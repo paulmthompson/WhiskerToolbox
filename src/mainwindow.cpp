@@ -71,6 +71,7 @@ void MainWindow::createActions()
     connect(ui->play_button,SIGNAL(clicked()),this,SLOT(PlayButton()));
     connect(ui->rewind,SIGNAL(clicked()),this,SLOT(RewindButton()));
     connect(ui->fastforward,SIGNAL(clicked()),this,SLOT(FastForwardButton()));
+    connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
 }
 
 void MainWindow::Load_Video()
@@ -121,6 +122,10 @@ void MainWindow::FastForwardButton()
 }
 void MainWindow::UpdateCanvas(QImage& img)
 {
+    for (auto pathItem : this->whisker_paths) {
+        scene->removeItem(pathItem);
+    }
+    this->whisker_paths.clear();
     pixmap_item->setPixmap(QPixmap::fromImage(img));
 }
 
@@ -151,3 +156,11 @@ QImage MainWindow::convertToImage(std::vector<uint8_t> input, int width, int hei
    return QImage(&input[0],width, height, QImage::Format_Grayscale8);
 }
 
+void MainWindow::TraceButton()
+{
+    QPainterPath* path = new QPainterPath();
+    path->moveTo(QPointF(100,100));
+    path->lineTo(QPointF(150,150));
+
+    whisker_paths.append(this->scene->addPath(*path,QPen(QColor(Qt::red))));
+}

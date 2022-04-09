@@ -39,6 +39,8 @@ private:
 
     QTimer* timer;
 
+
+
     long long t_last_draw;
     int last_loaded_frame;
 
@@ -48,6 +50,7 @@ private:
     QImage myimage;
     QGraphicsScene* scene;
     QGraphicsPixmapItem* pixmap_item;
+    QVector<QGraphicsPathItem*> whisker_paths;
 
 private slots:
     void Load_Video();
@@ -55,5 +58,6 @@ private slots:
     void PlayButton();
     void RewindButton();
     void FastForwardButton();
+    void TraceButton();
 };
 #endif // MAINWINDOW_H

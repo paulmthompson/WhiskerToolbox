@@ -113,7 +113,7 @@
     <property name="frameShadow">
      <enum>QFrame::Sunken</enum>
     </property>
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="trace_button">
      <property name="geometry">
       <rect>
        <x>30</x>
@@ -189,7 +189,7 @@
      <string/>
     </property>
     <property name="icon">
-     <iconset resource="whiskertoolbox.qrc">
+     <iconset resource="../whiskertoolbox.qrc">
       <normaloff>:/images/fastforward.png</normaloff>:/images/fastforward.png</iconset>
     </property>
     <property name="iconSize">
@@ -212,7 +212,7 @@
      <string/>
     </property>
     <property name="icon">
-     <iconset resource="whiskertoolbox.qrc">
+     <iconset resource="../whiskertoolbox.qrc">
       <normaloff>:/images/rewind.png</normaloff>:/images/rewind.png</iconset>
     </property>
     <property name="iconSize">
@@ -286,7 +286,7 @@
   </action>
  </widget>
  <resources>
-  <include location="whiskertoolbox.qrc"/>
+  <include location="../whiskertoolbox.qrc"/>
  </resources>
  <connections/>
 </ui>
