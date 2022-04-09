@@ -17,15 +17,10 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS MultimediaWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 
-# AVCODEC Library
-find_library(AVCODEC_LIBRARY avcodec HINTS C:\\Users\\wanglab\\Downloads\\ffmpeg-5.0-full_build-shared\\lib)
-if( ${AVCODEC_LIBRARY} STREQUAL "FFMPEG_LIBRARY-NOTFOUND")
-    message("Please set FFMPEG_LIBRARY variable to location of libavcodec")
-endif()
-
 set(FFMPEG_PATH "C:\\Users\\wanglab\\Downloads\\ffmpeg-5.0-full_build-shared\\lib")
 set(FFMPEG_INCLUDE "C:\\Users\\wanglab\\Downloads\\ffmpeg-5.0-full_build-shared\\include")
 
+find_library(AVCODEC_LIBRARY avcodec HINTS ${FFMPEG_PATH})
 find_library(AVFORMAT_LIBRARY avformat HINTS ${FFMPEG_PATH})
 find_library(AVUTIL_LIBRARY avutil HINTS ${FFMPEG_PATH})
 find_library(AVFILTER_LIBRARY avfilter HINTS ${FFMPEG_PATH})
