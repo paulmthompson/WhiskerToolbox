@@ -4,20 +4,14 @@
 #include <unordered_map>
 #include <vector>
 
-struct Whisker {
-    int id;
-    std::vector<float> x;
-    std::vector<float> y;
-};
-
 class WhiskerTracker {
 
 public:
     WhiskerTracker();
 
 private:
-    std::unordered_map<int, Whisker> woi;
-
+    struct Whisker;
+    //std::unordered_map<int, Whisker> woi;
 };
 
 

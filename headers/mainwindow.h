@@ -29,6 +29,7 @@ private:
     void UpdateCanvas(QImage& img);
     void GetVideoInfo();
     void LoadFrame(int frame_id,bool frame_by_frame = false);
+    void DrawWhiskers();
 
     void vidLoop();
 

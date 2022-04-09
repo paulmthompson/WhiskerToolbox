@@ -158,6 +158,11 @@ QImage MainWindow::convertToImage(std::vector<uint8_t> input, int width, int hei
 
 void MainWindow::TraceButton()
 {
+   DrawWhiskers();
+}
+
+void MainWindow::DrawWhiskers()
+{
     QPainterPath* path = new QPainterPath();
     path->moveTo(QPointF(100,100));
     path->lineTo(QPointF(150,150));
