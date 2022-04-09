@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/fastforward.png</file>
+        <file>images/rewind.png</file>
+    </qresource>
+</RCC>
