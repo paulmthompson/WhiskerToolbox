@@ -42,6 +42,8 @@ set(PROJECT_SOURCES
         headers/whiskertracker.h
         src/whiskertracker.cpp
         whiskertoolbox.qrc
+        headers/janelia.h
+        src/janelia.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
