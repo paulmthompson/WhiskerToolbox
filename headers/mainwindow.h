@@ -10,6 +10,8 @@
 
 #include "videodecoder.h"
 
+#include "whiskertracker.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -52,6 +54,9 @@ private:
     QGraphicsScene* scene;
     QGraphicsPixmapItem* pixmap_item;
     QVector<QGraphicsPathItem*> whisker_paths;
+
+    std::unique_ptr<WhiskerTracker> wt;
+    std::vector<uint8_t> current_frame;
 
 private slots:
     void Load_Video();

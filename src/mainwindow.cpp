@@ -35,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent)
     play_speed = 1;
 
     vd = std::make_unique<VideoDecoder>();
+    wt = std::make_unique<WhiskerTracker>();
+    std::vector<uint8_t>current_frame = {};
 
     scene = new QGraphicsScene(this);
 
@@ -83,6 +85,7 @@ void MainWindow::Load_Video()
                 "All files (*.*) ;; MP4 (*.mp4)");
 
     GetVideoInfo();
+    current_frame.resize(vd->getHeight()*vd->getWidth());
 
     LoadFrame(0);
 }
@@ -146,6 +149,8 @@ void MainWindow::LoadFrame(int frame_id,bool frame_by_frame)
 {
     std::vector<uint8_t> image = vd->getFrame( frame_id, frame_by_frame);
 
+    this->current_frame = image;
+
     QImage img = QImage(&image[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
     UpdateCanvas(img);
     this->last_loaded_frame = frame_id;
@@ -158,6 +163,7 @@ QImage MainWindow::convertToImage(std::vector<uint8_t> input, int width, int hei
 
 void MainWindow::TraceButton()
 {
+   wt->trace(this->current_frame);
    DrawWhiskers();
 }
 

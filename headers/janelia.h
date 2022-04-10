@@ -12,10 +12,17 @@ struct Whisker_Seg {
     int id;
     int time;
     int len;
-    float *x;
-    float *y;
-    float *thick;
-    float *scores;
+    std::vector<float> x;
+    std::vector<float> y;
+    std::vector<float> thick;
+    std::vector<float> scores;
+    Whisker_Seg(int n) {
+        len = n;
+        std::vector<float> x(n);
+        std::vector<float> y(n);
+        std::vector<float> thick(n);
+        std::vector<float> scores(n);
+    }
 };
 
 template <typename T>
@@ -25,10 +32,21 @@ struct Image
     int height;
     std::vector<T> array;
 
+    Image<T>() {
+        width = 0;
+        height = 0;
+        std::vector<T> array{};
+    }
+
     Image<T>(int w, int h) {
         width=w;
         height=h;
         std::vector<T> array(h*w);
+    }
+    Image<T>(int w, int h,std::vector<T> img) {
+        width=w;
+        height=h;
+        array = img;
     }
 };
 
@@ -131,7 +149,7 @@ class JaneliaTracker {
 
 public:
     JaneliaTracker();
-    Whisker_Seg *find_segments(int iFrame, Image<uint8_t> *image, Image<uint8_t> *bg, int *pnseg);
+   std::vector<Whisker_Seg> find_segments(int iFrame, Image<uint8_t>& image, Image<uint8_t> &bg);
 private:
     SEED_METHOD_ENUM _seed_method;
     int _lattice_spacing;
@@ -150,30 +168,57 @@ private:
     float _half_space_assymetry;
     float _max_delta_angle;
     int _half_space_tunneling_max_moves;
+    float _max_delta_width;
+    float _max_delta_offset;
     Array *bank;
+    Array *half_space_bank;
 
-    void compute_seed_from_point_field_on_grid(Image<uint8_t> *image, Image<uint8_t> *h, Image<float> *th, Image<float> *s);
-    Seed *compute_seed_from_point_ex( Image<uint8_t> *image, int p, int maxr, float *out_m, float *out_stat);
+    void compute_seed_from_point_field_on_grid(Image<uint8_t>& image, Image<uint8_t>& h, Image<float>& th, Image<float>& s);
+    Seed* compute_seed_from_point( Image<uint8_t>& image, int p, int maxr );
+    Seed *compute_seed_from_point_ex( Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat);
     Line_Params line_param_from_seed(const Seed *s);
-    float eval_line(Line_Params *line, Image<uint8_t> *image, int p);
+    float eval_line(Line_Params *line, Image<uint8_t>& image, int p);
     float round_anchor_and_offset( Line_Params *line, int *p, int stride );
-    std::vector<int> get_offset_list( Image<uint8_t> *image, int support, float angle, int p, int *npx );
+    std::vector<int> get_offset_list( Image<uint8_t>& image, int support, float angle, int p, int *npx );
     static int _cmp_seed_scores(seedrecord a, seedrecord b);
 
     int get_nearest_from_line_detector_bank(float offset, float width, float angle);
+    int get_nearest_from_half_space_detector_bank(float offset, float width, float angle, float *norm);
+
     void get_line_detector_bank(Range *off, Range *wid, Range *ang);
+    void get_half_space_detector_bank(Range *off, Range *wid, Range *ang, float *norm);
+
+
     Array* Build_Line_Detectors( Range off,Range wid,Range ang,float length,int supportsize );
+    Array* Build_Half_Space_Detectors( Range off,
+                                       Range wid,
+                                       Range ang,
+                                       float length,
+                                       int supportsize );
+
+
     int Get_Line_Detector( Array *bank, int ioffset, int iwidth, int iangle  );
+    int Get_Half_Space_Detector( Array *bank, int ioffset, int iwidth, int iangle  );
+
     void Render_Line_Detector( float offset,
                                float length,
                                float angle,
                                float width,
                                point anchor,
                                float* image, int *strides  );
+    void Render_Half_Space_Detector( float offset,
+                                     float length,
+                                     float angle,
+                                     float width,
+                                     point anchor,
+                                     float *image, int *strides  );
+
+    void Simple_Circle_Primitive( point *verts, int npoints, point center, float radius, int direction);
     void Simple_Line_Primitive( point *verts, point offset, float length, float thick );
     void rotate( point *pbuf, int n, float angle);
     void translate( point* pbuf, int n, point ori);
     void Sum_Pixel_Overlap( float *xy, int n, float gain, float *grid, int *strides );
+    void Multiply_Pixel_Overlap( float *xy, int n, float gain, float boundary, float *grid, int *strides );
     void pixel_to_vertex_array(int p, int stride, float *v);
     unsigned array_max_f32u ( float *buf, int size, int step, float bound );
     unsigned array_min_f32u ( float *buf, int size, int step, float bound );
@@ -194,19 +239,28 @@ private:
     int is_angle_leftward( float angle );
     int compute_number_steps( Range *r );
 
-    Whisker_Seg* trace_whisker(Seed *s, Image<uint8_t> *image);
+    Whisker_Seg* trace_whisker(Seed *s, Image<uint8_t>& image);
     void initialize_paramater_ranges( Line_Params *line, Interval *roff, Interval *rang, Interval *rwid);
-    int is_local_area_trusted_conservative( Line_Params *line, Image<uint8_t> *image, int p );
+    int is_local_area_trusted_conservative( Line_Params *line, Image<uint8_t>& image, int p );
     float threshold_two_means( uint8_t *array, size_t size );
-    float eval_half_space( Line_Params *line, Image<uint8_t> *image, int p, float *rr, float *ll );
+    float eval_half_space( Line_Params *line, Image<uint8_t>& image, int p, float *rr, float *ll );
+    int move_line( Line_Params *line, int *p, int stride, int direction );
+    int adjust_line_start(Line_Params *line, Image<uint8_t>& image, int *pp,
+                                   Interval *roff, Interval *rang, Interval *rwid);
+    int is_change_too_big( Line_Params *new_line, Line_Params *old, float alim, float wlim, float olim);
+    int is_local_area_trusted( Line_Params *line, Image<uint8_t>& image, int p );
+    int threshold_bottom_fraction_uint8( Image<uint8_t>& im );
+    static int outofbounds(int q, int cwidth, int cheight);
+    void compute_dxdy( Line_Params *line, float *dx, float *dy );
+
 
 };
 
 //  uint8_t val = *( ((uint8_t*) image->array) + tp);
 
 #define _COMPUTE_SEED_FROM_POINT_HELPER(BEST,BP)                    \
-{ int tp = x+cx + image->width * (y+cy);                            \
-  uint8_t val = image->array[tp];                                   \
+{ int tp = x+cx + image.width * (y+cy);                            \
+  uint8_t val = image.array[tp];                                   \
   if(   val <= BEST )                                               \
   { BP = tp;                                                        \
     BEST =  val;                                                    \
