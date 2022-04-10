@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cfloat>
 #include <algorithm>
+#include <stdio.h>
 
 JaneliaTracker::JaneliaTracker()
 {
@@ -27,7 +28,8 @@ JaneliaTracker::JaneliaTracker()
     _max_delta_width = 6.0;
     _max_delta_offset = 6.0;
 
-    bank = nullptr;
+    bank = Array();
+    half_space_bank = Array();
 }
 
 std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t>& image, Image<uint8_t>& bg) {
@@ -72,10 +74,10 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
     }
     { int i = sarea;
       int nseeds = 0;
-      std::vector<float> sa = s.array;
-      std::vector<float> tha = th.array;
-      std::vector<uint8_t> ha = h.array;
-      std::vector<uint8_t> maska = mask.array;
+      auto&  sa = s.array;
+      auto& tha = th.array;
+      auto& ha = h.array;
+      auto& maska = mask.array;
 
       // Compute means and mask
       while( i-- )
@@ -106,9 +108,9 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
 
                 line = line_param_from_seed( &seed );
 
-                scores[j  ].score = eval_line( &line, image, i );
+                scores[j].score = eval_line( &line, image, i );
 
-                scores[j  ].idx   = i;
+                scores[j].idx   = i;
                 j++;
               }
             }
@@ -119,25 +121,24 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
             while(j--)
             { i = scores[j].idx;
               if( maska[i]==1 )
-              { Whisker_Seg *w;
+              {
                 Seed seed = { i%stride,
                   i/stride,
                   (int) std::round(100 * cos( tha[i] )),
                   (int) std::round(100 * sin( tha[i] )) };
 
-                w = trace_whisker( &seed, image );
-                if(!w)
+                auto w = trace_whisker( &seed, image );
+                if(w.len == 0)
                 { SWAP(seed.xdir,seed.ydir);
                   w = trace_whisker( &seed, image ); // try again at a right angle...sometimes when we're off by one the slope estimate is perpendicular to the whisker.
                 }
-                if (w != NULL)
+                if (w.len >0)
                 {
-                  max_segs = n_segs+1;
-                  w->time = iFrame;
-                  w->id  = n_segs;
-                  wsegs.push_back(*w);
+                  w.time = iFrame;
+                  w.id  = n_segs;
+                  wsegs.push_back(std::move(w));
                   //draw_whisker( mask , w, this->_maxr/2.0, 3 ); // "color" set to 3 for debug, could be anything but 1
-                  free(w);
+                  //delete w;
                 } // ... if w
               } // ... if maska[i]
             }
@@ -148,19 +149,18 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
     return wsegs;
 }
 
- int JaneliaTracker::_cmp_seed_scores(seedrecord a, seedrecord b)
+ bool JaneliaTracker::_cmp_seed_scores(seedrecord a, seedrecord b)
 {
   float d = a.score - b.score;
-  if( d==0.0 ) return 0;
-  return d < 0 ? -1 : 1;
+  return d < 0 ? false : true;
 }
 
 void JaneliaTracker::compute_seed_from_point_field_on_grid(Image<uint8_t>& image, Image<uint8_t>& hist, Image<float>& slopes, Image<float>& stats) {
     int a = image.width * image.height;
     int stride = image.width;
-    std::vector<uint8_t>  h = hist.array;
-    std::vector<float> sl = slopes.array;
-    std::vector<float> st = stats.array;
+    auto&  h = hist.array;
+    auto& sl = slopes.array;
+    auto& st = stats.array;
 
     float   m,stat;
 
@@ -470,12 +470,12 @@ float JaneliaTracker::eval_line(Line_Params *line, Image<uint8_t>& image, int p)
       bank_i = get_nearest_from_line_detector_bank ( coff, line->width, line->angle );
 
       {
-        std::vector<uint8_t> parray = image.array;
+        auto& parray = image.array;
         s = 0.0;
         i = npxlist;
         while(i--)
           //s += parray[pxlist[2*i]] * weights[pxlist[2*i+1]];
-           s += parray[pxlist[2*i]] * this->bank->data[bank_i+pxlist[2*i+1]];
+           s += parray[pxlist[2*i]] * this->bank.data[bank_i+pxlist[2*i+1]];
       }
 
       return -s;
@@ -982,7 +982,7 @@ double JaneliaTracker::fit(box *B, point * x, int cx, vertex * ix, int fudge)
   return sclx*scly;
 }
 
-Whisker_Seg* JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
+Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
 { typedef struct { float x; float y; float thick; float score; } record;
     static std::vector<record> ldata = {};
     static std::vector<record> rdata = {};
@@ -1019,7 +1019,7 @@ Whisker_Seg* JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
 
     //Must start in a trusted area
     if( !is_local_area_trusted_conservative( &line, image, p ) )
-      return (NULL);
+      return (Whisker_Seg(0));
 
     line.score = eval_line( &line, image, p );
     adjust_line_start(&line,image,&p,&roff,&rang,&rwid);
@@ -1153,26 +1153,26 @@ Whisker_Seg* JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
    * Copy results into a whisker segment
    */
   if( nright+nleft > 2*this->_tlen )
-  { Whisker_Seg *wseg;
-    *wseg = Whisker_Seg( nright + nleft );
+  {
+    Whisker_Seg wseg = Whisker_Seg(nright + nleft);
     int j=0, i = nright;
     while( i-- )  /* backward copy */
-    { wseg->x     [j] = rdata[i].x;
-      wseg->y     [j] = rdata[i].y;
-      wseg->thick [j] = rdata[i].thick;
-      wseg->scores[j] = rdata[i].score;
+    { wseg.x     [j] = rdata[i].x;
+      wseg.y     [j] = rdata[i].y;
+      wseg.thick [j] = rdata[i].thick;
+      wseg.scores[j] = rdata[i].score;
       j++;
     }
     for( i=0; i< nleft; i++ )
-    { wseg->x     [j] = ldata[i].x;
-      wseg->y     [j] = ldata[i].y;
-      wseg->thick [j] = ldata[i].thick;
-      wseg->scores[j] = ldata[i].score;
+    { wseg.x     [j] = ldata[i].x;
+      wseg.y     [j] = ldata[i].y;
+      wseg.thick [j] = ldata[i].thick;
+      wseg.scores[j] = ldata[i].score;
       j++;
     }
     return wseg;
   } else
-  { return (NULL);
+  { return (Whisker_Seg(0));
   }
 }
 
@@ -1269,14 +1269,14 @@ float JaneliaTracker::eval_half_space( Line_Params *line, Image<uint8_t>& image,
   lefthalf  = get_nearest_from_half_space_detector_bank( coff, line->width, line->angle, &leftnorm );
   righthalf  = get_nearest_from_half_space_detector_bank( -coff, line->width, line->angle, &rightnorm );
   {
-    std::vector<uint8_t> parray = image.array;
+    auto& parray = image.array;
     i = a; //npxlist;
     l = 0.0;
     r = 0.0;
     while(i--)
     {
-      l += parray[pxlist[2*i]] * this->half_space_bank->data[lefthalf+pxlist[2*i+1]];
-      r += parray[pxlist[2*i]] * this->half_space_bank->data[righthalf+pxlist[2*i+1]];
+      l += parray[pxlist[2*i]] * this->half_space_bank.data[lefthalf+pxlist[2*i+1]];
+      r += parray[pxlist[2*i]] * this->half_space_bank.data[righthalf+pxlist[2*i+1]];
       //l += parray[pxlist[2*i]] * lefthalf[pxlist[2*i+1]];
       //r += parray[pxlist[2*i]] * righthalf[a - pxlist[2*i+1]];
     }
@@ -1317,26 +1317,26 @@ int JaneliaTracker::get_nearest_from_half_space_detector_bank(float offset, floa
   a = lround( (  angle - arng.min ) / arng.step );
   w = lround( (  width - wrng.min ) / wrng.step );
 
-  return Get_Half_Space_Detector( this->half_space_bank, o, w, a );
+  return Get_Half_Space_Detector(half_space_bank, o, w, a );
 }
 
 // I think that this is the finding the index of the element to start with for future calculations?
-int JaneliaTracker::Get_Line_Detector( Array *bank, int ioffset, int iwidth, int iangle  )
-{ return iangle  * bank->strides_px[1]
-                                + iwidth  * bank->strides_px[2]
-                                + ioffset * bank->strides_px[3];
+int JaneliaTracker::Get_Line_Detector(Array& lbank, int ioffset, int iwidth, int iangle  )
+{ return iangle  * lbank.strides_px[1]
+                                + iwidth  * lbank.strides_px[2]
+                                + ioffset * lbank.strides_px[3];
 }
 
-int JaneliaTracker::Get_Half_Space_Detector( Array *bank, int ioffset, int iwidth, int iangle  )
-{ return   iangle  * bank->strides_px[1]
-                                + iwidth  * bank->strides_px[2]
-                                + ioffset * bank->strides_px[3];
+int JaneliaTracker::Get_Half_Space_Detector(Array& hbank, int ioffset, int iwidth, int iangle  )
+{ return   iangle  * hbank.strides_px[1]
+                                + iwidth  * hbank.strides_px[2]
+                                + ioffset * hbank.strides_px[3];
 }
 
 void JaneliaTracker::get_line_detector_bank(Range *off, Range *wid, Range *ang)
 {
   static Range o,a,w;
-  if( !this->bank )
+  if( this->bank.data.empty() )
   {
     Range v[3] = {{ -1.0,       1.0,         this->_offset_step},          //offset
                   { -M_PI/4.0,  M_PI/4.0,    M_PI/4.0/this->_angle_step},  //angle
@@ -1345,6 +1345,9 @@ void JaneliaTracker::get_line_detector_bank(Range *off, Range *wid, Range *ang)
     a = v[1];
     w = v[2];
       this->bank = Build_Line_Detectors( o, w, a, this->_tlen, 2*this->_tlen+3 );
+
+    printf("Built Line Detector Bank");
+    fflush(stdout);
   }
   *off = o; *ang = a; *wid = w;
 
@@ -1355,7 +1358,7 @@ void JaneliaTracker::get_half_space_detector_bank(Range *off, Range *wid, Range 
 {
   static float sum = -1.0;
   static Range o,a,w;
-  if( !this->half_space_bank )
+  if( this->half_space_bank.data.empty() )
   {
     Range v[3] = {{ -1.0,       1.0,         this->_offset_step},          //offset
                   { -M_PI/4.0,  M_PI/4.0,    M_PI/4.0/this->_angle_step },  //angle
@@ -1366,31 +1369,33 @@ void JaneliaTracker::get_half_space_detector_bank(Range *off, Range *wid, Range 
 
     this->half_space_bank = Build_Half_Space_Detectors( o, w, a, this->_tlen, 2*this->_tlen+3 );
 
-    { float *m = this->half_space_bank->data.data() + Get_Half_Space_Detector(bank,0,0,0);
+    { float *m = this->half_space_bank.data.data() + Get_Half_Space_Detector(this->half_space_bank,0,0,0);
       int n = (2*this->_tlen+3)*(2*this->_tlen+3);
       while(n--)
         sum += m[n];
     }
+    printf("Build Half Space Detector Bank");
+    fflush(stdout);
   }
   *off = o; *ang = a; *wid = w; *norm = sum;
 
 }
 
-Array* JaneliaTracker::Build_Half_Space_Detectors( Range off,
+Array JaneliaTracker::Build_Half_Space_Detectors( Range off,
                                    Range wid,
                                    Range ang,
                                    float length,
                                    int supportsize )
-{ Array *bank;
+{
   int noff =  compute_number_steps( &off ),
       nwid =  compute_number_steps( &wid ),
       nang =  compute_number_steps( &ang );
-  int shape[5] = { supportsize,
+  std::vector<int> shape = { supportsize,
                    supportsize,
                    noff,
                    nwid,
                    nang};
-  *bank = Array(shape, 5, sizeof(float));
+  Array newbank = Array(shape, 5, sizeof(float));
 
   { int    o,a,w;
     for( o = 0; o < noff; o++ )
@@ -1399,7 +1404,7 @@ Array* JaneliaTracker::Build_Half_Space_Detectors( Range off,
       for( a = 0; a < nang; a++ )
         for( w = 0; w < nwid; w++ )
         {
-            float *bank_i = this->bank->data.data() + Get_Half_Space_Detector( bank, o,w,a);
+            float *bank_i = newbank.data.data() + Get_Half_Space_Detector(newbank, o,w,a);
           Render_Half_Space_Detector(
               o*off.step + off.min,                       //offset (before rotation)
               length,                                     //length,
@@ -1407,30 +1412,29 @@ Array* JaneliaTracker::Build_Half_Space_Detectors( Range off,
               w*wid.step + wid.min,                       //width,
               anchor,                                     //anchor,
               bank_i,      //image
-             bank->strides_px.data() + 3);                      //strides
+             newbank.strides_px.data() + 3);                      //strides
         }
     }
   }
 
-  return bank;
+  return newbank;
 }
 
-Array* JaneliaTracker::Build_Line_Detectors( Range off,
+Array JaneliaTracker::Build_Line_Detectors( Range off,
                             Range wid,
                             Range ang,
                             float length,
                             int supportsize )
 {
-    Array *bank;
  int noff =  compute_number_steps( &off ),
      nwid =  compute_number_steps( &wid ),
      nang =  compute_number_steps( &ang );
- int shape[5] = { supportsize,
+ std::vector<int> shape = { supportsize,
                   supportsize,
                   noff,
                   nwid,
                   nang};
-  *bank = Array(shape, 5, sizeof(float));
+  Array newbank = Array(shape, 5, sizeof(float));
 
  { int    o,a,w;
    for( o = 0; o < noff; o++ )
@@ -1439,7 +1443,7 @@ Array* JaneliaTracker::Build_Line_Detectors( Range off,
      for( a = 0; a < nang; a++ )
        for( w = 0; w < nwid; w++ )
        {
-           float *bank_i = this->bank->data.data() + Get_Line_Detector( bank, o,w,a);
+           float *bank_i = newbank.data.data() + Get_Line_Detector( newbank, o,w,a);
          Render_Line_Detector(
              o*off.step + off.min,                       //offset (before rotation)
              length,                                     //length,
@@ -1447,12 +1451,12 @@ Array* JaneliaTracker::Build_Line_Detectors( Range off,
              w*wid.step + wid.min,                       //width,
              anchor,                                     //anchor,
              bank_i,            //image
-             bank->strides_px.data() + 3);                      //strides
+             newbank.strides_px.data() + 3);                      //strides
        }
    }
  }
 
- return bank;
+ return newbank;
 }
 
 void JaneliaTracker::Render_Half_Space_Detector( float offset,

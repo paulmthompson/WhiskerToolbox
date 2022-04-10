@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <memory>
 
 enum SEED_METHOD_ENUM { SEED_ON_MHAT_CONTOURS, SEED_ON_GRID, SEED_EVERYWHERE };
 #define bigReal 1.E38f
@@ -16,12 +17,13 @@ struct Whisker_Seg {
     std::vector<float> y;
     std::vector<float> thick;
     std::vector<float> scores;
+
     Whisker_Seg(int n) {
         len = n;
-        std::vector<float> x(n);
-        std::vector<float> y(n);
-        std::vector<float> thick(n);
-        std::vector<float> scores(n);
+        x = std::vector<float>(n);
+        y = std::vector<float>(n);
+        thick = std::vector<float>(n);
+        scores = std::vector<float>(n);
     }
 };
 
@@ -41,7 +43,7 @@ struct Image
     Image<T>(int w, int h) {
         width=w;
         height=h;
-        std::vector<T> array(h*w);
+        array = std::vector<T>(h*w,0);
     }
     Image<T>(int w, int h,std::vector<T> img) {
         width=w;
@@ -69,6 +71,12 @@ struct seedrecord
 {
     int idx;
     float score;
+
+    seedrecord()
+    {
+        idx = 0;
+        score = 0;
+    }
 };
 
 
@@ -125,12 +133,16 @@ struct Array
   std::vector<int> shape;
   int ndim;
 
-  Array( int *shape_in , int ndim, int bytesperpixel ) {
-      int i = ndim;
-      ndim = ndim;
-      std::vector<int> shape(ndim);
-      std::vector<int> strides_bytes(ndim+1);
-      std::vector<int> strides_px(ndim+1);
+  Array() {
+
+  }
+
+  Array(std::vector<int> shape_in , int ndim_in, int bytesperpixel ) {
+      int i = ndim_in;
+      ndim = ndim_in;
+      shape = std::vector<int>(ndim);
+      strides_bytes = std::vector<int>(ndim+1);
+      strides_px = std::vector<int>(ndim+1);
 
       strides_bytes[ndim] = bytesperpixel;
       strides_px[ndim] = 1;
@@ -140,7 +152,7 @@ struct Array
         strides_px[i] = strides_bytes[i] / bytesperpixel;
         shape[i]   = shape_in[i];
       }
-      std::vector<float> data(strides_bytes[0]);
+      data = std::vector<float>(strides_bytes[0]);
   }
 };
 
@@ -170,8 +182,8 @@ private:
     int _half_space_tunneling_max_moves;
     float _max_delta_width;
     float _max_delta_offset;
-    Array *bank;
-    Array *half_space_bank;
+    Array bank;
+    Array half_space_bank;
 
     void compute_seed_from_point_field_on_grid(Image<uint8_t>& image, Image<uint8_t>& h, Image<float>& th, Image<float>& s);
     Seed* compute_seed_from_point( Image<uint8_t>& image, int p, int maxr );
@@ -180,7 +192,7 @@ private:
     float eval_line(Line_Params *line, Image<uint8_t>& image, int p);
     float round_anchor_and_offset( Line_Params *line, int *p, int stride );
     std::vector<int> get_offset_list( Image<uint8_t>& image, int support, float angle, int p, int *npx );
-    static int _cmp_seed_scores(seedrecord a, seedrecord b);
+    static bool _cmp_seed_scores(seedrecord a, seedrecord b);
 
     int get_nearest_from_line_detector_bank(float offset, float width, float angle);
     int get_nearest_from_half_space_detector_bank(float offset, float width, float angle, float *norm);
@@ -189,16 +201,16 @@ private:
     void get_half_space_detector_bank(Range *off, Range *wid, Range *ang, float *norm);
 
 
-    Array* Build_Line_Detectors( Range off,Range wid,Range ang,float length,int supportsize );
-    Array* Build_Half_Space_Detectors( Range off,
+    Array Build_Line_Detectors( Range off,Range wid,Range ang,float length,int supportsize );
+    Array Build_Half_Space_Detectors( Range off,
                                        Range wid,
                                        Range ang,
                                        float length,
                                        int supportsize );
 
 
-    int Get_Line_Detector( Array *bank, int ioffset, int iwidth, int iangle  );
-    int Get_Half_Space_Detector( Array *bank, int ioffset, int iwidth, int iangle  );
+    int Get_Line_Detector(Array& lbank, int ioffset, int iwidth, int iangle  );
+    int Get_Half_Space_Detector(Array& hbank, int ioffset, int iwidth, int iangle  );
 
     void Render_Line_Detector( float offset,
                                float length,
@@ -239,7 +251,7 @@ private:
     int is_angle_leftward( float angle );
     int compute_number_steps( Range *r );
 
-    Whisker_Seg* trace_whisker(Seed *s, Image<uint8_t>& image);
+    Whisker_Seg trace_whisker(Seed *s, Image<uint8_t>& image);
     void initialize_paramater_ranges( Line_Params *line, Interval *roff, Interval *rang, Interval *rwid);
     int is_local_area_trusted_conservative( Line_Params *line, Image<uint8_t>& image, int p );
     float threshold_two_means( uint8_t *array, size_t size );

@@ -27,7 +27,8 @@ class WhiskerTracker {
 public:
     WhiskerTracker();
 
-    std::vector<Whisker> trace(std::vector<uint8_t> input);
+   void trace(std::vector<uint8_t> input);
+    std::vector<Whisker> whiskers;
 
 private:
     JaneliaTracker janelia;
