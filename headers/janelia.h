@@ -182,6 +182,8 @@ private:
     int _half_space_tunneling_max_moves;
     float _max_delta_width;
     float _max_delta_offset;
+    float _min_length;
+    float _redundancy_thres;
     Array bank;
     Array half_space_bank;
 
@@ -264,6 +266,10 @@ private:
     int threshold_bottom_fraction_uint8( Image<uint8_t>& im );
     static int outofbounds(int q, int cwidth, int cheight);
     void compute_dxdy( Line_Params *line, float *dx, float *dy );
+
+    //New
+    double calculate_whisker_length(Whisker_Seg& w);
+    void eliminate_redundant(std::vector<Whisker_Seg> w_segs);
 
 
 };

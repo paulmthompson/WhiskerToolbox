@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cfloat>
 #include <algorithm>
+#include <numeric>
 #include <stdio.h>
 
 JaneliaTracker::JaneliaTracker()
@@ -27,6 +28,8 @@ JaneliaTracker::JaneliaTracker()
     _half_space_tunneling_max_moves = 50;
     _max_delta_width = 6.0;
     _max_delta_offset = 6.0;
+    _min_length = 100.0;
+    _redundancy_thres = 20.0;
 
     bank = Array();
     half_space_bank = Array();
@@ -132,20 +135,18 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
                 { SWAP(seed.xdir,seed.ydir);
                   w = trace_whisker( &seed, image ); // try again at a right angle...sometimes when we're off by one the slope estimate is perpendicular to the whisker.
                 }
-                if (w.len >0)
+                if (calculate_whisker_length(w) > this->_min_length)
                 {
                   w.time = iFrame;
                   w.id  = n_segs;
                   wsegs.push_back(std::move(w));
-                  //draw_whisker( mask , w, this->_maxr/2.0, 3 ); // "color" set to 3 for debug, could be anything but 1
-                  //delete w;
                 } // ... if w
               } // ... if maska[i]
             }
             scores.clear();
           }
     }
-
+    eliminate_redundant(wsegs);
     return wsegs;
 }
 
@@ -153,6 +154,66 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
 {
   float d = a.score - b.score;
   return (d < 0);
+}
+
+double JaneliaTracker::calculate_whisker_length(Whisker_Seg& w) {
+
+     double out = 0.0f;
+
+     if (w.len > 0)
+     {
+        for (int i=1; i<w.x.size(); i++) {
+            out += sqrt(pow(w.x[i]-w.x[i-1],2) + pow(w.y[i]-w.y[i-1],2));
+        }
+     }
+
+     return out;
+ }
+
+void JaneliaTracker::eliminate_redundant(std::vector<Whisker_Seg> w_segs) {
+
+    int i = 0;
+
+    while (i < w_segs.size())
+    {
+        auto& w2_x = w_segs[i].x;
+        auto& w2_y = w_segs[i].y;
+
+        double min_cor = 10000.0;
+
+        for (int j = 0; j<w_segs.size(); j++)
+        {
+            if (j != i)
+            {
+                auto& w1_x = w_segs[j].x;
+                auto& w1_y = w_segs[j].y;
+
+                double mycor = 0.0;
+                for (int k = 1; k<21; k++) {
+                    mycor += sqrt(pow(w1_x[w1_x.size() - k]-w2_x[w2_x.size() - k],2) + pow(w1_y[w1_y.size() - k]-w2_y[w2_y.size() - k],2));
+                }
+                if (mycor < min_cor) {
+                    min_cor = mycor;
+                }
+            }
+            if (min_cor < this->_redundancy_thres) {
+                double w1_score = std::accumulate(w_segs[j].scores.begin(),w_segs[j].scores.end(),0);
+                double w2_score = std::accumulate(w_segs[i].scores.begin(),w_segs[i].scores.end(),0);
+
+                if (w1_score > w2_score)
+                {
+                    w_segs.erase(w_segs.begin()+i);
+                } else {
+                    w_segs.erase(w_segs.begin()+j);
+                }
+
+                i = 1;
+                break;
+            }
+        }
+        i++;
+    }
+
 }
 
 void JaneliaTracker::compute_seed_from_point_field_on_grid(Image<uint8_t>& image, Image<uint8_t>& hist, Image<float>& slopes, Image<float>& stats) {
