@@ -152,7 +152,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
  bool JaneliaTracker::_cmp_seed_scores(seedrecord a, seedrecord b)
 {
   float d = a.score - b.score;
-  return d < 0 ? false : true;
+  return (d < 0);
 }
 
 void JaneliaTracker::compute_seed_from_point_field_on_grid(Image<uint8_t>& image, Image<uint8_t>& hist, Image<float>& slopes, Image<float>& stats) {

@@ -169,9 +169,17 @@ void MainWindow::TraceButton()
 
 void MainWindow::DrawWhiskers()
 {
-    QPainterPath* path = new QPainterPath();
-    path->moveTo(QPointF(100,100));
-    path->lineTo(QPointF(150,150));
+    whisker_paths.clear();
 
-    whisker_paths.append(this->scene->addPath(*path,QPen(QColor(Qt::red))));
+    for (auto w : wt->whiskers) {
+        QPainterPath* path = new QPainterPath();
+
+        path->moveTo(QPointF(w.x[0],w.y[0]));
+
+        for (int i = 1; i < w.x.size(); i++) {
+            path->lineTo(QPointF(w.x[i],w.y[i]));
+        }
+
+        whisker_paths.append(this->scene->addPath(*path,QPen(QColor(Qt::red))));
+    }
 }
