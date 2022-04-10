@@ -9,8 +9,7 @@ WhiskerTracker::WhiskerTracker()
 
 std::vector<Whisker> WhiskerTracker::trace(std::vector<uint8_t> input) {
 
-    Image<uint8_t> *img = nullptr;
-    *img = Image<uint8_t>(640,480,input);
+    Image<uint8_t>img = Image<uint8_t>(640,480,input);
     std::vector<Whisker_Seg> j_segs = janelia.find_segments(1,img,bg);
 
     std::vector<Whisker> output = {};
