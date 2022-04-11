@@ -161,7 +161,7 @@ class JaneliaTracker {
 
 public:
     JaneliaTracker();
-   std::vector<Whisker_Seg> find_segments(int iFrame, Image<uint8_t>& image, Image<uint8_t> &bg);
+   std::vector<Whisker_Seg> find_segments(int iFrame, Image<uint8_t>& image, const Image<uint8_t> &bg);
 private:
     SEED_METHOD_ENUM _seed_method;
     int _lattice_spacing;
@@ -189,7 +189,7 @@ private:
 
     void compute_seed_from_point_field_on_grid(Image<uint8_t>& image, Image<uint8_t>& h, Image<float>& th, Image<float>& s);
     Seed* compute_seed_from_point( Image<uint8_t>& image, int p, int maxr );
-    Seed *compute_seed_from_point_ex( Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat);
+    Seed *compute_seed_from_point_ex(const Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat);
     Line_Params line_param_from_seed(const Seed *s);
     float eval_line(Line_Params *line, Image<uint8_t>& image, int p);
     float round_anchor_and_offset( Line_Params *line, int *p, int stride );

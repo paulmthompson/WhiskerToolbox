@@ -9,6 +9,7 @@
 #include <QGraphicsPixmapItem>
 
 #include <QTimer>
+#include <QElapsedTimer>
 
 #include <stdio.h>
 #include <functional>
@@ -163,8 +164,17 @@ QImage MainWindow::convertToImage(std::vector<uint8_t> input, int width, int hei
 
 void MainWindow::TraceButton()
 {
+    QElapsedTimer timer2;
+    timer2.start();
+
    wt->trace(this->current_frame);
+
+   int t1 = timer2.elapsed();
    DrawWhiskers();
+
+   int t2 = timer2.elapsed();
+
+   qDebug() << "The tracing took" << t1 << "ms and drawing took" << (t2-t1);
 }
 
 void MainWindow::DrawWhiskers()

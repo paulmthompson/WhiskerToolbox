@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <numeric>
 #include <stdio.h>
+#include <chrono>  // for high_resolution_clock
+#include <iostream>
 
 JaneliaTracker::JaneliaTracker()
 {
@@ -35,12 +37,14 @@ JaneliaTracker::JaneliaTracker()
     half_space_bank = Array();
 }
 
-std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t>& image, Image<uint8_t>& bg) {
+std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t>& image, const Image<uint8_t>& bg) {
     static Image<uint8_t> h = Image<uint8_t>(); // histogram from compute_seed_from_point_field_windowed_on_contour
     static Image<float> th = Image<float>(); // slopes
     static Image<float> s = Image<float>(); // stats
     static Image<uint8_t> mask = Image<uint8_t>(); // Mask for keeping track of seed points
     static int sarea = 0;
+
+    //auto start = std::chrono::high_resolution_clock::now();
 
     int  area = image.width * image.height;
 //    Object_Map  *omap;
@@ -58,6 +62,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
       sarea = area;
     }
 
+    //Reset static arrays to zero
     std::fill(h.array.begin(),h.array.end(),0);
     std::fill(th.array.begin(),th.array.end(),0);
     std::fill(s.array.begin(),s.array.end(),0);
@@ -71,7 +76,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
     }
     case SEED_ON_GRID:
     {
-        compute_seed_from_point_field_on_grid(image,h,th,s);
+        compute_seed_from_point_field_on_grid(image,h,th,s); // 17 ms
     }
     case SEED_EVERYWHERE:
     {
@@ -80,7 +85,9 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
     default:
     {}
     }
-    { int i = sarea;
+    //auto t1 = std::chrono::high_resolution_clock::now();
+    {
+      int i = sarea;
       int nseeds = 0;
       auto&  sa = s.array;
       auto& tha = th.array;
@@ -106,6 +113,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
           Line_Params line;
             int j = 0;
 
+            auto start = std::chrono::high_resolution_clock::now();
             i = sarea;
             while( i-- )
             { if( maska[i]==1 )
@@ -123,7 +131,10 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
               }
             }
 
+            auto t1 = std::chrono::high_resolution_clock::now();
             sort(scores.begin(),scores.end(), JaneliaTracker::_cmp_seed_scores);
+
+
 
             j = nseeds;
             while(j--)
@@ -149,9 +160,15 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
               } // ... if maska[i]
             }
             scores.clear();
+            auto t2 = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed1 = t1 - start;
+            std::chrono::duration<double> elapsed2 = t2 - t1;
+            std::cout << "Elapsed time: " << elapsed1.count() << std::endl;
+            std::cout << "Elapsed time: " << elapsed2.count() << std::endl;
           }
     }
     eliminate_redundant(wsegs);
+
     return wsegs;
 }
 
@@ -282,7 +299,7 @@ void JaneliaTracker::compute_seed_from_point_field_on_grid(Image<uint8_t>& image
 
 }
 
-Seed* JaneliaTracker::compute_seed_from_point_ex( Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat)
+Seed* JaneliaTracker::compute_seed_from_point_ex(const Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat)
 /* Specific for uint8 */
 { static Seed myseed;
 static const float eps = 1e-3;
@@ -1077,11 +1094,9 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
      */
 
     if( !ldata.empty() ) {
-        ldata.resize(maxldata);
         //std::fill(ldata.begin(),ldata.end(),0);
     }
     if( !rdata.empty() ) {
-        rdata.resize(maxrdata);
         //std::fill(rdata.begin(),rdata.end(),0);
     }
 
@@ -1096,8 +1111,10 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
     line.score = eval_line( &line, image, p );
     adjust_line_start(&line,image,&p,&roff,&rang,&rwid);
 
-    size_t newsize = (size_t) (1.25 * (nleft+1) + 64);
-    ldata.resize(newsize);
+    size_t newsize = (size_t) std::round(1.25 * (nleft+1) + 64);
+    if (ldata.size() < (nleft+1)) {
+        ldata.resize(newsize);
+    }
     maxldata = newsize;
     compute_dxdy( &line, &dx, &dy);
     { record trec = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
@@ -1154,7 +1171,9 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
       }
 
       size_t newsize = (size_t) (1.25 * (nleft+1) + 64);
-      ldata.resize(newsize);
+      if (ldata.size() < (nleft+1)) {
+          ldata.resize(newsize);
+      }
       maxldata = newsize;
       compute_dxdy( &line, &dx, &dy);
       { record trec = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
@@ -1212,7 +1231,9 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
       }
 
       size_t newsize = (size_t) (1.25 * (nright+1) + 64);
-      rdata.resize(newsize);
+      if (rdata.size() < (nright+1)) {
+          rdata.resize(newsize);
+      }
       maxrdata = newsize;
       compute_dxdy( &line, &dx, &dy);
       { record trec = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
@@ -1261,13 +1282,13 @@ void JaneliaTracker::initialize_paramater_ranges( Line_Params *line, Interval *r
 int JaneliaTracker::is_local_area_trusted_conservative( Line_Params *line, Image<uint8_t>& image, int p )
 { float q,r,l;
   static float thresh = -1.0;
-  static std::vector<uint8_t> lastim = {};
+  static std::vector<uint8_t>* lastim = {};
   q = eval_half_space( line, image, p, &r, &l );
 
-  if( thresh < 0.0 || lastim != image.array) /* recomputes when image changes */
+  if( thresh < 0.0 || lastim != &image.array) /* recomputes when image changes */
   { //thresh = mean_uint8( image );
     thresh = threshold_two_means( image.array.data(), image.width*image.height );
-    lastim = image.array;
+    lastim = &image.array;
   }
   if( ((r < thresh) && (l < thresh )) ||
       (fabs(q) > this->_half_space_assymetry) )
@@ -1781,12 +1802,12 @@ int JaneliaTracker::is_change_too_big( Line_Params *new_line, Line_Params *old, 
 int JaneliaTracker::is_local_area_trusted( Line_Params *line, Image<uint8_t>& image, int p )
 { float q,r,l;
   static float thresh = -1.0;
-  static std::vector<uint8_t> lastim = {};
+  static std::vector<uint8_t>* lastim = {};
   q = eval_half_space( line, image, p, &r, &l );
 
-  if( thresh < 0.0 || lastim != image.array) /* recomputes when image changes */
+  if( thresh < 0.0 || lastim != &image.array) /* recomputes when image changes */
   { thresh = threshold_bottom_fraction_uint8(image);//,HALF_SPACE_FRACTION_DARK );
-    lastim = image.array;
+    lastim = &image.array;
   }
 
   if( ((r < thresh) && (l < thresh )) ||
@@ -1800,9 +1821,8 @@ int JaneliaTracker::is_local_area_trusted( Line_Params *line, Image<uint8_t>& im
 int JaneliaTracker::threshold_bottom_fraction_uint8( Image<uint8_t>& im ) //, float fraction )
 { float acc, mean, lm;
   int a,i, count;
-  std::vector<uint8_t> d;
 
-  d = im.array;
+  auto& d = im.array;
   a = i = im.width * im.height;
   acc = 0.0f;
   while(i--)
