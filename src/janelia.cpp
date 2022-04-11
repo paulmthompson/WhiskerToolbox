@@ -58,6 +58,11 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
       sarea = area;
     }
 
+    std::fill(h.array.begin(),h.array.end(),0);
+    std::fill(th.array.begin(),th.array.end(),0);
+    std::fill(s.array.begin(),s.array.end(),0);
+    std::fill(mask.array.begin(),mask.array.end(),0);
+
     // Get contours, and compute correlations on perimeters
     switch(this->_seed_method)
     {
@@ -170,7 +175,7 @@ double JaneliaTracker::calculate_whisker_length(Whisker_Seg& w) {
      return out;
  }
 
-void JaneliaTracker::eliminate_redundant(std::vector<Whisker_Seg> w_segs) {
+void JaneliaTracker::eliminate_redundant(std::vector<Whisker_Seg>& w_segs) {
 
     int i = 0;
 
@@ -1071,8 +1076,14 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
      *  init
      */
 
-    if( !ldata.empty() ) ldata.resize(maxldata);
-    if( !rdata.empty() ) rdata.resize(maxrdata);
+    if( !ldata.empty() ) {
+        ldata.resize(maxldata);
+        //std::fill(ldata.begin(),ldata.end(),0);
+    }
+    if( !rdata.empty() ) {
+        rdata.resize(maxrdata);
+        //std::fill(rdata.begin(),rdata.end(),0);
+    }
 
     line = line_param_from_seed( s );
 

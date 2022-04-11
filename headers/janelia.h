@@ -137,7 +137,7 @@ struct Array
 
   }
 
-  Array(std::vector<int> shape_in , int ndim_in, int bytesperpixel ) {
+  Array(std::vector<int>& shape_in , int ndim_in, int bytesperpixel ) {
       int i = ndim_in;
       ndim = ndim_in;
       shape = std::vector<int>(ndim);
@@ -269,7 +269,7 @@ private:
 
     //New
     double calculate_whisker_length(Whisker_Seg& w);
-    void eliminate_redundant(std::vector<Whisker_Seg> w_segs);
+    void eliminate_redundant(std::vector<Whisker_Seg>& w_segs);
 
 
 };

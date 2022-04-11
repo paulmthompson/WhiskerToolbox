@@ -171,7 +171,7 @@ void MainWindow::DrawWhiskers()
 {
     whisker_paths.clear();
 
-    for (auto w : wt->whiskers) {
+    for (auto& w : wt->whiskers) {
         QPainterPath* path = new QPainterPath();
 
         path->moveTo(QPointF(w.x[0],w.y[0]));
