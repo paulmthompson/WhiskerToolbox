@@ -131,10 +131,9 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
               }
             }
 
-            auto t1 = std::chrono::high_resolution_clock::now();
             sort(scores.begin(),scores.end(), JaneliaTracker::_cmp_seed_scores);
 
-
+            auto t1 = std::chrono::high_resolution_clock::now();
 
             j = nseeds;
             while(j--)
@@ -151,7 +150,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
                 { SWAP(seed.xdir,seed.ydir);
                   w = trace_whisker( &seed, image ); // try again at a right angle...sometimes when we're off by one the slope estimate is perpendicular to the whisker.
                 }
-                if (calculate_whisker_length(w) > this->_min_length)
+                if (w.len > this->_min_length)
                 {
                   w.time = iFrame;
                   w.id  = n_segs;
@@ -535,7 +534,7 @@ float JaneliaTracker::eval_line(Line_Params *line, Image<uint8_t>& image, int p)
     const int support  = 2*this->_tlen + 3;
     int npxlist;
 
-      std::vector<int> pxlist;
+ //     std::vector<int> pxlist;
       //float *weights, coff;
       float coff;
       int bank_i;
@@ -548,7 +547,7 @@ float JaneliaTracker::eval_line(Line_Params *line, Image<uint8_t>& image, int p)
       // compute a nearby anchor
 
       coff      = round_anchor_and_offset( line, &p, image.width );
-      pxlist    = get_offset_list( image, support, line->angle, p, &npxlist );
+      auto pxlist = get_offset_list( image, support, line->angle, p, &npxlist );
 
       bank_i = get_nearest_from_line_detector_bank ( coff, line->width, line->angle );
 
@@ -558,7 +557,7 @@ float JaneliaTracker::eval_line(Line_Params *line, Image<uint8_t>& image, int p)
         i = npxlist;
         while(i--)
           //s += parray[pxlist[2*i]] * weights[pxlist[2*i+1]];
-           s += parray[pxlist[2*i]] * this->bank.data[bank_i+pxlist[2*i+1]];
+           s += parray[(*pxlist)[2*i]] * this->bank.data[bank_i+(*pxlist)[2*i+1]];
       }
 
       return -s;
@@ -600,7 +599,7 @@ float JaneliaTracker::round_anchor_and_offset( Line_Params *line, int *p, int st
   return t;
 }
 
-std::vector<int> JaneliaTracker::get_offset_list( Image<uint8_t>& image, int support, float angle, int p, int *npx )
+std::vector<int>* JaneliaTracker::get_offset_list( Image<uint8_t>& image, int support, float angle, int p, int *npx )
   /* returns a static buffer with *npx integer pairs.  The integer pairs are
    * indices into the image and weight arrays such that:
    *
@@ -700,7 +699,7 @@ std::vector<int> JaneliaTracker::get_offset_list( Image<uint8_t>& image, int sup
     } // end if/ angle check
   }
   *npx = snpx/2;
-  return pxlist;
+  return &pxlist;
 }
 
 int JaneliaTracker::is_small_angle( float angle )
@@ -1117,9 +1116,8 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
     }
     maxldata = newsize;
     compute_dxdy( &line, &dx, &dy);
-    { record trec = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
-      ldata[nleft++] = trec;
-    }
+
+    ldata[nleft++] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
 
     q = p;
     rline = line;
@@ -1176,9 +1174,9 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
       }
       maxldata = newsize;
       compute_dxdy( &line, &dx, &dy);
-      { record trec = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
-        ldata[nleft++] = trec;
-      }
+
+      ldata[nleft++] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
+
     }
 
     /*
@@ -1236,9 +1234,8 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
       }
       maxrdata = newsize;
       compute_dxdy( &line, &dx, &dy);
-      { record trec = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
-        rdata[nright++] = trec;
-      }
+
+      rdata[nright++] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
     }
   }
 
@@ -1341,7 +1338,6 @@ float JaneliaTracker::eval_half_space( Line_Params *line, Image<uint8_t>& image,
 { int i,support  = 2*this->_tlen + 3;
   int npxlist, a = support*support;
 
-  std::vector<int> pxlist;
   float coff;
   float leftnorm;
   int lefthalf, righthalf;
@@ -1358,7 +1354,7 @@ float JaneliaTracker::eval_half_space( Line_Params *line, Image<uint8_t>& image,
   //}
 
   coff = round_anchor_and_offset( line, &p, image.width );
-  pxlist    = get_offset_list( image, support, line->angle, p, &npxlist );
+  auto pxlist    = get_offset_list( image, support, line->angle, p, &npxlist );
   lefthalf  = get_nearest_from_half_space_detector_bank( coff, line->width, line->angle, &leftnorm );
   righthalf  = get_nearest_from_half_space_detector_bank( -coff, line->width, line->angle, &rightnorm );
   {
@@ -1368,8 +1364,8 @@ float JaneliaTracker::eval_half_space( Line_Params *line, Image<uint8_t>& image,
     r = 0.0;
     while(i--)
     {
-      l += parray[pxlist[2*i]] * this->half_space_bank.data[lefthalf+pxlist[2*i+1]];
-      r += parray[pxlist[2*i]] * this->half_space_bank.data[righthalf+pxlist[2*i+1]];
+      l += parray[(*pxlist)[2*i]] * this->half_space_bank.data[lefthalf+(*pxlist)[2*i+1]];
+      r += parray[(*pxlist)[2*i]] * this->half_space_bank.data[righthalf+(*pxlist)[2*i+1]];
       //l += parray[pxlist[2*i]] * lefthalf[pxlist[2*i+1]];
       //r += parray[pxlist[2*i]] * righthalf[a - pxlist[2*i+1]];
     }

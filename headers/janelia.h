@@ -193,7 +193,7 @@ private:
     Line_Params line_param_from_seed(const Seed *s);
     float eval_line(Line_Params *line, Image<uint8_t>& image, int p);
     float round_anchor_and_offset( Line_Params *line, int *p, int stride );
-    std::vector<int> get_offset_list( Image<uint8_t>& image, int support, float angle, int p, int *npx );
+    std::vector<int>* get_offset_list( Image<uint8_t>& image, int support, float angle, int p, int *npx );
     static bool _cmp_seed_scores(seedrecord a, seedrecord b);
 
     int get_nearest_from_line_detector_bank(float offset, float width, float angle);

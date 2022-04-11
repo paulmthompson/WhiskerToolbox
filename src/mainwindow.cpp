@@ -179,7 +179,10 @@ void MainWindow::TraceButton()
 
 void MainWindow::DrawWhiskers()
 {
-    whisker_paths.clear();
+    for (auto pathItem : this->whisker_paths) {
+        scene->removeItem(pathItem);
+    }
+    this->whisker_paths.clear();
 
     for (auto& w : wt->whiskers) {
         QPainterPath* path = new QPainterPath();
