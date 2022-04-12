@@ -187,13 +187,13 @@ private:
     Array bank;
     Array half_space_bank;
 
-    void compute_seed_from_point_field_on_grid(Image<uint8_t>& image, Image<uint8_t>& h, Image<float>& th, Image<float>& s);
-    Seed* compute_seed_from_point( Image<uint8_t>& image, int p, int maxr );
+    void compute_seed_from_point_field_on_grid(const Image<uint8_t>& image, Image<uint8_t>& h, Image<float>& th, Image<float>& s);
+    Seed* compute_seed_from_point( const Image<uint8_t>& image, int p, int maxr );
     Seed *compute_seed_from_point_ex(const Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat);
     Line_Params line_param_from_seed(const Seed *s);
-    float eval_line(Line_Params *line, Image<uint8_t>& image, int p);
+    float eval_line(Line_Params *line, const Image<uint8_t>& image, int p);
     float round_anchor_and_offset( Line_Params *line, int *p, int stride );
-    std::vector<int>* get_offset_list( Image<uint8_t>& image, int support, float angle, int p, int *npx );
+    std::vector<int>* get_offset_list(const Image<uint8_t>& image, int support, float angle, int p, int *npx );
     static bool _cmp_seed_scores(seedrecord a, seedrecord b);
 
     int get_nearest_from_line_detector_bank(float offset, float width, float angle);
@@ -237,7 +237,7 @@ private:
     unsigned array_max_f32u ( float *buf, int size, int step, float bound );
     unsigned array_min_f32u ( float *buf, int size, int step, float bound );
     float inter(point * a, int na, point * b, int nb);
-    int ovl(rng p, rng q);
+    bool ovl(const rng p, const rng q);
     void bdr(float * X, float y);
     void bur(float * X, float y);
     void range(box *B, point * x, int c);
@@ -249,22 +249,23 @@ private:
 
     void inness(long long *sarea, vertex * P, int cP, vertex * Q, int cQ);
 
-    int is_small_angle( float angle );
-    int is_angle_leftward( float angle );
+    bool is_small_angle(const float angle );
+    bool is_angle_leftward(const float angle );
     int compute_number_steps( Range *r );
 
     Whisker_Seg trace_whisker(Seed *s, Image<uint8_t>& image);
     void initialize_paramater_ranges( Line_Params *line, Interval *roff, Interval *rang, Interval *rwid);
-    int is_local_area_trusted_conservative( Line_Params *line, Image<uint8_t>& image, int p );
+
     float threshold_two_means( uint8_t *array, size_t size );
-    float eval_half_space( Line_Params *line, Image<uint8_t>& image, int p, float *rr, float *ll );
+    float eval_half_space( Line_Params *line, const Image<uint8_t>& image, int p, float *rr, float *ll );
     int move_line( Line_Params *line, int *p, int stride, int direction );
-    int adjust_line_start(Line_Params *line, Image<uint8_t>& image, int *pp,
+    int adjust_line_start(Line_Params *line, const Image<uint8_t>& image, int *pp,
                                    Interval *roff, Interval *rang, Interval *rwid);
-    int is_change_too_big( Line_Params *new_line, Line_Params *old, float alim, float wlim, float olim);
-    int is_local_area_trusted( Line_Params *line, Image<uint8_t>& image, int p );
-    int threshold_bottom_fraction_uint8( Image<uint8_t>& im );
-    static int outofbounds(int q, int cwidth, int cheight);
+    bool is_change_too_big( Line_Params *new_line, Line_Params *old, const float alim, const float wlim, const float olim);
+    bool is_local_area_trusted( Line_Params *line, Image<uint8_t>& image, int p );
+    bool is_local_area_trusted_conservative( Line_Params *line, Image<uint8_t>& image, int p );
+    int threshold_bottom_fraction_uint8( const Image<uint8_t>& im );
+    static bool outofbounds(const int q, const int cwidth, const int cheight);
     void compute_dxdy( Line_Params *line, float *dx, float *dy );
 
     //New
