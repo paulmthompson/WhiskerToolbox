@@ -44,6 +44,7 @@ set(PROJECT_SOURCES
         whiskertoolbox.qrc
         headers/janelia.h
         src/janelia.cpp
+        my_stylesheet.qss
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
