@@ -20,6 +20,4 @@ void WhiskerTracker::trace(std::vector<uint8_t>& input) {
     for (auto& w_seg : j_segs) {
         whiskers.push_back(Whisker(1,w_seg.x,w_seg.y));
     }
-    //printf("The number of whiskers detected is %d",whiskers.size());
-    //fflush(stdout);
 }

@@ -47,9 +47,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
     //auto start = std::chrono::high_resolution_clock::now();
 
     int  area = image.width * image.height;
-//    Object_Map  *omap;
     std::vector<Whisker_Seg> wsegs = {};
-    size_t max_segs= 0;
     int n_segs=0;
 
     // Prepare
@@ -85,7 +83,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
     default:
     {}
     }
-    //auto t1 = std::chrono::high_resolution_clock::now();
+    auto t1 = std::chrono::high_resolution_clock::now();
     {
       int i = sarea;
       int nseeds = 0;
@@ -153,7 +151,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
                 if (w.len > this->_min_length)
                 {
                   w.time = iFrame;
-                  w.id  = n_segs;
+                  w.id  = n_segs++;
                   wsegs.push_back(std::move(w));
                 } // ... if w
               } // ... if maska[i]
@@ -162,8 +160,10 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
             auto t2 = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed1 = t1 - start;
             std::chrono::duration<double> elapsed2 = t2 - t1;
-            std::cout << "Elapsed time: " << elapsed1.count() << std::endl;
-            std::cout << "Elapsed time: " << elapsed2.count() << std::endl;
+            //std::cout << "Elapsed time: " << elapsed1.count() << std::endl;
+            //std::cout << "Elapsed time: " << elapsed2.count() << std::endl;
+            //std::cout << "Num seeds: " << nseeds << std::endl;
+
           }
     }
     eliminate_redundant(wsegs);
@@ -1065,10 +1065,9 @@ double JaneliaTracker::fit(box *B, point * x, int cx, vertex * ix, int fudge)
 }
 
 Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
-{ typedef struct { float x; float y; float thick; float score; } record;
-    static std::vector<record> ldata = {};
-    static std::vector<record> rdata = {};
-  static size_t maxldata = 0, maxrdata = 0;
+{
+  static std::vector<record> ldata(1000);
+  static std::vector<record> rdata(1000);
 
   int nleft = 0, nright = 0;
   float x,y,dx,dy,newoff;
@@ -1091,13 +1090,8 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
     /*
      *  init
      */
-
-    if( !ldata.empty() ) {
-        //std::fill(ldata.begin(),ldata.end(),0);
-    }
-    if( !rdata.empty() ) {
-        //std::fill(rdata.begin(),rdata.end(),0);
-    }
+    std::fill(ldata.begin(),ldata.end(),(record){0.0f,0.0f,0.0f,0.0f});
+    std::fill(rdata.begin(),rdata.end(),(record){0.0f,0.0f,0.0f,0.0f});
 
     line = line_param_from_seed( s );
 
@@ -1110,13 +1104,9 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
     line.score = eval_line( &line, image, p );
     adjust_line_start(&line,image,&p,&roff,&rang,&rwid);
 
-    size_t newsize = (size_t) std::round(1.25 * (nleft+1) + 64);
-    if (ldata.size() < (nleft+1)) {
-        ldata.resize(newsize);
-    }
-    maxldata = newsize;
     compute_dxdy( &line, &dx, &dy);
 
+    //ldata[nleft++] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
     ldata[nleft++] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
 
     q = p;
@@ -1168,15 +1158,14 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
         }
       }
 
-      size_t newsize = (size_t) (1.25 * (nleft+1) + 64);
-      if (ldata.size() < (nleft+1)) {
-          ldata.resize(newsize);
-      }
-      maxldata = newsize;
       compute_dxdy( &line, &dx, &dy);
 
-      ldata[nleft++] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
-
+      if (nleft < ldata.size()) {
+          ldata[nleft] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
+      } else {
+          ldata.push_back({p%cwidth + dx, p/cwidth + dy, line.width, line.score });
+      }
+      nleft++;
     }
 
     /*
@@ -1228,14 +1217,14 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
         }
       }
 
-      size_t newsize = (size_t) (1.25 * (nright+1) + 64);
-      if (rdata.size() < (nright+1)) {
-          rdata.resize(newsize);
-      }
-      maxrdata = newsize;
       compute_dxdy( &line, &dx, &dy);
 
-      rdata[nright++] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
+      if (nright < rdata.size()) {
+          rdata[nright] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
+      } else {
+          rdata.push_back({p%cwidth + dx, p/cwidth + dy, line.width, line.score });
+      }
+      nright++;
     }
   }
 
@@ -1280,6 +1269,7 @@ bool JaneliaTracker::is_local_area_trusted_conservative( Line_Params *line, Imag
 { float q,r,l;
   static float thresh = -1.0;
   static std::vector<uint8_t>* lastim = {};
+  //static const std::vector<uint8_t>* lastim = {};
   q = eval_half_space( line, image, p, &r, &l );
 
   if( thresh < 0.0 || lastim != &image.array) /* recomputes when image changes */

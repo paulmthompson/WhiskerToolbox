@@ -79,6 +79,13 @@ struct seedrecord
     }
 };
 
+struct record
+{
+    float x;
+    float y;
+    float thick;
+    float score;
+};
 
 struct Range
 {
