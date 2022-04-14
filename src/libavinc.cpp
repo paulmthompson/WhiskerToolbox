@@ -96,5 +96,30 @@ AVFormatContext avformat_open_input(const std::string& url, const libav::AVDicti
         ::avformat_close_input(p_ctx);
     });
 }
+
+// Modified from instructions at https://habr.com/en/company/intel/blog/575632/
+AVCodecContext make_encode_context(std::string codec_name,int width, int height, int fps, ::AVPixelFormat pix_fmt)
+{
+    const ::AVCodec* codec = ::avcodec_find_encoder_by_name(codec_name.c_str());
+    auto codecCtx = AVCodecContext(::avcodec_alloc_context3(codec),
+        [](::AVCodecContext* c) {
+            ::avcodec_free_context(&c);
+        });
+
+    codecCtx->width = width;
+    codecCtx->height = height;
+    codecCtx->time_base = ::AVRational({1,fps});
+    codecCtx->framerate = ::AVRational({fps,1});
+    codecCtx->sample_aspect_ratio = ::AVRational({1,1});
+    codecCtx->pix_fmt = pix_fmt;
+
+    return codecCtx;
 }
+
+AVCodecContext make_encode_context_nvenc(int width, int height, int fps) {
+    return make_encode_context("h264_nvenc",width,height,fps,AV_PIX_FMT_CUDA);
+}
+
+
+} // End libav namespace
 #endif // LIBAVINC_CPP

@@ -103,8 +103,10 @@ void VideoDecoder::yuv420togray8(libav::AVFrame frame,std::vector<uint8_t>& outp
 
     sws_scale(pContext, frame->data, frame->linesize, 0, this->height, frame2->data, frame2->linesize);
 
+    sws_freeContext(pContext);
+
     memcpy(output.data(),frame2->data[0],this->height*this->width);
 
-    sws_freeContext(pContext);
+
 }
 

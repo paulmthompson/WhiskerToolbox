@@ -233,6 +233,18 @@ inline AVPacket av_packet_clone(const AVPacket& src)
 {
     return libav::av_packet_clone(src.get());
 }
+
+///////////////////////////////////////////////////////////////////////////////
+using AVBufferRefBase = std::unique_ptr<::AVBufferRef,void (*)(::AVBufferRef*)>;
+class AVBufferRef : public AVBufferRefBase {
+public:
+    AVBufferRef()
+        : AVBufferRefBase(nullptr, [](::AVBufferRef*) {})
+    {
+    }
+
+
+};
 ///////////////////////////////////////////////////////////////////////////////
 using AVFormatContextBase = std::unique_ptr<::AVFormatContext, void (*)(::AVFormatContext*)>;
 using AVCodecContext = std::unique_ptr<::AVCodecContext, void (*)(::AVCodecContext*)>;
