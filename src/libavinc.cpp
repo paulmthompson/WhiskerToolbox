@@ -23,6 +23,7 @@ extern "C" {
 #include <memory>
 #include <string>
 #include <vector>
+#include <stdio.h>
 
 namespace libav {
 
@@ -117,9 +118,52 @@ AVCodecContext make_encode_context(std::string codec_name,int width, int height,
 }
 
 AVCodecContext make_encode_context_nvenc(int width, int height, int fps) {
-    return make_encode_context("h264_nvenc",width,height,fps,AV_PIX_FMT_CUDA);
+    return make_encode_context("h264_nvenc",width,height,fps,::AV_PIX_FMT_CUDA);
 }
 
+void bind_hardware_frames_context(AVCodecContext& ctx, int width, int height, ::AVPixelFormat hw_pix_fmt,::AVPixelFormat sw_pix_fmt)
+{
+    ::AVBufferRef *hw_device_ctx = nullptr;
+    ::av_hwdevice_ctx_create(&hw_device_ctx,::AV_HWDEVICE_TYPE_CUDA,NULL,NULL,0); // Deallocator?
+
+    auto hw_frames_ref = ::av_hwframe_ctx_alloc(hw_device_ctx); // Deallocator?
+
+    ::AVHWFramesContext *frames_ctx;
+    frames_ctx = (::AVHWFramesContext *)(hw_frames_ref->data);
+    frames_ctx->format = hw_pix_fmt;
+    frames_ctx->sw_format = sw_pix_fmt;
+    frames_ctx->width = width;
+    frames_ctx->height = height;
+
+    ::av_hwframe_ctx_init(hw_frames_ref);
+
+    ctx->hw_frames_ctx = ::av_buffer_ref(hw_frames_ref);
+
+}
+
+void bind_hardware_frames_context_nvenc(AVCodecContext& ctx, int width, int height, ::AVPixelFormat sw_pix_fmt) {
+     bind_hardware_frames_context(ctx, width, height, AV_PIX_FMT_CUDA,sw_pix_fmt);
+}
+
+void hardware_encode(FILE * pFile,AVCodecContext& ctx,AVFrame& hw_frame, AVFrame& sw_frame)
+{
+    const ::AVCodec* codec = ::avcodec_find_encoder_by_name("h264_nvenc");
+    ::av_hwframe_get_buffer(ctx->hw_frames_ctx,hw_frame.get(),0);
+
+    ::avcodec_open2(ctx.get(),codec,NULL);
+
+    ::av_hwframe_transfer_data(hw_frame.get(),sw_frame.get(),0);
+
+    auto pkt = av_packet_alloc();
+
+    ::avcodec_send_frame(ctx.get(), hw_frame.get());
+
+    ::avcodec_receive_packet(ctx.get(),pkt.get());
+
+    fwrite(pkt->data,pkt->size,1,pFile);
+
+    ::av_packet_unref(pkt.get());
+}
 
 } // End libav namespace
 #endif // LIBAVINC_CPP
