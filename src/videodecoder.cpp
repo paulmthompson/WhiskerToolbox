@@ -89,7 +89,7 @@ std::vector<uint8_t> VideoDecoder::getFrame(int frame_id,bool frame_by_frame)
     return output;
 }
 
-void VideoDecoder::yuv420togray8(libav::AVFrame frame,std::vector<uint8_t>& output)
+void VideoDecoder::yuv420togray8(libav::AVFrame& frame,std::vector<uint8_t>& output)
 {
     auto frame2 = libav::convert_frame(frame, this->width, this->height, AV_PIX_FMT_GRAY8);
     memcpy(output.data(),frame2->data[0],this->height*this->width);
