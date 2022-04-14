@@ -22,7 +22,6 @@ VideoDecoder::VideoDecoder()
     last_decoded_frame = 0;
 }
 
-
 void VideoDecoder::createMedia(std::string filename) {
 
     auto mymedia = libav::avformat_open_input(filename);
@@ -84,7 +83,6 @@ std::vector<uint8_t> VideoDecoder::getFrame(int frame_id,bool frame_by_frame)
                }
 
               last_decoded_frame = frame->best_effort_timestamp / this->pkt.get()->duration;
-
         });
     }
 
@@ -97,19 +95,16 @@ void VideoDecoder::yuv420togray8(libav::AVFrame frame,std::vector<uint8_t>& outp
     SwsContext * pContext = sws_getContext(this->width, this->height, AV_PIX_FMT_YUV420P,
                                           this->width, this->height, AV_PIX_FMT_GRAY8, (SWS_FULL_CHR_H_INT | SWS_ACCURATE_RND | SWS_FAST_BILINEAR), nullptr, nullptr, nullptr);
 
-   libav::AVFrame frame2 = libav::av_frame_alloc();
-
-    int num_bytes = av_image_get_buffer_size(AV_PIX_FMT_GRAY8, this->width, this->height,1);
-    uint8_t* frame2_buffer = (uint8_t *)av_malloc(num_bytes*sizeof(uint8_t));
-
-    av_image_fill_arrays(frame2->data,frame2->linesize,frame2_buffer,AV_PIX_FMT_GRAY8,this->width,this->height,1);
+    libav::AVFrame frame2 = libav::av_frame_alloc();
+    frame2->format = AV_PIX_FMT_GRAY8;
+    frame2->width = this->width;
+    frame2->height = this->height;
+    ::av_frame_get_buffer(frame2.get(),32);
 
     sws_scale(pContext, frame->data, frame->linesize, 0, this->height, frame2->data, frame2->linesize);
 
     memcpy(output.data(),frame2->data[0],this->height*this->width);
 
     sws_freeContext(pContext);
-    av_free(frame2_buffer);
-
 }
 
