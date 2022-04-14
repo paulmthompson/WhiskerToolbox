@@ -73,7 +73,7 @@ std::vector<uint8_t> VideoDecoder::getFrame(int frame_id,bool frame_by_frame)
     bool frame_to_display = false;
     while (!frame_to_display)
     {
-        libav::avcodec_send_packet(this->media,*(this->pkt), [&](libav::AVFrame frame) {
+        libav::avcodec_send_packet(this->media,this->pkt.get(), [&](libav::AVFrame frame) {
 
               if (frame->best_effort_timestamp == frame_id_d)
               {

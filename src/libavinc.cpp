@@ -24,9 +24,9 @@ extern "C" {
 #include <string>
 #include <vector>
 
-using namespace libav;
+namespace libav {
 
-::AVDictionary* libav::av_dictionary(const libav::AVDictionary& dict)
+::AVDictionary* av_dictionary(const libav::AVDictionary& dict)
 {
     ::AVDictionary* d = nullptr;
     for (const auto& entry : dict) {
@@ -35,7 +35,7 @@ using namespace libav;
     return d;
 }
 
-libav::AVDictionary libav::av_dictionary(const ::AVDictionary* dict)
+libav::AVDictionary av_dictionary(const ::AVDictionary* dict)
 {
     libav::AVDictionary d;
     AVDictionaryEntry* entry = nullptr;
@@ -45,7 +45,7 @@ libav::AVDictionary libav::av_dictionary(const ::AVDictionary* dict)
     return d;
 }
 
-void libav::av_dict_free(::AVDictionary* d)
+void av_dict_free(::AVDictionary* d)
 {
     if (d) {
         av_dict_free(&d);
@@ -55,7 +55,7 @@ void libav::av_dict_free(::AVDictionary* d)
 ///////////////////////////////////////////////////////////////////////////////
 
 
-int libav::av_read_frame(::AVFormatContext* ctx, ::AVPacket* pkt)
+int av_read_frame(::AVFormatContext* ctx, ::AVPacket* pkt)
 {
     if (!ctx || !pkt) {
         return AVERROR(1);
@@ -67,7 +67,7 @@ int libav::av_read_frame(::AVFormatContext* ctx, ::AVPacket* pkt)
         ::av_packet_rescale_ts(pkt, track->time_base, FLICKS_TIMESCALE_Q);
         // TODO check for pkt->size == 0 but not EOF
     } else {
-        ::av_init_packet(pkt);
+        pkt = ::av_packet_alloc();
         pkt->size = 0;
         pkt->data = nullptr;
     }
@@ -75,7 +75,7 @@ int libav::av_read_frame(::AVFormatContext* ctx, ::AVPacket* pkt)
     return err;
 }
 
-libav::AVFormatContext libav::avformat_open_input(const std::string& url, const libav::AVDictionary& options)
+AVFormatContext avformat_open_input(const std::string& url, const libav::AVDictionary& options)
 {
     ::AVFormatContext* fmtCtx = nullptr;
     auto avdict = libav::av_dictionary(options);
@@ -96,5 +96,5 @@ libav::AVFormatContext libav::avformat_open_input(const std::string& url, const 
         ::avformat_close_input(p_ctx);
     });
 }
-
+}
 #endif // LIBAVINC_CPP

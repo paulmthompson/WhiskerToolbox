@@ -330,15 +330,13 @@ inline int av_interleaved_write_frame(AVFormatContext& fmtCtx, int stream_index,
 ///////////////////////////////////////////////////////////////////////////////
 using AVFrame = std::shared_ptr<::AVFrame>;
 
-//This is
-/*
 inline AVFrame av_frame_alloc()
 {
-    return AVFrame(::av_frame_alloc(), [](::AVFrame* f) {
-        av_frame_free(&f);
+    return AVFrame(::av_frame_alloc(), [](::AVFrame* frame) {
+        auto* pframe = &frame;
+        av_frame_free(pframe);
     });
 }
-*/
 
 /*
 inline AVFrame av_frame_clone(const ::AVFrame* frame)
@@ -412,22 +410,14 @@ inline AVCodecContext& find_open_video_stream(AVFormatContext& fmtCtx)
     return err;
 }
 
-inline AVFrame av_frame_alloc()
-{
-    return AVFrame(::av_frame_alloc(), [](::AVFrame* frame) {
-        auto* pframe = &frame;
-        av_frame_free(pframe);
-    });
-}
-
 //This is rewritten from video lecture
-inline int avcodec_send_packet(AVFormatContext& fmtCtx, ::AVPacket& pkt,
+inline int avcodec_send_packet(AVFormatContext& fmtCtx, ::AVPacket* pkt,
     std::function<void(AVFrame)> onFrame)
 {
     int err = AVERROR(1);
-    auto codecCtx = fmtCtx.open_streams.find(pkt.stream_index);
+    auto codecCtx = fmtCtx.open_streams.find(pkt->stream_index);
     if (codecCtx != fmtCtx.open_streams.end()) {
-        ::avcodec_send_packet(codecCtx->second.get(), &pkt);
+        ::avcodec_send_packet(codecCtx->second.get(), pkt);
         for (;;) {
             auto frame = av_frame_alloc();
             err = ::avcodec_receive_frame(codecCtx->second.get(), frame.get());
@@ -445,9 +435,10 @@ inline int avcodec_send_packet(AVFormatContext& fmtCtx, ::AVPacket& pkt,
 inline int avcodec_send_packet(AVFormatContext& fmtCtx,
     std::function<void(AVFrame)> onFrame)
 {
-    ::AVPacket pkt;
-    ::av_init_packet(&pkt);
-    pkt.data = nullptr, pkt.size = 0;
+ //   ::AVPacket pkt;
+    ::AVPacket* pkt = ::av_packet_alloc();
+//    ::av_init_packet(&pkt);
+    pkt->data = nullptr, pkt->size = 0;
     return avcodec_send_packet(fmtCtx, pkt, onFrame);
 }
 
