@@ -66,105 +66,23 @@ inline int64_t av_rescale(flicks time, ::AVRational scale)
 using AVDictionary = std::multimap<std::string, std::string>;
 
 ::AVDictionary* av_dictionary(const AVDictionary& dict);
-/*
-::AVDictionary* av_dictionary(const AVDictionary& dict)
-{
-    ::AVDictionary* d = nullptr;
-    for (const auto& entry : dict) {
-        av_dict_set(&d, entry.first.c_str(), entry.second.c_str(), 0);
-    }
-    return d;
-}
-*/
+
 AVDictionary av_dictionary(const ::AVDictionary* dict);
-/*
-AVDictionary av_dictionary(const ::AVDictionary* dict)
-{
-    AVDictionary d;
-    AVDictionaryEntry* entry = nullptr;
-    while ((entry = av_dict_get(dict, "", entry, AV_DICT_IGNORE_SUFFIX))) {
-        d.emplace(entry->key, entry->value);
-    }
-    return d;
-}
-*/
-void av_dict_free(::AVDictionary* d);
-/*
-void av_dict_free(::AVDictionary* d)
-{
-    if (d) {
-        av_dict_free(&d);
-    }
-}
-*/
+
 ///////////////////////////////////////////////////////////////////////////////
 using AVIOContext = std::unique_ptr<::AVIOContext, void (*)(::AVIOContext*)>;
-inline AVIOContext avio_alloc_context(std::function<int(uint8_t*, int)> read,
+
+AVIOContext avio_alloc_context(std::function<int(uint8_t*, int)> read,
     std::function<int(uint8_t*, int)> write,
     std::function<int64_t(int64_t, int)> seek,
-    int buffer_size = 4096, int write_flag = 1)
-{
-    struct opaque_t {
-        std::function<int(uint8_t*, int)> read;
-        std::function<int(uint8_t*, int)> write;
-        std::function<int64_t(int64_t, int)> seek;
-    };
+    int buffer_size = 4096, int write_flag = 1);
 
-    // create a copy of the functions to enable captures
-    auto buffer = (unsigned char*)::av_malloc(buffer_size);
-    auto opaque = new opaque_t { read, write, seek };
-    return AVIOContext(
-        ::avio_alloc_context(
-            buffer, buffer_size, write_flag, opaque,
-            [](void* opaque, uint8_t* buf, int buf_size) {
-                auto o = reinterpret_cast<opaque_t*>(opaque);
-                return o->read(buf, buf_size);
-            },
-            [](void* opaque, uint8_t* buf, int buf_size) {
-                auto o = reinterpret_cast<opaque_t*>(opaque);
-                return o->write(buf, buf_size);
-            },
-            [](void* opaque, int64_t offset, int whence) {
-                auto o = reinterpret_cast<opaque_t*>(opaque);
-                return o->seek(offset, whence);
-            }),
-        [](::AVIOContext* c) {
-            delete reinterpret_cast<opaque_t*>(c->opaque);
-            av_free(c->buffer), c->buffer = nullptr;
-            ::avio_context_free(&c);
-        });
-}
+AVIOContext avio_alloc_context(std::function<int(uint8_t*, int)> read,
+    std::function<int64_t(int64_t, int)> seek, int buffer_size = 4096);
 
-inline AVIOContext avio_alloc_context(std::function<int(uint8_t*, int)> read,
-    std::function<int64_t(int64_t, int)> seek, int buffer_size = 4096)
-{
-    return libav::avio_alloc_context(
-        read, [](uint8_t*, int) { return 0; }, seek, 0, buffer_size);
-}
 ///////////////////////////////////////////////////////////////////////////////
-
 int av_read_frame(::AVFormatContext* ctx, ::AVPacket* pkt);
-/*
-int av_read_frame(::AVFormatContext* ctx, ::AVPacket* pkt)
-{
-    if (!ctx || !pkt) {
-        return AVERROR(1);
-    }
 
-    auto err = ::av_read_frame(ctx, pkt);
-    if (0 <= err) {
-        auto& track = ctx->streams[pkt->stream_index];
-        ::av_packet_rescale_ts(pkt, track->time_base, FLICKS_TIMESCALE_Q);
-        // TODO check for pkt->size == 0 but not EOF
-    } else {
-        ::av_init_packet(pkt);
-        pkt->size = 0;
-        pkt->data = nullptr;
-    }
-
-    return err;
-}
-*/
 // AVPacket is extended to enable ranged for loop
 using AVPacketBase = std::unique_ptr<::AVPacket, void (*)(::AVPacket*)>;
 class AVPacket : public AVPacketBase {
@@ -215,24 +133,11 @@ public:
     }
 };
 
-inline AVPacket av_packet_alloc()
-{
-    return AVPacket(nullptr);
-}
+AVPacket av_packet_alloc();
 
-inline AVPacket av_packet_clone(const ::AVPacket* src)
-{
-    auto newPkt = AVPacket(nullptr);
-    if (::av_packet_ref(newPkt.get(), src) < 0) {
-        newPkt.reset();
-    }
-    return newPkt;
-}
+AVPacket av_packet_clone(const ::AVPacket* src);
 
-inline AVPacket av_packet_clone(const AVPacket& src)
-{
-    return libav::av_packet_clone(src.get());
-}
+AVPacket av_packet_clone(const AVPacket& src);
 
 ///////////////////////////////////////////////////////////////////////////////
 using AVBufferRefBase = std::unique_ptr<::AVBufferRef,void (*)(::AVBufferRef*)>;
@@ -268,191 +173,40 @@ public:
 };
 
 AVFormatContext avformat_open_input(const std::string& url, const AVDictionary& options = AVDictionary());
-/*
-inline AVFormatContext avformat_open_input(const std::string& url, const AVDictionary& options = AVDictionary())
-{
-    ::AVFormatContext* fmtCtx = nullptr;
-    auto avdict = av_dictionary(options);
-    auto err = ::avformat_open_input(&fmtCtx, url.c_str(), nullptr, &avdict);
-    av_dict_free(avdict);
-    if (err < 0 || !fmtCtx) {
-        return AVFormatContext();
-    }
 
-    err = ::avformat_find_stream_info(fmtCtx, nullptr);
-    if (err < 0) {
-        ::avformat_close_input(&fmtCtx);
-        return AVFormatContext();
-    }
+int av_seek_frame(AVFormatContext& ctx, flicks time, int idx = -1, int flags = 0);
 
-    return AVFormatContext(fmtCtx, [](::AVFormatContext* ctx) {
-        auto p_ctx = &ctx;
-        ::avformat_close_input(p_ctx);
-    });
-}
-*/
-inline int av_seek_frame(AVFormatContext& ctx, flicks time, int idx = -1, int flags = 0)
-{
-    auto time_base = 0 <= idx ? ctx->streams[idx]->time_base : AV_TIME_BASE_Q;
-    return ::av_seek_frame(ctx.get(), idx, av_rescale(time, time_base), flags);
-}
+AVFormatContext avformat_open_output(const std::string& url, std::string format_name = std::string());
 
-inline AVFormatContext avformat_open_output(const std::string& url, std::string format_name = std::string())
-{
-    ::AVFormatContext* fmtCtx = nullptr;
-    auto err = ::avformat_alloc_output_context2(&fmtCtx, nullptr, format_name.empty() ? nullptr : format_name.c_str(), url.c_str());
-    if (0 != err || !fmtCtx) {
-        return AVFormatContext();
-    }
-
-    if (0 > ::avio_open(&fmtCtx->pb, url.c_str(), AVIO_FLAG_WRITE)) {
-        ::avformat_free_context(fmtCtx);
-        return AVFormatContext();
-    }
-
-    return AVFormatContext(fmtCtx, [](::AVFormatContext* fmtCtx) {
-        ::avio_close(fmtCtx->pb);
-        ::avformat_free_context(fmtCtx);
-    });
-}
 ///////////////////////////////////////////////////////////////////////////////
-inline int avformat_new_stream(AVFormatContext& fmtCtx, const ::AVCodecParameters* par)
-{
-    auto out_stream = ::avformat_new_stream(fmtCtx.get(), nullptr);
-    ::avcodec_parameters_copy(out_stream->codecpar, par);
-    return out_stream->index;
-}
+int avformat_new_stream(AVFormatContext& fmtCtx, const ::AVCodecParameters* par);
 
-inline int av_interleaved_write_frame(AVFormatContext& fmtCtx, int stream_index, const ::AVPacket& pkt)
-{
-    int err = 0;
-    // this is a flush packet, ignore and return.
-    if (!pkt.data || !pkt.size) {
-        return AVERROR_EOF;
-    }
-    ::AVPacket dup;
-    ::av_packet_ref(&dup, &pkt);
-    dup.stream_index = stream_index;
-    auto& track = fmtCtx->streams[stream_index];
-    ::av_packet_rescale_ts(&dup, FLICKS_TIMESCALE_Q, track->time_base);
-    err = ::av_interleaved_write_frame(fmtCtx.get(), &dup);
-    ::av_packet_unref(&dup);
-    return err;
-}
+int av_interleaved_write_frame(AVFormatContext& fmtCtx, int stream_index, const ::AVPacket& pkt);
 ///////////////////////////////////////////////////////////////////////////////
 using AVFrame = std::shared_ptr<::AVFrame>;
 
-inline AVFrame av_frame_alloc()
-{
-    return AVFrame(::av_frame_alloc(), [](::AVFrame* frame) {
-        auto* pframe = &frame;
-        av_frame_free(pframe);
-    });
-}
+AVFrame av_frame_alloc();
 
-/*
-inline AVFrame av_frame_clone(const ::AVFrame* frame)
-{
-    auto newFrame = av_frame_alloc();
-    if (::av_frame_ref(newFrame.get(), frame) < 0) {
-        newFrame.reset();
-    }
-    return newFrame;
-}
+AVFrame av_frame_clone(const ::AVFrame* frame);
 
-inline AVFrame av_frame_clone(const AVFrame& frame)
-{
-    return libav::av_frame_clone(frame.get());
-}
-*/
+AVFrame av_frame_clone(const AVFrame& frame);
+
+AVFrame convert_frame(AVFrame& frame, int width_out, int height_out, ::AVPixelFormat pix_out);
+
 ///////////////////////////////////////////////////////////////////////////////
-inline int av_open_best_stream(AVFormatContext& fmtCtx, AVMediaType type, int related_stream = -1)
-{
-    int idx = -1;
-    const ::AVCodec* codec = nullptr;
-    if ((idx = ::av_find_best_stream(fmtCtx.get(), type, -1, related_stream, &codec, 0)) < 0) {
-        return -1;
-    }
-    auto codecCtx = AVCodecContext(::avcodec_alloc_context3(codec),
-        [](::AVCodecContext* c) {
-            ::avcodec_free_context(&c);
-        });
+int av_open_best_stream(AVFormatContext& fmtCtx, AVMediaType type, int related_stream = -1);
 
-    if (::avcodec_parameters_to_context(codecCtx.get(), fmtCtx->streams[idx]->codecpar) < 0) {
-        return -1;
-    }
-    if (::avcodec_open2(codecCtx.get(), codec, nullptr) < 0) {
-        return -1;
-    }
+int av_open_best_streams(AVFormatContext& fmtCtx);
 
-    fmtCtx.open_streams.emplace(idx, std::move(codecCtx));
-    return idx;
-}
+AVCodecContext& find_open_audio_stream(AVFormatContext& fmtCtx);
 
-inline int av_open_best_streams(AVFormatContext& fmtCtx)
-{
-    auto v = av_open_best_stream(fmtCtx, AVMEDIA_TYPE_VIDEO);
-    auto a = av_open_best_stream(fmtCtx, AVMEDIA_TYPE_AUDIO, v);
-    auto s = av_open_best_stream(fmtCtx, AVMEDIA_TYPE_SUBTITLE, 0 <= v ? v : a);
-    (void)v, (void)a, (void)s;
-    return fmtCtx.open_streams.size();
-}
+AVCodecContext& find_open_video_stream(AVFormatContext& fmtCtx);
 
-inline AVCodecContext& find_open_audio_stream(AVFormatContext& fmtCtx)
-{
-    for (auto& stream : fmtCtx.open_streams) {
-        if (stream.second->codec_type == AVMEDIA_TYPE_AUDIO) {
-            return stream.second;
-        }
-    }
+int avcodec_send_packet(AVFormatContext& fmtCtx, ::AVPacket* pkt,
+    std::function<void(AVFrame)> onFrame);
 
-    static auto err = AVCodecContext(nullptr, [](::AVCodecContext*) {});
-    return err;
-}
-
-inline AVCodecContext& find_open_video_stream(AVFormatContext& fmtCtx)
-{
-    for (auto& stream : fmtCtx.open_streams) {
-        if (stream.second->codec_type == AVMEDIA_TYPE_VIDEO) {
-            return stream.second;
-        }
-    }
-
-    static auto err = AVCodecContext(nullptr, [](::AVCodecContext*) {});
-    return err;
-}
-
-//This is rewritten from video lecture
-inline int avcodec_send_packet(AVFormatContext& fmtCtx, ::AVPacket* pkt,
-    std::function<void(AVFrame)> onFrame)
-{
-    int err = AVERROR(1);
-    auto codecCtx = fmtCtx.open_streams.find(pkt->stream_index);
-    if (codecCtx != fmtCtx.open_streams.end()) {
-        ::avcodec_send_packet(codecCtx->second.get(), pkt);
-        for (;;) {
-            auto frame = av_frame_alloc();
-            err = ::avcodec_receive_frame(codecCtx->second.get(), frame.get());
-            if (err < 0) {
-                break;
-            }
-
-            onFrame(frame);
-        };
-    }
-    return err == AVERROR(EAGAIN) ? 0 : err;
-    //return err;
-}
-
-inline int avcodec_send_packet(AVFormatContext& fmtCtx,
-    std::function<void(AVFrame)> onFrame)
-{
- //   ::AVPacket pkt;
-    ::AVPacket* pkt = ::av_packet_alloc();
-//    ::av_init_packet(&pkt);
-    pkt->data = nullptr, pkt->size = 0;
-    return avcodec_send_packet(fmtCtx, pkt, onFrame);
-}
+int avcodec_send_packet(AVFormatContext& fmtCtx,
+    std::function<void(AVFrame)> onFrame);
 
 ///////////////////////////////////////////////////////////////////////////////
 using AVFilterGraphBase = std::unique_ptr<::AVFilterGraph, void (*)(::AVFilterGraph*)>;
@@ -545,7 +299,17 @@ inline int avfilter_graph_write_frame(AVFilterGraph& graph, AVFrame& frame, std:
 }
 */
 
-AVFrame convert_frame(AVFrame& frame, int width_out, int height_out, ::AVPixelFormat pix_out);
+///////////////////////////////////////////////////////////////////////////////
+
+AVCodecContext make_encode_context(std::string codec_name,int width, int height, int fps, ::AVPixelFormat pix_fmt);
+
+AVCodecContext make_encode_context_nvenc(int width, int height, int fps);
+
+void bind_hardware_frames_context(AVCodecContext& ctx, int width, int height, ::AVPixelFormat hw_pix_fmt,::AVPixelFormat sw_pix_fmt);
+
+void bind_hardware_frames_context_nvenc(AVCodecContext& ctx, int width, int height, ::AVPixelFormat sw_pix_fmt);
+
+void hardware_encode(FILE * pFile,AVCodecContext& ctx,AVFrame& hw_frame, AVFrame& sw_frame);
 
 } // End namespace
 
