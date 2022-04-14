@@ -193,6 +193,6 @@ void MainWindow::DrawWhiskers()
             path->lineTo(QPointF(w.x[i],w.y[i]));
         }
 
-        whisker_paths.append(this->scene->addPath(*path,QPen(QColor(Qt::red))));
+        whisker_paths.append(this->scene->addPath(*path,QPen(QColor(Qt::blue))));
     }
 }

@@ -32,7 +32,7 @@ void VideoDecoder::createMedia(std::string filename) {
     for (auto& pkg : this->media)
     {
         if (pkg.flags & AV_PKT_FLAG_KEY) {
-            // this is I-frame
+            // this is I-frame. We may want to keep a list of these for fast scrolling.
         }
         this->frame_count++;
     }
@@ -58,7 +58,7 @@ int VideoDecoder::getHeight() const
 
 std::vector<uint8_t> VideoDecoder::getFrame(int frame_id,bool frame_by_frame)
 {
-    std::vector<uint8_t> output(this->height * this->width);
+    std::vector<uint8_t> output(this->height * this->width); // How should this be passed?
 
     if ((frame_id == (last_decoded_frame + 1)) | (frame_by_frame)) {
         ++(this->pkt);
@@ -73,7 +73,7 @@ std::vector<uint8_t> VideoDecoder::getFrame(int frame_id,bool frame_by_frame)
     bool frame_to_display = false;
     while (!frame_to_display)
     {
-        libav::avcodec_send_packet(this->media,*(this->pkt), [&](std::shared_ptr<::AVFrame> frame) {
+        libav::avcodec_send_packet(this->media,*(this->pkt), [&](libav::AVFrame frame) {
 
               if (frame->best_effort_timestamp == frame_id_d)
               {
@@ -91,13 +91,13 @@ std::vector<uint8_t> VideoDecoder::getFrame(int frame_id,bool frame_by_frame)
     return output;
 }
 
-void VideoDecoder::yuv420togray8(std::shared_ptr<::AVFrame> frame,std::vector<uint8_t>& output)
+void VideoDecoder::yuv420togray8(libav::AVFrame frame,std::vector<uint8_t>& output)
 {
 
     SwsContext * pContext = sws_getContext(this->width, this->height, AV_PIX_FMT_YUV420P,
                                           this->width, this->height, AV_PIX_FMT_GRAY8, (SWS_FULL_CHR_H_INT | SWS_ACCURATE_RND | SWS_FAST_BILINEAR), nullptr, nullptr, nullptr);
 
-    std::shared_ptr<AVFrame> frame2 = libav::av_frame_alloc();
+   libav::AVFrame frame2 = libav::av_frame_alloc();
 
     int num_bytes = av_image_get_buffer_size(AV_PIX_FMT_GRAY8, this->width, this->height,1);
     uint8_t* frame2_buffer = (uint8_t *)av_malloc(num_bytes*sizeof(uint8_t));

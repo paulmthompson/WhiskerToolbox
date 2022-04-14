@@ -328,7 +328,7 @@ inline int av_interleaved_write_frame(AVFormatContext& fmtCtx, int stream_index,
     return err;
 }
 ///////////////////////////////////////////////////////////////////////////////
-//using AVFrame = std::unique_ptr<::AVFrame, void (*)(::AVFrame*)>;
+using AVFrame = std::shared_ptr<::AVFrame>;
 
 //This is
 /*
@@ -412,9 +412,9 @@ inline AVCodecContext& find_open_video_stream(AVFormatContext& fmtCtx)
     return err;
 }
 
-inline std::shared_ptr<AVFrame> av_frame_alloc()
+inline AVFrame av_frame_alloc()
 {
-    return std::shared_ptr<AVFrame>(::av_frame_alloc(), [](AVFrame* frame) {
+    return AVFrame(::av_frame_alloc(), [](::AVFrame* frame) {
         auto* pframe = &frame;
         av_frame_free(pframe);
     });
@@ -422,7 +422,7 @@ inline std::shared_ptr<AVFrame> av_frame_alloc()
 
 //This is rewritten from video lecture
 inline int avcodec_send_packet(AVFormatContext& fmtCtx, ::AVPacket& pkt,
-    std::function<void(std::shared_ptr<::AVFrame>)> onFrame)
+    std::function<void(AVFrame)> onFrame)
 {
     int err = AVERROR(1);
     auto codecCtx = fmtCtx.open_streams.find(pkt.stream_index);
@@ -443,7 +443,7 @@ inline int avcodec_send_packet(AVFormatContext& fmtCtx, ::AVPacket& pkt,
 }
 
 inline int avcodec_send_packet(AVFormatContext& fmtCtx,
-    std::function<void(std::shared_ptr<::AVFrame>)> onFrame)
+    std::function<void(AVFrame)> onFrame)
 {
     ::AVPacket pkt;
     ::av_init_packet(&pkt);
