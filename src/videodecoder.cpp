@@ -91,22 +91,7 @@ std::vector<uint8_t> VideoDecoder::getFrame(int frame_id,bool frame_by_frame)
 
 void VideoDecoder::yuv420togray8(libav::AVFrame frame,std::vector<uint8_t>& output)
 {
-
-    SwsContext * pContext = sws_getContext(this->width, this->height, AV_PIX_FMT_YUV420P,
-                                          this->width, this->height, AV_PIX_FMT_GRAY8, (SWS_FULL_CHR_H_INT | SWS_ACCURATE_RND | SWS_FAST_BILINEAR), nullptr, nullptr, nullptr);
-
-    libav::AVFrame frame2 = libav::av_frame_alloc();
-    frame2->format = AV_PIX_FMT_GRAY8;
-    frame2->width = this->width;
-    frame2->height = this->height;
-    ::av_frame_get_buffer(frame2.get(),32);
-
-    sws_scale(pContext, frame->data, frame->linesize, 0, this->height, frame2->data, frame2->linesize);
-
-    sws_freeContext(pContext);
-
+    auto frame2 = libav::convert_frame(frame, this->width, this->height, AV_PIX_FMT_GRAY8);
     memcpy(output.data(),frame2->data[0],this->height*this->width);
-
-
 }
 

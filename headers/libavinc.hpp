@@ -544,6 +544,9 @@ inline int avfilter_graph_write_frame(AVFilterGraph& graph, AVFrame& frame, std:
     return err == AVERROR(EAGAIN) ? 0 : err;
 }
 */
-}
+
+AVFrame convert_frame(AVFrame& frame, int width_out, int height_out, ::AVPixelFormat pix_out);
+
+} // End namespace
 
 #endif // LIBAVINC_HPP
