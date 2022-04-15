@@ -15,11 +15,6 @@
 #include <functional>
 #include <memory>
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-}
-
 #include "libavinc.hpp"
 #include "videodecoder.h"
 

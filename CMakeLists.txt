@@ -29,16 +29,21 @@ find_library(SWRESAMPLE_LIBRARY swresample HINTS ${FFMPEG_PATH})
 
 include_directories(${FFMPEG_INCLUDE})
 include_directories("headers")
+include_directories("C:\\Users\\wanglab\\Documents\\ffmpeg_wrapper\\headers")
+
+find_library(FFMPEG_WRAPPER_LIBRARY ffmpeg_wrapper HINTS "C:\\Users\\wanglab\\Documents\\ffmpeg_wrapper\\build")
+
+message("${FFMPEG_WRAPPER_LIBRARY}")
 
 set(PROJECT_SOURCES
         src/main.cpp
         src/mainwindow.cpp
         headers/mainwindow.h
         src/mainwindow.ui
-        headers/videodecoder.h
-        src/videodecoder.cpp
-        headers/libavinc.hpp
-        src/libavinc.cpp
+ #       headers/videodecoder.h
+ #       src/videodecoder.cpp
+ #       headers/libavinc.hpp
+ #       src/libavinc.cpp
         headers/whiskertracker.h
         src/whiskertracker.cpp
         whiskertoolbox.qrc
@@ -82,6 +87,7 @@ target_link_libraries(WhiskerToolbox PRIVATE
     ${AVFILTER_LIBRARY}
     ${SWSCALE_LIBRARY}
     ${SWRESAMPLE_LIBRARY}
+    ${FFMPEG_WRAPPER_LIBRARY}
 )
 
 set_target_properties(WhiskerToolbox PROPERTIES
