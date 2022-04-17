@@ -11,28 +11,7 @@
 
 JaneliaTracker::JaneliaTracker()
 {
-    _seed_method = SEED_ON_GRID;
-    _lattice_spacing = 50;
-    _maxr = 4;
-    _maxiter = 1;
-    _iteration_thres = 0.0;
-    _accum_thres = 0.99;
-    _seed_thres = 0.99;
-    _angle_step = 18.0;
-    _tlen = 8;
-    _offset_step = 0.1;
-    _width_min = 0.4;
-    _width_max = 6.5;
-    _width_step = 0.2;
-    _min_signal = 5.0;
-    _half_space_assymetry = 0.25;
-    _max_delta_angle = 10.1;
-    _half_space_tunneling_max_moves = 50;
-    _max_delta_width = 6.0;
-    _max_delta_offset = 6.0;
-    _min_length = 100.0;
-    _redundancy_thres = 20.0;
-
+    config = JaneliaConfig();
     bank = Array();
     half_space_bank = Array();
 }
@@ -67,7 +46,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
     std::fill(mask.array.begin(),mask.array.end(),0);
 
     // Get contours, and compute correlations on perimeters
-    switch(this->_seed_method)
+    switch(this->config._seed_method)
     {
     case SEED_ON_MHAT_CONTOURS: {
 
@@ -100,7 +79,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
       }
       i = sarea;
       while( i-- )
-      { if( sa[i] > this->_seed_thres)
+      { if( sa[i] > this->config._seed_thres)
         { maska[i] = 1;
           nseeds ++;
         }
@@ -148,7 +127,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
                 { SWAP(seed.xdir,seed.ydir);
                   w = trace_whisker( &seed, image ); // try again at a right angle...sometimes when we're off by one the slope estimate is perpendicular to the whisker.
                 }
-                if (w.len > this->_min_length)
+                if (w.len > this->config._min_length)
                 {
                   w.time = iFrame;
                   w.id  = n_segs++;
@@ -217,7 +196,7 @@ void JaneliaTracker::eliminate_redundant(std::vector<Whisker_Seg>& w_segs) {
                     min_cor = mycor;
                 }
             }
-            if (min_cor < this->_redundancy_thres) {
+            if (min_cor < this->config._redundancy_thres) {
                 double w1_score = std::accumulate(w_segs[j].scores.begin(),w_segs[j].scores.end(),0);
                 double w2_score = std::accumulate(w_segs[i].scores.begin(),w_segs[i].scores.end(),0);
 
@@ -252,18 +231,18 @@ void JaneliaTracker::compute_seed_from_point_field_on_grid(const Image<uint8_t>&
       Seed *s;
 
       for( x=0; x<stride; x++ )
-      { for( y=0; y<image.height; y += this->_lattice_spacing )
+      { for( y=0; y<image.height; y += this->config._lattice_spacing )
         { newp = x+y*stride;
           p = newp;
-          for( i=0; i < this->_maxiter; i++ )
+          for( i=0; i < this->config._maxiter; i++ )
           { p = newp;
-            s = compute_seed_from_point_ex(image, x+y*stride, this->_maxr, &m, &stat);
+            s = compute_seed_from_point_ex(image, x+y*stride, this->config._maxr, &m, &stat);
             if( !s ) break;
             newp = s->xpnt + stride * s->ypnt;
-            if ( newp == p || stat < this->_iteration_thres )
+            if ( newp == p || stat < this->config._iteration_thres )
               break;
           }
-          if( s && stat > this->_accum_thres)
+          if( s && stat > this->config._accum_thres)
           { h[p] ++;
             sl[p] += m;
             st[p] += stat;
@@ -275,19 +254,19 @@ void JaneliaTracker::compute_seed_from_point_field_on_grid(const Image<uint8_t>&
     { int x,y;
       int p,newp,i;
       Seed *s;
-      for( x=0; x<stride; x+=this->_lattice_spacing  )
+      for( x=0; x<stride; x+=this->config._lattice_spacing  )
       { for( y=0; y<image.height; y ++ )
         { newp = x+y*stride;
           p = newp;
-          for( i=0; i < this->_maxr; i++ ) // Max iter?
+          for( i=0; i < this->config._maxr; i++ ) // Max iter?
           { p = newp;
-            s = compute_seed_from_point_ex(image, x+y*stride, this->_maxr, &m, &stat);
+            s = compute_seed_from_point_ex(image, x+y*stride, this->config._maxr, &m, &stat);
             if( !s ) break;
             newp = s->xpnt + stride * s->ypnt;
-            if ( newp == p || stat < this->_iteration_thres)
+            if ( newp == p || stat < this->config._iteration_thres)
               break;
           }
-          if( s && stat > this->_accum_thres)
+          if( s && stat > this->config._accum_thres)
           { h[p] ++;
             sl[p] += m;
             st[p] += stat;
@@ -517,7 +496,7 @@ return &myseed;
 Line_Params JaneliaTracker::line_param_from_seed(const Seed *s) {
     Line_Params line;
      const double hpi = M_PI/4.0;
-     const double ain = hpi/this->_angle_step;
+     const double ain = hpi/this->config._angle_step;
        line.offset = .5;
        { if( s->xdir < 0 ) // flip so seed points along positive x
          { line.angle  = std::round(atan2(-1.0f* s->ydir,-1.0f* s->xdir) / ain) * ain;
@@ -531,7 +510,7 @@ Line_Params JaneliaTracker::line_param_from_seed(const Seed *s) {
 
 float JaneliaTracker::eval_line(Line_Params *line, const Image<uint8_t>& image, int p) {
     int i;
-    const int support  = 2*this->_tlen + 3;
+    const int support  = 2*this->config._tlen + 3;
     int npxlist;
 
  //     std::vector<int> pxlist;
@@ -1077,9 +1056,9 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
   int trusted = 1;
 
   const double hpi = M_PI/4.0;
-  const double ain = hpi/this->_angle_step;
+  const double ain = hpi/this->config._angle_step;
   const double rad = 45./hpi;
-  const double sigmin = (2*this->_tlen+1)*this->_min_signal;// + 255.00;
+  const double sigmin = (2*this->config._tlen+1)*this->config._min_signal;// + 255.00;
 
   x = s->xpnt;
   y = s->ypnt;
@@ -1124,7 +1103,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
       trusted = adjust_line_start(&line,image,&p,&roff,&rang,&rwid);
       { int nmoves = 0;
         trusted = trusted && is_local_area_trusted( &line, image, p );
-        while( !trusted /*&& score > sigmin*/ && nmoves < this->_half_space_tunneling_max_moves)
+        while( !trusted /*&& score > sigmin*/ && nmoves < this->config._half_space_tunneling_max_moves)
         { oldline = line; oldp = p;
           move_line( &line, &p, cwidth, 1 );
           nmoves ++;
@@ -1144,7 +1123,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
             if( !trusted ||
                 line.score < sigmin ||
                 !is_local_area_trusted( &line, image, p ) ||
-                is_change_too_big(&line,&oldline, 2*this->_max_delta_angle, 10.0, 10.0) )
+                is_change_too_big(&line,&oldline, 2*this->config._max_delta_angle, 10.0, 10.0) )
             { trusted = 0;    // nothing found, back up
               break;
             }
@@ -1183,7 +1162,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
       { int nmoves = 0;
         trusted = trusted && is_local_area_trusted( &line, image, p );
         //float score = line.score;
-        while( !trusted /*&& score > sigmin*/ && nmoves < this->_half_space_tunneling_max_moves )
+        while( !trusted /*&& score > sigmin*/ && nmoves < this->config._half_space_tunneling_max_moves )
         { oldline = line; oldp = p;
           move_line( &line, &p, cwidth, -1 );
           nmoves ++;
@@ -1204,7 +1183,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
             if( !trusted ||
                 line.score < sigmin ||
                 ! is_local_area_trusted( &line, image, p )  ||
-                is_change_too_big(&line,&oldline, 2*this->_max_delta_angle, 10.0, 10.0 ) )
+                is_change_too_big(&line,&oldline, 2*this->config._max_delta_angle, 10.0, 10.0 ) )
             { trusted = 0;  // nothing found, back up
               break;
             }
@@ -1231,7 +1210,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
   /*
    * Copy results into a whisker segment
    */
-  if( nright+nleft > 2*this->_tlen )
+  if( nright+nleft > 2*this->config._tlen )
   {
     Whisker_Seg wseg = Whisker_Seg(nright + nleft);
     int j=0, i = nright;
@@ -1278,7 +1257,7 @@ bool JaneliaTracker::is_local_area_trusted_conservative( Line_Params *line, Imag
     lastim = &image.array;
   }
   if( ((r < thresh) && (l < thresh )) ||
-      (fabs(q) > this->_half_space_assymetry) )
+      (fabs(q) > this->config._half_space_assymetry) )
   { return false;
   } else
   { return true;
@@ -1325,7 +1304,7 @@ float JaneliaTracker::threshold_two_means( uint8_t *array, size_t size )
 }
 
 float JaneliaTracker::eval_half_space( Line_Params *line, const Image<uint8_t>& image, int p, float *rr, float *ll )
-{ int i,support  = 2*this->_tlen + 3;
+{ int i,support  = 2*this->config._tlen + 3;
   int npxlist, a = support*support;
 
   float coff;
@@ -1417,13 +1396,13 @@ void JaneliaTracker::get_line_detector_bank(Range *off, Range *wid, Range *ang)
   static Range o,a,w;
   if( this->bank.data.empty() )
   {
-    Range v[3] = {{ -1.0,       1.0,         this->_offset_step},          //offset
-                  { -M_PI/4.0,  M_PI/4.0,    M_PI/4.0/this->_angle_step},  //angle
-                  {  this->_width_min, this->_width_max,   this->_width_step  }};         //width
+    Range v[3] = {{ -1.0,       1.0,         this->config._offset_step},          //offset
+                  { -M_PI/4.0,  M_PI/4.0,    M_PI/4.0/this->config._angle_step},  //angle
+                  {  this->config._width_min, this->config._width_max,   this->config._width_step  }};         //width
     o = v[0];
     a = v[1];
     w = v[2];
-      this->bank = Build_Line_Detectors( o, w, a, this->_tlen, 2*this->_tlen+3 );
+      this->bank = Build_Line_Detectors( o, w, a, this->config._tlen, 2*this->config._tlen+3 );
 
     printf("Built Line Detector Bank");
     fflush(stdout);
@@ -1435,21 +1414,21 @@ void JaneliaTracker::get_line_detector_bank(Range *off, Range *wid, Range *ang)
 
 void JaneliaTracker::get_half_space_detector_bank(Range *off, Range *wid, Range *ang, float *norm)
 {
-  static float sum = -1.0;
+  static float sum = -1.0; // What is this doing? Should it be part of the line detector since it just gets set to norm?
   static Range o,a,w;
   if( this->half_space_bank.data.empty() )
   {
-    Range v[3] = {{ -1.0,       1.0,         this->_offset_step},          //offset
-                  { -M_PI/4.0,  M_PI/4.0,    M_PI/4.0/this->_angle_step },  //angle
-                  {  this->_width_min, this->_width_max,   this->_width_step}};         //width
+    Range v[3] = {{ -1.0,       1.0,         this->config._offset_step},          //offset
+                  { -M_PI/4.0,  M_PI/4.0,    M_PI/4.0/this->config._angle_step },  //angle
+                  {  this->config._width_min, this->config._width_max,   this->config._width_step}};         //width
     o = v[0];
     a = v[1];
     w = v[2];
 
-    this->half_space_bank = Build_Half_Space_Detectors( o, w, a, this->_tlen, 2*this->_tlen+3 );
+    this->half_space_bank = Build_Half_Space_Detectors( o, w, a, this->config._tlen, 2*this->config._tlen+3 );
 
     { float *m = this->half_space_bank.data.data() + Get_Half_Space_Detector(this->half_space_bank,0,0,0);
-      int n = (2*this->_tlen+3)*(2*this->_tlen+3);
+      int n = (2*this->config._tlen+3)*(2*this->config._tlen+3);
       while(n--)
         sum += m[n];
     }
@@ -1659,7 +1638,7 @@ int JaneliaTracker::move_line( Line_Params *line, int *p, int stride, int direct
 int JaneliaTracker::adjust_line_start(Line_Params *line, const Image<uint8_t> &image, int *pp,
                                Interval *roff, Interval *rang, Interval *rwid)
 { double hpi = acos(0.)/2.;
-  double ain = hpi/this->_angle_step;
+  double ain = hpi/this->config._angle_step;
   double rad = 45./hpi;
   int trusted = 1;
 
@@ -1710,7 +1689,7 @@ int JaneliaTracker::adjust_line_start(Line_Params *line, const Image<uint8_t> &i
     last = best;
     x = line->offset;
     do
-    { line->offset -= this->_offset_step;
+    { line->offset -= this->config._offset_step;
       v = eval_line(line,image,p);
     } while( fabs(v - last) < 1e-5 && line->offset >= roff->min);
     if (         (v - best) > 1e-5 && line->offset >= roff->min)
@@ -1720,7 +1699,7 @@ int JaneliaTracker::adjust_line_start(Line_Params *line, const Image<uint8_t> &i
     else
     { line->offset = x;
       do
-      { line->offset += this->_offset_step;
+      { line->offset += this->config._offset_step;
         v = eval_line(line,image,p);
       } while( fabs(v - last) < 1e-5 && line->offset <= roff->max);
       if (         (v - best) > 1e-5 && line->offset <= roff->max)
@@ -1737,7 +1716,7 @@ int JaneliaTracker::adjust_line_start(Line_Params *line, const Image<uint8_t> &i
     last = best;
     x = line->width;
     do
-    { line->width -= this->_width_step;
+    { line->width -= this->config._width_step;
       v = eval_line(line,image,p);
     } while( fabs(v - last) < 1e-5 && line->width >= rwid->min);
     if (         (v - best) > 1e-5 && line->width >= rwid->min)
@@ -1747,7 +1726,7 @@ int JaneliaTracker::adjust_line_start(Line_Params *line, const Image<uint8_t> &i
     else
     { line->width = x;
       do
-      { line->width += this->_width_step;
+      { line->width += this->config._width_step;
         v = eval_line(line,image,p);
       } while( fabs(v - last) < 1e-5 && line->width <= rwid->max);
       if (         (v - best) > 1e-5 && line->width <= rwid->max)
@@ -1762,7 +1741,7 @@ int JaneliaTracker::adjust_line_start(Line_Params *line, const Image<uint8_t> &i
   }
 
 
-  if( is_change_too_big( &backup, line, this->_max_delta_angle, this->_max_delta_width, this->_max_delta_offset) )
+  if( is_change_too_big( &backup, line, this->config._max_delta_angle, this->config._max_delta_width, this->config._max_delta_offset) )
   {
     *line = backup; //No adjustment
     return 0;
@@ -1797,7 +1776,7 @@ bool JaneliaTracker::is_local_area_trusted( Line_Params *line, Image<uint8_t>& i
   }
 
   if( ((r < thresh) && (l < thresh )) ||
-      (fabs(q) > this->_half_space_assymetry))
+      (fabs(q) > this->config._half_space_assymetry))
   { return false;
   } else
   { return true;

@@ -52,13 +52,19 @@ struct Image
     }
 };
 
+struct Hist {
+    uint8_t h; // Histogram
+    float th; //Slopes
+    float s; // Stats
+    bool mask; // Mask of seeds
+};
+
 struct Seed {
     int xpnt;
     int ypnt;
     int xdir;
     int ydir;
 };
-
 
 struct  Line_Params {
     float  offset;
@@ -163,13 +169,7 @@ struct Array
   }
 };
 
-
-class JaneliaTracker {
-
-public:
-    JaneliaTracker();
-   std::vector<Whisker_Seg> find_segments(int iFrame, Image<uint8_t>& image, const Image<uint8_t> &bg);
-private:
+struct JaneliaConfig {
     SEED_METHOD_ENUM _seed_method;
     int _lattice_spacing;
     int _maxr;
@@ -191,6 +191,60 @@ private:
     float _max_delta_offset;
     float _min_length;
     float _redundancy_thres;
+
+    JaneliaConfig() {
+        _seed_method = SEED_ON_GRID;
+        _lattice_spacing = 50;
+        _maxr = 4;
+        _maxiter = 1;
+        _iteration_thres = 0.0;
+        _accum_thres = 0.99;
+        _seed_thres = 0.99;
+        _angle_step = 18.0;
+        _tlen = 8;
+        _offset_step = 0.1;
+        _width_min = 0.4;
+        _width_max = 6.5;
+        _width_step = 0.2;
+        _min_signal = 5.0;
+        _half_space_assymetry = 0.25;
+        _max_delta_angle = 10.1;
+        _half_space_tunneling_max_moves = 50;
+        _max_delta_width = 6.0;
+        _max_delta_offset = 6.0;
+        _min_length = 100.0;
+        _redundancy_thres = 20.0;
+    }
+};
+
+class DetectorBank {
+public:
+
+protected:
+    Range off;
+    Range wid;
+    Range ang;
+    Array bank;
+};
+
+class LineDetector : public DetectorBank {
+
+};
+
+class HalfSpaceDetector : public DetectorBank {
+protected:
+    float norm;
+};
+
+
+class JaneliaTracker {
+
+public:
+    JaneliaTracker();
+   std::vector<Whisker_Seg> find_segments(int iFrame, Image<uint8_t>& image, const Image<uint8_t> &bg);
+private:
+
+   JaneliaConfig config;
     Array bank;
     Array half_space_bank;
 

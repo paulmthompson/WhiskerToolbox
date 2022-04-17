@@ -40,10 +40,6 @@ set(PROJECT_SOURCES
         src/mainwindow.cpp
         headers/mainwindow.h
         src/mainwindow.ui
- #       headers/videodecoder.h
- #       src/videodecoder.cpp
- #       headers/libavinc.hpp
- #       src/libavinc.cpp
         headers/whiskertracker.h
         src/whiskertracker.cpp
         whiskertoolbox.qrc
