@@ -32,6 +32,7 @@ public:
 
 private:
     JaneliaTracker janelia;
+    bool janelia_init;
     //std::unordered_map<int, Whisker> woi;
 };
 

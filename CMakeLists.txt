@@ -46,6 +46,8 @@ set(PROJECT_SOURCES
         headers/janelia.h
         src/janelia.cpp
         my_stylesheet.qss
+        headers/detector_bank.h
+        src/detector_bank.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

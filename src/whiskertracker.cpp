@@ -7,10 +7,17 @@ Image<uint8_t> bg = Image<uint8_t>(640,480,std::vector<uint8_t>(640*480,0));
 WhiskerTracker::WhiskerTracker()
 {
     janelia = JaneliaTracker();
+    janelia_init = false;
     whiskers = std::vector<Whisker>{};
 }
 
 void WhiskerTracker::trace(std::vector<uint8_t>& input) {
+
+    if (this->janelia_init == false) {
+        this->janelia.bank = LineDetector(this->janelia.config);
+        this->janelia.half_space_bank = HalfSpaceDetector(this->janelia.config);
+        this->janelia_init = true;
+    }
 
     whiskers.clear();
 
