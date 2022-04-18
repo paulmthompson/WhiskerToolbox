@@ -108,7 +108,12 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
               }
             }
 
-            sort(scores.begin(),scores.end(), JaneliaTracker::_cmp_seed_scores);
+            //sort(scores.begin(),scores.end(), JaneliaTracker::_cmp_seed_scores);
+
+            std::sort(scores.begin(),scores.end(),
+                      [] (const seedrecord& a, const seedrecord& b){
+                        return a.score < b.score;
+            });
 
             auto t1 = std::chrono::high_resolution_clock::now();
 

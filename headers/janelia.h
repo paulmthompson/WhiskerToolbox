@@ -115,7 +115,6 @@ private:
     float eval_line(Line_Params *line, const Image<uint8_t>& image, int p);
     float round_anchor_and_offset( Line_Params *line, int *p, int stride );
     std::vector<int>* get_offset_list(const Image<uint8_t>& image, int support, float angle, int p, int *npx );
-    static bool _cmp_seed_scores(seedrecord a, seedrecord b);
 
     bool is_small_angle(const float angle );
     bool is_angle_leftward(const float angle );
