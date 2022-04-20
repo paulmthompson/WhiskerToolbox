@@ -134,6 +134,7 @@ public:
     Range ang;
 
     int compute_number_steps( Range r );
+    int get_nearest(float offset, float width, float angle);
     int Get_Detector(int ioffset, int iwidth, int iangle  );
 protected:
 
@@ -144,23 +145,22 @@ public:
     LineDetector();
     LineDetector(JaneliaConfig config);
 
-    int get_nearest(float offset, float width, float angle);
+private:
     void Build_Line_Detectors(float length,int supportsize );
     void Render_Line_Detector(float offset,float length,
                                 float angle,
                                 float width,
                                 point anchor,
                                 float *image, int *strides);
-private:
-
 };
 
 class HalfSpaceDetector : public DetectorBank {
 public:
     HalfSpaceDetector();
     HalfSpaceDetector(JaneliaConfig config);
+    float norm;
 
-    int get_nearest(float offset, float width, float angle);
+private:
     void Build_Half_Space_Detectors(float length, int supportsize);
     void Render_Half_Space_Detector( float offset,
                                      float length,
@@ -168,9 +168,6 @@ public:
                                      float width,
                                      point anchor,
                                      float *image, int *strides  );
-    float norm;
-
-protected:
 
 };
 

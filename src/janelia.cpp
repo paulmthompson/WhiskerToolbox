@@ -108,8 +108,6 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
               }
             }
 
-            //sort(scores.begin(),scores.end(), JaneliaTracker::_cmp_seed_scores);
-
             std::sort(scores.begin(),scores.end(),
                       [] (const seedrecord& a, const seedrecord& b){
                         return a.score < b.score;
@@ -153,12 +151,6 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
     eliminate_redundant(wsegs);
 
     return wsegs;
-}
-
- bool JaneliaTracker::_cmp_seed_scores(seedrecord a, seedrecord b)
-{
-  float d = a.score - b.score;
-  return (d < 0);
 }
 
 double JaneliaTracker::calculate_whisker_length(Whisker_Seg& w) {
@@ -927,7 +919,7 @@ bool JaneliaTracker::is_local_area_trusted_conservative( Line_Params *line, Imag
 
 float JaneliaTracker::threshold_two_means( uint8_t *array, size_t size )
 { size_t i;
-  std::vector<size_t> hist(256);
+    std::array<size_t, 256> hist ={};
   uint8_t *cur = array + size;
   float num = 0.0,
         dom = 0.0,
@@ -968,9 +960,7 @@ float JaneliaTracker::eval_half_space( Line_Params *line, const Image<uint8_t>& 
 { int i,support  = 2*this->config._tlen + 3;
   int npxlist, a = support*support;
 
-  float coff;
   float leftnorm;
-  int lefthalf, righthalf;
   float rightnorm;
   float  r,l,q       = 0.0;
   //static void *lastim = NULL;
@@ -983,12 +973,12 @@ float JaneliaTracker::eval_half_space( Line_Params *line, const Image<uint8_t>& 
   //  lastim = image->array;
   //}
 
-  coff = round_anchor_and_offset( line, &p, image.width );
+  float coff = round_anchor_and_offset( line, &p, image.width );
   auto pxlist    = get_offset_list( image, support, line->angle, p, &npxlist );
   //lefthalf  = get_nearest_from_half_space_detector_bank( coff, line->width, line->angle, &leftnorm );
   //righthalf  = get_nearest_from_half_space_detector_bank( -coff, line->width, line->angle, &rightnorm );
-  lefthalf = half_space_bank.get_nearest(coff,line->width,line->angle);
-  righthalf = half_space_bank.get_nearest(-coff,line->width,line->angle);
+  int lefthalf = half_space_bank.get_nearest(coff,line->width,line->angle);
+  int righthalf = half_space_bank.get_nearest(-coff,line->width,line->angle);
   {
     auto& parray = image.array;
     i = a; //npxlist;
@@ -1190,27 +1180,21 @@ bool JaneliaTracker::is_local_area_trusted( Line_Params *line, Image<uint8_t>& i
 }
 
 int JaneliaTracker::threshold_bottom_fraction_uint8( const Image<uint8_t>& im ) //, float fraction )
-{ float acc, mean, lm;
-  int a,i, count;
-
+{
   auto& d = im.array;
-  a = i = im.width * im.height;
-  acc = 0.0f;
-  while(i--)
-    acc += d[i];
-  mean = acc / (float)a;
+  uint8_t mean = std::floor(std::accumulate(d.begin(),d.end(),0) / d.size());
 
-  i = a;
-  acc = 0.0f;
-  count = 0;
+  int i = im.width * im.height;;
+  uint32_t acc = 0;
+  int count = 0;
   while(i--)
-  { float v = d[i];
-    if( v<mean )
-    { acc += v;
+  {
+    if( d[i] <= mean )
+    { acc += d[i];
       count ++;
     }
   }
-  lm = acc / (float) count;
+  float lm = acc / count;
 
   return (int) lm;
 }

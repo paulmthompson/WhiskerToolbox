@@ -202,7 +202,7 @@ void HalfSpaceDetector::Render_Half_Space_Detector( float offset,
   return;
 }
 
-int HalfSpaceDetector::get_nearest(float offset, float width, float angle)
+int DetectorBank::get_nearest(float offset, float width, float angle)
 {
   if( !is_small_angle( angle ) )  // if large angle then transpose
   { angle = 3.0*M_PI/2.0 - angle; //   to small ones ( <45deg )
@@ -222,7 +222,6 @@ int HalfSpaceDetector::get_nearest(float offset, float width, float angle)
 
   return Get_Detector(o, w, a );
 }
-
 
 void Simple_Circle_Primitive( point *verts, int npoints, point center, float radius, int direction)
 { int i = npoints;
@@ -273,31 +272,6 @@ void Multiply_Pixel_Overlap( float *xy, int n, float gain, float boundary, float
     }
   }
   return;
-}
-
-int LineDetector::get_nearest(float offset, float width, float angle)
-{
-  //If the angle is > 45 deg, fetch the detector
-  //  that, when transposed, will be correct.
-  //  This mechanism lets me store only half the detectors.
-  if( !is_small_angle( angle ) )  // if large angle then transpose
-  { angle = 3.0*M_PI/2.0 - angle; //   to small ones ( <45deg )
-  //offset = -offset;			  // The transpose is a rotation and flip
-  }								  // T = R(3pi/2) Flip
-  WRAP_ANGLE_2PI( angle );        // rotating as angle -= 3pi/2 also flips the offset
-                                  //    so it doesn't need to be done explicitly
-  //Lines are left right symmetric
-  //This allows us to store only half the angles (again)
-  if( is_angle_leftward(angle) )
-  { WRAP_ANGLE_HALF_PLANE( angle );
-    offset = -offset;
-  }
-
-  int o = lround( ( offset - this->off.min ) / this->off.step );
-  int a = lround( (  angle - this->ang.min ) / this->ang.step );
-  int w = lround( (  width - this->wid.min ) / this->wid.step );
-
-  return Get_Detector(o, w, a );
 }
 
 void Simple_Line_Primitive( point *verts, point offset, float length, float thick )
