@@ -17,6 +17,8 @@ JaneliaTracker::JaneliaTracker()
     config = JaneliaConfig();
     bank = LineDetector();
     half_space_bank = HalfSpaceDetector();
+
+    pxlist = std::vector<offset_pair>(1000);
 }
 
 std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t>& image, const Image<uint8_t>& bg) {
@@ -513,7 +515,6 @@ float JaneliaTracker::eval_line(Line_Params *line, const Image<uint8_t>& image, 
     const int support  = 2*this->config._tlen + 3;
     int npxlist;
 
- //     std::vector<int> pxlist;
       //float *weights, coff;
       float coff;
       int bank_i;
@@ -526,7 +527,7 @@ float JaneliaTracker::eval_line(Line_Params *line, const Image<uint8_t>& image, 
       // compute a nearby anchor
 
       coff      = round_anchor_and_offset( line, &p, image.width );
-      auto pxlist = get_offset_list( image, support, line->angle, p, &npxlist );
+      get_offset_list( image, support, line->angle, p, &npxlist );
 
       bank_i = bank.get_nearest(coff, line->width, line->angle);
       //bank_i = get_nearest_from_line_detector_bank ( coff, line->width, line->angle );
@@ -534,11 +535,13 @@ float JaneliaTracker::eval_line(Line_Params *line, const Image<uint8_t>& image, 
       {
         auto& parray = image.array;
         s = 0.0;
-        i = npxlist;
-        while(i--)
-         // s += parray[pxlist[2*i]] * weights[pxlist[2*i+1]];
+        i = 0;
+        while(i < npxlist) {
+          s += parray[this->pxlist[i].image_ind] * this->bank.bank.data[bank_i + this->pxlist[i].weight_ind];
          //  s += parray[(*pxlist)[2*i]] * this->bank.bank.data[bank_i+(*pxlist)[2*i+1]];
-             s += parray[(*pxlist)[2*i]] * this->bank.bank.data[bank_i+(*pxlist)[2*i+1]];
+         //    s += parray[(*pxlist)[2*i]] * this->bank.bank.data[bank_i+(*pxlist)[2*i+1]];
+          i++;
+        }
       }
 
       return -s;
@@ -580,9 +583,8 @@ float JaneliaTracker::round_anchor_and_offset( Line_Params *line, int *p, int st
   return t;
 }
 
-std::vector<int>* JaneliaTracker::get_offset_list(const Image<uint8_t>& image, int support, float angle, int p, int *npx )
-  /* returns a static buffer with *npx integer pairs.  The integer pairs are
-   * indices into the image and weight arrays such that:
+void JaneliaTracker::get_offset_list(const Image<uint8_t>& image, int support, float angle, int p, int *npx )
+  /* The integer pairs are indices into the image and weight arrays such that:
    *
    * The following will perform the correlation of filter and image centered at
    * p in the * image (with the center of the filter as its origin).
@@ -603,7 +605,7 @@ std::vector<int>* JaneliaTracker::get_offset_list(const Image<uint8_t>& image, i
    *      score += image->array[ pairs[2*npx] * filter[ pairs[2*npx+1] ]
    *
    */
-{ static std::vector<int> pxlist = {};
+{
   static int snpx = 0;
   static int lastp = -1;
   static int last_issmallangle = -1;
@@ -611,11 +613,11 @@ std::vector<int>* JaneliaTracker::get_offset_list(const Image<uint8_t>& image, i
   int half = support / 2;
   int px = p%(image.width),
       py = p/(image.width);
-  int ioob = 2*support*support; // index for out-of-bounds pixels
+  int ioob = support*support; // index for out-of-bounds pixels
 
   //pxlist is a minimum of 2*support*support.
-  if (pxlist.size() < (2*support*support)) {
-      pxlist.resize((int)std::round(1.25 * 2 * support * support + 64));
+  if (this->pxlist.size() < (2*support*support)) {
+      this->pxlist.resize((int)std::round(1.25 * 2 * support * support + 64));
   }
 
   issa = is_small_angle( angle );
@@ -638,8 +640,8 @@ std::vector<int>* JaneliaTracker::get_offset_list(const Image<uint8_t>& image, i
         { for( j=0; j<support; j++ )
           { tx = ox + j;
             if( (tx >= 0) && (tx<ww) )
-            { pxlist[ snpx++ ] = ww * ty + tx;    // image   pixel address
-              pxlist[ snpx++ ] = support * i + j; // weights pixel address
+            { this->pxlist[ snpx++ ] = std::move(offset_pair(ww * ty + tx,support*i+j));    // image   pixel address
+              //this->pxlist[ snpx++ ] = support * i + j; // weights pixel address
             }
           }
         }
@@ -648,8 +650,9 @@ std::vector<int>* JaneliaTracker::get_offset_list(const Image<uint8_t>& image, i
         { tx = ox + j;
           if( (ty<0) || (ty>=hh) || (tx < 0) || (tx>=ww) ) //out of bounds
           {
-            pxlist[ ioob-- ] = ww * std::min(std::max(0,ty),hh-1) + std::min(std::max(0,tx),ww-1); // clamps to border
-            pxlist[ ioob-- ] = support * i + j;
+            this->pxlist[ ioob-- ] = std::move(offset_pair(ww * std::min(std::max(0,ty),hh-1) + std::min(std::max(0,tx),ww-1),
+                                                     support * i + j)); // clamps to border
+            //this->pxlist[ ioob-- ] = support * i + j;
           }
         }
       }
@@ -661,8 +664,8 @@ std::vector<int>* JaneliaTracker::get_offset_list(const Image<uint8_t>& image, i
         { for( j=0; j<support; j++ )
           { ty = oy + j;
             if( (ty >= 0) && (ty<hh) )
-            { pxlist[ snpx++ ] = ww * ty + tx;
-              pxlist[ snpx++ ] = support * i + j;
+            { this->pxlist[ snpx++ ] = std::move(offset_pair(ww * ty + tx,support * i + j));
+              //this->pxlist[ snpx++ ] = support * i + j;
             }
           }
         }
@@ -672,15 +675,16 @@ std::vector<int>* JaneliaTracker::get_offset_list(const Image<uint8_t>& image, i
         { ty = oy + j;
           if( (ty<0) || (ty>=hh) || (tx < 0) || (tx>=ww) ) //out of bounds
           {
-            pxlist[ ioob-- ] = ww * std::min(std::max(0,ty),hh-1) + std::min(std::max(0,tx),ww-1); // clamps to border
-            pxlist[ ioob-- ] = support * i + j;
+            this->pxlist[ ioob-- ] = std::move(offset_pair(ww * std::min(std::max(0,ty),hh-1) + std::min(std::max(0,tx),ww-1),
+                                                     support * i + j)); // clamps to border
+            //this->pxlist[ ioob-- ] = support * i + j;
           }
         }
       }
     } // end if/ angle check
   }
-  *npx = snpx/2;
-  return &pxlist;
+
+  *npx = snpx;
 }
 
 bool JaneliaTracker::is_small_angle(const float angle )
@@ -977,20 +981,23 @@ float JaneliaTracker::eval_half_space( Line_Params *line, const Image<uint8_t>& 
   //}
 
   float coff = round_anchor_and_offset( line, &p, image.width );
-  auto pxlist    = get_offset_list( image, support, line->angle, p, &npxlist );
+  get_offset_list( image, support, line->angle, p, &npxlist );
   //lefthalf  = get_nearest_from_half_space_detector_bank( coff, line->width, line->angle, &leftnorm );
   //righthalf  = get_nearest_from_half_space_detector_bank( -coff, line->width, line->angle, &rightnorm );
   int lefthalf = half_space_bank.get_nearest(coff,line->width,line->angle);
   int righthalf = half_space_bank.get_nearest(-coff,line->width,line->angle);
   {
     auto& parray = image.array;
-    i = a; //npxlist;
+    i = 0; //npxlist;
     l = 0.0;
     r = 0.0;
-    while(i--)
+    while(i < npxlist)
     {
-      l += parray[(*pxlist)[2*i]] * this->half_space_bank.bank.data[lefthalf+(*pxlist)[2*i+1]];
-      r += parray[(*pxlist)[2*i]] * this->half_space_bank.bank.data[righthalf+(*pxlist)[2*i+1]]; // It doesn't work if I have the a term here. Why is that?
+      l += parray[this->pxlist[i].image_ind] * this->half_space_bank.bank.data[lefthalf + this->pxlist[i].weight_ind];
+      r += parray[this->pxlist[i].image_ind] * this->half_space_bank.bank.data[righthalf +this->pxlist[i].weight_ind];
+      i++;
+      //l += parray[(*pxlist)[2*i]] * this->half_space_bank.bank.data[lefthalf+(*pxlist)[2*i+1]];
+      //r += parray[(*pxlist)[2*i]] * this->half_space_bank.bank.data[righthalf+(*pxlist)[2*i+1]]; // It doesn't work if I have the a term here. Why is that?
       //l += parray[pxlist[2*i]] * lefthalf[pxlist[2*i+1]];
       //r += parray[pxlist[2*i]] * righthalf[a - pxlist[2*i+1]];
     }

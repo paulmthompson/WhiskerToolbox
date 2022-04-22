@@ -100,6 +100,14 @@ struct Interval
     double max;
  };
 
+struct offset_pair
+{
+    offset_pair() : image_ind(0),weight_ind(0) {}
+    offset_pair(int i, int w) : image_ind(i), weight_ind(w) {}
+    int image_ind;
+    int weight_ind;
+};
+
 class JaneliaTracker {
 
 public:
@@ -116,7 +124,7 @@ private:
     Line_Params line_param_from_seed(const Seed *s);
     float eval_line(Line_Params *line, const Image<uint8_t>& image, int p);
     float round_anchor_and_offset( Line_Params *line, int *p, int stride );
-    std::vector<int>* get_offset_list(const Image<uint8_t>& image, int support, float angle, int p, int *npx );
+    void get_offset_list(const Image<uint8_t>& image, int support, float angle, int p, int *npx );
 
     bool is_small_angle(const float angle );
     bool is_angle_leftward(const float angle );
@@ -139,6 +147,8 @@ private:
     //New
     double calculate_whisker_length(Whisker_Seg& w);
     void eliminate_redundant(std::vector<Whisker_Seg>& w_segs);
+
+    std::vector<offset_pair> pxlist;
 
 
 };
