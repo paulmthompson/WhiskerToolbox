@@ -17,23 +17,9 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS MultimediaWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 
-set(FFMPEG_PATH "C:\\Users\\wanglab\\Downloads\\ffmpeg-5.0-full_build-shared\\lib")
-set(FFMPEG_INCLUDE "C:\\Users\\wanglab\\Downloads\\ffmpeg-5.0-full_build-shared\\include")
+find_package(ffmpeg_wrapper CONFIG REQUIRED PATHS "C:\\Users\\wanglab\\Documents\\ffmpeg_wrapper\\build\\test")
 
-find_library(AVCODEC_LIBRARY avcodec HINTS ${FFMPEG_PATH})
-find_library(AVFORMAT_LIBRARY avformat HINTS ${FFMPEG_PATH})
-find_library(AVUTIL_LIBRARY avutil HINTS ${FFMPEG_PATH})
-find_library(AVFILTER_LIBRARY avfilter HINTS ${FFMPEG_PATH})
-find_library(SWSCALE_LIBRARY swscale HINTS ${FFMPEG_PATH})
-find_library(SWRESAMPLE_LIBRARY swresample HINTS ${FFMPEG_PATH})
-
-include_directories(${FFMPEG_INCLUDE})
 include_directories("headers")
-include_directories("C:\\Users\\wanglab\\Documents\\ffmpeg_wrapper\\headers")
-
-find_library(FFMPEG_WRAPPER_LIBRARY ffmpeg_wrapper HINTS "C:\\Users\\wanglab\\Documents\\ffmpeg_wrapper\\build")
-
-message("${FFMPEG_WRAPPER_LIBRARY}")
 
 set(PROJECT_SOURCES
         src/main.cpp
@@ -78,15 +64,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::Multimedia)
 target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::MultimediaWidgets)
 target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::OpenGL)
 
-target_link_libraries(WhiskerToolbox PRIVATE
-    ${AVCODEC_LIBRARY}
-    ${AVFORMAT_LIBRARY}
-    ${AVUTIL_LIBRARY}
-    ${AVFILTER_LIBRARY}
-    ${SWSCALE_LIBRARY}
-    ${SWRESAMPLE_LIBRARY}
-    ${FFMPEG_WRAPPER_LIBRARY}
-)
+target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 set_target_properties(WhiskerToolbox PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

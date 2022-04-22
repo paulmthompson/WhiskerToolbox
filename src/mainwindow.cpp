@@ -15,9 +15,6 @@
 #include <functional>
 #include <memory>
 
-#include "libavinc.hpp"
-#include "videodecoder.h"
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -30,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
     last_loaded_frame = 0;
     play_speed = 1;
 
-    vd = std::make_unique<VideoDecoder>();
+    vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
     wt = std::make_unique<WhiskerTracker>();
     std::vector<uint8_t>current_frame = {};
 
@@ -136,7 +133,7 @@ void MainWindow::Slider_Scroll(int newPos)
 
 void MainWindow::GetVideoInfo()
 {
-    vd->createMedia(vid_name.toStdString());
+    this->vd->createMedia(this->vid_name.toStdString());
 
     ui->horizontalScrollBar->setMaximum(vd->getFrameCount());
 }

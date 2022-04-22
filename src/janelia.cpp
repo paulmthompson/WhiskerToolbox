@@ -1,5 +1,8 @@
 
 #include "janelia.h"
+#include "qmath.h"
+
+#define _USE_MATH_DEFINES
 
 #include <cmath>
 #include <cfloat>
@@ -549,10 +552,10 @@ float JaneliaTracker::round_anchor_and_offset( Line_Params *line, int *p, int st
 **  is a bit overconstrained.  However, the size of the error can be
 **  bounded to less than the pixel size (proof?).
 */
-{ float ex,ey,rx,ry,px,py;
+{ float rx,ry,px,py;
   float ppx, ppy, drx, dry, t;     // ox, oy;
-  ex  = cos(line->angle + M_PI/2); // unit vector normal to line
-  ey  = sin(line->angle + M_PI/2);
+  float ex  = cos(line->angle + M_PI/2); // unit vector normal to line
+  float ey  = sin(line->angle + M_PI/2);
   px  = (*p % stride );            // current anchor
   py  = (*p / stride );
   rx  = px + ex * line->offset;    // current position
@@ -617,10 +620,10 @@ std::vector<int>* JaneliaTracker::get_offset_list(const Image<uint8_t>& image, i
 
   issa = is_small_angle( angle );
   if( p != lastp || issa != last_issmallangle ) //recompute only if neccessary
-  { int tx,ty,ww,hh,ox,oy;                     //  Neglects to check if support has changed
+  { int tx,ty,ox,oy;                     //  Neglects to check if support has changed
     //float angle = line->angle;
-    ww = image.width;
-    hh = image.height;
+    int ww = image.width;
+    int hh = image.height;
     ox = px - half;
     oy = py - half;
     lastp = p;
@@ -702,7 +705,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
   static std::vector<record> rdata(1000);
 
   int nleft = 0, nright = 0;
-  float x,y,dx,dy,newoff;
+  float dx,dy,newoff;
   int cwidth  = image.width,
       cheight = image.height;
   Line_Params line,rline,oldline;
@@ -713,8 +716,8 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
   const double rad = 45./hpi;
   const double sigmin = (2*this->config._tlen+1)*this->config._min_signal;// + 255.00;
 
-  x = s->xpnt;
-  y = s->ypnt;
+  float x = s->xpnt;
+  float y = s->ypnt;
   { int      q,p = x + cwidth*y;
     int      oldp;
     Interval roff, rang, rwid;
@@ -722,8 +725,8 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
     /*
      *  init
      */
-    std::fill(ldata.begin(),ldata.end(),(record){0.0f,0.0f,0.0f,0.0f});
-    std::fill(rdata.begin(),rdata.end(),(record){0.0f,0.0f,0.0f,0.0f});
+    std::fill(ldata.begin(),ldata.end(), record());
+    std::fill(rdata.begin(),rdata.end(), record());
 
     line = line_param_from_seed( s );
 
@@ -739,7 +742,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
     compute_dxdy( &line, &dx, &dy);
 
     //ldata[nleft++] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
-    ldata[nleft++] = {p%cwidth + dx, p/cwidth + dy, line.width, line.score };
+    ldata[nleft++] = record(p%cwidth + dx, p/cwidth + dy, line.width, line.score);
 
     q = p;
     rline = line;
@@ -883,7 +886,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
     }
     return wseg;
   } else
-  { return (Whisker_Seg(0));
+  { return (Whisker_Seg());
   }
 }
 
@@ -919,7 +922,7 @@ bool JaneliaTracker::is_local_area_trusted_conservative( Line_Params *line, Imag
 
 float JaneliaTracker::threshold_two_means( uint8_t *array, size_t size )
 { size_t i;
-    std::array<size_t, 256> hist ={};
+  size_t hist[256];
   uint8_t *cur = array + size;
   float num = 0.0,
         dom = 0.0,
@@ -987,7 +990,7 @@ float JaneliaTracker::eval_half_space( Line_Params *line, const Image<uint8_t>& 
     while(i--)
     {
       l += parray[(*pxlist)[2*i]] * this->half_space_bank.bank.data[lefthalf+(*pxlist)[2*i+1]];
-      r += parray[(*pxlist)[2*i]] * this->half_space_bank.bank.data[righthalf+(*pxlist)[2*i+1]];
+      r += parray[(*pxlist)[2*i]] * this->half_space_bank.bank.data[righthalf+(*pxlist)[2*i+1]]; // It doesn't work if I have the a term here. Why is that?
       //l += parray[pxlist[2*i]] * lefthalf[pxlist[2*i+1]];
       //r += parray[pxlist[2*i]] * righthalf[a - pxlist[2*i+1]];
     }
@@ -1206,9 +1209,9 @@ bool JaneliaTracker::outofbounds(const int q, const int cwidth, const int cheigh
 }
 
 void JaneliaTracker::compute_dxdy( Line_Params *line, float *dx, float *dy )
-{float ex,ey;
-  ex  = cos(line->angle + M_PI/2);  // unit vector normal to line
-  ey  = sin(line->angle + M_PI/2);
+{
+  float ex  = cos(line->angle + M_PI/2);  // unit vector normal to line
+  float ey  = sin(line->angle + M_PI/2);
   *dx = ex * line->offset; // current position
   *dy = ey * line->offset;
 }

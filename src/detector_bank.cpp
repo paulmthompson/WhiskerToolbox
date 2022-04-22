@@ -1,6 +1,10 @@
 
 #include "detector_bank.h"
 
+#include "qmath.h"
+
+#define _USE_MATH_DEFINES
+
 #include <cmath>
 #include <cfloat>
 

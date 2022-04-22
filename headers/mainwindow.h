@@ -8,7 +8,7 @@
 
 #include <memory>
 
-#include "videodecoder.h"
+#include <ffmpeg_wrapper/videodecoder.h>
 
 #include "whiskertracker.h"
 
@@ -35,7 +35,7 @@ private:
 
     void vidLoop();
 
-    std::unique_ptr<VideoDecoder> vd;
+    std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
 
     QString vid_name;
     int frame_count;

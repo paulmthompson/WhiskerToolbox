@@ -9,21 +9,25 @@
 
 struct Whisker_Seg {
 
-    int id;
-    int time;
-    int len;
-    std::vector<float> x;
-    std::vector<float> y;
-    std::vector<float> thick;
-    std::vector<float> scores;
+    Whisker_Seg() = default;
 
-    Whisker_Seg(int n) {
-        len = n;
-        x = std::vector<float>(n);
-        y = std::vector<float>(n);
-        thick = std::vector<float>(n);
-        scores = std::vector<float>(n);
-    }
+    Whisker_Seg(int n)
+        :
+        len {n}
+      , x(n)
+      , y(n)
+      , thick(n)
+      , scores(n)
+    {}
+
+    int id{0};
+    int time{0};
+    int len{0};
+    std::vector<float> x{};
+    std::vector<float> y{};
+    std::vector<float> thick{};
+    std::vector<float> scores{};
+
 };
 
 template <typename T>
@@ -74,18 +78,16 @@ struct  Line_Params {
 
 struct seedrecord
 {
-    int idx;
-    float score;
+    seedrecord() = default;
 
-    seedrecord()
-    {
-        idx = 0;
-        score = 0;
-    }
+    int idx{0};
+    float score{0.0f};
 };
 
 struct record
 {
+    record() : record(0.0f,0.0f,0.0f,0.0f) {}
+    record(float x,float y,float thick,float score) : x(x), y(y), thick(thick),score(score) {}
     float x;
     float y;
     float thick;
