@@ -124,7 +124,7 @@ private:
     Line_Params line_param_from_seed(const Seed *s);
     float eval_line(Line_Params *line, const Image<uint8_t>& image, int p);
     float round_anchor_and_offset( Line_Params *line, int *p, int stride );
-    void get_offset_list(const Image<uint8_t>& image, int support, float angle, int p, int *npx );
+    void get_offset_list(const Image<uint8_t>& image, const int support, const float angle, int p, int *npx );
 
     bool is_small_angle(const float angle );
     bool is_angle_leftward(const float angle );

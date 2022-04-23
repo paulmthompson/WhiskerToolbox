@@ -511,40 +511,27 @@ Line_Params JaneliaTracker::line_param_from_seed(const Seed *s) {
 }
 
 float JaneliaTracker::eval_line(Line_Params *line, const Image<uint8_t>& image, int p) {
-    int i;
+
     const int support  = 2*this->config._tlen + 3;
     int npxlist;
 
-      //float *weights, coff;
-      float coff;
-      int bank_i;
+    // compute a nearby anchor
 
-      float  r,l,q,s       = 0.0;
-      static float lastscore = 0.0;
-      static float bg     = -1.0; //background is bright
-      static void *lastim = NULL;
+    float coff      = round_anchor_and_offset( line, &p, image.width );
+    get_offset_list( image, support, line->angle, p, &npxlist );
 
-      // compute a nearby anchor
+    int bank_i = bank.get_nearest(coff, line->width, line->angle);
 
-      coff      = round_anchor_and_offset( line, &p, image.width );
-      get_offset_list( image, support, line->angle, p, &npxlist );
+    auto& parray = image.array;
+    float s = 0.0;
+    int i = 0;
+    while(i < npxlist) {
+        s += parray[this->pxlist[i].image_ind] * this->bank.bank.data[bank_i + this->pxlist[i].weight_ind];
+        //    s += parray[(*pxlist)[2*i]] * this->bank.bank.data[bank_i+(*pxlist)[2*i+1]];
+        i++;
+    }
 
-      bank_i = bank.get_nearest(coff, line->width, line->angle);
-      //bank_i = get_nearest_from_line_detector_bank ( coff, line->width, line->angle );
-
-      {
-        auto& parray = image.array;
-        s = 0.0;
-        i = 0;
-        while(i < npxlist) {
-          s += parray[this->pxlist[i].image_ind] * this->bank.bank.data[bank_i + this->pxlist[i].weight_ind];
-         //  s += parray[(*pxlist)[2*i]] * this->bank.bank.data[bank_i+(*pxlist)[2*i+1]];
-         //    s += parray[(*pxlist)[2*i]] * this->bank.bank.data[bank_i+(*pxlist)[2*i+1]];
-          i++;
-        }
-      }
-
-      return -s;
+    return -s;
 }
 
 float JaneliaTracker::round_anchor_and_offset( Line_Params *line, int *p, int stride )
@@ -555,19 +542,18 @@ float JaneliaTracker::round_anchor_and_offset( Line_Params *line, int *p, int st
 **  is a bit overconstrained.  However, the size of the error can be
 **  bounded to less than the pixel size (proof?).
 */
-{ float rx,ry,px,py;
-  float ppx, ppy, drx, dry, t;     // ox, oy;
+{
   float ex  = cos(line->angle + M_PI/2); // unit vector normal to line
   float ey  = sin(line->angle + M_PI/2);
-  px  = (*p % stride );            // current anchor
-  py  = (*p / stride );
-  rx  = px + ex * line->offset;    // current position
-  ry  = py + ey * line->offset;
-  ppx = round( rx );               // round to nearest pixel as anchor
-  ppy = round( ry );
-  drx = rx - ppx;                  // ppx - rx;       // dr: vector from pp to r
-  dry = ry - ppy;                  // ppy - ry;
-  t   = drx*ex + dry*ey;           // dr dot e (projection along normal to line)
+  float px  = (*p % stride );            // current anchor
+  float py  = (*p / stride );
+  float rx  = px + ex * line->offset;    // current position
+  float ry  = py + ey * line->offset;
+  float ppx = round( rx );               // round to nearest pixel as anchor
+  float ppy = round( ry );
+  float drx = rx - ppx;                  // ppx - rx;       // dr: vector from pp to r
+  float dry = ry - ppy;                  // ppy - ry;
+  float t   = drx*ex + dry*ey;           // dr dot e (projection along normal to line)
 
   // Max error is ~0.6 px
 
@@ -583,7 +569,7 @@ float JaneliaTracker::round_anchor_and_offset( Line_Params *line, int *p, int st
   return t;
 }
 
-void JaneliaTracker::get_offset_list(const Image<uint8_t>& image, int support, float angle, int p, int *npx )
+void JaneliaTracker::get_offset_list(const Image<uint8_t>& image, const int support, const float angle, int p, int *npx )
   /* The integer pairs are indices into the image and weight arrays such that:
    *
    * The following will perform the correlation of filter and image centered at
@@ -609,7 +595,7 @@ void JaneliaTracker::get_offset_list(const Image<uint8_t>& image, int support, f
   static int snpx = 0;
   static int lastp = -1;
   static int last_issmallangle = -1;
-  int i,j, issa;
+  int i,j;
   int half = support / 2;
   int px = p%(image.width),
       py = p/(image.width);
@@ -620,14 +606,14 @@ void JaneliaTracker::get_offset_list(const Image<uint8_t>& image, int support, f
       this->pxlist.resize((int)std::round(1.25 * 2 * support * support + 64));
   }
 
-  issa = is_small_angle( angle );
+  int issa = is_small_angle( angle );
   if( p != lastp || issa != last_issmallangle ) //recompute only if neccessary
-  { int tx,ty,ox,oy;                     //  Neglects to check if support has changed
+  { int tx,ty;                    //  Neglects to check if support has changed
     //float angle = line->angle;
     int ww = image.width;
     int hh = image.height;
-    ox = px - half;
-    oy = py - half;
+    int ox = px - half;
+    int oy = py - half;
     lastp = p;
     last_issmallangle = issa;
     //lastangle = line->angle;
@@ -926,7 +912,7 @@ bool JaneliaTracker::is_local_area_trusted_conservative( Line_Params *line, Imag
 
 float JaneliaTracker::threshold_two_means( uint8_t *array, size_t size )
 { size_t i;
-  size_t hist[256];
+    size_t hist[256] ={};
   uint8_t *cur = array + size;
   float num = 0.0,
         dom = 0.0,
@@ -964,58 +950,37 @@ float JaneliaTracker::threshold_two_means( uint8_t *array, size_t size )
 }
 
 float JaneliaTracker::eval_half_space( Line_Params *line, const Image<uint8_t>& image, int p, float *rr, float *ll )
-{ int i,support  = 2*this->config._tlen + 3;
-  int npxlist, a = support*support;
+{   int support  = 2*this->config._tlen + 3;
+    int npxlist;
 
-  float leftnorm;
-  float rightnorm;
-  float  r,l,q       = 0.0;
-  //static void *lastim = NULL;
-  //static float bg = -1.0;
+    float coff = round_anchor_and_offset( line, &p, image.width );
+    get_offset_list( image, support, line->angle, p, &npxlist );
+    //lefthalf  = get_nearest_from_half_space_detector_bank( coff, line->width, line->angle, &leftnorm );
+    //righthalf  = get_nearest_from_half_space_detector_bank( -coff, line->width, line->angle, &rightnorm );
+    int lefthalf = half_space_bank.get_nearest(coff,line->width,line->angle);
+    int righthalf = half_space_bank.get_nearest(-coff,line->width,line->angle);
 
-  // Out of bounds will be clamped to a constant corresponding to the bright
-  // background
-  //if( bg < 0.0 || lastim != image->array) /* memoize - recomputes when image changes */
-  //{ bg = threshold_upper_fraction_uint8(image);
-  //  lastim = image->array;
-  //}
-
-  float coff = round_anchor_and_offset( line, &p, image.width );
-  get_offset_list( image, support, line->angle, p, &npxlist );
-  //lefthalf  = get_nearest_from_half_space_detector_bank( coff, line->width, line->angle, &leftnorm );
-  //righthalf  = get_nearest_from_half_space_detector_bank( -coff, line->width, line->angle, &rightnorm );
-  int lefthalf = half_space_bank.get_nearest(coff,line->width,line->angle);
-  int righthalf = half_space_bank.get_nearest(-coff,line->width,line->angle);
-  {
     auto& parray = image.array;
-    i = 0; //npxlist;
-    l = 0.0;
-    r = 0.0;
+    int i = 0; //npxlist;
+    float l = 0.0;
+    float r = 0.0;
     while(i < npxlist)
     {
-      l += parray[this->pxlist[i].image_ind] * this->half_space_bank.bank.data[lefthalf + this->pxlist[i].weight_ind];
-      r += parray[this->pxlist[i].image_ind] * this->half_space_bank.bank.data[righthalf +this->pxlist[i].weight_ind];
-      i++;
-      //l += parray[(*pxlist)[2*i]] * this->half_space_bank.bank.data[lefthalf+(*pxlist)[2*i+1]];
-      //r += parray[(*pxlist)[2*i]] * this->half_space_bank.bank.data[righthalf+(*pxlist)[2*i+1]]; // It doesn't work if I have the a term here. Why is that?
-      //l += parray[pxlist[2*i]] * lefthalf[pxlist[2*i+1]];
-      //r += parray[pxlist[2*i]] * righthalf[a - pxlist[2*i+1]];
+        l += parray[this->pxlist[i].image_ind] * this->half_space_bank.bank.data[lefthalf + this->pxlist[i].weight_ind];
+        r += parray[this->pxlist[i].image_ind] * this->half_space_bank.bank.data[righthalf +this->pxlist[i].weight_ind]; // It doesn't work if I have the a term here. Why is that?
+        i++;
+        //l += parray[pxlist[2*i]] * lefthalf[pxlist[2*i+1]];
+        //r += parray[pxlist[2*i]] * righthalf[a - pxlist[2*i+1]];
     }
-
-  }
-
-  // Take averages
-
-  q = (r-l)/(r+l);
-  //r /= rightnorm;
-  //l /= leftnorm;
-  r /= this->half_space_bank.norm;
-  l /= this->half_space_bank.norm;
-  //
-  // Finish up
-  //
-  *ll = l; *rr = r;
-  return q;
+    // Take averages
+    float q = (r-l)/(r+l);
+    r /= this->half_space_bank.norm;
+    l /= this->half_space_bank.norm;
+    //
+    // Finish up
+    //
+    *ll = l; *rr = r;
+    return q;
 }
 
 int JaneliaTracker::move_line( Line_Params *line, int *p, int stride, int direction )
