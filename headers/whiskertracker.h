@@ -6,7 +6,7 @@
 #include "janelia.h"
 
 struct Whisker {
-    int id; // frame
+    int id; // unique identifier for whisker in frame, starting at 1
     std::vector<float> x;
     std::vector<float> y;
     Whisker()

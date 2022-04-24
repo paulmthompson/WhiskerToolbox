@@ -24,7 +24,8 @@ void WhiskerTracker::trace(std::vector<uint8_t>& input) {
     Image<uint8_t>img = Image<uint8_t>(640,480,input);
     std::vector<Whisker_Seg> j_segs = janelia.find_segments(1,img,bg);
 
+    int whisker_count = 1;
     for (auto& w_seg : j_segs) {
-        whiskers.push_back(Whisker(1,w_seg.x,w_seg.y));
+        whiskers.push_back(Whisker(whisker_count++,std::move(w_seg.x),std::move(w_seg.y)));
     }
 }

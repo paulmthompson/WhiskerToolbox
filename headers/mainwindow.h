@@ -11,6 +11,7 @@
 #include <ffmpeg_wrapper/videodecoder.h>
 
 #include "whiskertracker.h"
+#include "Video_Window.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -23,6 +24,8 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+protected:
 
 private:
     Ui::MainWindow *ui;
@@ -42,6 +45,7 @@ private:
 
     QTimer* timer;
 
+    int selected_whisker;
 
 
     long long t_last_draw;
@@ -51,7 +55,7 @@ private:
     bool play_mode;
 
     QImage myimage;
-    QGraphicsScene* scene;
+    Video_Window* scene;
     QGraphicsPixmapItem* pixmap_item;
     QVector<QGraphicsPathItem*> whisker_paths;
 

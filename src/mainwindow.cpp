@@ -27,11 +27,13 @@ MainWindow::MainWindow(QWidget *parent)
     last_loaded_frame = 0;
     play_speed = 1;
 
+    this->selected_whisker = 0;
+
     vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
     wt = std::make_unique<WhiskerTracker>();
     std::vector<uint8_t>current_frame = {};
 
-    scene = new QGraphicsScene(this);
+    scene = new Video_Window(this);
 
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::vidLoop);
@@ -185,6 +187,9 @@ void MainWindow::DrawWhiskers()
             path->lineTo(QPointF(w.x[i],w.y[i]));
         }
 
-        whisker_paths.append(this->scene->addPath(*path,QPen(QColor(Qt::blue))));
+        auto whisker_color = (w.id == this->selected_whisker) ? QPen(QColor(Qt::red)) : QPen(QColor(Qt::blue));
+
+        whisker_paths.append(this->scene->addPath(*path,whisker_color));
+
     }
 }
