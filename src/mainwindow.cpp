@@ -69,6 +69,7 @@ void MainWindow::createActions()
     connect(ui->rewind,SIGNAL(clicked()),this,SLOT(RewindButton()));
     connect(ui->fastforward,SIGNAL(clicked()),this,SLOT(FastForwardButton()));
     connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
+    connect(scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
 }
 
 void MainWindow::Load_Video()
@@ -192,4 +193,8 @@ void MainWindow::DrawWhiskers()
         whisker_paths.append(this->scene->addPath(*path,whisker_color));
 
     }
+}
+
+void MainWindow::ClickedInVideo(qreal x,qreal y) {
+    qDebug() << "Made it at " << x << " " << y;
 }

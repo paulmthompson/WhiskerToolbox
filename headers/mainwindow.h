@@ -69,5 +69,6 @@ private slots:
     void RewindButton();
     void FastForwardButton();
     void TraceButton();
+    void ClickedInVideo(qreal,qreal);
 };
 #endif // MAINWINDOW_H

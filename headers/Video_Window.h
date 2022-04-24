@@ -3,6 +3,7 @@
 
 #include "qdebug.h"
 #include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
 
 class Video_Window : public QGraphicsScene
 {
@@ -13,7 +14,11 @@ public:
 protected:
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event) {
-        qDebug() << "Clicked";
+        if (event->button() == Qt::LeftButton) {
+            emit leftClick(event->scenePos().x(),event->scenePos().y());
+        } else if (event->button() == Qt::RightButton){
+
+        }
     }
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
@@ -21,6 +26,8 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
     }
+signals:
+    void leftClick(qreal,qreal);
 };
 
 
