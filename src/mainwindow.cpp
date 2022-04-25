@@ -45,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->graphicsView->setScene(scene);
     ui->graphicsView->show();
 
+    selection_mode = Whisker_Select;
+
     createActions();
 
 }
@@ -147,6 +149,8 @@ void MainWindow::LoadFrame(int frame_id,bool frame_by_frame)
 
     this->current_frame = image;
 
+    this->selected_whisker = 0; //This will need to be
+
     QImage img = QImage(&image[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
     UpdateCanvas(img);
     this->last_loaded_frame = frame_id;
@@ -196,5 +200,21 @@ void MainWindow::DrawWhiskers()
 }
 
 void MainWindow::ClickedInVideo(qreal x,qreal y) {
-    qDebug() << "Made it at " << x << " " << y;
+
+    switch(this->selection_mode) {
+        case Whisker_Select: {
+        std::tuple<float,int> nearest_whisker = wt->get_nearest_whisker(x, y);
+        if (std::get<0>(nearest_whisker) < 10.0f) {
+            this->selected_whisker = std::get<1>(nearest_whisker);
+            this->DrawWhiskers();
+        }
+        break;
+        }
+        case Whisker_Pad_Select:
+
+        break;
+
+        default:
+        break;
+    }
 }

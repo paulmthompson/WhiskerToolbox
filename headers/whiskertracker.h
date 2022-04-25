@@ -28,12 +28,15 @@ public:
     WhiskerTracker();
 
    void trace(std::vector<uint8_t>& input);
+   std::tuple<float,int> get_nearest_whisker(float x_p, float y_p);
     std::vector<Whisker> whiskers;
+
 
 private:
     JaneliaTracker janelia;
     bool janelia_init;
     //std::unordered_map<int, Whisker> woi;
+
 };
 
 

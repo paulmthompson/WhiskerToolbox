@@ -62,6 +62,10 @@ private:
     std::unique_ptr<WhiskerTracker> wt;
     std::vector<uint8_t> current_frame;
 
+    enum Selection_Type {Whisker_Select,
+                        Whisker_Pad_Select};
+    MainWindow::Selection_Type selection_mode;
+
 private slots:
     void Load_Video();
     void Slider_Scroll(int newPos);
