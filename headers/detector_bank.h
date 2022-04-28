@@ -2,6 +2,7 @@
 #define DETECTOR_BANK_H
 
 #include <vector>
+#include <unordered_map>
 
 #define bigReal 1.E38f
 
@@ -96,22 +97,23 @@ struct vertex
 
 struct Array
 {
-  std::vector<float> data;
-  std::vector<int> strides_bytes;
-  std::vector<int> strides_px;
-  std::vector<int> shape;
   int ndim;
+  std::array<int,6> strides_bytes;
+  std::array<int,6> strides_px;
+  std::array<int,5> shape;
+  std::vector<float> data;
+  //std::unordered_map<int,float> data;
 
   Array() {
 
   }
-
-  Array(std::vector<int>& shape_in , int ndim_in, int bytesperpixel ) {
-      int i = ndim_in;
-      ndim = ndim_in;
-      shape = std::vector<int>(ndim);
-      strides_bytes = std::vector<int>(ndim+1);
-      strides_px = std::vector<int>(ndim+1);
+  // ndim_in is always 5
+  Array(std::array<int,5>& shape_in , int bytesperpixel ) {
+      int i = 5;
+      ndim = 5;
+      shape = {};
+      strides_bytes = {};
+      strides_px = {};
 
       strides_bytes[ndim] = bytesperpixel;
       strides_px[ndim] = 1;
@@ -122,6 +124,7 @@ struct Array
         shape[i]   = shape_in[i];
       }
       data = std::vector<float>(strides_bytes[0]);
+      //data.reserve(strides_bytes[0]);
   }
 };
 

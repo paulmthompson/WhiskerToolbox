@@ -54,12 +54,12 @@ void LineDetector::Build_Line_Detectors(float length,int supportsize ) {
      int noff =  compute_number_steps( this->off ),
          nwid =  compute_number_steps( this->wid ),
          nang =  compute_number_steps( this->ang );
-     std::vector<int> shape = { supportsize,
+     std::array<int,5> shape = { supportsize,
                       supportsize,
                       noff,
                       nwid,
                       nang};
-      this->bank = Array(shape, 5, sizeof(float));
+      this->bank = Array(shape, sizeof(float)); // This array is always size 5 for the number of dimensions
 
      { int    o,a,w;
        for( o = 0; o < noff; o++ )
@@ -132,12 +132,12 @@ void HalfSpaceDetector::Build_Half_Space_Detectors(float length,int supportsize 
   int noff =  compute_number_steps(this->off ),
       nwid =  compute_number_steps(this->wid ),
       nang =  compute_number_steps(this->ang );
-  std::vector<int> shape = { supportsize,
+  std::array<int,5> shape = { supportsize,
                    supportsize,
                    noff,
                    nwid,
                    nang};
-  this->bank = Array(shape, 5, sizeof(float));
+  this->bank = Array(shape, sizeof(float));
 
   { int    o,a,w;
     for( o = 0; o < noff; o++ )
