@@ -391,11 +391,11 @@ float inter(point * a, int na, point * b, int nb)
   ipa = (vertex*) malloc( sizeof(vertex) * (na+1) );
   ipb = (vertex*) malloc( sizeof(vertex) * (nb+1) );
 
-  range(&B, a, na);
-  range(&B, b, nb);
+  range(B, a, na);
+  range(B, b, nb);
 
-  ascale = fit(&B, a, na, ipa, 0);
-  ascale = fit(&B, b, nb, ipb, 2);
+  ascale = fit(B, a, na, ipa, 0);
+  ascale = fit(B, b, nb, ipb, 2);
 
   { long long s = 0;
     int j, k;
@@ -443,10 +443,10 @@ void bur(float * X, float y)
 { *X = *X>y ? *X:y;
 }
 
-void range(box *B, point * x, int c)
+void range(box& B, point * x, int c)
 { while(c--)
- { bdr(&B->min.x, x[c].x); bur(&B->max.x, x[c].x);
-   bdr(&B->min.y, x[c].y); bur(&B->max.y, x[c].y);
+ { bdr(&B.min.x, x[c].x); bur(&B.max.x, x[c].x);
+   bdr(&B.min.y, x[c].y); bur(&B.max.y, x[c].y);
  }
 }
 
@@ -457,7 +457,7 @@ void cntrib(long long *s, ipoint f, ipoint t, short w)
 { *s += (long long)w*(t.x-f.x)*(t.y+f.y)/2;
 }
 
-long long area(ipoint a, ipoint p, ipoint q)
+long long area(const ipoint a, const ipoint p, const ipoint q)
 /* Compute the area of the triangle (apq) */
 { return (long long)p.x*q.y - (long long)p.y*q.x +
    (long long)a.x*(p.y - q.y) + (long long)a.y*(q.x - p.x);
@@ -506,7 +506,7 @@ void inness(long long *sarea, vertex * P, int cP, vertex * Q, int cQ)
   }
 }
 
-double fit(box *B, point * x, int cx, vertex * ix, int fudge)
+double fit(box& B, point * x, int cx, vertex * ix, int fudge)
   /* Fits points to an integral lattice.
    *
    * Converts floating point coords to an integer representation.  The bottom
@@ -519,12 +519,12 @@ double fit(box *B, point * x, int cx, vertex * ix, int fudge)
    * http://doi.acm.org/10.1145/77635.77639
    */
 { const float gamut = 500000000., mid = gamut/2.;
-  float rngx = B->max.x - B->min.x, sclx = gamut/rngx,
-        rngy = B->max.y - B->min.y, scly = gamut/rngy;
+  float rngx = B.max.x - B.min.x, sclx = gamut/rngx,
+        rngy = B.max.y - B.min.y, scly = gamut/rngy;
   int c=cx;
   while(c--)
-  { ix[c].ip.x = (long)((x[c].x - B->min.x)*sclx - mid)&~7|fudge|c&1;
-    ix[c].ip.y = (long)((x[c].y - B->min.y)*scly - mid)&~7|fudge;
+  { ix[c].ip.x = (long)((x[c].x - B.min.x)*sclx - mid)&~7|fudge|c&1;
+    ix[c].ip.y = (long)((x[c].y - B.min.y)*scly - mid)&~7|fudge;
   }
   ix[0].ip.y += cx&1;
   ix[cx] = ix[0];
