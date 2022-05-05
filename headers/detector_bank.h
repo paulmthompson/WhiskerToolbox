@@ -193,9 +193,8 @@ void pixel_to_vertex_array(int p, int stride, float *v);
 unsigned array_max_f32u ( float *buf, int size, int step, float bound );
 unsigned array_min_f32u ( float *buf, int size, int step, float bound );
 float inter(point * a, int na, point * b, int nb);
-bool ovl(const rng p, const rng q);
-void bdr(float * X, float y);
-void bur(float * X, float y);
+
+
 void range(box& B, point * x, int c);
 void cntrib(long long *s, ipoint f, ipoint t, short w);
 long long area(const ipoint a, const ipoint p, const ipoint q);
@@ -203,8 +202,6 @@ void cross(long long *s, vertex * a, vertex * b, vertex * c, vertex * d,
     double a1, double a2, double a3, double a4);
 double fit(box& B, point * x, int cx, vertex * ix, int fudge);
 void inness(long long *sarea, vertex * P, int cP, vertex * Q, int cQ);
-bool is_small_angle(const float angle );
-bool is_angle_leftward(const float angle );
 
 void Simple_Circle_Primitive( point *verts, int npoints, point center, float radius, int direction);
 void Multiply_Pixel_Overlap( float *xy, int n, float gain, float boundary, float *grid, int *strides );

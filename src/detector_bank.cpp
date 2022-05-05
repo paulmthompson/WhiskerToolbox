@@ -208,12 +208,26 @@ void HalfSpaceDetector::Render_Half_Space_Detector( float offset,
 
 int DetectorBank::get_nearest(float offset, float width, float angle)
 {
+   auto is_small_angle = [](const float angle )
+     /* true iff angle is in [-pi/4,pi/4) or [3pi/4,5pi/4) */
+    { static const float qpi = M_PI/4.0;
+     static const float hpi = M_PI/2.0;
+     int n = floorf( (angle-qpi)/hpi );
+     return  (n % 2) != 0;
+    };
   if( !is_small_angle( angle ) )  // if large angle then transpose
   { angle = 3.0*M_PI/2.0 - angle; //   to small ones ( <45deg )
   //offset = -offset;
   }
   WRAP_ANGLE_2PI( angle );
 
+  auto is_angle_leftward = [](const float angle )
+          /* true iff angle is in left half plane */
+         { //static const float qpi = M_PI/4.0;
+          static const float hpi = M_PI/2.0;
+          int n = floorf( (angle-hpi)/M_PI );
+          return  (n % 2) == 0;
+         };
   //sometimes need to flip the line upside down
   if( is_angle_leftward(angle) )
   { WRAP_ANGLE_HALF_PLANE( angle );
@@ -400,6 +414,11 @@ float inter(point * a, int na, point * b, int nb)
   { long long s = 0;
     int j, k;
 
+    auto ovl = [](const rng p, const rng q)
+    /* True if intervals intersect */
+    { return p.mn < q.mx && q.mn < p.mx;
+    };
+
     /*
      * Look for crossings, add contributions from crossings and track winding
      * */
@@ -430,21 +449,15 @@ float inter(point * a, int na, point * b, int nb)
   }
 }
 
-bool ovl(const rng p, const rng q)
-/* True if intervals intersect */
-{ return p.mn < q.mx && q.mn < p.mx;
-}
-
-void bdr(float * X, float y)
-{ *X = *X<y ? *X:y;
-}
-
-void bur(float * X, float y)
-{ *X = *X>y ? *X:y;
-}
-
 void range(box& B, point * x, int c)
-{ while(c--)
+{
+  auto bdr = [](float * X, float y)
+  { *X = *X<y ? *X:y;
+  };
+  auto bur = [](float * X, float y)
+  { *X = *X>y ? *X:y;
+  };
+    while(c--)
  { bdr(&B.min.x, x[c].x); bur(&B.max.x, x[c].x);
    bdr(&B.min.y, x[c].y); bur(&B.max.y, x[c].y);
  }
@@ -544,20 +557,4 @@ double fit(box& B, point * x, int cx, vertex * ix, int fudge)
     ix[c].in=0;
   }
   return sclx*scly;
-}
-
-bool is_small_angle(const float angle )
- /* true iff angle is in [-pi/4,pi/4) or [3pi/4,5pi/4) */
-{ static const float qpi = M_PI/4.0;
- static const float hpi = M_PI/2.0;
- int n = floorf( (angle-qpi)/hpi );
- return  (n % 2) != 0;
-}
-
-bool is_angle_leftward(const float angle )
- /* true iff angle is in left half plane */
-{ //static const float qpi = M_PI/4.0;
- static const float hpi = M_PI/2.0;
- int n = floorf( (angle-hpi)/M_PI );
- return  (n % 2) == 0;
 }
