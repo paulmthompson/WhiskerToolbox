@@ -273,6 +273,7 @@
     <property name="title">
      <string>Image</string>
     </property>
+    <addaction name="actionTake_Snapshot"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -282,6 +283,11 @@
   <action name="actionLoad_Video">
    <property name="text">
     <string>Load Video</string>
+   </property>
+  </action>
+  <action name="actionTake_Snapshot">
+   <property name="text">
+    <string>Take Snapshot</string>
    </property>
   </action>
  </widget>

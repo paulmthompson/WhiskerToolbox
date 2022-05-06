@@ -132,7 +132,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
 
                 auto w = trace_whisker( &seed, image );
                 if(w.len == 0)
-                { SWAP(seed.xdir,seed.ydir);
+                { std::swap(seed.xdir,seed.ydir);
                   w = trace_whisker( &seed, image ); // try again at a right angle...sometimes when we're off by one the slope estimate is perpendicular to the whisker.
                 }
                 if (w.len > this->config._min_length)
@@ -606,6 +606,14 @@ void JaneliaTracker::get_offset_list(const Image<uint8_t>& image, const int supp
       this->pxlist.resize((int)std::round(1.25 * 2 * support * support + 64));
   }
 
+  auto is_small_angle = [](const float angle )
+  /* true iff angle is in [-pi/4,pi/4) or [3pi/4,5pi/4) */
+  { static const float qpi = M_PI/4.0;
+    static const float hpi = M_PI/2.0;
+    int n = floorf( (angle-qpi)/hpi );
+    return  (n % 2) != 0;
+   };
+
   int issa = is_small_angle( angle );
   if( p != lastp || issa != last_issmallangle ) //recompute only if neccessary
   { int tx,ty;                    //  Neglects to check if support has changed
@@ -673,22 +681,6 @@ void JaneliaTracker::get_offset_list(const Image<uint8_t>& image, const int supp
   *npx = snpx;
 }
 
-bool JaneliaTracker::is_small_angle(const float angle )
- /* true iff angle is in [-pi/4,pi/4) or [3pi/4,5pi/4) */
-{ static const float qpi = M_PI/4.0;
- static const float hpi = M_PI/2.0;
- int n = floorf( (angle-qpi)/hpi );
- return  (n % 2) != 0;
-}
-
-bool JaneliaTracker::is_angle_leftward(const float angle )
- /* true iff angle is in left half plane */
-{ //static const float qpi = M_PI/4.0;
- static const float hpi = M_PI/2.0;
- int n = floorf( (angle-hpi)/M_PI );
- return  (n % 2) == 0;
-}
-
 Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
 {
   static std::vector<record> ldata(1000);
@@ -712,6 +704,20 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
     int      oldp;
     Interval roff, rang, rwid;
 
+    auto compute_dxdy =[]( Line_Params *line, float *dx, float *dy )
+    {
+      float ex  = cos(line->angle + M_PI/2);  // unit vector normal to line
+      float ey  = sin(line->angle + M_PI/2);
+      *dx = ex * line->offset; // current position
+      *dy = ey * line->offset;
+    };
+
+    auto outofbounds = [](const int q, const int cwidth, const int cheight)
+    { int x = q%cwidth;
+      int y = q/cwidth;
+      return (x < 1 || x >= cwidth-1 ||y < 1 || y >= cheight-1);
+    };
+
     /*
      *  init
      */
@@ -720,7 +726,17 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
 
     line = line_param_from_seed( s );
 
-    initialize_paramater_ranges( &line, &roff, &rang, &rwid);
+    auto initialize_parameter_ranges = []( Line_Params *line, Interval *roff, Interval *rang, Interval *rwid)
+    {
+        rwid->min = 0.5;
+        rwid->max = 3.0;
+        roff->min = -2.5;
+        roff->max =  2.5;
+        rang->min = line->angle - M_PI;
+        rang->max = line->angle + M_PI;
+    };
+
+    initialize_parameter_ranges( &line, &roff, &rang, &rwid);
 
     //Must start in a trusted area
     if( !is_local_area_trusted_conservative( &line, image, p ) )
@@ -880,37 +896,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
   }
 }
 
-void JaneliaTracker::initialize_paramater_ranges( Line_Params *line, Interval *roff, Interval *rang, Interval *rwid)
-{
-    rwid->min = 0.5;
-    rwid->max = 3.0;
-    roff->min = -2.5;
-    roff->max =  2.5;
-    rang->min = line->angle - M_PI;
-    rang->max = line->angle + M_PI;
-}
-
-bool JaneliaTracker::is_local_area_trusted_conservative( Line_Params *line, Image<uint8_t>& image, int p )
-{ float q,r,l;
-  static float thresh = -1.0;
-  static std::vector<uint8_t>* lastim = {};
-  //static const std::vector<uint8_t>* lastim = {};
-  q = eval_half_space( line, image, p, &r, &l );
-
-  if( thresh < 0.0 || lastim != &image.array) /* recomputes when image changes */
-  { //thresh = mean_uint8( image );
-    thresh = threshold_two_means( image.array.data(), image.width*image.height );
-    lastim = &image.array;
-  }
-  if( ((r < thresh) && (l < thresh )) ||
-      (fabs(q) > this->config._half_space_assymetry) )
-  { return false;
-  } else
-  { return true;
-  }
-}
-
-float JaneliaTracker::threshold_two_means( uint8_t *array, size_t size )
+float threshold_two_means( uint8_t *array, size_t size )
 { size_t i;
     size_t hist[256] ={};
   uint8_t *cur = array + size;
@@ -947,6 +933,65 @@ float JaneliaTracker::threshold_two_means( uint8_t *array, size_t size )
   } while( fabs(last - thresh) > 0.5 );
   //debug("Threshold: %f\n",thresh);
   return thresh;
+}
+
+int threshold_bottom_fraction_uint8( const Image<uint8_t>& im ) //, float fraction )
+{
+  auto& d = im.array;
+  uint8_t mean = std::floor(std::accumulate(d.begin(),d.end(),0) / d.size());
+
+  int i = im.width * im.height;;
+  uint32_t acc = 0;
+  int count = 0;
+  while(i--)
+  {
+    if( d[i] <= mean )
+    { acc += d[i];
+      count ++;
+    }
+  }
+  float lm = acc / count;
+
+  return (int) lm;
+}
+
+bool JaneliaTracker::is_local_area_trusted( Line_Params *line, Image<uint8_t>& image, int p )
+{ float q,r,l;
+  static float thresh = -1.0;
+  static std::vector<uint8_t>* lastim = {};
+  q = eval_half_space( line, image, p, &r, &l );
+
+  if( thresh < 0.0 || lastim != &image.array) /* recomputes when image changes */
+  { thresh = threshold_bottom_fraction_uint8(image);//,HALF_SPACE_FRACTION_DARK );
+    lastim = &image.array;
+  }
+
+  if( ((r < thresh) && (l < thresh )) ||
+      (fabs(q) > this->config._half_space_assymetry))
+  { return false;
+  } else
+  { return true;
+  }
+}
+
+bool JaneliaTracker::is_local_area_trusted_conservative( Line_Params *line, Image<uint8_t>& image, int p )
+{ float q,r,l;
+  static float thresh = -1.0;
+  static std::vector<uint8_t>* lastim = {};
+  //static const std::vector<uint8_t>* lastim = {};
+  q = eval_half_space( line, image, p, &r, &l );
+
+  if( thresh < 0.0 || lastim != &image.array) /* recomputes when image changes */
+  { //thresh = mean_uint8( image );
+    thresh = threshold_two_means( image.array.data(), image.width*image.height );
+    lastim = &image.array;
+  }
+  if( ((r < thresh) && (l < thresh )) ||
+      (fabs(q) > this->config._half_space_assymetry) )
+  { return false;
+  } else
+  { return true;
+  }
 }
 
 float JaneliaTracker::eval_half_space( Line_Params *line, const Image<uint8_t>& image, int p, float *rr, float *ll )
@@ -1133,59 +1178,6 @@ bool JaneliaTracker::is_change_too_big( Line_Params *new_line, Line_Params *old,
     return true;
   }
   return false;
-}
-
-bool JaneliaTracker::is_local_area_trusted( Line_Params *line, Image<uint8_t>& image, int p )
-{ float q,r,l;
-  static float thresh = -1.0;
-  static std::vector<uint8_t>* lastim = {};
-  q = eval_half_space( line, image, p, &r, &l );
-
-  if( thresh < 0.0 || lastim != &image.array) /* recomputes when image changes */
-  { thresh = threshold_bottom_fraction_uint8(image);//,HALF_SPACE_FRACTION_DARK );
-    lastim = &image.array;
-  }
-
-  if( ((r < thresh) && (l < thresh )) ||
-      (fabs(q) > this->config._half_space_assymetry))
-  { return false;
-  } else
-  { return true;
-  }
-}
-
-int JaneliaTracker::threshold_bottom_fraction_uint8( const Image<uint8_t>& im ) //, float fraction )
-{
-  auto& d = im.array;
-  uint8_t mean = std::floor(std::accumulate(d.begin(),d.end(),0) / d.size());
-
-  int i = im.width * im.height;;
-  uint32_t acc = 0;
-  int count = 0;
-  while(i--)
-  {
-    if( d[i] <= mean )
-    { acc += d[i];
-      count ++;
-    }
-  }
-  float lm = acc / count;
-
-  return (int) lm;
-}
-
-bool JaneliaTracker::outofbounds(const int q, const int cwidth, const int cheight)
-{ int x = q%cwidth;
-  int y = q/cwidth;
-  return (x < 1 || x >= cwidth-1 ||y < 1 || y >= cheight-1);
-}
-
-void JaneliaTracker::compute_dxdy( Line_Params *line, float *dx, float *dy )
-{
-  float ex  = cos(line->angle + M_PI/2);  // unit vector normal to line
-  float ey  = sin(line->angle + M_PI/2);
-  *dx = ex * line->offset; // current position
-  *dy = ey * line->offset;
 }
 
 Seed* JaneliaTracker::compute_seed_from_point( const Image<uint8_t>& image, int p, int maxr )

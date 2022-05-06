@@ -126,13 +126,8 @@ private:
     float round_anchor_and_offset( Line_Params *line, int *p, int stride );
     void get_offset_list(const Image<uint8_t>& image, const int support, const float angle, int p, int *npx );
 
-    bool is_small_angle(const float angle );
-    bool is_angle_leftward(const float angle );
-
     Whisker_Seg trace_whisker(Seed *s, Image<uint8_t>& image);
-    void initialize_paramater_ranges( Line_Params *line, Interval *roff, Interval *rang, Interval *rwid);
 
-    float threshold_two_means( uint8_t *array, size_t size );
     float eval_half_space( Line_Params *line, const Image<uint8_t>& image, int p, float *rr, float *ll );
     int move_line( Line_Params *line, int *p, int stride, int direction );
     int adjust_line_start(Line_Params *line, const Image<uint8_t>& image, int *pp,
@@ -140,9 +135,6 @@ private:
     bool is_change_too_big( Line_Params *new_line, Line_Params *old, const float alim, const float wlim, const float olim);
     bool is_local_area_trusted( Line_Params *line, Image<uint8_t>& image, int p );
     bool is_local_area_trusted_conservative( Line_Params *line, Image<uint8_t>& image, int p );
-    int threshold_bottom_fraction_uint8( const Image<uint8_t>& im );
-    static bool outofbounds(const int q, const int cwidth, const int cheight);
-    void compute_dxdy( Line_Params *line, float *dx, float *dy );
 
     //New
     double calculate_whisker_length(Whisker_Seg& w);
@@ -150,10 +142,7 @@ private:
 
     std::vector<offset_pair> pxlist;
 
-
 };
-
-//  uint8_t val = *( ((uint8_t*) image->array) + tp);
 
 #define _COMPUTE_SEED_FROM_POINT_HELPER(BEST,BP)                    \
 { int tp = x+cx + image.width * (y+cy);                            \
@@ -163,7 +152,5 @@ private:
     BEST =  val;                                                    \
   }                                                                 \
 }
-
-#define SWAP(a,b) (( (a)==(b) ) || ( ((a) ^= (b)), ((b) ^= (a)), ((a) ^=(b) ))  )
 
 #endif // JANELIA_H
