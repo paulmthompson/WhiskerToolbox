@@ -174,17 +174,6 @@ private:
 
 };
 
-#define WRAP_ANGLE_HALF_PLANE(th) \
-  while( (th)    < M_PI/2.0 )     \
-    (th)    +=   M_PI;            \
-  while( (th)    >= M_PI/2.0 )    \
-    (th)    -=   M_PI;
-#define WRAP_ANGLE_2PI(th)        \
-  while( (th)    < -M_PI )        \
-    (th)    +=   2*M_PI;          \
-  while( (th)    >= M_PI )        \
-    (th)    -=   2*M_PI;
-
 template <std::size_t N>
 void Simple_Line_Primitive( std::array<point,N>& verts, point offset, float length, float thick );
 
@@ -197,7 +186,7 @@ void translate(std::array<point,N>& pbuf, point ori);
 template <std::size_t N>
 void Sum_Pixel_Overlap(std::array<point,N>& xy, float gain, float *grid, int *strides );
 
-void pixel_to_vertex_array(int p, int stride, std::array<point,4>& v);
+void pixel_to_vertex_array(const int p, const int stride, std::array<point,4>& v);
 
 template <std::size_t N>
 float inter(std::array<point, N>& a, std::array<point,4>& b);
@@ -211,10 +200,11 @@ void cross(long long *s, vertex * a, vertex * b, vertex * c, vertex * d,
     double a1, double a2, double a3, double a4);
 
 
-template <std::size_t N>
-double fit(box& B, std::array<point,N>& x, vertex * ix, int fudge);
+template <std::size_t N, std::size_t M>
+double fit(box& B, std::array<point,N>& x, std::array<vertex,M>& ix, int fudge);
 
-void inness(long long *sarea, vertex * P, int cP, vertex * Q, int cQ);
+template <std::size_t M, std::size_t N>
+void inness(long long *sarea, std::array<vertex,M>& P, int cP, std::array<vertex,N>& Q, int cQ);
 
 template <std::size_t N>
 void Simple_Circle_Primitive(std::array<point,N>& verts, point center, float radius, int direction);

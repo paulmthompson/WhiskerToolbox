@@ -218,7 +218,12 @@ int DetectorBank::get_nearest(float offset, float width, float angle)
   { angle = 3.0*M_PI/2.0 - angle; //   to small ones ( <45deg )
   //offset = -offset;
   }
-  WRAP_ANGLE_2PI( angle );
+
+  // Make sure angle is between 0 and 2 Pi
+  while( (angle)    < -M_PI )
+    (angle)    +=   2*M_PI;
+  while( (angle)    >= M_PI )
+    (angle)    -=   2*M_PI;
 
   auto is_angle_leftward = [](const float angle )
           /* true iff angle is in left half plane */
@@ -229,7 +234,13 @@ int DetectorBank::get_nearest(float offset, float width, float angle)
          };
   //sometimes need to flip the line upside down
   if( is_angle_leftward(angle) )
-  { WRAP_ANGLE_HALF_PLANE( angle );
+  {
+    //Wrap the angle in the appropriate half plane
+    while( (angle)    < M_PI/2.0 )
+       (angle)    +=   M_PI;
+    while( (angle)    >= M_PI/2.0 )
+       (angle)    -=   M_PI;
+
     offset = -offset;
   }
 
@@ -362,7 +373,7 @@ void Sum_Pixel_Overlap(std::array<point,N>& xy, float gain, float *grid, int *st
   return;
 }
 
-void pixel_to_vertex_array(int p, int stride, std::array<point,4>& v)
+void pixel_to_vertex_array(const int p, const int stride, std::array<point,4>& v)
 { float x = p%stride;
  float y = p/stride;
  v[0] = {x,y};
@@ -400,12 +411,12 @@ std::array<int,4> f32_min_max(std::array<point,N>& points,int * bound) {
 template <size_t N>
 float inter(std::array<point, N>& a, std::array<point,4>& b)
 { //vertex ipa[na+1], ipb[nb+1];
-  vertex *ipa,*ipb;
+  //vertex *ipa,*ipb;
   box B = {{bigReal, bigReal}, {-bigReal, -bigReal}};
   double ascale;
 
-  ipa = (vertex*) malloc( sizeof(vertex) * (a.size()+1) );
-  ipb = (vertex*) malloc( sizeof(vertex) * (b.size()+1) );
+  std::array<vertex,N+1> ipa = {};
+  std::array<vertex,5> ipb = {};
 
   range(B, a);
   range(B, b);
@@ -445,8 +456,6 @@ float inter(std::array<point, N>& a, std::array<point,4>& b)
     /* Add contributions from non-crossing edges */
     inness(&s, ipa, a.size(), ipb, b.size());
     inness(&s, ipb, b.size(), ipa, a.size());
-    free(ipa);
-    free(ipb);
     return s/ascale;
   }
 }
@@ -504,7 +513,8 @@ void cross(long long *s, vertex * a, vertex * b, vertex * c, vertex * d,
   --c->in;
 }
 
-void inness(long long *sarea, vertex * P, int cP, vertex * Q, int cQ)
+template <size_t M, size_t N>
+void inness(long long *sarea, std::array<vertex,M>& P, int cP, std::array<vertex,N>& Q, int cQ)
 { int s=0, c=cQ;
   ipoint p = P[0].ip;
   int j;
@@ -522,8 +532,8 @@ void inness(long long *sarea, vertex * P, int cP, vertex * Q, int cQ)
   }
 }
 
-template <size_t N>
-double fit(box& B, std::array<point,N>& x, vertex * ix, int fudge)
+template <size_t N, size_t M>
+double fit(box& B, std::array<point,N>& x, std::array<vertex,M>& ix, int fudge)
   /* Fits points to an integral lattice.
    *
    * Converts floating point coords to an integer representation.  The bottom
