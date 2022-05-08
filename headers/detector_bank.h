@@ -185,25 +185,41 @@ private:
   while( (th)    >= M_PI )        \
     (th)    -=   2*M_PI;
 
-void Simple_Line_Primitive( point *verts, point offset, float length, float thick );
-void rotate( point *pbuf, int n, float angle);
-void translate( point* pbuf, int n, point ori);
-void Sum_Pixel_Overlap( float *xy, int n, float gain, float *grid, int *strides );
-void pixel_to_vertex_array(int p, int stride, float *v);
-unsigned array_max_f32u ( float *buf, int size, int step, float bound );
-unsigned array_min_f32u ( float *buf, int size, int step, float bound );
-float inter(point * a, int na, point * b, int nb);
+template <std::size_t N>
+void Simple_Line_Primitive( std::array<point,N>& verts, point offset, float length, float thick );
 
+template <std::size_t N>
+void rotate( std::array<point,N>& pbuf, float angle);
 
-void range(box& B, point * x, int c);
+template <std::size_t N>
+void translate(std::array<point,N>& pbuf, point ori);
+
+template <std::size_t N>
+void Sum_Pixel_Overlap(std::array<point,N>& xy, float gain, float *grid, int *strides );
+
+void pixel_to_vertex_array(int p, int stride, std::array<point,4>& v);
+
+template <std::size_t N>
+float inter(std::array<point, N>& a, std::array<point,4>& b);
+
+template <std::size_t N>
+void range(box& B, std::array<point,N>& x);
+
 void cntrib(long long *s, ipoint f, ipoint t, short w);
 long long area(const ipoint a, const ipoint p, const ipoint q);
 void cross(long long *s, vertex * a, vertex * b, vertex * c, vertex * d,
     double a1, double a2, double a3, double a4);
-double fit(box& B, point * x, int cx, vertex * ix, int fudge);
+
+
+template <std::size_t N>
+double fit(box& B, std::array<point,N>& x, vertex * ix, int fudge);
+
 void inness(long long *sarea, vertex * P, int cP, vertex * Q, int cQ);
 
-void Simple_Circle_Primitive( point *verts, int npoints, point center, float radius, int direction);
-void Multiply_Pixel_Overlap( float *xy, int n, float gain, float boundary, float *grid, int *strides );
+template <std::size_t N>
+void Simple_Circle_Primitive(std::array<point,N>& verts, point center, float radius, int direction);
+
+template <std::size_t N>
+void Multiply_Pixel_Overlap(std::array<point,N>& xy, float gain, float boundary, float *grid, int *strides );
 
 #endif // DETECTOR_BANK_H

@@ -94,7 +94,7 @@ void LineDetector::Render_Line_Detector( float offset,
  *           For now assume channels == 1.
  *  `anchor` The center is at anchor.
  */
-{ point prim[4];
+{ std::array<point,4> prim ={};
   const float thick = 0.7;
   const float r = 1.0;
   //const float area = 4*thick*length;
@@ -102,27 +102,27 @@ void LineDetector::Render_Line_Detector( float offset,
 
   { point off = { 0.0, offset + width/2.0f + r*thick/2.0f   };
     Simple_Line_Primitive(prim, off, length, r*thick   );
-    rotate( prim, 4, angle );
-    translate( prim, 4, anchor );
-    Sum_Pixel_Overlap( (float*) prim, 4, -1.0/r, image, strides );
+    rotate( prim, angle );
+    translate( prim, anchor );
+    Sum_Pixel_Overlap( prim, -1.0/r, image, strides );
   }
   { point off = { 0.0, offset + width/2.0f - thick/2.0f };
     Simple_Line_Primitive(prim, off, length/r, thick );
-    rotate( prim, 4, angle );
-    translate( prim, 4, anchor );
-    Sum_Pixel_Overlap( (float*) prim, 4,  r, image, strides );
+    rotate( prim, angle );
+    translate( prim, anchor );
+    Sum_Pixel_Overlap( prim, r, image, strides );
   }
   { point off = { 0.0, offset - width/2.0f + thick/2.0f };
     Simple_Line_Primitive(prim, off, length/r, thick );
-    rotate( prim, 4, angle );
-    translate( prim, 4, anchor );
-    Sum_Pixel_Overlap( (float*) prim, 4,  r, image, strides );
+    rotate( prim, angle );
+    translate( prim, anchor );
+    Sum_Pixel_Overlap( prim, r, image, strides );
   }
   { point off = { 0.0, offset - width/2.0f - r*thick/2.0f  };
     Simple_Line_Primitive(prim, off, length, r*thick   );
-    rotate( prim, 4, angle );
-    translate( prim, 4, anchor );
-    Sum_Pixel_Overlap( (float*) prim, 4, -1.0f/r, image, strides );
+    rotate( prim, angle );
+    translate( prim, anchor );
+    Sum_Pixel_Overlap(prim,-1.0f/r, image, strides );
   }
   return;
 }
@@ -178,12 +178,12 @@ void HalfSpaceDetector::Render_Half_Space_Detector( float offset,
   float thick = length;
   float density = 1.0f;
 
-  { point prim[4];
+  { std::array<point,4> prim = {};
     point off = { 0.0, offset + thick /*+ width/2.0 */   };
     Simple_Line_Primitive(prim, off, 2*length, thick   );
-    rotate( prim, 4, angle );
-    translate( prim, 4, anchor );
-    Sum_Pixel_Overlap( (float*) prim, 4, density, image, strides );
+    rotate( prim, angle );
+    translate( prim, anchor );
+    Sum_Pixel_Overlap(prim, density, image, strides );
   }
 
   //{ point prim[4];
@@ -194,13 +194,12 @@ void HalfSpaceDetector::Render_Half_Space_Detector( float offset,
   //  Sum_Pixel_Overlap( (float*) prim, 4, -density, image, strides );
   //}
 
-  { point prim[12];
-    int npoint = 12;
+  { std::array<point,12> prim ={};
     point off = { 0.0, offset };
-    Simple_Circle_Primitive(prim,npoint,off,length, 1);
-    rotate( prim, npoint, angle );
-    translate( prim, npoint, anchor );
-    Multiply_Pixel_Overlap( (float*) prim, npoint, density, 0, image, strides );
+    Simple_Circle_Primitive(prim,off,length, 1);
+    rotate( prim, angle );
+    translate( prim, anchor );
+    Multiply_Pixel_Overlap( prim, density, 0, image, strides );
   }
 
   return;
@@ -241,17 +240,19 @@ int DetectorBank::get_nearest(float offset, float width, float angle)
   return Get_Detector(o, w, a );
 }
 
-void Simple_Circle_Primitive( point *verts, int npoints, point center, float radius, int direction)
-{ int i = npoints;
-  float k = direction*2*M_PI/(float)npoints;
-  while(i--)
-  { point p = { static_cast<float>(center.x + radius * cos( k*i )),
-                static_cast<float>(center.y + radius * sin( k*i ))};
-    verts[i] = p;
+template <size_t N>
+void Simple_Circle_Primitive( std::array<point,N>& verts, point center, float radius, int direction)
+{
+  float k = direction*2*M_PI/(float)verts.size();
+  for (int i = 0; i < verts.size(); i++) {
+      point p = { static_cast<float>(center.x + radius * cos( k*i )),
+                      static_cast<float>(center.y + radius * sin( k*i ))};
+      verts[i] = p;
   }
 }
 
-void Multiply_Pixel_Overlap( float *xy, int n, float gain, float boundary, float *grid, int *strides )
+template <size_t N>
+void Multiply_Pixel_Overlap( std::array<point,N>& xy, float gain, float boundary, float *grid, int *strides )
 /* `xy`      is an array of `n` vertices arranged in (x,y) pairs.
  * `n`       the number of vertices in `xy`.
  * `grid`    should point to the origin pixel in an image buffer in the
@@ -260,22 +261,17 @@ void Multiply_Pixel_Overlap( float *xy, int n, float gain, float boundary, float
  *           with { width*height*channels, width*channels, channels }
  *           For now assume channels == 1.
  */
-{ float pxverts[8];
+{ std::array<point,4> pxverts ={};
   int px,ix,iy;
-  unsigned minx, maxx, miny, maxy;
 
-  // Compute AABB
-  minx = array_min_f32u( xy  , 2*n, 2, 0.0                      );
-  maxx = array_max_f32u( xy  , 2*n, 2, strides[1]-1             );
-  miny = array_min_f32u( xy+1, 2*n, 2, 0.0                      );
-  maxy = array_max_f32u( xy+1, 2*n, 2, strides[0]/strides[1] - 1);
+  auto[minx,maxx,miny,maxy] = f32_min_max(xy,strides);
 
   // multiply by overlaps
   for( ix = minx; ix <= maxx; ix++ )
   { for( iy = miny; iy <= maxy; iy ++ )
     { px = iy*strides[1] + ix;
       pixel_to_vertex_array( px, strides[1], pxverts );
-      *(grid+px) *= gain * inter( (point*) xy, n, (point*) pxverts, 4 );
+      *(grid+px) *= gain * inter( xy, pxverts);
     }
   }
 
@@ -292,7 +288,8 @@ void Multiply_Pixel_Overlap( float *xy, int n, float gain, float boundary, float
   return;
 }
 
-void Simple_Line_Primitive( point *verts, point offset, float length, float thick )
+template <size_t N>
+void Simple_Line_Primitive( std::array<point,N>& verts, point offset, float length, float thick )
 { point v0 = { offset.x - length,  offset.y - thick},
        v1 = { offset.x + length,  offset.y - thick},
        v2 = { offset.x + length,  offset.y + thick},
@@ -303,29 +300,30 @@ void Simple_Line_Primitive( point *verts, point offset, float length, float thic
  verts[3] = v3;
 }
 
-void rotate( point *pbuf, int n, float angle)
+template <size_t N>
+void rotate( std::array<point,N>& pbuf, float angle)
   /* positive angle rotates counter clockwise */
 { float s = sin(angle),
         c = cos(angle);
-  point *p = pbuf + n;
-  while( p-- > pbuf )
-  { float x = p->x,
-          y = p->y;
-    p->x =  x*c - y*s;
-    p->y =  x*s + y*c;
-  }
+    for (auto& p : pbuf) {
+        float x = p.x;
+        float y = p.y;
+        p.x =  x*c - y*s;
+        p.y =  x*s + y*c;
+    }
 }
 
-void translate( point* pbuf, int n, point ori)
-{ point *p = pbuf + n;
-  while( p-- > pbuf )
-  { p->x =  p->x + ori.x;
-    p->y =  p->y + ori.y;
-  }
-  return;
+template <size_t N>
+void translate( std::array<point,N>& pbuf, point ori)
+{
+    for (auto& p : pbuf) {
+        p.x =  p.x + ori.x;
+        p.y =  p.y + ori.y;
+    }
 }
 
-void Sum_Pixel_Overlap( float *xy, int n, float gain, float *grid, int *strides )
+template <size_t N>
+void Sum_Pixel_Overlap(std::array<point,N>& xy, float gain, float *grid, int *strides )
 /* `xy`      is an array of `n` vertices arranged in (x,y) pairs.
  * `n`       the number of vertices in `xy`.
  * `grid`    should point to the origin pixel in an image buffer in the
@@ -349,67 +347,71 @@ void Sum_Pixel_Overlap( float *xy, int n, float gain, float *grid, int *strides 
    *                      4-tuples of vertices    - simplest
    * 3. For each pixel, compute intersection area
    */
-  float pxverts[8];
+  std::array<point,4> pxverts ={};
   int px,ix,iy;
-  unsigned minx, maxx, miny, maxy;
 
-  // Compute AABB
-  minx = array_min_f32u( xy  , 2*n, 2, 0.0                      );
-  maxx = array_max_f32u( xy  , 2*n, 2, strides[1]-1             );
-  miny = array_min_f32u( xy+1, 2*n, 2, 0.0                      );
-  maxy = array_max_f32u( xy+1, 2*n, 2, strides[0]/strides[1] - 1);
+  auto[minx,maxx,miny,maxy] = f32_min_max(xy,strides);
 
   for( ix = minx; ix <= maxx; ix++ )
   { for( iy = miny; iy <= maxy; iy ++ )
     { px = iy*strides[1] + ix;
       pixel_to_vertex_array( px, strides[1], pxverts );
-      *(grid+px) += gain * inter( (point*) xy, n, (point*) pxverts, 4 );
+      *(grid+px) += gain * inter(xy, pxverts);
     }
   }
   return;
 }
 
-void pixel_to_vertex_array(int p, int stride, float *v)
+void pixel_to_vertex_array(int p, int stride, std::array<point,4>& v)
 { float x = p%stride;
  float y = p/stride;
- v[0] = x;      v[1] = y;
- v[2] = x+1.0f; v[3] = y;
- v[4] = x+1.0f; v[5] = y+1.0f;
- v[6] = x;      v[7] = y+1.0f;
+ v[0] = {x,y};
+ v[1] = {x+1.0f, y};
+ v[2] = {x+1.0f, y+1.0f};
+ v[3] = {x, y+1.0f};
  return;
 }
 
-unsigned array_max_f32u ( float *buf, int size, int step, float bound )
-{ float *t = buf + size;
- float r = 0.0f;
- while( (t -= step) >= buf )
-   r = std::max( r, ceilf(*t) );
- return (unsigned) std::min(r,bound);
+template <size_t N>
+std::array<int,4> f32_min_max(std::array<point,N>& points,int * bound) {
+    float miny = FLT_MAX, minx = FLT_MAX, maxy=0.0f, maxx = 0.0f;
+
+    for (auto p : points) {
+        if (p.x < minx) {
+            minx = p.x;
+        }
+        if (p.x > maxx) {
+            maxx = p.x;
+        }
+        if (p.y < miny) {
+            miny = p.y;
+        }
+        if (p.y > maxy) {
+            maxy = p.y;
+        }
+    }
+
+    return std::array<int,4>{std::max((int)minx,0),
+                std::min((int)maxx,bound[1]-1),
+                std::max((int)miny,0),
+                std::min((int)maxy,bound[0]/bound[1]-1)};
 }
 
-unsigned array_min_f32u ( float *buf, int size, int step, float bound )
-{ float *t = buf + size;
- float r = FLT_MAX;
- while( (t -= step) >= buf )
-   r = std::min( r, floorf(*t) );
- return (unsigned) std::max(r,bound);
-}
-
-float inter(point * a, int na, point * b, int nb)
+template <size_t N>
+float inter(std::array<point, N>& a, std::array<point,4>& b)
 { //vertex ipa[na+1], ipb[nb+1];
   vertex *ipa,*ipb;
   box B = {{bigReal, bigReal}, {-bigReal, -bigReal}};
   double ascale;
 
-  if(na < 3 || nb < 3) return 0;
-  ipa = (vertex*) malloc( sizeof(vertex) * (na+1) );
-  ipb = (vertex*) malloc( sizeof(vertex) * (nb+1) );
+  ipa = (vertex*) malloc( sizeof(vertex) * (a.size()+1) );
+  ipb = (vertex*) malloc( sizeof(vertex) * (b.size()+1) );
 
-  range(B, a, na);
-  range(B, b, nb);
+  range(B, a);
+  range(B, b);
 
-  ascale = fit(B, a, na, ipa, 0);
-  ascale = fit(B, b, nb, ipb, 2);
+  ascale = fit(B, a,ipa, 0);
+  ascale = fit(B, b,ipb, 2);
 
   { long long s = 0;
     int j, k;
@@ -422,8 +424,8 @@ float inter(point * a, int na, point * b, int nb)
     /*
      * Look for crossings, add contributions from crossings and track winding
      * */
-    for(j=0; j<na; ++j)
-      for(k=0; k<nb; ++k)
+    for(j=0; j<a.size(); ++j)
+      for(k=0; k<b.size(); ++k)
         if(ovl(ipa[j].rx, ipb[k].rx) && ovl(ipa[j].ry, ipb[k].ry)) // if edges have overlapping bounding boxes...
         {
           long long a1 = -area(ipa[j  ].ip, ipb[k].ip, ipb[k+1].ip),
@@ -441,25 +443,26 @@ float inter(point * a, int na, point * b, int nb)
           }
         }
     /* Add contributions from non-crossing edges */
-    inness(&s, ipa, na, ipb, nb);
-    inness(&s, ipb, nb, ipa, na);
+    inness(&s, ipa, a.size(), ipb, b.size());
+    inness(&s, ipb, b.size(), ipa, a.size());
     free(ipa);
     free(ipb);
     return s/ascale;
   }
 }
 
-void range(box& B, point * x, int c)
+template <size_t N>
+void range(box& B, std::array<point,N>& x)
 {
-  auto bdr = [](float * X, float y)
+  auto bdr = [](float * X, const float y)
   { *X = *X<y ? *X:y;
   };
-  auto bur = [](float * X, float y)
+  auto bur = [](float * X, const float y)
   { *X = *X>y ? *X:y;
   };
-    while(c--)
- { bdr(&B.min.x, x[c].x); bur(&B.max.x, x[c].x);
-   bdr(&B.min.y, x[c].y); bur(&B.max.y, x[c].y);
+  for (auto xx : x)
+ { bdr(&B.min.x, xx.x); bur(&B.max.x, xx.x);
+   bdr(&B.min.y, xx.y); bur(&B.max.y, xx.y);
  }
 }
 
@@ -519,7 +522,8 @@ void inness(long long *sarea, vertex * P, int cP, vertex * Q, int cQ)
   }
 }
 
-double fit(box& B, point * x, int cx, vertex * ix, int fudge)
+template <size_t N>
+double fit(box& B, std::array<point,N>& x, vertex * ix, int fudge)
   /* Fits points to an integral lattice.
    *
    * Converts floating point coords to an integer representation.  The bottom
@@ -534,15 +538,15 @@ double fit(box& B, point * x, int cx, vertex * ix, int fudge)
 { const float gamut = 500000000., mid = gamut/2.;
   float rngx = B.max.x - B.min.x, sclx = gamut/rngx,
         rngy = B.max.y - B.min.y, scly = gamut/rngy;
-  int c=cx;
+  int c=x.size();
   while(c--)
   { ix[c].ip.x = (long)((x[c].x - B.min.x)*sclx - mid)&~7|fudge|c&1;
     ix[c].ip.y = (long)((x[c].y - B.min.y)*scly - mid)&~7|fudge;
   }
-  ix[0].ip.y += cx&1;
-  ix[cx] = ix[0];
+  ix[0].ip.y += x.size()&1;
+  ix[x.size()] = ix[0];
 
-  c=cx;
+  c=x.size();
   while(c--)
   { rng xl = { ix[c  ].ip.x, ix[c+1].ip.x },
         xh = { ix[c+1].ip.x, ix[c  ].ip.x },
