@@ -175,16 +175,16 @@ private:
 };
 
 template <std::size_t N>
-void Simple_Line_Primitive( std::array<point,N>& verts, point offset, float length, float thick );
+void Simple_Line_Primitive( std::array<point,N>& verts, const point offset, const float length, const float thick );
 
 template <std::size_t N>
-void rotate( std::array<point,N>& pbuf, float angle);
+void rotate( std::array<point,N>& pbuf, const float angle);
 
 template <std::size_t N>
-void translate(std::array<point,N>& pbuf, point ori);
+void translate(std::array<point,N>& pbuf, const point ori);
 
 template <std::size_t N>
-void Sum_Pixel_Overlap(std::array<point,N>& xy, float gain, float *grid, int *strides );
+void Sum_Pixel_Overlap(std::array<point,N>& xy, const float gain, float *grid, int *strides );
 
 void pixel_to_vertex_array(const int p, const int stride, std::array<point,4>& v);
 
@@ -194,17 +194,17 @@ float inter(std::array<point, N>& a, std::array<point,4>& b);
 template <std::size_t N>
 void range(box& B, std::array<point,N>& x);
 
-void cntrib(long long *s, ipoint f, ipoint t, short w);
+long long cntrib(const ipoint f, const ipoint t, const short w);
 long long area(const ipoint a, const ipoint p, const ipoint q);
-void cross(long long *s, vertex * a, vertex * b, vertex * c, vertex * d,
-    double a1, double a2, double a3, double a4);
+long long cross(vertex & a, vertex & b, vertex & c, vertex & d,
+    const double a1, const double a2, const double a3, const double a4);
 
 
 template <std::size_t N, std::size_t M>
 double fit(box& B, std::array<point,N>& x, std::array<vertex,M>& ix, int fudge);
 
 template <std::size_t M, std::size_t N>
-void inness(long long *sarea, std::array<vertex,M>& P, int cP, std::array<vertex,N>& Q, int cQ);
+long long inness(std::array<vertex,M>& P, std::array<vertex,N>& Q);
 
 template <std::size_t N>
 void Simple_Circle_Primitive(std::array<point,N>& verts, point center, float radius, int direction);

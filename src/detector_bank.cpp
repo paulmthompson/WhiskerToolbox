@@ -300,19 +300,16 @@ void Multiply_Pixel_Overlap( std::array<point,N>& xy, float gain, float boundary
 }
 
 template <size_t N>
-void Simple_Line_Primitive( std::array<point,N>& verts, point offset, float length, float thick )
-{ point v0 = { offset.x - length,  offset.y - thick},
-       v1 = { offset.x + length,  offset.y - thick},
-       v2 = { offset.x + length,  offset.y + thick},
-       v3 = { offset.x - length,  offset.y + thick};
- verts[0] = v0;
- verts[1] = v1;
- verts[2] = v2;
- verts[3] = v3;
+void Simple_Line_Primitive( std::array<point,N>& verts, const point offset, const float length, const float thick )
+{
+ verts[0] = { offset.x - length,  offset.y - thick};
+ verts[1] = { offset.x + length,  offset.y - thick};
+ verts[2] = { offset.x + length,  offset.y + thick};
+ verts[3] = { offset.x - length,  offset.y + thick};
 }
 
 template <size_t N>
-void rotate( std::array<point,N>& pbuf, float angle)
+void rotate( std::array<point,N>& pbuf, const float angle)
   /* positive angle rotates counter clockwise */
 { float s = sin(angle),
         c = cos(angle);
@@ -325,7 +322,7 @@ void rotate( std::array<point,N>& pbuf, float angle)
 }
 
 template <size_t N>
-void translate( std::array<point,N>& pbuf, point ori)
+void translate( std::array<point,N>& pbuf, const point ori)
 {
     for (auto& p : pbuf) {
         p.x =  p.x + ori.x;
@@ -334,7 +331,7 @@ void translate( std::array<point,N>& pbuf, point ori)
 }
 
 template <size_t N>
-void Sum_Pixel_Overlap(std::array<point,N>& xy, float gain, float *grid, int *strides )
+void Sum_Pixel_Overlap(std::array<point,N>& xy, const float gain, float *grid, int *strides )
 /* `xy`      is an array of `n` vertices arranged in (x,y) pairs.
  * `n`       the number of vertices in `xy`.
  * `grid`    should point to the origin pixel in an image buffer in the
@@ -447,15 +444,15 @@ float inter(std::array<point, N>& a, std::array<point,4>& b)
               long long a3 = area(ipb[k].ip, ipa[j].ip, ipa[j+1].ip),
                  a4 = -area(ipb[k+1].ip, ipa[j].ip, ipa[j+1].ip);
               if(a3<0 == a4<0)  //if still consistent with a crossing...
-              { if(o) cross(&s, &ipa[j], &ipa[j+1], &ipb[k], &ipb[k+1], a1, a2, a3, a4);
-                else  cross(&s, &ipb[k], &ipb[k+1], &ipa[j], &ipa[j+1], a3, a4, a1, a2);
+              { if(o) s+=cross(ipa[j], ipa[j+1], ipb[k], ipb[k+1], a1, a2, a3, a4);
+                else  s+=cross(ipb[k], ipb[k+1], ipa[j], ipa[j+1], a3, a4, a1, a2);
               }
             }
           }
         }
     /* Add contributions from non-crossing edges */
-    inness(&s, ipa, a.size(), ipb, b.size());
-    inness(&s, ipb, b.size(), ipa, a.size());
+    s += inness(ipa, ipb);
+    s += inness(ipb, ipa);
     return s/ascale;
   }
 }
@@ -475,12 +472,11 @@ void range(box& B, std::array<point,N>& x)
  }
 }
 
-void cntrib(long long *s, ipoint f, ipoint t, short w)
+long long cntrib(const ipoint f, const ipoint t, const short w)
 /* Integrand for the line integral.  Google `Green's theorem polygon area` for
 * functional form.
 */
-{ *s += (long long)w*(t.x-f.x)*(t.y+f.y)/2;
-}
+{ return (long long)w*(t.x-f.x)*(t.y+f.y)/2;}
 
 long long area(const ipoint a, const ipoint p, const ipoint q)
 /* Compute the area of the triangle (apq) */
@@ -488,36 +484,34 @@ long long area(const ipoint a, const ipoint p, const ipoint q)
    (long long)a.x*(p.y - q.y) + (long long)a.y*(q.x - p.x);
 }
 
-void cross(long long *s, vertex * a, vertex * b, vertex * c, vertex * d,
-    double a1, double a2, double a3, double a4)
+long long cross(vertex & a, vertex & b, vertex & c, vertex & d,
+    const double a1, const double a2, const double a3, const double a4)
 { /* Interpolate to intersection and add contributions from each half edge */
   float r1=a1/((float)a1+a2), r2 = a3/((float)a3+a4);
-  /*
-  cntrib(s, (ipoint){a->ip.x + r1*(b->ip.x-a->ip.x),
-                     a->ip.y + r1*(b->ip.y-a->ip.y)},
-      b->ip, 1);
-  cntrib(s, d->ip, (ipoint){
-      c->ip.x + r2*(d->ip.x - c->ip.x),
-      c->ip.y + r2*(d->ip.y - c->ip.y)}, 1);
-  */
-  { ipoint p = {  static_cast<long>(a->ip.x + r1*(b->ip.x-a->ip.x)),
-                  static_cast<long>(a->ip.y + r1*(b->ip.y-a->ip.y))};
-    cntrib(s, p, b->ip, 1 );
+
+  long long s = 0;
+  { ipoint p = {  static_cast<long>(a.ip.x + r1*(b.ip.x-a.ip.x)),
+                  static_cast<long>(a.ip.y + r1*(b.ip.y-a.ip.y))};
+    s += cntrib(p, b.ip, 1 );
   }
   { ipoint p = {
-      static_cast<long>(c->ip.x + r2*(d->ip.x - c->ip.x)),
-      static_cast<long>(c->ip.y + r2*(d->ip.y - c->ip.y))};
-    cntrib(s, d->ip, p, 1 );
+      static_cast<long>(c.ip.x + r2*(d.ip.x - c.ip.x)),
+      static_cast<long>(c.ip.y + r2*(d.ip.y - c.ip.y))};
+    s += cntrib(d.ip, p, 1 );
   }
-  ++a->in; /* Track winding numbers...these show up later in `inness` */
-  --c->in;
+  ++a.in; /* Track winding numbers...these show up later in `inness` */
+  --c.in;
+
+  return s;
 }
 
 template <size_t M, size_t N>
-void inness(long long *sarea, std::array<vertex,M>& P, int cP, std::array<vertex,N>& Q, int cQ)
-{ int s=0, c=cQ;
+long long inness(std::array<vertex,M>& P, std::array<vertex,N>& Q)
+{ int s=0;
   ipoint p = P[0].ip;
   int j;
+
+  int c = N-1;
   while(c--) //Compute winding of P[0] wrt Q
     if(Q[c].rx.mn < p.x && p.x < Q[c].rx.mx) //Bounds check x-interval only
     {  //use area to determine P[0] left of Q[c] edge
@@ -525,11 +519,13 @@ void inness(long long *sarea, std::array<vertex,M>& P, int cP, std::array<vertex
       // only count cw and moving right or ccw and moving left
       s += sgn != Q[c].ip.x < Q[c+1].ip.x ? 0 : (sgn?-1:1); //add winding
     }
-  for(j=0; j<cP; ++j)
+  long long sarea = 0;
+  for(j=0; j<(M-1); ++j)
   { if(s)
-      cntrib(sarea, P[j].ip, P[j+1].ip, s);
+      sarea += cntrib(P[j].ip, P[j+1].ip, s);
     s += P[j].in;
   }
+  return sarea;
 }
 
 template <size_t N, size_t M>
