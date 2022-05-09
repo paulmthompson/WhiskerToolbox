@@ -12,7 +12,7 @@ int DetectorBank::compute_number_steps( Range r )
 {  return lround( (r.max - r.min) / r.step ) + 1;
 }
 
-int DetectorBank::Get_Detector(int ioffset, int iwidth, int iangle  )
+int DetectorBank::Get_Detector(const int ioffset, const int iwidth, const int iangle  )
 { return iangle  * this->bank.strides_px[1]
                                 + iwidth  * this->bank.strides_px[2]
                                 + ioffset * this->bank.strides_px[3];

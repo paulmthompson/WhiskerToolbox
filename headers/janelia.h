@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <optional>
 
 #include "detector_bank.h"
 
@@ -119,14 +120,14 @@ public:
 private:
 
     void compute_seed_from_point_field_on_grid(const Image<uint8_t>& image, Image<uint8_t>& h, Image<float>& th, Image<float>& s);
-    Seed* compute_seed_from_point( const Image<uint8_t>& image, int p, int maxr );
-    Seed *compute_seed_from_point_ex(const Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat);
-    Line_Params line_param_from_seed(const Seed *s);
+    std::optional<Seed> compute_seed_from_point( const Image<uint8_t>& image, int p, int maxr );
+    std::optional<Seed> compute_seed_from_point_ex(const Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat);
+    Line_Params line_param_from_seed(const Seed s);
     float eval_line(Line_Params *line, const Image<uint8_t>& image, int p);
     float round_anchor_and_offset( Line_Params *line, int *p, int stride );
     void get_offset_list(const Image<uint8_t>& image, const int support, const float angle, int p, int *npx );
 
-    Whisker_Seg trace_whisker(Seed *s, Image<uint8_t>& image);
+    Whisker_Seg trace_whisker(Seed s, Image<uint8_t>& image);
 
     float eval_half_space( Line_Params *line, const Image<uint8_t>& image, int p, float *rr, float *ll );
     int move_line( Line_Params *line, int *p, int stride, int direction );

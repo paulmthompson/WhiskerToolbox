@@ -104,7 +104,7 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
                     (int) std::round(100 * cos( tha[i] )),
                     (int) std::round(100 * sin( tha[i] )) };
 
-                line = line_param_from_seed( &seed );
+                line = line_param_from_seed( seed );
 
                 scores[j].score = eval_line( &line, image, i );
 
@@ -130,10 +130,10 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
                   (int) std::round(100 * cos( tha[i] )),
                   (int) std::round(100 * sin( tha[i] )) };
 
-                auto w = trace_whisker( &seed, image );
+                auto w = trace_whisker( seed, image );
                 if(w.len == 0)
                 { std::swap(seed.xdir,seed.ydir);
-                  w = trace_whisker( &seed, image ); // try again at a right angle...sometimes when we're off by one the slope estimate is perpendicular to the whisker.
+                  w = trace_whisker( seed, image ); // try again at a right angle...sometimes when we're off by one the slope estimate is perpendicular to the whisker.
                 }
                 if (w.len > this->config._min_length)
                 {
@@ -230,8 +230,7 @@ void JaneliaTracker::compute_seed_from_point_field_on_grid(const Image<uint8_t>&
     // horizontal lines
         int x,y;
       int p,newp,i;
-      Seed *s;
-
+      std::optional<Seed> s;
       for( x=0; x<stride; x++ )
       { for( y=0; y<image.height; y += this->config._lattice_spacing )
         { newp = x+y*stride;
@@ -239,12 +238,12 @@ void JaneliaTracker::compute_seed_from_point_field_on_grid(const Image<uint8_t>&
           for( i=0; i < this->config._maxiter; i++ )
           { p = newp;
             s = compute_seed_from_point_ex(image, x+y*stride, this->config._maxr, &m, &stat);
-            if( !s ) break;
+            if( !s.has_value() ) break;
             newp = s->xpnt + stride * s->ypnt;
             if ( newp == p || stat < this->config._iteration_thres )
               break;
           }
-          if( s && stat > this->config._accum_thres)
+          if( s.has_value() && stat > this->config._accum_thres)
           { h[p] ++;
             sl[p] += m;
             st[p] += stat;
@@ -255,14 +254,13 @@ void JaneliaTracker::compute_seed_from_point_field_on_grid(const Image<uint8_t>&
     // Vertical lines
     { int x,y;
       int p,newp,i;
-      Seed *s;
       for( x=0; x<stride; x+=this->config._lattice_spacing  )
       { for( y=0; y<image.height; y ++ )
         { newp = x+y*stride;
           p = newp;
           for( i=0; i < this->config._maxr; i++ ) // Max iter?
           { p = newp;
-            s = compute_seed_from_point_ex(image, x+y*stride, this->config._maxr, &m, &stat);
+            std::optional<Seed> s = compute_seed_from_point_ex(image, x+y*stride, this->config._maxr, &m, &stat);
             if( !s ) break;
             newp = s->xpnt + stride * s->ypnt;
             if ( newp == p || stat < this->config._iteration_thres)
@@ -279,7 +277,7 @@ void JaneliaTracker::compute_seed_from_point_field_on_grid(const Image<uint8_t>&
 
 }
 
-Seed* JaneliaTracker::compute_seed_from_point_ex(const Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat)
+std::optional<Seed> JaneliaTracker::compute_seed_from_point_ex(const Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat)
 /* Specific for uint8 */
 { static Seed myseed;
 static const float eps = 1e-3;
@@ -301,10 +299,10 @@ float rsx   = 0.0, /* statistics for right corner cut: (ad,bc) grouping */
  * Analyze eigenvalues from covariance of minima positions
  * Exclude center.
  */
-int tp, cx,cy,x,y;
-cx=cy=0;
-x = p%stride;
-y = p/stride;
+int cx=0;
+int cy=0;
+int x = p%stride;
+int y = p/stride;
 
 if( (x < maxr)                   || // Computation isn't valid for boundary
     (x >=(image.width  - maxr)) ||
@@ -312,7 +310,7 @@ if( (x < maxr)                   || // Computation isn't valid for boundary
     (y >=(image.height - maxr)) )
 { *out_m = 0.0;
   *out_stat = 0.0;
-  return nullptr;
+  return std::nullopt;
 }
 
 while( i++ < maxr)
@@ -492,18 +490,18 @@ while( i++ < maxr)
   }
 }
 
-return &myseed;
+return myseed;
 }
 
-Line_Params JaneliaTracker::line_param_from_seed(const Seed *s) {
+Line_Params JaneliaTracker::line_param_from_seed(const Seed s) {
     Line_Params line;
      const double hpi = M_PI/4.0;
      const double ain = hpi/this->config._angle_step;
        line.offset = .5;
-       { if( s->xdir < 0 ) // flip so seed points along positive x
-         { line.angle  = std::round(atan2(-1.0f* s->ydir,-1.0f* s->xdir) / ain) * ain;
+       { if( s.xdir < 0 ) // flip so seed points along positive x
+         { line.angle  = std::round(atan2(-1.0f* s.ydir,-1.0f* s.xdir) / ain) * ain;
          } else {
-           line.angle  = std::round(atan2(s->ydir,s->xdir) / ain) * ain;
+           line.angle  = std::round(atan2(s.ydir,s.xdir) / ain) * ain;
          }
        }
        line.width  = 2.0;
@@ -681,7 +679,7 @@ void JaneliaTracker::get_offset_list(const Image<uint8_t>& image, const int supp
   *npx = snpx;
 }
 
-Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
+Whisker_Seg JaneliaTracker::trace_whisker(Seed s, Image<uint8_t>& image)
 {
   static std::vector<record> ldata(1000);
   static std::vector<record> rdata(1000);
@@ -698,8 +696,8 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
   const double rad = 45./hpi;
   const double sigmin = (2*this->config._tlen+1)*this->config._min_signal;// + 255.00;
 
-  float x = s->xpnt;
-  float y = s->ypnt;
+  float x = s.xpnt;
+  float y = s.ypnt;
   { int      q,p = x + cwidth*y;
     int      oldp;
     Interval roff, rang, rwid;
@@ -774,9 +772,9 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
           trusted &= adjust_line_start(&line,image,&p,&roff,&rang,&rwid);
           if(trusted && line.score < sigmin)
           { // check to see if a line can be reaquired
-            Seed *sd = compute_seed_from_point( image, p, 3.0);
-            if(sd)
-            { line = line_param_from_seed(sd);
+            std::optional<Seed> sd = compute_seed_from_point( image, p, 3.0);
+            if(sd.has_value())
+            { line = line_param_from_seed(sd.value());
               if( line.angle * oldline.angle < 0.0 ) //make sure points in same direction
                 line.angle *= -1.0;
             }
@@ -833,10 +831,10 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed *s, Image<uint8_t>& image)
           trusted &= adjust_line_start(&line,image,&p,&roff,&rang,&rwid);
           if(trusted && line.score < sigmin)
           { // check to see if a line can be reaquired
-            Seed *sd = compute_seed_from_point( image, p, 3.0); // this will often pop the line back on
-            if(sd) // else just use last line
+            std::optional<Seed> sd = compute_seed_from_point( image, p, 3.0); // this will often pop the line back on
+            if(sd.has_value()) // else just use last line
             {
-              line = line_param_from_seed(sd);
+              line = line_param_from_seed(sd.value());
               if( line.angle * oldline.angle < 0.0 ) //make sure points in same direction
                 line.angle *= -1.0;
             }
@@ -1180,7 +1178,7 @@ bool JaneliaTracker::is_change_too_big( Line_Params *new_line, Line_Params *old,
   return false;
 }
 
-Seed* JaneliaTracker::compute_seed_from_point( const Image<uint8_t>& image, int p, int maxr )
+std::optional<Seed> JaneliaTracker::compute_seed_from_point( const Image<uint8_t>& image, int p, int maxr )
 { float m, stat;
   return compute_seed_from_point_ex( image, p, maxr, &m, &stat);
 }

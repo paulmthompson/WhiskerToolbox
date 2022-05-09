@@ -138,7 +138,7 @@ public:
 
     int compute_number_steps( Range r );
     int get_nearest(float offset, float width, float angle);
-    int Get_Detector(int ioffset, int iwidth, int iangle  );
+    int Get_Detector(const int ioffset, const int iwidth, const int iangle  );
 protected:
 
 };
