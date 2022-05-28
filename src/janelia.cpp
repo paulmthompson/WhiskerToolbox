@@ -515,7 +515,8 @@ float JaneliaTracker::eval_line(Line_Params *line, const Image<uint8_t>& image, 
 
     // compute a nearby anchor
 
-    float coff      = round_anchor_and_offset( line, &p, image.width );
+    float coff;
+    std::tie(coff, p)      = round_anchor_and_offset( *line, p, image.width );
     get_offset_list( image, support, line->angle, p, &npxlist );
 
     int bank_i = bank.get_nearest(coff, line->width, line->angle);
@@ -529,10 +530,10 @@ float JaneliaTracker::eval_line(Line_Params *line, const Image<uint8_t>& image, 
         i++;
     }
 
-    return -s;
+    return -s; // Return the line score
 }
 
-float JaneliaTracker::round_anchor_and_offset( Line_Params *line, int *p, int stride )
+std::pair<float,int> JaneliaTracker::round_anchor_and_offset( const Line_Params line, const int p, const int stride )
 /* rounds pixel anchor, p, to pixel nearest center of line detector (rx,ry)
 ** returns best offset to line
 **
@@ -541,12 +542,12 @@ float JaneliaTracker::round_anchor_and_offset( Line_Params *line, int *p, int st
 **  bounded to less than the pixel size (proof?).
 */
 {
-  float ex  = cos(line->angle + M_PI/2); // unit vector normal to line
-  float ey  = sin(line->angle + M_PI/2);
-  float px  = (*p % stride );            // current anchor
-  float py  = (*p / stride );
-  float rx  = px + ex * line->offset;    // current position
-  float ry  = py + ey * line->offset;
+  float ex  = cos(line.angle + M_PI/2); // unit vector normal to line
+  float ey  = sin(line.angle + M_PI/2);
+  float px  = (p % stride );            // current anchor
+  float py  = (p / stride );
+  float rx  = px + ex * line.offset;    // current position
+  float ry  = py + ey * line.offset;
   float ppx = round( rx );               // round to nearest pixel as anchor
   float ppy = round( ry );
   float drx = rx - ppx;                  // ppx - rx;       // dr: vector from pp to r
@@ -563,8 +564,7 @@ float JaneliaTracker::round_anchor_and_offset( Line_Params *line, int *p, int st
    // printf("(%3d, %3d) off: %5.5f --> (%3d, %3d) off: %5.5f\terr:%g\n",
    //			(int)px,(int)py,line->offset, (int)ppx, (int)ppy,t, err);
   //}
-  *p = ((int)ppx) + stride*( (int) ppy );
-  return t;
+  return std::make_pair(t,((int)ppx) + stride*( (int) ppy ));
 }
 
 void JaneliaTracker::get_offset_list(const Image<uint8_t>& image, const int support, const float angle, int p, int *npx )
@@ -755,7 +755,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed s, Image<uint8_t>& image)
      * Move forward from seed
      */
     while( line.score > sigmin )
-    { move_line( &line, &p, cwidth, 1 );
+    { p = move_line( &line, p, cwidth, 1 );
       if( outofbounds(p, cwidth, cheight) ) break;
       line.score = eval_line( &line, image, p );
       oldline = line;
@@ -765,7 +765,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed s, Image<uint8_t>& image)
         trusted = trusted && is_local_area_trusted( &line, image, p );
         while( !trusted /*&& score > sigmin*/ && nmoves < this->config._half_space_tunneling_max_moves)
         { oldline = line; oldp = p;
-          move_line( &line, &p, cwidth, 1 );
+          p = move_line( &line, p, cwidth, 1 );
           nmoves ++;
           if( outofbounds(p, cwidth, cheight) ) break;
           trusted = is_local_area_trusted( &line, image, p );
@@ -783,7 +783,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed s, Image<uint8_t>& image)
             if( !trusted ||
                 line.score < sigmin ||
                 !is_local_area_trusted( &line, image, p ) ||
-                is_change_too_big(&line,&oldline, 2*this->config._max_delta_angle, 10.0, 10.0) )
+                is_change_too_big(line,oldline, 2*this->config._max_delta_angle, 10.0, 10.0) )
             { trusted = 0;    // nothing found, back up
               break;
             }
@@ -814,7 +814,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed s, Image<uint8_t>& image)
     p = q;
     nright = 0;
     while( line.score > sigmin )
-    { move_line( &line, &p, cwidth, -1 );
+    { p = move_line( &line, p, cwidth, -1 );
       if( outofbounds(p, cwidth, cheight) ) break;
       line.score = eval_line( &line, image, p );
       trusted = adjust_line_start(&line,image,&p,&roff,&rang,&rwid);
@@ -824,7 +824,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed s, Image<uint8_t>& image)
         //float score = line.score;
         while( !trusted /*&& score > sigmin*/ && nmoves < this->config._half_space_tunneling_max_moves )
         { oldline = line; oldp = p;
-          move_line( &line, &p, cwidth, -1 );
+          p = move_line( &line, p, cwidth, -1 );
           nmoves ++;
           if( outofbounds(p, cwidth, cheight) ) break;
           trusted = is_local_area_trusted( &line, image, p );
@@ -843,7 +843,7 @@ Whisker_Seg JaneliaTracker::trace_whisker(Seed s, Image<uint8_t>& image)
             if( !trusted ||
                 line.score < sigmin ||
                 ! is_local_area_trusted( &line, image, p )  ||
-                is_change_too_big(&line,&oldline, 2*this->config._max_delta_angle, 10.0, 10.0 ) )
+                is_change_too_big(line,oldline, 2*this->config._max_delta_angle, 10.0, 10.0 ) )
             { trusted = 0;  // nothing found, back up
               break;
             }
@@ -996,7 +996,8 @@ float JaneliaTracker::eval_half_space( Line_Params *line, const Image<uint8_t>& 
 {   int support  = 2*this->config._tlen + 3;
     int npxlist;
 
-    float coff = round_anchor_and_offset( line, &p, image.width );
+    float coff;
+    std::tie(coff, p)  = round_anchor_and_offset( *line, p, image.width );
     get_offset_list( image, support, line->angle, p, &npxlist );
     //lefthalf  = get_nearest_from_half_space_detector_bank( coff, line->width, line->angle, &leftnorm );
     //righthalf  = get_nearest_from_half_space_detector_bank( -coff, line->width, line->angle, &rightnorm );
@@ -1026,7 +1027,7 @@ float JaneliaTracker::eval_half_space( Line_Params *line, const Image<uint8_t>& 
     return q;
 }
 
-int JaneliaTracker::move_line( Line_Params *line, int *p, int stride, int direction )
+int JaneliaTracker::move_line( Line_Params* line, const int p, const int stride, const int direction )
 { float lx,ly,ex,ey,rx0,ry0,rx1,ry1;
   float ppx, ppy, drx, dry, t, ox, oy;
   float th = line->angle;
@@ -1034,8 +1035,8 @@ int JaneliaTracker::move_line( Line_Params *line, int *p, int stride, int direct
   ly  = sin(th);
   ex  = cos(th + M_PI/2);  // unit vector normal to line
   ey  = sin(th + M_PI/2);
-  rx0 = (*p % stride ) + ex * line->offset; // current position
-  ry0 = (*p / stride ) + ey * line->offset;
+  rx0 = (p % stride ) + ex * line->offset; // current position
+  ry0 = (p / stride ) + ey * line->offset;
   rx1 = rx0 + direction * lx;        // step to next position
   ry1 = ry0 + direction * ly;
   ppx = round( rx1 );    // round to nearest pixel as anchor
@@ -1045,8 +1046,7 @@ int JaneliaTracker::move_line( Line_Params *line, int *p, int stride, int direct
   t   = drx*ex + dry*ey; // dr dot l
 
   line->offset = t;
-  *p = ((int)ppx) + stride*( (int) ppy );
-  return *p;
+  return ((int)ppx) + stride*( (int) ppy );
 }
 
 int JaneliaTracker::adjust_line_start(Line_Params *line, const Image<uint8_t> &image, int *pp,
@@ -1155,7 +1155,7 @@ int JaneliaTracker::adjust_line_start(Line_Params *line, const Image<uint8_t> &i
   }
 
 
-  if( is_change_too_big( &backup, line, this->config._max_delta_angle, this->config._max_delta_width, this->config._max_delta_offset) )
+  if( is_change_too_big( backup, *line, this->config._max_delta_angle, this->config._max_delta_width, this->config._max_delta_offset) )
   {
     *line = backup; //No adjustment
     return 0;
@@ -1165,10 +1165,10 @@ int JaneliaTracker::adjust_line_start(Line_Params *line, const Image<uint8_t> &i
   return trusted;
 }
 
-bool JaneliaTracker::is_change_too_big( Line_Params *new_line, Line_Params *old, const float alim, const float wlim, const float olim)
-{ float dth = old->angle - new_line->angle,
-        dw  = old->width - new_line->width,
-        doff= old->offset- new_line->offset;
+bool JaneliaTracker::is_change_too_big( const Line_Params new_line, const Line_Params old, const float alim, const float wlim, const float olim)
+{ float dth = old.angle - new_line.angle,
+        dw  = old.width - new_line.width,
+        doff= old.offset- new_line.offset;
   if( ( fabs((dth*180.0/M_PI)) >  alim ) ||
       ( fabs(dw)               >  wlim ) ||
       ( fabs(doff)             >  olim ) )

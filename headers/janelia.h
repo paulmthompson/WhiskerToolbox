@@ -124,16 +124,16 @@ private:
     std::optional<Seed> compute_seed_from_point_ex(const Image<uint8_t>& image, int p, int maxr, float *out_m, float *out_stat);
     Line_Params line_param_from_seed(const Seed s);
     float eval_line(Line_Params *line, const Image<uint8_t>& image, int p);
-    float round_anchor_and_offset( Line_Params *line, int *p, int stride );
+    std::pair<float,int>  round_anchor_and_offset( const Line_Params line, const int p, const int stride );
     void get_offset_list(const Image<uint8_t>& image, const int support, const float angle, int p, int *npx );
 
     Whisker_Seg trace_whisker(Seed s, Image<uint8_t>& image);
 
     float eval_half_space( Line_Params *line, const Image<uint8_t>& image, int p, float *rr, float *ll );
-    int move_line( Line_Params *line, int *p, int stride, int direction );
+    int move_line( Line_Params *line, const int p, const int stride, const int direction );
     int adjust_line_start(Line_Params *line, const Image<uint8_t>& image, int *pp,
                                    Interval *roff, Interval *rang, Interval *rwid);
-    bool is_change_too_big( Line_Params *new_line, Line_Params *old, const float alim, const float wlim, const float olim);
+    bool is_change_too_big( const Line_Params new_line, const Line_Params old, const float alim, const float wlim, const float olim);
     bool is_local_area_trusted( Line_Params *line, Image<uint8_t>& image, int p );
     bool is_local_area_trusted_conservative( Line_Params *line, Image<uint8_t>& image, int p );
 

@@ -20,6 +20,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 #find_package(ffmpeg_wrapper CONFIG REQUIRED PATHS "/home/wanglab/Documents/ffmpeg_wrapper/build/test")
 find_package(ffmpeg_wrapper CONFIG REQUIRED PATHS "C:\\Users\\Paul\\Documents\\ffmpeg_wrapper\\build\\test")
 
+
 include_directories("headers")
 
 set(PROJECT_SOURCES
