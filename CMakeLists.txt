@@ -17,11 +17,16 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS MultimediaWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 
-#find_package(ffmpeg_wrapper CONFIG REQUIRED PATHS "/home/wanglab/Documents/ffmpeg_wrapper/build/test")
-find_package(ffmpeg_wrapper CONFIG REQUIRED PATHS "C:\\Users\\Paul\\Documents\\ffmpeg_wrapper\\build\\test")
 
+set(HIGHFIVE_USE_BOOST OFF CACHE BOOL, "enable boost" FORCE)
+set(HIGHFIVE_EXAMPLES OFF CACHE BOOL, "" FORCE)
+add_subdirectory(HighFive EXCLUDE_FROM_ALL)
+#set(HighFive_DIR ${HighFive_BINARY_DIR})
+
+find_package(ffmpeg_wrapper CONFIG REQUIRED PATHS "C:/Users/Paul/Documents/ffmpeg_wrapper/build/test")
 
 include_directories("headers")
+
 
 set(PROJECT_SOURCES
         src/main.cpp
@@ -68,6 +73,10 @@ target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::MultimediaWi
 target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::OpenGL)
 
 target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
+
+target_link_libraries(WhiskerToolbox PRIVATE HighFive)
+
+
 
 set_target_properties(WhiskerToolbox PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
