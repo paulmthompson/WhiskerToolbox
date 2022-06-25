@@ -20,10 +20,10 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 
 set(HIGHFIVE_USE_BOOST OFF CACHE BOOL, "enable boost" FORCE)
 set(HIGHFIVE_EXAMPLES OFF CACHE BOOL, "" FORCE)
-add_subdirectory(HighFive EXCLUDE_FROM_ALL)
+add_subdirectory(external/HighFive EXCLUDE_FROM_ALL)
 #set(HighFive_DIR ${HighFive_BINARY_DIR})
 
-find_package(ffmpeg_wrapper CONFIG REQUIRED PATHS "C:/Users/Paul/Documents/ffmpeg_wrapper/build/test")
+find_package(ffmpeg_wrapper CONFIG REQUIRED PATHS "C:/Users/wanglab/Documents/ffmpeg_wrapper/build/test")
 
 include_directories("headers")
 
