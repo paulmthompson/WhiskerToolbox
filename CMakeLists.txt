@@ -25,9 +25,6 @@ add_subdirectory(external/HighFive EXCLUDE_FROM_ALL)
 
 find_package(ffmpeg_wrapper CONFIG REQUIRED PATHS "C:/Users/wanglab/Documents/ffmpeg_wrapper/build/test")
 
-include_directories("headers")
-
-
 set(PROJECT_SOURCES
         src/main.cpp
         src/mainwindow.cpp
@@ -36,11 +33,11 @@ set(PROJECT_SOURCES
         headers/whiskertracker.h
         src/whiskertracker.cpp
         whiskertoolbox.qrc
-        headers/janelia.h
-        src/janelia.cpp
+        WhiskerToolbox/Janelia/janelia.h
+        WhiskerToolbox/Janelia/janelia.cpp
         my_stylesheet.qss
-        headers/detector_bank.h
-        src/detector_bank.cpp
+        WhiskerToolbox/Janelia/detector_bank.h
+        WhiskerToolbox/Janelia/detector_bank.cpp
         headers/video_window.h
 )
 
@@ -76,7 +73,7 @@ target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 
-
+target_include_directories(WhiskerToolbox PRIVATE Headers WhiskerToolbox/Janelia)
 
 set_target_properties(WhiskerToolbox PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
