@@ -28,11 +28,7 @@ set(PROJECT_SOURCES
         headers/whiskertracker.h
         src/whiskertracker.cpp
         whiskertoolbox.qrc
-        WhiskerToolbox/Janelia/janelia.h
-        WhiskerToolbox/Janelia/janelia.cpp
         my_stylesheet.qss
-        WhiskerToolbox/Janelia/detector_bank.h
-        WhiskerToolbox/Janelia/detector_bank.cpp
         headers/video_window.h
 )
 
