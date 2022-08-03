@@ -68,7 +68,9 @@ target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 
+add_subdirectory(WhiskerToolbox/Janelia)
 target_include_directories(WhiskerToolbox PRIVATE Headers WhiskerToolbox/Janelia)
+target_link_libraries(WhiskerToolbox PRIVATE janelia)
 
 set_target_properties(WhiskerToolbox PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

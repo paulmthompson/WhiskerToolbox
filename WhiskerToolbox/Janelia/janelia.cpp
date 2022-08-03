@@ -1,8 +1,5 @@
 
 #include "janelia.h"
-#include "qmath.h"
-
-#define _USE_MATH_DEFINES
 
 #include <cmath>
 #include <cfloat>
