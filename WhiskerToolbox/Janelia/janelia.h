@@ -38,18 +38,18 @@ struct Image
     int height;
     std::vector<T> array;
 
-    Image<T>() {
+    Image() {
         width = 0;
         height = 0;
         std::vector<T> array{};
     }
 
-    Image<T>(int w, int h) {
+    Image(int w, int h) {
         width=w;
         height=h;
         array = std::vector<T>(h*w,0);
     }
-    Image<T>(int w, int h,std::vector<T> img) {
+    Image(int w, int h,std::vector<T> img) {
         width=w;
         height=h;
         array = img;

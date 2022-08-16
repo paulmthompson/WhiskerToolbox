@@ -1,11 +1,12 @@
 
 #include "detector_bank.h"
 
+#include <numbers>
 #include <cmath>
 #include <cfloat>
 
 int DetectorBank::compute_number_steps( Range r )
-{  return lround( (r.max - r.min) / r.step ) + 1;
+{  return std::lround( (r.max - r.min) / r.step ) + 1;
 }
 
 int DetectorBank::Get_Detector(const int ioffset, const int iwidth, const int iangle  )
@@ -21,7 +22,7 @@ LineDetector::LineDetector() {
 LineDetector::LineDetector(JaneliaConfig config) {
 
     this->off = Range { -1.0,1.0,config._offset_step};
-    this->ang = Range { -M_PI/4.0,M_PI/4.0, M_PI/4.0/config._angle_step};
+    this->ang = Range { std::numbers::pi/4.0,std::numbers::pi/4.0, std::numbers::pi/4.0/config._angle_step};
     this->wid = Range { config._width_min,config._width_max, config._width_step  };
     Build_Line_Detectors(config._tlen, 2*config._tlen+3 );
 }
@@ -33,7 +34,7 @@ HalfSpaceDetector::HalfSpaceDetector() {
 HalfSpaceDetector::HalfSpaceDetector(JaneliaConfig config) {
     this->norm = -1;
     this->off = Range { -1.0,1.0,config._offset_step};
-    this->ang = Range { -M_PI/4.0,  M_PI/4.0, M_PI/4.0/config._angle_step };
+    this->ang = Range { -std::numbers::pi/4.0,  std::numbers::pi/4.0, std::numbers::pi/4.0/config._angle_step };
     this->wid = Range {config._width_min, config._width_max, config._width_step};
     Build_Half_Space_Detectors(config._tlen,2*config._tlen+3);
 
@@ -205,44 +206,44 @@ int DetectorBank::get_nearest(float offset, float width, float angle)
 {
    auto is_small_angle = [](const float angle )
      /* true iff angle is in [-pi/4,pi/4) or [3pi/4,5pi/4) */
-    { static const float qpi = M_PI/4.0;
-     static const float hpi = M_PI/2.0;
-     int n = floorf( (angle-qpi)/hpi );
+    { static const float qpi = std::numbers::pi/4.0;
+     static const float hpi = std::numbers::pi/2.0;
+     int n = std::floor( (angle-qpi)/hpi );
      return  (n % 2) != 0;
     };
   if( !is_small_angle( angle ) )  // if large angle then transpose
-  { angle = 3.0*M_PI/2.0 - angle; //   to small ones ( <45deg )
+  { angle = 3.0*std::numbers::pi/2.0 - angle; //   to small ones ( <45deg )
   //offset = -offset;
   }
 
   // Make sure angle is between 0 and 2 Pi
-  while( (angle)    < -M_PI )
-    (angle)    +=   2*M_PI;
-  while( (angle)    >= M_PI )
-    (angle)    -=   2*M_PI;
+  while( (angle)    < -std::numbers::pi )
+    (angle)    +=   2*std::numbers::pi;
+  while( (angle)    >= std::numbers::pi )
+    (angle)    -=   2*std::numbers::pi;
 
   auto is_angle_leftward = [](const float angle )
           /* true iff angle is in left half plane */
-         { //static const float qpi = M_PI/4.0;
-          static const float hpi = M_PI/2.0;
-          int n = floorf( (angle-hpi)/M_PI );
+         { //static const float qpi = std::numbers::pi/4.0;
+          static const float hpi = std::numbers::pi/2.0;
+          int n = std::floor( (angle-hpi)/std::numbers::pi );
           return  (n % 2) == 0;
          };
   //sometimes need to flip the line upside down
   if( is_angle_leftward(angle) )
   {
     //Wrap the angle in the appropriate half plane
-    while( (angle)    < M_PI/2.0 )
-       (angle)    +=   M_PI;
-    while( (angle)    >= M_PI/2.0 )
-       (angle)    -=   M_PI;
+    while( (angle)    < std::numbers::pi/2.0 )
+       (angle)    +=   std::numbers::pi;
+    while( (angle)    >= std::numbers::pi/2.0 )
+       (angle)    -=   std::numbers::pi;
 
     offset = -offset;
   }
 
-  int o = lround( ( offset - this->off.min ) / this->off.step );
-  int a = lround( (  angle - this->ang.min ) / this->ang.step );
-  int w = lround( (  width - this->wid.min ) / this->wid.step );
+  int o = std::lround( ( offset - this->off.min ) / this->off.step );
+  int a = std::lround( (  angle - this->ang.min ) / this->ang.step );
+  int w = std::lround( (  width - this->wid.min ) / this->wid.step );
 
   return Get_Detector(o, w, a );
 }
@@ -250,7 +251,7 @@ int DetectorBank::get_nearest(float offset, float width, float angle)
 template <size_t N>
 void Simple_Circle_Primitive( std::array<point,N>& verts, point center, float radius, int direction)
 {
-  float k = direction*2*M_PI/(float)verts.size();
+  float k = direction*2*std::numbers::pi/(float)verts.size();
   for (int i = 0; i < verts.size(); i++) {
       point p = { static_cast<float>(center.x + radius * cos( k*i )),
                       static_cast<float>(center.y + radius * sin( k*i ))};

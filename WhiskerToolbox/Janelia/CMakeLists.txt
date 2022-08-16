@@ -3,7 +3,7 @@ project(janelia
         VERSION 0.0.1
         DESCRIPTION "Janelia whisker tracking in Modern C++")
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(janelia SHARED
