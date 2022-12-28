@@ -22,7 +22,7 @@ LineDetector::LineDetector() {
 LineDetector::LineDetector(JaneliaConfig config) {
 
     this->off = Range { -1.0,1.0,config._offset_step};
-    this->ang = Range { std::numbers::pi/4.0,std::numbers::pi/4.0, std::numbers::pi/4.0/config._angle_step};
+    this->ang = Range { -1 * std::numbers::pi/4.0,std::numbers::pi/4.0, std::numbers::pi/4.0/config._angle_step};
     this->wid = Range { config._width_min,config._width_max, config._width_step  };
     Build_Line_Detectors(config._tlen, 2*config._tlen+3 );
 }
