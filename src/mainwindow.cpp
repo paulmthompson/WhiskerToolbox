@@ -33,16 +33,14 @@ MainWindow::MainWindow(QWidget *parent)
     wt = std::make_unique<WhiskerTracker>();
     std::vector<uint8_t>current_frame = {};
 
-    scene = new Video_Window(this);
+    this->scene = new Video_Window(this);
 
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::vidLoop);
 
     play_mode = false;
 
-    myimage = QImage(640,480,QImage::Format_Grayscale8);
-    pixmap_item = scene->addPixmap(QPixmap::fromImage(myimage));
-    ui->graphicsView->setScene(scene);
+    ui->graphicsView->setScene(this->scene);
     ui->graphicsView->show();
 
     selection_mode = Whisker_Select;
@@ -71,7 +69,7 @@ void MainWindow::createActions()
     connect(ui->rewind,SIGNAL(clicked()),this,SLOT(RewindButton()));
     connect(ui->fastforward,SIGNAL(clicked()),this,SLOT(FastForwardButton()));
     connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
-    connect(scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
+    connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
 }
 
 void MainWindow::Load_Video()
@@ -121,14 +119,6 @@ void MainWindow::FastForwardButton()
     this->play_speed++;
     ui->fps_label->setText(QString::number(25 * this->play_speed));
 }
-void MainWindow::UpdateCanvas(QImage& img)
-{
-    for (auto pathItem : this->whisker_paths) {
-        scene->removeItem(pathItem);
-    }
-    this->whisker_paths.clear();
-    pixmap_item->setPixmap(QPixmap::fromImage(img));
-}
 
 void MainWindow::Slider_Scroll(int newPos)
 {
@@ -152,7 +142,7 @@ void MainWindow::LoadFrame(int frame_id,bool frame_by_frame)
     this->selected_whisker = 0; //This will need to be
 
     QImage img = QImage(&image[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
-    UpdateCanvas(img);
+    scene->UpdateCanvas(img);
     this->last_loaded_frame = frame_id;
 }
 
@@ -178,10 +168,7 @@ void MainWindow::TraceButton()
 
 void MainWindow::DrawWhiskers()
 {
-    for (auto pathItem : this->whisker_paths) {
-        scene->removeItem(pathItem);
-    }
-    this->whisker_paths.clear();
+    scene->clearLines();
 
     for (auto& w : wt->whiskers) {
         QPainterPath* path = new QPainterPath();
@@ -194,7 +181,7 @@ void MainWindow::DrawWhiskers()
 
         auto whisker_color = (w.id == this->selected_whisker) ? QPen(QColor(Qt::red)) : QPen(QColor(Qt::blue));
 
-        whisker_paths.append(this->scene->addPath(*path,whisker_color));
+        scene->addLine(path,whisker_color);
 
     }
 }

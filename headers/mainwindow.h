@@ -31,7 +31,6 @@ private:
     Ui::MainWindow *ui;
     void createActions();
     QImage convertToImage(std::vector<uint8_t> input, int width, int height);
-    void UpdateCanvas(QImage& img);
     void GetVideoInfo();
     void LoadFrame(int frame_id,bool frame_by_frame = false);
     void DrawWhiskers();
@@ -54,10 +53,7 @@ private:
     int play_speed;
     bool play_mode;
 
-    QImage myimage;
     Video_Window* scene;
-    QGraphicsPixmapItem* pixmap_item;
-    QVector<QGraphicsPathItem*> whisker_paths;
 
     std::unique_ptr<WhiskerTracker> wt;
     std::vector<uint8_t> current_frame;
