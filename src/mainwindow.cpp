@@ -52,7 +52,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::vidLoop()
 {
-    auto loaded_frame = scene->AdvanceFrame(this->play_speed, true);
+    auto loaded_frame = scene->AdvanceFrame(this->play_speed);
     this->selected_whisker = 0;
     ui->frame_label->setText(QString::number(loaded_frame));
 }

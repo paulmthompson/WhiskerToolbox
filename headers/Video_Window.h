@@ -68,13 +68,15 @@ public:
         return vd->getFrameCount();
     }
 
-    int AdvanceFrame(int num_frames,bool frame_by_frame = true) {
+    // Advance from current frame by num_frames
+    int AdvanceFrame(int num_frames) {
 
-        return LoadFrame(this->last_loaded_frame + num_frames, frame_by_frame);
+        return LoadFrame(this->last_loaded_frame + num_frames, true);
 
     }
 
-    int LoadFrame(int frame_id,bool frame_by_frame = true)
+    //Jump to specific frame designated by frame_id
+    int LoadFrame(int frame_id,bool frame_by_frame = false)
     {
         std::vector<uint8_t> image = vd->getFrame( frame_id, frame_by_frame);
 
