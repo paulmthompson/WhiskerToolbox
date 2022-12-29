@@ -12,7 +12,7 @@ WhiskerTracker::WhiskerTracker()
     whiskers = std::vector<Whisker>{};
 }
 
-void WhiskerTracker::trace(std::vector<uint8_t>& input) {
+void WhiskerTracker::trace(const std::vector<uint8_t>& input) {
 
     if (this->janelia_init == false) {
         this->janelia.bank = LineDetector(this->janelia.config);

@@ -27,7 +27,7 @@ class WhiskerTracker {
 public:
     WhiskerTracker();
 
-   void trace(std::vector<uint8_t>& input);
+   void trace(const std::vector<uint8_t>& input);
    std::tuple<float,int> get_nearest_whisker(float x_p, float y_p);
     std::vector<Whisker> whiskers;
 

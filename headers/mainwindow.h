@@ -8,8 +8,6 @@
 
 #include <memory>
 
-#include <ffmpeg_wrapper/videodecoder.h>
-
 #include "whiskertracker.h"
 #include "Video_Window.h"
 
@@ -31,24 +29,17 @@ private:
     Ui::MainWindow *ui;
     void createActions();
     QImage convertToImage(std::vector<uint8_t> input, int width, int height);
-    void GetVideoInfo();
-    void LoadFrame(int frame_id,bool frame_by_frame = false);
     void DrawWhiskers();
 
     void vidLoop();
 
-    std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
-
-    QString vid_name;
     int frame_count;
 
     QTimer* timer;
 
     int selected_whisker;
 
-
     long long t_last_draw;
-    int last_loaded_frame;
 
     int play_speed;
     bool play_mode;
@@ -56,7 +47,6 @@ private:
     Video_Window* scene;
 
     std::unique_ptr<WhiskerTracker> wt;
-    std::vector<uint8_t> current_frame;
 
     enum Selection_Type {Whisker_Select,
                         Whisker_Pad_Select};

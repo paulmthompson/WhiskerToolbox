@@ -21,17 +21,12 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    QString vid_name;
-
     frame_count = 0;
-    last_loaded_frame = 0;
     play_speed = 1;
 
     this->selected_whisker = 0;
 
-    vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
     wt = std::make_unique<WhiskerTracker>();
-    std::vector<uint8_t>current_frame = {};
 
     this->scene = new Video_Window(this);
 
@@ -57,8 +52,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::vidLoop()
 {
-    LoadFrame(this->last_loaded_frame + this->play_speed, true);
-    ui->frame_label->setText(QString::number(this->last_loaded_frame));
+    auto loaded_frame = scene->AdvanceFrame(this->play_speed, true);
+    this->selected_whisker = 0;
+    ui->frame_label->setText(QString::number(loaded_frame));
 }
 
 void MainWindow::createActions()
@@ -74,16 +70,16 @@ void MainWindow::createActions()
 
 void MainWindow::Load_Video()
 {
-    vid_name =  QFileDialog::getOpenFileName(
+    auto vid_name =  QFileDialog::getOpenFileName(
                 this,
                 "Load Video File",
                 QDir::currentPath(),
                 "All files (*.*) ;; MP4 (*.mp4)");
 
-    GetVideoInfo();
-    current_frame.resize(vd->getHeight()*vd->getWidth());
+    ui->horizontalScrollBar->setMaximum(scene->GetVideoInfo(vid_name.toStdString()));
 
-    LoadFrame(0);
+    scene->LoadFrame(0);
+    this->selected_whisker = 0;
 }
 
 void MainWindow::PlayButton()
@@ -95,7 +91,7 @@ void MainWindow::PlayButton()
         play_mode = false;
 
         ui->horizontalScrollBar->blockSignals(true);
-        ui->horizontalScrollBar->setValue(last_loaded_frame);
+        ui->horizontalScrollBar->setValue(scene->getLastLoadedFrame());
         ui->horizontalScrollBar->blockSignals(false);
 
     } else {
@@ -122,28 +118,9 @@ void MainWindow::FastForwardButton()
 
 void MainWindow::Slider_Scroll(int newPos)
 {
-    LoadFrame(newPos);
+    scene->LoadFrame(newPos);
+    this->selected_whisker = 0;
     ui->frame_label->setText(QString::number(newPos));
-}
-
-void MainWindow::GetVideoInfo()
-{
-    this->vd->createMedia(this->vid_name.toStdString());
-
-    ui->horizontalScrollBar->setMaximum(vd->getFrameCount());
-}
-
-void MainWindow::LoadFrame(int frame_id,bool frame_by_frame)
-{
-    std::vector<uint8_t> image = vd->getFrame( frame_id, frame_by_frame);
-
-    this->current_frame = image;
-
-    this->selected_whisker = 0; //This will need to be
-
-    QImage img = QImage(&image[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
-    scene->UpdateCanvas(img);
-    this->last_loaded_frame = frame_id;
 }
 
 QImage MainWindow::convertToImage(std::vector<uint8_t> input, int width, int height)
@@ -156,7 +133,7 @@ void MainWindow::TraceButton()
     QElapsedTimer timer2;
     timer2.start();
 
-   wt->trace(this->current_frame);
+   wt->trace(this->scene->getCurrentFrame());
 
    int t1 = timer2.elapsed();
    DrawWhiskers();
@@ -171,17 +148,10 @@ void MainWindow::DrawWhiskers()
     scene->clearLines();
 
     for (auto& w : wt->whiskers) {
-        QPainterPath* path = new QPainterPath();
-
-        path->moveTo(QPointF(w.x[0],w.y[0]));
-
-        for (int i = 1; i < w.x.size(); i++) {
-            path->lineTo(QPointF(w.x[i],w.y[i]));
-        }
 
         auto whisker_color = (w.id == this->selected_whisker) ? QPen(QColor(Qt::red)) : QPen(QColor(Qt::blue));
 
-        scene->addLine(path,whisker_color);
+        scene->addLine(w.x,w.y,whisker_color);
 
     }
 }
