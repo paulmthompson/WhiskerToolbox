@@ -11,8 +11,6 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
-#include <QUiLoader>
-
 #include "Covariate_Widget.h"
 
 #include <stdio.h>

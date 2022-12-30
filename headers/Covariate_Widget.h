@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QUiLoader>
 #include <QFile>
+#include <iostream>
 #include "ui_covariate_widget.h"
 
 //https://doc.qt.io/qt-6/designer-using-a-ui-file.html
@@ -13,8 +14,18 @@ Q_OBJECT
 public:
     Covariate_Widget(QWidget *parent = 0) : QWidget(parent) {
         setupUi(this);
+
+        //std::cout << graphicsView->size().height() << std::endl;
     }
 
-
+private:
+    //Y+
+    //Y-
+    //Gain?
+    //Offset?
+    //Time
+    //Plot type (analog, digital)
+    //Color
+    //
 };
 #endif // COVARIATE_WIDGET_H
