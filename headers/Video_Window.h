@@ -51,28 +51,20 @@ public:
     std::vector<uint8_t> getCurrentFrame() const {
         return this->current_frame;
     }
-    void setCurrentFrame( std::vector<uint8_t> img) {
-        this->current_frame = img;
-    }
-    void setCurrentFrame(int mysize) {
-        this->current_frame.resize(mysize);
-    }
 
     int GetVideoInfo(std::string name)
     {
         this->vid_name = name;
         this->vd->createMedia(this->vid_name);
 
-        setCurrentFrame(vd->getHeight()*vd->getWidth());
+        this->current_frame.resize(vd->getHeight()*vd->getWidth());
 
         return vd->getFrameCount();
     }
 
     // Advance from current frame by num_frames
     int AdvanceFrame(int num_frames) {
-
         return LoadFrame(this->last_loaded_frame + num_frames, true);
-
     }
 
     //Jump to specific frame designated by frame_id
@@ -80,7 +72,7 @@ public:
     {
         std::vector<uint8_t> image = vd->getFrame( frame_id, frame_by_frame);
 
-        setCurrentFrame(image);
+        this->current_frame = image;
 
         QImage img = QImage(&image[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
         UpdateCanvas(img);

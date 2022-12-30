@@ -11,6 +11,8 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
+#include <QUiLoader>
+
 #include <stdio.h>
 #include <functional>
 #include <memory>
@@ -66,6 +68,7 @@ void MainWindow::createActions()
     connect(ui->fastforward,SIGNAL(clicked()),this,SLOT(FastForwardButton()));
     connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
     connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
+    connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(addCovariate()));
 }
 
 void MainWindow::Load_Video()
@@ -80,6 +83,23 @@ void MainWindow::Load_Video()
 
     scene->LoadFrame(0);
     this->selected_whisker = 0;
+}
+
+void MainWindow::addCovariate() {
+
+    auto item = new QListWidgetItem(ui->listWidget);
+    ui->listWidget->addItem(item);
+
+    QUiLoader loader;
+    QFile file(":/covariate_widget.ui");
+    file.open(QFile::ReadOnly);
+    QWidget *myWidget = loader.load(&file, this);
+    file.close();
+
+    item->setSizeHint(myWidget->frameSize());
+
+    ui->listWidget->setItemWidget(item,myWidget);
+
 }
 
 void MainWindow::PlayButton()
