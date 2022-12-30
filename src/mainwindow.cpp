@@ -13,6 +13,8 @@
 
 #include <QUiLoader>
 
+#include "Covariate_Widget.h"
+
 #include <stdio.h>
 #include <functional>
 #include <memory>
@@ -91,11 +93,7 @@ void MainWindow::addCovariate() {
     auto item = new QListWidgetItem(ui->listWidget);
     ui->listWidget->addItem(item);
 
-    QUiLoader loader;
-    QFile file(":/covariate_widget.ui");
-    file.open(QFile::ReadOnly);
-    QWidget *myWidget = loader.load(&file, this);
-    file.close();
+    auto myWidget = new Covariate_Widget(this);
 
     item->setSizeHint(myWidget->frameSize());
 

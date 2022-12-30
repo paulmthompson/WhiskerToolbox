@@ -27,12 +27,13 @@ set(PROJECT_SOURCES
         src/mainwindow.cpp
         headers/mainwindow.h
         src/mainwindow.ui
-        covariate_widget.ui
         headers/whiskertracker.h
         src/whiskertracker.cpp
         whiskertoolbox.qrc
         my_stylesheet.qss
         headers/video_window.h
+        headers/Covariate_Widget.h
+        headers/covariate_widget.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
