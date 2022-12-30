@@ -61,5 +61,6 @@ private slots:
     void TraceButton();
     void ClickedInVideo(qreal,qreal);
     void addCovariate();
+    void removeCovariate();
 };
 #endif // MAINWINDOW_H

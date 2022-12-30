@@ -69,6 +69,7 @@ void MainWindow::createActions()
     connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
     connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
     connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(addCovariate()));
+    connect(ui->pushButton_2,SIGNAL(clicked()),this,SLOT(removeCovariate()));
 }
 
 void MainWindow::Load_Video()
@@ -100,6 +101,12 @@ void MainWindow::addCovariate() {
 
     ui->listWidget->setItemWidget(item,myWidget);
 
+}
+
+void MainWindow::removeCovariate() {
+    auto item = ui->listWidget->currentItem();
+    ui->listWidget->removeItemWidget(item);
+    delete item;
 }
 
 void MainWindow::PlayButton()

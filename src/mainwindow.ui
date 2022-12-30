@@ -246,12 +246,12 @@
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>75</width>
+        <width>61</width>
         <height>24</height>
        </rect>
       </property>
       <property name="text">
-       <string>PushButton</string>
+       <string>Add</string>
       </property>
      </widget>
      <widget class="QListWidget" name="listWidget">
@@ -262,6 +262,19 @@
         <width>301</width>
         <height>301</height>
        </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_2">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>10</y>
+        <width>61</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Remove</string>
       </property>
      </widget>
     </widget>
