@@ -34,6 +34,8 @@ set(PROJECT_SOURCES
         headers/video_window.h
         headers/Covariate_Widget.h
         headers/covariate_widget.ui
+        headers/Covariate_Config.h
+        headers/Covariate_Config.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
