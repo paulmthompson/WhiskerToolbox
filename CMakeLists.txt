@@ -71,8 +71,15 @@ target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 
-add_subdirectory(WhiskerToolbox/Janelia)
-target_include_directories(WhiskerToolbox PRIVATE Headers WhiskerToolbox/Janelia)
+add_subdirectory(Modules/Janelia)
+
+target_include_directories(WhiskerToolbox PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/headers>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Modules/Janelia>"
+
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+
 target_link_libraries(WhiskerToolbox PRIVATE janelia)
 
 set_target_properties(WhiskerToolbox PROPERTIES
