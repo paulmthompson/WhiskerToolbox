@@ -2,9 +2,10 @@
 #define COVARIATE_WIDGET_H
 
 #include <QWidget>
-#include <QUiLoader>
-#include <QFile>
+
 #include <iostream>
+#include <vector>
+
 #include "ui_covariate_widget.h"
 
 //https://doc.qt.io/qt-6/designer-using-a-ui-file.html
@@ -14,13 +15,13 @@ Q_OBJECT
 public:
     Covariate_Widget(QWidget *parent = 0) : QWidget(parent) {
         setupUi(this);
-
         //std::cout << graphicsView->size().height() << std::endl;
     }
 
 private:
-    //Y+
-    //Y-
+    std::vector<float> data;
+    float y_max;
+    float y_min;
     //Gain?
     //Offset?
     //Time
