@@ -25,6 +25,8 @@ public:
         config_win = new Covariate_Config(c_opt,this);
 
         connect(pushButton_2,SIGNAL(clicked()),this,SLOT(openConfig()));
+
+        connect(config_win,SIGNAL(valueChanged()),this,SLOT(updateValues()));
     }
 
 private:
@@ -39,8 +41,11 @@ private:
     //
 private slots:
     void openConfig() {
-        std::cout << c_opt->y_max << std::endl;
         config_win->show();
+    };
+    void updateValues() {
+        std::cout << "Y Max: " << c_opt->y_max << std::endl;
+        std::cout << "Y Min: " << c_opt->y_min << std::endl;
     };
 };
 #endif // COVARIATE_WIDGET_H

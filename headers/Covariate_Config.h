@@ -34,12 +34,12 @@ public:
 
         connect(
             y_max_spin,QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-                    this,[=]( const double d ) { this->c_opt->y_max = d; }
+                    this,[=]( const double d ) { this->c_opt->y_max = d; emit valueChanged();}
         );
 
         connect(
             y_min_spin,QOverload<double>::of(&QDoubleSpinBox::valueChanged),
-                    this,[=]( const double d ) { this->c_opt->y_min = d; }
+                    this,[=]( const double d ) { this->c_opt->y_min = d; emit valueChanged();}
         );
 
     }
@@ -48,6 +48,9 @@ private:
     std::shared_ptr<config_options> c_opt;
 
 private slots:
+
+signals:
+    void valueChanged();
 
 };
 
