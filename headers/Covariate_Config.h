@@ -32,23 +32,17 @@ public:
         //https://doc.qt.io/qt-6/qt.html#WindowType-enum
         setWindowFlag(Qt::Window);
 
-        connect(y_max_spin,SIGNAL(valueChanged(double)),this,SLOT(updateYMax(double)));
-
-        /*
         connect(
             y_max_spin,QOverload<double>::of(&QDoubleSpinBox::valueChanged),
                     this,[=]( const double d ) { this->c_opt->y_max = d; }
         );
-        */
+
     }
 
 private:
     std::shared_ptr<config_options> c_opt;
 
 private slots:
-    void updateYMax(double d) {
-        this->c_opt->y_max = d;
-    }
 
 };
 
