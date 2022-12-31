@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "Covariate_Config.h"
 
@@ -19,16 +20,17 @@ public:
         setupUi(this);
         //std::cout << graphicsView->size().height() << std::endl;
 
-        config_win = new Covariate_Config(parent);
+        this->c_opt = std::make_shared<config_options>();
+
+        config_win = new Covariate_Config(c_opt,this);
 
         connect(pushButton_2,SIGNAL(clicked()),this,SLOT(openConfig()));
     }
 
 private:
     std::vector<float> data;
-    float y_max;
-    float y_min;
     Covariate_Config* config_win;
+    std::shared_ptr<config_options> c_opt;
     //Gain?
     //Offset?
     //Time
@@ -37,6 +39,7 @@ private:
     //
 private slots:
     void openConfig() {
+        std::cout << c_opt->y_max << std::endl;
         config_win->show();
     };
 };
