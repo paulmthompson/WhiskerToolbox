@@ -25,6 +25,15 @@
      <height>22</height>
     </rect>
    </property>
+   <property name="minimum">
+    <double>-10000.000000000000000</double>
+   </property>
+   <property name="maximum">
+    <double>10000.000000000000000</double>
+   </property>
+   <property name="value">
+    <double>10.000000000000000</double>
+   </property>
   </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
@@ -60,6 +69,15 @@
      <width>62</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="minimum">
+    <double>-10000.000000000000000</double>
+   </property>
+   <property name="maximum">
+    <double>10000.000000000000000</double>
+   </property>
+   <property name="value">
+    <double>-10.000000000000000</double>
    </property>
   </widget>
  </widget>
