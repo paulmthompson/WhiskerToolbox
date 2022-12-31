@@ -37,6 +37,11 @@ public:
                     this,[=]( const double d ) { this->c_opt->y_max = d; }
         );
 
+        connect(
+            y_min_spin,QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                    this,[=]( const double d ) { this->c_opt->y_min = d; }
+        );
+
     }
 
 private:
