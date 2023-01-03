@@ -41,11 +41,14 @@ private:
     //
 private slots:
     void openConfig() {
+        config_win->updateValues();
         config_win->show();
     };
     void updateValues() {
         std::cout << "Y Max: " << c_opt->y_max << std::endl;
         std::cout << "Y Min: " << c_opt->y_min << std::endl;
+
+        //Replot
     };
 };
 #endif // COVARIATE_WIDGET_H

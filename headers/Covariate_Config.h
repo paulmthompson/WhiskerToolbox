@@ -42,7 +42,11 @@ public:
                     this,[=]( const double d ) { this->c_opt->y_min = d; emit valueChanged();}
         );
 
-    }
+    };
+    void updateValues() {
+        this->y_max_spin->setValue(this->c_opt->y_max);
+        this->y_min_spin->setValue(this->c_opt->y_min);
+    };
 
 private:
     std::shared_ptr<config_options> c_opt;

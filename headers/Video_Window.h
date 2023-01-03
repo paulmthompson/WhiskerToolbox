@@ -14,6 +14,7 @@ public:
     Video_Window(QObject *parent = 0) : QGraphicsScene(parent) {
         this->myimage = QImage(640,480,QImage::Format_Grayscale8);
         this->pixmap_item = addPixmap(QPixmap::fromImage(this->myimage));
+
         vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
         last_loaded_frame = 0;
     }
@@ -40,6 +41,19 @@ public:
             removeItem(pathItem);
         }
         this->line_paths.clear();
+    }
+
+    template <typename T>
+    void addPoint(T x, T y, QPen color) {
+
+        this->points.append(addEllipse(x,y,15.0,15.0,color));
+    }
+
+    void clearPoints() {
+        for (auto pathItem : this->points) {
+            removeItem(pathItem);
+        }
+        this->points.clear();
     }
 
     void UpdateCanvas(QImage& img)
@@ -101,11 +115,15 @@ protected:
     }
 
     std::string vid_name;
-    QVector<QGraphicsPathItem*> line_paths;
-    QGraphicsPixmapItem* pixmap_item;
     QImage myimage;
-    std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
     std::vector<uint8_t> current_frame;
+    QGraphicsPixmapItem* pixmap_item;
+
+
+    QVector<QGraphicsPathItem*> line_paths;
+    QVector<QGraphicsEllipseItem*> points;
+
+    std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
     int last_loaded_frame;
 
 
