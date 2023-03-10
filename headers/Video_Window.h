@@ -12,7 +12,10 @@ class Video_Window : public QGraphicsScene
 Q_OBJECT
 public:
     Video_Window(QObject *parent = 0) : QGraphicsScene(parent) {
-        this->myimage = QImage(640,480,QImage::Format_Grayscale8);
+
+        w = 640;
+        h = 480;
+        this->myimage = QImage(w,h,QImage::Format_Grayscale8);
         this->pixmap_item = addPixmap(QPixmap::fromImage(this->myimage));
 
         vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
@@ -56,9 +59,19 @@ public:
         this->points.clear();
     }
 
+    void UpdateCanvas()
+    {
+        clearLines();
+        clearPoints();
+        QImage img = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
+        UpdateCanvas(img);
+        this->pixmap_item->setPixmap(QPixmap::fromImage(img));
+    }
+
     void UpdateCanvas(QImage& img)
     {
         clearLines();
+        clearPoints();
         this->pixmap_item->setPixmap(QPixmap::fromImage(img));
     }
 
@@ -84,18 +97,28 @@ public:
     //Jump to specific frame designated by frame_id
     int LoadFrame(int frame_id,bool frame_by_frame = false)
     {
-        std::vector<uint8_t> image = vd->getFrame( frame_id, frame_by_frame);
 
-        this->current_frame = image;
+        std::cout << "Getting frame " << frame_id << std::endl;
 
-        QImage img = QImage(&image[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
+        this->current_frame = vd->getFrame( frame_id, frame_by_frame);
+
+        std::cout << "Loaded frame " << frame_id << std::endl;
+
+        QImage img = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
         UpdateCanvas(img);
+
+        std::cout << "Drew frame " << frame_id << std::endl;
+
         this->last_loaded_frame = frame_id;
         return this->last_loaded_frame;
     }
 
     int getLastLoadedFrame() const {
         return last_loaded_frame;
+    }
+
+    int findNearestKeyframe(int frame) const {
+        return this->vd->nearest_iframe(frame);
     }
 
 protected:
@@ -118,6 +141,8 @@ protected:
     QImage myimage;
     std::vector<uint8_t> current_frame;
     QGraphicsPixmapItem* pixmap_item;
+    int h;
+    int w;
 
 
     QVector<QGraphicsPathItem*> line_paths;

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <array>
 
 #define bigReal 1.E38f
 

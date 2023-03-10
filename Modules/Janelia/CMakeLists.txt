@@ -6,6 +6,9 @@ project(janelia
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+#This is necessary to work on windows. A better way would be to define only the symbols that need to be exported
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 add_library(janelia SHARED
     janelia.h
     janelia.cpp

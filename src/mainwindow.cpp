@@ -62,7 +62,9 @@ void MainWindow::vidLoop()
 void MainWindow::createActions()
 {
     connect(ui->actionLoad_Video,SIGNAL(triggered()),this,SLOT(Load_Video()));
+    //connect(ui->horizontalScrollBar,SIGNAL(actionTriggered(int)),this,SLOT(Slider_Scroll(int)));
     connect(ui->horizontalScrollBar,SIGNAL(valueChanged(int)),this,SLOT(Slider_Scroll(int)));
+    connect(ui->horizontalScrollBar,SIGNAL(sliderMoved(int)),this,SLOT(Slider_Drag(int))); // For drag events
     connect(ui->play_button,SIGNAL(clicked()),this,SLOT(PlayButton()));
     connect(ui->rewind,SIGNAL(clicked()),this,SLOT(RewindButton()));
     connect(ui->fastforward,SIGNAL(clicked()),this,SLOT(FastForwardButton()));
@@ -70,6 +72,7 @@ void MainWindow::createActions()
     connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
     connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(addCovariate()));
     connect(ui->pushButton_2,SIGNAL(clicked()),this,SLOT(removeCovariate()));
+    connect(ui->horizontalScrollBar,SIGNAL(sliderReleased()),this,SLOT(updateDisplay()));
 }
 
 void MainWindow::Load_Video()
@@ -139,11 +142,34 @@ void MainWindow::FastForwardButton()
     ui->fps_label->setText(QString::number(25 * this->play_speed));
 }
 
+/*
+We can click and hold the slider to move to a new position
+In the case that we are dragging the slider, to make this optimally smooth, we should not add any new decoding frames
+until we have finished the most recent one.
+ */
+
+void MainWindow::Slider_Drag(int action)
+{
+    auto keyframe = this->scene->findNearestKeyframe(ui->horizontalScrollBar->sliderPosition());
+    std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << " and the nearest keyframe is " << keyframe << std::endl;
+    ui->horizontalScrollBar->setSliderPosition(keyframe);
+}
+
+
 void MainWindow::Slider_Scroll(int newPos)
 {
+    std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << std::endl;
+
     scene->LoadFrame(newPos);
     this->selected_whisker = 0;
     ui->frame_label->setText(QString::number(newPos));
+}
+
+void MainWindow::updateDisplay() {
+    //this->scene->UpdateCanvas();
+    //scene->LoadFrame(ui->horizontalScrollBar->sliderPosition());
+    //this->selected_whisker = 0;
+    //ui->frame_label->setText(QString::number(ui->horizontalScrollBar->sliderPosition()));
 }
 
 QImage MainWindow::convertToImage(std::vector<uint8_t> input, int width, int height)

@@ -54,6 +54,7 @@ private:
 
 private slots:
     void Load_Video();
+    void Slider_Drag(int newPos);
     void Slider_Scroll(int newPos);
     void PlayButton();
     void RewindButton();
@@ -62,5 +63,6 @@ private slots:
     void ClickedInVideo(qreal,qreal);
     void addCovariate();
     void removeCovariate();
+    void updateDisplay();
 };
 #endif // MAINWINDOW_H
