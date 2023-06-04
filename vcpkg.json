@@ -1,9 +1,14 @@
 {
-    "name": "WhiskerToolbox",
+    "name": "whiskertoolbox",
     "version-string": "0.0.1",
     "dependencies": [
         {
-            "name": "Highfive"
+            "name": "highfive"
+        },
+        {
+            "name": "ffmpeg",
+            "default-features": true,
+            "features": ["nvcodec"]
         }
     ]
 }

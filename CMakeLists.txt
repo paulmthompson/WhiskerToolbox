@@ -4,6 +4,13 @@ project(WhiskerToolbox VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+#[[
+Best practice for looking for cmake modules cmake folder in root of the project
+Currently, this project does not have any cmake modules
+From Professional CMake Chapter 11 Modules
+]]
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
+
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -16,6 +23,8 @@ Manifest mode from VCPKG will make all dependancies specified in vcpkg.json be a
 with this particular project
 ]]
 set(VCPKG_MANIFEST_MODE ON)
+set(CMAKE_TOOLCHAIN_FILE $ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
+set(VCPKG_FEATURE_FLAGS "manifests,versions,binarycaching,registries")
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Multimedia)
@@ -25,8 +34,12 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS UiTools REQUIRED)
 
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 
+#[[
+We will get external package ffmpeg_wrapper using fetchcontent
+]]
+add_subdirectory(external)
+
 find_package(HighFive CONFIG REQUIRED)
-find_package(ffmpeg_wrapper CONFIG REQUIRED)
 
 set(PROJECT_SOURCES
         src/main.cpp
