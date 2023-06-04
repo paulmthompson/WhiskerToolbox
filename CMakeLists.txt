@@ -23,8 +23,6 @@ Manifest mode from VCPKG will make all dependancies specified in vcpkg.json be a
 with this particular project
 ]]
 set(VCPKG_MANIFEST_MODE ON)
-set(CMAKE_TOOLCHAIN_FILE $ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake)
-set(VCPKG_FEATURE_FLAGS "manifests,versions,binarycaching,registries")
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Multimedia)
