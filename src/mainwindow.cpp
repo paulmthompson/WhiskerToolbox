@@ -49,7 +49,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-
 }
 
 void MainWindow::vidLoop()
@@ -62,19 +61,32 @@ void MainWindow::vidLoop()
 void MainWindow::createActions()
 {
     connect(ui->actionLoad_Video,SIGNAL(triggered()),this,SLOT(Load_Video()));
+
     //connect(ui->horizontalScrollBar,SIGNAL(actionTriggered(int)),this,SLOT(Slider_Scroll(int)));
     connect(ui->horizontalScrollBar,SIGNAL(valueChanged(int)),this,SLOT(Slider_Scroll(int)));
     connect(ui->horizontalScrollBar,SIGNAL(sliderMoved(int)),this,SLOT(Slider_Drag(int))); // For drag events
+    connect(ui->horizontalScrollBar,SIGNAL(sliderReleased()),this,SLOT(updateDisplay()));
+
     connect(ui->play_button,SIGNAL(clicked()),this,SLOT(PlayButton()));
     connect(ui->rewind,SIGNAL(clicked()),this,SLOT(RewindButton()));
     connect(ui->fastforward,SIGNAL(clicked()),this,SLOT(FastForwardButton()));
+
     connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
+
     connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
+
+
     connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(addCovariate()));
     connect(ui->pushButton_2,SIGNAL(clicked()),this,SLOT(removeCovariate()));
-    connect(ui->horizontalScrollBar,SIGNAL(sliderReleased()),this,SLOT(updateDisplay()));
+
 }
 
+/*
+The Load_Video callback is executed whenever a the load_video option is selected.
+If a video is selected, that video will
+
+
+*/
 void MainWindow::Load_Video()
 {
     auto vid_name =  QFileDialog::getOpenFileName(
@@ -82,6 +94,10 @@ void MainWindow::Load_Video()
                 "Load Video File",
                 QDir::currentPath(),
                 "All files (*.*) ;; MP4 (*.mp4)");
+
+    if (vid_name.isNull()) {
+        return;
+    }
 
     ui->horizontalScrollBar->setMaximum(scene->GetVideoInfo(vid_name.toStdString()));
 
