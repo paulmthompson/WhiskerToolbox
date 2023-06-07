@@ -83,8 +83,8 @@ void MainWindow::createActions()
 
 /*
 The Load_Video callback is executed whenever a the load_video option is selected.
-If a video is selected, that video will
-
+If a video is selected, that video will be loaded and the first frame will be
+drawn on the video screen.
 
 */
 void MainWindow::Load_Video()
@@ -124,8 +124,17 @@ void MainWindow::removeCovariate() {
     delete item;
 }
 
+/*
+The play button starts the video automatically advancing frames
+The timer runs every 40 ms, and the number of frames to advance will be dictated by the speed
+selected with forward and reverse buttons.
+The timer is fixed at 25 fps, so faster will result in some frames not being flashed to the screen.
+*/
 void MainWindow::PlayButton()
 {
+
+    const int timer_period_ms = 40;
+
     if (play_mode) {
 
         timer->stop();
@@ -138,24 +147,33 @@ void MainWindow::PlayButton()
 
     } else {
         ui->play_button->setText(QString("Pause"));
-        timer->start(40);
+        timer->start(timer_period_ms);
         play_mode = true;
     }
 }
 
+/*
+Increases the speed of a playing video in increments of the base_fps (default = 25)
+*/
 void MainWindow::RewindButton()
 {
+    const int play_speed_base_fps = 25;
     if (this->play_speed > 1)
     {
         this->play_speed--;
-        ui->fps_label->setText(QString::number(25 * this->play_speed));
+        ui->fps_label->setText(QString::number(play_speed_base_fps * this->play_speed));
     }
 }
 
+/*
+Decreases the speed of a playing video in increments of the base_fps (default = 25)
+*/
 void MainWindow::FastForwardButton()
 {
+    const int play_speed_base_fps = 25;
+
     this->play_speed++;
-    ui->fps_label->setText(QString::number(25 * this->play_speed));
+    ui->fps_label->setText(QString::number(play_speed_base_fps * this->play_speed));
 }
 
 /*
