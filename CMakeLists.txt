@@ -48,7 +48,7 @@ set(PROJECT_SOURCES
         src/whiskertracker.cpp
         whiskertoolbox.qrc
         my_stylesheet.qss
-        headers/video_window.h
+        headers/Video_Window.h
         headers/Covariate_Widget.h
         headers/covariate_widget.ui
         headers/Covariate_Config.h
