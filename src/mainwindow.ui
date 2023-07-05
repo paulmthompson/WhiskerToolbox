@@ -347,9 +347,16 @@
     </property>
     <addaction name="actionTake_Snapshot"/>
    </widget>
+   <widget class="QMenu" name="menuModules">
+    <property name="title">
+     <string>Modules</string>
+    </property>
+    <addaction name="actionWhisker_Tracking"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuImage"/>
+   <addaction name="menuModules"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionLoad_Video">
@@ -360,6 +367,11 @@
   <action name="actionTake_Snapshot">
    <property name="text">
     <string>Take Snapshot</string>
+   </property>
+  </action>
+  <action name="actionWhisker_Tracking">
+   <property name="text">
+    <string>Whisker Tracking</string>
    </property>
   </action>
  </widget>

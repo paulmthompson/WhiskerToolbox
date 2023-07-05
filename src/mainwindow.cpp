@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "Whisker_Widget.h"
 #include "ui_mainwindow.h"
 
 #include <QFileDialog>
@@ -79,6 +80,8 @@ void MainWindow::createActions()
     connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(addCovariate()));
     connect(ui->pushButton_2,SIGNAL(clicked()),this,SLOT(removeCovariate()));
 
+    connect(ui->actionWhisker_Tracking,SIGNAL(triggered()),this,SLOT(openWhiskerTracking()));
+
 }
 
 /*
@@ -103,6 +106,11 @@ void MainWindow::Load_Video()
 
     scene->LoadFrame(0);
     this->selected_whisker = 0;
+}
+
+void MainWindow::openWhiskerTracking() {
+    auto ww = new Whisker_Widget();
+    ww->show();
 }
 
 void MainWindow::addCovariate() {

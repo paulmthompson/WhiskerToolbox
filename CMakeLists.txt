@@ -49,10 +49,13 @@ set(PROJECT_SOURCES
         whiskertoolbox.qrc
         my_stylesheet.qss
         headers/Video_Window.h
+        src/Video_Window/Video_Window.cpp
         headers/Covariate_Widget.h
         headers/covariate_widget.ui
         headers/Covariate_Config.h
         headers/Covariate_Config.ui
+        headers/Whisker_Widget.h
+        headers/Whisker_Widget.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

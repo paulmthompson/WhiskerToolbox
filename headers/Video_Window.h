@@ -7,21 +7,20 @@
 #include <QImage>
 #include <ffmpeg_wrapper/videodecoder.h>
 
+/*
+
+The Video_Window class
+
+*/
+
 class Video_Window : public QGraphicsScene
 {
 Q_OBJECT
 public:
-    Video_Window(QObject *parent = 0) : QGraphicsScene(parent) {
+    Video_Window(QObject *parent = 0);
 
-        w = 640;
-        h = 480;
-        this->myimage = QImage(w,h,QImage::Format_Grayscale8);
-        this->pixmap_item = addPixmap(QPixmap::fromImage(this->myimage));
-
-        vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
-        last_loaded_frame = 0;
-    }
-
+    //Template member functions must be defined in header file so that compiler than create specialized versions
+    //Other methods can achieve this
     template <typename T>
     void addLine(std::vector<T>& x, std::vector<T>& y, QPen color) {
         QPainterPath* path = new QPainterPath();
@@ -35,107 +34,38 @@ public:
         addLine(path,color);
     }
 
-    void addLine(QPainterPath* path, QPen color) {
-        line_paths.append(addPath(*path,color));
-    }
+    void addLine(QPainterPath* path, QPen color);
 
-    void clearLines() {
-        for (auto pathItem : this->line_paths) {
-            removeItem(pathItem);
-        }
-        this->line_paths.clear();
-    }
+    void clearLines();
 
     template <typename T>
-    void addPoint(T x, T y, QPen color) {
+    void addPoint(T x, T y, QPen color);
 
-        this->points.append(addEllipse(x,y,15.0,15.0,color));
-    }
+    void clearPoints();
 
-    void clearPoints() {
-        for (auto pathItem : this->points) {
-            removeItem(pathItem);
-        }
-        this->points.clear();
-    }
+    void UpdateCanvas();
 
-    void UpdateCanvas()
-    {
-        clearLines();
-        clearPoints();
-        QImage img = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
-        UpdateCanvas(img);
-        this->pixmap_item->setPixmap(QPixmap::fromImage(img));
-    }
+    void UpdateCanvas(QImage& img);
 
-    void UpdateCanvas(QImage& img)
-    {
-        clearLines();
-        clearPoints();
-        this->pixmap_item->setPixmap(QPixmap::fromImage(img));
-    }
+    std::vector<uint8_t> getCurrentFrame() const;
 
-    std::vector<uint8_t> getCurrentFrame() const {
-        return this->current_frame;
-    }
-
-    int GetVideoInfo(std::string name)
-    {
-        this->vid_name = name;
-        this->vd->createMedia(this->vid_name);
-
-        this->current_frame.resize(vd->getHeight()*vd->getWidth());
-
-        return vd->getFrameCount();
-    }
+    int GetVideoInfo(std::string name);
 
     // Advance from current frame by num_frames
-    int AdvanceFrame(int num_frames) {
-        return LoadFrame(this->last_loaded_frame + num_frames, true);
-    }
+    int AdvanceFrame(int num_frames);
 
     //Jump to specific frame designated by frame_id
-    int LoadFrame(int frame_id,bool frame_by_frame = false)
-    {
+    int LoadFrame(int frame_id,bool frame_by_frame = false);
 
-        std::cout << "Getting frame " << frame_id << std::endl;
+    int getLastLoadedFrame() const;
 
-        this->current_frame = vd->getFrame( frame_id, frame_by_frame);
-
-        std::cout << "Loaded frame " << frame_id << std::endl;
-
-        QImage img = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
-        UpdateCanvas(img);
-
-        std::cout << "Drew frame " << frame_id << std::endl;
-
-        this->last_loaded_frame = frame_id;
-        return this->last_loaded_frame;
-    }
-
-    int getLastLoadedFrame() const {
-        return last_loaded_frame;
-    }
-
-    int findNearestKeyframe(int frame) const {
-        return this->vd->nearest_iframe(frame);
-    }
+    int findNearestKeyframe(int frame) const;
 
 protected:
 
-    void mousePressEvent(QGraphicsSceneMouseEvent *event) {
-        if (event->button() == Qt::LeftButton) {
-            emit leftClick(event->scenePos().x(),event->scenePos().y());
-        } else if (event->button() == Qt::RightButton){
-
-        }
-    }
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-
-    }
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-
-    }
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 
     std::string vid_name;
     QImage myimage;
@@ -143,7 +73,6 @@ protected:
     QGraphicsPixmapItem* pixmap_item;
     int h;
     int w;
-
 
     QVector<QGraphicsPathItem*> line_paths;
     QVector<QGraphicsEllipseItem*> points;

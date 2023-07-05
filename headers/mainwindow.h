@@ -64,5 +64,6 @@ private slots:
     void addCovariate();
     void removeCovariate();
     void updateDisplay();
+    void openWhiskerTracking();
 };
 #endif // MAINWINDOW_H
