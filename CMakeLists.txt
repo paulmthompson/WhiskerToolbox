@@ -65,6 +65,8 @@ set(PROJECT_SOURCES
         headers/Label_Widget.h
         headers/Label_Widget.ui
         src/Label_Widget/Label_Widget.cpp
+        headers/label_maker.h
+        src/Label_Widget/label_maker.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

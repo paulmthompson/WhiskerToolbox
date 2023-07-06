@@ -6,8 +6,10 @@
 #include <memory>
 
 #include "Video_Window.h"
-
+#include "label_maker.h"
 #include "ui_Label_Widget.h"
+
+#include <memory>
 
 class Label_Widget : public QWidget, private Ui::Label_Widget
 {
@@ -18,6 +20,8 @@ public:
 
         this->scene = scene;
 
+        this->label_maker = std::make_unique<LabelMaker>();
+
     };
 
    void openWidget(); // Call
@@ -27,6 +31,7 @@ protected:
 
 private:
     Video_Window * scene;
+    std::unique_ptr<LabelMaker> label_maker;
 
 private slots:
     void ClickedInVideo(qreal x,qreal y);

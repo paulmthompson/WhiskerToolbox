@@ -22,6 +22,8 @@ void Label_Widget::closeEvent(QCloseEvent *event) {
 
 void Label_Widget::ClickedInVideo(qreal x,qreal y) {
 
-    std::cout << "Clicked at x: " << x << ", y: " << y << std::endl;
-}
+    this->label_maker->addLabel(this->scene->getLastLoadedFrame(), static_cast<int>(x), static_cast<int>(y));
 
+    //update table
+
+}
