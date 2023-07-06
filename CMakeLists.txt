@@ -56,6 +56,7 @@ set(PROJECT_SOURCES
         headers/Covariate_Config.ui
         headers/Whisker_Widget.h
         headers/Whisker_Widget.ui
+        src/Whisker_Widget/Whisker_Widget.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

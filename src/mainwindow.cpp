@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "Whisker_Widget.h"
 #include "ui_mainwindow.h"
 
 #include <QFileDialog>
@@ -13,6 +12,7 @@
 #include <QElapsedTimer>
 
 #include "Covariate_Widget.h"
+#include "Whisker_Widget.h"
 
 #include <stdio.h>
 #include <functional>
@@ -118,8 +118,7 @@ void MainWindow::openWhiskerTracking() {
     } else {
         std::cout << "Whisker Tracker already exists" << std::endl;
     }
-    this->ww->show();
-
+    this->ww->openWidget();
 }
 
 void MainWindow::addCovariate() {

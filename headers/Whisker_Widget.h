@@ -19,11 +19,20 @@ public:
     Whisker_Widget(QWidget *parent = 0) : QWidget(parent) {
         setupUi(this);
 
+        createActions();
+
         //connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(openConfig()));
 
     };
 
+    void openWidget(); // Call
+protected:
+    void closeEvent(QCloseEvent *event);
+
 private:
+    void createActions();
+    void openActions();
+    void closeActions();
 
 private slots:
     /*
