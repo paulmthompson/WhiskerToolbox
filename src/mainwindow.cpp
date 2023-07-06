@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     selection_mode = Whisker_Select;
 
-    createActions();
+    createActions(); // Creates callback functions
 
 }
 
@@ -109,8 +109,17 @@ void MainWindow::Load_Video()
 }
 
 void MainWindow::openWhiskerTracking() {
-    auto ww = new Whisker_Widget();
-    ww->show();
+
+    // We create a whisker widget. We only want to load this module one time,
+    // so if we exit the window, it is not created again
+    if (!this->ww) {
+        this->ww = new Whisker_Widget();
+        std::cout << "Whisker Tracker Constructed" << std::endl;
+    } else {
+        std::cout << "Whisker Tracker already exists" << std::endl;
+    }
+    this->ww->show();
+
 }
 
 void MainWindow::addCovariate() {

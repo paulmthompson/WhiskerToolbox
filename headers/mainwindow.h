@@ -5,11 +5,13 @@
 #include <QImage>
 #include <QGraphicsScene>
 #include <QTimer>
+#include <QPointer>
 
 #include <memory>
 
 #include "whiskertracker.h"
 #include "Video_Window.h"
+#include "Whisker_Widget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,6 +29,10 @@ protected:
 
 private:
     Ui::MainWindow *ui;
+
+    Video_Window* scene;
+    QPointer<Whisker_Widget> ww;
+
     void createActions();
     QImage convertToImage(std::vector<uint8_t> input, int width, int height);
     void DrawWhiskers();
@@ -43,8 +49,6 @@ private:
 
     int play_speed;
     bool play_mode;
-
-    Video_Window* scene;
 
     std::unique_ptr<WhiskerTracker> wt;
 

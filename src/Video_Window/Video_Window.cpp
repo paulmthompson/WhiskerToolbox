@@ -29,24 +29,23 @@ void Video_Window::addLine(QPainterPath* path, QPen color) {
 }
 
 void Video_Window::clearLines() {
-        for (auto pathItem : this->line_paths) {
-            removeItem(pathItem);
-        }
-        this->line_paths.clear();
+    for (auto pathItem : this->line_paths) {
+        removeItem(pathItem);
     }
+    this->line_paths.clear();
+}
 
 template <typename T>
-    void Video_Window::addPoint(T x, T y, QPen color) {
-
-        this->points.append(addEllipse(x,y,15.0,15.0,color));
-    }
+void Video_Window::addPoint(T x, T y, QPen color) {
+    this->points.append(addEllipse(x,y,15.0,15.0,color));
+}
 
 void Video_Window::clearPoints() {
-        for (auto pathItem : this->points) {
-            removeItem(pathItem);
-        }
-        this->points.clear();
+    for (auto pathItem : this->points) {
+        removeItem(pathItem);
     }
+    this->points.clear();
+}
 
 void Video_Window::UpdateCanvas()
 {

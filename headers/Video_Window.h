@@ -9,7 +9,10 @@
 
 /*
 
-The Video_Window class
+The Video_Window class is responsible for plotting images, movies, and shapes on top of them.
+Shapes may take the form of lines, points, or arbitrary 2d masks.
+
+Advancing a frame will result in the video window loading new data.
 
 */
 
