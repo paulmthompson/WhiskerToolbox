@@ -35,11 +35,6 @@ void Video_Window::clearLines() {
     this->line_paths.clear();
 }
 
-template <typename T>
-void Video_Window::addPoint(T x, T y, QPen color) {
-    this->points.append(addEllipse(x,y,15.0,15.0,color));
-}
-
 void Video_Window::clearPoints() {
     for (auto pathItem : this->points) {
         removeItem(pathItem);

@@ -37,7 +37,7 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
             std::cout << "Corresponding selected frame is " << selected_frame << std::endl;
 
             this->label_maker->removeLabel(selected_frame);
-            this->updateTable();
+            this->updateAll();
         }
     }
 
@@ -47,8 +47,23 @@ void Label_Widget::ClickedInVideo(qreal x,qreal y) {
 
     this->label_maker->addLabel(this->scene->getLastLoadedFrame(), static_cast<int>(x), static_cast<int>(y));
 
-    //update table
-    this->updateTable();
+    this->updateAll();
+}
+
+void Label_Widget::updateAll() {
+    updateDraw();
+    updateTable();
+}
+
+//If current frame has label, it should be redrawn
+
+void Label_Widget::updateDraw() {
+    scene->clearPoints();
+    for (auto i : this->label_maker->getLabels()) {
+        if (i.first == scene->getLastLoadedFrame()) {
+            this->scene->addPoint(i.second.x,i.second.y,QPen(QColor(Qt::red)));
+        }
+    }
 
 }
 

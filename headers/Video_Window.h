@@ -42,7 +42,10 @@ public:
     void clearLines();
 
     template <typename T>
-    void addPoint(T x, T y, QPen color);
+    void addPoint(T x, T y, QPen color,float radius = 15.0) {
+        // addEllipse draws from top left of rectangle down and to the right, so we want to center point in the middle of this rectangle
+        this->points.append(addEllipse(x - radius/2,y - radius/2,radius, radius,color));
+    }
 
     void clearPoints();
 
