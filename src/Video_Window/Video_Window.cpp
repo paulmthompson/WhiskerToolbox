@@ -4,7 +4,6 @@
 #include <QImage>
 
 #include "Video_Window.h"
-#include "qwidget.h"
 
 #include <ffmpeg_wrapper/videodecoder.h>
 
@@ -23,6 +22,7 @@ Video_Window::Video_Window(QObject *parent) : QGraphicsScene(parent) {
 
     vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
     last_loaded_frame = 0;
+    frame_number = 0;
 }
 
 void Video_Window::addLine(QPainterPath* path, QPen color) {
@@ -68,7 +68,9 @@ int Video_Window::GetVideoInfo(std::string name)
 
     this->current_frame.resize(vd->getHeight()*vd->getWidth());
 
-    return vd->getFrameCount();
+
+    this->frame_number =  vd->getFrameCount(); // Total frames
+    return this->frame_number;
 }
 
 // Advance from current frame by num_frames or reverse
@@ -88,6 +90,9 @@ int Video_Window::LoadFrame(int frame_id,bool frame_by_frame)
 
     if (frame_id < 0) {
         frame_id = 0;
+        frame_by_frame = false;
+    } else if (frame_id >= this->frame_number - 1) {
+        frame_id = this->frame_number -1;
         frame_by_frame = false;
     }
 

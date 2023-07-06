@@ -94,8 +94,9 @@ void MainWindow::Load_Video()
     if (vid_name.isNull()) {
         return;
     }
-
-    ui->horizontalScrollBar->setMaximum(scene->GetVideoInfo(vid_name.toStdString()));
+    this->frame_count = scene->GetVideoInfo(vid_name.toStdString()) - 1; // We are zero indexing so subtract 1
+    ui->frame_count_label->setText(QString::number(this->frame_count));
+    ui->horizontalScrollBar->setMaximum(this->frame_count);
 
     scene->LoadFrame(0);
 

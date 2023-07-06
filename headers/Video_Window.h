@@ -86,6 +86,8 @@ protected:
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
     int last_loaded_frame;
 
+    int frame_number;
+
 
 signals:
     void leftClick(qreal,qreal);
