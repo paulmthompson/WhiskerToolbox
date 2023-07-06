@@ -42,7 +42,7 @@ void LabelMaker::saveLabelsJSON() {
 std::string LabelMaker::makeFrameName(int frame) {
 
     std::stringstream a;
-    a << std::setw(6) << std::setfill('0') << frame;
+    a << std::setw(7) << std::setfill('0') << frame;
     std::string frame_id = "scene" + a.str() + ".png";
 
     return frame_id;

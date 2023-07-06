@@ -4,6 +4,7 @@
 #include <QImage>
 
 #include "Video_Window.h"
+#include "qwidget.h"
 
 #include <ffmpeg_wrapper/videodecoder.h>
 
@@ -70,14 +71,25 @@ int Video_Window::GetVideoInfo(std::string name)
     return vd->getFrameCount();
 }
 
-// Advance from current frame by num_frames
+// Advance from current frame by num_frames or reverse
+// For forward, we should just keep decoding, but in reverse
+// We will always need to seek to a new keyframe
 int Video_Window::AdvanceFrame(int num_frames) {
-    return LoadFrame(this->last_loaded_frame + num_frames, true);
+    if (num_frames > 0) {
+        return LoadFrame(this->last_loaded_frame + num_frames, true);
+    } else {
+        return LoadFrame(this->last_loaded_frame + num_frames, false);
+    }
 }
 
 //Jump to specific frame designated by frame_id
 int Video_Window::LoadFrame(int frame_id,bool frame_by_frame)
 {
+
+    if (frame_id < 0) {
+        frame_id = 0;
+        frame_by_frame = false;
+    }
 
     std::cout << "Getting frame " << frame_id << std::endl;
 
@@ -108,12 +120,15 @@ void Video_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         emit leftClick(event->scenePos().x(),event->scenePos().y());
     } else if (event->button() == Qt::RightButton){
 
+    } else {
+        QGraphicsScene::mousePressEvent(event);
     }
 }
 void Video_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-
+    QGraphicsScene::mouseReleaseEvent(event);
 }
 void Video_Window::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    QGraphicsScene::mouseMoveEvent(event);
 
 }
 

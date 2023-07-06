@@ -7,6 +7,7 @@
 #include <QVideoFrameFormat>
 #include <QVideoFrame>
 #include <QGraphicsPixmapItem>
+#include <QKeyEvent>
 
 #include <QTimer>
 #include <QElapsedTimer>
@@ -26,6 +27,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     frame_count = 0;
     play_speed = 1;
+
+    //This is necessary to accept keyboard events
+    this->setFocusPolicy(Qt::StrongFocus);
 
     this->scene = new Video_Window(this);
 
@@ -192,6 +196,21 @@ void MainWindow::FastForwardButton()
 
     this->play_speed++;
     ui->fps_label->setText(QString::number(play_speed_base_fps * this->play_speed));
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event) {
+
+    if (event->key() == Qt::Key_Right) {
+        auto loaded_frame = scene->AdvanceFrame(1);
+        ui->frame_label->setText(QString::number(loaded_frame));
+    } else if (event->key() == Qt::Key_Left){
+        auto loaded_frame = scene->AdvanceFrame(-1);
+        ui->frame_label->setText(QString::number(loaded_frame));
+    } else {
+        std::cout << "Key pressed but nothing to do" << std::endl;
+        QMainWindow::keyPressEvent(event);
+    }
+
 }
 
 /*
