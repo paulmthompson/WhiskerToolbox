@@ -38,6 +38,7 @@ We will get external package ffmpeg_wrapper using fetchcontent
 add_subdirectory(external)
 
 find_package(HighFive CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 set(PROJECT_SOURCES
         src/main.cpp
@@ -101,6 +102,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::UiTools)
 target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
+target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
 add_subdirectory(Modules/Janelia)
 

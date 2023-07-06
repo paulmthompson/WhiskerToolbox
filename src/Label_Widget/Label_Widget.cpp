@@ -12,6 +12,7 @@ void Label_Widget::openWidget() {
 
     //connect(this->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
     connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
+    connect(this->saveLabelsButton,SIGNAL(clicked()),this,SLOT(saveButton()));
 
     this->show();
 
@@ -20,6 +21,7 @@ void Label_Widget::openWidget() {
 void Label_Widget::closeEvent(QCloseEvent *event) {
     std::cout << "Close event detected" << std::endl;
     disconnect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
+    disconnect(this->saveLabelsButton,SIGNAL(clicked()),this,SLOT(saveButton()));
 
 }
 
@@ -83,4 +85,8 @@ void Label_Widget::addLabeltoTable(int row, int frame, label_point label) {
     tableWidget->setItem(row,0,new QTableWidgetItem(QString::number(frame)));
     tableWidget->setItem(row,1,new QTableWidgetItem(QString::number(label.x)));
     tableWidget->setItem(row,2,new QTableWidgetItem(QString::number(label.y)));
+}
+
+void Label_Widget::saveButton() {
+    this->label_maker->saveLabelsJSON();
 }

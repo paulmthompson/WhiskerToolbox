@@ -20,6 +20,7 @@ public:
 
         this->scene = scene;
 
+
         this->label_maker = std::make_unique<LabelMaker>();
 
     };
@@ -40,6 +41,7 @@ private:
     void addLabeltoTable(int row, int frame, label_point label);
 private slots:
     void ClickedInVideo(qreal x,qreal y);
+    void saveButton();
 
 };
 

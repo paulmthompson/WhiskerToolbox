@@ -9,6 +9,8 @@
             "name": "ffmpeg",
             "default-features": true,
             "features": ["nvcodec"]
+        },
+        {   "name": "nlohmann-json"
         }
     ]
 }
