@@ -99,6 +99,7 @@ int Video_Window::LoadFrame(int frame_id,bool frame_by_frame)
 
     this->last_loaded_frame = frame_id;
     return this->last_loaded_frame;
+    // I should emit a signal here that can be caught by anything that draws to scene (before or after draw? or both?)
 }
 
 int Video_Window::getLastLoadedFrame() const {

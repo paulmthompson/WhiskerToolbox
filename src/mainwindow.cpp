@@ -27,10 +27,6 @@ MainWindow::MainWindow(QWidget *parent)
     frame_count = 0;
     play_speed = 1;
 
-    this->selected_whisker = 0;
-
-    wt = std::make_unique<WhiskerTracker>();
-
     this->scene = new Video_Window(this);
 
     timer = new QTimer(this);
@@ -40,8 +36,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->graphicsView->setScene(this->scene);
     ui->graphicsView->show();
-
-    selection_mode = Whisker_Select;
 
     createActions(); // Creates callback functions
 
@@ -55,7 +49,6 @@ MainWindow::~MainWindow()
 void MainWindow::vidLoop()
 {
     auto loaded_frame = scene->AdvanceFrame(this->play_speed);
-    this->selected_whisker = 0;
     ui->frame_label->setText(QString::number(loaded_frame));
 }
 
@@ -71,11 +64,6 @@ void MainWindow::createActions()
     connect(ui->play_button,SIGNAL(clicked()),this,SLOT(PlayButton()));
     connect(ui->rewind,SIGNAL(clicked()),this,SLOT(RewindButton()));
     connect(ui->fastforward,SIGNAL(clicked()),this,SLOT(FastForwardButton()));
-
-    connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
-
-    connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
-
 
     connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(addCovariate()));
     connect(ui->pushButton_2,SIGNAL(clicked()),this,SLOT(removeCovariate()));
@@ -105,7 +93,7 @@ void MainWindow::Load_Video()
     ui->horizontalScrollBar->setMaximum(scene->GetVideoInfo(vid_name.toStdString()));
 
     scene->LoadFrame(0);
-    this->selected_whisker = 0;
+
 }
 
 void MainWindow::openWhiskerTracking() {
@@ -113,7 +101,7 @@ void MainWindow::openWhiskerTracking() {
     // We create a whisker widget. We only want to load this module one time,
     // so if we exit the window, it is not created again
     if (!this->ww) {
-        this->ww = new Whisker_Widget();
+        this->ww = new Whisker_Widget(this->scene);
         std::cout << "Whisker Tracker Constructed" << std::endl;
     } else {
         std::cout << "Whisker Tracker already exists" << std::endl;
@@ -211,7 +199,6 @@ void MainWindow::Slider_Scroll(int newPos)
     std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << std::endl;
 
     scene->LoadFrame(newPos);
-    this->selected_whisker = 0;
     ui->frame_label->setText(QString::number(newPos));
 }
 
@@ -225,52 +212,4 @@ void MainWindow::updateDisplay() {
 QImage MainWindow::convertToImage(std::vector<uint8_t> input, int width, int height)
 {
    return QImage(&input[0],width, height, QImage::Format_Grayscale8);
-}
-
-void MainWindow::TraceButton()
-{
-    QElapsedTimer timer2;
-    timer2.start();
-
-   wt->trace(this->scene->getCurrentFrame());
-
-   int t1 = timer2.elapsed();
-   DrawWhiskers();
-
-   int t2 = timer2.elapsed();
-
-   qDebug() << "The tracing took" << t1 << "ms and drawing took" << (t2-t1);
-}
-
-void MainWindow::DrawWhiskers()
-{
-    scene->clearLines();
-
-    for (auto& w : wt->whiskers) {
-
-        auto whisker_color = (w.id == this->selected_whisker) ? QPen(QColor(Qt::red)) : QPen(QColor(Qt::blue));
-
-        scene->addLine(w.x,w.y,whisker_color);
-
-    }
-}
-
-void MainWindow::ClickedInVideo(qreal x,qreal y) {
-
-    switch(this->selection_mode) {
-        case Whisker_Select: {
-        std::tuple<float,int> nearest_whisker = wt->get_nearest_whisker(x, y);
-        if (std::get<0>(nearest_whisker) < 10.0f) {
-            this->selected_whisker = std::get<1>(nearest_whisker);
-            this->DrawWhiskers();
-        }
-        break;
-        }
-        case Whisker_Pad_Select:
-
-        break;
-
-        default:
-        break;
-    }
 }

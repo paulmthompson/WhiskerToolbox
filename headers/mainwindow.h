@@ -9,7 +9,6 @@
 
 #include <memory>
 
-#include "whiskertracker.h"
 #include "Video_Window.h"
 #include "Whisker_Widget.h"
 
@@ -35,7 +34,6 @@ private:
 
     void createActions();
     QImage convertToImage(std::vector<uint8_t> input, int width, int height);
-    void DrawWhiskers();
 
     void vidLoop();
 
@@ -43,18 +41,10 @@ private:
 
     QTimer* timer;
 
-    int selected_whisker;
-
     long long t_last_draw;
 
     int play_speed;
     bool play_mode;
-
-    std::unique_ptr<WhiskerTracker> wt;
-
-    enum Selection_Type {Whisker_Select,
-                        Whisker_Pad_Select};
-    MainWindow::Selection_Type selection_mode;
 
 private slots:
     void Load_Video();
@@ -63,8 +53,7 @@ private slots:
     void PlayButton();
     void RewindButton();
     void FastForwardButton();
-    void TraceButton();
-    void ClickedInVideo(qreal,qreal);
+
     void addCovariate();
     void removeCovariate();
     void updateDisplay();

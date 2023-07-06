@@ -3,6 +3,11 @@
 
 #include <QWidget>
 
+#include <memory>
+
+#include "whiskertracker.h"
+#include "Video_Window.h"
+
 #include "ui_Whisker_Widget.h"
 
 /*
@@ -16,11 +21,16 @@ class Whisker_Widget : public QWidget, private Ui::Whisker_Widget
 {
     Q_OBJECT
 public:
-    Whisker_Widget(QWidget *parent = 0) : QWidget(parent) {
+    Whisker_Widget(Video_Window* scene, QWidget *parent = 0) : QWidget(parent) {
         setupUi(this);
+
+        this->scene = scene;
 
         createActions();
 
+        this->wt = std::make_unique<WhiskerTracker>();
+        this->selected_whisker = 0;
+        this->selection_mode = Whisker_Select;
         //connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(openConfig()));
 
     };
@@ -33,8 +43,18 @@ private:
     void createActions();
     void openActions();
     void closeActions();
+    void DrawWhiskers();
+
+    std::unique_ptr<WhiskerTracker> wt;
+    Video_Window * scene;
+    int selected_whisker;
+    enum Selection_Type {Whisker_Select,
+                          Whisker_Pad_Select};
+    Whisker_Widget::Selection_Type selection_mode;
 
 private slots:
+    void TraceButton();
+    void ClickedInVideo(qreal x,qreal y);
     /*
     void openConfig() {
         config_win->updateValues();

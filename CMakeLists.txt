@@ -41,22 +41,26 @@ find_package(HighFive CONFIG REQUIRED)
 
 set(PROJECT_SOURCES
         src/main.cpp
+
         src/mainwindow.cpp
         headers/mainwindow.h
         src/mainwindow.ui
-        headers/whiskertracker.h
-        src/whiskertracker.cpp
         whiskertoolbox.qrc
         my_stylesheet.qss
+
         headers/Video_Window.h
         src/Video_Window/Video_Window.cpp
+
         headers/Covariate_Widget.h
         headers/covariate_widget.ui
         headers/Covariate_Config.h
         headers/Covariate_Config.ui
+
         headers/Whisker_Widget.h
         headers/Whisker_Widget.ui
+        headers/whiskertracker.h
         src/Whisker_Widget/Whisker_Widget.cpp
+        src/Whisker_Widget/whiskertracker.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
