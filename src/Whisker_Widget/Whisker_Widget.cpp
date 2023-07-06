@@ -35,6 +35,7 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
     std::cout << "Close event detected" << std::endl;
 
     disconnect(this->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
+    disconnect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
 }
 
 void Whisker_Widget::TraceButton()

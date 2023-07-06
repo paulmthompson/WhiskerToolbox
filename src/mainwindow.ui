@@ -310,6 +310,7 @@
      <string>Modules</string>
     </property>
     <addaction name="actionWhisker_Tracking"/>
+    <addaction name="actionLabel_Maker"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -330,6 +331,11 @@
   <action name="actionWhisker_Tracking">
    <property name="text">
     <string>Whisker Tracking</string>
+   </property>
+  </action>
+  <action name="actionLabel_Maker">
+   <property name="text">
+    <string>Label Maker</string>
    </property>
   </action>
  </widget>

@@ -11,6 +11,7 @@
 
 #include "Video_Window.h"
 #include "Whisker_Widget.h"
+#include "Label_Widget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -31,6 +32,7 @@ private:
 
     Video_Window* scene;
     QPointer<Whisker_Widget> ww;
+    QPointer<Label_Widget> label_maker;
 
     void createActions();
 
@@ -57,5 +59,6 @@ private slots:
     void removeCovariate();
     void updateDisplay();
     void openWhiskerTracking();
+    void openLabelMaker();
 };
 #endif // MAINWINDOW_H

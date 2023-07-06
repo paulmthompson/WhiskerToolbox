@@ -69,6 +69,7 @@ void MainWindow::createActions()
     connect(ui->pushButton_2,SIGNAL(clicked()),this,SLOT(removeCovariate()));
 
     connect(ui->actionWhisker_Tracking,SIGNAL(triggered()),this,SLOT(openWhiskerTracking()));
+    connect(ui->actionLabel_Maker,SIGNAL(triggered()),this,SLOT(openLabelMaker()));
 
 }
 
@@ -107,6 +108,19 @@ void MainWindow::openWhiskerTracking() {
         std::cout << "Whisker Tracker already exists" << std::endl;
     }
     this->ww->openWidget();
+}
+
+void MainWindow::openLabelMaker() {
+
+    // We create a whisker widget. We only want to load this module one time,
+    // so if we exit the window, it is not created again
+    if (!this->label_maker) {
+        this->label_maker = new Label_Widget(this->scene);
+        std::cout << "Label Maker Constructed" << std::endl;
+    } else {
+        std::cout << "Label Maker already exists" << std::endl;
+    }
+    this->label_maker->openWidget();
 }
 
 void MainWindow::addCovariate() {

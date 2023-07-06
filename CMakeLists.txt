@@ -61,6 +61,10 @@ set(PROJECT_SOURCES
         headers/whiskertracker.h
         src/Whisker_Widget/Whisker_Widget.cpp
         src/Whisker_Widget/whiskertracker.cpp
+
+        headers/Label_Widget.h
+        headers/Label_Widget.ui
+        src/Label_Widget/Label_Widget.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
