@@ -74,8 +74,8 @@ protected:
     QImage myimage;
     std::vector<uint8_t> current_frame;
     QGraphicsPixmapItem* pixmap_item;
-    int h;
-    int w;
+    int canvasHeight;
+    int canvasWidth;
 
     QVector<QGraphicsPathItem*> line_paths;
     QVector<QGraphicsEllipseItem*> points;

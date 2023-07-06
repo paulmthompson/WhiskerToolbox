@@ -15,9 +15,9 @@ The Video_Window class
 
 Video_Window::Video_Window(QObject *parent) : QGraphicsScene(parent) {
 
-    w = 640;
-    h = 480;
-    this->myimage = QImage(w,h,QImage::Format_Grayscale8);
+    canvasWidth = 640;
+    canvasHeight = 480;
+    this->myimage = QImage(canvasWidth,canvasHeight,QImage::Format_Grayscale8);
     this->pixmap_item = addPixmap(QPixmap::fromImage(this->myimage));
 
     vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
@@ -57,6 +57,7 @@ void Video_Window::UpdateCanvas(QImage& img)
 {
     clearLines();
     clearPoints();
+    //We should resize image here to match the size of the canvas
     this->pixmap_item->setPixmap(QPixmap::fromImage(img));
 }
 
