@@ -2,7 +2,7 @@
 #define LABEL_MAKER_H
 
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 
@@ -16,9 +16,11 @@ public:
 
     LabelMaker();
     void addLabel(int frame, int x, int y);
+    void removeLabel(int frame) {this->point_labels.erase(frame);};
+    std::map<int, label_point> getLabels() const {return this->point_labels;};
 
 private:
-    std::unordered_map<int, label_point> point_labels;
+    std::map<int, label_point> point_labels;
     std::vector<std::string> label_names;
 
     void printLabels();

@@ -32,7 +32,8 @@ protected:
 private:
     Video_Window * scene;
     std::unique_ptr<LabelMaker> label_maker;
-
+    void updateTable();
+    void addLabeltoTable(int row, int frame, label_point label);
 private slots:
     void ClickedInVideo(qreal x,qreal y);
 
