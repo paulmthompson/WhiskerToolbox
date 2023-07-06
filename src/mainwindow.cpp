@@ -209,7 +209,3 @@ void MainWindow::updateDisplay() {
     //ui->frame_label->setText(QString::number(ui->horizontalScrollBar->sliderPosition()));
 }
 
-QImage MainWindow::convertToImage(std::vector<uint8_t> input, int width, int height)
-{
-   return QImage(&input[0],width, height, QImage::Format_Grayscale8);
-}

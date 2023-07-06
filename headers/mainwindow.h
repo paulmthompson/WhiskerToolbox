@@ -33,7 +33,6 @@ private:
     QPointer<Whisker_Widget> ww;
 
     void createActions();
-    QImage convertToImage(std::vector<uint8_t> input, int width, int height);
 
     void vidLoop();
 

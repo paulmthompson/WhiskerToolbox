@@ -49,11 +49,8 @@ void Video_Window::clearPoints() {
 
 void Video_Window::UpdateCanvas()
 {
-    clearLines();
-    clearPoints();
     QImage img = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
     UpdateCanvas(img);
-    this->pixmap_item->setPixmap(QPixmap::fromImage(img));
 }
 
 void Video_Window::UpdateCanvas(QImage& img)

@@ -54,7 +54,7 @@ void Whisker_Widget::TraceButton()
 
 void Whisker_Widget::DrawWhiskers()
 {
-    scene->clearLines();
+    scene->clearLines(); // We should have the scene do this every time a frame is advanced
 
     for (auto& w : wt->whiskers) {
 
