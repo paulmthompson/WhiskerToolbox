@@ -50,6 +50,7 @@ private:
 
 private slots:
     void Load_Video();
+    void Load_Images();
     void Slider_Drag(int newPos);
     void Slider_Scroll(int newPos);
     void PlayButton();

@@ -340,6 +340,7 @@
      <string>File</string>
     </property>
     <addaction name="actionLoad_Video"/>
+    <addaction name="actionLoad_Images"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -383,6 +384,11 @@
   <action name="actionLabel_Maker">
    <property name="text">
     <string>Label Maker</string>
+   </property>
+  </action>
+  <action name="actionLoad_Images">
+   <property name="text">
+    <string>Load Images</string>
    </property>
   </action>
  </widget>

@@ -59,6 +59,8 @@ void MainWindow::createActions()
 {
     connect(ui->actionLoad_Video,SIGNAL(triggered()),this,SLOT(Load_Video()));
 
+    connect(ui->actionLoad_Images,SIGNAL(triggered()),this,SLOT(Load_Images()));
+
     //connect(ui->horizontalScrollBar,SIGNAL(actionTriggered(int)),this,SLOT(Slider_Scroll(int)));
     connect(ui->horizontalScrollBar,SIGNAL(valueChanged(int)),this,SLOT(Slider_Scroll(int)));
     connect(ui->horizontalScrollBar,SIGNAL(sliderMoved(int)),this,SLOT(Slider_Drag(int))); // For drag events
@@ -103,6 +105,19 @@ void MainWindow::Load_Video()
 
     scene->LoadFrame(0);
 
+}
+
+void MainWindow::Load_Images() {
+    auto dir_name =  QFileDialog::getExistingDirectory(
+        this,
+        "Load Video File",
+        QDir::currentPath());
+
+    if (dir_name.isNull()) {
+        return;
+    }
+
+    std::cout << "Loading images in directory " << dir_name.toStdString() << std::endl;
 }
 
 //If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.
