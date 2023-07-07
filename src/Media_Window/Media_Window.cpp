@@ -5,8 +5,6 @@
 
 #include "Media_Window.h"
 
-#include <ffmpeg_wrapper/videodecoder.h>
-
 #include <iostream>
 
 /*
@@ -22,11 +20,8 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
     this->myimage = QImage(canvasWidth,canvasHeight,QImage::Format_Grayscale8);
     this->pixmap_item = addPixmap(QPixmap::fromImage(this->myimage));
 
-    vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
     last_loaded_frame = 0;
     total_frame_count = 0;
-
-    this->media = Media_Window::VIDEO;
 }
 
 void Media_Window::addLine(QPainterPath* path, QPen color) {
@@ -97,8 +92,8 @@ int Media_Window::getLastLoadedFrame() const {
     return last_loaded_frame;
 }
 
-int Media_Window::findNearestKeyframe(int frame) const {
-    return this->vd->nearest_iframe(frame);
+int Media_Window::findNearestSnapFrame(int frame) const {
+    return doFindNearestSnapFrame(frame);
 }
 
 void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {

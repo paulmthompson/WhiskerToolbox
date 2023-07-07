@@ -2,7 +2,7 @@
 #include "Video_Window.h"
 
 Video_Window::Video_Window(QObject *parent) : Media_Window(parent) {
-
+    vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
 }
 
 int Video_Window::doLoadMedia(std::string name) {
@@ -41,4 +41,8 @@ int Video_Window::doLoadFrame(int frame_id) {
     this->myimage = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
 
     return frame_id;
+}
+
+int Video_Window::doFindNearestSnapFrame(int frame_id) const {
+    return this->vd->nearest_iframe(frame_id);
 }

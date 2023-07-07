@@ -3,6 +3,8 @@
 
 #include "Media_Window.h"
 
+#include <ffmpeg_wrapper/videodecoder.h>
+
 #include <memory>
 #include <string>
 
@@ -15,7 +17,10 @@ public:
 private:
     int doLoadMedia(std::string name) override;
     int doLoadFrame(int frame_id) override;
+    int doFindNearestSnapFrame(int frame_id) const override;
     int GetVideoInfo(std::string name);
+
+    std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
 
 };
 #endif // VIDEO_WINDOW_H

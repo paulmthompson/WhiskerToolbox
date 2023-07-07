@@ -6,8 +6,6 @@
 #include <QGraphicsPixmapItem>
 #include <QImage>
 
-#include <ffmpeg_wrapper/videodecoder.h>
-
 #include <string>
 #include <vector>
 #include <memory>
@@ -59,8 +57,6 @@ public:
     std::vector<uint8_t> getCurrentFrame() const;
 
     int LoadMedia(std::string name);
-    void setMediaVideo() {this->media = Media_Window::VIDEO;}
-    void setMediaImages() {this->media = Media_Window::IMAGES;}
 
     // Advance from current frame by num_frames
     int AdvanceFrame(int num_frames);
@@ -70,7 +66,7 @@ public:
 
     int getLastLoadedFrame() const;
 
-    int findNearestKeyframe(int frame) const;
+    int findNearestSnapFrame(int frame) const;
 
 protected:
 
@@ -88,17 +84,13 @@ protected:
     QVector<QGraphicsEllipseItem*> points;
 
     std::string vid_name; // Name of the video file
-    std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
 
     int last_loaded_frame;
     int total_frame_count;
 
-    enum MediaType {VIDEO, IMAGES};
-
-    Media_Window::MediaType media;
-
     virtual int doLoadMedia(std::string name) {return 0;};
     virtual int doLoadFrame(int frame_id) {return 0;};
+    virtual int doFindNearestSnapFrame(int frame_id) const {return frame_id;};
 
 
 signals:

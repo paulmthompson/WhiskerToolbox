@@ -235,7 +235,7 @@ until we have finished the most recent one.
 
 void MainWindow::Slider_Drag(int action)
 {
-    auto keyframe = this->scene->findNearestKeyframe(ui->horizontalScrollBar->sliderPosition());
+    auto keyframe = this->scene->findNearestSnapFrame(ui->horizontalScrollBar->sliderPosition());
     std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << " and the nearest keyframe is " << keyframe << std::endl;
     ui->horizontalScrollBar->setSliderPosition(keyframe);
 }
