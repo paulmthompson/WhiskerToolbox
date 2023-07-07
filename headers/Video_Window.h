@@ -14,6 +14,7 @@ public:
 
 private:
     int doLoadMedia(std::string name) override;
+    int doLoadFrame(int frame_id) override;
     int GetVideoInfo(std::string name);
 
 };

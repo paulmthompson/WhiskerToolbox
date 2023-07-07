@@ -75,32 +75,21 @@ int Media_Window::LoadMedia(std::string name) {
 // For forward, we should just keep decoding, but in reverse
 // We will always need to seek to a new keyframe
 int Media_Window::AdvanceFrame(int num_frames) {
-    if (num_frames > 0) {
-        return LoadFrame(this->last_loaded_frame + num_frames, true);
-    } else {
-        return LoadFrame(this->last_loaded_frame + num_frames, false);
-    }
+        return LoadFrame(this->last_loaded_frame + num_frames);
 }
 
 //Jump to specific frame designated by frame_id
-int Media_Window::LoadFrame(int frame_id,bool frame_by_frame)
+int Media_Window::LoadFrame(int frame_id)
 {
 
     if (frame_id < 0) {
         frame_id = 0;
-        frame_by_frame = false;
     } else if (frame_id >= this->total_frame_count - 1) {
         frame_id = this->total_frame_count -1;
-        frame_by_frame = false;
     }
 
-    std::cout << "Getting frame " << std::to_string(frame_id) << std::endl;
+    frame_id = doLoadFrame(frame_id);
 
-    this->current_frame = vd->getFrame( frame_id, frame_by_frame);
-
-    std::cout << "Loaded frame " << frame_id << std::endl;
-
-    this->myimage = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
     UpdateCanvas(this->myimage);
 
     std::cout << "Drew frame " << frame_id << std::endl;

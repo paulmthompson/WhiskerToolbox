@@ -18,3 +18,27 @@ int Video_Window::GetVideoInfo(std::string name)
 
     return vd->getFrameCount(); // Total frames
 }
+
+int Video_Window::doLoadFrame(int frame_id) {
+
+    //In most circumstances, we want to decode forward from the current frame without reseeking to a keyframe
+    bool frame_by_frame = true;
+
+    if (frame_id == 0) {
+        frame_by_frame = false;
+    } else if (frame_id >= this->total_frame_count - 1) {
+        frame_by_frame = false;
+    } else if (frame_id <= this->last_loaded_frame) {
+        frame_by_frame = false;
+    }
+
+    std::cout << "Getting frame " << std::to_string(frame_id) << std::endl;
+
+    this->current_frame = vd->getFrame( frame_id, frame_by_frame);
+
+    std::cout << "Loaded frame " << frame_id << std::endl;
+
+    this->myimage = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
+
+    return frame_id;
+}

@@ -68,7 +68,7 @@ public:
     int AdvanceFrame(int num_frames);
 
     //Jump to specific frame designated by frame_id
-    int LoadFrame(int frame_id,bool frame_by_frame = false);
+    int LoadFrame(int frame_id);
 
     int getLastLoadedFrame() const;
 
@@ -100,6 +100,7 @@ protected:
     Media_Window::MediaType media;
 
     virtual int doLoadMedia(std::string name) {return 0;};
+    virtual int doLoadFrame(int frame_id) {return 0;};
 
 
 signals:
