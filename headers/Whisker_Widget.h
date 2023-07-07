@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "whiskertracker.h"
-#include "Video_Window.h"
+#include "Media_Window.h"
 
 #include "ui_Whisker_Widget.h"
 
@@ -21,7 +21,7 @@ class Whisker_Widget : public QWidget, private Ui::Whisker_Widget
 {
     Q_OBJECT
 public:
-    Whisker_Widget(Video_Window* scene, QWidget *parent = 0) : QWidget(parent) {
+    Whisker_Widget(Media_Window* scene, QWidget *parent = 0) : QWidget(parent) {
         setupUi(this);
 
         this->scene = scene;
@@ -46,7 +46,7 @@ private:
     void DrawWhiskers();
 
     std::unique_ptr<WhiskerTracker> wt;
-    Video_Window * scene;
+    Media_Window * scene;
     int selected_whisker;
     enum Selection_Type {Whisker_Select,
                           Whisker_Pad_Select};

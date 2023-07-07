@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "Video_Window.h"
+#include "Media_Window.h"
 #include "label_maker.h"
 #include "ui_Label_Widget.h"
 
@@ -15,7 +15,7 @@ class Label_Widget : public QWidget, private Ui::Label_Widget
 {
     Q_OBJECT
 public:
-   Label_Widget(Video_Window* scene, QWidget *parent = 0) : QWidget(parent) {
+   Label_Widget(Media_Window* scene, QWidget *parent = 0) : QWidget(parent) {
         setupUi(this);
 
         this->scene = scene;
@@ -33,7 +33,7 @@ protected:
 
 
 private:
-    Video_Window * scene;
+    Media_Window * scene;
     std::unique_ptr<LabelMaker> label_maker;
     void updateAll();
     void updateTable();

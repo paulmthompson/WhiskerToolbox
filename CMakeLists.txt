@@ -49,8 +49,10 @@ set(PROJECT_SOURCES
         whiskertoolbox.qrc
         my_stylesheet.qss
 
+        headers/Media_Window.h
         headers/Video_Window.h
-        src/Video_Window/Video_Window.cpp
+        src/Media_Window/Media_Window.cpp
+        src/Media_Window/Video_Window.cpp
 
         headers/Covariate_Widget.h
         headers/covariate_widget.ui

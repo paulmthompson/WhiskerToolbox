@@ -7,7 +7,7 @@
 #include <QTimer>
 #include <QPointer>
 
-#include "Video_Window.h"
+#include "Media_Window.h"
 #include "Whisker_Widget.h"
 #include "Label_Widget.h"
 
@@ -29,9 +29,11 @@ protected:
 private:
     Ui::MainWindow *ui;
 
-    Video_Window* scene;
+    Media_Window* scene;
     QPointer<Whisker_Widget> ww;
     QPointer<Label_Widget> label_maker;
+
+    void updateMedia();
 
     void createActions();
 

@@ -15,6 +15,8 @@
 #include "Covariate_Widget.h"
 #include "Whisker_Widget.h"
 
+#include "Video_Window.h"
+
 #include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -29,15 +31,14 @@ MainWindow::MainWindow(QWidget *parent)
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
 
-    this->scene = new Video_Window(this);
+    this->scene = new Media_Window(this);
 
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::vidLoop);
 
     play_mode = false;
 
-    ui->graphicsView->setScene(this->scene);
-    ui->graphicsView->show();
+    this->updateMedia();
 
     createActions(); // Creates callback functions
 
@@ -92,11 +93,25 @@ void MainWindow::Load_Video()
     if (vid_name.isNull()) {
         return;
     }
-    this->frame_count = scene->LoadMedia(vid_name.toStdString()) - 1; // We are zero indexing so subtract 1
+
+    this->scene = new Video_Window(this);
+    this->updateMedia();
+
+    this->frame_count = this->scene->LoadMedia(vid_name.toStdString()) - 1; // We are zero indexing so subtract 1 from total frame count
     ui->frame_count_label->setText(QString::number(this->frame_count));
     ui->horizontalScrollBar->setMaximum(this->frame_count);
 
     scene->LoadFrame(0);
+
+}
+
+//If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.
+//these include whisker_widget and label_widget
+//There are probably better ways to do this.
+void MainWindow::updateMedia() {
+
+    ui->graphicsView->setScene(this->scene);
+    ui->graphicsView->show();
 
 }
 

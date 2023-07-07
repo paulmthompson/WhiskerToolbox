@@ -3,7 +3,7 @@
 #include <QGraphicsPixmapItem>
 #include <QImage>
 
-#include "Video_Window.h"
+#include "Media_Window.h"
 
 #include <ffmpeg_wrapper/videodecoder.h>
 
@@ -11,11 +11,11 @@
 
 /*
 
-The Video_Window class
+The Media_Window class
 
 */
 
-Video_Window::Video_Window(QObject *parent) : QGraphicsScene(parent) {
+Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
 
     canvasWidth = 640;
     canvasHeight = 480;
@@ -26,34 +26,34 @@ Video_Window::Video_Window(QObject *parent) : QGraphicsScene(parent) {
     last_loaded_frame = 0;
     total_frame_count = 0;
 
-    this->media = Video_Window::VIDEO;
+    this->media = Media_Window::VIDEO;
 }
 
-void Video_Window::addLine(QPainterPath* path, QPen color) {
+void Media_Window::addLine(QPainterPath* path, QPen color) {
     line_paths.append(addPath(*path,color));
 }
 
-void Video_Window::clearLines() {
+void Media_Window::clearLines() {
     for (auto pathItem : this->line_paths) {
         removeItem(pathItem);
     }
     this->line_paths.clear();
 }
 
-void Video_Window::clearPoints() {
+void Media_Window::clearPoints() {
     for (auto pathItem : this->points) {
         removeItem(pathItem);
     }
     this->points.clear();
 }
 
-void Video_Window::UpdateCanvas()
+void Media_Window::UpdateCanvas()
 {
     QImage img = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
     UpdateCanvas(img);
 }
 
-void Video_Window::UpdateCanvas(QImage& img)
+void Media_Window::UpdateCanvas(QImage& img)
 {
     clearLines();
     clearPoints();
@@ -61,24 +61,24 @@ void Video_Window::UpdateCanvas(QImage& img)
     this->pixmap_item->setPixmap(QPixmap::fromImage(img));
 }
 
-std::vector<uint8_t> Video_Window::getCurrentFrame() const {
+std::vector<uint8_t> Media_Window::getCurrentFrame() const {
     return this->current_frame;
 }
 
-int Video_Window::LoadMedia(std::string name) {
+int Media_Window::LoadMedia(std::string name) {
 
     switch (this->media) {
-        case Video_Window::VIDEO:
+        case Media_Window::VIDEO:
             this->total_frame_count = this->GetVideoInfo(name);
             break;
-        case Video_Window::IMAGES:
+        case Media_Window::IMAGES:
             std::cout << "Load images" << std::endl;
             break;
     }
     return this->total_frame_count;
 }
 
-int Video_Window::GetVideoInfo(std::string name)
+int Media_Window::GetVideoInfo(std::string name)
 {
     this->vid_name = name;
     this->vd->createMedia(this->vid_name);
@@ -91,7 +91,7 @@ int Video_Window::GetVideoInfo(std::string name)
 // Advance from current frame by num_frames or reverse
 // For forward, we should just keep decoding, but in reverse
 // We will always need to seek to a new keyframe
-int Video_Window::AdvanceFrame(int num_frames) {
+int Media_Window::AdvanceFrame(int num_frames) {
     if (num_frames > 0) {
         return LoadFrame(this->last_loaded_frame + num_frames, true);
     } else {
@@ -100,7 +100,7 @@ int Video_Window::AdvanceFrame(int num_frames) {
 }
 
 //Jump to specific frame designated by frame_id
-int Video_Window::LoadFrame(int frame_id,bool frame_by_frame)
+int Media_Window::LoadFrame(int frame_id,bool frame_by_frame)
 {
 
     if (frame_id < 0) {
@@ -127,15 +127,15 @@ int Video_Window::LoadFrame(int frame_id,bool frame_by_frame)
     // I should emit a signal here that can be caught by anything that draws to scene (before or after draw? or both?)
 }
 
-int Video_Window::getLastLoadedFrame() const {
+int Media_Window::getLastLoadedFrame() const {
     return last_loaded_frame;
 }
 
-int Video_Window::findNearestKeyframe(int frame) const {
+int Media_Window::findNearestKeyframe(int frame) const {
     return this->vd->nearest_iframe(frame);
 }
 
-void Video_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         emit leftClick(event->scenePos().x(),event->scenePos().y());
     } else if (event->button() == Qt::RightButton){
@@ -144,10 +144,10 @@ void Video_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         QGraphicsScene::mousePressEvent(event);
     }
 }
-void Video_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+void Media_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     QGraphicsScene::mouseReleaseEvent(event);
 }
-void Video_Window::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     QGraphicsScene::mouseMoveEvent(event);
 
 }
