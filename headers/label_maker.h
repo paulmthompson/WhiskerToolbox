@@ -16,18 +16,18 @@ class LabelMaker{
 public:
 
     LabelMaker();
-    void addLabel(int frame, int x, int y);
-    void removeLabel(int frame) {this->point_labels.erase(frame);};
-    std::map<int, label_point> getLabels() const {return this->point_labels;};
+    void addLabel(std::string frame_id, int x, int y);
+    void removeLabel(std::string frame_id) {this->point_labels.erase(frame_id);};
+    std::map<std::string, label_point> getLabels() const {return this->point_labels;};
     void saveLabelsJSON();
 
 private:
-    std::map<int, label_point> point_labels;
+    std::map<std::string, label_point> point_labels;
     std::string label_name;
     std::filesystem::path saveFilePath;
 
     void printLabels();
-    std::string makeFrameName(int frame);
+    std::string makeFrameName(std::string frame_id);
 };
 
 #endif // LABEL_MAKER_H

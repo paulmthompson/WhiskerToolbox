@@ -96,6 +96,10 @@ int Media_Window::findNearestSnapFrame(int frame) const {
     return doFindNearestSnapFrame(frame);
 }
 
+std::string Media_Window::getFrameID(int frame) {
+    return doGetFrameID(frame);
+}
+
 void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         emit leftClick(event->scenePos().x(),event->scenePos().y());

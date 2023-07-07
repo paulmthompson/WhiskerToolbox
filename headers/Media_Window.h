@@ -67,6 +67,7 @@ public:
     int getLastLoadedFrame() const;
 
     int findNearestSnapFrame(int frame) const;
+    std::string getFrameID(int frame);
 
 protected:
 
@@ -91,6 +92,7 @@ protected:
     virtual int doLoadMedia(std::string name) {return 0;};
     virtual int doLoadFrame(int frame_id) {return 0;};
     virtual int doFindNearestSnapFrame(int frame_id) const {return frame_id;};
+    virtual std::string doGetFrameID(int frame_id) {return "";};
 
 
 signals:

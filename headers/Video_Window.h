@@ -18,6 +18,8 @@ private:
     int doLoadMedia(std::string name) override;
     int doLoadFrame(int frame_id) override;
     int doFindNearestSnapFrame(int frame_id) const override;
+    std::string doGetFrameID(int frame_id) override;
+
     int GetVideoInfo(std::string name);
 
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;

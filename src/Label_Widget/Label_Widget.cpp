@@ -35,7 +35,7 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
             int selected_row_number = tableWidget->selectedItems().first()->row();
             std::cout << "Row selected is " << selected_row_number << std::endl;
 
-            int selected_frame = tableWidget->item(selected_row_number,0)->text().toInt();
+            auto selected_frame = tableWidget->item(selected_row_number,0)->text().toStdString();
             std::cout << "Corresponding selected frame is " << selected_frame << std::endl;
 
             this->label_maker->removeLabel(selected_frame);
@@ -47,7 +47,7 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
 
 void Label_Widget::ClickedInVideo(qreal x,qreal y) {
 
-    this->label_maker->addLabel(this->scene->getLastLoadedFrame(), static_cast<int>(x), static_cast<int>(y));
+    this->label_maker->addLabel(this->scene->getFrameID(this->scene->getLastLoadedFrame()), static_cast<int>(x), static_cast<int>(y));
 
     this->updateAll();
 }
@@ -62,7 +62,7 @@ void Label_Widget::updateAll() {
 void Label_Widget::updateDraw() {
     scene->clearPoints();
     for (auto i : this->label_maker->getLabels()) {
-        if (i.first == scene->getLastLoadedFrame()) {
+        if (i.first == scene->getFrameID(scene->getLastLoadedFrame())) {
             this->scene->addPoint(i.second.x,i.second.y,QPen(QColor(Qt::red)));
         }
     }
@@ -80,9 +80,9 @@ void Label_Widget::updateTable() {
     }
 }
 
-void Label_Widget::addLabeltoTable(int row, int frame, label_point label) {
+void Label_Widget::addLabeltoTable(int row, std::string frame_id, label_point label) {
     tableWidget->insertRow(tableWidget->rowCount());
-    tableWidget->setItem(row,0,new QTableWidgetItem(QString::number(frame)));
+    tableWidget->setItem(row,0,new QTableWidgetItem(QString::fromStdString(frame_id)));
     tableWidget->setItem(row,1,new QTableWidgetItem(QString::number(label.x)));
     tableWidget->setItem(row,2,new QTableWidgetItem(QString::number(label.y)));
 }

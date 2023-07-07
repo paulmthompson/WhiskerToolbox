@@ -11,8 +11,8 @@ LabelMaker::LabelMaker() {
     this->saveFilePath = "./test.json";
 }
 
-void LabelMaker::addLabel(int frame, int x, int y) {
-    this->point_labels[frame] = label_point{x,y};
+void LabelMaker::addLabel(std::string frame_id, int x, int y) {
+    this->point_labels[frame_id] = label_point{x,y};
 
     printLabels();
 }
@@ -39,11 +39,11 @@ void LabelMaker::saveLabelsJSON() {
 
 }
 
-std::string LabelMaker::makeFrameName(int frame) {
+std::string LabelMaker::makeFrameName(std::string frame_id) {
 
     std::stringstream a;
-    a << std::setw(7) << std::setfill('0') << frame;
-    std::string frame_id = "scene" + a.str() + ".png";
+    a << std::setw(7) << std::setfill('0') << frame_id;
+    std::string frame_name = "scene" + a.str() + ".png";
 
-    return frame_id;
+    return frame_name;
 }

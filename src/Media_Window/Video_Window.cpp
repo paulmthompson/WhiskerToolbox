@@ -46,3 +46,8 @@ int Video_Window::doLoadFrame(int frame_id) {
 int Video_Window::doFindNearestSnapFrame(int frame_id) const {
     return this->vd->nearest_iframe(frame_id);
 }
+
+std::string Video_Window::doGetFrameID(int frame_id) {
+    return std::to_string(frame_id);
+}
+
