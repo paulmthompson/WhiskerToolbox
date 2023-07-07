@@ -54,8 +54,6 @@ public:
 
     void clearPoints();
 
-    void UpdateCanvas();
-
     void UpdateCanvas(QImage& img);
 
     std::vector<uint8_t> getCurrentFrame() const;

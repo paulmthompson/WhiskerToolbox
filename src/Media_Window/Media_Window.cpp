@@ -47,12 +47,6 @@ void Media_Window::clearPoints() {
     this->points.clear();
 }
 
-void Media_Window::UpdateCanvas()
-{
-    QImage img = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
-    UpdateCanvas(img);
-}
-
 void Media_Window::UpdateCanvas(QImage& img)
 {
     clearLines();
