@@ -51,8 +51,10 @@ set(PROJECT_SOURCES
 
         headers/Media_Window.h
         headers/Video_Window.h
+        headers/Images_Window.h
         src/Media_Window/Media_Window.cpp
         src/Media_Window/Video_Window.cpp
+        src/Media_Window/Images_Window.cpp
 
         headers/Covariate_Widget.h
         headers/covariate_widget.ui
@@ -105,6 +107,8 @@ target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
+
+#target_link_libraries(WhiskerToolbox PRIVATE PNG::PNG)
 
 add_subdirectory(Modules/Janelia)
 

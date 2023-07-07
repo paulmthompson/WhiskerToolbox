@@ -11,6 +11,9 @@
             "features": ["nvcodec"]
         },
         {   "name": "nlohmann-json"
+        },
+        {
+            "name": "opencv4"
         }
     ]
 }

@@ -16,6 +16,7 @@
 #include "Whisker_Widget.h"
 
 #include "Video_Window.h"
+#include "Images_Window.h"
 
 #include <iostream>
 
@@ -118,6 +119,15 @@ void MainWindow::Load_Images() {
     }
 
     std::cout << "Loading images in directory " << dir_name.toStdString() << std::endl;
+
+    this->scene = new Images_Window(this);
+    this->updateMedia();
+
+    this->frame_count = this->scene->LoadMedia(dir_name.toStdString()) - 1; // We are zero indexing so subtract 1 from total frame count
+    ui->frame_count_label->setText(QString::number(this->frame_count));
+    ui->horizontalScrollBar->setMaximum(this->frame_count);
+
+    scene->LoadFrame(0);
 }
 
 //If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.
