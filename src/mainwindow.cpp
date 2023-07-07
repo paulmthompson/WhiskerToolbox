@@ -15,9 +15,6 @@
 #include "Covariate_Widget.h"
 #include "Whisker_Widget.h"
 
-#include <stdio.h>
-#include <functional>
-#include <memory>
 #include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)

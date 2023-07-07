@@ -107,8 +107,8 @@ int Video_Window::LoadFrame(int frame_id,bool frame_by_frame)
 
     std::cout << "Loaded frame " << frame_id << std::endl;
 
-    QImage img = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
-    UpdateCanvas(img);
+    this->myimage = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
+    UpdateCanvas(this->myimage);
 
     std::cout << "Drew frame " << frame_id << std::endl;
 

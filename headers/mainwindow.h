@@ -7,8 +7,6 @@
 #include <QTimer>
 #include <QPointer>
 
-#include <memory>
-
 #include "Video_Window.h"
 #include "Whisker_Widget.h"
 #include "Label_Widget.h"
