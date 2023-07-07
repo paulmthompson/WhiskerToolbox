@@ -67,25 +67,8 @@ std::vector<uint8_t> Media_Window::getCurrentFrame() const {
 
 int Media_Window::LoadMedia(std::string name) {
 
-    switch (this->media) {
-        case Media_Window::VIDEO:
-            this->total_frame_count = this->GetVideoInfo(name);
-            break;
-        case Media_Window::IMAGES:
-            std::cout << "Load images" << std::endl;
-            break;
-    }
+    this->total_frame_count = this->doLoadMedia(name);
     return this->total_frame_count;
-}
-
-int Media_Window::GetVideoInfo(std::string name)
-{
-    this->vid_name = name;
-    this->vd->createMedia(this->vid_name);
-
-    this->current_frame.resize(vd->getHeight()*vd->getWidth());
-
-    return vd->getFrameCount(); // Total frames
 }
 
 // Advance from current frame by num_frames or reverse

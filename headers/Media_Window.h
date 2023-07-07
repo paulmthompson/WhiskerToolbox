@@ -80,8 +80,6 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 
-    int GetVideoInfo(std::string name);
-
     QImage myimage;
     std::vector<uint8_t> current_frame;
     QGraphicsPixmapItem* pixmap_item;
@@ -100,6 +98,8 @@ protected:
     enum MediaType {VIDEO, IMAGES};
 
     Media_Window::MediaType media;
+
+    virtual int doLoadMedia(std::string name) {return 0;};
 
 
 signals:
