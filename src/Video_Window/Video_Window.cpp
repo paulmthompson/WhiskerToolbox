@@ -7,6 +7,8 @@
 
 #include <ffmpeg_wrapper/videodecoder.h>
 
+#include <iostream>
+
 /*
 
 The Video_Window class
@@ -61,6 +63,11 @@ std::vector<uint8_t> Video_Window::getCurrentFrame() const {
     return this->current_frame;
 }
 
+int Video_Window::LoadMedia(std::string name) {
+    this->frame_number = this->GetVideoInfo(name);
+    return this->frame_number;
+}
+
 int Video_Window::GetVideoInfo(std::string name)
 {
     this->vid_name = name;
@@ -68,9 +75,7 @@ int Video_Window::GetVideoInfo(std::string name)
 
     this->current_frame.resize(vd->getHeight()*vd->getWidth());
 
-
-    this->frame_number =  vd->getFrameCount(); // Total frames
-    return this->frame_number;
+    return vd->getFrameCount(); // Total frames
 }
 
 // Advance from current frame by num_frames or reverse
@@ -96,7 +101,7 @@ int Video_Window::LoadFrame(int frame_id,bool frame_by_frame)
         frame_by_frame = false;
     }
 
-    std::cout << "Getting frame " << frame_id << std::endl;
+    std::cout << "Getting frame " << std::to_string(frame_id) << std::endl;
 
     this->current_frame = vd->getFrame( frame_id, frame_by_frame);
 

@@ -5,7 +5,12 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPixmapItem>
 #include <QImage>
+
 #include <ffmpeg_wrapper/videodecoder.h>
+
+#include <string>
+#include <vector>
+#include <memory>
 
 /*
 
@@ -55,7 +60,7 @@ public:
 
     std::vector<uint8_t> getCurrentFrame() const;
 
-    int GetVideoInfo(std::string name);
+    int LoadMedia(std::string name);
 
     // Advance from current frame by num_frames
     int AdvanceFrame(int num_frames);
@@ -73,7 +78,8 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 
-    std::string vid_name;
+    int GetVideoInfo(std::string name);
+
     QImage myimage;
     std::vector<uint8_t> current_frame;
     QGraphicsPixmapItem* pixmap_item;
@@ -83,9 +89,10 @@ protected:
     QVector<QGraphicsPathItem*> line_paths;
     QVector<QGraphicsEllipseItem*> points;
 
+    std::string vid_name; // Name of the video file
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
-    int last_loaded_frame;
 
+    int last_loaded_frame;
     int frame_number;
 
 

@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <functional>
 #include <memory>
+#include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -94,7 +95,7 @@ void MainWindow::Load_Video()
     if (vid_name.isNull()) {
         return;
     }
-    this->frame_count = scene->GetVideoInfo(vid_name.toStdString()) - 1; // We are zero indexing so subtract 1
+    this->frame_count = scene->LoadMedia(vid_name.toStdString()) - 1; // We are zero indexing so subtract 1
     ui->frame_count_label->setText(QString::number(this->frame_count));
     ui->horizontalScrollBar->setMaximum(this->frame_count);
 
