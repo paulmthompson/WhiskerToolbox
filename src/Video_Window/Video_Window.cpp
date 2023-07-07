@@ -24,7 +24,9 @@ Video_Window::Video_Window(QObject *parent) : QGraphicsScene(parent) {
 
     vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
     last_loaded_frame = 0;
-    frame_number = 0;
+    total_frame_count = 0;
+
+    this->media = Video_Window::VIDEO;
 }
 
 void Video_Window::addLine(QPainterPath* path, QPen color) {
@@ -64,8 +66,16 @@ std::vector<uint8_t> Video_Window::getCurrentFrame() const {
 }
 
 int Video_Window::LoadMedia(std::string name) {
-    this->frame_number = this->GetVideoInfo(name);
-    return this->frame_number;
+
+    switch (this->media) {
+        case Video_Window::VIDEO:
+            this->total_frame_count = this->GetVideoInfo(name);
+            break;
+        case Video_Window::IMAGES:
+            std::cout << "Load images" << std::endl;
+            break;
+    }
+    return this->total_frame_count;
 }
 
 int Video_Window::GetVideoInfo(std::string name)
@@ -96,8 +106,8 @@ int Video_Window::LoadFrame(int frame_id,bool frame_by_frame)
     if (frame_id < 0) {
         frame_id = 0;
         frame_by_frame = false;
-    } else if (frame_id >= this->frame_number - 1) {
-        frame_id = this->frame_number -1;
+    } else if (frame_id >= this->total_frame_count - 1) {
+        frame_id = this->total_frame_count -1;
         frame_by_frame = false;
     }
 

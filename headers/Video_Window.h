@@ -61,6 +61,8 @@ public:
     std::vector<uint8_t> getCurrentFrame() const;
 
     int LoadMedia(std::string name);
+    void setMediaVideo() {this->media = Video_Window::VIDEO;}
+    void setMediaImages() {this->media = Video_Window::IMAGES;}
 
     // Advance from current frame by num_frames
     int AdvanceFrame(int num_frames);
@@ -93,7 +95,11 @@ protected:
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
 
     int last_loaded_frame;
-    int frame_number;
+    int total_frame_count;
+
+    enum MediaType {VIDEO, IMAGES};
+
+    Video_Window::MediaType media;
 
 
 signals:
