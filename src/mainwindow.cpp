@@ -53,7 +53,7 @@ MainWindow::~MainWindow()
 void MainWindow::vidLoop()
 {
     auto loaded_frame = scene->AdvanceFrame(this->play_speed);
-    ui->frame_label->setText(QString::number(loaded_frame));
+    updateFrameLabels(loaded_frame);
 }
 
 void MainWindow::createActions()
@@ -241,10 +241,10 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
 
     if (event->key() == Qt::Key_Right) {
         auto loaded_frame = scene->AdvanceFrame(1);
-        ui->frame_label->setText(QString::number(loaded_frame));
+        updateFrameLabels(loaded_frame);
     } else if (event->key() == Qt::Key_Left){
         auto loaded_frame = scene->AdvanceFrame(-1);
-        ui->frame_label->setText(QString::number(loaded_frame));
+        updateFrameLabels(loaded_frame);
     } else {
         std::cout << "Key pressed but nothing to do" << std::endl;
         QMainWindow::keyPressEvent(event);
@@ -271,7 +271,7 @@ void MainWindow::Slider_Scroll(int newPos)
     std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << std::endl;
 
     scene->LoadFrame(newPos);
-    ui->frame_label->setText(QString::number(newPos));
+    updateFrameLabels(newPos);
 }
 
 void MainWindow::updateDisplay() {
@@ -281,3 +281,6 @@ void MainWindow::updateDisplay() {
     //ui->frame_label->setText(QString::number(ui->horizontalScrollBar->sliderPosition()));
 }
 
+void MainWindow::updateFrameLabels(int frame_num) {
+    ui->frame_label->setText(QString::number(frame_num));
+}

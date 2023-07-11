@@ -41,9 +41,19 @@ void LabelMaker::saveLabelsJSON() {
 
 std::string LabelMaker::makeFrameName(std::string frame_id) {
 
+    //We create a 7 digit number, padding with leading zeros
     std::stringstream a;
     a << std::setw(7) << std::setfill('0') << frame_id;
-    std::string frame_name = "scene" + a.str() + ".png";
+
+    std::string frame_name = a.str();
+
+    if (frame_name.substr(0,5) != "scene") {
+        frame_name = "scene" + frame_name;
+    }
+
+    if (frame_name.substr(frame_name.length() - 4) != ".png") {
+        frame_name = frame_name + ".png";
+    }
 
     return frame_name;
 }

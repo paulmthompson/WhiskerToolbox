@@ -39,6 +39,8 @@ private:
 
     void vidLoop();
 
+    void updateFrameLabels(int frame_num);
+
     int frame_count;
 
     QTimer* timer;
