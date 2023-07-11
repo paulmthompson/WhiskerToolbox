@@ -4,6 +4,7 @@
 #include <iostream>
 #include <iterator>
 #include <fstream>
+#include <filesystem>
 
 #include <QKeyEvent>
 #include <QFileDialog>
@@ -107,7 +108,7 @@ void Label_Widget::saveButton() {
 
     if (export_frames_checkbox->isChecked()) {
         std::cout << "Exporting frames" << std::endl;
-        exportFrames();
+        exportFrames(saveFileName.toStdString());
     }
 
 }
@@ -116,7 +117,16 @@ void Label_Widget::changeLabelName() {
     this->label_maker->changeLabelName(label_name_box->toPlainText().toStdString());
 }
 
-void Label_Widget::exportFrames() {
+void Label_Widget::exportFrames(std::string saveFileName) {
+
+    std::filesystem::path saveFilePath = saveFileName;
+
+    saveFilePath = saveFilePath.parent_path() / "images";
+
+    if (!std::filesystem::exists(saveFilePath)) {
+        std::filesystem::create_directory(saveFilePath);
+        std::cout << "Creating directory at " << saveFilePath.string() << std::endl;
+    }
 
     for (auto& [frame_name,label] : this->label_maker->getLabels()) {
 

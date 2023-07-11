@@ -39,7 +39,7 @@ private:
     void updateTable();
     void updateDraw();
     void addLabeltoTable(int row, std::string frame_id, label_point label);
-    void exportFrames();
+    void exportFrames(std::string saveFileName);
 private slots:
     void ClickedInVideo(qreal x,qreal y);
     void saveButton();
