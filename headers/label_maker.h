@@ -21,6 +21,7 @@ public:
     void removeLabel(std::string frame_id) {this->point_labels.erase(frame_id);};
     std::map<std::string, label_point> getLabels() const {return this->point_labels;};
     std::stringstream saveLabelsJSON();
+    void changeLabelName(std::string label_name) {this->label_name = label_name;};
 
 private:
     std::map<std::string, label_point> point_labels;

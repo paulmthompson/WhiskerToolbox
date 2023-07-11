@@ -15,6 +15,8 @@ void Label_Widget::openWidget() {
     connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
     connect(this->saveLabelsButton,SIGNAL(clicked()),this,SLOT(saveButton()));
 
+    connect(this->label_name_box,SIGNAL(textChanged()),this,SLOT(changeLabelName()));
+
     this->show();
 
 }
@@ -62,7 +64,7 @@ void Label_Widget::updateAll() {
 
 void Label_Widget::updateDraw() {
     scene->clearPoints();
-    for (auto i : this->label_maker->getLabels()) {
+    for (auto& i : this->label_maker->getLabels()) {
         if (i.first == scene->getFrameID(scene->getLastLoadedFrame())) {
             this->scene->addPoint(i.second.x,i.second.y,QPen(QColor(Qt::red)));
         }
@@ -75,7 +77,7 @@ void Label_Widget::updateTable() {
     //The table is erased and rebuilt from scratch
     tableWidget->setRowCount(0);
     int current_row = 0;
-    for (auto i : this->label_maker->getLabels()) {
+    for (auto& i : this->label_maker->getLabels()) {
         this->addLabeltoTable(current_row, i.first,i.second);
         current_row++;
     }
@@ -103,4 +105,8 @@ void Label_Widget::saveButton() {
 
     outFile.close();
 
+}
+
+void Label_Widget::changeLabelName() {
+    this->label_maker->changeLabelName(label_name_box->toPlainText().toStdString());
 }

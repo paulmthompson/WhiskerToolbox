@@ -42,6 +42,7 @@ private:
 private slots:
     void ClickedInVideo(qreal x,qreal y);
     void saveButton();
+    void changeLabelName();
 
 };
 
