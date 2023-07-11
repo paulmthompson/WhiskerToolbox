@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>376</width>
-    <height>550</height>
+    <height>637</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>110</x>
-     <y>200</y>
+     <y>270</y>
      <width>104</width>
      <height>31</height>
     </rect>
@@ -40,7 +40,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>210</y>
+     <y>280</y>
      <width>71</width>
      <height>20</height>
     </rect>
@@ -53,7 +53,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>300</y>
+     <y>360</y>
      <width>301</width>
      <height>192</height>
     </rect>
@@ -89,7 +89,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>510</y>
+     <y>570</y>
      <width>75</width>
      <height>24</height>
     </rect>
@@ -104,7 +104,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <x>20</x>
      <y>10</y>
      <width>331</width>
-     <height>181</height>
+     <height>241</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -127,14 +127,16 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Label Maker&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Click on a location in a frame, and a label will be created at that position. All labels created will be summarized in the table below. &lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Labels can be exported as a JSON file by clicking the Save Labels button, where the name of the label can be specified in &amp;quot;Label Name&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Labels can be exported as a JSON file by clicking the Save Labels button, where the name of the label can be specified in &amp;quot;Label Name&amp;quot;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;You can also export the individual frames corresponding to each label with the Export Frames checkbox. Note that you can use this interface if you just want to extract frames by making &amp;quot;fake&amp;quot; labels for each frame you desire to export.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
      <x>110</x>
-     <y>260</y>
+     <y>320</y>
      <width>131</width>
      <height>31</height>
     </rect>
@@ -150,6 +152,19 @@ li.checked::marker { content: &quot;\2612&quot;; }
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="export_frames_checkbox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>600</y>
+     <width>111</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Export Frames</string>
    </property>
   </widget>
  </widget>

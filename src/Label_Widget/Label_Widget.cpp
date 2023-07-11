@@ -64,9 +64,9 @@ void Label_Widget::updateAll() {
 
 void Label_Widget::updateDraw() {
     scene->clearPoints();
-    for (auto& i : this->label_maker->getLabels()) {
-        if (i.first == scene->getFrameID(scene->getLastLoadedFrame())) {
-            this->scene->addPoint(i.second.x,i.second.y,QPen(QColor(Qt::red)));
+    for (auto& [frame_name,label] : this->label_maker->getLabels()) {
+        if (frame_name == scene->getFrameID(scene->getLastLoadedFrame())) {
+            this->scene->addPoint(label.x,label.y,QPen(QColor(Qt::red)));
         }
     }
 
@@ -77,8 +77,8 @@ void Label_Widget::updateTable() {
     //The table is erased and rebuilt from scratch
     tableWidget->setRowCount(0);
     int current_row = 0;
-    for (auto& i : this->label_maker->getLabels()) {
-        this->addLabeltoTable(current_row, i.first,i.second);
+    for (auto& [frame_name, label] : this->label_maker->getLabels()) {
+        this->addLabeltoTable(current_row, frame_name,label);
         current_row++;
     }
 }
@@ -105,8 +105,20 @@ void Label_Widget::saveButton() {
 
     outFile.close();
 
+    if (export_frames_checkbox->isChecked()) {
+        std::cout << "Exporting frames" << std::endl;
+        exportFrames();
+    }
+
 }
 
 void Label_Widget::changeLabelName() {
     this->label_maker->changeLabelName(label_name_box->toPlainText().toStdString());
+}
+
+void Label_Widget::exportFrames() {
+
+    for (auto& [frame_name,label] : this->label_maker->getLabels()) {
+
+    }
 }

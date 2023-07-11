@@ -17,8 +17,8 @@ void LabelMaker::addLabel(std::string frame_id, int x, int y) {
 }
 
 void LabelMaker::printLabels() {
-    for (auto i : this->point_labels) {
-        std::cout << "Label on frame " << i.first << " at location x: " << i.second.x << " y: " << i.second.y << std::endl;
+    for (auto& [frame_name,label ] : this->point_labels) {
+        std::cout << "Label on frame " << frame_name << " at location x: " << label.x << " y: " << label.y << std::endl;
     }
 }
 
@@ -26,11 +26,11 @@ std::stringstream LabelMaker::saveLabelsJSON() {
 
     json j = json::array();
 
-    for (auto i : this->getLabels()) {
+    for (auto& [frame_name,label ]: this->getLabels()) {
         json json_object = json::object();
 
-        json_object["image"] = makeFrameName(i.first);
-        json_object["labels"][this->label_name] = {i.second.x, i.second.y};
+        json_object["image"] = makeFrameName(frame_name);
+        json_object["labels"][this->label_name] = {label.x, label.y};
         j.push_back(json_object);
     }
 

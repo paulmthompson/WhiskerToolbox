@@ -7,6 +7,16 @@
 #include <iostream>
 #include <filesystem>
 
+/*
+Label maker is used for associating labels with specific images it gathers from media player
+
+
+*/
+
+struct image {
+    std::vector<uint8_t> data;
+    int media_window_frame_number;
+};
 
 struct label_point {
     int x;
