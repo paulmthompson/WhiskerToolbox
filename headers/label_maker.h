@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <iostream>
 #include <filesystem>
 
 
@@ -19,7 +20,7 @@ public:
     void addLabel(std::string frame_id, int x, int y);
     void removeLabel(std::string frame_id) {this->point_labels.erase(frame_id);};
     std::map<std::string, label_point> getLabels() const {return this->point_labels;};
-    void saveLabelsJSON();
+    std::stringstream saveLabelsJSON();
 
 private:
     std::map<std::string, label_point> point_labels;

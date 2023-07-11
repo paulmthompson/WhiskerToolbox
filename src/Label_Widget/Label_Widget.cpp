@@ -3,9 +3,10 @@
 
 #include <iostream>
 #include <iterator>
+#include <fstream>
 
 #include <QKeyEvent>
-
+#include <QFileDialog>
 
 void Label_Widget::openWidget() {
     std::cout << "Label Widget Opened" << std::endl;
@@ -88,5 +89,18 @@ void Label_Widget::addLabeltoTable(int row, std::string frame_id, label_point la
 }
 
 void Label_Widget::saveButton() {
-    this->label_maker->saveLabelsJSON();
+
+    auto output_stream = this->label_maker->saveLabelsJSON();
+    //std::cout << output_stream.str() << std::endl;
+    QString saveFileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                                                    "",
+                                                    tr("JSON (*.json)"));
+
+    std::ofstream outFile;
+    outFile.open(saveFileName.toStdString());
+
+    outFile << output_stream.str() << std::endl;
+
+    outFile.close();
+
 }

@@ -1,7 +1,6 @@
 
 #include "label_maker.h"
 
-#include <iostream>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -23,7 +22,7 @@ void LabelMaker::printLabels() {
     }
 }
 
-void LabelMaker::saveLabelsJSON() {
+std::stringstream LabelMaker::saveLabelsJSON() {
 
     json j = json::array();
 
@@ -35,7 +34,9 @@ void LabelMaker::saveLabelsJSON() {
         j.push_back(json_object);
     }
 
-    std::cout << j.dump(2) << std::endl;
+    std::stringstream out_stream;
+    out_stream << j.dump(2);
+    return out_stream;
 
 }
 
