@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <utility>
 
 /*
 
@@ -69,6 +70,8 @@ public:
     int findNearestSnapFrame(int frame) const;
     std::string getFrameID(int frame);
 
+    std::pair<int,int> getMediaDimensions() const;
+
 protected:
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -93,6 +96,7 @@ protected:
     virtual int doLoadFrame(int frame_id) {return 0;};
     virtual int doFindNearestSnapFrame(int frame_id) const {return frame_id;};
     virtual std::string doGetFrameID(int frame_id) {return "";};
+    virtual std::pair<int,int> doGetMediaDimensions() const {return std::pair<int,int>{0,0};};
 
 
 signals:

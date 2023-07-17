@@ -4,7 +4,6 @@
 #include <iostream>
 #include <iterator>
 #include <fstream>
-#include <filesystem>
 
 #include <QKeyEvent>
 #include <QFileDialog>
@@ -51,7 +50,13 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
 
 void Label_Widget::ClickedInVideo(qreal x,qreal y) {
 
-    this->label_maker->addLabel(this->scene->getFrameID(this->scene->getLastLoadedFrame()), static_cast<int>(x), static_cast<int>(y));
+    //Generate the image to be labeled
+    auto [height, width] = this->scene->getMediaDimensions();
+    int frame_number = this->scene->getLastLoadedFrame();
+    std::string frame_id = this->scene->getFrameID(frame_number);
+    auto img = label_maker->createImage(height,width,frame_number,frame_id, this->scene->getCurrentFrame());
+
+    this->label_maker->addLabel(img, static_cast<int>(x), static_cast<int>(y));
 
     this->updateAll();
 }
@@ -119,6 +124,15 @@ void Label_Widget::changeLabelName() {
 
 void Label_Widget::exportFrames(std::string saveFileName) {
 
+    std::filesystem::path saveFilePath = createImagePath(saveFileName);
+
+    for (auto& [frame_name,label] : this->label_maker->getLabels()) {
+
+    }
+}
+
+std::filesystem::path Label_Widget::createImagePath(std::string saveFileName) {
+
     std::filesystem::path saveFilePath = saveFileName;
 
     saveFilePath = saveFilePath.parent_path() / "images";
@@ -126,9 +140,9 @@ void Label_Widget::exportFrames(std::string saveFileName) {
     if (!std::filesystem::exists(saveFilePath)) {
         std::filesystem::create_directory(saveFilePath);
         std::cout << "Creating directory at " << saveFilePath.string() << std::endl;
+    } else {
+        std::cout << "Images directory already exists" << std::endl;
     }
 
-    for (auto& [frame_name,label] : this->label_maker->getLabels()) {
-
-    }
+    return saveFilePath;
 }

@@ -51,3 +51,7 @@ std::string Video_Window::doGetFrameID(int frame_id) {
     return std::to_string(frame_id);
 }
 
+std::pair<int,int> Video_Window::doGetMediaDimensions() const {
+    return std::pair<int,int>{vd->getHeight(),vd->getWidth()};
+}
+

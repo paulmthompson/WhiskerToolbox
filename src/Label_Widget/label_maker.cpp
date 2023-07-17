@@ -10,8 +10,9 @@ LabelMaker::LabelMaker() {
     this->saveFilePath = "./test.json";
 }
 
-void LabelMaker::addLabel(std::string frame_id, int x, int y) {
-    this->point_labels[frame_id] = label_point{x,y};
+void LabelMaker::addLabel(image img, int x, int y) {
+
+    this->point_labels[img.frame_id] = label_point{x,y};
 
     printLabels();
 }
@@ -57,4 +58,8 @@ std::string LabelMaker::makeFrameName(std::string frame_id) {
     }
 
     return frame_name;
+}
+
+image LabelMaker::createImage(int height, int width, int frame_number, std::string frame_id, std::vector<uint8_t> data) {
+    return image(data, height, width, frame_number, frame_id);
 }

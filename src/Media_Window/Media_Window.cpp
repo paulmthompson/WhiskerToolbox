@@ -117,4 +117,8 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
 }
 
+std::pair<int,int> Media_Window::getMediaDimensions() const {
+    return this-> doGetMediaDimensions();
+}
+
 

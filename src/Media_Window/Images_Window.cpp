@@ -38,3 +38,7 @@ int Images_Window::doFindNearestSnapFrame(int frame_id) const {
 std::string Images_Window::doGetFrameID(int frame_id) {
     return this->image_paths[frame_id].filename().string();
 }
+
+std::pair<int,int> Images_Window::doGetMediaDimensions() const {
+    return std::pair<int,int>{this->myimage.height(),this->myimage.width()};
+}

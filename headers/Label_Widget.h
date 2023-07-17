@@ -4,12 +4,12 @@
 #include <QWidget>
 
 #include <memory>
+#include <filesystem>
 
 #include "Media_Window.h"
 #include "label_maker.h"
 #include "ui_Label_Widget.h"
 
-#include <memory>
 
 class Label_Widget : public QWidget, private Ui::Label_Widget
 {
@@ -40,6 +40,7 @@ private:
     void updateDraw();
     void addLabeltoTable(int row, std::string frame_id, label_point label);
     void exportFrames(std::string saveFileName);
+    std::filesystem::path createImagePath(std::string saveFileName);
 private slots:
     void ClickedInVideo(qreal x,qreal y);
     void saveButton();
