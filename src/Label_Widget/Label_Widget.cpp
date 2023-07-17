@@ -72,7 +72,8 @@ void Label_Widget::updateDraw() {
     scene->clearPoints();
     for (auto& [frame_name,label] : this->label_maker->getLabels()) {
         if (frame_name == scene->getFrameID(scene->getLastLoadedFrame())) {
-            this->scene->addPoint(label.x,label.y,QPen(QColor(Qt::red)));
+            auto& [img, point] = label;
+            this->scene->addPoint(point.x,point.y,QPen(QColor(Qt::red)));
         }
     }
 
@@ -84,7 +85,8 @@ void Label_Widget::updateTable() {
     tableWidget->setRowCount(0);
     int current_row = 0;
     for (auto& [frame_name, label] : this->label_maker->getLabels()) {
-        this->addLabeltoTable(current_row, frame_name,label);
+        auto& [img, point] = label;
+        this->addLabeltoTable(current_row, frame_name,point);
         current_row++;
     }
 }
@@ -127,7 +129,11 @@ void Label_Widget::exportFrames(std::string saveFileName) {
     std::filesystem::path saveFilePath = createImagePath(saveFileName);
 
     for (auto& [frame_name,label] : this->label_maker->getLabels()) {
-
+        auto& [img, point] = label;
+        QImage labeled_image(&img.data[0],img.width,img.height, QImage::Format_Grayscale8);
+        std::string saveName = saveFilePath.string() + "/" + img.frame_id + ".png";
+        std::cout << "Saving file" << saveName << std::endl;
+        labeled_image.save(QString::fromStdString(saveName));
     }
 }
 
