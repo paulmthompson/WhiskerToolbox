@@ -98,6 +98,8 @@ protected:
     virtual std::string doGetFrameID(int frame_id) {return "";};
     virtual std::pair<int,int> doGetMediaDimensions() const {return std::pair<int,int>{0,0};};
 
+    bool verbose_frame;
+
 
 signals:
     void leftClick(qreal,qreal);

@@ -50,6 +50,8 @@ private:
     int play_speed;
     bool play_mode;
 
+    bool verbose;
+
 private slots:
     void Load_Video();
     void Load_Images();

@@ -32,11 +32,12 @@ int Video_Window::doLoadFrame(int frame_id) {
         frame_by_frame = false;
     }
 
-    std::cout << "Getting frame " << std::to_string(frame_id) << std::endl;
-
     this->current_frame = vd->getFrame( frame_id, frame_by_frame);
 
-    std::cout << "Loaded frame " << frame_id << std::endl;
+    if (this->verbose_frame) {
+        std::cout << "Getting frame " << std::to_string(frame_id) << std::endl;
+        std::cout << "Loaded frame " << frame_id << std::endl;
+    }
 
     this->myimage = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
 

@@ -22,6 +22,8 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
 
     last_loaded_frame = 0;
     total_frame_count = 0;
+
+    verbose_frame = false;
 }
 
 void Media_Window::addLine(QPainterPath* path, QPen color) {
@@ -81,7 +83,9 @@ int Media_Window::LoadFrame(int frame_id)
 
     UpdateCanvas(this->myimage);
 
-    std::cout << "Drew frame " << frame_id << std::endl;
+    if (this->verbose_frame) {
+        std::cout << "Drew frame " << frame_id << std::endl;
+    }
 
     this->last_loaded_frame = frame_id;
     return this->last_loaded_frame;

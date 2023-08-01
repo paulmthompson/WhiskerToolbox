@@ -39,6 +39,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     play_mode = false;
 
+    verbose = false;
+
     this->updateMedia();
 
     createActions(); // Creates callback functions
@@ -261,14 +263,18 @@ until we have finished the most recent one.
 void MainWindow::Slider_Drag(int action)
 {
     auto keyframe = this->scene->findNearestSnapFrame(ui->horizontalScrollBar->sliderPosition());
-    std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << " and the nearest keyframe is " << keyframe << std::endl;
+    if (this->verbose) {
+        std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << " and the nearest keyframe is " << keyframe << std::endl;
+    }
     ui->horizontalScrollBar->setSliderPosition(keyframe);
 }
 
 
 void MainWindow::Slider_Scroll(int newPos)
 {
-    std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << std::endl;
+    if (this->verbose) {
+        std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << std::endl;
+    }
 
     scene->LoadFrame(newPos);
     updateFrameLabels(newPos);
