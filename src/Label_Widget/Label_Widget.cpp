@@ -130,9 +130,12 @@ void Label_Widget::exportFrames(std::string saveFileName) {
 
     for (auto& [frame_name,label] : this->label_maker->getLabels()) {
         auto& [img, point] = label;
+
         QImage labeled_image(&img.data[0],img.width,img.height, QImage::Format_Grayscale8);
+
         std::string saveName = saveFilePath.string() + "/" + img.frame_id + ".png";
         std::cout << "Saving file" << saveName << std::endl;
+
         labeled_image.save(QString::fromStdString(saveName));
     }
 }

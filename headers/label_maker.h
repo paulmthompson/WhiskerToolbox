@@ -7,6 +7,7 @@
 #include <iostream>
 #include <filesystem>
 #include <utility>
+#include <sstream>
 
 /*
 Label maker is used for associating labels with specific images it gathers from media player
