@@ -49,9 +49,9 @@ set(PROJECT_SOURCES
         whiskertoolbox.qrc
         my_stylesheet.qss
 
-        headers/Media_Window.h
-        headers/Video_Window.h
-        headers/Images_Window.h
+        src/Media_Window/Media_Window.h
+        src/Media_Window/Video_Window.h
+        src/Media_Window/Images_Window.h
         src/Media_Window/Media_Window.cpp
         src/Media_Window/Video_Window.cpp
         src/Media_Window/Images_Window.cpp
@@ -114,6 +114,7 @@ add_subdirectory(Modules/Janelia)
 
 target_include_directories(WhiskerToolbox PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/headers>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/Media_Window>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Modules/Janelia>"
 
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
