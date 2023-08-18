@@ -49,13 +49,6 @@ set(PROJECT_SOURCES
         whiskertoolbox.qrc
         my_stylesheet.qss
 
-        src/Media_Window/Media_Window.h
-        src/Media_Window/Video_Window.h
-        src/Media_Window/Images_Window.h
-        src/Media_Window/Media_Window.cpp
-        src/Media_Window/Video_Window.cpp
-        src/Media_Window/Images_Window.cpp
-
         headers/Covariate_Widget.h
         headers/covariate_widget.ui
         headers/Covariate_Config.h
@@ -111,6 +104,7 @@ target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 #target_link_libraries(WhiskerToolbox PRIVATE PNG::PNG)
 
 add_subdirectory(Modules/Janelia)
+add_subdirectory(src/Media_Window)
 
 target_include_directories(WhiskerToolbox PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/headers>"
@@ -121,6 +115,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE janelia)
+target_link_libraries(WhiskerToolbox PRIVATE Media_Window)
 
 set_target_properties(WhiskerToolbox PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
