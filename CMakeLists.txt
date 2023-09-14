@@ -103,6 +103,7 @@ target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
 #target_link_libraries(WhiskerToolbox PRIVATE PNG::PNG)
 
+add_subdirectory(src/DataManager)
 add_subdirectory(Modules/Janelia)
 add_subdirectory(src/Media_Window)
 
@@ -110,6 +111,7 @@ target_include_directories(WhiskerToolbox PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/headers>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/Media_Window>"
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Modules/Janelia>"
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/DataManager>"
 
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
