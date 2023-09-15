@@ -48,7 +48,10 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
 
 }
 
-void Label_Widget::ClickedInVideo(qreal x,qreal y) {
+void Label_Widget::ClickedInVideo(qreal x_canvas,qreal y_canvas) {
+
+    float x_media = x_canvas / this->scene->getXAspect();
+    float y_media = y_canvas / this->scene->getYAspect();
 
     //Generate the image to be labeled
     auto [height, width] = this->scene->getMediaDimensions();
@@ -56,7 +59,7 @@ void Label_Widget::ClickedInVideo(qreal x,qreal y) {
     std::string frame_id = this->scene->getFrameID(frame_number);
     auto img = label_maker->createImage(height,width,frame_number,frame_id, this->scene->getCurrentFrame());
 
-    this->label_maker->addLabel(img, static_cast<int>(x), static_cast<int>(y));
+    this->label_maker->addLabel(img, static_cast<int>(x_media), static_cast<int>(y_media));
 
     this->updateAll();
 }

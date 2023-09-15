@@ -50,9 +50,15 @@ public:
     void clearLines();
 
     template <typename T>
-    void addPoint(T x, T y, QPen color,float radius = 15.0) {
+    void addPoint(T x_canvas, T y_canvas, QPen color,float radius = 15.0) {
+
+        auto xAspect = getXAspect();
+        auto yAspect = getYAspect();
+
         // addEllipse draws from top left of rectangle down and to the right, so we want to center point in the middle of this rectangle
-        this->points.append(addEllipse(x - radius/2,y - radius/2,radius, radius,color));
+        this->points.append(addEllipse(static_cast<float>(x_canvas) * xAspect - radius/2,
+                                       static_cast<float>(y_canvas) * yAspect - radius/2,
+                                       radius, radius,color));
     }
 
     void clearPoints();
