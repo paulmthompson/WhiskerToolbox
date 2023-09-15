@@ -27,7 +27,8 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
 }
 
 void Media_Window::addLine(QPainterPath* path, QPen color) {
-    line_paths.append(addPath(*path,color));
+    auto linePath = addPath(*path,color);
+    line_paths.append(linePath);
 }
 
 void Media_Window::clearLines() {

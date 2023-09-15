@@ -10,6 +10,7 @@
 #include <vector>
 #include <memory>
 #include <utility>
+#include <iostream>
 
 /*
 
@@ -32,10 +33,17 @@ public:
     void addLine(std::vector<T>& x, std::vector<T>& y, QPen color) {
         QPainterPath* path = new QPainterPath();
 
-        path->moveTo(QPointF(x[0],y[0]));
+        float scale_height = static_cast<float>(this->canvasHeight)
+                             / static_cast<float>(std::get<0>(this->getMediaDimensions()));
+        float scale_width = static_cast<float>(this->canvasWidth)
+                            / static_cast<float>(std::get<1>(this->getMediaDimensions()));
+
+        std::cout << "Aspect Ratio is " << scale_height << " x " << scale_width << std::endl;
+
+        path->moveTo(QPointF(x[0] * scale_width,y[0] * scale_height));
 
         for (int i = 1; i < x.size(); i++) {
-            path->lineTo(QPointF(x[i],y[i]));
+            path->lineTo(QPointF(x[i] * scale_width , y[i] * scale_height));
         }
 
         addLine(path,color);

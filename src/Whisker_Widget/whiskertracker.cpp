@@ -12,7 +12,7 @@ WhiskerTracker::WhiskerTracker()
     whiskers = std::vector<Whisker>{};
 }
 
-void WhiskerTracker::trace(const std::vector<uint8_t>& input) {
+void WhiskerTracker::trace(const std::vector<uint8_t>& input, const std::pair<int,int> height_width) {
 
     if (this->janelia_init == false) {
         this->janelia.bank = LineDetector(this->janelia.config);
@@ -22,7 +22,7 @@ void WhiskerTracker::trace(const std::vector<uint8_t>& input) {
 
     whiskers.clear();
 
-    Image<uint8_t>img = Image<uint8_t>(640,480,input);
+    Image<uint8_t>img = Image<uint8_t>(std::get<1>(height_width),std::get<0>(height_width),input);
     std::vector<Whisker_Seg> j_segs = janelia.find_segments(1,img,bg);
 
     int whisker_count = 1;
