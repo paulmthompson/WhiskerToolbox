@@ -33,17 +33,13 @@ public:
     void addLine(std::vector<T>& x, std::vector<T>& y, QPen color) {
         QPainterPath* path = new QPainterPath();
 
-        float scale_height = static_cast<float>(this->canvasHeight)
-                             / static_cast<float>(std::get<0>(this->getMediaDimensions()));
-        float scale_width = static_cast<float>(this->canvasWidth)
-                            / static_cast<float>(std::get<1>(this->getMediaDimensions()));
+        auto xAspect = getXAspect();
+        auto yAspect = getYAspect();
 
-        std::cout << "Aspect Ratio is " << scale_height << " x " << scale_width << std::endl;
-
-        path->moveTo(QPointF(x[0] * scale_width,y[0] * scale_height));
+        path->moveTo(QPointF(static_cast<float>(x[0]) * xAspect, static_cast<float>(y[0]) * yAspect));
 
         for (int i = 1; i < x.size(); i++) {
-            path->lineTo(QPointF(x[i] * scale_width , y[i] * scale_height));
+            path->lineTo(QPointF(static_cast<float>(x[i]) * xAspect , static_cast<float>(y[i]) * yAspect));
         }
 
         addLine(path,color);
@@ -79,6 +75,9 @@ public:
     std::string getFrameID(int frame);
 
     std::pair<int,int> getMediaDimensions() const;
+
+    float getXAspect() const;
+    float getYAspect() const;
 
 protected:
 

@@ -126,4 +126,19 @@ std::pair<int,int> Media_Window::getMediaDimensions() const {
     return this-> doGetMediaDimensions();
 }
 
+float Media_Window::getXAspect() const {
+
+    float scale_width = static_cast<float>(this->canvasWidth)
+                        / static_cast<float>(std::get<1>(this->getMediaDimensions()));
+
+    return scale_width;
+}
+
+float Media_Window::getYAspect() const {
+
+    float scale_height = static_cast<float>(this->canvasHeight)
+                         / static_cast<float>(std::get<0>(this->getMediaDimensions()));
+
+    return scale_height;
+}
 

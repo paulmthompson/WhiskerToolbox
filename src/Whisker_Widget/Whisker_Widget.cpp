@@ -66,11 +66,15 @@ void Whisker_Widget::DrawWhiskers()
     }
 }
 
-void Whisker_Widget::ClickedInVideo(qreal x,qreal y) {
+//x
+void Whisker_Widget::ClickedInVideo(qreal x_canvas,qreal y_canvas) {
+
+    float x_media = x_canvas / this->scene->getXAspect();
+    float y_media = y_canvas / this->scene->getYAspect();
 
     switch(this->selection_mode) {
     case Whisker_Select: {
-        std::tuple<float,int> nearest_whisker = wt->get_nearest_whisker(x, y);
+        std::tuple<float,int> nearest_whisker = wt->get_nearest_whisker(x_media, y_media);
         if (std::get<0>(nearest_whisker) < 10.0f) {
             this->selected_whisker = std::get<1>(nearest_whisker);
             this->DrawWhiskers();
