@@ -8,16 +8,24 @@ It keeps track of the time that is displayed and ensures that each data member t
 
 */
 
+#include <memory>
+#include <vector>
+#include <string>
+
 
 #include "DataSeries.h"
 #include "TimeFrame.h"
 
 class DataManager {
+public:
 
-
-
-
+    std::shared_ptr<VideoSeries> loadVideo(std::string);
+    int getFrameCount() const {return this->frame_count;};
+protected:
+    std::vector<std::shared_ptr<DataSeries>> data;
+    int frame_count;
 };
+
 
 //Load data object
 // If data object has new new time series, load it

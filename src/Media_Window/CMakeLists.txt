@@ -14,6 +14,7 @@ add_library(Media_Window SHARED
     Video_Window.cpp
     Images_Window.cpp)
 
+
 target_include_directories(Media_Window PUBLIC
                             "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
 
@@ -24,3 +25,5 @@ target_link_libraries(Media_Window PRIVATE Qt${QT_VERSION_MAJOR}::OpenGL)
 target_link_libraries(Media_Window PRIVATE Qt${QT_VERSION_MAJOR}::UiTools)
 
 target_link_libraries(Media_Window PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
+
+target_link_libraries(Media_Window PRIVATE DataManager)

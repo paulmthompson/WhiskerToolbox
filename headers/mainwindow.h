@@ -10,6 +10,7 @@
 #include "Media_Window.h"
 #include "Whisker_Widget.h"
 #include "Label_Widget.h"
+#include "DataManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -53,6 +54,8 @@ private:
     bool play_mode;
 
     bool verbose;
+
+    std::unique_ptr<DataManager> dataManager;
 
 private slots:
     void Load_Video();

@@ -12,6 +12,8 @@
 #include <utility>
 #include <iostream>
 
+#include "DataSeries.h"
+
 /*
 
 The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
@@ -71,12 +73,10 @@ public:
     std::vector<uint8_t> getCurrentFrame() const;
 
     int LoadMedia(std::string name);
+    int LoadImages(std::string name);
 
-    // Advance from current frame by num_frames
-    int AdvanceFrame(int num_frames);
-
-    //Jump to specific frame designated by frame_id
-    int LoadFrame(int frame_id);
+    //Jump to specific frame designated by frame_id, or relative to last loaded frame if relative is true
+    int LoadFrame(int frame_id, bool relative = false);
 
     int getLastLoadedFrame() const;
 
@@ -101,6 +101,8 @@ protected:
 
     QVector<QGraphicsPathItem*> line_paths;
     QVector<QGraphicsEllipseItem*> points;
+
+    std::shared_ptr<MediaSeries> media;
 
     // This should be in data / time object.
     // Here i am implicitly making all data stored by the object (or at least returned by the object

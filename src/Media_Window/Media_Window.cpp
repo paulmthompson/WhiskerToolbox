@@ -63,16 +63,21 @@ int Media_Window::LoadMedia(std::string name) {
     return this->total_frame_count;
 }
 
-// Advance from current frame by num_frames or reverse
-// For forward, we should just keep decoding, but in reverse
-// We will always need to seek to a new keyframe
-int Media_Window::AdvanceFrame(int num_frames) {
-        return LoadFrame(this->last_loaded_frame + num_frames);
+int Media_Window::LoadImages(std::string name) {
+
+    this->media = std::make_shared<ImageSeries>();
+
+    this->total_frame_count = this->media->LoadMedia(name);
+    return this->total_frame_count;
 }
 
 //Jump to specific frame designated by frame_id
-int Media_Window::LoadFrame(int frame_id)
+int Media_Window::LoadFrame(int frame_id , bool relative)
 {
+
+    if (relative) {
+        frame_id = this->last_loaded_frame + frame_id;
+    }
 
     if (frame_id < 0) {
         frame_id = 0;
@@ -80,7 +85,20 @@ int Media_Window::LoadFrame(int frame_id)
         frame_id = this->total_frame_count -1;
     }
 
-    frame_id = doLoadFrame(frame_id);
+    frame_id = this->media->LoadFrame(frame_id);
+    //frame_id = doLoadFrame(frame_id);
+
+    //Get current_frame (in media coordinates)
+    auto image_native_resolution = QImage(&(this->media->getCurrentFrame())[0],
+                                          this->media->getWidth(),
+                                          this->media->getHeight(), QImage::Format_Grayscale8);
+    this->myimage = image_native_resolution.scaled(this->canvasWidth,this->canvasHeight);
+    //auto image_native_resolution = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
+    //this->myimage = image_native_resolution.scaled(this->canvasWidth,this->canvasHeight);
+
+    //Scale it to canvas image
+    //update canvas
+
 
     UpdateCanvas(this->myimage);
 

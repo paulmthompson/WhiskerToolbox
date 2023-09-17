@@ -41,6 +41,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     verbose = false;
 
+    dataManager = std::make_unique<DataManager>();
+
     this->updateMedia();
 
     createActions(); // Creates callback functions
@@ -95,6 +97,7 @@ void MainWindow::Load_Video()
 
     // Create video data object
     // Pass video data object to scene?
+    //auto video_data = dataManager->loadVideo(vid_name.toStdString());
 
     this->scene = new Video_Window(this); // Establish scene as Video Window
     this->updateMedia();
@@ -121,10 +124,12 @@ void MainWindow::Load_Images() {
 
     std::cout << "Loading images in directory " << dir_name.toStdString() << std::endl;
 
-    this->scene = new Images_Window(this);
+    this->scene = new Media_Window(this);
+    //this->scene = new Images_Window(this);
     this->updateMedia();
 
-    this->frame_count = this->scene->LoadMedia(dir_name.toStdString()) - 1; // We are zero indexing so subtract 1 from total frame count
+    //this->frame_count = this->scene->LoadMedia(dir_name.toStdString()) - 1; // We are zero indexing so subtract 1 from total frame count
+    this->frame_count = this->scene->LoadImages(dir_name.toStdString()) - 1;
 
     updateScrollBarNewMax(this->frame_count);
 
@@ -303,7 +308,7 @@ void MainWindow::updateDisplay() {
 
 void MainWindow::updateDataDisplays(int advance_n_frames) {
 
-    auto loaded_frame = scene->AdvanceFrame(advance_n_frames);
+    auto loaded_frame = scene->LoadFrame(advance_n_frames,true);
     updateFrameLabels(loaded_frame);
 
 }
