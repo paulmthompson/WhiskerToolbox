@@ -30,11 +30,6 @@ int Images_Window::doLoadFrame(int frame_id) {
     return frame_id;
 }
 
-int Images_Window::doFindNearestSnapFrame(int frame_id) const {
-
-    return frame_id;
-}
-
 std::string Images_Window::doGetFrameID(int frame_id) {
     return this->image_paths[frame_id].filename().string();
 }
