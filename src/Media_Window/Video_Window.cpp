@@ -41,8 +41,7 @@ int Video_Window::doLoadFrame(int frame_id) {
 
     auto image_native_resolution = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
 
-    this->myimage = image_native_resolution.scaled(this->canvasWidth,this->canvasHeight);
-
+    this->canvasImage = image_native_resolution.scaled(this->canvasWidth,this->canvasHeight);
 
     return frame_id;
 }

@@ -17,8 +17,8 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
 
     canvasWidth = 640;
     canvasHeight = 480;
-    this->myimage = QImage(canvasWidth,canvasHeight,QImage::Format_Grayscale8);
-    this->pixmap_item = addPixmap(QPixmap::fromImage(this->myimage));
+    this->canvasImage = QImage(canvasWidth,canvasHeight,QImage::Format_Grayscale8);
+    this->canvasPixmap = addPixmap(QPixmap::fromImage(this->canvasImage));
 
     last_loaded_frame = 0; // This should be in data / time object
     total_frame_count = 0; // This should be in data / time object
@@ -50,7 +50,7 @@ void Media_Window::UpdateCanvas(QImage& img)
     clearLines();
     clearPoints();
     //We should resize image here to match the size of the canvas
-    this->pixmap_item->setPixmap(QPixmap::fromImage(img));
+    this->canvasPixmap->setPixmap(QPixmap::fromImage(img));
 }
 
 std::vector<uint8_t> Media_Window::getCurrentFrame() const {
@@ -82,7 +82,7 @@ int Media_Window::LoadFrame(int frame_id)
 
     frame_id = doLoadFrame(frame_id);
 
-    UpdateCanvas(this->myimage);
+    UpdateCanvas(this->canvasImage);
 
     if (this->verbose_frame) {
         std::cout << "Drew frame " << frame_id << std::endl;

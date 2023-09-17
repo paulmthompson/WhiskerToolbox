@@ -94,8 +94,8 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 
-    QImage myimage;
-    QGraphicsPixmapItem* pixmap_item;
+    QImage canvasImage;
+    QGraphicsPixmapItem* canvasPixmap;
     int canvasHeight;
     int canvasWidth;
 

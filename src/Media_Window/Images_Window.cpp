@@ -23,9 +23,9 @@ int Images_Window::doLoadMedia(std::string dir_name) {
 
 int Images_Window::doLoadFrame(int frame_id) {
 
-    this->myimage = QImage(QString::fromStdString(this->image_paths[frame_id].string()));
+    this->canvasImage = QImage(QString::fromStdString(this->image_paths[frame_id].string()));
 
-    this->current_frame = std::vector<uint8_t>(this->myimage.bits(), this->myimage.bits() + this->myimage.sizeInBytes());
+    this->current_frame = std::vector<uint8_t>(this->canvasImage.bits(), this->canvasImage.bits() + this->canvasImage.sizeInBytes());
 
     return frame_id;
 }
@@ -40,5 +40,5 @@ std::string Images_Window::doGetFrameID(int frame_id) {
 }
 
 std::pair<int,int> Images_Window::doGetMediaDimensions() const {
-    return std::pair<int,int>{this->myimage.height(),this->myimage.width()};
+    return std::pair<int,int>{this->canvasImage.height(),this->canvasImage.width()};
 }
