@@ -52,12 +52,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::vidLoop()
-{
-    auto loaded_frame = scene->AdvanceFrame(this->play_speed);
-    updateFrameLabels(loaded_frame);
-}
-
 void MainWindow::createActions()
 {
     connect(ui->actionLoad_Video,SIGNAL(triggered()),this,SLOT(Load_Video()));
@@ -99,12 +93,17 @@ void MainWindow::Load_Video()
         return;
     }
 
-    this->scene = new Video_Window(this);
+    // Create video data object
+    // Pass video data object to scene?
+
+    this->scene = new Video_Window(this); // Establish scene as Video Window
     this->updateMedia();
 
     this->frame_count = this->scene->LoadMedia(vid_name.toStdString()) - 1; // We are zero indexing so subtract 1 from total frame count
-    ui->frame_count_label->setText(QString::number(this->frame_count));
-    ui->horizontalScrollBar->setMaximum(this->frame_count);
+
+    // After loading a new data object in a new time coordinate system, we
+    // need to update the scrollbar.
+    updateScrollBarNewMax(this->frame_count);
 
     scene->LoadFrame(0);
 
@@ -126,8 +125,8 @@ void MainWindow::Load_Images() {
     this->updateMedia();
 
     this->frame_count = this->scene->LoadMedia(dir_name.toStdString()) - 1; // We are zero indexing so subtract 1 from total frame count
-    ui->frame_count_label->setText(QString::number(this->frame_count));
-    ui->horizontalScrollBar->setMaximum(this->frame_count);
+
+    updateScrollBarNewMax(this->frame_count);
 
     scene->LoadFrame(0);
 }
@@ -193,6 +192,12 @@ The timer runs every 40 ms, and the number of frames to advance will be dictated
 selected with forward and reverse buttons.
 The timer is fixed at 25 fps, so faster will result in some frames not being flashed to the screen.
 */
+
+void MainWindow::vidLoop()
+{
+    updateDataDisplays(this->play_speed);
+}
+
 void MainWindow::PlayButton()
 {
 
@@ -241,12 +246,18 @@ void MainWindow::FastForwardButton()
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
 
+    //Data manager should be responsible for loading new value of data object
+    //Main window can update displays with new data object position
+    //Frame label is also updated.
+
     if (event->key() == Qt::Key_Right) {
-        auto loaded_frame = scene->AdvanceFrame(1);
-        updateFrameLabels(loaded_frame);
+
+        updateDataDisplays(1);
+
     } else if (event->key() == Qt::Key_Left){
-        auto loaded_frame = scene->AdvanceFrame(-1);
-        updateFrameLabels(loaded_frame);
+
+        updateDataDisplays(-1);
+
     } else {
         std::cout << "Key pressed but nothing to do" << std::endl;
         QMainWindow::keyPressEvent(event);
@@ -262,6 +273,9 @@ until we have finished the most recent one.
 
 void MainWindow::Slider_Drag(int action)
 {
+    //If we are dragging the slider, the data manager should be aware of this, and possibly adjust the position
+    //of the new point (such as keyframe)
+
     auto keyframe = this->scene->findNearestSnapFrame(ui->horizontalScrollBar->sliderPosition());
     if (this->verbose) {
         std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << " and the nearest keyframe is " << keyframe << std::endl;
@@ -287,6 +301,20 @@ void MainWindow::updateDisplay() {
     //ui->frame_label->setText(QString::number(ui->horizontalScrollBar->sliderPosition()));
 }
 
+void MainWindow::updateDataDisplays(int advance_n_frames) {
+
+    auto loaded_frame = scene->AdvanceFrame(advance_n_frames);
+    updateFrameLabels(loaded_frame);
+
+}
+
 void MainWindow::updateFrameLabels(int frame_num) {
     ui->frame_label->setText(QString::number(frame_num));
+}
+
+void MainWindow::updateScrollBarNewMax(int new_max) {
+
+    ui->frame_count_label->setText(QString::number(new_max));
+    ui->horizontalScrollBar->setMaximum(new_max);
+
 }

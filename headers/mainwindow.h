@@ -39,6 +39,8 @@ private:
 
     void vidLoop();
 
+    void updateScrollBarNewMax(int new_max);
+    void updateDataDisplays(int advance_n_frames);
     void updateFrameLabels(int frame_num);
 
     int frame_count;

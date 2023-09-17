@@ -65,6 +65,9 @@ public:
 
     void UpdateCanvas(QImage& img);
 
+    // This should be in data / time object.
+    // Here i am implicitly making all data stored by the object (or at least returned by the object
+    // std::vector<uint8_t> and not a more general template type.
     std::vector<uint8_t> getCurrentFrame() const;
 
     int LoadMedia(std::string name);
@@ -78,7 +81,7 @@ public:
     int getLastLoadedFrame() const;
 
     int findNearestSnapFrame(int frame) const;
-    std::string getFrameID(int frame);
+    std::string getFrameID(int frame); // This should be in data / time object
 
     std::pair<int,int> getMediaDimensions() const;
 
@@ -92,7 +95,6 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 
     QImage myimage;
-    std::vector<uint8_t> current_frame;
     QGraphicsPixmapItem* pixmap_item;
     int canvasHeight;
     int canvasWidth;
@@ -100,15 +102,20 @@ protected:
     QVector<QGraphicsPathItem*> line_paths;
     QVector<QGraphicsEllipseItem*> points;
 
-    std::string vid_name; // Name of the video file
+    // This should be in data / time object.
+    // Here i am implicitly making all data stored by the object (or at least returned by the object
+    // std::vector<uint8_t> and not a more general template type.
+    std::vector<uint8_t> current_frame;
 
-    int last_loaded_frame;
-    int total_frame_count;
+    std::string vid_name; // This should be in data / time object
+
+    int last_loaded_frame; // This should be in data / time object
+    int total_frame_count; // This should be in data / time object
 
     virtual int doLoadMedia(std::string name) {return 0;};
     virtual int doLoadFrame(int frame_id) {return 0;};
     virtual int doFindNearestSnapFrame(int frame_id) const {return frame_id;};
-    virtual std::string doGetFrameID(int frame_id) {return "";};
+    virtual std::string doGetFrameID(int frame_id) {return "";}; // This should be used with data structure
     virtual std::pair<int,int> doGetMediaDimensions() const {return std::pair<int,int>{0,0};};
 
     bool verbose_frame;

@@ -20,8 +20,8 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
     this->myimage = QImage(canvasWidth,canvasHeight,QImage::Format_Grayscale8);
     this->pixmap_item = addPixmap(QPixmap::fromImage(this->myimage));
 
-    last_loaded_frame = 0;
-    total_frame_count = 0;
+    last_loaded_frame = 0; // This should be in data / time object
+    total_frame_count = 0; // This should be in data / time object
 
     verbose_frame = false;
 }
