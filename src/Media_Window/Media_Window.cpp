@@ -93,10 +93,6 @@ int Media_Window::getLastLoadedFrame() const {
     return last_loaded_frame;
 }
 
-int Media_Window::findNearestSnapFrame(int frame) const {
-    return doFindNearestSnapFrame(frame);
-}
-
 std::string Media_Window::getFrameID(int frame) {
     return doGetFrameID(frame);
 }

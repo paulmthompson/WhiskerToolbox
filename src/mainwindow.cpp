@@ -274,12 +274,11 @@ void MainWindow::Slider_Drag(int action)
 {
     //If we are dragging the slider, the data manager should be aware of this, and possibly adjust the position
     //of the new point (such as keyframe)
+    if (dynamic_cast<Video_Window*>(this->scene)) {
+        auto keyframe = dynamic_cast<Video_Window*>(this->scene)->FindNearestSnapFrame(ui->horizontalScrollBar->sliderPosition());
+        ui->horizontalScrollBar->setSliderPosition(keyframe);
 
-    auto keyframe = this->scene->findNearestSnapFrame(ui->horizontalScrollBar->sliderPosition());
-    if (this->verbose) {
-        std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << " and the nearest keyframe is " << keyframe << std::endl;
     }
-    ui->horizontalScrollBar->setSliderPosition(keyframe);
 }
 
 

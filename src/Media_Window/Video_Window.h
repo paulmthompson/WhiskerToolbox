@@ -14,10 +14,12 @@ class Video_Window : public Media_Window
 public:
     Video_Window(QObject *parent = 0);
 
+    int FindNearestSnapFrame(int frame_id) const;
+
 private:
     int doLoadMedia(std::string name) override;
     void doLoadFrame(int frame_id) override;
-    int doFindNearestSnapFrame(int frame_id) const override;
+
     std::string doGetFrameID(int frame_id) override;
 
     int GetVideoInfo(std::string name);

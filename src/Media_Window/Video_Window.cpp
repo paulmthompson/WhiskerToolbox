@@ -41,7 +41,7 @@ void Video_Window::doLoadFrame(int frame_id) {
     this->mediaImage = QImage(&this->mediaData[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
 }
 
-int Video_Window::doFindNearestSnapFrame(int frame_id) const {
+int Video_Window::FindNearestSnapFrame(int frame_id) const {
     return this->vd->nearest_iframe(frame_id);
 }
 

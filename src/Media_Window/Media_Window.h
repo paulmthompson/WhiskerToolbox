@@ -80,7 +80,6 @@ public:
 
     int getLastLoadedFrame() const;
 
-    int findNearestSnapFrame(int frame) const;
     std::string getFrameID(int frame); // This should be in data / time object
 
     float getXAspect() const;
