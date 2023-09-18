@@ -14,7 +14,7 @@ int Video_Window::GetVideoInfo(std::string name)
     this->vid_name = name;
     this->vd->createMedia(this->vid_name);
 
-    this->current_frame.resize(vd->getHeight()*vd->getWidth());
+    this->mediaData.resize(vd->getHeight()*vd->getWidth());
 
     return vd->getFrameCount(); // Total frames
 }
@@ -33,12 +33,9 @@ void Video_Window::doLoadFrame(int frame_id) {
     }
 
     //We load the data associated with the frame
-    this->current_frame = vd->getFrame( frame_id, frame_by_frame);
+    this->mediaData = vd->getFrame( frame_id, frame_by_frame);
 
-    auto image_native_resolution = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
-
-    this->canvasImage = image_native_resolution.scaled(this->canvasWidth,this->canvasHeight);
-
+    this->mediaImage = QImage(&this->mediaData[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
 }
 
 int Video_Window::doFindNearestSnapFrame(int frame_id) const {

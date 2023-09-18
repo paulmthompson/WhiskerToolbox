@@ -99,15 +99,16 @@ protected:
     int canvasHeight;
     int canvasWidth;
 
+    // This should be in data / time object.
+    // Here i am implicitly making all data stored by the object (or at least returned by the object
+    // std::vector<uint8_t> and not a more general template type.
+    std::vector<uint8_t> mediaData;
+    QImage mediaImage;
+
     QVector<QGraphicsPathItem*> line_paths;
     QVector<QGraphicsEllipseItem*> points;
 
     int checkFrameInbounds(int frame_id);
-
-    // This should be in data / time object.
-    // Here i am implicitly making all data stored by the object (or at least returned by the object
-    // std::vector<uint8_t> and not a more general template type.
-    std::vector<uint8_t> current_frame;
 
     std::string vid_name; // This should be in data / time object
 

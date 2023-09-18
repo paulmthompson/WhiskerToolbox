@@ -54,7 +54,7 @@ void Media_Window::UpdateCanvas(QImage& img)
 }
 
 std::vector<uint8_t> Media_Window::getCurrentFrame() const {
-    return this->current_frame;
+    return this->mediaData;
 }
 
 int Media_Window::LoadMedia(std::string name) {
@@ -79,6 +79,8 @@ int Media_Window::LoadFrame(int frame_id)
     frame_id = this->checkFrameInbounds(frame_id);
 
     doLoadFrame(frame_id);
+
+    this->canvasImage = mediaImage.scaled(this->canvasWidth,this->canvasHeight);
 
     UpdateCanvas(this->canvasImage);
 
