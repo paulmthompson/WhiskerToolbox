@@ -19,10 +19,7 @@ public:
 private:
     int doLoadMedia(std::string name) override;
     void doLoadFrame(int frame_id) override;
-
     std::string doGetFrameID(int frame_id) override;
-
-    int GetVideoInfo(std::string name);
 
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
 

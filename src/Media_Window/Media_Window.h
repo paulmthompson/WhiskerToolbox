@@ -78,7 +78,7 @@ public:
     //Jump to specific frame designated by frame_id
     int LoadFrame(int frame_id);
 
-    int getLastLoadedFrame() const;
+    int getLastLoadedFrame() const; // This should be in time object
 
     std::string getFrameID(int frame); // This should be in data / time object
 
@@ -109,7 +109,7 @@ protected:
     QVector<QGraphicsPathItem*> line_paths;
     QVector<QGraphicsEllipseItem*> points;
 
-    int checkFrameInbounds(int frame_id);
+    int checkFrameInbounds(int frame_id); //This should be in time object
 
     std::string vid_name; // This should be in data / time object
 
@@ -118,7 +118,6 @@ protected:
 
     virtual int doLoadMedia(std::string name) {return 0;};
     virtual void doLoadFrame(int frame_id) {};
-    virtual int doFindNearestSnapFrame(int frame_id) const {return frame_id;};
     virtual std::string doGetFrameID(int frame_id) {return "";}; // This should be used with data structure
 
     bool verbose_frame;

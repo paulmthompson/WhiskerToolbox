@@ -6,11 +6,6 @@ Video_Window::Video_Window(QObject *parent) : Media_Window(parent) {
 }
 
 int Video_Window::doLoadMedia(std::string name) {
-    return this->GetVideoInfo(name);
-}
-
-int Video_Window::GetVideoInfo(std::string name)
-{
     this->vid_name = name;
     this->vd->createMedia(this->vid_name);
 
@@ -41,10 +36,10 @@ void Video_Window::doLoadFrame(int frame_id) {
     this->mediaImage = QImage(&this->mediaData[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
 }
 
-int Video_Window::FindNearestSnapFrame(int frame_id) const {
-    return this->vd->nearest_iframe(frame_id);
-}
-
 std::string Video_Window::doGetFrameID(int frame_id) {
     return std::to_string(frame_id);
+}
+
+int Video_Window::FindNearestSnapFrame(int frame_id) const {
+    return this->vd->nearest_iframe(frame_id);
 }
