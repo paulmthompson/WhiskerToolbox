@@ -70,27 +70,20 @@ int Media_Window::AdvanceFrame(int num_frames) {
         return LoadFrame(this->last_loaded_frame + num_frames);
 }
 
-//Jump to specific frame designated by frame_id
+//Load media designated by frame_id
+//Media frame is loaded. It is then scaled to the
+//Canvas size, and the canvas is updated
 int Media_Window::LoadFrame(int frame_id)
 {
 
-    if (frame_id < 0) {
-        frame_id = 0;
-    } else if (frame_id >= this->total_frame_count - 1) {
-        frame_id = this->total_frame_count -1;
-    }
+    frame_id = this->checkFrameInbounds(frame_id);
 
-    frame_id = doLoadFrame(frame_id);
+    doLoadFrame(frame_id);
 
     UpdateCanvas(this->canvasImage);
 
-    if (this->verbose_frame) {
-        std::cout << "Drew frame " << frame_id << std::endl;
-    }
-
     this->last_loaded_frame = frame_id;
     return this->last_loaded_frame;
-    // I should emit a signal here that can be caught by anything that draws to scene (before or after draw? or both?)
 }
 
 int Media_Window::getLastLoadedFrame() const {
@@ -142,3 +135,12 @@ float Media_Window::getYAspect() const {
     return scale_height;
 }
 
+int Media_Window::checkFrameInbounds(int frame_id) {
+
+    if (frame_id < 0) {
+        frame_id = 0;
+    } else if (frame_id >= this->total_frame_count - 1) {
+        frame_id = this->total_frame_count -1;
+    }
+    return frame_id;
+}

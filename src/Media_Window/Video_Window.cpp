@@ -19,7 +19,7 @@ int Video_Window::GetVideoInfo(std::string name)
     return vd->getFrameCount(); // Total frames
 }
 
-int Video_Window::doLoadFrame(int frame_id) {
+void Video_Window::doLoadFrame(int frame_id) {
 
     //In most circumstances, we want to decode forward from the current frame without reseeking to a keyframe
     bool frame_by_frame = true;
@@ -32,18 +32,13 @@ int Video_Window::doLoadFrame(int frame_id) {
         frame_by_frame = false;
     }
 
+    //We load the data associated with the frame
     this->current_frame = vd->getFrame( frame_id, frame_by_frame);
-
-    if (this->verbose_frame) {
-        std::cout << "Getting frame " << std::to_string(frame_id) << std::endl;
-        std::cout << "Loaded frame " << frame_id << std::endl;
-    }
 
     auto image_native_resolution = QImage(&this->current_frame[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
 
     this->canvasImage = image_native_resolution.scaled(this->canvasWidth,this->canvasHeight);
 
-    return frame_id;
 }
 
 int Video_Window::doFindNearestSnapFrame(int frame_id) const {

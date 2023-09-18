@@ -102,6 +102,8 @@ protected:
     QVector<QGraphicsPathItem*> line_paths;
     QVector<QGraphicsEllipseItem*> points;
 
+    int checkFrameInbounds(int frame_id);
+
     // This should be in data / time object.
     // Here i am implicitly making all data stored by the object (or at least returned by the object
     // std::vector<uint8_t> and not a more general template type.
@@ -113,7 +115,7 @@ protected:
     int total_frame_count; // This should be in data / time object
 
     virtual int doLoadMedia(std::string name) {return 0;};
-    virtual int doLoadFrame(int frame_id) {return 0;};
+    virtual void doLoadFrame(int frame_id) {};
     virtual int doFindNearestSnapFrame(int frame_id) const {return frame_id;};
     virtual std::string doGetFrameID(int frame_id) {return "";}; // This should be used with data structure
     virtual std::pair<int,int> doGetMediaDimensions() const {return std::pair<int,int>{0,0};};

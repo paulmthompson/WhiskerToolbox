@@ -21,13 +21,12 @@ int Images_Window::doLoadMedia(std::string dir_name) {
     return this->image_paths.size();
 }
 
-int Images_Window::doLoadFrame(int frame_id) {
+void Images_Window::doLoadFrame(int frame_id) {
 
     this->canvasImage = QImage(QString::fromStdString(this->image_paths[frame_id].string()));
 
+    //Note that this is not necessary a uint8_t because the format of the QImage above is automatically assigned and may not be Gray8.
     this->current_frame = std::vector<uint8_t>(this->canvasImage.bits(), this->canvasImage.bits() + this->canvasImage.sizeInBytes());
-
-    return frame_id;
 }
 
 std::string Images_Window::doGetFrameID(int frame_id) {

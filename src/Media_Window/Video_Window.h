@@ -16,7 +16,7 @@ public:
 
 private:
     int doLoadMedia(std::string name) override;
-    int doLoadFrame(int frame_id) override;
+    void doLoadFrame(int frame_id) override;
     int doFindNearestSnapFrame(int frame_id) const override;
     std::string doGetFrameID(int frame_id) override;
     std::pair<int,int> doGetMediaDimensions() const override;
