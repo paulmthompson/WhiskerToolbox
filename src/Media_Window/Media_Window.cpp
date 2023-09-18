@@ -28,7 +28,7 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
 
 void Media_Window::addLine(QPainterPath* path, QPen color) {
     auto linePath = addPath(*path,color);
-    line_paths.append(linePath);
+    this->line_paths.append(linePath);
 }
 
 void Media_Window::clearLines() {
@@ -49,7 +49,8 @@ void Media_Window::UpdateCanvas(QImage& img)
 {
     clearLines();
     clearPoints();
-    //We should resize image here to match the size of the canvas
+
+    //We should check size of image here to ensure that its the correct size
     this->canvasPixmap->setPixmap(QPixmap::fromImage(img));
 }
 
@@ -117,14 +118,10 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
 }
 
-std::pair<int,int> Media_Window::getMediaDimensions() const {
-    return this-> doGetMediaDimensions();
-}
-
 float Media_Window::getXAspect() const {
 
     float scale_width = static_cast<float>(this->canvasWidth)
-                        / static_cast<float>(std::get<1>(this->getMediaDimensions()));
+                        / static_cast<float>(this->mediaWidth);
 
     return scale_width;
 }
@@ -132,7 +129,7 @@ float Media_Window::getXAspect() const {
 float Media_Window::getYAspect() const {
 
     float scale_height = static_cast<float>(this->canvasHeight)
-                         / static_cast<float>(std::get<0>(this->getMediaDimensions()));
+                         / static_cast<float>(this->mediaHeight);
 
     return scale_height;
 }

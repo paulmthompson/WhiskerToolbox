@@ -54,10 +54,9 @@ void Label_Widget::ClickedInVideo(qreal x_canvas,qreal y_canvas) {
     float y_media = y_canvas / this->scene->getYAspect();
 
     //Generate the image to be labeled
-    auto [height, width] = this->scene->getMediaDimensions();
     int frame_number = this->scene->getLastLoadedFrame();
     std::string frame_id = this->scene->getFrameID(frame_number);
-    auto img = label_maker->createImage(height,width,frame_number,frame_id, this->scene->getCurrentFrame());
+    auto img = label_maker->createImage(this->scene->getMediaHeight(),this->scene->getMediaWidth(),frame_number,frame_id, this->scene->getCurrentFrame());
 
     this->label_maker->addLabel(img, static_cast<int>(x_media), static_cast<int>(y_media));
 

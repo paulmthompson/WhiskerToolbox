@@ -99,13 +99,7 @@ void MainWindow::Load_Video()
     this->scene = new Video_Window(this); // Establish scene as Video Window
     this->updateMedia();
 
-    this->frame_count = this->scene->LoadMedia(vid_name.toStdString()) - 1; // We are zero indexing so subtract 1 from total frame count
-
-    // After loading a new data object in a new time coordinate system, we
-    // need to update the scrollbar.
-    updateScrollBarNewMax(this->frame_count);
-
-    scene->LoadFrame(0);
+    this->LoadData(vid_name.toStdString());
 
 }
 
@@ -119,16 +113,21 @@ void MainWindow::Load_Images() {
         return;
     }
 
-    std::cout << "Loading images in directory " << dir_name.toStdString() << std::endl;
-
     this->scene = new Images_Window(this);
     this->updateMedia();
 
-    this->frame_count = this->scene->LoadMedia(dir_name.toStdString()) - 1; // We are zero indexing so subtract 1 from total frame count
+    this->LoadData(dir_name.toStdString());
 
-    updateScrollBarNewMax(this->frame_count);
+}
+
+void MainWindow::LoadData(std::string filepath) {
+
+    this->frame_count = this->scene->LoadMedia(filepath) - 1; // We are zero indexing so subtract 1 from total frame count
+
+    this->updateScrollBarNewMax(this->frame_count);
 
     scene->LoadFrame(0);
+
 }
 
 //If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.

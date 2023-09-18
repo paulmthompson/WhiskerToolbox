@@ -39,6 +39,8 @@ private:
 
     void vidLoop();
 
+    void LoadData(std::string filepath);
+
     void updateScrollBarNewMax(int new_max);
     void updateDataDisplays(int advance_n_frames);
     void updateFrameLabels(int frame_num);

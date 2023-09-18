@@ -14,7 +14,10 @@ int Video_Window::GetVideoInfo(std::string name)
     this->vid_name = name;
     this->vd->createMedia(this->vid_name);
 
-    this->mediaData.resize(vd->getHeight()*vd->getWidth());
+    this->mediaHeight = vd->getHeight();
+    this->mediaWidth = vd->getWidth();
+
+    this->mediaData.resize(this->mediaWidth * this->mediaHeight);
 
     return vd->getFrameCount(); // Total frames
 }
@@ -45,8 +48,3 @@ int Video_Window::doFindNearestSnapFrame(int frame_id) const {
 std::string Video_Window::doGetFrameID(int frame_id) {
     return std::to_string(frame_id);
 }
-
-std::pair<int,int> Video_Window::doGetMediaDimensions() const {
-    return std::pair<int,int>{vd->getHeight(),vd->getWidth()};
-}
-

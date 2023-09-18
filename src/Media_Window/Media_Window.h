@@ -83,10 +83,10 @@ public:
     int findNearestSnapFrame(int frame) const;
     std::string getFrameID(int frame); // This should be in data / time object
 
-    std::pair<int,int> getMediaDimensions() const;
-
     float getXAspect() const;
     float getYAspect() const;
+    int getMediaHeight() const {return this->mediaHeight;};
+    int getMediaWidth() const {return this->mediaWidth;};
 
 protected:
 
@@ -104,6 +104,8 @@ protected:
     // std::vector<uint8_t> and not a more general template type.
     std::vector<uint8_t> mediaData;
     QImage mediaImage;
+    int mediaHeight;
+    int mediaWidth;
 
     QVector<QGraphicsPathItem*> line_paths;
     QVector<QGraphicsEllipseItem*> points;
@@ -119,7 +121,6 @@ protected:
     virtual void doLoadFrame(int frame_id) {};
     virtual int doFindNearestSnapFrame(int frame_id) const {return frame_id;};
     virtual std::string doGetFrameID(int frame_id) {return "";}; // This should be used with data structure
-    virtual std::pair<int,int> doGetMediaDimensions() const {return std::pair<int,int>{0,0};};
 
     bool verbose_frame;
 

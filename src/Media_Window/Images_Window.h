@@ -18,7 +18,6 @@ private:
     void doLoadFrame(int frame_id) override;
     int doFindNearestSnapFrame(int frame_id) const override {return frame_id;};
     std::string doGetFrameID(int frame_id) override;
-    std::pair<int,int> doGetMediaDimensions() const override;
 
     std::vector<std::filesystem::path> image_paths;
 
