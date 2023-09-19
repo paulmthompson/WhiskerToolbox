@@ -26,7 +26,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    frame_count = 0;
     play_speed = 1;
 
     //This is necessary to accept keyboard events
@@ -124,9 +123,10 @@ void MainWindow::Load_Images() {
 
 void MainWindow::LoadData(std::string filepath) {
 
-    this->frame_count = this->scene->LoadMedia(filepath) - 1; // We are zero indexing so subtract 1 from total frame count
+    auto frame_count = this->scene->LoadMedia(filepath) - 1; // We are zero indexing so subtract 1 from total frame count
+    this->time->updateTotalFrameCount(frame_count);
 
-    this->updateScrollBarNewMax(this->frame_count);
+    this->updateScrollBarNewMax(this->time->getTotalFrameCount());
 
     this->LoadFrame(0);
 
@@ -134,7 +134,7 @@ void MainWindow::LoadData(std::string filepath) {
 
 void MainWindow::LoadFrame(int frame_id) {
 
-    frame_id = this->checkFrameInbounds(frame_id);
+    frame_id = this->time->checkFrameInbounds(frame_id);
     auto loaded_frame_id = scene->LoadFrame(frame_id);
     this->time->updateLastLoadedFrame(loaded_frame_id);
 }
@@ -327,13 +327,4 @@ void MainWindow::updateScrollBarNewMax(int new_max) {
 
 }
 
-int MainWindow::checkFrameInbounds(int frame_id) {
-
-    if (frame_id < 0) {
-        frame_id = 0;
-    } else if (frame_id >= this->frame_count - 1) {
-        frame_id = this->frame_count -1;
-    }
-    return frame_id;
-}
 

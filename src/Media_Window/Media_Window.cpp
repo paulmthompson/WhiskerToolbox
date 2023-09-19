@@ -64,9 +64,6 @@ int Media_Window::LoadMedia(std::string name) {
 //Canvas size, and the canvas is updated
 int Media_Window::LoadFrame(int frame_id)
 {
-
-    //frame_id = this->checkFrameInbounds(frame_id);
-
     doLoadFrame(frame_id);
 
     this->canvasImage = mediaImage.scaled(this->canvasWidth,this->canvasHeight);

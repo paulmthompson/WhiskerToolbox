@@ -47,8 +47,6 @@ private:
     void updateDataDisplays(int advance_n_frames);
     void updateFrameLabels(int frame_num);
 
-    int frame_count;
-
     QTimer* timer;
 
     long long t_last_draw;
@@ -58,7 +56,6 @@ private:
 
     bool verbose;
 
-    int checkFrameInbounds(int frame_id);
     void LoadFrame(int frame_id);
 
     std::shared_ptr<TimeFrame> time;
