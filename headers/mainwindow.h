@@ -11,6 +11,8 @@
 #include "Whisker_Widget.h"
 #include "Label_Widget.h"
 
+#include "TimeFrame.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -55,6 +57,12 @@ private:
     bool play_mode;
 
     bool verbose;
+
+    int checkFrameInbounds(int frame_id);
+    void LoadFrame(int frame_id);
+
+    std::shared_ptr<TimeFrame> time;
+
 
 private slots:
     void Load_Video();

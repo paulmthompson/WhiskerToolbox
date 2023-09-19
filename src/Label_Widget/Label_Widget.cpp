@@ -54,7 +54,7 @@ void Label_Widget::ClickedInVideo(qreal x_canvas,qreal y_canvas) {
     float y_media = y_canvas / this->scene->getYAspect();
 
     //Generate the image to be labeled
-    int frame_number = this->scene->getLastLoadedFrame();
+    int frame_number = this->time->getLastLoadedFrame();
     std::string frame_id = this->scene->getFrameID(frame_number);
     auto img = label_maker->createImage(this->scene->getMediaHeight(),this->scene->getMediaWidth(),frame_number,frame_id, this->scene->getCurrentFrame());
 
@@ -73,7 +73,7 @@ void Label_Widget::updateAll() {
 void Label_Widget::updateDraw() {
     scene->clearPoints();
     for (auto& [frame_name,label] : this->label_maker->getLabels()) {
-        if (frame_name == scene->getFrameID(scene->getLastLoadedFrame())) {
+        if (frame_name == scene->getFrameID(this->time->getLastLoadedFrame())) {
             auto& [img, point] = label;
             this->scene->addPoint(point.x,point.y,QPen(QColor(Qt::red)));
         }

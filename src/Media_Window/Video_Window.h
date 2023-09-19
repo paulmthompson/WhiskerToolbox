@@ -21,6 +21,7 @@ private:
     void doLoadFrame(int frame_id) override;
     std::string doGetFrameID(int frame_id) override;
 
+    int last_decoded_frame;
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
 
 };

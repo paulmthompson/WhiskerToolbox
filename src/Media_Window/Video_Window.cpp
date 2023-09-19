@@ -3,6 +3,7 @@
 
 Video_Window::Video_Window(QObject *parent) : Media_Window(parent) {
     vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
+    last_decoded_frame = 0;
 }
 
 int Video_Window::doLoadMedia(std::string name) {
@@ -26,12 +27,13 @@ void Video_Window::doLoadFrame(int frame_id) {
         frame_by_frame = false;
     } else if (frame_id >= this->total_frame_count - 1) {
         frame_by_frame = false;
-    } else if (frame_id <= this->last_loaded_frame) {
+    } else if (frame_id <= this->last_decoded_frame) {
         frame_by_frame = false;
     }
 
     //We load the data associated with the frame
     this->mediaData = vd->getFrame( frame_id, frame_by_frame);
+    this->last_decoded_frame = frame_id;
 
     this->mediaImage = QImage(&this->mediaData[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
 }

@@ -43,6 +43,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     this->updateMedia();
 
+    time = std::make_shared<TimeFrame>();
+
     createActions(); // Creates callback functions
 
 }
@@ -126,8 +128,15 @@ void MainWindow::LoadData(std::string filepath) {
 
     this->updateScrollBarNewMax(this->frame_count);
 
-    scene->LoadFrame(0);
+    this->LoadFrame(0);
 
+}
+
+void MainWindow::LoadFrame(int frame_id) {
+
+    frame_id = this->checkFrameInbounds(frame_id);
+    auto loaded_frame_id = scene->LoadFrame(frame_id);
+    this->time->updateLastLoadedFrame(loaded_frame_id);
 }
 
 //If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.
@@ -158,7 +167,7 @@ void MainWindow::openLabelMaker() {
     // We create a whisker widget. We only want to load this module one time,
     // so if we exit the window, it is not created again
     if (!this->label_maker) {
-        this->label_maker = new Label_Widget(this->scene);
+        this->label_maker = new Label_Widget(this->scene,this->time);
         std::cout << "Label Maker Constructed" << std::endl;
     } else {
         std::cout << "Label Maker already exists" << std::endl;
@@ -209,7 +218,7 @@ void MainWindow::PlayButton()
         play_mode = false;
 
         ui->horizontalScrollBar->blockSignals(true);
-        ui->horizontalScrollBar->setValue(scene->getLastLoadedFrame());
+        ui->horizontalScrollBar->setValue(this->time->getLastLoadedFrame());
         ui->horizontalScrollBar->blockSignals(false);
 
     } else {
@@ -288,7 +297,7 @@ void MainWindow::Slider_Scroll(int newPos)
         std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << std::endl;
     }
 
-    scene->LoadFrame(newPos);
+    this->LoadFrame(newPos);
     updateFrameLabels(newPos);
 }
 
@@ -301,8 +310,9 @@ void MainWindow::updateDisplay() {
 
 void MainWindow::updateDataDisplays(int advance_n_frames) {
 
-    auto loaded_frame = scene->AdvanceFrame(advance_n_frames);
-    updateFrameLabels(loaded_frame);
+    auto frame_to_load = this->time->getLastLoadedFrame() + advance_n_frames;
+    this->LoadFrame(frame_to_load);
+    updateFrameLabels(frame_to_load);
 
 }
 
@@ -316,3 +326,14 @@ void MainWindow::updateScrollBarNewMax(int new_max) {
     ui->horizontalScrollBar->setMaximum(new_max);
 
 }
+
+int MainWindow::checkFrameInbounds(int frame_id) {
+
+    if (frame_id < 0) {
+        frame_id = 0;
+    } else if (frame_id >= this->frame_count - 1) {
+        frame_id = this->frame_count -1;
+    }
+    return frame_id;
+}
+

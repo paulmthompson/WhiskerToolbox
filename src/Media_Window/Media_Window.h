@@ -67,9 +67,6 @@ public:
 
     int LoadMedia(std::string name);
 
-    // Advance from current frame by num_frames
-    int AdvanceFrame(int num_frames);
-
     //Jump to specific frame designated by frame_id
     int LoadFrame(int frame_id);
 
@@ -80,7 +77,6 @@ public:
     // Here i am implicitly making all data stored by the object (or at least returned by the object
     // std::vector<uint8_t> and not a more general template type.
     std::vector<uint8_t> getCurrentFrame() const {return this->mediaData;};
-    int getLastLoadedFrame() const { return last_loaded_frame;}; // This should be in time object
     std::string getFrameID(int frame) {return doGetFrameID(frame);}; // This should be in data / time object
     int getMediaHeight() const {return this->mediaHeight;};
     int getMediaWidth() const {return this->mediaWidth;};
@@ -108,8 +104,6 @@ protected:
     QImage mediaImage;
     int mediaHeight;
     int mediaWidth;
-
-    int checkFrameInbounds(int frame_id); //This should be in time object
 
     std::string vid_name; // This should be in data / time object
 

@@ -20,7 +20,6 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
     this->canvasImage = QImage(canvasWidth,canvasHeight,QImage::Format_Grayscale8);
     this->canvasPixmap = addPixmap(QPixmap::fromImage(this->canvasImage));
 
-    last_loaded_frame = 0; // This should be in data / time object
     total_frame_count = 0; // This should be in data / time object
 
     verbose_frame = false;
@@ -60,20 +59,13 @@ int Media_Window::LoadMedia(std::string name) {
     return this->total_frame_count;
 }
 
-// Advance from current frame by num_frames or reverse
-// For forward, we should just keep decoding, but in reverse
-// We will always need to seek to a new keyframe
-int Media_Window::AdvanceFrame(int num_frames) {
-        return LoadFrame(this->last_loaded_frame + num_frames);
-}
-
 //Load media designated by frame_id
 //Media frame is loaded. It is then scaled to the
 //Canvas size, and the canvas is updated
 int Media_Window::LoadFrame(int frame_id)
 {
 
-    frame_id = this->checkFrameInbounds(frame_id);
+    //frame_id = this->checkFrameInbounds(frame_id);
 
     doLoadFrame(frame_id);
 
@@ -81,8 +73,10 @@ int Media_Window::LoadFrame(int frame_id)
 
     UpdateCanvas(this->canvasImage);
 
-    this->last_loaded_frame = frame_id;
-    return this->last_loaded_frame;
+    return frame_id;
+
+    //this->last_loaded_frame = frame_id;
+    //return this->last_loaded_frame;
 }
 
 void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
@@ -116,14 +110,4 @@ float Media_Window::getYAspect() const {
                          / static_cast<float>(this->mediaHeight);
 
     return scale_height;
-}
-
-int Media_Window::checkFrameInbounds(int frame_id) {
-
-    if (frame_id < 0) {
-        frame_id = 0;
-    } else if (frame_id >= this->total_frame_count - 1) {
-        frame_id = this->total_frame_count -1;
-    }
-    return frame_id;
 }
