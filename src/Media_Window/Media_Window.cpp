@@ -54,10 +54,6 @@ void Media_Window::UpdateCanvas(QImage& img)
     this->canvasPixmap->setPixmap(QPixmap::fromImage(img));
 }
 
-std::vector<uint8_t> Media_Window::getCurrentFrame() const {
-    return this->mediaData;
-}
-
 int Media_Window::LoadMedia(std::string name) {
 
     this->total_frame_count = this->doLoadMedia(name);
@@ -87,14 +83,6 @@ int Media_Window::LoadFrame(int frame_id)
 
     this->last_loaded_frame = frame_id;
     return this->last_loaded_frame;
-}
-
-int Media_Window::getLastLoadedFrame() const {
-    return last_loaded_frame;
-}
-
-std::string Media_Window::getFrameID(int frame) {
-    return doGetFrameID(frame);
 }
 
 void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {

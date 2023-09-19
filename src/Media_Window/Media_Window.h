@@ -65,11 +65,6 @@ public:
 
     void UpdateCanvas(QImage& img);
 
-    // This should be in data / time object.
-    // Here i am implicitly making all data stored by the object (or at least returned by the object
-    // std::vector<uint8_t> and not a more general template type.
-    std::vector<uint8_t> getCurrentFrame() const;
-
     int LoadMedia(std::string name);
 
     // Advance from current frame by num_frames
@@ -78,12 +73,15 @@ public:
     //Jump to specific frame designated by frame_id
     int LoadFrame(int frame_id);
 
-    int getLastLoadedFrame() const; // This should be in time object
-
-    std::string getFrameID(int frame); // This should be in data / time object
-
     float getXAspect() const;
     float getYAspect() const;
+
+    // This should be in data / time object.
+    // Here i am implicitly making all data stored by the object (or at least returned by the object
+    // std::vector<uint8_t> and not a more general template type.
+    std::vector<uint8_t> getCurrentFrame() const {return this->mediaData;};
+    int getLastLoadedFrame() const { return last_loaded_frame;}; // This should be in time object
+    std::string getFrameID(int frame) {return doGetFrameID(frame);}; // This should be in data / time object
     int getMediaHeight() const {return this->mediaHeight;};
     int getMediaWidth() const {return this->mediaWidth;};
 
@@ -98,6 +96,11 @@ protected:
     int canvasHeight;
     int canvasWidth;
 
+    QVector<QGraphicsPathItem*> line_paths;
+    QVector<QGraphicsEllipseItem*> points;
+
+    bool verbose_frame;
+
     // This should be in data / time object.
     // Here i am implicitly making all data stored by the object (or at least returned by the object
     // std::vector<uint8_t> and not a more general template type.
@@ -105,9 +108,6 @@ protected:
     QImage mediaImage;
     int mediaHeight;
     int mediaWidth;
-
-    QVector<QGraphicsPathItem*> line_paths;
-    QVector<QGraphicsEllipseItem*> points;
 
     int checkFrameInbounds(int frame_id); //This should be in time object
 
@@ -119,9 +119,6 @@ protected:
     virtual int doLoadMedia(std::string name) {return 0;};
     virtual void doLoadFrame(int frame_id) {};
     virtual std::string doGetFrameID(int frame_id) {return "";}; // This should be used with data structure
-
-    bool verbose_frame;
-
 
 signals:
     void leftClick(qreal,qreal);
