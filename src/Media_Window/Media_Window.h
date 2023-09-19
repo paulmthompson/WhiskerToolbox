@@ -107,7 +107,6 @@ protected:
 
     std::string vid_name; // This should be in data / time object
 
-    int last_loaded_frame; // This should be in data / time object
     int total_frame_count; // This should be in data / time object
 
     virtual int doLoadMedia(std::string name) {return 0;};

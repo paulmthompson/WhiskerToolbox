@@ -74,9 +74,6 @@ int Media_Window::LoadFrame(int frame_id)
     UpdateCanvas(this->canvasImage);
 
     return frame_id;
-
-    //this->last_loaded_frame = frame_id;
-    //return this->last_loaded_frame;
 }
 
 void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
