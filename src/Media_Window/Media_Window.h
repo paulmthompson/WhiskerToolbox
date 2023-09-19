@@ -21,6 +21,17 @@ Advancing a frame will result in the video window loading new data.
 
 */
 
+class MediaData {
+public:
+    int getHeight() const {return this->height;};
+    int getWidth() const {return this->width;};
+    void updateHeight(int height) {this->height = height;};
+    void updateWidth(int width) {this->width = width;};
+private:
+    int height;
+    int width;
+};
+
 class Media_Window : public QGraphicsScene
 {
 Q_OBJECT
@@ -78,8 +89,11 @@ public:
     // std::vector<uint8_t> and not a more general template type.
     std::vector<uint8_t> getCurrentFrame() const {return this->mediaData;};
     std::string getFrameID(int frame) {return doGetFrameID(frame);}; // This should be in data / time object
-    int getMediaHeight() const {return this->mediaHeight;};
-    int getMediaWidth() const {return this->mediaWidth;};
+
+
+    //Can be removed when other objects have separate interface to media
+    int getMediaHeight() const {return this->media->getHeight();};
+    int getMediaWidth() const {return this->media->getWidth();};
 
 protected:
 
@@ -97,13 +111,13 @@ protected:
 
     bool verbose_frame;
 
+    std::shared_ptr<MediaData> media;
+
     // This should be in data / time object.
     // Here i am implicitly making all data stored by the object (or at least returned by the object
     // std::vector<uint8_t> and not a more general template type.
     std::vector<uint8_t> mediaData;
     QImage mediaImage;
-    int mediaHeight;
-    int mediaWidth;
 
     std::string vid_name; // This should be in data / time object
 
@@ -116,6 +130,5 @@ protected:
 signals:
     void leftClick(qreal,qreal);
 };
-
 
 #endif // MEDIA_WINDOW_H

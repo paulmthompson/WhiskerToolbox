@@ -10,10 +10,10 @@ int Video_Window::doLoadMedia(std::string name) {
     this->vid_name = name;
     this->vd->createMedia(this->vid_name);
 
-    this->mediaHeight = vd->getHeight();
-    this->mediaWidth = vd->getWidth();
+    this->media->updateHeight(vd->getHeight());
+    this->media->updateWidth(vd->getWidth());
 
-    this->mediaData.resize(this->mediaWidth * this->mediaHeight);
+    this->mediaData.resize(this->media->getWidth() * this->media->getHeight());
 
     return vd->getFrameCount(); // Total frames
 }

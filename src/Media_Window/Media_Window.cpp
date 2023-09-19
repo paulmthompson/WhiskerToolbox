@@ -20,6 +20,8 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
     this->canvasImage = QImage(canvasWidth,canvasHeight,QImage::Format_Grayscale8);
     this->canvasPixmap = addPixmap(QPixmap::fromImage(this->canvasImage));
 
+    this->media = std::make_shared<MediaData>();
+
     total_frame_count = 0; // This should be in data / time object
 
     verbose_frame = false;
@@ -93,7 +95,7 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 float Media_Window::getXAspect() const {
 
     float scale_width = static_cast<float>(this->canvasWidth)
-                        / static_cast<float>(this->mediaWidth);
+                        / static_cast<float>(this->media->getWidth());
 
     return scale_width;
 }
@@ -101,7 +103,7 @@ float Media_Window::getXAspect() const {
 float Media_Window::getYAspect() const {
 
     float scale_height = static_cast<float>(this->canvasHeight)
-                         / static_cast<float>(this->mediaHeight);
+                         / static_cast<float>(this->media->getHeight());
 
     return scale_height;
 }

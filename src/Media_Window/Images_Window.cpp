@@ -34,8 +34,8 @@ void Images_Window::doLoadFrame(int frame_id) {
 
     this->mediaImage = QImage(QString::fromStdString(this->image_paths[frame_id].string()));
 
-    this->mediaHeight = this->mediaImage.height();
-    this->mediaWidth = this->mediaImage.width();
+    this->media->updateHeight(this->mediaImage.height());
+    this->media->updateWidth(this->mediaImage.width());
 
     //Note that this is not necessary a uint8_t because the format of the QImage above is automatically assigned and may not be Gray8.
     this->mediaData = std::vector<uint8_t>(this->mediaImage.bits(), this->mediaImage.bits() + this->mediaImage.sizeInBytes());
