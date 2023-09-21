@@ -32,15 +32,15 @@ int Images_Window::doLoadMedia(std::string dir_name) {
 
 void Images_Window::doLoadFrame(int frame_id) {
 
-    this->mediaImage = QImage(QString::fromStdString(this->image_paths[frame_id].string()));
+    auto loaded_image = QImage(QString::fromStdString(this->image_paths[frame_id].string()));
 
-    this->media->updateHeight(this->mediaImage.height());
-    this->media->updateWidth(this->mediaImage.width());
+    this->media->updateHeight(loaded_image.height());
+    this->media->updateWidth(loaded_image.width());
 
-    this->media->setFormat(this->mediaImage.format());
+    this->media->setFormat(loaded_image.format());
 
     //Note that this is not necessary a uint8_t because the format of the QImage above is automatically assigned and may not be Gray8.
-    this->mediaData = std::vector<uint8_t>(this->mediaImage.bits(), this->mediaImage.bits() + this->mediaImage.sizeInBytes());
+    this->mediaData = std::vector<uint8_t>(loaded_image.bits(), loaded_image.bits() + loaded_image.sizeInBytes());
 }
 
 std::string Images_Window::doGetFrameID(int frame_id) {

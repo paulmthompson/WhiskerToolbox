@@ -41,11 +41,6 @@ void Video_Window::doLoadFrame(int frame_id) {
     this->mediaData = vd->getFrame( frame_id, frame_by_frame);
     this->last_decoded_frame = frame_id;
 
-    this->mediaImage = QImage(&this->mediaData[0],
-                              vd->getWidth(),
-                              vd->getHeight(),
-                              QImage::Format(this->media->getFormat())
-                              );
 }
 
 std::string Video_Window::doGetFrameID(int frame_id) {

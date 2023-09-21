@@ -66,9 +66,16 @@ int Media_Window::LoadMedia(std::string name) {
 //Canvas size, and the canvas is updated
 int Media_Window::LoadFrame(int frame_id)
 {
+    // Get MediaData
     doLoadFrame(frame_id);
 
-    this->canvasImage = mediaImage.scaled(this->canvasWidth,this->canvasHeight);
+    this->mediaImage = QImage(&this->mediaData[0],
+                              this->media->getWidth(),
+                              this->media->getHeight(),
+                              QImage::Format(this->media->getFormat())
+                              );
+
+    this->canvasImage = this->mediaImage.scaled(this->canvasWidth,this->canvasHeight);
 
     UpdateCanvas(this->canvasImage);
 
