@@ -7,6 +7,10 @@
 
 #include <iostream>
 
+
+
+
+
 /*
 
 The Media_Window class
@@ -21,8 +25,6 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
     this->canvasPixmap = addPixmap(QPixmap::fromImage(this->canvasImage));
 
     this->media = std::make_shared<MediaData>();
-
-    total_frame_count = 0; // This should be in data / time object
 
     verbose_frame = false;
 }
@@ -57,8 +59,9 @@ void Media_Window::UpdateCanvas(QImage& img)
 
 int Media_Window::LoadMedia(std::string name) {
 
-    this->total_frame_count = this->doLoadMedia(name);
-    return this->total_frame_count;
+    auto total_frame_count = this->media->LoadMedia(name);
+    this->media->setTotalFrameCount(total_frame_count);
+    return total_frame_count;
 }
 
 //Load media designated by frame_id
@@ -67,9 +70,11 @@ int Media_Window::LoadMedia(std::string name) {
 int Media_Window::LoadFrame(int frame_id)
 {
     // Get MediaData
-    doLoadFrame(frame_id);
+    this->media->LoadFrame(frame_id);
 
-    this->mediaImage = QImage(&this->mediaData[0],
+    auto media_data = this->media->getData();
+
+    this->mediaImage = QImage(&media_data[0],
                               this->media->getWidth(),
                               this->media->getHeight(),
                               QImage::Format(this->media->getFormat())

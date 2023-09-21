@@ -27,12 +27,23 @@ public:
     void updateHeight(int height) {this->height = height;};
     void updateWidth(int width) {this->width = width;};
 
+    int getTotalFrameCount() const {return this->totalFrameCount;};
+    void setTotalFrameCount(int total_frame_count) {this->totalFrameCount = total_frame_count;};
+
+    std::vector<uint8_t> getData() const {return this->data;};
+
+    virtual int LoadMedia(std::string name) {return 0;};
+    virtual void LoadFrame(int frame_id) {};
+    virtual std::string GetFrameID(int frame_id) {return "";};
+
 protected:
     int height;
     int width;
     int format; // This corresponds to an enum. Here we will use QImage.
 
     std::string filename;
+    int totalFrameCount;
+    std::vector<uint8_t> data;
 };
 
 /*
@@ -96,12 +107,8 @@ public:
     float getXAspect() const;
     float getYAspect() const;
 
-    // This should be in data / time object.
-    // Here i am implicitly making all data stored by the object (or at least returned by the object
-    // std::vector<uint8_t> and not a more general template type.
-    std::vector<uint8_t> getCurrentFrame() const {return this->mediaData;};
-    std::string getFrameID(int frame) {return doGetFrameID(frame);}; // This should be in data / time object
-
+    std::vector<uint8_t> getCurrentFrame() const {return this->media->getData();};
+    std::string getFrameID(int frame) {return this->media->GetFrameID(frame);}; // This should be in data / time object
 
     //Can be removed when other objects have separate interface to media
     int getMediaHeight() const {return this->media->getHeight();};
@@ -125,17 +132,11 @@ protected:
 
     std::shared_ptr<MediaData> media;
 
-    // This should be in data / time object.
-    // Here i am implicitly making all data stored by the object (or at least returned by the object
-    // std::vector<uint8_t> and not a more general template type.
-    std::vector<uint8_t> mediaData;
     QImage mediaImage;
 
-    int total_frame_count; // This should be in data / time object
-
-    virtual int doLoadMedia(std::string name) {return 0;};
-    virtual void doLoadFrame(int frame_id) {};
-    virtual std::string doGetFrameID(int frame_id) {return "";}; // This should be used with data structure
+    //virtual int doLoadMedia(std::string name) {return 0;};
+    //virtual void doLoadFrame(int frame_id) {};
+    //virtual std::string doGetFrameID(int frame_id) {return "";}; // This should be used with data structure
 
 signals:
     void leftClick(qreal,qreal);
