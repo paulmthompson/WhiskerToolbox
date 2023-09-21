@@ -7,6 +7,10 @@
 #include <vector>
 #include <filesystem>
 
+class ImageMedia : public MediaData {
+
+};
+
 class Images_Window : public Media_Window
 {
     Q_OBJECT

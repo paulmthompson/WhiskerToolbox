@@ -8,6 +8,10 @@
 #include <memory>
 #include <string>
 
+class VideoMedia : public MediaData {
+
+};
+
 class Video_Window : public Media_Window
 {
  Q_OBJECT
