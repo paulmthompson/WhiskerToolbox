@@ -7,8 +7,8 @@ Video_Window::Video_Window(QObject *parent) : Media_Window(parent) {
 }
 
 int Video_Window::doLoadMedia(std::string name) {
-    this->vid_name = name;
-    this->vd->createMedia(this->vid_name);
+    this->media->setFilename(name);
+    this->vd->createMedia(name);
 
     this->media->updateHeight(vd->getHeight());
     this->media->updateWidth(vd->getWidth());

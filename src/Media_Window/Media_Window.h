@@ -12,6 +12,25 @@
 #include <utility>
 #include <iostream>
 
+
+class MediaData {
+public:
+
+    std::string getFilename() const {return this->filename;};
+    void setFilename(std::string filename) {this->filename = filename;};
+
+    int getHeight() const {return this->height;};
+    int getWidth() const {return this->width;};
+    void updateHeight(int height) {this->height = height;};
+    void updateWidth(int width) {this->width = width;};
+
+protected:
+    int height;
+    int width;
+
+    std::string filename;
+};
+
 /*
 
 The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
@@ -20,17 +39,6 @@ Shapes may take the form of lines, points, or arbitrary 2d masks.
 Advancing a frame will result in the video window loading new data.
 
 */
-
-class MediaData {
-public:
-    int getHeight() const {return this->height;};
-    int getWidth() const {return this->width;};
-    void updateHeight(int height) {this->height = height;};
-    void updateWidth(int width) {this->width = width;};
-private:
-    int height;
-    int width;
-};
 
 class Media_Window : public QGraphicsScene
 {
@@ -118,8 +126,6 @@ protected:
     // std::vector<uint8_t> and not a more general template type.
     std::vector<uint8_t> mediaData;
     QImage mediaImage;
-
-    std::string vid_name; // This should be in data / time object
 
     int total_frame_count; // This should be in data / time object
 
