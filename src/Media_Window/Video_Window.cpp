@@ -19,6 +19,8 @@ int Video_Window::doLoadMedia(std::string name) {
 
     this->mediaData.resize(this->media->getWidth() * this->media->getHeight());
 
+    this->media->setFormat(QImage::Format::Format_Grayscale8);
+
     return vd->getFrameCount(); // Total frames
 }
 
@@ -39,7 +41,11 @@ void Video_Window::doLoadFrame(int frame_id) {
     this->mediaData = vd->getFrame( frame_id, frame_by_frame);
     this->last_decoded_frame = frame_id;
 
-    this->mediaImage = QImage(&this->mediaData[0],vd->getWidth(), vd->getHeight(), QImage::Format_Grayscale8);
+    this->mediaImage = QImage(&this->mediaData[0],
+                              vd->getWidth(),
+                              vd->getHeight(),
+                              QImage::Format(this->media->getFormat())
+                              );
 }
 
 std::string Video_Window::doGetFrameID(int frame_id) {

@@ -19,6 +19,9 @@ public:
     std::string getFilename() const {return this->filename;};
     void setFilename(std::string filename) {this->filename = filename;};
 
+    void setFormat(int format) {this->format = format;};
+    int getFormat() const {return this->format;};
+
     int getHeight() const {return this->height;};
     int getWidth() const {return this->width;};
     void updateHeight(int height) {this->height = height;};
@@ -27,6 +30,7 @@ public:
 protected:
     int height;
     int width;
+    int format; // This corresponds to an enum. Here we will use QImage.
 
     std::string filename;
 };
