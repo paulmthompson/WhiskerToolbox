@@ -2,7 +2,11 @@
 #include "Video_Window.h"
 
 Video_Window::Video_Window(QObject *parent) : Media_Window(parent) {
+
+    this->media = std::make_shared<VideoData>();
+
     vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
+
     last_decoded_frame = 0;
 }
 

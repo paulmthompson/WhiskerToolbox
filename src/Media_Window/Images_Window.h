@@ -7,7 +7,7 @@
 #include <vector>
 #include <filesystem>
 
-class ImageMedia : public MediaData {
+class ImageData : public MediaData {
 
 };
 

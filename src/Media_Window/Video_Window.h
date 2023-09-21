@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-class VideoMedia : public MediaData {
+class VideoData : public MediaData {
 
 };
 
