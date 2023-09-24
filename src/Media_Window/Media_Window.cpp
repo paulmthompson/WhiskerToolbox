@@ -72,9 +72,10 @@ int Media_Window::LoadFrame(int frame_id)
     // Get MediaData
     this->media->LoadFrame(frame_id);
 
-    auto media_data = this->media->getData();
+    this->mediaData = this->media->getData();
 
-    this->mediaImage = QImage(&media_data[0],
+
+    this->mediaImage = QImage(&this->mediaData[0],
                               this->media->getWidth(),
                               this->media->getHeight(),
                               QImage::Format(this->media->getFormat())

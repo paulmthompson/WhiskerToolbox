@@ -133,6 +133,7 @@ protected:
     std::shared_ptr<MediaData> media;
 
     QImage mediaImage;
+    std::vector<uint8_t> mediaData;
 
     //virtual int doLoadMedia(std::string name) {return 0;};
     //virtual void doLoadFrame(int frame_id) {};
