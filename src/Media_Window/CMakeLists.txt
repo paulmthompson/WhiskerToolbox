@@ -15,7 +15,7 @@ add_library(Media_Window SHARED
     Images_Window.cpp)
 
 target_include_directories(Media_Window PUBLIC
-                            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
+                            "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>")
 
 target_link_libraries(Media_Window PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(Media_Window PRIVATE Qt${QT_VERSION_MAJOR}::Multimedia)

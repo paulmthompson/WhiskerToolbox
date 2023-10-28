@@ -120,6 +120,7 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 
+    QImage mediaImage;
     QImage canvasImage;
     QGraphicsPixmapItem* canvasPixmap;
     int canvasHeight;
@@ -131,8 +132,6 @@ protected:
     bool verbose_frame;
 
     std::shared_ptr<MediaData> media;
-
-    QImage mediaImage;
 
     //virtual int doLoadMedia(std::string name) {return 0;};
     //virtual void doLoadFrame(int frame_id) {};

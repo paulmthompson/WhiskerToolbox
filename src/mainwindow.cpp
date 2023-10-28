@@ -97,6 +97,8 @@ void MainWindow::Load_Video()
     // Create video data object
     // Pass video data object to scene?
 
+
+
     this->scene = new Video_Window(this); // Establish scene as Video Window
     this->updateMedia();
 

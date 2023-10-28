@@ -7,10 +7,6 @@
 
 #include <iostream>
 
-
-
-
-
 /*
 
 The Media_Window class
@@ -21,6 +17,8 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
 
     canvasWidth = 640;
     canvasHeight = 480;
+
+    this->mediaImage = QImage(canvasWidth,canvasHeight,QImage::Format_Grayscale8);
     this->canvasImage = QImage(canvasWidth,canvasHeight,QImage::Format_Grayscale8);
     this->canvasPixmap = addPixmap(QPixmap::fromImage(this->canvasImage));
 
@@ -74,13 +72,16 @@ int Media_Window::LoadFrame(int frame_id)
 
     auto media_data = this->media->getData();
 
-    this->mediaImage = QImage(&media_data[0],
+    std::cout << this->media->getHeight() << " x " << this->media->getWidth() << std::endl;
+    auto unscaled_image = QImage(&media_data[0],
                               this->media->getWidth(),
                               this->media->getHeight(),
                               QImage::Format(this->media->getFormat())
                               );
 
-    this->canvasImage = this->mediaImage.scaled(this->canvasWidth,this->canvasHeight);
+    std::cout << unscaled_image.height() << " x " << unscaled_image.width() << std::endl;
+
+    this->canvasImage = unscaled_image.scaled(this->canvasWidth,this->canvasHeight);
 
     UpdateCanvas(this->canvasImage);
 
