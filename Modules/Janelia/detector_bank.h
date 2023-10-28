@@ -11,24 +11,32 @@ enum SEED_METHOD_ENUM { SEED_ON_MHAT_CONTOURS, SEED_ON_GRID, SEED_EVERYWHERE };
 
 struct JaneliaConfig {
     SEED_METHOD_ENUM _seed_method;
-    int _lattice_spacing;
-    int _maxr;
-    int _maxiter;
-    float _iteration_thres;
-    float _accum_thres;
-    float _seed_thres;
-    float _angle_step;
-    int _tlen;
-    float _offset_step;
-    float _width_min;
-    float _width_max;
-    float _width_step;
-    float _min_signal;
-    float _half_space_assymetry;
-    float _max_delta_angle;
-    int _half_space_tunneling_max_moves;
-    float _max_delta_width;
-    float _max_delta_offset;
+    int _lattice_spacing; // SEED_ON_GRID_LATTICE_SPACING (pixels)
+    int _maxr; //SEED_SIZE_PX Width of the seed detector in pixels.
+    int _maxiter; // SEED_ITERATIONS Maxium number of iterations to re-estimate a seed.
+    float _iteration_thres; // SEED_ITERATION_THRESH (0 to 1) Threshold score determining when a seed should be reestimated.
+    float _accum_thres; // SEED_ACCUM_THRESH (0 to 1) Threshold score determining when to accumulate statistics
+    float _seed_thres; // SEED_THRESH (0 to 1) Threshold score determining when to generate a seed
+
+
+
+
+    // These are all related to the detector bank (should be in that class)?
+    // The detector bank will need to be updated if any of them change.
+    int _tlen;  // (px) half the size of the detector support.
+    float _angle_step; // divisions of pi/4
+    float _offset_step; // pixels
+    float _width_min; // (pixels) must be a multiple of WIDTH_STEP
+    float _width_max; // (pixels) must be a multiple of WIDTH_STEP
+    float _width_step; // (pixels)
+    float _min_signal; // minimum detector response per detector column.  Typically: (2*TLEN+1)*MIN_SIGNAL is the threshold determining when tracing stops.
+    float _half_space_assymetry; // (between 0 and 1)  1 is completely insensitive to asymmetry
+    float _max_delta_angle; // (degrees)  The detector is constrained to turns less than this value at each step.
+    int _half_space_tunneling_max_moves; // (pixels)  This should be the largest size of an occluding area to cross
+    float _max_delta_width; // (pixels)   The detector width is constrained to change less than this value at each step.
+    float _max_delta_offset; // (pixels)   The detector offset is constrained to change less than this value at each step.
+
+
     float _min_length;
     float _redundancy_thres;
 
@@ -52,8 +60,8 @@ struct JaneliaConfig {
         _half_space_tunneling_max_moves = 50;
         _max_delta_width = 6.0;
         _max_delta_offset = 6.0;
-        _min_length = 100.0;
-        _redundancy_thres = 20.0;
+        _min_length = 20.0;
+        _redundancy_thres = 5.0;
     }
 };
 
