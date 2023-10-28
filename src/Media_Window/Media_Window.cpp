@@ -70,16 +70,16 @@ int Media_Window::LoadFrame(int frame_id)
     // Get MediaData
     this->media->LoadFrame(frame_id);
 
-    this->mediaData = this->media->getData();
+    auto media_data = this->media->getData();
 
-    std::cout << this->media->getHeight() << " x " << this->media->getWidth() << std::endl;
+    //std::cout << this->media->getHeight() << " x " << this->media->getWidth() << std::endl;
     auto unscaled_image = QImage(&media_data[0],
                               this->media->getWidth(),
                               this->media->getHeight(),
                               QImage::Format(this->media->getFormat())
                               );
 
-    std::cout << unscaled_image.height() << " x " << unscaled_image.width() << std::endl;
+    //std::cout << unscaled_image.height() << " x " << unscaled_image.width() << std::endl;
 
     this->canvasImage = unscaled_image.scaled(this->canvasWidth,this->canvasHeight);
 
