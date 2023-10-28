@@ -26,6 +26,32 @@
     <string>Trace</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="save_image">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>90</y>
+     <width>81</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save Image</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="save_whisker_mask">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>130</y>
+     <width>131</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save Whisker Mask</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

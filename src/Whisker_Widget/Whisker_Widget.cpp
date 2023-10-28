@@ -4,8 +4,9 @@
 
 #include <QElapsedTimer>
 
+#include <iomanip>
 #include <iostream>
-
+#include <sstream>
 
 void Whisker_Widget::createActions() {
     //connect(this,SIGNAL(this->show()),this,SLOT(openActions()));
@@ -17,6 +18,8 @@ void Whisker_Widget::openWidget() {
 
     connect(this->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
     connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
+
+    connect(this->save_image,SIGNAL(clicked()),this,SLOT(SaveImageButton()));
 
     this->show();
 
@@ -36,6 +39,8 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
 
     disconnect(this->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
     disconnect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
+
+    disconnect(this->save_image,SIGNAL(clicked()),this,SLOT(SaveImageButton()));
 }
 
 void Whisker_Widget::TraceButton()
@@ -51,6 +56,28 @@ void Whisker_Widget::TraceButton()
     int t2 = timer2.elapsed();
 
     qDebug() << "The tracing took" << t1 << "ms and drawing took" << (t2-t1);
+}
+
+void Whisker_Widget::SaveImageButton()
+{
+
+    auto data = this->scene->getCurrentFrame();
+
+    auto width = this->scene->getMediaWidth();
+    auto height = this->scene->getMediaHeight();
+
+    auto frame_id = this->time->getLastLoadedFrame();
+
+    QImage labeled_image(&data[0],width,height, QImage::Format_Grayscale8);
+
+    std::stringstream ss;
+    ss << std::setw(7) << std::setfill('0') << frame_id;
+
+    std::string saveName = "img" +  ss.str() + ".png";
+    std::cout << "Saving file " << saveName << std::endl;
+
+    labeled_image.save(QString::fromStdString(saveName));
+
 }
 
 void Whisker_Widget::DrawWhiskers()

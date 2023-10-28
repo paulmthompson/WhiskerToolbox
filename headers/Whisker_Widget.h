@@ -10,6 +10,8 @@
 
 #include "ui_Whisker_Widget.h"
 
+#include "TimeFrame.h"
+
 /*
 
 This is our interface to using the Janelia whisker tracker.
@@ -21,10 +23,12 @@ class Whisker_Widget : public QWidget, private Ui::Whisker_Widget
 {
     Q_OBJECT
 public:
-    Whisker_Widget(Media_Window* scene, QWidget *parent = 0) : QWidget(parent) {
+    Whisker_Widget(Media_Window* scene, std::shared_ptr<TimeFrame> time, QWidget *parent = 0) : QWidget(parent) {
         setupUi(this);
 
         this->scene = scene;
+
+        this->time = time;
 
         createActions();
 
@@ -47,6 +51,7 @@ private:
 
     std::unique_ptr<WhiskerTracker> wt;
     Media_Window * scene;
+    std::shared_ptr<TimeFrame> time;
     int selected_whisker;
     enum Selection_Type {Whisker_Select,
                           Whisker_Pad_Select};
@@ -54,6 +59,7 @@ private:
 
 private slots:
     void TraceButton();
+    void SaveImageButton();
     void ClickedInVideo(qreal x,qreal y);
     /*
     void openConfig() {
