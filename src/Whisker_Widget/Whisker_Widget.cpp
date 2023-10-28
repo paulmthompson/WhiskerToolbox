@@ -20,6 +20,7 @@ void Whisker_Widget::openWidget() {
     connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
 
     connect(this->save_image,SIGNAL(clicked()),this,SLOT(SaveImageButton()));
+    connect(this->save_whisker_mask,SIGNAL(clicked()),this,SLOT(SaveWhiskerMaskButton()));
 
     this->show();
 
@@ -41,6 +42,7 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
     disconnect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
 
     disconnect(this->save_image,SIGNAL(clicked()),this,SLOT(SaveImageButton()));
+    disconnect(this->save_whisker_mask,SIGNAL(clicked()),this,SLOT(SaveWhiskerMaskButton()));
 }
 
 void Whisker_Widget::TraceButton()
@@ -78,6 +80,42 @@ void Whisker_Widget::SaveImageButton()
 
     labeled_image.save(QString::fromStdString(saveName));
 
+}
+
+void Whisker_Widget::SaveWhiskerMaskButton() {
+
+    auto width = this->scene->getMediaWidth();
+    auto height = this->scene->getMediaHeight();
+
+    auto frame_id = this->time->getLastLoadedFrame();
+
+    QImage mask_image(width,height,QImage::Format_Grayscale8);
+
+    mask_image.fill(Qt::black);
+
+    if (!this->wt->whiskers.empty()) {
+
+        std::cout << "Size of whisker x vector " << this->wt->whiskers[this->selected_whisker].x.size() << std::endl;
+
+        for (int i = 0; i < this->wt->whiskers[this->selected_whisker].x.size(); i++) {
+
+            auto x = std::lround(this->wt->whiskers[this->selected_whisker].x[i]);
+            auto y = std::lround(this->wt->whiskers[this->selected_whisker].y[i]);
+
+            std::cout << "(" << x << " , " << y << ")" << std::endl;
+
+            mask_image.setPixel(x,y, Qt::white);
+        }
+
+    }
+
+    std::stringstream ss;
+    ss << std::setw(7) << std::setfill('0') << frame_id;
+
+    std::string saveName = "w" +  ss.str() + ".png";
+    std::cout << "Saving file " << saveName << std::endl;
+
+    mask_image.save(QString::fromStdString(saveName));
 }
 
 void Whisker_Widget::DrawWhiskers()

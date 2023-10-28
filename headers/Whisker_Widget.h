@@ -60,6 +60,7 @@ private:
 private slots:
     void TraceButton();
     void SaveImageButton();
+    void SaveWhiskerMaskButton();
     void ClickedInVideo(qreal x,qreal y);
     /*
     void openConfig() {
