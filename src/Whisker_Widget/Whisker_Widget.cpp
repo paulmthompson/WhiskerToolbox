@@ -95,14 +95,12 @@ void Whisker_Widget::SaveWhiskerMaskButton() {
 
     if (!this->wt->whiskers.empty()) {
 
-        std::cout << "Size of whisker x vector " << this->wt->whiskers[this->selected_whisker].x.size() << std::endl;
+        auto& w = this->wt->whiskers[this->selected_whisker-1];
 
-        for (int i = 0; i < this->wt->whiskers[this->selected_whisker].x.size(); i++) {
+        for (int i = 0; i < w.x.size(); i++) {
 
-            auto x = std::lround(this->wt->whiskers[this->selected_whisker].x[i]);
-            auto y = std::lround(this->wt->whiskers[this->selected_whisker].y[i]);
-
-            std::cout << "(" << x << " , " << y << ")" << std::endl;
+            auto x = std::lround(w.x[i]);
+            auto y = std::lround(w.y[i]);
 
             mask_image.setPixel(x,y, Qt::white);
         }
