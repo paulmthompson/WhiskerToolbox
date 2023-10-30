@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 void Whisker_Widget::createActions() {
     //connect(this,SIGNAL(this->show()),this,SLOT(openActions()));
@@ -21,6 +22,13 @@ void Whisker_Widget::openWidget() {
 
     connect(this->save_image,SIGNAL(clicked()),this,SLOT(SaveImageButton()));
     connect(this->save_whisker_mask,SIGNAL(clicked()),this,SLOT(SaveWhiskerMaskButton()));
+    connect(this->contact_button,SIGNAL(clicked()),this,SLOT(ContactButton()));
+    connect(this->save_contact_button,SIGNAL(clicked()),this,SLOT(SaveContact()));
+    connect(this->load_contact_button,SIGNAL(clicked()),this,SLOT(LoadContact()));
+
+    if (this->contact.empty()) {
+        this->contact = std::vector<Contact>(this->time->getTotalFrameCount());
+    }
 
     this->show();
 
@@ -43,6 +51,9 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
 
     disconnect(this->save_image,SIGNAL(clicked()),this,SLOT(SaveImageButton()));
     disconnect(this->save_whisker_mask,SIGNAL(clicked()),this,SLOT(SaveWhiskerMaskButton()));
+    disconnect(this->contact_button,SIGNAL(clicked()),this,SLOT(ContactButton()));
+    disconnect(this->save_contact_button,SIGNAL(clicked()),this,SLOT(SaveContact()));
+    disconnect(this->load_contact_button,SIGNAL(clicked()),this,SLOT(LoadContact()));
 }
 
 void Whisker_Widget::TraceButton()
@@ -102,7 +113,7 @@ void Whisker_Widget::SaveWhiskerMaskButton() {
             auto x = std::lround(w.x[i]);
             auto y = std::lround(w.y[i]);
 
-            mask_image.setPixel(x,y, Qt::white);
+            mask_image.setPixelColor(x,y, Qt::white);
         }
 
     }
@@ -114,6 +125,53 @@ void Whisker_Widget::SaveWhiskerMaskButton() {
     std::cout << "Saving file " << saveName << std::endl;
 
     mask_image.save(QString::fromStdString(saveName));
+}
+
+void Whisker_Widget::ContactButton() {
+
+    auto frame_num = this->time->getLastLoadedFrame();
+
+    // If we are in a contact epoch, we need to mark the termination frame and add those to block
+    if (this->contact_epoch) {
+
+        this->contact_epoch = false;
+
+        this->contact_button->setText("Mark Contact");
+
+        for (int i = contact_start; i < frame_num; i++) {
+            this->contact[i] = Contact::Contact;
+        }
+
+    } else {
+        // If we are not already in contact epoch, start one
+        this->contact_start = frame_num;
+
+        this->contact_epoch = true;
+
+        this->contact_button->setText("Mark Contact End");
+    }
+}
+
+void Whisker_Widget::SaveContact() {
+
+
+    std::fstream fout;
+
+    fout.open("contact.csv",std::fstream::out);
+
+    for (auto& frame_contact : this->contact) {
+        if (frame_contact == Contact::Contact) {
+            fout << "Contact" << "\n";
+        } else {
+            fout << "Nocontact" << "\n";
+        }
+    }
+
+    fout.close();
+}
+
+void Whisker_Widget::LoadContact() {
+
 }
 
 void Whisker_Widget::DrawWhiskers()

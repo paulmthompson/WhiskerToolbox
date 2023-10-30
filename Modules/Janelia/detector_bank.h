@@ -42,12 +42,12 @@ struct JaneliaConfig {
 
     JaneliaConfig() {
         _seed_method = SEED_ON_GRID;
-        _lattice_spacing = 50;
+        _lattice_spacing = 30;
         _maxr = 4;
         _maxiter = 1;
         _iteration_thres = 0.0;
         _accum_thres = 0.99;
-        _seed_thres = 0.99;
+        _seed_thres = 0.90;
         _angle_step = 18.0;
         _tlen = 8;
         _offset_step = 0.1;

@@ -19,6 +19,11 @@ This is our interface to using the Janelia whisker tracker.
 
 */
 
+enum class Contact : int {
+    Contact = 1,
+    NoContact = 0
+};
+
 class Whisker_Widget : public QWidget, private Ui::Whisker_Widget
 {
     Q_OBJECT
@@ -57,10 +62,19 @@ private:
                           Whisker_Pad_Select};
     Whisker_Widget::Selection_Type selection_mode;
 
+    std::vector<Contact> contact;
+    int contact_start;
+    bool contact_epoch;
+
 private slots:
     void TraceButton();
     void SaveImageButton();
     void SaveWhiskerMaskButton();
+
+    void ContactButton();
+    void SaveContact();
+    void LoadContact();
+
     void ClickedInVideo(qreal x,qreal y);
     /*
     void openConfig() {
