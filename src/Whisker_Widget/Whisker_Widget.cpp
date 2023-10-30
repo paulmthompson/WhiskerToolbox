@@ -2,12 +2,14 @@
 #include "Whisker_Widget.h"
 #include "qevent.h"
 
+#include <QFileDialog>
 #include <QElapsedTimer>
 
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <string>
 
 void Whisker_Widget::createActions() {
     //connect(this,SIGNAL(this->show()),this,SLOT(openActions()));
@@ -172,6 +174,27 @@ void Whisker_Widget::SaveContact() {
 
 void Whisker_Widget::LoadContact() {
 
+    auto contact_filename =  QFileDialog::getOpenFileName(
+        this,
+        "Load Video File",
+        QDir::currentPath(),
+        "All files (*.*) ;; MP4 (*.mp4)");
+
+
+    std::ifstream fin(contact_filename.toStdString());
+
+    std::string line;
+
+    int row_num = 0;
+
+    while (std::getline(fin,line)) {
+        if (line == "Contact") {
+            this->contact[row_num] = Contact::Contact;
+        }
+        row_num++;
+    }
+
+    fin.close();
 }
 
 void Whisker_Widget::DrawWhiskers()
