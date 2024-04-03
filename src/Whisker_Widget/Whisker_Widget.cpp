@@ -28,6 +28,7 @@ void Whisker_Widget::openWidget() {
     connect(this->save_contact_button,SIGNAL(clicked()),this,SLOT(SaveContact()));
     connect(this->load_contact_button,SIGNAL(clicked()),this,SLOT(LoadContact()));
 
+
     if (this->contact.empty()) {
         this->contact = std::vector<Contact>(this->time->getTotalFrameCount());
     }
