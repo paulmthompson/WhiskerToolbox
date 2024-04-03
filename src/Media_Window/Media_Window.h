@@ -16,19 +16,19 @@
 class MediaData {
 public:
 
-    std::string getFilename() const {return this->filename;};
-    void setFilename(std::string filename) {this->filename = filename;};
+    std::string getFilename() const {return _filename;};
+    void setFilename(std::string filename) {_filename = filename;};
 
-    void setFormat(int format) {this->_format = format;};
-    int getFormat() const {return this->_format;};
+    void setFormat(int format) {_format = format;};
+    int getFormat() const {return _format;};
 
     int getHeight() const {return _height;};
     int getWidth() const {return _width;};
     void updateHeight(int height) {_height = height;};
     void updateWidth(int width) {_width = width;};
 
-    int getTotalFrameCount() const {return this->totalFrameCount;};
-    void setTotalFrameCount(int total_frame_count) {this->totalFrameCount = total_frame_count;};
+    int getTotalFrameCount() const {return _totalFrameCount;};
+    void setTotalFrameCount(int total_frame_count) {_totalFrameCount = total_frame_count;};
 
     std::vector<uint8_t> getData() const {return this->data;};
 
@@ -37,10 +37,13 @@ public:
     virtual std::string GetFrameID(int frame_id) {return "";};
 
 protected:
-    std::string filename;
-    int totalFrameCount;
+
+
     std::vector<uint8_t> data;
 private:
+    std::string _filename;
+    int _totalFrameCount;
+
     int _height;
     int _width;
     int _format; // This corresponds to an enum. Here we will use QImage.
@@ -90,7 +93,7 @@ public:
         auto yAspect = getYAspect();
 
         // addEllipse draws from top left of rectangle down and to the right, so we want to center point in the middle of this rectangle
-        this->points.append(addEllipse(static_cast<float>(x_canvas) * xAspect - radius/2,
+        _points.append(addEllipse(static_cast<float>(x_canvas) * xAspect - radius/2,
                                        static_cast<float>(y_canvas) * yAspect - radius/2,
                                        radius, radius,color));
     }
@@ -120,22 +123,20 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 
-    QImage mediaImage;
-    QImage canvasImage;
-    QGraphicsPixmapItem* canvasPixmap;
-    int canvasHeight;
-    int canvasWidth;
-
-    QVector<QGraphicsPathItem*> line_paths;
-    QVector<QGraphicsEllipseItem*> points;
-
-    bool verbose_frame;
-
     std::shared_ptr<MediaData> media;
 
-    //virtual int doLoadMedia(std::string name) {return 0;};
-    //virtual void doLoadFrame(int frame_id) {};
-    //virtual std::string doGetFrameID(int frame_id) {return "";}; // This should be used with data structure
+private:
+    QImage _mediaImage;
+
+    QGraphicsPixmapItem* _canvasPixmap;
+    QImage _canvasImage;
+    int _canvasHeight;
+    int _canvasWidth;
+
+    QVector<QGraphicsPathItem*> _line_paths;
+    QVector<QGraphicsEllipseItem*> _points;
+
+    bool _is_verbose;
 
 signals:
     void leftClick(qreal,qreal);

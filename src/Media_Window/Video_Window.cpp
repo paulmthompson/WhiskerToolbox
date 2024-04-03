@@ -9,7 +9,7 @@ VideoData::VideoData() {
 
 int VideoData::LoadMedia(std::string name) {
     setFilename(name);
-    this->_vd->createMedia(name);
+    _vd->createMedia(name);
 
     updateHeight(_vd->getHeight());
     updateWidth(_vd->getWidth());
@@ -28,15 +28,15 @@ void VideoData::LoadFrame(int frame_id) {
 
     if (frame_id == 0) {
         frame_by_frame = false;
-    } else if (frame_id >= this->totalFrameCount - 1) {
+    } else if (frame_id >= this->getTotalFrameCount() - 1) {
         frame_by_frame = false;
-    } else if (frame_id <= this->_last_decoded_frame) {
+    } else if (frame_id <= _last_decoded_frame) {
         frame_by_frame = false;
     }
 
     //We load the data associated with the frame
     this->data = _vd->getFrame( frame_id, frame_by_frame);
-    this->_last_decoded_frame = frame_id;
+    _last_decoded_frame = frame_id;
 
 }
 
@@ -45,7 +45,7 @@ std::string VideoData::GetFrameID(int frame_id) {
 }
 
 int VideoData::FindNearestSnapFrame(int frame_id) const {
-    return this->_vd->nearest_iframe(frame_id);
+    return _vd->nearest_iframe(frame_id);
 }
 
 Video_Window::Video_Window(QObject *parent) : Media_Window(parent) {

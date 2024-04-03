@@ -15,11 +15,11 @@ int ImageData::LoadMedia(std::string dir_name) {
 
     for (const auto & entry : fs::directory_iterator(dir_name)) {
         if (file_extensions.count(entry.path().extension().string())) {
-            this->_image_paths.push_back(dir_name / entry.path());
+            _image_paths.push_back(dir_name / entry.path());
         }
     }
 
-    if (this->_image_paths.size() == 0) {
+    if (_image_paths.size() == 0) {
         std::cout << "Warning: No images found in directory with matching extensions ";
         for (auto const &i : file_extensions) {
             std::cout << i << " ";
@@ -27,12 +27,12 @@ int ImageData::LoadMedia(std::string dir_name) {
         std::cout << std::endl;
     }
 
-    return this->_image_paths.size();
+    return _image_paths.size();
 }
 
 void ImageData::LoadFrame(int frame_id) {
 
-    auto loaded_image = QImage(QString::fromStdString(this->_image_paths[frame_id].string()));
+    auto loaded_image = QImage(QString::fromStdString(_image_paths[frame_id].string()));
 
     updateHeight(loaded_image.height());
     updateWidth(loaded_image.width());
@@ -43,7 +43,7 @@ void ImageData::LoadFrame(int frame_id) {
 }
 
 std::string ImageData::GetFrameID(int frame_id) {
-    return this->_image_paths[frame_id].filename().string();
+    return _image_paths[frame_id].filename().string();
 }
 
 
