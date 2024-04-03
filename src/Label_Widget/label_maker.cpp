@@ -6,20 +6,20 @@
 using json = nlohmann::json;
 
 LabelMaker::LabelMaker() {
-    this->label_name = "Label1";
-    this->saveFilePath = "./test.json";
+    _label_name = "Label1";
+    _saveFilePath = "./test.json";
 }
 
 void LabelMaker::addLabel(image img, int x, int y) {
 
     std::pair<image,label_point> pair = std::make_pair(img,label_point{x,y});
-    this->point_labels[img.frame_id] = pair;
+    _point_labels[img.frame_id] = pair;
 
-    printLabels();
+    _printLabels();
 }
 
-void LabelMaker::printLabels() {
-    for (auto& [frame_name,label ] : this->point_labels) {
+void LabelMaker::_printLabels() {
+    for (auto& [frame_name,label ] : _point_labels) {
         auto& [img, point] = label;
         std::cout << "Label on frame " << frame_name << " at location x: " << point.x << " y: " << point.y << std::endl;
     }
@@ -35,8 +35,8 @@ std::stringstream LabelMaker::saveLabelsJSON() {
 
         json json_object = json::object();
 
-        json_object["image"] = makeFrameName(frame_name);
-        json_object["labels"][this->label_name] = {point.x, point.y};
+        json_object["image"] = _makeFrameName(frame_name);
+        json_object["labels"][_label_name] = {point.x, point.y};
         j.push_back(json_object);
     }
 
@@ -46,7 +46,7 @@ std::stringstream LabelMaker::saveLabelsJSON() {
 
 }
 
-std::string LabelMaker::makeFrameName(std::string frame_id) {
+std::string LabelMaker::_makeFrameName(std::string frame_id) {
 
     //We create a 7 digit number, padding with leading zeros
     std::stringstream a;

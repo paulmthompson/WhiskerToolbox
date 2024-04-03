@@ -43,22 +43,22 @@ public:
     LabelMaker();
 
     void addLabel(image img, int x, int y); // We should probably send an image here that can be labeled
-    void removeLabel(std::string frame_id) {this->point_labels.erase(frame_id);};
+    void removeLabel(std::string frame_id) {_point_labels.erase(frame_id);};
 
-    std::map<std::string, std::pair<image,label_point>> getLabels() const {return this->point_labels;};
+    std::map<std::string, std::pair<image,label_point>> getLabels() const {return _point_labels;};
 
     std::stringstream saveLabelsJSON();
-    void changeLabelName(std::string label_name) {this->label_name = label_name;};
+    void changeLabelName(std::string label_name) {_label_name = label_name;};
 
     image createImage(int height, int width, int frame_number, std::string frame_id, std::vector<uint8_t> data);
 
 private:
-    std::map<std::string, std::pair<image,label_point>> point_labels;
-    std::string label_name;
-    std::filesystem::path saveFilePath;
+    std::map<std::string, std::pair<image,label_point>> _point_labels;
+    std::string _label_name;
+    std::filesystem::path _saveFilePath;
 
-    void printLabels();
-    std::string makeFrameName(std::string frame_id);
+    void _printLabels();
+    std::string _makeFrameName(std::string frame_id);
 };
 
 #endif // LABEL_MAKER_H
