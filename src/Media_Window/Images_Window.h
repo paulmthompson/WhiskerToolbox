@@ -15,7 +15,9 @@ public:
     std::string GetFrameID(int frame_id) override;
 
 protected:
-    std::vector<std::filesystem::path> image_paths;
+
+private:
+    std::vector<std::filesystem::path> _image_paths;
 };
 
 class Images_Window : public Media_Window
@@ -25,11 +27,6 @@ public:
     Images_Window(QObject *parent = 0);
 
 private:
-    //int doLoadMedia(std::string name) override;
-    //void doLoadFrame(int frame_id) override;
-    //std::string doGetFrameID(int frame_id) override;
-
-    //std::vector<std::filesystem::path> image_paths;
 
 };
 #endif // IMAGES_WINDOW_H

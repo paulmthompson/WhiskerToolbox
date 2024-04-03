@@ -17,8 +17,10 @@ public:
 
     int FindNearestSnapFrame(int frame_id) const;
 protected:
-    int last_decoded_frame;
-    std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
+
+private:
+    int _last_decoded_frame;
+    std::unique_ptr<ffmpeg_wrapper::VideoDecoder> _vd;
 };
 
 class Video_Window : public Media_Window
@@ -30,12 +32,6 @@ public:
     int FindNearestSnapFrame(int frame_id) const;
 
 private:
-    //int doLoadMedia(std::string name) override;
-    //void doLoadFrame(int frame_id) override;
-    //std::string doGetFrameID(int frame_id) override;
-
-    //int last_decoded_frame;
-    //std::unique_ptr<ffmpeg_wrapper::VideoDecoder> vd;
 
 };
 #endif // VIDEO_WINDOW_H
