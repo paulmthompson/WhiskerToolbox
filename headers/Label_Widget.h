@@ -44,9 +44,9 @@ private:
   std::filesystem::path _createImagePath(std::string saveFileName);
 
 private slots:
-  void ClickedInVideo(qreal x, qreal y);
-  void saveButton();
-  void changeLabelName();
+  void _ClickedInVideo(qreal x, qreal y);
+  void _saveButton();
+  void _changeLabelName();
 };
 
 #endif // LABEL_WIDGET_H

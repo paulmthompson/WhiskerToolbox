@@ -13,11 +13,11 @@ void Label_Widget::openWidget() {
 
   // connect(this->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
   connect(_scene, SIGNAL(leftClick(qreal, qreal)), this,
-          SLOT(ClickedInVideo(qreal, qreal)));
-  connect(this->saveLabelsButton, SIGNAL(clicked()), this, SLOT(saveButton()));
+          SLOT(_ClickedInVideo(qreal, qreal)));
+  connect(this->saveLabelsButton, SIGNAL(clicked()), this, SLOT(_saveButton()));
 
   connect(this->label_name_box, SIGNAL(textChanged()), this,
-          SLOT(changeLabelName()));
+          SLOT(_changeLabelName()));
 
   this->show();
 }
@@ -25,9 +25,9 @@ void Label_Widget::openWidget() {
 void Label_Widget::closeEvent(QCloseEvent *event) {
   std::cout << "Close event detected" << std::endl;
   disconnect(_scene, SIGNAL(leftClick(qreal, qreal)), this,
-             SLOT(ClickedInVideo(qreal, qreal)));
+             SLOT(_ClickedInVideo(qreal, qreal)));
   disconnect(this->saveLabelsButton, SIGNAL(clicked()), this,
-             SLOT(saveButton()));
+             SLOT(_saveButton()));
 }
 
 void Label_Widget::keyPressEvent(QKeyEvent *event) {
@@ -51,10 +51,10 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
   }
 }
 
-void Label_Widget::ClickedInVideo(qreal x_canvas, qreal y_canvas) {
+void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
 
-  float x_media = x_canvas / this->_scene->getXAspect();
-  float y_media = y_canvas / this->_scene->getYAspect();
+  float x_media = x_canvas / _scene->getXAspect();
+  float y_media = y_canvas / _scene->getYAspect();
 
   // Generate the image to be labeled
   int frame_number = _time->getLastLoadedFrame();
@@ -107,7 +107,7 @@ void Label_Widget::_addLabeltoTable(int row, std::string frame_id,
   tableWidget->setItem(row, 2, new QTableWidgetItem(QString::number(label.y)));
 }
 
-void Label_Widget::saveButton() {
+void Label_Widget::_saveButton() {
 
   auto output_stream = _label_maker->saveLabelsJSON();
   // std::cout << output_stream.str() << std::endl;
@@ -127,7 +127,7 @@ void Label_Widget::saveButton() {
   }
 }
 
-void Label_Widget::changeLabelName() {
+void Label_Widget::_changeLabelName() {
   _label_maker->changeLabelName(label_name_box->toPlainText().toStdString());
 }
 
