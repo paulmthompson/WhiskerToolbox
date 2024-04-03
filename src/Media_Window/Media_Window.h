@@ -19,13 +19,13 @@ public:
     std::string getFilename() const {return this->filename;};
     void setFilename(std::string filename) {this->filename = filename;};
 
-    void setFormat(int format) {this->format = format;};
-    int getFormat() const {return this->format;};
+    void setFormat(int format) {this->_format = format;};
+    int getFormat() const {return this->_format;};
 
-    int getHeight() const {return this->height;};
-    int getWidth() const {return this->width;};
-    void updateHeight(int height) {this->height = height;};
-    void updateWidth(int width) {this->width = width;};
+    int getHeight() const {return _height;};
+    int getWidth() const {return _width;};
+    void updateHeight(int height) {_height = height;};
+    void updateWidth(int width) {_width = width;};
 
     int getTotalFrameCount() const {return this->totalFrameCount;};
     void setTotalFrameCount(int total_frame_count) {this->totalFrameCount = total_frame_count;};
@@ -37,13 +37,13 @@ public:
     virtual std::string GetFrameID(int frame_id) {return "";};
 
 protected:
-    int height;
-    int width;
-    int format; // This corresponds to an enum. Here we will use QImage.
-
     std::string filename;
     int totalFrameCount;
     std::vector<uint8_t> data;
+private:
+    int _height;
+    int _width;
+    int _format; // This corresponds to an enum. Here we will use QImage.
 };
 
 /*
