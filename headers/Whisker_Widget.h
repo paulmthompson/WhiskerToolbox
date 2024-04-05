@@ -31,15 +31,15 @@ public:
     Whisker_Widget(Media_Window* scene, std::shared_ptr<TimeFrame> time, QWidget *parent = 0) : QWidget(parent) {
         setupUi(this);
 
-        this->scene = scene;
+        _scene = scene;
 
-        this->time = time;
+        _time = time;
 
-        createActions();
+        _createActions();
 
-        this->wt = std::make_unique<WhiskerTracker>();
-        this->selected_whisker = 0;
-        this->selection_mode = Whisker_Select;
+        _wt = std::make_unique<WhiskerTracker>();
+        _selected_whisker = 0;
+        _selection_mode = Whisker_Select;
         //connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(openConfig()));
 
     };
@@ -49,33 +49,33 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
-    void createActions();
-    void openActions();
-    void closeActions();
-    void DrawWhiskers();
+    void _createActions();
+    void _openActions();
+    void _closeActions();
+    void _DrawWhiskers();
 
-    std::unique_ptr<WhiskerTracker> wt;
-    Media_Window * scene;
-    std::shared_ptr<TimeFrame> time;
-    int selected_whisker;
+    std::unique_ptr<WhiskerTracker> _wt;
+    Media_Window * _scene;
+    std::shared_ptr<TimeFrame> _time;
+    int _selected_whisker;
     enum Selection_Type {Whisker_Select,
                           Whisker_Pad_Select};
-    Whisker_Widget::Selection_Type selection_mode;
+    Whisker_Widget::Selection_Type _selection_mode;
 
-    std::vector<Contact> contact;
-    int contact_start;
-    bool contact_epoch;
+    std::vector<Contact> _contact;
+    int _contact_start;
+    bool _contact_epoch;
 
 private slots:
-    void TraceButton();
-    void SaveImageButton();
-    void SaveWhiskerMaskButton();
+    void _TraceButton();
+    void _SaveImageButton();
+    void _SaveWhiskerMaskButton();
 
-    void ContactButton();
-    void SaveContact();
-    void LoadContact();
+    void _ContactButton();
+    void _SaveContact();
+    void _LoadContact();
 
-    void ClickedInVideo(qreal x,qreal y);
+    void _ClickedInVideo(qreal x,qreal y);
     /*
     void openConfig() {
         config_win->updateValues();

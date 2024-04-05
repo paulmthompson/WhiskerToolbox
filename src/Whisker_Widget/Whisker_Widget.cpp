@@ -11,37 +11,37 @@
 #include <fstream>
 #include <string>
 
-void Whisker_Widget::createActions() {
-    //connect(this,SIGNAL(this->show()),this,SLOT(openActions()));
-    //connect(this,SIGNAL(this->close()),this,SLOT(closeActions()));
+void Whisker_Widget::_createActions() {
+    //connect(this,SIGNAL(this->show()),this,SLOT(_openActions()));
+    //connect(this,SIGNAL(this->close()),this,SLOT(_closeActions()));
 }
 
 void Whisker_Widget::openWidget() {
     std::cout << "Whisker Widget Opened" << std::endl;
 
-    connect(this->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
-    connect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
+    connect(this->trace_button,SIGNAL(clicked()),this,SLOT(_TraceButton()));
+    connect(this->_scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(_ClickedInVideo(qreal,qreal)));
 
-    connect(this->save_image,SIGNAL(clicked()),this,SLOT(SaveImageButton()));
-    connect(this->save_whisker_mask,SIGNAL(clicked()),this,SLOT(SaveWhiskerMaskButton()));
-    connect(this->contact_button,SIGNAL(clicked()),this,SLOT(ContactButton()));
-    connect(this->save_contact_button,SIGNAL(clicked()),this,SLOT(SaveContact()));
-    connect(this->load_contact_button,SIGNAL(clicked()),this,SLOT(LoadContact()));
+    connect(this->save_image,SIGNAL(clicked()),this,SLOT(_SaveImageButton()));
+    connect(this->save_whisker_mask,SIGNAL(clicked()),this,SLOT(_SaveWhiskerMaskButton()));
+    connect(this->contact_button,SIGNAL(clicked()),this,SLOT(_ContactButton()));
+    connect(this->save_contact_button,SIGNAL(clicked()),this,SLOT(_SaveContact()));
+    connect(this->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
 
 
-    if (this->contact.empty()) {
-        this->contact = std::vector<Contact>(this->time->getTotalFrameCount());
+    if (_contact.empty()) {
+        _contact = std::vector<Contact>(_time->getTotalFrameCount());
     }
 
     this->show();
 
 }
 
-void Whisker_Widget::openActions() {
+void Whisker_Widget::_openActions() {
     std::cout << "Setting up actions for whisker tracker" << std::endl;
 }
 
-void Whisker_Widget::closeActions() {
+void Whisker_Widget::_closeActions() {
     std::cout << "Disconnecting actions for whisker tracker" << std::endl;
 }
 
@@ -49,40 +49,40 @@ void Whisker_Widget::closeActions() {
 void Whisker_Widget::closeEvent(QCloseEvent *event) {
     std::cout << "Close event detected" << std::endl;
 
-    disconnect(this->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
-    disconnect(this->scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(ClickedInVideo(qreal,qreal)));
+    disconnect(this->trace_button,SIGNAL(clicked()),this,SLOT(_TraceButton()));
+    disconnect(_scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(_ClickedInVideo(qreal,qreal)));
 
-    disconnect(this->save_image,SIGNAL(clicked()),this,SLOT(SaveImageButton()));
-    disconnect(this->save_whisker_mask,SIGNAL(clicked()),this,SLOT(SaveWhiskerMaskButton()));
-    disconnect(this->contact_button,SIGNAL(clicked()),this,SLOT(ContactButton()));
-    disconnect(this->save_contact_button,SIGNAL(clicked()),this,SLOT(SaveContact()));
-    disconnect(this->load_contact_button,SIGNAL(clicked()),this,SLOT(LoadContact()));
+    disconnect(this->save_image,SIGNAL(clicked()),this,SLOT(_SaveImageButton()));
+    disconnect(this->save_whisker_mask,SIGNAL(clicked()),this,SLOT(_SaveWhiskerMaskButton()));
+    disconnect(this->contact_button,SIGNAL(clicked()),this,SLOT(_ContactButton()));
+    disconnect(this->save_contact_button,SIGNAL(clicked()),this,SLOT(_SaveContact()));
+    disconnect(this->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
 }
 
-void Whisker_Widget::TraceButton()
+void Whisker_Widget::_TraceButton()
 {
     QElapsedTimer timer2;
     timer2.start();
-
-    this->wt->trace(this->scene->getCurrentFrame(),this->scene->getMediaHeight(), this->scene->getMediaWidth());
+    
+    _wt->trace(_scene->getCurrentFrame(),_scene->getMediaHeight(), _scene->getMediaWidth());
 
     int t1 = timer2.elapsed();
-    DrawWhiskers();
+    _DrawWhiskers();
 
     int t2 = timer2.elapsed();
 
     qDebug() << "The tracing took" << t1 << "ms and drawing took" << (t2-t1);
 }
 
-void Whisker_Widget::SaveImageButton()
+void Whisker_Widget::_SaveImageButton()
 {
-
-    auto data = this->scene->getCurrentFrame();
-
-    auto width = this->scene->getMediaWidth();
-    auto height = this->scene->getMediaHeight();
-
-    auto frame_id = this->time->getLastLoadedFrame();
+    
+    auto data = _scene->getCurrentFrame();
+    
+    auto width = _scene->getMediaWidth();
+    auto height = _scene->getMediaHeight();
+    
+    auto frame_id = _time->getLastLoadedFrame();
 
     QImage labeled_image(&data[0],width,height, QImage::Format_Grayscale8);
 
@@ -96,20 +96,20 @@ void Whisker_Widget::SaveImageButton()
 
 }
 
-void Whisker_Widget::SaveWhiskerMaskButton() {
-
-    auto width = this->scene->getMediaWidth();
-    auto height = this->scene->getMediaHeight();
-
-    auto frame_id = this->time->getLastLoadedFrame();
+void Whisker_Widget::_SaveWhiskerMaskButton() {
+    
+    auto width = _scene->getMediaWidth();
+    auto height = _scene->getMediaHeight();
+    
+    auto frame_id = _time->getLastLoadedFrame();
 
     QImage mask_image(width,height,QImage::Format_Grayscale8);
 
     mask_image.fill(Qt::black);
-
-    if (!this->wt->whiskers.empty()) {
-
-        auto& w = this->wt->whiskers[this->selected_whisker-1];
+    
+    if (!_wt->whiskers.empty()) {
+        
+        auto& w = _wt->whiskers[_selected_whisker-1];
 
         for (int i = 0; i < w.x.size(); i++) {
 
@@ -130,39 +130,39 @@ void Whisker_Widget::SaveWhiskerMaskButton() {
     mask_image.save(QString::fromStdString(saveName));
 }
 
-void Whisker_Widget::ContactButton() {
-
-    auto frame_num = this->time->getLastLoadedFrame();
+void Whisker_Widget::_ContactButton() {
+    
+    auto frame_num = _time->getLastLoadedFrame();
 
     // If we are in a contact epoch, we need to mark the termination frame and add those to block
-    if (this->contact_epoch) {
+    if (_contact_epoch) {
 
-        this->contact_epoch = false;
+        _contact_epoch = false;
 
         this->contact_button->setText("Mark Contact");
 
-        for (int i = contact_start; i < frame_num; i++) {
-            this->contact[i] = Contact::Contact;
+        for (int i = _contact_start; i < frame_num; i++) {
+            _contact[i] = Contact::Contact;
         }
 
     } else {
         // If we are not already in contact epoch, start one
-        this->contact_start = frame_num;
+        _contact_start = frame_num;
 
-        this->contact_epoch = true;
+        _contact_epoch = true;
 
         this->contact_button->setText("Mark Contact End");
     }
 }
 
-void Whisker_Widget::SaveContact() {
+void Whisker_Widget::_SaveContact() {
 
 
     std::fstream fout;
 
     fout.open("contact.csv",std::fstream::out);
 
-    for (auto& frame_contact : this->contact) {
+    for (auto& frame_contact : _contact) {
         if (frame_contact == Contact::Contact) {
             fout << "Contact" << "\n";
         } else {
@@ -173,7 +173,7 @@ void Whisker_Widget::SaveContact() {
     fout.close();
 }
 
-void Whisker_Widget::LoadContact() {
+void Whisker_Widget::_LoadContact() {
 
     auto contact_filename =  QFileDialog::getOpenFileName(
         this,
@@ -190,7 +190,7 @@ void Whisker_Widget::LoadContact() {
 
     while (std::getline(fin,line)) {
         if (line == "Contact") {
-            this->contact[row_num] = Contact::Contact;
+            _contact[row_num] = Contact::Contact;
         }
         row_num++;
     }
@@ -198,31 +198,31 @@ void Whisker_Widget::LoadContact() {
     fin.close();
 }
 
-void Whisker_Widget::DrawWhiskers()
+void Whisker_Widget::_DrawWhiskers()
 {
-    scene->clearLines(); // We should have the scene do this every time a frame is advanced
+    _scene->clearLines(); // We should have the scene do this every time a frame is advanced
+    
+    for (auto& w : _wt->whiskers) {
 
-    for (auto& w : wt->whiskers) {
-
-        auto whisker_color = (w.id == this->selected_whisker) ? QPen(QColor(Qt::red)) : QPen(QColor(Qt::blue));
-
-        scene->addLine(w.x,w.y,whisker_color);
+        auto whisker_color = (w.id == _selected_whisker) ? QPen(QColor(Qt::red)) : QPen(QColor(Qt::blue));
+        
+        _scene->addLine(w.x,w.y,whisker_color);
 
     }
 }
 
 //x
-void Whisker_Widget::ClickedInVideo(qreal x_canvas,qreal y_canvas) {
-
-    float x_media = x_canvas / this->scene->getXAspect();
-    float y_media = y_canvas / this->scene->getYAspect();
-
-    switch(this->selection_mode) {
+void Whisker_Widget::_ClickedInVideo(qreal x_canvas,qreal y_canvas) {
+    
+    float x_media = x_canvas / _scene->getXAspect();
+    float y_media = y_canvas / _scene->getYAspect();
+    
+    switch(_selection_mode) {
     case Whisker_Select: {
-        std::tuple<float,int> nearest_whisker = wt->get_nearest_whisker(x_media, y_media);
+        std::tuple<float,int> nearest_whisker = _wt->get_nearest_whisker(x_media, y_media);
         if (std::get<0>(nearest_whisker) < 10.0f) {
-            this->selected_whisker = std::get<1>(nearest_whisker);
-            this->DrawWhiskers();
+            _selected_whisker = std::get<1>(nearest_whisker);
+            _DrawWhiskers();
         }
         break;
     }
