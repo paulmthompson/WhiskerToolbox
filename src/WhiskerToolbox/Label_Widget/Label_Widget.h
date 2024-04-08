@@ -8,23 +8,18 @@
 
 #include "Media_Window.h"
 #include "label_maker.h"
-#include "ui_Label_Widget.h"
 
 #include "TimeFrame.h"
 
-class Label_Widget : public QWidget, private Ui::Label_Widget {
+namespace Ui {
+class Label_Widget;
+}
+
+class Label_Widget : public QWidget {
   Q_OBJECT
 public:
-  Label_Widget(Media_Window *scene, std::shared_ptr<TimeFrame> time,
-               QWidget *parent = 0)
-      : QWidget(parent) {
-    setupUi(this);
-
-    _scene = scene;
-    _time = time;
-
-    _label_maker = std::make_unique<LabelMaker>();
-  };
+  Label_Widget(Media_Window *scene, std::shared_ptr<TimeFrame> time, QWidget *parent = 0);
+    ~Label_Widget();
 
   void openWidget(); // Call
 
@@ -42,7 +37,7 @@ private:
   void _addLabeltoTable(int row, std::string frame_id, label_point label);
   void _exportFrames(std::string saveFileName);
   std::filesystem::path _createImagePath(std::string saveFileName);
-
+  Ui::Label_Widget *ui;
 private slots:
   void _ClickedInVideo(qreal x, qreal y);
   void _saveButton();

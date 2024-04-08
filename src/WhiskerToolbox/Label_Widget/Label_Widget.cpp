@@ -8,15 +8,32 @@
 #include <QFileDialog>
 #include <QKeyEvent>
 
+#include "ui_Label_Widget.h"
+
+Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<TimeFrame> time, QWidget *parent) :
+    QWidget(parent),  ui(new Ui::Label_Widget)
+{
+    ui->setupUi(this);
+
+    _scene = scene;
+    _time = time;
+
+    _label_maker = std::make_unique<LabelMaker>();
+}
+
+Label_Widget::~Label_Widget() {
+    delete ui;
+}
+
 void Label_Widget::openWidget() {
   std::cout << "Label Widget Opened" << std::endl;
 
   // connect(this->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
   connect(_scene, SIGNAL(leftClick(qreal, qreal)), this,
           SLOT(_ClickedInVideo(qreal, qreal)));
-  connect(this->saveLabelsButton, SIGNAL(clicked()), this, SLOT(_saveButton()));
+  connect(ui->saveLabelsButton, SIGNAL(clicked()), this, SLOT(_saveButton()));
 
-  connect(this->label_name_box, SIGNAL(textChanged()), this,
+  connect(ui->label_name_box, SIGNAL(textChanged()), this,
           SLOT(_changeLabelName()));
 
   this->show();
@@ -26,7 +43,7 @@ void Label_Widget::closeEvent(QCloseEvent *event) {
   std::cout << "Close event detected" << std::endl;
   disconnect(_scene, SIGNAL(leftClick(qreal, qreal)), this,
              SLOT(_ClickedInVideo(qreal, qreal)));
-  disconnect(this->saveLabelsButton, SIGNAL(clicked()), this,
+  disconnect(ui->saveLabelsButton, SIGNAL(clicked()), this,
              SLOT(_saveButton()));
 }
 
@@ -34,14 +51,14 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
 
   if (event->key() == Qt::Key_Delete) {
     std::cout << "Delete key pressed" << std::endl;
-    if (tableWidget->selectedItems().empty()) {
+      if (ui->tableWidget->selectedItems().empty()) {
       std::cout << "No items in the table are selected" << std::endl;
     } else {
-      int selected_row_number = tableWidget->selectedItems().first()->row();
+          int selected_row_number = ui->tableWidget->selectedItems().first()->row();
       std::cout << "Row selected is " << selected_row_number << std::endl;
 
       auto selected_frame =
-          tableWidget->item(selected_row_number, 0)->text().toStdString();
+          ui->tableWidget->item(selected_row_number, 0)->text().toStdString();
       std::cout << "Corresponding selected frame is " << selected_frame
                 << std::endl;
 
@@ -89,7 +106,7 @@ void Label_Widget::_updateDraw() {
 void Label_Widget::_updateTable() {
 
   // The table is erased and rebuilt from scratch
-  tableWidget->setRowCount(0);
+    ui->tableWidget->setRowCount(0);
   int current_row = 0;
   for (auto &[frame_name, label] : _label_maker->getLabels()) {
     auto &[img, point] = label;
@@ -100,11 +117,11 @@ void Label_Widget::_updateTable() {
 
 void Label_Widget::_addLabeltoTable(int row, std::string frame_id,
                                     label_point label) {
-  tableWidget->insertRow(tableWidget->rowCount());
-  tableWidget->setItem(row, 0,
+    ui->tableWidget->insertRow(ui->tableWidget->rowCount());
+    ui->tableWidget->setItem(row, 0,
                        new QTableWidgetItem(QString::fromStdString(frame_id)));
-  tableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(label.x)));
-  tableWidget->setItem(row, 2, new QTableWidgetItem(QString::number(label.y)));
+    ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::number(label.x)));
+    ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::number(label.y)));
 }
 
 void Label_Widget::_saveButton() {
@@ -121,14 +138,14 @@ void Label_Widget::_saveButton() {
 
   outFile.close();
 
-  if (export_frames_checkbox->isChecked()) {
+  if (ui->export_frames_checkbox->isChecked()) {
     std::cout << "Exporting frames" << std::endl;
     _exportFrames(saveFileName.toStdString());
   }
 }
 
 void Label_Widget::_changeLabelName() {
-  _label_maker->changeLabelName(label_name_box->toPlainText().toStdString());
+    _label_maker->changeLabelName(ui->label_name_box->toPlainText().toStdString());
 }
 
 void Label_Widget::_exportFrames(std::string saveFileName) {

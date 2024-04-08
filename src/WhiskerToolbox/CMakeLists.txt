@@ -30,10 +30,10 @@ set(PROJECT_SOURCES
         Whisker_Widget/Whisker_Widget.cpp
         Whisker_Widget/whiskertracker.cpp
 
-        headers/Label_Widget.h
-        headers/Label_Widget.ui
+        Label_Widget/Label_Widget.h
+        Label_Widget/Label_Widget.ui
         Label_Widget/Label_Widget.cpp
-        headers/label_maker.h
+        Label_Widget/label_maker.h
         Label_Widget/label_maker.cpp
 )
 
@@ -80,6 +80,7 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/headers>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
         "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Modules/Janelia>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
 
