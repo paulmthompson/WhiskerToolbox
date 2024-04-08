@@ -8,9 +8,11 @@
 #include "whiskertracker.h"
 #include "Media_Window.h"
 
-#include "ui_Whisker_Widget.h"
-
 #include "TimeFrame.h"
+
+namespace Ui {
+    class Whisker_Widget;
+}
 
 /*
 
@@ -24,25 +26,14 @@ enum class Contact : int {
     NoContact = 0
 };
 
-class Whisker_Widget : public QWidget, private Ui::Whisker_Widget
+class Whisker_Widget : public QWidget
 {
     Q_OBJECT
 public:
-    Whisker_Widget(Media_Window* scene, std::shared_ptr<TimeFrame> time, QWidget *parent = 0) : QWidget(parent) {
-        setupUi(this);
 
-        _scene = scene;
+    Whisker_Widget(Media_Window* scene, std::shared_ptr<TimeFrame> time, QWidget *parent = 0);
 
-        _time = time;
-
-        _createActions();
-
-        _wt = std::make_unique<WhiskerTracker>();
-        _selected_whisker = 0;
-        _selection_mode = Whisker_Select;
-        //connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(openConfig()));
-
-    };
+    virtual ~Whisker_Widget();
 
     void openWidget(); // Call
 protected:
@@ -65,6 +56,8 @@ private:
     std::vector<Contact> _contact;
     int _contact_start;
     bool _contact_epoch;
+
+    Ui::Whisker_Widget *ui;
 
 private slots:
     void _TraceButton();

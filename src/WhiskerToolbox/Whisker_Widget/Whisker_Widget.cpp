@@ -11,6 +11,31 @@
 #include <fstream>
 #include <string>
 
+#include "ui_Whisker_Widget.h"
+
+Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<TimeFrame> time, QWidget *parent) :
+    QWidget(parent),  ui(new Ui::Whisker_Widget) {
+
+    ui->setupUi(this);
+
+    _scene = scene;
+
+    _time = time;
+
+    _createActions();
+
+    _wt = std::make_unique<WhiskerTracker>();
+    _selected_whisker = 0;
+    _selection_mode = Whisker_Select;
+    //connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(openConfig()));
+
+};
+
+Whisker_Widget::~Whisker_Widget()
+{
+    delete ui;
+}
+
 void Whisker_Widget::_createActions() {
     //connect(this,SIGNAL(this->show()),this,SLOT(_openActions()));
     //connect(this,SIGNAL(this->close()),this,SLOT(_closeActions()));
@@ -19,14 +44,14 @@ void Whisker_Widget::_createActions() {
 void Whisker_Widget::openWidget() {
     std::cout << "Whisker Widget Opened" << std::endl;
 
-    connect(this->trace_button,SIGNAL(clicked()),this,SLOT(_TraceButton()));
-    connect(this->_scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(_ClickedInVideo(qreal,qreal)));
+    connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(_TraceButton()));
+    connect(_scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(_ClickedInVideo(qreal,qreal)));
 
-    connect(this->save_image,SIGNAL(clicked()),this,SLOT(_SaveImageButton()));
-    connect(this->save_whisker_mask,SIGNAL(clicked()),this,SLOT(_SaveWhiskerMaskButton()));
-    connect(this->contact_button,SIGNAL(clicked()),this,SLOT(_ContactButton()));
-    connect(this->save_contact_button,SIGNAL(clicked()),this,SLOT(_SaveContact()));
-    connect(this->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
+    connect(ui->save_image,SIGNAL(clicked()),this,SLOT(_SaveImageButton()));
+    connect(ui->save_whisker_mask,SIGNAL(clicked()),this,SLOT(_SaveWhiskerMaskButton()));
+    connect(ui->contact_button,SIGNAL(clicked()),this,SLOT(_ContactButton()));
+    connect(ui->save_contact_button,SIGNAL(clicked()),this,SLOT(_SaveContact()));
+    connect(ui->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
 
 
     if (_contact.empty()) {
@@ -49,14 +74,14 @@ void Whisker_Widget::_closeActions() {
 void Whisker_Widget::closeEvent(QCloseEvent *event) {
     std::cout << "Close event detected" << std::endl;
 
-    disconnect(this->trace_button,SIGNAL(clicked()),this,SLOT(_TraceButton()));
+    disconnect(ui->trace_button,SIGNAL(clicked()),this,SLOT(_TraceButton()));
     disconnect(_scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(_ClickedInVideo(qreal,qreal)));
 
-    disconnect(this->save_image,SIGNAL(clicked()),this,SLOT(_SaveImageButton()));
-    disconnect(this->save_whisker_mask,SIGNAL(clicked()),this,SLOT(_SaveWhiskerMaskButton()));
-    disconnect(this->contact_button,SIGNAL(clicked()),this,SLOT(_ContactButton()));
-    disconnect(this->save_contact_button,SIGNAL(clicked()),this,SLOT(_SaveContact()));
-    disconnect(this->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
+    disconnect(ui->save_image,SIGNAL(clicked()),this,SLOT(_SaveImageButton()));
+    disconnect(ui->save_whisker_mask,SIGNAL(clicked()),this,SLOT(_SaveWhiskerMaskButton()));
+    disconnect(ui->contact_button,SIGNAL(clicked()),this,SLOT(_ContactButton()));
+    disconnect(ui->save_contact_button,SIGNAL(clicked()),this,SLOT(_SaveContact()));
+    disconnect(ui->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
 }
 
 void Whisker_Widget::_TraceButton()
@@ -139,7 +164,7 @@ void Whisker_Widget::_ContactButton() {
 
         _contact_epoch = false;
 
-        this->contact_button->setText("Mark Contact");
+        ui->contact_button->setText("Mark Contact");
 
         for (int i = _contact_start; i < frame_num; i++) {
             _contact[i] = Contact::Contact;
@@ -151,7 +176,7 @@ void Whisker_Widget::_ContactButton() {
 
         _contact_epoch = true;
 
-        this->contact_button->setText("Mark Contact End");
+        ui->contact_button->setText("Mark Contact End");
     }
 }
 

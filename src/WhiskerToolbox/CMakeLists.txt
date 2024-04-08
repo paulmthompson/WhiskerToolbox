@@ -24,9 +24,9 @@ set(PROJECT_SOURCES
         headers/Covariate_Config.h
         headers/Covariate_Config.ui
 
-        headers/Whisker_Widget.h
-        headers/Whisker_Widget.ui
-        headers/whiskertracker.h
+        Whisker_Widget/Whisker_Widget.h
+        Whisker_Widget/Whisker_Widget.ui
+        Whisker_Widget/whiskertracker.h
         Whisker_Widget/Whisker_Widget.cpp
         Whisker_Widget/whiskertracker.cpp
 
@@ -79,6 +79,7 @@ add_subdirectory(Media_Window)
 target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/headers>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Modules/Janelia>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
 
