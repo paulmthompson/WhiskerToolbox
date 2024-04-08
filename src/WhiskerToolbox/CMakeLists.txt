@@ -13,9 +13,9 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 set(PROJECT_SOURCES
         main.cpp
 
-        mainwindow.cpp
-        headers/mainwindow.h
-        mainwindow.ui
+        Main_Window/mainwindow.cpp
+        Main_Window/mainwindow.h
+        Main_Window/mainwindow.ui
         whiskertoolbox.qrc
         my_stylesheet.qss
 
@@ -77,7 +77,7 @@ add_subdirectory(DataManager)
 add_subdirectory(Media_Window)
 
 target_include_directories(WhiskerToolbox PRIVATE
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/headers>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
