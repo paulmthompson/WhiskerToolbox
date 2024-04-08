@@ -1,7 +1,7 @@
 #=============================
 # Preamble
 #=============================
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.25)
 project(WhiskerToolbox VERSION 0.1 LANGUAGES CXX)
 
 
@@ -30,6 +30,9 @@ Manifest mode from VCPKG will make all dependencies specified in vcpkg.json be a
 with this particular project
 ]]
 set(VCPKG_MANIFEST_MODE ON)
+
+#This is necessary to work on windows. A better way would be to define only the symbols that need to be exported
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 #=============================
 # Externally Provided Content
