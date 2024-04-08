@@ -12,7 +12,7 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
-#include "Covariate_Widget.h"
+#include "Covariate_Widget/Covariate_Widget.h"
 #include "Whisker_Widget.h"
 
 #include "Video_Window.h"

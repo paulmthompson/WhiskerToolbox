@@ -19,10 +19,10 @@ set(PROJECT_SOURCES
         whiskertoolbox.qrc
         my_stylesheet.qss
 
-        headers/Covariate_Widget.h
-        headers/covariate_widget.ui
-        headers/Covariate_Config.h
-        headers/Covariate_Config.ui
+        Covariate_Widget/Covariate_Widget.h
+        Covariate_Widget/covariate_widget.ui
+        Covariate_Widget/Covariate_Config.h
+        Covariate_Widget/Covariate_Config.ui
 
         Whisker_Widget/Whisker_Widget.h
         Whisker_Widget/Whisker_Widget.ui
@@ -81,6 +81,7 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Covariate_Widget>"
         "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Modules/Janelia>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
 
