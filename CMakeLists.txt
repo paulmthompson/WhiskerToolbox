@@ -41,5 +41,4 @@ add_subdirectory(external)
 # Main Build Targets
 #=============================
 
-add_subdirectory(Modules/Janelia)
 add_subdirectory(src)
