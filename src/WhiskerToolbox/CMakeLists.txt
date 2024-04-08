@@ -12,12 +12,12 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 
 set(PROJECT_SOURCES
         main.cpp
+        whiskertoolbox.qrc
+        my_stylesheet.qss
 
         Main_Window/mainwindow.cpp
         Main_Window/mainwindow.h
         Main_Window/mainwindow.ui
-        whiskertoolbox.qrc
-        my_stylesheet.qss
 
         Covariate_Widget/Covariate_Widget.h
         Covariate_Widget/covariate_widget.ui
@@ -77,12 +77,14 @@ add_subdirectory(DataManager)
 add_subdirectory(Media_Window)
 
 target_include_directories(WhiskerToolbox PRIVATE
+        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Modules/Janelia>"
+
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Covariate_Widget>"
-        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Modules/Janelia>"
+
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
 
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
