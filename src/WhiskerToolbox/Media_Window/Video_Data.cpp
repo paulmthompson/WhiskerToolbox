@@ -8,6 +8,7 @@ VideoData::VideoData() {
     _vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
 
     _last_decoded_frame = 0;
+
 }
 
 int VideoData::LoadMedia(std::string name) {
@@ -17,9 +18,9 @@ int VideoData::LoadMedia(std::string name) {
     updateHeight(_vd->getHeight());
     updateWidth(_vd->getWidth());
 
-    this->data.resize(getWidth() * getHeight());
-
-    setFormat(QImage::Format_Grayscale8);
+    // Set format of video decoder to the format currently
+    // selected in the MediaData
+    //setFormat(QImage::Format_Grayscale8);
 
     return _vd->getFrameCount(); // Total frames
 }

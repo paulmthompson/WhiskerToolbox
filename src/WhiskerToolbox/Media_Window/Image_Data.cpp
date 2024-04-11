@@ -39,9 +39,13 @@ void ImageData::LoadFrame(int frame_id) {
     updateHeight(loaded_image.height());
     updateWidth(loaded_image.width());
 
-    this->setFormat(loaded_image.format());
+    // Convert to display format
 
-    this->data = std::vector<uint8_t>(loaded_image.bits(), loaded_image.bits() + loaded_image.sizeInBytes());
+    //this->setFormat(loaded_image.format());
+
+    auto converted_image = loaded_image.convertToFormat(QImage::Format_Grayscale8);
+
+    this->data = std::vector<uint8_t>(converted_image.bits(), converted_image.bits() + converted_image.sizeInBytes());
 }
 
 std::string ImageData::GetFrameID(int frame_id) {

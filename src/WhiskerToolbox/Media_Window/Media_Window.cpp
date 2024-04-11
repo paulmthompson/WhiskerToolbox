@@ -77,7 +77,8 @@ int Media_Window::LoadFrame(int frame_id)
     auto unscaled_image = QImage(&media_data[0],
                               this->media->getWidth(),
                               this->media->getHeight(),
-                              QImage::Format(this->media->getFormat())
+                                 QImage::Format_Grayscale8
+                              //QImage::Format(this->media->getFormat())
                               );
 
     //std::cout << unscaled_image.height() << " x " << unscaled_image.width() << std::endl;
