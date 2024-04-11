@@ -34,6 +34,17 @@ int ImageData::LoadMedia(std::string dir_name) {
     return _image_paths.size();
 }
 
+QImage _convertToDisplayFormat(QImage& image, ImageData::DisplayFormat format)
+{
+    switch (format)
+    {
+    case ImageData::DisplayFormat::Gray:
+        return image.convertToFormat(QImage::Format_Grayscale8);
+    case ImageData::DisplayFormat::Color:
+        return image.convertToFormat(QImage::Format_ARGB32);
+    }
+}
+
 void ImageData::LoadFrame(int frame_id) {
 
     auto loaded_image = QImage(QString::fromStdString(_image_paths[frame_id].string()));
@@ -41,11 +52,7 @@ void ImageData::LoadFrame(int frame_id) {
     updateHeight(loaded_image.height());
     updateWidth(loaded_image.width());
 
-    // Convert to display format
-
-    //this->setFormat(loaded_image.format());
-
-    auto converted_image = loaded_image.convertToFormat(QImage::Format_Grayscale8);
+    auto converted_image = _convertToDisplayFormat(loaded_image, this->getFormat());
 
     this->data = std::vector<uint8_t>(converted_image.bits(), converted_image.bits() + converted_image.sizeInBytes());
 }

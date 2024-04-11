@@ -12,8 +12,7 @@ class MediaData {
 public:
 
     MediaData() {
-        _format = DisplayFormat::Gray;
-        _display_format_bytes = 1;
+        setFormat(DisplayFormat::Gray);
     };
 
     std::string getFilename() const {return _filename;};

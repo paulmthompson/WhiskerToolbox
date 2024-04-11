@@ -19,11 +19,9 @@ Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
     _canvasWidth = 640;
     _canvasHeight = 480;
 
-    _mediaImage = QImage(_canvasWidth,_canvasHeight,QImage::Format_Grayscale8);
-    _canvasImage = QImage(_canvasWidth,_canvasHeight,QImage::Format_Grayscale8);
-    _canvasPixmap = addPixmap(QPixmap::fromImage(_canvasImage));
-
     this->media = std::make_shared<MediaData>();
+
+    _createCanvasForData();
 
     _is_verbose = false;
 }
@@ -77,7 +75,7 @@ int Media_Window::LoadFrame(int frame_id)
     auto unscaled_image = QImage(&media_data[0],
                               this->media->getWidth(),
                               this->media->getHeight(),
-                                 QImage::Format_Grayscale8
+                                 _getQImageFormat()
                               //QImage::Format(this->media->getFormat())
                               );
 
@@ -88,6 +86,28 @@ int Media_Window::LoadFrame(int frame_id)
     UpdateCanvas(_canvasImage);
 
     return frame_id;
+}
+
+QImage::Format Media_Window::_getQImageFormat() {
+
+    switch(this->media->getFormat())
+    {
+    case MediaData::DisplayFormat::Gray:
+        return QImage::Format_Grayscale8;
+    case MediaData::DisplayFormat::Color:
+        return QImage::Format_ARGB32;
+    }
+}
+
+void Media_Window::_createCanvasForData()
+{
+
+    auto image_format = _getQImageFormat();
+
+    _mediaImage = QImage(_canvasWidth,_canvasHeight,image_format);
+    _canvasImage = QImage(_canvasWidth,_canvasHeight,image_format);
+
+    _canvasPixmap = addPixmap(QPixmap::fromImage(_canvasImage));
 }
 
 void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {

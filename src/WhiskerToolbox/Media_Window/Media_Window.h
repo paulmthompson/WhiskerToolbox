@@ -128,6 +128,9 @@ private:
 
     bool _is_verbose;
 
+    QImage::Format _getQImageFormat();
+    void _createCanvasForData();
+
 signals:
     void leftClick(qreal,qreal);
 };
