@@ -12,6 +12,9 @@ class MediaData {
 public:
 
     MediaData() {
+        _width = 640;
+        _height = 480;
+        data = std::vector<uint8_t>(_height * _width);
         setFormat(DisplayFormat::Gray);
     };
 
