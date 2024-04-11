@@ -1,11 +1,16 @@
 
 add_library(Media_Window SHARED
-    Media_Window.h
-    Video_Window.h
-    Images_Window.h
-    Media_Window.cpp
-    Video_Window.cpp
-    Images_Window.cpp
+        Media_Window.h
+        Media_Window.cpp
+        Media_Data.h
+
+        Video_Window.h
+        Video_Window.cpp
+        Video_Data.hpp
+        Video_Data.cpp
+
+        Images_Window.h
+        Images_Window.cpp
         Image_Data.h
         Image_Data.cpp
 )
