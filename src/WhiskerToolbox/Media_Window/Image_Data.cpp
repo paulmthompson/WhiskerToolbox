@@ -4,6 +4,8 @@
 
 #include "Image_Data.h"
 
+#include <QString>
+#include <QImage>
 #include <set>
 #include <iostream>
 

@@ -9,7 +9,6 @@
 #include <vector>
 #include <string>
 #include "Media_Data.h"
-#include "Media_Window.h"
 
 class ImageData : public MediaData {
 public:
