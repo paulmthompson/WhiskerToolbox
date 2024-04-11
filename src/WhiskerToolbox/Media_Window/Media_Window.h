@@ -14,15 +14,12 @@
 #include "Media_Data.h"
 
 
-/*
-
-The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
-Shapes may take the form of lines, points, or arbitrary 2d masks.
-
-Advancing a frame will result in the video window loading new data.
-
-*/
-
+/**
+ * The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
+ * Shapes may take the form of lines, points, or arbitrary 2d masks.
+ * Advancing a frame will result in the video window loading new data.
+ *
+ */
 class Media_Window : public QGraphicsScene
 
 {
@@ -30,8 +27,15 @@ Q_OBJECT
 public:
     Media_Window(QObject *parent = 0);
 
-    //Template member functions must be defined in header file so that compiler than create specialized versions
-    //Other methods can achieve this
+
+    /**
+     *
+     *
+     * @tparam T
+     * @param x
+     * @param y
+     * @param color
+     */
     template <typename T>
     void addLine(std::vector<T>& x, std::vector<T>& y, QPen color) {
         QPainterPath* path = new QPainterPath();
@@ -52,6 +56,16 @@ public:
 
     void clearLines();
 
+    /**
+     *
+     *
+     *
+     * @tparam T
+     * @param x_canvas
+     * @param y_canvas
+     * @param color
+     * @param radius
+     */
     template <typename T>
     void addPoint(T x_canvas, T y_canvas, QPen color,float radius = 15.0) {
 
@@ -66,11 +80,21 @@ public:
 
     void clearPoints();
 
+    /**
+     *
+     * @param img
+     */
     void UpdateCanvas(QImage& img);
 
     int LoadMedia(std::string name);
 
-    //Jump to specific frame designated by frame_id
+    /**
+     *
+     * Jump to specific frame designated by frame_id
+     *
+     * @param frame_id
+     * @return
+     */
     int LoadFrame(int frame_id);
 
     float getXAspect() const;
