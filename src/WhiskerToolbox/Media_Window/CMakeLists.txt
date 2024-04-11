@@ -5,7 +5,10 @@ add_library(Media_Window SHARED
     Images_Window.h
     Media_Window.cpp
     Video_Window.cpp
-    Images_Window.cpp)
+    Images_Window.cpp
+        Image_Data.h
+        Image_Data.cpp
+)
 
 target_include_directories(Media_Window PUBLIC
                             "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>")

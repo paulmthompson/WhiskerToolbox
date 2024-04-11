@@ -8,19 +8,6 @@
 #include <vector>
 #include <filesystem>
 
-class ImageData : public MediaData {
-public:
-    ImageData();
-    int LoadMedia(std::string name) override;
-    void LoadFrame(int frame_id) override;
-    std::string GetFrameID(int frame_id) override;
-
-protected:
-
-private:
-    std::vector<std::filesystem::path> _image_paths;
-};
-
 class Images_Window : public Media_Window
 {
     Q_OBJECT
