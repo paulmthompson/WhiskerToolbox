@@ -15,7 +15,7 @@ public:
         _width = 640;
         _height = 480;
         data = std::vector<uint8_t>(_height * _width);
-        setFormat(DisplayFormat::Gray);
+        setFormat(DisplayFormat::Color);
     };
 
     std::string getFilename() const {return _filename;};

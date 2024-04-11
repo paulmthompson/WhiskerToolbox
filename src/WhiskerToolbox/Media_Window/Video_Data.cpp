@@ -18,6 +18,17 @@ int VideoData::LoadMedia(std::string name) {
     updateHeight(_vd->getHeight());
     updateWidth(_vd->getWidth());
 
+    switch (getFormat()) {
+    case DisplayFormat::Gray:
+        _vd->setFormat(ffmpeg_wrapper::VideoDecoder::Gray8);
+        break;
+    case DisplayFormat::Color:
+        _vd->setFormat(ffmpeg_wrapper::VideoDecoder::ARGB);
+        break;
+    default:
+        _vd->setFormat(ffmpeg_wrapper::VideoDecoder::Gray8);
+    }
+
     // Set format of video decoder to the format currently
     // selected in the MediaData
     //setFormat(QImage::Format_Grayscale8);

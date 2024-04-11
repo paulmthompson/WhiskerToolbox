@@ -95,7 +95,7 @@ QImage::Format Media_Window::_getQImageFormat() {
     case MediaData::DisplayFormat::Gray:
         return QImage::Format_Grayscale8;
     case MediaData::DisplayFormat::Color:
-        return QImage::Format_ARGB32;
+        return QImage::Format_RGBA8888;
     }
 }
 
