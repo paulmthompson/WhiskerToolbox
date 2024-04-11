@@ -9,7 +9,6 @@
 #include <memory>
 #include <ffmpeg_wrapper/videodecoder.h>
 #include "Media_Data.h"
-#include "Media_Window.h"
 
 class VideoData : public MediaData {
 public:
