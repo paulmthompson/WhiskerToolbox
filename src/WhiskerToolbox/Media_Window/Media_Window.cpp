@@ -4,6 +4,7 @@
 #include <QImage>
 
 #include "Media_Window.h"
+#include "Media_Data.h"
 
 #include <iostream>
 

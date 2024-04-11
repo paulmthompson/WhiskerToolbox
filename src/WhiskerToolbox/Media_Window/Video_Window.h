@@ -2,6 +2,7 @@
 #define VIDEO_WINDOW_H
 
 #include "Media_Window.h"
+#include "Media_Data.h"
 
 #include <ffmpeg_wrapper/videodecoder.h>
 
