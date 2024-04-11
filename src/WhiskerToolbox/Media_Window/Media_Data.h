@@ -11,9 +11,10 @@
 class MediaData {
 public:
 
-    MediaData() {
-        _width = 640;
-        _height = 480;
+    MediaData() :
+        _width{640},
+        _height{480}
+    {
         data = std::vector<uint8_t>(_height * _width);
         setFormat(DisplayFormat::Color);
     };
@@ -43,6 +44,7 @@ public:
         }
         this->data.resize(_height * _width * _display_format_bytes);
     };
+
     DisplayFormat getFormat() const {return _format;};
 
     int getHeight() const {return _height;};
