@@ -14,10 +14,19 @@
 class VideoData : public MediaData {
 public:
     VideoData();
+
     int LoadMedia(std::string name) override;
     void LoadFrame(int frame_id) override;
     std::string GetFrameID(int frame_id) override;
 
+    /**
+     * When scrolling through large video files, it makes for much
+     * smoother scrolling for the slider to "snap" or seek only
+     * to key frames.
+     *
+     * @param frame_id
+     * @return Nearest keyframe to frame_id
+     */
     int FindNearestSnapFrame(int frame_id) const;
 protected:
 

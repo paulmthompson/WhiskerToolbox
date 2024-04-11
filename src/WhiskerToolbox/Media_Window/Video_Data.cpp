@@ -26,7 +26,8 @@ int VideoData::LoadMedia(std::string name) {
 
 void VideoData::LoadFrame(int frame_id) {
 
-    //In most circumstances, we want to decode forward from the current frame without reseeking to a keyframe
+    //In most circumstances, we want to decode forward from
+    // the current frame without reseeking to a keyframe
     bool frame_by_frame = true;
 
     if (frame_id == 0) {

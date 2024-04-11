@@ -24,6 +24,7 @@ Advancing a frame will result in the video window loading new data.
 */
 
 class Media_Window : public QGraphicsScene
+
 {
 Q_OBJECT
 public:

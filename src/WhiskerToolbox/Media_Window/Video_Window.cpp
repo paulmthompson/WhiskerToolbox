@@ -2,7 +2,13 @@
 #include "Video_Window.h"
 #include "Video_Data.hpp"
 
-Video_Window::Video_Window(QObject *parent) : Media_Window(parent) {
+Video_Window::Video_Window(QObject *parent) : Media_Window(parent)
+/*!
+ *
+ *
+ * @param parent
+ */
+{
 
     this->media = std::make_shared<VideoData>();
 
