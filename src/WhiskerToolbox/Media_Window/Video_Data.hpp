@@ -15,8 +15,11 @@ class VideoData : public MediaData {
 public:
     VideoData();
 
+
     int LoadMedia(std::string name) override;
+
     void LoadFrame(int frame_id) override;
+
     std::string GetFrameID(int frame_id) override;
 
     /**

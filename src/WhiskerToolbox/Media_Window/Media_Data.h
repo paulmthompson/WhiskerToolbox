@@ -27,8 +27,29 @@ public:
 
     std::vector<uint8_t> getData() const {return this->data;};
 
+    /**
+     *
+     *
+     *
+     * @brief LoadMedia
+     * @param name points to the path to the file or folder
+     * @return The total number of frames in the media
+     */
     virtual int LoadMedia(std::string name) {return 0;};
+
+    /**
+     *
+     * Subclasses will specify how to load a specific frame given by frame_id
+     * This will populate the data class member with a vector of raw uint8_t
+     *
+     *
+     *
+     * @brief LoadFrame
+     * @param frame_id
+     */
     virtual void LoadFrame(int frame_id) {};
+
+
     virtual std::string GetFrameID(int frame_id) {return "";};
 
 protected:
