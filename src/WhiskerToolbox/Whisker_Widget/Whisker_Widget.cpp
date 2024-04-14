@@ -14,21 +14,18 @@
 #include "ui_Whisker_Widget.h"
 
 Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<TimeFrame> time, QWidget *parent) :
-    QWidget(parent),  ui(new Ui::Whisker_Widget) {
-
+    QWidget(parent),
+    _wt{std::make_unique<WhiskerTracker>()},
+    _scene{scene},
+    _time{time},
+    _selected_whisker{0},
+    _selection_mode{Whisker_Select},
+    _contact_start{0},
+    _contact_epoch(false),
+    ui(new Ui::Whisker_Widget)
+{
     ui->setupUi(this);
-
-    _scene = scene;
-
-    _time = time;
-
-    _createActions();
-
-    _wt = std::make_unique<WhiskerTracker>();
-    _selected_whisker = 0;
-    _selection_mode = Whisker_Select;
-    //connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(openConfig()));
-
+    _createActions(); 
 };
 
 Whisker_Widget::~Whisker_Widget()
