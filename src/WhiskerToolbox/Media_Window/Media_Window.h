@@ -100,15 +100,15 @@ public:
     float getXAspect() const;
     float getYAspect() const;
 
-    std::vector<uint8_t> getCurrentFrame() const {return this->media->getData();};
-    std::string getFrameID(int frame) {return this->media->GetFrameID(frame);}; // This should be in data / time object
+    std::vector<uint8_t> getCurrentFrame() const {return this->_media->getData();};
+    std::string getFrameID(int frame) {return this->_media->GetFrameID(frame);}; // This should be in data / time object
 
-    //Can be removed when other objects have separate interface to media
-    int getMediaHeight() const {return this->media->getHeight();};
-    int getMediaWidth() const {return this->media->getWidth();};
+    //Can be removed when other objects have separate interface to _media
+    int getMediaHeight() const {return this->_media->getHeight();};
+    int getMediaWidth() const {return this->_media->getWidth();};
 
-    void setData(std::shared_ptr<MediaData> media) {this->media = media;};
-    std::shared_ptr<MediaData> getData() const {return this->media;};
+    void setData(std::shared_ptr<MediaData> media) {this->_media = media;};
+    std::shared_ptr<MediaData> getData() const {return this->_media;};
 
 protected:
 
@@ -117,12 +117,15 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 
 private:
-    std::shared_ptr<MediaData> media;
+    QImage::Format _getQImageFormat();
+    void _createCanvasForData();
+
+    std::shared_ptr<MediaData> _media;
 
     QImage _mediaImage;
-
     QGraphicsPixmapItem* _canvasPixmap;
     QImage _canvasImage;
+
     int _canvasHeight;
     int _canvasWidth;
 
@@ -130,9 +133,6 @@ private:
     QVector<QGraphicsEllipseItem*> _points;
 
     bool _is_verbose;
-
-    QImage::Format _getQImageFormat();
-    void _createCanvasForData();
 
 signals:
     void leftClick(qreal,qreal);

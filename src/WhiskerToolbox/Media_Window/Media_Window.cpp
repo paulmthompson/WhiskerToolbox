@@ -14,16 +14,14 @@ The Media_Window class
 
 */
 
-Media_Window::Media_Window(QObject *parent) : QGraphicsScene(parent) {
-
-    _canvasWidth = 640;
-    _canvasHeight = 480;
-
-    this->media = std::make_shared<MediaData>();
-
+Media_Window::Media_Window(QObject *parent) :
+    QGraphicsScene(parent),
+    _media{std::make_shared<MediaData>()},
+    _canvasHeight{480},
+    _canvasWidth{640},
+    _is_verbose{false}
+{
     _createCanvasForData();
-
-    _is_verbose = false;
 }
 
 void Media_Window::addLine(QPainterPath* path, QPen color) {
@@ -56,8 +54,8 @@ void Media_Window::UpdateCanvas(QImage& img)
 
 int Media_Window::LoadMedia(std::string name) {
 
-    auto total_frame_count = this->media->LoadMedia(name);
-    this->media->setTotalFrameCount(total_frame_count);
+    auto total_frame_count = _media->LoadMedia(name);
+    _media->setTotalFrameCount(total_frame_count);
     return total_frame_count;
 }
 
@@ -67,14 +65,14 @@ int Media_Window::LoadMedia(std::string name) {
 int Media_Window::LoadFrame(int frame_id)
 {
     // Get MediaData
-    this->media->LoadFrame(frame_id);
+    _media->LoadFrame(frame_id);
 
-    auto media_data = this->media->getData();
+    auto media_data = _media->getData();
 
-    //std::cout << this->media->getHeight() << " x " << this->media->getWidth() << std::endl;
+    //std::cout << this->_media->getHeight() << " x " << this->_media->getWidth() << std::endl;
     auto unscaled_image = QImage(&media_data[0],
-                              this->media->getWidth(),
-                              this->media->getHeight(),
+                                 _media->getWidth(),
+                                 _media->getHeight(),
                                  _getQImageFormat()
                               //QImage::Format(this->media->getFormat())
                               );
@@ -90,7 +88,7 @@ int Media_Window::LoadFrame(int frame_id)
 
 QImage::Format Media_Window::_getQImageFormat() {
 
-    switch(this->media->getFormat())
+    switch(_media->getFormat())
     {
     case MediaData::DisplayFormat::Gray:
         return QImage::Format_Grayscale8;
@@ -130,7 +128,7 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 float Media_Window::getXAspect() const {
 
     float scale_width = static_cast<float>(_canvasWidth)
-                        / static_cast<float>(this->media->getWidth());
+                        / static_cast<float>(_media->getWidth());
 
     return scale_width;
 }
@@ -138,7 +136,7 @@ float Media_Window::getXAspect() const {
 float Media_Window::getYAspect() const {
 
     float scale_height = static_cast<float>(_canvasHeight)
-                         / static_cast<float>(this->media->getHeight());
+                         / static_cast<float>(_media->getHeight());
 
     return scale_height;
 }
