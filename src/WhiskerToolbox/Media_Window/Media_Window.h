@@ -107,15 +107,18 @@ public:
     int getMediaHeight() const {return this->media->getHeight();};
     int getMediaWidth() const {return this->media->getWidth();};
 
+    void setData(std::shared_ptr<MediaData> media) {this->media = media;};
+    std::shared_ptr<MediaData> getData() const {return this->media;};
+
 protected:
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 
+private:
     std::shared_ptr<MediaData> media;
 
-private:
     QImage _mediaImage;
 
     QGraphicsPixmapItem* _canvasPixmap;

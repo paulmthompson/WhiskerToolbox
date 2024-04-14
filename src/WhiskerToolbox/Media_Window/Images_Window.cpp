@@ -8,5 +8,5 @@ namespace fs = std::filesystem;
 
 
 Images_Window::Images_Window(QObject *parent) : Media_Window(parent) {
-    this->media = std::make_shared<ImageData>();
+    setData(std::make_shared<ImageData>());
 }
