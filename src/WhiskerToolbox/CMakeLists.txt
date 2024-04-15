@@ -75,6 +75,7 @@ target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
 add_subdirectory(DataManager)
 add_subdirectory(Media_Window)
+add_subdirectory(AnalogViewer)
 
 target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Modules/Janelia>"
@@ -86,6 +87,8 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Covariate_Widget>"
 
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
+
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
 
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
