@@ -75,6 +75,7 @@ target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
 add_subdirectory(DataManager)
 add_subdirectory(Media_Window)
+
 add_subdirectory(AnalogViewer)
 
 target_include_directories(WhiskerToolbox PRIVATE
