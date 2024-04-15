@@ -359,6 +359,7 @@
     </property>
     <addaction name="actionWhisker_Tracking"/>
     <addaction name="actionLabel_Maker"/>
+    <addaction name="actionAnalog_Viewer"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -389,6 +390,11 @@
   <action name="actionLoad_Images">
    <property name="text">
     <string>Load Images</string>
+   </property>
+  </action>
+  <action name="actionAnalog_Viewer">
+   <property name="text">
+    <string>Analog Viewer</string>
    </property>
   </action>
  </widget>

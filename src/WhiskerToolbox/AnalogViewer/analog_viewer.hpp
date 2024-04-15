@@ -22,7 +22,7 @@ public:
     Analog_Viewer(Media_Window *scene, std::shared_ptr<TimeFrame> time, QWidget *parent = 0);
     ~Analog_Viewer();
 
-    //void openWidget(); // Call
+    void openWidget();
 
 protected:
     //void closeEvent(QCloseEvent *event);

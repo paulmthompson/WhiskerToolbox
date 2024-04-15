@@ -10,6 +10,7 @@
 #include "Media_Window.h"
 #include "Whisker_Widget.h"
 #include "Label_Widget.h"
+#include "analog_viewer.hpp"
 
 #include "TimeFrame.h"
 
@@ -34,6 +35,7 @@ private:
     Media_Window* scene;
     QPointer<Whisker_Widget> ww;
     QPointer<Label_Widget> label_maker;
+    QPointer<Analog_Viewer> _analog_viewer;
 
     void updateMedia();
 
@@ -75,5 +77,6 @@ private slots:
     void updateDisplay();
     void openWhiskerTracking();
     void openLabelMaker();
+    void openAnalogViewer();
 };
 #endif // MAINWINDOW_H

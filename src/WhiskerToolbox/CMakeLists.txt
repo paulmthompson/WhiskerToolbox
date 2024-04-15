@@ -96,6 +96,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 
 target_link_libraries(WhiskerToolbox PRIVATE janelia)
 target_link_libraries(WhiskerToolbox PRIVATE Media_Window)
+target_link_libraries(WhiskerToolbox PRIVATE Analog_Viewer)
 
 set_target_properties(WhiskerToolbox PROPERTIES
         MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

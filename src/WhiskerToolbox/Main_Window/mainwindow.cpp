@@ -73,6 +73,7 @@ void MainWindow::createActions()
 
     connect(ui->actionWhisker_Tracking,SIGNAL(triggered()),this,SLOT(openWhiskerTracking()));
     connect(ui->actionLabel_Maker,SIGNAL(triggered()),this,SLOT(openLabelMaker()));
+    connect(ui->actionAnalog_Viewer,SIGNAL(triggered()),this,SLOT(openAnalogViewer()));
 
 }
 
@@ -175,6 +176,17 @@ void MainWindow::openLabelMaker() {
         std::cout << "Label Maker already exists" << std::endl;
     }
     this->label_maker->openWidget();
+}
+
+void MainWindow::openAnalogViewer()
+{
+    if (!this->_analog_viewer) {
+        this->_analog_viewer = new Analog_Viewer(this->scene,this->time);
+        std::cout << "Analog Viewer Constructed" << std::endl;
+    } else {
+        std::cout << "Analog Viewer already exists" << std::endl;
+    }
+    this->_analog_viewer->openWidget();
 }
 
 void MainWindow::addCovariate() {
