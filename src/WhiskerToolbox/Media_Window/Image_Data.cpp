@@ -53,8 +53,8 @@ void ImageData::LoadFrame(int frame_id) {
     updateWidth(loaded_image.width());
 
     auto converted_image = _convertToDisplayFormat(loaded_image, this->getFormat());
-
-    this->data = std::vector<uint8_t>(converted_image.bits(), converted_image.bits() + converted_image.sizeInBytes());
+    
+    this->setRawData(std::vector<uint8_t>(converted_image.bits(), converted_image.bits() + converted_image.sizeInBytes()));
 }
 
 std::string ImageData::GetFrameID(int frame_id) {

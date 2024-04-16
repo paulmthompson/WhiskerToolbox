@@ -11,13 +11,7 @@
 class MediaData {
 public:
 
-    MediaData() :
-        _width{640},
-        _height{480}
-    {
-        data = std::vector<uint8_t>(_height * _width);
-        setFormat(DisplayFormat::Color);
-    };
+    MediaData();
 
     std::string getFilename() const {return _filename;};
     void setFilename(std::string filename) {_filename = filename;};
@@ -27,43 +21,21 @@ public:
         Color
     };
 
-    void setFormat(DisplayFormat format)
-    {
-        _format = format;
-        switch(_format)
-        {
-        case DisplayFormat::Gray:
-            _display_format_bytes = 1;
-            break;
-        case DisplayFormat::Color:
-            _display_format_bytes = 4;
-            break;
-        default:
-            _display_format_bytes = 1;
-            break;
-        }
-        this->data.resize(_height * _width * _display_format_bytes);
-    };
+    void setFormat(DisplayFormat format);
 
     DisplayFormat getFormat() const {return _format;};
 
     int getHeight() const {return _height;};
     int getWidth() const {return _width;};
-    void updateHeight(int height)
-    {
-        _height = height;
-        this->data.resize(_height * _width * _display_format_bytes);
-    };
-    void updateWidth(int width)
-    {
-        _width = width;
-        this->data.resize(_height * _width * _display_format_bytes);
-    };
+
+    void updateHeight(int height);
+
+    void updateWidth(int width);
 
     int getTotalFrameCount() const {return _totalFrameCount;};
     void setTotalFrameCount(int total_frame_count) {_totalFrameCount = total_frame_count;};
 
-    std::vector<uint8_t> getData() const {return this->data;};
+    std::vector<uint8_t> getData() const {return this->rawData;};
 
     /**
      *
@@ -90,10 +62,11 @@ public:
 
     virtual std::string GetFrameID(int frame_id) {return "";};
 
+    std::vector<uint8_t> getRawData() {return rawData;};
+    void setRawData(std::vector<uint8_t> data) {rawData = data;};
+
 protected:
 
-
-    std::vector<uint8_t> data;
 private:
     std::string _filename;
     int _totalFrameCount;
@@ -102,6 +75,8 @@ private:
     int _width;
     DisplayFormat _format; // This corresponds to an enum. Here we will use QImage.
     int _display_format_bytes;
+
+    std::vector<uint8_t> rawData;
 };
 
 #endif //WHISKERTOOLBOX_MEDIA_DATA_H

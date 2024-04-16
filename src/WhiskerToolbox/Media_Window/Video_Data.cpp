@@ -51,7 +51,7 @@ void VideoData::LoadFrame(int frame_id) {
     }
 
     //We load the data associated with the frame
-    this->data = _vd->getFrame( frame_id, frame_by_frame);
+    this->setRawData(_vd->getFrame( frame_id, frame_by_frame));
     _last_decoded_frame = frame_id;
 
 }

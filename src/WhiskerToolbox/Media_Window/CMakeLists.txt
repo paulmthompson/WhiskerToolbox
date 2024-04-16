@@ -13,6 +13,7 @@ add_library(Media_Window SHARED
         Images_Window.cpp
         Image_Data.h
         Image_Data.cpp
+        Media_Data.cpp
 )
 
 target_include_directories(Media_Window PUBLIC
