@@ -2,18 +2,12 @@
 add_library(Media_Window SHARED
         Media_Window.h
         Media_Window.cpp
-        Media_Data.h
 
         Video_Window.h
         Video_Window.cpp
-        Video_Data.hpp
-        Video_Data.cpp
 
         Images_Window.h
         Images_Window.cpp
-        Image_Data.h
-        Image_Data.cpp
-        Media_Data.cpp
 )
 
 target_include_directories(Media_Window PUBLIC
@@ -25,4 +19,5 @@ target_link_libraries(Media_Window PRIVATE Qt${QT_VERSION_MAJOR}::MultimediaWidg
 target_link_libraries(Media_Window PRIVATE Qt${QT_VERSION_MAJOR}::OpenGL)
 target_link_libraries(Media_Window PRIVATE Qt${QT_VERSION_MAJOR}::UiTools)
 
+target_link_libraries(Media_Window PRIVATE DataManager)
 target_link_libraries(Media_Window PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)

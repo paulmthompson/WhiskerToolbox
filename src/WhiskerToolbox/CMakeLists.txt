@@ -82,19 +82,20 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Modules/Janelia>"
 
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
+
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Covariate_Widget>"
-
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
-
+        
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
 
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE janelia)
+target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 target_link_libraries(WhiskerToolbox PRIVATE Media_Window)
 target_link_libraries(WhiskerToolbox PRIVATE Analog_Viewer)
 

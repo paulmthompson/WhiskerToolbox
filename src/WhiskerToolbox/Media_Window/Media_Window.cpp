@@ -1,10 +1,5 @@
-#include <QGraphicsScene>
-#include <QGraphicsSceneMouseEvent>
-#include <QGraphicsPixmapItem>
-#include <QImage>
 
 #include "Media_Window.h"
-#include "Media_Data.h"
 
 #include <iostream>
 
@@ -81,6 +76,7 @@ int Media_Window::LoadFrame(int frame_id)
 
     _canvasImage = unscaled_image.scaled(_canvasWidth,_canvasHeight);
 
+    // Here we should change the pixmap to the
     UpdateCanvas(_canvasImage);
 
     return frame_id;

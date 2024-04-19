@@ -5,10 +5,11 @@
 #ifndef WHISKERTOOLBOX_VIDEO_DATA_HPP
 #define WHISKERTOOLBOX_VIDEO_DATA_HPP
 
+#include "Media_Data.h"
+#include "ffmpeg_wrapper/videodecoder.h"
+
 #include <string>
 #include <memory>
-#include <ffmpeg_wrapper/videodecoder.h>
-#include "Media_Data.h"
 
 class VideoData : public MediaData {
 public:

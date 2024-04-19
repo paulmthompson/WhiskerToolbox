@@ -19,6 +19,13 @@
  * Shapes may take the form of lines, points, or arbitrary 2d masks.
  * Advancing a frame will result in the video window loading new data.
  *
+ * This is a QGraphicsScene, which internally renders lines, paths, points, and
+ * shapes which are added to the scene
+ *
+ * Shapes can be added to the specific frame being visualized after it has been rendered and saved
+ * or just temporarily (scrolled back it will not be there), or data assets can be loaded which are
+ * saved for the duration (loading keypoints to be plotted with each corresponding frame).
+ *
  */
 class Media_Window : public QGraphicsScene
 
@@ -128,6 +135,7 @@ private:
 
     int _canvasHeight;
     int _canvasWidth;
+
 
     QVector<QGraphicsPathItem*> _line_paths;
     QVector<QGraphicsEllipseItem*> _points;
