@@ -26,25 +26,25 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    play_speed = 1;
+    _play_speed = 1;
 
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
 
-    this->scene = new Media_Window(this);
+    _scene = new Media_Window(this);
 
-    timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &MainWindow::vidLoop);
+    _timer = new QTimer(this);
+    connect(_timer, &QTimer::timeout, this, &MainWindow::_vidLoop);
 
-    play_mode = false;
+    _play_mode = false;
 
-    verbose = false;
+    _verbose = false;
 
-    this->updateMedia();
+    _updateMedia();
 
-    time = std::make_shared<TimeFrame>();
+    _time = std::make_shared<TimeFrame>();
 
-    createActions(); // Creates callback functions
+    _createActions(); // Creates callback functions
 
 }
 
@@ -53,7 +53,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::createActions()
+void MainWindow::_createActions()
 {
     connect(ui->actionLoad_Video,SIGNAL(triggered()),this,SLOT(Load_Video()));
 
@@ -100,10 +100,10 @@ void MainWindow::Load_Video()
 
 
 
-    this->scene = new Video_Window(this); // Establish scene as Video Window
-    this->updateMedia();
+    _scene = new Video_Window(this); // Establish scene as Video Window
+    _updateMedia();
 
-    this->LoadData(vid_name.toStdString());
+    _LoadData(vid_name.toStdString());
 
 }
 
@@ -117,37 +117,37 @@ void MainWindow::Load_Images() {
         return;
     }
 
-    this->scene = new Images_Window(this);
-    this->updateMedia();
+    _scene = new Images_Window(this);
+    _updateMedia();
 
-    this->LoadData(dir_name.toStdString());
-
-}
-
-void MainWindow::LoadData(std::string filepath) {
-
-    auto frame_count = this->scene->LoadMedia(filepath) - 1; // We are zero indexing so subtract 1 from total frame count
-    this->time->updateTotalFrameCount(frame_count);
-
-    this->updateScrollBarNewMax(this->time->getTotalFrameCount());
-
-    this->LoadFrame(0);
+    _LoadData(dir_name.toStdString());
 
 }
 
-void MainWindow::LoadFrame(int frame_id) {
+void MainWindow::_LoadData(std::string filepath) {
 
-    frame_id = this->time->checkFrameInbounds(frame_id);
-    auto loaded_frame_id = scene->LoadFrame(frame_id);
-    this->time->updateLastLoadedFrame(loaded_frame_id);
+    auto frame_count = _scene->LoadMedia(filepath) - 1; // We are zero indexing so subtract 1 from total frame count
+    _time->updateTotalFrameCount(frame_count);
+
+    _updateScrollBarNewMax(_time->getTotalFrameCount());
+
+    _LoadFrame(0);
+
+}
+
+void MainWindow::_LoadFrame(int frame_id) {
+
+    frame_id = _time->checkFrameInbounds(frame_id);
+    auto loaded_frame_id = _scene->LoadFrame(frame_id);
+    _time->updateLastLoadedFrame(loaded_frame_id);
 }
 
 //If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.
 //these include whisker_widget and label_widget
 //There are probably better ways to do this.
-void MainWindow::updateMedia() {
+void MainWindow::_updateMedia() {
 
-    ui->graphicsView->setScene(this->scene);
+    ui->graphicsView->setScene(_scene);
     ui->graphicsView->show();
 
 }
@@ -156,37 +156,37 @@ void MainWindow::openWhiskerTracking() {
 
     // We create a whisker widget. We only want to load this module one time,
     // so if we exit the window, it is not created again
-    if (!this->ww) {
-        this->ww = new Whisker_Widget(this->scene,this->time);
+    if (!_ww) {
+        _ww = new Whisker_Widget(_scene,_time);
         std::cout << "Whisker Tracker Constructed" << std::endl;
     } else {
         std::cout << "Whisker Tracker already exists" << std::endl;
     }
-    this->ww->openWidget();
+    _ww->openWidget();
 }
 
 void MainWindow::openLabelMaker() {
 
     // We create a whisker widget. We only want to load this module one time,
     // so if we exit the window, it is not created again
-    if (!this->label_maker) {
-        this->label_maker = new Label_Widget(this->scene,this->time);
+    if (!_label_maker) {
+        _label_maker = new Label_Widget(_scene,_time);
         std::cout << "Label Maker Constructed" << std::endl;
     } else {
         std::cout << "Label Maker already exists" << std::endl;
     }
-    this->label_maker->openWidget();
+    _label_maker->openWidget();
 }
 
 void MainWindow::openAnalogViewer()
 {
-    if (!this->_analog_viewer) {
-        this->_analog_viewer = new Analog_Viewer(this->scene,this->time);
+    if (!_analog_viewer) {
+        _analog_viewer = new Analog_Viewer(_scene,_time);
         std::cout << "Analog Viewer Constructed" << std::endl;
     } else {
         std::cout << "Analog Viewer already exists" << std::endl;
     }
-    this->_analog_viewer->openWidget();
+    _analog_viewer->openWidget();
 }
 
 void MainWindow::addCovariate() {
@@ -215,9 +215,9 @@ selected with forward and reverse buttons.
 The timer is fixed at 25 fps, so faster will result in some frames not being flashed to the screen.
 */
 
-void MainWindow::vidLoop()
+void MainWindow::_vidLoop()
 {
-    updateDataDisplays(this->play_speed);
+    _updateDataDisplays(_play_speed);
 }
 
 void MainWindow::PlayButton()
@@ -225,20 +225,20 @@ void MainWindow::PlayButton()
 
     const int timer_period_ms = 40;
 
-    if (play_mode) {
+    if (_play_mode) {
 
-        timer->stop();
+        _timer->stop();
         ui->play_button->setText(QString("Play"));
-        play_mode = false;
+        _play_mode = false;
 
         ui->horizontalScrollBar->blockSignals(true);
-        ui->horizontalScrollBar->setValue(this->time->getLastLoadedFrame());
+        ui->horizontalScrollBar->setValue(_time->getLastLoadedFrame());
         ui->horizontalScrollBar->blockSignals(false);
 
     } else {
         ui->play_button->setText(QString("Pause"));
-        timer->start(timer_period_ms);
-        play_mode = true;
+        _timer->start(timer_period_ms);
+        _play_mode = true;
     }
 }
 
@@ -248,10 +248,10 @@ Increases the speed of a playing video in increments of the base_fps (default = 
 void MainWindow::RewindButton()
 {
     const int play_speed_base_fps = 25;
-    if (this->play_speed > 1)
+    if (_play_speed > 1)
     {
-        this->play_speed--;
-        ui->fps_label->setText(QString::number(play_speed_base_fps * this->play_speed));
+        _play_speed--;
+        ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
     }
 }
 
@@ -262,8 +262,8 @@ void MainWindow::FastForwardButton()
 {
     const int play_speed_base_fps = 25;
 
-    this->play_speed++;
-    ui->fps_label->setText(QString::number(play_speed_base_fps * this->play_speed));
+    _play_speed++;
+    ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
@@ -274,11 +274,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
 
     if (event->key() == Qt::Key_Right) {
 
-        updateDataDisplays(1);
+        _updateDataDisplays(1);
 
     } else if (event->key() == Qt::Key_Left){
 
-        updateDataDisplays(-1);
+        _updateDataDisplays(-1);
 
     } else {
         std::cout << "Key pressed but nothing to do" << std::endl;
@@ -297,8 +297,8 @@ void MainWindow::Slider_Drag(int action)
 {
     //If we are dragging the slider, the data manager should be aware of this, and possibly adjust the position
     //of the new point (such as keyframe)
-    if (dynamic_cast<Video_Window*>(this->scene)) {
-        auto keyframe = dynamic_cast<Video_Window*>(this->scene)->FindNearestSnapFrame(ui->horizontalScrollBar->sliderPosition());
+    if (dynamic_cast<Video_Window*>(_scene)) {
+        auto keyframe = dynamic_cast<Video_Window*>(_scene)->FindNearestSnapFrame(ui->horizontalScrollBar->sliderPosition());
         ui->horizontalScrollBar->setSliderPosition(keyframe);
 
     }
@@ -307,12 +307,12 @@ void MainWindow::Slider_Drag(int action)
 
 void MainWindow::Slider_Scroll(int newPos)
 {
-    if (this->verbose) {
+    if (_verbose) {
         std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << std::endl;
     }
 
-    this->LoadFrame(newPos);
-    updateFrameLabels(newPos);
+    _LoadFrame(newPos);
+    _updateFrameLabels(newPos);
 }
 
 void MainWindow::updateDisplay() {
@@ -322,19 +322,19 @@ void MainWindow::updateDisplay() {
     //ui->frame_label->setText(QString::number(ui->horizontalScrollBar->sliderPosition()));
 }
 
-void MainWindow::updateDataDisplays(int advance_n_frames) {
+void MainWindow::_updateDataDisplays(int advance_n_frames) {
 
-    auto frame_to_load = this->time->getLastLoadedFrame() + advance_n_frames;
-    this->LoadFrame(frame_to_load);
-    updateFrameLabels(frame_to_load);
+    auto frame_to_load = _time->getLastLoadedFrame() + advance_n_frames;
+    _LoadFrame(frame_to_load);
+    _updateFrameLabels(frame_to_load);
 
 }
 
-void MainWindow::updateFrameLabels(int frame_num) {
+void MainWindow::_updateFrameLabels(int frame_num) {
     ui->frame_label->setText(QString::number(frame_num));
 }
 
-void MainWindow::updateScrollBarNewMax(int new_max) {
+void MainWindow::_updateScrollBarNewMax(int new_max) {
 
     ui->frame_count_label->setText(QString::number(new_max));
     ui->horizontalScrollBar->setMaximum(new_max);

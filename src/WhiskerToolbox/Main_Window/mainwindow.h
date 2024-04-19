@@ -32,35 +32,35 @@ protected:
 private:
     Ui::MainWindow *ui;
 
-    Media_Window* scene;
-    QPointer<Whisker_Widget> ww;
-    QPointer<Label_Widget> label_maker;
+    Media_Window* _scene;
+    QPointer<Whisker_Widget> _ww;
+    QPointer<Label_Widget> _label_maker;
     QPointer<Analog_Viewer> _analog_viewer;
 
-    void updateMedia();
+    void _updateMedia();
 
-    void createActions();
+    void _createActions();
 
-    void vidLoop();
+    void _vidLoop();
 
-    void LoadData(std::string filepath);
+    void _LoadData(std::string filepath);
 
-    void updateScrollBarNewMax(int new_max);
-    void updateDataDisplays(int advance_n_frames);
-    void updateFrameLabels(int frame_num);
+    void _updateScrollBarNewMax(int new_max);
+    void _updateDataDisplays(int advance_n_frames);
+    void _updateFrameLabels(int frame_num);
 
-    QTimer* timer;
+    QTimer* _timer;
 
-    long long t_last_draw;
+    long long _t_last_draw;
 
-    int play_speed;
-    bool play_mode;
+    int _play_speed;
+    bool _play_mode;
 
-    bool verbose;
+    bool _verbose;
 
-    void LoadFrame(int frame_id);
+    void _LoadFrame(int frame_id);
 
-    std::shared_ptr<TimeFrame> time;
+    std::shared_ptr<TimeFrame> _time;
 
 
 private slots:
