@@ -6,7 +6,7 @@ MediaData::MediaData() :
     _height{480}
 {
     rawData = std::vector<uint8_t>(_height * _width);
-    setFormat(DisplayFormat::Color);
+    setFormat(DisplayFormat::Gray);
 };
 
 void MediaData::setFormat(DisplayFormat format)
