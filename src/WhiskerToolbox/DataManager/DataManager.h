@@ -16,7 +16,9 @@ public:
         Video,
         Images,
     };
-    void loadMedia(std::string filepath, MediaType media_type);
+
+    void createMedia(MediaType);
+    void loadMedia(std::string filepath);
     std::shared_ptr<MediaData> getMediaData();
 private:
 

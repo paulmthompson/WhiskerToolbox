@@ -13,6 +13,7 @@
 #include "analog_viewer.hpp"
 
 #include "TimeFrame.h"
+#include "DataManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -61,6 +62,8 @@ private:
     void _LoadFrame(int frame_id);
 
     std::shared_ptr<TimeFrame> _time;
+
+    std::shared_ptr<DataManager> _data_manager;
 
 
 private slots:
