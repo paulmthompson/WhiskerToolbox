@@ -45,7 +45,6 @@ void Media_Window::UpdateCanvas()
 
     _convertNewMediaToQImage();
 
-    //We should check size of image here to ensure that its the correct size
     _canvasPixmap->setPixmap(QPixmap::fromImage(_canvasImage));
 }
 

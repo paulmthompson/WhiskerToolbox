@@ -6,11 +6,8 @@
 #include <QGraphicsPixmapItem>
 #include <QImage>
 
-#include <string>
 #include <vector>
 #include <memory>
-#include <utility>
-#include <iostream>
 #include "Media_Data.h"
 
 

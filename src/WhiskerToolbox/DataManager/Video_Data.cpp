@@ -4,12 +4,10 @@
 
 #include "Video_Data.hpp"
 
-VideoData::VideoData() {
-    _vd = std::make_unique<ffmpeg_wrapper::VideoDecoder>();
-
-    _last_decoded_frame = 0;
-
-}
+VideoData::VideoData() :
+    _vd{std::make_unique<ffmpeg_wrapper::VideoDecoder>()},
+    _last_decoded_frame{0}
+{}
 
 void VideoData::doLoadMedia(std::string name) {
     setFilename(name);

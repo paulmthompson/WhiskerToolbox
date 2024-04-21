@@ -9,9 +9,7 @@
 #include <set>
 #include <iostream>
 
-ImageData::ImageData() {
-
-}
+ImageData::ImageData() = default;
 
 void ImageData::doLoadMedia(std::string dir_name) {
 
