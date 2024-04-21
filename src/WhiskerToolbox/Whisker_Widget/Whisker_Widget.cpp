@@ -85,8 +85,10 @@ void Whisker_Widget::_TraceButton()
 {
     QElapsedTimer timer2;
     timer2.start();
+
+    auto _media = _scene->getData();
     
-    _wt->trace(_scene->getCurrentFrame(),_scene->getMediaHeight(), _scene->getMediaWidth());
+    _wt->trace(_media->getData(),_media->getHeight(), _media->getWidth());
 
     int t1 = timer2.elapsed();
     _DrawWhiskers();
