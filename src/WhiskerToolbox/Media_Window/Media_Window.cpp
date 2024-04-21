@@ -38,37 +38,34 @@ void Media_Window::clearPoints() {
     _points.clear();
 }
 
-void Media_Window::UpdateCanvas(QImage& img)
+void Media_Window::UpdateCanvas()
 {
     clearLines();
     clearPoints();
 
+    _convertNewMediaToQImage();
+
     //We should check size of image here to ensure that its the correct size
-    _canvasPixmap->setPixmap(QPixmap::fromImage(img));
+    _canvasPixmap->setPixmap(QPixmap::fromImage(_canvasImage));
 }
 
 
 //Load media designated by frame_id
 //Media frame is loaded. It is then scaled to the
 //Canvas size, and the canvas is updated
-void Media_Window::LoadFrame()
+void Media_Window::_convertNewMediaToQImage()
 {
     auto media_data = _media->getData();
 
-    //std::cout << this->_media->getHeight() << " x " << this->_media->getWidth() << std::endl;
     auto unscaled_image = QImage(&media_data[0],
                                  _media->getWidth(),
                                  _media->getHeight(),
                                  _getQImageFormat()
-                              //QImage::Format(this->media->getFormat())
                               );
-
-    //std::cout << unscaled_image.height() << " x " << unscaled_image.width() << std::endl;
 
     _canvasImage = unscaled_image.scaled(_canvasWidth,_canvasHeight);
 
-    // Here we should change the pixmap to the
-    UpdateCanvas(_canvasImage);
+    UpdateCanvas();
 }
 
 QImage::Format Media_Window::_getQImageFormat() {

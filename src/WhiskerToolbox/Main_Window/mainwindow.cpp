@@ -157,7 +157,7 @@ void MainWindow::_LoadFrame(int frame_id) {
     // Get MediaData
     _data_manager->getMediaData()->LoadFrame(frame_id);
 
-    _scene->LoadFrame();
+    _scene->UpdateCanvas();
     _time->updateLastLoadedFrame(frame_id);
 }
 

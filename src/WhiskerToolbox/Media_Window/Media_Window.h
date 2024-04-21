@@ -89,19 +89,9 @@ public:
 
     /**
      *
-     * @param img
-     */
-    void UpdateCanvas(QImage& img);
-
-
-    /**
      *
-     * Jump to specific frame designated by frame_id
-     *
-     * @param frame_id
-     * @return
      */
-    void LoadFrame();
+    void UpdateCanvas();
 
     float getXAspect() const;
     float getYAspect() const;
@@ -116,9 +106,6 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
-    QImage::Format _getQImageFormat();
-    void _createCanvasForData();
-
     std::shared_ptr<MediaData> _media;
 
     QImage _mediaImage;
@@ -133,6 +120,10 @@ private:
     QVector<QGraphicsEllipseItem*> _points;
 
     bool _is_verbose;
+
+    QImage::Format _getQImageFormat();
+    void _createCanvasForData();
+    void _convertNewMediaToQImage();
 
 signals:
     void leftClick(qreal,qreal);
