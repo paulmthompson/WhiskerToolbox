@@ -98,9 +98,10 @@ void MainWindow::Load_Video()
     // Create video data object
     // Pass video data object to scene?
 
-
-
+    _data_manager->createMedia(DataManager::Video);
     _scene = new Video_Window(this); // Establish scene as Video Window
+    _scene->setData(_data_manager->getMediaData());
+
     _updateMedia();
 
     _LoadData(vid_name.toStdString());
@@ -117,7 +118,10 @@ void MainWindow::Load_Images() {
         return;
     }
 
+    _data_manager->createMedia(DataManager::Images);
     _scene = new Images_Window(this);
+    _scene->setData(_data_manager->getMediaData());
+
     _updateMedia();
 
     _LoadData(dir_name.toStdString());
