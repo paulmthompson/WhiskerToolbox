@@ -101,7 +101,7 @@ public:
      * @param frame_id
      * @return
      */
-    int LoadFrame(int frame_id);
+    void LoadFrame();
 
     float getXAspect() const;
     float getYAspect() const;

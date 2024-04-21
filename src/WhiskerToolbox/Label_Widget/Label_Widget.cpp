@@ -73,12 +73,14 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
   float x_media = x_canvas / _scene->getXAspect();
   float y_media = y_canvas / _scene->getYAspect();
 
+  auto _media = _scene->getData();
+
   // Generate the image to be labeled
   int frame_number = _time->getLastLoadedFrame();
-  std::string frame_id = _scene->getFrameID(frame_number);
-  auto img = _label_maker->createImage(_scene->getMediaHeight(),
-                                       _scene->getMediaWidth(), frame_number,
-                                       frame_id, _scene->getCurrentFrame());
+  std::string frame_id = _media->GetFrameID(frame_number);
+  auto img = _label_maker->createImage(_media->getHeight(),
+                                       _media->getWidth(), frame_number,
+                                       frame_id, _media->getData());
 
   _label_maker->addLabel(img, static_cast<int>(x_media),
                          static_cast<int>(y_media));
@@ -93,10 +95,12 @@ void Label_Widget::_updateAll() {
 
 // If current frame has label, it should be redrawn
 
-void Label_Widget::_updateDraw() {
+void Label_Widget::_updateDraw()
+{
+    auto _media = _scene->getData();
   _scene->clearPoints();
   for (auto &[frame_name, label] : _label_maker->getLabels()) {
-    if (frame_name == _scene->getFrameID(_time->getLastLoadedFrame())) {
+      if (frame_name == _media->GetFrameID(_time->getLastLoadedFrame())) {
       auto &[img, point] = label;
       _scene->addPoint(point.x, point.y, QPen(QColor(Qt::red)));
     }

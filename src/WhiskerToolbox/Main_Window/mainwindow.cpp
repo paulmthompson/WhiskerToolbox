@@ -143,11 +143,22 @@ void MainWindow::_LoadData(std::string filepath) {
 
 }
 
+/**
+ * @brief MainWindow::_LoadFrame
+ *
+ *
+ *
+ * @param frame_id
+ */
 void MainWindow::_LoadFrame(int frame_id) {
 
     frame_id = _time->checkFrameInbounds(frame_id);
-    auto loaded_frame_id = _scene->LoadFrame(frame_id);
-    _time->updateLastLoadedFrame(loaded_frame_id);
+
+    // Get MediaData
+    _data_manager->getMediaData()->LoadFrame(frame_id);
+
+    _scene->LoadFrame();
+    _time->updateLastLoadedFrame(frame_id);
 }
 
 //If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.

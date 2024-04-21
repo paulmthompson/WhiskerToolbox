@@ -99,10 +99,12 @@ void Whisker_Widget::_TraceButton()
 void Whisker_Widget::_SaveImageButton()
 {
     
-    auto data = _scene->getCurrentFrame();
+    auto _media = _scene->getData();
+
+    auto data = _media->getData();
     
-    auto width = _scene->getMediaWidth();
-    auto height = _scene->getMediaHeight();
+    auto width = _media->getWidth();
+    auto height = _media->getHeight();
     
     auto frame_id = _time->getLastLoadedFrame();
 
@@ -119,9 +121,11 @@ void Whisker_Widget::_SaveImageButton()
 }
 
 void Whisker_Widget::_SaveWhiskerMaskButton() {
+
+    auto _media = _scene->getData();
     
-    auto width = _scene->getMediaWidth();
-    auto height = _scene->getMediaHeight();
+    auto width = _media->getWidth();
+    auto height = _media->getHeight();
     
     auto frame_id = _time->getLastLoadedFrame();
 

@@ -51,11 +51,8 @@ void Media_Window::UpdateCanvas(QImage& img)
 //Load media designated by frame_id
 //Media frame is loaded. It is then scaled to the
 //Canvas size, and the canvas is updated
-int Media_Window::LoadFrame(int frame_id)
+void Media_Window::LoadFrame()
 {
-    // Get MediaData
-    _media->LoadFrame(frame_id);
-
     auto media_data = _media->getData();
 
     //std::cout << this->_media->getHeight() << " x " << this->_media->getWidth() << std::endl;
@@ -72,8 +69,6 @@ int Media_Window::LoadFrame(int frame_id)
 
     // Here we should change the pixmap to the
     UpdateCanvas(_canvasImage);
-
-    return frame_id;
 }
 
 QImage::Format Media_Window::_getQImageFormat() {
