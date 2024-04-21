@@ -38,3 +38,8 @@ void MediaData::updateWidth(int width)
     _width = width;
     this->rawData.resize(_height * _width * _display_format_bytes);
 };
+
+void MediaData::LoadMedia(std::string name)
+{
+    doLoadMedia(name);
+}

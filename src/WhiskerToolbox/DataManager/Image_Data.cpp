@@ -13,7 +13,7 @@ ImageData::ImageData() {
 
 }
 
-int ImageData::LoadMedia(std::string dir_name) {
+void ImageData::doLoadMedia(std::string dir_name) {
 
     auto file_extensions = std::set<std::string>{".png",".jpg"};
 
@@ -31,7 +31,7 @@ int ImageData::LoadMedia(std::string dir_name) {
         std::cout << std::endl;
     }
 
-    return _image_paths.size();
+    setTotalFrameCount(_image_paths.size());
 }
 
 QImage _convertToDisplayFormat(QImage& image, ImageData::DisplayFormat format)

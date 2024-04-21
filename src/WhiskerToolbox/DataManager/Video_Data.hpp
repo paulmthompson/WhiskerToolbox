@@ -15,9 +15,6 @@ class VideoData : public MediaData {
 public:
     VideoData();
 
-
-    int LoadMedia(std::string name) override;
-
     void LoadFrame(int frame_id) override;
 
     std::string GetFrameID(int frame_id) override;
@@ -32,7 +29,7 @@ public:
      */
     int FindNearestSnapFrame(int frame_id) const;
 protected:
-
+    void doLoadMedia(std::string name) override;
 private:
     int _last_decoded_frame;
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> _vd;

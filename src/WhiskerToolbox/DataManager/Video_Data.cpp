@@ -11,7 +11,7 @@ VideoData::VideoData() {
 
 }
 
-int VideoData::LoadMedia(std::string name) {
+void VideoData::doLoadMedia(std::string name) {
     setFilename(name);
     _vd->createMedia(name);
 
@@ -33,7 +33,7 @@ int VideoData::LoadMedia(std::string name) {
     // selected in the MediaData
     //setFormat(QImage::Format_Grayscale8);
 
-    return _vd->getFrameCount(); // Total frames
+    setTotalFrameCount(_vd->getFrameCount());
 }
 
 void VideoData::LoadFrame(int frame_id) {

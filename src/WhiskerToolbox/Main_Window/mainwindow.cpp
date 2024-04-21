@@ -132,7 +132,9 @@ void MainWindow::Load_Images() {
 
 void MainWindow::_LoadData(std::string filepath) {
 
-    auto frame_count = _scene->LoadMedia(filepath) - 1; // We are zero indexing so subtract 1 from total frame count
+    _scene->LoadMedia(filepath); // We are zero indexing so subtract 1 from total frame count
+    auto frame_count = _data_manager->getMediaData()->getTotalFrameCount() - 1;
+
     _time->updateTotalFrameCount(frame_count);
 
     _updateScrollBarNewMax(_time->getTotalFrameCount());

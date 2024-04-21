@@ -47,11 +47,9 @@ void Media_Window::UpdateCanvas(QImage& img)
     _canvasPixmap->setPixmap(QPixmap::fromImage(img));
 }
 
-int Media_Window::LoadMedia(std::string name) {
+void Media_Window::LoadMedia(std::string name) {
 
-    auto total_frame_count = _media->LoadMedia(name);
-    _media->setTotalFrameCount(total_frame_count);
-    return total_frame_count;
+    _media->LoadMedia(name);
 }
 
 //Load media designated by frame_id

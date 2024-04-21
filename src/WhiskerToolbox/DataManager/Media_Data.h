@@ -45,9 +45,8 @@ public:
      *
      * @brief LoadMedia
      * @param name points to the path to the file or folder
-     * @return The total number of frames in the media
      */
-    virtual int LoadMedia(std::string name) {return 0;};
+    void LoadMedia(std::string name);
 
     /**
      *
@@ -68,7 +67,7 @@ public:
     void setRawData(std::vector<uint8_t> data) {rawData = data;};
 
 protected:
-
+    virtual void doLoadMedia(std::string name) {return;};
 private:
     std::string _filename;
     int _totalFrameCount;
