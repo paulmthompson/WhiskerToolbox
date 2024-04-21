@@ -47,10 +47,6 @@ void Media_Window::UpdateCanvas(QImage& img)
     _canvasPixmap->setPixmap(QPixmap::fromImage(img));
 }
 
-void Media_Window::LoadMedia(std::string name) {
-
-    _media->LoadMedia(name);
-}
 
 //Load media designated by frame_id
 //Media frame is loaded. It is then scaled to the

@@ -93,7 +93,6 @@ public:
      */
     void UpdateCanvas(QImage& img);
 
-    void LoadMedia(std::string name);
 
     /**
      *

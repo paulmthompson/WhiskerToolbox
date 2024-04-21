@@ -132,7 +132,7 @@ void MainWindow::Load_Images() {
 
 void MainWindow::_LoadData(std::string filepath) {
 
-    _scene->LoadMedia(filepath); // We are zero indexing so subtract 1 from total frame count
+    _data_manager->getMediaData()->LoadMedia(filepath);
     auto frame_count = _data_manager->getMediaData()->getTotalFrameCount() - 1;
 
     _time->updateTotalFrameCount(frame_count);
