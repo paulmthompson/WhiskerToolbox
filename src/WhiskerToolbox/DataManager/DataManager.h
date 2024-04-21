@@ -1,9 +1,6 @@
 #ifndef DATAMANAGER_H
 #define DATAMANAGER_H
 
-#include "DataSeries.h"
-#include "TimeFrame.h"
-
 #include "Media_Data.h"
 
 #include <string>
@@ -12,6 +9,7 @@
 class DataManager {
 
 public:
+    DataManager();
     enum MediaType {
         Video,
         Images,

@@ -21,8 +21,10 @@
 #include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    : QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    _data_manager{std::make_shared<DataManager>()}
+
 {
     ui->setupUi(this);
 

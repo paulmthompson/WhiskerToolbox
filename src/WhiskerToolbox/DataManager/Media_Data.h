@@ -13,6 +13,8 @@ public:
 
     MediaData();
 
+    ~MediaData() = default;
+
     std::string getFilename() const {return _filename;};
     void setFilename(std::string filename) {_filename = filename;};
 
