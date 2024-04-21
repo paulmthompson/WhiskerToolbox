@@ -64,8 +64,6 @@ void Media_Window::_convertNewMediaToQImage()
                               );
 
     _canvasImage = unscaled_image.scaled(_canvasWidth,_canvasHeight);
-
-    UpdateCanvas();
 }
 
 QImage::Format Media_Window::_getQImageFormat() {
