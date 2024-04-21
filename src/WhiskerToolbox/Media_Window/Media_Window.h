@@ -107,7 +107,6 @@ public:
     float getYAspect() const;
 
     std::vector<uint8_t> getCurrentFrame() const {return this->_media->getData();};
-    std::string getFrameID(int frame) {return this->_media->GetFrameID(frame);}; // This should be in data / time object
 
     void setData(std::shared_ptr<MediaData> media) {this->_media = media;};
     std::shared_ptr<MediaData> getData() const {return this->_media;};
