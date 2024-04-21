@@ -106,8 +106,6 @@ public:
     float getXAspect() const;
     float getYAspect() const;
 
-    std::vector<uint8_t> getCurrentFrame() const {return this->_media->getData();};
-
     void setData(std::shared_ptr<MediaData> media) {this->_media = media;};
     std::shared_ptr<MediaData> getData() const {return this->_media;};
 
