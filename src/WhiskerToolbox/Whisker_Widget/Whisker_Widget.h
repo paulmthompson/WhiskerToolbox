@@ -73,6 +73,7 @@ private slots:
     void _LoadJaneliaWhiskers();
 
     void _SelectWhiskerPad();
+    void _ChangeWhiskerLengthThreshold(double new_threshold);
 
     void _ClickedInVideo(qreal x,qreal y);
     /*

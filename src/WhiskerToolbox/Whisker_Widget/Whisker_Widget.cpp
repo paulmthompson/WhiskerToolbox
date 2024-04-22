@@ -56,6 +56,7 @@ void Whisker_Widget::openWidget() {
 
     connect(ui->load_janelia_button,SIGNAL(clicked()),this,SLOT(_LoadJaneliaWhiskers()));
     connect(ui->whisker_pad_select,SIGNAL(clicked()),this,SLOT(_SelectWhiskerPad()));
+    connect(ui->length_threshold_spinbox,SIGNAL(valueChanged(double)),this,SLOT(_ChangeWhiskerLengthThreshold(double)));
 
 
     if (_contact.empty()) {
@@ -89,6 +90,8 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
 
     disconnect(ui->load_janelia_button,SIGNAL(clicked()),this,SLOT(_LoadJaneliaWhiskers()));
     disconnect(ui->whisker_pad_select,SIGNAL(clicked()),this,SLOT(_SelectWhiskerPad()));
+
+    disconnect(ui->length_threshold_spinbox,SIGNAL(valueChanged(double)),this,SLOT(_ChangeWhiskerLengthThreshold(double)));
 }
 
 void Whisker_Widget::_TraceButton()
@@ -249,9 +252,10 @@ void Whisker_Widget::_addWhiskersToData()
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     for (auto& w : _wt->whiskers) {
-
-        _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
-
+        auto w_length = _wt->calculateWhiskerLength(w);
+        if (w_length > _length_threshold) {
+            _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
+        }
     }
 }
 
@@ -270,6 +274,11 @@ void Whisker_Widget::_DrawWhiskers()
 
     }
     */
+}
+
+void Whisker_Widget::_ChangeWhiskerLengthThreshold(double new_threshold)
+{
+    _length_threshold = static_cast<float>(new_threshold);
 }
 
 //x
