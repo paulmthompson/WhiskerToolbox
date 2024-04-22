@@ -52,6 +52,7 @@ private:
     int _contact_start;
     bool _contact_epoch;
     float _length_threshold;
+    std::tuple<float,float> _whisker_pad;
 
     Ui::Whisker_Widget *ui;
 
@@ -70,6 +71,8 @@ private slots:
     void _SaveContact();
     void _LoadContact();
     void _LoadJaneliaWhiskers();
+
+    void _SelectWhiskerPad();
 
     void _ClickedInVideo(qreal x,qreal y);
     /*

@@ -23,6 +23,7 @@ Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager>
     _contact_start{0},
     _contact_epoch(false),
     _length_threshold{75.0},
+    _whisker_pad{0.0,0.0},
     ui(new Ui::Whisker_Widget)
 {
     ui->setupUi(this);
@@ -54,6 +55,7 @@ void Whisker_Widget::openWidget() {
     connect(ui->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
 
     connect(ui->load_janelia_button,SIGNAL(clicked()),this,SLOT(_LoadJaneliaWhiskers()));
+    connect(ui->whisker_pad_select,SIGNAL(clicked()),this,SLOT(_SelectWhiskerPad()));
 
 
     if (_contact.empty()) {
@@ -86,6 +88,7 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
 
     disconnect(ui->load_janelia_button,SIGNAL(clicked()),this,SLOT(_LoadJaneliaWhiskers()));
+    disconnect(ui->whisker_pad_select,SIGNAL(clicked()),this,SLOT(_SelectWhiskerPad()));
 }
 
 void Whisker_Widget::_TraceButton()
@@ -236,6 +239,11 @@ void Whisker_Widget::_LoadContact() {
     fin.close();
 }
 
+void Whisker_Widget::_SelectWhiskerPad()
+{
+    _selection_mode = Selection_Type::Whisker_Pad_Select;
+}
+
 void Whisker_Widget::_addWhiskersToData()
 {
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
@@ -271,7 +279,8 @@ void Whisker_Widget::_ClickedInVideo(qreal x_canvas,qreal y_canvas) {
     float y_media = y_canvas / _scene->getYAspect();
     
     switch(_selection_mode) {
-    case Whisker_Select: {
+    case Whisker_Select:
+    {
         std::tuple<float,int> nearest_whisker = _wt->get_nearest_whisker(x_media, y_media);
         if (std::get<0>(nearest_whisker) < 10.0f) {
             _selected_whisker = std::get<1>(nearest_whisker);
@@ -280,9 +289,14 @@ void Whisker_Widget::_ClickedInVideo(qreal x_canvas,qreal y_canvas) {
         break;
     }
     case Whisker_Pad_Select:
-
+    {
+        _whisker_pad = std::make_tuple(static_cast<int>(x_media),static_cast<int>(y_media));
+        std::string whisker_pad_label =
+            "(" + std::to_string(static_cast<int>(x_media)) + "," + std::to_string(static_cast<int>(y_media)) + ")";
+        ui->whisker_pad_pos_label->setText(QString::fromStdString(whisker_pad_label));
+        _selection_mode = Whisker_Select;
         break;
-
+    }
     default:
         break;
     }

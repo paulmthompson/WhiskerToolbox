@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>440</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QPushButton" name="trace_button">
    <property name="geometry">
     <rect>
-     <x>80</x>
+     <x>20</x>
      <y>40</y>
      <width>75</width>
      <height>24</height>
@@ -29,8 +29,8 @@
   <widget class="QPushButton" name="save_image">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>90</y>
+     <x>20</x>
+     <y>100</y>
      <width>81</width>
      <height>24</height>
     </rect>
@@ -42,7 +42,7 @@
   <widget class="QPushButton" name="save_whisker_mask">
    <property name="geometry">
     <rect>
-     <x>80</x>
+     <x>20</x>
      <y>130</y>
      <width>131</width>
      <height>24</height>
@@ -55,8 +55,8 @@
   <widget class="QPushButton" name="contact_button">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>180</y>
+     <x>20</x>
+     <y>190</y>
      <width>101</width>
      <height>24</height>
     </rect>
@@ -68,8 +68,8 @@
   <widget class="QPushButton" name="save_contact_button">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>210</y>
+     <x>20</x>
+     <y>220</y>
      <width>91</width>
      <height>24</height>
     </rect>
@@ -81,8 +81,8 @@
   <widget class="QPushButton" name="load_contact_button">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>240</y>
+     <x>20</x>
+     <y>250</y>
      <width>91</width>
      <height>24</height>
     </rect>
@@ -102,6 +102,61 @@
    </property>
    <property name="text">
     <string>Load Janelia Whisker File</string>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="length_threshold_spinbox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>290</y>
+     <width>62</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <double>600.000000000000000</double>
+   </property>
+   <property name="value">
+    <double>75.000000000000000</double>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>90</x>
+     <y>290</y>
+     <width>111</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Length Threshold</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="whisker_pad_select">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>320</y>
+     <width>111</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Whisker Pad Select</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="whisker_pad_pos_label">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>320</y>
+     <width>71</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(0,0)</string>
    </property>
   </widget>
  </widget>
