@@ -44,6 +44,7 @@ private:
     void _openActions();
     void _closeActions();
     void _DrawWhiskers();
+    void _addWhiskersToData();
 
     std::unique_ptr<WhiskerTracker> _wt;
     Media_Window * _scene;

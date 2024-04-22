@@ -228,6 +228,17 @@ void Whisker_Widget::_LoadContact() {
     fin.close();
 }
 
+void Whisker_Widget::_addWhiskersToData()
+{
+    auto current_time = _time->getLastLoadedFrame();
+
+    for (auto& w : _wt->whiskers) {
+
+        //_scene->addLine(w.x,w.y,whisker_color);
+
+    }
+}
+
 void Whisker_Widget::_DrawWhiskers()
 {
     _scene->clearLines(); // We should have the scene do this every time a frame is advanced
