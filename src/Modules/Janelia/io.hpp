@@ -21,7 +21,7 @@ std::vector<Whisker_Seg> load_binary_data(const std::string filename)
 
     typedef struct {int id; int time; int len;} trunc_WSeg;
 
-    trunc_WSeg *whisker_segment_header;
+    trunc_WSeg *whisker_segment_header = new trunc_WSeg{0,0,0};
 
     while (!whisk_stream.eof()) {
 
@@ -45,6 +45,8 @@ std::vector<Whisker_Seg> load_binary_data(const std::string filename)
         wsegs.push_back(std::move(this_seg));
 
     }
+
+    delete whisker_segment_header;
 
     std::cout << "Loaded " << wsegs.size() << " total whiskers from file" << std::endl;
     return wsegs;
