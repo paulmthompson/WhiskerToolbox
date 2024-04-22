@@ -47,6 +47,8 @@ void Media_Window::UpdateCanvas()
 
     _canvasPixmap->setPixmap(QPixmap::fromImage(_canvasImage));
 
+    // Check for manual selection with the currently rendered frame;
+
     _plotLineData();
 }
 

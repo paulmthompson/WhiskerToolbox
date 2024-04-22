@@ -13,7 +13,8 @@ add_library(janelia SHARED
     janelia.h
     janelia.cpp
     detector_bank.h
-    detector_bank.cpp)
+    detector_bank.cpp
+    io.hpp)
 
 target_include_directories(janelia
     PUBLIC

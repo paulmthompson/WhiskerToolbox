@@ -3,6 +3,9 @@
 
 #include <unordered_map>
 #include <vector>
+#include <string>
+#include <map>
+
 #include "janelia.h"
 
 struct Whisker {
@@ -29,8 +32,10 @@ public:
 
    void trace(const std::vector<uint8_t>& image,const int image_height, const int image_width);
    std::tuple<float,int> get_nearest_whisker(float x_p, float y_p);
-   std::vector<Whisker> whiskers;
+   std::map<int,std::vector<Whisker>> load_janelia_whiskers(const std::string filename);
 
+
+   std::vector<Whisker> whiskers;
 
 private:
     JaneliaTracker janelia;

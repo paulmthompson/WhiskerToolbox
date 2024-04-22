@@ -91,6 +91,19 @@
     <string>Load Contact</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="load_janelia_button">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>30</y>
+     <width>161</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load Janelia Whisker File</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

@@ -52,6 +52,8 @@ void Whisker_Widget::openWidget() {
     connect(ui->save_contact_button,SIGNAL(clicked()),this,SLOT(_SaveContact()));
     connect(ui->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
 
+    connect(ui->load_janelia_button,SIGNAL(clicked()),this,SLOT(_LoadJaneliaWhiskers()));
+
 
     if (_contact.empty()) {
         _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
@@ -81,6 +83,8 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->contact_button,SIGNAL(clicked()),this,SLOT(_ContactButton()));
     disconnect(ui->save_contact_button,SIGNAL(clicked()),this,SLOT(_SaveContact()));
     disconnect(ui->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
+
+    disconnect(ui->load_janelia_button,SIGNAL(clicked()),this,SLOT(_LoadJaneliaWhiskers()));
 }
 
 void Whisker_Widget::_TraceButton()
@@ -283,3 +287,17 @@ void Whisker_Widget::_ClickedInVideo(qreal x_canvas,qreal y_canvas) {
     }
 }
 
+void Whisker_Widget::_LoadJaneliaWhiskers()
+{
+    auto janelia_name =  QFileDialog::getOpenFileName(
+        this,
+        "Load Whisker File",
+        QDir::currentPath(),
+        "All files (*.*) ;; whisker file (*.whiskers)");
+
+    if (janelia_name.isNull()) {
+        return;
+    }
+
+    _wt->load_janelia_whiskers(janelia_name.toStdString());
+}

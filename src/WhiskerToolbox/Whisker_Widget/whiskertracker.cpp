@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <stdio.h>
+#include "io.hpp"
 
 Image<uint8_t> bg = Image<uint8_t>(640,480,std::vector<uint8_t>(640*480,0));
 
@@ -50,4 +51,23 @@ std::tuple<float,int> WhiskerTracker::get_nearest_whisker(float x_p, float y_p) 
     }
 
     return std::make_tuple(nearest_distance,whisker_id);
+}
+
+std::map<int,std::vector<Whisker>> WhiskerTracker::load_janelia_whiskers(const std::string filename)
+{
+    auto j_segs = load_binary_data(filename);
+
+    auto output_whiskers = std::map<int,std::vector<Whisker>>();
+
+    for (auto& w_seg : j_segs) {
+
+        if (output_whiskers.find(w_seg.time) == output_whiskers.end()) { // Key doesn't exist
+            output_whiskers[w_seg.time] = std::vector<Whisker>();
+        }
+
+         output_whiskers[w_seg.time].push_back(Whisker(w_seg.id,std::move(w_seg.x),std::move(w_seg.y)));
+
+    }
+
+    return output_whiskers;
 }

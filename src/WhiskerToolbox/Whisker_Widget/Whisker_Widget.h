@@ -68,6 +68,7 @@ private slots:
     void _ContactButton();
     void _SaveContact();
     void _LoadContact();
+    void _LoadJaneliaWhiskers();
 
     void _ClickedInVideo(qreal x,qreal y);
     /*

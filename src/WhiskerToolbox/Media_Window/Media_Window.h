@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <map>
 
 #include "Media/Media_Data.hpp"
 #include "DataManager.hpp"
@@ -96,6 +97,7 @@ private:
     bool _is_verbose;
 
     std::unordered_set<std::string> _lines_to_show;
+    //std::map<QColor> _line_colors;
 
     QImage::Format _getQImageFormat();
     void _createCanvasForData();
