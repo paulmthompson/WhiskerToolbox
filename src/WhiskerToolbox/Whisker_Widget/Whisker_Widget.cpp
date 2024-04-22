@@ -299,5 +299,12 @@ void Whisker_Widget::_LoadJaneliaWhiskers()
         return;
     }
 
-    _wt->load_janelia_whiskers(janelia_name.toStdString());
+    auto whiskers_from_janelia = _wt->load_janelia_whiskers(janelia_name.toStdString());
+
+    for (auto& [time, whiskers_in_frame] : whiskers_from_janelia)
+    {
+        for (auto& w : whiskers_in_frame) {
+            _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(time, w.x, w.y);
+        }
+    }
 }
