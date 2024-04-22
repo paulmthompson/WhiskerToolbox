@@ -22,6 +22,7 @@ Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager>
     _selection_mode{Whisker_Select},
     _contact_start{0},
     _contact_epoch(false),
+    _length_threshold{75.0},
     ui(new Ui::Whisker_Widget)
 {
     ui->setupUi(this);
@@ -304,7 +305,11 @@ void Whisker_Widget::_LoadJaneliaWhiskers()
     for (auto& [time, whiskers_in_frame] : whiskers_from_janelia)
     {
         for (auto& w : whiskers_in_frame) {
-            _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(time, w.x, w.y);
+
+            auto w_length = _wt->calculateWhiskerLength(w);
+            if (w_length > _length_threshold) {
+                _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(time, w.x, w.y);
+            }
         }
     }
 }

@@ -39,8 +39,8 @@ public:
    std::vector<Whisker> whiskers;
 
 private:
-    JaneliaTracker janelia;
-    bool janelia_init;
+   JaneliaTracker _janelia;
+    bool _janelia_init;
     //std::unordered_map<int, Whisker> woi;
 
 };

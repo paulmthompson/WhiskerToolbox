@@ -51,6 +51,7 @@ private:
     std::vector<Contact> _contact;
     int _contact_start;
     bool _contact_epoch;
+    float _length_threshold;
 
     Ui::Whisker_Widget *ui;
 
