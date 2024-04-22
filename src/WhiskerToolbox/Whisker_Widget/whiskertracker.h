@@ -34,6 +34,7 @@ public:
    std::tuple<float,int> get_nearest_whisker(float x_p, float y_p);
    std::map<int,std::vector<Whisker>> load_janelia_whiskers(const std::string filename);
 
+   float calculateWhiskerLength(const Whisker& whisker);
 
    std::vector<Whisker> whiskers;
 

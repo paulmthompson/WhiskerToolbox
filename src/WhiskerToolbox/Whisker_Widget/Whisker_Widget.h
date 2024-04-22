@@ -40,12 +40,6 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
-    void _createActions();
-    void _openActions();
-    void _closeActions();
-    void _DrawWhiskers();
-    void _addWhiskersToData();
-
     std::unique_ptr<WhiskerTracker> _wt;
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
@@ -59,6 +53,12 @@ private:
     bool _contact_epoch;
 
     Ui::Whisker_Widget *ui;
+
+    void _createActions();
+    void _openActions();
+    void _closeActions();
+    void _DrawWhiskers();
+    void _addWhiskersToData();
 
 private slots:
     void _TraceButton();

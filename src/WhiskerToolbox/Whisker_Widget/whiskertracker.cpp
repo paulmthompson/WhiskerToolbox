@@ -71,3 +71,15 @@ std::map<int,std::vector<Whisker>> WhiskerTracker::load_janelia_whiskers(const s
 
     return output_whiskers;
 }
+
+float WhiskerTracker::calculateWhiskerLength(const Whisker& whisker)
+{
+    float length = 0.0;
+
+    for (int i = 1; i < whisker.x.size(); i++)
+    {
+        length += sqrt(pow((whisker.x[i] - whisker.x[i-1]),2) + pow((whisker.y[i] - whisker.y[i-1]),2));
+    }
+
+    return length;
+}
