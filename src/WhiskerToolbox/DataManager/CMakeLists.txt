@@ -11,6 +11,8 @@ add_library(DataManager SHARED
         Media/Video_Data.hpp
         Media/Media_Data.hpp
         Media/Media_Data.cpp
+        Lines/Line_Data.hpp
+        Lines/Line_Data.cpp
 )
 
 target_include_directories(DataManager PUBLIC
