@@ -7,12 +7,12 @@ add_library(DataManager SHARED
         TimeFrame.h
         TimeFrame.cpp
 
-        Image_Data.cpp
-        Image_Data.h
-        Video_Data.cpp
-        Video_Data.hpp
-        Media_Data.h
-        Media_Data.cpp
+        Media/Image_Data.cpp
+        Media/Image_Data.h
+        Media/Video_Data.cpp
+        Media/Video_Data.hpp
+        Media/Media_Data.h
+        Media/Media_Data.cpp
 )
 
 target_include_directories(DataManager PUBLIC

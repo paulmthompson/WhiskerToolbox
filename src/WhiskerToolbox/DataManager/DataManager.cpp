@@ -1,8 +1,8 @@
 
 #include "DataManager.h"
 
-#include "Video_Data.hpp"
-#include "Image_Data.h"
+#include "Media/Video_Data.hpp"
+#include "Media/Image_Data.h"
 
 
 DataManager::DataManager() :
