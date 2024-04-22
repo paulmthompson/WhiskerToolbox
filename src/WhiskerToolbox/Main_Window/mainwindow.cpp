@@ -43,8 +43,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     _updateMedia();
 
-    _time = std::make_shared<TimeFrame>();
-
     _createActions(); // Creates callback functions
 
 }
@@ -130,9 +128,9 @@ void MainWindow::_LoadData(std::string filepath) {
     _data_manager->getMediaData()->LoadMedia(filepath);
     auto frame_count = _data_manager->getMediaData()->getTotalFrameCount() - 1;
 
-    _time->updateTotalFrameCount(frame_count);
+    _data_manager->getTime()->updateTotalFrameCount(frame_count);
 
-    _updateScrollBarNewMax(_time->getTotalFrameCount());
+    _updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount());
 
     _LoadFrame(0);
 
@@ -147,13 +145,13 @@ void MainWindow::_LoadData(std::string filepath) {
  */
 void MainWindow::_LoadFrame(int frame_id) {
 
-    frame_id = _time->checkFrameInbounds(frame_id);
+    frame_id = _data_manager->getTime()->checkFrameInbounds(frame_id);
 
     // Get MediaData
     _data_manager->getMediaData()->LoadFrame(frame_id);
 
     _scene->UpdateCanvas();
-    _time->updateLastLoadedFrame(frame_id);
+    _data_manager->getTime()->updateLastLoadedFrame(frame_id);
 }
 
 //If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.
@@ -171,7 +169,7 @@ void MainWindow::openWhiskerTracking() {
     // We create a whisker widget. We only want to load this module one time,
     // so if we exit the window, it is not created again
     if (!_ww) {
-        _ww = new Whisker_Widget(_scene, _data_manager, _time);
+        _ww = new Whisker_Widget(_scene, _data_manager);
         std::cout << "Whisker Tracker Constructed" << std::endl;
     } else {
         std::cout << "Whisker Tracker already exists" << std::endl;
@@ -184,7 +182,7 @@ void MainWindow::openLabelMaker() {
     // We create a whisker widget. We only want to load this module one time,
     // so if we exit the window, it is not created again
     if (!_label_maker) {
-        _label_maker = new Label_Widget(_scene,_data_manager,_time);
+        _label_maker = new Label_Widget(_scene,_data_manager);
         std::cout << "Label Maker Constructed" << std::endl;
     } else {
         std::cout << "Label Maker already exists" << std::endl;
@@ -195,7 +193,7 @@ void MainWindow::openLabelMaker() {
 void MainWindow::openAnalogViewer()
 {
     if (!_analog_viewer) {
-        _analog_viewer = new Analog_Viewer(_scene,_time);
+        _analog_viewer = new Analog_Viewer(_scene);
         std::cout << "Analog Viewer Constructed" << std::endl;
     } else {
         std::cout << "Analog Viewer already exists" << std::endl;
@@ -246,7 +244,7 @@ void MainWindow::PlayButton()
         _play_mode = false;
 
         ui->horizontalScrollBar->blockSignals(true);
-        ui->horizontalScrollBar->setValue(_time->getLastLoadedFrame());
+        ui->horizontalScrollBar->setValue(_data_manager->getTime()->getLastLoadedFrame());
         ui->horizontalScrollBar->blockSignals(false);
 
     } else {
@@ -336,7 +334,7 @@ void MainWindow::updateDisplay() {
 
 void MainWindow::_updateDataDisplays(int advance_n_frames) {
 
-    auto frame_to_load = _time->getLastLoadedFrame() + advance_n_frames;
+    auto frame_to_load = _data_manager->getTime()->getLastLoadedFrame() + advance_n_frames;
     _LoadFrame(frame_to_load);
     _updateFrameLabels(frame_to_load);
 

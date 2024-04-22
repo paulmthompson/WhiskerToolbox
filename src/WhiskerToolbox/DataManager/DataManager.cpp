@@ -6,7 +6,8 @@
 
 
 DataManager::DataManager() :
-    _media{std::make_shared<MediaData>()}
+    _media{std::make_shared<MediaData>()},
+    _time{std::make_shared<TimeFrame>()}
 {
 
 }

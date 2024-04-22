@@ -61,8 +61,6 @@ private:
 
     void _LoadFrame(int frame_id);
 
-    std::shared_ptr<TimeFrame> _time;
-
     std::shared_ptr<DataManager> _data_manager;
 
 

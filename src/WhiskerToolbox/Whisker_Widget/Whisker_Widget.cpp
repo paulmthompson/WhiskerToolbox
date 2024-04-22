@@ -13,12 +13,11 @@
 
 #include "ui_Whisker_Widget.h"
 
-Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, std::shared_ptr<TimeFrame> time, QWidget *parent) :
+Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     QWidget(parent),
     _wt{std::make_unique<WhiskerTracker>()},
     _scene{scene},
     _data_manager{data_manager},
-    _time{time},
     _selected_whisker{0},
     _selection_mode{Whisker_Select},
     _contact_start{0},
@@ -54,7 +53,7 @@ void Whisker_Widget::openWidget() {
 
 
     if (_contact.empty()) {
-        _contact = std::vector<Contact>(_time->getTotalFrameCount());
+        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
     }
 
     this->show();
@@ -113,7 +112,7 @@ void Whisker_Widget::_SaveImageButton()
     auto width = media->getWidth();
     auto height = media->getHeight();
     
-    auto frame_id = _time->getLastLoadedFrame();
+    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
     QImage labeled_image(&data[0],width,height, QImage::Format_Grayscale8);
 
@@ -134,7 +133,7 @@ void Whisker_Widget::_SaveWhiskerMaskButton() {
     auto width = media->getWidth();
     auto height = media->getHeight();
     
-    auto frame_id = _time->getLastLoadedFrame();
+    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
     QImage mask_image(width,height,QImage::Format_Grayscale8);
 
@@ -165,7 +164,7 @@ void Whisker_Widget::_SaveWhiskerMaskButton() {
 
 void Whisker_Widget::_ContactButton() {
     
-    auto frame_num = _time->getLastLoadedFrame();
+    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
 
     // If we are in a contact epoch, we need to mark the termination frame and add those to block
     if (_contact_epoch) {
@@ -233,7 +232,7 @@ void Whisker_Widget::_LoadContact() {
 
 void Whisker_Widget::_addWhiskersToData()
 {
-    auto current_time = _time->getLastLoadedFrame();
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     for (auto& w : _wt->whiskers) {
 

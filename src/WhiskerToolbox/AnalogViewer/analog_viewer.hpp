@@ -19,7 +19,7 @@ class Analog_Viewer;
 class Analog_Viewer : public QWidget {
     Q_OBJECT
 public:
-    Analog_Viewer(Media_Window *scene, std::shared_ptr<TimeFrame> time, QWidget *parent = 0);
+    Analog_Viewer(Media_Window *scene, QWidget *parent = 0);
     ~Analog_Viewer();
 
     void openWidget();

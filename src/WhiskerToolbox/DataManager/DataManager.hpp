@@ -3,6 +3,7 @@
 
 #include "Media/Media_Data.hpp"
 #include "Lines/Line_Data.hpp"
+#include "TimeFrame.hpp"
 
 #include <string>
 #include <memory>
@@ -24,10 +25,15 @@ public:
     void createLine(const std::string line_key);
     std::shared_ptr<LineData> getLine(const std::string line_key);
 
+    std::shared_ptr<TimeFrame> getTime() {return _time;};
+
 private:
 
     std::shared_ptr<MediaData> _media;
     std::unordered_map<std::string,std::shared_ptr<LineData>> _lines;
+
+    std::shared_ptr<TimeFrame> _time;
+
 };
 
 
