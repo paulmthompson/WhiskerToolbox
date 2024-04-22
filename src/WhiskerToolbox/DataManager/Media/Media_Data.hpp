@@ -37,8 +37,6 @@ public:
     int getTotalFrameCount() const {return _totalFrameCount;};
     void setTotalFrameCount(int total_frame_count) {_totalFrameCount = total_frame_count;};
 
-    std::vector<uint8_t> getData() const {return this->rawData;};
-
     /**
      *
      *
@@ -63,8 +61,8 @@ public:
 
     virtual std::string GetFrameID(int frame_id) {return "";};
 
-    std::vector<uint8_t> getRawData() {return rawData;};
-    void setRawData(std::vector<uint8_t> data) {rawData = data;};
+    std::vector<uint8_t> getRawData() const {return _rawData;};
+    void setRawData(std::vector<uint8_t> data) {_rawData = data;};
 
 protected:
     virtual void doLoadMedia(std::string name) {return;};
@@ -77,7 +75,7 @@ private:
     DisplayFormat _format; // This corresponds to an enum. Here we will use QImage.
     int _display_format_bytes;
 
-    std::vector<uint8_t> rawData;
+    std::vector<uint8_t> _rawData;
 };
 
 #endif //WHISKERTOOLBOX_MEDIA_DATA_HPP

@@ -88,7 +88,7 @@ void Whisker_Widget::_TraceButton()
 
     auto _media = _scene->getData();
     
-    _wt->trace(_media->getData(),_media->getHeight(), _media->getWidth());
+    _wt->trace(_media->getRawData(),_media->getHeight(), _media->getWidth());
 
     //Add lines to data manager
 
@@ -104,8 +104,8 @@ void Whisker_Widget::_SaveImageButton()
 {
     
     auto _media = _scene->getData();
-
-    auto data = _media->getData();
+    
+    auto data = _media->getRawData();
     
     auto width = _media->getWidth();
     auto height = _media->getHeight();

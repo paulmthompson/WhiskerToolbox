@@ -54,7 +54,7 @@ void Media_Window::UpdateCanvas()
 //Canvas size, and the canvas is updated
 void Media_Window::_convertNewMediaToQImage()
 {
-    auto media_data = _media->getData();
+    auto media_data = _media->getRawData();
 
     auto unscaled_image = QImage(&media_data[0],
                                  _media->getWidth(),

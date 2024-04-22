@@ -5,7 +5,7 @@ MediaData::MediaData() :
     _width{640},
     _height{480}
 {
-    rawData = std::vector<uint8_t>(_height * _width);
+    _rawData = std::vector<uint8_t>(_height * _width);
     setFormat(DisplayFormat::Gray);
 };
 
@@ -24,19 +24,19 @@ void MediaData::setFormat(DisplayFormat format)
         _display_format_bytes = 1;
         break;
     }
-    this->rawData.resize(_height * _width * _display_format_bytes);
+    this->_rawData.resize(_height * _width * _display_format_bytes);
 };
 
 void MediaData::updateHeight(int height)
 {
     _height = height;
-    this->rawData.resize(_height * _width * _display_format_bytes);
+    this->_rawData.resize(_height * _width * _display_format_bytes);
 };
 
 void MediaData::updateWidth(int width)
 {
     _width = width;
-    this->rawData.resize(_height * _width * _display_format_bytes);
+    this->_rawData.resize(_height * _width * _display_format_bytes);
 };
 
 void MediaData::LoadMedia(std::string name)
