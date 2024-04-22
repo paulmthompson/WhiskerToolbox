@@ -90,6 +90,8 @@ void Whisker_Widget::_TraceButton()
     
     _wt->trace(_media->getData(),_media->getHeight(), _media->getWidth());
 
+    //Add lines to data manager
+
     int t1 = timer2.elapsed();
     _DrawWhiskers();
 
