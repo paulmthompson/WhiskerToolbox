@@ -146,12 +146,14 @@ void MainWindow::_LoadData(std::string filepath) {
 void MainWindow::_LoadFrame(int frame_id) {
 
     frame_id = _data_manager->getTime()->checkFrameInbounds(frame_id);
+    _data_manager->getTime()->updateLastLoadedFrame(frame_id);
 
     // Get MediaData
     _data_manager->getMediaData()->LoadFrame(frame_id);
 
     _scene->UpdateCanvas();
-    _data_manager->getTime()->updateLastLoadedFrame(frame_id);
+
+    _updateFrameLabels(frame_id);
 }
 
 //If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.
@@ -322,7 +324,7 @@ void MainWindow::Slider_Scroll(int newPos)
     }
 
     _LoadFrame(newPos);
-    _updateFrameLabels(newPos);
+    //_updateFrameLabels(newPos);
 }
 
 void MainWindow::updateDisplay() {
@@ -336,7 +338,7 @@ void MainWindow::_updateDataDisplays(int advance_n_frames) {
 
     auto frame_to_load = _data_manager->getTime()->getLastLoadedFrame() + advance_n_frames;
     _LoadFrame(frame_to_load);
-    _updateFrameLabels(frame_to_load);
+    //_updateFrameLabels(frame_to_load);
 
 }
 

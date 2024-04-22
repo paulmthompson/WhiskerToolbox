@@ -36,33 +36,7 @@ public:
 Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
 
 
-    /**
-     *
-     *
-     * @tparam T
-     * @param x
-     * @param y
-     * @param color
-     */
-    template <typename T>
-    void addLine(std::vector<T>& x, std::vector<T>& y, QPen color) {
-        QPainterPath* path = new QPainterPath();
-
-        auto xAspect = getXAspect();
-        auto yAspect = getYAspect();
-
-        path->moveTo(QPointF(static_cast<float>(x[0]) * xAspect, static_cast<float>(y[0]) * yAspect));
-
-        for (int i = 1; i < x.size(); i++) {
-            path->lineTo(QPointF(static_cast<float>(x[i]) * xAspect , static_cast<float>(y[i]) * yAspect));
-        }
-
-        addLine(path,color);
-    }
-
     void addLineDataToScene(const std::string line_key);
-
-    void addLine(QPainterPath* path, QPen color);
 
     void clearLines();
 

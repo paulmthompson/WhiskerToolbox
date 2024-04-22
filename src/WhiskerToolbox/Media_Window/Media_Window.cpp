@@ -19,11 +19,6 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
     _createCanvasForData();
 }
 
-void Media_Window::addLine(QPainterPath* path, QPen color) {
-    auto linePath = addPath(*path,color);
-    _line_paths.append(linePath);
-}
-
 void Media_Window::addLineDataToScene(const std::string line_key)
 {
     _lines_to_show.insert(line_key);
