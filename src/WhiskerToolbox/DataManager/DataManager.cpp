@@ -2,7 +2,7 @@
 #include "DataManager.hpp"
 
 #include "Media/Video_Data.hpp"
-#include "Media/Image_Data.h"
+#include "Media/Image_Data.hpp"
 
 
 DataManager::DataManager() :

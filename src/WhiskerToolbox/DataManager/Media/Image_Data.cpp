@@ -2,7 +2,7 @@
 // Created by wanglab on 4/10/2024.
 //
 
-#include "Media/Image_Data.h"
+#include "Media/Image_Data.hpp"
 
 #include <QString>
 #include <QImage>

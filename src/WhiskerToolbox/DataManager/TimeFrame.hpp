@@ -1,5 +1,5 @@
-#ifndef TIMEFRAME_H
-#define TIMEFRAME_H
+#ifndef TIMEFRAME_HPP
+#define TIMEFRAME_HPP
 
 
 class TimeFrame {
@@ -27,4 +27,4 @@ private:
 };
 
 
-#endif // TIMEFRAME_H
+#endif // TIMEFRAME_HPP

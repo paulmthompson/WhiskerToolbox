@@ -2,8 +2,8 @@
 // Created by wanglab on 4/10/2024.
 //
 
-#ifndef WHISKERTOOLBOX_MEDIA_DATA_H
-#define WHISKERTOOLBOX_MEDIA_DATA_H
+#ifndef WHISKERTOOLBOX_MEDIA_DATA_HPP
+#define WHISKERTOOLBOX_MEDIA_DATA_HPP
 
 #include <vector>
 #include <string>
@@ -80,4 +80,4 @@ private:
     std::vector<uint8_t> rawData;
 };
 
-#endif //WHISKERTOOLBOX_MEDIA_DATA_H
+#endif //WHISKERTOOLBOX_MEDIA_DATA_HPP

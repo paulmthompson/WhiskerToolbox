@@ -8,7 +8,7 @@
 #include "whiskertracker.h"
 #include "Media_Window.h"
 
-#include "TimeFrame.h"
+#include "TimeFrame.hpp"
 
 namespace Ui {
     class Whisker_Widget;

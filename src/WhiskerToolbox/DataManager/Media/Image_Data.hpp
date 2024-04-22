@@ -2,13 +2,13 @@
 // Created by wanglab on 4/10/2024.
 //
 
-#ifndef WHISKERTOOLBOX_IMAGE_DATA_H
-#define WHISKERTOOLBOX_IMAGE_DATA_H
+#ifndef WHISKERTOOLBOX_IMAGE_DATA_HPP
+#define WHISKERTOOLBOX_IMAGE_DATA_HPP
 
 #include <filesystem>
 #include <vector>
 #include <string>
-#include "Media/Media_Data.h"
+#include "Media/Media_Data.hpp"
 
 class ImageData : public MediaData {
 public:
@@ -23,4 +23,4 @@ private:
 };
 
 
-#endif //WHISKERTOOLBOX_IMAGE_DATA_H
+#endif //WHISKERTOOLBOX_IMAGE_DATA_HPP

@@ -12,7 +12,7 @@
 #include "Label_Widget.h"
 #include "analog_viewer.hpp"
 
-#include "TimeFrame.h"
+#include "TimeFrame.hpp"
 #include "DataManager.hpp"
 
 QT_BEGIN_NAMESPACE

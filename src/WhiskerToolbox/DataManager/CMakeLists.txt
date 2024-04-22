@@ -2,16 +2,14 @@
 add_library(DataManager SHARED
         DataManager.hpp
         DataManager.cpp
-        DataSeries.h
-        DataSeries.cpp
-        TimeFrame.h
+        TimeFrame.hpp
         TimeFrame.cpp
 
         Media/Image_Data.cpp
-        Media/Image_Data.h
+        Media/Image_Data.hpp
         Media/Video_Data.cpp
         Media/Video_Data.hpp
-        Media/Media_Data.h
+        Media/Media_Data.hpp
         Media/Media_Data.cpp
 )
 
