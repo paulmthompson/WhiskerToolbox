@@ -48,11 +48,11 @@ void Media_Window::UpdateCanvas()
     clearLines();
     clearPoints();
 
-    _plotLineData();
-
     _convertNewMediaToQImage();
 
     _canvasPixmap->setPixmap(QPixmap::fromImage(_canvasImage));
+
+    _plotLineData();
 }
 
 
@@ -135,22 +135,32 @@ float Media_Window::getYAspect() const {
 
 void Media_Window::_plotLineData()
 {
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto xAspect = getXAspect();
+    auto yAspect = getYAspect();
+
     for (const auto& line_key : _lines_to_show)
     {
-        //auto lineData = _data_manager->getLine(line_key)->getLinesAtTime();
-        QPainterPath* path = new QPainterPath();
 
-        auto xAspect = getXAspect();
-        auto yAspect = getYAspect();
+        std::cout << "Plotting lines from " << line_key << std::endl;
 
-        /*
-        path->moveTo(QPointF(static_cast<float>(x[0]) * xAspect, static_cast<float>(y[0]) * yAspect));
+        auto lineData = _data_manager->getLine(line_key)->getLinesAtTime(current_time);
 
-        for (int i = 1; i < x.size(); i++) {
-            path->lineTo(QPointF(static_cast<float>(x[i]) * xAspect , static_cast<float>(y[i]) * yAspect));
+        for (const auto& single_line : lineData) {
+
+            QPainterPath* path = new QPainterPath();
+
+            path->moveTo(QPointF(static_cast<float>(single_line[0].x) * xAspect, static_cast<float>(single_line[0].y) * yAspect));
+
+            for (int i = 1; i < single_line.size(); i++) {
+                path->lineTo(QPointF(static_cast<float>(single_line[i].x) * xAspect , static_cast<float>(single_line[i].y) * yAspect));
+            }
+
+            auto linePath = addPath(*path, QPen(QColor(Qt::blue)));
+            _line_paths.append(linePath);
         }
 
-        auto linePath = addPath(*path,color);
-        */
+
+
     }
 }

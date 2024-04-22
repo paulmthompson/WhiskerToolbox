@@ -26,6 +26,7 @@ Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager>
 {
     ui->setupUi(this);
     _data_manager->createLine("unlabeled_whiskers");
+    _scene->addLineDataToScene("unlabeled_whiskers");
     _createActions(); 
 };
 
@@ -92,7 +93,7 @@ void Whisker_Widget::_TraceButton()
     _wt->trace(media->getRawData(),media->getHeight(), media->getWidth());
 
     //Add lines to data manager
-
+    _addWhiskersToData();
 
     int t1 = timer2.elapsed();
     _DrawWhiskers();
@@ -243,7 +244,8 @@ void Whisker_Widget::_addWhiskersToData()
 
 void Whisker_Widget::_DrawWhiskers()
 {
-    _scene->clearLines(); // We should have the scene do this every time a frame is advanced
+    _scene->UpdateCanvas();
+    //_scene->clearLines(); // We should have the scene do this every time a frame is advanced
     //_data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
     
     /*
