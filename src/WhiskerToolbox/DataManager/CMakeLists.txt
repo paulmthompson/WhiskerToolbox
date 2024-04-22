@@ -1,6 +1,6 @@
 
 add_library(DataManager SHARED
-        DataManager.h
+        DataManager.hpp
         DataManager.cpp
         DataSeries.h
         DataSeries.cpp

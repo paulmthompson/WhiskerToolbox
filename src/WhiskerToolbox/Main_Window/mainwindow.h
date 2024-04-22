@@ -13,7 +13,7 @@
 #include "analog_viewer.hpp"
 
 #include "TimeFrame.h"
-#include "DataManager.h"
+#include "DataManager.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

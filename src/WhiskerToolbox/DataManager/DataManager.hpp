@@ -1,5 +1,5 @@
-#ifndef DATAMANAGER_H
-#define DATAMANAGER_H
+#ifndef DATAMANAGER_HPP
+#define DATAMANAGER_HPP
 
 #include "Media/Media_Data.h"
 
@@ -30,4 +30,4 @@ private:
 
 
 
-#endif // DATAMANAGER_H
+#endif // DATAMANAGER_HPP
