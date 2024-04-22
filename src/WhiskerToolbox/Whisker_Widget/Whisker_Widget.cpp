@@ -26,6 +26,7 @@ Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager>
     ui(new Ui::Whisker_Widget)
 {
     ui->setupUi(this);
+    _data_manager->createLine("unlabeled_whiskers");
     _createActions(); 
 };
 

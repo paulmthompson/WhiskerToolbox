@@ -36,3 +36,8 @@ std::shared_ptr<MediaData> DataManager::getMediaData()
 {
     return _media;
 }
+
+void DataManager::createLine(const std::string line_key)
+{
+    _lines[line_key] = std::make_unique<LineData>();
+}
