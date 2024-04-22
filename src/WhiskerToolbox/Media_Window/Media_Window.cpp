@@ -9,12 +9,12 @@ The Media_Window class
 
 */
 
-Media_Window::Media_Window(QObject *parent) :
+Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent) :
     QGraphicsScene(parent),
-    _media{std::make_shared<MediaData>()},
     _canvasHeight{480},
     _canvasWidth{640},
-    _is_verbose{false}
+    _is_verbose{false},
+    _data_manager{data_manager}
 {
     _createCanvasForData();
 }
@@ -22,6 +22,11 @@ Media_Window::Media_Window(QObject *parent) :
 void Media_Window::addLine(QPainterPath* path, QPen color) {
     auto linePath = addPath(*path,color);
     _line_paths.append(linePath);
+}
+
+void Media_Window::addLineDataToScene(const std::string line_key)
+{
+    _lines_to_show.insert(line_key);
 }
 
 void Media_Window::clearLines() {
@@ -43,6 +48,8 @@ void Media_Window::UpdateCanvas()
     clearLines();
     clearPoints();
 
+    _plotLineData();
+
     _convertNewMediaToQImage();
 
     _canvasPixmap->setPixmap(QPixmap::fromImage(_canvasImage));
@@ -54,6 +61,7 @@ void Media_Window::UpdateCanvas()
 //Canvas size, and the canvas is updated
 void Media_Window::_convertNewMediaToQImage()
 {
+    auto _media = _data_manager->getMediaData();
     auto media_data = _media->getRawData();
 
     auto unscaled_image = QImage(&media_data[0],
@@ -67,6 +75,7 @@ void Media_Window::_convertNewMediaToQImage()
 
 QImage::Format Media_Window::_getQImageFormat() {
 
+    auto _media = _data_manager->getMediaData();
     switch(_media->getFormat())
     {
     case MediaData::DisplayFormat::Gray:
@@ -106,6 +115,8 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
 float Media_Window::getXAspect() const {
 
+    auto _media = _data_manager->getMediaData();
+
     float scale_width = static_cast<float>(_canvasWidth)
                         / static_cast<float>(_media->getWidth());
 
@@ -114,8 +125,32 @@ float Media_Window::getXAspect() const {
 
 float Media_Window::getYAspect() const {
 
+    auto _media = _data_manager->getMediaData();
+
     float scale_height = static_cast<float>(_canvasHeight)
                          / static_cast<float>(_media->getHeight());
 
     return scale_height;
+}
+
+void Media_Window::_plotLineData()
+{
+    for (const auto& line_key : _lines_to_show)
+    {
+        //auto lineData = _data_manager->getLine(line_key)->getLinesAtTime();
+        QPainterPath* path = new QPainterPath();
+
+        auto xAspect = getXAspect();
+        auto yAspect = getYAspect();
+
+        /*
+        path->moveTo(QPointF(static_cast<float>(x[0]) * xAspect, static_cast<float>(y[0]) * yAspect));
+
+        for (int i = 1; i < x.size(); i++) {
+            path->lineTo(QPointF(static_cast<float>(x[i]) * xAspect , static_cast<float>(y[i]) * yAspect));
+        }
+
+        auto linePath = addPath(*path,color);
+        */
+    }
 }

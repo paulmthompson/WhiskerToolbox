@@ -8,7 +8,11 @@
 
 #include <vector>
 #include <memory>
+#include <string>
+#include <unordered_set>
+
 #include "Media/Media_Data.hpp"
+#include "DataManager.hpp"
 
 
 /**
@@ -29,7 +33,7 @@ class Media_Window : public QGraphicsScene
 {
 Q_OBJECT
 public:
-    Media_Window(QObject *parent = 0);
+Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
 
 
     /**
@@ -55,6 +59,8 @@ public:
 
         addLine(path,color);
     }
+
+    void addLineDataToScene(const std::string line_key);
 
     void addLine(QPainterPath* path, QPen color);
 
@@ -93,9 +99,6 @@ public:
     float getXAspect() const;
     float getYAspect() const;
 
-    void setData(std::shared_ptr<MediaData> media) {this->_media = media;};
-    std::shared_ptr<MediaData> getData() const {return this->_media;};
-
 protected:
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
@@ -103,7 +106,7 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
-    std::shared_ptr<MediaData> _media;
+    std::shared_ptr<DataManager> _data_manager;
 
     QImage _mediaImage;
     QGraphicsPixmapItem* _canvasPixmap;
@@ -118,9 +121,12 @@ private:
 
     bool _is_verbose;
 
+    std::unordered_set<std::string> _lines_to_show;
+
     QImage::Format _getQImageFormat();
     void _createCanvasForData();
     void _convertNewMediaToQImage();
+    void _plotLineData();
 
 signals:
     void leftClick(qreal,qreal);

@@ -10,15 +10,15 @@
 
 #include "ui_Label_Widget.h"
 
-Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<TimeFrame> time, QWidget *parent) :
-    QWidget(parent),  ui(new Ui::Label_Widget)
+Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, std::shared_ptr<TimeFrame> time, QWidget *parent) :
+    _scene{scene},
+    _data_manager{data_manager},
+    _time{time},
+    _label_maker{std::make_unique<LabelMaker>()},
+    QWidget(parent),
+    ui(new Ui::Label_Widget)
 {
     ui->setupUi(this);
-
-    _scene = scene;
-    _time = time;
-
-    _label_maker = std::make_unique<LabelMaker>();
 }
 
 Label_Widget::~Label_Widget() {
@@ -73,14 +73,14 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
   float x_media = x_canvas / _scene->getXAspect();
   float y_media = y_canvas / _scene->getYAspect();
 
-  auto _media = _scene->getData();
+  auto media = _data_manager->getMediaData();
 
   // Generate the image to be labeled
   int frame_number = _time->getLastLoadedFrame();
-  std::string frame_id = _media->GetFrameID(frame_number);
-  auto img = _label_maker->createImage(_media->getHeight(),
-                                       _media->getWidth(), frame_number,
-                                       frame_id, _media->getRawData());
+  std::string frame_id = media->GetFrameID(frame_number);
+  auto img = _label_maker->createImage(media->getHeight(),
+                                       media->getWidth(), frame_number,
+                                       frame_id, media->getRawData());
 
   _label_maker->addLabel(img, static_cast<int>(x_media),
                          static_cast<int>(y_media));
@@ -97,10 +97,11 @@ void Label_Widget::_updateAll() {
 
 void Label_Widget::_updateDraw()
 {
-    auto _media = _scene->getData();
+    auto media = _data_manager->getMediaData();
+
   _scene->clearPoints();
   for (auto &[frame_name, label] : _label_maker->getLabels()) {
-      if (frame_name == _media->GetFrameID(_time->getLastLoadedFrame())) {
+      if (frame_name == media->GetFrameID(_time->getLastLoadedFrame())) {
       auto &[img, point] = label;
       _scene->addPoint(point.x, point.y, QPen(QColor(Qt::red)));
     }

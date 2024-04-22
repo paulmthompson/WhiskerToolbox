@@ -22,11 +22,12 @@ public:
     std::shared_ptr<MediaData> getMediaData();
 
     void createLine(const std::string line_key);
+    std::shared_ptr<LineData> getLine(const std::string line_key);
 
 private:
 
     std::shared_ptr<MediaData> _media;
-    std::unordered_map<std::string,std::unique_ptr<LineData>> _lines;
+    std::unordered_map<std::string,std::shared_ptr<LineData>> _lines;
 };
 
 

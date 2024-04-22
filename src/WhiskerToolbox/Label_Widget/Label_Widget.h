@@ -18,7 +18,7 @@ class Label_Widget;
 class Label_Widget : public QWidget {
   Q_OBJECT
 public:
-  Label_Widget(Media_Window *scene, std::shared_ptr<TimeFrame> time, QWidget *parent = 0);
+  Label_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, std::shared_ptr<TimeFrame> time, QWidget *parent = 0);
     ~Label_Widget();
 
   void openWidget(); // Call
@@ -29,6 +29,7 @@ protected:
 
 private:
   Media_Window *_scene;
+    std::shared_ptr<DataManager> _data_manager;
   std::unique_ptr<LabelMaker> _label_maker;
   std::shared_ptr<TimeFrame> _time;
   void _updateAll();

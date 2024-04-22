@@ -2,12 +2,6 @@
 add_library(Media_Window SHARED
         Media_Window.h
         Media_Window.cpp
-
-        Video_Window.h
-        Video_Window.cpp
-
-        Images_Window.h
-        Images_Window.cpp
 )
 
 target_include_directories(Media_Window PUBLIC

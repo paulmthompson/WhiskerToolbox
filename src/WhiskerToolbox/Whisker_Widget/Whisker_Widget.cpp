@@ -88,11 +88,12 @@ void Whisker_Widget::_TraceButton()
     QElapsedTimer timer2;
     timer2.start();
 
-    auto _media = _scene->getData();
+    auto media = _data_manager->getMediaData();
     
-    _wt->trace(_media->getRawData(),_media->getHeight(), _media->getWidth());
+    _wt->trace(media->getRawData(),media->getHeight(), media->getWidth());
 
     //Add lines to data manager
+
 
     int t1 = timer2.elapsed();
     _DrawWhiskers();
@@ -105,12 +106,12 @@ void Whisker_Widget::_TraceButton()
 void Whisker_Widget::_SaveImageButton()
 {
     
-    auto _media = _scene->getData();
+    auto media = _data_manager->getMediaData();
     
-    auto data = _media->getRawData();
+    auto data = media->getRawData();
     
-    auto width = _media->getWidth();
-    auto height = _media->getHeight();
+    auto width = media->getWidth();
+    auto height = media->getHeight();
     
     auto frame_id = _time->getLastLoadedFrame();
 
@@ -128,10 +129,10 @@ void Whisker_Widget::_SaveImageButton()
 
 void Whisker_Widget::_SaveWhiskerMaskButton() {
 
-    auto _media = _scene->getData();
+    auto media = _data_manager->getMediaData();
     
-    auto width = _media->getWidth();
-    auto height = _media->getHeight();
+    auto width = media->getWidth();
+    auto height = media->getHeight();
     
     auto frame_id = _time->getLastLoadedFrame();
 
@@ -236,7 +237,7 @@ void Whisker_Widget::_addWhiskersToData()
 
     for (auto& w : _wt->whiskers) {
 
-        //_scene->addLine(w.x,w.y,whisker_color);
+        _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
 
     }
 }
@@ -244,7 +245,9 @@ void Whisker_Widget::_addWhiskersToData()
 void Whisker_Widget::_DrawWhiskers()
 {
     _scene->clearLines(); // We should have the scene do this every time a frame is advanced
+    //_data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
     
+    /*
     for (auto& w : _wt->whiskers) {
 
         auto whisker_color = (w.id == _selected_whisker) ? QPen(QColor(Qt::red)) : QPen(QColor(Qt::blue));
@@ -252,6 +255,7 @@ void Whisker_Widget::_DrawWhiskers()
         _scene->addLine(w.x,w.y,whisker_color);
 
     }
+    */
 }
 
 //x

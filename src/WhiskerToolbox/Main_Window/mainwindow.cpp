@@ -15,8 +15,7 @@
 #include "Covariate_Widget/Covariate_Widget.h"
 #include "Whisker_Widget.h"
 
-#include "Video_Window.h"
-#include "Images_Window.h"
+#include "Media/Video_Data.hpp"
 
 #include <iostream>
 
@@ -33,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
 
-    _scene = new Media_Window(this);
+    _scene = new Media_Window(_data_manager, this);
 
     _timer = new QTimer(this);
     connect(_timer, &QTimer::timeout, this, &MainWindow::_vidLoop);
@@ -101,8 +100,6 @@ void MainWindow::Load_Video()
     // Pass video data object to scene?
 
     _data_manager->createMedia(DataManager::Video);
-    _scene = new Video_Window(this); // Establish scene as Video Window
-    _scene->setData(_data_manager->getMediaData());
 
     _updateMedia();
 
@@ -121,8 +118,6 @@ void MainWindow::Load_Images() {
     }
 
     _data_manager->createMedia(DataManager::Images);
-    _scene = new Images_Window(this);
-    _scene->setData(_data_manager->getMediaData());
 
     _updateMedia();
 
@@ -189,7 +184,7 @@ void MainWindow::openLabelMaker() {
     // We create a whisker widget. We only want to load this module one time,
     // so if we exit the window, it is not created again
     if (!_label_maker) {
-        _label_maker = new Label_Widget(_scene,_time);
+        _label_maker = new Label_Widget(_scene,_data_manager,_time);
         std::cout << "Label Maker Constructed" << std::endl;
     } else {
         std::cout << "Label Maker already exists" << std::endl;
@@ -314,12 +309,10 @@ until we have finished the most recent one.
 
 void MainWindow::Slider_Drag(int action)
 {
-    //If we are dragging the slider, the data manager should be aware of this, and possibly adjust the position
-    //of the new point (such as keyframe)
-    if (dynamic_cast<Video_Window*>(_scene)) {
-        auto keyframe = dynamic_cast<Video_Window*>(_scene)->FindNearestSnapFrame(ui->horizontalScrollBar->sliderPosition());
+    if (dynamic_cast<VideoData*>(_data_manager->getMediaData().get())) {
+        auto current_frame = ui->horizontalScrollBar->sliderPosition();
+        auto keyframe = dynamic_cast<VideoData*>(_data_manager->getMediaData().get())->FindNearestSnapFrame(current_frame);
         ui->horizontalScrollBar->setSliderPosition(keyframe);
-
     }
 }
 
