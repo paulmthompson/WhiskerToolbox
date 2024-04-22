@@ -8,6 +8,7 @@
 #include "whiskertracker.h"
 #include "Media_Window.h"
 
+#include "DataManager.hpp"
 #include "TimeFrame.hpp"
 
 namespace Ui {
@@ -31,7 +32,7 @@ class Whisker_Widget : public QWidget
     Q_OBJECT
 public:
 
-    Whisker_Widget(Media_Window* scene, std::shared_ptr<TimeFrame> time, QWidget *parent = 0);
+    Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, std::shared_ptr<TimeFrame> time, QWidget *parent = 0);
 
     virtual ~Whisker_Widget();
 
@@ -48,6 +49,7 @@ private:
 
     std::unique_ptr<WhiskerTracker> _wt;
     Media_Window * _scene;
+    std::shared_ptr<DataManager> _data_manager;
     std::shared_ptr<TimeFrame> _time;
     int _selected_whisker;
     enum Selection_Type {Whisker_Select,

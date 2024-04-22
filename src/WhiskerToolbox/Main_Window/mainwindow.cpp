@@ -176,7 +176,7 @@ void MainWindow::openWhiskerTracking() {
     // We create a whisker widget. We only want to load this module one time,
     // so if we exit the window, it is not created again
     if (!_ww) {
-        _ww = new Whisker_Widget(_scene,_time);
+        _ww = new Whisker_Widget(_scene, _data_manager, _time);
         std::cout << "Whisker Tracker Constructed" << std::endl;
     } else {
         std::cout << "Whisker Tracker already exists" << std::endl;

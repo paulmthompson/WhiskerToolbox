@@ -13,10 +13,11 @@
 
 #include "ui_Whisker_Widget.h"
 
-Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<TimeFrame> time, QWidget *parent) :
+Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, std::shared_ptr<TimeFrame> time, QWidget *parent) :
     QWidget(parent),
     _wt{std::make_unique<WhiskerTracker>()},
     _scene{scene},
+    _data_manager{data_manager},
     _time{time},
     _selected_whisker{0},
     _selection_mode{Whisker_Select},
