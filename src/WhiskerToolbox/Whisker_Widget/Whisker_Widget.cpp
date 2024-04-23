@@ -252,7 +252,7 @@ void Whisker_Widget::_addWhiskersToData()
         if (w_length < _length_threshold) {
             continue;
         }
-
+        _wt->alignWhiskerToFollicle(w, std::get<0>(_whisker_pad), std::get<1>(_whisker_pad));
         _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
     }
 }

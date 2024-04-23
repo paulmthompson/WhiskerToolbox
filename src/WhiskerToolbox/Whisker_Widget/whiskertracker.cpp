@@ -83,3 +83,15 @@ float WhiskerTracker::calculateWhiskerLength(const Whisker& whisker)
 
     return length;
 }
+
+void WhiskerTracker::alignWhiskerToFollicle(Whisker& whisker, float follicle_x, float follicle_y)
+{
+    auto start_distance = sqrt(pow((whisker.x[0] - follicle_x),2) + pow((whisker.y[0] - follicle_y),2));
+
+    auto end_distance = sqrt(pow((whisker.x.back() - follicle_x),2) + pow((whisker.y.back() - follicle_y),2));
+
+    if (start_distance > end_distance) {
+        std::reverse(whisker.x.begin(),whisker.x.end());
+        std::reverse(whisker.y.begin(),whisker.y.end());
+    }
+}

@@ -36,6 +36,8 @@ public:
 
    float calculateWhiskerLength(const Whisker& whisker);
 
+   void alignWhiskerToFollicle(Whisker& whisker, float follicle_x, float follicle_y);
+
    std::vector<Whisker> whiskers;
 
 private:
