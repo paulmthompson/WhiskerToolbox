@@ -18,6 +18,11 @@ void LineData::addLineAtTime(const int time, const std::vector<float>& x, const 
     _data[time].push_back(new_line);
 }
 
+void LineData::addLineAtTime(const int time, const std::vector<Point2D> line)
+{
+    _data[time].push_back(line);
+}
+
 std::vector<Line2D> LineData::getLinesAtTime(const int time)
 {
     return _data[time];

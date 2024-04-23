@@ -14,7 +14,10 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
     _canvasHeight{480},
     _canvasWidth{640},
     _is_verbose{false},
-    _data_manager{data_manager}
+    _data_manager{data_manager},
+    _line_colors{QColor(Qt::blue),
+                   QColor(Qt::magenta),
+                   QColor(Qt::green)}
 {
     _createCanvasForData();
 }
@@ -136,6 +139,7 @@ void Media_Window::_plotLineData()
     auto xAspect = getXAspect();
     auto yAspect = getYAspect();
 
+    int i =0;
     for (const auto& line_key : _lines_to_show)
     {
 
@@ -153,11 +157,9 @@ void Media_Window::_plotLineData()
                 path->lineTo(QPointF(static_cast<float>(single_line[i].x) * xAspect , static_cast<float>(single_line[i].y) * yAspect));
             }
 
-            auto linePath = addPath(*path, QPen(QColor(Qt::blue)));
+            auto linePath = addPath(*path, QPen(_line_colors[i]));
             _line_paths.append(linePath);
         }
-
-
-
+        i ++;
     }
 }

@@ -69,6 +69,8 @@ private:
 
     void _drawWhiskers();
     void _addWhiskersToData();
+    void _orderWhiskersByPosition();
+    std::vector<Point2D> _getWhiskerBasePositions();
 
 private slots:
     void _traceButton();

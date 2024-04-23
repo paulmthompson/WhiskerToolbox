@@ -16,6 +16,7 @@ public:
     LineData();
     void clearLinesAtTime(const int time);
     void addLineAtTime(const int time, const std::vector<float>& x, const std::vector<float>& y);
+    void addLineAtTime(const int time, const std::vector<Point2D> line);
 
     std::vector<Line2D> getLinesAtTime(const int time);
 protected:

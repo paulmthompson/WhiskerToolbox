@@ -253,7 +253,12 @@ void Whisker_Widget::_addWhiskersToData()
             continue;
         }
         _wt->alignWhiskerToFollicle(w, std::get<0>(_whisker_pad), std::get<1>(_whisker_pad));
+
         _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
+    }
+
+    if (_num_whisker_to_track > 0) {
+        _orderWhiskersByPosition();
     }
 }
 
@@ -351,4 +356,69 @@ void Whisker_Widget::_selectFaceOrientation(int index)
 void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers)
 {
     _num_whisker_to_track = n_whiskers;
+
+    if (n_whiskers == 0) {
+        return;
+    }
+
+    std::string whisker_name = "whisker_" + std::to_string(n_whiskers);
+
+    if (!_data_manager->getLine(whisker_name)) {
+        std::cout << "Creating " << whisker_name << std::endl;
+        _data_manager->createLine(whisker_name);
+        _scene->addLineDataToScene(whisker_name);
+    }
+}
+
+void Whisker_Widget::_orderWhiskersByPosition()
+{
+    auto base_positions = _getWhiskerBasePositions();
+    std::vector<int> base_position_order = std::vector<int>(base_positions.size());
+    std::iota(base_position_order.begin(),base_position_order.end(),0);
+
+    if (_face_orientation == Facing_Top) {
+        std::sort(std::begin(base_position_order),
+                  std::end(base_position_order),
+                  [&](int i1, int i2) { return base_positions[i1].y < base_positions[i2].y; } );
+    } else if (_face_orientation == Facing_Bottom) {
+        std::sort(std::begin(base_position_order),
+                  std::end(base_position_order),
+                  [&](int i1, int i2) { return base_positions[i1].y > base_positions[i2].y; } );
+    } else if (_face_orientation == Facing_Left) {
+        std::sort(std::begin(base_position_order),
+                  std::end(base_position_order),
+                  [&](int i1, int i2) { return base_positions[i1].x < base_positions[i2].x; } );
+    } else {
+        std::sort(std::begin(base_position_order),
+                  std::end(base_position_order),
+                  [&](int i1, int i2) { return base_positions[i1].x > base_positions[i2].x; } );
+    }
+
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
+
+    int i = 0;
+    for (auto& position : base_position_order)
+    {
+        if (position < _num_whisker_to_track) {
+            std::string whisker_name = "whisker_" + std::to_string(position + 1);
+            _data_manager->getLine(whisker_name)->addLineAtTime(current_time, whiskers[i]);
+        }
+        i++;
+    }
+}
+
+std::vector<Point2D> Whisker_Widget::_getWhiskerBasePositions()
+{
+    auto base_positions = std::vector<Point2D>{};
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    auto whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
+
+    for (auto& whisker : whiskers)
+    {
+        base_positions.push_back(whisker[0]);
+    }
+
+    return base_positions;
 }
