@@ -114,54 +114,62 @@ void WhiskerTracker::alignWhiskerToFollicle(Whisker& whisker, float follicle_x, 
     }
 }
 
+
 void WhiskerTracker::_removeDuplicates(std::vector<float>& scores)
 {
-    int i = 0;
-    auto minimum_correlation_so_far = 10000.0;
-    auto closest_match_id = 0;
+
+    struct correlation_matrix {
+        int i;
+        int j;
+        double corr;
+    };
+
     auto minimum_size = 20;
     auto correlation_threshold = 20.0;
 
-    while (i < whiskers.size())
-    {
-        for (int j=0; j< whiskers.size(); j++)
-        {
-            if (j == i)
-            {
-                continue;
-            }
+    auto cor_mat = std::vector<correlation_matrix>();
 
-            if ((whiskers[i].x.size() < minimum_size ) || (whiskers[j].x.size() < minimum_size))
+    for (int i = 0; i<whiskers.size(); i++)
+    {
+        if (whiskers[i].x.size() < minimum_size)
+        {
+            continue;
+        }
+        for (int j=i+1; j<whiskers.size(); j++)
+        {
+            if  (whiskers[j].x.size() < minimum_size)
             {
                 continue;
             }
 
             auto this_cor = 0.0;
-            for (int k=0; k < minimum_size; k++)
-            {
-                this_cor += sqrt(pow(whiskers[i].x.end()[-k - 1] - whiskers[i].x.end()[-k - 2],2) +
-                                 pow(whiskers[i].y.end()[-k - 1] - whiskers[i].y.end()[-k - 2],2));
+            for (int k=0; k < minimum_size; k++) {
+                this_cor += sqrt(pow(whiskers[i].x.end()[-k - 1] - whiskers[j].x.end()[-k - 1],2) +
+                                pow(whiskers[i].y.end()[-k - 1] - whiskers[j].y.end()[-k - 1],2));
             }
-            if (this_cor < minimum_correlation_so_far)
-            {
-                minimum_correlation_so_far = this_cor;
-                closest_match_id = i;
-            }
-            if (minimum_correlation_so_far < correlation_threshold)
-            {
-                if (scores[j] > scores[i])
-                {
-                    whiskers.erase(whiskers.begin() + i);
-                    scores.erase(scores.begin() + i);
-                } else {
-                    whiskers.erase(whiskers.begin() + j);
-                    scores.erase(scores.begin() + j);
-                }
 
-                i = 1;
-                break;
+            cor_mat.push_back(correlation_matrix{i,j,this_cor});
+        }
+    }
+
+    std::vector<int> erase_inds = std::vector<int>();
+    for (int i = 0; i< cor_mat.size(); i++)
+    {
+        if (cor_mat[i].corr < correlation_threshold)
+        {
+            std::cout << "Whiskers " << cor_mat[i].i << " and " << cor_mat[i].j << " are the same" << std::endl;
+
+            if (scores[cor_mat[i].i] > scores[cor_mat[i].j])
+            {
+                erase_inds.push_back(cor_mat[i].j);
+            } else {
+                erase_inds.push_back(cor_mat[i].i);
             }
         }
-        i+=1;
+    }
+
+    std::sort(erase_inds.begin(), erase_inds.end(),std::greater<int>());
+    for (auto& erase_ind : erase_inds) {
+        whiskers.erase(whiskers.begin() + erase_ind);
     }
 }
