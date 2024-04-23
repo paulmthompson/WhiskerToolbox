@@ -34,9 +34,6 @@ public:
    std::tuple<float,int> get_nearest_whisker(float x_p, float y_p);
    std::map<int,std::vector<Whisker>> load_janelia_whiskers(const std::string filename);
 
-   float calculateWhiskerLength(const Whisker& whisker);
-
-   void alignWhiskerToFollicle(Whisker& whisker);
 
    float getWhiskerLengthThreshold() const {return _whisker_length_threshold;};
    void setWhiskerLengthThreshold(float length_threshold) {_whisker_length_threshold = length_threshold;};
@@ -53,6 +50,8 @@ private:
     std::tuple<float,float> _whisker_pad;
 
    void _removeDuplicates(std::vector<float>& scores);
+    void _alignWhiskerToFollicle(Whisker& whisker);
+   float _calculateWhiskerLength(const Whisker& whisker);
 
 };
 

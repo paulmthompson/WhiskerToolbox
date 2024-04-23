@@ -34,8 +34,8 @@ void WhiskerTracker::trace(const std::vector<uint8_t>& image, const int image_he
     int whisker_count = 1;
     for (auto& w_seg : j_segs) {
         auto whisker = Whisker(whisker_count++,std::move(w_seg.x),std::move(w_seg.y));
-        if (calculateWhiskerLength(whisker) > _whisker_length_threshold) {
-            alignWhiskerToFollicle(whisker);
+        if (_calculateWhiskerLength(whisker) > _whisker_length_threshold) {
+            _alignWhiskerToFollicle(whisker);
             whiskers.push_back(whisker);
             scores.push_back(std::accumulate(w_seg.scores.begin(),w_seg.scores.end(),0.0) / static_cast<float>(w_seg.scores.size()));
         }
@@ -84,7 +84,7 @@ std::map<int,std::vector<Whisker>> WhiskerTracker::load_janelia_whiskers(const s
     return output_whiskers;
 }
 
-float WhiskerTracker::calculateWhiskerLength(const Whisker& whisker)
+float WhiskerTracker::_calculateWhiskerLength(const Whisker& whisker)
 {
     float length = 0.0;
 
@@ -97,7 +97,7 @@ float WhiskerTracker::calculateWhiskerLength(const Whisker& whisker)
 }
 
 /**
- * @brief WhiskerTracker::alignWhiskerToFollicle
+ * @brief WhiskerTracker::_alignWhiskerToFollicle
  *
  * Measures the distance between the Point at one end of a whisker and Point
  * at the other end. The whisker is then flipped so that the first index is closest
@@ -106,7 +106,7 @@ float WhiskerTracker::calculateWhiskerLength(const Whisker& whisker)
  *
  * @param whisker whisker to be checked
  */
-void WhiskerTracker::alignWhiskerToFollicle(Whisker& whisker)
+void WhiskerTracker::_alignWhiskerToFollicle(Whisker& whisker)
 {
     auto follicle_x = std::get<0>(_whisker_pad);
     auto follicle_y = std::get<1>(_whisker_pad);
