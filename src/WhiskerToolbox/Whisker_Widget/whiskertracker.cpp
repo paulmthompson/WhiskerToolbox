@@ -84,6 +84,18 @@ float WhiskerTracker::calculateWhiskerLength(const Whisker& whisker)
     return length;
 }
 
+/**
+ * @brief WhiskerTracker::alignWhiskerToFollicle
+ *
+ * Measures the distance between the Point at one end of a whisker and Point
+ * at the other end. The whisker is then flipped so that the first index is closest
+ * to the follicle
+ *
+ *
+ * @param whisker whisker to be checked
+ * @param follicle_x x coordinate of the follicle
+ * @param follicle_y y coordinate of the follicle
+ */
 void WhiskerTracker::alignWhiskerToFollicle(Whisker& whisker, float follicle_x, float follicle_y)
 {
     auto start_distance = sqrt(pow((whisker.x[0] - follicle_x),2) + pow((whisker.y[0] - follicle_y),2));

@@ -343,13 +343,22 @@ void Whisker_Widget::_loadJaneliaWhiskers()
 void Whisker_Widget::_selectFaceOrientation(int index)
 {
     if (index == 0) {
+
         _face_orientation = Face_Orientation::Facing_Top;
+        std::cout << "Changing face orientation to facing top" << std::endl;
+
     } else if (index == 1) {
         _face_orientation = Face_Orientation::Facing_Bottom;
+        std::cout << "Changing face orientation to facing bottom" << std::endl;
+
     } else if (index == 2) {
         _face_orientation = Face_Orientation::Facing_Left;
+        std::cout << "Changing face orientation to facing left" << std::endl;
+
     } else {
         _face_orientation = Face_Orientation::Facing_Right;
+        std::cout << "Changing face orientation to facing right" << std::endl;
+
     }
 }
 
@@ -370,41 +379,70 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers)
     }
 }
 
+/**
+ * @brief Whisker_Widget::_orderWhiskersByPosition
+ *
+ * (0,0) coordinate is the top left of the video
+ *
+ */
 void Whisker_Widget::_orderWhiskersByPosition()
 {
     auto base_positions = _getWhiskerBasePositions();
+
     std::vector<int> base_position_order = std::vector<int>(base_positions.size());
     std::iota(base_position_order.begin(),base_position_order.end(),0);
 
     if (_face_orientation == Facing_Top) {
+
+        std::cout << "Ordering by increasing y values" << std::endl;
+
         std::sort(std::begin(base_position_order),
                   std::end(base_position_order),
                   [&](int i1, int i2) { return base_positions[i1].y < base_positions[i2].y; } );
     } else if (_face_orientation == Facing_Bottom) {
+
+        std::cout << "Ordering by decreasing y values" << std::endl;
+
         std::sort(std::begin(base_position_order),
                   std::end(base_position_order),
                   [&](int i1, int i2) { return base_positions[i1].y > base_positions[i2].y; } );
     } else if (_face_orientation == Facing_Left) {
-        std::sort(std::begin(base_position_order),
-                  std::end(base_position_order),
-                  [&](int i1, int i2) { return base_positions[i1].x < base_positions[i2].x; } );
-    } else {
+
+        std::cout << "Ordering by increasing x values" << std::endl;
+
         std::sort(std::begin(base_position_order),
                   std::end(base_position_order),
                   [&](int i1, int i2) { return base_positions[i1].x > base_positions[i2].x; } );
+    } else {
+
+        std::cout << "Ordering by decreasing x values" << std::endl;
+
+        std::sort(std::begin(base_position_order),
+                  std::end(base_position_order),
+                  [&](int i1, int i2) { return base_positions[i1].x < base_positions[i2].x; } );
     }
 
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
     auto whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
 
-    int i = 0;
-    for (auto& position : base_position_order)
+    for (int i = 0; i < _num_whisker_to_track; i++) {
+        std::cout << "The "<< i << " position whisker is " << base_position_order[i];
+        std::cout << " with follicle at " << "(" << base_positions[base_position_order[i]].x << "," << base_positions[base_position_order[i]].y << ")" << std::endl;
+
+        std::string whisker_name = "whisker_" + std::to_string(i + 1);
+
+        _data_manager->getLine(whisker_name)->addLineAtTime(current_time, whiskers[base_position_order[i]]);
+    }
+
+}
+
+void _printBasePositionOrder(std::vector<Point2D>& base_positions)
+{
+    std::cout << "The order of whisker base positions: " << std::endl;
+
+    for (int i = 0; i < base_positions.size(); i++)
     {
-        if (position < _num_whisker_to_track) {
-            std::string whisker_name = "whisker_" + std::to_string(position + 1);
-            _data_manager->getLine(whisker_name)->addLineAtTime(current_time, whiskers[i]);
-        }
-        i++;
+        std::cout << "Whisker " << i << " at " << "(" << base_positions[i].x << "," << base_positions[i].y << ")" << std::endl;
     }
 }
 
@@ -420,5 +458,8 @@ std::vector<Point2D> Whisker_Widget::_getWhiskerBasePositions()
         base_positions.push_back(whisker[0]);
     }
 
+    _printBasePositionOrder(base_positions);
+
     return base_positions;
 }
+
