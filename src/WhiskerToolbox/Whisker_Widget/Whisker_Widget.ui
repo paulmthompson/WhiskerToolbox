@@ -159,6 +159,49 @@
     <string>(0,0)</string>
    </property>
   </widget>
+  <widget class="QComboBox" name="face_orientation">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>350</y>
+     <width>101</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>Facing Top</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Facing Bottom</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Facing Left</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Facing Right</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>350</y>
+     <width>121</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Head Orientation</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

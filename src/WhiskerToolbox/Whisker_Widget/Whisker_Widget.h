@@ -54,6 +54,15 @@ private:
     float _length_threshold;
     std::tuple<float,float> _whisker_pad;
 
+    enum Face_Orientation {
+        Facing_Top,
+        Facing_Bottom,
+        Facing_Left,
+        Facing_Right
+    };
+
+    Face_Orientation _face_orientation;
+
     Ui::Whisker_Widget *ui;
 
     void _drawWhiskers();
@@ -71,6 +80,8 @@ private slots:
 
     void _selectWhiskerPad();
     void _changeWhiskerLengthThreshold(double new_threshold);
+
+    void _selectFaceOrientation(int index);
 
     void _clickedInVideo(qreal x,qreal y);
 
