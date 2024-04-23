@@ -30,6 +30,8 @@ void WhiskerTracker::trace(const std::vector<uint8_t>& image, const int image_he
     for (auto& w_seg : j_segs) {
         whiskers.push_back(Whisker(whisker_count++,std::move(w_seg.x),std::move(w_seg.y)));
     }
+
+    _removeDuplicates();
 }
 
 std::tuple<float,int> WhiskerTracker::get_nearest_whisker(float x_p, float y_p) {
@@ -106,4 +108,9 @@ void WhiskerTracker::alignWhiskerToFollicle(Whisker& whisker, float follicle_x, 
         std::reverse(whisker.x.begin(),whisker.x.end());
         std::reverse(whisker.y.begin(),whisker.y.end());
     }
+}
+
+void WhiskerTracker::_removeDuplicates()
+{
+
 }

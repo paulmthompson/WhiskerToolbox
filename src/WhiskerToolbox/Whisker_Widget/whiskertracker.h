@@ -44,6 +44,8 @@ private:
    JaneliaTracker _janelia;
     bool _janelia_init;
 
+   void _removeDuplicates();
+
 };
 
 
