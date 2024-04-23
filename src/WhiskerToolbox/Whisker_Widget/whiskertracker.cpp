@@ -10,7 +10,8 @@ Image<uint8_t> bg = Image<uint8_t>(640,480,std::vector<uint8_t>(640*480,0));
 
 WhiskerTracker::WhiskerTracker() :
     _whisker_length_threshold{75.0},
-    _janelia_init{false}
+    _janelia_init{false},
+    _whisker_pad{0.0, 0.0}
 {
     _janelia = JaneliaTracker();
     whiskers = std::vector<Whisker>{};
@@ -34,6 +35,7 @@ void WhiskerTracker::trace(const std::vector<uint8_t>& image, const int image_he
     for (auto& w_seg : j_segs) {
         auto whisker = Whisker(whisker_count++,std::move(w_seg.x),std::move(w_seg.y));
         if (calculateWhiskerLength(whisker) > _whisker_length_threshold) {
+            alignWhiskerToFollicle(whisker);
             whiskers.push_back(whisker);
             scores.push_back(std::accumulate(w_seg.scores.begin(),w_seg.scores.end(),0.0) / static_cast<float>(w_seg.scores.size()));
         }
@@ -103,11 +105,12 @@ float WhiskerTracker::calculateWhiskerLength(const Whisker& whisker)
  *
  *
  * @param whisker whisker to be checked
- * @param follicle_x x coordinate of the follicle
- * @param follicle_y y coordinate of the follicle
  */
-void WhiskerTracker::alignWhiskerToFollicle(Whisker& whisker, float follicle_x, float follicle_y)
+void WhiskerTracker::alignWhiskerToFollicle(Whisker& whisker)
 {
+    auto follicle_x = std::get<0>(_whisker_pad);
+    auto follicle_y = std::get<1>(_whisker_pad);
+
     auto start_distance = sqrt(pow((whisker.x[0] - follicle_x),2) + pow((whisker.y[0] - follicle_y),2));
 
     auto end_distance = sqrt(pow((whisker.x.back() - follicle_x),2) + pow((whisker.y.back() - follicle_y),2));

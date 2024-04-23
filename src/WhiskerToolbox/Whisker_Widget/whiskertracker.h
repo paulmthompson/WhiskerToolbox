@@ -36,10 +36,13 @@ public:
 
    float calculateWhiskerLength(const Whisker& whisker);
 
-   void alignWhiskerToFollicle(Whisker& whisker, float follicle_x, float follicle_y);
+   void alignWhiskerToFollicle(Whisker& whisker);
 
    float getWhiskerLengthThreshold() const {return _whisker_length_threshold;};
    void setWhiskerLengthThreshold(float length_threshold) {_whisker_length_threshold = length_threshold;};
+
+   std::tuple<float,float> getWhiskerPad() const {return _whisker_pad;};
+   void setWhiskerPad(float w_x, float w_y) {_whisker_pad = std::make_tuple(w_x,w_y);};
 
    std::vector<Whisker> whiskers;
 
@@ -47,6 +50,7 @@ private:
    JaneliaTracker _janelia;
     bool _janelia_init;
    float _whisker_length_threshold;
+    std::tuple<float,float> _whisker_pad;
 
    void _removeDuplicates(std::vector<float>& scores);
 

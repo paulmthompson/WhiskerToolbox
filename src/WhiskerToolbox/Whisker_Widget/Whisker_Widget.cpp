@@ -23,7 +23,6 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
         _selection_mode{Whisker_Select},
         _contact_start{0},
         _contact_epoch(false),
-        _whisker_pad{0.0, 0.0},
         _face_orientation{Facing_Top},
         _num_whisker_to_track{0},
         ui(new Ui::Whisker_Widget) {
@@ -259,9 +258,6 @@ void Whisker_Widget::_addWhiskersToData() {
     _data_manager->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
     for (auto &w: _wt->whiskers) {
-
-        _wt->alignWhiskerToFollicle(w, std::get<0>(_whisker_pad), std::get<1>(_whisker_pad));
-
         _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
     }
 
@@ -294,7 +290,7 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
             break;
         }
         case Whisker_Pad_Select: {
-            _whisker_pad = std::make_tuple(static_cast<int>(x_media), static_cast<int>(y_media));
+            _wt->setWhiskerPad(x_media,y_media);
             std::string whisker_pad_label =
                     "(" + std::to_string(static_cast<int>(x_media)) + "," + std::to_string(static_cast<int>(y_media)) +
                     ")";
