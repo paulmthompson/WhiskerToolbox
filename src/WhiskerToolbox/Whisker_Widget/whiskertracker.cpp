@@ -1,5 +1,6 @@
 #include "whiskertracker.h"
 
+#include <algorithm>
 #include <cmath>
 #include <stdio.h>
 #include "io.hpp"
