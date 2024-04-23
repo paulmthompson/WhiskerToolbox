@@ -38,11 +38,15 @@ public:
 
    void alignWhiskerToFollicle(Whisker& whisker, float follicle_x, float follicle_y);
 
+   float getWhiskerLengthThreshold() const {return _whisker_length_threshold;};
+   void setWhiskerLengthThreshold(float length_threshold) {_whisker_length_threshold = length_threshold;};
+
    std::vector<Whisker> whiskers;
 
 private:
    JaneliaTracker _janelia;
     bool _janelia_init;
+   float _whisker_length_threshold;
 
    void _removeDuplicates(std::vector<float>& scores);
 

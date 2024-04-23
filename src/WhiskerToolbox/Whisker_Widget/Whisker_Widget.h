@@ -51,7 +51,6 @@ private:
     std::vector<Contact> _contact;
     int _contact_start;
     bool _contact_epoch;
-    float _length_threshold;
     std::tuple<float,float> _whisker_pad;
 
     enum Face_Orientation {

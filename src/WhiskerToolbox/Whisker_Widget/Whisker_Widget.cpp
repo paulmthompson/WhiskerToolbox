@@ -23,7 +23,6 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
         _selection_mode{Whisker_Select},
         _contact_start{0},
         _contact_epoch(false),
-        _length_threshold{75.0},
         _whisker_pad{0.0, 0.0},
         _face_orientation{Facing_Top},
         _num_whisker_to_track{0},
@@ -260,11 +259,7 @@ void Whisker_Widget::_addWhiskersToData() {
     _data_manager->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
     for (auto &w: _wt->whiskers) {
-        auto w_length = _wt->calculateWhiskerLength(w);
 
-        if (w_length < _length_threshold) {
-            continue;
-        }
         _wt->alignWhiskerToFollicle(w, std::get<0>(_whisker_pad), std::get<1>(_whisker_pad));
 
         _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
@@ -280,7 +275,7 @@ void Whisker_Widget::_drawWhiskers() {
 }
 
 void Whisker_Widget::_changeWhiskerLengthThreshold(double new_threshold) {
-    _length_threshold = static_cast<float>(new_threshold);
+    _wt->setWhiskerLengthThreshold(static_cast<float>(new_threshold));
 }
 
 //x
@@ -327,11 +322,7 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
 
     for (auto &[time, whiskers_in_frame]: whiskers_from_janelia) {
         for (auto &w: whiskers_in_frame) {
-
-            auto w_length = _wt->calculateWhiskerLength(w);
-            if (w_length > _length_threshold) {
-                _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(time, w.x, w.y);
-            }
+            _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(time, w.x, w.y);
         }
     }
 }

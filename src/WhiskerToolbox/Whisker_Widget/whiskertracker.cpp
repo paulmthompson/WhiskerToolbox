@@ -8,10 +8,11 @@
 
 Image<uint8_t> bg = Image<uint8_t>(640,480,std::vector<uint8_t>(640*480,0));
 
-WhiskerTracker::WhiskerTracker()
+WhiskerTracker::WhiskerTracker() :
+    _whisker_length_threshold{75.0},
+    _janelia_init{false}
 {
     _janelia = JaneliaTracker();
-    _janelia_init = false;
     whiskers = std::vector<Whisker>{};
 }
 
@@ -28,11 +29,14 @@ void WhiskerTracker::trace(const std::vector<uint8_t>& image, const int image_he
     Image<uint8_t>img = Image<uint8_t>(image_width,image_height,image);
     std::vector<Whisker_Seg> j_segs = _janelia.find_segments(1,img,bg);
 
-    std::vector<float> scores = std::vector<float>(j_segs.size());
+    std::vector<float> scores = std::vector<float>();
     int whisker_count = 1;
     for (auto& w_seg : j_segs) {
-        scores[whisker_count-1] = std::accumulate(w_seg.scores.begin(),w_seg.scores.end(),0.0) / static_cast<float>(w_seg.scores.size());
-        whiskers.push_back(Whisker(whisker_count++,std::move(w_seg.x),std::move(w_seg.y)));
+        auto whisker = Whisker(whisker_count++,std::move(w_seg.x),std::move(w_seg.y));
+        if (calculateWhiskerLength(whisker) > _whisker_length_threshold) {
+            whiskers.push_back(whisker);
+            scores.push_back(std::accumulate(w_seg.scores.begin(),w_seg.scores.end(),0.0) / static_cast<float>(w_seg.scores.size()));
+        }
     }
 
     _removeDuplicates(scores);
