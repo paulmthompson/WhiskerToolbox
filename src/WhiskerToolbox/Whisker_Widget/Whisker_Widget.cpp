@@ -245,11 +245,15 @@ void Whisker_Widget::_addWhiskersToData()
 {
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    for (auto& w : _wt->whiskers) {
+    for (auto& w : _wt->whiskers)
+    {
         auto w_length = _wt->calculateWhiskerLength(w);
-        if (w_length > _length_threshold) {
-            _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
+
+        if (w_length < _length_threshold) {
+            continue;
         }
+
+        _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
     }
 }
 
