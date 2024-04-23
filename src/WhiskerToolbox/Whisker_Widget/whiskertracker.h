@@ -44,7 +44,7 @@ private:
    JaneliaTracker _janelia;
     bool _janelia_init;
 
-   void _removeDuplicates();
+   void _removeDuplicates(std::vector<float>& scores);
 
 };
 

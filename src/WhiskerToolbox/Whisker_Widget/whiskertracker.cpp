@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 #include <stdio.h>
 #include "io.hpp"
 
@@ -27,12 +28,14 @@ void WhiskerTracker::trace(const std::vector<uint8_t>& image, const int image_he
     Image<uint8_t>img = Image<uint8_t>(image_width,image_height,image);
     std::vector<Whisker_Seg> j_segs = _janelia.find_segments(1,img,bg);
 
+    std::vector<float> scores = std::vector<float>(j_segs.size());
     int whisker_count = 1;
     for (auto& w_seg : j_segs) {
+        scores[whisker_count-1] = std::accumulate(w_seg.scores.begin(),w_seg.scores.end(),0.0) / static_cast<float>(w_seg.scores.size());
         whiskers.push_back(Whisker(whisker_count++,std::move(w_seg.x),std::move(w_seg.y)));
     }
 
-    _removeDuplicates();
+    _removeDuplicates(scores);
 }
 
 std::tuple<float,int> WhiskerTracker::get_nearest_whisker(float x_p, float y_p) {
@@ -111,7 +114,54 @@ void WhiskerTracker::alignWhiskerToFollicle(Whisker& whisker, float follicle_x, 
     }
 }
 
-void WhiskerTracker::_removeDuplicates()
+void WhiskerTracker::_removeDuplicates(std::vector<float>& scores)
 {
+    int i = 0;
+    auto minimum_correlation_so_far = 10000.0;
+    auto closest_match_id = 0;
+    auto minimum_size = 20;
+    auto correlation_threshold = 20.0;
 
+    while (i < whiskers.size())
+    {
+        for (int j=0; j< whiskers.size(); j++)
+        {
+            if (j == i)
+            {
+                continue;
+            }
+
+            if ((whiskers[i].x.size() < minimum_size ) || (whiskers[j].x.size() < minimum_size))
+            {
+                continue;
+            }
+
+            auto this_cor = 0.0;
+            for (int k=0; k < minimum_size; k++)
+            {
+                this_cor += sqrt(pow(whiskers[i].x.end()[-k - 1] - whiskers[i].x.end()[-k - 2],2) +
+                                 pow(whiskers[i].y.end()[-k - 1] - whiskers[i].y.end()[-k - 2],2));
+            }
+            if (this_cor < minimum_correlation_so_far)
+            {
+                minimum_correlation_so_far = this_cor;
+                closest_match_id = i;
+            }
+            if (minimum_correlation_so_far < correlation_threshold)
+            {
+                if (scores[j] > scores[i])
+                {
+                    whiskers.erase(whiskers.begin() + i);
+                    scores.erase(scores.begin() + i);
+                } else {
+                    whiskers.erase(whiskers.begin() + j);
+                    scores.erase(scores.begin() + j);
+                }
+
+                i = 1;
+                break;
+            }
+        }
+        i+=1;
+    }
 }

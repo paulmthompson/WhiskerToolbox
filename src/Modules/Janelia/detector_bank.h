@@ -46,8 +46,8 @@ struct JaneliaConfig {
         _maxr = 4;
         _maxiter = 1;
         _iteration_thres = 0.0;
-        _accum_thres = 0.99;
-        _seed_thres = 0.90;
+        _accum_thres = 0.90; // Originally 0.99
+        _seed_thres = 0.80; // Originally 0.9
         _angle_step = 18.0;
         _tlen = 8;
         _offset_step = 0.1;
