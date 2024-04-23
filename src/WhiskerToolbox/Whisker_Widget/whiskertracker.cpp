@@ -173,6 +173,9 @@ void WhiskerTracker::_removeDuplicates(std::vector<float>& scores)
     }
 
     std::sort(erase_inds.begin(), erase_inds.end(),std::greater<int>());
+    auto last = std::unique(erase_inds.begin(), erase_inds.end());
+    erase_inds.erase(last, erase_inds.end());
+
     for (auto& erase_ind : erase_inds) {
         whiskers.erase(whiskers.begin() + erase_ind);
     }
