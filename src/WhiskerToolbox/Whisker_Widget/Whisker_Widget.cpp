@@ -10,6 +10,7 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <filesystem>
 
 #include "ui_Whisker_Widget.h"
 
@@ -56,6 +57,7 @@ void Whisker_Widget::openWidget() {
 
     connect(ui->face_orientation, SIGNAL(currentIndexChanged(int)), this, SLOT(_selectFaceOrientation(int)));
     connect(ui->whisker_number, SIGNAL(valueChanged(int)), this, SLOT(_selectNumWhiskersToTrack(int)));
+    connect(ui->export_image_csv,SIGNAL(clicked()),this, SLOT(_exportImageCSV()));
 
 
     if (_contact.empty()) {
@@ -86,6 +88,8 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
 
     disconnect(ui->face_orientation, SIGNAL(currentIndexChanged(int)), this, SLOT(_selectFaceOrientation(int)));
     disconnect(ui->whisker_number, SIGNAL(valueChanged(int)), this, SLOT(_selectNumWhiskersToTrack(int)));
+
+    disconnect(ui->export_image_csv,SIGNAL(clicked()),this, SLOT(_exportImageCSV()));
 }
 
 void Whisker_Widget::_traceButton() {
@@ -109,7 +113,11 @@ void Whisker_Widget::_traceButton() {
 }
 
 void Whisker_Widget::_saveImageButton() {
+    _saveImage("./");
+}
 
+void Whisker_Widget::_saveImage(const std::string folder)
+{
     auto media = _data_manager->getMediaData();
 
     auto data = media->getRawData();
@@ -127,8 +135,7 @@ void Whisker_Widget::_saveImageButton() {
     std::string saveName = "img" + ss.str() + ".png";
     std::cout << "Saving file " << saveName << std::endl;
 
-    labeled_image.save(QString::fromStdString(saveName));
-
+    labeled_image.save(QString::fromStdString(folder + saveName));
 }
 
 void Whisker_Widget::_saveWhiskerMaskButton() {
@@ -430,3 +437,47 @@ std::vector<Point2D> Whisker_Widget::_getWhiskerBasePositions() {
     return base_positions;
 }
 
+void Whisker_Widget::_exportImageCSV()
+{
+
+    std::string folder = "./images/";
+
+    std::filesystem::create_directory(folder);
+    _saveImage(folder);
+
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    for (int i = 0; i<_num_whisker_to_track; i++)
+    {
+        std::string whisker_name = "whisker_" + std::to_string(i + 1);
+
+        auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
+
+        std::string folder = "./data/" + whisker_name + "/";
+        std::filesystem::create_directory(folder);
+
+        _saveWhiskerAsCSV(folder, whiskers[0]);
+    }
+}
+
+void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D>& whisker)
+{
+    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+
+    std::stringstream ss;
+    ss << std::setw(7) << std::setfill('0') << frame_id;
+
+    std::string saveName = ss.str() + ".csv";
+
+    std::fstream myfile;
+    myfile.open (folder + saveName, std::fstream::out);
+
+    //myfile << std::fixed << std::setprecision(2);
+    for (auto& point: whisker)
+    {
+        myfile << point.x << "," << point.y << "\n";
+    }
+
+    myfile.close();
+
+}

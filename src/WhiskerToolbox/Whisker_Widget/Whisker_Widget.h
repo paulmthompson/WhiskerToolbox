@@ -71,6 +71,7 @@ private:
     void _addWhiskersToData();
     void _orderWhiskersByPosition();
     std::vector<Point2D> _getWhiskerBasePositions();
+    void _saveImage(const std::string folder);
 
 private slots:
     void _traceButton();
@@ -91,6 +92,8 @@ private slots:
 
     void _clickedInVideo(qreal x,qreal y);
 
+    void _exportImageCSV();
+    void _saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D>& whisker);
 };
 
 #endif // WHISKER_WIDGET_H
