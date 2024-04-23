@@ -63,6 +63,8 @@ private:
 
     Face_Orientation _face_orientation;
 
+    int _num_whisker_to_track;
+
     Ui::Whisker_Widget *ui;
 
     void _drawWhiskers();
@@ -82,6 +84,8 @@ private slots:
     void _changeWhiskerLengthThreshold(double new_threshold);
 
     void _selectFaceOrientation(int index);
+
+    void _selectNumWhiskersToTrack(int n_whiskers);
 
     void _clickedInVideo(qreal x,qreal y);
 

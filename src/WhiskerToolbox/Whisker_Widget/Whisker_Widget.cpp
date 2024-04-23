@@ -25,6 +25,7 @@ Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager>
     _length_threshold{75.0},
     _whisker_pad{0.0,0.0},
     _face_orientation{Facing_Top},
+    _num_whisker_to_track{0},
     ui(new Ui::Whisker_Widget)
 {
     ui->setupUi(this);
@@ -55,6 +56,7 @@ void Whisker_Widget::openWidget() {
     connect(ui->length_threshold_spinbox,SIGNAL(valueChanged(double)),this,SLOT(_changeWhiskerLengthThreshold(double)));
 
     connect(ui->face_orientation,SIGNAL(currentIndexChanged(int)),this,SLOT(_selectFaceOrientation(int)));
+    connect(ui->whisker_number,SIGNAL(valueChanged(int)),this,SLOT(_selectNumWhiskersToTrack(int)));
 
 
     if (_contact.empty()) {
@@ -83,6 +85,7 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->length_threshold_spinbox,SIGNAL(valueChanged(double)),this,SLOT(_changeWhiskerLengthThreshold(double)));
 
     disconnect(ui->face_orientation,SIGNAL(currentIndexChanged(int)),this,SLOT(_selectFaceOrientation(int)));
+    disconnect(ui->whisker_number,SIGNAL(valueChanged(int)),this,SLOT(_selectNumWhiskersToTrack(int)));
 }
 
 void Whisker_Widget::_traceButton()
@@ -339,4 +342,9 @@ void Whisker_Widget::_selectFaceOrientation(int index)
     } else {
         _face_orientation = Face_Orientation::Facing_Right;
     }
+}
+
+void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers)
+{
+    _num_whisker_to_track = n_whiskers;
 }
