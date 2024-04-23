@@ -453,7 +453,7 @@ void Whisker_Widget::_exportImageCSV()
 
         auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
 
-        std::string folder = "./data/" + whisker_name + "/";
+        std::string folder = "./" + whisker_name + "/";
         std::filesystem::create_directory(folder);
 
         _saveWhiskerAsCSV(folder, whiskers[0]);
@@ -472,7 +472,7 @@ void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vec
     std::fstream myfile;
     myfile.open (folder + saveName, std::fstream::out);
 
-    //myfile << std::fixed << std::setprecision(2);
+    myfile << std::fixed << std::setprecision(2);
     for (auto& point: whisker)
     {
         myfile << point.x << "," << point.y << "\n";
