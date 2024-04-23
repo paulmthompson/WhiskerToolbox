@@ -39,6 +39,7 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
 
 
     void addLineDataToScene(const std::string line_key);
+    void addLineColor(std::string line_key, const QColor color);
 
     void clearLines();
 
@@ -98,7 +99,7 @@ private:
     bool _is_verbose;
 
     std::unordered_set<std::string> _lines_to_show;
-    std::array<QColor,3> _line_colors;
+    std::unordered_map<std::string,QColor> _line_colors;
 
     QImage::Format _getQImageFormat();
     void _createCanvasForData();

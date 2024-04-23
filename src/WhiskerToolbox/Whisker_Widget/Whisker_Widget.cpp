@@ -31,6 +31,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     ui->setupUi(this);
     _data_manager->createLine("unlabeled_whiskers");
     _scene->addLineDataToScene("unlabeled_whiskers");
+    _scene->addLineColor("unlabeled_whiskers",QColor("blue"));
 
 };
 
@@ -347,6 +348,12 @@ void Whisker_Widget::_selectFaceOrientation(int index) {
     }
 }
 
+const std::vector<QColor> whisker_colors = {QColor("red"),
+                                            QColor("green"),
+                                            QColor("cyan"),
+                                            QColor("magenta"),
+                                            QColor("yellow")};
+
 void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
     _num_whisker_to_track = n_whiskers;
 
@@ -360,6 +367,7 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->createLine(whisker_name);
         _scene->addLineDataToScene(whisker_name);
+        _scene->addLineColor(whisker_name,whisker_colors[n_whiskers-1]);
     }
 }
 
@@ -453,7 +461,7 @@ void Whisker_Widget::_exportImageCSV()
 
         auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
 
-        std::string folder = "./" + whisker_name + "/";
+        std::string folder = "./" + std::to_string(i) + "/";
         std::filesystem::create_directory(folder);
 
         _saveWhiskerAsCSV(folder, whiskers[0]);

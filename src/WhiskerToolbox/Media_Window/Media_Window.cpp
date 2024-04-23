@@ -15,9 +15,7 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
     _canvasWidth{640},
     _is_verbose{false},
     _data_manager{data_manager},
-    _line_colors{QColor(Qt::blue),
-                   QColor(Qt::magenta),
-                   QColor(Qt::green)}
+    _line_colors{}
 {
     _createCanvasForData();
 }
@@ -25,6 +23,11 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
 void Media_Window::addLineDataToScene(const std::string line_key)
 {
     _lines_to_show.insert(line_key);
+}
+
+void Media_Window::addLineColor(std::string line_key, const QColor color)
+{
+    _line_colors[line_key] = color;
 }
 
 void Media_Window::clearLines() {
@@ -143,7 +146,11 @@ void Media_Window::_plotLineData()
     for (const auto& line_key : _lines_to_show)
     {
 
-        std::cout << "Plotting lines from " << line_key << std::endl;
+        auto plot_color = QColor("blue");
+        if (_line_colors.count(line_key) != 0)
+        {
+            plot_color = QColor(_line_colors[line_key]);
+        }
 
         auto lineData = _data_manager->getLine(line_key)->getLinesAtTime(current_time);
 
@@ -157,7 +164,7 @@ void Media_Window::_plotLineData()
                 path->lineTo(QPointF(static_cast<float>(single_line[i].x) * xAspect , static_cast<float>(single_line[i].y) * yAspect));
             }
 
-            auto linePath = addPath(*path, QPen(_line_colors[i]));
+            auto linePath = addPath(*path, QPen(plot_color));
             _line_paths.append(linePath);
         }
         i ++;
