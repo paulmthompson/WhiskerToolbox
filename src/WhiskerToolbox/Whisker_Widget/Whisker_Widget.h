@@ -56,38 +56,24 @@ private:
 
     Ui::Whisker_Widget *ui;
 
-    void _createActions();
-    void _openActions();
-    void _closeActions();
-    void _DrawWhiskers();
+    void _drawWhiskers();
     void _addWhiskersToData();
 
 private slots:
-    void _TraceButton();
-    void _SaveImageButton();
-    void _SaveWhiskerMaskButton();
+    void _traceButton();
+    void _saveImageButton();
+    void _saveWhiskerMaskButton();
 
-    void _ContactButton();
-    void _SaveContact();
-    void _LoadContact();
-    void _LoadJaneliaWhiskers();
+    void _contactButton();
+    void _saveContact();
+    void _loadContact();
+    void _loadJaneliaWhiskers();
 
-    void _SelectWhiskerPad();
-    void _ChangeWhiskerLengthThreshold(double new_threshold);
+    void _selectWhiskerPad();
+    void _changeWhiskerLengthThreshold(double new_threshold);
 
-    void _ClickedInVideo(qreal x,qreal y);
-    /*
-    void openConfig() {
-        config_win->updateValues();
-        config_win->show();
-    };
-    void updateValues() {
-        std::cout << "Y Max: " << c_opt->y_max << std::endl;
-        std::cout << "Y Min: " << c_opt->y_min << std::endl;
+    void _clickedInVideo(qreal x,qreal y);
 
-        //Replot
-    };
-*/
 };
 
 #endif // WHISKER_WIDGET_H

@@ -29,17 +29,12 @@ Whisker_Widget::Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager>
     ui->setupUi(this);
     _data_manager->createLine("unlabeled_whiskers");
     _scene->addLineDataToScene("unlabeled_whiskers");
-    _createActions(); 
+
 };
 
 Whisker_Widget::~Whisker_Widget()
 {
     delete ui;
-}
-
-void Whisker_Widget::_createActions() {
-    //connect(this,SIGNAL(this->show()),this,SLOT(_openActions()));
-    //connect(this,SIGNAL(this->close()),this,SLOT(_closeActions()));
 }
 
 void Whisker_Widget::openWidget() {
@@ -67,15 +62,6 @@ void Whisker_Widget::openWidget() {
 
 }
 
-void Whisker_Widget::_openActions() {
-    std::cout << "Setting up actions for whisker tracker" << std::endl;
-}
-
-void Whisker_Widget::_closeActions() {
-    std::cout << "Disconnecting actions for whisker tracker" << std::endl;
-}
-
-
 void Whisker_Widget::closeEvent(QCloseEvent *event) {
     std::cout << "Close event detected" << std::endl;
 
@@ -94,7 +80,7 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->length_threshold_spinbox,SIGNAL(valueChanged(double)),this,SLOT(_ChangeWhiskerLengthThreshold(double)));
 }
 
-void Whisker_Widget::_TraceButton()
+void Whisker_Widget::_traceButton()
 {
     QElapsedTimer timer2;
     timer2.start();
@@ -107,14 +93,14 @@ void Whisker_Widget::_TraceButton()
     _addWhiskersToData();
 
     int t1 = timer2.elapsed();
-    _DrawWhiskers();
+    _drawWhiskers();
 
     int t2 = timer2.elapsed();
 
     qDebug() << "The tracing took" << t1 << "ms and drawing took" << (t2-t1);
 }
 
-void Whisker_Widget::_SaveImageButton()
+void Whisker_Widget::_saveImageButton()
 {
     
     auto media = _data_manager->getMediaData();
@@ -138,7 +124,7 @@ void Whisker_Widget::_SaveImageButton()
 
 }
 
-void Whisker_Widget::_SaveWhiskerMaskButton() {
+void Whisker_Widget::_saveWhiskerMaskButton() {
 
     auto media = _data_manager->getMediaData();
     
@@ -174,7 +160,7 @@ void Whisker_Widget::_SaveWhiskerMaskButton() {
     mask_image.save(QString::fromStdString(saveName));
 }
 
-void Whisker_Widget::_ContactButton() {
+void Whisker_Widget::_contactButton() {
     
     auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
 
@@ -199,7 +185,7 @@ void Whisker_Widget::_ContactButton() {
     }
 }
 
-void Whisker_Widget::_SaveContact() {
+void Whisker_Widget::_saveContact() {
 
 
     std::fstream fout;
@@ -217,7 +203,7 @@ void Whisker_Widget::_SaveContact() {
     fout.close();
 }
 
-void Whisker_Widget::_LoadContact() {
+void Whisker_Widget::_loadContact() {
 
     auto contact_filename =  QFileDialog::getOpenFileName(
         this,
@@ -242,7 +228,7 @@ void Whisker_Widget::_LoadContact() {
     fin.close();
 }
 
-void Whisker_Widget::_SelectWhiskerPad()
+void Whisker_Widget::_selectWhiskerPad()
 {
     _selection_mode = Selection_Type::Whisker_Pad_Select;
 }
@@ -259,7 +245,7 @@ void Whisker_Widget::_addWhiskersToData()
     }
 }
 
-void Whisker_Widget::_DrawWhiskers()
+void Whisker_Widget::_drawWhiskers()
 {
     _scene->UpdateCanvas();
     //_scene->clearLines(); // We should have the scene do this every time a frame is advanced
@@ -276,13 +262,13 @@ void Whisker_Widget::_DrawWhiskers()
     */
 }
 
-void Whisker_Widget::_ChangeWhiskerLengthThreshold(double new_threshold)
+void Whisker_Widget::_changeWhiskerLengthThreshold(double new_threshold)
 {
     _length_threshold = static_cast<float>(new_threshold);
 }
 
 //x
-void Whisker_Widget::_ClickedInVideo(qreal x_canvas,qreal y_canvas) {
+void Whisker_Widget::_clickedInVideo(qreal x_canvas,qreal y_canvas) {
     
     float x_media = x_canvas / _scene->getXAspect();
     float y_media = y_canvas / _scene->getYAspect();
@@ -293,7 +279,7 @@ void Whisker_Widget::_ClickedInVideo(qreal x_canvas,qreal y_canvas) {
         std::tuple<float,int> nearest_whisker = _wt->get_nearest_whisker(x_media, y_media);
         if (std::get<0>(nearest_whisker) < 10.0f) {
             _selected_whisker = std::get<1>(nearest_whisker);
-            _DrawWhiskers();
+            _drawWhiskers();
         }
         break;
     }
@@ -311,7 +297,7 @@ void Whisker_Widget::_ClickedInVideo(qreal x_canvas,qreal y_canvas) {
     }
 }
 
-void Whisker_Widget::_LoadJaneliaWhiskers()
+void Whisker_Widget::_loadJaneliaWhiskers()
 {
     auto janelia_name =  QFileDialog::getOpenFileName(
         this,
