@@ -40,18 +40,18 @@ Whisker_Widget::~Whisker_Widget()
 void Whisker_Widget::openWidget() {
     std::cout << "Whisker Widget Opened" << std::endl;
 
-    connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(_TraceButton()));
-    connect(_scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(_ClickedInVideo(qreal,qreal)));
+    connect(ui->trace_button,SIGNAL(clicked()),this,SLOT(_traceButton()));
+    connect(_scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(_clickedInVideo(qreal,qreal)));
 
-    connect(ui->save_image,SIGNAL(clicked()),this,SLOT(_SaveImageButton()));
-    connect(ui->save_whisker_mask,SIGNAL(clicked()),this,SLOT(_SaveWhiskerMaskButton()));
-    connect(ui->contact_button,SIGNAL(clicked()),this,SLOT(_ContactButton()));
-    connect(ui->save_contact_button,SIGNAL(clicked()),this,SLOT(_SaveContact()));
-    connect(ui->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
+    connect(ui->save_image,SIGNAL(clicked()),this,SLOT(_saveImageButton()));
+    connect(ui->save_whisker_mask,SIGNAL(clicked()),this,SLOT(_saveWhiskerMaskButton()));
+    connect(ui->contact_button,SIGNAL(clicked()),this,SLOT(_contactButton()));
+    connect(ui->save_contact_button,SIGNAL(clicked()),this,SLOT(_saveContact()));
+    connect(ui->load_contact_button,SIGNAL(clicked()),this,SLOT(_loadContact()));
 
-    connect(ui->load_janelia_button,SIGNAL(clicked()),this,SLOT(_LoadJaneliaWhiskers()));
-    connect(ui->whisker_pad_select,SIGNAL(clicked()),this,SLOT(_SelectWhiskerPad()));
-    connect(ui->length_threshold_spinbox,SIGNAL(valueChanged(double)),this,SLOT(_ChangeWhiskerLengthThreshold(double)));
+    connect(ui->load_janelia_button,SIGNAL(clicked()),this,SLOT(_loadJaneliaWhiskers()));
+    connect(ui->whisker_pad_select,SIGNAL(clicked()),this,SLOT(_selectWhiskerPad()));
+    connect(ui->length_threshold_spinbox,SIGNAL(valueChanged(double)),this,SLOT(_changeWhiskerLengthThreshold(double)));
 
 
     if (_contact.empty()) {
@@ -65,19 +65,19 @@ void Whisker_Widget::openWidget() {
 void Whisker_Widget::closeEvent(QCloseEvent *event) {
     std::cout << "Close event detected" << std::endl;
 
-    disconnect(ui->trace_button,SIGNAL(clicked()),this,SLOT(_TraceButton()));
-    disconnect(_scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(_ClickedInVideo(qreal,qreal)));
+    disconnect(ui->trace_button,SIGNAL(clicked()),this,SLOT(_traceButton()));
+    disconnect(_scene,SIGNAL(leftClick(qreal,qreal)),this,SLOT(_clickedInVideo(qreal,qreal)));
 
-    disconnect(ui->save_image,SIGNAL(clicked()),this,SLOT(_SaveImageButton()));
-    disconnect(ui->save_whisker_mask,SIGNAL(clicked()),this,SLOT(_SaveWhiskerMaskButton()));
-    disconnect(ui->contact_button,SIGNAL(clicked()),this,SLOT(_ContactButton()));
-    disconnect(ui->save_contact_button,SIGNAL(clicked()),this,SLOT(_SaveContact()));
-    disconnect(ui->load_contact_button,SIGNAL(clicked()),this,SLOT(_LoadContact()));
+    disconnect(ui->save_image,SIGNAL(clicked()),this,SLOT(_saveImageButton()));
+    disconnect(ui->save_whisker_mask,SIGNAL(clicked()),this,SLOT(_saveWhiskerMaskButton()));
+    disconnect(ui->contact_button,SIGNAL(clicked()),this,SLOT(_contactButton()));
+    disconnect(ui->save_contact_button,SIGNAL(clicked()),this,SLOT(_saveContact()));
+    disconnect(ui->load_contact_button,SIGNAL(clicked()),this,SLOT(_loadContact()));
 
-    disconnect(ui->load_janelia_button,SIGNAL(clicked()),this,SLOT(_LoadJaneliaWhiskers()));
-    disconnect(ui->whisker_pad_select,SIGNAL(clicked()),this,SLOT(_SelectWhiskerPad()));
+    disconnect(ui->load_janelia_button,SIGNAL(clicked()),this,SLOT(_loadJaneliaWhiskers()));
+    disconnect(ui->whisker_pad_select,SIGNAL(clicked()),this,SLOT(_selectWhiskerPad()));
 
-    disconnect(ui->length_threshold_spinbox,SIGNAL(valueChanged(double)),this,SLOT(_ChangeWhiskerLengthThreshold(double)));
+    disconnect(ui->length_threshold_spinbox,SIGNAL(valueChanged(double)),this,SLOT(_changeWhiskerLengthThreshold(double)));
 }
 
 void Whisker_Widget::_traceButton()
