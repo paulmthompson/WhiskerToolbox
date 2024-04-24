@@ -110,3 +110,7 @@ set_target_properties(WhiskerToolbox PROPERTIES
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(WhiskerToolbox)
 endif()
+
+if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_INSTALL_BINDIR})
+endif()
