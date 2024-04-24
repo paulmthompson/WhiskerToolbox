@@ -5,6 +5,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPixmapItem>
 #include <QImage>
+#include <QtCore/QtGlobal>
+
 
 #include <memory>
 #include <string>
@@ -13,11 +15,14 @@
 
 #include "DataManager.hpp"
 
+
 #if defined _WIN32 || defined __CYGWIN__
-    #define DLLOPT __declspec(dllexport)
+    #define MEDIA_WINDOW_DLLOPT
+//  #define MEDIA_WINDOW_DLLOPT Q_DECL_EXPORT
 #else
-    #define DLLOPT __attribute__((visibility("default")))
+    #define MEDIA_WINDOW_DLLOPT __attribute__((visibility("default")))
 #endif
+
 
 /**
  * The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
@@ -32,8 +37,7 @@
  * saved for the duration (loading keypoints to be plotted with each corresponding frame).
  *
  */
-class DLLOPT Media_Window : public QGraphicsScene
-
+class MEDIA_WINDOW_DLLOPT Media_Window : public QGraphicsScene
 {
 Q_OBJECT
 public:

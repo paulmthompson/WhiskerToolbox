@@ -10,15 +10,10 @@
 #include "DataManager.hpp"
 #include "label_maker.h"
 
+
 namespace Ui {
 class Label_Widget;
 }
-
-#if defined _WIN32 || defined __CYGWIN__
-    #define DLLOPT __declspec(dllexport)
-#else
-    #define DLLOPT __attribute__((visibility("default")))
-#endif
 
 class DLLOPT Label_Widget : public QWidget {
   Q_OBJECT

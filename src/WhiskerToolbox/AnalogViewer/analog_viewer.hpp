@@ -7,25 +7,22 @@
 
 #include <QWidget>
 
-#include "Media_Window.h"
-#include "TimeFrame.hpp"
-
-#include <memory>
 
 #if defined _WIN32 || defined __CYGWIN__
-    #define DLLOPT __declspec(dllexport)
+    #define ANALOG_VIEWER_DLLOPT
+    //#define ANALOG_VIEWER_DLLOPT Q_DECL_EXPORT
 #else
-    #define DLLOPT __attribute__((visibility("default")))
+    #define ANALOG_VIEWER_DLLOPT __attribute__((visibility("default")))
 #endif
 
 namespace Ui {
 class Analog_Viewer;
 }
 
-class DLLOPT Analog_Viewer : public QWidget {
+class ANALOG_VIEWER_DLLOPT Analog_Viewer : public QWidget {
     Q_OBJECT
 public:
-    Analog_Viewer(Media_Window *scene, QWidget *parent = 0);
+    Analog_Viewer(QWidget *parent = 0);
     ~Analog_Viewer();
 
     void openWidget();
@@ -35,8 +32,6 @@ protected:
     //void keyPressEvent(QKeyEvent *event);
 
 private:
-    Media_Window *_scene;
-    std::shared_ptr<TimeFrame> _time;
 
     Ui::Analog_Viewer *ui;
 private slots:

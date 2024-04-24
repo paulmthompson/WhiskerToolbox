@@ -10,10 +10,6 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS UiTools REQUIRED)
 
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 
-set(CMAKE_EXE_LINKER_FLAGS_INIT "-fuse-ld=lld")
-set(CMAKE_MODULE_LINKER_FLAGS_INIT "-fuse-ld=lld")
-set(CMAKE_SHARED_LINKER_FLAGS_INIT "-fuse-ld=lld")
-
 set(PROJECT_SOURCES
         main.cpp
         whiskertoolbox.qrc

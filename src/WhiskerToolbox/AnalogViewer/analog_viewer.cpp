@@ -7,9 +7,8 @@
 
 #include <iostream>
 
-Analog_Viewer::Analog_Viewer(Media_Window* scene, QWidget *parent) :
+Analog_Viewer::Analog_Viewer(QWidget *parent) :
     QWidget(parent),
-    _scene{scene},
     ui(new Ui::Analog_Viewer)
 {
     ui->setupUi(this);

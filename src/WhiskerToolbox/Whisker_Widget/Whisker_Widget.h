@@ -10,11 +10,20 @@
 
 #include "DataManager.hpp"
 
+/*
+ *
+ * Currently I can export all symbols on win32, but I think
+ * because I use dllopt in ffmepg_wrapper, it does not actually
+ * od that anymore with clang, and I needt o manually define these
+ *
+ */
 #if defined _WIN32 || defined __CYGWIN__
-    #define DLLOPT __declspec(dllexport)
+    #define WHISKER_WIDGET_DLLOPT
+    //#define WHISKER_WIDGET_DLLOPT Q_DECL_EXPORT
 #else
-    #define DLLOPT __attribute__((visibility("default")))
+    #define WHISKER_WIDGET_DLLOPT __attribute__((visibility("default")))
 #endif
+
 
 namespace Ui {
     class Whisker_Widget;
@@ -32,7 +41,7 @@ enum class Contact : int {
     NoContact = 0
 };
 
-class DLLOPT Whisker_Widget : public QWidget
+class WHISKER_WIDGET_DLLOPT Whisker_Widget : public QWidget
 {
     Q_OBJECT
 public:

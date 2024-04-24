@@ -10,6 +10,7 @@
 
 #if defined _WIN32 || defined __CYGWIN__
     #define DLLOPT __declspec(dllexport)
+    //#define DLLOPT __declspec(dllexport)
 #else
     #define DLLOPT __attribute__((visibility("default")))
 #endif

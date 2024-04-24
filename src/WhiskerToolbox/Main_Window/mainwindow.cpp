@@ -195,7 +195,7 @@ void MainWindow::openLabelMaker() {
 void MainWindow::openAnalogViewer()
 {
     if (!_analog_viewer) {
-        _analog_viewer = new Analog_Viewer(_scene);
+        _analog_viewer = new Analog_Viewer();
         std::cout << "Analog Viewer Constructed" << std::endl;
     } else {
         std::cout << "Analog Viewer already exists" << std::endl;

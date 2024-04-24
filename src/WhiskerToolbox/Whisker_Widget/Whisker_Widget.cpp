@@ -398,6 +398,11 @@ void Whisker_Widget::_orderWhiskersByPosition() {
     auto whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
 
     for (int i = 0; i < _num_whisker_to_track; i++) {
+
+        if (i >= base_position_order.size()) {
+            break;
+        }
+
         std::cout << "The " << i << " position whisker is " << base_position_order[i];
         std::cout << " with follicle at " << "(" << base_positions[base_position_order[i]].x << ","
                   << base_positions[base_position_order[i]].y << ")" << std::endl;
