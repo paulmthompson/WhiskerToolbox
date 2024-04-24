@@ -12,11 +12,17 @@
 
 #include <memory>
 
+#if defined _WIN32 || defined __CYGWIN__
+    #define DLLOPT __declspec(dllexport)
+#else
+    #define DLLOPT __attribute__((visibility("default")))
+#endif
+
 namespace Ui {
 class Analog_Viewer;
 }
 
-class Analog_Viewer : public QWidget {
+class DLLOPT Analog_Viewer : public QWidget {
     Q_OBJECT
 public:
     Analog_Viewer(Media_Window *scene, QWidget *parent = 0);

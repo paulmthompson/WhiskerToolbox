@@ -4,6 +4,12 @@
 #include <vector>
 #include <map>
 
+#if defined _WIN32 || defined __CYGWIN__
+    #define DLLOPT __declspec(dllexport)
+#else
+    #define DLLOPT __attribute__((visibility("default")))
+#endif
+
 struct Point2D {
     float x;
     float y;
@@ -11,7 +17,7 @@ struct Point2D {
 
 using Line2D = std::vector<Point2D>;
 
-class LineData {
+class DLLOPT LineData {
 public:
     LineData();
     void clearLinesAtTime(const int time);

@@ -10,7 +10,13 @@
 #include <string>
 #include "Media/Media_Data.hpp"
 
-class ImageData : public MediaData {
+#if defined _WIN32 || defined __CYGWIN__
+    #define DLLOPT __declspec(dllexport)
+#else
+    #define DLLOPT __attribute__((visibility("default")))
+#endif
+
+class DLLOPT ImageData : public MediaData {
 public:
     ImageData();
     void LoadFrame(int frame_id) override;

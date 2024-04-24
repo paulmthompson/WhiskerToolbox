@@ -2,7 +2,13 @@
 #define TIMEFRAME_HPP
 
 
-class TimeFrame {
+#if defined _WIN32 || defined __CYGWIN__
+    #define DLLOPT __declspec(dllexport)
+#else
+    #define DLLOPT __attribute__((visibility("default")))
+#endif
+
+class DLLOPT TimeFrame {
 public:
     void updateTotalFrameCount(int frame_count) {_total_frame_count = frame_count;};
     int getTotalFrameCount() const {return _total_frame_count;};

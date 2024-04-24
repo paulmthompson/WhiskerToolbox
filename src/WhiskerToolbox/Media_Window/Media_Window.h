@@ -6,16 +6,18 @@
 #include <QGraphicsPixmapItem>
 #include <QImage>
 
-#include <vector>
-#include <array>
 #include <memory>
 #include <string>
 #include <unordered_set>
-#include <map>
+#include <unordered_map>
 
-#include "Media/Media_Data.hpp"
 #include "DataManager.hpp"
 
+#if defined _WIN32 || defined __CYGWIN__
+    #define DLLOPT __declspec(dllexport)
+#else
+    #define DLLOPT __attribute__((visibility("default")))
+#endif
 
 /**
  * The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
@@ -30,7 +32,7 @@
  * saved for the duration (loading keypoints to be plotted with each corresponding frame).
  *
  */
-class Media_Window : public QGraphicsScene
+class DLLOPT Media_Window : public QGraphicsScene
 
 {
 Q_OBJECT

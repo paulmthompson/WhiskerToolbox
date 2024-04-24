@@ -14,7 +14,13 @@ namespace Ui {
 class Label_Widget;
 }
 
-class Label_Widget : public QWidget {
+#if defined _WIN32 || defined __CYGWIN__
+    #define DLLOPT __declspec(dllexport)
+#else
+    #define DLLOPT __attribute__((visibility("default")))
+#endif
+
+class DLLOPT Label_Widget : public QWidget {
   Q_OBJECT
 public:
   Label_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);

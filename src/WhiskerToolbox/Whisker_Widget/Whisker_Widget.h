@@ -10,6 +10,12 @@
 
 #include "DataManager.hpp"
 
+#if defined _WIN32 || defined __CYGWIN__
+    #define DLLOPT __declspec(dllexport)
+#else
+    #define DLLOPT __attribute__((visibility("default")))
+#endif
+
 namespace Ui {
     class Whisker_Widget;
 }
@@ -26,7 +32,7 @@ enum class Contact : int {
     NoContact = 0
 };
 
-class Whisker_Widget : public QWidget
+class DLLOPT Whisker_Widget : public QWidget
 {
     Q_OBJECT
 public:
