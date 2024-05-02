@@ -56,6 +56,8 @@ private:
    void _removeDuplicates(std::vector<float>& scores);
     void _alignWhiskerToFollicle(Whisker& whisker);
    float _calculateWhiskerLength(const Whisker& whisker);
+    void _removeWhiskersByWhiskerPadRadius();
+   void _eraseWhiskers(std::vector<int>& erase_inds);
 
 };
 

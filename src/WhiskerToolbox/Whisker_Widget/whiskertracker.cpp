@@ -176,6 +176,17 @@ void WhiskerTracker::_removeDuplicates(std::vector<float>& scores)
         }
     }
 
+    _eraseWhiskers(erase_inds);
+}
+
+void WhiskerTracker::_removeWhiskersByWhiskerPadRadius()
+{
+
+
+}
+
+void WhiskerTracker::_eraseWhiskers(std::vector<int>& erase_inds)
+{
     std::sort(erase_inds.begin(), erase_inds.end(),std::greater<int>());
     auto last = std::unique(erase_inds.begin(), erase_inds.end());
     erase_inds.erase(last, erase_inds.end());
