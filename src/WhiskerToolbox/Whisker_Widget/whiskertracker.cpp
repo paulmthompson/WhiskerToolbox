@@ -10,6 +10,7 @@ Image<uint8_t> bg = Image<uint8_t>(640,480,std::vector<uint8_t>(640*480,0));
 
 WhiskerTracker::WhiskerTracker() :
     _whisker_length_threshold{75.0},
+    _whisker_pad_radius{50.0},
     _janelia_init{false},
     _whisker_pad{0.0, 0.0}
 {
