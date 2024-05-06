@@ -57,7 +57,7 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
-    std::unique_ptr<WhiskerTracker> _wt;
+    std::shared_ptr<WhiskerTracker> _wt;
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     int _selected_whisker;

@@ -78,7 +78,7 @@
     <string>Seed Iterations</string>
    </property>
   </widget>
-  <widget class="QSpinBox" name="seed_size_px_2">
+  <widget class="QSpinBox" name="seed_iterations">
    <property name="geometry">
     <rect>
      <x>200</x>
@@ -143,7 +143,7 @@
     <string>Seed Iteration Threshold</string>
    </property>
   </widget>
-  <widget class="QDoubleSpinBox" name="doubleSpinBox">
+  <widget class="QDoubleSpinBox" name="seed_iteration_thres">
    <property name="geometry">
     <rect>
      <x>200</x>
@@ -227,7 +227,7 @@
     <string>Seed Threshold</string>
    </property>
   </widget>
-  <widget class="QDoubleSpinBox" name="seed_accum_thresh_2">
+  <widget class="QDoubleSpinBox" name="seed_thres">
    <property name="geometry">
     <rect>
      <x>200</x>

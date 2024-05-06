@@ -3,6 +3,9 @@
 
 
 #include <QWidget>
+#include "whiskertracker.h"
+
+#include <memory>
 
 namespace Ui {
 class janelia_config;
@@ -21,7 +24,7 @@ class Janelia_Config : public QWidget
     Q_OBJECT
 public:
 
-    Janelia_Config(QWidget *parent = 0);
+    Janelia_Config(std::shared_ptr<WhiskerTracker> tracker, QWidget *parent = 0);
 
     virtual ~Janelia_Config();
 
@@ -30,12 +33,17 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
-
+    std::shared_ptr<WhiskerTracker> _wt;
     Ui::janelia_config *ui;
 
 
 private slots:
-
+    void _changeSeedOnGridLatticeSpacing(int value);
+    void _changeSeedSizePx(int value);
+    void _changeSeedIterations(int value);
+    void _changeSeedIterationThres(double value);
+    void _changeSeedAccumThres(double value);
+    void _changeSeedThres(double value);
 };
 
 

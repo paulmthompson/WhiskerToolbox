@@ -16,7 +16,7 @@
 
 Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, QWidget *parent) :
         QWidget(parent),
-        _wt{std::make_unique<WhiskerTracker>()},
+        _wt{std::make_shared<WhiskerTracker>()},
         _scene{scene},
         _data_manager{data_manager},
         _selected_whisker{0},
@@ -31,7 +31,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     _data_manager->createLine("unlabeled_whiskers");
     _scene->addLineDataToScene("unlabeled_whiskers");
     _scene->addLineColor("unlabeled_whiskers",QColor("blue"));
-    _janelia_config_widget = new Janelia_Config();
+    _janelia_config_widget = new Janelia_Config(_wt);
 
 };
 
@@ -490,5 +490,5 @@ void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vec
 
 void Whisker_Widget::_openJaneliaConfig()
 {
-    _janelia_config_widget->show();
+    _janelia_config_widget->openWidget();
 }

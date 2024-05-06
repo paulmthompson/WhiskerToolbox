@@ -127,22 +127,28 @@ void WhiskerTracker::changeJaneliaParameter(JaneliaParameter parameter, float va
 {
     switch (parameter) {
         case SEED_ON_GRID_LATTICE_SPACING: {
-            _janelia.config._lattice_spacing = value;
+            _janelia.config._lattice_spacing = static_cast<int>(value);
+            break;
         }
         case SEED_SIZE_PX: {
-            _janelia.config._maxr = value;
+            _janelia.config._maxr = static_cast<int>(value);
+            break;
         }
         case SEED_ITERATIONS: {
-            _janelia.config._maxiter = value;
+            _janelia.config._maxiter = static_cast<int>(value);
+            break;
         }
         case SEED_ITERATION_THRESH: {
             _janelia.config._iteration_thres = value;
+            break;
         }
         case SEED_ACCUM_THRESH: {
             _janelia.config._accum_thres = value;
+            break;
         }
         case SEED_THRESH: {
             _janelia.config._accum_thres = value;
+            break;
         }
         case HAT_RADIUS: {
 
@@ -156,14 +162,17 @@ void WhiskerTracker::changeJaneliaParameter(JaneliaParameter parameter, float va
         case TLEN: {
             _janelia.config._tlen = value;
             _reinitializeJanelia();
+            break;
         }
         case OFFSET_STEP: {
             _janelia.config._offset_step = value;
             _reinitializeJanelia();
+            break;
         }
         case ANGLE_STEP: {
             _janelia.config._angle_step = value;
             _reinitializeJanelia();
+            break;
         }
         case WIDTH_STEP: {
             _janelia.config._width_step = value;
@@ -173,34 +182,42 @@ void WhiskerTracker::changeJaneliaParameter(JaneliaParameter parameter, float va
             // Must be multiple of width step
             _janelia.config._width_min = value;
             _reinitializeJanelia();
+            break;
         }
         case WIDTH_MAX: {
             _janelia.config._width_max = value;
             _reinitializeJanelia();
+            break;
         }
         case MIN_SIGNAL: {
             _janelia.config._min_signal = value;
             _reinitializeJanelia();
+            break;
         }
         case MAX_DELTA_ANGLE: {
             _janelia.config._max_delta_angle = value;
             _reinitializeJanelia();
+            break;
         }
         case MAX_DELTA_WIDTH: {
             _janelia.config._max_delta_width = value;
             _reinitializeJanelia();
+            break;
         }
         case MAX_DELTA_OFFSET: {
             _janelia.config._max_delta_offset = value;
             _reinitializeJanelia();
+            break;
         }
         case HALF_SPACE_ASSYMETRY_THRESH: {
             _janelia.config._half_space_assymetry = value;
             _reinitializeJanelia();
+            break;
         }
         case HALF_SPACE_TUNNELING_MAX_MOVES: {
             _janelia.config._half_space_tunneling_max_moves = value;
             _reinitializeJanelia();
+            break;
         }
     }
 }
