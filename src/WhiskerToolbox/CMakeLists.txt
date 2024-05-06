@@ -41,6 +41,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(WhiskerToolbox
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
+            Whisker_Widget/janelia_config.ui
+            Whisker_Widget/janelia_config.hpp
+            Whisker_Widget/janelia_config.cpp
     )
     # Define target properties for Android with Qt 6 as:
     #    set_property(TARGET WhiskerToolbox APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

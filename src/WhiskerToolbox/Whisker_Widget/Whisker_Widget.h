@@ -2,11 +2,13 @@
 #define WHISKER_WIDGET_H
 
 #include <QWidget>
+#include <QPointer>
 
 #include <memory>
 
 #include "whiskertracker.h"
 #include "Media_Window.h"
+#include "janelia_config.hpp"
 
 #include "DataManager.hpp"
 
@@ -63,6 +65,8 @@ private:
                           Whisker_Pad_Select};
     Whisker_Widget::Selection_Type _selection_mode;
 
+    QPointer<Janelia_Config> _janelia_config_widget;
+
     std::vector<Contact> _contact;
     int _contact_start;
     bool _contact_epoch;
@@ -108,6 +112,8 @@ private slots:
 
     void _exportImageCSV();
     void _saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D>& whisker);
+
+    void _openJaneliaConfig();
 };
 
 #endif // WHISKER_WIDGET_H

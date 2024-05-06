@@ -25,11 +25,13 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
         _contact_epoch(false),
         _face_orientation{Facing_Top},
         _num_whisker_to_track{0},
-        ui(new Ui::Whisker_Widget) {
+        ui(new Ui::Whisker_Widget)
+        {
     ui->setupUi(this);
     _data_manager->createLine("unlabeled_whiskers");
     _scene->addLineDataToScene("unlabeled_whiskers");
     _scene->addLineColor("unlabeled_whiskers",QColor("blue"));
+    _janelia_config_widget = new Janelia_Config();
 
 };
 
@@ -63,6 +65,8 @@ void Whisker_Widget::openWidget() {
         _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
     }
 
+    connect(ui->config_janelia_button, SIGNAL(clicked()), this, SLOT(_openJaneliaConfig()));
+
     this->show();
 
 }
@@ -89,6 +93,8 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->whisker_number, SIGNAL(valueChanged(int)), this, SLOT(_selectNumWhiskersToTrack(int)));
 
     disconnect(ui->export_image_csv,SIGNAL(clicked()),this, SLOT(_exportImageCSV()));
+
+    disconnect(ui->config_janelia_button, SIGNAL(clicked()), this, SLOT(_openJaneliaConfig()));
 }
 
 void Whisker_Widget::_traceButton() {
@@ -480,4 +486,9 @@ void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vec
 
     myfile.close();
 
+}
+
+void Whisker_Widget::_openJaneliaConfig()
+{
+    _janelia_config_widget->show();
 }
