@@ -44,6 +44,32 @@ public:
    std::tuple<float,float> getWhiskerPad() const {return _whisker_pad;};
    void setWhiskerPad(float w_x, float w_y) {_whisker_pad = std::make_tuple(w_x,w_y);};
 
+   enum JaneliaParameter {
+       SEED_ON_GRID_LATTICE_SPACING,
+       SEED_SIZE_PX,
+       SEED_ITERATIONS,
+       SEED_ITERATION_THRESH,
+       SEED_ACCUM_THRESH,
+       SEED_THRESH,
+       HAT_RADIUS,
+       MIN_LEVEL,
+       MIN_SIZE,
+       TLEN,
+       OFFSET_STEP,
+       ANGLE_STEP,
+       WIDTH_STEP,
+       WIDTH_MIN,
+       WIDTH_MAX,
+       MIN_SIGNAL,
+       MAX_DELTA_ANGLE,
+       MAX_DELTA_WIDTH,
+       MAX_DELTA_OFFSET,
+       HALF_SPACE_ASSYMETRY_THRESH,
+       HALF_SPACE_TUNNELING_MAX_MOVES
+   };
+
+   void changeJaneliaParameter(JaneliaParameter parameter, float value);
+
    std::vector<Whisker> whiskers;
 
 private:
@@ -58,6 +84,7 @@ private:
    float _calculateWhiskerLength(const Whisker& whisker);
     void _removeWhiskersByWhiskerPadRadius();
    void _eraseWhiskers(std::vector<int>& erase_inds);
+    void _reinitializeJanelia();
 
 };
 

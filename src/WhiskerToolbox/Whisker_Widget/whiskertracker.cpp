@@ -10,7 +10,7 @@ Image<uint8_t> bg = Image<uint8_t>(640,480,std::vector<uint8_t>(640*480,0));
 
 WhiskerTracker::WhiskerTracker() :
     _whisker_length_threshold{75.0},
-    _whisker_pad_radius{50.0},
+    _whisker_pad_radius{150.0},
     _janelia_init{false},
     _whisker_pad{0.0, 0.0}
 {
@@ -43,6 +43,7 @@ void WhiskerTracker::trace(const std::vector<uint8_t>& image, const int image_he
     }
 
     _removeDuplicates(scores);
+    _removeWhiskersByWhiskerPadRadius();
 }
 
 std::tuple<float,int> WhiskerTracker::get_nearest_whisker(float x_p, float y_p) {
@@ -122,6 +123,87 @@ void WhiskerTracker::_alignWhiskerToFollicle(Whisker& whisker)
     }
 }
 
+void WhiskerTracker::changeJaneliaParameter(JaneliaParameter parameter, float value)
+{
+    switch (parameter) {
+        case SEED_ON_GRID_LATTICE_SPACING: {
+            _janelia.config._lattice_spacing = value;
+        }
+        case SEED_SIZE_PX: {
+            _janelia.config._maxr = value;
+        }
+        case SEED_ITERATIONS: {
+            _janelia.config._maxiter = value;
+        }
+        case SEED_ITERATION_THRESH: {
+            _janelia.config._iteration_thres = value;
+        }
+        case SEED_ACCUM_THRESH: {
+            _janelia.config._accum_thres = value;
+        }
+        case SEED_THRESH: {
+            _janelia.config._accum_thres = value;
+        }
+        case HAT_RADIUS: {
+
+        }
+        case MIN_LEVEL: {
+
+        }
+        case MIN_SIZE: {
+
+        }
+        case TLEN: {
+            _janelia.config._tlen = value;
+            _reinitializeJanelia();
+        }
+        case OFFSET_STEP: {
+            _janelia.config._offset_step = value;
+            _reinitializeJanelia();
+        }
+        case ANGLE_STEP: {
+            _janelia.config._angle_step = value;
+            _reinitializeJanelia();
+        }
+        case WIDTH_STEP: {
+            _janelia.config._width_step = value;
+            _reinitializeJanelia();
+        }
+        case WIDTH_MIN: {
+            // Must be multiple of width step
+            _janelia.config._width_min = value;
+            _reinitializeJanelia();
+        }
+        case WIDTH_MAX: {
+            _janelia.config._width_max = value;
+            _reinitializeJanelia();
+        }
+        case MIN_SIGNAL: {
+            _janelia.config._min_signal = value;
+            _reinitializeJanelia();
+        }
+        case MAX_DELTA_ANGLE: {
+            _janelia.config._max_delta_angle = value;
+            _reinitializeJanelia();
+        }
+        case MAX_DELTA_WIDTH: {
+            _janelia.config._max_delta_width = value;
+            _reinitializeJanelia();
+        }
+        case MAX_DELTA_OFFSET: {
+            _janelia.config._max_delta_offset = value;
+            _reinitializeJanelia();
+        }
+        case HALF_SPACE_ASSYMETRY_THRESH: {
+            _janelia.config._half_space_assymetry = value;
+            _reinitializeJanelia();
+        }
+        case HALF_SPACE_TUNNELING_MAX_MOVES: {
+            _janelia.config._half_space_tunneling_max_moves = value;
+            _reinitializeJanelia();
+        }
+    }
+}
 
 void WhiskerTracker::_removeDuplicates(std::vector<float>& scores)
 {
@@ -182,7 +264,20 @@ void WhiskerTracker::_removeDuplicates(std::vector<float>& scores)
 void WhiskerTracker::_removeWhiskersByWhiskerPadRadius()
 {
 
+    std::vector<int> erase_inds = std::vector<int>();
+    auto follicle_x = std::get<0>(_whisker_pad);
+    auto follicle_y = std::get<1>(_whisker_pad);
 
+    for (int i = 0; i < whiskers.size(); i++ ) {
+        auto distance_to_follicle = sqrt(pow(whiskers[i].x[0] - follicle_x,2) +
+                                         pow(whiskers[i].y[0] - follicle_y,2));
+
+        if (distance_to_follicle > _whisker_pad_radius) {
+            erase_inds.push_back(i);
+        }
+    }
+
+    _eraseWhiskers(erase_inds);
 }
 
 void WhiskerTracker::_eraseWhiskers(std::vector<int>& erase_inds)
@@ -194,4 +289,11 @@ void WhiskerTracker::_eraseWhiskers(std::vector<int>& erase_inds)
     for (auto& erase_ind : erase_inds) {
         whiskers.erase(whiskers.begin() + erase_ind);
     }
+}
+
+void WhiskerTracker::_reinitializeJanelia()
+{
+    _janelia.bank = LineDetector(_janelia.config);
+    _janelia.half_space_bank = HalfSpaceDetector(_janelia.config);
+    _janelia_init = true;
 }
