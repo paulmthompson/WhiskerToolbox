@@ -353,7 +353,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>(angle) Divisions of pi/4</string>
+    <string>(pixels)</string>
    </property>
   </widget>
   <widget class="QDoubleSpinBox" name="angle_step">
@@ -552,7 +552,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Half Space Assymmetry Threshold</string>
+    <string>Half Space Asymmetry Threshold</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_26">
@@ -566,6 +566,230 @@
    </property>
    <property name="text">
     <string>Half Space Tunneling Max Moves</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="half_space_tunneling_max_moves">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>530</y>
+     <width>61</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="value">
+    <number>8</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_27">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>260</y>
+     <width>401</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(angle) Divisions of pi/4</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_28">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>290</y>
+     <width>401</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(pixels)</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_29">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>320</y>
+     <width>401</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(pixels) must be multiple of Width Step</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_30">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>350</y>
+     <width>401</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(pixels) must be multiple of Width Step</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_31">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>370</y>
+     <width>491</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>minimum detector response per detector column.  
+ Typically: (2*TLEN+1)*MIN_SIGNAL is the threshold determining when tracing stops.</string>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="max_delta_angle">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>410</y>
+     <width>62</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <double>100.000000000000000</double>
+   </property>
+   <property name="singleStep">
+    <double>0.010000000000000</double>
+   </property>
+   <property name="value">
+    <double>10.100000000000000</double>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_32">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>410</y>
+     <width>491</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(degrees)  The detector is constrained to turns less than this value at each step.
+</string>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="max_delta_width">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>440</y>
+     <width>62</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <double>20.000000000000000</double>
+   </property>
+   <property name="singleStep">
+    <double>0.010000000000000</double>
+   </property>
+   <property name="value">
+    <double>6.000000000000000</double>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="max_delta_offset">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>470</y>
+     <width>62</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <double>20.000000000000000</double>
+   </property>
+   <property name="singleStep">
+    <double>0.010000000000000</double>
+   </property>
+   <property name="value">
+    <double>6.000000000000000</double>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_33">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>440</y>
+     <width>491</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(pixels)   The detector width is constrained to change less than this value at each step.</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_34">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>470</y>
+     <width>491</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(pixels)   The detector offset is constrained to change less than this value at each step.
+</string>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="half_space_asymmetry_threshold">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>500</y>
+     <width>62</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <double>1.000000000000000</double>
+   </property>
+   <property name="singleStep">
+    <double>0.010000000000000</double>
+   </property>
+   <property name="value">
+    <double>0.250000000000000</double>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_35">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>500</y>
+     <width>491</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(0 - 1)  1 is completely insensitive to asymmetry
+</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_36">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>530</y>
+     <width>491</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(pixels)   The detector offset is constrained to change less than this value at each step.
+</string>
    </property>
   </widget>
  </widget>

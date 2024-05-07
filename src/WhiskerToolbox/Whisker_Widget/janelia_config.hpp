@@ -44,6 +44,22 @@ private slots:
     void _changeSeedIterationThres(double value);
     void _changeSeedAccumThres(double value);
     void _changeSeedThres(double value);
+    void _changeTLen(int value);
+    void _changeOffsetStep(double value);
+    void _changeAngleStep(double value);
+
+    void _changeWidthStep(double value);
+    void _changeWidthMin(double value);
+    void _changeWidthMax(double value);
+
+    void _changeMinSignal(double value);
+
+    void _changeMaxDeltaAngle(double value);
+    void _changeMaxDeltaWidth(double value);
+    void _changeMaxDeltaOffset(double value);
+
+    void _changeHalfSpaceAsymmetryThreshold(double value);
+    void _changeHalfSpaceTunnelingMaxMoves(int value);
 };
 
 
