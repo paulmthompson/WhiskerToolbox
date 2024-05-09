@@ -105,6 +105,7 @@ private slots:
     void _saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D>& whisker);
 
     void _openJaneliaConfig();
+    void _openContactWidget();
 };
 
 #endif // WHISKER_WIDGET_H

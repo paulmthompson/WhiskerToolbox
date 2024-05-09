@@ -57,6 +57,7 @@ void Whisker_Widget::openWidget() {
     connect(ui->export_image_csv,SIGNAL(clicked()),this, SLOT(_exportImageCSV()));
 
     connect(ui->config_janelia_button, SIGNAL(clicked()), this, SLOT(_openJaneliaConfig()));
+    connect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_openContactWidget()));
 
     this->show();
 
@@ -83,6 +84,7 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->export_image_csv,SIGNAL(clicked()),this, SLOT(_exportImageCSV()));
 
     disconnect(ui->config_janelia_button, SIGNAL(clicked()), this, SLOT(_openJaneliaConfig()));
+    disconnect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_openContactWidget()));
 }
 
 void Whisker_Widget::_traceButton() {
@@ -412,4 +414,9 @@ void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vec
 void Whisker_Widget::_openJaneliaConfig()
 {
     _janelia_config_widget->openWidget();
+}
+
+void Whisker_Widget::_openContactWidget()
+{
+    _contact_widget->openWidget();
 }
