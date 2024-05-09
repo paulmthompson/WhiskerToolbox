@@ -21,8 +21,6 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
         _data_manager{data_manager},
         _selected_whisker{0},
         _selection_mode{Whisker_Select},
-        _contact_start{0},
-        _contact_epoch(false),
         _face_orientation{Facing_Top},
         _num_whisker_to_track{0},
         ui(new Ui::Whisker_Widget)
@@ -32,6 +30,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     _scene->addLineDataToScene("unlabeled_whiskers");
     _scene->addLineColor("unlabeled_whiskers",QColor("blue"));
     _janelia_config_widget = new Janelia_Config(_wt);
+    _contact_widget = new Contact_Widget(_data_manager);
 
 };
 
@@ -47,9 +46,6 @@ void Whisker_Widget::openWidget() {
 
     connect(ui->save_image, SIGNAL(clicked()), this, SLOT(_saveImageButton()));
     connect(ui->save_whisker_mask, SIGNAL(clicked()), this, SLOT(_saveWhiskerMaskButton()));
-    connect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_contactButton()));
-    connect(ui->save_contact_button, SIGNAL(clicked()), this, SLOT(_saveContact()));
-    connect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
 
     connect(ui->load_janelia_button, SIGNAL(clicked()), this, SLOT(_loadJaneliaWhiskers()));
     connect(ui->whisker_pad_select, SIGNAL(clicked()), this, SLOT(_selectWhiskerPad()));
@@ -59,11 +55,6 @@ void Whisker_Widget::openWidget() {
     connect(ui->face_orientation, SIGNAL(currentIndexChanged(int)), this, SLOT(_selectFaceOrientation(int)));
     connect(ui->whisker_number, SIGNAL(valueChanged(int)), this, SLOT(_selectNumWhiskersToTrack(int)));
     connect(ui->export_image_csv,SIGNAL(clicked()),this, SLOT(_exportImageCSV()));
-
-
-    if (_contact.empty()) {
-        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
-    }
 
     connect(ui->config_janelia_button, SIGNAL(clicked()), this, SLOT(_openJaneliaConfig()));
 
@@ -79,9 +70,6 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
 
     disconnect(ui->save_image, SIGNAL(clicked()), this, SLOT(_saveImageButton()));
     disconnect(ui->save_whisker_mask, SIGNAL(clicked()), this, SLOT(_saveWhiskerMaskButton()));
-    disconnect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_contactButton()));
-    disconnect(ui->save_contact_button, SIGNAL(clicked()), this, SLOT(_saveContact()));
-    disconnect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
 
     disconnect(ui->load_janelia_button, SIGNAL(clicked()), this, SLOT(_loadJaneliaWhiskers()));
     disconnect(ui->whisker_pad_select, SIGNAL(clicked()), this, SLOT(_selectWhiskerPad()));
@@ -179,73 +167,6 @@ void Whisker_Widget::_saveWhiskerMaskButton() {
     mask_image.save(QString::fromStdString(saveName));
 }
 
-void Whisker_Widget::_contactButton() {
-
-    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
-
-    // If we are in a contact epoch, we need to mark the termination frame and add those to block
-    if (_contact_epoch) {
-
-        _contact_epoch = false;
-
-        ui->contact_button->setText("Mark Contact");
-
-        for (int i = _contact_start; i < frame_num; i++) {
-            _contact[i] = Contact::Contact;
-        }
-
-    } else {
-        // If we are not already in contact epoch, start one
-        _contact_start = frame_num;
-
-        _contact_epoch = true;
-
-        ui->contact_button->setText("Mark Contact End");
-    }
-}
-
-void Whisker_Widget::_saveContact() {
-
-
-    std::fstream fout;
-
-    fout.open("contact.csv", std::fstream::out);
-
-    for (auto &frame_contact: _contact) {
-        if (frame_contact == Contact::Contact) {
-            fout << "Contact" << "\n";
-        } else {
-            fout << "Nocontact" << "\n";
-        }
-    }
-
-    fout.close();
-}
-
-void Whisker_Widget::_loadContact() {
-
-    auto contact_filename = QFileDialog::getOpenFileName(
-            this,
-            "Load Video File",
-            QDir::currentPath(),
-            "All files (*.*) ;; MP4 (*.mp4)");
-
-
-    std::ifstream fin(contact_filename.toStdString());
-
-    std::string line;
-
-    int row_num = 0;
-
-    while (std::getline(fin, line)) {
-        if (line == "Contact") {
-            _contact[row_num] = Contact::Contact;
-        }
-        row_num++;
-    }
-
-    fin.close();
-}
 
 void Whisker_Widget::_selectWhiskerPad() {
     _selection_mode = Selection_Type::Whisker_Pad_Select;

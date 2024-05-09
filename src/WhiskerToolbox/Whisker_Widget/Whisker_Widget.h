@@ -9,6 +9,7 @@
 #include "whiskertracker.h"
 #include "Media_Window.h"
 #include "janelia_config.hpp"
+#include "contact_widget.hpp"
 
 #include "DataManager.hpp"
 
@@ -38,11 +39,6 @@ This is our interface to using the Janelia whisker tracker.
 
 */
 
-enum class Contact : int {
-    Contact = 1,
-    NoContact = 0
-};
-
 class WHISKER_WIDGET_DLLOPT Whisker_Widget : public QWidget
 {
     Q_OBJECT
@@ -66,10 +62,8 @@ private:
     Whisker_Widget::Selection_Type _selection_mode;
 
     QPointer<Janelia_Config> _janelia_config_widget;
+    QPointer<Contact_Widget> _contact_widget;
 
-    std::vector<Contact> _contact;
-    int _contact_start;
-    bool _contact_epoch;
     std::tuple<float,float> _whisker_pad;
 
     enum Face_Orientation {
@@ -96,9 +90,6 @@ private slots:
     void _saveImageButton();
     void _saveWhiskerMaskButton();
 
-    void _contactButton();
-    void _saveContact();
-    void _loadContact();
     void _loadJaneliaWhiskers();
 
     void _selectWhiskerPad();
