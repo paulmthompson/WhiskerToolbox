@@ -24,6 +24,11 @@ enum class Contact : int {
     NoContact = 0
 };
 
+struct ContactEvent {
+    int start;
+    int end;
+};
+
 class Contact_Widget : public QWidget
 {
     Q_OBJECT
@@ -44,6 +49,10 @@ private:
     std::vector<Contact> _contact;
     int _contact_start;
     bool _contact_epoch;
+    std::vector<ContactEvent> _contactEvents;
+
+    void _buildContactTable();
+    void _calculateContactPeriods();
 
 
 private slots:

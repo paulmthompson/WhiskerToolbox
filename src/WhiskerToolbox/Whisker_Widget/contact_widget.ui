@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>508</width>
-    <height>230</height>
+    <width>715</width>
+    <height>257</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -51,6 +51,26 @@
    <property name="text">
     <string>Mark Contact</string>
    </property>
+  </widget>
+  <widget class="QTableWidget" name="contact_table">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>10</y>
+     <width>311</width>
+     <height>81</height>
+    </rect>
+   </property>
+   <column>
+    <property name="text">
+     <string>Contact Start</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Contact End</string>
+    </property>
+   </column>
   </widget>
  </widget>
  <resources/>

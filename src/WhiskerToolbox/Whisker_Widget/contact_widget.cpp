@@ -5,6 +5,7 @@
 
 #include <QFileDialog>
 
+#include <iostream>
 #include <sstream>
 #include <fstream>
 #include <string>
@@ -14,6 +15,7 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidge
     _data_manager{data_manager},
     _contact_start{0},
     _contact_epoch(false),
+    _contactEvents{std::vector<ContactEvent>()},
     ui(new Ui::contact_widget) {
     ui->setupUi(this);
 };
@@ -66,6 +68,8 @@ void Contact_Widget::_contactButton() {
 
         ui->contact_button->setText("Mark Contact End");
     }
+
+    _calculateContactPeriods();
 }
 
 void Contact_Widget::_saveContact() {
@@ -109,4 +113,46 @@ void Contact_Widget::_loadContact() {
     }
 
     fin.close();
+
+    _calculateContactPeriods();
+}
+
+void Contact_Widget::_buildContactTable()
+{
+    ui->contact_table->setRowCount(0);
+    for (int i=0; i < _contactEvents.size(); i++)
+    {
+        ui->contact_table->insertRow(ui->contact_table->rowCount());
+        ui->contact_table->setItem(i,0,new QTableWidgetItem(QString::number(_contactEvents[i].start)));
+        ui->contact_table->setItem(i,1,new QTableWidgetItem(QString::number(_contactEvents[i].end)));
+
+    }
+}
+
+void Contact_Widget::_calculateContactPeriods()
+{
+    bool in_contact = false;
+    int contact_start = 0;
+
+    _contactEvents = std::vector<ContactEvent>();
+
+    for (int i = 0; i < _contact.size(); i++)
+    {
+        if (in_contact)
+        {
+            if (_contact[i] == Contact::NoContact) {
+                _contactEvents.push_back(ContactEvent{contact_start,i});
+                in_contact = false;
+            }
+        } else {
+            if (_contact[i] == Contact::Contact)
+            {
+                in_contact = true;
+                contact_start = i;
+            }
+        }
+    }
+
+    std::cout << "There are " << _contactEvents.size() << " contact events" << std::endl;
+    _buildContactTable();
 }
