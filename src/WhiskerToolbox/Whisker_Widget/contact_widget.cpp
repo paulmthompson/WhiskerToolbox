@@ -5,6 +5,7 @@
 
 #include <QFileDialog>
 #include <QGraphicsPixmapItem>
+#include <QElapsedTimer>
 
 #include <iostream>
 #include <sstream>
@@ -63,6 +64,9 @@ void Contact_Widget::closeEvent(QCloseEvent *event) {
 void Contact_Widget::updateFrame(int frame_id)
 {
 
+    QElapsedTimer timer2;
+    timer2.start();
+
     ui->graphicsView->setTransformationAnchor(QGraphicsView::NoAnchor);
 
     auto _media = _data_manager->getMediaData();
@@ -102,6 +106,9 @@ void Contact_Widget::updateFrame(int frame_id)
         pixmap_item->setTransform(QTransform().translate(130 * (i + 2),0),true);
     }
 
+    int t1 = timer2.elapsed();
+
+    qDebug() << "Drawing 5 frames took " << t1;
 }
 
 QImage::Format Contact_Widget::_getQImageFormat() {
