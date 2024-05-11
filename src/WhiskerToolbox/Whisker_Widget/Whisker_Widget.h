@@ -49,6 +49,8 @@ public:
     virtual ~Whisker_Widget();
 
     void openWidget(); // Call
+public slots:
+    void LoadFrame(int frame_id);
 protected:
     void closeEvent(QCloseEvent *event);
 

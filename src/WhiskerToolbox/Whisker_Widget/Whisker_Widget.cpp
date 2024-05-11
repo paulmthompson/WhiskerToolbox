@@ -420,3 +420,8 @@ void Whisker_Widget::_openContactWidget()
 {
     _contact_widget->openWidget();
 }
+
+void Whisker_Widget::LoadFrame(int frame_id)
+{
+    _contact_widget->updateFrame(frame_id);
+}

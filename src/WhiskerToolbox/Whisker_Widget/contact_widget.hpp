@@ -5,6 +5,7 @@
 
 #include <QWidget>
 #include <QGraphicsScene>
+#include <QImage>
 
 #include <memory>
 #include <vector>
@@ -40,6 +41,8 @@ public:
     virtual ~Contact_Widget();
 
     void openWidget(); // Call
+
+    void updateFrame(int frame_id);
 protected:
     void closeEvent(QCloseEvent *event);
 
@@ -52,10 +55,12 @@ private:
     bool _contact_epoch;
     std::vector<ContactEvent> _contactEvents;
     QGraphicsScene* _scene;
+    std::vector<QImage> _contact_imgs;
+    int _image_buffer_size;
 
     void _buildContactTable();
     void _calculateContactPeriods();
-
+    QImage::Format _getQImageFormat();
 
 private slots:
     void _contactButton();

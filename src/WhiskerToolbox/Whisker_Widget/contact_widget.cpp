@@ -16,9 +16,16 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidge
     _contact_start{0},
     _contact_epoch(false),
     _contactEvents{std::vector<ContactEvent>()},
+    _image_buffer_size{5},
     ui(new Ui::contact_widget)
 {
     ui->setupUi(this);
+
+    _contact_imgs = std::vector<QImage>();
+
+    for (int i = 0; i < _image_buffer_size; i++) {
+        _contact_imgs.push_back(QImage(130,130,QImage::Format_Grayscale8));
+    }
 
     _scene = new QGraphicsScene();
 
@@ -49,6 +56,34 @@ void Contact_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_contactButton()));
     disconnect(ui->save_contact_button, SIGNAL(clicked()), this, SLOT(_saveContact()));
     disconnect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
+}
+
+void Contact_Widget::updateFrame(int frame_id)
+{
+    auto _media = _data_manager->getMediaData();
+    auto media_data = _media->getRawData();
+
+    auto unscaled_image = QImage(&media_data[0],
+                                 _media->getWidth(),
+                                 _media->getHeight(),
+                                 _getQImageFormat()
+                                 );
+
+    _contact_imgs[0] = unscaled_image.scaled(130,130);
+
+    _scene->addPixmap(QPixmap::fromImage(_contact_imgs[0]));
+}
+
+QImage::Format Contact_Widget::_getQImageFormat() {
+
+    auto _media = _data_manager->getMediaData();
+    switch(_media->getFormat())
+    {
+    case MediaData::DisplayFormat::Gray:
+        return QImage::Format_Grayscale8;
+    case MediaData::DisplayFormat::Color:
+        return QImage::Format_RGBA8888;
+    }
 }
 
 void Contact_Widget::_contactButton() {

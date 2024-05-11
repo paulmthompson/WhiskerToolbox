@@ -53,7 +53,6 @@ void MainWindow::_createActions()
 
     connect(ui->time_scrollbar, SIGNAL(timeChanged(int)),_scene,SLOT(LoadFrame(int)));
 
-
     connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(addCovariate()));
     connect(ui->pushButton_2,SIGNAL(clicked()),this,SLOT(removeCovariate()));
 
@@ -139,6 +138,7 @@ void MainWindow::openWhiskerTracking() {
     // so if we exit the window, it is not created again
     if (!_ww) {
         _ww = new Whisker_Widget(_scene, _data_manager);
+        connect(ui->time_scrollbar, SIGNAL(timeChanged(int)),_ww,SLOT(LoadFrame(int)));
         std::cout << "Whisker Tracker Constructed" << std::endl;
     } else {
         std::cout << "Whisker Tracker already exists" << std::endl;
