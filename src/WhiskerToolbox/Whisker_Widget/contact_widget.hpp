@@ -4,6 +4,7 @@
 #include "DataManager.hpp"
 
 #include <QWidget>
+#include <QGraphicsScene>
 
 #include <memory>
 #include <vector>
@@ -50,6 +51,7 @@ private:
     int _contact_start;
     bool _contact_epoch;
     std::vector<ContactEvent> _contactEvents;
+    QGraphicsScene* _scene;
 
     void _buildContactTable();
     void _calculateContactPeriods();

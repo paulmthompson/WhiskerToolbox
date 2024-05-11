@@ -72,6 +72,16 @@
     </property>
    </column>
   </widget>
+  <widget class="QGraphicsView" name="graphicsView">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>160</y>
+     <width>651</width>
+     <height>61</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

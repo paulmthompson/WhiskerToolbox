@@ -16,8 +16,14 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidge
     _contact_start{0},
     _contact_epoch(false),
     _contactEvents{std::vector<ContactEvent>()},
-    ui(new Ui::contact_widget) {
+    ui(new Ui::contact_widget)
+{
     ui->setupUi(this);
+
+    _scene = new QGraphicsScene();
+
+    ui->graphicsView->setScene(_scene);
+    ui->graphicsView->show();
 };
 
 Contact_Widget::~Contact_Widget() {
