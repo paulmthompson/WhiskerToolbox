@@ -4,6 +4,7 @@
 #include "ui_contact_widget.h"
 
 #include <QFileDialog>
+#include <QGraphicsPixmapItem>
 
 #include <iostream>
 #include <sstream>
@@ -28,6 +29,7 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidge
     }
 
     _scene = new QGraphicsScene();
+    _scene->setSceneRect(0, 0, 650, 130);
 
     ui->graphicsView->setScene(_scene);
     ui->graphicsView->show();
@@ -60,18 +62,46 @@ void Contact_Widget::closeEvent(QCloseEvent *event) {
 
 void Contact_Widget::updateFrame(int frame_id)
 {
-    auto _media = _data_manager->getMediaData();
-    auto media_data = _media->getRawData();
 
-    auto unscaled_image = QImage(&media_data[0],
+    ui->graphicsView->setTransformationAnchor(QGraphicsView::NoAnchor);
+
+    auto _media = _data_manager->getMediaData();
+
+    float pole_x = 130;
+    float pole_y = 130;
+
+    float crop_width = 130;
+    float crop_height = 130;
+
+    for (int i = 2; i > -3; i--) {
+
+        if (frame_id + i < 0) {
+            continue;
+        }
+
+        _media->LoadFrame(frame_id + i);
+
+        auto media_data = _media->getRawData();
+
+        auto unscaled_image = QImage(&media_data[0],
                                  _media->getWidth(),
                                  _media->getHeight(),
                                  _getQImageFormat()
                                  );
 
-    _contact_imgs[0] = unscaled_image.scaled(130,130);
+        QRect rect(pole_x - crop_width/2, pole_y - crop_height/2, crop_width, crop_height);
 
-    _scene->addPixmap(QPixmap::fromImage(_contact_imgs[0]));
+        auto cropped_image = unscaled_image.copy(rect);
+
+        _contact_imgs[i + 2] = cropped_image.scaled(130,130);
+
+        auto pixmap = QPixmap::fromImage(_contact_imgs[i + 2]);
+        QGraphicsPixmapItem* pixmap_item = new QGraphicsPixmapItem(pixmap);
+
+        _scene->addItem(pixmap_item);
+        pixmap_item->setTransform(QTransform().translate(130 * (i + 2),0),true);
+    }
+
 }
 
 QImage::Format Contact_Widget::_getQImageFormat() {
