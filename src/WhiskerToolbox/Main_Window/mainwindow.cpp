@@ -61,7 +61,6 @@ void MainWindow::_createActions()
     //connect(ui->horizontalScrollBar,SIGNAL(actionTriggered(int)),this,SLOT(Slider_Scroll(int)));
     connect(ui->horizontalScrollBar,SIGNAL(valueChanged(int)),this,SLOT(Slider_Scroll(int)));
     connect(ui->horizontalScrollBar,SIGNAL(sliderMoved(int)),this,SLOT(Slider_Drag(int))); // For drag events
-    connect(ui->horizontalScrollBar,SIGNAL(sliderReleased()),this,SLOT(updateDisplay()));
 
     connect(ui->play_button,SIGNAL(clicked()),this,SLOT(PlayButton()));
     connect(ui->rewind,SIGNAL(clicked()),this,SLOT(RewindButton()));
@@ -325,13 +324,6 @@ void MainWindow::Slider_Scroll(int newPos)
 
     _LoadFrame(newPos);
     //_updateFrameLabels(newPos);
-}
-
-void MainWindow::updateDisplay() {
-    //this->scene->UpdateCanvas();
-    //scene->LoadFrame(ui->horizontalScrollBar->sliderPosition());
-    //this->selected_whisker = 0;
-    //ui->frame_label->setText(QString::number(ui->horizontalScrollBar->sliderPosition()));
 }
 
 void MainWindow::_updateDataDisplays(int advance_n_frames) {

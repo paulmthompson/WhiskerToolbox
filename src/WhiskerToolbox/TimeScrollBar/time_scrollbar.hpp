@@ -4,6 +4,7 @@
 #include "DataManager.hpp"
 
 #include <QWidget>
+#include <QTimer>
 
 #include <memory>
 #include <vector>
@@ -25,9 +26,22 @@ protected:
 private:
     Ui::TimeScrollBar *ui;
     std::shared_ptr<DataManager> _data_manager;
+    bool _verbose;
+    int _play_speed;
+    bool _play_mode;
+
+    QTimer* _timer;
+
+    void _updateScrollBarNewMax(int new_max);
+    void _updateFrameLabels(int frame_num);
+    void _vidLoop();
 
 private slots:
-
+    void Slider_Drag(int newPos);
+    void Slider_Scroll(int newPos);
+    void PlayButton();
+    void RewindButton();
+    void FastForwardButton();
 };
 
 

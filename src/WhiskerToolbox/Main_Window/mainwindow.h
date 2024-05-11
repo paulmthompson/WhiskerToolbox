@@ -74,7 +74,6 @@ private slots:
 
     void addCovariate();
     void removeCovariate();
-    void updateDisplay();
     void openWhiskerTracking();
     void openLabelMaker();
     void openAnalogViewer();
