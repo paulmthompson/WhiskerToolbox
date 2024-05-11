@@ -44,6 +44,14 @@ void Media_Window::clearPoints() {
     _points.clear();
 }
 
+void Media_Window::LoadFrame(int frame_id)
+{
+    // Get MediaData
+    _data_manager->getMediaData()->LoadFrame(frame_id);
+
+    UpdateCanvas();
+}
+
 void Media_Window::UpdateCanvas()
 {
     clearLines();

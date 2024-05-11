@@ -1,7 +1,7 @@
 
-#include "time_scrollbar.hpp"
+#include "TimeScrollBar.hpp"
 
-#include "ui_time_scrollbar.h"
+#include "ui_TimeScrollBar.h"
 
 #include "Media/Video_Data.hpp"
 
@@ -12,9 +12,8 @@
 #include <fstream>
 #include <string>
 
-TimeScrollBar::TimeScrollBar(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
+TimeScrollBar::TimeScrollBar(QWidget *parent) :
     QWidget(parent),
-    _data_manager{data_manager},
     _verbose{false},
     _play_mode{false},
     _play_speed{1},
@@ -60,8 +59,11 @@ void TimeScrollBar::Slider_Scroll(int newPos)
         std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << std::endl;
     }
 
-    //_LoadFrame(newPos);
-    //_updateFrameLabels(newPos);
+    auto frame_id = _data_manager->getTime()->checkFrameInbounds(newPos);
+    _data_manager->getTime()->updateLastLoadedFrame(frame_id);
+    _updateFrameLabels(frame_id);
+
+    timeChanged(frame_id);
 }
 
 
@@ -69,7 +71,7 @@ void TimeScrollBar::_updateFrameLabels(int frame_num) {
     ui->frame_label->setText(QString::number(frame_num));
 }
 
-void TimeScrollBar::_updateScrollBarNewMax(int new_max) {
+void TimeScrollBar::updateScrollBarNewMax(int new_max) {
 
     ui->frame_count_label->setText(QString::number(new_max));
     ui->horizontalScrollBar->setMaximum(new_max);
@@ -125,5 +127,18 @@ void TimeScrollBar::FastForwardButton()
 
 void TimeScrollBar::_vidLoop()
 {
-    //_updateDataDisplays(_play_speed);
+     auto frame_to_load = _data_manager->getTime()->getLastLoadedFrame() + _play_speed;
+     ui->horizontalScrollBar->setSliderPosition(frame_to_load);
+}
+
+void TimeScrollBar::changeScrollBarValue(int new_value, bool relative)
+{
+    if (relative)
+    {
+        auto absolute_value = _data_manager->getTime()->getLastLoadedFrame() + new_value;
+        Slider_Scroll(absolute_value);
+    } else {
+        Slider_Scroll(new_value);
+    }
+
 }

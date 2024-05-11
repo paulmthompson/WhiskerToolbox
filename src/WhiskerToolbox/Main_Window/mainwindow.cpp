@@ -15,8 +15,6 @@
 #include "Covariate_Widget/Covariate_Widget.h"
 #include "Whisker_Widget.h"
 
-#include "Media/Video_Data.hpp"
-
 #include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -27,19 +25,14 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    _play_speed = 1;
-
     //This is necessary to accept keyboard events
     this->setFocusPolicy(Qt::StrongFocus);
 
     _scene = new Media_Window(_data_manager, this);
 
-    _timer = new QTimer(this);
-    connect(_timer, &QTimer::timeout, this, &MainWindow::_vidLoop);
-
-    _play_mode = false;
-
     _verbose = false;
+
+    ui->time_scrollbar->setDataManager(_data_manager);
 
     _updateMedia();
 
@@ -58,13 +51,8 @@ void MainWindow::_createActions()
 
     connect(ui->actionLoad_Images,SIGNAL(triggered()),this,SLOT(Load_Images()));
 
-    //connect(ui->horizontalScrollBar,SIGNAL(actionTriggered(int)),this,SLOT(Slider_Scroll(int)));
-    connect(ui->horizontalScrollBar,SIGNAL(valueChanged(int)),this,SLOT(Slider_Scroll(int)));
-    connect(ui->horizontalScrollBar,SIGNAL(sliderMoved(int)),this,SLOT(Slider_Drag(int))); // For drag events
+    connect(ui->time_scrollbar, SIGNAL(timeChanged(int)),_scene,SLOT(LoadFrame(int)));
 
-    connect(ui->play_button,SIGNAL(clicked()),this,SLOT(PlayButton()));
-    connect(ui->rewind,SIGNAL(clicked()),this,SLOT(RewindButton()));
-    connect(ui->fastforward,SIGNAL(clicked()),this,SLOT(FastForwardButton()));
 
     connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(addCovariate()));
     connect(ui->pushButton_2,SIGNAL(clicked()),this,SLOT(removeCovariate()));
@@ -129,30 +117,10 @@ void MainWindow::_LoadData(std::string filepath) {
 
     _data_manager->getTime()->updateTotalFrameCount(frame_count);
 
-    _updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount());
+    ui->time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount());
 
-    _LoadFrame(0);
+    ui->time_scrollbar->changeScrollBarValue(0);
 
-}
-
-/**
- * @brief MainWindow::_LoadFrame
- *
- *
- *
- * @param frame_id
- */
-void MainWindow::_LoadFrame(int frame_id) {
-
-    frame_id = _data_manager->getTime()->checkFrameInbounds(frame_id);
-    _data_manager->getTime()->updateLastLoadedFrame(frame_id);
-
-    // Get MediaData
-    _data_manager->getMediaData()->LoadFrame(frame_id);
-
-    _scene->UpdateCanvas();
-
-    _updateFrameLabels(frame_id);
 }
 
 //If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.
@@ -221,64 +189,6 @@ void MainWindow::removeCovariate() {
     delete item;
 }
 
-/*
-The play button starts the video automatically advancing frames
-The timer runs every 40 ms, and the number of frames to advance will be dictated by the speed
-selected with forward and reverse buttons.
-The timer is fixed at 25 fps, so faster will result in some frames not being flashed to the screen.
-*/
-
-void MainWindow::_vidLoop()
-{
-    _updateDataDisplays(_play_speed);
-}
-
-void MainWindow::PlayButton()
-{
-
-    const int timer_period_ms = 40;
-
-    if (_play_mode) {
-
-        _timer->stop();
-        ui->play_button->setText(QString("Play"));
-        _play_mode = false;
-
-        ui->horizontalScrollBar->blockSignals(true);
-        ui->horizontalScrollBar->setValue(_data_manager->getTime()->getLastLoadedFrame());
-        ui->horizontalScrollBar->blockSignals(false);
-
-    } else {
-        ui->play_button->setText(QString("Pause"));
-        _timer->start(timer_period_ms);
-        _play_mode = true;
-    }
-}
-
-/*
-Increases the speed of a playing video in increments of the base_fps (default = 25)
-*/
-void MainWindow::RewindButton()
-{
-    const int play_speed_base_fps = 25;
-    if (_play_speed > 1)
-    {
-        _play_speed--;
-        ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
-    }
-}
-
-/*
-Decreases the speed of a playing video in increments of the base_fps (default = 25)
-*/
-void MainWindow::FastForwardButton()
-{
-    const int play_speed_base_fps = 25;
-
-    _play_speed++;
-    ui->fps_label->setText(QString::number(play_speed_base_fps * _play_speed));
-}
-
 void MainWindow::keyPressEvent(QKeyEvent *event) {
 
     //Data manager should be responsible for loading new value of data object
@@ -286,63 +196,13 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     //Frame label is also updated.
 
     if (event->key() == Qt::Key_Right) {
-
-        _updateDataDisplays(1);
-
+        ui->time_scrollbar->changeScrollBarValue(1,true);
     } else if (event->key() == Qt::Key_Left){
-
-        _updateDataDisplays(-1);
-
+        ui->time_scrollbar->changeScrollBarValue(-1,true);
     } else {
         std::cout << "Key pressed but nothing to do" << std::endl;
         QMainWindow::keyPressEvent(event);
     }
 
 }
-
-/*
-We can click and hold the slider to move to a new position
-In the case that we are dragging the slider, to make this optimally smooth, we should not add any new decoding frames
-until we have finished the most recent one.
- */
-
-void MainWindow::Slider_Drag(int action)
-{
-    if (dynamic_cast<VideoData*>(_data_manager->getMediaData().get())) {
-        auto current_frame = ui->horizontalScrollBar->sliderPosition();
-        auto keyframe = dynamic_cast<VideoData*>(_data_manager->getMediaData().get())->FindNearestSnapFrame(current_frame);
-        ui->horizontalScrollBar->setSliderPosition(keyframe);
-    }
-}
-
-
-void MainWindow::Slider_Scroll(int newPos)
-{
-    if (_verbose) {
-        std::cout << "The slider position is " << ui->horizontalScrollBar->sliderPosition() << std::endl;
-    }
-
-    _LoadFrame(newPos);
-    //_updateFrameLabels(newPos);
-}
-
-void MainWindow::_updateDataDisplays(int advance_n_frames) {
-
-    auto frame_to_load = _data_manager->getTime()->getLastLoadedFrame() + advance_n_frames;
-    _LoadFrame(frame_to_load);
-    //_updateFrameLabels(frame_to_load);
-
-}
-
-void MainWindow::_updateFrameLabels(int frame_num) {
-    ui->frame_label->setText(QString::number(frame_num));
-}
-
-void MainWindow::_updateScrollBarNewMax(int new_max) {
-
-    ui->frame_count_label->setText(QString::number(new_max));
-    ui->horizontalScrollBar->setMaximum(new_max);
-
-}
-
 

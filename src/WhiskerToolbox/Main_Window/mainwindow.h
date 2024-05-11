@@ -41,24 +41,9 @@ private:
 
     void _createActions();
 
-    void _vidLoop();
-
     void _LoadData(std::string filepath);
 
-    void _updateScrollBarNewMax(int new_max);
-    void _updateDataDisplays(int advance_n_frames);
-    void _updateFrameLabels(int frame_num);
-
-    QTimer* _timer;
-
-    long long _t_last_draw;
-
-    int _play_speed;
-    bool _play_mode;
-
     bool _verbose;
-
-    void _LoadFrame(int frame_id);
 
     std::shared_ptr<DataManager> _data_manager;
 
@@ -66,11 +51,6 @@ private:
 private slots:
     void Load_Video();
     void Load_Images();
-    void Slider_Drag(int newPos);
-    void Slider_Scroll(int newPos);
-    void PlayButton();
-    void RewindButton();
-    void FastForwardButton();
 
     void addCovariate();
     void removeCovariate();

@@ -1,5 +1,5 @@
-#ifndef TIME_SCROLLBAR_H
-#define TIME_SCROLLBAR_H
+#ifndef TIMESCROLLBAR_H
+#define TIMESCROLLBAR_H
 
 #include "DataManager.hpp"
 
@@ -18,9 +18,13 @@ class TimeScrollBar : public QWidget
     Q_OBJECT
 public:
 
-    TimeScrollBar(std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);
+    explicit TimeScrollBar(QWidget *parent = 0);
 
     virtual ~TimeScrollBar();
+
+    void setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = data_manager;};
+    void updateScrollBarNewMax(int new_max);
+    void changeScrollBarValue(int new_value, bool relative=false); // Should be friend
 
 protected:
 private:
@@ -32,7 +36,7 @@ private:
 
     QTimer* _timer;
 
-    void _updateScrollBarNewMax(int new_max);
+
     void _updateFrameLabels(int frame_num);
     void _vidLoop();
 
@@ -42,7 +46,9 @@ private slots:
     void PlayButton();
     void RewindButton();
     void FastForwardButton();
+signals:
+    void timeChanged(int x);
 };
 
 
-#endif // TIME_SCROLLBAR_H
+#endif // TIMESCROLLBAR_H

@@ -47,9 +47,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
             Whisker_Widget/contact_widget.ui
             Whisker_Widget/contact_widget.hpp
             Whisker_Widget/contact_widget.cpp
-            TimeScrollBar/time_scrollbar.hpp
-            TimeScrollBar/time_scrollbar.cpp
-            TimeScrollBar/time_scrollbar.ui
+            TimeScrollBar/TimeScrollBar.hpp
+            TimeScrollBar/TimeScrollBar.cpp
+            TimeScrollBar/TimeScrollBar.ui
     )
     # Define target properties for Android with Qt 6 as:
     #    set_property(TARGET WhiskerToolbox APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

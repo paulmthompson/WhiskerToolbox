@@ -112,6 +112,8 @@ private:
     void _convertNewMediaToQImage();
     void _plotLineData();
 
+public slots:
+    void LoadFrame(int frame_id);
 signals:
     void leftClick(qreal,qreal);
 };
