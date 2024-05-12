@@ -43,6 +43,7 @@ public:
     void openWidget(); // Call
 
     void updateFrame(int frame_id);
+    void setPolePos(float pole_x, float pole_y);
 protected:
     void closeEvent(QCloseEvent *event);
 
@@ -57,6 +58,8 @@ private:
     QGraphicsScene* _scene;
     std::vector<QImage> _contact_imgs;
     int _image_buffer_size;
+    std::tuple<float,float> _pole_pos;
+    bool _pole_select_mode;
 
     void _buildContactTable();
     void _calculateContactPeriods();
@@ -66,6 +69,7 @@ private slots:
     void _contactButton();
     void _saveContact();
     void _loadContact();
+    void _poleSelectButton();
 };
 
 

@@ -19,6 +19,8 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidge
     _contact_epoch(false),
     _contactEvents{std::vector<ContactEvent>()},
     _image_buffer_size{5},
+    _pole_pos{std::make_tuple(250.0f,250.0f)},
+    _pole_select_mode{false},
     ui(new Ui::contact_widget)
 {
     ui->setupUi(this);
@@ -45,6 +47,7 @@ void Contact_Widget::openWidget() {
     connect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_contactButton()));
     connect(ui->save_contact_button, SIGNAL(clicked()), this, SLOT(_saveContact()));
     connect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
+    connect(ui->pole_select, SIGNAL(clicked()),this, SLOT(_poleSelectButton()));
 
     if (_contact.empty()) {
         _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
@@ -59,6 +62,22 @@ void Contact_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_contactButton()));
     disconnect(ui->save_contact_button, SIGNAL(clicked()), this, SLOT(_saveContact()));
     disconnect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
+    disconnect(ui->pole_select, SIGNAL(clicked()),this, SLOT(_poleSelectButton()));
+
+}
+
+void Contact_Widget::setPolePos(float pole_x, float pole_y)
+{
+    if (_pole_select_mode) {
+        _pole_pos = std::make_tuple(pole_x,pole_y);
+        _pole_select_mode = false;
+        updateFrame(_data_manager->getTime()->getLastLoadedFrame());
+    }
+}
+
+void Contact_Widget::_poleSelectButton()
+{
+    _pole_select_mode = true;
 }
 
 void Contact_Widget::updateFrame(int frame_id)
@@ -71,8 +90,8 @@ void Contact_Widget::updateFrame(int frame_id)
 
     auto _media = _data_manager->getMediaData();
 
-    float pole_x = 130;
-    float pole_y = 130;
+    float pole_x = std::get<0>(_pole_pos);
+    float pole_y = std::get<1>(_pole_pos);
 
     float crop_width = 130;
     float crop_height = 130;

@@ -230,6 +230,7 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         default:
             break;
     }
+    _contact_widget->setPolePos(x_media,y_media); // Pass forward to contact widget
 }
 
 void Whisker_Widget::_loadJaneliaWhiskers() {
