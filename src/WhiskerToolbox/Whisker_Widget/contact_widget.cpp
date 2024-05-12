@@ -21,6 +21,7 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidge
     _image_buffer_size{5},
     _pole_pos{std::make_tuple(250,250)},
     _pole_select_mode{false},
+    _bounding_box_width{130},
     ui(new Ui::contact_widget)
 {
     ui->setupUi(this);
@@ -50,6 +51,7 @@ void Contact_Widget::openWidget() {
     connect(ui->save_contact_button, SIGNAL(clicked()), this, SLOT(_saveContact()));
     connect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
     connect(ui->pole_select, SIGNAL(clicked()),this, SLOT(_poleSelectButton()));
+    connect(ui->bounding_box_size, SIGNAL(valueChanged(int)),this,SLOT(_setBoundingBoxWidth(int)));
 
     if (_contact.empty()) {
         _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
@@ -65,6 +67,7 @@ void Contact_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->save_contact_button, SIGNAL(clicked()), this, SLOT(_saveContact()));
     disconnect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
     disconnect(ui->pole_select, SIGNAL(clicked()),this, SLOT(_poleSelectButton()));
+    disconnect(ui->bounding_box_size, SIGNAL(valueChanged(int)),this,SLOT(_setBoundingBoxWidth(int)));
 
 }
 
@@ -84,6 +87,12 @@ void Contact_Widget::_poleSelectButton()
     _pole_select_mode = true;
 }
 
+void Contact_Widget::_setBoundingBoxWidth(int value)
+{
+    _bounding_box_width = value;
+    updateFrame(_data_manager->getTime()->getLastLoadedFrame());
+}
+
 void Contact_Widget::updateFrame(int frame_id)
 {
 
@@ -94,9 +103,6 @@ void Contact_Widget::updateFrame(int frame_id)
 
     float pole_x = std::get<0>(_pole_pos);
     float pole_y = std::get<1>(_pole_pos);
-
-    float crop_width = 130;
-    float crop_height = 130;
 
     for (int i = 2; i > -3; i--) {
 
@@ -114,7 +120,7 @@ void Contact_Widget::updateFrame(int frame_id)
                                  _getQImageFormat()
                                  );
 
-        QRect rect(pole_x - crop_width/2, pole_y - crop_height/2, crop_width, crop_height);
+        QRect rect(pole_x - _bounding_box_width/2, pole_y - _bounding_box_width/2, _bounding_box_width, _bounding_box_width);
 
         auto cropped_image = unscaled_image.copy(rect);
 

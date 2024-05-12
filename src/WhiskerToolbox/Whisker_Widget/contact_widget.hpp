@@ -59,6 +59,7 @@ private:
     std::vector<QImage> _contact_imgs;
     int _image_buffer_size;
     std::tuple<int, int> _pole_pos;
+    int _bounding_box_width;
     bool _pole_select_mode;
 
     void _buildContactTable();
@@ -70,6 +71,7 @@ private slots:
     void _saveContact();
     void _loadContact();
     void _poleSelectButton();
+    void _setBoundingBoxWidth(int value);
 };
 
 
