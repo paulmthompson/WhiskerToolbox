@@ -19,7 +19,7 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidge
     _contact_epoch(false),
     _contactEvents{std::vector<ContactEvent>()},
     _image_buffer_size{5},
-    _pole_pos{std::make_tuple(250.0f,250.0f)},
+    _pole_pos{std::make_tuple(250,250)},
     _pole_select_mode{false},
     ui(new Ui::contact_widget)
 {
@@ -36,6 +36,8 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidge
 
     ui->graphicsView->setScene(_scene);
     ui->graphicsView->show();
+
+    ui->graphicsView->setTransformationAnchor(QGraphicsView::NoAnchor);
 };
 
 Contact_Widget::~Contact_Widget() {
@@ -69,7 +71,9 @@ void Contact_Widget::closeEvent(QCloseEvent *event) {
 void Contact_Widget::setPolePos(float pole_x, float pole_y)
 {
     if (_pole_select_mode) {
-        _pole_pos = std::make_tuple(pole_x,pole_y);
+        _pole_pos = std::make_tuple(static_cast<int>(pole_x),static_cast<int>(pole_y));
+        std::string new_label = "(" + std::to_string(static_cast<int>(pole_x)) + ", " + std::to_string(static_cast<int>(pole_y)) + ")";
+        ui->current_location_label->setText(QString::fromStdString(new_label));
         _pole_select_mode = false;
         updateFrame(_data_manager->getTime()->getLastLoadedFrame());
     }
@@ -85,8 +89,6 @@ void Contact_Widget::updateFrame(int frame_id)
 
     QElapsedTimer timer2;
     timer2.start();
-
-    ui->graphicsView->setTransformationAnchor(QGraphicsView::NoAnchor);
 
     auto _media = _data_manager->getMediaData();
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>715</width>
-    <height>297</height>
+    <height>417</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -75,8 +75,8 @@
   <widget class="QGraphicsView" name="graphicsView">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>140</y>
+     <x>30</x>
+     <y>230</y>
      <width>650</width>
      <height>130</height>
     </rect>
@@ -91,8 +91,8 @@
   <widget class="QPushButton" name="pole_select">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>40</y>
+     <x>40</x>
+     <y>190</y>
      <width>131</width>
      <height>24</height>
     </rect>
@@ -104,8 +104,8 @@
   <widget class="QSpinBox" name="bounding_box_size">
    <property name="geometry">
     <rect>
-     <x>170</x>
-     <y>70</y>
+     <x>470</x>
+     <y>190</y>
      <width>42</width>
      <height>22</height>
     </rect>
@@ -120,14 +120,40 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>220</x>
-     <y>70</y>
+     <x>530</x>
+     <y>190</y>
      <width>141</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
     <string>Focus Bounding Box Size</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>190</x>
+     <y>190</y>
+     <width>121</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Current Location: </string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="current_location_label">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>190</y>
+     <width>71</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(250, 250)</string>
    </property>
   </widget>
  </widget>

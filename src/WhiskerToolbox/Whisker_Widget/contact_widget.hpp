@@ -58,7 +58,7 @@ private:
     QGraphicsScene* _scene;
     std::vector<QImage> _contact_imgs;
     int _image_buffer_size;
-    std::tuple<float,float> _pole_pos;
+    std::tuple<int, int> _pole_pos;
     bool _pole_select_mode;
 
     void _buildContactTable();
