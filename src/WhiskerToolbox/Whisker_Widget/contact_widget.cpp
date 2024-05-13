@@ -259,5 +259,9 @@ void Contact_Widget::_calculateContactPeriods()
     }
 
     std::cout << "There are " << _contactEvents.size() << " contact events" << std::endl;
+
+    ui->total_contact_label->setText(QString::number(_contactEvents.size()));
+    ui->contact_number->setMaximum(_contactEvents.size());
+
     _buildContactTable();
 }
