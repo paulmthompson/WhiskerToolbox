@@ -10,6 +10,8 @@
 #include "Media_Window.h"
 #include "janelia_config.hpp"
 #include "contact_widget.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
+
 
 #include "DataManager.hpp"
 
@@ -44,7 +46,7 @@ class WHISKER_WIDGET_DLLOPT Whisker_Widget : public QWidget
     Q_OBJECT
 public:
 
-    Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);
+    Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = 0);
 
     virtual ~Whisker_Widget();
 

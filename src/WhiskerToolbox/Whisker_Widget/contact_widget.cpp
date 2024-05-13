@@ -12,7 +12,7 @@
 #include <fstream>
 #include <string>
 
-Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
+Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QWidget(parent),
     _data_manager{data_manager},
     _contact_start{0},
@@ -22,6 +22,7 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidge
     _pole_pos{std::make_tuple(250,250)},
     _pole_select_mode{false},
     _bounding_box_width{130},
+    _time_scrollbar{time_scrollbar},
     ui(new Ui::contact_widget)
 {
     ui->setupUi(this);
@@ -33,12 +34,13 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidge
     }
 
     _scene = new QGraphicsScene();
-    _scene->setSceneRect(0, 0, 650, 130);
+    _scene->setSceneRect(0, 0, 650, 150);
 
     ui->graphicsView->setScene(_scene);
     ui->graphicsView->show();
 
     ui->graphicsView->setTransformationAnchor(QGraphicsView::NoAnchor);
+
 };
 
 Contact_Widget::~Contact_Widget() {
@@ -52,6 +54,8 @@ void Contact_Widget::openWidget() {
     connect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
     connect(ui->pole_select, SIGNAL(clicked()),this, SLOT(_poleSelectButton()));
     connect(ui->bounding_box_size, SIGNAL(valueChanged(int)),this,SLOT(_setBoundingBoxWidth(int)));
+
+    connect(ui->contact_number, SIGNAL(valueChanged(int)),this,SLOT(_contactNumberSelect(int)));
 
     if (_contact.empty()) {
         _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
@@ -68,6 +72,7 @@ void Contact_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
     disconnect(ui->pole_select, SIGNAL(clicked()),this, SLOT(_poleSelectButton()));
     disconnect(ui->bounding_box_size, SIGNAL(valueChanged(int)),this,SLOT(_setBoundingBoxWidth(int)));
+    disconnect(ui->contact_number, SIGNAL(valueChanged(int)),this,SLOT(_contactNumberSelect(int)));
 
 }
 
@@ -130,7 +135,21 @@ void Contact_Widget::updateFrame(int frame_id)
         QGraphicsPixmapItem* pixmap_item = new QGraphicsPixmapItem(pixmap);
 
         _scene->addItem(pixmap_item);
-        pixmap_item->setTransform(QTransform().translate(130 * (i + 2),0),true);
+        pixmap_item->setTransform(QTransform().translate(130 * (i + 2),20),true);
+
+        if (_contactEvents.size() == 0) { continue;}
+
+        QPainterPath contact_rectangle;
+        contact_rectangle.addRect(0,0,130,20);
+        contact_rectangle.setFillRule(Qt::WindingFill);
+        QGraphicsPathItem* rect_item = new QGraphicsPathItem();
+
+        if (_contact[frame_id + i] == Contact::Contact) {
+            rect_item = _scene->addPath(contact_rectangle,QPen(Qt::red),QBrush(Qt::red));
+        } else {
+            rect_item = _scene->addPath(contact_rectangle,QPen(Qt::green),QBrush(Qt::green));
+        }
+        rect_item->setTransform(QTransform().translate(130 * (i + 2),0),true);
     }
 
     int t1 = timer2.elapsed();
@@ -264,4 +283,11 @@ void Contact_Widget::_calculateContactPeriods()
     ui->contact_number->setMaximum(_contactEvents.size());
 
     _buildContactTable();
+}
+
+void Contact_Widget::_contactNumberSelect(int value)
+{
+
+    auto frame_id = _contactEvents[value].start;
+    _time_scrollbar->changeScrollBarValue(frame_id);
 }

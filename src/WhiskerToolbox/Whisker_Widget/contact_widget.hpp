@@ -2,6 +2,7 @@
 #define CONTACT_WIDGET_HPP
 
 #include "DataManager.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QWidget>
 #include <QGraphicsScene>
@@ -36,7 +37,7 @@ class Contact_Widget : public QWidget
     Q_OBJECT
 public:
 
-    Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);
+    Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = 0);
 
     virtual ~Contact_Widget();
 
@@ -61,6 +62,7 @@ private:
     std::tuple<int, int> _pole_pos;
     int _bounding_box_width;
     bool _pole_select_mode;
+    TimeScrollBar* _time_scrollbar;
 
     void _buildContactTable();
     void _calculateContactPeriods();
@@ -72,6 +74,7 @@ private slots:
     void _loadContact();
     void _poleSelectButton();
     void _setBoundingBoxWidth(int value);
+    void _contactNumberSelect(int value);
 };
 
 

@@ -14,7 +14,7 @@
 
 #include "ui_Whisker_Widget.h"
 
-Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, QWidget *parent) :
+Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
         QWidget(parent),
         _wt{std::make_shared<WhiskerTracker>()},
         _scene{scene},
@@ -30,7 +30,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     _scene->addLineDataToScene("unlabeled_whiskers");
     _scene->addLineColor("unlabeled_whiskers",QColor("blue"));
     _janelia_config_widget = new Janelia_Config(_wt);
-    _contact_widget = new Contact_Widget(_data_manager);
+    _contact_widget = new Contact_Widget(_data_manager, time_scrollbar);
 
 };
 

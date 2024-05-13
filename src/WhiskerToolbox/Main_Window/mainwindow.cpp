@@ -137,7 +137,7 @@ void MainWindow::openWhiskerTracking() {
     // We create a whisker widget. We only want to load this module one time,
     // so if we exit the window, it is not created again
     if (!_ww) {
-        _ww = new Whisker_Widget(_scene, _data_manager);
+        _ww = new Whisker_Widget(_scene, _data_manager, ui->time_scrollbar);
         connect(ui->time_scrollbar, SIGNAL(timeChanged(int)),_ww,SLOT(LoadFrame(int)));
         std::cout << "Whisker Tracker Constructed" << std::endl;
     } else {
