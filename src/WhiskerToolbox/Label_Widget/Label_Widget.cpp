@@ -79,7 +79,7 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
   std::string frame_id = media->GetFrameID(frame_number);
   auto img = _label_maker->createImage(media->getHeight(),
                                        media->getWidth(), frame_number,
-                                       frame_id, media->getRawData());
+                                       frame_id, media->getRawData(frame_number));
 
   _label_maker->addLabel(img, static_cast<int>(x_media),
                          static_cast<int>(y_media));

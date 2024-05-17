@@ -92,8 +92,9 @@ void Whisker_Widget::_traceButton() {
     timer2.start();
 
     auto media = _data_manager->getMediaData();
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    _wt->trace(media->getRawData(), media->getHeight(), media->getWidth());
+    _wt->trace(media->getRawData(current_time), media->getHeight(), media->getWidth());
 
 
     //Add lines to data manager
@@ -114,13 +115,12 @@ void Whisker_Widget::_saveImageButton() {
 void Whisker_Widget::_saveImage(const std::string folder)
 {
     auto media = _data_manager->getMediaData();
+    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
-    auto data = media->getRawData();
+    auto data = media->getRawData(frame_id);
 
     auto width = media->getWidth();
     auto height = media->getHeight();
-
-    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
     QImage labeled_image(&data[0], width, height, QImage::Format_Grayscale8);
 

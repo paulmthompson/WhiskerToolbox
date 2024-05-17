@@ -60,7 +60,7 @@ void TimeScrollBar::Slider_Scroll(int newPos)
     }
 
     auto frame_id = _data_manager->getTime()->checkFrameInbounds(newPos);
-    _data_manager->getTime()->updateLastLoadedFrame(frame_id);
+    _data_manager->getTime()->updateLastLoadedFrame(frame_id); //
     _updateFrameLabels(frame_id);
 
     timeChanged(frame_id);

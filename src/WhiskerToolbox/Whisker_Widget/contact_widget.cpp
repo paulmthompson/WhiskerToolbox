@@ -115,9 +115,7 @@ void Contact_Widget::updateFrame(int frame_id)
             continue;
         }
 
-        _media->LoadFrame(frame_id + i);
-
-        auto media_data = _media->getRawData();
+        auto media_data = _media->getRawData(frame_id + i);
 
         auto unscaled_image = QImage(&media_data[0],
                                  _media->getWidth(),

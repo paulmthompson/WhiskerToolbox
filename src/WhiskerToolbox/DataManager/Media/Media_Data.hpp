@@ -68,7 +68,7 @@ public:
 
     virtual std::string GetFrameID(int frame_id) {return "";};
 
-    std::vector<uint8_t> getRawData() const {return _rawData;};
+    std::vector<uint8_t> getRawData(int frame_number);
     void setRawData(std::vector<uint8_t> data) {_rawData = data;};
 
 protected:

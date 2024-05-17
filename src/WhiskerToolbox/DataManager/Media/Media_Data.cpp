@@ -24,22 +24,28 @@ void MediaData::setFormat(DisplayFormat format)
         _display_format_bytes = 1;
         break;
     }
-    this->_rawData.resize(_height * _width * _display_format_bytes);
+    _rawData.resize(_height * _width * _display_format_bytes);
 };
 
 void MediaData::updateHeight(int height)
 {
     _height = height;
-    this->_rawData.resize(_height * _width * _display_format_bytes);
+    _rawData.resize(_height * _width * _display_format_bytes);
 };
 
 void MediaData::updateWidth(int width)
 {
     _width = width;
-    this->_rawData.resize(_height * _width * _display_format_bytes);
+    _rawData.resize(_height * _width * _display_format_bytes);
 };
 
 void MediaData::LoadMedia(std::string name)
 {
     doLoadMedia(name);
+}
+
+std::vector<uint8_t> MediaData::getRawData(int frame_number)
+{
+    LoadFrame(frame_number);
+    return _rawData;
 }
