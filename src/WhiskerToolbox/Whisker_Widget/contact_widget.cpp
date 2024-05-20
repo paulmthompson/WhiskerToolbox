@@ -109,7 +109,7 @@ void Contact_Widget::updateFrame(int frame_id)
     float pole_x = std::get<0>(_pole_pos);
     float pole_y = std::get<1>(_pole_pos);
 
-    for (int i = 2; i > -3; i--) {
+    for (int i = -2; i < 3; i++) {
 
         if (frame_id + i < 0) {
             continue;
