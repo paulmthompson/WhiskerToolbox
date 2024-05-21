@@ -228,7 +228,7 @@ void Contact_Widget::_loadContact() {
     int row_num = 0;
 
     while (std::getline(fin, line)) {
-        if (line == "Contact") {
+        if ((line == "Contact") || (line == "Contact\r")) {
             _contact[row_num] = Contact::Contact;
         }
         row_num++;
