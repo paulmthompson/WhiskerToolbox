@@ -67,6 +67,7 @@ private:
     void _buildContactTable();
     void _calculateContactPeriods();
     QImage::Format _getQImageFormat();
+    void _drawContactRectangles(int frame_id);
 
 private slots:
     void _contactButton();
@@ -75,6 +76,7 @@ private slots:
     void _poleSelectButton();
     void _setBoundingBoxWidth(int value);
     void _contactNumberSelect(int value);
+    void _flipContactButton();
 };
 
 

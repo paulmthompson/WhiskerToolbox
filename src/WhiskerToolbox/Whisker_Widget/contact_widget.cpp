@@ -54,6 +54,7 @@ void Contact_Widget::openWidget() {
     connect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
     connect(ui->pole_select, SIGNAL(clicked()),this, SLOT(_poleSelectButton()));
     connect(ui->bounding_box_size, SIGNAL(valueChanged(int)),this,SLOT(_setBoundingBoxWidth(int)));
+    connect(ui->flip_contact_button, SIGNAL(clicked()), this, SLOT(_flipContactButton()));
 
     connect(ui->contact_number, SIGNAL(valueChanged(int)),this,SLOT(_contactNumberSelect(int)));
 
@@ -73,6 +74,7 @@ void Contact_Widget::closeEvent(QCloseEvent *event) {
     disconnect(ui->pole_select, SIGNAL(clicked()),this, SLOT(_poleSelectButton()));
     disconnect(ui->bounding_box_size, SIGNAL(valueChanged(int)),this,SLOT(_setBoundingBoxWidth(int)));
     disconnect(ui->contact_number, SIGNAL(valueChanged(int)),this,SLOT(_contactNumberSelect(int)));
+    disconnect(ui->flip_contact_button, SIGNAL(clicked()), this, SLOT(_flipContactButton()));
 
 }
 
@@ -134,9 +136,20 @@ void Contact_Widget::updateFrame(int frame_id)
 
         _scene->addItem(pixmap_item);
         pixmap_item->setTransform(QTransform().translate(130 * (i + 2),20),true);
+    }
 
-        if (_contactEvents.size() == 0) { continue;}
+    if (_contactEvents.size() != 0) {
+        _drawContactRectangles(frame_id);
+    }
 
+    int t1 = timer2.elapsed();
+
+    qDebug() << "Drawing 5 frames took " << t1;
+}
+
+void Contact_Widget::_drawContactRectangles(int frame_id) {
+
+    for (int i = -2; i < 3; i++) {
         QPainterPath contact_rectangle;
         contact_rectangle.addRect(0,0,130,20);
         contact_rectangle.setFillRule(Qt::WindingFill);
@@ -149,10 +162,6 @@ void Contact_Widget::updateFrame(int frame_id)
         }
         rect_item->setTransform(QTransform().translate(130 * (i + 2),0),true);
     }
-
-    int t1 = timer2.elapsed();
-
-    qDebug() << "Drawing 5 frames took " << t1;
 }
 
 QImage::Format Contact_Widget::_getQImageFormat() {
@@ -288,4 +297,18 @@ void Contact_Widget::_contactNumberSelect(int value)
 
     auto frame_id = _contactEvents[value].start;
     _time_scrollbar->changeScrollBarValue(frame_id);
+}
+
+void Contact_Widget::_flipContactButton()
+{
+
+    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+
+    if (_contact[frame_num] == Contact::Contact) {
+        _contact[frame_num] = Contact::NoContact;
+    } else {
+        _contact[frame_num] = Contact::Contact;
+    }
+    _drawContactRectangles(frame_num);
+    _calculateContactPeriods();
 }

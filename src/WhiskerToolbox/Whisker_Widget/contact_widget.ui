@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>715</width>
-    <height>417</height>
+    <height>434</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -206,6 +206,19 @@
    </property>
    <property name="text">
     <string>0</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="flip_contact_button">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>390</y>
+     <width>130</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Flip Contact State</string>
    </property>
   </widget>
  </widget>
