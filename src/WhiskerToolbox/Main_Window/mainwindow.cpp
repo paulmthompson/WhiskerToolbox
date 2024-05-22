@@ -38,6 +38,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     _createActions(); // Creates callback functions
 
+    QWidget::grabKeyboard();
+
 }
 
 MainWindow::~MainWindow()
