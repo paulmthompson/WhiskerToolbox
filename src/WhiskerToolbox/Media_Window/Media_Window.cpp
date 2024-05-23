@@ -165,15 +165,15 @@ void Media_Window::_plotLineData()
 
         for (const auto& single_line : lineData) {
 
-            QPainterPath* path = new QPainterPath();
+            QPainterPath path = QPainterPath();
 
-            path->moveTo(QPointF(static_cast<float>(single_line[0].x) * xAspect, static_cast<float>(single_line[0].y) * yAspect));
+            path.moveTo(QPointF(static_cast<float>(single_line[0].x) * xAspect, static_cast<float>(single_line[0].y) * yAspect));
 
             for (int i = 1; i < single_line.size(); i++) {
-                path->lineTo(QPointF(static_cast<float>(single_line[i].x) * xAspect , static_cast<float>(single_line[i].y) * yAspect));
+                path.lineTo(QPointF(static_cast<float>(single_line[i].x) * xAspect , static_cast<float>(single_line[i].y) * yAspect));
             }
 
-            auto linePath = addPath(*path, QPen(plot_color));
+            auto linePath = addPath(path, QPen(plot_color));
             _line_paths.append(linePath);
         }
         i ++;
