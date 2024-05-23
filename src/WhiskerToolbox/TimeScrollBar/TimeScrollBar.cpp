@@ -8,9 +8,6 @@
 #include <QFileDialog>
 
 #include <iostream>
-#include <sstream>
-#include <fstream>
-#include <string>
 
 TimeScrollBar::TimeScrollBar(QWidget *parent) :
     QWidget(parent),
@@ -22,14 +19,15 @@ TimeScrollBar::TimeScrollBar(QWidget *parent) :
     ui->setupUi(this);
 
     _timer = new QTimer(this);
+
     connect(_timer, &QTimer::timeout, this, &TimeScrollBar::_vidLoop);
 
-    connect(ui->horizontalScrollBar,SIGNAL(valueChanged(int)),this,SLOT(Slider_Scroll(int)));
-    connect(ui->horizontalScrollBar,SIGNAL(sliderMoved(int)),this,SLOT(Slider_Drag(int))); // For drag events
+    connect(ui->horizontalScrollBar, &QScrollBar::valueChanged, this, &TimeScrollBar::Slider_Scroll);
+    connect(ui->horizontalScrollBar, &QScrollBar::sliderMoved, this, &TimeScrollBar::Slider_Drag); // For drag events
 
-    connect(ui->play_button,SIGNAL(clicked()),this,SLOT(PlayButton()));
-    connect(ui->rewind,SIGNAL(clicked()),this,SLOT(RewindButton()));
-    connect(ui->fastforward,SIGNAL(clicked()),this,SLOT(FastForwardButton()));
+    connect(ui->play_button, &QPushButton::clicked, this, &TimeScrollBar::PlayButton);
+    connect(ui->rewind, &QPushButton::clicked, this, &TimeScrollBar::RewindButton);
+    connect(ui->fastforward, &QPushButton::clicked, this, &TimeScrollBar::FastForwardButton);
 
 };
 
