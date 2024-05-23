@@ -63,11 +63,15 @@ private:
     int _bounding_box_width;
     bool _pole_select_mode;
     TimeScrollBar* _time_scrollbar;
+    std::vector<QGraphicsPathItem*> _contact_rectangle_items;
+    std::vector<QGraphicsPixmapItem*> _contact_pixmaps;
 
     void _buildContactTable();
     void _calculateContactPeriods();
     QImage::Format _getQImageFormat();
     void _drawContactRectangles(int frame_id);
+    void _createContactRectangles();
+    void _createContactPixmaps();
 
 private slots:
     void _contactButton();

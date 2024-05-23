@@ -36,6 +36,9 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeSc
     _scene = new QGraphicsScene();
     _scene->setSceneRect(0, 0, 650, 150);
 
+    _createContactRectangles();
+    _createContactPixmaps();
+
     ui->graphicsView->setScene(_scene);
     ui->graphicsView->show();
 
@@ -131,11 +134,9 @@ void Contact_Widget::updateFrame(int frame_id)
 
         _contact_imgs[i + 2] = cropped_image.scaled(130,130);
 
-        auto pixmap = QPixmap::fromImage(_contact_imgs[i + 2]);
-        QGraphicsPixmapItem* pixmap_item = new QGraphicsPixmapItem(pixmap);
-
-        _scene->addItem(pixmap_item);
-        pixmap_item->setTransform(QTransform().translate(130 * (i + 2),20),true);
+        _contact_pixmaps[i + 2]->setPixmap(QPixmap::fromImage(_contact_imgs[i + 2]));
+        _scene->addItem(_contact_pixmaps[i + 2]);
+        _contact_pixmaps[i + 2]->setTransform(QTransform().translate(130 * (i + 2),20),true);
     }
 
     if (_contactEvents.size() != 0) {
@@ -147,20 +148,39 @@ void Contact_Widget::updateFrame(int frame_id)
     qDebug() << "Drawing 5 frames took " << t1;
 }
 
+void Contact_Widget::_createContactPixmaps()
+{
+    _contact_pixmaps = std::vector<QGraphicsPixmapItem*>();
+
+    for (int i = -2; i < 3; i++) {
+
+        _contact_pixmaps.push_back(new QGraphicsPixmapItem());
+    }
+
+}
+
+void Contact_Widget::_createContactRectangles()
+{
+    _contact_rectangle_items = std::vector<QGraphicsPathItem*>();
+
+    for (int i = -2; i < 3; i++) {
+        _contact_rectangle_items.push_back(new QGraphicsPathItem());
+    }
+}
+
 void Contact_Widget::_drawContactRectangles(int frame_id) {
 
     for (int i = -2; i < 3; i++) {
         QPainterPath contact_rectangle;
         contact_rectangle.addRect(0,0,130,20);
         contact_rectangle.setFillRule(Qt::WindingFill);
-        QGraphicsPathItem* rect_item = new QGraphicsPathItem();
 
         if (_contact[frame_id + i] == Contact::Contact) {
-            rect_item = _scene->addPath(contact_rectangle,QPen(Qt::red),QBrush(Qt::red));
+            _contact_rectangle_items[i + 2] = _scene->addPath(contact_rectangle,QPen(Qt::red),QBrush(Qt::red));
         } else {
-            rect_item = _scene->addPath(contact_rectangle,QPen(Qt::green),QBrush(Qt::green));
+            _contact_rectangle_items[i + 2] = _scene->addPath(contact_rectangle,QPen(Qt::green),QBrush(Qt::green));
         }
-        rect_item->setTransform(QTransform().translate(130 * (i + 2),0),true);
+        _contact_rectangle_items[i + 2]->setTransform(QTransform().translate(130 * (i + 2),0),true);
     }
 }
 
@@ -272,7 +292,7 @@ void Contact_Widget::_calculateContactPeriods()
         if (in_contact)
         {
             if (_contact[i] == Contact::NoContact) {
-                _contactEvents.push_back(ContactEvent{contact_start,i});
+                _contactEvents.push_back(ContactEvent{contact_start,i - 1});
                 in_contact = false;
             }
         } else {
