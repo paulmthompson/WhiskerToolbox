@@ -149,31 +149,35 @@ void Contact_Widget::updateFrame(int frame_id)
 
 void Contact_Widget::_createContactPixmaps()
 {
+    const int image_width = 130;
+    const int y_offset = 20;
     _contact_pixmaps = std::vector<QGraphicsPixmapItem*>();
 
     for (int i = 0; i < 5; i++) {
 
         _contact_pixmaps.push_back(new QGraphicsPixmapItem());
         _scene->addItem(_contact_pixmaps[i]);
-        _contact_pixmaps[i]->setTransform(QTransform().translate(130 * (i),20),true);
+        _contact_pixmaps[i]->setTransform(QTransform().translate(image_width * (i),y_offset),true);
     }
 
 }
 
 void Contact_Widget::_createContactRectangles()
 {
+    const int rect_width = 130;
+    const int rect_height = 20;
     _contact_rectangle_items = std::vector<QGraphicsPathItem*>();
 
     for (int i = 0; i < 5; i++) {
         _contact_rectangle_items.push_back(new QGraphicsPathItem());
 
         QPainterPath contact_rectangle;
-        contact_rectangle.addRect(0,0,130,20);
+        contact_rectangle.addRect(0,0,rect_width,rect_height);
         contact_rectangle.setFillRule(Qt::WindingFill);
 
         _contact_rectangle_items[i] = _scene->addPath(contact_rectangle,QPen(Qt::green),QBrush(Qt::green));
 
-        _contact_rectangle_items[i]->setTransform(QTransform().translate(130 * (i),0),true);
+        _contact_rectangle_items[i]->setTransform(QTransform().translate(rect_width * (i),0),true);
 
     }
 }
@@ -183,11 +187,11 @@ void Contact_Widget::_drawContactRectangles(int frame_id) {
     for (int i = -2; i < 3; i++) {
 
         if (_contact[frame_id + i] == Contact::Contact) {
-            _contact_rectangle_items[i + 2]->setPen(QPen(Qt::green));
-            _contact_rectangle_items[i + 2]->setBrush(QBrush(Qt::green));
-        } else {
             _contact_rectangle_items[i + 2]->setPen(QPen(Qt::red));
             _contact_rectangle_items[i + 2]->setBrush(QBrush(Qt::red));
+        } else {
+            _contact_rectangle_items[i + 2]->setPen(QPen(Qt::green));
+            _contact_rectangle_items[i + 2]->setBrush(QBrush(Qt::green));
         }
     }
 }
