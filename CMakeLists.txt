@@ -25,6 +25,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(enable_sanitizers)
+
 #[[
 Manifest mode from VCPKG will make all dependencies specified in vcpkg.json be associated and installed
 with this particular project

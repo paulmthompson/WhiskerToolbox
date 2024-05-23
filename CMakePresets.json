@@ -202,7 +202,13 @@
       },
       {
         "name": "linux-gcc-debug",
-        "inherits": ["linux-base","gcc-debug-base"]
+        "inherits": ["linux-base","gcc-debug-base"],
+        "cacheVariables": {
+            "enableAddressSanitizer": {
+                "type": "BOOL",
+                "value": "ON"
+            }
+        }
       },
 
       {
