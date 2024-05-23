@@ -49,18 +49,18 @@ MainWindow::~MainWindow()
 
 void MainWindow::_createActions()
 {
-    connect(ui->actionLoad_Video,SIGNAL(triggered()),this,SLOT(Load_Video()));
+    connect(ui->actionLoad_Video, &QAction::triggered, this, &MainWindow::Load_Video);
 
-    connect(ui->actionLoad_Images,SIGNAL(triggered()),this,SLOT(Load_Images()));
+    connect(ui->actionLoad_Images, &QAction::triggered,this, &MainWindow::Load_Images);
 
-    connect(ui->time_scrollbar, SIGNAL(timeChanged(int)),_scene,SLOT(LoadFrame(int)));
+    connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
 
-    connect(ui->pushButton,SIGNAL(clicked()),this,SLOT(addCovariate()));
-    connect(ui->pushButton_2,SIGNAL(clicked()),this,SLOT(removeCovariate()));
+    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::addCovariate);
+    connect(ui->pushButton_2, &QPushButton::clicked, this, &MainWindow::removeCovariate);
 
-    connect(ui->actionWhisker_Tracking,SIGNAL(triggered()),this,SLOT(openWhiskerTracking()));
-    connect(ui->actionLabel_Maker,SIGNAL(triggered()),this,SLOT(openLabelMaker()));
-    connect(ui->actionAnalog_Viewer,SIGNAL(triggered()),this,SLOT(openAnalogViewer()));
+    connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
+    connect(ui->actionLabel_Maker, &QAction::triggered, this, &MainWindow::openLabelMaker);
+    connect(ui->actionAnalog_Viewer, &QAction::triggered, this, &MainWindow::openAnalogViewer);
 
 }
 
