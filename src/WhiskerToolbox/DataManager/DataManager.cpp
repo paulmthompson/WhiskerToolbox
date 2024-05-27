@@ -18,12 +18,15 @@ void DataManager::createMedia(MediaType media_type)
     {
     case (MediaType::Images):
     {
-        _media.reset(new ImageData{});
+        _media.reset();
+        _media = std::make_shared<ImageData>();
+        break;
     }
     case (MediaType::Video):
     {
         _media.reset();
         _media = std::make_shared<VideoData>();
+        break;
     }
     }
 }
