@@ -81,6 +81,8 @@ private:
 
     int _num_whisker_to_track;
 
+    bool _save_by_frame_name;
+
     Ui::Whisker_Widget *ui;
 
     void _drawWhiskers();
@@ -88,6 +90,7 @@ private:
     void _orderWhiskersByPosition();
     std::vector<Point2D> _getWhiskerBasePositions();
     void _saveImage(const std::string folder);
+    std::string _getWhiskerSaveName(int frame_id);
 
 private slots:
     void _traceButton();

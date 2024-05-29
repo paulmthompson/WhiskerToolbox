@@ -23,6 +23,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
         _selection_mode{Whisker_Select},
         _face_orientation{Facing_Top},
         _num_whisker_to_track{0},
+        _save_by_frame_name{true},
         ui(new Ui::Whisker_Widget)
         {
     ui->setupUi(this);
@@ -390,14 +391,34 @@ void Whisker_Widget::_exportImageCSV()
     }
 }
 
+//https://stackoverflow.com/questions/6417817/easy-way-to-remove-extension-from-a-filename
+std::string remove_extension(const std::string& filename) {
+    size_t lastdot = filename.find_last_of(".");
+    if (lastdot == std::string::npos) return filename;
+    return filename.substr(0, lastdot);
+}
+
+std::string Whisker_Widget::_getWhiskerSaveName(int frame_id) {
+
+    if (_save_by_frame_name) {
+        auto frame_string = _data_manager->getMediaData()->GetFrameID(frame_id);
+        frame_string = remove_extension(frame_string);
+
+        return frame_string + ".csv";
+    } else {
+        std::stringstream ss;
+        ss << std::setw(7) << std::setfill('0') << frame_id;
+
+        std::string saveName = ss.str() + ".csv";
+        return saveName;
+    }
+}
+
 void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D>& whisker)
 {
     auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
-    std::stringstream ss;
-    ss << std::setw(7) << std::setfill('0') << frame_id;
-
-    std::string saveName = ss.str() + ".csv";
+    auto saveName = _getWhiskerSaveName(frame_id);
 
     std::fstream myfile;
     myfile.open (folder + saveName, std::fstream::out);
