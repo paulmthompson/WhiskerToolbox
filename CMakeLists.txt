@@ -35,6 +35,7 @@ set(VCPKG_MANIFEST_MODE ON)
 
 #This is necessary to work on windows. A better way would be to define only the symbols that need to be exported
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+set(CMAKE_SUPPORT_WINDOWS_EXPORT_ALL_SYMBOLS 1)
 
 #=============================
 # Externally Provided Content
