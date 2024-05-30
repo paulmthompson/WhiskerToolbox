@@ -1,4 +1,6 @@
 
+find_package(HDF5 COMPONENTS CXX REQUIRED)
+
 add_library(DataManager SHARED
         DataManager.hpp
         DataManager.cpp
@@ -13,12 +15,17 @@ add_library(DataManager SHARED
         Media/Media_Data.cpp
         Lines/Line_Data.hpp
         Lines/Line_Data.cpp
+        utils/hdf5_mask_load.hpp
 )
 
 target_include_directories(DataManager PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    )
 
 target_link_libraries(DataManager PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(DataManager PRIVATE Qt${QT_VERSION_MAJOR}::Multimedia)
 
 target_link_libraries(DataManager PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
+
+target_link_libraries(DataManager PRIVATE HighFive)
+target_link_libraries(DataManager PRIVATE HDF5::HDF5)

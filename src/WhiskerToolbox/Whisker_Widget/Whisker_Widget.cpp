@@ -51,6 +51,9 @@ void Whisker_Widget::openWidget() {
     connect(ui->save_whisker_mask, SIGNAL(clicked()), this, SLOT(_saveWhiskerMaskButton()));
 
     connect(ui->load_janelia_button, SIGNAL(clicked()), this, SLOT(_loadJaneliaWhiskers()));
+    connect(ui->load_hdf5_button, SIGNAL(clicked()), this, SLOT(_loadHDF5Whiskers()));
+
+
     connect(ui->whisker_pad_select, SIGNAL(clicked()), this, SLOT(_selectWhiskerPad()));
     connect(ui->length_threshold_spinbox, SIGNAL(valueChanged(double)), this,
             SLOT(_changeWhiskerLengthThreshold(double)));
@@ -254,6 +257,21 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
             _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(time, w.x, w.y);
         }
     }
+}
+
+void Whisker_Widget::_loadHDF5Whiskers()
+{
+    auto filename = QFileDialog::getOpenFileName(
+        this,
+        "Load Whisker File",
+        QDir::currentPath(),
+        "All files (*.*) ;; whisker file (*.whiskers)");
+
+    if (filename.isNull()) {
+        return;
+    }
+
+    auto whiskers_from_hdf5 = _data_manager->read_hdf5(filename.toStdString());
 }
 
 void Whisker_Widget::_selectFaceOrientation(int index) {

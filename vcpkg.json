@@ -6,6 +6,10 @@
             "name": "highfive"
         },
         {
+            "name": "hdf5",
+            "features": ["cpp"]
+        },
+        {
             "name": "ffmpeg",
             "default-features": true,
             "features": ["nvcodec"],

@@ -2,8 +2,10 @@
 #include "DataManager.hpp"
 
 #include "Media/Video_Data.hpp"
+
 #include "Media/Image_Data.hpp"
 
+#include "utils/hdf5_mask_load.hpp"
 
 DataManager::DataManager() :
     _media{std::make_shared<MediaData>()},
@@ -29,6 +31,12 @@ void DataManager::createMedia(MediaType media_type)
         break;
     }
     }
+}
+
+std::vector<std::vector<float>> DataManager::read_hdf5(const std::string filepath)
+{
+    auto myvector = load_hdf5_mask<float>(filepath);
+    return myvector;
 }
 
 void DataManager::loadMedia(std::string filepath)

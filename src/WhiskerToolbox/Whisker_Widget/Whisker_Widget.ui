@@ -225,13 +225,26 @@
    <property name="geometry">
     <rect>
      <x>210</x>
-     <y>70</y>
+     <y>110</y>
      <width>151</width>
      <height>24</height>
     </rect>
    </property>
    <property name="text">
     <string>Change Janelia Parameter</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="load_hdf5_button">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>60</y>
+     <width>161</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load HDF5 Whisker File</string>
    </property>
   </widget>
  </widget>

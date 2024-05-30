@@ -7,6 +7,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 #include <unordered_map>
 
 #if defined _WIN32 || defined __CYGWIN__
@@ -33,6 +34,8 @@ public:
     std::shared_ptr<LineData> getLine(const std::string line_key);
 
     std::shared_ptr<TimeFrame> getTime() {return _time;};
+
+    std::vector<std::vector<float>> read_hdf5(const std::string filepath);
 
 private:
 

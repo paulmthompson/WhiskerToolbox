@@ -98,6 +98,7 @@ private slots:
     void _saveWhiskerMaskButton();
 
     void _loadJaneliaWhiskers();
+    void _loadHDF5Whiskers();
 
     void _selectWhiskerPad();
     void _changeWhiskerLengthThreshold(double new_threshold);
@@ -113,6 +114,7 @@ private slots:
 
     void _openJaneliaConfig();
     void _openContactWidget();
+
 };
 
 #endif // WHISKER_WIDGET_H
