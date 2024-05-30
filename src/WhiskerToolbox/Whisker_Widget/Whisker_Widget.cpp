@@ -37,6 +37,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
 
 Whisker_Widget::~Whisker_Widget() {
     delete ui;
+    delete _contact_widget;
+    delete _janelia_config_widget;
 }
 
 void Whisker_Widget::openWidget() {
