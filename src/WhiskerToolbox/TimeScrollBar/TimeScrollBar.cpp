@@ -33,6 +33,7 @@ TimeScrollBar::TimeScrollBar(QWidget *parent) :
 
 TimeScrollBar::~TimeScrollBar() {
     delete ui;
+    _timer->stop();
 }
 
 /*

@@ -394,8 +394,9 @@ void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vec
 {
     auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
+    auto frame_string = _data_manager->getMediaData()->GetFrameID(frame_id);
     std::stringstream ss;
-    ss << std::setw(7) << std::setfill('0') << frame_id;
+    ss << std::setw(7) << std::setfill('0') << frame_string;
 
     std::string saveName = ss.str() + ".csv";
 
