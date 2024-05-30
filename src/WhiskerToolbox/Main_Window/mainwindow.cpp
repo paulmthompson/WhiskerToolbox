@@ -45,6 +45,16 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+    if (_ww) {
+        _ww.clear();
+    }
+    if (_label_maker) {
+        _label_maker.clear();
+    }
+    if (_analog_viewer) {
+        _analog_viewer.clear();
+    }
+
 }
 
 void MainWindow::_createActions()
