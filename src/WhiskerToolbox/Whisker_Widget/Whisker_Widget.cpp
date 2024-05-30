@@ -271,7 +271,7 @@ void Whisker_Widget::_loadHDF5Whiskers()
         return;
     }
 
-    auto whiskers_from_hdf5 = _data_manager->read_hdf5(filename.toStdString());
+    auto whiskers_from_hdf5 = _data_manager->read_ragged_hdf5(filename.toStdString(), "probs");
 }
 
 void Whisker_Widget::_selectFaceOrientation(int index) {

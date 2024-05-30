@@ -33,9 +33,9 @@ void DataManager::createMedia(MediaType media_type)
     }
 }
 
-std::vector<std::vector<float>> DataManager::read_hdf5(const std::string filepath)
+std::vector<std::vector<float>> DataManager::read_ragged_hdf5(const std::string& filepath, const std::string& key)
 {
-    auto myvector = load_hdf5_mask<float>(filepath);
+    auto myvector = load_ragged_array<float>(filepath, key);
     return myvector;
 }
 

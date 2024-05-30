@@ -16,6 +16,8 @@ add_library(DataManager SHARED
         Lines/Line_Data.hpp
         Lines/Line_Data.cpp
         utils/hdf5_mask_load.hpp
+        Masks/Mask_Data.hpp
+        Points/Point_Data.hpp
 )
 
 target_include_directories(DataManager PUBLIC

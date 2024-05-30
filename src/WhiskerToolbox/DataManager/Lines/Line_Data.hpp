@@ -4,17 +4,14 @@
 #include <vector>
 #include <map>
 
+#include "Points/Point_Data.hpp"
+
 #if defined _WIN32 || defined __CYGWIN__
 #define DLLOPT __declspec(dllexport)
 //#define DLLOPT __declspec(dllexport)
 #else
 #define DLLOPT __attribute__((visibility("default")))
 #endif
-
-struct Point2D {
-    float x;
-    float y;
-};
 
 using Line2D = std::vector<Point2D>;
 

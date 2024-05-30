@@ -7,8 +7,59 @@
 
 #include <H5Cpp.h>
 
+// Much appreciation to comments provided here
+// https://github.com/BlueBrain/HighFive/issues/369#issuecomment-961133649
+
+std::vector<hsize_t> get_ragged_dims(H5::DataSet& dataset)
+{
+    H5::DataSpace dataspace = dataset.getSpace();
+    const int n_dims = dataspace.getSimpleExtentNdims();
+    std::vector<hsize_t> dims(n_dims);
+    dataspace.getSimpleExtentDims(dims.data());
+
+    std::cout << "n_dims: " << dims.size() << '\n';
+
+    std::cout << "shape: (";
+    for (hsize_t dim: dims) {
+        std::cout << dim << ", ";
+    }
+    std::cout << ")\n" << std::endl;
+
+    return dims;
+}
+
 template <typename T>
-std::vector<std::vector<T>> load_hdf5_mask(std::string filepath)
+std::vector<std::vector<T>> load_ragged_array(H5::DataSet& dataset)
+{
+    auto dims = get_ragged_dims(dataset);
+
+    const hsize_t n_rows = dims[0];
+    std::vector<hvl_t> varlen_specs(n_rows);
+
+    std::vector<std::vector<T>> data;
+    data.reserve(n_rows);
+
+    H5::FloatType mem_item_type;
+    if constexpr(std::is_same_v<T, float>) {
+        H5::FloatType mem_item_type(H5::PredType::NATIVE_FLOAT);
+    } else if constexpr(std::is_same_v<T, double>) {
+        H5::FloatType mem_item_type(H5::PredType::NATIVE_DOUBLE);
+    }
+    H5::VarLenType mem_type(mem_item_type);
+
+    dataset.read(varlen_specs.data(), mem_type);
+
+    for (const auto& varlen_spec: varlen_specs) {
+        auto data_ptr = static_cast<T*>(varlen_spec.p);
+        data.emplace_back(data_ptr, data_ptr + varlen_spec.len);
+        H5free_memory(varlen_spec.p);
+    }
+
+    return data;
+}
+
+template <typename T>
+std::vector<std::vector<T>> load_ragged_array(const std::string& filepath, const std::string key)
 {
     auto c_str = filepath.c_str();
     H5::H5File file(c_str, H5F_ACC_RDONLY);
@@ -17,11 +68,15 @@ std::vector<std::vector<T>> load_hdf5_mask(std::string filepath)
         std::cout << file.getObjnameByIdx(i) << std::endl;
     }
 
+    H5::DataSet dataset {file.openDataSet(key)};
+
+    auto data = load_ragged_array<T>(dataset);
 
     file.close();
 
-    return std::vector<std::vector<float>>{};
+    return data;
 }
+
 
 
 

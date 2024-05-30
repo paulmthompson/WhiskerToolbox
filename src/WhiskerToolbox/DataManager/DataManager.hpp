@@ -35,7 +35,7 @@ public:
 
     std::shared_ptr<TimeFrame> getTime() {return _time;};
 
-    std::vector<std::vector<float>> read_hdf5(const std::string filepath);
+    std::vector<std::vector<float>> read_ragged_hdf5(const std::string& filepath, const std::string& key);
 
 private:
 
