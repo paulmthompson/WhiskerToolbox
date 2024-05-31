@@ -65,6 +65,8 @@ void Whisker_Widget::openWidget() {
     connect(ui->config_janelia_button, SIGNAL(clicked()), this, SLOT(_openJaneliaConfig()));
     connect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_openContactWidget()));
 
+    connect(ui->mask_alpha_slider, SIGNAL(valueChanged(int)), this, SLOT(_setMaskAlpha(int)));
+
     this->show();
 
 }
@@ -479,4 +481,9 @@ void Whisker_Widget::_openContactWidget()
 void Whisker_Widget::LoadFrame(int frame_id)
 {
     _contact_widget->updateFrame(frame_id);
+}
+
+void Whisker_Widget::_setMaskAlpha(int alpha)
+{
+    _scene->setMaskAlpha(alpha);
 }

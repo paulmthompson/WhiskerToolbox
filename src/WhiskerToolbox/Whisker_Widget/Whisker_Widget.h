@@ -115,6 +115,8 @@ private slots:
     void _openJaneliaConfig();
     void _openContactWidget();
 
+    void _setMaskAlpha(int);
+
 };
 
 #endif // WHISKER_WIDGET_H

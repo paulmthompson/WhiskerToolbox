@@ -54,6 +54,8 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
 
     void clearMasks();
 
+    void setMaskAlpha(const int alpha) {_mask_alpha = alpha; UpdateCanvas();};
+
     /**
      *
      *
@@ -107,6 +109,8 @@ private:
     QVector<QGraphicsPathItem*> _line_paths;
     QVector<QGraphicsEllipseItem*> _points;
     QVector<QGraphicsPixmapItem*> _masks;
+
+    int _mask_alpha;
 
     bool _is_verbose;
 

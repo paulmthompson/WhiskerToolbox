@@ -15,7 +15,8 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
     _canvasWidth{640},
     _is_verbose{false},
     _data_manager{data_manager},
-    _line_colors{}
+    _line_colors{},
+    _mask_alpha{50}
 {
     _createCanvasForData();
 }
@@ -203,9 +204,12 @@ void Media_Window::_plotLineData()
 
 void Media_Window::_plotMaskData()
 {
+    const float mask_height = 256.0;
+    const float mask_width = 256.0;
+
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-    auto xAspect = static_cast<float>(_canvasWidth) / 256.0;
-    auto yAspect = static_cast<float>(_canvasHeight) / 256.0;
+    auto xAspect = static_cast<float>(_canvasWidth) / mask_width;
+    auto yAspect = static_cast<float>(_canvasHeight) / mask_height;
 
     int i =0;
     for (const auto& mask_key : _masks_to_show)
@@ -225,7 +229,7 @@ void Media_Window::_plotMaskData()
 
             for (int i = 0; i < single_mask.size(); i ++)
             {
-                mask_image.setPixel(QPoint(single_mask[i].y * xAspect, single_mask[i].x * yAspect), qRgba(0, 0, 255, 255));
+                mask_image.setPixel(QPoint(single_mask[i].y * xAspect, single_mask[i].x * yAspect), qRgba(0, 0, 255, _mask_alpha));
             }
 
             auto maskPixmap = addPixmap(QPixmap::fromImage(mask_image));
