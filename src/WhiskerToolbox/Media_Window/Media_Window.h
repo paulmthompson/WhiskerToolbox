@@ -49,6 +49,11 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
 
     void clearLines();
 
+    void addMaskDataToScene(const std::string& mask_key);
+    void addMaskColor(const std::string& mask_key, const QColor color );
+
+    void clearMasks();
+
     /**
      *
      *
@@ -101,16 +106,21 @@ private:
 
     QVector<QGraphicsPathItem*> _line_paths;
     QVector<QGraphicsEllipseItem*> _points;
+    QVector<QGraphicsPixmapItem*> _masks;
 
     bool _is_verbose;
 
     std::unordered_set<std::string> _lines_to_show;
     std::unordered_map<std::string,QColor> _line_colors;
 
+    std::unordered_set<std::string> _masks_to_show;
+    std::unordered_map<std::string,QColor> _mask_colors;
+
     QImage::Format _getQImageFormat();
     void _createCanvasForData();
     void _convertNewMediaToQImage();
     void _plotLineData();
+    void _plotMaskData();
 
 public slots:
     void LoadFrame(int frame_id);

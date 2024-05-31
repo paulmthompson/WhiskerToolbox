@@ -39,6 +39,12 @@ std::vector<std::vector<float>> DataManager::read_ragged_hdf5(const std::string&
     return myvector;
 }
 
+std::vector<int> DataManager::read_array_hdf5(const std::string& filepath, const std::string& key)
+{
+    auto myvector = load_array<int>(filepath, key);
+    return myvector;
+}
+
 void DataManager::loadMedia(std::string filepath)
 {
 
@@ -59,3 +65,15 @@ std::shared_ptr<LineData> DataManager::getLine(const std::string line_key)
 
     return _lines[line_key];
 }
+
+void DataManager::createMask(const std::string& mask_key)
+{
+    _masks[mask_key] = std::make_shared<MaskData>();
+}
+
+std::shared_ptr<MaskData> DataManager::getMask(const std::string& mask_key)
+{
+
+    return _masks[mask_key];
+}
+

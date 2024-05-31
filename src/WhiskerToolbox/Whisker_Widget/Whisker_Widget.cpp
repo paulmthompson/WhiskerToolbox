@@ -271,7 +271,20 @@ void Whisker_Widget::_loadHDF5Whiskers()
         return;
     }
 
-    auto whiskers_from_hdf5 = _data_manager->read_ragged_hdf5(filename.toStdString(), "probs");
+    auto frames =  _data_manager->read_array_hdf5(filename.toStdString(), "frames");
+    auto probs = _data_manager->read_ragged_hdf5(filename.toStdString(), "probs");
+    auto x_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "heights");
+    auto y_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "widths");
+
+    _data_manager->createMask("Whisker_Mask");
+
+    auto mask = _data_manager->getMask("Whisker_Mask");
+
+    for (int i = 0; i < frames.size(); i ++) {
+        mask->addMaskAtTime(frames[i], x_coords[i], y_coords[i]);
+    }
+
+    _scene->addMaskDataToScene("Whisker_Mask");
 }
 
 void Whisker_Widget::_selectFaceOrientation(int index) {

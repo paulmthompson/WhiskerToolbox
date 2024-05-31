@@ -37,6 +37,24 @@ void Media_Window::clearLines() {
     _line_paths.clear();
 }
 
+void Media_Window::addMaskDataToScene(const std::string& mask_key)
+{
+     _masks_to_show.insert(mask_key);
+}
+
+void Media_Window::addMaskColor(const std::string& mask_key, const QColor color )
+{
+     _mask_colors[mask_key] = color;
+}
+
+void Media_Window::clearMasks()
+{
+    for (auto maskItem : _masks) {
+        removeItem(maskItem);
+    }
+    _masks.clear();
+}
+
 void Media_Window::clearPoints() {
     for (auto pathItem : _points) {
         removeItem(pathItem);
@@ -56,6 +74,7 @@ void Media_Window::UpdateCanvas()
 {
     clearLines();
     clearPoints();
+    clearMasks();
 
     _convertNewMediaToQImage();
 
@@ -64,6 +83,8 @@ void Media_Window::UpdateCanvas()
     // Check for manual selection with the currently rendered frame;
 
     _plotLineData();
+
+    _plotMaskData();
 }
 
 
@@ -175,6 +196,41 @@ void Media_Window::_plotLineData()
 
             auto linePath = addPath(path, QPen(plot_color));
             _line_paths.append(linePath);
+        }
+        i ++;
+    }
+}
+
+void Media_Window::_plotMaskData()
+{
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto xAspect = static_cast<float>(_canvasWidth) / 256.0;
+    auto yAspect = static_cast<float>(_canvasHeight) / 256.0;
+
+    int i =0;
+    for (const auto& mask_key : _masks_to_show)
+    {
+
+        auto plot_color = QColor("blue");
+        if (_mask_colors.count(mask_key) != 0)
+        {
+            plot_color = QColor(_mask_colors[mask_key]);
+        }
+
+        auto maskData = _data_manager->getMask(mask_key)->getMasksAtTime(current_time);
+
+        for (const auto& single_mask : maskData) {
+
+            QImage mask_image(_canvasWidth, _canvasHeight,QImage::Format::Format_ARGB32);
+
+            for (int i = 0; i < single_mask.size(); i ++)
+            {
+                mask_image.setPixel(QPoint(single_mask[i].y * xAspect, single_mask[i].x * yAspect), qRgba(0, 0, 255, 255));
+            }
+
+            auto maskPixmap = addPixmap(QPixmap::fromImage(mask_image));
+
+            _masks.append(maskPixmap);
         }
         i ++;
     }

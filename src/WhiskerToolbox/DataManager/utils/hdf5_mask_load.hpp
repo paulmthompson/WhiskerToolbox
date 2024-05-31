@@ -1,6 +1,7 @@
 #ifndef HDF5_MASK_LOAD_HPP
 #define HDF5_MASK_LOAD_HPP
 
+#include <variant>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -29,6 +30,37 @@ std::vector<hsize_t> get_ragged_dims(H5::DataSet& dataset)
 }
 
 template <typename T>
+H5::VarLenType get_varlen_type()
+{
+    H5::VarLenType mem_type;
+    if constexpr(std::is_same_v<T, float>) {
+        H5::FloatType mem_item_type(H5::PredType::NATIVE_FLOAT);
+        mem_type = H5::VarLenType(mem_item_type);
+    } else if constexpr(std::is_same_v<T, double>) {
+        H5::FloatType mem_item_type(H5::PredType::NATIVE_DOUBLE);
+        mem_type = H5::VarLenType(mem_item_type);
+    } else if constexpr(std::is_same_v<T, int>) {
+        H5::IntType mem_item_type(H5::PredType::NATIVE_INT32);
+        mem_type = H5::VarLenType(mem_item_type);
+    }
+
+    return mem_type;
+}
+
+template <typename T>
+H5::PredType get_datatype()
+{
+    if constexpr(std::is_same_v<T, float>) {
+        return H5::PredType::NATIVE_FLOAT;
+    } else if constexpr(std::is_same_v<T, double>) {
+        return H5::PredType::NATIVE_DOUBLE;
+    } else if constexpr(std::is_same_v<T, int>) {
+        return H5::PredType::NATIVE_INT32;
+    }
+
+}
+
+template <typename T>
 std::vector<std::vector<T>> load_ragged_array(H5::DataSet& dataset)
 {
     auto dims = get_ragged_dims(dataset);
@@ -39,15 +71,9 @@ std::vector<std::vector<T>> load_ragged_array(H5::DataSet& dataset)
     std::vector<std::vector<T>> data;
     data.reserve(n_rows);
 
-    H5::FloatType mem_item_type;
-    if constexpr(std::is_same_v<T, float>) {
-        H5::FloatType mem_item_type(H5::PredType::NATIVE_FLOAT);
-    } else if constexpr(std::is_same_v<T, double>) {
-        H5::FloatType mem_item_type(H5::PredType::NATIVE_DOUBLE);
-    }
-    H5::VarLenType mem_type(mem_item_type);
+    auto mem_type = get_varlen_type<T>();
 
-    dataset.read(varlen_specs.data(), mem_type);
+    dataset.read(static_cast<void*>(varlen_specs.data()), mem_type);
 
     for (const auto& varlen_spec: varlen_specs) {
         auto data_ptr = static_cast<T*>(varlen_spec.p);
@@ -58,8 +84,42 @@ std::vector<std::vector<T>> load_ragged_array(H5::DataSet& dataset)
     return data;
 }
 
+template<typename T>
+std::vector<T> load_array(H5::DataSet& dataset)
+{
+    auto dims = get_ragged_dims(dataset);
+    const hsize_t n_rows = dims[0];
+
+    auto data = std::vector<T>(n_rows);
+
+    std::cout << "Vector has " << data.size() << " elements";
+
+    dataset.read(static_cast<void*>(data.data()), get_datatype<T>());
+
+    return data;
+}
+
+template<typename T>
+std::vector<T> load_array(const std::string& filepath, const std::string& key)
+{
+    auto c_str = filepath.c_str();
+    H5::H5File file(c_str, H5F_ACC_RDONLY);
+
+    for (int i=0; i < file.getNumObjs(); i++) {
+        std::cout << file.getObjnameByIdx(i) << std::endl;
+    }
+
+    H5::DataSet dataset {file.openDataSet(key)};
+
+    auto data = load_array<T>(dataset);
+
+    file.close();
+
+    return data;
+}
+
 template <typename T>
-std::vector<std::vector<T>> load_ragged_array(const std::string& filepath, const std::string key)
+std::vector<std::vector<T>> load_ragged_array(const std::string& filepath, const std::string& key)
 {
     auto c_str = filepath.c_str();
     H5::H5File file(c_str, H5F_ACC_RDONLY);
