@@ -23,7 +23,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
         _selection_mode{Whisker_Select},
         _face_orientation{Facing_Top},
         _num_whisker_to_track{0},
-        _save_by_frame_name{true},
+        _save_by_frame_name{false},
         ui(new Ui::Whisker_Widget)
         {
     ui->setupUi(this);

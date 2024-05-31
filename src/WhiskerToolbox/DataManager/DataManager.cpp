@@ -66,6 +66,11 @@ std::shared_ptr<LineData> DataManager::getLine(const std::string line_key)
     return _lines[line_key];
 }
 
+std::vector<std::string> DataManager::getLineKeys()
+{
+    return _get_keys(_lines);
+}
+
 void DataManager::createMask(const std::string& mask_key)
 {
     _masks[mask_key] = std::make_shared<MaskData>();
@@ -76,4 +81,6 @@ std::shared_ptr<MaskData> DataManager::getMask(const std::string& mask_key)
 
     return _masks[mask_key];
 }
+
+
 

@@ -8,15 +8,24 @@
 
 #include <H5Cpp.h>
 
-// Much appreciation to comments provided here
+// Much appreciation to comments provided here for ragged array loading
 // https://github.com/BlueBrain/HighFive/issues/369#issuecomment-961133649
 
+/**
+ *
+ *
+ *
+ * @brief get_ragged_dims
+ * @param dataset
+ * @return
+ */
 std::vector<hsize_t> get_ragged_dims(H5::DataSet& dataset)
 {
     H5::DataSpace dataspace = dataset.getSpace();
     const int n_dims = dataspace.getSimpleExtentNdims();
     std::vector<hsize_t> dims(n_dims);
     dataspace.getSimpleExtentDims(dims.data());
+
 
     std::cout << "n_dims: " << dims.size() << '\n';
 

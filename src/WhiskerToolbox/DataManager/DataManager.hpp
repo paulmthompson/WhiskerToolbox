@@ -33,6 +33,7 @@ public:
 
     void createLine(const std::string line_key);
     std::shared_ptr<LineData> getLine(const std::string line_key);
+    std::vector<std::string> getLineKeys();
 
     void createMask(const std::string& mask_key);
     std::shared_ptr<MaskData> getMask(const std::string& mask_key);
@@ -50,6 +51,18 @@ private:
     std::unordered_map<std::string, std::shared_ptr<MaskData>> _masks;
 
     std::shared_ptr<TimeFrame> _time;
+
+    template<typename T>
+    std::vector<std::string> _get_keys(std::unordered_map<std::string, T>& map)
+    {
+        //https://stackoverflow.com/questions/8483985/obtaining-list-of-keys-and-values-from-unordered-map
+        std::vector<std::string> keys;
+        keys.reserve(map.size());
+        for (auto kv : map) {
+            keys.push_back(kv.first);
+        }
+        return keys;
+    }
 
 };
 
