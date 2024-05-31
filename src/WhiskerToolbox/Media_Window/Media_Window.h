@@ -125,6 +125,7 @@ private:
     void _convertNewMediaToQImage();
     void _plotLineData();
     void _plotMaskData();
+    QRgb _create_mask_plot_color(const std::string& mask_key);
 
 public slots:
     void LoadFrame(int frame_id);

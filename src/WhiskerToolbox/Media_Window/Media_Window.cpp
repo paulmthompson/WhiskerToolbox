@@ -202,6 +202,19 @@ void Media_Window::_plotLineData()
     }
 }
 
+QRgb Media_Window::_create_mask_plot_color(const std::string& mask_key) {
+
+    auto plot_color = QColor("blue");
+    if (_mask_colors.count(mask_key) != 0)
+    {
+        plot_color = QColor(_mask_colors[mask_key]);
+    }
+
+    auto output_color = qRgba(plot_color.red(), plot_color.green(), plot_color.blue(), _mask_alpha);
+
+    return output_color;
+}
+
 void Media_Window::_plotMaskData()
 {
     const float mask_height = 256.0;
@@ -215,11 +228,7 @@ void Media_Window::_plotMaskData()
     for (const auto& mask_key : _masks_to_show)
     {
 
-        auto plot_color = QColor("blue");
-        if (_mask_colors.count(mask_key) != 0)
-        {
-            plot_color = QColor(_mask_colors[mask_key]);
-        }
+        auto plot_color = _create_mask_plot_color(mask_key);
 
         auto maskData = _data_manager->getMask(mask_key)->getMasksAtTime(current_time);
 
@@ -231,7 +240,7 @@ void Media_Window::_plotMaskData()
             {
                 mask_image.setPixel(
                     QPoint(single_mask[i].y * xAspect, single_mask[i].x * yAspect),
-                    qRgba(plot_color.red(), plot_color.green(), plot_color.blue(), _mask_alpha));
+                    plot_color);
             }
 
             auto maskPixmap = addPixmap(QPixmap::fromImage(mask_image));
