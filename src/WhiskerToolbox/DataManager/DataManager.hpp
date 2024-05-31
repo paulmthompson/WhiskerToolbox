@@ -37,6 +37,7 @@ public:
 
     void createMask(const std::string& mask_key);
     std::shared_ptr<MaskData> getMask(const std::string& mask_key);
+    std::vector<std::string> getMaskKeys();
 
     std::shared_ptr<TimeFrame> getTime() {return _time;};
 

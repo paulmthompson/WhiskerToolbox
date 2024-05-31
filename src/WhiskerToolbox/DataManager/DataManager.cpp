@@ -82,5 +82,8 @@ std::shared_ptr<MaskData> DataManager::getMask(const std::string& mask_key)
     return _masks[mask_key];
 }
 
-
+std::vector<std::string> DataManager::getMaskKeys()
+{
+    return _get_keys(_masks);
+}
 
