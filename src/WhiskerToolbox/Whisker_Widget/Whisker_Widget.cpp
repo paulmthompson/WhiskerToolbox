@@ -14,6 +14,12 @@
 
 #include "ui_Whisker_Widget.h"
 
+const std::vector<QColor> whisker_colors = {QColor("red"),
+                                            QColor("green"),
+                                            QColor("cyan"),
+                                            QColor("magenta"),
+                                            QColor("yellow")};
+
 Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
         QWidget(parent),
         _wt{std::make_shared<WhiskerTracker>()},
@@ -278,15 +284,20 @@ void Whisker_Widget::_loadHDF5Whiskers()
     auto x_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "heights");
     auto y_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "widths");
 
-    _data_manager->createMask("Whisker_Mask");
+    auto mask_num = _data_manager->getMaskKeys().size();
 
-    auto mask = _data_manager->getMask("Whisker_Mask");
+    auto mask_key = "Whisker_Mask" + std::to_string(mask_num);
+
+    _data_manager->createMask(mask_key);
+
+    auto mask = _data_manager->getMask(mask_key);
 
     for (int i = 0; i < frames.size(); i ++) {
         mask->addMaskAtTime(frames[i], x_coords[i], y_coords[i]);
     }
 
-    _scene->addMaskDataToScene("Whisker_Mask");
+    _scene->addMaskDataToScene(mask_key);
+    _scene->addMaskColor(mask_key, whisker_colors[mask_num]);
 }
 
 void Whisker_Widget::_selectFaceOrientation(int index) {
@@ -300,12 +311,6 @@ void Whisker_Widget::_selectFaceOrientation(int index) {
         _face_orientation = Face_Orientation::Facing_Right;
     }
 }
-
-const std::vector<QColor> whisker_colors = {QColor("red"),
-                                            QColor("green"),
-                                            QColor("cyan"),
-                                            QColor("magenta"),
-                                            QColor("yellow")};
 
 void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
     _num_whisker_to_track = n_whiskers;

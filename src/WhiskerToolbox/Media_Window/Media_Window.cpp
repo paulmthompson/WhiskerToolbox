@@ -229,7 +229,9 @@ void Media_Window::_plotMaskData()
 
             for (int i = 0; i < single_mask.size(); i ++)
             {
-                mask_image.setPixel(QPoint(single_mask[i].y * xAspect, single_mask[i].x * yAspect), qRgba(0, 0, 255, _mask_alpha));
+                mask_image.setPixel(
+                    QPoint(single_mask[i].y * xAspect, single_mask[i].x * yAspect),
+                    qRgba(plot_color.red(), plot_color.green(), plot_color.blue(), _mask_alpha));
             }
 
             auto maskPixmap = addPixmap(QPixmap::fromImage(mask_image));
