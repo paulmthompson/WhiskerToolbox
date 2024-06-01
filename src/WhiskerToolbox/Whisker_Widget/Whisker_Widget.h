@@ -89,7 +89,9 @@ private:
     void _addWhiskersToData();
     void _orderWhiskersByPosition();
     std::vector<Point2D> _getWhiskerBasePositions();
+
     void _saveImage(const std::string folder);
+    std::string _getImageSaveName(int frame_id);
     std::string _getWhiskerSaveName(int frame_id);
 
 private slots:

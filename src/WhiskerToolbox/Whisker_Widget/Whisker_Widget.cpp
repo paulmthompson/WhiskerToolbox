@@ -138,10 +138,8 @@ void Whisker_Widget::_saveImage(const std::string folder)
 
     QImage labeled_image(&data[0], width, height, QImage::Format_Grayscale8);
 
-    std::stringstream ss;
-    ss << std::setw(7) << std::setfill('0') << frame_id;
+    auto saveName = _getImageSaveName(frame_id);
 
-    std::string saveName = "img" + ss.str() + ".png";
     std::cout << "Saving file " << saveName << std::endl;
 
     labeled_image.save(QString::fromStdString(folder + saveName));
@@ -438,11 +436,29 @@ std::string remove_extension(const std::string& filename) {
     return filename.substr(0, lastdot);
 }
 
+std::string Whisker_Widget::_getImageSaveName(int frame_id)
+{
+    if (_save_by_frame_name)
+    {
+        auto saveName = _data_manager->getMediaData()->GetFrameID(frame_id);
+        return saveName;
+    } else {
+        std::stringstream ss;
+        ss << std::setw(7) << std::setfill('0') << frame_id;
+
+        std::string saveName = "img" + ss.str() + ".png";
+        return saveName;
+    }
+}
+
 std::string Whisker_Widget::_getWhiskerSaveName(int frame_id) {
 
     if (_save_by_frame_name) {
         auto frame_string = _data_manager->getMediaData()->GetFrameID(frame_id);
         frame_string = remove_extension(frame_string);
+
+        //Strip off the img prefix and leave the number
+
 
         return frame_string + ".csv";
     } else {
