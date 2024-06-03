@@ -81,6 +81,8 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
     disconnect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
 }
 
+/////////////////////////////////////////////
+
 void Whisker_Widget::_traceButton() {
     QElapsedTimer timer2;
     timer2.start();
@@ -101,6 +103,45 @@ void Whisker_Widget::_traceButton() {
 
     qDebug() << "The tracing took" << t1 << "ms and drawing took" << (t2 - t1);
 }
+
+void Whisker_Widget::_selectWhiskerPad() {
+    _selection_mode = Selection_Type::Whisker_Pad_Select;
+}
+
+void Whisker_Widget::_changeWhiskerLengthThreshold(double new_threshold) {
+    _wt->setWhiskerLengthThreshold(static_cast<float>(new_threshold));
+}
+
+void Whisker_Widget::_selectFaceOrientation(int index) {
+    if (index == 0) {
+        _face_orientation = Face_Orientation::Facing_Top;
+    } else if (index == 1) {
+        _face_orientation = Face_Orientation::Facing_Bottom;
+    } else if (index == 2) {
+        _face_orientation = Face_Orientation::Facing_Left;
+    } else {
+        _face_orientation = Face_Orientation::Facing_Right;
+    }
+}
+
+void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
+    _num_whisker_to_track = n_whiskers;
+
+    if (n_whiskers == 0) {
+        return;
+    }
+
+    std::string whisker_name = "whisker_" + std::to_string(n_whiskers);
+
+    if (!_data_manager->getLine(whisker_name)) {
+        std::cout << "Creating " << whisker_name << std::endl;
+        _data_manager->createLine(whisker_name);
+        _scene->addLineDataToScene(whisker_name);
+        _scene->addLineColor(whisker_name,whisker_colors[n_whiskers-1]);
+    }
+}
+
+/////////////////////////////////////////////
 
 void Whisker_Widget::_saveImageButton() {
     _saveImage("./");
@@ -152,19 +193,86 @@ void Whisker_Widget::_saveWhiskerMaskButton() {
 
     }
 
-    std::stringstream ss;
-    ss << std::setw(7) << std::setfill('0') << frame_id;
-
-    std::string saveName = "w" + ss.str() + ".png";
+    std::string saveName = "w" + pad_frame_id(frame_id, 7) + ".png";
     std::cout << "Saving file " << saveName << std::endl;
 
     mask_image.save(QString::fromStdString(saveName));
 }
 
+void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D>& whisker)
+{
+    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
-void Whisker_Widget::_selectWhiskerPad() {
-    _selection_mode = Selection_Type::Whisker_Pad_Select;
+    auto saveName = _getWhiskerSaveName(frame_id);
+
+    std::fstream myfile;
+    myfile.open (folder + saveName, std::fstream::out);
+
+    myfile << std::fixed << std::setprecision(2);
+    for (auto& point: whisker)
+    {
+        myfile << point.x << "," << point.y << "\n";
+    }
+
+    myfile.close();
+
 }
+
+std::string Whisker_Widget::_getWhiskerSaveName(int frame_id) {
+
+    if (_save_by_frame_name) {
+        auto frame_string = _data_manager->getMediaData()->GetFrameID(frame_id);
+        frame_string = remove_extension(frame_string);
+
+        //Strip off the img prefix and leave the number
+
+
+        return frame_string + ".csv";
+    } else {
+
+        std::string saveName = pad_frame_id(frame_id, 7) + ".csv";
+        return saveName;
+    }
+}
+
+
+void Whisker_Widget::_exportImageCSV()
+{
+
+    std::string folder = "./images/";
+
+    std::filesystem::create_directory(folder);
+    _saveImage(folder);
+
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    for (int i = 0; i<_num_whisker_to_track; i++)
+    {
+        std::string whisker_name = "whisker_" + std::to_string(i + 1);
+
+        auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
+
+        std::string folder = "./" + std::to_string(i) + "/";
+        std::filesystem::create_directory(folder);
+
+        _saveWhiskerAsCSV(folder, whiskers[0]);
+    }
+}
+
+std::string Whisker_Widget::_getImageSaveName(int frame_id)
+{
+    if (_save_by_frame_name)
+    {
+        auto saveName = _data_manager->getMediaData()->GetFrameID(frame_id);
+        return saveName;
+    } else {
+
+        std::string saveName = "img" + pad_frame_id(frame_id, 7) + ".png";
+        return saveName;
+    }
+}
+
+/////////////////////////////////////////////
 
 
 /**
@@ -191,11 +299,6 @@ void Whisker_Widget::_drawWhiskers() {
     _scene->UpdateCanvas();
 }
 
-void Whisker_Widget::_changeWhiskerLengthThreshold(double new_threshold) {
-    _wt->setWhiskerLengthThreshold(static_cast<float>(new_threshold));
-}
-
-//x
 void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
     float x_media = x_canvas / _scene->getXAspect();
@@ -278,34 +381,9 @@ void Whisker_Widget::_loadHDF5Whiskers()
     _scene->addMaskColor(mask_key, whisker_colors[mask_num]);
 }
 
-void Whisker_Widget::_selectFaceOrientation(int index) {
-    if (index == 0) {
-        _face_orientation = Face_Orientation::Facing_Top;
-    } else if (index == 1) {
-        _face_orientation = Face_Orientation::Facing_Bottom;
-    } else if (index == 2) {
-        _face_orientation = Face_Orientation::Facing_Left;
-    } else {
-        _face_orientation = Face_Orientation::Facing_Right;
-    }
-}
 
-void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
-    _num_whisker_to_track = n_whiskers;
 
-    if (n_whiskers == 0) {
-        return;
-    }
 
-    std::string whisker_name = "whisker_" + std::to_string(n_whiskers);
-
-    if (!_data_manager->getLine(whisker_name)) {
-        std::cout << "Creating " << whisker_name << std::endl;
-        _data_manager->createLine(whisker_name);
-        _scene->addLineDataToScene(whisker_name);
-        _scene->addLineColor(whisker_name,whisker_colors[n_whiskers-1]);
-    }
-}
 
 /**
  * @brief Whisker_Widget::_orderWhiskersByPosition
@@ -362,15 +440,6 @@ void Whisker_Widget::_orderWhiskersByPosition() {
     }
 }
 
-void _printBasePositionOrder(std::vector<Point2D> &base_positions) {
-    std::cout << "The order of whisker base positions: " << std::endl;
-
-    for (int i = 0; i < base_positions.size(); i++) {
-        std::cout << "Whisker " << i << " at " << "(" << base_positions[i].x << "," << base_positions[i].y << ")"
-                  << std::endl;
-    }
-}
-
 std::vector<Point2D> Whisker_Widget::_getWhiskerBasePositions() {
     auto base_positions = std::vector<Point2D>{};
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
@@ -386,88 +455,8 @@ std::vector<Point2D> Whisker_Widget::_getWhiskerBasePositions() {
     return base_positions;
 }
 
-void Whisker_Widget::_exportImageCSV()
-{
-
-    std::string folder = "./images/";
-
-    std::filesystem::create_directory(folder);
-    _saveImage(folder);
-
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-
-    for (int i = 0; i<_num_whisker_to_track; i++)
-    {
-        std::string whisker_name = "whisker_" + std::to_string(i + 1);
-
-        auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
-
-        std::string folder = "./" + std::to_string(i) + "/";
-        std::filesystem::create_directory(folder);
-
-        _saveWhiskerAsCSV(folder, whiskers[0]);
-    }
-}
-
-//https://stackoverflow.com/questions/6417817/easy-way-to-remove-extension-from-a-filename
-std::string remove_extension(const std::string& filename) {
-    size_t lastdot = filename.find_last_of(".");
-    if (lastdot == std::string::npos) return filename;
-    return filename.substr(0, lastdot);
-}
-
-std::string Whisker_Widget::_getImageSaveName(int frame_id)
-{
-    if (_save_by_frame_name)
-    {
-        auto saveName = _data_manager->getMediaData()->GetFrameID(frame_id);
-        return saveName;
-    } else {
-        std::stringstream ss;
-        ss << std::setw(7) << std::setfill('0') << frame_id;
-
-        std::string saveName = "img" + ss.str() + ".png";
-        return saveName;
-    }
-}
-
-std::string Whisker_Widget::_getWhiskerSaveName(int frame_id) {
-
-    if (_save_by_frame_name) {
-        auto frame_string = _data_manager->getMediaData()->GetFrameID(frame_id);
-        frame_string = remove_extension(frame_string);
-
-        //Strip off the img prefix and leave the number
 
 
-        return frame_string + ".csv";
-    } else {
-        std::stringstream ss;
-        ss << std::setw(7) << std::setfill('0') << frame_id;
-
-        std::string saveName = ss.str() + ".csv";
-        return saveName;
-    }
-}
-
-void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D>& whisker)
-{
-    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
-
-    auto saveName = _getWhiskerSaveName(frame_id);
-
-    std::fstream myfile;
-    myfile.open (folder + saveName, std::fstream::out);
-
-    myfile << std::fixed << std::setprecision(2);
-    for (auto& point: whisker)
-    {
-        myfile << point.x << "," << point.y << "\n";
-    }
-
-    myfile.close();
-
-}
 
 void Whisker_Widget::_openJaneliaConfig()
 {
@@ -487,4 +476,30 @@ void Whisker_Widget::LoadFrame(int frame_id)
 void Whisker_Widget::_setMaskAlpha(int alpha)
 {
     _scene->setMaskAlpha(alpha);
+}
+
+/////////////////////////////////////////////
+
+void _printBasePositionOrder(std::vector<Point2D> &base_positions) {
+    std::cout << "The order of whisker base positions: " << std::endl;
+
+    for (int i = 0; i < base_positions.size(); i++) {
+        std::cout << "Whisker " << i << " at " << "(" << base_positions[i].x << "," << base_positions[i].y << ")"
+                  << std::endl;
+    }
+}
+
+//https://stackoverflow.com/questions/6417817/easy-way-to-remove-extension-from-a-filename
+std::string remove_extension(const std::string& filename) {
+    size_t lastdot = filename.find_last_of(".");
+    if (lastdot == std::string::npos) return filename;
+    return filename.substr(0, lastdot);
+}
+
+std::string pad_frame_id(int frame_id, int pad_digits)
+{
+    std::stringstream ss;
+    ss << std::setw(pad_digits) << std::setfill('0') << frame_id;
+
+    return ss.str();
 }

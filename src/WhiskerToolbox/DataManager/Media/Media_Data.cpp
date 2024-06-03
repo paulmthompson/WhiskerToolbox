@@ -9,6 +9,11 @@ MediaData::MediaData() :
     setFormat(DisplayFormat::Gray);
 };
 
+MediaData::~MediaData()
+{
+
+}
+
 void MediaData::setFormat(DisplayFormat format)
 {
     _format = format;

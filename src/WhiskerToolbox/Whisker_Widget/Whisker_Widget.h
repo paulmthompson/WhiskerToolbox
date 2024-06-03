@@ -121,4 +121,8 @@ private slots:
 
 };
 
+void _printBasePositionOrder(std::vector<Point2D> &base_positions);
+std::string remove_extension(const std::string& filename);
+std::string pad_frame_id(int frame_id, int pad_digits);
+
 #endif // WHISKER_WIDGET_H
