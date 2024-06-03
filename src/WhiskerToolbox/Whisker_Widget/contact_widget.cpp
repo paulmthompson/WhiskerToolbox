@@ -52,14 +52,16 @@ Contact_Widget::~Contact_Widget() {
 
 void Contact_Widget::openWidget() {
 
-    connect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_contactButton()));
-    connect(ui->save_contact_button, SIGNAL(clicked()), this, SLOT(_saveContact()));
-    connect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
-    connect(ui->pole_select, SIGNAL(clicked()),this, SLOT(_poleSelectButton()));
-    connect(ui->bounding_box_size, SIGNAL(valueChanged(int)),this,SLOT(_setBoundingBoxWidth(int)));
-    connect(ui->flip_contact_button, SIGNAL(clicked()), this, SLOT(_flipContactButton()));
+    connect(ui->contact_button, &QPushButton::clicked, this, &Contact_Widget::_contactButton);
+    connect(ui->save_contact_button, &QPushButton::clicked, this, &Contact_Widget::_saveContact);
+    connect(ui->load_contact_button, &QPushButton::clicked, this, &Contact_Widget::_loadContact);
+    connect(ui->pole_select, &QPushButton::clicked,this, &Contact_Widget::_poleSelectButton);
 
-    connect(ui->contact_number, SIGNAL(valueChanged(int)),this,SLOT(_contactNumberSelect(int)));
+    connect(ui->bounding_box_size, &QSpinBox::valueChanged,this, &Contact_Widget::_setBoundingBoxWidth);
+
+    connect(ui->flip_contact_button, &QPushButton::clicked, this, &Contact_Widget::_flipContactButton);
+
+    connect(ui->contact_number, &QSpinBox::valueChanged,this, &Contact_Widget::_contactNumberSelect);
 
     if (_contact.empty()) {
         _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
@@ -70,14 +72,6 @@ void Contact_Widget::openWidget() {
 }
 
 void Contact_Widget::closeEvent(QCloseEvent *event) {
-
-    disconnect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_contactButton()));
-    disconnect(ui->save_contact_button, SIGNAL(clicked()), this, SLOT(_saveContact()));
-    disconnect(ui->load_contact_button, SIGNAL(clicked()), this, SLOT(_loadContact()));
-    disconnect(ui->pole_select, SIGNAL(clicked()),this, SLOT(_poleSelectButton()));
-    disconnect(ui->bounding_box_size, SIGNAL(valueChanged(int)),this,SLOT(_setBoundingBoxWidth(int)));
-    disconnect(ui->contact_number, SIGNAL(valueChanged(int)),this,SLOT(_contactNumberSelect(int)));
-    disconnect(ui->flip_contact_button, SIGNAL(clicked()), this, SLOT(_flipContactButton()));
 
 }
 
