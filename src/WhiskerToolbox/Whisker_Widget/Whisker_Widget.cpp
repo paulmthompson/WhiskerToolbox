@@ -33,12 +33,18 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
         ui(new Ui::Whisker_Widget)
         {
     ui->setupUi(this);
+
     _data_manager->createLine("unlabeled_whiskers");
     _scene->addLineDataToScene("unlabeled_whiskers");
     _scene->addLineColor("unlabeled_whiskers",QColor("blue"));
     _janelia_config_widget = new Janelia_Config(_wt);
     _contact_widget = new Contact_Widget(_data_manager, time_scrollbar);
 
+    connect(ui->trace_button, &QPushButton::clicked, this, &Whisker_Widget::_traceButton);
+
+    connect(ui->save_image, &QPushButton::clicked, this, &Whisker_Widget::_saveImageButton);
+    connect(ui->save_whisker_mask, &QPushButton::clicked, this, &Whisker_Widget::_saveWhiskerMaskButton);
+    connect(ui->export_image_csv, &QPushButton::clicked, this, &Whisker_Widget::_exportImageCSV);
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -48,17 +54,13 @@ Whisker_Widget::~Whisker_Widget() {
 }
 
 void Whisker_Widget::openWidget() {
+
     std::cout << "Whisker Widget Opened" << std::endl;
 
-    connect(ui->trace_button, SIGNAL(clicked()), this, SLOT(_traceButton()));
     connect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
-
-    connect(ui->save_image, SIGNAL(clicked()), this, SLOT(_saveImageButton()));
-    connect(ui->save_whisker_mask, SIGNAL(clicked()), this, SLOT(_saveWhiskerMaskButton()));
 
     connect(ui->load_janelia_button, SIGNAL(clicked()), this, SLOT(_loadJaneliaWhiskers()));
     connect(ui->load_hdf5_button, SIGNAL(clicked()), this, SLOT(_loadHDF5Whiskers()));
-
 
     connect(ui->whisker_pad_select, SIGNAL(clicked()), this, SLOT(_selectWhiskerPad()));
     connect(ui->length_threshold_spinbox, SIGNAL(valueChanged(double)), this,
@@ -66,7 +68,7 @@ void Whisker_Widget::openWidget() {
 
     connect(ui->face_orientation, SIGNAL(currentIndexChanged(int)), this, SLOT(_selectFaceOrientation(int)));
     connect(ui->whisker_number, SIGNAL(valueChanged(int)), this, SLOT(_selectNumWhiskersToTrack(int)));
-    connect(ui->export_image_csv,SIGNAL(clicked()),this, SLOT(_exportImageCSV()));
+
 
     connect(ui->config_janelia_button, SIGNAL(clicked()), this, SLOT(_openJaneliaConfig()));
     connect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_openContactWidget()));
@@ -80,11 +82,7 @@ void Whisker_Widget::openWidget() {
 void Whisker_Widget::closeEvent(QCloseEvent *event) {
     std::cout << "Close event detected" << std::endl;
 
-    disconnect(ui->trace_button, SIGNAL(clicked()), this, SLOT(_traceButton()));
     disconnect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
-
-    disconnect(ui->save_image, SIGNAL(clicked()), this, SLOT(_saveImageButton()));
-    disconnect(ui->save_whisker_mask, SIGNAL(clicked()), this, SLOT(_saveWhiskerMaskButton()));
 
     disconnect(ui->load_janelia_button, SIGNAL(clicked()), this, SLOT(_loadJaneliaWhiskers()));
     disconnect(ui->whisker_pad_select, SIGNAL(clicked()), this, SLOT(_selectWhiskerPad()));
@@ -94,8 +92,6 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
 
     disconnect(ui->face_orientation, SIGNAL(currentIndexChanged(int)), this, SLOT(_selectFaceOrientation(int)));
     disconnect(ui->whisker_number, SIGNAL(valueChanged(int)), this, SLOT(_selectNumWhiskersToTrack(int)));
-
-    disconnect(ui->export_image_csv,SIGNAL(clicked()),this, SLOT(_exportImageCSV()));
 
     disconnect(ui->config_janelia_button, SIGNAL(clicked()), this, SLOT(_openJaneliaConfig()));
     disconnect(ui->contact_button, SIGNAL(clicked()), this, SLOT(_openContactWidget()));
