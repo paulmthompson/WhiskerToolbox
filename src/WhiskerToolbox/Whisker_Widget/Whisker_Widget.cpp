@@ -21,7 +21,7 @@ const std::vector<QColor> whisker_colors = {QColor("red"),
                                             QColor("yellow")};
 
 Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
-        QWidget(parent),
+        QMainWindow(parent),
         _wt{std::make_shared<WhiskerTracker>()},
         _scene{scene},
         _data_manager{data_manager},
@@ -55,7 +55,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     connect(ui->load_janelia_button, &QPushButton::clicked, this, &Whisker_Widget::_loadJaneliaWhiskers);
     connect(ui->load_hdf5_button, &QPushButton::clicked, this, &Whisker_Widget::_loadHDF5Whiskers);
 
-    connect(ui->contact_button, &QPushButton::clicked, this, &Whisker_Widget::_openContactWidget);
+    connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
     connect(ui->mask_alpha_slider, &QSlider::valueChanged, this, &Whisker_Widget::_setMaskAlpha);
 };

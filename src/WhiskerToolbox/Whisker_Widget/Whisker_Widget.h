@@ -1,7 +1,7 @@
 #ifndef WHISKER_WIDGET_H
 #define WHISKER_WIDGET_H
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QPointer>
 
 #include <memory>
@@ -41,7 +41,7 @@ This is our interface to using the Janelia whisker tracker.
 
 */
 
-class WHISKER_WIDGET_DLLOPT Whisker_Widget : public QWidget
+class WHISKER_WIDGET_DLLOPT Whisker_Widget : public QMainWindow
 {
     Q_OBJECT
 public:
