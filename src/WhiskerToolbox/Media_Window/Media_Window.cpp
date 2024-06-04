@@ -9,10 +9,13 @@ The Media_Window class
 
 */
 
+int const default_width = 640;
+int const default_height = 480;
+
 Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent) :
     QGraphicsScene(parent),
-    _canvasHeight{480},
-    _canvasWidth{640},
+    _canvasHeight{default_height},
+    _canvasWidth{default_width},
     _is_verbose{false},
     _data_manager{data_manager},
     _line_colors{},
@@ -217,22 +220,21 @@ QRgb Media_Window::_create_mask_plot_color(const std::string& mask_key) {
 
 void Media_Window::_plotMaskData()
 {
-    const float mask_height = 256.0;
-    const float mask_width = 256.0;
+    float const mask_height = 256.0;
+    float const mask_width = 256.0;
 
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-    auto xAspect = static_cast<float>(_canvasWidth) / mask_width;
-    auto yAspect = static_cast<float>(_canvasHeight) / mask_height;
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const xAspect = static_cast<float>(_canvasWidth) / mask_width;
+    auto const yAspect = static_cast<float>(_canvasHeight) / mask_height;
 
     int i =0;
-    for (const auto& mask_key : _masks_to_show)
+    for (auto const& mask_key : _masks_to_show)
     {
-
         auto plot_color = _create_mask_plot_color(mask_key);
 
-        auto maskData = _data_manager->getMask(mask_key)->getMasksAtTime(current_time);
+        auto const& maskData = _data_manager->getMask(mask_key)->getMasksAtTime(current_time);
 
-        for (const auto& single_mask : maskData) {
+        for (auto const& single_mask : maskData) {
 
             QImage mask_image(_canvasWidth, _canvasHeight,QImage::Format::Format_ARGB32);
 

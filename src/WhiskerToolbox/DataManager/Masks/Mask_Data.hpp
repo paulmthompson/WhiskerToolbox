@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 
+
 #include "Points/Point_Data.hpp"
 
 using Mask2D = std::vector<Point2D>;
@@ -15,7 +16,7 @@ public:
     void addMaskAtTime(const int time, const std::vector<float>& x, const std::vector<float>& y);
     void addMaskAtTime(const int time, const std::vector<Point2D> mask);
 
-    std::vector<Mask2D> getMasksAtTime(const int time);
+    std::vector<Mask2D> const& getMasksAtTime(const int time) const;
 protected:
 
 private:
