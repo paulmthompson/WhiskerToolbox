@@ -41,19 +41,19 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     _contact_widget = new Contact_Widget(_data_manager, time_scrollbar);
 
     connect(ui->trace_button, &QPushButton::clicked, this, &Whisker_Widget::_traceButton);
-    connect(ui->config_janelia_button, &QPushButton::clicked, this, &Whisker_Widget::_openJaneliaConfig);
+    connect(ui->actionJanelia_Settings, &QAction::triggered, this, &Whisker_Widget::_openJaneliaConfig);
     connect(ui->face_orientation, &QComboBox::currentIndexChanged, this, &Whisker_Widget::_selectFaceOrientation);
     connect(ui->length_threshold_spinbox, &QDoubleSpinBox::valueChanged, this,
             &Whisker_Widget::_changeWhiskerLengthThreshold);
     connect(ui->whisker_pad_select, &QPushButton::clicked, this, &Whisker_Widget::_selectWhiskerPad);
     connect(ui->whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectNumWhiskersToTrack);
 
-    connect(ui->save_image, &QPushButton::clicked, this, &Whisker_Widget::_saveImageButton);
-    connect(ui->save_whisker_mask, &QPushButton::clicked, this, &Whisker_Widget::_saveWhiskerMaskButton);
+    connect(ui->actionSave_Snapshot, &QAction::triggered, this, &Whisker_Widget::_saveImageButton);
+    connect(ui->actionSave_Whisker_Mask, &QAction::triggered, this, &Whisker_Widget::_saveWhiskerMaskButton);
     connect(ui->export_image_csv, &QPushButton::clicked, this, &Whisker_Widget::_exportImageCSV);
 
-    connect(ui->load_janelia_button, &QPushButton::clicked, this, &Whisker_Widget::_loadJaneliaWhiskers);
-    connect(ui->load_hdf5_button, &QPushButton::clicked, this, &Whisker_Widget::_loadHDF5Whiskers);
+    connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
+    connect(ui->actionMask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5Whiskers);
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 

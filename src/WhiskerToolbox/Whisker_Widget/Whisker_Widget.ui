@@ -6,279 +6,265 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>440</height>
+    <width>480</width>
+    <height>358</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="trace_button">
+   <widget class="QFrame" name="frame">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>40</y>
-      <width>75</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Trace</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="save_image">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>100</y>
-      <width>81</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Save Image</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="save_whisker_mask">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>130</y>
-      <width>131</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Save Whisker Mask</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="contact_button">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>210</y>
-      <width>161</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Open Contact Detection</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="load_janelia_button">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
+      <x>10</x>
       <y>30</y>
-      <width>161</width>
-      <height>24</height>
+      <width>241</width>
+      <height>281</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Load Janelia Whisker File</string>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
     </property>
-   </widget>
-   <widget class="QDoubleSpinBox" name="length_threshold_spinbox">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>290</y>
-      <width>62</width>
-      <height>22</height>
-     </rect>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
     </property>
-    <property name="maximum">
-     <double>600.000000000000000</double>
-    </property>
-    <property name="value">
-     <double>75.000000000000000</double>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>90</x>
-      <y>290</y>
-      <width>111</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Length Threshold</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="whisker_pad_select">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>320</y>
-      <width>111</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Whisker Pad Select</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="whisker_pad_pos_label">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>320</y>
-      <width>71</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>(0,0)</string>
-    </property>
-   </widget>
-   <widget class="QComboBox" name="face_orientation">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>350</y>
-      <width>101</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <item>
-     <property name="text">
-      <string>Facing Top</string>
+    <widget class="QPushButton" name="trace_button">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>75</width>
+       <height>24</height>
+      </rect>
      </property>
-    </item>
-    <item>
      <property name="text">
-      <string>Facing Bottom</string>
+      <string>Trace</string>
      </property>
-    </item>
-    <item>
+    </widget>
+    <widget class="QDoubleSpinBox" name="length_threshold_spinbox">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>80</y>
+       <width>62</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <double>600.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>75.000000000000000</double>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>80</x>
+       <y>80</y>
+       <width>111</width>
+       <height>16</height>
+      </rect>
+     </property>
      <property name="text">
-      <string>Facing Left</string>
+      <string>Length Threshold</string>
      </property>
-    </item>
-    <item>
+    </widget>
+    <widget class="QPushButton" name="whisker_pad_select">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>120</y>
+       <width>111</width>
+       <height>24</height>
+      </rect>
+     </property>
      <property name="text">
-      <string>Facing Right</string>
+      <string>Whisker Pad Select</string>
      </property>
-    </item>
+    </widget>
+    <widget class="QLabel" name="whisker_pad_pos_label">
+     <property name="geometry">
+      <rect>
+       <x>140</x>
+       <y>120</y>
+       <width>71</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>(0,0)</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="face_orientation">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>150</y>
+       <width>101</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <item>
+      <property name="text">
+       <string>Facing Top</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Facing Bottom</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Facing Left</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Facing Right</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>150</y>
+       <width>121</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Head Orientation</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="whisker_number">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>180</y>
+       <width>71</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <number>1</number>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>190</y>
+       <width>131</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Number of Whiskers</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="export_image_csv">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>220</y>
+       <width>151</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Export Image and CSV</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>10</y>
+       <width>121</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Whisker Tracing</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
    </widget>
-   <widget class="QLabel" name="label_2">
+   <widget class="QFrame" name="frame_2">
     <property name="geometry">
      <rect>
-      <x>130</x>
-      <y>350</y>
-      <width>121</width>
-      <height>16</height>
+      <x>250</x>
+      <y>30</y>
+      <width>191</width>
+      <height>161</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Head Orientation</string>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
     </property>
-   </widget>
-   <widget class="QLabel" name="label_3">
-    <property name="geometry">
-     <rect>
-      <x>130</x>
-      <y>390</y>
-      <width>131</width>
-      <height>16</height>
-     </rect>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
     </property>
-    <property name="text">
-     <string>Number of Whiskers</string>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="whisker_number">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>390</y>
-      <width>71</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>0</number>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="export_image_csv">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>140</y>
-      <width>151</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Export Image and CSV</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="config_janelia_button">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>110</y>
-      <width>151</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Change Janelia Parameter</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="load_hdf5_button">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>60</y>
-      <width>161</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Load HDF5 Whisker File</string>
-    </property>
-   </widget>
-   <widget class="QSlider" name="mask_alpha_slider">
-    <property name="geometry">
-     <rect>
-      <x>230</x>
-      <y>220</y>
-      <width>131</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-    <property name="value">
-     <number>50</number>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_4">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>250</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Mask Alpha</string>
-    </property>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>60</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Mask Alpha</string>
+     </property>
+    </widget>
+    <widget class="QSlider" name="mask_alpha_slider">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>40</y>
+       <width>131</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="value">
+      <number>50</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_6">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>10</y>
+       <width>121</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Display</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -286,7 +272,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>400</width>
+     <width>480</width>
      <height>22</height>
     </rect>
    </property>
@@ -302,6 +288,7 @@
     </widget>
     <addaction name="actionMask"/>
     <addaction name="menuLoad_Whiskers"/>
+    <addaction name="actionJanelia_Settings"/>
    </widget>
    <widget class="QMenu" name="menuContact">
     <property name="title">
@@ -309,6 +296,14 @@
     </property>
     <addaction name="actionOpen_Contact_Detection"/>
    </widget>
+   <widget class="QMenu" name="menuImage">
+    <property name="title">
+     <string>Image</string>
+    </property>
+    <addaction name="actionSave_Snapshot"/>
+    <addaction name="actionSave_Whisker_Mask"/>
+   </widget>
+   <addaction name="menuImage"/>
    <addaction name="menuWhisker"/>
    <addaction name="menuContact"/>
   </widget>
@@ -325,6 +320,21 @@
   <action name="actionLoad_Janelia_Whiskers">
    <property name="text">
     <string>Load Janelia Whiskers</string>
+   </property>
+  </action>
+  <action name="actionSave_Snapshot">
+   <property name="text">
+    <string>Save Snapshot</string>
+   </property>
+  </action>
+  <action name="actionSave_Whisker_Mask">
+   <property name="text">
+    <string>Save Whisker Mask</string>
+   </property>
+  </action>
+  <action name="actionJanelia_Settings">
+   <property name="text">
+    <string>Janelia Settings</string>
    </property>
   </action>
  </widget>
