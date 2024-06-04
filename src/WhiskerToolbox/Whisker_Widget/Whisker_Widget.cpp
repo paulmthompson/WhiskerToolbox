@@ -81,6 +81,22 @@ void Whisker_Widget::closeEvent(QCloseEvent *event) {
     disconnect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
 }
 
+void Whisker_Widget::keyPressEvent(QKeyEvent *event) {
+
+    //Data manager should be responsible for loading new value of data object
+    //Main window can update displays with new data object position
+    //Frame label is also updated.
+
+    if (event->key() == Qt::Key_T) {
+        _traceButton();
+    } else if (event->key() == Qt::Key_E){
+        _exportImageCSV();
+    } else {
+        QMainWindow::keyPressEvent(event);
+
+    }
+}
+
 /////////////////////////////////////////////
 
 void Whisker_Widget::_traceButton() {

@@ -213,7 +213,14 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
         ui->time_scrollbar->changeScrollBarValue(-1,true);
     } else {
         std::cout << "Key pressed but nothing to do" << std::endl;
-        QMainWindow::keyPressEvent(event);
+        if (_ww) {
+            if (_ww->isActiveWindow()) {
+                QApplication::sendEvent(_ww, event);
+                std::cout << "Whisker widget is active, so sending keypress there" << std::endl;
+            }
+        } else {
+            QMainWindow::keyPressEvent(event);
+        }
     }
 
 }

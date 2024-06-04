@@ -55,6 +55,7 @@ public slots:
     void LoadFrame(int frame_id);
 protected:
     void closeEvent(QCloseEvent *event);
+    void keyPressEvent(QKeyEvent *event);
 
 private:
     std::shared_ptr<WhiskerTracker> _wt;
