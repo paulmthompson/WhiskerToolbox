@@ -90,7 +90,7 @@ private:
     void _orderWhiskersByPosition();
     std::vector<Point2D> _getWhiskerBasePositions();
 
-    void _saveImage(const std::string folder);
+    void _saveImage(const std::string& folder);
     std::string _getImageSaveName(int frame_id);
     std::string _getWhiskerSaveName(int frame_id);
 
@@ -121,7 +121,7 @@ private slots:
 
 };
 
-void _printBasePositionOrder(std::vector<Point2D> &base_positions);
+void _printBasePositionOrder(const std::vector<Point2D> &base_positions);
 std::string remove_extension(const std::string& filename);
 std::string pad_frame_id(int frame_id, int pad_digits);
 

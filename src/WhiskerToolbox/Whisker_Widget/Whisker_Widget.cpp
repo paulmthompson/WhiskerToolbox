@@ -147,7 +147,7 @@ void Whisker_Widget::_saveImageButton() {
     _saveImage("./");
 }
 
-void Whisker_Widget::_saveImage(const std::string folder)
+void Whisker_Widget::_saveImage(const std::string& folder)
 {
     auto media = _data_manager->getMediaData();
     auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
@@ -421,7 +421,7 @@ void Whisker_Widget::_orderWhiskersByPosition() {
                   [&](int i1, int i2) { return base_positions[i1].x < base_positions[i2].x; });
     }
 
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    const auto current_time = _data_manager->getTime()->getLastLoadedFrame();
     auto whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
 
     for (int i = 0; i < _num_whisker_to_track; i++) {
@@ -442,9 +442,10 @@ void Whisker_Widget::_orderWhiskersByPosition() {
 
 std::vector<Point2D> Whisker_Widget::_getWhiskerBasePositions() {
     auto base_positions = std::vector<Point2D>{};
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    auto whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
+    const auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    const auto whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
 
     for (auto &whisker: whiskers) {
         base_positions.push_back(whisker[0]);
@@ -480,7 +481,7 @@ void Whisker_Widget::_setMaskAlpha(int alpha)
 
 /////////////////////////////////////////////
 
-void _printBasePositionOrder(std::vector<Point2D> &base_positions) {
+void _printBasePositionOrder(const std::vector<Point2D> &base_positions) {
     std::cout << "The order of whisker base positions: " << std::endl;
 
     for (int i = 0; i < base_positions.size(); i++) {
@@ -491,7 +492,7 @@ void _printBasePositionOrder(std::vector<Point2D> &base_positions) {
 
 //https://stackoverflow.com/questions/6417817/easy-way-to-remove-extension-from-a-filename
 std::string remove_extension(const std::string& filename) {
-    size_t lastdot = filename.find_last_of(".");
+    const size_t lastdot = filename.find_last_of(".");
     if (lastdot == std::string::npos) return filename;
     return filename.substr(0, lastdot);
 }
