@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 
 LineData::LineData()
 {
@@ -26,9 +27,15 @@ void LineData::addLineAtTime(int const time, std::vector<Point2D> const line)
     _data[time].push_back(line);
 }
 
-std::vector<Line2D> LineData::getLinesAtTime(int const time)
+std::vector<Line2D> const& LineData::getLinesAtTime(int const time) const
 {
-    return _data[time];
+    // [] operator is not const because it inserts if mask is not present
+    if (_data.find(time) != _data.end())
+    {
+        return _data.at(time);
+    } else {
+        std::cout << "Error. Mask does not exist at time " << std::to_string(time) << std::endl;
+    }
 }
 
 Line2D LineData::_createLine(std::vector<float> const& x, std::vector<float> const& y)
