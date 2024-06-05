@@ -23,9 +23,9 @@ void LineData::addLineAtTime(int const time, std::vector<float> const& x, std::v
     _data[time].push_back(new_line);
 }
 
-void LineData::addLineAtTime(int const time, std::vector<Point2D> const line)
+void LineData::addLineAtTime(int const time, std::vector<Point2D> const & line)
 {
-    _data[time].push_back(line);
+    _data[time].push_back(std::move(line));
 }
 
 std::vector<Line2D> const& LineData::getLinesAtTime(int const time) const
