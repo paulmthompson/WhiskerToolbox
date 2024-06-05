@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <string>
 
 #include "Points/Point_Data.hpp"
 
@@ -31,5 +32,6 @@ private:
     Line2D _createLine(const std::vector<float>& x, const std::vector<float>& y);
 };
 
+void save_line_as_csv(Line2D const& line, std::string const& filename, int const point_precision = 2);
 
 #endif // LINE_DATA_HPP

@@ -1,9 +1,10 @@
 
 #include "Whisker_Widget.h"
-#include "qevent.h"
+#include "DataManager/Lines/Line_Data.hpp"
 
 #include <QFileDialog>
 #include <QElapsedTimer>
+#include "qevent.h"
 
 #include <iomanip>
 #include <iostream>
@@ -217,21 +218,11 @@ void Whisker_Widget::_saveWhiskerMaskButton() {
 
 void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D>& whisker)
 {
-    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
     auto saveName = _getWhiskerSaveName(frame_id);
 
-    std::fstream myfile;
-    myfile.open (folder + saveName, std::fstream::out);
-
-    myfile << std::fixed << std::setprecision(2);
-    for (auto& point: whisker)
-    {
-        myfile << point.x << "," << point.y << "\n";
-    }
-
-    myfile.close();
-
+    save_line_as_csv(whisker, folder + saveName);
 }
 
 std::string Whisker_Widget::_getWhiskerSaveName(int frame_id) {

@@ -1,6 +1,9 @@
 
 #include "Line_Data.hpp"
 
+#include <fstream>
+#include <iomanip>
+
 LineData::LineData()
 {
 
@@ -38,4 +41,18 @@ Line2D LineData::_createLine(const std::vector<float>& x, const std::vector<floa
     }
 
     return new_line;
+}
+
+void save_line_as_csv(Line2D const& line, std::string const& filename, int const point_precision)
+{
+    std::fstream myfile;
+    myfile.open (filename, std::fstream::out);
+
+    myfile << std::fixed << std::setprecision(point_precision);
+    for (auto& point: line)
+    {
+        myfile << point.x << "," << point.y << "\n";
+    }
+
+    myfile.close();
 }
