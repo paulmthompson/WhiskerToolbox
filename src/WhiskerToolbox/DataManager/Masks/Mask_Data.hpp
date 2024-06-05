@@ -12,17 +12,17 @@ using Mask2D = std::vector<Point2D>;
 class MaskData {
 public:
     MaskData();
-    void clearMasksAtTime(const int time);
-    void addMaskAtTime(const int time, const std::vector<float>& x, const std::vector<float>& y);
-    void addMaskAtTime(const int time, const std::vector<Point2D> mask);
+    void clearMasksAtTime(int const time);
+    void addMaskAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y);
+    void addMaskAtTime(int const time, std::vector<Point2D> const mask);
 
-    std::vector<Mask2D> const& getMasksAtTime(const int time) const;
+    std::vector<Mask2D> const& getMasksAtTime(int const time) const;
 protected:
 
 private:
     std::map<int,std::vector<Mask2D>> _data;
 
-    Mask2D _createMask(const std::vector<float>& x, const std::vector<float>& y);
+    Mask2D _createMask(std::vector<float> const& x, std::vector<float> const& y);
 };
 
 

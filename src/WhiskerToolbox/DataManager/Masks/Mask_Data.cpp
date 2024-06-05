@@ -8,24 +8,24 @@ MaskData::MaskData()
 
 }
 
-void MaskData::clearMasksAtTime(const int time)
+void MaskData::clearMasksAtTime(int const time)
 {
     _data[time].clear();
 }
 
-void MaskData::addMaskAtTime(const int time, const std::vector<float>& x, const std::vector<float>& y)
+void MaskData::addMaskAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y)
 {
     auto new_mask = _createMask(x,y);
 
     _data[time].push_back(new_mask);
 }
 
-void MaskData::addMaskAtTime(const int time, const std::vector<Point2D> mask)
+void MaskData::addMaskAtTime(int const time, std::vector<Point2D> const mask)
 {
     _data[time].push_back(mask);
 }
 
-std::vector<Mask2D> const& MaskData::getMasksAtTime(const int time) const
+std::vector<Mask2D> const& MaskData::getMasksAtTime(int const time) const
 {
     // [] operator is not const because it inserts if mask is not present
     if (_data.find(time) != _data.end())
@@ -36,7 +36,7 @@ std::vector<Mask2D> const& MaskData::getMasksAtTime(const int time) const
     }
 }
 
-Mask2D MaskData::_createMask(const std::vector<float>& x, const std::vector<float>& y)
+Mask2D MaskData::_createMask(std::vector<float> const& x, std::vector<float> const& y)
 {
     auto new_mask = Mask2D{x.size()};
 
