@@ -14,7 +14,7 @@ MediaData::~MediaData()
 
 }
 
-void MediaData::setFormat(DisplayFormat format)
+void MediaData::setFormat(DisplayFormat const format)
 {
     _format = format;
     switch(_format)
@@ -32,24 +32,24 @@ void MediaData::setFormat(DisplayFormat format)
     _rawData.resize(_height * _width * _display_format_bytes);
 };
 
-void MediaData::updateHeight(int height)
+void MediaData::updateHeight(int const height)
 {
     _height = height;
     _rawData.resize(_height * _width * _display_format_bytes);
 };
 
-void MediaData::updateWidth(int width)
+void MediaData::updateWidth(int const width)
 {
     _width = width;
     _rawData.resize(_height * _width * _display_format_bytes);
 };
 
-void MediaData::LoadMedia(std::string name)
+void MediaData::LoadMedia(std::string const& name)
 {
     doLoadMedia(name);
 }
 
-std::vector<uint8_t> MediaData::getRawData(int frame_number)
+std::vector<uint8_t> const& MediaData::getRawData(int const frame_number)
 {
     LoadFrame(frame_number);
     return _rawData;

@@ -23,26 +23,26 @@ public:
     virtual ~MediaData();
 
     std::string getFilename() const {return _filename;};
-    void setFilename(std::string filename) {_filename = filename;};
+    void setFilename(std::string const& filename) {_filename = filename;};
 
     enum DisplayFormat {
         Gray,
         Color
     };
 
-    void setFormat(DisplayFormat format);
+    void setFormat(DisplayFormat const format);
 
     DisplayFormat getFormat() const {return _format;};
 
     int getHeight() const {return _height;};
     int getWidth() const {return _width;};
 
-    void updateHeight(int height);
+    void updateHeight(int const height);
 
-    void updateWidth(int width);
+    void updateWidth(int const width);
 
     int getTotalFrameCount() const {return _totalFrameCount;};
-    void setTotalFrameCount(int total_frame_count) {_totalFrameCount = total_frame_count;};
+    void setTotalFrameCount(int const total_frame_count) {_totalFrameCount = total_frame_count;};
 
     /**
      *
@@ -51,7 +51,7 @@ public:
      * @brief LoadMedia
      * @param name points to the path to the file or folder
      */
-    void LoadMedia(std::string name);
+    void LoadMedia(std::string const& name);
 
     /**
      *
@@ -68,7 +68,7 @@ public:
 
     virtual std::string GetFrameID(int frame_id) {return "";};
 
-    std::vector<uint8_t> getRawData(int frame_number);
+    std::vector<uint8_t> const& getRawData(int const frame_number);
     void setRawData(std::vector<uint8_t> data) {_rawData = data;};
 
 protected:
