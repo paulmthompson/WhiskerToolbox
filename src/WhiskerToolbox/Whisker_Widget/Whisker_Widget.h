@@ -102,6 +102,7 @@ private slots:
 
     void _loadJaneliaWhiskers();
     void _loadHDF5Whiskers();
+    void _loadCSVWhiskers();
 
     void _selectWhiskerPad();
     void _changeWhiskerLengthThreshold(double new_threshold);

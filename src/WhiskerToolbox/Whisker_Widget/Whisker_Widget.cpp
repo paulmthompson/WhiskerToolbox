@@ -55,6 +55,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
     connect(ui->actionMask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5Whiskers);
+    connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadCSVWhiskers);
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
@@ -388,7 +389,20 @@ void Whisker_Widget::_loadHDF5Whiskers()
     _scene->addMaskColor(mask_key, whisker_colors[mask_num]);
 }
 
+void Whisker_Widget::_loadCSVWhiskers()
+{
+    auto filename = QFileDialog::getOpenFileName(
+        this,
+        "Load Whisker File",
+        QDir::currentPath(),
+        "All files (*.*) ;; whisker file (*.whiskers)");
 
+    if (filename.isNull()) {
+        return;
+    }
+
+    load_line_from_csv(filename.toStdString());
+}
 
 
 

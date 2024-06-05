@@ -285,6 +285,7 @@
       <string>Load Whiskers</string>
      </property>
      <addaction name="actionLoad_Janelia_Whiskers"/>
+     <addaction name="actionLoad_CSV_Whiskers"/>
     </widget>
     <addaction name="actionMask"/>
     <addaction name="menuLoad_Whiskers"/>
@@ -335,6 +336,11 @@
   <action name="actionJanelia_Settings">
    <property name="text">
     <string>Janelia Settings</string>
+   </property>
+  </action>
+  <action name="actionLoad_CSV_Whiskers">
+   <property name="text">
+    <string>Load CSV Whiskers</string>
    </property>
   </action>
  </widget>

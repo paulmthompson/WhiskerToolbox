@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 LineData::LineData()
 {
@@ -62,4 +63,31 @@ void save_line_as_csv(Line2D const& line, std::string const& filename, int const
     }
 
     myfile.close();
+}
+
+Line2D load_line_from_csv(std::string const& filename)
+{
+    std::string csv_line;
+
+    auto line_output = Line2D();
+
+    std::fstream myfile;
+    myfile.open (filename, std::fstream::in);
+
+    std::string x_str;
+    std::string y_str;
+
+    while (getline(myfile, csv_line)) {
+
+        std::stringstream ss(csv_line);
+
+        getline(ss, x_str, ',');
+        getline(ss, y_str);
+
+        //std::cout << x_str << " , " << y_str << std::endl;
+
+        line_output.push_back(Point2D{std::stof(x_str),std::stof(y_str)});
+    }
+
+    return line_output;
 }

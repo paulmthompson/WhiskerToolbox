@@ -34,4 +34,6 @@ private:
 
 void save_line_as_csv(Line2D const& line, std::string const& filename, int const point_precision = 2);
 
+Line2D load_line_from_csv(std::string const& filename);
+
 #endif // LINE_DATA_HPP
