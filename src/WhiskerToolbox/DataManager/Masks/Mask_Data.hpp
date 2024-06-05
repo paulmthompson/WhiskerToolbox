@@ -21,6 +21,7 @@ protected:
 
 private:
     std::map<int,std::vector<Mask2D>> _data;
+    std::vector<Mask2D> _empty;
 
     Mask2D _createMask(std::vector<float> const& x, std::vector<float> const& y);
 };

@@ -35,7 +35,7 @@ std::vector<Line2D> const& LineData::getLinesAtTime(int const time) const
     {
         return _data.at(time);
     } else {
-        std::cout << "Error. Mask does not exist at time " << std::to_string(time) << std::endl;
+        return _empty;
     }
 }
 

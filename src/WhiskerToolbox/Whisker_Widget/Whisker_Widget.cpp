@@ -149,14 +149,9 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
         return;
     }
 
-    std::string whisker_name = "whisker_" + std::to_string(n_whiskers);
+    std::string whisker_name = "whisker_" + std::to_string(n_whiskers-1);
 
-    if (!_data_manager->getLine(whisker_name)) {
-        std::cout << "Creating " << whisker_name << std::endl;
-        _data_manager->createLine(whisker_name);
-        _scene->addLineDataToScene(whisker_name);
-        _scene->addLineColor(whisker_name,whisker_colors[n_whiskers-1]);
-    }
+    _createNewWhisker(whisker_name, n_whiskers);
 }
 
 /////////////////////////////////////////////
@@ -282,6 +277,15 @@ std::string Whisker_Widget::_getImageSaveName(int const frame_id)
 
 /////////////////////////////////////////////
 
+void Whisker_Widget::_createNewWhisker(std::string const & whisker_name, const int whisker_id)
+{
+    if (!_data_manager->getLine(whisker_name)) {
+        std::cout << "Creating " << whisker_name << std::endl;
+        _data_manager->createLine(whisker_name);
+        _scene->addLineDataToScene(whisker_name);
+        _scene->addLineColor(whisker_name,whisker_colors[whisker_id]);
+    }
+}
 
 /**
  *
@@ -391,17 +395,33 @@ void Whisker_Widget::_loadHDF5Whiskers()
 
 void Whisker_Widget::_loadCSVWhiskers()
 {
-    auto filename = QFileDialog::getOpenFileName(
+    auto const dir_name =  QFileDialog::getExistingDirectory(
         this,
-        "Load Whisker File",
-        QDir::currentPath(),
-        "All files (*.*) ;; whisker file (*.whiskers)");
+        "Load Whisker CSV Files",
+        QDir::currentPath());
 
-    if (filename.isNull()) {
+    if (dir_name.isNull()) {
         return;
     }
 
-    load_line_from_csv(filename.toStdString());
+    auto dir_path = std::filesystem::path(dir_name.toStdString());
+    auto const whisker_number = std::stoi(dir_path.filename().string());
+
+    std::string const whisker_name = "whisker_" + std::to_string(whisker_number);
+
+    _createNewWhisker(whisker_name, whisker_number);
+
+    int whisker_count = 0;
+    for (const auto & entry : std::filesystem::directory_iterator(dir_name.toStdString()))
+    {
+        auto const frame_num = remove_extension(entry.path().filename().string());
+        auto whisker = load_line_from_csv(entry.path().string());
+        _data_manager->getLine(whisker_name)->addLineAtTime(std::stoi(frame_num), whisker);
+        whisker_count++;
+    }
+
+    std::cout << "Loaded " << whisker_count << " whiskers" << std::endl;
+
 }
 
 
@@ -455,7 +475,7 @@ void Whisker_Widget::_orderWhiskersByPosition() {
         std::cout << " with follicle at " << "(" << base_positions[base_position_order[i]].x << ","
                   << base_positions[base_position_order[i]].y << ")" << std::endl;
 
-        std::string whisker_name = "whisker_" + std::to_string(i + 1);
+        std::string whisker_name = "whisker_" + std::to_string(i);
 
         _data_manager->getLine(whisker_name)->addLineAtTime(current_time, whiskers[base_position_order[i]]);
     }

@@ -88,6 +88,7 @@ private:
 
     void _drawWhiskers();
     void _addWhiskersToData();
+    void _createNewWhisker(std::string const & whisker_name, int const whisker_id);
     void _orderWhiskersByPosition();
     std::vector<Point2D> _getWhiskerBasePositions();
 

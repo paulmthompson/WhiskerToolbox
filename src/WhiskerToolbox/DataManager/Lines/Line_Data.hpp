@@ -28,6 +28,7 @@ protected:
 
 private:
     std::map<int,std::vector<Line2D>> _data;
+    std::vector<Line2D> _empty;
 
     Line2D _createLine(std::vector<float> const& x, std::vector<float> const& y);
 };

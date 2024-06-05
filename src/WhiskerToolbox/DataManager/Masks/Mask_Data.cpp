@@ -32,7 +32,7 @@ std::vector<Mask2D> const& MaskData::getMasksAtTime(int const time) const
     {
         return _data.at(time);
     } else {
-        std::cout << "Error. Mask does not exist at time " << std::to_string(time) << std::endl;
+        return _empty;
     }
 }
 
