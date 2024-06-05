@@ -165,15 +165,15 @@ void Whisker_Widget::_saveImageButton() {
     _saveImage("./");
 }
 
-void Whisker_Widget::_saveImage(const std::string& folder)
+void Whisker_Widget::_saveImage(std::string const& folder)
 {
     auto media = _data_manager->getMediaData();
-    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
     auto data = media->getRawData(frame_id);
 
-    auto width = media->getWidth();
-    auto height = media->getHeight();
+    auto const width = media->getWidth();
+    auto const height = media->getHeight();
 
     QImage labeled_image(&data[0], width, height, QImage::Format_Grayscale8);
 
@@ -226,7 +226,7 @@ void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vec
     save_line_as_csv(whisker, folder + saveName);
 }
 
-std::string Whisker_Widget::_getWhiskerSaveName(int frame_id) {
+std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
 
     if (_save_by_frame_name) {
         auto frame_string = _data_manager->getMediaData()->GetFrameID(frame_id);
@@ -267,7 +267,7 @@ void Whisker_Widget::_exportImageCSV()
     }
 }
 
-std::string Whisker_Widget::_getImageSaveName(int frame_id)
+std::string Whisker_Widget::_getImageSaveName(int const frame_id)
 {
     if (_save_by_frame_name)
     {

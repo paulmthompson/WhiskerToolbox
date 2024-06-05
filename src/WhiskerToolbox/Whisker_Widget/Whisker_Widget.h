@@ -91,9 +91,9 @@ private:
     void _orderWhiskersByPosition();
     std::vector<Point2D> _getWhiskerBasePositions();
 
-    void _saveImage(const std::string& folder);
-    std::string _getImageSaveName(int frame_id);
-    std::string _getWhiskerSaveName(int frame_id);
+    void _saveImage(std::string const& folder);
+    std::string _getImageSaveName(int const frame_id);
+    std::string _getWhiskerSaveName(int const frame_id);
 
 private slots:
     void _traceButton();
@@ -114,7 +114,7 @@ private slots:
     void _clickedInVideo(qreal x,qreal y);
 
     void _exportImageCSV();
-    void _saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D>& whisker);
+    void _saveWhiskerAsCSV(std::string const& folder, std::vector<Point2D> const& whisker);
 
     void _openJaneliaConfig();
     void _openContactWidget();

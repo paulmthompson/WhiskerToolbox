@@ -50,11 +50,11 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
     void clearLines();
 
     void addMaskDataToScene(const std::string& mask_key);
-    void addMaskColor(const std::string& mask_key, const QColor color );
+    void addMaskColor(std::string const& mask_key, QColor const color );
 
     void clearMasks();
 
-    void setMaskAlpha(const int alpha) {_mask_alpha = alpha; UpdateCanvas();};
+    void setMaskAlpha(int const alpha) {_mask_alpha = alpha; UpdateCanvas();};
 
     /**
      *
@@ -125,7 +125,7 @@ private:
     void _convertNewMediaToQImage();
     void _plotLineData();
     void _plotMaskData();
-    QRgb _create_mask_plot_color(const std::string& mask_key);
+    QRgb _create_mask_plot_color(std::string const& mask_key);
 
 public slots:
     void LoadFrame(int frame_id);
