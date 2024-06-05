@@ -9,29 +9,29 @@ LineData::LineData()
 
 }
 
-void LineData::clearLinesAtTime(const int time)
+void LineData::clearLinesAtTime(int const time)
 {
     _data[time].clear();
 }
 
-void LineData::addLineAtTime(const int time, const std::vector<float>& x, const std::vector<float>& y)
+void LineData::addLineAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y)
 {
     auto new_line = _createLine(x,y);
 
     _data[time].push_back(new_line);
 }
 
-void LineData::addLineAtTime(const int time, const std::vector<Point2D> line)
+void LineData::addLineAtTime(int const time, std::vector<Point2D> const line)
 {
     _data[time].push_back(line);
 }
 
-std::vector<Line2D> LineData::getLinesAtTime(const int time)
+std::vector<Line2D> LineData::getLinesAtTime(int const time)
 {
     return _data[time];
 }
 
-Line2D LineData::_createLine(const std::vector<float>& x, const std::vector<float>& y)
+Line2D LineData::_createLine(std::vector<float> const& x, std::vector<float> const& y)
 {
     auto new_line = Line2D{x.size()};
 

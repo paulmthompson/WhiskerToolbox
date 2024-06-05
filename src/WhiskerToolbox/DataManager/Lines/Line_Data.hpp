@@ -19,17 +19,17 @@ using Line2D = std::vector<Point2D>;
 class DLLOPT LineData {
 public:
     LineData();
-    void clearLinesAtTime(const int time);
-    void addLineAtTime(const int time, const std::vector<float>& x, const std::vector<float>& y);
-    void addLineAtTime(const int time, const std::vector<Point2D> line);
+    void clearLinesAtTime(int const time);
+    void addLineAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y);
+    void addLineAtTime(int const time, std::vector<Point2D> const line);
 
-    std::vector<Line2D> getLinesAtTime(const int time);
+    std::vector<Line2D> getLinesAtTime(int const time);
 protected:
 
 private:
     std::map<int,std::vector<Line2D>> _data;
 
-    Line2D _createLine(const std::vector<float>& x, const std::vector<float>& y);
+    Line2D _createLine(std::vector<float> const& x, std::vector<float> const& y);
 };
 
 void save_line_as_csv(Line2D const& line, std::string const& filename, int const point_precision = 2);
