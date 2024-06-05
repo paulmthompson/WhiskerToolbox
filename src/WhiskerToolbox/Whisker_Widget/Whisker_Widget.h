@@ -61,6 +61,7 @@ private:
     std::shared_ptr<WhiskerTracker> _wt;
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
+    TimeScrollBar* _time_scrollbar;
     int _selected_whisker;
     enum Selection_Type {Whisker_Select,
                           Whisker_Pad_Select};
@@ -121,6 +122,8 @@ private slots:
     void _openContactWidget();
 
     void _setMaskAlpha(int);
+
+    void _skipToTrackedFrame(int index);
 
 };
 

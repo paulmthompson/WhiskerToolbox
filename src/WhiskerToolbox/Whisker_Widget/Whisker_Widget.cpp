@@ -14,6 +14,7 @@
 #include <filesystem>
 
 #include "ui_Whisker_Widget.h"
+#include "utils/container.hpp"
 
 const std::vector<QColor> whisker_colors = {QColor("red"),
                                             QColor("green"),
@@ -26,6 +27,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
         _wt{std::make_shared<WhiskerTracker>()},
         _scene{scene},
         _data_manager{data_manager},
+        _time_scrollbar{time_scrollbar},
         _selected_whisker{0},
         _selection_mode{Whisker_Select},
         _face_orientation{Facing_Top},
@@ -60,6 +62,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
     connect(ui->mask_alpha_slider, &QSlider::valueChanged, this, &Whisker_Widget::_setMaskAlpha);
+
+    connect(ui->tracked_whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_skipToTrackedFrame);
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -518,6 +522,13 @@ void Whisker_Widget::LoadFrame(int frame_id)
 void Whisker_Widget::_setMaskAlpha(int alpha)
 {
     _scene->setMaskAlpha(alpha);
+}
+
+void Whisker_Widget::_skipToTrackedFrame(int index)
+{
+    std::vector<int> tracked_frames = _data_manager->getLine("whisker_0")->getTimesWithLines();
+    auto frame_id = tracked_frames[index];
+    _time_scrollbar->changeScrollBarValue(frame_id);
 }
 
 /////////////////////////////////////////////

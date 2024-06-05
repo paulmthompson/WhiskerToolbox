@@ -6,6 +6,7 @@
 #include "Media/Image_Data.hpp"
 
 #include "utils/hdf5_mask_load.hpp"
+#include "utils/container.hpp"
 
 DataManager::DataManager() :
     _media{std::make_shared<MediaData>()},
@@ -68,7 +69,7 @@ std::shared_ptr<LineData> DataManager::getLine(const std::string line_key)
 
 std::vector<std::string> DataManager::getLineKeys()
 {
-    return _get_keys(_lines);
+    return get_keys(_lines);
 }
 
 void DataManager::createMask(const std::string& mask_key)
@@ -84,6 +85,6 @@ std::shared_ptr<MaskData> DataManager::getMask(const std::string& mask_key)
 
 std::vector<std::string> DataManager::getMaskKeys()
 {
-    return _get_keys(_masks);
+    return get_keys(_masks);
 }
 

@@ -53,18 +53,6 @@ private:
 
     std::shared_ptr<TimeFrame> _time;
 
-    template<typename T>
-    std::vector<std::string> _get_keys(std::unordered_map<std::string, T>& map)
-    {
-        //https://stackoverflow.com/questions/8483985/obtaining-list-of-keys-and-values-from-unordered-map
-        std::vector<std::string> keys;
-        keys.reserve(map.size());
-        for (auto kv : map) {
-            keys.push_back(kv.first);
-        }
-        return keys;
-    }
-
 };
 
 

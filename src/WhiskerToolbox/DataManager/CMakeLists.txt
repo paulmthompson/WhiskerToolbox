@@ -19,6 +19,7 @@ add_library(DataManager SHARED
         Masks/Mask_Data.hpp
         Points/Point_Data.hpp
         Masks/Mask_Data.cpp
+        utils/container.hpp
 )
 
 target_include_directories(DataManager PUBLIC

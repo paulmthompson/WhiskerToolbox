@@ -1,5 +1,6 @@
 
 #include "Line_Data.hpp"
+#include "utils/container.hpp"
 
 #include <fstream>
 #include <iomanip>
@@ -37,6 +38,16 @@ std::vector<Line2D> const& LineData::getLinesAtTime(int const time) const
     } else {
         return _empty;
     }
+}
+
+std::vector<int> LineData::getTimesWithLines() const
+{
+    std::vector<int> keys;
+    keys.reserve(_data.size());
+    for (auto kv : _data) {
+        keys.push_back(kv.first);
+    }
+    return keys;
 }
 
 Line2D LineData::_createLine(std::vector<float> const& x, std::vector<float> const& y)
