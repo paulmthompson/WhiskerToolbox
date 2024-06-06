@@ -57,7 +57,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
     connect(ui->actionMask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5Whiskers);
-    connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadCSVWhiskers);
+    connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
@@ -397,17 +397,8 @@ void Whisker_Widget::_loadHDF5Whiskers()
     _scene->addMaskColor(mask_key, whisker_colors[mask_num]);
 }
 
-void Whisker_Widget::_loadCSVWhiskers()
+void Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name)
 {
-    auto const dir_name =  QFileDialog::getExistingDirectory(
-        this,
-        "Load Whisker CSV Files",
-        QDir::currentPath()).toStdString();
-
-    if (dir_name.empty()) {
-        return;
-    }
-
     auto dir_path = std::filesystem::path(dir_name);
     auto const whisker_number = std::stoi(dir_path.filename().string());
 
@@ -425,7 +416,20 @@ void Whisker_Widget::_loadCSVWhiskers()
     }
 
     std::cout << "Loaded " << whisker_count << " whiskers" << std::endl;
+}
 
+void Whisker_Widget::_loadSingleCSVWhisker()
+{
+    auto const dir_name =  QFileDialog::getExistingDirectory(
+        this,
+        "Load Whisker CSV Files",
+        QDir::currentPath()).toStdString();
+
+    if (dir_name.empty()) {
+        return;
+    }
+
+    _loadCSVWhiskerFromDir(dir_name);
 }
 
 

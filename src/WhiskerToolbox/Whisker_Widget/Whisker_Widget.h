@@ -97,6 +97,8 @@ private:
     std::string _getImageSaveName(int const frame_id);
     std::string _getWhiskerSaveName(int const frame_id);
 
+    void _loadCSVWhiskerFromDir(std::string const & dir_name);
+
 private slots:
     void _traceButton();
     void _saveImageButton();
@@ -104,7 +106,7 @@ private slots:
 
     void _loadJaneliaWhiskers();
     void _loadHDF5Whiskers();
-    void _loadCSVWhiskers();
+    void _loadSingleCSVWhisker();
 
     void _selectWhiskerPad();
     void _changeWhiskerLengthThreshold(double new_threshold);
