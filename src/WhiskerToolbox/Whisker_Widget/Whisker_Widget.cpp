@@ -402,13 +402,13 @@ void Whisker_Widget::_loadCSVWhiskers()
     auto const dir_name =  QFileDialog::getExistingDirectory(
         this,
         "Load Whisker CSV Files",
-        QDir::currentPath());
+        QDir::currentPath()).toStdString();
 
-    if (dir_name.isNull()) {
+    if (dir_name.empty()) {
         return;
     }
 
-    auto dir_path = std::filesystem::path(dir_name.toStdString());
+    auto dir_path = std::filesystem::path(dir_name);
     auto const whisker_number = std::stoi(dir_path.filename().string());
 
     std::string const whisker_name = "whisker_" + std::to_string(whisker_number);
@@ -416,7 +416,7 @@ void Whisker_Widget::_loadCSVWhiskers()
     _createNewWhisker(whisker_name, whisker_number);
 
     int whisker_count = 0;
-    for (const auto & entry : std::filesystem::directory_iterator(dir_name.toStdString()))
+    for (const auto & entry : std::filesystem::directory_iterator(dir_name))
     {
         auto const frame_num = remove_extension(entry.path().filename().string());
         auto whisker = load_line_from_csv(entry.path().string());
