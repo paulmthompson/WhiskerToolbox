@@ -58,6 +58,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
     connect(ui->actionMask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5Whiskers);
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
+    connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
@@ -432,6 +433,26 @@ void Whisker_Widget::_loadSingleCSVWhisker()
     _loadCSVWhiskerFromDir(dir_name);
 }
 
+void Whisker_Widget::_loadMultiCSVWhiskers()
+{
+    auto const dir_name =  QFileDialog::getExistingDirectory(
+                              this,
+                              "Load Whisker CSV Files",
+                              QDir::currentPath()).toStdString();
+
+    if (dir_name.empty()) {
+        return;
+    }
+
+    for (const auto & entry : std::filesystem::directory_iterator(dir_name))
+    {
+        if (entry.is_directory())
+        {
+            _loadCSVWhiskerFromDir(entry.path().string());
+        }
+    }
+
+}
 
 
 /**
