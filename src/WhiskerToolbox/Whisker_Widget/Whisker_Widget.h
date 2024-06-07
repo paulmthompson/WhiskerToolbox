@@ -70,8 +70,6 @@ private:
     QPointer<Janelia_Config> _janelia_config_widget;
     QPointer<Contact_Widget> _contact_widget;
 
-    std::tuple<float,float> _whisker_pad;
-
     enum Face_Orientation {
         Facing_Top,
         Facing_Bottom,
