@@ -128,6 +128,8 @@ private slots:
 
     void _skipToTrackedFrame(int index);
 
+    void _calculateMask();
+
 };
 
 void _printBasePositionOrder(const std::vector<Point2D> &base_positions);

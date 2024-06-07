@@ -109,6 +109,8 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 target_link_libraries(WhiskerToolbox PRIVATE Media_Window)
 target_link_libraries(WhiskerToolbox PRIVATE Analog_Viewer)
 
+target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc)
+
 set_target_properties(WhiskerToolbox PROPERTIES
         MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
         MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}

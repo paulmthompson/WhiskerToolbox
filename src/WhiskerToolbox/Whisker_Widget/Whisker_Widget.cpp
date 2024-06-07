@@ -65,6 +65,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     connect(ui->mask_alpha_slider, &QSlider::valueChanged, this, &Whisker_Widget::_setMaskAlpha);
 
     connect(ui->tracked_whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_skipToTrackedFrame);
+
+    connect(ui->calculate_mask, &QPushButton::clicked, this, &Whisker_Widget::_calculateMask);
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -556,6 +558,30 @@ void Whisker_Widget::_skipToTrackedFrame(int index)
         auto frame_id = tracked_frames[index];
         _time_scrollbar->changeScrollBarValue(frame_id);
     }
+}
+
+void Whisker_Widget::_calculateMask()
+{
+    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
+
+    auto const media_data = _data_manager->getMediaData();
+
+    auto mask = media_data->getRawData(frame_id);
+
+    auto m2 = convert_vector_to_mat(mask, media_data->getWidth(), media_data->getHeight());
+
+    cv::medianBlur(m2,m2,35);
+
+    auto output = cv::Mat::zeros(m2.rows, m2.cols, CV_8UC1);
+
+    /*
+    auto wp = _whisker_t
+
+    cv::circle(output,getWhiskerPad())
+
+    cv::grabCut(m2, )
+*/
+
 }
 
 /////////////////////////////////////////////
