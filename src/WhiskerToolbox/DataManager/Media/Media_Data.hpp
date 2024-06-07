@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 
+#include "opencv2/opencv.hpp"
+
 #if defined _WIN32 || defined __CYGWIN__
     #define DLLOPT __declspec(dllexport)
     //#define DLLOPT __declspec(dllexport)
@@ -85,6 +87,10 @@ private:
     int _display_format_bytes;
 
     std::vector<uint8_t> _rawData;
+    std::map<std::string, std::function<void(cv::Mat& input)>> _process_chain;
+
 };
+
+inline cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int const height);
 
 #endif //WHISKERTOOLBOX_MEDIA_DATA_HPP

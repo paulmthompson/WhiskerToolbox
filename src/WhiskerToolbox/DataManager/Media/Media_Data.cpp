@@ -1,7 +1,7 @@
 
 #include "Media/Media_Data.hpp"
 
-#include "opencv2/opencv.hpp"
+
 
 MediaData::MediaData() :
     _width{640},
@@ -75,16 +75,29 @@ std::vector<uint8_t> MediaData::getProcessedData(const int frame_number)
 
     std::vector<uint8_t> output = _rawData;
 
-    cv::Mat m2{output, false};
+    auto m2 = convert_vector_to_mat(output, getWidth(),getHeight());
 
-    m2.reshape(getWidth(),getHeight());
-
-    cv::convertScaleAbs(m2, m2, 1.5, 0.0);
+    //cv::convertScaleAbs(m2, m2, 1.5, 0.0);
     //cv::medianBlur(m2,m2,15);
+
+    for (auto const & [key, process] : _process_chain)
+    {
+        process(m2);
+    }
 
     m2.reshape(1,getWidth()*getHeight());
 
     output.assign(m2.data, m2.data + m2.total() *m2.channels());
 
     return output;
+}
+
+inline cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int const height)
+{
+
+    cv::Mat m2{vec, false};
+
+    m2.reshape(width,height);
+
+    return m2;
 }
