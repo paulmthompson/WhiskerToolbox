@@ -156,7 +156,7 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
 
     std::string whisker_name = "whisker_" + std::to_string(n_whiskers-1);
 
-    _createNewWhisker(whisker_name, n_whiskers);
+    _createNewWhisker(whisker_name, n_whiskers-1);
 }
 
 /////////////////////////////////////////////
@@ -551,9 +551,11 @@ void Whisker_Widget::_setMaskAlpha(int alpha)
 
 void Whisker_Widget::_skipToTrackedFrame(int index)
 {
-    std::vector<int> tracked_frames = _data_manager->getLine("whisker_0")->getTimesWithLines();
-    auto frame_id = tracked_frames[index];
-    _time_scrollbar->changeScrollBarValue(frame_id);
+    if (_data_manager->getLine("whisker_0")) {
+        std::vector<int> tracked_frames = _data_manager->getLine("whisker_0")->getTimesWithLines();
+        auto frame_id = tracked_frames[index];
+        _time_scrollbar->changeScrollBarValue(frame_id);
+    }
 }
 
 /////////////////////////////////////////////
