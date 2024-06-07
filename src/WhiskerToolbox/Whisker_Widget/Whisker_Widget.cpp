@@ -52,7 +52,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     connect(ui->whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectNumWhiskersToTrack);
 
     connect(ui->actionSave_Snapshot, &QAction::triggered, this, &Whisker_Widget::_saveImageButton);
-    connect(ui->actionSave_Whisker_Mask, &QAction::triggered, this, &Whisker_Widget::_saveWhiskerMaskButton);
+    connect(ui->actionSave_Whisker_Mask, &QAction::triggered, this, &Whisker_Widget::_saveFaceMaskButton);
     connect(ui->export_image_csv, &QPushButton::clicked, this, &Whisker_Widget::_exportImageCSV);
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
@@ -186,34 +186,32 @@ void Whisker_Widget::_saveImage(std::string const& folder)
     labeled_image.save(QString::fromStdString(folder + saveName));
 }
 
-void Whisker_Widget::_saveWhiskerMaskButton() {
+void Whisker_Widget::_saveFaceMaskButton() {
 
-    auto media = _data_manager->getMediaData();
+    auto const media_data = _data_manager->getMediaData();
 
-    auto width = media->getWidth();
-    auto height = media->getHeight();
+    auto const width = media_data->getWidth();
+    auto const height = media_data->getHeight();
 
-    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
-    QImage mask_image(width, height, QImage::Format_Grayscale8);
+    auto mask = media_data->getRawData(frame_id);
 
-    mask_image.fill(Qt::black);
+    auto m2 = convert_vector_to_mat(mask, width, height);
 
-    if (!_wt->whiskers.empty()) {
+    cv::medianBlur(m2,m2,35);
 
-        auto &w = _wt->whiskers[_selected_whisker - 1];
+    m2.reshape(1,width*height);
 
-        for (int i = 0; i < w.x.size(); i++) {
+    mask.assign(m2.data, m2.data + m2.total() *m2.channels());
 
-            auto x = std::lround(w.x[i]);
-            auto y = std::lround(w.y[i]);
+    auto mask_image = QImage(&mask[0],
+                                 width,
+                                 height,
+                                  QImage::Format_Grayscale8
+                                 );
 
-            mask_image.setPixelColor(x, y, Qt::white);
-        }
-
-    }
-
-    std::string saveName = "w" + pad_frame_id(frame_id, 7) + ".png";
+    std::string saveName = "mask" + pad_frame_id(frame_id, 7) + ".png";
     std::cout << "Saving file " << saveName << std::endl;
 
     mask_image.save(QString::fromStdString(saveName));
@@ -572,15 +570,17 @@ void Whisker_Widget::_calculateMask()
 
     cv::medianBlur(m2,m2,35);
 
-    auto output = cv::Mat::zeros(m2.rows, m2.cols, CV_8UC1);
+    cv::Mat output = cv::Mat::zeros(m2.rows, m2.cols, CV_8UC1);
 
-    /*
-    auto wp = _whisker_t
+    auto const wp = _wt->getWhiskerPad();
 
-    cv::circle(output,getWhiskerPad())
+    cv::circle(output,cv::Point(
+                           static_cast<int>(std::get<0>(wp)),
+                                 static_cast<int>(std::get<1>(wp))
+                        ),10.0, cv::Scalar(255,255,255));
 
-    cv::grabCut(m2, )
-*/
+    //cv::grabCut(m2,output,)
+
 
 }
 
