@@ -1,6 +1,8 @@
 
 #include "Media/Media_Data.hpp"
 
+#include "opencv2/opencv.hpp"
+
 MediaData::MediaData() :
     _width{640},
     _height{480}
@@ -52,5 +54,17 @@ void MediaData::LoadMedia(std::string const& name)
 std::vector<uint8_t> const& MediaData::getRawData(int const frame_number)
 {
     LoadFrame(frame_number);
+
+    cv::Mat m2{_rawData, false};
+
+    m2.reshape(getWidth(),getHeight());
+
+    cv::convertScaleAbs(m2, m2, 1.5, 0.0);
+    //cv::medianBlur(m2,m2,15);
+
+    m2.reshape(1,getWidth()*getHeight());
+
+    _rawData.assign(m2.data, m2.data + m2.total() *m2.channels());
+
     return _rawData;
 }

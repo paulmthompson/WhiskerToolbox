@@ -33,3 +33,6 @@ target_link_libraries(DataManager PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(DataManager PRIVATE HighFive)
 target_link_libraries(DataManager PRIVATE HDF5::HDF5)
+
+target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc)
+
