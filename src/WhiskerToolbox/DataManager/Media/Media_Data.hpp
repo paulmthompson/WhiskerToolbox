@@ -71,6 +71,8 @@ public:
     std::vector<uint8_t> const& getRawData(int const frame_number);
     void setRawData(std::vector<uint8_t> data) {_rawData = data;};
 
+    std::vector<uint8_t> getProcessedData(const int frame_number);
+
 protected:
     virtual void doLoadMedia(std::string name) {return;};
 private:

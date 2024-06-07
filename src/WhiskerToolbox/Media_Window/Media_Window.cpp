@@ -99,7 +99,7 @@ void Media_Window::_convertNewMediaToQImage()
 {
     auto _media = _data_manager->getMediaData();
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
-    auto media_data = _media->getRawData(current_time);
+    auto media_data = _media->getProcessedData(current_time);
 
     auto unscaled_image = QImage(&media_data[0],
                                  _media->getWidth(),

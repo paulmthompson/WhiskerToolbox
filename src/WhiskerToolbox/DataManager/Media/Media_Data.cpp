@@ -68,3 +68,23 @@ std::vector<uint8_t> const& MediaData::getRawData(int const frame_number)
 
     return _rawData;
 }
+
+std::vector<uint8_t> MediaData::getProcessedData(const int frame_number)
+{
+    LoadFrame(frame_number);
+
+    std::vector<uint8_t> output = _rawData;
+
+    cv::Mat m2{output, false};
+
+    m2.reshape(getWidth(),getHeight());
+
+    cv::convertScaleAbs(m2, m2, 1.5, 0.0);
+    //cv::medianBlur(m2,m2,15);
+
+    m2.reshape(1,getWidth()*getHeight());
+
+    output.assign(m2.data, m2.data + m2.total() *m2.channels());
+
+    return output;
+}

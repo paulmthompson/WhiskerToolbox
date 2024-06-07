@@ -113,7 +113,7 @@ void Whisker_Widget::_traceButton() {
     auto media = _data_manager->getMediaData();
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    _wt->trace(media->getRawData(current_time), media->getHeight(), media->getWidth());
+    _wt->trace(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
 
 
     //Add lines to data manager
