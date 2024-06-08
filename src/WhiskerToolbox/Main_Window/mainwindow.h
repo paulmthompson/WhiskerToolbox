@@ -52,8 +52,6 @@ private slots:
     void Load_Video();
     void Load_Images();
 
-    void addCovariate();
-    void removeCovariate();
     void openWhiskerTracking();
     void openLabelMaker();
     void openAnalogViewer();

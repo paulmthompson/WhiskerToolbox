@@ -12,7 +12,6 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
-#include "Covariate_Widget/Covariate_Widget.h"
 #include "Whisker_Widget.h"
 
 #include <iostream>
@@ -64,9 +63,6 @@ void MainWindow::_createActions()
     connect(ui->actionLoad_Images, &QAction::triggered,this, &MainWindow::Load_Images);
 
     connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
-
-    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::addCovariate);
-    connect(ui->pushButton_2, &QPushButton::clicked, this, &MainWindow::removeCovariate);
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionLabel_Maker, &QAction::triggered, this, &MainWindow::openLabelMaker);
@@ -180,25 +176,6 @@ void MainWindow::openAnalogViewer()
         std::cout << "Analog Viewer already exists" << std::endl;
     }
     _analog_viewer->openWidget();
-}
-
-void MainWindow::addCovariate() {
-
-    auto item = new QListWidgetItem(ui->listWidget);
-    ui->listWidget->addItem(item);
-
-    auto myWidget = new Covariate_Widget(this);
-
-    item->setSizeHint(myWidget->frameSize());
-
-    ui->listWidget->setItemWidget(item,myWidget);
-
-}
-
-void MainWindow::removeCovariate() {
-    auto item = ui->listWidget->currentItem();
-    ui->listWidget->removeItemWidget(item);
-    delete item;
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
