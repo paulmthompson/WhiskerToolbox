@@ -24,7 +24,7 @@ void LineData::addLineAtTime(int const time, std::vector<float> const& x, std::v
     _data[time].push_back(new_line);
 }
 
-void LineData::addLineAtTime(int const time, std::vector<Point2D> const & line)
+void LineData::addLineAtTime(int const time, std::vector<Point2D<float>> const & line)
 {
     _data[time].push_back(std::move(line));
 }
@@ -56,7 +56,7 @@ Line2D LineData::_createLine(std::vector<float> const& x, std::vector<float> con
 
     for (int i = 0; i < x.size(); i++)
     {
-        new_line[i] = Point2D{x[i],y[i]};
+        new_line[i] = Point2D<float>{x[i],y[i]};
     }
 
     return new_line;
@@ -97,7 +97,7 @@ Line2D load_line_from_csv(std::string const& filename)
 
         //std::cout << x_str << " , " << y_str << std::endl;
 
-        line_output.push_back(Point2D{std::stof(x_str),std::stof(y_str)});
+        line_output.push_back(Point2D<float>{std::stof(x_str),std::stof(y_str)});
     }
 
     return line_output;

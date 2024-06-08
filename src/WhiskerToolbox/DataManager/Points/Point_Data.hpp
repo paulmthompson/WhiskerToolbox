@@ -2,9 +2,10 @@
 #define POINT_DATA_HPP
 
 
+template<typename T>
 struct Point2D {
-    float x;
-    float y;
+    T x;
+    T y;
 };
 
 

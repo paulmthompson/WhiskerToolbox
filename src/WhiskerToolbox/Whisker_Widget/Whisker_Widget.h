@@ -89,7 +89,7 @@ private:
     void _addWhiskersToData();
     void _createNewWhisker(std::string const & whisker_name, int const whisker_id);
     void _orderWhiskersByPosition();
-    std::vector<Point2D> _getWhiskerBasePositions();
+    std::vector<Point2D<float>> _getWhiskerBasePositions();
 
     void _saveImage(std::string const& folder);
     std::string _getImageSaveName(int const frame_id);
@@ -117,7 +117,7 @@ private slots:
     void _clickedInVideo(qreal x,qreal y);
 
     void _exportImageCSV();
-    void _saveWhiskerAsCSV(std::string const& folder, std::vector<Point2D> const& whisker);
+    void _saveWhiskerAsCSV(std::string const& folder, std::vector<Point2D<float>> const& whisker);
 
     void _openJaneliaConfig();
     void _openContactWidget();
@@ -130,7 +130,7 @@ private slots:
 
 };
 
-void _printBasePositionOrder(const std::vector<Point2D> &base_positions);
+void _printBasePositionOrder(const std::vector<Point2D<float>> &base_positions);
 std::string remove_extension(const std::string& filename);
 std::string pad_frame_id(int frame_id, int pad_digits);
 

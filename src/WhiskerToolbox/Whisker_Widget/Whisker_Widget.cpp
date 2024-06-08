@@ -217,7 +217,7 @@ void Whisker_Widget::_saveFaceMaskButton() {
     mask_image.save(QString::fromStdString(saveName));
 }
 
-void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D>& whisker)
+void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D<float>>& whisker)
 {
     auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
@@ -510,8 +510,8 @@ void Whisker_Widget::_orderWhiskersByPosition() {
     }
 }
 
-std::vector<Point2D> Whisker_Widget::_getWhiskerBasePositions() {
-    auto base_positions = std::vector<Point2D>{};
+std::vector<Point2D<float>> Whisker_Widget::_getWhiskerBasePositions() {
+    auto base_positions = std::vector<Point2D<float>>{};
 
     const auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
@@ -586,7 +586,7 @@ void Whisker_Widget::_calculateMask()
 
 /////////////////////////////////////////////
 
-void _printBasePositionOrder(const std::vector<Point2D> &base_positions) {
+void _printBasePositionOrder(const std::vector<Point2D<float>> &base_positions) {
     std::cout << "The order of whisker base positions: " << std::endl;
 
     for (int i = 0; i < base_positions.size(); i++) {
