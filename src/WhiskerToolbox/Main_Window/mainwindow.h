@@ -55,5 +55,6 @@ private slots:
     void openWhiskerTracking();
     void openLabelMaker();
     void openAnalogViewer();
+    void openImageProcessing();
 };
 #endif // MAINWINDOW_H

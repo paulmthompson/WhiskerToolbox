@@ -67,7 +67,7 @@ void MainWindow::_createActions()
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionLabel_Maker, &QAction::triggered, this, &MainWindow::openLabelMaker);
     connect(ui->actionAnalog_Viewer, &QAction::triggered, this, &MainWindow::openAnalogViewer);
-
+    connect(ui->actionImage_Processing, &QAction::triggered, this, &MainWindow::openImageProcessing);
 }
 
 /*
@@ -176,6 +176,11 @@ void MainWindow::openAnalogViewer()
         std::cout << "Analog Viewer already exists" << std::endl;
     }
     _analog_viewer->openWidget();
+}
+
+void MainWindow::openImageProcessing()
+{
+
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {

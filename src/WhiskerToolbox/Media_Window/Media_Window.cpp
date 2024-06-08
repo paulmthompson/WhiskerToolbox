@@ -236,16 +236,20 @@ void Media_Window::_plotMaskData()
 
         for (auto const& single_mask : maskData) {
 
-            QImage mask_image(_canvasWidth, _canvasHeight,QImage::Format::Format_ARGB32);
+            QImage unscaled_mask_image(mask_width, mask_height,QImage::Format::Format_ARGB32);
+
+            unscaled_mask_image.fill(0);
 
             for (int i = 0; i < single_mask.size(); i ++)
             {
-                mask_image.setPixel(
-                    QPoint(single_mask[i].y * xAspect, single_mask[i].x * yAspect),
+                unscaled_mask_image.setPixel(
+                    QPoint(single_mask[i].y, single_mask[i].x),
                     plot_color);
             }
 
-            auto maskPixmap = addPixmap(QPixmap::fromImage(mask_image));
+            auto scaled_mask_image = unscaled_mask_image.scaled(_canvasWidth,_canvasHeight);
+
+            auto maskPixmap = addPixmap(QPixmap::fromImage(scaled_mask_image));
 
             _masks.append(maskPixmap);
         }
