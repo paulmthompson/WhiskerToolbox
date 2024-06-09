@@ -51,6 +51,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
             TimeScrollBar/TimeScrollBar.hpp
             TimeScrollBar/TimeScrollBar.cpp
             TimeScrollBar/TimeScrollBar.ui
+            Image_Processing_Widget/Image_Processing_Widget.hpp
+            Image_Processing_Widget/Image_Processing_Widget.cpp
+            Image_Processing_Widget/Image_Processing_Widget.ui
     )
     # Define target properties for Android with Qt 6 as:
     #    set_property(TARGET WhiskerToolbox APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

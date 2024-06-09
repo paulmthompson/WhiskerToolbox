@@ -180,7 +180,13 @@ void MainWindow::openAnalogViewer()
 
 void MainWindow::openImageProcessing()
 {
-
+    if (!_image_processing) {
+        _image_processing = new Image_Processing_Widget(_data_manager);
+        std::cout << "Image Processing Widget Constructed" << std::endl;
+    } else {
+        std::cout << "Image Processing Widget already exists" << std::endl;
+    }
+    _image_processing->openWidget();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {

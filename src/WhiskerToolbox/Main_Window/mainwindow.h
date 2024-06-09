@@ -11,6 +11,7 @@
 #include "Whisker_Widget.h"
 #include "Label_Widget.h"
 #include "analog_viewer.hpp"
+#include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 
 #include "TimeFrame.hpp"
 #include "DataManager.hpp"
@@ -36,6 +37,7 @@ private:
     QPointer<Whisker_Widget> _ww;
     QPointer<Label_Widget> _label_maker;
     QPointer<Analog_Viewer> _analog_viewer;
+    QPointer<Image_Processing_Widget> _image_processing;
 
     void _updateMedia();
 
