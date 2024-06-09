@@ -396,7 +396,7 @@
      <string>Image</string>
     </property>
     <addaction name="actionSave_Snapshot"/>
-    <addaction name="actionSave_Whisker_Mask"/>
+    <addaction name="actionSave_Face_Mask"/>
    </widget>
    <addaction name="menuImage"/>
    <addaction name="menuWhisker"/>
@@ -422,7 +422,7 @@
     <string>Save Snapshot</string>
    </property>
   </action>
-  <action name="actionSave_Whisker_Mask">
+  <action name="actionSave_Face_Mask">
    <property name="text">
     <string>Save Whisker Mask</string>
    </property>

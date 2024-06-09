@@ -52,7 +52,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     connect(ui->whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectNumWhiskersToTrack);
 
     connect(ui->actionSave_Snapshot, &QAction::triggered, this, &Whisker_Widget::_saveImageButton);
-    connect(ui->actionSave_Whisker_Mask, &QAction::triggered, this, &Whisker_Widget::_saveFaceMaskButton);
+    connect(ui->actionSave_Face_Mask, &QAction::triggered, this, &Whisker_Widget::_saveFaceMaskButton);
     connect(ui->export_image_csv, &QPushButton::clicked, this, &Whisker_Widget::_exportImageCSV);
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
