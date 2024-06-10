@@ -46,10 +46,10 @@ std::vector<Whisker_Seg> JaneliaTracker::find_segments(int iFrame, Image<uint8_t
     }
 
     //Reset static arrays to zero
-    std::fill(h.array.begin(),h.array.end(),0);
-    std::fill(th.array.begin(),th.array.end(),0);
-    std::fill(s.array.begin(),s.array.end(),0);
-    std::fill(mask.array.begin(),mask.array.end(),0);
+    std::fill(h.array.begin(),h.array.end(),0x0);
+    std::fill(th.array.begin(),th.array.end(),0.0f);
+    std::fill(s.array.begin(),s.array.end(),0.0f);
+    std::fill(mask.array.begin(),mask.array.end(),0x0);
 
     // Get contours, and compute correlations on perimeters
     switch(this->config._seed_method)
@@ -200,8 +200,8 @@ void JaneliaTracker::eliminate_redundant(std::vector<Whisker_Seg>& w_segs) {
                 }
             }
             if (min_cor < this->config._redundancy_thres) {
-                double w1_score = std::accumulate(w_segs[j].scores.begin(),w_segs[j].scores.end(),0);
-                double w2_score = std::accumulate(w_segs[i].scores.begin(),w_segs[i].scores.end(),0);
+                double w1_score = std::accumulate(w_segs[j].scores.begin(),w_segs[j].scores.end(),0.0);
+                double w2_score = std::accumulate(w_segs[i].scores.begin(),w_segs[i].scores.end(),0.0);
 
                 if (w1_score > w2_score)
                 {
