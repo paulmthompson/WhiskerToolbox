@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "Media_Window.h"
+#include "Media_Window.hpp"
 #include "DataManager.hpp"
 #include "label_maker.hpp"
 

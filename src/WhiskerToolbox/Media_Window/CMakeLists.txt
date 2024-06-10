@@ -5,7 +5,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 add_library(Media_Window SHARED
-        Media_Window.h
+        Media_Window.hpp
         Media_Window.cpp
 )
 

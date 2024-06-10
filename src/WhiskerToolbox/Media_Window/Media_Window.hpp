@@ -1,5 +1,5 @@
-#ifndef MEDIA_WINDOW_H
-#define MEDIA_WINDOW_H
+#ifndef MEDIA_WINDOW_HPP
+#define MEDIA_WINDOW_HPP
 
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
@@ -133,4 +133,4 @@ signals:
     void leftClick(qreal,qreal);
 };
 
-#endif // MEDIA_WINDOW_H
+#endif // MEDIA_WINDOW_HPP

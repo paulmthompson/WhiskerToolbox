@@ -7,7 +7,7 @@
 #include <QTimer>
 #include <QPointer>
 
-#include "Media_Window.h"
+#include "Media_Window.hpp"
 #include "Whisker_Widget.hpp"
 #include "Label_Widget.hpp"
 #include "analog_viewer.hpp"
