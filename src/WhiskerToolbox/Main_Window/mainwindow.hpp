@@ -1,5 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MAINWINDOW_HPP
+#define MAINWINDOW_HPP
 
 #include <QMainWindow>
 #include <QImage>
@@ -59,4 +59,4 @@ private slots:
     void openAnalogViewer();
     void openImageProcessing();
 };
-#endif // MAINWINDOW_H
+#endif // MAINWINDOW_HPP

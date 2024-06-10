@@ -17,7 +17,7 @@ set(PROJECT_SOURCES
         my_stylesheet.qss
 
         Main_Window/mainwindow.cpp
-        Main_Window/mainwindow.h
+        Main_Window/mainwindow.hpp
         Main_Window/mainwindow.ui
 
         Covariate_Widget/Covariate_Widget.h
