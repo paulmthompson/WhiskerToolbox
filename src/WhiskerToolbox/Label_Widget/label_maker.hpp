@@ -1,5 +1,5 @@
-#ifndef LABEL_MAKER_H
-#define LABEL_MAKER_H
+#ifndef LABEL_MAKER_HPP
+#define LABEL_MAKER_HPP
 
 #include <string>
 #include <map>
@@ -61,4 +61,4 @@ private:
     std::string _makeFrameName(std::string frame_id);
 };
 
-#endif // LABEL_MAKER_H
+#endif // LABEL_MAKER_HPP

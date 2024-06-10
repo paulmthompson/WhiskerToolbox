@@ -34,7 +34,7 @@ set(PROJECT_SOURCES
         Label_Widget/Label_Widget.h
         Label_Widget/Label_Widget.ui
         Label_Widget/Label_Widget.cpp
-        Label_Widget/label_maker.h
+        Label_Widget/label_maker.hpp
         Label_Widget/label_maker.cpp
 )
 
