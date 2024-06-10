@@ -1,7 +1,7 @@
 #ifndef IO_HPP
 #define IO_HPP
 
-#include "janelia.h"
+#include "janelia.hpp"
 
 #include <string>
 #include <iostream>

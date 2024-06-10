@@ -1,5 +1,5 @@
-#ifndef DETECTOR_BANK_H
-#define DETECTOR_BANK_H
+#ifndef DETECTOR_BANK_HPP
+#define DETECTOR_BANK_HPP
 
 #include <vector>
 #include <unordered_map>
@@ -221,4 +221,4 @@ void Simple_Circle_Primitive(std::array<point,N>& verts, point center, float rad
 template <std::size_t N>
 void Multiply_Pixel_Overlap(std::array<point,N>& xy, float gain, float boundary, float *grid, int *strides );
 
-#endif // DETECTOR_BANK_H
+#endif // DETECTOR_BANK_HPP

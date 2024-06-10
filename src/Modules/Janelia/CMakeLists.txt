@@ -10,9 +10,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 add_library(janelia SHARED
-    janelia.h
+    janelia.hpp
     janelia.cpp
-    detector_bank.h
+    detector_bank.hpp
     detector_bank.cpp
     io.hpp)
 

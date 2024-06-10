@@ -1,5 +1,5 @@
 
-#include "janelia.h"
+#include "janelia.hpp"
 
 //Use this include before including cmath to get M_PI
 //If c++20, can switch to std::pi in the future to remove cmath

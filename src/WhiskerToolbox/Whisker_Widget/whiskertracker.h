@@ -6,7 +6,7 @@
 #include <string>
 #include <map>
 
-#include "janelia.h"
+#include "janelia.hpp"
 
 struct Whisker {
     int id; // unique identifier for whisker in frame, starting at 1

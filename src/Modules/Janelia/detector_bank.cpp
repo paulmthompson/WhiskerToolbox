@@ -1,5 +1,5 @@
 
-#include "detector_bank.h"
+#include "detector_bank.hpp"
 
 #include <numbers>
 #include <cmath>

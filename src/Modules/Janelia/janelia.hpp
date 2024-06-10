@@ -1,12 +1,12 @@
-#ifndef JANELIA_H
-#define JANELIA_H
+#ifndef JANELIA_HPP
+#define JANELIA_HPP
 
 #include <cstdint>
 #include <vector>
 #include <memory>
 #include <optional>
 
-#include "detector_bank.h"
+#include "detector_bank.hpp"
 
 struct Whisker_Seg {
 
@@ -154,4 +154,4 @@ private:
   }                                                                 \
 }
 
-#endif // JANELIA_H
+#endif // JANELIA_HPP
