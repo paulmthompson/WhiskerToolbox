@@ -31,7 +31,7 @@ set(PROJECT_SOURCES
         Whisker_Widget/Whisker_Widget.cpp
         Whisker_Widget/whiskertracker.cpp
 
-        Label_Widget/Label_Widget.h
+        Label_Widget/Label_Widget.hpp
         Label_Widget/Label_Widget.ui
         Label_Widget/Label_Widget.cpp
         Label_Widget/label_maker.hpp

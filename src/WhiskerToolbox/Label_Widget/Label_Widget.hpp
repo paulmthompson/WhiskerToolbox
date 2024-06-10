@@ -1,5 +1,5 @@
-#ifndef LABEL_WIDGET_H
-#define LABEL_WIDGET_H
+#ifndef LABEL_WIDGET_HPP
+#define LABEL_WIDGET_HPP
 
 #include <QWidget>
 
@@ -44,4 +44,4 @@ private slots:
   void _changeLabelName();
 };
 
-#endif // LABEL_WIDGET_H
+#endif // LABEL_WIDGET_HPP
