@@ -37,6 +37,7 @@ set(VCPKG_MANIFEST_MODE ON)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(CMAKE_SUPPORT_WINDOWS_EXPORT_ALL_SYMBOLS 1)
 
+#set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 #=============================
 # Externally Provided Content
 #=============================

@@ -6,12 +6,10 @@
 //https://stackoverflow.com/questions/6563810/m-pi-works-with-math-h-but-not-with-cmath-in-visual-studio
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include <cfloat>
 #include <algorithm>
 #include <numeric>
 #include <stdio.h>
 #include <chrono>  // for high_resolution_clock
-#include <iostream>
 
 JaneliaTracker::JaneliaTracker()
 {

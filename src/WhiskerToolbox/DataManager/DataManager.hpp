@@ -11,14 +11,7 @@
 #include <vector>
 #include <unordered_map>
 
-#if defined _WIN32 || defined __CYGWIN__
-    #define DLLOPT
-    //#define DLLOPT __declspec(dllexport)
-#else
-    #define DLLOPT __attribute__((visibility("default")))
-#endif
-
-class DLLOPT DataManager {
+class DataManager {
 
 public:
     DataManager();
