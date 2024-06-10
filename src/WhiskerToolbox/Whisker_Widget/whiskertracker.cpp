@@ -1,4 +1,4 @@
-#include "whiskertracker.h"
+#include "whiskertracker.hpp"
 
 #include <algorithm>
 #include <cmath>

@@ -1,5 +1,5 @@
-#ifndef WHISKERTRACKER_H
-#define WHISKERTRACKER_H
+#ifndef WHISKERTRACKER_HPP
+#define WHISKERTRACKER_HPP
 
 #include <unordered_map>
 #include <vector>
@@ -91,4 +91,4 @@ private:
 
 
 
-#endif // WHISKERTRACKER_H
+#endif // WHISKERTRACKER_HPP

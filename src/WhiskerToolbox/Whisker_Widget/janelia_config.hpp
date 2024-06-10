@@ -3,7 +3,7 @@
 
 
 #include <QWidget>
-#include "whiskertracker.h"
+#include "whiskertracker.hpp"
 
 #include <memory>
 

@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include "whiskertracker.h"
+#include "whiskertracker.hpp"
 #include "Media_Window.h"
 #include "janelia_config.hpp"
 #include "contact_widget.hpp"

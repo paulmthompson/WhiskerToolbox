@@ -27,7 +27,7 @@ set(PROJECT_SOURCES
 
         Whisker_Widget/Whisker_Widget.h
         Whisker_Widget/Whisker_Widget.ui
-        Whisker_Widget/whiskertracker.h
+        Whisker_Widget/whiskertracker.hpp
         Whisker_Widget/Whisker_Widget.cpp
         Whisker_Widget/whiskertracker.cpp
 
