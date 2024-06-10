@@ -12,8 +12,6 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
-#include "Whisker_Widget.h"
-
 #include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)

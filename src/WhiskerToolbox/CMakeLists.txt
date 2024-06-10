@@ -25,7 +25,7 @@ set(PROJECT_SOURCES
         Covariate_Widget/Covariate_Config.h
         Covariate_Widget/Covariate_Config.ui
 
-        Whisker_Widget/Whisker_Widget.h
+        Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
         Whisker_Widget/whiskertracker.hpp
         Whisker_Widget/Whisker_Widget.cpp

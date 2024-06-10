@@ -1,5 +1,5 @@
 
-#include "Whisker_Widget.h"
+#include "Whisker_Widget.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 
 #include <QFileDialog>

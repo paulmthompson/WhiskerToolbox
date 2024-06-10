@@ -8,7 +8,7 @@
 #include <QPointer>
 
 #include "Media_Window.h"
-#include "Whisker_Widget.h"
+#include "Whisker_Widget.hpp"
 #include "Label_Widget.hpp"
 #include "analog_viewer.hpp"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
