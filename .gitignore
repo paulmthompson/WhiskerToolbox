@@ -2,4 +2,6 @@ CMakeLists.txt.user
 CMakeLists.txt.user*
 out
 
+CMakeUserPresets.json
+
 .idea
