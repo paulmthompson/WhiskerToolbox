@@ -220,17 +220,15 @@ QRgb Media_Window::_create_mask_plot_color(const std::string& mask_key) {
 
 void Media_Window::_plotMaskData()
 {
-    float const mask_height = 256.0;
-    float const mask_width = 256.0;
-
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
-    auto const xAspect = static_cast<float>(_canvasWidth) / mask_width;
-    auto const yAspect = static_cast<float>(_canvasHeight) / mask_height;
 
     int i =0;
     for (auto const& mask_key : _masks_to_show)
     {
         auto plot_color = _create_mask_plot_color(mask_key);
+
+        float mask_height = static_cast<float>(_data_manager->getMask(mask_key)->getMaskHeight());
+        float mask_width = static_cast<float>(_data_manager->getMask(mask_key)->getMaskWidth());
 
         auto const& maskData = _data_manager->getMask(mask_key)->getMasksAtTime(current_time);
 

@@ -232,7 +232,36 @@ void Whisker_Widget::_loadFaceMask()
 
     auto image = QImage(face_mask_name);
 
-    std::cout << "Image is " << image.height() << " by " << image.width() << std::endl;
+    std::vector<float> x;
+    std::vector<float> y;
+
+    _data_manager->createMask("Face_Mask");
+
+    for (int x_pixel = 0; x_pixel < image.width(); x_pixel ++)
+    {
+        for (int y_pixel = 0; y_pixel < image.height(); y_pixel++)
+        {
+            auto pixel = image.pixel(x_pixel, y_pixel);
+
+            if (pixel != QColor("white").rgb())
+            {
+                x.push_back(x_pixel);
+                y.push_back(y_pixel);
+            }
+        }
+    }
+
+    auto mask = _data_manager->getMask("Face_Mask");
+
+    mask->setMaskWidth(image.width());
+    mask->setMaskHeight(image.height());
+
+    mask->addMaskAtTime(0, y, x);
+
+    _scene->addMaskDataToScene("Face_Mask");
+    _scene->addMaskColor("Face_Mask", QColor("Gray"));
+
+    std::cout << "Mask has " << x.size() << " pixels " <<  std::endl;
 }
 
 void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D<float>>& whisker)
