@@ -52,7 +52,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     connect(ui->whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectNumWhiskersToTrack);
 
     connect(ui->actionSave_Snapshot, &QAction::triggered, this, &Whisker_Widget::_saveImageButton);
-    connect(ui->actionSave_Face_Mask, &QAction::triggered, this, &Whisker_Widget::_saveFaceMaskButton);
+    connect(ui->actionSave_Face_Mask_2, &QAction::triggered, this, &Whisker_Widget::_saveFaceMask);
+    connect(ui->actionLoad_Face_Mask, &QAction::triggered, this, &Whisker_Widget::_loadFaceMask);
     connect(ui->export_image_csv, &QPushButton::clicked, this, &Whisker_Widget::_exportImageCSV);
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
@@ -186,7 +187,7 @@ void Whisker_Widget::_saveImage(std::string const& folder)
     labeled_image.save(QString::fromStdString(folder + saveName));
 }
 
-void Whisker_Widget::_saveFaceMaskButton() {
+void Whisker_Widget::_saveFaceMask() {
 
     auto const media_data = _data_manager->getMediaData();
 
@@ -215,6 +216,23 @@ void Whisker_Widget::_saveFaceMaskButton() {
     std::cout << "Saving file " << saveName << std::endl;
 
     mask_image.save(QString::fromStdString(saveName));
+}
+
+void Whisker_Widget::_loadFaceMask()
+{
+    auto face_mask_name = QFileDialog::getOpenFileName(
+        this,
+        "Load Face Mask",
+        QDir::currentPath(),
+        "All files (*.*)");
+
+    if (face_mask_name.isNull()) {
+        return;
+    }
+
+    auto image = QImage(face_mask_name);
+
+    std::cout << "Image is " << image.height() << " by " << image.width() << std::endl;
 }
 
 void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D<float>>& whisker)

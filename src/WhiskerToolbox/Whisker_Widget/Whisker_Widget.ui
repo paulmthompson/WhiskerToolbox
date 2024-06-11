@@ -395,8 +395,15 @@
     <property name="title">
      <string>Image</string>
     </property>
+    <widget class="QMenu" name="menuFace_Mask">
+     <property name="title">
+      <string>Face Mask</string>
+     </property>
+     <addaction name="actionSave_Face_Mask_2"/>
+     <addaction name="actionLoad_Face_Mask"/>
+    </widget>
     <addaction name="actionSave_Snapshot"/>
-    <addaction name="actionSave_Face_Mask"/>
+    <addaction name="menuFace_Mask"/>
    </widget>
    <addaction name="menuImage"/>
    <addaction name="menuWhisker"/>
@@ -422,11 +429,6 @@
     <string>Save Snapshot</string>
    </property>
   </action>
-  <action name="actionSave_Face_Mask">
-   <property name="text">
-    <string>Save Whisker Mask</string>
-   </property>
-  </action>
   <action name="actionJanelia_Settings">
    <property name="text">
     <string>Janelia Settings</string>
@@ -440,6 +442,16 @@
   <action name="actionLoad_CSV_Whiskers_Multiple">
    <property name="text">
     <string>Load CSV Whiskers (Multiple)</string>
+   </property>
+  </action>
+  <action name="actionSave_Face_Mask_2">
+   <property name="text">
+    <string>Save Face Mask</string>
+   </property>
+  </action>
+  <action name="actionLoad_Face_Mask">
+   <property name="text">
+    <string>Load Face Mask</string>
    </property>
   </action>
  </widget>

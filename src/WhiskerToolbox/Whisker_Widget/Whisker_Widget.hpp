@@ -100,7 +100,8 @@ private:
 private slots:
     void _traceButton();
     void _saveImageButton();
-    void _saveFaceMaskButton();
+    void _saveFaceMask();
+    void _loadFaceMask();
 
     void _loadJaneliaWhiskers();
     void _loadHDF5Whiskers();
