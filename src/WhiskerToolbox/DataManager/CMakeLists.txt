@@ -32,7 +32,8 @@ target_link_libraries(DataManager PRIVATE Qt${QT_VERSION_MAJOR}::Multimedia)
 target_link_libraries(DataManager PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(DataManager PRIVATE HighFive)
-target_link_libraries(DataManager PRIVATE HDF5::HDF5)
+#target_link_libraries(DataManager PRIVATE HDF5::HDF5)
+target_link_libraries(DataManager PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
 
 target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc)
 
