@@ -9,3 +9,14 @@ FetchContent_Declare(
 )
 
 add_subdirectory(ffmpeg_wrapper)
+
+FetchContent_Declare(
+  Whisker-Analysis
+  GIT_REPOSITORY https://github.com/paulmthompson/Whisker-Analysis.git
+  GIT_TAG bc307d64fb282a232f35598bc8637e27989a2ce9
+)
+
+add_subdirectory(Whisker-Analysis)
+
+#We should use make avaiable
+FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis)

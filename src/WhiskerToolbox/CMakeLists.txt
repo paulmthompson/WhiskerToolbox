@@ -27,9 +27,9 @@ set(PROJECT_SOURCES
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
-        Whisker_Widget/whiskertracker.hpp
+        #Whisker_Widget/whiskertracker.hpp
         Whisker_Widget/Whisker_Widget.cpp
-        Whisker_Widget/whiskertracker.cpp
+        #Whisker_Widget/whiskertracker.cpp
 
         Label_Widget/Label_Widget.hpp
         Label_Widget/Label_Widget.ui
@@ -92,10 +92,8 @@ add_subdirectory(Media_Window)
 add_subdirectory(AnalogViewer)
 
 target_include_directories(WhiskerToolbox PRIVATE
-        "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Modules/Janelia>"
 
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
-
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
@@ -107,7 +105,7 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-target_link_libraries(WhiskerToolbox PRIVATE janelia)
+target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 target_link_libraries(WhiskerToolbox PRIVATE Media_Window)
 target_link_libraries(WhiskerToolbox PRIVATE Analog_Viewer)
