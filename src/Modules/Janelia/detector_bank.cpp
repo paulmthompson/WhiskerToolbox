@@ -6,11 +6,13 @@
 #include <cfloat>
 
 int DetectorBank::compute_number_steps( Range r )
-{  return std::lround( (r.max - r.min) / r.step ) + 1;
+{
+    return std::lround( (r.max - r.min) / r.step ) + 1;
 }
 
 int DetectorBank::Get_Detector(const int ioffset, const int iwidth, const int iangle  )
-{ return iangle  * this->bank.strides_px[1]
+{
+    return iangle  * this->bank.strides_px[1]
             + iwidth  * this->bank.strides_px[2]
             + ioffset * this->bank.strides_px[3];
 }
@@ -308,8 +310,9 @@ void Simple_Line_Primitive( std::array<point,N>& verts, const point offset, cons
 template <size_t N>
 void rotate( std::array<point,N>& pbuf, const float angle)
 /* positive angle rotates counter clockwise */
-{ float s = sin(angle),
-            c = cos(angle);
+{
+    float s = sin(angle);
+    float c = cos(angle);
     for (auto& p : pbuf) {
         float x = p.x;
         float y = p.y;
@@ -368,8 +371,9 @@ void Sum_Pixel_Overlap(std::array<point,N>& xy, const float gain, float *grid, i
 }
 
 void pixel_to_vertex_array(const int p, const int stride, std::array<point,4>& v)
-{ float x = p%stride;
-    float y = p/stride;
+{
+    float x = p % stride;
+    float y = p / stride;
     v[0] = {x,y};
     v[1] = {x+1.0f, y};
     v[2] = {x+1.0f, y+1.0f};
