@@ -81,7 +81,7 @@ std::vector<uint8_t> MediaData::getProcessedData(const int frame_number)
     return output;
 }
 
-inline cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int const height)
+cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int const height)
 {
 
     cv::Mat m2{vec, false};
