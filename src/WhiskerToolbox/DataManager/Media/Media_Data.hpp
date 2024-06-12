@@ -86,5 +86,6 @@ private:
 };
 
 cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int const height);
+void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat const & mat, const int width, const int height);
 
 #endif //WHISKERTOOLBOX_MEDIA_DATA_HPP

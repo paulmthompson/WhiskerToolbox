@@ -86,7 +86,21 @@ cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int co
 
     cv::Mat m2{vec, false};
 
-    m2.reshape(width,height);
+    m2 = m2.reshape(0, width);
 
     return m2;
+}
+
+void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat const & mat, const int width, const int height) {
+
+    mat.reshape(1,width*height);
+
+    //https://stackoverflow.com/questions/26681713/convert-mat-to-array-vector-in-opencv
+    if (mat.isContinuous()) {
+        vec.assign(mat.data, mat.data + mat.total() * mat.channels());
+    } else {
+        for (int i = 0; i< mat.rows; i++) {
+            vec.insert(vec.end(), mat.ptr<uchar>(i),  mat.ptr<uchar>(i)+mat.cols*mat.channels());
+        }
+    }
 }
