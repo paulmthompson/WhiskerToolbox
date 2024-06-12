@@ -1,0 +1,34 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "my-msvc-release",
+      "inherits": [
+        "windows-msvc-release"
+      ],
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.2.4/msvc2019_64",
+        "QT_DIR": "C:/Qt/6.2.4/msvc2019_64/lib/cmake/Qt6"
+      }
+    }
+  ],
+  "buildPresets": [
+
+    {
+      "name": "my-msvc-release",
+      "configurePreset": "my-msvc-release"
+    }
+
+  ],
+  "testPresets": [
+    {
+      "name": "my-msvc-release",
+      "configurePreset": "my-msvc-release"
+    }
+  ]
+}

@@ -24,7 +24,7 @@ class Janelia_Config : public QWidget
     Q_OBJECT
 public:
 
-    Janelia_Config(std::shared_ptr<WhiskerTracker> tracker, QWidget *parent = 0);
+    Janelia_Config(std::shared_ptr<whisker::WhiskerTracker> tracker, QWidget *parent = 0);
 
     virtual ~Janelia_Config();
 
@@ -33,7 +33,7 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private:
-    std::shared_ptr<WhiskerTracker> _wt;
+    std::shared_ptr<whisker::WhiskerTracker> _wt;
     Ui::janelia_config *ui;
 
 

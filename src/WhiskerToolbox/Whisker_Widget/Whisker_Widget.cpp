@@ -22,9 +22,18 @@ const std::vector<QColor> whisker_colors = {QColor("red"),
                                             QColor("magenta"),
                                             QColor("yellow")};
 
+Line2D convert_to_Line2D(whisker::Line2D& line)
+{
+    auto output_line = Line2D();
+    for (auto const & p : line) {
+        output_line.push_back(Point2D<float>{p.x,p.y});
+    }
+    return output_line;
+}
+
 Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
         QMainWindow(parent),
-        _wt{std::make_shared<WhiskerTracker>()},
+        _wt{std::make_shared<whisker::WhiskerTracker>()},
         _scene{scene},
         _data_manager{data_manager},
         _time_scrollbar{time_scrollbar},
@@ -351,7 +360,7 @@ void Whisker_Widget::_addWhiskersToData() {
     _data_manager->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
     for (auto &w: _wt->whiskers) {
-        _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w.x, w.y);
+        _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, convert_to_Line2D(w));
     }
 
     if (_num_whisker_to_track > 0) {
@@ -407,7 +416,7 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
 
     for (auto &[time, whiskers_in_frame]: whiskers_from_janelia) {
         for (auto &w: whiskers_in_frame) {
-            _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(time, w.x, w.y);
+            _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(time, convert_to_Line2D(w));
         }
     }
 }
@@ -622,8 +631,8 @@ void Whisker_Widget::_calculateMask()
     auto const wp = _wt->getWhiskerPad();
 
     cv::circle(output,cv::Point(
-                           static_cast<int>(std::get<0>(wp)),
-                                 static_cast<int>(std::get<1>(wp))
+                           static_cast<int>(wp.x),
+                                 static_cast<int>(wp.y)
                         ),10.0, cv::Scalar(255,255,255));
 
     //cv::grabCut(m2,output,)

@@ -59,7 +59,7 @@ protected:
     void keyPressEvent(QKeyEvent *event);
 
 private:
-    std::shared_ptr<WhiskerTracker> _wt;
+    std::shared_ptr<whisker::WhiskerTracker> _wt;
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
