@@ -1,5 +1,17 @@
 #include "opencv_utility.hpp"
 
+#include "opencv2/imgcodecs.hpp"
+#include "opencv2/imgproc.hpp"
+
+cv::Mat load_mask(std::string const & filename)
+{
+    auto mat = cv::imread(filename);
+
+    cv::threshold(mat,mat,127,255,cv::THRESH_BINARY);
+
+    return mat;
+}
+
 cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int const height)
 {
 

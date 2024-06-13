@@ -6,17 +6,17 @@
 #include <QElapsedTimer>
 #include "qevent.h"
 
+#include "ui_Whisker_Widget.h"
+
+#include "opencv2/imgproc.hpp"
+#include "utils/opencv_utility.hpp"
+
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <filesystem>
 
-#include "ui_Whisker_Widget.h"
-
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/imgproc.hpp"
-#include "utils/opencv_utility.hpp"
 
 const std::vector<QColor> whisker_colors = {QColor("red"),
                                             QColor("green"),
@@ -240,11 +240,9 @@ void Whisker_Widget::_loadFaceMask()
         return;
     }
 
-    auto mat = cv::imread(face_mask_name.toStdString());
+    auto mat = load_mask(face_mask_name.toStdString());
 
     _data_manager->createMask("Face_Mask", mat.cols, mat.rows);
-
-    cv::threshold(mat,mat,127,255,cv::THRESH_BINARY);
 
     const int dilation_size = 5;
     cv::Mat element = cv::Mat::ones(dilation_size,dilation_size,CV_8U);
