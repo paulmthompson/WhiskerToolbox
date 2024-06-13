@@ -255,7 +255,7 @@ void Whisker_Widget::_loadFaceMask()
     std::vector<float> x;
     std::vector<float> y;
 
-    _data_manager->createMask("Face_Mask");
+    _data_manager->createMask("Face_Mask", mat.cols, mat.rows);
 
     for (int x_pixel = 0; x_pixel < mat.cols; x_pixel ++)
     {
@@ -272,9 +272,6 @@ void Whisker_Widget::_loadFaceMask()
     }
 
     auto mask = _data_manager->getMask("Face_Mask");
-
-    mask->setMaskWidth(mat.cols);
-    mask->setMaskHeight(mat.rows);
 
     mask->addMaskAtTime(0, y, x);
 

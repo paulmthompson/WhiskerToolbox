@@ -29,6 +29,7 @@ public:
     std::vector<std::string> getLineKeys();
 
     void createMask(const std::string& mask_key);
+    void createMask(const std::string& mask_key, int const width, int const height);
     std::shared_ptr<MaskData> getMask(const std::string& mask_key);
     std::vector<std::string> getMaskKeys();
 
