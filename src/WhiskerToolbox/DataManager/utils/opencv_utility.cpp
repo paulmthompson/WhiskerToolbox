@@ -55,3 +55,17 @@ std::vector<Point2D<float>> create_mask(cv::Mat const & mat)
 
     return mask_points;
 }
+
+void grow_mask(cv::Mat & mat, int const dilation_size)
+{
+    cv::Mat element = cv::Mat::ones(dilation_size,dilation_size,CV_8U);
+
+    cv::bitwise_not(mat, mat);
+    cv::dilate(mat, mat, element,cv::Point(-1,-1),1);
+    cv::bitwise_not(mat, mat);
+}
+
+void median_blur(cv::Mat & mat, int const kernel_size)
+{
+    cv::medianBlur(mat, mat , kernel_size);
+}

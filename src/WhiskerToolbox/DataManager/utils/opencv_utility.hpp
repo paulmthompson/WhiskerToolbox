@@ -16,4 +16,8 @@ std::vector<Point2D<float>> create_mask(cv::Mat const & mat);
 
 cv::Mat load_mask(std::string const & filename);
 
+void grow_mask(cv::Mat & mat, int const dilation_size);
+
+void median_blur(cv::Mat & mat, int const kernel_size);
+
 #endif // OPENCV_UTILITY_HPP

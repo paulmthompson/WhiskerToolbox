@@ -1,15 +1,14 @@
 
 #include "Whisker_Widget.hpp"
+
 #include "DataManager/Lines/Line_Data.hpp"
+#include "utils/opencv_utility.hpp"
 
 #include <QFileDialog>
 #include <QElapsedTimer>
 #include "qevent.h"
 
 #include "ui_Whisker_Widget.h"
-
-#include "opencv2/imgproc.hpp"
-#include "utils/opencv_utility.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -210,11 +209,9 @@ void Whisker_Widget::_saveFaceMask() {
 
     auto m2 = convert_vector_to_mat(mask, width, height);
 
-    cv::medianBlur(m2,m2,35);
+    median_blur(m2, 35);
 
-    m2 = m2.reshape(1,width*height);
-
-    mask.assign(m2.data, m2.data + m2.total() *m2.channels());
+    convert_mat_to_vector(mask, m2, width, height);
 
     auto mask_image = QImage(&mask[0],
                                  width,
@@ -245,11 +242,7 @@ void Whisker_Widget::_loadFaceMask()
     _data_manager->createMask("Face_Mask", mat.cols, mat.rows);
 
     const int dilation_size = 5;
-    cv::Mat element = cv::Mat::ones(dilation_size,dilation_size,CV_8U);
-
-    cv::bitwise_not(mat, mat);
-    cv::dilate(mat, mat, element,cv::Point(-1,-1),1);
-    cv::bitwise_not(mat, mat);
+    grow_mask(mat, dilation_size);
 
     auto mask_points = create_mask(mat);
 
