@@ -22,9 +22,9 @@ void MaskData::addMaskAtTime(int const time, std::vector<float> const& x, std::v
     _data[time].push_back(new_mask);
 }
 
-void MaskData::addMaskAtTime(int const time, std::vector<Point2D<float>> const mask)
+void MaskData::addMaskAtTime(int const time, std::vector<Point2D<float>> const & mask)
 {
-    _data[time].push_back(mask);
+    _data[time].push_back(std::move(mask));
 }
 
 std::vector<Mask2D> const& MaskData::getMasksAtTime(int const time) const

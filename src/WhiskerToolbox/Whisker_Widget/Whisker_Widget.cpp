@@ -243,6 +243,8 @@ void Whisker_Widget::_loadFaceMask()
 
     auto mat = cv::imread(face_mask_name.toStdString());
 
+    _data_manager->createMask("Face_Mask", mat.cols, mat.rows);
+
     cv::threshold(mat,mat,127,255,cv::THRESH_BINARY);
 
     const int dilation_size = 5;
@@ -252,11 +254,7 @@ void Whisker_Widget::_loadFaceMask()
     cv::dilate(mat, mat, element,cv::Point(-1,-1),1);
     cv::bitwise_not(mat, mat);
 
-    std::vector<float> x;
-    std::vector<float> y;
-
-    _data_manager->createMask("Face_Mask", mat.cols, mat.rows);
-
+    std::vector<Point2D<float>> mask_points;
     for (int x_pixel = 0; x_pixel < mat.cols; x_pixel ++)
     {
         for (int y_pixel = 0; y_pixel < mat.rows; y_pixel++)
@@ -265,20 +263,20 @@ void Whisker_Widget::_loadFaceMask()
 
             if (pixel == cv::Vec3b(0,0,0))
             {
-                x.push_back(x_pixel);
-                y.push_back(y_pixel);
+                mask_points.push_back(Point2D<float>{static_cast<float>(y_pixel),static_cast<float>(x_pixel)});
             }
         }
     }
 
     auto mask = _data_manager->getMask("Face_Mask");
 
-    mask->addMaskAtTime(0, y, x);
+    std::cout << "Mask has " << mask_points.size() << " pixels " <<  std::endl;
+
+    mask->addMaskAtTime(0,mask_points);
 
     _scene->addMaskDataToScene("Face_Mask");
     _scene->addMaskColor("Face_Mask", QColor("Gray"));
 
-    std::cout << "Mask has " << x.size() << " pixels " <<  std::endl;
 }
 
 void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D<float>>& whisker)

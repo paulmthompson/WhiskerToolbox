@@ -14,7 +14,7 @@ public:
     MaskData();
     void clearMasksAtTime(int const time);
     void addMaskAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y);
-    void addMaskAtTime(int const time, std::vector<Point2D<float>> const mask);
+    void addMaskAtTime(int const time, std::vector<Point2D<float>> const & mask);
 
     int getMaskHeight() const {return _mask_height;};
     int getMaskWidth() const {return _mask_width;};
