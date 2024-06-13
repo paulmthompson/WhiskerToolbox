@@ -128,6 +128,9 @@ private slots:
 
     void _skipToTrackedFrame(int index);
 
+    void _maskDilation(int dilation_size);
+    void _maskDilationExtended(int dilation_size);
+
 };
 
 void _printBasePositionOrder(const std::vector<Point2D<float>> &base_positions);

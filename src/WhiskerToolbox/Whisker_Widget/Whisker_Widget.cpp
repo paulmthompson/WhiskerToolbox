@@ -600,6 +600,19 @@ void Whisker_Widget::_skipToTrackedFrame(int index)
     }
 }
 
+
+void Whisker_Widget::_maskDilation(int dilation_size)
+{
+    auto mask = _data_manager->getMask("Face_Mask");
+
+    //convert mask to opencv
+}
+
+void Whisker_Widget::_maskDilationExtended(int dilation_size)
+{
+
+}
+
 /////////////////////////////////////////////
 
 void _printBasePositionOrder(const std::vector<Point2D<float>> &base_positions) {

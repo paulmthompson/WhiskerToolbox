@@ -22,6 +22,24 @@ cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int co
     return m2;
 }
 
+cv::Mat convert_vector_to_mat(std::vector<Point2D<float>>& vec, int const width, int const height)
+{
+
+    cv::Mat mat = cv::Mat::zeros(width, height, CV_8U);
+
+    for (auto const & p : vec)
+    {
+        auto x_pixel = std::lround(p.x);
+        auto y_pixel = std::lround(p.y);
+
+        auto & pixel = mat.at<cv::Vec3b>(y_pixel, x_pixel);
+
+        pixel = cv::Vec3b(255, 255, 255);
+    }
+
+    return mat;
+}
+
 void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat & mat, const int width, const int height)
 {
 
