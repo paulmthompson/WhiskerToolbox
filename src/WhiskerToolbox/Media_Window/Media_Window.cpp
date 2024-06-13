@@ -222,7 +222,6 @@ void Media_Window::_plotMaskData()
 {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    int i =0;
     for (auto const& mask_key : _masks_to_show)
     {
         auto plot_color = _create_mask_plot_color(mask_key);
@@ -232,25 +231,34 @@ void Media_Window::_plotMaskData()
 
         auto const& maskData = _data_manager->getMask(mask_key)->getMasksAtTime(current_time);
 
-        for (auto const& single_mask : maskData) {
+        _plotSingleMaskData(maskData, mask_width, mask_height, plot_color);
 
-            QImage unscaled_mask_image(mask_width, mask_height,QImage::Format::Format_ARGB32);
+        auto const& maskData2 = _data_manager->getMask(mask_key)->getMasksAtTime(-1);
 
-            unscaled_mask_image.fill(0);
+        _plotSingleMaskData(maskData2, mask_width, mask_height, plot_color);
 
-            for (int i = 0; i < single_mask.size(); i ++)
-            {
-                unscaled_mask_image.setPixel(
-                    QPoint(single_mask[i].x, single_mask[i].y),
-                    plot_color);
-            }
+    }
+}
 
-            auto scaled_mask_image = unscaled_mask_image.scaled(_canvasWidth,_canvasHeight);
+void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, int const mask_width, int const mask_height, QRgb plot_color)
+{
+    for (auto const& single_mask : maskData) {
 
-            auto maskPixmap = addPixmap(QPixmap::fromImage(scaled_mask_image));
+        QImage unscaled_mask_image(mask_width, mask_height,QImage::Format::Format_ARGB32);
 
-            _masks.append(maskPixmap);
+        unscaled_mask_image.fill(0);
+
+        for (int i = 0; i < single_mask.size(); i ++)
+        {
+            unscaled_mask_image.setPixel(
+                QPoint(single_mask[i].x, single_mask[i].y),
+                plot_color);
         }
-        i ++;
+
+        auto scaled_mask_image = unscaled_mask_image.scaled(_canvasWidth,_canvasHeight);
+
+        auto maskPixmap = addPixmap(QPixmap::fromImage(scaled_mask_image));
+
+        _masks.append(maskPixmap);
     }
 }

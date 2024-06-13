@@ -243,7 +243,7 @@ void Whisker_Widget::_loadFaceMask()
 
     _data_manager->createMask("Face_Mask_Original", mat.cols, mat.rows);
     auto mask_points_original = create_mask(mat);
-    _data_manager->getMask("Face_Mask_Original")->addMaskAtTime(0,mask_points_original);
+    _data_manager->getMask("Face_Mask_Original")->addMaskAtTime(-1,mask_points_original);
 
     _data_manager->createMask("Face_Mask", mat.cols, mat.rows);
 
@@ -256,7 +256,7 @@ void Whisker_Widget::_loadFaceMask()
 
     //std::cout << "Mask has " << mask_points.size() << " pixels " <<  std::endl;
 
-    mask->addMaskAtTime(0,mask_points);
+    mask->addMaskAtTime(-1,mask_points);
 
     _scene->addMaskDataToScene("Face_Mask");
     _scene->addMaskColor("Face_Mask", QColor("Gray"));
@@ -615,9 +615,11 @@ void Whisker_Widget::_maskDilation(int dilation_size)
         return;
     }
 
+    int const time = -1;
+
     auto original_mask = _data_manager->getMask("Face_Mask_Original");
 
-    auto mask_pixels = original_mask->getMasksAtTime(0)[0];
+    auto mask_pixels = original_mask->getMasksAtTime(time)[0];
 
     //convert mask to opencv
     auto mat = convert_vector_to_mat(mask_pixels, original_mask->getMaskWidth(), original_mask->getMaskHeight());
@@ -628,9 +630,9 @@ void Whisker_Widget::_maskDilation(int dilation_size)
 
     auto dilated_mask = _data_manager->getMask("Face_Mask");
 
-    dilated_mask->clearMasksAtTime(0);
+    dilated_mask->clearMasksAtTime(time);
 
-    dilated_mask->addMaskAtTime(0, new_mask );
+    dilated_mask->addMaskAtTime(time, new_mask );
 
     auto mask_for_tracker = std::vector<whisker::Point2D<float>>();
     for (auto const & p : new_mask) {
