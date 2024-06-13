@@ -427,8 +427,8 @@ void Whisker_Widget::_loadHDF5Whiskers()
 
     auto frames =  _data_manager->read_array_hdf5(filename.toStdString(), "frames");
     auto probs = _data_manager->read_ragged_hdf5(filename.toStdString(), "probs");
-    auto x_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "heights");
-    auto y_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "widths");
+    auto y_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "heights");
+    auto x_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "widths");
 
     auto mask_num = _data_manager->getMaskKeys().size();
 
