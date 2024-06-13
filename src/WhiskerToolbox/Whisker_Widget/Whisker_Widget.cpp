@@ -254,19 +254,7 @@ void Whisker_Widget::_loadFaceMask()
     cv::dilate(mat, mat, element,cv::Point(-1,-1),1);
     cv::bitwise_not(mat, mat);
 
-    std::vector<Point2D<float>> mask_points;
-    for (int x_pixel = 0; x_pixel < mat.cols; x_pixel ++)
-    {
-        for (int y_pixel = 0; y_pixel < mat.rows; y_pixel++)
-        {
-            auto & pixel = mat.at<cv::Vec3b>(y_pixel, x_pixel);
-
-            if (pixel == cv::Vec3b(0,0,0))
-            {
-                mask_points.push_back(Point2D<float>{static_cast<float>(y_pixel),static_cast<float>(x_pixel)});
-            }
-        }
-    }
+    auto mask_points = create_mask(mat);
 
     auto mask = _data_manager->getMask("Face_Mask");
 

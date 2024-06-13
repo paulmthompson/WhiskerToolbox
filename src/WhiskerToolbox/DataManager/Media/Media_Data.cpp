@@ -2,7 +2,6 @@
 #include "Media/Media_Data.hpp"
 
 
-
 MediaData::MediaData() :
     _width{640},
     _height{480}
@@ -91,7 +90,8 @@ cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int co
     return m2;
 }
 
-void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat const & mat, const int width, const int height) {
+void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat const & mat, const int width, const int height)
+{
 
     mat.reshape(1,width*height);
 
@@ -103,4 +103,23 @@ void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat const & mat, const
             vec.insert(vec.end(), mat.ptr<uchar>(i),  mat.ptr<uchar>(i)+mat.cols*mat.channels());
         }
     }
+}
+
+std::vector<Point2D<float>> create_mask(cv::Mat const & mat)
+{
+    std::vector<Point2D<float>> mask_points;
+    for (int x_pixel = 0; x_pixel < mat.cols; x_pixel ++)
+    {
+        for (int y_pixel = 0; y_pixel < mat.rows; y_pixel++)
+        {
+            auto & pixel = mat.at<cv::Vec3b>(y_pixel, x_pixel);
+
+            if (pixel == cv::Vec3b(0,0,0))
+            {
+                mask_points.push_back(Point2D<float>{static_cast<float>(y_pixel),static_cast<float>(x_pixel)});
+            }
+        }
+    }
+
+    return mask_points;
 }
