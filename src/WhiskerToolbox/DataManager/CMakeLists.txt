@@ -20,6 +20,8 @@ add_library(DataManager SHARED
         Points/Point_Data.hpp
         Masks/Mask_Data.cpp
         utils/container.hpp
+        utils/opencv_utility.hpp
+        utils/opencv_utility.cpp
 )
 
 target_include_directories(DataManager PUBLIC

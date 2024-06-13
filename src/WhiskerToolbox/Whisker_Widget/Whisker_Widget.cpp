@@ -9,14 +9,14 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <fstream>
 #include <string>
 #include <filesystem>
 
 #include "ui_Whisker_Widget.h"
-#include "utils/container.hpp"
 
 #include "opencv2/imgcodecs.hpp"
+#include "opencv2/imgproc.hpp"
+#include "utils/opencv_utility.hpp"
 
 const std::vector<QColor> whisker_colors = {QColor("red"),
                                             QColor("green"),
@@ -78,7 +78,6 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
 
     connect(ui->tracked_whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_skipToTrackedFrame);
 
-    connect(ui->calculate_mask, &QPushButton::clicked, this, &Whisker_Widget::_calculateMask);
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -213,7 +212,7 @@ void Whisker_Widget::_saveFaceMask() {
 
     cv::medianBlur(m2,m2,35);
 
-    m2.reshape(1,width*height);
+    m2 = m2.reshape(1,width*height);
 
     mask.assign(m2.data, m2.data + m2.total() *m2.channels());
 
@@ -264,6 +263,8 @@ void Whisker_Widget::_loadFaceMask()
 
     _scene->addMaskDataToScene("Face_Mask");
     _scene->addMaskColor("Face_Mask", QColor("Gray"));
+
+    ui->mask_file_label->setText(face_mask_name);
 
 }
 
@@ -606,32 +607,6 @@ void Whisker_Widget::_skipToTrackedFrame(int index)
         auto frame_id = tracked_frames[index];
         _time_scrollbar->changeScrollBarValue(frame_id);
     }
-}
-
-void Whisker_Widget::_calculateMask()
-{
-    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
-
-    auto const media_data = _data_manager->getMediaData();
-
-    auto mask = media_data->getRawData(frame_id);
-
-    auto m2 = convert_vector_to_mat(mask, media_data->getWidth(), media_data->getHeight());
-
-    cv::medianBlur(m2,m2,35);
-
-    cv::Mat output = cv::Mat::zeros(m2.rows, m2.cols, CV_8UC1);
-
-    auto const wp = _wt->getWhiskerPad();
-
-    cv::circle(output,cv::Point(
-                           static_cast<int>(wp.x),
-                                 static_cast<int>(wp.y)
-                        ),10.0, cv::Scalar(255,255,255));
-
-    //cv::grabCut(m2,output,)
-
-
 }
 
 /////////////////////////////////////////////

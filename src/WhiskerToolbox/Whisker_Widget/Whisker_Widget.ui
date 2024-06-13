@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>480</width>
+    <width>549</width>
     <height>358</height>
    </rect>
   </property>
@@ -242,7 +242,7 @@
      <rect>
       <x>250</x>
       <y>30</y>
-      <width>191</width>
+      <width>251</width>
       <height>101</height>
      </rect>
     </property>
@@ -255,7 +255,7 @@
     <widget class="QLabel" name="label_4">
      <property name="geometry">
       <rect>
-       <x>70</x>
+       <x>90</x>
        <y>60</y>
        <width>71</width>
        <height>20</height>
@@ -270,7 +270,7 @@
       <rect>
        <x>40</x>
        <y>40</y>
-       <width>131</width>
+       <width>171</width>
        <height>22</height>
       </rect>
      </property>
@@ -287,7 +287,7 @@
     <widget class="QLabel" name="label_6">
      <property name="geometry">
       <rect>
-       <x>40</x>
+       <x>60</x>
        <y>10</y>
        <width>121</width>
        <height>16</height>
@@ -306,8 +306,8 @@
      <rect>
       <x>250</x>
       <y>130</y>
-      <width>191</width>
-      <height>141</height>
+      <width>251</width>
+      <height>181</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -326,7 +326,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Mask</string>
+      <string>Face Mask</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -336,7 +336,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>40</y>
+       <y>120</y>
        <width>75</width>
        <height>24</height>
       </rect>
@@ -349,13 +349,109 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>70</y>
+       <y>150</y>
        <width>75</width>
        <height>24</height>
       </rect>
      </property>
      <property name="text">
       <string>View Mask</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_9">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Mask File:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="mask_file_label">
+     <property name="geometry">
+      <rect>
+       <x>98</x>
+       <y>40</y>
+       <width>141</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>None</string>
+     </property>
+     <property name="scaledContents">
+      <bool>false</bool>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="mask_dilation">
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>70</y>
+       <width>71</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <number>1</number>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_11">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>70</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Mask Extension</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_12">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>141</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Extended Mask Extension</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="mask_dilation_2">
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>100</y>
+       <width>71</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>0</number>
+     </property>
+     <property name="singleStep">
+      <number>1</number>
+     </property>
+     <property name="value">
+      <number>30</number>
      </property>
     </widget>
    </widget>
@@ -365,7 +461,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>480</width>
+     <width>549</width>
      <height>22</height>
     </rect>
    </property>

@@ -3,6 +3,8 @@
 
 #include "ui_Image_Processing_Widget.h"
 
+#include <iostream>
+
 Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     QMainWindow(parent),
     _data_manager{data_manager},
