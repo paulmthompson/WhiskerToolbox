@@ -609,6 +609,12 @@ void Whisker_Widget::_skipToTrackedFrame(int index)
 
 void Whisker_Widget::_maskDilation(int dilation_size)
 {
+
+    if (!_data_manager->getMask("Face_Mask_Original"))
+    {
+        return;
+    }
+
     auto original_mask = _data_manager->getMask("Face_Mask_Original");
 
     auto mask_pixels = original_mask->getMasksAtTime(0)[0];
@@ -625,6 +631,12 @@ void Whisker_Widget::_maskDilation(int dilation_size)
     dilated_mask->clearMasksAtTime(0);
 
     dilated_mask->addMaskAtTime(0, new_mask );
+
+    auto mask_for_tracker = std::vector<whisker::Point2D<float>>();
+    for (auto const & p : new_mask) {
+        mask_for_tracker.push_back(whisker::Point2D<float>{p.x, p.y});
+    }
+    _wt->setFaceMask(mask_for_tracker);
 }
 
 void Whisker_Widget::_maskDilationExtended(int dilation_size)
