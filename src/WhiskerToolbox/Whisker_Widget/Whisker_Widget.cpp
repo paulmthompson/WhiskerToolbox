@@ -77,6 +77,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
 
     connect(ui->tracked_whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_skipToTrackedFrame);
 
+    connect(ui->mask_dilation, &QSpinBox::valueChanged, this, &Whisker_Widget::_maskDilation);
+
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -605,7 +607,18 @@ void Whisker_Widget::_maskDilation(int dilation_size)
 {
     auto mask = _data_manager->getMask("Face_Mask");
 
+    auto mask_pixels = mask->getMasksAtTime(0)[0];
+
     //convert mask to opencv
+    auto mat = convert_vector_to_mat(mask_pixels, mask->getMaskWidth(), mask->getMaskHeight());
+
+    grow_mask(mat, dilation_size);
+
+    auto new_mask = create_mask(mat);
+
+    mask->clearMasksAtTime(0);
+
+    mask->addMaskAtTime(0, new_mask );
 }
 
 void Whisker_Widget::_maskDilationExtended(int dilation_size)

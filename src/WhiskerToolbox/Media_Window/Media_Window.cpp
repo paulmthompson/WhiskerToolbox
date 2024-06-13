@@ -241,7 +241,7 @@ void Media_Window::_plotMaskData()
             for (int i = 0; i < single_mask.size(); i ++)
             {
                 unscaled_mask_image.setPixel(
-                    QPoint(single_mask[i].y, single_mask[i].x),
+                    QPoint(single_mask[i].x, single_mask[i].y),
                     plot_color);
             }
 
