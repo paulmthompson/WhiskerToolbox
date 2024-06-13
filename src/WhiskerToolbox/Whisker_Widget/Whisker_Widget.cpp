@@ -16,6 +16,8 @@
 #include "ui_Whisker_Widget.h"
 #include "utils/container.hpp"
 
+#include "opencv2/imgcodecs.hpp"
+
 const std::vector<QColor> whisker_colors = {QColor("red"),
                                             QColor("green"),
                                             QColor("cyan"),
@@ -239,20 +241,29 @@ void Whisker_Widget::_loadFaceMask()
         return;
     }
 
-    auto image = QImage(face_mask_name);
+    auto mat = cv::imread(face_mask_name.toStdString());
+
+    cv::threshold(mat,mat,127,255,cv::THRESH_BINARY);
+
+    const int dilation_size = 5;
+    cv::Mat element = cv::Mat::ones(dilation_size,dilation_size,CV_8U);
+
+    cv::bitwise_not(mat, mat);
+    cv::dilate(mat, mat, element,cv::Point(-1,-1),1);
+    cv::bitwise_not(mat, mat);
 
     std::vector<float> x;
     std::vector<float> y;
 
     _data_manager->createMask("Face_Mask");
 
-    for (int x_pixel = 0; x_pixel < image.width(); x_pixel ++)
+    for (int x_pixel = 0; x_pixel < mat.cols; x_pixel ++)
     {
-        for (int y_pixel = 0; y_pixel < image.height(); y_pixel++)
+        for (int y_pixel = 0; y_pixel < mat.rows; y_pixel++)
         {
-            auto pixel = image.pixel(x_pixel, y_pixel);
+            auto & pixel = mat.at<cv::Vec3b>(y_pixel, x_pixel);
 
-            if (pixel != QColor("white").rgb())
+            if (pixel == cv::Vec3b(0,0,0))
             {
                 x.push_back(x_pixel);
                 y.push_back(y_pixel);
@@ -262,8 +273,8 @@ void Whisker_Widget::_loadFaceMask()
 
     auto mask = _data_manager->getMask("Face_Mask");
 
-    mask->setMaskWidth(image.width());
-    mask->setMaskHeight(image.height());
+    mask->setMaskWidth(mat.cols);
+    mask->setMaskHeight(mat.rows);
 
     mask->addMaskAtTime(0, y, x);
 
