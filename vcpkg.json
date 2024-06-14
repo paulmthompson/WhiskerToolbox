@@ -13,7 +13,7 @@
             "name": "ffmpeg",
             "default-features": true,
             "features": ["nvcodec"],
-            "version>=": "4.4.1",
+            "$version>=": "4.4.1",
             "$comment": "version 4.4.3 commited on november 14, 2022"
         },
         {   "name": "nlohmann-json"
@@ -25,6 +25,6 @@
             "name": "boost-circular-buffer"
         }
     ],
-    "builtin-baseline": "acc3bcf76b84ae5041c86ab55fe138ae7b8255c7",
+    "$builtin-baseline": "acc3bcf76b84ae5041c86ab55fe138ae7b8255c7",
     "$comment": "hash corresponds to 2022.03.10"
 }
