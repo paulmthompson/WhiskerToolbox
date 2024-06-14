@@ -304,7 +304,7 @@ void Whisker_Widget::_exportImageCSV()
 
     for (int i = 0; i<_num_whisker_to_track; i++)
     {
-        std::string whisker_name = "whisker_" + std::to_string(i + 1);
+        std::string whisker_name = "whisker_" + std::to_string(i);
 
         auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
 
