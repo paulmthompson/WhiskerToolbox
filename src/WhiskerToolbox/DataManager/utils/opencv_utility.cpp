@@ -21,7 +21,8 @@ cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int co
 
     cv::Mat m2{vec, false};
 
-    m2 = m2.reshape(0, width);
+    // The number of rows = height, number of columns = width
+    m2 = m2.reshape(0, height);
 
     return m2;
 }
