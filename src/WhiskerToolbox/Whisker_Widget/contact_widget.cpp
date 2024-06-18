@@ -110,7 +110,7 @@ void Contact_Widget::updateFrame(int frame_id)
 
     for (int i = -2; i < 3; i++) {
 
-        if (frame_id + i < 0) {
+        if ((frame_id + i < 0) | (frame_id + i >= _data_manager->getTime()->getTotalFrameCount())) {
             continue;
         }
 

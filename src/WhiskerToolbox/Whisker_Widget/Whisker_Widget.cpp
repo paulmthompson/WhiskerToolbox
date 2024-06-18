@@ -418,6 +418,15 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
     }
 }
 
+
+/**
+ *
+ * Loads a whisker mask defined in a HDF5 file (e.g. a bag of points
+ * that define the pixels in an image that represent a whisker with
+ * NO ordering).
+ *
+ * @brief Whisker_Widget::_loadHDF5WhiskerMasks
+ */
 void Whisker_Widget::_loadHDF5WhiskerMasks()
 {
     auto filename = QFileDialog::getOpenFileName(
@@ -451,6 +460,20 @@ void Whisker_Widget::_loadHDF5WhiskerMasks()
     _scene->addMaskColor(mask_key, whisker_colors[mask_num]);
 }
 
+/**
+ *
+ * Loads whisker lines where each is defined in a CSV file in
+ * the same directory. The filename of the CSV file should
+ * correspond to the frame number of the corresponding video
+ *
+ * The CSV is assumed
+ * to have x positions in column 1 and y positions in column 2.
+ * Each row should correspond to a single point moving from follicle
+ * to whisker tip.
+ *
+ * @brief Whisker_Widget::_loadCSVWhiskerFromDir
+ * @param dir_name
+ */
 void Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name)
 {
     auto dir_path = std::filesystem::path(dir_name);
