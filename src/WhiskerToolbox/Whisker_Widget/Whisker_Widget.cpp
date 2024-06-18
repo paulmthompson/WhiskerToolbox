@@ -263,6 +263,8 @@ void Whisker_Widget::_loadFaceMask()
 
     ui->mask_file_label->setText(face_mask_name);
 
+    _scene->UpdateCanvas();
+
 }
 
 void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D<float>>& whisker)
@@ -306,12 +308,15 @@ void Whisker_Widget::_exportImageCSV()
     {
         std::string whisker_name = "whisker_" + std::to_string(i);
 
-        auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
+        if (_data_manager->getLine(whisker_name)) {
 
-        std::string folder = "./" + std::to_string(i) + "/";
-        std::filesystem::create_directory(folder);
+            auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
 
-        _saveWhiskerAsCSV(folder, whiskers[0]);
+            std::string folder = "./" + std::to_string(i) + "/";
+            std::filesystem::create_directory(folder);
+
+            _saveWhiskerAsCSV(folder, whiskers[0]);
+        }
     }
 }
 
@@ -554,6 +559,7 @@ void Whisker_Widget::_orderWhiskersByPosition() {
 
         std::string whisker_name = "whisker_" + std::to_string(i);
 
+        _data_manager->getLine(whisker_name)->clearLinesAtTime(current_time);
         _data_manager->getLine(whisker_name)->addLineAtTime(current_time, whiskers[base_position_order[i]]);
     }
 }
@@ -639,6 +645,8 @@ void Whisker_Widget::_maskDilation(int dilation_size)
         mask_for_tracker.push_back(whisker::Point2D<float>{p.x, p.y});
     }
     _wt->setFaceMask(mask_for_tracker);
+
+    _scene->UpdateCanvas();
 }
 
 void Whisker_Widget::_maskDilationExtended(int dilation_size)
