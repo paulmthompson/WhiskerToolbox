@@ -16,7 +16,7 @@ void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat & mat, const int w
 
 std::vector<Point2D<float>> create_mask(cv::Mat const & mat);
 
-cv::Mat load_mask(std::string const & filename);
+cv::Mat load_mask_from_image(std::string const & filename);
 
 void grow_mask(cv::Mat & mat, int const dilation_size);
 

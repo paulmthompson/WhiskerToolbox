@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-cv::Mat load_mask(std::string const & filename)
+cv::Mat load_mask_from_image(std::string const & filename)
 {
     auto mat = cv::imread(filename,cv::IMREAD_GRAYSCALE);
 

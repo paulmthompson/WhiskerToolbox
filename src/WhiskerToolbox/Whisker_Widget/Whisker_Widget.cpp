@@ -239,7 +239,7 @@ void Whisker_Widget::_loadFaceMask()
         return;
     }
 
-    auto mat = load_mask(face_mask_name.toStdString());
+    auto mat = load_mask_from_image(face_mask_name.toStdString());
 
     _data_manager->createMask("Face_Mask_Original", mat.cols, mat.rows);
     auto mask_points_original = create_mask(mat);
