@@ -3,9 +3,11 @@
 //
 
 #include "Media/Image_Data.hpp"
+#include "utils/string_manip.hpp"
 
 #include <QString>
 #include <QImage>
+
 #include <set>
 #include <iostream>
 
@@ -62,4 +64,16 @@ void ImageData::LoadFrame(int frame_id) {
 
 std::string ImageData::GetFrameID(int frame_id) {
     return _image_paths[frame_id].filename().string();
+}
+
+int ImageData::getFrameIndexFromNumber(int frame_id)
+{
+    for (std::size_t i = 0; i < _image_paths.size(); i++) {
+        auto image_frame_id = extract_numbers_from_string(_image_paths[i].filename().string());
+        if (std::stoi(image_frame_id) == frame_id) {
+            return i;
+        }
+    }
+    std::cout << "No matching frame found for requested ID" << std::endl;
+    return 0;
 }

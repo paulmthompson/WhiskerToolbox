@@ -28,6 +28,8 @@ public:
      * @return Nearest keyframe to frame_id
      */
     int FindNearestSnapFrame(int frame_id) const;
+
+    int getFrameIndexFromNumber(int frame_id) override {return frame_id;};
 protected:
     void doLoadMedia(std::string name) override;
 private:

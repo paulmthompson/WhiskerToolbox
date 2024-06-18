@@ -489,9 +489,10 @@ void Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name)
         auto const frame_num = remove_extension(entry.path().filename().string());
         auto whisker = load_line_from_csv(entry.path().string());
 
-        //Find the frame corresponding to this frame number.
+        //Find the relative frame corresponding to this frame number.
+        auto const frame_index = _data_manager->getMediaData()->getFrameIndexFromNumber(std::stoi(frame_num));
 
-        _data_manager->getLine(whisker_name)->addLineAtTime(std::stoi(frame_num), whisker);
+        _data_manager->getLine(whisker_name)->addLineAtTime(frame_index, whisker);
         whisker_count++;
     }
 
