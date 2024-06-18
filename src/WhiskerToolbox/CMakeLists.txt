@@ -52,6 +52,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
             Image_Processing_Widget/Image_Processing_Widget.hpp
             Image_Processing_Widget/Image_Processing_Widget.cpp
             Image_Processing_Widget/Image_Processing_Widget.ui
+            Tongue_Widget/Tongue_Widget.hpp
+            Tongue_Widget/Tongue_Widget.cpp
+            Tongue_Widget/Tongue_Widget.ui
     )
     # Define target properties for Android with Qt 6 as:
     #    set_property(TARGET WhiskerToolbox APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

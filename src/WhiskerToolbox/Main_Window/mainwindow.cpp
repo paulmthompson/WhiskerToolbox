@@ -66,6 +66,7 @@ void MainWindow::_createActions()
     connect(ui->actionLabel_Maker, &QAction::triggered, this, &MainWindow::openLabelMaker);
     connect(ui->actionAnalog_Viewer, &QAction::triggered, this, &MainWindow::openAnalogViewer);
     connect(ui->actionImage_Processing, &QAction::triggered, this, &MainWindow::openImageProcessing);
+    connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
 }
 
 /*
@@ -185,6 +186,18 @@ void MainWindow::openImageProcessing()
         std::cout << "Image Processing Widget already exists" << std::endl;
     }
     _image_processing->openWidget();
+}
+
+void MainWindow::openTongueTracking()
+{
+    if (!_tongue_widget) {
+        _tongue_widget = new Tongue_Widget(_scene, _data_manager, ui->time_scrollbar);
+
+        std::cout << "Tongue Tracker Constructed" << std::endl;
+    } else {
+        std::cout << "Tongue Tracker already exists" << std::endl;
+    }
+    _tongue_widget->openWidget();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {

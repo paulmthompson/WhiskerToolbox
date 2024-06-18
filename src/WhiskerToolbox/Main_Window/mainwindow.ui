@@ -82,6 +82,7 @@
     <addaction name="actionWhisker_Tracking"/>
     <addaction name="actionLabel_Maker"/>
     <addaction name="actionAnalog_Viewer"/>
+    <addaction name="actionTongue_Tracking"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -122,6 +123,11 @@
   <action name="actionImage_Processing">
    <property name="text">
     <string>Image Processing</string>
+   </property>
+  </action>
+  <action name="actionTongue_Tracking">
+   <property name="text">
+    <string>Tongue Tracking</string>
    </property>
   </action>
  </widget>

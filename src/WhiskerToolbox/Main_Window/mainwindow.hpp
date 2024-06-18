@@ -12,6 +12,7 @@
 #include "Label_Widget.hpp"
 #include "analog_viewer.hpp"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
+#include "Tongue_Widget/Tongue_Widget.hpp"
 
 #include "TimeFrame.hpp"
 #include "DataManager.hpp"
@@ -38,6 +39,7 @@ private:
     QPointer<Label_Widget> _label_maker;
     QPointer<Analog_Viewer> _analog_viewer;
     QPointer<Image_Processing_Widget> _image_processing;
+    QPointer<Tongue_Widget> _tongue_widget;
 
     void _updateMedia();
 
@@ -58,5 +60,6 @@ private slots:
     void openLabelMaker();
     void openAnalogViewer();
     void openImageProcessing();
+    void openTongueTracking();
 };
 #endif // MAINWINDOW_HPP
