@@ -499,6 +499,18 @@ void Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name)
     std::cout << "Loaded " << whisker_count << " whiskers" << std::endl;
 }
 
+/**
+ *
+ * Loads multiple CSV files located in the same directory
+ * CSV files are assumed to contain the frame number in the
+ * corresponding video. And each CSV should contain two columns
+ * with the 1st column being pixel positions in x and 2nd column
+ * being pixel positions in y.
+ *
+ * Each row
+ *
+ * @brief Whisker_Widget::_loadSingleCSVWhisker
+ */
 void Whisker_Widget::_loadSingleCSVWhisker()
 {
     auto const dir_name =  QFileDialog::getExistingDirectory(
