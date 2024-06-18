@@ -22,6 +22,7 @@ add_library(DataManager SHARED
         utils/container.hpp
         utils/opencv_utility.hpp
         utils/opencv_utility.cpp
+        utils/string_manip.hpp
 )
 
 target_include_directories(DataManager PUBLIC
