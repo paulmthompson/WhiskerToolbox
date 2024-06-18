@@ -67,7 +67,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     connect(ui->export_image_csv, &QPushButton::clicked, this, &Whisker_Widget::_exportImageCSV);
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
-    connect(ui->actionMask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5Whiskers);
+    connect(ui->actionLoad_Mask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerMasks);
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
     connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
 
@@ -418,13 +418,13 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
     }
 }
 
-void Whisker_Widget::_loadHDF5Whiskers()
+void Whisker_Widget::_loadHDF5WhiskerMasks()
 {
     auto filename = QFileDialog::getOpenFileName(
         this,
         "Load Whisker File",
         QDir::currentPath(),
-        "All files (*.*) ;; whisker file (*.whiskers)");
+        "All files (*.*)");
 
     if (filename.isNull()) {
         return;

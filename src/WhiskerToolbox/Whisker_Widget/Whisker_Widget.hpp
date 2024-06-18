@@ -105,7 +105,7 @@ private slots:
     void _loadFaceMask();
 
     void _loadJaneliaWhiskers();
-    void _loadHDF5Whiskers();
+    void _loadHDF5WhiskerMasks();
     void _loadSingleCSVWhisker();
     void _loadMultiCSVWhiskers();
 
