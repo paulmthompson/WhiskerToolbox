@@ -43,11 +43,18 @@ std::vector<Point2D<float>> const& PointData::getPointsAtTime(int const time) co
     }
 }
 
+//https://stackoverflow.com/questions/4654636/how-to-determine-if-a-string-is-a-number-with-c
+bool is_number(const std::string& s)
+{
+    return !s.empty() && std::find_if(s.begin(),
+                                      s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+}
+
 std::map<int,Point2D<float>> load_points_from_csv(std::string const& filename, int const frame_column, int const x_column, int const y_column)
 {
     std::string csv_line;
 
-    char const column_delim = ',';
+    char const column_delim = ' ';
 
     auto line_output = std::map<int,Point2D<float>>{};
 
@@ -64,7 +71,7 @@ std::map<int,Point2D<float>> load_points_from_csv(std::string const& filename, i
         std::stringstream ss(csv_line);
 
         int cols_read = 0;
-        while (getline(ss, col_value)) {
+        while (getline(ss, col_value,column_delim)) {
             if (cols_read == frame_column) {
                 frame_str = col_value;
             } else if (cols_read == x_column) {
@@ -75,7 +82,9 @@ std::map<int,Point2D<float>> load_points_from_csv(std::string const& filename, i
             cols_read++;
         }
 
-        line_output[std::stoi(frame_str)]=Point2D<float>{std::stof(x_str),std::stof(y_str)};
+        if (is_number(frame_str)) {
+            line_output[std::stoi(frame_str)]=Point2D<float>{std::stof(x_str),std::stof(y_str)};
+        }
     }
 
     return line_output;

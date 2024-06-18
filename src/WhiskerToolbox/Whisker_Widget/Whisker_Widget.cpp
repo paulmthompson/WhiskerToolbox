@@ -2,6 +2,7 @@
 #include "Whisker_Widget.hpp"
 
 #include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Points/Point_Data.hpp"
 #include "utils/opencv_utility.hpp"
 
 #include <QFileDialog>
@@ -70,6 +71,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     connect(ui->actionLoad_Mask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerMasks);
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
     connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
+    connect(ui->actionLoad_Keypoint_CSV, &QAction::triggered, this, &Whisker_Widget::_loadKeypointCSV);
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
@@ -333,6 +335,21 @@ std::string Whisker_Widget::_getImageSaveName(int const frame_id)
         std::string saveName = "img" + pad_frame_id(frame_id, 7) + ".png";
         return saveName;
     }
+}
+
+void Whisker_Widget::_loadKeypointCSV()
+{
+    auto keypoint_filename = QFileDialog::getOpenFileName(
+        this,
+        "Load Keypoints",
+        QDir::currentPath(),
+        "All files (*.*)");
+
+    if (keypoint_filename.isNull()) {
+        return;
+    }
+
+    auto keypoints = load_points_from_csv(keypoint_filename.toStdString(), 0, 1, 2);
 }
 
 /////////////////////////////////////////////

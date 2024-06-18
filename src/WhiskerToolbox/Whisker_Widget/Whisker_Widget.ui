@@ -501,6 +501,7 @@
     </widget>
     <addaction name="actionSave_Snapshot"/>
     <addaction name="menuFace_Mask"/>
+    <addaction name="actionLoad_Keypoint_CSV"/>
    </widget>
    <addaction name="menuImage"/>
    <addaction name="menuWhisker"/>
@@ -554,6 +555,11 @@
   <action name="actionLoad_Mask">
    <property name="text">
     <string>Load HDF5 Mask (Single)</string>
+   </property>
+  </action>
+  <action name="actionLoad_Keypoint_CSV">
+   <property name="text">
+    <string>Load Keypoint (CSV)</string>
    </property>
   </action>
  </widget>
