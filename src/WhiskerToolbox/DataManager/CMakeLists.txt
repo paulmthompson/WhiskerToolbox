@@ -23,6 +23,7 @@ add_library(DataManager SHARED
         utils/opencv_utility.hpp
         utils/opencv_utility.cpp
         utils/string_manip.hpp
+        Points/Point_Data.cpp
 )
 
 target_include_directories(DataManager PUBLIC

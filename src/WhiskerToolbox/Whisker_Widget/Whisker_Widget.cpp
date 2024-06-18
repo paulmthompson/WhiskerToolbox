@@ -213,6 +213,8 @@ void Whisker_Widget::_saveFaceMask() {
 
     median_blur(m2, 35);
 
+    //TODO I can use OpenCV to save image here instead of converting back to vector
+
     convert_mat_to_vector(mask, m2, width, height);
 
     auto mask_image = QImage(&mask[0],
