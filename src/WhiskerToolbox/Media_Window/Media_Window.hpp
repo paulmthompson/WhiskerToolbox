@@ -56,28 +56,8 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
 
     void setMaskAlpha(int const alpha) {_mask_alpha = alpha; UpdateCanvas();};
 
-    /**
-     *
-     *
-     *
-     * @tparam T
-     * @param x_canvas
-     * @param y_canvas
-     * @param color
-     * @param radius
-     */
-    template <typename T>
-    void addPoint(T x_canvas, T y_canvas, QPen color,float radius = 15.0) {
-
-        auto xAspect = getXAspect();
-        auto yAspect = getYAspect();
-
-        // addEllipse draws from top left of rectangle down and to the right, so we want to center point in the middle of this rectangle
-        _points.append(addEllipse(static_cast<float>(x_canvas) * xAspect - radius/2,
-                                       static_cast<float>(y_canvas) * yAspect - radius/2,
-                                       radius, radius,color));
-    }
-
+    void addPointDataToScene(const std::string& point_key);
+    void addPointColor(std::string const& point_key, QColor const color);
     void clearPoints();
 
     /**
@@ -119,6 +99,9 @@ private:
 
     std::unordered_set<std::string> _masks_to_show;
     std::unordered_map<std::string,QColor> _mask_colors;
+
+    std::unordered_set<std::string> _points_to_show;
+    std::unordered_map<std::string,QColor> _point_colors;
 
     QImage::Format _getQImageFormat();
     void _createCanvasForData();

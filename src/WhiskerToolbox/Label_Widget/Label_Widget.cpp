@@ -102,7 +102,7 @@ void Label_Widget::_updateDraw()
   for (auto &[frame_name, label] : _label_maker->getLabels()) {
       if (frame_name == media->GetFrameID(_data_manager->getTime()->getLastLoadedFrame())) {
       auto &[img, point] = label;
-      _scene->addPoint(point.x, point.y, QPen(QColor(Qt::red)));
+      //_scene->addPoint(point.x, point.y, QPen(QColor(Qt::red)));
     }
   }
 }

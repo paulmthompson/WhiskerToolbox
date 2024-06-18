@@ -59,6 +59,16 @@ void Media_Window::clearMasks()
     _masks.clear();
 }
 
+void Media_Window::addPointDataToScene(const std::string& point_key)
+{
+    _points_to_show.insert(point_key);
+}
+
+void Media_Window::addPointColor(std::string const& point_key, QColor const color)
+{
+    _point_colors[point_key] = color;
+}
+
 void Media_Window::clearPoints() {
     for (auto pathItem : _points) {
         removeItem(pathItem);
