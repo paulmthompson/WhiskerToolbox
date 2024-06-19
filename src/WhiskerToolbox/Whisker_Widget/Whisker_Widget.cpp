@@ -363,8 +363,8 @@ void Whisker_Widget::_loadKeypointCSV()
         point->addPointAtTime(key, val.x, val.y);
     }
 
-    _scene->addMaskDataToScene(keypoint_key);
-    _scene->addMaskColor(keypoint_key, whisker_colors[point_num]);
+    _scene->addPointDataToScene(keypoint_key);
+    _scene->addPointColor(keypoint_key, whisker_colors[point_num]);
 }
 
 /////////////////////////////////////////////

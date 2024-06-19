@@ -68,7 +68,7 @@ std::shared_ptr<PointData> DataManager::getPoint(std::string const & point_key)
 
 std::vector<std::string> DataManager::getPointKeys()
 {
-    get_keys(_points);
+    return get_keys(_points);
 }
 
 void DataManager::createLine(const std::string line_key)

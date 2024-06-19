@@ -99,6 +99,8 @@ void Media_Window::UpdateCanvas()
     _plotLineData();
 
     _plotMaskData();
+
+    _plotPointData();
 }
 
 
@@ -276,8 +278,6 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, int
 void Media_Window::_plotPointData()
 {
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-    auto xAspect = getXAspect();
-    auto yAspect = getYAspect();
 
     int i =0;
 
@@ -290,11 +290,17 @@ void Media_Window::_plotPointData()
             plot_color = QColor(_point_colors[point_key]);
         }
 
+        float mask_height = static_cast<float>(_data_manager->getPoint(point_key)->getMaskHeight());
+        float mask_width = static_cast<float>(_data_manager->getPoint(point_key)->getMaskWidth());
+
+        auto xAspect = _canvasWidth / mask_width;
+        auto yAspect = _canvasHeight / mask_height;
+
         auto pointData = _data_manager->getPoint(point_key)->getPointsAtTime(current_time);
 
         for (const auto& single_point : pointData) {
 
-            auto ellipse = addEllipse(single_point.x * xAspect, single_point.y * yAspect, 10.0, 10.0, QPen(plot_color));
+            auto ellipse = addEllipse(single_point.y * xAspect, single_point.x * yAspect, 10.0, 10.0, QPen(plot_color));
             _points.append(ellipse);
         }
         i ++;
