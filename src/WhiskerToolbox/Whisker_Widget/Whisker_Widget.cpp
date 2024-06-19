@@ -350,6 +350,21 @@ void Whisker_Widget::_loadKeypointCSV()
     }
 
     auto keypoints = load_points_from_csv(keypoint_filename.toStdString(), 0, 1, 2);
+
+    auto point_num = _data_manager->getMaskKeys().size();
+
+    auto keypoint_key = "keypoint_" + std::to_string(point_num);
+
+    _data_manager->createPoint(keypoint_key);
+
+    auto point = _data_manager->getPoint(keypoint_key);
+
+    for (auto & [key, val] : keypoints) {
+        point->addPointAtTime(key, val.x, val.y);
+    }
+
+    _scene->addMaskDataToScene(keypoint_key);
+    _scene->addMaskColor(keypoint_key, whisker_colors[point_num]);
 }
 
 /////////////////////////////////////////////

@@ -56,6 +56,21 @@ std::shared_ptr<MediaData> DataManager::getMediaData()
     return _media;
 }
 
+void DataManager::createPoint(std::string const & point_key)
+{
+    _points[point_key] = std::make_shared<PointData>();
+}
+
+std::shared_ptr<PointData> DataManager::getPoint(std::string const & point_key)
+{
+    return _points[point_key];
+}
+
+std::vector<std::string> DataManager::getPointKeys()
+{
+    get_keys(_points);
+}
+
 void DataManager::createLine(const std::string line_key)
 {
     _lines[line_key] = std::make_shared<LineData>();

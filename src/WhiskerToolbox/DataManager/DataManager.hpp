@@ -4,6 +4,7 @@
 #include "Media/Media_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "TimeFrame.hpp"
 
 #include <string>
@@ -24,6 +25,10 @@ public:
     void loadMedia(std::string filepath);
     std::shared_ptr<MediaData> getMediaData();
 
+    void createPoint(std::string const & point_key);
+    std::shared_ptr<PointData> getPoint(std::string const & point_key);
+    std::vector<std::string> getPointKeys();
+
     void createLine(const std::string line_key);
     std::shared_ptr<LineData> getLine(const std::string line_key);
     std::vector<std::string> getLineKeys();
@@ -41,6 +46,9 @@ public:
 private:
 
     std::shared_ptr<MediaData> _media;
+
+    std::unordered_map<std::string,std::shared_ptr<PointData>> _points;
+
     std::unordered_map<std::string,std::shared_ptr<LineData>> _lines;
 
     std::unordered_map<std::string, std::shared_ptr<MaskData>> _masks;

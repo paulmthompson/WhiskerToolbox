@@ -559,7 +559,7 @@
   </action>
   <action name="actionLoad_Keypoint_CSV">
    <property name="text">
-    <string>Load Keypoint (CSV)</string>
+    <string>Load Follicle (CSV)</string>
    </property>
   </action>
  </widget>
