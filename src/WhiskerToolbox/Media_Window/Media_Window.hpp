@@ -109,6 +109,7 @@ private:
     void _plotLineData();
     void _plotMaskData();
     void _plotSingleMaskData(std::vector<Mask2D> const & maskData, int const mask_width, int const mask_height, QRgb plot_color);
+    void _plotPointData();
     QRgb _create_mask_plot_color(std::string const& mask_key);
 
 public slots:

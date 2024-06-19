@@ -272,3 +272,31 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, int
         _masks.append(maskPixmap);
     }
 }
+
+void Media_Window::_plotPointData()
+{
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto xAspect = getXAspect();
+    auto yAspect = getYAspect();
+
+    int i =0;
+
+    for (const auto& point_key : _points_to_show)
+    {
+
+        auto plot_color = QColor("blue");
+        if (_point_colors.count(point_key) != 0)
+        {
+            plot_color = QColor(_point_colors[point_key]);
+        }
+
+        auto pointData = _data_manager->getPoint(point_key)->getPointsAtTime(current_time);
+
+        for (const auto& single_point : pointData) {
+
+            auto ellipse = addEllipse(single_point.x * xAspect, single_point.y * yAspect, 10.0, 10.0, QPen(plot_color));
+            _points.append(ellipse);
+        }
+        i ++;
+    }
+}
