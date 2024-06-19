@@ -1,20 +1,19 @@
 #ifndef WHISKER_WIDGET_HPP
 #define WHISKER_WIDGET_HPP
 
+
+#include "contact_widget.hpp"
+#include "DataManager.hpp"
+#include "janelia_config.hpp"
+#include "Media_Window.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
+#include "whiskertracker.hpp"
+
 #include <QMainWindow>
 #include <QPointer>
 
 #include <memory>
 
-
-#include "Media_Window.hpp"
-#include "janelia_config.hpp"
-#include "contact_widget.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
-
-
-#include "DataManager.hpp"
-#include "whiskertracker.hpp"
 
 /*
  *

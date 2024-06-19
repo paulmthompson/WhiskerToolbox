@@ -3,14 +3,13 @@
 
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "ui_Whisker_Widget.h"
 #include "utils/opencv_utility.hpp"
 #include "utils/string_manip.hpp"
 
 #include <QFileDialog>
 #include <QElapsedTimer>
 #include "qevent.h"
-
-#include "ui_Whisker_Widget.h"
 
 #include <iostream>
 #include <string>
