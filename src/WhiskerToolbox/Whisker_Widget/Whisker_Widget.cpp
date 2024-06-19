@@ -4,6 +4,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "utils/opencv_utility.hpp"
+#include "utils/string_manip.hpp"
 
 #include <QFileDialog>
 #include <QElapsedTimer>
@@ -11,9 +12,7 @@
 
 #include "ui_Whisker_Widget.h"
 
-#include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <filesystem>
 
@@ -738,17 +737,3 @@ void _printBasePositionOrder(const std::vector<Point2D<float>> &base_positions) 
     }
 }
 
-//https://stackoverflow.com/questions/6417817/easy-way-to-remove-extension-from-a-filename
-std::string remove_extension(const std::string& filename) {
-    const size_t lastdot = filename.find_last_of(".");
-    if (lastdot == std::string::npos) return filename;
-    return filename.substr(0, lastdot);
-}
-
-std::string pad_frame_id(int frame_id, int pad_digits)
-{
-    std::stringstream ss;
-    ss << std::setw(pad_digits) << std::setfill('0') << frame_id;
-
-    return ss.str();
-}
