@@ -129,10 +129,10 @@ void Whisker_Widget::_traceButton() {
     //Add lines to data manager
     _addWhiskersToData();
 
-    int t1 = timer2.elapsed();
+    auto t1 = timer2.elapsed();
     _drawWhiskers();
 
-    int t2 = timer2.elapsed();
+    auto t2 = timer2.elapsed();
 
     qDebug() << "The tracing took" << t1 << "ms and drawing took" << (t2 - t1);
 }
@@ -310,10 +310,10 @@ void Whisker_Widget::_exportImageCSV()
 
             auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
 
-            std::string folder = "./" + std::to_string(i) + "/";
-            std::filesystem::create_directory(folder);
+            std::string whisker_folder = "./" + std::to_string(i) + "/";
+            std::filesystem::create_directory(whisker_folder);
 
-            _saveWhiskerAsCSV(folder, whiskers[0]);
+            _saveWhiskerAsCSV(whisker_folder, whiskers[0]);
         }
     }
 }
@@ -371,7 +371,7 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_name, const i
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->createLine(whisker_name);
         _scene->addLineDataToScene(whisker_name);
-        _scene->addLineColor(whisker_name,whisker_colors[whisker_id]);
+        _scene->addLineColor(whisker_name, whisker_colors[whisker_id]);
     }
 }
 
@@ -482,7 +482,7 @@ void Whisker_Widget::_loadHDF5WhiskerMasks()
 
     auto mask = _data_manager->getMask(mask_key);
 
-    for (int i = 0; i < frames.size(); i ++) {
+    for (std::size_t i = 0; i < frames.size(); i ++) {
         mask->addMaskAtTime(frames[i], x_coords[i], y_coords[i]);
     }
 
@@ -648,7 +648,7 @@ void Whisker_Widget::_orderWhiskersByPosition() {
     const auto current_time = _data_manager->getTime()->getLastLoadedFrame();
     auto whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
 
-    for (int i = 0; i < _num_whisker_to_track; i++) {
+    for (std::size_t i = 0; i < static_cast<std::size_t>(_num_whisker_to_track); i++) {
 
         if (i >= base_position_order.size()) {
             break;
@@ -760,7 +760,7 @@ void Whisker_Widget::_maskDilationExtended(int dilation_size)
 void _printBasePositionOrder(const std::vector<Point2D<float>> &base_positions) {
     std::cout << "The order of whisker base positions: " << std::endl;
 
-    for (int i = 0; i < base_positions.size(); i++) {
+    for (std::size_t i = 0; i < base_positions.size(); i++) {
         std::cout << "Whisker " << i << " at " << "(" << base_positions[i].x << "," << base_positions[i].y << ")"
                   << std::endl;
     }
