@@ -9,17 +9,12 @@ The Media_Window class
 
 */
 
-int const default_width = 640;
-int const default_height = 480;
+
 
 Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent) :
     QGraphicsScene(parent),
-    _canvasHeight{default_height},
-    _canvasWidth{default_width},
-    _is_verbose{false},
     _data_manager{data_manager},
-    _line_colors{},
-    _mask_alpha{50}
+    _line_colors{}
 {
     _createCanvasForData();
 }
@@ -189,7 +184,7 @@ void Media_Window::_plotLineData()
     auto yAspect = getYAspect();
 
     int i =0;
-    for (const auto& line_key : _lines_to_show)
+    for (auto const & line_key : _lines_to_show)
     {
 
         auto plot_color = QColor("blue");
@@ -200,7 +195,7 @@ void Media_Window::_plotLineData()
 
         auto lineData = _data_manager->getLine(line_key)->getLinesAtTime(current_time);
 
-        for (const auto& single_line : lineData) {
+        for (auto const & single_line : lineData) {
 
             QPainterPath path = QPainterPath();
 
@@ -277,11 +272,11 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, int
 
 void Media_Window::_plotPointData()
 {
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     int i =0;
 
-    for (const auto& point_key : _points_to_show)
+    for (auto const & point_key : _points_to_show)
     {
 
         auto plot_color = QColor("blue");

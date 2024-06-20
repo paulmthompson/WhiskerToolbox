@@ -23,6 +23,9 @@
     #define MEDIA_WINDOW_DLLOPT __attribute__((visibility("default")))
 #endif
 
+int const default_width = 640;
+int const default_height = 480;
+
 
 /**
  * The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
@@ -82,17 +85,16 @@ private:
     QGraphicsPixmapItem* _canvasPixmap;
     QImage _canvasImage;
 
-    int _canvasHeight;
-    int _canvasWidth;
-
+    int _canvasHeight {default_height};
+    int _canvasWidth {default_width};
 
     QVector<QGraphicsPathItem*> _line_paths;
     QVector<QGraphicsEllipseItem*> _points;
     QVector<QGraphicsPixmapItem*> _masks;
 
-    int _mask_alpha;
+    int _mask_alpha {50};
 
-    bool _is_verbose;
+    bool _is_verbose {false};
 
     std::unordered_set<std::string> _lines_to_show;
     std::unordered_map<std::string,QColor> _line_colors;
