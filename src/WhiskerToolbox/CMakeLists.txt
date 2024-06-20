@@ -128,3 +128,15 @@ endif()
 if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_INSTALL_BINDIR})
 endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(WhiskerToolbox PRIVATE ${CLANG_OPTIONS})
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(WhiskerToolbox PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(WhiskerToolbox PRIVATE ${MSVC_WARNINGS})
+endif()
