@@ -180,12 +180,12 @@ void Whisker_Widget::_saveImage(std::string const& folder)
     auto media = _data_manager->getMediaData();
     auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
-    auto data = media->getRawData(frame_id);
+    auto media_data = media->getRawData(frame_id);
 
     auto const width = media->getWidth();
     auto const height = media->getHeight();
 
-    QImage labeled_image(&data[0], width, height, QImage::Format_Grayscale8);
+    QImage labeled_image(&media_data[0], width, height, QImage::Format_Grayscale8);
 
     auto saveName = _getImageSaveName(frame_id);
 
