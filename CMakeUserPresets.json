@@ -2,7 +2,7 @@
   "version": 3,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 21,
+    "minor": 25,
     "patch": 0
   },
   "configurePresets": [
@@ -15,6 +15,16 @@
         "CMAKE_PREFIX_PATH": "C:/Qt/6.2.4/msvc2019_64",
         "QT_DIR": "C:/Qt/6.2.4/msvc2019_64/lib/cmake/Qt6"
       }
+    },
+    {
+      "name": "my-clang-release",
+      "inherits": [
+        "windows-clang-release"
+      ],
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.7.1/llvm-mingw_64",
+        "QT_DIR": "C:/Qt/6.7.1/llvm-mingw_64/lib/cmake/Qt6"
+      }
     }
   ],
   "buildPresets": [
@@ -22,6 +32,10 @@
     {
       "name": "my-msvc-release",
       "configurePreset": "my-msvc-release"
+    },
+    {
+      "name": "my-clang-release",
+      "configurePreset": "my-clang-release"
     }
 
   ],
@@ -29,6 +43,10 @@
     {
       "name": "my-msvc-release",
       "configurePreset": "my-msvc-release"
+    },
+    {
+      "name": "my-clang-release",
+      "configurePreset": "my-clang-release"
     }
   ]
 }
