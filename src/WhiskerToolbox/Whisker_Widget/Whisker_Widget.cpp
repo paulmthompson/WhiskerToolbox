@@ -350,7 +350,9 @@ void Whisker_Widget::_loadKeypointCSV()
 
     auto keypoints = load_points_from_csv(keypoint_filename.toStdString(), 0, 1, 2);
 
-    auto point_num = _data_manager->getMaskKeys().size();
+    auto point_num = _data_manager->getPointKeys().size();
+
+    std::cout << "There are " << point_num << " keypoints loaded" << std::endl;
 
     auto keypoint_key = "keypoint_" + std::to_string(point_num);
 
