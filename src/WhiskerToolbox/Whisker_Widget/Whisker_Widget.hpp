@@ -105,6 +105,7 @@ private slots:
 
     void _loadJaneliaWhiskers();
     void _loadHDF5WhiskerMasks();
+    void _loadHDF5WhiskerLines();
     void _loadSingleCSVWhisker();
     void _loadMultiCSVWhiskers();
 

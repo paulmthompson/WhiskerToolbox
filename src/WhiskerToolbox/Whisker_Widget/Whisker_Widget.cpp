@@ -67,6 +67,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
     connect(ui->actionLoad_Mask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerMasks);
+    connect(ui->actionLoad_HDF5_Whisker_Single, &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerLines);
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
     connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
     connect(ui->actionLoad_Keypoint_CSV, &QAction::triggered, this, &Whisker_Widget::_loadKeypointCSV);
@@ -490,6 +491,38 @@ void Whisker_Widget::_loadHDF5WhiskerMasks()
 
     _scene->addMaskDataToScene(mask_key);
     _scene->addMaskColor(mask_key, whisker_colors[mask_num]);
+}
+
+void Whisker_Widget::_loadHDF5WhiskerLines()
+{
+    auto filename = QFileDialog::getOpenFileName(
+        this,
+        "Load Whisker File",
+        QDir::currentPath(),
+        "All files (*.*)");
+
+    if (filename.isNull()) {
+        return;
+    }
+
+    auto frames =  _data_manager->read_array_hdf5(filename.toStdString(), "frames");
+    auto y_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "x");
+    auto x_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "y");
+
+    auto line_num = _data_manager->getLineKeys().size();
+
+    std::cout << "There are already " << line_num << " whiskers " << std::endl; // Unlabled is already created
+
+    std::string const whisker_name = "whisker_" + std::to_string(line_num-1);
+
+    _createNewWhisker(whisker_name, line_num - 1);
+
+    auto line = _data_manager->getLine(whisker_name);
+
+    for (int i = 0; i < frames.size(); i ++) {
+        line->addLineAtTime(frames[i], x_coords[i], y_coords[i]);
+    }
+
 }
 
 /**
