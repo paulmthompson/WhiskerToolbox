@@ -62,10 +62,13 @@ private:
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
-    int _selected_whisker;
+
+    int _selected_whisker {0};
+
     enum Selection_Type {Whisker_Select,
                           Whisker_Pad_Select};
-    Whisker_Widget::Selection_Type _selection_mode;
+
+    Whisker_Widget::Selection_Type _selection_mode {Whisker_Select};
 
     QPointer<Janelia_Config> _janelia_config_widget;
     QPointer<Contact_Widget> _contact_widget;
@@ -77,11 +80,11 @@ private:
         Facing_Right
     };
 
-    Face_Orientation _face_orientation;
+    Face_Orientation _face_orientation {Facing_Top};
 
-    int _num_whisker_to_track;
+    int _num_whisker_to_track {0};
 
-    bool _save_by_frame_name;
+    bool _save_by_frame_name {false};
 
     Ui::Whisker_Widget *ui;
 
