@@ -646,7 +646,7 @@ void Whisker_Widget::_orderWhiskersByPosition() {
     }
 
     const auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-    auto whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
+    std::vector<Line2D> whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
 
     for (std::size_t i = 0; i < static_cast<std::size_t>(_num_whisker_to_track); i++) {
 
@@ -662,6 +662,14 @@ void Whisker_Widget::_orderWhiskersByPosition() {
 
         _data_manager->getLine(whisker_name)->clearLinesAtTime(current_time);
         _data_manager->getLine(whisker_name)->addLineAtTime(current_time, whiskers[base_position_order[i]]);
+    }
+
+    _data_manager->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
+
+    std::cout << "The size of remaining whiskers is " << whiskers.size() << std::endl;
+
+    for (std::size_t i = static_cast<std::size_t>(_num_whisker_to_track); i < whiskers.size(); i++) {
+        _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[base_position_order[i]]);
     }
 }
 

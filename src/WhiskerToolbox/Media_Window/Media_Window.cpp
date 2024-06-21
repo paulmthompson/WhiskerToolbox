@@ -3,6 +3,8 @@
 
 #include "Media/Media_Data.hpp"
 
+#include <iostream>
+
 /*
 
 The Media_Window class
@@ -186,7 +188,6 @@ void Media_Window::_plotLineData()
     int i =0;
     for (auto const & line_key : _lines_to_show)
     {
-
         auto plot_color = QColor("blue");
         if (_line_colors.count(line_key) != 0)
         {
