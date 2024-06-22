@@ -59,10 +59,10 @@ jobs:
           cache: true
 
       - name: Set QTDIR and QtToolsPath
-         shell: bash
-         run: |
-           echo "QTDIR=$QT_ROOT_DIR" >> "$GITHUB_ENV"
-           echo "QtToolsPath=$QT_ROOT_DIR/bin" >> "$GITHUB_ENV"
+        shell: bash
+        run: |
+          echo "QTDIR=$QT_ROOT_DIR" >> "$GITHUB_ENV"
+          echo "QtToolsPath=$QT_ROOT_DIR/bin" >> "$GITHUB_ENV"
 
       - name: "Set environmental variables"
         shell: bash
