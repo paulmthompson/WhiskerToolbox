@@ -78,7 +78,7 @@ jobs:
 
       - name: Print error messages from build
         if: runner.os == 'Linux' && failure()
-        run: cat /usr/local/share/vcpkg/buildtrees/libsystemd/config-x64-linux-dynamic-dbg-meson-log.txt.log
+        run: cat  /usr/local/share/vcpkg/buildtrees/libsystemd/config-x64-linux-dynamic-dbg-out.log
 
       - name: Build
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
