@@ -1,0 +1,77 @@
+name: CMake
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - {"os": ubuntu-latest, short: linux, compiler: gcc, shell: bash}
+          #- {"os": ubuntu-latest, short: linux, compiler: clang, shell: bash}
+          #- {"os": windows-latest, short: windows, compiler: gcc, shell: msys2}
+          #- {"os": windows-latest, short: windows, compiler: clang, shell: msys2}
+          #- {"os": windows-latest, short: windows, compiler: msvc, shell: powershell}
+
+    runs-on: ${{matrix.os}}
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+    defaults:
+      run:
+        shell: '${{ matrix.shell }} {0}'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: seanmiddleditch/gha-setup-ninja@master
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows' && matrix.compiler == 'msvc'
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Add clang and and gcc to windows runner
+        uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows' && matrix.shell == 'msys2'
+        with:
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-x86_64-clang
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.2.4
+          cache: true
+
+      - name: Set QTDIR and QtToolsPath
+         shell: bash
+         run: |
+           echo "QTDIR=$QT_ROOT_DIR" >> "$GITHUB_ENV"
+           echo "QtToolsPath=$QT_ROOT_DIR/bin" >> "$GITHUB_ENV"
+
+      - name: "Set environmental variables"
+        shell: bash
+        run: |
+          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+
+      - name: Configure CMake
+        run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release
+
+      - name: Build
+        run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
+
