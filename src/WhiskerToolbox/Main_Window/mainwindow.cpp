@@ -3,9 +3,6 @@
 
 #include <QFileDialog>
 #include <QImage>
-#include <QVideoWidget>
-#include <QVideoFrameFormat>
-#include <QVideoFrame>
 #include <QGraphicsPixmapItem>
 #include <QKeyEvent>
 

@@ -3,13 +3,15 @@ find_package(HighFive CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Multimedia)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS MultimediaWidgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS UiTools REQUIRED)
+set(QT_VERSION_MAJOR 6)
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+#find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Multimedia)
+#find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS MultimediaWidgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+#find_package(Qt${QT_VERSION_MAJOR} COMPONENTS UiTools REQUIRED)
+
+#find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -75,10 +77,10 @@ else()
 endif()
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::Multimedia)
-target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::MultimediaWidgets)
-target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::OpenGL)
-target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::UiTools)
+#target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::Multimedia)
+#target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::MultimediaWidgets)
+#target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::OpenGL)
+#target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::UiTools)
 
 target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 

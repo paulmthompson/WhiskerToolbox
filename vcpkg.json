@@ -3,11 +3,7 @@
     "version-string": "0.0.1",
     "dependencies": [
         {
-            "name": "highfive"
-        },
-        {
-            "name": "hdf5",
-            "features": ["cpp"]
+            "name": "boost-circular-buffer"
         },
         {
             "name": "ffmpeg",
@@ -16,13 +12,17 @@
             "$version>=": "4.4.1",
             "$comment": "version 4.4.3 commited on november 14, 2022"
         },
+        {
+            "name": "hdf5",
+            "features": ["cpp"]
+        },
+        {
+            "name": "highfive"
+        },
         {   "name": "nlohmann-json"
         },
         {
             "name": "opencv4"
-        },
-        {
-            "name": "boost-circular-buffer"
         }
     ],
     "$builtin-baseline": "acc3bcf76b84ae5041c86ab55fe138ae7b8255c7",
