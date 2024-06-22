@@ -73,12 +73,12 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get install -y nasm python3-jinja2
 
+      - name: Configure CMake
+        run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release
+
       - name: Print error messages from build
         if: runner.os == 'Linux'
         run: cat /usr/local/share/vcpkg/buildtrees/libsystemd/config-x64-linux-dynamic-dbg-meson-log.txt.log
-
-      - name: Configure CMake
-        run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release
 
       - name: Build
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
