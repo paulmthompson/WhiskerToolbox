@@ -148,12 +148,16 @@ void Whisker_Widget::_changeWhiskerLengthThreshold(double new_threshold) {
 void Whisker_Widget::_selectFaceOrientation(int index) {
     if (index == 0) {
         _face_orientation = Face_Orientation::Facing_Top;
+        _wt->setHeadDirection(0.0f, -1.0f);
     } else if (index == 1) {
         _face_orientation = Face_Orientation::Facing_Bottom;
+        _wt->setHeadDirection(0.0f, 1.0f);
     } else if (index == 2) {
         _face_orientation = Face_Orientation::Facing_Left;
+        _wt->setHeadDirection(-1.0f, 0.0f);
     } else {
         _face_orientation = Face_Orientation::Facing_Right;
+        _wt->setHeadDirection(1.0f, 0.0f);
     }
 }
 

@@ -69,9 +69,9 @@ jobs:
         run: |
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
-      - name: Install nasm
+      - name: Install nasm and meson
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y nasm
+        run: sudo apt-get install -y nasm meson
 
       - name: Configure CMake
         run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release

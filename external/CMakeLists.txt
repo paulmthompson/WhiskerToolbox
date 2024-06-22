@@ -13,7 +13,7 @@ add_subdirectory(ffmpeg_wrapper)
 FetchContent_Declare(
   Whisker-Analysis
   GIT_REPOSITORY https://github.com/paulmthompson/Whisker-Analysis.git
-  GIT_TAG 626f0917f8f15384b0c8875d9e2792de896882df
+  GIT_TAG 988c0142b85d97a57bf295767a774eff935c50e8
 )
 
 add_subdirectory(Whisker-Analysis)
