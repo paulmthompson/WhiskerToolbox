@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         include:
-          #- {"os": ubuntu-latest, short: linux, compiler: gcc, shell: bash}
+          - {"os": ubuntu-latest, short: linux, compiler: gcc, shell: bash}
           #- {"os": ubuntu-latest, short: linux, compiler: clang, shell: bash}
           #- {"os": windows-latest, short: windows, compiler: gcc, shell: msys2}
           #- {"os": windows-latest, short: windows, compiler: clang, shell: msys2}
@@ -72,6 +72,10 @@ jobs:
       - name: Install nasm and meson
         if: runner.os == 'Linux'
         run: sudo apt-get install -y nasm python3-jinja2
+
+      - name: Print error messages from build
+        if: runner.os == 'Linux'
+        run: cat /usr/local/share/vcpkg/buildtrees/libsystemd/config-x64-linux-dynamic-dbg-meson-log.txt.log
 
       - name: Configure CMake
         run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release
