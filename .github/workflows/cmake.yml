@@ -16,6 +16,7 @@ jobs:
           #- {"os": windows-latest, short: windows, compiler: gcc, shell: msys2}
           #- {"os": windows-latest, short: windows, compiler: clang, shell: msys2}
           - {"os": windows-latest, short: windows, compiler: msvc, shell: powershell}
+          - {"os": macos-latest, short: mac, compiler: clang, shell: bash}
 
     runs-on: ${{matrix.os}}
 
@@ -80,9 +81,9 @@ jobs:
       - name: Configure CMake
         run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release
 
-      - name: Print error messages from build
-        if: runner.os == 'Linux' && failure()
-        run: cat   /usr/local/share/vcpkg/buildtrees/gtk3/config-x64-linux-dynamic-dbg-out.log
+      #- name: Print error messages from build
+      #  if: runner.os == 'Linux' && failure()
+      #  run: cat   /usr/local/share/vcpkg/buildtrees/gtk3/config-x64-linux-dynamic-dbg-out.log
 
       - name: Build
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
