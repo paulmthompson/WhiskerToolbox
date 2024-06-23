@@ -71,7 +71,7 @@ jobs:
 
       - name: Install nasm and meson
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y nasm libxi-dev libxtst-dev
+        run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev
 
       - name: Install jinja2
         if: runner.os == 'Linux'
@@ -82,7 +82,7 @@ jobs:
 
       - name: Print error messages from build
         if: runner.os == 'Linux' && failure()
-        run: cat  /usr/local/share/vcpkg/buildtrees/at-spi2-core/config-x64-linux-dynamic-dbg-out.log
+        run: cat   /usr/local/share/vcpkg/buildtrees/gtk3/config-x64-linux-dynamic-dbg-out.log
 
       - name: Build
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
