@@ -37,7 +37,7 @@ target_link_libraries(DataManager PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(DataManager PRIVATE HighFive)
 #target_link_libraries(DataManager PRIVATE HDF5::HDF5)
-if (OSX)
+if (APPLE)
     target_link_libraries(DataManager PRIVATE hdf5::hdf5-static hdf5::hdf5_cpp-static)
 else()
     target_link_libraries(DataManager PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
