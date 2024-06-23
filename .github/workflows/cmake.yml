@@ -32,6 +32,10 @@ jobs:
 
       - uses: seanmiddleditch/gha-setup-ninja@master
 
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        if: runner.os == 'macOS'
+
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows' && matrix.compiler == 'msvc'
 
