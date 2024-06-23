@@ -37,7 +37,20 @@ target_link_libraries(DataManager PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(DataManager PRIVATE HighFive)
 #target_link_libraries(DataManager PRIVATE HDF5::HDF5)
-target_link_libraries(DataManager PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
+target_link_libraries(DataManager PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared hdf5::hdf5_hl_cpp-shared)
 
 target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(DataManager PRIVATE ${CLANG_OPTIONS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(DataManager PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(DataManager PRIVATE ${MSVC_WARNINGS})
+endif()
