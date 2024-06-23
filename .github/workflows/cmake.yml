@@ -16,7 +16,7 @@ jobs:
           #- {"os": windows-latest, short: windows, compiler: gcc, shell: msys2}
           #- {"os": windows-latest, short: windows, compiler: clang, shell: msys2}
           - {"os": windows-latest, short: windows, compiler: msvc, shell: powershell}
-          - {"os": macos-latest, short: mac, compiler: clang, shell: bash}
+          - {"os": macos-latest, short: mac-arm64, compiler: clang, shell: bash}
 
     runs-on: ${{matrix.os}}
 
@@ -35,6 +35,13 @@ jobs:
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         if: runner.os == 'macOS'
+        with:
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
+
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        if: runner.os == 'macOS'
+        uses: Homebrew/actions/setup-homebrew@master
 
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows' && matrix.compiler == 'msvc'
@@ -75,9 +82,13 @@ jobs:
         run: |
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
-      - name: Install nasm and meson
+      - name: Install nasm and other libraries on Linux
         if: runner.os == 'Linux'
         run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev
+
+      - name: Install nasm on Mac
+        if: runner.os == 'macOS'
+        run: brew install nasm
 
       - name: Install jinja2
         if: runner.os == 'Linux'

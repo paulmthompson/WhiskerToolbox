@@ -10,14 +10,6 @@
         "name": "default",
         "hidden": true,
         "displayName": "Default Config",
-        "architecture": {
-          "value": "x64",
-          "strategy": "external"
-        },
-        "toolset": {
-          "value": "host=x64",
-          "strategy": "external"
-        },
         "generator": "Ninja",
         "cacheVariables": {
           "CMAKE_TOOLCHAIN_FILE": {
@@ -30,8 +22,34 @@
         }
       },
       {
-        "name": "windows-base",
+        "name": "x64",
         "inherits": ["default"],
+        "hidden": true,
+        "architecture": {
+          "value": "x64",
+          "strategy": "external"
+        },
+        "toolset": {
+          "value": "host=x64",
+          "strategy": "external"
+        }
+      },
+      {
+        "name": "arm64",
+        "inherits": ["default"],
+        "hidden": true,
+        "architecture": {
+          "value": "arm64",
+          "strategy": "external"
+        },
+        "toolset": {
+          "value": "host=arm64",
+          "strategy": "external"
+        }
+      },
+      {
+        "name": "windows-base",
+        "inherits": ["x64"],
         "hidden": true,
         "condition": {
           "type": "equals",
@@ -40,36 +58,38 @@
         }
       },
       {
-        "name": "mac-base",
+        "name": "mac-amd64-base",
+        "inherits": [
+          "x64"
+        ],
         "hidden": true,
         "condition": {
           "type": "equals",
           "lhs": "${hostSystemName}",
           "rhs": "Darwin"
         },
-        "architecture": {
-          "value": "arm64",
-          "strategy": "external"
-        },
-        "toolset": {
-          "value": "host=arm64",
-          "strategy": "external"
-        },
-        "generator": "Ninja",
         "cacheVariables": {
-          "CMAKE_TOOLCHAIN_FILE": {
-            "type": "FILEPATH",
-            "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-          },
-          "VCPKG_TARGET_TRIPLET": "arm64-osx-dynamic"
+          "VCPKG_TARGET_TRIPLET": "x64-osx"
+        }
+      },
+      {
+        "name": "mac-arm64-base",
+        "inherits": [
+          "arm64"
+        ],
+        "hidden": true,
+        "condition": {
+          "type": "equals",
+          "lhs": "${hostSystemName}",
+          "rhs": "Darwin"
         },
-        "environment": {
-          "VCPKG_FEATURE_FLAGS": "manifests,versions,binarycaching,registries"
+        "cacheVariables": {
+          "VCPKG_TARGET_TRIPLET": "arm64-osx"
         }
       },
       {
         "name": "linux-base",
-        "inherits": ["default"],
+        "inherits": ["x64"],
         "hidden": true,
         "condition": {
           "type": "equals",
@@ -234,8 +254,12 @@
       }
       },
       {
-        "name": "mac-clang-release",
-        "inherits": ["mac-base", "clang-release-base"]
+        "name": "mac-amd64-clang-release",
+        "inherits": ["mac-amd64-base", "clang-release-base"]
+      },
+      {
+        "name": "mac-arm64-clang-release",
+        "inherits": ["mac-arm64-base", "clang-release-base"]
       },
 
       {
@@ -288,6 +312,14 @@
         "name": "windows-msvc-debug",
         "configurePreset": "windows-msvc-debug"
       },
+      {
+        "name": "mac-amd64-clang-release",
+        "configurePreset": "mac-amd64-clang-release"
+      },
+      {
+        "name": "mac-arm64-clang-release",
+        "configurePreset": "mac-arm64-clang-release"
+      },
 
       {
         "name": "linux-gcc-release",
@@ -332,6 +364,15 @@
       {
         "name": "windows-msvc-debug",
         "configurePreset": "windows-msvc-debug"
+      },
+
+      {
+        "name": "mac-amd64-clang-release",
+        "configurePreset": "mac-amd64-clang-release"
+      },
+      {
+        "name": "mac-arm64-clang-release",
+        "configurePreset": "mac-arm64-clang-release"
       },
 
       {

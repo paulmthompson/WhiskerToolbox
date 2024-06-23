@@ -5,7 +5,7 @@ include(FetchContent)
 FetchContent_Declare(
   ffmpeg_wrapper
   GIT_REPOSITORY https://github.com/paulmthompson/ffmpeg_wrapper.git
-  GIT_TAG 0ab33b1bc9fef636e0bd154876d65d98dc9ec2eb
+  GIT_TAG 8c496f7cf44b2be4631cf66dd5b28f2ffb3909bb
 )
 
 add_subdirectory(ffmpeg_wrapper)
@@ -13,7 +13,7 @@ add_subdirectory(ffmpeg_wrapper)
 FetchContent_Declare(
   Whisker-Analysis
   GIT_REPOSITORY https://github.com/paulmthompson/Whisker-Analysis.git
-  GIT_TAG fd08a47119ac7cf68771349f714cc7fa61b9e5e5
+  GIT_TAG 1ff57c6c6b547117a82333f69ea0b1d6b43265c4
 )
 
 add_subdirectory(Whisker-Analysis)
