@@ -25,6 +25,6 @@
             "name": "opencv4"
         }
     ],
-    "$builtin-baseline": "acc3bcf76b84ae5041c86ab55fe138ae7b8255c7",
-    "$comment": "hash corresponds to 2022.03.10"
+    "builtin-baseline": "f7423ee180c4b7f40d43402c2feb3859161ef625",
+    "$comment": "hash corresponds to 2024.06.15"
 }
