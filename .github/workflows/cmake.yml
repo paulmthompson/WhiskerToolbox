@@ -35,6 +35,14 @@ jobs:
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         if: runner.os == 'macOS'
+        with:
+          vcpkgDirectory: 'usr/local/vcpkg'
+
+      - name: Set VCPKG_ROOT
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+           echo "VCPKG_ROOT=/usr/local/vcpkg" >> "$GITHUB_ENV"
 
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows' && matrix.compiler == 'msvc'
