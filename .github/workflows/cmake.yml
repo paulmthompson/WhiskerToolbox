@@ -70,6 +70,7 @@ jobs:
           echo "QtToolsPath=$QT_ROOT_DIR/bin" >> "$GITHUB_ENV"
 
       - name: "Set environmental variables"
+        if: runner.os == 'Linux' || runner.os == 'Windows'
         shell: bash
         run: |
           echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
