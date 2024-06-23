@@ -40,6 +40,19 @@
         }
       },
       {
+        "name": "mac-base",
+        "inherits": ["default"],
+        "hidden": true,
+        "condition": {
+          "type": "equals",
+          "lhs": "${hostSystemName}",
+          "rhs": "Darwin"
+        },
+        "cacheVariables": {
+          "VCPKG_TARGET_TRIPLET": "arm64-osx-dynamic"
+        }
+      },
+      {
         "name": "linux-base",
         "inherits": ["default"],
         "hidden": true,
@@ -204,6 +217,10 @@
         "cacheVariables": {
           "VCPKG_TARGET_TRIPLET": "x64-windows"
       }
+      },
+      {
+        "name": "mac-clang-release",
+        "inherits": ["mac-base", "clang-release-base"]
       },
 
       {
