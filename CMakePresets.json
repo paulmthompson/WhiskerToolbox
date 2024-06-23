@@ -41,15 +41,30 @@
       },
       {
         "name": "mac-base",
-        "inherits": ["default"],
         "hidden": true,
         "condition": {
           "type": "equals",
           "lhs": "${hostSystemName}",
           "rhs": "Darwin"
         },
+        "architecture": {
+          "value": "arm64",
+          "strategy": "external"
+        },
+        "toolset": {
+          "value": "host=arm64",
+          "strategy": "external"
+        },
+        "generator": "Ninja",
         "cacheVariables": {
+          "CMAKE_TOOLCHAIN_FILE": {
+            "type": "FILEPATH",
+            "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+          },
           "VCPKG_TARGET_TRIPLET": "arm64-osx-dynamic"
+        },
+        "environment": {
+          "VCPKG_FEATURE_FLAGS": "manifests,versions,binarycaching,registries"
         }
       },
       {
