@@ -33,6 +33,7 @@ Manifest mode from VCPKG will make all dependencies specified in vcpkg.json be a
 with this particular project
 ]]
 set(VCPKG_MANIFEST_MODE ON)
+set(VCPKG_INSTALL_OPTIONS "--allow-unsupported")
 
 #This is necessary to work on windows. A better way would be to define only the symbols that need to be exported
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
