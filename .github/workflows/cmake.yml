@@ -67,7 +67,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: 6.2.4
+          version: 6.7.2
           cache: true
 
       - name: Set QTDIR and QtToolsPath
