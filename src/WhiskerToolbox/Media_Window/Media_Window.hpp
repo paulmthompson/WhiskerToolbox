@@ -1,6 +1,8 @@
 #ifndef MEDIA_WINDOW_HPP
 #define MEDIA_WINDOW_HPP
 
+#include "DataManager.hpp"
+
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPixmapItem>
@@ -12,16 +14,6 @@
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
-
-#include "DataManager.hpp"
-
-
-#if defined _WIN32 || defined __CYGWIN__
-    #define MEDIA_WINDOW_DLLOPT
-//  #define MEDIA_WINDOW_DLLOPT Q_DECL_EXPORT
-#else
-    #define MEDIA_WINDOW_DLLOPT __attribute__((visibility("default")))
-#endif
 
 int const default_width = 640;
 int const default_height = 480;
@@ -40,7 +32,7 @@ int const default_height = 480;
  * saved for the duration (loading keypoints to be plotted with each corresponding frame).
  *
  */
-class MEDIA_WINDOW_DLLOPT Media_Window : public QGraphicsScene
+class Media_Window : public QGraphicsScene
 {
 Q_OBJECT
 public:

@@ -3,9 +3,9 @@ find_package(HighFive CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
-set(QT_VERSION_MAJOR 6)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+qt_standard_project_setup()
 
 set(PROJECT_SOURCES
         main.cpp
@@ -50,24 +50,13 @@ set(PROJECT_SOURCES
         Tongue_Widget/Tongue_Widget.ui
 )
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(WhiskerToolbox
-            MANUAL_FINALIZATION
-            ${PROJECT_SOURCES}
-    )
-else()
-    if(ANDROID)
-        add_library(WhiskerToolbox SHARED
-                ${PROJECT_SOURCES}
-        )
-    else()
-        add_executable(WhiskerToolbox
-                ${PROJECT_SOURCES}
-        )
-    endif()
-endif()
 
-target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+qt_add_executable(WhiskerToolbox
+        MANUAL_FINALIZATION
+        ${PROJECT_SOURCES}
+)
+
+target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets)
 
 target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
@@ -108,12 +97,18 @@ set_target_properties(WhiskerToolbox PROPERTIES
         WIN32_EXECUTABLE TRUE
 )
 
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(WhiskerToolbox)
-endif()
+qt_finalize_executable(WhiskerToolbox)
+
 
 if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_INSTALL_BINDIR})
+endif()
+
+if(APPLE)
+    # Assume targeting macOS to keep this example simple
+    set_target_properties(WhiskerToolbox PROPERTIES
+    INSTALL_RPATH @executable_path/../Frameworks
+    )
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -127,3 +122,17 @@ endif()
 if (MSVC)
     target_compile_options(WhiskerToolbox PRIVATE ${MSVC_WARNINGS})
 endif()
+
+install(TARGETS WhiskerToolbox
+    BUNDLE DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+qt_generate_deploy_app_script(
+    TARGET WhiskerToolbox
+    OUTPUT_SCRIPT deployApp
+)
+
+install(SCRIPT "${deployApp}")
+
+include(CPack)
