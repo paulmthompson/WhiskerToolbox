@@ -5,13 +5,7 @@ find_package(OpenCV CONFIG REQUIRED)
 
 set(QT_VERSION_MAJOR 6)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-#find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Multimedia)
-#find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS MultimediaWidgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-#find_package(Qt${QT_VERSION_MAJOR} COMPONENTS UiTools REQUIRED)
-
-#find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS OpenGL)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -30,45 +24,42 @@ set(PROJECT_SOURCES
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
         Whisker_Widget/Whisker_Widget.cpp
+        Whisker_Widget/janelia_config.ui
+        Whisker_Widget/janelia_config.hpp
+        Whisker_Widget/janelia_config.cpp
+        Whisker_Widget/contact_widget.ui
+        Whisker_Widget/contact_widget.hpp
+        Whisker_Widget/contact_widget.cpp
 
         Label_Widget/Label_Widget.hpp
         Label_Widget/Label_Widget.ui
         Label_Widget/Label_Widget.cpp
         Label_Widget/label_maker.hpp
         Label_Widget/label_maker.cpp
+
+        TimeScrollBar/TimeScrollBar.hpp
+        TimeScrollBar/TimeScrollBar.cpp
+        TimeScrollBar/TimeScrollBar.ui
+
+        Image_Processing_Widget/Image_Processing_Widget.hpp
+        Image_Processing_Widget/Image_Processing_Widget.cpp
+        Image_Processing_Widget/Image_Processing_Widget.ui
+
+        Tongue_Widget/Tongue_Widget.hpp
+        Tongue_Widget/Tongue_Widget.cpp
+        Tongue_Widget/Tongue_Widget.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(WhiskerToolbox
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
-            Whisker_Widget/janelia_config.ui
-            Whisker_Widget/janelia_config.hpp
-            Whisker_Widget/janelia_config.cpp
-            Whisker_Widget/contact_widget.ui
-            Whisker_Widget/contact_widget.hpp
-            Whisker_Widget/contact_widget.cpp
-            TimeScrollBar/TimeScrollBar.hpp
-            TimeScrollBar/TimeScrollBar.cpp
-            TimeScrollBar/TimeScrollBar.ui
-            Image_Processing_Widget/Image_Processing_Widget.hpp
-            Image_Processing_Widget/Image_Processing_Widget.cpp
-            Image_Processing_Widget/Image_Processing_Widget.ui
-            Tongue_Widget/Tongue_Widget.hpp
-            Tongue_Widget/Tongue_Widget.cpp
-            Tongue_Widget/Tongue_Widget.ui
     )
-    # Define target properties for Android with Qt 6 as:
-    #    set_property(TARGET WhiskerToolbox APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-    #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-    # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
         add_library(WhiskerToolbox SHARED
                 ${PROJECT_SOURCES}
         )
-        # Define properties for Android with Qt 5 after find_package() calls as:
-        #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
         add_executable(WhiskerToolbox
                 ${PROJECT_SOURCES}
@@ -77,17 +68,11 @@ else()
 endif()
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-#target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::Multimedia)
-#target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::MultimediaWidgets)
-#target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::OpenGL)
-#target_link_libraries(WhiskerToolbox PRIVATE Qt${QT_VERSION_MAJOR}::UiTools)
 
 target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
-
-#target_link_libraries(WhiskerToolbox PRIVATE PNG::PNG)
 
 add_subdirectory(DataManager)
 add_subdirectory(Media_Window)
