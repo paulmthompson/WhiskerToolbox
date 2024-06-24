@@ -5,7 +5,7 @@ include(FetchContent)
 FetchContent_Declare(
   ffmpeg_wrapper
   GIT_REPOSITORY https://github.com/paulmthompson/ffmpeg_wrapper.git
-  GIT_TAG 8c496f7cf44b2be4631cf66dd5b28f2ffb3909bb
+  GIT_TAG 07d271fc088d429c99dd41ef67929fdd6322e536
 )
 
 add_subdirectory(ffmpeg_wrapper)

@@ -30,13 +30,12 @@ target_include_directories(DataManager PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
     )
 
-target_link_libraries(DataManager PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-#target_link_libraries(DataManager PRIVATE Qt${QT_VERSION_MAJOR}::Multimedia)
+target_link_libraries(DataManager PRIVATE Qt6::Widgets)
 
 target_link_libraries(DataManager PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(DataManager PRIVATE HighFive)
-#target_link_libraries(DataManager PRIVATE HDF5::HDF5)
+
 if (APPLE)
     target_link_libraries(DataManager PRIVATE hdf5::hdf5-static hdf5::hdf5_cpp-static)
 else()

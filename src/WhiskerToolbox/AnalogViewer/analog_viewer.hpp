@@ -7,19 +7,11 @@
 
 #include <QWidget>
 
-
-#if defined _WIN32 || defined __CYGWIN__
-    #define ANALOG_VIEWER_DLLOPT
-    //#define ANALOG_VIEWER_DLLOPT Q_DECL_EXPORT
-#else
-    #define ANALOG_VIEWER_DLLOPT __attribute__((visibility("default")))
-#endif
-
 namespace Ui {
 class Analog_Viewer;
 }
 
-class ANALOG_VIEWER_DLLOPT Analog_Viewer : public QWidget {
+class Analog_Viewer : public QWidget {
     Q_OBJECT
 public:
     Analog_Viewer(QWidget *parent = 0);

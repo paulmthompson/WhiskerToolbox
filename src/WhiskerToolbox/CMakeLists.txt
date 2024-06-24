@@ -12,6 +12,10 @@ set(PROJECT_SOURCES
         whiskertoolbox.qrc
         my_stylesheet.qss
 
+        AnalogViewer/analog_viewer.hpp
+        AnalogViewer/analog_viewer.cpp
+        AnalogViewer/analog_viewer.ui
+
         Main_Window/mainwindow.cpp
         Main_Window/mainwindow.hpp
         Main_Window/mainwindow.ui
@@ -36,6 +40,9 @@ set(PROJECT_SOURCES
         Label_Widget/Label_Widget.cpp
         Label_Widget/label_maker.hpp
         Label_Widget/label_maker.cpp
+
+        Media_Window/Media_Window.hpp
+        Media_Window/Media_Window.cpp
 
         TimeScrollBar/TimeScrollBar.hpp
         TimeScrollBar/TimeScrollBar.cpp
@@ -64,28 +71,22 @@ target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
 add_subdirectory(DataManager)
-add_subdirectory(Media_Window)
-
-add_subdirectory(AnalogViewer)
 
 target_include_directories(WhiskerToolbox PRIVATE
 
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Covariate_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Covariate_Widget>"
-        
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
 
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager)
-target_link_libraries(WhiskerToolbox PRIVATE Media_Window)
-target_link_libraries(WhiskerToolbox PRIVATE Analog_Viewer)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
 
@@ -123,7 +124,7 @@ if (MSVC)
     target_compile_options(WhiskerToolbox PRIVATE ${MSVC_WARNINGS})
 endif()
 
-install(TARGETS WhiskerToolbox
+install(TARGETS WhiskerToolbox DataManager
     BUNDLE DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
