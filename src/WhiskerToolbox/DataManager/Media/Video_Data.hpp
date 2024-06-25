@@ -6,11 +6,17 @@
 #include <memory>
 #include <string>
 
+// I can forward declare VideoDecoder as a unique_ptr member variable
+// But i need a destructor declaration in header and empty definition
+// in the cpp file for it to be a complete type
+//https://stackoverflow.com/questions/6012157/is-stdunique-ptrt-required-to-know-the-full-definition-of-t
 namespace ffmpeg_wrapper {class VideoDecoder;}
 
 class VideoData : public MediaData {
 public:
     VideoData();
+
+    ~VideoData();
 
     void LoadFrame(int frame_id) override;
 
@@ -30,7 +36,7 @@ public:
 protected:
     void doLoadMedia(std::string name) override;
 private:
-    int _last_decoded_frame;
+    int _last_decoded_frame {0};
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> _vd;
 };
 

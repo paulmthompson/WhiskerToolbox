@@ -3,8 +3,10 @@
 #include "ffmpeg_wrapper/videodecoder.h"
 
 VideoData::VideoData() :
-    _vd{std::make_unique<ffmpeg_wrapper::VideoDecoder>()},
-    _last_decoded_frame{0}
+    _vd{std::make_unique<ffmpeg_wrapper::VideoDecoder>()}
+{}
+
+VideoData::~VideoData()
 {}
 
 void VideoData::doLoadMedia(std::string name) {
