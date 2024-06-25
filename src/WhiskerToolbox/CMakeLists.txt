@@ -3,6 +3,7 @@ find_package(HighFive CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
+set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 qt_standard_project_setup()
@@ -151,6 +152,7 @@ else()
                 [[libgcc_s_seh-1\.dll]] [[libstdc\+\+\-6.dll]]
                 POST_EXCLUDE_REGEXES
                 [[.*/system32/.*\.dll]]
+                [[avcodec*]]
         )
     ELSE()
         install(RUNTIME_DEPENDENCY_SET appDeps
