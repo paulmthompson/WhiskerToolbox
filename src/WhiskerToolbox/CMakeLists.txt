@@ -119,7 +119,7 @@ if(APPLE)
 
     # Generate a deployment script to be executed at install time
     qt_generate_deploy_script(
-            TARGET MyApp
+            TARGET WhiskerToolbox
             OUTPUT_SCRIPT deploy_script
             CONTENT "
     qt_deploy_runtime_dependencies(
