@@ -136,20 +136,13 @@ if (MSVC)
     target_compile_options(WhiskerToolbox PRIVATE ${MSVC_WARNINGS})
 endif()
 
-# Generate a deployment script to be executed at install time
-qt_generate_deploy_script(
-        TARGET WhiskerToolbox
-        OUTPUT_SCRIPT deploy_script
-        CONTENT "
-qt_deploy_runtime_dependencies(
-    EXECUTABLE ${executable_path}
-    GENERATE_QT_CONF
-    VERBOSE
-)")
-
-
 install(TARGETS WhiskerToolbox
     BUNDLE DESTINATION .
+)
+
+qt_generate_deploy_app_script(
+    TARGET WhiskerToolbox
+    OUTPUT_SCRIPT deploy_script
 )
 
 install(SCRIPT "${deploy_script}")
