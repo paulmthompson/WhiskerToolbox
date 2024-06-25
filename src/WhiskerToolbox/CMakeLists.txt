@@ -137,7 +137,15 @@ if (MSVC)
 endif()
 
 install(TARGETS WhiskerToolbox
-    BUNDLE DESTINATION .
+        BUNDLE DESTINATION .
+        LIBRARY
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 qt_generate_deploy_app_script(
