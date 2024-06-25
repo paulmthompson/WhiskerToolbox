@@ -88,41 +88,6 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core)
 
-set_target_properties(WhiskerToolbox PROPERTIES
-        MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
-        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-        MACOSX_BUNDLE TRUE
-        WIN32_EXECUTABLE TRUE
-)
-
-#include(\"${QT_DEPLOY_SUPPORT}\")
-# App bundles on macOS have an .app suffix
-if(APPLE)
-    set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
-else()
-    set(executable_path "${CMAKE_INSTALL_BINDIR}/$<TARGET_FILE_NAME:WhiskerToolbox>")
-endif()
-
-message(${executable_path})
-
-set(data_manager_path "${CMAKE_INSTALL_BINDIR}/$<TARGET_FILE_NAME:DataManager>")
-
-#qt_finalize_executable(WhiskerToolbox)
-
-
-#[[
-if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_INSTALL_BINDIR})
-endif()
-]]#
-
-if(APPLE)
-    # Assume targeting macOS to keep this example simple
-    set_target_properties(WhiskerToolbox PROPERTIES
-    INSTALL_RPATH @executable_path/../Frameworks
-    )
-endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(WhiskerToolbox PRIVATE ${CLANG_OPTIONS})
@@ -136,7 +101,33 @@ if (MSVC)
     target_compile_options(WhiskerToolbox PRIVATE ${MSVC_WARNINGS})
 endif()
 
-install(TARGETS WhiskerToolbox
+set_target_properties(WhiskerToolbox PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+        MACOSX_BUNDLE TRUE
+        WIN32_EXECUTABLE TRUE
+)
+
+#include(\"${QT_DEPLOY_SUPPORT}\")
+# App bundles on macOS have an .app suffix
+if(APPLE)
+
+    set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
+
+    # Assume targeting macOS to keep this example simple
+    set_target_properties(WhiskerToolbox PROPERTIES
+            INSTALL_RPATH @executable_path/../Frameworks
+    )
+    set_target_properties(DataManager PROPERTIES
+            FRAMEWORK TRUE
+            INSTALL_RPATH @loader_path/../../..)
+
+    install(TARGETS DataManager WhiskerToolbox
+        BUNDLE DESTINATION .
+        FRAMEWORK DESTINATION Whiskertoolbox.app/Contents/Frameworks)
+else()
+    install(TARGETS WhiskerToolbox
         BUNDLE DESTINATION .
         LIBRARY
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -146,7 +137,8 @@ install(TARGETS WhiskerToolbox
         DESTINATION ${CMAKE_INSTALL_BINDIR}
         INCLUDES
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+    )
+endif()
 
 qt_generate_deploy_app_script(
     TARGET WhiskerToolbox
