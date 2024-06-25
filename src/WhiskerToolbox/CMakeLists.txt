@@ -127,6 +127,42 @@ if(APPLE)
         BUNDLE DESTINATION .
         FRAMEWORK DESTINATION Whiskertoolbox.app/Contents/Frameworks)
 else()
+
+    install(TARGETS DataManager
+            BUNDLE DESTINATION .
+            LIBRARY
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE
+            DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            RUNTIME
+            DESTINATION ${CMAKE_INSTALL_BINDIR}
+            INCLUDES
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    )
+
+    install(TARGETS DataManager RUNTIME_DEPENDENCY_SET appDeps)
+
+    IF (WIN32)
+        install(RUNTIME_DEPENDENCY_SET appDeps
+                PRE_EXCLUDE_REGEXES
+                [[api-ms-win-.*]] [[ext-ms-.*]] [[kernel32\.dll]]
+                [[bcrypt.dll]] [[mfplat.dll]] [[msvcrt.dll]] [[ole32.dll]] [[secur32.dll]] [[user32.dll]] [[vcruntime140.dll]]
+                [[ws2_32.dll]]
+                [[libgcc_s_seh-1\.dll]] [[libstdc\+\+\-6.dll]]
+                POST_EXCLUDE_REGEXES
+                [[.*/system32/.*\.dll]]
+        )
+    ELSE()
+        install(RUNTIME_DEPENDENCY_SET appDeps
+                PRE_EXCLUDE_REGEXES
+                [[libc\.so\..*]] [[libgcc_s\.so\..*]] [[libm\.so\..*]] [[libstdc\+\+\.so\..*]]
+                [[ld.*]] [[libbz2.*]] [[libdl.*]] [[libgmp.*]] [[libgnutls.*]] [[libhogweed.*]]
+                [[libpthread.*]] [[librt.*]] [[libz.*]] [[libQt6Widgets.*]]
+                POST_EXCLUDE_REGEXES
+                [[/lib/x86_64-linux-gnu/*]]
+        )
+    ENDIF()
+
     install(TARGETS WhiskerToolbox
         BUNDLE DESTINATION .
         LIBRARY
