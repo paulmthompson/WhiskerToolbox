@@ -115,7 +115,7 @@ set_target_properties(WhiskerToolbox PROPERTIES
 if(APPLE)
 
     set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
-    set(data_manager_path "${CMAKE_INSTALL_BIN_DIR}/$<TARGET_FILE_NAME:DataManager>")
+    set(data_manager_path "lib/$<TARGET_FILE_NAME:DataManager>")
 
     # Generate a deployment script to be executed at install time
     qt_generate_deploy_script(
