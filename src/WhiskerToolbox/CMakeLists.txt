@@ -115,18 +115,23 @@ set_target_properties(WhiskerToolbox PROPERTIES
 if(APPLE)
 
     set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
+    set(data_manager_path "${CMAKE_INSTALL_BIN_DIR}/$<TARGET_FILE_NAME:DataManager>")
 
-    # Assume targeting macOS to keep this example simple
-    set_target_properties(WhiskerToolbox PROPERTIES
-            INSTALL_RPATH @executable_path/../Frameworks
-    )
-    set_target_properties(DataManager PROPERTIES
-            FRAMEWORK TRUE
-            INSTALL_RPATH @loader_path/../../..)
+    # Generate a deployment script to be executed at install time
+    qt_generate_deploy_script(
+            TARGET MyApp
+            OUTPUT_SCRIPT deploy_script
+            CONTENT "
+    qt_deploy_runtime_dependencies(
+    EXECUTABLE ${executable_path}
+    ADDITIONAL_LIBRARIES ${data_manager_path}
+    GENERATE_QT_CONF
+    VERBOSE
+    )")
 
     install(TARGETS DataManager WhiskerToolbox
         BUNDLE DESTINATION .
-        FRAMEWORK DESTINATION Whiskertoolbox.app/Contents/Frameworks)
+    )
 else()
 
     install(TARGETS DataManager
@@ -176,12 +181,14 @@ else()
         INCLUDES
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
+
+    qt_generate_deploy_app_script(
+            TARGET WhiskerToolbox
+            OUTPUT_SCRIPT deploy_script
+    )
 endif()
 
-qt_generate_deploy_app_script(
-    TARGET WhiskerToolbox
-    OUTPUT_SCRIPT deploy_script
-)
+
 
 install(SCRIPT "${deploy_script}")
 
