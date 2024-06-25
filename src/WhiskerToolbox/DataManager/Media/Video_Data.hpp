@@ -7,7 +7,8 @@
 
 #include "Media/Media_Data.hpp"
 
-#include "ffmpeg_wrapper/videodecoder.h"
+//#include "ffmpeg_wrapper/videodecoder.h"
+namespace ffmpeg_wrapper {class VideoDecoder;}
 
 #include <string>
 #include <memory>

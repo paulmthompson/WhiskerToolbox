@@ -3,6 +3,7 @@
 //
 
 #include "Media/Video_Data.hpp"
+#include "ffmpeg_wrapper/videodecoder.h"
 
 VideoData::VideoData() :
     _vd{std::make_unique<ffmpeg_wrapper::VideoDecoder>()},

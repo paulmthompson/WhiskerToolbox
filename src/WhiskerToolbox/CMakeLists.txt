@@ -65,7 +65,7 @@ qt_add_executable(WhiskerToolbox
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets)
 
-target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
+#target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
