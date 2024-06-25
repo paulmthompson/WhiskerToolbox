@@ -8,7 +8,7 @@ FetchContent_Declare(
   GIT_TAG 07d271fc088d429c99dd41ef67929fdd6322e536
 )
 
-add_subdirectory(ffmpeg_wrapper)
+#add_subdirectory(ffmpeg_wrapper)
 
 FetchContent_Declare(
   Whisker-Analysis
@@ -20,3 +20,5 @@ add_subdirectory(Whisker-Analysis)
 
 #We should use make avaiable
 FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis)
+
+add_subdirectory(ffmpeg_wrapper)

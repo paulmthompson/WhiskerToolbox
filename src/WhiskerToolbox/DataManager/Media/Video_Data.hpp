@@ -6,6 +6,7 @@
 #define WHISKERTOOLBOX_VIDEO_DATA_HPP
 
 #include "Media/Media_Data.hpp"
+
 #include "ffmpeg_wrapper/videodecoder.h"
 
 #include <string>

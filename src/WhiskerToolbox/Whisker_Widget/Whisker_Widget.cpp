@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QElapsedTimer>
 #include "qevent.h"
+#include "opencv2/core/mat.hpp"
 
 #include <iostream>
 #include <string>

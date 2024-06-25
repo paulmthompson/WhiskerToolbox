@@ -7,6 +7,8 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 qt_standard_project_setup()
 
+add_subdirectory(DataManager)
+
 set(PROJECT_SOURCES
         main.cpp
         whiskertoolbox.qrc
@@ -57,9 +59,7 @@ set(PROJECT_SOURCES
         Tongue_Widget/Tongue_Widget.ui
 )
 
-
 qt_add_executable(WhiskerToolbox
-        MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
 )
 
@@ -69,8 +69,6 @@ target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
-
-add_subdirectory(DataManager)
 
 target_include_directories(WhiskerToolbox PRIVATE
 
@@ -88,7 +86,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 
-target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
+target_link_libraries(WhiskerToolbox PRIVATE opencv_core)
 
 set_target_properties(WhiskerToolbox PROPERTIES
         MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
@@ -98,12 +96,26 @@ set_target_properties(WhiskerToolbox PROPERTIES
         WIN32_EXECUTABLE TRUE
 )
 
-qt_finalize_executable(WhiskerToolbox)
+#include(\"${QT_DEPLOY_SUPPORT}\")
+# App bundles on macOS have an .app suffix
+if(APPLE)
+    set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
+else()
+    set(executable_path "${CMAKE_INSTALL_BINDIR}/$<TARGET_FILE_NAME:WhiskerToolbox>")
+endif()
+
+message(${executable_path})
+
+set(data_manager_path "${CMAKE_INSTALL_BINDIR}/$<TARGET_FILE_NAME:DataManager>")
+
+#qt_finalize_executable(WhiskerToolbox)
 
 
+#[[
 if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_INSTALL_BINDIR})
 endif()
+]]#
 
 if(APPLE)
     # Assume targeting macOS to keep this example simple
@@ -124,16 +136,22 @@ if (MSVC)
     target_compile_options(WhiskerToolbox PRIVATE ${MSVC_WARNINGS})
 endif()
 
-install(TARGETS WhiskerToolbox DataManager
+# Generate a deployment script to be executed at install time
+qt_generate_deploy_script(
+        TARGET WhiskerToolbox
+        OUTPUT_SCRIPT deploy_script
+        CONTENT "
+qt_deploy_runtime_dependencies(
+    EXECUTABLE ${executable_path}
+    GENERATE_QT_CONF
+    VERBOSE
+)")
+
+
+install(TARGETS WhiskerToolbox
     BUNDLE DESTINATION .
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-qt_generate_deploy_app_script(
-    TARGET WhiskerToolbox
-    OUTPUT_SCRIPT deployApp
-)
-
-install(SCRIPT "${deployApp}")
+install(SCRIPT "${deploy_script}")
 
 include(CPack)
