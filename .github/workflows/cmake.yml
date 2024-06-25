@@ -104,3 +104,7 @@ jobs:
       - name: Build
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
 
+      - name: Install
+        run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}} --target install
+
+
