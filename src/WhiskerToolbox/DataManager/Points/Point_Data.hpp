@@ -1,9 +1,10 @@
 #ifndef POINT_DATA_HPP
 #define POINT_DATA_HPP
 
-#include <vector>
+
 #include <map>
 #include <string>
+#include <vector>
 
 template<typename T>
 struct Point2D {

@@ -1,12 +1,13 @@
 #ifndef WHISKERTOOLBOX_MEDIA_DATA_HPP
 #define WHISKERTOOLBOX_MEDIA_DATA_HPP
 
-#include "opencv2/core/mat.hpp"
-
 #include <functional>
 #include <map>
+#include <stdint.h>
 #include <string>
 #include <vector>
+
+namespace cv { class Mat; }
 
 class MediaData {
 public:

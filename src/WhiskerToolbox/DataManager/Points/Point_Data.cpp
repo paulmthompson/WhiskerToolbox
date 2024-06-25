@@ -2,11 +2,12 @@
 #include "Point_Data.hpp"
 #include "utils/container.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <algorithm>
+
 
 PointData::PointData()
 {

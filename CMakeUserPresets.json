@@ -25,7 +25,7 @@
       ],
       "cacheVariables": {
         "CMAKE_PREFIX_PATH": "C:/Qt/6.7.2/llvm-mingw_64",
-        "QT_DIR": "C:/Qt/6.7.2/llvm-mingw_64/lib/cmake/Qt6"
+        "Qt6_DIR": "C:/Qt/6.7.2/llvm-mingw_64/lib/cmake/Qt6"
       }
     }
   ],

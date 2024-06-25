@@ -3,6 +3,8 @@
 
 #include "utils/opencv_utility.hpp"
 
+#include <opencv2/core/mat.hpp>
+
 MediaData::MediaData() :
     _width{640},
     _height{480}
