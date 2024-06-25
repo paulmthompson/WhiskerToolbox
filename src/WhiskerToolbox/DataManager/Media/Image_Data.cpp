@@ -1,15 +1,15 @@
-//
-// Created by wanglab on 4/10/2024.
-//
 
 #include "Media/Image_Data.hpp"
+
 #include "utils/string_manip.hpp"
 
-#include <QString>
 #include <QImage>
+#include <QString>
 
-#include <set>
+#include <cstddef>
 #include <iostream>
+#include <set>
+
 
 ImageData::ImageData() = default;
 

@@ -1,8 +1,5 @@
-//
-// Created by wanglab on 4/10/2024.
-//
-
 #include "Media/Video_Data.hpp"
+
 #include "ffmpeg_wrapper/videodecoder.h"
 
 VideoData::VideoData() :

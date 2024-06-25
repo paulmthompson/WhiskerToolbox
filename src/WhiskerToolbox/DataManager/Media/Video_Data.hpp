@@ -1,17 +1,12 @@
-//
-// Created by wanglab on 4/10/2024.
-//
-
 #ifndef WHISKERTOOLBOX_VIDEO_DATA_HPP
 #define WHISKERTOOLBOX_VIDEO_DATA_HPP
 
 #include "Media/Media_Data.hpp"
 
-//#include "ffmpeg_wrapper/videodecoder.h"
-namespace ffmpeg_wrapper {class VideoDecoder;}
-
-#include <string>
 #include <memory>
+#include <string>
+
+namespace ffmpeg_wrapper {class VideoDecoder;}
 
 class VideoData : public MediaData {
 public:

@@ -1,14 +1,13 @@
-//
-// Created by wanglab on 4/10/2024.
-//
 
 #ifndef WHISKERTOOLBOX_IMAGE_DATA_HPP
 #define WHISKERTOOLBOX_IMAGE_DATA_HPP
 
-#include <filesystem>
-#include <vector>
-#include <string>
 #include "Media/Media_Data.hpp"
+
+#include <filesystem>
+#include <string>
+#include <vector>
+
 
 class ImageData : public MediaData {
 public:

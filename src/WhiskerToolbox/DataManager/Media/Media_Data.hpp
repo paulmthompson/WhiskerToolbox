@@ -1,17 +1,12 @@
-//
-// Created by wanglab on 4/10/2024.
-//
-
 #ifndef WHISKERTOOLBOX_MEDIA_DATA_HPP
 #define WHISKERTOOLBOX_MEDIA_DATA_HPP
 
-#include <vector>
-#include <string>
-#include <functional>
-#include <map>
-
 #include "opencv2/core/mat.hpp"
 
+#include <functional>
+#include <map>
+#include <string>
+#include <vector>
 
 class MediaData {
 public:
