@@ -112,6 +112,9 @@ void Tongue_Widget::_loadImgTongueMasks(){
     _data_manager->createMask(mask_key);
     auto mask = _data_manager->getMask(mask_key);
 
+    mask->setMaskHeight(480);
+    mask->setMaskWidth(640);
+
     for (const auto & img_it : std::filesystem::directory_iterator(dir_name))
     {
         //std::cout << "Processing " << img_it.path() << '\n';
@@ -120,13 +123,15 @@ void Tongue_Widget::_loadImgTongueMasks(){
         for (int i=0; i<img.rows; ++i){
             for (int j=0; j<img.cols; ++j){
                 if (img.at<uchar>(i,j) > 0){
-                    x_coords.push_back(static_cast<float>(j)/2);
-                    y_coords.push_back(static_cast<float>(i)/2);
+                    x_coords.push_back(j);
+                    y_coords.push_back(i);
                 }
             }
         }
 
-        auto const frame_index = stoi(remove_extension(img_it.path().filename().string().substr(5)));
+        auto const frame_num = remove_extension(img_it.path().filename().string().substr(5));
+        auto const frame_index = _data_manager->getMediaData()->getFrameIndexFromNumber(std::stoi(frame_num));
+
         mask->addMaskAtTime(frame_index, x_coords, y_coords);
         //std::cout << "Added " << x_coords.size() << " pts at frame " << frame_index << '\n';
     }
