@@ -3,5 +3,5 @@ CMakeLists.txt.user*
 out
 
 CMakeUserPresets.json
-
+build
 .idea
