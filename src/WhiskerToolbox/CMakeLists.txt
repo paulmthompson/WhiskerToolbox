@@ -101,3 +101,5 @@ endif()
 if (MSVC)
     target_compile_options(WhiskerToolbox PRIVATE ${MSVC_WARNINGS})
 endif()
+
+include(${CMAKE_SOURCE_DIR}/packaging/Install.cmake)
