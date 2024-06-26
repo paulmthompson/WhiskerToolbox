@@ -24,7 +24,7 @@ public:
 
     virtual ~Tongue_Widget();
 
-    void openWidget(); // Call
+    void openWidget(); //
 protected:
     void closeEvent(QCloseEvent *event);
     void keyPressEvent(QKeyEvent *event);
@@ -37,6 +37,8 @@ private:
     Ui::Tongue_Widget *ui;
 
 private slots:
+    void _loadHDF5TongueMasks();
+    void _loadImgTongueMasks();
 
 };
 
