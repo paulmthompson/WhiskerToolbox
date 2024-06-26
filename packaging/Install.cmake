@@ -7,76 +7,12 @@ set_target_properties(WhiskerToolbox PROPERTIES
         WIN32_EXECUTABLE TRUE
 )
 
-#include(\"${QT_DEPLOY_SUPPORT}\")
-# App bundles on macOS have an .app suffix
-if(APPLE)
-
-    set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
-    set(data_manager_path "lib/$<TARGET_FILE_NAME:DataManager>")
-
-    # Generate a deployment script to be executed at install time
-    qt_generate_deploy_script(
-            TARGET WhiskerToolbox
-            OUTPUT_SCRIPT deploy_script
-            CONTENT "
-    qt_deploy_runtime_dependencies(
-    EXECUTABLE ${executable_path}
-    ADDITIONAL_LIBRARIES ${data_manager_path}
-    GENERATE_QT_CONF
-    VERBOSE
-    )")
-
-    install(TARGETS DataManager WhiskerToolbox
-            BUNDLE DESTINATION .
-    )
+if (APPLE)
+    include(${CMAKE_SOURCE_DIR}/packaging/Install_Apple.cmake)
+elseif (WIN32)
+    include(${CMAKE_SOURCE_DIR}/packaging/Install_Windows.cmake)
 else()
-
-    install(TARGETS DataManager
-            BUNDLE DESTINATION .
-            LIBRARY
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            ARCHIVE
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            RUNTIME
-            DESTINATION ${CMAKE_INSTALL_BINDIR}
-            INCLUDES
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    )
-
-    #install(TARGETS DataManager RUNTIME_DEPENDENCY_SET appDeps)
-
-    IF (WIN32)
-
-
-    ELSE()
-        install(RUNTIME_DEPENDENCY_SET appDeps
-                PRE_EXCLUDE_REGEXES
-                [[libc\.so\..*]] [[libgcc_s\.so\..*]] [[libm\.so\..*]] [[libstdc\+\+\.so\..*]]
-                [[ld.*]] [[libbz2.*]] [[libdl.*]] [[libgmp.*]] [[libgnutls.*]] [[libhogweed.*]]
-                [[libpthread.*]] [[librt.*]] [[libz.*]] [[libQt6Widgets.*]]
-                POST_EXCLUDE_REGEXES
-                [[/lib/x86_64-linux-gnu/*]]
-        )
-    ENDIF()
-
-    install(TARGETS WhiskerToolbox
-            BUNDLE DESTINATION .
-            LIBRARY
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            ARCHIVE
-            DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            RUNTIME
-            DESTINATION ${CMAKE_INSTALL_BINDIR}
-            INCLUDES
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    )
-
-    qt_generate_deploy_app_script(
-            TARGET WhiskerToolbox
-            OUTPUT_SCRIPT deploy_script
-    )
+    include(${CMAKE_SOURCE_DIR}/packaging/Install_Linux.cmake)
 endif()
-
-install(SCRIPT "${deploy_script}")
 
 include(CPack)
