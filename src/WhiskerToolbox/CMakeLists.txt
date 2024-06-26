@@ -102,4 +102,8 @@ if (MSVC)
     target_compile_options(WhiskerToolbox PRIVATE ${MSVC_WARNINGS})
 endif()
 
+set_target_properties(WhiskerToolbox DataManager PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 include(${CMAKE_SOURCE_DIR}/packaging/Install.cmake)

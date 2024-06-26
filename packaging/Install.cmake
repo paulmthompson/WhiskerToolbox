@@ -43,19 +43,11 @@ else()
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
 
-    install(TARGETS DataManager RUNTIME_DEPENDENCY_SET appDeps)
+    #install(TARGETS DataManager RUNTIME_DEPENDENCY_SET appDeps)
 
     IF (WIN32)
-        install(RUNTIME_DEPENDENCY_SET appDeps
-                PRE_EXCLUDE_REGEXES
-                [[api-ms-win-.*]] [[ext-ms-.*]] [[kernel32\.dll]]
-                [[bcrypt.dll]] [[mfplat.dll]] [[msvcrt.dll]] [[ole32.dll]] [[secur32.dll]] [[user32.dll]] [[vcruntime140.dll]]
-                [[ws2_32.dll]]
-                [[libgcc_s_seh-1\.dll]] [[libstdc\+\+\-6.dll]]
-                POST_EXCLUDE_REGEXES
-                [[.*/system32/.*\.dll]]
-                [[avcodec*]]
-        )
+
+
     ELSE()
         install(RUNTIME_DEPENDENCY_SET appDeps
                 PRE_EXCLUDE_REGEXES
