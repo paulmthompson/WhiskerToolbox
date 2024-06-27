@@ -1,8 +1,12 @@
 
 #include "Tongue_Widget.hpp"
 
-#include <QFileDialog>
+#include "utils/opencv_utility.hpp"
+#include "utils/string_manip.hpp"
+
 #include <QElapsedTimer>
+#include <QFileDialog>
+#include <QPushButton>
 #include "qevent.h"
 
 #include "ui_Tongue_Widget.h"
@@ -13,10 +17,6 @@
 #include <string>
 #include <filesystem>
 
-#include "utils/string_manip.hpp"
-
-#include <QPushButton>
-#include <opencv2/opencv.hpp>
 
 const std::vector<QColor> tongue_colors = {
     QColor("darkRed"),
@@ -117,22 +117,15 @@ void Tongue_Widget::_loadImgTongueMasks(){
 
     for (const auto & img_it : std::filesystem::directory_iterator(dir_name))
     {
-        //std::cout << "Processing " << img_it.path() << '\n';
-        cv::Mat img = imread(img_it.path(), cv::IMREAD_GRAYSCALE);
-        std::vector<float> x_coords, y_coords;
-        for (int i=0; i<img.rows; ++i){
-            for (int j=0; j<img.cols; ++j){
-                if (img.at<uchar>(i,j) > 0){
-                    x_coords.push_back(j);
-                    y_coords.push_back(i);
-                }
-            }
-        }
+
+        auto img = load_mask_from_image(img_it.path().string(), true);
+
+        auto img_mask = create_mask(img);
 
         auto const frame_num = remove_extension(img_it.path().filename().string().substr(5));
         auto const frame_index = _data_manager->getMediaData()->getFrameIndexFromNumber(std::stoi(frame_num));
 
-        mask->addMaskAtTime(frame_index, x_coords, y_coords);
+        mask->addMaskAtTime(frame_index, img_mask);
         //std::cout << "Added " << x_coords.size() << " pts at frame " << frame_index << '\n';
     }
 
