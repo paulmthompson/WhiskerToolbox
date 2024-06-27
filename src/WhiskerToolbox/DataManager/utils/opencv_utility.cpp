@@ -5,13 +5,20 @@
 
 #include <algorithm>
 
-cv::Mat load_mask_from_image(std::string const & filename)
+
+
+cv::Mat load_mask_from_image(std::string const & filename, bool const invert)
 {
     auto mat = cv::imread(filename,cv::IMREAD_GRAYSCALE);
 
     cv::threshold(mat,mat,127,255,cv::THRESH_BINARY);
 
     mat.convertTo(mat,CV_8U);
+
+    if (invert)
+    {
+        cv::bitwise_not(mat, mat);
+    }
 
     return mat;
 }
