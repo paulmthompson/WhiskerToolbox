@@ -22,4 +22,6 @@ void grow_mask(cv::Mat & mat, int const dilation_size);
 
 void median_blur(cv::Mat & mat, int const kernel_size);
 
+void linear_transform(cv::Mat & mat, double alpha, int beta);
+
 #endif // OPENCV_UTILITY_HPP

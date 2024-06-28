@@ -5,6 +5,8 @@
 
 #include "DataManager/DataManager.hpp"
 
+#include <opencv2/imgcodecs.hpp>
+
 
 namespace Ui {
 class Image_Processing_Widget;
@@ -21,6 +23,15 @@ public:
 private:
     Ui::Image_Processing_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
+
+    void _updateFilters();
+
+    double _alpha = 1;
+    int _beta = 0;
+
+private slots:
+    void _updAlpha();
+    void _updBeta();
 };
 
 #endif // IMAGE_PROCESSING_WIDGET_HPP

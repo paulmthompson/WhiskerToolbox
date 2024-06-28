@@ -69,6 +69,8 @@ public:
 
     std::vector<uint8_t> getProcessedData(const int frame_number);
 
+    void insertProcess(std::string key, std::function<void(cv::Mat& input)> process);
+
 protected:
     virtual void doLoadMedia(std::string name) {return;};
 private:

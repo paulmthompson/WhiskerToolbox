@@ -83,4 +83,8 @@ std::vector<uint8_t> MediaData::getProcessedData(const int frame_number)
     return output;
 }
 
+void MediaData::insertProcess(std::string key, std::function<void(cv::Mat& input)> process){
+    this->_process_chain[key] = process;
+}
+
 

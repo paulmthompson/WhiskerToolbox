@@ -18,7 +18,7 @@
     <rect>
      <x>30</x>
      <y>20</y>
-     <width>171</width>
+     <width>221</width>
      <height>32</height>
     </rect>
    </property>
@@ -36,7 +36,20 @@
     </rect>
    </property>
    <property name="text">
-    <string>Load Tongue Mask (Binary Image)</string>
+    <string>Load Tongue Mask (Binary Images)</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="load_jaw_btn">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>80</y>
+     <width>221</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load Jaw Points (CSV)</string>
    </property>
   </widget>
  </widget>
