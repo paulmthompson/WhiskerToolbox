@@ -13,44 +13,83 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QPushButton" name="load_hdf_btn">
+  <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>20</y>
-     <width>221</width>
-     <height>32</height>
+     <x>10</x>
+     <y>10</y>
+     <width>241</width>
+     <height>121</height>
     </rect>
    </property>
-   <property name="text">
-    <string>Load Tongue Mask (HDF5)</string>
+   <property name="title">
+    <string>Data Loading</string>
    </property>
+   <widget class="QPushButton" name="load_hdf_btn">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>221</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Load tongue mask (HDF5)</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="load_jaw_btn">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>221</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Load jaw points (CSV)</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="load_img_btn">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>80</y>
+      <width>221</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Load tongue mask (Binary Images)</string>
+    </property>
+   </widget>
   </widget>
-  <widget class="QPushButton" name="load_img_btn">
+  <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>50</y>
-     <width>221</width>
-     <height>32</height>
+     <x>10</x>
+     <y>130</y>
+     <width>241</width>
+     <height>161</height>
     </rect>
    </property>
-   <property name="text">
-    <string>Load Tongue Mask (Binary Images)</string>
+   <property name="title">
+    <string>GrabCut Tool</string>
    </property>
-  </widget>
-  <widget class="QPushButton" name="load_jaw_btn">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>80</y>
-     <width>221</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Load Jaw Points (CSV)</string>
-   </property>
+   <widget class="QPushButton" name="begin_grabcut_btn">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>221</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Open on current frame</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>
