@@ -66,8 +66,6 @@ qt_add_executable(WhiskerToolbox
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets)
 
-#target_link_libraries(WhiskerToolbox PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
-
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
@@ -102,7 +100,7 @@ if (MSVC)
     target_compile_options(WhiskerToolbox PRIVATE ${MSVC_WARNINGS})
 endif()
 
-set_target_properties(WhiskerToolbox DataManager PROPERTIES
+set_target_properties(WhiskerToolbox PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 

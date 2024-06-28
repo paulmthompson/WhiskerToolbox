@@ -477,8 +477,10 @@
      <addaction name="actionLoad_CSV_Whiskers"/>
      <addaction name="actionLoad_CSV_Whiskers_Multiple"/>
      <addaction name="actionLoad_HDF5_Whisker_Single"/>
+     <addaction name="actionLoad_HDF5_Whisker_Multiple"/>
      <addaction name="separator"/>
      <addaction name="actionLoad_Mask"/>
+     <addaction name="actionLoad_HDF5_Mask_Multiple"/>
     </widget>
     <addaction name="menuLoad_Whiskers"/>
     <addaction name="actionJanelia_Settings"/>
@@ -566,6 +568,16 @@
   <action name="actionLoad_HDF5_Whisker_Single">
    <property name="text">
     <string>Load HDF5 Whisker (Single)</string>
+   </property>
+  </action>
+  <action name="actionLoad_HDF5_Whisker_Multiple">
+   <property name="text">
+    <string>Load HDF5 Whisker (Multiple)</string>
+   </property>
+  </action>
+  <action name="actionLoad_HDF5_Mask_Multiple">
+   <property name="text">
+    <string>Load HDF5 Mask (Multiple)</string>
    </property>
   </action>
  </widget>

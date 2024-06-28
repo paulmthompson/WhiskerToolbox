@@ -198,6 +198,10 @@ void Media_Window::_plotLineData()
 
         for (auto const & single_line : lineData) {
 
+            if (single_line.size() == 0) {
+                continue;
+            }
+
             QPainterPath path = QPainterPath();
 
             path.moveTo(QPointF(static_cast<float>(single_line[0].x) * xAspect, static_cast<float>(single_line[0].y) * yAspect));

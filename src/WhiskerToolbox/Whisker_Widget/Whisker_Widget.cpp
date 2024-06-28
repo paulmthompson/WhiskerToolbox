@@ -63,7 +63,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
     connect(ui->actionLoad_Mask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerMasks);
-    connect(ui->actionLoad_HDF5_Whisker_Single, &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerLines);
+    connect(ui->actionLoad_HDF5_Whisker_Single, &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerLine);
+    connect(ui->actionLoad_HDF5_Whisker_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerLines);
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
     connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
     connect(ui->actionLoad_Keypoint_CSV, &QAction::triggered, this, &Whisker_Widget::_loadKeypointCSV);
@@ -495,7 +496,7 @@ void Whisker_Widget::_loadHDF5WhiskerMasks()
     _scene->addMaskColor(mask_key, whisker_colors[mask_num]);
 }
 
-void Whisker_Widget::_loadHDF5WhiskerLines()
+void Whisker_Widget::_loadHDF5WhiskerLine()
 {
     auto filename = QFileDialog::getOpenFileName(
         this,
@@ -507,9 +508,45 @@ void Whisker_Widget::_loadHDF5WhiskerLines()
         return;
     }
 
-    auto frames =  _data_manager->read_array_hdf5(filename.toStdString(), "frames");
-    auto y_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "x");
-    auto x_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "y");
+    _loadSingleHDF5WhiskerLine(filename.toStdString());
+}
+
+void Whisker_Widget::_loadHDF5WhiskerLines()
+{
+    QString dir_name = QFileDialog::getExistingDirectory(
+            this,
+            "Select Directory",
+            QDir::currentPath());
+
+    if (dir_name.isEmpty()) {
+        return;
+    }
+
+    std::filesystem::path directory(dir_name.toStdString());
+
+    // Store the paths of all files that match the criteria
+    std::vector<std::filesystem::path> whisker_files;
+
+    for (const auto & entry : std::filesystem::directory_iterator(directory)) {
+        std::string filename = entry.path().filename().string();
+        if (filename.find("whisker_") != std::string::npos) {
+            whisker_files.push_back(entry.path());
+        }
+    }
+
+    // Sort the files based on their names
+    std::sort(whisker_files.begin(), whisker_files.end());
+
+    // Load the files in sorted order
+    for (const auto & file : whisker_files) {
+        _loadSingleHDF5WhiskerLine(file.string());
+    }
+}
+
+void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename) {
+    auto frames =  _data_manager->read_array_hdf5(filename, "frames");
+    auto y_coords = _data_manager->read_ragged_hdf5(filename, "x");
+    auto x_coords = _data_manager->read_ragged_hdf5(filename, "y");
 
     auto line_num = _data_manager->getLineKeys().size();
 
@@ -524,7 +561,6 @@ void Whisker_Widget::_loadHDF5WhiskerLines()
     for (int i = 0; i < frames.size(); i ++) {
         line->addLineAtTime(frames[i], x_coords[i], y_coords[i]);
     }
-
 }
 
 /**

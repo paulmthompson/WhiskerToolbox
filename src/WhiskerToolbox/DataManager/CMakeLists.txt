@@ -63,3 +63,7 @@ endif()
 if (MSVC)
     target_compile_options(DataManager PRIVATE ${MSVC_WARNINGS})
 endif()
+
+set_target_properties(DataManager PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
