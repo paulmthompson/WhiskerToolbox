@@ -17,6 +17,11 @@
 #include <string>
 #include <filesystem>
 
+#include "utils/string_manip.hpp"
+#include "Points/Point_Data.hpp"
+
+#include <QPushButton>
+#include <opencv2/opencv.hpp>
 
 const std::vector<QColor> tongue_colors = {
     QColor("darkRed"),
@@ -36,6 +41,7 @@ Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> d
 
     connect(ui->load_hdf_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadHDF5TongueMasks);
     connect(ui->load_img_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadImgTongueMasks);
+    connect(ui->load_jaw_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadCSVJawKeypoints);
 };
 
 Tongue_Widget::~Tongue_Widget() {
@@ -122,7 +128,7 @@ void Tongue_Widget::_loadImgTongueMasks(){
 
         auto img_mask = create_mask(img);
 
-        auto const frame_num = remove_extension(img_it.path().filename().string().substr(5));
+        auto const frame_num = remove_extension(extract_numbers_from_string(img_it.path().filename().string()));
         auto const frame_index = _data_manager->getMediaData()->getFrameIndexFromNumber(std::stoi(frame_num));
 
         mask->addMaskAtTime(frame_index, img_mask);
@@ -132,3 +138,36 @@ void Tongue_Widget::_loadImgTongueMasks(){
     _scene->addMaskDataToScene(mask_key);
     _scene->addMaskColor(mask_key, tongue_colors[mask_num]);
 }
+
+void Tongue_Widget::_loadCSVJawKeypoints(){
+    auto filename = QFileDialog::getOpenFileName(
+        this,
+        "Load Jaw CSV File",
+        QDir::currentPath(),
+        "All files (*.*)");
+
+    if (filename.isNull()) {
+        return;
+    }
+
+    auto keypoints = load_points_from_csv(filename.toStdString(), 0, 1, 2);
+
+    auto point_num = _data_manager->getPointKeys().size();
+
+    std::cout << "There are " << point_num << " keypoints loaded" << std::endl;
+
+    auto keypoint_key = "keypoint_" + std::to_string(point_num);
+
+    _data_manager->createPoint(keypoint_key);
+
+    auto point = _data_manager->getPoint(keypoint_key);
+
+    for (auto & [key, val] : keypoints) {
+        point->addPointAtTime(key, val.x, val.y);
+    }
+
+    _scene->addPointDataToScene(keypoint_key);
+    _scene->addPointColor(keypoint_key, tongue_colors[point_num]);
+}
+
+

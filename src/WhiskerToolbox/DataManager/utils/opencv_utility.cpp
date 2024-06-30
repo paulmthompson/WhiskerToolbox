@@ -107,3 +107,8 @@ void median_blur(cv::Mat & mat, int const kernel_size)
 {
     cv::medianBlur(mat, mat , kernel_size);
 }
+
+void linear_transform(cv::Mat & mat, double alpha, int beta)
+{
+    mat.convertTo(mat, -1, alpha, beta);
+}

@@ -111,7 +111,7 @@ void Whisker_Widget::keyPressEvent(QKeyEvent *event) {
     } else if (event->key() == Qt::Key_E){
         _exportImageCSV();
     } else {
-        QMainWindow::keyPressEvent(event);
+        //QMainWindow::keyPressEvent(event);
 
     }
 }
