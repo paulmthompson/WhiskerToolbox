@@ -25,6 +25,8 @@ private:
 
     double _contrast_alpha = 1;
     int _contrast_beta = 0;
+    bool _contrast_active {false};
+
     double _sharpen_sigma = 3.0;
 
     int _clahe_grid = 8;
@@ -37,6 +39,7 @@ private:
 private slots:
     void _updateContrastAlpha();
     void _updateContrastBeta();
+    void _activateContrast();
 
     void _updateSharpenSigma();
 

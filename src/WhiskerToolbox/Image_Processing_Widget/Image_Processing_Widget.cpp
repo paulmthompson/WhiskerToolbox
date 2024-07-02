@@ -5,6 +5,8 @@
 
 #include "utils/opencv_utility.hpp"
 
+#include <QCheckBox>
+
 #include <functional>
 #include <iostream>
 
@@ -19,6 +21,7 @@ Image_Processing_Widget::Image_Processing_Widget(Media_Window* scene, std::share
 
     connect(ui->alpha_dspinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateContrastAlpha);
     connect(ui->beta_spinbox, &QSpinBox::valueChanged, this, &Image_Processing_Widget::_updateContrastBeta);
+    connect(ui->contrast_checkbox, &QCheckBox::checkStateChanged, this, &Image_Processing_Widget::_activateContrast);
 
     connect(ui->sharpen_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateSharpenSigma);
 
@@ -26,16 +29,31 @@ Image_Processing_Widget::Image_Processing_Widget(Media_Window* scene, std::share
     connect(ui->clahe_clip_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateClaheClip);
 }
 
-void Image_Processing_Widget::_updateContrastFilter(){
-    _data_manager->getMediaData()->insertProcess("1__lineartransform", std::bind(linear_transform, std::placeholders::_1, _contrast_alpha, _contrast_beta));
-    _scene->UpdateCanvas();
-}
-
 void Image_Processing_Widget::openWidget() {
 
     std::cout << "Image Processing Widget Opened" << std::endl;
 
     this->show();
+}
+
+void Image_Processing_Widget::_updateContrastFilter()
+{
+    if (_contrast_active) {
+        _data_manager->getMediaData()->insertProcess("1__lineartransform", std::bind(linear_transform, std::placeholders::_1, _contrast_alpha, _contrast_beta));
+        _scene->UpdateCanvas();
+    }
+}
+
+void Image_Processing_Widget::_activateContrast()
+{
+    _contrast_active = ui->contrast_checkbox->isChecked();
+
+    if (_contrast_active) {
+        _updateContrastFilter();
+    } else {
+        _data_manager->getMediaData()->removeProcess("1__lineartransform");
+        _scene->UpdateCanvas();
+    }
 }
 
 void Image_Processing_Widget::_updateContrastAlpha(){
@@ -47,6 +65,8 @@ void Image_Processing_Widget::_updateContrastBeta(){
     _contrast_beta = ui->beta_spinbox->value();
     _updateContrastFilter();
 }
+
+
 
 void Image_Processing_Widget::_updateSharpenFilter()
 {
