@@ -23,14 +23,14 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene;
 
-    void _updateFilters();
+    double _contrast_alpha = 1;
+    int _contrast_beta = 0;
 
-    double _alpha = 1;
-    int _beta = 0;
+    void _updateContrastFilter();
 
 private slots:
-    void _updAlpha();
-    void _updBeta();
+    void _updateContrastAlpha();
+    void _updateContrastBeta();
 };
 
 #endif // IMAGE_PROCESSING_WIDGET_HPP

@@ -112,3 +112,4 @@ void linear_transform(cv::Mat & mat, double alpha, int beta)
 {
     mat.convertTo(mat, -1, alpha, beta);
 }
+
