@@ -34,9 +34,15 @@ private:
     double _clahe_clip = 2.0;
     bool _clahe_active {false};
 
+    int _bilateral_d = 5;
+    double _bilateral_spatial_sigma = 20.0;
+    double _bilateral_color_sigma = 20.0;
+    bool _bilateral_active {false};
+
     void _updateContrastFilter();
     void _updateSharpenFilter();
     void _updateClaheFilter();
+    void _updateBilateralFilter();
 
 private slots:
     void _updateContrastAlpha();
@@ -49,6 +55,11 @@ private slots:
     void _updateClaheGrid();
     void _updateClaheClip();
     void _activateClahe();
+
+    void _updateBilateralD();
+    void _updateBilateralSpatialSigma();
+    void _updateBilateralColorSigma();
+    void _activateBilateral();
 };
 
 #endif // IMAGE_PROCESSING_WIDGET_HPP
