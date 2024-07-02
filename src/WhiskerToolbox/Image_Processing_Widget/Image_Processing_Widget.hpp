@@ -28,9 +28,11 @@ private:
     bool _contrast_active {false};
 
     double _sharpen_sigma = 3.0;
+    bool _sharpen_active {false};
 
     int _clahe_grid = 8;
     double _clahe_clip = 2.0;
+    bool _clahe_active {false};
 
     void _updateContrastFilter();
     void _updateSharpenFilter();
@@ -42,9 +44,11 @@ private slots:
     void _activateContrast();
 
     void _updateSharpenSigma();
+    void _activateSharpen();
 
     void _updateClaheGrid();
     void _updateClaheClip();
+    void _activateClahe();
 };
 
 #endif // IMAGE_PROCESSING_WIDGET_HPP

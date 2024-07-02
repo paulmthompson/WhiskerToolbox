@@ -24,9 +24,11 @@ Image_Processing_Widget::Image_Processing_Widget(Media_Window* scene, std::share
     connect(ui->contrast_checkbox, &QCheckBox::checkStateChanged, this, &Image_Processing_Widget::_activateContrast);
 
     connect(ui->sharpen_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateSharpenSigma);
+    connect(ui->sharpen_checkbox, &QCheckBox::checkStateChanged, this, &Image_Processing_Widget::_activateSharpen);
 
     connect(ui->clahe_grid_spinbox, &QSpinBox::valueChanged, this, &Image_Processing_Widget::_updateClaheGrid);
     connect(ui->clahe_clip_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateClaheClip);
+    connect(ui->clahe_checkbox, &QCheckBox::checkStateChanged, this, &Image_Processing_Widget::_activateClahe);
 }
 
 void Image_Processing_Widget::openWidget() {
@@ -35,6 +37,8 @@ void Image_Processing_Widget::openWidget() {
 
     this->show();
 }
+
+//////////////////////////////////////////////////
 
 void Image_Processing_Widget::_updateContrastFilter()
 {
@@ -66,12 +70,26 @@ void Image_Processing_Widget::_updateContrastBeta(){
     _updateContrastFilter();
 }
 
-
+//////////////////////////////////////////////////
 
 void Image_Processing_Widget::_updateSharpenFilter()
 {
-    _data_manager->getMediaData()->insertProcess("2__sharpentransform", std::bind(sharpen_image, std::placeholders::_1, _sharpen_sigma));
-    _scene->UpdateCanvas();
+    if (_sharpen_active) {
+        _data_manager->getMediaData()->insertProcess("2__sharpentransform", std::bind(sharpen_image, std::placeholders::_1, _sharpen_sigma));
+        _scene->UpdateCanvas();
+    }
+}
+
+void Image_Processing_Widget::_activateSharpen()
+{
+    _sharpen_active = ui->sharpen_checkbox->isChecked();
+
+    if (_sharpen_active) {
+        _updateSharpenFilter();
+    } else {
+        _data_manager->getMediaData()->removeProcess("2__sharpentransform");
+        _scene->UpdateCanvas();
+    }
 }
 
 void Image_Processing_Widget::_updateSharpenSigma()
@@ -80,10 +98,26 @@ void Image_Processing_Widget::_updateSharpenSigma()
     _updateSharpenFilter();
 }
 
+//////////////////////////////////////////////////
+
 void Image_Processing_Widget::_updateClaheFilter()
 {
-    _data_manager->getMediaData()->insertProcess("2__clahetransform", std::bind(clahe, std::placeholders::_1, _clahe_clip, _clahe_grid));
-    _scene->UpdateCanvas();
+    if (_clahe_active) {
+        _data_manager->getMediaData()->insertProcess("3__clahetransform", std::bind(clahe, std::placeholders::_1, _clahe_clip, _clahe_grid));
+        _scene->UpdateCanvas();
+    }
+}
+
+void Image_Processing_Widget::_activateClahe()
+{
+    _clahe_active = ui->clahe_checkbox->isChecked();
+
+    if (_clahe_active) {
+        _updateClaheFilter();
+    } else {
+        _data_manager->getMediaData()->removeProcess("3__clahetransform");
+        _scene->UpdateCanvas();
+    }
 }
 
 void Image_Processing_Widget::_updateClaheClip()
