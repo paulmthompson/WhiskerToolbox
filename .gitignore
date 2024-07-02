@@ -5,3 +5,4 @@ out
 CMakeUserPresets.json
 build
 .idea
+.Rproj.user
