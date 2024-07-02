@@ -27,13 +27,21 @@ private:
     int _contrast_beta = 0;
     double _sharpen_sigma = 3.0;
 
+    int _clahe_grid = 8;
+    double _clahe_clip = 2.0;
+
     void _updateContrastFilter();
     void _updateSharpenFilter();
+    void _updateClaheFilter();
 
 private slots:
     void _updateContrastAlpha();
     void _updateContrastBeta();
+
     void _updateSharpenSigma();
+
+    void _updateClaheGrid();
+    void _updateClaheClip();
 };
 
 #endif // IMAGE_PROCESSING_WIDGET_HPP
