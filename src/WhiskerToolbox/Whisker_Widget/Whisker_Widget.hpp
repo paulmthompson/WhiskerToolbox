@@ -1,38 +1,25 @@
 #ifndef WHISKER_WIDGET_HPP
 #define WHISKER_WIDGET_HPP
 
-
-#include "contact_widget.hpp"
-#include "DataManager.hpp"
-#include "janelia_config.hpp"
-#include "Media_Window.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
-#include "whiskertracker.hpp"
+#include "Points/Point_Data.hpp"  // for Point2D
 
 #include <QMainWindow>
 #include <QPointer>
 
 #include <memory>
+#include <string>
+#include <vector>
+
+class Contact_Widget;
+class DataManager;
+class Janelia_Config;
+class Media_Window;
+class TimeScrollBar;
+
+namespace Ui {class Whisker_Widget;}
+namespace whisker {class WhiskerTracker;}
 
 
-/*
- *
- * Currently I can export all symbols on win32, but I think
- * because I use dllopt in ffmepg_wrapper, it does not actually
- * od that anymore with clang, and I needt o manually define these
- *
- */
-#if defined _WIN32 || defined __CYGWIN__
-    #define WHISKER_WIDGET_DLLOPT
-    //#define WHISKER_WIDGET_DLLOPT Q_DECL_EXPORT
-#else
-    #define WHISKER_WIDGET_DLLOPT __attribute__((visibility("default")))
-#endif
-
-
-namespace Ui {
-    class Whisker_Widget;
-}
 
 /*
 
@@ -41,7 +28,7 @@ This is our interface to using the Janelia whisker tracker.
 
 */
 
-class WHISKER_WIDGET_DLLOPT Whisker_Widget : public QMainWindow
+class Whisker_Widget : public QMainWindow
 {
     Q_OBJECT
 public:

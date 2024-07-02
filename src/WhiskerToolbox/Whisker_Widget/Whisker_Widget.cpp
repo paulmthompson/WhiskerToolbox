@@ -1,20 +1,27 @@
 
 #include "Whisker_Widget.hpp"
 
+#include "contact_widget.hpp"
+#include "DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "janelia_config.hpp"
+#include "Media_Window.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
 #include "ui_Whisker_Widget.h"
 #include "utils/opencv_utility.hpp"
 #include "utils/string_manip.hpp"
+#include "whiskertracker.hpp"
 
 #include <QFileDialog>
 #include <QElapsedTimer>
 #include "qevent.h"
 #include "opencv2/core/mat.hpp"
 
+#include <filesystem>
 #include <iostream>
 #include <string>
-#include <filesystem>
+
 
 
 const std::vector<QColor> whisker_colors = {QColor("red"),
