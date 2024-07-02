@@ -34,4 +34,10 @@ void median_blur(cv::Mat & mat, int const kernel_size);
 
 void linear_transform(cv::Mat & mat, double alpha, int beta);
 
+void clahe(cv::Mat & mat, double const clip_limit, int const grid_size);
+
+void sharpen_image(cv::Mat& img, const double sigma = 3.0);
+
+void bilateral_filter(cv::Mat& img, int d = 15, double sigmaColor = 75.0, double sigmaSpace = 75.0);
+
 #endif // OPENCV_UTILITY_HPP

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>467</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QGroupBox" name="lin_trans_box">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>50</x>
      <y>10</y>
      <width>221</width>
      <height>81</height>
@@ -92,6 +92,77 @@
      <number>100000</number>
     </property>
    </widget>
+  </widget>
+  <widget class="QGroupBox" name="sharpen_box">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>100</y>
+     <width>221</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Sharpen Image</string>
+   </property>
+   <widget class="QDoubleSpinBox" name="sharpen_spinbox">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>40</y>
+      <width>91</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>50.000000000000000</double>
+    </property>
+    <property name="value">
+     <double>3.000000000000000</double>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>40</y>
+      <width>49</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Sigma</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="clahe_box">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>180</y>
+     <width>221</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>CLAHE</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="bilateral_filter_box">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>270</y>
+     <width>221</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Bilateral Filter</string>
+   </property>
   </widget>
  </widget>
  <resources/>

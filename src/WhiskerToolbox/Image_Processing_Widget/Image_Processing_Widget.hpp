@@ -25,12 +25,15 @@ private:
 
     double _contrast_alpha = 1;
     int _contrast_beta = 0;
+    double _sharpen_sigma = 3.0;
 
     void _updateContrastFilter();
+    void _updateSharpenFilter();
 
 private slots:
     void _updateContrastAlpha();
     void _updateContrastBeta();
+    void _updateSharpenSigma();
 };
 
 #endif // IMAGE_PROCESSING_WIDGET_HPP

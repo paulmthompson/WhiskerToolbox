@@ -19,6 +19,7 @@ Image_Processing_Widget::Image_Processing_Widget(Media_Window* scene, std::share
 
     connect(ui->alpha_dspinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateContrastAlpha);
     connect(ui->beta_spinbox, &QSpinBox::valueChanged, this, &Image_Processing_Widget::_updateContrastBeta);
+    connect(ui->sharpen_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateSharpenSigma);
 
     _updateContrastFilter();
 }
@@ -43,4 +44,16 @@ void Image_Processing_Widget::_updateContrastAlpha(){
 void Image_Processing_Widget::_updateContrastBeta(){
     _contrast_beta = ui->beta_spinbox->value();
     _updateContrastFilter();
+}
+
+void Image_Processing_Widget::_updateSharpenFilter()
+{
+    _data_manager->getMediaData()->insertProcess("2__sharpentransform", std::bind(sharpen_image, std::placeholders::_1, _sharpen_sigma));
+    _scene->UpdateCanvas();
+}
+
+void Image_Processing_Widget::_updateSharpenSigma()
+{
+    _sharpen_sigma = ui->sharpen_spinbox->value();
+    _updateSharpenFilter();
 }

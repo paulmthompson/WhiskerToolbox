@@ -113,3 +113,35 @@ void linear_transform(cv::Mat & mat, double alpha, int beta)
     mat.convertTo(mat, -1, alpha, beta);
 }
 
+void clahe(cv::Mat & mat, double const clip_limit, int const grid_size)
+{
+    cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
+    clahe->setClipLimit(clip_limit);
+    clahe->setTilesGridSize(cv::Size(grid_size,grid_size));
+    clahe->apply(mat, mat);
+}
+
+void sharpen_image(cv::Mat& img, const double sigma )
+{
+    cv::Mat img_blur, img_sharp;
+
+    // Apply Gaussian blur to the image
+    cv::GaussianBlur(img, img_blur, cv::Size(0, 0), sigma);
+
+    // Subtract the blurred image from the original image (scaled)
+    cv::addWeighted(img, 1.5, img_blur, -0.5, 0, img_sharp);
+
+    // Copy the sharpened image back to the original cv::Mat
+    img_sharp.copyTo(img);
+}
+
+void bilateral_filter(cv::Mat& img, int d, double sigmaColor, double sigmaSpace)
+{
+    cv::Mat img_filtered;
+
+    // Apply bilateral filter to the image
+    cv::bilateralFilter(img, img_filtered, d, sigmaColor, sigmaSpace);
+
+    // Copy the filtered image back to the original cv::Mat
+    img_filtered.copyTo(img);
+}
