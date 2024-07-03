@@ -61,8 +61,8 @@ set(PROJECT_SOURCES
 
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp
-        Grabcut_Widget/grabcuttool.cpp
-        Grabcut_Widget/grabcuttool.hpp
+        Grabcut_Widget/GrabCutTool.cpp
+        Grabcut_Widget/GrabCutTool.hpp
         Grabcut_Widget/Grabcut_Widget.ui
 )
 
