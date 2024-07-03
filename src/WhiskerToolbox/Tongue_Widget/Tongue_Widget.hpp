@@ -10,6 +10,9 @@
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "DataManager.hpp"
 
+#include "Grabcut_Widget/Grabcut_Widget.hpp"
+
+
 
 namespace Ui {
 class Tongue_Widget;
@@ -32,6 +35,7 @@ protected:
 private:
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
+    QPointer<Grabcut_Widget> _grabcut_widget;
     TimeScrollBar* _time_scrollbar;
 
     Ui::Tongue_Widget *ui;
@@ -40,6 +44,7 @@ private slots:
     void _loadHDF5TongueMasks();
     void _loadImgTongueMasks();
     void _loadCSVJawKeypoints();
+    void _startGrabCut();
 
 };
 

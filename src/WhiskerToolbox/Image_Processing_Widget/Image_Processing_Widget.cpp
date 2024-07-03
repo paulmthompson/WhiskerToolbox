@@ -18,7 +18,7 @@ Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> da
     connect(ui->alpha_dspinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updAlpha);
     connect(ui->beta_spinbox, &QSpinBox::valueChanged, this, &Image_Processing_Widget::_updBeta);
 
-    this->_updateFilters();
+    _updateFilters();
 
     // _data_manager->getMediaData()->insertProcess("1__lineartransform", [this](cv::Mat& mat){
     //     return linear_transform(mat, this->_alpha, this->_beta);
@@ -27,7 +27,7 @@ Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> da
     //connect(ui->load_hdf_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadHDF5TongueMasks);
 
 void Image_Processing_Widget::_updateFilters(){
-    this->_data_manager->getMediaData()->insertProcess("1__lineartransform", std::bind(linear_transform, std::placeholders::_1, this->_alpha, this->_beta));
+    this->_data_manager->getMediaData()->setProcess("1__lineartransform", std::bind(linear_transform, std::placeholders::_1, this->_alpha, this->_beta));
 }
 
 void Image_Processing_Widget::openWidget() {

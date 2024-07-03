@@ -42,6 +42,7 @@ Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> d
     connect(ui->load_hdf_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadHDF5TongueMasks);
     connect(ui->load_img_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadImgTongueMasks);
     connect(ui->load_jaw_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadCSVJawKeypoints);
+    connect(ui->begin_grabcut_btn, &QPushButton::clicked, this, &Tongue_Widget::_startGrabCut);
 };
 
 Tongue_Widget::~Tongue_Widget() {
@@ -168,6 +169,28 @@ void Tongue_Widget::_loadCSVJawKeypoints(){
 
     _scene->addPointDataToScene(keypoint_key);
     _scene->addPointColor(keypoint_key, tongue_colors[point_num]);
+}
+
+void Tongue_Widget::_startGrabCut(){
+    auto media = _data_manager->getMediaData();
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto media_data = media->getProcessedData(current_time);
+
+
+    bool is_gray = media->getFormat() == MediaData::DisplayFormat::Gray;
+    cv::Mat img(
+        media->getHeight(),
+        media->getWidth(),
+        is_gray ? CV_8UC1 : CV_8UC4,
+        reinterpret_cast<cv::Scalar*>(media_data.data())
+    );
+    cv::cvtColor(img, img, is_gray ? cv::COLOR_GRAY2BGR : cv::COLOR_BGRA2BGR);
+
+    if (!_grabcut_widget){
+        _grabcut_widget = new Grabcut_Widget(_scene, _data_manager, _time_scrollbar);
+    }
+    _grabcut_widget->setup(img, _data_manager->getTime()->getLastLoadedFrame());
+    _grabcut_widget->openWidget();
 }
 
 
