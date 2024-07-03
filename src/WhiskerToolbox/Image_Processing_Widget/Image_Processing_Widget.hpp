@@ -18,6 +18,8 @@ public:
     Image_Processing_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);
     void openWidget();
 
+void hello();
+
 private:
     Ui::Image_Processing_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;

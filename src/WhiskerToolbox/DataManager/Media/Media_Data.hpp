@@ -69,7 +69,7 @@ public:
 
     std::vector<uint8_t> getProcessedData(const int frame_number);
 
-    void insertProcess(std::string key, std::function<void(cv::Mat& input)> process);
+    void setProcess(std::string key, std::function<void(cv::Mat& input)> process);
     void removeProcess(std::string const & key);
 
 protected:

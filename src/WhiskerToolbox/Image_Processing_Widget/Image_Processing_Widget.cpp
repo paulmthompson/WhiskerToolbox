@@ -48,7 +48,7 @@ void Image_Processing_Widget::openWidget() {
 void Image_Processing_Widget::_updateContrastFilter()
 {
     if (_contrast_active) {
-        _data_manager->getMediaData()->insertProcess("1__lineartransform", std::bind(linear_transform, std::placeholders::_1, _contrast_alpha, _contrast_beta));
+        _data_manager->getMediaData()->setProcess("1__lineartransform", std::bind(linear_transform, std::placeholders::_1, _contrast_alpha, _contrast_beta));
         _scene->UpdateCanvas();
     }
 }
@@ -80,7 +80,7 @@ void Image_Processing_Widget::_updateContrastBeta(){
 void Image_Processing_Widget::_updateSharpenFilter()
 {
     if (_sharpen_active) {
-        _data_manager->getMediaData()->insertProcess("2__sharpentransform", std::bind(sharpen_image, std::placeholders::_1, _sharpen_sigma));
+        _data_manager->getMediaData()->setProcess("2__sharpentransform", std::bind(sharpen_image, std::placeholders::_1, _sharpen_sigma));
         _scene->UpdateCanvas();
     }
 }
@@ -108,7 +108,7 @@ void Image_Processing_Widget::_updateSharpenSigma()
 void Image_Processing_Widget::_updateClaheFilter()
 {
     if (_clahe_active) {
-        _data_manager->getMediaData()->insertProcess("3__clahetransform", std::bind(clahe, std::placeholders::_1, _clahe_clip, _clahe_grid));
+        _data_manager->getMediaData()->setProcess("3__clahetransform", std::bind(clahe, std::placeholders::_1, _clahe_clip, _clahe_grid));
         _scene->UpdateCanvas();
     }
 }
@@ -142,7 +142,7 @@ void Image_Processing_Widget::_updateClaheGrid()
 void Image_Processing_Widget::_updateBilateralFilter()
 {
     if (_bilateral_active) {
-        _data_manager->getMediaData()->insertProcess("4__bilateraltransform", std::bind(bilateral_filter,
+        _data_manager->getMediaData()->setProcess("4__bilateraltransform", std::bind(bilateral_filter,
                                                                                         std::placeholders::_1,
                                                                                         _bilateral_d,
                                                                                         _bilateral_color_sigma,

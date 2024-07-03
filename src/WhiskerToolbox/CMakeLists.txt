@@ -58,6 +58,12 @@ set(PROJECT_SOURCES
         Tongue_Widget/Tongue_Widget.hpp
         Tongue_Widget/Tongue_Widget.cpp
         Tongue_Widget/Tongue_Widget.ui
+
+        Grabcut_Widget/Grabcut_Widget.hpp
+        Grabcut_Widget/Grabcut_Widget.cpp
+        Grabcut_Widget/GrabCutTool.cpp
+        Grabcut_Widget/GrabCutTool.hpp
+        Grabcut_Widget/Grabcut_Widget.ui
 )
 
 qt_add_executable(WhiskerToolbox
@@ -78,6 +84,7 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Grabcut_Widget>"
 
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
@@ -85,7 +92,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 
-target_link_libraries(WhiskerToolbox PRIVATE opencv_core)
+target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui)
 
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
