@@ -160,13 +160,22 @@ void GrabCutTool::_brushOutline(cv::Mat& img){
 cv::Mat GrabCutTool::getDisp(){
     cv::Mat img_disp = _img.clone();
 
+    std::cout << "oke\n";
+    std::cout.flush();
     for (int i=0; i<img_disp.rows; ++i){
         for (int j=0; j<img_disp.cols; ++j){
             if (_mask.at<uint8_t>(i, j) == cv::GC_FGD || _mask.at<uint8_t>(i, j) == cv::GC_PR_FGD){
-                img_disp.at<uint8_t>(i, j, 0) = std::min(static_cast<int>(img_disp.at<uint8_t>(i, j, 0))+255-_mask_transparency, 255);
+                // Could be improved lol
+                img_disp.at<cv::Vec3b>(i, j) = cv::Vec3b(
+                    static_cast<uint8_t>(std::min(static_cast<int>(img_disp.at<cv::Vec3b>(i, j)[0])+255-_mask_transparency, 255)),
+                    static_cast<uint8_t>(std::max(static_cast<int>(img_disp.at<cv::Vec3b>(i, j)[1])-51+_mask_transparency/5, 0)),
+                    static_cast<uint8_t>(std::max(static_cast<int>(img_disp.at<cv::Vec3b>(i, j)[2])-51+_mask_transparency/5, 0))
+                );
             }
         }
     }
+    std::cout << "oke2\n";
+    std::cout.flush();
 
     // Show rectangle if it exists
     if ((_drawing && _rect_stage) || !_rect_stage){

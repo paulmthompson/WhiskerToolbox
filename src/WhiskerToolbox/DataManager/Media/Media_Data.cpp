@@ -87,4 +87,8 @@ void MediaData::setProcess(std::string key, std::function<void(cv::Mat& input)> 
     this->_process_chain[key] = process;
 }
 
+void MediaData::removeProcess(std::string const & key)
+{
+    _process_chain.erase(key);
+}
 
