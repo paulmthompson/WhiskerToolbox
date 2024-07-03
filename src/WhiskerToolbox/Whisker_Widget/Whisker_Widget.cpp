@@ -367,9 +367,11 @@ void Whisker_Widget::_loadKeypointCSV()
     _data_manager->createPoint(keypoint_key);
 
     auto point = _data_manager->getPoint(keypoint_key);
+    point->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    point->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
     for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(key, val.x, val.y);
+        point->addPointAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(key), val.x, val.y);
     }
 
     _scene->addPointDataToScene(keypoint_key);

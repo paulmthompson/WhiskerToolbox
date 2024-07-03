@@ -95,9 +95,11 @@ void Tongue_Widget::_loadHDF5TongueMasks()
     _data_manager->createMask(mask_key);
 
     auto mask = _data_manager->getMask(mask_key);
+    mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
     for (std::size_t i = 0; i < frames.size(); i ++) {
-        mask->addMaskAtTime(frames[i], x_coords[i], y_coords[i]);
+        mask->addMaskAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(frames[i]), x_coords[i], y_coords[i]);
     }
 
     _scene->addMaskDataToScene(mask_key);
@@ -119,8 +121,8 @@ void Tongue_Widget::_loadImgTongueMasks(){
     _data_manager->createMask(mask_key);
     auto mask = _data_manager->getMask(mask_key);
 
-    mask->setMaskHeight(480);
-    mask->setMaskWidth(640);
+    mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
     for (const auto & img_it : std::filesystem::directory_iterator(dir_name))
     {
@@ -162,9 +164,11 @@ void Tongue_Widget::_loadCSVJawKeypoints(){
     _data_manager->createPoint(keypoint_key);
 
     auto point = _data_manager->getPoint(keypoint_key);
+    point->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    point->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
     for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(key, val.x, val.y);
+        point->addPointAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(key), val.x, val.y);
     }
 
     _scene->addPointDataToScene(keypoint_key);
