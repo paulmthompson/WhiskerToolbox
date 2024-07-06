@@ -13,7 +13,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   Whisker-Analysis
   GIT_REPOSITORY https://github.com/paulmthompson/Whisker-Analysis.git
-  GIT_TAG ecf88bb79178fa44f0b501f951c65258c04ca705
+  GIT_TAG c8de94f71984620f2029d3a1de8c1c57f23ae408
 )
 
 #add_subdirectory(Whisker-Analysis)
