@@ -63,6 +63,7 @@ jobs:
             mingw-w64-x86_64-clang
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-openmp
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -84,11 +85,13 @@ jobs:
 
       - name: Install nasm and other libraries on Linux
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev
+        run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev libomp-14-dev
 
       - name: Install nasm on Mac
         if: runner.os == 'macOS'
-        run: brew install nasm
+        run: | 
+          brew install nasm libomp
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
 
       - name: Install jinja2
         if: runner.os == 'Linux'
