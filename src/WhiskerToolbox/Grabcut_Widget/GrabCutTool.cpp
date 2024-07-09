@@ -160,8 +160,6 @@ void GrabCutTool::_brushOutline(cv::Mat& img){
 cv::Mat GrabCutTool::getDisp(){
     cv::Mat img_disp = _img.clone();
 
-    std::cout << "oke\n";
-    std::cout.flush();
     for (int i=0; i<img_disp.rows; ++i){
         for (int j=0; j<img_disp.cols; ++j){
             if (_mask.at<uint8_t>(i, j) == cv::GC_FGD || _mask.at<uint8_t>(i, j) == cv::GC_PR_FGD){
@@ -174,8 +172,6 @@ cv::Mat GrabCutTool::getDisp(){
             }
         }
     }
-    std::cout << "oke2\n";
-    std::cout.flush();
 
     // Show rectangle if it exists
     if ((_drawing && _rect_stage) || !_rect_stage){
