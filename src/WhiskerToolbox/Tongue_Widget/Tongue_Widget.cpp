@@ -8,6 +8,7 @@
 #include <QFileDialog>
 #include <QPushButton>
 #include "qevent.h"
+#include <QSlider>
 
 #include "ui_Tongue_Widget.h"
 
@@ -20,7 +21,6 @@
 #include "utils/string_manip.hpp"
 #include "Points/Point_Data.hpp"
 
-#include <QPushButton>
 #include <opencv2/opencv.hpp>
 
 const std::vector<QColor> tongue_colors = {
@@ -43,6 +43,8 @@ Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> d
     connect(ui->load_img_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadImgTongueMasks);
     connect(ui->load_jaw_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadCSVJawKeypoints);
     connect(ui->begin_grabcut_btn, &QPushButton::clicked, this, &Tongue_Widget::_startGrabCut);
+    connect(ui->transparency_slider, &QSlider::valueChanged, this, &Tongue_Widget::_upd_mask_transparency);
+    connect(ui->savemasks_btn, &QPushButton::clicked, this, &Tongue_Widget::_exportMasks);
 };
 
 Tongue_Widget::~Tongue_Widget() {
@@ -95,9 +97,11 @@ void Tongue_Widget::_loadHDF5TongueMasks()
     _data_manager->createMask(mask_key);
 
     auto mask = _data_manager->getMask(mask_key);
+    mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
     for (std::size_t i = 0; i < frames.size(); i ++) {
-        mask->addMaskAtTime(frames[i], x_coords[i], y_coords[i]);
+        mask->addMaskAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(frames[i]), x_coords[i], y_coords[i]);
     }
 
     _scene->addMaskDataToScene(mask_key);
@@ -119,8 +123,8 @@ void Tongue_Widget::_loadImgTongueMasks(){
     _data_manager->createMask(mask_key);
     auto mask = _data_manager->getMask(mask_key);
 
-    mask->setMaskHeight(480);
-    mask->setMaskWidth(640);
+    mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
     for (const auto & img_it : std::filesystem::directory_iterator(dir_name))
     {
@@ -162,9 +166,11 @@ void Tongue_Widget::_loadCSVJawKeypoints(){
     _data_manager->createPoint(keypoint_key);
 
     auto point = _data_manager->getPoint(keypoint_key);
+    point->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    point->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
     for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(key, val.x, val.y);
+        point->addPointAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(key), val.x, val.y);
     }
 
     _scene->addPointDataToScene(keypoint_key);
@@ -189,8 +195,44 @@ void Tongue_Widget::_startGrabCut(){
     if (!_grabcut_widget){
         _grabcut_widget = new Grabcut_Widget(_scene, _data_manager, _time_scrollbar);
     }
-    _grabcut_widget->setup(img, _data_manager->getTime()->getLastLoadedFrame());
+    auto frame = _data_manager->getTime()->getLastLoadedFrame();
+    _grabcut_widget->setup(img, frame);
+    drawn.push_back(frame);
     _grabcut_widget->openWidget();
 }
+
+void Tongue_Widget::_upd_mask_transparency(){
+    _scene->setMaskAlpha(ui->transparency_slider->value());
+}
+
+void Tongue_Widget::_exportMasks() {
+    auto const dir_name =  QFileDialog::getExistingDirectory(
+                              this,
+                              "Load Tongue image files",
+                              QDir::currentPath()).toStdString();
+    if (dir_name.empty()) {
+        return;
+    }
+    auto dir_path = std::filesystem::path(dir_name);
+
+    auto mask_name = "grabcut_masks";
+    auto mask_data = _data_manager->getMask(mask_name);
+
+    for (int i : drawn){
+        auto mask = mask_data->getMasksAtTime(i)[0];
+        if (!mask.empty()){
+            QImage mask_img(mask_data->getMaskWidth(), mask_data->getMaskHeight(), QImage::Format_Grayscale8);
+            mask_img.fill(0);
+            for (auto [x, y] : mask){
+                mask_img.setPixel(static_cast<int>(x), static_cast<int>(y), 0xFFFFFF);
+            }
+            std::string saveName = dir_path.string() + "/" + std::to_string(i) + ".png";
+            std::cout << "Saving file" << saveName << std::endl;
+
+            mask_img.save(QString::fromStdString(saveName));
+        }
+    }
+}
+
 
 

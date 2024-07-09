@@ -40,12 +40,15 @@ private:
 
     Ui::Tongue_Widget *ui;
 
+    std::vector<int> drawn;
+
 private slots:
     void _loadHDF5TongueMasks();
     void _loadImgTongueMasks();
     void _loadCSVJawKeypoints();
     void _startGrabCut();
-
+    void _upd_mask_transparency();
+    void _exportMasks();
 };
 
 

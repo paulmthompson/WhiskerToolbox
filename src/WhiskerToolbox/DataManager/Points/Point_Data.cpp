@@ -88,6 +88,7 @@ std::map<int,Point2D<float>> load_points_from_csv(std::string const& filename, i
             line_output[std::stoi(frame_str)]=Point2D<float>{std::stof(x_str),std::stof(y_str)};
         }
     }
+    std::cout.flush();
 
     return line_output;
 }
