@@ -18,6 +18,7 @@
 #include "qevent.h"
 #include "opencv2/core/mat.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <string>
@@ -53,7 +54,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     _scene->addLineDataToScene("unlabeled_whiskers");
     _scene->addLineColor("unlabeled_whiskers",QColor("blue"));
     _janelia_config_widget = new Janelia_Config(_wt);
-    _contact_widget = new Contact_Widget(_data_manager, time_scrollbar);
+
 
     connect(ui->trace_button, &QPushButton::clicked, this, &Whisker_Widget::_traceButton);
     connect(ui->actionJanelia_Settings, &QAction::triggered, this, &Whisker_Widget::_openJaneliaConfig);
@@ -132,11 +133,13 @@ void Whisker_Widget::_traceButton() {
     auto media = _data_manager->getMediaData();
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    _wt->trace(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+    auto whiskers = _wt->trace(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
 
+    std::vector<Line2D> whisker_lines(whiskers.size());
+    std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);
 
     //Add lines to data manager
-    _addWhiskersToData();
+    _addWhiskersToData(whisker_lines);
 
     auto t1 = timer2.elapsed();
     _drawWhiskers();
@@ -304,9 +307,48 @@ std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
     }
 }
 
+bool Whisker_Widget::_checkWhiskerNum()
+{
 
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    int whiskers_in_frame = 0;
+
+    for (int i = 0; i<_num_whisker_to_track; i++)
+    {
+        std::string whisker_name = "whisker_" + std::to_string(i);
+
+        if (_data_manager->getLine(whisker_name)) {
+            auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
+            if (whiskers.size() > 0) {
+                if (whiskers[0].size() > 0) {
+                    whiskers_in_frame += 1;
+                }
+            }
+        }
+    }
+
+    std::cout << "There are " << whiskers_in_frame << " whiskers in this image" << std::endl;
+
+    if (whiskers_in_frame != _num_whisker_to_track) {
+        std::cout << "There are " << whiskers_in_frame << " in image, but " << _num_whisker_to_track << " are supposed to be tracked" << std::endl;
+        return false;
+    } else {
+        return true;
+    }
+}
+
+/**
+ * @brief Whisker_Widget::_exportImageCSV
+ *
+ *
+ */
 void Whisker_Widget::_exportImageCSV()
 {
+
+    if (!_checkWhiskerNum()) {
+        return;
+    }
 
     std::string folder = "./images/";
 
@@ -396,13 +438,13 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_name, const i
  *
  * @brief Whisker_Widget::_addWhiskersToData
  */
-void Whisker_Widget::_addWhiskersToData() {
+void Whisker_Widget::_addWhiskersToData(std::vector<Line2D> & whiskers) {
 
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
     _data_manager->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
-    for (auto &w: _wt->whiskers) {
-        _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, convert_to_Line2D(w));
+    for (auto & w: whiskers) {
+        _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w);
     }
 
     if (_num_whisker_to_track > 0) {
@@ -421,13 +463,16 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
     switch (_selection_mode) {
         case Whisker_Select: {
-            std::tuple<float, int> nearest_whisker = _wt->get_nearest_whisker(x_media, y_media);
+        /*
+        std::tuple<float, int> nearest_whisker = whisker::get_nearest_whisker(x_media, y_media);
             if (std::get<0>(nearest_whisker) < 10.0f) {
                 _selected_whisker = std::get<1>(nearest_whisker);
                 _drawWhiskers();
             }
             break;
+        */
         }
+
         case Whisker_Pad_Select: {
             _wt->setWhiskerPad(x_media,y_media);
             std::string whisker_pad_label =
@@ -440,7 +485,9 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         default:
             break;
     }
-    _contact_widget->setPolePos(x_media,y_media); // Pass forward to contact widget
+    if (_contact_widget) {
+        _contact_widget->setPolePos(x_media,y_media); // Pass forward to contact widget
+    }
 }
 
 void Whisker_Widget::_loadJaneliaWhiskers() {
@@ -454,7 +501,7 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
         return;
     }
 
-    auto whiskers_from_janelia = _wt->load_janelia_whiskers(janelia_name.toStdString());
+    auto whiskers_from_janelia = whisker::load_janelia_whiskers(janelia_name.toStdString());
 
     for (auto &[time, whiskers_in_frame]: whiskers_from_janelia) {
         for (auto &w: whiskers_in_frame) {
@@ -749,12 +796,17 @@ void Whisker_Widget::_openJaneliaConfig()
 
 void Whisker_Widget::_openContactWidget()
 {
+    if (!_contact_widget) {
+        _contact_widget = new Contact_Widget(_data_manager, _time_scrollbar);
+    }
     _contact_widget->openWidget();
 }
 
 void Whisker_Widget::LoadFrame(int frame_id)
 {
-    _contact_widget->updateFrame(frame_id);
+    if (_contact_widget) {
+        _contact_widget->updateFrame(frame_id);
+    }
 }
 
 void Whisker_Widget::_setMaskAlpha(int alpha)

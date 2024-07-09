@@ -222,7 +222,7 @@
         },
         "vendor": {
           "jetbrains.com/clion": {
-            "toolchain": "MSYS_MinGW"
+            "toolchain": "minGW_clang"
           }
         }
       },
@@ -234,7 +234,7 @@
         },
         "vendor": {
           "jetbrains.com/clion": {
-            "toolchain": "MSYS_MinGW"
+            "toolchain": "minGW_clang"
           }
         }
       },

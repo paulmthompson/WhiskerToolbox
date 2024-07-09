@@ -1,6 +1,7 @@
 #ifndef WHISKER_WIDGET_HPP
 #define WHISKER_WIDGET_HPP
 
+#include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"  // for Point2D
 
 #include <QMainWindow>
@@ -17,7 +18,7 @@ class Media_Window;
 class TimeScrollBar;
 
 namespace Ui {class Whisker_Widget;}
-namespace whisker {class WhiskerTracker;}
+namespace whisker {class WhiskerTracker; struct Line2D;}
 
 
 
@@ -76,7 +77,7 @@ private:
     Ui::Whisker_Widget *ui;
 
     void _drawWhiskers();
-    void _addWhiskersToData();
+    void _addWhiskersToData(std::vector<Line2D> & whiskers);
     void _createNewWhisker(std::string const & whisker_name, int const whisker_id);
     void _orderWhiskersByPosition();
     std::vector<Point2D<float>> _getWhiskerBasePositions();
@@ -87,6 +88,7 @@ private:
 
     void _loadSingleHDF5WhiskerLine(std::string const & filename);
     void _loadCSVWhiskerFromDir(std::string const & dir_name);
+    bool _checkWhiskerNum();
 
 private slots:
     void _traceButton();
