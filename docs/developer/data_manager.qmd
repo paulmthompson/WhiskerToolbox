@@ -1,3 +1,17 @@
 ---
 title: "Data Manager"
 ---
+
+## Data Types
+
+### Point
+
+### Line
+
+### Mask
+
+### Media
+
+#### Image
+
+#### Video

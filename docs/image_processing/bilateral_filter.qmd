@@ -1,0 +1,11 @@
+---
+title: "Bilateral Filter"
+---
+
+## References
+
+<https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html>
+
+<https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed>
+
+<https://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html>
