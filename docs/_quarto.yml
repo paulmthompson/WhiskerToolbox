@@ -22,6 +22,11 @@ website:
         contents:
         - labeling/keypoint.qmd
         - labeling/mask.qmd
+      
+      - section: "Behavior Modules"
+        contents:
+        - behaviors/whisker.qmd
+        - behaviors/tongue.qmd
         
       - section: "Example Uses"
         contents:
