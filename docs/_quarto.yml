@@ -4,11 +4,23 @@ project:
 
 website:
   title: "Behavior Toolbox"
-  navbar:
-    left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
+  sidebar:
+    style: docked
+    contents:
+      - section: "Introduction"
+        contents: 
+        - index.qmd
+        
+      - section: "Example Uses"
+        contents:
+        - examples/keypoint_labeling.qmd
+        
+      - section: "Developer"
+        contents: 
+        - developer/data_manager.qmd
+        - developer/image_processing.qmd
+
+
 
 format:
   html:
