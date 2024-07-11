@@ -8,6 +8,14 @@
 
 #include <iostream>
 
+/**
+ * @brief Grabcut_Widget::Grabcut_Widget
+ * Constructor for Grabcut Widget.
+ * @param scene
+ * @param data_manager
+ * @param time_scrollbar
+ * @param parent
+ */
 Grabcut_Widget::Grabcut_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QMainWindow(parent),
     _scene{scene},
@@ -32,6 +40,12 @@ Grabcut_Widget::Grabcut_Widget(Media_Window *scene, std::shared_ptr<DataManager>
     });
 }
 
+/**
+ * @brief Grabcut_Widget::setup
+ * Loads the image to edit and frame number for saving purposes into the widget
+ * @param img Image data as cv::Mat, must be of pixel type CV_8UC3
+ * @param frame_index Frame index number which the mask will be saved to when requested
+ */
 void Grabcut_Widget::setup(cv::Mat img, int frame_index) {
     _img = img;
     _height = img.rows;
@@ -44,16 +58,28 @@ void Grabcut_Widget::setup(cv::Mat img, int frame_index) {
     _reset();
 }
 
+/**
+ * @brief Grabcut_Widget::_grabcutIter
+ * Runs one interation of grabCut and updates the display
+ */
 void Grabcut_Widget::_grabcutIter(){
     _tool.grabcutIter();
     _updateDisplays();
 }
 
+/**
+ * @brief Grabcut_Widget::_setBrushThickness
+ * Sets brush thickness to the value in the thickness spinbox in the widget
+ */
 void Grabcut_Widget::_setBrushThickness(){
     _tool.setBrushThickness(ui->thickness_spinbox->value());
     _updateDisplays();
 }
 
+/**
+ * @brief Grabcut_Widget::_setColor
+ * Sets color according to the value in the dropbox in the widget
+ */
 void Grabcut_Widget::_setColor(){
     switch (ui->color_combobox->currentIndex()){
     case 0:
@@ -74,6 +100,10 @@ void Grabcut_Widget::_setColor(){
     }
 }
 
+/**
+ * @brief Grabcut_Widget::_reset
+ * Resets the tool and UI to the intial state
+ */
 void Grabcut_Widget::_reset(){
     _tool.reset();
     _updateDisplays();
@@ -107,6 +137,12 @@ void Grabcut_Widget::keyPressEvent(QKeyEvent *event) {
 
 }
 
+/**
+ * @brief Grabcut_Widget::_scaleTransMouse
+ * Transforms a coordinate of the mouse into the local coordinates of the image
+ * @param p QPoint that holds the mouse position on the widget
+ * @return
+ */
 QPoint Grabcut_Widget::_scaleTransMouse(QPoint p){
     p -= ui->editor_label->pos();
     p.setX(p.x() * _width / ui->editor_label->width());
@@ -183,6 +219,6 @@ void Grabcut_Widget::_saveMask(){
 }
 
 void Grabcut_Widget::_setMaskTransparency(){
-    _tool.setMaskDispTransparency(ui->transparency_slider->value());
+    _tool.setMaskDispTransparency(static_cast<float>(ui->transparency_slider->value()) / 100);
     _updateDisplays();
 }

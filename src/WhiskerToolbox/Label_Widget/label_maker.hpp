@@ -48,6 +48,7 @@ public:
     std::map<std::string, std::pair<image,label_point>> getLabels() const {return _point_labels;};
 
     std::stringstream saveLabelsJSON();
+    std::stringstream saveLabelsCSV();
     void changeLabelName(std::string label_name) {_label_name = label_name;};
 
     image createImage(int height, int width, int frame_number, std::string frame_id, std::vector<uint8_t> data);
