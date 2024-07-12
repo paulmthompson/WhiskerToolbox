@@ -18,16 +18,22 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-  QtADS
+  qt6advanceddocking
   GIT_REPOSITORY https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System
   GIT_TAG 4.3.1
+  CMAKE_ARGS -DBUILD_EXAMPLES=OFF
 )
 
 #add_subdirectory(Whisker-Analysis)
 
 #We should use make avaiable
-FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis QtADS)
+FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking)
 
 set_target_properties(ffmpeg_wrapper PROPERTIES EXCLUDE_FROM_ALL TRUE)
 set_target_properties(Whisker-Analysis PROPERTIES EXCLUDE_FROM_ALL TRUE)
+set_target_properties(qt6advanceddocking PROPERTIES
+        EXCLUDE_FROM_ALL TRUE
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
 
