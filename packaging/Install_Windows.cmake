@@ -36,6 +36,51 @@ add_custom_command(TARGET WhiskerToolbox POST_BUILD
         COMMENT "Copying qt6advanceddocking DLL to Qt directory"
 )
 
+function(copy_dlls_during_install dll_list dest_dir)
+    foreach(dll IN LISTS dll_list)
+        install(CODE "
+            execute_process(
+                COMMAND \${CMAKE_COMMAND} -E copy_if_different
+                \"${dll}\"
+                \"\${CMAKE_INSTALL_PREFIX}/${dest_dir}\"
+            )
+            message(STATUS \"Copying ${dll} to install directory\")
+        ")
+    endforeach()
+endfunction()
+
+set(OPENCV_DLLS
+        "${CMAKE_BINARY_DIR}/opencv_imgproc4.dll"
+        "${CMAKE_BINARY_DIR}/opencv_core4.dll"
+        "${CMAKE_BINARY_DIR}/opencv_imgcodecs4.dll"
+        "${CMAKE_BINARY_DIR}/jpeg62.dll"
+        "${CMAKE_BINARY_DIR}/libwebpdecoder.dll"
+        "${CMAKE_BINARY_DIR}/libwebp.dll"
+        "${CMAKE_BINARY_DIR}/tiff.dll"
+        "${CMAKE_BINARY_DIR}/libpng16.dll"
+        "${CMAKE_BINARY_DIR}/libsharpyuv.dll"
+        "${CMAKE_BINARY_DIR}/zlib1.dll"
+)
+
+set(HDF5_DLLS
+        "${CMAKE_BINARY_DIR}/hdf5_cpp.dll"
+        "${CMAKE_BINARY_DIR}/hdf5.dll"
+)
+
+set(WHISKER_DLLS
+        "${CMAKE_BINARY_DIR}/janelia.dll"
+)
+
+set(EXTRA_DLLS
+        "${CMAKE_BINARY_DIR}/szip.dll"
+        "${CMAKE_BINARY_DIR}/liblzma.dll"
+)
+
+copy_dlls_during_install("${OPENCV_DLLS}" "${CMAKE_INSTALL_BINDIR}")
+copy_dlls_during_install("${HDF5_DLLS}" "${CMAKE_INSTALL_BINDIR}")
+copy_dlls_during_install("${WHISKER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
+copy_dlls_during_install("${EXTRA_DLLS}" "${CMAKE_INSTALL_BINDIR}")
+
 qt_generate_deploy_app_script(
         TARGET WhiskerToolbox
         OUTPUT_SCRIPT deploy_script
