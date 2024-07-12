@@ -27,9 +27,12 @@ install(TARGETS WhiskerToolbox
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
+# QT thinks thinks that dependency qt6ad
+# is a library, and tries to install it, but doesn't find it with qt6 and errors
 qt_generate_deploy_app_script(
         TARGET WhiskerToolbox
         OUTPUT_SCRIPT deploy_script
+        DEPLOY_TOOL_OPTIONS --ignore-library-errors --no-advanceddocking
 )
 
 install(SCRIPT "${deploy_script}")
