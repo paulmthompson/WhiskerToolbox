@@ -32,7 +32,7 @@ install(TARGETS WhiskerToolbox
 add_custom_command(TARGET WhiskerToolbox POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_BINARY_DIR}/bin/qt6advanceddocking.dll"
-        "${Qt6_DIR}"
+        "${Qt6_DIR}/../../../bin"
         COMMENT "Copying qt6advanceddocking DLL to Qt directory"
 )
 
