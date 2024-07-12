@@ -75,8 +75,6 @@ target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets)
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
-message(STATUS ${QtADS_SOURCE_DIR})
-
 target_include_directories(WhiskerToolbox PRIVATE
 
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
@@ -87,7 +85,6 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Grabcut_Widget>"
-        "$<BUILD_INTERFACE:${QtADS_SOURCE_DIR}/src>"
 
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
