@@ -599,6 +599,14 @@ void Whisker_Widget::_loadHDF5WhiskerLines()
     }
 }
 
+
+/**
+ * @brief Whisker_Widget::_loadSingleHDF5WhiskerLine
+ *
+ *
+ *
+ * @param filename
+ */
 void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename) {
     auto frames =  _data_manager->read_array_hdf5(filename, "frames");
     auto y_coords = _data_manager->read_ragged_hdf5(filename, "x");

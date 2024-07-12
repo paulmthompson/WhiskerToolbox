@@ -11,12 +11,28 @@ jobs:
     strategy:
       matrix:
         include:
-          - {"os": ubuntu-latest, short: linux, compiler: gcc, shell: bash}
-          - {"os": ubuntu-latest, short: linux, compiler: clang, shell: bash}
+          - {"os": ubuntu-latest,
+             short: linux,
+             compiler: gcc,
+             shell: bash,
+             appfolder: out/install/GCC/Release/WhiskerToolbox}
+          - {"os": ubuntu-latest,
+             short: linux,
+             compiler: clang,
+             shell: bash,
+             appfolder: out/install/Clang/Release/WhiskerToolbox}
           #- {"os": windows-latest, short: windows, compiler: gcc, shell: msys2}
           #- {"os": windows-latest, short: windows, compiler: clang, shell: msys2}
-          - {"os": windows-latest, short: windows, compiler: msvc, shell: powershell}
-          - {"os": macos-latest, short: mac-arm64, compiler: clang, shell: bash}
+          - {"os": windows-latest,
+             short: windows,
+             compiler: msvc,
+             shell: powershell,
+             appfolder: out/install/MSVC/Release/WhiskerToolbox.exe}
+          - {"os": macos-latest,
+             short: mac-arm64,
+             compiler: clang,
+             shell: bash,
+             appfolder: out/install/Clang/Release/WhiskerToolbox.app}
 
     runs-on: ${{matrix.os}}
 
@@ -109,5 +125,4 @@ jobs:
 
       - name: Install
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
-
 
