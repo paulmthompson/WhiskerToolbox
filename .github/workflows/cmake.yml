@@ -27,7 +27,7 @@ jobs:
              short: windows,
              compiler: msvc,
              shell: powershell,
-             appfolder: out/install/MSVC/Release/WhiskerToolbox.exe}
+             appfolder: out/install/MSVC/Release/bin/WhiskerToolbox.exe}
           - {"os": macos-latest,
              short: mac-arm64,
              compiler: clang,
