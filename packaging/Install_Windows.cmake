@@ -29,6 +29,13 @@ install(TARGETS WhiskerToolbox
 
 # QT thinks thinks that dependency qt6ad
 # is a library, and tries to install it, but doesn't find it with qt6 and errors
+add_custom_command(TARGET WhiskerToolbox POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/bin/qt6advanceddocking.dll"
+        "${Qt6_DIR}"
+        COMMENT "Copying qt6advanceddocking DLL to Qt directory"
+)
+
 qt_generate_deploy_app_script(
         TARGET WhiskerToolbox
         OUTPUT_SCRIPT deploy_script
