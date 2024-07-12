@@ -1,12 +1,6 @@
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
-#include <QMainWindow>
-#include <QImage>
-#include <QGraphicsScene>
-#include <QTimer>
-#include <QPointer>
-
 #include "Media_Window.hpp"
 #include "Whisker_Widget.hpp"
 #include "Label_Widget.hpp"
@@ -16,6 +10,15 @@
 
 #include "TimeFrame.hpp"
 #include "DataManager.hpp"
+
+#include <QMainWindow>
+#include <QImage>
+#include <QGraphicsScene>
+#include <QTimer>
+#include <QPointer>
+
+#include "DockManager.h"
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -40,6 +43,8 @@ private:
     QPointer<Analog_Viewer> _analog_viewer;
     QPointer<Image_Processing_Widget> _image_processing;
     QPointer<Tongue_Widget> _tongue_widget;
+
+    ads::CDockManager* _m_DockManager;
 
     void _updateMedia();
 
