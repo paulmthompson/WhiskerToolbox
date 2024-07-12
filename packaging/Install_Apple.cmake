@@ -16,6 +16,8 @@ qt_generate_deploy_script(
    VERBOSE
    )")
 
+# Need to manually install janelia, whisker analysis, qtdocking and data manager
+
 install(TARGETS DataManager WhiskerToolbox
         BUNDLE DESTINATION .
 )
