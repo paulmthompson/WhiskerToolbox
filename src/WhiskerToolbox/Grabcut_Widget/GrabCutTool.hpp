@@ -18,7 +18,7 @@ public:
 
     bool getRectStage();
 
-    void setMaskDispTransparency(int transparency);
+    void setMaskDispTransparency(float transparency);
 
     // Mouse event handlers
     void mouseDown(int x, int y);
@@ -46,7 +46,7 @@ private:
     int _brush_thickness = 5;
     uint8_t _color = cv::GC_BGD;
     bool _first_iter = false;
-    int _mask_transparency = 0;
+    float _mask_transparency = 0;
 
     // grabCut specific
     cv::Mat _mask;

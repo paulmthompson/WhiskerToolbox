@@ -158,21 +158,24 @@ void GrabCutTool::_brushOutline(cv::Mat& img){
 }
 
 cv::Mat GrabCutTool::getDisp(){
-    cv::Mat img_disp = _img.clone();
+    cv::Mat mask_img = cv::Mat::zeros(_img.size(), CV_8UC3);
 
-    for (int i=0; i<img_disp.rows; ++i){
-        for (int j=0; j<img_disp.cols; ++j){
+    for (int i=0; i<_img.rows; ++i){
+        for (int j=0; j<_img.cols; ++j){
             if (_mask.at<uint8_t>(i, j) == cv::GC_FGD || _mask.at<uint8_t>(i, j) == cv::GC_PR_FGD){
-                // Could be improved lol
-                img_disp.at<cv::Vec3b>(i, j) = cv::Vec3b(
-                    static_cast<uint8_t>(std::min(static_cast<int>(img_disp.at<cv::Vec3b>(i, j)[0])+255-_mask_transparency, 255)),
-                    static_cast<uint8_t>(std::max(static_cast<int>(img_disp.at<cv::Vec3b>(i, j)[1])-51+_mask_transparency/5, 0)),
-                    static_cast<uint8_t>(std::max(static_cast<int>(img_disp.at<cv::Vec3b>(i, j)[2])-51+_mask_transparency/5, 0))
-                );
+                mask_img.at<cv::Vec3b>(i, j) = cv::Vec3b(255, 0, 0);
             }
         }
     }
-
+    cv::Mat img_disp = cv::Mat::zeros(_img.size(), CV_8UC3);
+    cv::addWeighted(_img, _mask_transparency, mask_img, 1-_mask_transparency, 0.0, img_disp);
+    for (int i=0; i<_img.rows; ++i){
+        for (int j=0; j<_img.cols; ++j){
+            if (!(_mask.at<uint8_t>(i, j) == cv::GC_FGD || _mask.at<uint8_t>(i, j) == cv::GC_PR_FGD)){
+                img_disp.at<cv::Vec3b>(i, j) = _img.at<cv::Vec3b>(i, j);
+            }
+        }
+    }
     // Show rectangle if it exists
     if ((_drawing && _rect_stage) || !_rect_stage){
         cv::rectangle(img_disp, _rect, cv::Scalar(0, 255, 0), 1);
@@ -203,7 +206,7 @@ bool GrabCutTool::getRectStage(){
     return _rect_stage;
 }
 
-void GrabCutTool::setMaskDispTransparency(int transparency){
+void GrabCutTool::setMaskDispTransparency(float transparency){
     _mask_transparency = transparency;
 }
 

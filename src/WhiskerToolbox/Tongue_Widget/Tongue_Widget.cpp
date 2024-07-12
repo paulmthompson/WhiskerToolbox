@@ -97,8 +97,8 @@ void Tongue_Widget::_loadHDF5TongueMasks()
     _data_manager->createMask(mask_key);
 
     auto mask = _data_manager->getMask(mask_key);
-    mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
-    mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
+    // mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    // mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
     for (std::size_t i = 0; i < frames.size(); i ++) {
         mask->addMaskAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(frames[i]), x_coords[i], y_coords[i]);
@@ -108,6 +108,10 @@ void Tongue_Widget::_loadHDF5TongueMasks()
     _scene->addMaskColor(mask_key, tongue_colors[mask_num]);
 }
 
+/**
+ * @brief Tongue_Widget::_loadImgTongueMasks
+ * Loads masks of tongue from image sequence
+ */
 void Tongue_Widget::_loadImgTongueMasks(){
     auto const dir_name =  QFileDialog::getExistingDirectory(
                               this,
@@ -166,8 +170,6 @@ void Tongue_Widget::_loadCSVJawKeypoints(){
     _data_manager->createPoint(keypoint_key);
 
     auto point = _data_manager->getPoint(keypoint_key);
-    point->setMaskHeight(_data_manager->getMediaData()->getHeight());
-    point->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
     for (auto & [key, val] : keypoints) {
         point->addPointAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(key), val.x, val.y);
@@ -226,7 +228,7 @@ void Tongue_Widget::_exportMasks() {
             for (auto [x, y] : mask){
                 mask_img.setPixel(static_cast<int>(x), static_cast<int>(y), 0xFFFFFF);
             }
-            std::string saveName = dir_path.string() + "/" + std::to_string(i) + ".png";
+            std::string saveName = dir_path.string() + "/" + _data_manager->getMediaData()->GetFrameID(i) + ".png";
             std::cout << "Saving file" << saveName << std::endl;
 
             mask_img.save(QString::fromStdString(saveName));

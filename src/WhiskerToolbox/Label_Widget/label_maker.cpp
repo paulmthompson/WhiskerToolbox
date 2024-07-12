@@ -7,7 +7,7 @@ using json = nlohmann::json;
 
 LabelMaker::LabelMaker() {
     _label_name = "Label1";
-    _saveFilePath = "./test.json";
+    _saveFilePath = "./test.csv";
 }
 
 void LabelMaker::addLabel(image img, int x, int y) {
@@ -23,6 +23,20 @@ void LabelMaker::_printLabels() {
         auto& [img, point] = label;
         std::cout << "Label on frame " << frame_name << " at location x: " << point.x << " y: " << point.y << std::endl;
     }
+}
+
+std::stringstream LabelMaker::saveLabelsCSV(){
+    std::stringstream out;
+    out << "Frame X Y\n";
+    for (auto& [frame_name,label ]: this->getLabels()) {
+
+        auto& [img, point] = label;
+
+        out << frame_name << ' ' << point.x << ' ' << point.y << '\n';
+    }
+
+    return out;
+
 }
 
 std::stringstream LabelMaker::saveLabelsJSON() {

@@ -18,6 +18,15 @@ Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> dat
     ui(new Ui::Label_Widget)
 {
     ui->setupUi(this);
+
+    if (!_data_manager->getPoint("labels")){
+        _data_manager->createPoint("labels");
+        _scene->addPointDataToScene("labels");
+        _scene->addPointColor("labels", "#ffe600");
+        auto point = _data_manager->getPoint("labels");
+        point->setMaskHeight(_data_manager->getMediaData()->getHeight());
+        point->setMaskWidth(_data_manager->getMediaData()->getWidth());
+    }
 }
 
 Label_Widget::~Label_Widget() {
@@ -67,6 +76,7 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
   }
 }
 
+// Change
 void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
 
   float x_media = x_canvas / _scene->getXAspect();
@@ -83,22 +93,29 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
 
   _label_maker->addLabel(img, static_cast<int>(x_media),
                          static_cast<int>(y_media));
+  auto point = _data_manager->getPoint("labels");
+  // point->addPointAtTime(_data_manager->getMediaData()->getRawData(_data_manager->getTime()->getLastLoadedFrame()), x_media, y_media);
+  point->clearPointsAtTime(frame_number);
+  point->addPointAtTime(frame_number, y_media, x_media);
+
+  _scene->UpdateCanvas();
 
   this->_updateAll();
 }
 
 void Label_Widget::_updateAll() {
-  _updateDraw();
+    _scene->UpdateCanvas();
   _updateTable();
 }
 
 // If current frame has label, it should be redrawn
 
+// Is this even necessary anymore?
 void Label_Widget::_updateDraw()
 {
     auto media = _data_manager->getMediaData();
 
-  _scene->clearPoints();
+  //_scene->clearPoints();
   for (auto &[frame_name, label] : _label_maker->getLabels()) {
       if (frame_name == media->GetFrameID(_data_manager->getTime()->getLastLoadedFrame())) {
       auto &[img, point] = label;
@@ -130,10 +147,10 @@ void Label_Widget::_addLabeltoTable(int row, std::string frame_id,
 
 void Label_Widget::_saveButton() {
 
-  auto output_stream = _label_maker->saveLabelsJSON();
+  auto output_stream = _label_maker->saveLabelsCSV();
   // std::cout << output_stream.str() << std::endl;
   QString saveFileName = QFileDialog::getSaveFileName(this, tr("Save File"), "",
-                                                      tr("JSON (*.json)"));
+                                                      tr("CSV (*.csv)"));
 
   std::ofstream outFile;
   outFile.open(saveFileName.toStdString());
