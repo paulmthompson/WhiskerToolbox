@@ -32,7 +32,7 @@ install(TARGETS WhiskerToolbox
 qt_generate_deploy_app_script(
         TARGET WhiskerToolbox
         OUTPUT_SCRIPT deploy_script
-        DEPLOY_TOOL_OPTIONS --ignore-library-errors --no-advanceddocking
+        DEPLOY_TOOL_OPTIONS --ignore-library-errors
 )
 
 install(SCRIPT "${deploy_script}")
