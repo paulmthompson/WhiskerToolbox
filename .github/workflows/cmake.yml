@@ -130,4 +130,10 @@ jobs:
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
 
       - name: Run Installed app
-        run: $GITHUB_WORKSPACE/${{matrix.appfolder}}
+        run: |
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            open $GITHUB_WORKSPACE/${{matrix.appfolder}}
+          else
+            $GITHUB_WORKSPACE/${{matrix.appfolder}}
+          fi
+        shell: bash
