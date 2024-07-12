@@ -126,3 +126,5 @@ jobs:
       - name: Install
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
 
+      - name: Run Installed app
+        run: ./${{matrix.appfolder}}
