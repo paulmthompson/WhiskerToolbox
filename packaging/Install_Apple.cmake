@@ -20,10 +20,14 @@ qt_generate_deploy_script(
 function(copy_dylibs_during_install dylib_list dest_dir)
     foreach(dylib IN LISTS dylib_list)
         install(CODE "
+            set(target_dir \"\${CMAKE_INSTALL_PREFIX}/${dest_dir}\")
+            if(NOT EXISTS \"\${target_dir}\")
+                file(MAKE_DIRECTORY \"\${target_dir}\")
+            endif()
             execute_process(
-                COMMAND cp -f \"${dylib}\" \"\${CMAKE_INSTALL_PREFIX}/${dest_dir}\"
+                COMMAND \${CMAKE_COMMAND} -E copy_if_different \"${dylib}\" \"\${target_dir}\"
             )
-            message(STATUS \"Copying ${dylib} to WhiskerToolbox.app/Contents/Frameworks\")
+            message(STATUS \"Copying ${dylib} to \${target_dir}\")
         ")
     endforeach()
 endfunction()
