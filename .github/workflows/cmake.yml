@@ -140,3 +140,4 @@ jobs:
               cpack -G TGZ
             fi
             popd
+        shell: bash
