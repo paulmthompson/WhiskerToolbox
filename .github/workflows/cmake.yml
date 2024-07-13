@@ -133,7 +133,7 @@ jobs:
             elif [ "${{ runner.os }}" = "Windows" ]; then
               Get-ChildItem -Path ${{matrix.buildfolder}} -Recurse | ForEach-Object {Write-Output $_.FullName}
             fi
-          shell: bash
+        shell: bash
 
       - name: Install
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
