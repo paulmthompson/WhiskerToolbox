@@ -15,24 +15,24 @@ jobs:
              short: linux,
              compiler: gcc,
              shell: bash,
-             appfolder: out/install/GCC/Release/bin/WhiskerToolbox}
+             appfolder: out/install/GCC/Release}
           - {"os": ubuntu-latest,
              short: linux,
              compiler: clang,
              shell: bash,
-             appfolder: out/install/Clang/Release/bin/WhiskerToolbox}
+             appfolder: out/install/Clang/Release}
           #- {"os": windows-latest, short: windows, compiler: gcc, shell: msys2}
           #- {"os": windows-latest, short: windows, compiler: clang, shell: msys2}
           - {"os": windows-latest,
              short: windows,
              compiler: msvc,
              shell: powershell,
-             appfolder: out/install/MSVC/Release/bin/WhiskerToolbox.exe}
+             appfolder: out/install/MSVC/Release}
           - {"os": macos-latest,
              short: mac-arm64,
              compiler: clang,
              shell: bash,
-             appfolder: out/install/Clang/Release/WhiskerToolbox.app}
+             appfolder: out/install/Clang/Release}
 
     runs-on: ${{matrix.os}}
 
@@ -129,11 +129,14 @@ jobs:
       - name: Install
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
 
-      - name: Run Installed app
+      - name: Package with cpack
         run: |
-          if [ "${{ runner.os }}" = "macOS" ]; then
-            open $GITHUB_WORKSPACE/${{matrix.appfolder}}
-          else
-            $GITHUB_WORKSPACE/${{matrix.appfolder}}
-          fi
-        shell: bash
+            pushd ${{matrix.appfolder}}
+            if [ "${{ runner.os }}" = "Windows" ]; then
+              cpack -G ZIP
+            elif [ "${{ runner.os }}" = "macOS" ]; then
+              cpack -G DragNDrop
+            else
+              cpack -G TGZ
+            fi
+            popd
