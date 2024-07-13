@@ -17,6 +17,26 @@ qt_generate_deploy_script(
    )")
 
 # Need to manually install janelia, whisker analysis, qtdocking and data manager
+function(copy_dylibs_during_install dylib_list dest_dir)
+    foreach(dylib IN LISTS dylib_list)
+        install(CODE "
+            execute_process(
+                COMMAND cp -f \"${dylib}\" \"\${CMAKE_INSTALL_PREFIX}/${dest_dir}\"
+            )
+            message(STATUS \"Copying ${dylib} to WhiskerToolbox.app/Contents/Frameworks\")
+        ")
+    endforeach()
+endfunction()
+
+# Example usage
+set(MY_DYLIBS
+        "${CMAKE_BINARY_DIR}/libjanelia.dylib"
+        "${CMAKE_BINARY_DIR}/libWhisker-Analysis.dylib"
+        "${CMAKE_BINARY_DIR}/bin/libqt6advanceddocking.dylib"
+        "${CMAKE_BINARY_DIR}/libDataManager.dylib"
+)
+
+copy_dylibs_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
 
 install(TARGETS DataManager WhiskerToolbox
         BUNDLE DESTINATION .
