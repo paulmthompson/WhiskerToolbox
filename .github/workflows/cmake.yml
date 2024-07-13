@@ -126,6 +126,15 @@ jobs:
       - name: Build
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
 
+      - name: List file/directory tree
+        run: |
+            if [ "${{ runner.os }}" = "Linux" ] || [ "${{ runner.os }}" = "macOS" ]; then
+              ls -R ${{matrix.buildfolder}}
+            elif [ "${{ runner.os }}" = "Windows" ]; then
+              Get-ChildItem -Path ${{matrix.buildfolder}} -Recurse | ForEach-Object {Write-Output $_.FullName}
+            fi
+          shell: bash
+
       - name: Install
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
 
