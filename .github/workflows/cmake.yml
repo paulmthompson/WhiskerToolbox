@@ -15,24 +15,24 @@ jobs:
              short: linux,
              compiler: gcc,
              shell: bash,
-             appfolder: out/install/GCC/Release}
+             buildfolder: out/build/GCC/Release}
           - {"os": ubuntu-latest,
              short: linux,
              compiler: clang,
              shell: bash,
-             appfolder: out/install/Clang/Release}
+             buildfolder: out/build/Clang/Release}
           #- {"os": windows-latest, short: windows, compiler: gcc, shell: msys2}
           #- {"os": windows-latest, short: windows, compiler: clang, shell: msys2}
           - {"os": windows-latest,
              short: windows,
              compiler: msvc,
              shell: powershell,
-             appfolder: out/install/MSVC/Release}
+             buildfolder: out/build/MSVC/Release}
           - {"os": macos-latest,
              short: mac-arm64,
              compiler: clang,
              shell: bash,
-             appfolder: out/install/Clang/Release}
+             buildfolder: out/build/Clang/Release}
 
     runs-on: ${{matrix.os}}
 
@@ -131,7 +131,7 @@ jobs:
 
       - name: Package with cpack
         run: |
-            pushd ${{matrix.appfolder}}
+            pushd ${{matrix.buildfolder}}
             if [ "${{ runner.os }}" = "Windows" ]; then
               cpack -G ZIP
             elif [ "${{ runner.os }}" = "macOS" ]; then
