@@ -126,15 +126,6 @@ jobs:
       - name: Build
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
 
-      - name: List file/directory tree
-        run: |
-            if [ "${{ runner.os }}" = "Linux" ] || [ "${{ runner.os }}" = "macOS" ]; then
-              ls -R ${{matrix.buildfolder}}
-            elif [ "${{ runner.os }}" = "Windows" ]; then
-              Get-ChildItem -Path ${{matrix.buildfolder}} -Recurse | ForEach-Object {Write-Output $_.FullName}
-            fi
-        shell: bash
-
       - name: Install
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
 
@@ -150,3 +141,21 @@ jobs:
             fi
             popd
         shell: bash
+
+      - name: Find CPack Artifact
+        run: |
+            if [ "${{ runner.os }}" = "Windows" ]; then
+              ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.zip)
+            elif [ "${{ runner.os }}" = "macOS" ]; then
+              ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.dmg)
+            else
+              ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.tar.gz)
+            fi
+            echo "ARTIFACT_PATH=$ARTIFACT_PATH" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Upload CPack Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpack-artifact
+          path: ${{ env.ARTIFACT_PATH }}
