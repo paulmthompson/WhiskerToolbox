@@ -40,6 +40,14 @@ set(MY_DYLIBS
         "${CMAKE_BINARY_DIR}/libDataManager.dylib"
 )
 
+# For each target representing a dynamic library, set the INSTALL_RPATH property
+foreach(target IN ITEMS janelia Whisker-Analysis qt6advanceddocking DataManager)
+    set_target_properties(${target} PROPERTIES
+            INSTALL_RPATH "@executable_path/../Frameworks"
+            BUILD_WITH_INSTALL_RPATH TRUE
+    )
+endforeach()
+
 copy_dylibs_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
 
 install(TARGETS DataManager WhiskerToolbox
