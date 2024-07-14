@@ -66,7 +66,7 @@ endfunction()
 update_install_name("janelia" "@executable_path/../Frameworks/libjanelia.dylib" "libjanelia.dylib" )
 update_install_name("Whisker-Analysis" "@executable_path/../Frameworks/libWhisker-Analysis.dylib" "libWhisker-Analysis.dylib")
 update_install_name("DataManager" "@executable_path/../Frameworks/libDataManager.dylib" "libDataManager.dylib")
-update_install_name("qt6advanceddocking" "@executable_path/../Frameworks/libqt6advanceddocking.4.3.1.dylib" "libqt6advanceddocking.4.3.1.dylib")
+update_install_name("qt6advanceddocking" "@executable_path/../Frameworks/libqt6advanceddocking.4.3.1.dylib" "bin/libqt6advanceddocking.4.3.1.dylib")
 
 copy_dylibs_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
 
