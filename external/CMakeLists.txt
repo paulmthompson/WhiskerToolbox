@@ -1,7 +1,7 @@
 
 
 include(FetchContent)
-
+set(BUILD_TESTING OFF)
 FetchContent_Declare(
   ffmpeg_wrapper
   GIT_REPOSITORY https://github.com/paulmthompson/ffmpeg_wrapper.git
