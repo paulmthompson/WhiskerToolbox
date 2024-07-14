@@ -14,7 +14,8 @@ FetchContent_Declare(
   Whisker-Analysis
   GIT_REPOSITORY https://github.com/paulmthompson/Whisker-Analysis.git
   GIT_TAG c70c20f9421fb7fc603ca62b61df4993a3f22b5e
-  CMAKE_ARGS -DBUILD_WHISKERTRACKER=OFF
+  CMAKE_ARGS -DBUILD_WHISKERTRACKER=OFF -BUILD_TESTING=OFF
+
 )
 
 FetchContent_Declare(
