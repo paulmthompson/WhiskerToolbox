@@ -129,6 +129,11 @@ jobs:
       - name: Install
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
 
+      - name: Check rpath
+        if: runner.os == 'macOS'
+        run: |
+            otool -l out/install/Clang/Release/WhiskerToolbox.app/Contents/MacOS/WhiskerToolbox | grep -A 2 LC_RPATH
+
       - name: Package with cpack
         run: |
             pushd ${{matrix.buildfolder}}
