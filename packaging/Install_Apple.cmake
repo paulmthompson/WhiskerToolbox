@@ -54,19 +54,19 @@ set_target_properties(WhiskerToolbox PROPERTIES
         BUILD_WITH_INSTALL_RPATH TRUE
 )
 
-function(update_install_name target_lib new_install_name)
+function(update_install_name target_lib new_install_name old_install_name)
     add_custom_target(UpdateInstallName${target_lib} ALL
-            COMMAND ${CMAKE_INSTALL_NAME_TOOL} -id "${new_install_name}" "${CMAKE_BINARY_DIR}/${target_lib}"
+            COMMAND ${CMAKE_INSTALL_NAME_TOOL} -id "${new_install_name}" "${CMAKE_BINARY_DIR}/${old_install_name}"
             COMMENT "Updating install name for ${target_lib}"
     )
     add_dependencies(UpdateInstallName${target_lib} ${target_lib})
 endfunction()
 
 # Example usage of the function
-update_install_name("libjanelia.dylib" "@executable_path/../Frameworks/libjanelia.dylib")
-update_install_name("libWhisker-Analysis.dylib" "@executable_path/../Frameworks/libWhisker-Analysis.dylib")
-update_install_name("libDataManager.dylib" "@executable_path/../Frameworks/libDataManager.dylib")
-update_install_name("libqt6advanceddocking.4.3.1.dylib" "@executable_path/../Frameworks/libqt6advanceddocking.4.3.1.dylib")
+update_install_name("janelia" "@executable_path/../Frameworks/libjanelia.dylib" "libjanelia.dylib" )
+update_install_name("Whisker-Analysis" "@executable_path/../Frameworks/libWhisker-Analysis.dylib" "libWhisker-Analysis.dylib")
+update_install_name("DataManager" "@executable_path/../Frameworks/libDataManager.dylib" "libDataManager.dylib")
+update_install_name("qt6advanceddocking" "@executable_path/../Frameworks/libqt6advanceddocking.4.3.1.dylib" "libqt6advanceddocking.4.3.1.dylib")
 
 copy_dylibs_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
 
