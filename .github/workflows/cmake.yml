@@ -133,6 +133,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
             otool -l out/install/Clang/Release/WhiskerToolbox.app/Contents/MacOS/WhiskerToolbox | grep -A 2 LC_RPATH
+            otool -l out/install/Clang/Release/WhiskerToolbox.app/Contents/MacOS/WhiskerToolbox
 
       - name: Package with cpack
         run: |
