@@ -53,10 +53,14 @@ set_target_properties(WhiskerToolbox PROPERTIES
         BUILD_WITH_INSTALL_RPATH TRUE
 )
 
-add_custom_command(TARGET janelia POST_BUILD
+# Define a custom target for updating the install name
+add_custom_target(UpdateInstallNameJanelia ALL
         COMMAND ${CMAKE_INSTALL_NAME_TOOL} -id "@executable_path/../Frameworks/libjanelia.dylib" "${CMAKE_BINARY_DIR}/libjanelia.dylib"
         COMMENT "Updating install name for libjanelia.dylib"
 )
+
+# Ensure the custom target is built after the janelia target
+add_dependencies(UpdateInstallNameJanelia janelia)
 
 copy_dylibs_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
 
