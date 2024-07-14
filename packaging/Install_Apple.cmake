@@ -41,26 +41,32 @@ set(MY_DYLIBS
 )
 
 # For each target representing a dynamic library, set the INSTALL_RPATH property
-foreach(target IN ITEMS janelia Whisker-Analysis qt6advanceddocking DataManager)
-    set_target_properties(${target} PROPERTIES
-            INSTALL_RPATH "@executable_path/../Frameworks"
-            BUILD_WITH_INSTALL_RPATH TRUE
-    )
-endforeach()
+# This doesn't work
+#foreach(target IN ITEMS janelia Whisker-Analysis qt6advanceddocking DataManager)
+#    set_target_properties(${target} PROPERTIES
+#            INSTALL_RPATH "@executable_path/../Frameworks"
+#            BUILD_WITH_INSTALL_RPATH TRUE
+#    )
+#endforeach()
 
 set_target_properties(WhiskerToolbox PROPERTIES
         INSTALL_RPATH "@executable_path/../Frameworks"
         BUILD_WITH_INSTALL_RPATH TRUE
 )
 
-# Define a custom target for updating the install name
-add_custom_target(UpdateInstallNameJanelia ALL
-        COMMAND ${CMAKE_INSTALL_NAME_TOOL} -id "@executable_path/../Frameworks/libjanelia.dylib" "${CMAKE_BINARY_DIR}/libjanelia.dylib"
-        COMMENT "Updating install name for libjanelia.dylib"
-)
+function(update_install_name target_lib new_install_name)
+    add_custom_target(UpdateInstallName${target_lib} ALL
+            COMMAND ${CMAKE_INSTALL_NAME_TOOL} -id "${new_install_name}" "${CMAKE_BINARY_DIR}/${target_lib}"
+            COMMENT "Updating install name for ${target_lib}"
+    )
+    add_dependencies(UpdateInstallName${target_lib} ${target_lib})
+endfunction()
 
-# Ensure the custom target is built after the janelia target
-add_dependencies(UpdateInstallNameJanelia janelia)
+# Example usage of the function
+update_install_name("libjanelia.dylib" "@executable_path/../Frameworks/libjanelia.dylib")
+update_install_name("libWhisker-Analysis.dylib" "@executable_path/../Frameworks/libWhisker-Analysis.dylib")
+update_install_name("libDataManager.dylib" "@executable_path/../Frameworks/libDataManager.dylib")
+update_install_name("libqt6advanceddocking.4.3.1.dylib" "@executable_path/../Frameworks/libqt6advanceddocking.4.3.1.dylib")
 
 copy_dylibs_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
 
