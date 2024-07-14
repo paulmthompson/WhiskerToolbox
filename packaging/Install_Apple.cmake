@@ -48,6 +48,11 @@ foreach(target IN ITEMS janelia Whisker-Analysis qt6advanceddocking DataManager)
     )
 endforeach()
 
+set_target_properties(WhiskerToolbox PROPERTIES
+        INSTALL_RPATH "@executable_path/../Frameworks"
+        BUILD_WITH_INSTALL_RPATH TRUE
+)
+
 copy_dylibs_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
 
 install(TARGETS DataManager WhiskerToolbox
