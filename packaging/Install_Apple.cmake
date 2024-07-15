@@ -74,5 +74,36 @@ install(TARGETS DataManager WhiskerToolbox
         BUNDLE DESTINATION .
 )
 
+# Define the codesign certificate name
+set(CODESIGN_CERT "Developer ID Application: Your Name (TEAMID)")
+
+# Custom install command to codesign the application
+install(CODE "
+    execute_process(
+        COMMAND codesign --force --verify --verbose --sign \"${CODESIGN_CERT}\" \"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE output
+        ERROR_VARIABLE error
+    )
+    if(NOT \${result} EQUAL 0)
+        message(FATAL_ERROR \"Failed to codesign WhiskerToolbox.app: \${error}\")
+    endif()
+    message(STATUS \"Successfully codesigned WhiskerToolbox.app\")
+")
+
+# Optionally, verify the codesigning
+install(CODE "
+    execute_process(
+        COMMAND codesign --verify --deep --strict --verbose=2 \"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE output
+        ERROR_VARIABLE error
+    )
+    if(NOT \${result} EQUAL 0)
+        message(FATAL_ERROR \"Failed to verify codesigning of WhiskerToolbox.app: \${error}\")
+    endif()
+    message(STATUS \"Successfully verified codesigning of WhiskerToolbox.app\")
+")
+
 install(SCRIPT "${deploy_script}")
 
