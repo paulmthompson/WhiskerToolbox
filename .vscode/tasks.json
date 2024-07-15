@@ -1,0 +1,13 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build and run",
+            "type": "shell",
+            "command": "ninja && ./WhiskerToolbox.app/Contents/MacOS/WhiskerToolbox",
+            "options": {
+                "cwd": "${workspaceFolder}/out/build/Clang/Release"
+            }
+        }
+    ]
+}
