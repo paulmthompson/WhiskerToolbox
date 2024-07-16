@@ -88,11 +88,3 @@ install(CODE "
     endif()
     message(STATUS \"Successfully codesigned WhiskerToolbox.app\")
 ")
-
-# Package the application
-add_custom_target(package_app ALL
-        COMMAND ${CMAKE_COMMAND} -E echo "Packaging the application with cpack..."
-        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target package
-        COMMENT "Packaging the application"
-        DEPENDS WhiskerToolbox # Ensure this depends on your main target and any other dependencies
-)
