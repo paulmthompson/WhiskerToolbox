@@ -185,7 +185,7 @@ jobs:
             MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
             MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
         run: |
-              codesign --force --deep --verbose out/install/Clang/Release/WhiskerToolbox.app
+              codesign --force --deep --verbose --sign "Eric Certificate" ${{ env.ARTIFACT_PATH }}
               echo $?
         shell: bash
 
