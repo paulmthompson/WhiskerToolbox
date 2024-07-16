@@ -182,7 +182,7 @@ jobs:
             MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
             MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
         run: |
-              codesign --force --verbose ${{ env.ARTIFACT_PATH }}/WhiskerToolbox.app
+              codesign --force --verbose ${{ env.ARTIFACT_PATH }}
               echo $?
         shell: bash
 
