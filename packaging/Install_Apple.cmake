@@ -89,22 +89,10 @@ install(CODE "
     message(STATUS \"Successfully codesigned WhiskerToolbox.app\")
 ")
 
-# Define a custom target for signing
-add_custom_target(sign_app ALL
-        COMMAND ${CMAKE_COMMAND} -E echo "Signing the application..."
-        COMMAND codesign --force --deep --verbose --sign "Eric Certificate" "${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app"
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        COMMENT "Signing the application with codesign"
-)
-
-# Ensure the app is built and installed before signing
-add_dependencies(sign_app WhiskerToolbox)
-
-# Custom command to package after signing
-add_custom_command(
-        TARGET sign_app
-        POST_BUILD
+# Package the application
+add_custom_target(package_app ALL
         COMMAND ${CMAKE_COMMAND} -E echo "Packaging the application with cpack..."
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target package
         COMMENT "Packaging the application"
+        DEPENDS WhiskerToolbox # Ensure this depends on your main target and any other dependencies
 )
