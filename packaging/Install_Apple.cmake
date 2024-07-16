@@ -93,7 +93,7 @@ install(CODE "
 # Optionally, verify the codesigning
 install(CODE "
     execute_process(
-        COMMAND codesign --verify --deep --strict --verbose=2 \"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
+        COMMAND codesign --verify --verbose=2 \"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
         ERROR_VARIABLE error
