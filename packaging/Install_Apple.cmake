@@ -74,6 +74,8 @@ install(TARGETS DataManager WhiskerToolbox
         BUNDLE DESTINATION .
 )
 
+install(SCRIPT "${deploy_script}")
+
 # Custom install command to codesign the application
 install(CODE "
     execute_process(
@@ -101,6 +103,3 @@ install(CODE "
     endif()
     message(STATUS \"Successfully verified codesigning of WhiskerToolbox.app\")
 ")
-
-install(SCRIPT "${deploy_script}")
-
