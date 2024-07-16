@@ -77,7 +77,7 @@ install(TARGETS DataManager WhiskerToolbox
 # Custom install command to codesign the application
 install(CODE "
     execute_process(
-        COMMAND codesign --force --verify --verbose -\"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
+        COMMAND codesign --force --verify --verbose \"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
         ERROR_VARIABLE error
