@@ -30,7 +30,3 @@ else()
 endif()
 
 include(CPack)
-
-if (APPLE)
-    set(CPACK_INSTALL_SCRIPTS "${CMAKE_SOURCE_DIR}/packaging/Codesign_Apple.cmake")
-endif()
