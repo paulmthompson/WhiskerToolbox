@@ -123,9 +123,6 @@ jobs:
       #  if: runner.os == 'Linux' && failure()
       #  run: cat   /usr/local/share/vcpkg/buildtrees/gtk3/config-x64-linux-dynamic-dbg-out.log
 
-      - name: Build
-        run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
-
       - name: Codesign executable
         if: runner.os == 'macOS'
         env:
@@ -143,6 +140,9 @@ jobs:
             security set-keychain-settings -t 3600 -u build.keychain
             security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
             security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+
+      - name: Build
+        run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
 
       - name: Install
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
