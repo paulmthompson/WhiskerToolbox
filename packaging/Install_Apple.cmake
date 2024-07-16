@@ -88,5 +88,3 @@ install(CODE "
     endif()
     message(STATUS \"Successfully codesigned WhiskerToolbox.app\")
 ")
-
-set(CPACK_POST_BUILD_SCRIPTS "${CMAKE_SOURCE_DIR}/packaging/Codesign_Apple.cmake")

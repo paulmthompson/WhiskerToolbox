@@ -178,16 +178,33 @@ jobs:
             echo "ARTIFACT_PATH=$ARTIFACT_PATH" >> $GITHUB_ENV
         shell: bash
 
-      - name: Codesign artifact
+      - name: Sign and Recreate DMG
         if: runner.os == 'macOS'
-        env:
-            MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-            MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
-            MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
         run: |
-              codesign --force --deep --verbose --sign "Eric Certificate" ${{ env.ARTIFACT_PATH }}
-              echo $?
+          # Define paths
+          DMG_PATH="${{ env.ARTIFACT_PATH }}"
+          SIGNED_DMG_PATH="${{ matrix.buildfolder }}/YourSignedApplication.dmg"
+
+          # Step 1: Mount the DMG
+          MOUNT_DIR=$(hdiutil attach "$DMG_PATH" | grep "Volumes" | awk '{print $3}')
+
+          # Step 2: Sign the .app bundle
+          APP_PATH="$MOUNT_DIR/WhiskerToolbox.app"
+          codesign --force --deep --verbose --sign "Eric Certificate" "$APP_PATH"
+
+          # Step 3: Unmount the DMG
+          hdiutil detach "$MOUNT_DIR"
+
+          # Step 4: Recreate the DMG
+          hdiutil create -volname "WhiskerToolbox" -srcfolder "$MOUNT_DIR" -ov -format UDZO "$SIGNED_DMG_PATH"
+
+          # Update ARTIFACT_PATH to point to the newly created signed DMG
+          echo "ARTIFACT_PATH=$SIGNED_DMG_PATH" >> $GITHUB_ENV
         shell: bash
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
 
       - name: Upload CPack Artifact
         uses: actions/upload-artifact@v3
