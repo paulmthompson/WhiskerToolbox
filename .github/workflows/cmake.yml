@@ -188,19 +188,25 @@ jobs:
           # Step 1: Mount the DMG
           MOUNT_DIR=$(hdiutil attach "$DMG_PATH" | grep "Volumes" | awk '{print $3}')
           
+          # Step 2: Create a temporary directory
+          TEMP_DIR=$(mktemp -d)
+          
+          # Step 3: Copy all files from the mounted DMG to the temporary directory
+          cp -R "$MOUNT_DIR/"* "$TEMP_DIR"
+          
            # Explicitly sign libDataManager.dylib
-          LIB_PATH="$MOUNT_DIR/WhiskerToolbox.app/Contents/Frameworks/libDataManager.dylib"
+          LIB_PATH="$TEMP_DIR/WhiskerToolbox.app/Contents/Frameworks/libDataManager.dylib"
           codesign --force --deep --verbose=4 --sign "Eric Certificate" "$LIB_PATH"
 
           # Step 2: Sign the .app bundle
-          APP_PATH="$MOUNT_DIR/WhiskerToolbox.app"
+          APP_PATH="$TEMP_DIR/WhiskerToolbox.app"
           codesign --force --deep --verbose=4 --sign "Eric Certificate" "$APP_PATH"
 
           # Step 3: Unmount the DMG
           hdiutil detach "$MOUNT_DIR"
 
           # Step 4: Recreate the DMG
-          hdiutil create -volname "WhiskerToolbox" -srcfolder "$MOUNT_DIR" -ov -format UDZO "$SIGNED_DMG_PATH"
+          hdiutil create -volname "WhiskerToolbox" -srcfolder "$TEMP_DIR" -ov -format UDZO "$SIGNED_DMG_PATH"
 
           # Update ARTIFACT_PATH to point to the newly created signed DMG
           echo "ARTIFACT_PATH=$SIGNED_DMG_PATH" >> $GITHUB_ENV
