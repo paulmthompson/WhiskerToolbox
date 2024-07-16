@@ -187,6 +187,10 @@ jobs:
 
           # Step 1: Mount the DMG
           MOUNT_DIR=$(hdiutil attach "$DMG_PATH" | grep "Volumes" | awk '{print $3}')
+          
+           # Explicitly sign libDataManager.dylib
+          LIB_PATH="$MOUNT_DIR/WhiskerToolbox.app/Contents/Frameworks/libDataManager.dylib"
+          codesign --force --deep --verbose --sign "Eric Certificate" "$LIB_PATH"
 
           # Step 2: Sign the .app bundle
           APP_PATH="$MOUNT_DIR/WhiskerToolbox.app"
