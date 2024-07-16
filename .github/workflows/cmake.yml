@@ -135,6 +135,8 @@ jobs:
         run: |
             KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
             echo -n "$MACOS_CERTIFICATE" | base64 --decode -o certificate.p12
+            openssl pkcs12 -in certificate.p12 -nodes -passin pass:$MACOS_CERTIFICATE_PWD | openssl x509 -noout -subject
+            
             security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
             security default-keychain -s build.keychain
             security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
