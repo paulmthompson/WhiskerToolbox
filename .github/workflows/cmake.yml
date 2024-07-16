@@ -175,6 +175,17 @@ jobs:
             echo "ARTIFACT_PATH=$ARTIFACT_PATH" >> $GITHUB_ENV
         shell: bash
 
+      - name: Codesign artifact
+        if: runner.os == 'macOS'
+        env:
+            MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+            MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+            MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
+        run: |
+              codesign --force --verbose ${{ env.ARTIFACT_PATH }}/WhiskerToolbox.app
+              echo $?
+        shell: bash
+
       - name: Upload CPack Artifact
         uses: actions/upload-artifact@v3
         with:
