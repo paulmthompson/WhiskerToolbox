@@ -190,11 +190,11 @@ jobs:
           
            # Explicitly sign libDataManager.dylib
           LIB_PATH="$MOUNT_DIR/WhiskerToolbox.app/Contents/Frameworks/libDataManager.dylib"
-          codesign --force --deep --verbose --sign "Eric Certificate" "$LIB_PATH"
+          codesign --force --deep --verbose=4 --sign "Eric Certificate" "$LIB_PATH"
 
           # Step 2: Sign the .app bundle
           APP_PATH="$MOUNT_DIR/WhiskerToolbox.app"
-          codesign --force --deep --verbose --sign "Eric Certificate" "$APP_PATH"
+          codesign --force --deep --verbose=4 --sign "Eric Certificate" "$APP_PATH"
 
           # Step 3: Unmount the DMG
           hdiutil detach "$MOUNT_DIR"
