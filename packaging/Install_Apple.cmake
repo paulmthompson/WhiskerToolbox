@@ -74,13 +74,10 @@ install(TARGETS DataManager WhiskerToolbox
         BUNDLE DESTINATION .
 )
 
-# Define the codesign certificate name
-set(CODESIGN_CERT "Developer ID Application: Your Name (TEAMID)")
-
 # Custom install command to codesign the application
 install(CODE "
     execute_process(
-        COMMAND codesign --force --verify --verbose --sign \"${CODESIGN_CERT}\" \"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
+        COMMAND codesign --force --verify --verbose -\"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
         ERROR_VARIABLE error
