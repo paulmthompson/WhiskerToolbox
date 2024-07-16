@@ -77,12 +77,11 @@ install(TARGETS DataManager WhiskerToolbox
 install(SCRIPT "${deploy_script}")
 
 # Custom install command to codesign the application
-install(CODE "
-    execute_process(
-        COMMAND codesign --force --verbose \"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
-        RESULT_VARIABLE result
-        OUTPUT_VARIABLE output
-        ERROR_VARIABLE error
-    )
-
-")
+#install(CODE "
+#    execute_process(
+#        COMMAND codesign --force --verbose \"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
+#        RESULT_VARIABLE result
+#        OUTPUT_VARIABLE output
+#        ERROR_VARIABLE error
+#    )
+#")
