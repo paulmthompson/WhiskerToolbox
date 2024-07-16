@@ -1,6 +1,6 @@
 
 execute_process(
-        COMMAND codesign --force --deep --verbose --sign "Eric Certificate" "${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app"
+        COMMAND codesign --force --deep --verbose --sign "Eric Certificate" "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/WhiskerToolbox.app"
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
         ERROR_VARIABLE error
