@@ -126,6 +126,24 @@ jobs:
       #  if: runner.os == 'Linux' && failure()
       #  run: cat   /usr/local/share/vcpkg/buildtrees/gtk3/config-x64-linux-dynamic-dbg-out.log
 
+      - name: Codesign executable
+        if: runner.os == 'macOS'
+        env:
+            MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+            MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+            MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
+        run: |
+            KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+            echo -n "$MACOS_CERTIFICATE" | base64 --decode -o certificate.p12
+            openssl pkcs12 -in certificate.p12 -nodes -passin pass:$MACOS_CERTIFICATE_PWD | openssl x509 -noout -subject
+            
+            security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+            security default-keychain -s build.keychain
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+            security set-keychain-settings -t 3600 -u build.keychain
+            security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+
       - name: Build
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
 
@@ -163,11 +181,52 @@ jobs:
             echo "ARTIFACT_PATH=$ARTIFACT_PATH" >> $GITHUB_ENV
         shell: bash
 
-      - name: Sign MacOS App
+      - name: Sign and Recreate DMG
+        if: runner.os == 'macOS'
         run: |
-            if [ "${{ runner.os }}" = "macOS" ]; then
-              echo "Thingything"
-            fi
+          # Define paths
+          DMG_PATH="${{ env.ARTIFACT_PATH }}"
+          SIGNED_DMG_PATH="${{ matrix.buildfolder }}/YourSignedApplication.dmg"
+
+          # Step 1: Mount the DMG
+          MOUNT_DIR=$(hdiutil attach "$DMG_PATH" | grep "Volumes" | awk '{print $3}')
+          
+          # Step 2: Create a temporary directory
+          TEMP_DIR=$(mktemp -d)
+          
+          # Step 3: Copy all files from the mounted DMG to the temporary directory
+          cp -R "$MOUNT_DIR/"* "$TEMP_DIR"
+          
+          # Debugging: List contents of TEMP_DIR
+          echo "Listing contents of TEMP_DIR:"
+          ls -la "$TEMP_DIR"
+
+          # Step 2: Sign the .app bundle
+          APP_PATH="$TEMP_DIR/WhiskerToolbox.app"
+          codesign --force --deep --verbose=4 --sign "Eric Certificate" "$APP_PATH"
+          
+          # Debugging: List contents of TEMP_DIR
+          echo "Listing contents of TEMP_DIR:"
+          ls -la "$TEMP_DIR"
+
+          # Step 3: Unmount the DMG
+          hdiutil detach "$MOUNT_DIR"
+
+          # Step 4: Recreate the DMG
+          hdiutil create -volname "WhiskerToolbox" -srcfolder "$TEMP_DIR" -ov -format UDZO "$SIGNED_DMG_PATH"
+
+          MOUNT_DIR=$(hdiutil attach "$SIGNED_DMG_PATH" | grep "Volumes" | awk '{print $3}')
+          echo "Listing contents of the mounted DMG:"
+          ls -la "$MOUNT_DIR"
+          hdiutil detach "$MOUNT_DIR"
+          
+          # Update ARTIFACT_PATH to point to the newly created signed DMG
+          echo "ARTIFACT_PATH=$SIGNED_DMG_PATH" >> $GITHUB_ENV
+        shell: bash
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
 
       - name: Upload CPack Artifact
         uses: actions/upload-artifact@v3

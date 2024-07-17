@@ -2,9 +2,7 @@
 #define MAINWINDOW_HPP
 
 #include "Media_Window.hpp"
-#include "Whisker_Widget.hpp"
 #include "Label_Widget.hpp"
-#include "analog_viewer.hpp"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 
@@ -19,6 +17,9 @@
 
 #include "DockManager.h"
 
+#include <map>
+#include <memory>
+#include <string>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -31,6 +32,18 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void addWidget(std::string const & key, QWidget* widget) {
+        _widgets[key] = std::unique_ptr<QWidget>(widget);
+    }
+
+    QWidget* getWidget(std::string const & key) {
+        auto it = _widgets.find(key);
+        if (it != _widgets.end()) {
+            return it->second.get();
+        }
+        return nullptr;
+    }
+
 protected:
     void keyPressEvent(QKeyEvent *event);
 
@@ -38,24 +51,24 @@ private:
     Ui::MainWindow *ui;
 
     Media_Window* _scene;
-    QPointer<Whisker_Widget> _ww;
     QPointer<Label_Widget> _label_maker;
-    QPointer<Analog_Viewer> _analog_viewer;
     QPointer<Image_Processing_Widget> _image_processing;
     QPointer<Tongue_Widget> _tongue_widget;
 
     ads::CDockManager* _m_DockManager;
+
+    bool _verbose;
+
+    std::shared_ptr<DataManager> _data_manager;
+
+    std::map<std::string, std::unique_ptr<QWidget>> _widgets;
 
     void _updateMedia();
 
     void _createActions();
 
     void _LoadData(std::string filepath);
-
-    bool _verbose;
-
-    std::shared_ptr<DataManager> _data_manager;
-
+    void _registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area);
 
 private slots:
     void Load_Video();
