@@ -76,11 +76,16 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     connect(ui->export_image_csv, &QPushButton::clicked, this, &Whisker_Widget::_exportImageCSV);
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
-    connect(ui->actionLoad_Mask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerMasks);
+
+    connect(ui->actionLoad_Mask,  &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerMask);
+    connect(ui->actionLoad_HDF5_Mask_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerMasksFromDir);
+
     connect(ui->actionLoad_HDF5_Whisker_Single, &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerLine);
-    connect(ui->actionLoad_HDF5_Whisker_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerLines);
+    connect(ui->actionLoad_HDF5_Whisker_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerLinesFromDir);
+
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
     connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
+
     connect(ui->actionLoad_Keypoint_CSV, &QAction::triggered, this, &Whisker_Widget::_loadKeypointCSV);
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
@@ -518,14 +523,11 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
 
 
 /**
- *
- * Loads a whisker mask defined in a HDF5 file (e.g. a bag of points
- * that define the pixels in an image that represent a whisker with
- * NO ordering).
- *
  * @brief Whisker_Widget::_loadHDF5WhiskerMasks
+ *
+ *
  */
-void Whisker_Widget::_loadHDF5WhiskerMasks()
+void Whisker_Widget::_loadHDF5WhiskerMask()
 {
     auto filename = QFileDialog::getOpenFileName(
         this,
@@ -537,10 +539,62 @@ void Whisker_Widget::_loadHDF5WhiskerMasks()
         return;
     }
 
-    auto frames =  _data_manager->read_array_hdf5(filename.toStdString(), "frames");
-    auto probs = _data_manager->read_ragged_hdf5(filename.toStdString(), "probs");
-    auto y_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "heights");
-    auto x_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "widths");
+    _loadSingleHDF5WhiskerMask(filename.toStdString());
+}
+
+/**
+ * @brief Whisker_Widget::_loadHDF5WhiskerMasksFromDir
+ *
+ *
+ */
+void Whisker_Widget::_loadHDF5WhiskerMasksFromDir()
+{
+
+    QString dir_name = QFileDialog::getExistingDirectory(
+        this,
+        "Select Directory",
+        QDir::currentPath());
+
+    if (dir_name.isEmpty()) {
+        return;
+    }
+
+    std::filesystem::path directory(dir_name.toStdString());
+
+    // Store the paths of all files that match the criteria
+    std::vector<std::filesystem::path> whisker_files;
+
+    for (const auto & entry : std::filesystem::directory_iterator(directory)) {
+        std::string filename = entry.path().filename().string();
+        if (filename.find("_whisker.h5") != std::string::npos) {
+            whisker_files.push_back(entry.path());
+        }
+    }
+
+    // Sort the files based on their names
+    std::sort(whisker_files.begin(), whisker_files.end());
+
+    // Load the files in sorted order
+    for (const auto & file : whisker_files) {
+        _loadSingleHDF5WhiskerMask(file.string());
+    }
+}
+
+/**
+ * @brief Whisker_Widget::_loadSingleHDF5WhiskerMask
+ *
+ * Loads a whisker mask defined in a HDF5 file (e.g. a bag of points
+ * that define the pixels in an image that represent a whisker with
+ * NO ordering).
+ *
+ * @param filename
+ */
+void Whisker_Widget::_loadSingleHDF5WhiskerMask(std::string const & filename)
+{
+    auto frames =  _data_manager->read_array_hdf5(filename, "frames");
+    auto probs = _data_manager->read_ragged_hdf5(filename, "probs");
+    auto y_coords = _data_manager->read_ragged_hdf5(filename, "heights");
+    auto x_coords = _data_manager->read_ragged_hdf5(filename, "widths");
 
     auto mask_num = _data_manager->getMaskKeys().size();
 
@@ -558,6 +612,13 @@ void Whisker_Widget::_loadHDF5WhiskerMasks()
     _scene->addMaskColor(mask_key, whisker_colors[mask_num]);
 }
 
+/**
+ * @brief Whisker_Widget::_loadHDF5WhiskerLine
+ *
+ * Creates a dialog box for the user to select a single hdf5 file
+ * that defines whisker *lines*
+ *
+ */
 void Whisker_Widget::_loadHDF5WhiskerLine()
 {
     auto filename = QFileDialog::getOpenFileName(
@@ -573,7 +634,20 @@ void Whisker_Widget::_loadHDF5WhiskerLine()
     _loadSingleHDF5WhiskerLine(filename.toStdString());
 }
 
-void Whisker_Widget::_loadHDF5WhiskerLines()
+/**
+ * @brief Whisker_Widget::_loadHDF5WhiskerLinesFromDir
+ *
+ * Creates a dialog box for the user to select a directory
+ * containing one or multiple hdf5 files that define
+ * whisker *lines*
+ *
+ * This will look for entries following the format
+ * whisker_x where x is the whisker ID number.
+ *
+ * 0 signifies most posterior
+ *
+ */
+void Whisker_Widget::_loadHDF5WhiskerLinesFromDir()
 {
     QString dir_name = QFileDialog::getExistingDirectory(
             this,
