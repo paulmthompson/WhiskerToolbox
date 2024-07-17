@@ -6,6 +6,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "janelia_config.hpp"
+#include "mainwindow.hpp"
 #include "Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "ui_Whisker_Widget.h"
@@ -40,12 +41,17 @@ Line2D convert_to_Line2D(whisker::Line2D& line)
     return output_line;
 }
 
-Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
+Whisker_Widget::Whisker_Widget(Media_Window *scene,
+                               std::shared_ptr<DataManager> data_manager,
+                               TimeScrollBar* time_scrollbar,
+                               MainWindow* mainwindow,
+                               QWidget *parent) :
         QMainWindow(parent),
         _wt{std::make_shared<whisker::WhiskerTracker>()},
         _scene{scene},
         _data_manager{data_manager},
         _time_scrollbar{time_scrollbar},
+        _main_window{mainwindow},
         ui(new Ui::Whisker_Widget)
 {
     ui->setupUi(this);
@@ -89,7 +95,6 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene, std::shared_ptr<DataManager>
 
 Whisker_Widget::~Whisker_Widget() {
     delete ui;
-    delete _contact_widget;
     delete _janelia_config_widget;
 }
 
@@ -485,8 +490,9 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         default:
             break;
     }
-    if (_contact_widget) {
-        _contact_widget->setPolePos(x_media,y_media); // Pass forward to contact widget
+    auto* contact_widget = _main_window->getWidget("Contact_Widget");
+    if (contact_widget) {
+        dynamic_cast<Contact_Widget*>(contact_widget)->setPolePos(x_media,y_media); // Pass forward to contact widget
     }
 }
 
@@ -804,16 +810,28 @@ void Whisker_Widget::_openJaneliaConfig()
 
 void Whisker_Widget::_openContactWidget()
 {
-    if (!_contact_widget) {
-        _contact_widget = new Contact_Widget(_data_manager, _time_scrollbar);
+    std::string const key = "Contact_Widget";
+
+    auto* contact_widget = _main_window->getWidget(key);
+    if (!contact_widget) {
+        auto contact_widget_ptr = std::make_unique<Contact_Widget>(_data_manager, _time_scrollbar);
+        _main_window->addWidget(key, std::move(contact_widget_ptr));
+
+        contact_widget = _main_window->getWidget(key);
+        _main_window->registerDockWidget(key, contact_widget, ads::RightDockWidgetArea);
+        dynamic_cast<Contact_Widget*>(contact_widget)->openWidget();
+    } else {
+        dynamic_cast<Contact_Widget*>(contact_widget)->openWidget();
     }
-    _contact_widget->openWidget();
+
+    _main_window->showDockWidget(key);
 }
 
 void Whisker_Widget::LoadFrame(int frame_id)
 {
-    if (_contact_widget) {
-        _contact_widget->updateFrame(frame_id);
+    auto* contact_widget = _main_window->getWidget("Contact_Widget");
+    if (contact_widget) {
+        dynamic_cast<Contact_Widget*>(contact_widget)->updateFrame(frame_id);
     }
 }
 

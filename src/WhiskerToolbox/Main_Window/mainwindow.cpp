@@ -39,8 +39,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     QWidget::grabKeyboard();
 
-    _registerDockWidget("media", ui->graphicsView, ads::TopDockWidgetArea);
-    _registerDockWidget("scrollbar", ui->time_scrollbar, ads::BottomDockWidgetArea);
+    registerDockWidget("media", ui->graphicsView, ads::TopDockWidgetArea);
+    registerDockWidget("scrollbar", ui->time_scrollbar, ads::BottomDockWidgetArea);
 }
 
 MainWindow::~MainWindow()
@@ -142,30 +142,34 @@ void MainWindow::openWhiskerTracking() {
 
     auto it = _widgets.find(key);
     if (it == _widgets.end()) {
-        auto whiskerWidget = std::make_unique<Whisker_Widget>(_scene, _data_manager, ui->time_scrollbar);
+        auto whiskerWidget = std::make_unique<Whisker_Widget>(_scene, _data_manager, ui->time_scrollbar, this);
         auto* whiskerPtr = whiskerWidget.get();
         connect(ui->time_scrollbar, SIGNAL(timeChanged(int)),whiskerPtr,SLOT(LoadFrame(int)));
         whiskerPtr->setObjectName(key);
         _widgets[key] = std::move(whiskerWidget);
 
-        _registerDockWidget(key, whiskerPtr, ads::RightDockWidgetArea);
+        registerDockWidget(key, whiskerPtr, ads::RightDockWidgetArea);
 
         whiskerPtr->openWidget();
     } else {
 
-        dynamic_cast<Analog_Viewer*>(it->second.get())->openWidget();
+        dynamic_cast<Whisker_Widget*>(it->second.get())->openWidget();
     }
 
-    _m_DockManager->findDockWidget(QString::fromStdString(key))->toggleView();
+    showDockWidget(key);
 }
 
-void MainWindow::_registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area)
+void MainWindow::registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area)
 {
     auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
     dock_widget->setWidget(widget);
     _m_DockManager->addDockWidget(area, dock_widget);
 }
 
+void MainWindow::showDockWidget(std::string const & key)
+{
+    _m_DockManager->findDockWidget(QString::fromStdString(key))->toggleView();
+}
 
 void MainWindow::openLabelMaker() {
 
@@ -192,7 +196,7 @@ void MainWindow::openAnalogViewer()
         _widgets[key] = std::move(analogViewer);
 
         // Create a dock widget and add it to the docking system
-        _registerDockWidget(key, viewerPtr, ads::CenterDockWidgetArea);
+        registerDockWidget(key, viewerPtr, ads::CenterDockWidgetArea);
 
         viewerPtr->openWidget();
     } else {
