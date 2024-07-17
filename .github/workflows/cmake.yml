@@ -174,7 +174,7 @@ jobs:
             if [ "${{ runner.os }}" = "Windows" ]; then
               ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.zip)
             elif [ "${{ runner.os }}" = "macOS" ]; then
-              ARTIFACT_PATH=$(ls ${{matrix.installfolder}}/*.app)
+              ARTIFACT_PATH=$(ls ${{matrix.installfolder}}/*.dmg)
             else
               ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.tar.gz)
             fi
