@@ -7,6 +7,7 @@
 #include <QMainWindow>
 #include <QPointer>
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -78,6 +79,8 @@ private:
 
     bool _save_by_frame_name {false};
 
+    std::filesystem::path _output_path;
+
     Ui::Whisker_Widget *ui;
 
     void _drawWhiskers();
@@ -135,6 +138,8 @@ private slots:
     void _maskDilationExtended(int dilation_size);
 
     void _loadKeypointCSV();
+
+    void _changeOutputDir();
 
 };
 

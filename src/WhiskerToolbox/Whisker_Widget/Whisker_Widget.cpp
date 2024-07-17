@@ -52,9 +52,12 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
         _data_manager{data_manager},
         _time_scrollbar{time_scrollbar},
         _main_window{mainwindow},
+        _output_path{std::filesystem::current_path()},
         ui(new Ui::Whisker_Widget)
 {
     ui->setupUi(this);
+
+    ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
 
     _data_manager->createLine("unlabeled_whiskers");
     _scene->addLineDataToScene("unlabeled_whiskers");
@@ -95,6 +98,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     connect(ui->tracked_whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_skipToTrackedFrame);
 
     connect(ui->mask_dilation, &QSpinBox::valueChanged, this, &Whisker_Widget::_maskDilation);
+
+    connect(ui->output_dir_button, &QPushButton::clicked, this, &Whisker_Widget::_changeOutputDir);
 
 };
 
@@ -360,7 +365,7 @@ void Whisker_Widget::_exportImageCSV()
         return;
     }
 
-    std::string folder = "./images/";
+    std::string folder = _output_path.string() + "/images/";
 
     std::filesystem::create_directory(folder);
     _saveImage(folder);
@@ -375,7 +380,7 @@ void Whisker_Widget::_exportImageCSV()
 
             auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
 
-            std::string whisker_folder = "./" + std::to_string(i) + "/";
+            std::string whisker_folder = _output_path.string() + "/" + std::to_string(i) + "/";
             std::filesystem::create_directory(whisker_folder);
 
             _saveWhiskerAsCSV(whisker_folder, whiskers[0]);
@@ -963,6 +968,21 @@ void Whisker_Widget::_maskDilation(int dilation_size)
 void Whisker_Widget::_maskDilationExtended(int dilation_size)
 {
 
+}
+
+void Whisker_Widget::_changeOutputDir()
+{
+    QString dir_name = QFileDialog::getExistingDirectory(
+        this,
+        "Select Directory",
+        QDir::currentPath());
+
+    if (dir_name.isEmpty()) {
+        return;
+    }
+
+    _output_path = std::filesystem::path(dir_name.toStdString());
+    ui->output_dir_label->setText(dir_name);
 }
 
 /////////////////////////////////////////////

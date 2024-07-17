@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>549</width>
-    <height>358</height>
+    <height>403</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>10</x>
       <y>30</y>
       <width>241</width>
-      <height>281</height>
+      <height>321</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -234,6 +234,35 @@
      </property>
      <property name="text">
       <string>Skip to Tracked Frame</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="output_dir_button">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>280</y>
+       <width>101</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Set Output Dir</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="output_dir_label">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>280</y>
+       <width>111</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
    </widget>
