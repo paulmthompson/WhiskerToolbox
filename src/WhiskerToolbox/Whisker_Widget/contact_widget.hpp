@@ -9,6 +9,7 @@
 #include <QImage>
 
 #include <memory>
+#include <filesystem>
 #include <vector>
 
 namespace Ui {
@@ -65,6 +66,7 @@ private:
     TimeScrollBar* _time_scrollbar;
     std::vector<QGraphicsPathItem*> _contact_rectangle_items;
     std::vector<QGraphicsPixmapItem*> _contact_pixmaps;
+    std::filesystem::path _output_path;
 
     void _buildContactTable();
     void _calculateContactPeriods();
@@ -81,6 +83,7 @@ private slots:
     void _setBoundingBoxWidth(int value);
     void _contactNumberSelect(int value);
     void _flipContactButton();
+    void _changeOutputDir();
 };
 
 

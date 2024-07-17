@@ -221,6 +221,35 @@
     <string>Flip Contact State</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="output_dir_button">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>150</y>
+     <width>91</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Output Dir</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="output_dir_label">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>150</y>
+     <width>201</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

@@ -8,6 +8,7 @@
 #include <QElapsedTimer>
 
 #include <iostream>
+#include <filesystem>
 #include <sstream>
 #include <fstream>
 #include <string>
@@ -23,9 +24,12 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeSc
     _pole_select_mode{false},
     _bounding_box_width{130},
     _time_scrollbar{time_scrollbar},
+    _output_path{std::filesystem::current_path()},
     ui(new Ui::contact_widget)
 {
     ui->setupUi(this);
+
+    ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
 
     _contact_imgs = std::vector<QImage>();
 
@@ -66,6 +70,8 @@ void Contact_Widget::openWidget() {
     if (_contact.empty()) {
         _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
     }
+
+    connect(ui->output_dir_button, &QPushButton::clicked, this, &Contact_Widget::_changeOutputDir);
 
     this->show();
 
@@ -244,7 +250,7 @@ void Contact_Widget::_saveContact() {
 
     std::fstream fout;
 
-    fout.open("contact.csv", std::fstream::out);
+    fout.open(_output_path.append("contact.csv").string(), std::fstream::out);
 
     for (auto &frame_contact: _contact) {
         if (frame_contact == Contact::Contact) {
@@ -347,4 +353,19 @@ void Contact_Widget::_flipContactButton()
     }
     _drawContactRectangles(frame_num);
     _calculateContactPeriods();
+}
+
+void Contact_Widget::_changeOutputDir()
+{
+    QString dir_name = QFileDialog::getExistingDirectory(
+        this,
+        "Select Directory",
+        QDir::currentPath());
+
+    if (dir_name.isEmpty()) {
+        return;
+    }
+
+    _output_path = std::filesystem::path(dir_name.toStdString());
+    ui->output_dir_label->setText(dir_name);
 }

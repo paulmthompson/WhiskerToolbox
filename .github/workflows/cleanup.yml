@@ -1,0 +1,33 @@
+name: Cleanup Old Artifacts
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs at midnight every day
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Delete old artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          #!/bin/bash
+          set -e
+          echo "Fetching workflow runs..."
+          # Fetch all workflow runs, excluding the most recent
+          runs=$(gh api repos/${{ github.repository }}/actions/runs --paginate --jq '.workflow_runs[1:] | .[].id')
+
+          for run_id in $runs; do
+            echo "Fetching artifacts for run $run_id..."
+            artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[].id')
+
+            for artifact_id in $artifacts; do
+              echo "Deleting artifact $artifact_id from run $run_id..."
+              gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id
+            done
+          done
