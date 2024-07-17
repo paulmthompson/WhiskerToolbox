@@ -22,7 +22,6 @@
 #include <memory>
 #include <string>
 
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -71,6 +70,7 @@ private:
     void _createActions();
 
     void _LoadData(std::string filepath);
+    void _registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area);
 
 private slots:
     void Load_Video();

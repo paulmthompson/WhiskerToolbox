@@ -160,6 +160,14 @@ void MainWindow::openWhiskerTracking() {
     _ww->openWidget();
 }
 
+void MainWindow::_registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area)
+{
+    auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
+    dock_widget->setWidget(widget);
+    _m_DockManager->addDockWidget(area, dock_widget);
+}
+
+
 void MainWindow::openLabelMaker() {
 
     // We create a whisker widget. We only want to load this module one time,
@@ -183,12 +191,17 @@ void MainWindow::openAnalogViewer()
         auto* viewerPtr = analogViewer.get();
         viewerPtr->setObjectName(key);
         _widgets[key] = std::move(analogViewer);
-        std::cout << "Analog Viewer Constructed" << std::endl;
+
+        // Create a dock widget and add it to the docking system
+        _registerDockWidget(key, viewerPtr, ads::CenterDockWidgetArea);
+
         viewerPtr->openWidget();
     } else {
-        std::cout << "Analog Viewer already exists" << std::endl;
-        static_cast<Analog_Viewer*>(it->second.get())->openWidget();
+
+        dynamic_cast<Analog_Viewer*>(it->second.get())->openWidget();
     }
+
+    _m_DockManager->findDockWidget(QString::fromStdString(key))->toggleView();
 }
 
 void MainWindow::openImageProcessing()
