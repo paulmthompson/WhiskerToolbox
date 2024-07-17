@@ -1,3 +1,27 @@
 ---
 title: "Creating Mask Labels"
 ---
+Creating mask labels is done through the GrabCut tool. Currently it can be opened through the Tongue Tracking widget.
+
+![GrabCut Tool](/images/gctool.png){width=50%}
+
+## GrabCut Tool Operation
+### Selecting ROI
+To start creating a mask, left click and drag the mouse over the image to form a green rectangle as the region of interest. The objected intended to be masked should be completely within this rectangle. If a mistake is made the reset button returns the tool to the initial state.
+
+The GrabCut algorithm works as such: the algorithm keeps track of the mask and for each iteration, attempts to refine it. In between iterations, the user can tweak the mask to provide feedback to the algorithm, which will be noted through subsequent iterations.
+
+After drawing an ROI the "Iterate Grabcut" button becomes functional. Using it completes one iteration of the GrabCut algorithm. The first usage of this button will show the initial mask created by the algorithm. **Ideally the user should press this button throughout the editing process.**
+
+- Opacity of the displayed mask can be adjusted with the transparency slider
+
+### User Feedback
+In between iterations the user has access to a drawing bush whose radius can be adjusted. It is used to paint feedback for the GrabCut algorithm, which it will take into account upon pressing the "Iterate Grabcut" button. The brush has four colors:
+
+- "Definite Background": Tells GrabCut the painted area is definitely not part of the mask. 
+- "Definite Foreground": Tells GrabCut the painted area is definitely part of the mask.
+- "Probable Background": Suggests to GrabCut the painted area may not be part of the mask. GrabCut uses this information to create a better mask but may partially/fully disobey it.
+- "Probable Foreground": Suggests to GrabCut the painted area is likely part of the mask. GrabCut uses this information to create a better mask but may partially/fully disobey it.
+
+### Saving and Exporting 
+The GrabCut tool may be exited at any time by pressing the "Exit" button. "Save and Exit" will exit the tool and save the mask into the main application and displayed in the media player. All created masks can be saved to disk using the "Save Drawn Masks" button in the Tongue Tracking widget.

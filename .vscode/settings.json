@@ -1,3 +1,7 @@
 {
-    "sonarlint.pathToCompileCommands": "${workspaceFolder}\\out\\build\\Clang\\Release\\.qtc_clangd\\compile_commands.json"
+    "files.associations": {
+        "qfile": "cpp",
+        "qslider": "cpp",
+        "__locale": "cpp"
+    }
 }

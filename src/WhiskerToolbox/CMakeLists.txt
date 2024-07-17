@@ -4,11 +4,13 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
 set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport)
 
 qt_standard_project_setup()
 
 add_subdirectory(DataManager)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v")
 
 set(PROJECT_SOURCES
         main.cpp
@@ -93,6 +95,8 @@ target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui)
+
+target_link_libraries(WhiskerToolbox PRIVATE JKQTPlotter6::JKQTPlotter6)
 
 target_link_libraries(WhiskerToolbox PRIVATE qt6advanceddocking)
 
