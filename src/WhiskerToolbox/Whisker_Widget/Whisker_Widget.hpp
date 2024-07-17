@@ -11,9 +11,9 @@
 #include <string>
 #include <vector>
 
-class Contact_Widget;
 class DataManager;
 class Janelia_Config;
+class MainWindow;
 class Media_Window;
 class TimeScrollBar;
 
@@ -34,7 +34,11 @@ class Whisker_Widget : public QMainWindow
     Q_OBJECT
 public:
 
-    Whisker_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = 0);
+    Whisker_Widget(Media_Window* scene,
+                   std::shared_ptr<DataManager> data_manager,
+                   TimeScrollBar* time_scrollbar,
+                   MainWindow* main_window,
+                   QWidget *parent = 0);
 
     virtual ~Whisker_Widget();
 
@@ -50,6 +54,7 @@ private:
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
+    MainWindow* _main_window;
 
     int _selected_whisker {0};
 
@@ -59,7 +64,6 @@ private:
     Whisker_Widget::Selection_Type _selection_mode {Whisker_Select};
 
     QPointer<Janelia_Config> _janelia_config_widget;
-    QPointer<Contact_Widget> _contact_widget;
 
     enum Face_Orientation {
         Facing_Top,

@@ -180,6 +180,10 @@ void Contact_Widget::_drawContactRectangles(int frame_id) {
 
     for (int i = -2; i < 3; i++) {
 
+        if ((frame_id + i < 0) | (frame_id + i >= _data_manager->getTime()->getTotalFrameCount())) {
+            continue;
+        }
+
         if (_contact[frame_id + i] == Contact::Contact) {
             _contact_rectangle_items[i + 2]->setPen(QPen(Qt::red));
             _contact_rectangle_items[i + 2]->setBrush(QBrush(Qt::red));
@@ -205,6 +209,12 @@ QImage::Format Contact_Widget::_getQImageFormat() {
 void Contact_Widget::_contactButton() {
 
     auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+
+    if (_contact.size() != _data_manager->getTime()->getTotalFrameCount()) {
+        std::cout << "The contact storage and number of frames are not equal" << std::endl;
+        std::cout << "It is possible the video was just loaded after opening the contact widget" << std::endl;
+        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
+    }
 
     // If we are in a contact epoch, we need to mark the termination frame and add those to block
     if (_contact_epoch) {

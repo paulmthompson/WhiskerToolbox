@@ -32,8 +32,8 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void addWidget(std::string const & key, QWidget* widget) {
-        _widgets[key] = std::unique_ptr<QWidget>(widget);
+    void addWidget(std::string const & key, std::unique_ptr<QWidget> widget) {
+        _widgets[key] = std::move(widget);
     }
 
     QWidget* getWidget(std::string const & key) {
@@ -43,6 +43,9 @@ public:
         }
         return nullptr;
     }
+
+    void registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area);
+    void showDockWidget(std::string const & key);
 
 protected:
     void keyPressEvent(QKeyEvent *event);
@@ -68,7 +71,6 @@ private:
     void _createActions();
 
     void _LoadData(std::string filepath);
-    void _registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area);
 
 private slots:
     void Load_Video();
