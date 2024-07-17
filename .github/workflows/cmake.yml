@@ -15,14 +15,12 @@ jobs:
              short: linux,
              compiler: gcc,
              shell: bash,
-             buildfolder: out/build/GCC/Release,
-             installfolder: out/install/GCC/Release}
+             buildfolder: out/build/GCC/Release}
           - {"os": ubuntu-latest,
              short: linux,
              compiler: clang,
              shell: bash,
-             buildfolder: out/build/Clang/Release,
-             installfolder: out/install/Clang/Release}
+             buildfolder: out/build/Clang/Release}
           #- {"os": windows-latest, short: windows, compiler: gcc, shell: msys2}
           #- {"os": windows-latest, short: windows, compiler: clang, shell: msys2}
           - {"os": windows-latest,
@@ -34,8 +32,7 @@ jobs:
              short: mac-arm64,
              compiler: clang,
              shell: bash,
-             buildfolder: out/build/Clang/Release,
-             installfolder: out/install/Clang/Release}
+             buildfolder: out/build/Clang/Release}
 
     runs-on: ${{matrix.os}}
 
@@ -174,7 +171,7 @@ jobs:
             if [ "${{ runner.os }}" = "Windows" ]; then
               ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.zip)
             elif [ "${{ runner.os }}" = "macOS" ]; then
-              ARTIFACT_PATH=$(ls ${{matrix.installfolder}}/*.dmg)
+              ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.dmg)
             else
               ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.tar.gz)
             fi
