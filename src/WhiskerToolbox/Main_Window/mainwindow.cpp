@@ -39,16 +39,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     QWidget::grabKeyboard();
 
-    auto graphics_view_widget = new ads::CDockWidget("media");
-    graphics_view_widget->setWidget(ui->graphicsView);
-
-    _m_DockManager->addDockWidget(ads::TopDockWidgetArea, graphics_view_widget);
-
-    auto scrollbar_dock_widget = new ads::CDockWidget("scrollbar");
-    scrollbar_dock_widget->setWidget(ui->time_scrollbar);
-
-    _m_DockManager->addDockWidget(ads::BottomDockWidgetArea, scrollbar_dock_widget);
-
+    _registerDockWidget("media", ui->graphicsView, ads::TopDockWidgetArea);
+    _registerDockWidget("scrollbar", ui->time_scrollbar, ads::BottomDockWidgetArea);
 }
 
 MainWindow::~MainWindow()
