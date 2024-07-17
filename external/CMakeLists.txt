@@ -1,4 +1,5 @@
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include(FetchContent)
 set(BUILD_TESTING OFF)
@@ -25,10 +26,17 @@ FetchContent_Declare(
   CMAKE_ARGS -DBUILD_EXAMPLES=OFF
 )
 
+Set(FETCHCONTENT_QUIET FALSE)
+FetchContent_Declare(JKQTPlotter6
+                     GIT_REPOSITORY https://github.com/jkriege2/JKQtPlotter.git
+                     GIT_TAG aa4ac4c58a099594e88e3c63110dff69136d54b8
+                     )
+# ... finally make JKQTPlotter5/6 available
+
 #add_subdirectory(Whisker-Analysis)
 
 #We should use make avaiable
-FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking)
+FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking JKQTPlotter6)
 
 set_target_properties(ffmpeg_wrapper PROPERTIES EXCLUDE_FROM_ALL TRUE)
 set_target_properties(Whisker-Analysis PROPERTIES EXCLUDE_FROM_ALL TRUE)
@@ -37,4 +45,3 @@ set_target_properties(qt6advanceddocking PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
-

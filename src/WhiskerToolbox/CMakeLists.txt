@@ -94,6 +94,8 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui)
 
+target_link_libraries(WhiskerToolbox PRIVATE JKQTPlotter6)
+
 target_link_libraries(WhiskerToolbox PRIVATE qt6advanceddocking)
 
 
