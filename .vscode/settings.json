@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "qfile": "cpp"
+        "qfile": "cpp",
+        "qslider": "cpp",
+        "__locale": "cpp"
     }
 }
