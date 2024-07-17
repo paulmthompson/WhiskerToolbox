@@ -39,6 +39,9 @@ set(MY_DYLIBS
         "${CMAKE_BINARY_DIR}/bin/libqt6advanceddocking.dylib"
         "${CMAKE_BINARY_DIR}/libDataManager.dylib"
         "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTPlotter6_Release.5.0.0.dylib"
+        "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTMath6_Release.5.0.0.dylib"
+        "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTMathText6_Release.5.0.0.dylib"
+        "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTCommon6_Release.5.0.0.dylib"
 )
 
 # For each target representing a dynamic library, set the INSTALL_RPATH property

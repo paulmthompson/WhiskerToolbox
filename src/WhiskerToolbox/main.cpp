@@ -21,11 +21,9 @@ int main(int argc, char *argv[])
 
     w.show();
 
-
     // JKQT Test
     // JKQTPlotter plot;
     // JKQTPDatastore* ds=plot.getDatastore();
-
     // QVector<double> X, Y;
     // const int Ndata=100;
     // for (int i=0; i<Ndata; i++) {
@@ -33,19 +31,14 @@ int main(int argc, char *argv[])
     //     X<<x;
     //     Y<<sin(x);
     // }
-
     // size_t columnX=ds->addCopiedColumn(X, "x");
     // size_t columnY=ds->addCopiedColumn(Y, "y");
-
     // JKQTPXYLineGraph* graph1=new JKQTPXYLineGraph(&plot);
     // graph1->setXColumn(columnX);
     // graph1->setYColumn(columnY);
     // graph1->setTitle(QObject::tr("sine graph"));
-
     // plot.addGraph(graph1);
- 
     // plot.zoomToFit();
- 
     // plot.show();
     // plot.resize(600,400);
 
