@@ -86,6 +86,7 @@ jobs:
         with:
           version: 6.7.2
           cache: true
+          modules: "qtopengl"
 
       - name: Set QTDIR and QtToolsPath
         shell: bash
