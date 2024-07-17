@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include "analog_viewer.hpp"
+#include "whisker_widget.hpp"
 
 #include <QFileDialog>
 #include <QImage>
@@ -53,9 +54,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-    if (_ww) {
-        _ww.clear();
-    }
     if (_label_maker) {
         _label_maker.clear();
     }
@@ -148,16 +146,25 @@ void MainWindow::_updateMedia() {
 
 void MainWindow::openWhiskerTracking() {
 
-    // We create a whisker widget. We only want to load this module one time,
-    // so if we exit the window, it is not created again
-    if (!_ww) {
-        _ww = new Whisker_Widget(_scene, _data_manager, ui->time_scrollbar);
-        connect(ui->time_scrollbar, SIGNAL(timeChanged(int)),_ww,SLOT(LoadFrame(int)));
-        std::cout << "Whisker Tracker Constructed" << std::endl;
+    std::string const key = "whisker_widget";
+
+    auto it = _widgets.find(key);
+    if (it == _widgets.end()) {
+        auto whiskerWidget = std::make_unique<Whisker_Widget>(_scene, _data_manager, ui->time_scrollbar);
+        auto* whiskerPtr = whiskerWidget.get();
+        connect(ui->time_scrollbar, SIGNAL(timeChanged(int)),whiskerPtr,SLOT(LoadFrame(int)));
+        whiskerPtr->setObjectName(key);
+        _widgets[key] = std::move(whiskerWidget);
+
+        _registerDockWidget(key, whiskerPtr, ads::RightDockWidgetArea);
+
+        whiskerPtr->openWidget();
     } else {
-        std::cout << "Whisker Tracker already exists" << std::endl;
+
+        dynamic_cast<Analog_Viewer*>(it->second.get())->openWidget();
     }
-    _ww->openWidget();
+
+    _m_DockManager->findDockWidget(QString::fromStdString(key))->toggleView();
 }
 
 void MainWindow::_registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area)
@@ -239,15 +246,20 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
         ui->time_scrollbar->changeScrollBarValue(-1,true);
     } else {
         std::cout << "Key pressed but nothing to do" << std::endl;
-        if (_ww) {
-            if (_ww->isActiveWindow()) {
-                QApplication::sendEvent(_ww, event);
-                std::cout << "Whisker widget is active, so sending keypress there" << std::endl;
+
+        auto it = _widgets.find("whisker_widget");
+        if (it != _widgets.end()) {
+
+            auto ww = dynamic_cast<Whisker_Widget *>(it->second.get());
+            if (ww) {
+                if (ww->isActiveWindow()) {
+                    QApplication::sendEvent(ww, event);
+                    std::cout << "Whisker widget is active, so sending keypress there" << std::endl;
+                }
+            } else {
+                QMainWindow::keyPressEvent(event);
             }
-        } else {
-            QMainWindow::keyPressEvent(event);
         }
     }
-
 }
 
