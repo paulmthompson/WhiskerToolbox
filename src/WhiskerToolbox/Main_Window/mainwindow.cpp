@@ -137,25 +137,21 @@ void MainWindow::_updateMedia() {
 }
 
 void MainWindow::openWhiskerTracking() {
-
     std::string const key = "whisker_widget";
 
-    auto it = _widgets.find(key);
-    if (it == _widgets.end()) {
-        auto whiskerWidget = std::make_unique<Whisker_Widget>(_scene, _data_manager, ui->time_scrollbar, this);
-        auto* whiskerPtr = whiskerWidget.get();
-        connect(ui->time_scrollbar, SIGNAL(timeChanged(int)),whiskerPtr,SLOT(LoadFrame(int)));
-        whiskerPtr->setObjectName(key);
+    if (_widgets.find(key) == _widgets.end()) {
+        auto whiskerWidget = std::make_unique<Whisker_Widget>(
+                _scene,
+                _data_manager,
+                ui->time_scrollbar,
+                this);
+        connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, whiskerWidget.get(), &Whisker_Widget::LoadFrame);
+
         _widgets[key] = std::move(whiskerWidget);
-
-        registerDockWidget(key, whiskerPtr, ads::RightDockWidgetArea);
-
-        whiskerPtr->openWidget();
-    } else {
-
-        dynamic_cast<Whisker_Widget*>(it->second.get())->openWidget();
+        registerDockWidget(key, _widgets[key].get(), ads::RightDockWidgetArea);
     }
 
+    dynamic_cast<Whisker_Widget*>(_widgets[key].get())->openWidget();
     showDockWidget(key);
 }
 
@@ -188,23 +184,15 @@ void MainWindow::openAnalogViewer()
 {
     std::string const key = "analog_viewer";
 
-    auto it = _widgets.find(key);
-    if (it == _widgets.end()) {
+    if (_widgets.find(key) == _widgets.end()) {
         auto analogViewer = std::make_unique<Analog_Viewer>();
-        auto* viewerPtr = analogViewer.get();
-        viewerPtr->setObjectName(key);
+        analogViewer->setObjectName(key);
+        registerDockWidget(key, analogViewer.get(), ads::CenterDockWidgetArea);
         _widgets[key] = std::move(analogViewer);
-
-        // Create a dock widget and add it to the docking system
-        registerDockWidget(key, viewerPtr, ads::CenterDockWidgetArea);
-
-        viewerPtr->openWidget();
-    } else {
-
-        dynamic_cast<Analog_Viewer*>(it->second.get())->openWidget();
     }
 
-    _m_DockManager->findDockWidget(QString::fromStdString(key))->toggleView();
+    dynamic_cast<Analog_Viewer*>(_widgets[key].get())->openWidget();
+    showDockWidget(key);
 }
 
 void MainWindow::openImageProcessing()
