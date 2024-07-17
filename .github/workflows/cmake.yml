@@ -194,9 +194,13 @@ jobs:
           # Step 3: Copy all files from the mounted DMG to the temporary directory
           cp -R "$MOUNT_DIR/"* "$TEMP_DIR"
           
+          # Debugging: List contents of TEMP_DIR
+          echo "Listing contents of TEMP_DIR:"
+          ls -la "$TEMP_DIR"
+          
            # Explicitly sign libDataManager.dylib
-          LIB_PATH="$TEMP_DIR/WhiskerToolbox.app/Contents/Frameworks/libDataManager.dylib"
-          codesign --force --deep --verbose=4 --sign "Eric Certificate" "$LIB_PATH"
+          #LIB_PATH="$TEMP_DIR/WhiskerToolbox.app/Contents/Frameworks/libDataManager.dylib"
+          #codesign --force --deep --verbose=4 --sign "Eric Certificate" "$LIB_PATH"
 
           # Step 2: Sign the .app bundle
           APP_PATH="$TEMP_DIR/WhiskerToolbox.app"
