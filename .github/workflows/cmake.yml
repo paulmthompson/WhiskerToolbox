@@ -197,14 +197,14 @@ jobs:
           # Debugging: List contents of TEMP_DIR
           echo "Listing contents of TEMP_DIR:"
           ls -la "$TEMP_DIR"
-          
-           # Explicitly sign libDataManager.dylib
-          #LIB_PATH="$TEMP_DIR/WhiskerToolbox.app/Contents/Frameworks/libDataManager.dylib"
-          #codesign --force --deep --verbose=4 --sign "Eric Certificate" "$LIB_PATH"
 
           # Step 2: Sign the .app bundle
           APP_PATH="$TEMP_DIR/WhiskerToolbox.app"
           codesign --force --deep --verbose=4 --sign "Eric Certificate" "$APP_PATH"
+          
+          # Debugging: List contents of TEMP_DIR
+          echo "Listing contents of TEMP_DIR:"
+          ls -la "$TEMP_DIR"
 
           # Step 3: Unmount the DMG
           hdiutil detach "$MOUNT_DIR"
@@ -212,6 +212,11 @@ jobs:
           # Step 4: Recreate the DMG
           hdiutil create -volname "WhiskerToolbox" -srcfolder "$TEMP_DIR" -ov -format UDZO "$SIGNED_DMG_PATH"
 
+          MOUNT_DIR=$(hdiutil attach "$SIGNED_DMG_PATH" | grep "Volumes" | awk '{print $3}')
+          echo "Listing contents of the mounted DMG:"
+          ls -la "$MOUNT_DIR"
+          hdiutil detach "$MOUNT_DIR"
+          
           # Update ARTIFACT_PATH to point to the newly created signed DMG
           echo "ARTIFACT_PATH=$SIGNED_DMG_PATH" >> $GITHUB_ENV
         shell: bash
