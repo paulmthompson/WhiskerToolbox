@@ -2,7 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include "analog_viewer.hpp"
-#include "whisker_widget.hpp"
+#include "Whisker_Widget.hpp"
 
 #include <QFileDialog>
 #include <QImage>
