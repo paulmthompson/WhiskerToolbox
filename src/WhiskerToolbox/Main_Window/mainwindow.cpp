@@ -1,6 +1,8 @@
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 
+#include "analog_viewer.hpp"
+
 #include <QFileDialog>
 #include <QImage>
 #include <QGraphicsPixmapItem>
@@ -57,10 +59,6 @@ MainWindow::~MainWindow()
     if (_label_maker) {
         _label_maker.clear();
     }
-    if (_analog_viewer) {
-        _analog_viewer.clear();
-    }
-
 }
 
 void MainWindow::_createActions()
@@ -177,13 +175,20 @@ void MainWindow::openLabelMaker() {
 
 void MainWindow::openAnalogViewer()
 {
-    if (!_analog_viewer) {
-        _analog_viewer = new Analog_Viewer();
+    std::string const key = "analog_viewer";
+
+    auto it = _widgets.find(key);
+    if (it == _widgets.end()) {
+        auto analogViewer = std::make_unique<Analog_Viewer>();
+        auto* viewerPtr = analogViewer.get();
+        viewerPtr->setObjectName(key);
+        _widgets[key] = std::move(analogViewer);
         std::cout << "Analog Viewer Constructed" << std::endl;
+        viewerPtr->openWidget();
     } else {
         std::cout << "Analog Viewer already exists" << std::endl;
+        static_cast<Analog_Viewer*>(it->second.get())->openWidget();
     }
-    _analog_viewer->openWidget();
 }
 
 void MainWindow::openImageProcessing()
