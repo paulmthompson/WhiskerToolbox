@@ -222,17 +222,15 @@ void Tongue_Widget::_exportMasks() {
 
     for (int i : drawn){
         auto mask = mask_data->getMasksAtTime(i)[0];
-        if (!mask.empty()){
-            QImage mask_img(mask_data->getMaskWidth(), mask_data->getMaskHeight(), QImage::Format_Grayscale8);
-            mask_img.fill(0);
-            for (auto [x, y] : mask){
-                mask_img.setPixel(static_cast<int>(x), static_cast<int>(y), 0xFFFFFF);
-            }
-            std::string saveName = dir_path.string() + "/" + _data_manager->getMediaData()->GetFrameID(i) + ".png";
-            std::cout << "Saving file" << saveName << std::endl;
-
-            mask_img.save(QString::fromStdString(saveName));
+        QImage mask_img(mask_data->getMaskWidth(), mask_data->getMaskHeight(), QImage::Format_Grayscale8);
+        mask_img.fill(0);
+        for (auto [x, y] : mask){
+            mask_img.setPixel(static_cast<int>(x), static_cast<int>(y), 0xFFFFFF);
         }
+        std::string saveName = dir_path.string() + "/" + _data_manager->getMediaData()->GetFrameID(i) + ".png";
+        std::cout << "Saving file" << saveName << std::endl;
+
+        mask_img.save(QString::fromStdString(saveName));
     }
 }
 

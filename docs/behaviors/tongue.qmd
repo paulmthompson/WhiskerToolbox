@@ -1,3 +1,12 @@
 ---
 title: "Tongue Tracking"
 ---
+The Tongue Tracking widget deals with operations related to the tongue.
+
+## Loading
+Tongue masks can be loaded through the sparse HDF5 format or binary images (where white is part of the mask, black is not).
+
+Jaw keypoint tracking can also be loaded through CSV format. The first column should indicate frame number, the next indicating $x$ position and the next $y$ position.
+
+## GrabCut Tool
+Documentation on the GrabCut tool can be found [here](/labeling/mask.html).
