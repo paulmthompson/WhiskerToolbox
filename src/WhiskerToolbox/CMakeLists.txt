@@ -4,7 +4,7 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
 set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg)
 
 qt_standard_project_setup()
 
