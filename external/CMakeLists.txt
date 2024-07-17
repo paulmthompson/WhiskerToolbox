@@ -30,7 +30,7 @@ Set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare(JKQTPlotter6
                      GIT_REPOSITORY https://github.com/jkriege2/JKQtPlotter.git
                      GIT_TAG aa4ac4c58a099594e88e3c63110dff69136d54b8
-                     CMAKE_ARGS -DJKQtPlotter_BUILD_EXAMPLES=OFF -DJKQtPlotter_BUILD_TESTS=OFF
+                     CMAKE_ARGS -DJKQtPlotter_BUILD_EXAMPLES=OFF -DJKQtPlotter_BUILD_TESTS=OFF -DJKQtPlotter_BUILD_TOOLS=OFF
                      )
 # ... finally make JKQTPlotter5/6 available
 
