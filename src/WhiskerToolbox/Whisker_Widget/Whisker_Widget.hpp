@@ -7,7 +7,9 @@
 #include <QMainWindow>
 #include <QPointer>
 
+#include <filesystem>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -78,6 +80,10 @@ private:
 
     bool _save_by_frame_name {false};
 
+    std::set<int> _tracked_frame_ids {};
+
+    std::filesystem::path _output_path;
+
     Ui::Whisker_Widget *ui;
 
     void _drawWhiskers();
@@ -94,6 +100,8 @@ private:
     void _loadSingleHDF5WhiskerLine(std::string const & filename);
     void _loadCSVWhiskerFromDir(std::string const & dir_name);
     bool _checkWhiskerNum();
+
+    void _addNewTrackedWhisker(int const index);
 
 private slots:
     void _traceButton();
@@ -135,6 +143,8 @@ private slots:
     void _maskDilationExtended(int dilation_size);
 
     void _loadKeypointCSV();
+
+    void _changeOutputDir();
 
 };
 
