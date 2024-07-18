@@ -98,10 +98,11 @@ private:
 
     void _loadSingleHDF5WhiskerMask(std::string const & filename);
     void _loadSingleHDF5WhiskerLine(std::string const & filename);
-    void _loadCSVWhiskerFromDir(std::string const & dir_name);
+    std::vector<int> _loadCSVWhiskerFromDir(std::string const & dir_name);
     bool _checkWhiskerNum();
 
     void _addNewTrackedWhisker(int const index);
+    void _addNewTrackedWhisker(std::vector<int> const & indexes);
 
 private slots:
     void _traceButton();
