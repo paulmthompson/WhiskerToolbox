@@ -2,16 +2,32 @@
 // Created by wanglab on 4/15/2024.
 //
 
+#include <QMainWindow>
+#include <QPointer>
+
 #include "analog_viewer.hpp"
 #include "ui_analog_viewer.h"
 
+#include "jkqtplotter/jkqtplotter.h"
+#include "jkqtplotter/graphs/jkqtplines.h"
+#include "jkqtplotter/graphs/jkqtpparsedfunction.h"
+
 #include <iostream>
 
-Analog_Viewer::Analog_Viewer(QWidget *parent) :
-    QWidget(parent),
+Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
+    QMainWindow(parent),
+    _scene{scene},
+    _data_manager{data_manager},
+    _time_scrollbar{time_scrollbar},
     ui(new Ui::Analog_Viewer)
 {
     ui->setupUi(this);
+
+    JKQTPXParsedFunctionLineGraph* graph = new JKQTPXParsedFunctionLineGraph(ui->plot);
+    graph->setFunction("y=x^3-4*x");
+    graph->setTitle("Some function");
+    ui->plot->addGraph(graph);
+    ui->plot->setXY(-10,10,-10,10);
 }
 
 Analog_Viewer::~Analog_Viewer() {
@@ -22,14 +38,9 @@ void Analog_Viewer::openWidget()
 {
     std::cout << "Analog Viewer Opened" << std::endl;
 
-    // connect(this->trace_button,SIGNAL(clicked()),this,SLOT(TraceButton()));
-    /*
-    connect(_scene, SIGNAL(leftClick(qreal, qreal)), this,
-            SLOT(_ClickedInVideo(qreal, qreal)));
-    connect(ui->saveLabelsButton, SIGNAL(clicked()), this, SLOT(_saveButton()));
-
-    connect(ui->label_name_box, SIGNAL(textChanged()), this,
-            SLOT(_changeLabelName()));
-    */
     this->show();
+}
+
+void Analog_Viewer::SetFrame(int i){
+    std::cout << "Analog Viewer: Set Frame " << i << std::endl;
 }

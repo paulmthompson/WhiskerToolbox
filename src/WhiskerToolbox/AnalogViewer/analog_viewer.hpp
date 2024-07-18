@@ -6,15 +6,21 @@
 #define WHISKERTOOLBOX_ANALOG_VIEWER_HPP
 
 #include <QWidget>
+#include <QMainWindow>
+
+#include "Media_Window.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
+#include "DataManager.hpp"
 
 namespace Ui {
 class Analog_Viewer;
 }
 
-class Analog_Viewer : public QWidget {
+class Analog_Viewer : public QMainWindow {
     Q_OBJECT
 public:
-    Analog_Viewer(QWidget *parent = 0);
+
+    Analog_Viewer(Media_Window* scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = 0);
     ~Analog_Viewer();
 
     void openWidget();
@@ -24,8 +30,15 @@ protected:
     //void keyPressEvent(QKeyEvent *event);
 
 private:
+    Media_Window * _scene;
+    std::shared_ptr<DataManager> _data_manager;
+    TimeScrollBar* _time_scrollbar;
 
     Ui::Analog_Viewer *ui;
+
+public slots:
+    void SetFrame(int i);
+
 private slots:
 
 };

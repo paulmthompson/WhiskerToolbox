@@ -64,6 +64,8 @@ void MainWindow::_createActions()
     connect(ui->actionAnalog_Viewer, &QAction::triggered, this, &MainWindow::openAnalogViewer);
     connect(ui->actionImage_Processing, &QAction::triggered, this, &MainWindow::openImageProcessing);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
+
+    connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
 }
 
 /*
@@ -185,13 +187,17 @@ void MainWindow::openAnalogViewer()
     std::string const key = "analog_viewer";
 
     if (_widgets.find(key) == _widgets.end()) {
-        auto analogViewer = std::make_unique<Analog_Viewer>();
+        auto analogViewer = std::make_unique<Analog_Viewer>(_scene, _data_manager, ui->time_scrollbar, this);
         analogViewer->setObjectName(key);
         registerDockWidget(key, analogViewer.get(), ads::CenterDockWidgetArea);
         _widgets[key] = std::move(analogViewer);
+
+        connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, static_cast<Analog_Viewer*>(_widgets[key].get()), &Analog_Viewer::SetFrame);
     }
 
     dynamic_cast<Analog_Viewer*>(_widgets[key].get())->openWidget();
+
+
     showDockWidget(key);
 }
 
