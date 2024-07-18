@@ -26,6 +26,7 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
     connect(ui->linechoose_cbox, &QComboBox::currentTextChanged, this, &Analog_Viewer::ResetLineEditor);
     connect(ui->ymult_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::ElementSetLintrans);
     connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::ElementSetLintrans);
+    connect(ui->xwidth_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::SetZoom);
 }
 
 Analog_Viewer::~Analog_Viewer() {
@@ -39,6 +40,7 @@ void Analog_Viewer::openWidget()
     for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
         plotLine(name);
     }
+    _setZoom(0);
 
     this->show();
 }
@@ -46,7 +48,7 @@ void Analog_Viewer::openWidget()
 void Analog_Viewer::SetFrame(int i){
     std::cout << "Analog Viewer: Set Frame " << i << std::endl;
 
-    ui->plot->zoom(i-5, i+5, -10, 10);
+    _setZoom(i);
 }
 
 /**
@@ -98,7 +100,7 @@ void Analog_Viewer::removeGraph(std::string name){
     _plot_elements.erase(name);
 }
 
-void Analog_Viewer::_element_apply_lintrans(std::string name){
+void Analog_Viewer::_elementApplyLintrans(std::string name){
     if (_plot_elements.find(name) == _plot_elements.end()) {
         std::cout << "Plot element named " << name << " does not exist" << std::endl;
         return;
@@ -116,7 +118,7 @@ void Analog_Viewer::ElementSetLintrans(){
     if (!name.empty()) {
         _plot_elements[name].mult = ui->ymult_dspinbox->value();
         _plot_elements[name].add = ui->yoffset_dspinbox->value();
-        _element_apply_lintrans(name);
+        _elementApplyLintrans(name);
         ui->plot->redrawPlot();
     }
 }
@@ -125,4 +127,12 @@ void Analog_Viewer::ResetLineEditor(){
     std::string name = ui->linechoose_cbox->currentText().toStdString();
     ui->ymult_dspinbox->setValue(_plot_elements[name].mult);
     ui->yoffset_dspinbox->setValue(_plot_elements[name].add);
+}
+
+void Analog_Viewer::_setZoom(int i){
+    ui->plot->zoom(i - ui->xwidth_dspinbox->value()/2, i + ui->xwidth_dspinbox->value()/2, -10, 10);
+}
+
+void Analog_Viewer::SetZoom(int i){
+    _setZoom(i);
 }

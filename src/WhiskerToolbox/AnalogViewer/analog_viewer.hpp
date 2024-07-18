@@ -51,13 +51,16 @@ private:
     };
     std::map<std::string, PlotElementInfo> _plot_elements;
 
-    void _element_apply_lintrans(std::string name);
+    void _setZoom(int i);
+
+    void _elementApplyLintrans(std::string name);
 public slots:
     void SetFrame(int i);
 
 private slots:
     void ElementSetLintrans();
     void ResetLineEditor();
+    void SetZoom(int i);
 };
 
 
