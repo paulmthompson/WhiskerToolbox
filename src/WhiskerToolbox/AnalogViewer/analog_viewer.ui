@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>453</width>
-    <height>341</height>
+    <width>472</width>
+    <height>543</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,11 +17,114 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>50</y>
-     <width>431</width>
+     <y>10</y>
+     <width>451</width>
      <height>281</height>
     </rect>
    </property>
+  </widget>
+  <widget class="QGroupBox" name="groupBox">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>320</y>
+     <width>451</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Edit Line</string>
+   </property>
+   <widget class="QComboBox" name="linechoose_cbox">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>20</y>
+      <width>280</width>
+      <height>41</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>30</y>
+      <width>81</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Line to edit:</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="ymult_dspinbox">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>60</y>
+      <width>91</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <double>-99999.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>99999.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.010000000000000</double>
+    </property>
+    <property name="value">
+     <double>1.000000000000000</double>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>60</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Y multiplier:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>80</y>
+      <width>58</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Y offset:</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="yoffset_dspinbox">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>80</y>
+      <width>91</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <double>-99999.000000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>99999.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.100000000000000</double>
+    </property>
+   </widget>
   </widget>
  </widget>
  <customwidgets>

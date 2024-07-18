@@ -27,7 +27,7 @@ public:
 
     void openWidget();
 
-    void plotLine(std::string name, std::vector<double>& data);
+    void plotLine(std::string name);
     void removeGraph(std::string name);
 
 protected:
@@ -41,14 +41,23 @@ private:
 
     Ui::Analog_Viewer *ui;
 
-    std::map<std::string, JKQTPPlotElement*> _plot_elements;
+    struct PlotElementInfo {
+        double mult = 1.0;
+        double add = 0.0;
+        JKQTPPlotElement* element = nullptr;
+        size_t ds_y_col;
 
+        PlotElementInfo() {}
+    };
+    std::map<std::string, PlotElementInfo> _plot_elements;
 
+    void _element_apply_lintrans(std::string name);
 public slots:
     void SetFrame(int i);
 
 private slots:
-
+    void ElementSetLintrans();
+    void ResetLineEditor();
 };
 
 

@@ -143,6 +143,10 @@ void MainWindow::_loadTimeSeriesCSV()
 
     std::cout << "Loaded series " << key << " with " <<
         _data_manager->getAnalogTimeSeries(key)->getAnalogTimeSeries().size() << " points " << std::endl;
+
+    if (_widgets.find("analog_viewer") != _widgets.end()) {
+        dynamic_cast<Analog_Viewer*>(_widgets["analog_viewer"].get())->plotLine(key);
+    }
 }
 
 void MainWindow::_LoadData(std::string filepath) {
@@ -227,7 +231,6 @@ void MainWindow::openAnalogViewer()
 
     auto ptr = dynamic_cast<Analog_Viewer*>(_widgets[key].get());
     ptr->openWidget();
-
 
     showDockWidget(key);
 }
