@@ -40,7 +40,7 @@ void Analog_Viewer::openWidget()
     for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
         plotLine(name);
     }
-    _setZoom(0);
+    _setZoom();
 
     this->show();
 }
@@ -48,7 +48,8 @@ void Analog_Viewer::openWidget()
 void Analog_Viewer::SetFrame(int i){
     std::cout << "Analog Viewer: Set Frame " << i << std::endl;
 
-    _setZoom(i);
+    _current_frame = i;
+    _setZoom();
 }
 
 /**
@@ -129,10 +130,10 @@ void Analog_Viewer::ResetLineEditor(){
     ui->yoffset_dspinbox->setValue(_plot_elements[name].add);
 }
 
-void Analog_Viewer::_setZoom(int i){
-    ui->plot->zoom(i - ui->xwidth_dspinbox->value()/2, i + ui->xwidth_dspinbox->value()/2, -10, 10);
+void Analog_Viewer::_setZoom(){
+    ui->plot->zoom(_current_frame - ui->xwidth_dspinbox->value()/2, _current_frame + ui->xwidth_dspinbox->value()/2, -10, 10);
 }
 
-void Analog_Viewer::SetZoom(int i){
-    _setZoom(i);
+void Analog_Viewer::SetZoom(){
+    _setZoom();
 }
