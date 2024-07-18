@@ -59,7 +59,9 @@ void Analog_Viewer::SetFrame(int i){
 void Analog_Viewer::plotLine(std::string name){
     auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
     if (_plot_elements.find(name) != _plot_elements.end()) {
-        std::cout << "Plot element named " << name << " already exists, ignoring" << std::endl;
+        std::cout << "Plot element named " << name << " already exists, data has been replaced" << std::endl;
+        _elementApplyLintrans(name);
+        ui->plot->redrawPlot();
         return;
     }
 
