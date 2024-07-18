@@ -6,28 +6,63 @@
 #define WHISKERTOOLBOX_ANALOG_VIEWER_HPP
 
 #include <QWidget>
+#include <QMainWindow>
+
+#include "jkqtplotter/jkqtplotter.h"
+
+#include "Media_Window.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
+#include "DataManager.hpp"
 
 namespace Ui {
 class Analog_Viewer;
 }
 
-class Analog_Viewer : public QWidget {
+class Analog_Viewer : public QMainWindow {
     Q_OBJECT
 public:
-    Analog_Viewer(QWidget *parent = 0);
+
+    Analog_Viewer(Media_Window* scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = 0);
     ~Analog_Viewer();
 
     void openWidget();
+
+    void plotLine(std::string name);
+    void removeGraph(std::string name);
 
 protected:
     //void closeEvent(QCloseEvent *event);
     //void keyPressEvent(QKeyEvent *event);
 
 private:
+    Media_Window * _scene;
+    std::shared_ptr<DataManager> _data_manager;
+    TimeScrollBar* _time_scrollbar;
 
     Ui::Analog_Viewer *ui;
-private slots:
 
+    struct PlotElementInfo {
+        double mult = 1.0;
+        double add = 0.0;
+        JKQTPPlotElement* element = nullptr;
+        size_t ds_y_col;
+
+        PlotElementInfo() {}
+    };
+    std::map<std::string, PlotElementInfo> _plot_elements;
+
+    void _setZoom();
+
+    void _elementApplyLintrans(std::string name);
+
+    int64_t _current_frame = 0;
+public slots:
+    void SetFrame(int i);
+
+private slots:
+    void ElementSetLintrans();
+    void ResetLineEditor();
+    void SetZoom();
 };
 
 

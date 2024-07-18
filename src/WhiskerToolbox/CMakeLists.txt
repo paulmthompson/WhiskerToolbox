@@ -10,8 +10,6 @@ qt_standard_project_setup()
 
 add_subdirectory(DataManager)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -v")
-
 set(PROJECT_SOURCES
         main.cpp
         whiskertoolbox.qrc
