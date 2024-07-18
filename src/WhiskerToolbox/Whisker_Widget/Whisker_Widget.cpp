@@ -322,6 +322,18 @@ std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
     }
 }
 
+/**
+ * @brief Whisker_Widget::_checkWhiskerNum
+ *
+ * This checks if the number of whiskers that have been ordered in the frame is equal
+ * to the number of whiskers we have set to track in the image.
+ *
+ * This prevents misclicks where we click export and only 4 whiskers may be present
+ * but we wish to track 5.
+ *
+ *
+ * @return
+ */
 bool Whisker_Widget::_checkWhiskerNum()
 {
 
@@ -715,6 +727,7 @@ void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename) {
 }
 
 /**
+ * @brief Whisker_Widget::_loadCSVWhiskerFromDir
  *
  * Loads whisker lines where each is defined in a CSV file in
  * the same directory. The filename of the CSV file should
@@ -725,10 +738,10 @@ void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename) {
  * Each row should correspond to a single point moving from follicle
  * to whisker tip.
  *
- * @brief Whisker_Widget::_loadCSVWhiskerFromDir
  * @param dir_name
+ * @return vector of frame numbers that were loaded
  */
-void Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name)
+std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name)
 {
     auto dir_path = std::filesystem::path(dir_name);
     auto const whisker_number = std::stoi(dir_path.filename().string());
@@ -737,7 +750,8 @@ void Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name)
 
     _createNewWhisker(whisker_name, whisker_number);
 
-    int whisker_count = 0;
+    auto loaded_frames = std::vector<int>{};
+
     for (const auto & entry : std::filesystem::directory_iterator(dir_name))
     {
         auto const frame_num = remove_extension(entry.path().filename().string());
@@ -747,10 +761,12 @@ void Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name)
         auto const frame_index = _data_manager->getMediaData()->getFrameIndexFromNumber(std::stoi(frame_num));
 
         _data_manager->getLine(whisker_name)->addLineAtTime(frame_index, whisker);
-        whisker_count++;
+        loaded_frames.push_back(frame_index);
     }
 
-    std::cout << "Loaded " << whisker_count << " whiskers" << std::endl;
+    std::cout << "Loaded " << loaded_frames.size() << " whiskers" << std::endl;
+
+    return loaded_frames;
 }
 
 /**
@@ -776,7 +792,9 @@ void Whisker_Widget::_loadSingleCSVWhisker()
         return;
     }
 
-    _loadCSVWhiskerFromDir(dir_name);
+    auto loaded_whisker_ids = _loadCSVWhiskerFromDir(dir_name);
+
+    _addNewTrackedWhisker(loaded_whisker_ids);
 }
 
 void Whisker_Widget::_loadMultiCSVWhiskers()
@@ -790,13 +808,16 @@ void Whisker_Widget::_loadMultiCSVWhiskers()
         return;
     }
 
+    std::vector<int> loaded_whisker_ids;
     for (const auto & entry : std::filesystem::directory_iterator(dir_name))
     {
         if (entry.is_directory())
         {
-            _loadCSVWhiskerFromDir(entry.path().string());
+            loaded_whisker_ids = _loadCSVWhiskerFromDir(entry.path().string());
         }
     }
+
+    _addNewTrackedWhisker(loaded_whisker_ids);
 
 }
 
@@ -951,6 +972,17 @@ void Whisker_Widget::_skipToTrackedFrame(int index)
 void Whisker_Widget::_addNewTrackedWhisker(int const index)
 {
     _tracked_frame_ids.insert(index);
+
+    ui->tracked_whisker_number->setMaximum(_tracked_frame_ids.size() - 1);
+
+    ui->tracked_whisker_count->setText(QString::number(_tracked_frame_ids.size()));
+}
+
+void Whisker_Widget::_addNewTrackedWhisker(std::vector<int> const & indexes)
+{
+    for (auto i : indexes) {
+        _tracked_frame_ids.insert(i);
+    }
 
     ui->tracked_whisker_number->setMaximum(_tracked_frame_ids.size() - 1);
 

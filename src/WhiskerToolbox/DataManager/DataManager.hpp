@@ -1,6 +1,7 @@
 #ifndef DATAMANAGER_HPP
 #define DATAMANAGER_HPP
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Media/Media_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
@@ -38,6 +39,10 @@ public:
     std::shared_ptr<MaskData> getMask(const std::string& mask_key);
     std::vector<std::string> getMaskKeys();
 
+    void createAnalogTimeSeries(std::string const & analog_key);
+    std::shared_ptr<AnalogTimeSeries> getAnalogTimeSeries(std::string const & analog_key);
+    std::vector<std::string> getAnalogTimeSeriesKeys();
+
     std::shared_ptr<TimeFrame> getTime() {return _time;};
 
     std::vector<std::vector<float>> read_ragged_hdf5(const std::string& filepath, const std::string& key);
@@ -52,6 +57,8 @@ private:
     std::unordered_map<std::string,std::shared_ptr<LineData>> _lines;
 
     std::unordered_map<std::string, std::shared_ptr<MaskData>> _masks;
+
+    std::unordered_map<std::string, std::shared_ptr<AnalogTimeSeries>> _analog;
 
     std::shared_ptr<TimeFrame> _time;
 

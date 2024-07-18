@@ -12,6 +12,7 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
+#include <filesystem>
 #include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -56,6 +57,8 @@ void MainWindow::_createActions()
     connect(ui->actionLoad_Video, &QAction::triggered, this, &MainWindow::Load_Video);
 
     connect(ui->actionLoad_Images, &QAction::triggered,this, &MainWindow::Load_Images);
+
+    connect(ui->actionLoad_Time_Series_CSV, &QAction::triggered, this, &MainWindow::_loadTimeSeriesCSV);
 
     connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
 
@@ -113,6 +116,33 @@ void MainWindow::Load_Images() {
 
     _LoadData(dir_name.toStdString());
 
+}
+
+void MainWindow::_loadTimeSeriesCSV()
+{
+    auto filename =  QFileDialog::getOpenFileName(
+        this,
+        "Load Video File",
+        QDir::currentPath(),
+        "All files (*.*) ;; CSV (*.csv)");
+
+    if (filename.isNull()) {
+        return;
+    }
+
+    auto series = load_series_from_csv(filename.toStdString());
+
+    std::cout << "Loaded " << series.size() << " points" << std::endl;
+
+    auto path = std::filesystem::path(filename.toStdString());
+    auto key = path.filename().replace_extension("").string();
+
+    _data_manager->createAnalogTimeSeries(key);
+
+    _data_manager->getAnalogTimeSeries(key)->setData(series);
+
+    std::cout << "Loaded series " << key << " with " <<
+        _data_manager->getAnalogTimeSeries(key)->getAnalogTimeSeries().size() << " points " << std::endl;
 }
 
 void MainWindow::_LoadData(std::string filepath) {

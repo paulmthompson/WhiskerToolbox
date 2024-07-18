@@ -110,3 +110,18 @@ std::vector<std::string> DataManager::getMaskKeys()
     return get_keys(_masks);
 }
 
+void DataManager::createAnalogTimeSeries(std::string const & key)
+{
+    _analog[key] = std::make_shared<AnalogTimeSeries>();
+}
+
+std::shared_ptr<AnalogTimeSeries> DataManager::getAnalogTimeSeries(std::string const & analog_key)
+{
+    return _analog[analog_key];
+}
+
+std::vector<std::string> DataManager::getAnalogTimeSeriesKeys()
+{
+    return get_keys(_analog);
+}
+

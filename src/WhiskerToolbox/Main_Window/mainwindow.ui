@@ -62,6 +62,8 @@
     </property>
     <addaction name="actionLoad_Video"/>
     <addaction name="actionLoad_Images"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_Time_Series_CSV"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -128,6 +130,11 @@
   <action name="actionTongue_Tracking">
    <property name="text">
     <string>Tongue Tracking</string>
+   </property>
+  </action>
+  <action name="actionLoad_Time_Series_CSV">
+   <property name="text">
+    <string>Load Time Series (CSV)</string>
    </property>
   </action>
  </widget>

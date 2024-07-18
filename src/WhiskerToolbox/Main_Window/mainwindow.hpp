@@ -76,6 +76,8 @@ private slots:
     void Load_Video();
     void Load_Images();
 
+    void _loadTimeSeriesCSV();
+
     void openWhiskerTracking();
     void openLabelMaker();
     void openAnalogViewer();
