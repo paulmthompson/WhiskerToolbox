@@ -8,6 +8,8 @@
 #include <QWidget>
 #include <QMainWindow>
 
+#include "jkqtplotter/jkqtplotter.h"
+
 #include "Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "DataManager.hpp"
@@ -25,6 +27,9 @@ public:
 
     void openWidget();
 
+    void plotLine(std::string name, std::vector<double>& data);
+    void removeGraph(std::string name);
+
 protected:
     //void closeEvent(QCloseEvent *event);
     //void keyPressEvent(QKeyEvent *event);
@@ -35,6 +40,9 @@ private:
     TimeScrollBar* _time_scrollbar;
 
     Ui::Analog_Viewer *ui;
+
+    std::map<std::string, JKQTPPlotElement*> _plot_elements;
+
 
 public slots:
     void SetFrame(int i);

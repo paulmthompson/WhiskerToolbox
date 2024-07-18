@@ -192,10 +192,11 @@ void MainWindow::openAnalogViewer()
         registerDockWidget(key, analogViewer.get(), ads::CenterDockWidgetArea);
         _widgets[key] = std::move(analogViewer);
 
-        connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, static_cast<Analog_Viewer*>(_widgets[key].get()), &Analog_Viewer::SetFrame);
+        connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, dynamic_cast<Analog_Viewer*>(_widgets[key].get()), &Analog_Viewer::SetFrame);
     }
 
-    dynamic_cast<Analog_Viewer*>(_widgets[key].get())->openWidget();
+    auto ptr = dynamic_cast<Analog_Viewer*>(_widgets[key].get());
+    ptr->openWidget();
 
 
     showDockWidget(key);
