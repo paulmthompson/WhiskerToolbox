@@ -203,7 +203,7 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
 /////////////////////////////////////////////
 
 void Whisker_Widget::_saveImageButton() {
-    _saveImage("./");
+    _saveImage(_output_path.string() + "/");
 }
 
 void Whisker_Widget::_saveImage(std::string const& folder)
@@ -371,6 +371,8 @@ void Whisker_Widget::_exportImageCSV()
     _saveImage(folder);
 
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    _addNewTrackedWhisker(current_time);
 
     for (int i = 0; i<_num_whisker_to_track; i++)
     {
@@ -919,13 +921,40 @@ void Whisker_Widget::_setMaskAlpha(int alpha)
     _scene->setMaskAlpha(alpha);
 }
 
+/**
+ * @brief Whisker_Widget::_skipToTrackedFrame
+ *
+ * A tracked frame is one where we have generated labels.
+ * IDs of tracked frames are stored in _tracked_frame_ids
+ *
+ *
+ * @param index
+ */
 void Whisker_Widget::_skipToTrackedFrame(int index)
 {
-    if (_data_manager->getLine("whisker_0")) {
-        std::vector<int> tracked_frames = _data_manager->getLine("whisker_0")->getTimesWithLines();
-        auto frame_id = tracked_frames[index];
-        _time_scrollbar->changeScrollBarValue(frame_id);
-    }
+    if (index < 0 || index >= _tracked_frame_ids.size()) return;
+
+    auto it = _tracked_frame_ids.begin();
+    std::advance(it, index);
+
+    int frame_id = *it;
+    _time_scrollbar->changeScrollBarValue(frame_id);
+}
+
+/**
+ * @brief Whisker_Widget::_addNewTrackedWhisker
+ *
+ * Adds a new whisker to the list of tracked whiskers
+ *
+ * @param index
+ */
+void Whisker_Widget::_addNewTrackedWhisker(int const index)
+{
+    _tracked_frame_ids.insert(index);
+
+    ui->tracked_whisker_number->setMaximum(_tracked_frame_ids.size() - 1);
+
+    ui->tracked_whisker_count->setText(QString::number(_tracked_frame_ids.size()));
 }
 
 
