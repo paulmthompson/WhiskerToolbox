@@ -24,6 +24,9 @@ add_library(DataManager SHARED
         Masks/Mask_Data.hpp
         Masks/Mask_Data.cpp
 
+        AnalogTimeSeries/Analog_Time_Series.hpp
+        AnalogTimeSeries/Analog_Time_Series.cpp
+
         utils/container.hpp
         utils/hdf5_mask_load.hpp
         utils/opencv_utility.hpp

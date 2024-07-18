@@ -727,6 +727,7 @@ void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename) {
 }
 
 /**
+ * @brief Whisker_Widget::_loadCSVWhiskerFromDir
  *
  * Loads whisker lines where each is defined in a CSV file in
  * the same directory. The filename of the CSV file should
@@ -737,8 +738,8 @@ void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename) {
  * Each row should correspond to a single point moving from follicle
  * to whisker tip.
  *
- * @brief Whisker_Widget::_loadCSVWhiskerFromDir
  * @param dir_name
+ * @return vector of frame numbers that were loaded
  */
 std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name)
 {
