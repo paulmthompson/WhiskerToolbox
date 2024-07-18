@@ -132,8 +132,6 @@ void MainWindow::_loadTimeSeriesCSV()
 
     auto series = load_series_from_csv(filename.toStdString());
 
-    std::cout << "Loaded " << series.size() << " points" << std::endl;
-
     auto path = std::filesystem::path(filename.toStdString());
     auto key = path.filename().replace_extension("").string();
 

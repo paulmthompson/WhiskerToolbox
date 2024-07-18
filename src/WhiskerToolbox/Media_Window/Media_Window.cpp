@@ -35,6 +35,9 @@ void Media_Window::clearLines() {
     for (auto pathItem : _line_paths) {
         removeItem(pathItem);
     }
+    for (auto pathItem : _line_paths) {
+        delete pathItem;
+    }
     _line_paths.clear();
 }
 
@@ -53,6 +56,10 @@ void Media_Window::clearMasks()
     for (auto maskItem : _masks) {
         removeItem(maskItem);
     }
+
+    for (auto maskItem : _masks) {
+        delete maskItem;
+    }
     _masks.clear();
 }
 
@@ -69,6 +76,9 @@ void Media_Window::addPointColor(std::string const& point_key, QColor const colo
 void Media_Window::clearPoints() {
     for (auto pathItem : _points) {
         removeItem(pathItem);
+    }
+    for (auto pathItem : _points) {
+        delete pathItem;
     }
     _points.clear();
 }
