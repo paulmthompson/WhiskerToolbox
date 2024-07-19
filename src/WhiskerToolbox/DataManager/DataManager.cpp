@@ -1,9 +1,10 @@
 
 #include "DataManager.hpp"
 
-#include "Media/Video_Data.hpp"
-
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Media/Image_Data.hpp"
+#include "Media/Video_Data.hpp"
+#include "TimeFrame.hpp"
 
 #include "utils/hdf5_mask_load.hpp"
 #include "utils/container.hpp"

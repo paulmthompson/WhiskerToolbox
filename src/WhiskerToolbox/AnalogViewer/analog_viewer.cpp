@@ -1,16 +1,15 @@
-//
-// Created by wanglab on 4/15/2024.
-//
-
-#include <QMainWindow>
-#include <QPointer>
 
 #include "analog_viewer.hpp"
+
 #include "ui_analog_viewer.h"
+
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 
 #include "jkqtplotter/jkqtplotter.h"
 #include "jkqtplotter/graphs/jkqtplines.h"
 #include "jkqtplotter/jkqtpgraphsbase.h"
+#include <QMainWindow>
+#include <QPointer>
 
 #include <iostream>
 

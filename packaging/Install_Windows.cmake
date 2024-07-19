@@ -68,6 +68,13 @@ set(HDF5_DLLS
         "${CMAKE_BINARY_DIR}/hdf5.dll"
 )
 
+set(JKQTPLOTTER_DLLS
+        $<$<CONFIG:Release>:"${CMAKE_BINARY_DIR}/JKQTPlotter6_Release.dll">
+        $<$<CONFIG:Release>:"${CMAKE_BINARY_DIR}/JKQTMath6_Release.dll">
+        $<$<CONFIG:Release>:"${CMAKE_BINARY_DIR}/JKQTMathText6_Release.dll">
+        $<$<CONFIG:Release>:"${CMAKE_BINARY_DIR}/JKQTCommon6_Release.dll">
+)
+
 set(WHISKER_DLLS
         "${CMAKE_BINARY_DIR}/janelia.dll"
 )
@@ -81,6 +88,7 @@ copy_dlls_during_install("${OPENCV_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${HDF5_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${WHISKER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${EXTRA_DLLS}" "${CMAKE_INSTALL_BINDIR}")
+copy_dlls_during_install("${JKQTPLOTTER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 
 qt_generate_deploy_app_script(
         TARGET WhiskerToolbox

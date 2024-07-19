@@ -4,16 +4,15 @@
 #include "DataManager.hpp"
 
 #include <QGraphicsScene>
-#include <QGraphicsSceneMouseEvent>
-#include <QGraphicsPixmapItem>
-#include <QImage>
 #include <QtCore/QtGlobal>
-
 
 #include <memory>
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
+
+class QGraphicsPixmapItem;
+class QImage;
 
 int const default_width = 640;
 int const default_height = 480;

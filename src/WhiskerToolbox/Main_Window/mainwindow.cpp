@@ -1,11 +1,13 @@
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "analog_viewer.hpp"
 #include "DataManager.hpp"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
 #include "Media_Window.hpp"
+#include "TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
 

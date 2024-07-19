@@ -5,6 +5,7 @@
 #include "DataManager.hpp"
 #include "label_maker.hpp"
 #include "Media_Window.hpp"
+#include "TimeFrame.hpp"
 
 #include <QFileDialog>
 #include <QKeyEvent>

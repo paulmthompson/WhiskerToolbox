@@ -1,17 +1,18 @@
 #ifndef DATAMANAGER_HPP
 #define DATAMANAGER_HPP
 
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Media/Media_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
-#include "TimeFrame.hpp"
 
 #include <string>
 #include <memory>
 #include <vector>
 #include <unordered_map>
+
+class AnalogTimeSeries;
+class TimeFrame;
 
 class DataManager {
 

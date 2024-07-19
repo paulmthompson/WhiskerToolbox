@@ -4,6 +4,7 @@
 #include "ui_contact_widget.h"
 
 #include "DataManager.hpp"
+#include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QElapsedTimer>

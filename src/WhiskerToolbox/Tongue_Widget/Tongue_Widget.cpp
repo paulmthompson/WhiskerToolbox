@@ -7,6 +7,7 @@
 #include "Grabcut_Widget/Grabcut_Widget.hpp"
 #include "Media_Window.hpp"
 #include "Points/Point_Data.hpp"
+#include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "utils/opencv_utility.hpp"
 #include "utils/string_manip.hpp"

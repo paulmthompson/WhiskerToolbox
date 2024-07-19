@@ -8,6 +8,7 @@
 #include "janelia_config.hpp"
 #include "mainwindow.hpp"
 #include "Media_Window.hpp"
+#include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "ui_Whisker_Widget.h"
 #include "utils/opencv_utility.hpp"

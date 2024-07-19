@@ -2,6 +2,11 @@
 #include "Media_Window.hpp"
 
 #include "Media/Media_Data.hpp"
+#include "TimeFrame.hpp"
+
+#include <QGraphicsSceneMouseEvent>
+#include <QGraphicsPixmapItem>
+#include <QImage>
 
 #include <iostream>
 
