@@ -30,10 +30,13 @@ Set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare(JKQTPlotter6
                      GIT_REPOSITORY https://github.com/jkriege2/JKQtPlotter.git
                      GIT_TAG aa4ac4c58a099594e88e3c63110dff69136d54b8
-                     CMAKE_ARGS -DJKQtPlotter_BUILD_EXAMPLES=OFF -DJKQtPlotter_BUILD_TESTS=OFF -DJKQtPlotter_BUILD_TOOLS=OFF -DJKQtPlotter_BUILD_LIB_JKQTFASTPLOTTER=OFF
                      )
 # ... finally make JKQTPlotter5/6 available
 
+set(JKQtPlotter_BUILD_EXAMPLES OFF)
+set(JKQtPlotter_BUILD_TESTS OFF)
+set(JKQtPlotter_BUILD_TOOLS OFF)
+set(JKQtPlotter_BUILD_LIB_JKQTFASTPLOTTER OFF)
 #add_subdirectory(Whisker-Analysis)
 
 #We should use make avaiable
@@ -48,7 +51,7 @@ set_target_properties(qt6advanceddocking PROPERTIES
 )
 
 if (WIN32)
-    set_target_properties(JKQTPlotter6 JKQTCommon6 JKQTMath6 JKQTMathText6 JKQTFastPlotter6 PROPERTIES
+    set_target_properties(JKQTPlotter6 JKQTCommon6 JKQTMath6 JKQTMathText6 PROPERTIES
         EXCLUDE_FROM_ALL TRUE
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
