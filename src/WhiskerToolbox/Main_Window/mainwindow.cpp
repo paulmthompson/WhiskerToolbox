@@ -70,7 +70,7 @@ void MainWindow::_buildInitialLayout()
 
     ads::CDockSplitter* splitter = ads::internal::findParent<ads::CDockSplitter*>(dockArea);
     int height = splitter->height();
-    splitter->setSizes({height*4/5,height*1/5});
+    splitter->setSizes({height*85/100,height*15/100});
 }
 
 void MainWindow::_createActions()
