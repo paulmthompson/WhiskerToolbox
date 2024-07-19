@@ -2,9 +2,6 @@
 #define MAINWINDOW_HPP
 
 #include "Media_Window.hpp"
-#include "Label_Widget.hpp"
-#include "Image_Processing_Widget/Image_Processing_Widget.hpp"
-#include "Tongue_Widget/Tongue_Widget.hpp"
 
 #include "TimeFrame.hpp"
 #include "DataManager.hpp"
@@ -54,9 +51,6 @@ private:
     Ui::MainWindow *ui;
 
     Media_Window* _scene;
-    QPointer<Label_Widget> _label_maker;
-    QPointer<Image_Processing_Widget> _image_processing;
-    QPointer<Tongue_Widget> _tongue_widget;
 
     ads::CDockManager* _m_DockManager;
 

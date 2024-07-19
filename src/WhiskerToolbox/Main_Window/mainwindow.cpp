@@ -2,6 +2,9 @@
 #include "ui_mainwindow.h"
 
 #include "analog_viewer.hpp"
+#include "Image_Processing_Widget/Image_Processing_Widget.hpp"
+#include "Label_Widget.hpp"
+#include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
 
 #include <QFileDialog>
@@ -47,9 +50,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-    if (_label_maker) {
-        _label_maker.clear();
-    }
 }
 
 void MainWindow::_createActions()
@@ -203,15 +203,19 @@ void MainWindow::showDockWidget(std::string const & key)
 
 void MainWindow::openLabelMaker() {
 
-    // We create a whisker widget. We only want to load this module one time,
-    // so if we exit the window, it is not created again
-    if (!_label_maker) {
-        _label_maker = new Label_Widget(_scene,_data_manager);
-        std::cout << "Label Maker Constructed" << std::endl;
-    } else {
-        std::cout << "Label Maker already exists" << std::endl;
+    std::string const key = "label_maker";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto labelMaker = std::make_unique<Label_Widget>(_scene, _data_manager);
+        labelMaker->setObjectName(key);
+        registerDockWidget(key, labelMaker.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(labelMaker);
     }
-    _label_maker->openWidget();
+
+    auto ptr = dynamic_cast<Label_Widget*>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
 }
 
 void MainWindow::openAnalogViewer()
@@ -221,7 +225,7 @@ void MainWindow::openAnalogViewer()
     if (_widgets.find(key) == _widgets.end()) {
         auto analogViewer = std::make_unique<Analog_Viewer>(_scene, _data_manager, ui->time_scrollbar, this);
         analogViewer->setObjectName(key);
-        registerDockWidget(key, analogViewer.get(), ads::CenterDockWidgetArea);
+        registerDockWidget(key, analogViewer.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(analogViewer);
 
         connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, dynamic_cast<Analog_Viewer*>(_widgets[key].get()), &Analog_Viewer::SetFrame);
@@ -235,25 +239,36 @@ void MainWindow::openAnalogViewer()
 
 void MainWindow::openImageProcessing()
 {
-    if (!_image_processing) {
-        _image_processing = new Image_Processing_Widget(_scene, _data_manager);
-        std::cout << "Image Processing Widget Constructed" << std::endl;
-    } else {
-        std::cout << "Image Processing Widget already exists" << std::endl;
+    std::string const key = "image_processing";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto imageProcessing = std::make_unique<Image_Processing_Widget>(_scene, _data_manager);
+        imageProcessing->setObjectName(key);
+        registerDockWidget(key, imageProcessing.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(imageProcessing);
     }
-    _image_processing->openWidget();
+
+    auto ptr = dynamic_cast<Image_Processing_Widget*>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
 }
 
 void MainWindow::openTongueTracking()
 {
-    if (!_tongue_widget) {
-        _tongue_widget = new Tongue_Widget(_scene, _data_manager, ui->time_scrollbar);
+    std::string const key = "tongue_widget";
 
-        std::cout << "Tongue Tracker Constructed" << std::endl;
-    } else {
-        std::cout << "Tongue Tracker already exists" << std::endl;
+    if (_widgets.find(key) == _widgets.end()) {
+        auto tongueWidget = std::make_unique<Tongue_Widget>(_scene, _data_manager, ui->time_scrollbar);
+        tongueWidget->setObjectName(key);
+        registerDockWidget(key, tongueWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(tongueWidget);
     }
-    _tongue_widget->openWidget();
+
+    auto ptr = dynamic_cast<Tongue_Widget*>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
