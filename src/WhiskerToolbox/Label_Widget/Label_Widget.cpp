@@ -1,14 +1,18 @@
 
 #include "Label_Widget.hpp"
+#include "ui_Label_Widget.h"
+
+#include "DataManager.hpp"
+#include "label_maker.hpp"
+#include "Media_Window.hpp"
+
+#include <QFileDialog>
+#include <QKeyEvent>
 
 #include <fstream>
 #include <iostream>
 #include <iterator>
 
-#include <QFileDialog>
-#include <QKeyEvent>
-
-#include "ui_Label_Widget.h"
 
 Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     _scene{scene},

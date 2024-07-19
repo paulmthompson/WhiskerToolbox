@@ -3,9 +3,13 @@
 
 #include "ui_contact_widget.h"
 
+#include "DataManager.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
+
+#include <QElapsedTimer>
 #include <QFileDialog>
 #include <QGraphicsPixmapItem>
-#include <QElapsedTimer>
+#include <QGraphicsScene>
 
 #include <iostream>
 #include <filesystem>
@@ -16,13 +20,7 @@
 Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QWidget(parent),
     _data_manager{data_manager},
-    _contact_start{0},
-    _contact_epoch(false),
     _contactEvents{std::vector<ContactEvent>()},
-    _image_buffer_size{5},
-    _pole_pos{std::make_tuple(250,250)},
-    _pole_select_mode{false},
-    _bounding_box_width{130},
     _time_scrollbar{time_scrollbar},
     _output_path{std::filesystem::current_path()},
     ui(new Ui::contact_widget)

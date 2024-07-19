@@ -3,17 +3,16 @@
 
 #include "ui_TimeScrollBar.h"
 
+#include "DataManager.hpp"
 #include "Media/Video_Data.hpp"
 
 #include <QFileDialog>
+#include <QTimer>
 
 #include <iostream>
 
 TimeScrollBar::TimeScrollBar(QWidget *parent) :
     QWidget(parent),
-    _verbose{false},
-    _play_mode{false},
-    _play_speed{1},
     ui(new Ui::TimeScrollBar)
 {
     ui->setupUi(this);

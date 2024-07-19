@@ -1,11 +1,11 @@
 #ifndef JANELIA_CONFIG_HPP
 #define JANELIA_CONFIG_HPP
 
-
 #include <QWidget>
-#include "whiskertracker.hpp"
 
 #include <memory>
+
+namespace whisker {class WhiskerTracker;}
 
 namespace Ui {
 class janelia_config;

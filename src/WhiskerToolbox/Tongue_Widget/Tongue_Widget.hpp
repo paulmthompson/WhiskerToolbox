@@ -6,13 +6,10 @@
 
 #include <memory>
 
-#include "Media_Window.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
-#include "DataManager.hpp"
-
-#include "Grabcut_Widget/Grabcut_Widget.hpp"
-
-
+class DataManager;
+class Grabcut_Widget;
+class Media_Window;
+class TimeScrollBar;
 
 namespace Ui {
 class Tongue_Widget;

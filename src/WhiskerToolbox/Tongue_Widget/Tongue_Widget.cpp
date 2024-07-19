@@ -1,16 +1,22 @@
 
 #include "Tongue_Widget.hpp"
 
+#include "ui_Tongue_Widget.h"
+
+#include "DataManager.hpp"
+#include "Grabcut_Widget/Grabcut_Widget.hpp"
+#include "Media_Window.hpp"
+#include "Points/Point_Data.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
 #include "utils/opencv_utility.hpp"
 #include "utils/string_manip.hpp"
 
+#include <opencv2/opencv.hpp>
 #include <QElapsedTimer>
 #include <QFileDialog>
 #include <QPushButton>
 #include "qevent.h"
 #include <QSlider>
-
-#include "ui_Tongue_Widget.h"
 
 #include <iomanip>
 #include <iostream>
@@ -18,10 +24,6 @@
 #include <string>
 #include <filesystem>
 
-#include "utils/string_manip.hpp"
-#include "Points/Point_Data.hpp"
-
-#include <opencv2/opencv.hpp>
 
 const std::vector<QColor> tongue_colors = {
     QColor("darkRed"),

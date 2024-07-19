@@ -1,13 +1,12 @@
 #ifndef TIMESCROLLBAR_H
 #define TIMESCROLLBAR_H
 
-#include "DataManager.hpp"
-
 #include <QWidget>
-#include <QTimer>
 
 #include <memory>
-#include <vector>
+
+class DataManager;
+class QTimer;
 
 namespace Ui {
 class TimeScrollBar;
@@ -30,9 +29,9 @@ protected:
 private:
     Ui::TimeScrollBar *ui;
     std::shared_ptr<DataManager> _data_manager;
-    bool _verbose;
-    int _play_speed;
-    bool _play_mode;
+    bool _verbose {false};
+    int _play_speed {1};
+    bool _play_mode {false};
 
     QTimer* _timer;
 

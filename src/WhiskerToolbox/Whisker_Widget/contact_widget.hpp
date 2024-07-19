@@ -1,16 +1,18 @@
 #ifndef CONTACT_WIDGET_HPP
 #define CONTACT_WIDGET_HPP
 
-#include "DataManager.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
-
-#include <QWidget>
-#include <QGraphicsScene>
 #include <QImage>
+#include <QWidget>
 
 #include <memory>
 #include <filesystem>
 #include <vector>
+
+class DataManager;
+class QGraphicsPathItem;
+class QGraphicsPixmapItem;
+class QGraphicsScene;
+class TimeScrollBar;
 
 namespace Ui {
 class contact_widget;
@@ -54,15 +56,15 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
     std::vector<Contact> _contact;
-    int _contact_start;
-    bool _contact_epoch;
+    int _contact_start {0};
+    bool _contact_epoch {false};
     std::vector<ContactEvent> _contactEvents;
     QGraphicsScene* _scene;
     std::vector<QImage> _contact_imgs;
-    int _image_buffer_size;
-    std::tuple<int, int> _pole_pos;
-    int _bounding_box_width;
-    bool _pole_select_mode;
+    int _image_buffer_size {5};
+    std::tuple<int, int> _pole_pos {std::make_tuple(250,250)};
+    int _bounding_box_width {130};
+    bool _pole_select_mode {false};
     TimeScrollBar* _time_scrollbar;
     std::vector<QGraphicsPathItem*> _contact_rectangle_items;
     std::vector<QGraphicsPixmapItem*> _contact_pixmaps;

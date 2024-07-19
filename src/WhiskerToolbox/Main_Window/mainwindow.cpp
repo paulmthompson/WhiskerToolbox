@@ -2,14 +2,15 @@
 #include "ui_mainwindow.h"
 
 #include "analog_viewer.hpp"
+#include "DataManager.hpp"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
+#include "Media_Window.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
 
 #include <QFileDialog>
 #include <QImage>
-#include <QGraphicsPixmapItem>
 #include <QKeyEvent>
 
 #include <QTimer>

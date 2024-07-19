@@ -6,10 +6,10 @@
 #include <filesystem>
 #include <memory>
 
-#include "Media_Window.hpp"
-#include "DataManager.hpp"
-#include "label_maker.hpp"
-
+class DataManager;
+struct label_point;
+class LabelMaker;
+class Media_Window;
 
 namespace Ui {
 class Label_Widget;

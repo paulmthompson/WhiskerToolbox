@@ -1,8 +1,9 @@
 
 #include "Image_Processing_Widget.hpp"
-
 #include "ui_Image_Processing_Widget.h"
 
+#include "DataManager/DataManager.hpp"
+#include "Media_Window.hpp"
 #include "utils/opencv_utility.hpp"
 
 #include <QCheckBox>

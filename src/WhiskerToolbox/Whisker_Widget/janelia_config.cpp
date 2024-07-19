@@ -3,6 +3,7 @@
 
 #include "ui_janelia_config.h"
 
+#include "whiskertracker.hpp"
 
 Janelia_Config::Janelia_Config(std::shared_ptr<whisker::WhiskerTracker> tracker, QWidget *parent) :
     QWidget(parent),

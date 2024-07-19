@@ -1,22 +1,16 @@
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
-#include "Media_Window.hpp"
-
-#include "TimeFrame.hpp"
-#include "DataManager.hpp"
-
 #include <QMainWindow>
-#include <QImage>
-#include <QGraphicsScene>
-#include <QTimer>
-#include <QPointer>
 
 #include "DockManager.h"
 
 #include <map>
 #include <memory>
 #include <string>
+
+class DataManager;
+class Media_Window;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

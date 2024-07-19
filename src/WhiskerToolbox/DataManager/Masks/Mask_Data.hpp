@@ -1,11 +1,11 @@
 #ifndef MASK_DATA_HPP
 #define MASK_DATA_HPP
 
+#include "Points/Point_Data.hpp"
+
 #include <vector>
 #include <map>
 
-
-#include "Points/Point_Data.hpp"
 
 using Mask2D = std::vector<Point2D<float>>;
 

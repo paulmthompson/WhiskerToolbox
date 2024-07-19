@@ -1,10 +1,10 @@
 #ifndef IMAGE_PROCESSING_WIDGET_HPP
 #define IMAGE_PROCESSING_WIDGET_HPP
 
-#include "DataManager/DataManager.hpp"
-#include "Media_Window.hpp"
-
 #include <QMainWindow>
+
+class DataManager;
+class Media_Window;
 
 namespace Ui {
 class Image_Processing_Widget;
