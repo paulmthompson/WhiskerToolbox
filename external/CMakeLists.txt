@@ -47,8 +47,10 @@ set_target_properties(qt6advanceddocking PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
-set_target_properties(JKQTPlotter6 JKQTCommon6 JKQTMath6 JKQTMathText6 JKQTFastPlotter6 PROPERTIES
+if (WIN32)
+    set_target_properties(JKQTPlotter6 JKQTCommon6 JKQTMath6 JKQTMathText6 JKQTFastPlotter6 PROPERTIES
         EXCLUDE_FROM_ALL TRUE
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-)
+    )
+endif()
