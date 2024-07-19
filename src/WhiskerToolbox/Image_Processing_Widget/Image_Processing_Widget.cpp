@@ -68,11 +68,21 @@ void Image_Processing_Widget::_activateContrast()
 void Image_Processing_Widget::_updateContrastAlpha(){
     _contrast_alpha = ui->alpha_dspinbox->value();
     _updateContrastFilter();
+
+    if (!_contrast_active)
+    {
+        ui->contrast_checkbox->setCheckState(Qt::Checked);
+    }
 }
 
 void Image_Processing_Widget::_updateContrastBeta(){
     _contrast_beta = ui->beta_spinbox->value();
     _updateContrastFilter();
+
+    if (!_contrast_active)
+    {
+        ui->contrast_checkbox->setCheckState(Qt::Checked);
+    }
 }
 
 //////////////////////////////////////////////////
@@ -101,6 +111,10 @@ void Image_Processing_Widget::_updateSharpenSigma()
 {
     _sharpen_sigma = ui->sharpen_spinbox->value();
     _updateSharpenFilter();
+
+    if (!_sharpen_active){
+        ui->sharpen_checkbox->setCheckState(Qt::Checked);
+    }
 }
 
 //////////////////////////////////////////////////
@@ -129,12 +143,20 @@ void Image_Processing_Widget::_updateClaheClip()
 {
     _clahe_clip = ui->clahe_clip_spinbox->value();
     _updateClaheFilter();
+
+    if (!_clahe_active) {
+        ui->clahe_checkbox->setCheckState(Qt::Checked);
+    }
 }
 
 void Image_Processing_Widget::_updateClaheGrid()
 {
     _clahe_grid = ui->clahe_grid_spinbox->value();
     _updateClaheFilter();
+
+    if (!_clahe_active) {
+        ui->clahe_checkbox->setCheckState(Qt::Checked);
+    }
 }
 
 //////////////////////////////////////////////////
@@ -167,15 +189,27 @@ void Image_Processing_Widget::_updateBilateralD()
 {
     _bilateral_d = ui->bilateral_d_spinbox->value();
     _updateBilateralFilter();
+
+    if (!_bilateral_active) {
+        ui->bilateral_checkbox->setCheckState(Qt::Checked);
+    }
 }
 
 void Image_Processing_Widget::_updateBilateralSpatialSigma()
 {
     _bilateral_spatial_sigma = ui->bilateral_spatial_spinbox->value();
     _updateBilateralFilter();
+
+    if (!_bilateral_active) {
+        ui->bilateral_checkbox->setCheckState(Qt::Checked);
+    }
 }
 void Image_Processing_Widget::_updateBilateralColorSigma()
 {
     _bilateral_color_sigma = ui->bilateral_color_spinbox->value();
     _updateBilateralFilter();
+
+    if (!_bilateral_active) {
+        ui->bilateral_checkbox->setCheckState(Qt::Checked);
+    }
 }
