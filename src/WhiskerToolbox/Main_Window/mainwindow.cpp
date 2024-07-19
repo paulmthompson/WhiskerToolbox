@@ -1,11 +1,15 @@
 #include "mainwindow.hpp"
+
 #include "ui_mainwindow.h"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "analog_viewer.hpp"
 #include "DataManager.hpp"
+#include "DockAreaWidget.h"
+#include "DockSplitter.h"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
+#include "Media_Widget/Media_Widget.hpp"
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
@@ -40,19 +44,33 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->time_scrollbar->setDataManager(_data_manager);
 
-    _updateMedia();
+    ui->media_widget->setScene(_scene);
+    ui->media_widget->updateMedia();
 
     _createActions(); // Creates callback functions
 
     QWidget::grabKeyboard();
 
-    registerDockWidget("media", ui->graphicsView, ads::TopDockWidgetArea);
-    registerDockWidget("scrollbar", ui->time_scrollbar, ads::BottomDockWidgetArea);
+    _buildInitialLayout();
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::_buildInitialLayout()
+{
+    auto media_dock_widget = new ads::CDockWidget(QString::fromStdString("media"));
+    media_dock_widget->setWidget(ui->media_widget);
+    auto dockArea = _m_DockManager->addDockWidget(ads::TopDockWidgetArea, media_dock_widget);
+
+    registerDockWidget("scrollbar", ui->time_scrollbar, ads::BottomDockWidgetArea);
+
+    ads::CDockSplitter* splitter = ads::internal::findParent<ads::CDockSplitter*>(dockArea);
+    int height = splitter->height();
+    splitter->setSizes({height*4/5,height*1/5});
 }
 
 void MainWindow::_createActions()
@@ -92,12 +110,9 @@ void MainWindow::Load_Video()
         return;
     }
 
-    // Create video data object
-    // Pass video data object to scene?
-
     _data_manager->createMedia(DataManager::Video);
 
-    _updateMedia();
+    ui->media_widget->updateMedia();
 
     _LoadData(vid_name.toStdString());
 
@@ -115,7 +130,7 @@ void MainWindow::Load_Images() {
 
     _data_manager->createMedia(DataManager::Images);
 
-    _updateMedia();
+    ui->media_widget->updateMedia();
 
     _LoadData(dir_name.toStdString());
 
@@ -160,16 +175,6 @@ void MainWindow::_LoadData(std::string filepath) {
     ui->time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount());
 
     ui->time_scrollbar->changeScrollBarValue(0);
-
-}
-
-//If we load new media, we need to update the references to it. Widgets that use that media need to be updated to it.
-//these include whisker_widget and label_widget
-//There are probably better ways to do this.
-void MainWindow::_updateMedia() {
-
-    ui->graphicsView->setScene(_scene);
-    ui->graphicsView->show();
 
 }
 

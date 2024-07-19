@@ -54,9 +54,8 @@ private:
 
     std::map<std::string, std::unique_ptr<QWidget>> _widgets;
 
-    void _updateMedia();
-
     void _createActions();
+    void _buildInitialLayout();
 
     void _LoadData(std::string filepath);
 
