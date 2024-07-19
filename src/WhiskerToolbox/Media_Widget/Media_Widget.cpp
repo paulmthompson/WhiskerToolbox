@@ -34,7 +34,7 @@ void Media_Widget::_openDataViewer()
 
     auto* media_widget_item_list = _main_window->getWidget(key);
     if (!media_widget_item_list) {
-        auto media_widget_item_list_ptr = std::make_unique<Media_Widget_Items>();
+        auto media_widget_item_list_ptr = std::make_unique<Media_Widget_Items>(_data_manager, _scene);
         _main_window->addWidget(key, std::move(media_widget_item_list_ptr));
 
         media_widget_item_list = _main_window->getWidget(key);

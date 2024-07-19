@@ -43,6 +43,19 @@
     </property>
    </column>
   </widget>
+  <widget class="QPushButton" name="refresh_button">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>230</y>
+     <width>111</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Refresh</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

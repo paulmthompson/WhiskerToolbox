@@ -15,7 +15,7 @@ class Media_Widget_Items : public QWidget
     Q_OBJECT
 public:
 
-    explicit Media_Widget_Items(QWidget *parent = 0);
+    explicit Media_Widget_Items(std::shared_ptr<DataManager> data_manager, Media_Window* scene, QWidget *parent = 0);
 
     virtual ~Media_Widget_Items();
 

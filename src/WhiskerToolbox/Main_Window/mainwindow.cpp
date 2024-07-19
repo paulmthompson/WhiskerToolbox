@@ -287,14 +287,30 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     } else if (event->key() == Qt::Key_Left){
         ui->time_scrollbar->changeScrollBarValue(-1,true);
     } else {
-
         auto ww = QApplication::focusWidget();
-        if (!this->isActiveWindow()) {
-            std::cout << "Sending event to another window" << std::endl;
-            QApplication::sendEvent(ww, event);
-        } else {
-            std::cout << "Focus widget: " << ww->objectName().toStdString() << std::endl;
-            QApplication::sendEvent(ww, event);
+        if (ww) {
+            if (!this->isActiveWindow()) {
+                std::cout << "Sending event to another window" << std::endl;
+                QApplication::sendEvent(ww, event);
+            } else if (ww->objectName().toStdString().find("dockWidget") != std::string::npos) {
+
+                std::cout << "Dock widget is active" << std::endl;
+                auto dock_widget = _m_DockManager->findDockWidget("whisker_widget");
+                if (dock_widget)
+                {
+                    QApplication::sendEvent(dock_widget->widget(), event);
+                }
+
+
+
+            } else if (ww->objectName().toStdString().find("MainWindow") != std::string::npos) {
+                // Main window is focus widget. Don't want to send infinite loop
+            } else {
+
+                std::cout << "Focus widget: " << ww->objectName().toStdString() << std::endl;
+                QApplication::sendEvent(ww, event);
+
+            }
         }
     }
 }
