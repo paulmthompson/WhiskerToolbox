@@ -70,7 +70,7 @@ qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
 )
 
-target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets)
+target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)

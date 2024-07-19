@@ -90,10 +90,13 @@ copy_dlls_during_install("${WHISKER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${EXTRA_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${JKQTPLOTTER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 
+# Print support and xml are dependencies of JKQTPlotter6
+# But they are not automatically found by qt windows deployment
+# and need to be added manually
 qt_generate_deploy_app_script(
         TARGET WhiskerToolbox
         OUTPUT_SCRIPT deploy_script
-        DEPLOY_TOOL_OPTIONS --ignore-library-errors
+        DEPLOY_TOOL_OPTIONS --ignore-library-errors -xml -printsupport
 )
 
 install(SCRIPT "${deploy_script}")
