@@ -273,29 +273,19 @@ void MainWindow::openTongueTracking()
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
 
-    //Data manager should be responsible for loading new value of data object
-    //Main window can update displays with new data object position
-    //Frame label is also updated.
-
     if (event->key() == Qt::Key_Right) {
         ui->time_scrollbar->changeScrollBarValue(1,true);
     } else if (event->key() == Qt::Key_Left){
         ui->time_scrollbar->changeScrollBarValue(-1,true);
     } else {
-        std::cout << "Key pressed but nothing to do" << std::endl;
 
-        auto it = _widgets.find("whisker_widget");
-        if (it != _widgets.end()) {
-
-            auto ww = dynamic_cast<Whisker_Widget *>(it->second.get());
-            if (ww) {
-                if (ww->isActiveWindow()) {
-                    QApplication::sendEvent(ww, event);
-                    std::cout << "Whisker widget is active, so sending keypress there" << std::endl;
-                }
-            } else {
-                QMainWindow::keyPressEvent(event);
-            }
+        auto ww = QApplication::focusWidget();
+        if (!this->isActiveWindow()) {
+            std::cout << "Sending event to another window" << std::endl;
+            QApplication::sendEvent(ww, event);
+        } else {
+            std::cout << "Focus widget: " << ww->objectName().toStdString() << std::endl;
+            QApplication::sendEvent(ww, event);
         }
     }
 }
