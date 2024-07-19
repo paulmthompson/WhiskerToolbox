@@ -4,6 +4,7 @@
 #include <QWidget>
 
 class DataManager;
+class MainWindow;
 class Media_Window;
 
 namespace Ui {
@@ -21,6 +22,7 @@ public:
 
     void setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = data_manager;};
     void setScene(Media_Window* scene) {_scene = scene;};
+    void setMainWindow(MainWindow* mainwindow) {_main_window = mainwindow;};
 
     void updateMedia();
 
@@ -30,10 +32,13 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     Media_Window* _scene;
 
+    MainWindow* _main_window;
+
 
 
 
 private slots:
+    void _openDataViewer();
 
 signals:
 

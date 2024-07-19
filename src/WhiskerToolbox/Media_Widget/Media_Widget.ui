@@ -84,6 +84,19 @@
     <string>Select</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="data_viewer_button">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>190</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Data Viewer</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

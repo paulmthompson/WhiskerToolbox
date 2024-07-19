@@ -44,6 +44,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->time_scrollbar->setDataManager(_data_manager);
 
+    ui->media_widget->setMainWindow(this);
     ui->media_widget->setScene(_scene);
     ui->media_widget->updateMedia();
 
