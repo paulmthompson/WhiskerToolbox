@@ -28,6 +28,10 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     Media_Window* _scene;
 
+    void _getPointItems();
+    void _getLineItems();
+    void _getMaskItems();
+
 };
 
 #endif // MEDIA_WIDGET_ITEMS_HPP

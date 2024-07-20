@@ -26,12 +26,12 @@
 #include <filesystem>
 
 
-const std::vector<QColor> tongue_colors = {
-    QColor("darkRed"),
-    QColor("darkGreen"),
-    QColor("darkMagenta"),
-    QColor("darkYellow"),
-    QColor("darkBlue")
+const std::vector<std::string> tongue_colors = {
+    "#8b0000", // dark red
+    "#006400", // dark green
+    "#8b008b", // dark magenta
+    "#9b870c", // dark yellow
+    "#00008b" // dark blue
 };
 Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QMainWindow(parent),
@@ -108,7 +108,7 @@ void Tongue_Widget::_loadHDF5TongueMasks()
     }
 
     _scene->addMaskDataToScene(mask_key);
-    _scene->addMaskColor(mask_key, tongue_colors[mask_num]);
+    _scene->changeMaskColor(mask_key, tongue_colors[mask_num]);
 }
 
 /**
@@ -148,7 +148,7 @@ void Tongue_Widget::_loadImgTongueMasks(){
     }
 
     _scene->addMaskDataToScene(mask_key);
-    _scene->addMaskColor(mask_key, tongue_colors[mask_num]);
+    _scene->changeMaskColor(mask_key, tongue_colors[mask_num]);
 }
 
 void Tongue_Widget::_loadCSVJawKeypoints(){
@@ -179,7 +179,7 @@ void Tongue_Widget::_loadCSVJawKeypoints(){
     }
 
     _scene->addPointDataToScene(keypoint_key);
-    _scene->addPointColor(keypoint_key, tongue_colors[point_num]);
+    _scene->changePointColor(keypoint_key, tongue_colors[point_num]);
 }
 
 void Tongue_Widget::_startGrabCut(){

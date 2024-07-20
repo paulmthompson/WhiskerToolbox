@@ -20,20 +20,25 @@ The Media_Window class
 
 Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent) :
     QGraphicsScene(parent),
-    _data_manager{data_manager},
-    _line_colors{}
+    _data_manager{data_manager}
 {
     _createCanvasForData();
 }
 
-void Media_Window::addLineDataToScene(const std::string line_key)
+void Media_Window::addLineDataToScene(std::string const & line_key)
 {
     _lines_to_show.insert(line_key);
+    _line_configs[line_key] = element_config{"#0000FF",1.0};
 }
 
-void Media_Window::addLineColor(std::string line_key, const QColor color)
+void Media_Window::changeLineColor(std::string const & line_key, std::string const & hex_color)
 {
-    _line_colors[line_key] = color;
+    _line_configs[line_key].hex_color = hex_color;
+}
+
+void Media_Window::changeLineAlpha(std::string const & line_key, float const alpha)
+{
+    _line_configs[line_key].alpha = alpha;
 }
 
 void Media_Window::clearLines() {
@@ -49,11 +54,17 @@ void Media_Window::clearLines() {
 void Media_Window::addMaskDataToScene(const std::string& mask_key)
 {
      _masks_to_show.insert(mask_key);
+     _mask_configs[mask_key] = element_config{"#0000FF",1.0};
 }
 
-void Media_Window::addMaskColor(const std::string& mask_key, const QColor color )
+void Media_Window::changeMaskColor(const std::string& mask_key, std::string const & hex_color)
 {
-     _mask_colors[mask_key] = color;
+     _mask_configs[mask_key].hex_color = hex_color;
+}
+
+void Media_Window::changeMaskAlpha(std::string const & line_key, float const alpha)
+{
+    _mask_configs[line_key].alpha = alpha;
 }
 
 void Media_Window::clearMasks()
@@ -71,11 +82,12 @@ void Media_Window::clearMasks()
 void Media_Window::addPointDataToScene(const std::string& point_key)
 {
     _points_to_show.insert(point_key);
+    _point_configs[point_key] = element_config{"#0000FF",1.0};
 }
 
-void Media_Window::addPointColor(std::string const& point_key, QColor const color)
+void Media_Window::changePointColor(std::string const& point_key, std::string const & hex_color)
 {
-    _point_colors[point_key] = color;
+    _point_configs[point_key].hex_color = hex_color;
 }
 
 void Media_Window::clearPoints() {
@@ -86,6 +98,11 @@ void Media_Window::clearPoints() {
         delete pathItem;
     }
     _points.clear();
+}
+
+void Media_Window::setPointAlpha(std::string const & point_key, float const alpha)
+{
+    _point_configs[point_key].alpha = alpha;
 }
 
 void Media_Window::LoadFrame(int frame_id)
@@ -203,11 +220,7 @@ void Media_Window::_plotLineData()
     int i =0;
     for (auto const & line_key : _lines_to_show)
     {
-        auto plot_color = QColor("blue");
-        if (_line_colors.count(line_key) != 0)
-        {
-            plot_color = QColor(_line_colors[line_key]);
-        }
+        auto plot_color = _plot_color_with_alpha(_line_configs, line_key);
 
         auto lineData = _data_manager->getLine(line_key)->getLinesAtTime(current_time);
 
@@ -232,15 +245,13 @@ void Media_Window::_plotLineData()
     }
 }
 
-QRgb Media_Window::_create_mask_plot_color(const std::string& mask_key) {
+QRgb Media_Window::_plot_color_with_alpha(std::unordered_map<std::string,element_config> elems, std::string const & key)
+{
+    auto plot_color = elems[key].hex_color;
+    auto alpha = elems[key].alpha;
 
-    auto plot_color = QColor("blue");
-    if (_mask_colors.count(mask_key) != 0)
-    {
-        plot_color = QColor(_mask_colors[mask_key]);
-    }
-
-    auto output_color = qRgba(plot_color.red(), plot_color.green(), plot_color.blue(), _mask_alpha);
+    auto color = QColor(QString::fromStdString(plot_color));
+    auto output_color = qRgba(color.red(), color.green(), color.blue(), alpha * 255);
 
     return output_color;
 }
@@ -251,7 +262,7 @@ void Media_Window::_plotMaskData()
 
     for (auto const& mask_key : _masks_to_show)
     {
-        auto plot_color = _create_mask_plot_color(mask_key);
+        auto plot_color = _plot_color_with_alpha(_mask_configs, mask_key);
 
         float mask_height = static_cast<float>(_data_manager->getMask(mask_key)->getMaskHeight());
         float mask_width = static_cast<float>(_data_manager->getMask(mask_key)->getMaskWidth());
@@ -299,11 +310,7 @@ void Media_Window::_plotPointData()
     for (auto const & point_key : _points_to_show)
     {
 
-        auto plot_color = QColor("blue");
-        if (_point_colors.count(point_key) != 0)
-        {
-            plot_color = QColor(_point_colors[point_key]);
-        }
+        auto plot_color = _plot_color_with_alpha(_point_configs, point_key);
 
         float mask_height = static_cast<float>(_data_manager->getPoint(point_key)->getMaskHeight());
         float mask_width = static_cast<float>(_data_manager->getPoint(point_key)->getMaskWidth());

@@ -17,6 +17,11 @@ class QImage;
 int const default_width = 640;
 int const default_height = 480;
 
+struct element_config {
+    std::string hex_color;
+    float alpha;
+};
+
 
 /**
  * The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
@@ -38,20 +43,21 @@ public:
 Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
 
 
-    void addLineDataToScene(const std::string line_key);
-    void addLineColor(std::string line_key, const QColor color);
-
+    void addLineDataToScene(std::string const & line_key);
+void changeLineColor(std::string const & line_key, std::string const & hex_color);
+    void changeLineAlpha(std::string const & line_key, float const alpha);
     void clearLines();
 
     void addMaskDataToScene(const std::string& mask_key);
-    void addMaskColor(std::string const& mask_key, QColor const color );
-
+    void changeMaskColor(std::string const & mask_key, std::string const & hex_color);
+    void changeMaskAlpha(std::string const & line_key, float const alpha);
     void clearMasks();
 
     void setMaskAlpha(int const alpha) {_mask_alpha = alpha; UpdateCanvas();};
 
     void addPointDataToScene(const std::string& point_key);
-    void addPointColor(std::string const& point_key, QColor const color);
+    void changePointColor(std::string const & point_key, std::string const & hex_color);
+    void setPointAlpha(std::string const & point_key, float const alpha);
     void clearPoints();
 
     /**
@@ -88,22 +94,22 @@ private:
     bool _is_verbose {false};
 
     std::unordered_set<std::string> _lines_to_show;
-    std::unordered_map<std::string,QColor> _line_colors;
+    std::unordered_map<std::string, element_config> _line_configs;
 
     std::unordered_set<std::string> _masks_to_show;
-    std::unordered_map<std::string,QColor> _mask_colors;
+    std::unordered_map<std::string, element_config> _mask_configs;
 
     std::unordered_set<std::string> _points_to_show;
-    std::unordered_map<std::string,QColor> _point_colors;
+    std::unordered_map<std::string, element_config> _point_configs;
 
     QImage::Format _getQImageFormat();
+    QRgb _plot_color_with_alpha(std::unordered_map<std::string,element_config> elems, std::string const & key);
     void _createCanvasForData();
     void _convertNewMediaToQImage();
     void _plotLineData();
     void _plotMaskData();
     void _plotSingleMaskData(std::vector<Mask2D> const & maskData, int const mask_width, int const mask_height, QRgb plot_color);
     void _plotPointData();
-    QRgb _create_mask_plot_color(std::string const& mask_key);
 
 public slots:
     void LoadFrame(int frame_id);

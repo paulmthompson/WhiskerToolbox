@@ -27,7 +27,7 @@ Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> dat
     if (!_data_manager->getPoint("labels")){
         _data_manager->createPoint("labels");
         _scene->addPointDataToScene("labels");
-        _scene->addPointColor("labels", "#ffe600");
+        _scene->changePointColor("labels", "#ffe600");
         auto point = _data_manager->getPoint("labels");
         point->setMaskHeight(_data_manager->getMediaData()->getHeight());
         point->setMaskWidth(_data_manager->getMediaData()->getWidth());

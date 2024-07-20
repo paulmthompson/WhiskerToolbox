@@ -27,11 +27,11 @@
 
 
 
-const std::vector<QColor> whisker_colors = {QColor("red"),
-                                            QColor("green"),
-                                            QColor("cyan"),
-                                            QColor("magenta"),
-                                            QColor("yellow")};
+const std::vector<std::string> whisker_colors = {"#ff0000", // Red
+                                            "#008000", // Green
+                                            "#00ffff", // Cyan
+                                            "#ff00ff", // Magenta
+                                            "#ffff00"}; // Yellow
 
 Line2D convert_to_Line2D(whisker::Line2D& line)
 {
@@ -62,7 +62,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     _data_manager->createLine("unlabeled_whiskers");
     _scene->addLineDataToScene("unlabeled_whiskers");
-    _scene->addLineColor("unlabeled_whiskers",QColor("blue"));
+    _scene->changeLineColor("unlabeled_whiskers","#0000ff");
     _janelia_config_widget = new Janelia_Config(_wt);
 
 
@@ -289,7 +289,7 @@ void Whisker_Widget::_loadFaceMask()
     mask->addMaskAtTime(-1,mask_points);
 
     _scene->addMaskDataToScene("Face_Mask");
-    _scene->addMaskColor("Face_Mask", QColor("Gray"));
+    _scene->changeMaskColor("Face_Mask", "#808080");
 
     ui->mask_file_label->setText(face_mask_name);
 
@@ -447,7 +447,7 @@ void Whisker_Widget::_loadKeypointCSV()
     }
 
     _scene->addPointDataToScene(keypoint_key);
-    _scene->addPointColor(keypoint_key, whisker_colors[point_num]);
+    _scene->changePointColor(keypoint_key, whisker_colors[point_num]);
 }
 
 /////////////////////////////////////////////
@@ -458,7 +458,7 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_name, const i
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->createLine(whisker_name);
         _scene->addLineDataToScene(whisker_name);
-        _scene->addLineColor(whisker_name, whisker_colors[whisker_id]);
+        _scene->changeLineColor(whisker_name, whisker_colors[whisker_id]);
     }
 }
 
@@ -629,7 +629,7 @@ void Whisker_Widget::_loadSingleHDF5WhiskerMask(std::string const & filename)
     }
 
     _scene->addMaskDataToScene(mask_key);
-    _scene->addMaskColor(mask_key, whisker_colors[mask_num]);
+    _scene->changeMaskColor(mask_key, whisker_colors[mask_num]);
 }
 
 /**
