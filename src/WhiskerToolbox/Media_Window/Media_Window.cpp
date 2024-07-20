@@ -27,7 +27,6 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
 
 void Media_Window::addLineDataToScene(std::string const & line_key)
 {
-    _lines_to_show.insert(line_key);
     _line_configs[line_key] = element_config{"#0000FF",1.0};
 }
 
@@ -53,7 +52,6 @@ void Media_Window::clearLines() {
 
 void Media_Window::addMaskDataToScene(const std::string& mask_key)
 {
-     _masks_to_show.insert(mask_key);
      _mask_configs[mask_key] = element_config{"#0000FF",1.0};
 }
 
@@ -65,6 +63,15 @@ void Media_Window::changeMaskColor(const std::string& mask_key, std::string cons
 void Media_Window::changeMaskAlpha(std::string const & line_key, float const alpha)
 {
     _mask_configs[line_key].alpha = alpha;
+    UpdateCanvas();
+}
+
+void Media_Window::changeMaskAlpha(float const alpha)
+{
+    for (auto & [mask_key, mask_config] : _mask_configs) {
+        mask_config.alpha= alpha;
+    }
+    UpdateCanvas();
 }
 
 void Media_Window::clearMasks()
@@ -81,7 +88,7 @@ void Media_Window::clearMasks()
 
 void Media_Window::addPointDataToScene(const std::string& point_key)
 {
-    _points_to_show.insert(point_key);
+
     _point_configs[point_key] = element_config{"#0000FF",1.0};
 }
 
@@ -218,9 +225,9 @@ void Media_Window::_plotLineData()
     auto yAspect = getYAspect();
 
     int i =0;
-    for (auto const & line_key : _lines_to_show)
+    for (auto const & [line_key, _line_config] : _line_configs)
     {
-        auto plot_color = _plot_color_with_alpha(_line_configs, line_key);
+        auto plot_color = _plot_color_with_alpha(_line_config);
 
         auto lineData = _data_manager->getLine(line_key)->getLinesAtTime(current_time);
 
@@ -245,13 +252,10 @@ void Media_Window::_plotLineData()
     }
 }
 
-QRgb Media_Window::_plot_color_with_alpha(std::unordered_map<std::string,element_config> elems, std::string const & key)
+QRgb Media_Window::_plot_color_with_alpha(element_config elem)
 {
-    auto plot_color = elems[key].hex_color;
-    auto alpha = elems[key].alpha;
-
-    auto color = QColor(QString::fromStdString(plot_color));
-    auto output_color = qRgba(color.red(), color.green(), color.blue(), alpha * 255);
+    auto color = QColor(QString::fromStdString(elem.hex_color));
+    auto output_color = qRgba(color.red(), color.green(), color.blue(), elem.alpha * 255);
 
     return output_color;
 }
@@ -260,9 +264,9 @@ void Media_Window::_plotMaskData()
 {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    for (auto const& mask_key : _masks_to_show)
+    for (auto const & [mask_key, _mask_config] : _mask_configs)
     {
-        auto plot_color = _plot_color_with_alpha(_mask_configs, mask_key);
+        auto plot_color = _plot_color_with_alpha(_mask_config);
 
         float mask_height = static_cast<float>(_data_manager->getMask(mask_key)->getMaskHeight());
         float mask_width = static_cast<float>(_data_manager->getMask(mask_key)->getMaskWidth());
@@ -307,10 +311,10 @@ void Media_Window::_plotPointData()
 
     int i =0;
 
-    for (auto const & point_key : _points_to_show)
+    for (auto const & [point_key, _point_config] : _point_configs)
     {
 
-        auto plot_color = _plot_color_with_alpha(_point_configs, point_key);
+        auto plot_color = _plot_color_with_alpha(_point_config);
 
         float mask_height = static_cast<float>(_data_manager->getPoint(point_key)->getMaskHeight());
         float mask_width = static_cast<float>(_data_manager->getPoint(point_key)->getMaskWidth());

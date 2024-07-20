@@ -50,10 +50,9 @@ void changeLineColor(std::string const & line_key, std::string const & hex_color
 
     void addMaskDataToScene(const std::string& mask_key);
     void changeMaskColor(std::string const & mask_key, std::string const & hex_color);
+    void changeMaskAlpha(float const alpha);
     void changeMaskAlpha(std::string const & line_key, float const alpha);
     void clearMasks();
-
-    void setMaskAlpha(int const alpha) {_mask_alpha = alpha; UpdateCanvas();};
 
     void addPointDataToScene(const std::string& point_key);
     void changePointColor(std::string const & point_key, std::string const & hex_color);
@@ -89,21 +88,14 @@ private:
     QVector<QGraphicsEllipseItem*> _points;
     QVector<QGraphicsPixmapItem*> _masks;
 
-    int _mask_alpha {50};
-
     bool _is_verbose {false};
 
-    std::unordered_set<std::string> _lines_to_show;
     std::unordered_map<std::string, element_config> _line_configs;
-
-    std::unordered_set<std::string> _masks_to_show;
     std::unordered_map<std::string, element_config> _mask_configs;
-
-    std::unordered_set<std::string> _points_to_show;
     std::unordered_map<std::string, element_config> _point_configs;
 
     QImage::Format _getQImageFormat();
-    QRgb _plot_color_with_alpha(std::unordered_map<std::string,element_config> elems, std::string const & key);
+    QRgb _plot_color_with_alpha(element_config elem);
     void _createCanvasForData();
     void _convertNewMediaToQImage();
     void _plotLineData();

@@ -940,7 +940,7 @@ void Whisker_Widget::LoadFrame(int frame_id)
 
 void Whisker_Widget::_setMaskAlpha(int alpha)
 {
-    _scene->setMaskAlpha(alpha);
+    _scene->changeMaskAlpha(alpha);
 }
 
 /**

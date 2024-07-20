@@ -207,7 +207,7 @@ void Tongue_Widget::_startGrabCut(){
 }
 
 void Tongue_Widget::_upd_mask_transparency(){
-    _scene->setMaskAlpha(ui->transparency_slider->value());
+    _scene->changeMaskAlpha(ui->transparency_slider->value());
 }
 
 void Tongue_Widget::_exportMasks() {
