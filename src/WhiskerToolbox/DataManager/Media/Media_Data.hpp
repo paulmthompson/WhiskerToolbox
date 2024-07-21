@@ -85,8 +85,11 @@ private:
     int _display_format_bytes;
 
     std::vector<uint8_t> _rawData;
+    std::vector<uint8_t> _processedData;
     std::map<std::string, std::function<void(cv::Mat& input)>> _process_chain;
     int _last_loaded_frame {-1};
+
+    void _processData();
 
 };
 
