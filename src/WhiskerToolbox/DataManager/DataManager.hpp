@@ -6,10 +6,12 @@
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 
-#include <string>
-#include <memory>
-#include <vector>
-#include <unordered_map>
+#include <functional> // std::function
+#include <memory> // std::shared_ptr
+#include <string> // std::string
+#include <unordered_map> // std::unordered_map
+#include <utility> // std::move
+#include <vector> // std::vector
 
 class AnalogTimeSeries;
 class TimeFrame;
@@ -46,8 +48,18 @@ public:
 
     std::shared_ptr<TimeFrame> getTime() {return _time;};
 
-    std::vector<std::vector<float>> read_ragged_hdf5(const std::string& filepath, const std::string& key);
-    std::vector<int> read_array_hdf5(const std::string& filepath, const std::string& key);
+    using ObserverCallback = std::function<void()>;
+
+    void addObserver(ObserverCallback callback) {
+        _observers.push_back(std::move(callback));
+    }
+
+    // Method to notify all observers of a change
+    void notifyObservers() {
+        for (auto& observer : _observers) {
+            observer(); // Call the observer callback
+        }
+    }
 
 private:
 
@@ -63,8 +75,12 @@ private:
 
     std::shared_ptr<TimeFrame> _time;
 
+    std::vector<ObserverCallback> _observers;
+
 };
 
+std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key);
+std::vector<int> read_array_hdf5(std::string const & filepath, std::string const & key);
 
 
 #endif // DATAMANAGER_HPP

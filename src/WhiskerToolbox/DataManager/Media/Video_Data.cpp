@@ -34,7 +34,7 @@ void VideoData::doLoadMedia(std::string name) {
     setTotalFrameCount(_vd->getFrameCount());
 }
 
-void VideoData::LoadFrame(int frame_id) {
+void VideoData::doLoadFrame(int frame_id) {
 
     //In most circumstances, we want to decode forward from
     // the current frame without reseeking to a keyframe
