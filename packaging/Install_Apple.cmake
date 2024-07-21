@@ -1,6 +1,3 @@
-
-
-
 set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
 set(data_manager_path "lib/$<TARGET_FILE_NAME:DataManager>")
 
@@ -79,10 +76,12 @@ install(TARGETS DataManager WhiskerToolbox
         BUNDLE DESTINATION .
 )
 
-
 install(SCRIPT "${deploy_script}")
 
 install(CODE "
+    execute_process(
+        COMMAND cp ${CMAKE_SOURCE_DIR}/packaging/WhiskerToolbox.icns ${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app/Contents/Resources/WhiskerToolbox.icns
+    )
     execute_process(
         COMMAND codesign --force --deep --verbose --sign \"Eric Certificate\" \"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
         RESULT_VARIABLE result
@@ -93,4 +92,5 @@ install(CODE "
         message(FATAL_ERROR \"Failed to codesign WhiskerToolbox.app: \${error}\")
     endif()
     message(STATUS \"Successfully codesigned WhiskerToolbox.app\")
+    
 ")
