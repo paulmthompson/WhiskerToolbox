@@ -71,6 +71,7 @@ update_install_name("qt6advanceddocking" "@executable_path/../Frameworks/libqt6a
 update_install_name("JKQTPlotter6" "@executable_path/../Frameworks/libJKQTPlotter6_Release.5.0.0.dylib" "_deps/jkqtplotter6-build/output/libJKQTPlotter6_Release.5.0.0.dylib")
 
 copy_dylibs_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
+copy_dylibs_during_install("${CMAKE_SOURCE_DIR}/packaging/WhiskerToolbox.icns" "WhiskerToolbox.app/Contents/Resources/")
 
 install(TARGETS DataManager WhiskerToolbox
         BUNDLE DESTINATION .
@@ -79,9 +80,6 @@ install(TARGETS DataManager WhiskerToolbox
 install(SCRIPT "${deploy_script}")
 
 install(CODE "
-    execute_process(
-        COMMAND cp ${CMAKE_SOURCE_DIR}/packaging/WhiskerToolbox.icns ${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app/Contents/Resources/WhiskerToolbox.icns
-    )
     execute_process(
         COMMAND codesign --force --deep --verbose --sign \"Eric Certificate\" \"${CMAKE_INSTALL_PREFIX}/WhiskerToolbox.app\"
         RESULT_VARIABLE result
