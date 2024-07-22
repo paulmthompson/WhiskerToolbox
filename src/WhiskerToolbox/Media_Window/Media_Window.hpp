@@ -44,7 +44,7 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
 
 
     void addLineDataToScene(std::string const & line_key);
-void changeLineColor(std::string const & line_key, std::string const & hex_color);
+    void changeLineColor(std::string const & line_key, std::string const & hex_color);
     void changeLineAlpha(std::string const & line_key, float const alpha);
     void clearLines();
 

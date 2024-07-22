@@ -56,7 +56,7 @@ Contact_Widget::~Contact_Widget() {
 void Contact_Widget::openWidget() {
 
     connect(ui->contact_button, &QPushButton::clicked, this, &Contact_Widget::_contactButton);
-    connect(ui->save_contact_button, &QPushButton::clicked, this, &Contact_Widget::_saveContact);
+    connect(ui->save_contact_button, &QPushButton::clicked, this, &Contact_Widget::_saveContactFrameByFrame);
     connect(ui->load_contact_button, &QPushButton::clicked, this, &Contact_Widget::_loadContact);
     connect(ui->pole_select, &QPushButton::clicked,this, &Contact_Widget::_poleSelectButton);
 
@@ -244,12 +244,13 @@ void Contact_Widget::_contactButton() {
     _calculateContactPeriods();
 }
 
-void Contact_Widget::_saveContact() {
-
+void Contact_Widget::_saveContactFrameByFrame() {
 
     std::fstream fout;
 
-    fout.open(_output_path.append("contact.csv").string(), std::fstream::out);
+    auto frame_by_frame_output = _output_path;
+
+    fout.open(frame_by_frame_output.append("contact_FRAME_BY_FRAME.csv").string(), std::fstream::out);
 
     for (auto &frame_contact: _contact) {
         if (frame_contact == Contact::Contact) {
@@ -257,6 +258,23 @@ void Contact_Widget::_saveContact() {
         } else {
             fout << "Nocontact" << "\n";
         }
+    }
+
+    fout.close();
+
+    _saveContactBlocks();
+}
+
+void Contact_Widget::_saveContactBlocks() {
+
+    std::fstream fout;
+
+    auto block_output = _output_path;
+
+    fout.open(block_output.append("contact_BLOCKS.csv").string(), std::fstream::out);
+
+    for (auto & event : _contactEvents) {
+        fout << event.start << "," << event.end << "\n";
     }
 
     fout.close();

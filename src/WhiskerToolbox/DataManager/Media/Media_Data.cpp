@@ -57,6 +57,13 @@ void MediaData::LoadMedia(std::string const& name)
     doLoadMedia(name);
 }
 
+void MediaData::LoadFrame(int const frame_id)
+{
+    doLoadFrame(frame_id);
+
+    _last_loaded_frame = frame_id;
+}
+
 std::vector<uint8_t> const& MediaData::getRawData(int const frame_number)
 {
     if (frame_number != _last_loaded_frame) {
@@ -72,19 +79,25 @@ std::vector<uint8_t> MediaData::getProcessedData(const int frame_number)
         LoadFrame(frame_number);
     }
 
-    _processData();
+    if (_last_processed_frame != _last_loaded_frame) {
+        _processData();
+    }
 
     return _processedData;
 }
 
-void MediaData::setProcess(std::string key, std::function<void(cv::Mat& input)> process){
+void MediaData::setProcess(std::string key, std::function<void(cv::Mat& input)> process)
+{
     this->_process_chain[key] = process;
-
+    _processData();
+    //NOTIFY
 }
 
 void MediaData::removeProcess(std::string const & key)
 {
     _process_chain.erase(key);
+    _processData();
+    //NOTIFY
 }
 
 void MediaData::_processData()
@@ -101,4 +114,6 @@ void MediaData::_processData()
     m2.reshape(1,getWidth()*getHeight());
 
     _processedData.assign(m2.data, m2.data + m2.total() *m2.channels());
+
+    _last_processed_frame = _last_loaded_frame;
 }

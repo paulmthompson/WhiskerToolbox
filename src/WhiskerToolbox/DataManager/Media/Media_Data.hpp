@@ -57,8 +57,7 @@ public:
      * @brief LoadFrame
      * @param frame_id
      */
-    void LoadFrame(int frame_id) {doLoadFrame(frame_id); _last_loaded_frame = frame_id;};
-
+    void LoadFrame(int const frame_id);
 
     virtual std::string GetFrameID(int frame_id) {return "";};
 
@@ -88,6 +87,7 @@ private:
     std::vector<uint8_t> _processedData;
     std::map<std::string, std::function<void(cv::Mat& input)>> _process_chain;
     int _last_loaded_frame {-1};
+    int _last_processed_frame {-1};
 
     void _processData();
 
