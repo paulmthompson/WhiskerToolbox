@@ -1,6 +1,3 @@
-
-
-
 set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
 set(data_manager_path "lib/$<TARGET_FILE_NAME:DataManager>")
 
@@ -17,17 +14,17 @@ qt_generate_deploy_script(
    )")
 
 # Need to manually install janelia, whisker analysis, qtdocking and data manager
-function(copy_dylibs_during_install dylib_list dest_dir)
-    foreach(dylib IN LISTS dylib_list)
+function(copy_items_during_install items_list dest_dir)
+    foreach(item IN LISTS items_list)
         install(CODE "
             set(target_dir \"\${CMAKE_INSTALL_PREFIX}/${dest_dir}\")
             if(NOT EXISTS \"\${target_dir}\")
                 file(MAKE_DIRECTORY \"\${target_dir}\")
             endif()
             execute_process(
-                COMMAND \${CMAKE_COMMAND} -E copy_if_different \"${dylib}\" \"\${target_dir}\"
+                COMMAND \${CMAKE_COMMAND} -E copy_if_different \"${item}\" \"\${target_dir}\"
             )
-            message(STATUS \"Copying ${dylib} to \${target_dir}\")
+            message(STATUS \"Copying ${item} to \${target_dir}\")
         ")
     endforeach()
 endfunction()
@@ -73,12 +70,12 @@ update_install_name("DataManager" "@executable_path/../Frameworks/libDataManager
 update_install_name("qt6advanceddocking" "@executable_path/../Frameworks/libqt6advanceddocking.dylib" "bin/libqt6advanceddocking.4.3.1.dylib")
 update_install_name("JKQTPlotter6" "@executable_path/../Frameworks/libJKQTPlotter6_Release.5.0.0.dylib" "_deps/jkqtplotter6-build/output/libJKQTPlotter6_Release.5.0.0.dylib")
 
-copy_dylibs_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
+copy_items_during_install("${MY_DYLIBS}" "WhiskerToolbox.app/Contents/Frameworks")
+copy_items_during_install("${CMAKE_SOURCE_DIR}/packaging/WhiskerToolbox.icns" "WhiskerToolbox.app/Contents/Resources/")
 
 install(TARGETS DataManager WhiskerToolbox
         BUNDLE DESTINATION .
 )
-
 
 install(SCRIPT "${deploy_script}")
 
@@ -93,4 +90,5 @@ install(CODE "
         message(FATAL_ERROR \"Failed to codesign WhiskerToolbox.app: \${error}\")
     endif()
     message(STATUS \"Successfully codesigned WhiskerToolbox.app\")
+    
 ")
