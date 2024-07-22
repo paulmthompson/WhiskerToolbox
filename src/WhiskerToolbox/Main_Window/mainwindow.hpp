@@ -63,7 +63,8 @@ private slots:
     void Load_Video();
     void Load_Images();
 
-    void _loadTimeSeriesCSV();
+    void _loadAnalogTimeSeriesCSV();
+    void _loadDigitalTimeSeriesCSV();
 
     void openWhiskerTracking();
     void openLabelMaker();

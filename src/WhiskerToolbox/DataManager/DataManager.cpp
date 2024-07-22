@@ -114,6 +114,21 @@ std::vector<std::string> DataManager::getAnalogTimeSeriesKeys()
     return get_keys(_analog);
 }
 
+void DataManager::createDigitalTimeSeries(std::string const & digital_key)
+{
+    _digital[digital_key] = std::make_shared<DigitalTimeSeries>();
+}
+
+std::shared_ptr<DigitalTimeSeries> DataManager::getDigitalTimeSeries(std::string const & digital_key)
+{
+    return _digital[digital_key];
+}
+
+std::vector<std::string> DataManager::getDigitalTimeSeriesKeys()
+{
+    return get_keys(_digital);
+}
+
 std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key)
 {
     auto myvector = load_ragged_array<float>(filepath, key);

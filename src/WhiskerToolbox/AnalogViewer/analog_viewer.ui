@@ -33,12 +33,12 @@
     </rect>
    </property>
    <property name="title">
-    <string>Edit Line</string>
+    <string>Graph Editor</string>
    </property>
-   <widget class="QComboBox" name="linechoose_cbox">
+   <widget class="QComboBox" name="graphchoose_cbox">
     <property name="geometry">
      <rect>
-      <x>80</x>
+      <x>120</x>
       <y>20</y>
       <width>280</width>
       <height>41</height>
@@ -50,12 +50,12 @@
      <rect>
       <x>10</x>
       <y>30</y>
-      <width>81</width>
+      <width>111</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>Line to edit:</string>
+     <string>Graph of Interest:</string>
     </property>
    </widget>
    <widget class="QDoubleSpinBox" name="ymult_dspinbox">
@@ -123,6 +123,19 @@
     </property>
     <property name="singleStep">
      <double>0.100000000000000</double>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="show_checkbox">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>60</y>
+      <width>85</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Show</string>
     </property>
    </widget>
   </widget>

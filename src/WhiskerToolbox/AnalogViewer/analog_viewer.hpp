@@ -27,7 +27,8 @@ public:
 
     void openWidget();
 
-    void plotLine(std::string name);
+    void plotAnalog(std::string name);
+    void plotDigital(std::string name);
     void removeGraph(std::string name);
 
 protected:
@@ -41,28 +42,40 @@ private:
 
     Ui::Analog_Viewer *ui;
 
-    struct PlotElementInfo {
+    enum class GraphType {
+        analog,
+        digital
+    };
+    struct GraphInfo {
         double mult = 1.0;
         double add = 0.0;
-        JKQTPPlotElement* element = nullptr;
+        JKQTPPlotElement* graph;
+        bool show = true;
         size_t ds_y_col;
+        GraphType type;
 
-        PlotElementInfo() {}
+        GraphInfo() {}
     };
-    std::map<std::string, PlotElementInfo> _plot_elements;
+    std::map<std::string, GraphInfo> _graphs;
 
     void _setZoom();
 
-    void _elementApplyLintrans(std::string name);
+    void _graphApplyLintrans(std::string name);
+
+    std::string _prev_analog = ""; 
 
     int64_t _current_frame = 0;
+
+    std::string get_selected_graph_name();
 public slots:
     void SetFrame(int i);
 
 private slots:
-    void ElementSetLintrans();
-    void ResetLineEditor();
+    void GraphSetLintrans();
+    void GraphSetShow();
+    void SetPlotEditor();
     void SetZoom();
+    void ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button);
 };
 
 
