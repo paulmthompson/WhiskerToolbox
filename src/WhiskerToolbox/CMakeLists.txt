@@ -18,6 +18,8 @@ set(PROJECT_SOURCES
         AnalogViewer/analog_viewer.hpp
         AnalogViewer/analog_viewer.cpp
         AnalogViewer/analog_viewer.ui
+        AnalogViewer/DigitalTimeSeriesGraph.cpp
+        AnalogViewer/DigitalTimeSeriesGraph.hpp
 
         Main_Window/mainwindow.cpp
         Main_Window/mainwindow.hpp

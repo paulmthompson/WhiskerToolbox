@@ -5,6 +5,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "DigitalTimeSeries/Digital_Time_Series.hpp"
 
 #include <functional> // std::function
 #include <memory> // std::shared_ptr
@@ -46,6 +47,10 @@ public:
     std::shared_ptr<AnalogTimeSeries> getAnalogTimeSeries(std::string const & analog_key);
     std::vector<std::string> getAnalogTimeSeriesKeys();
 
+    void createDigitalTimeSeries(std::string const & digital_key);
+    std::shared_ptr<DigitalTimeSeries> getDigitalTimeSeries(std::string const & digital_key);
+    std::vector<std::string> getDigitalTimeSeriesKeys();
+
     std::shared_ptr<TimeFrame> getTime() {return _time;};
 
     using ObserverCallback = std::function<void()>;
@@ -72,6 +77,8 @@ private:
     std::unordered_map<std::string, std::shared_ptr<MaskData>> _masks;
 
     std::unordered_map<std::string, std::shared_ptr<AnalogTimeSeries>> _analog;
+
+    std::unordered_map<std::string, std::shared_ptr<DigitalTimeSeries>> _digital;
 
     std::shared_ptr<TimeFrame> _time;
 

@@ -80,7 +80,8 @@ void MainWindow::_createActions()
 
     connect(ui->actionLoad_Images, &QAction::triggered,this, &MainWindow::Load_Images);
 
-    connect(ui->actionLoad_Time_Series_CSV, &QAction::triggered, this, &MainWindow::_loadTimeSeriesCSV);
+    connect(ui->actionLoad_Analog_Time_Series_CSV, &QAction::triggered, this, &MainWindow::_loadAnalogTimeSeriesCSV);
+    connect(ui->actionLoad_Digital_Time_Series_CSV, &QAction::triggered, this, &MainWindow::_loadDigitalTimeSeriesCSV);
 
     connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
 
@@ -137,7 +138,7 @@ void MainWindow::Load_Images() {
 
 }
 
-void MainWindow::_loadTimeSeriesCSV()
+void MainWindow::_loadAnalogTimeSeriesCSV()
 {
     auto filename =  QFileDialog::getOpenFileName(
         this,
@@ -162,7 +163,35 @@ void MainWindow::_loadTimeSeriesCSV()
         _data_manager->getAnalogTimeSeries(key)->getAnalogTimeSeries().size() << " points " << std::endl;
 
     if (_widgets.find("analog_viewer") != _widgets.end()) {
-        dynamic_cast<Analog_Viewer*>(_widgets["analog_viewer"].get())->plotLine(key);
+        dynamic_cast<Analog_Viewer*>(_widgets["analog_viewer"].get())->plotAnalog(key);
+    }
+}
+
+void MainWindow::_loadDigitalTimeSeriesCSV(){
+    auto filename =  QFileDialog::getOpenFileName(
+        this,
+        "Load Video File",
+        QDir::currentPath(),
+        "All files (*.*) ;; CSV (*.csv)");
+
+    if (filename.isNull()) {
+        return;
+    }
+
+    auto series = load_digital_series_from_csv(filename.toStdString());
+
+    auto path = std::filesystem::path(filename.toStdString());
+    auto key = path.filename().replace_extension("").string();
+
+    _data_manager->createDigitalTimeSeries(key);
+
+    _data_manager->getDigitalTimeSeries(key)->setData(series);
+
+    std::cout << "Loaded series " << key << " with " <<
+        _data_manager->getDigitalTimeSeries(key)->getDigitalTimeSeries().size() << " points " << std::endl;
+
+    if (_widgets.find("analog_viewer") != _widgets.end()) {
+        dynamic_cast<Analog_Viewer*>(_widgets["analog_viewer"].get())->plotDigital(key);
     }
 }
 

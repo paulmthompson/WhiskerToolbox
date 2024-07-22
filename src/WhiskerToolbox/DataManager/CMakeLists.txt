@@ -27,6 +27,9 @@ add_library(DataManager SHARED
         AnalogTimeSeries/Analog_Time_Series.hpp
         AnalogTimeSeries/Analog_Time_Series.cpp
 
+        DigitalTimeSeries/Digital_Time_Series.hpp
+        DigitalTimeSeries/Digital_Time_Series.cpp
+
         utils/container.hpp
         utils/hdf5_mask_load.hpp
         utils/opencv_utility.hpp
