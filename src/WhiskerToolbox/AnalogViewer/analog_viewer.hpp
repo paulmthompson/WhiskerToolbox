@@ -41,19 +41,22 @@ private:
 
     Ui::Analog_Viewer *ui;
 
-    struct PlotElementInfo {
+    struct GraphInfo {
         double mult = 1.0;
         double add = 0.0;
-        JKQTPPlotElement* element = nullptr;
+        JKQTPPlotElement* graph = nullptr;
+        bool show = true;
         size_t ds_y_col;
 
-        PlotElementInfo() {}
+        GraphInfo() {}
     };
-    std::map<std::string, PlotElementInfo> _plot_elements;
+    std::map<std::string, GraphInfo> _graphs;
 
     void _setZoom();
 
     void _elementApplyLintrans(std::string name);
+
+    std::string _prev_element = ""; 
 
     int64_t _current_frame = 0;
 public slots:
@@ -61,7 +64,7 @@ public slots:
 
 private slots:
     void ElementSetLintrans();
-    void ResetLineEditor();
+    void SetPlotEditor();
     void SetZoom();
 };
 

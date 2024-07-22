@@ -10,6 +10,7 @@
 #include "jkqtplotter/jkqtpgraphsbase.h"
 #include <QMainWindow>
 #include <QPointer>
+#include <QCheckBox>
 
 #include <iostream>
 
@@ -22,7 +23,7 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
 {
     ui->setupUi(this);
 
-    connect(ui->linechoose_cbox, &QComboBox::currentTextChanged, this, &Analog_Viewer::ResetLineEditor);
+    connect(ui->graphchoose_cbox, &QComboBox::currentTextChanged, this, &Analog_Viewer::SetPlotEditor);
     connect(ui->ymult_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::ElementSetLintrans);
     connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::ElementSetLintrans);
     connect(ui->xwidth_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::SetZoom);
@@ -57,14 +58,14 @@ void Analog_Viewer::SetFrame(int i){
  */
 void Analog_Viewer::plotLine(std::string name){
     auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
-    if (_plot_elements.find(name) != _plot_elements.end()) {
+    if (_graphs.find(name) != _graphs.end()) {
         std::cout << "Plot element named " << name << " already exists, data has been replaced" << std::endl;
         _elementApplyLintrans(name);
         ui->plot->redrawPlot();
         return;
     }
 
-    PlotElementInfo element;
+    GraphInfo graphInfo;
 
     JKQTPDatastore* ds = ui->plot->getDatastore();
     std::vector<int> frame_numbers(data.size());
@@ -72,9 +73,9 @@ void Analog_Viewer::plotLine(std::string name){
     size_t x_col=ds->addCopiedColumn(frame_numbers, QString::fromStdString(name+"_x"));
     size_t y_col=ds->addCopiedColumn(data, QString::fromStdString(name+"_y_trans"));
 
-    element.ds_y_col = y_col;
-    element.mult = 1.0;
-    element.add = 0.0;
+    graphInfo.ds_y_col = y_col;
+    graphInfo.mult = 1.0;
+    graphInfo.add = 0.0;
 
     JKQTPXYLineGraph* graph=new JKQTPXYLineGraph(ui->plot);
     graph->setSymbolType(JKQTPNoSymbol);
@@ -82,28 +83,28 @@ void Analog_Viewer::plotLine(std::string name){
     graph->setYColumn(y_col);
     graph->setTitle(QObject::tr(name.c_str()));
 
-    element.element = graph;
+    graphInfo.graph = graph;
 
-    _plot_elements[name] = element;
+    _graphs[name] = graphInfo;
 
-    ui->linechoose_cbox->addItem(QString::fromStdString(name));
+    ui->graphchoose_cbox->addItem(QString::fromStdString(name));
 
     ui->plot->addGraph(graph);
 }
 
 void Analog_Viewer::removeGraph(std::string name){
-    if (_plot_elements.find(name) == _plot_elements.end()) {
+    if (_graphs.find(name) == _graphs.end()) {
         std::cout << "Plot element named " << name << " does not exist" << std::endl;
         return;
     }
 
-    JKQTPPlotElement* graph = _plot_elements[name].element;
+    JKQTPPlotElement* graph = _graphs[name].graph;
     ui->plot->deleteGraph(graph);
-    _plot_elements.erase(name);
+    _graphs.erase(name);
 }
 
 void Analog_Viewer::_elementApplyLintrans(std::string name){
-    if (_plot_elements.find(name) == _plot_elements.end()) {
+    if (_graphs.find(name) == _graphs.end()) {
         std::cout << "Plot element named " << name << " does not exist" << std::endl;
         return;
     } 
@@ -111,24 +112,25 @@ void Analog_Viewer::_elementApplyLintrans(std::string name){
     auto ds = ui->plot->getDatastore();
     auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
     for (int i=0; i<data.size(); i++) {
-        ds->set(_plot_elements[name].ds_y_col, i, data[i]*_plot_elements[name].mult+_plot_elements[name].add);
+        ds->set(_graphs[name].ds_y_col, i, data[i]*_graphs[name].mult+_graphs[name].add);
     }
 }
 
 void Analog_Viewer::ElementSetLintrans(){
-    std::string name = ui->linechoose_cbox->currentText().toStdString();
+    std::string name = ui->graphchoose_cbox->currentText().toStdString();
     if (!name.empty()) {
-        _plot_elements[name].mult = ui->ymult_dspinbox->value();
-        _plot_elements[name].add = ui->yoffset_dspinbox->value();
+        _graphs[name].mult = ui->ymult_dspinbox->value();
+        _graphs[name].add = ui->yoffset_dspinbox->value();
         _elementApplyLintrans(name);
         ui->plot->redrawPlot();
     }
 }
 
-void Analog_Viewer::ResetLineEditor(){
-    std::string name = ui->linechoose_cbox->currentText().toStdString();
-    ui->ymult_dspinbox->setValue(_plot_elements[name].mult);
-    ui->yoffset_dspinbox->setValue(_plot_elements[name].add);
+void Analog_Viewer::SetPlotEditor(){
+    }
+    _graphs[name].graph->setHighlighted(true);
+    _prev_element = name;
+    ui->plot->redrawPlot();
 }
 
 void Analog_Viewer::_setZoom(){
@@ -137,4 +139,7 @@ void Analog_Viewer::_setZoom(){
 
 void Analog_Viewer::SetZoom(){
     _setZoom();
+}
+        }
+    }
 }
