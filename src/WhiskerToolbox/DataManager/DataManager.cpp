@@ -35,18 +35,6 @@ void DataManager::createMedia(MediaType media_type)
     }
 }
 
-std::vector<std::vector<float>> DataManager::read_ragged_hdf5(const std::string& filepath, const std::string& key)
-{
-    auto myvector = load_ragged_array<float>(filepath, key);
-    return myvector;
-}
-
-std::vector<int> DataManager::read_array_hdf5(const std::string& filepath, const std::string& key)
-{
-    auto myvector = load_array<int>(filepath, key);
-    return myvector;
-}
-
 void DataManager::loadMedia(std::string filepath)
 {
 
@@ -126,3 +114,14 @@ std::vector<std::string> DataManager::getAnalogTimeSeriesKeys()
     return get_keys(_analog);
 }
 
+std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key)
+{
+    auto myvector = load_ragged_array<float>(filepath, key);
+    return myvector;
+}
+
+std::vector<int> read_array_hdf5(std::string const & filepath, std::string const & key)
+{
+    auto myvector = load_array<int>(filepath, key);
+    return myvector;
+}

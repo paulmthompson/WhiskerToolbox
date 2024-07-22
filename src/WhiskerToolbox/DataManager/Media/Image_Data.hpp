@@ -12,12 +12,12 @@
 class ImageData : public MediaData {
 public:
     ImageData();
-    void LoadFrame(int frame_id) override;
     std::string GetFrameID(int frame_id) override;
 
     int getFrameIndexFromNumber(int frame_id) override;
 protected:
     void doLoadMedia(std::string name) override;
+    void doLoadFrame(int frame_id) override;
 private:
     std::vector<std::filesystem::path> _image_paths;
 };

@@ -76,10 +76,11 @@ private:
     void _drawContactRectangles(int frame_id);
     void _createContactRectangles();
     void _createContactPixmaps();
+    void _saveContactBlocks();
 
 private slots:
     void _contactButton();
-    void _saveContact();
+    void _saveContactFrameByFrame();
     void _loadContact();
     void _poleSelectButton();
     void _setBoundingBoxWidth(int value);

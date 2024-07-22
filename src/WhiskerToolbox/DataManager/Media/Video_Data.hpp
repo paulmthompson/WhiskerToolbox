@@ -18,8 +18,6 @@ public:
 
     ~VideoData();
 
-    void LoadFrame(int frame_id) override;
-
     std::string GetFrameID(int frame_id) override;
 
     /**
@@ -35,6 +33,7 @@ public:
     int getFrameIndexFromNumber(int frame_id) override {return frame_id;};
 protected:
     void doLoadMedia(std::string name) override;
+    void doLoadFrame(int frame_id) override;
 private:
     int _last_decoded_frame {0};
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> _vd;

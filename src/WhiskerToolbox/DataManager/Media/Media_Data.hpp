@@ -57,8 +57,7 @@ public:
      * @brief LoadFrame
      * @param frame_id
      */
-    virtual void LoadFrame(int frame_id) {};
-
+    void LoadFrame(int const frame_id);
 
     virtual std::string GetFrameID(int frame_id) {return "";};
 
@@ -74,6 +73,7 @@ public:
 
 protected:
     virtual void doLoadMedia(std::string name) {return;};
+    virtual void doLoadFrame(int frame_id) {};
 private:
     std::string _filename;
     int _totalFrameCount;
@@ -84,7 +84,12 @@ private:
     int _display_format_bytes;
 
     std::vector<uint8_t> _rawData;
+    std::vector<uint8_t> _processedData;
     std::map<std::string, std::function<void(cv::Mat& input)>> _process_chain;
+    int _last_loaded_frame {-1};
+    int _last_processed_frame {-1};
+
+    void _processData();
 
 };
 

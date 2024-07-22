@@ -88,10 +88,10 @@ void Tongue_Widget::_loadHDF5TongueMasks()
         return;
     }
 
-    auto frames =  _data_manager->read_array_hdf5(filename.toStdString(), "frames");
-    auto probs = _data_manager->read_ragged_hdf5(filename.toStdString(), "probs");
-    auto y_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "heights");
-    auto x_coords = _data_manager->read_ragged_hdf5(filename.toStdString(), "widths");
+    auto frames =  read_array_hdf5(filename.toStdString(), "frames");
+    auto probs = read_ragged_hdf5(filename.toStdString(), "probs");
+    auto y_coords = read_ragged_hdf5(filename.toStdString(), "heights");
+    auto x_coords = read_ragged_hdf5(filename.toStdString(), "widths");
 
     auto mask_num = _data_manager->getMaskKeys().size();
 

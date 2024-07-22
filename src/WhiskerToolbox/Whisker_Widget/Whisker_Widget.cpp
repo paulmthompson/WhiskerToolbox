@@ -611,10 +611,10 @@ void Whisker_Widget::_loadHDF5WhiskerMasksFromDir()
  */
 void Whisker_Widget::_loadSingleHDF5WhiskerMask(std::string const & filename)
 {
-    auto frames =  _data_manager->read_array_hdf5(filename, "frames");
-    auto probs = _data_manager->read_ragged_hdf5(filename, "probs");
-    auto y_coords = _data_manager->read_ragged_hdf5(filename, "heights");
-    auto x_coords = _data_manager->read_ragged_hdf5(filename, "widths");
+    auto frames =  read_array_hdf5(filename, "frames");
+    auto probs = read_ragged_hdf5(filename, "probs");
+    auto y_coords = read_ragged_hdf5(filename, "heights");
+    auto x_coords = read_ragged_hdf5(filename, "widths");
 
     auto mask_num = _data_manager->getMaskKeys().size();
 
@@ -708,9 +708,9 @@ void Whisker_Widget::_loadHDF5WhiskerLinesFromDir()
  * @param filename
  */
 void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename) {
-    auto frames =  _data_manager->read_array_hdf5(filename, "frames");
-    auto y_coords = _data_manager->read_ragged_hdf5(filename, "x");
-    auto x_coords = _data_manager->read_ragged_hdf5(filename, "y");
+    auto frames =  read_array_hdf5(filename, "frames");
+    auto y_coords = read_ragged_hdf5(filename, "x");
+    auto x_coords = read_ragged_hdf5(filename, "y");
 
     auto line_num = _data_manager->getLineKeys().size();
 

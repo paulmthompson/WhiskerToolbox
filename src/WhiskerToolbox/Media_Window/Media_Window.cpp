@@ -23,6 +23,10 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
     _data_manager{data_manager}
 {
     _createCanvasForData();
+
+    _data_manager->addObserver([this]() {
+        UpdateCanvas();
+    });
 }
 
 void Media_Window::addLineDataToScene(std::string const & line_key)

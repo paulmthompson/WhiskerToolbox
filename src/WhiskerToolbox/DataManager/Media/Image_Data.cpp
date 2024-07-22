@@ -45,7 +45,7 @@ QImage _convertToDisplayFormat(QImage& image, ImageData::DisplayFormat format)
     }
 }
 
-void ImageData::LoadFrame(int frame_id) {
+void ImageData::doLoadFrame(int frame_id) {
 
     if (frame_id > _image_paths.size()) {
         std::cout << "Error: Requested frame ID is larger than the number of frames in Media Data" << std::endl;
