@@ -67,6 +67,7 @@ private slots:
     void ElementSetShow();
     void SetPlotEditor();
     void SetZoom();
+    void ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button);
 };
 
 

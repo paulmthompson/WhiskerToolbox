@@ -28,6 +28,7 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
     connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::ElementSetLintrans);
     connect(ui->xwidth_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::SetZoom);
     connect(ui->show_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::ElementSetShow);
+    connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
 }
 
 Analog_Viewer::~Analog_Viewer() {
@@ -44,6 +45,9 @@ void Analog_Viewer::openWidget()
     _setZoom();
 
     ui->plot->setContextMenuMode(jkqtpcmmNoContextMenu);
+    ui->plot->clearAllRegisteredMouseDoubleClickActions();
+    ui->plot->registerMouseDragAction(Qt::LeftButton, Qt::NoModifier, jkqtpmdaPanPlotOnMove);
+
     this->show();
 }
 
@@ -158,6 +162,21 @@ void Analog_Viewer::ElementSetShow(){
     }
 }
 
+void Analog_Viewer::ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button){
+    if (button == Qt::LeftButton) {
+        double min_dist = 1e9;
+        std::string min_dist_name = "";
+        for (auto& [name, graphInfo] : _graphs) {
+            if (graphInfo.show){
+                double dist = graphInfo.graph->hitTest(QPointF(x, y));
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    min_dist_name = name;
+                }
+            }
+        }
+        if (!min_dist_name.empty()) {
+            ui->graphchoose_cbox->setCurrentText(QString::fromStdString(min_dist_name));
         }
     }
 }
