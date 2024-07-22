@@ -55,6 +55,7 @@ void Grabcut_Widget::setup(cv::Mat img, int frame_index) {
     _updateDisplays();
     ui->editor_label->setPixmap(_img_disp_pixmap);
     ui->editor_label->setScaledContents(true);
+    ui->iter_pushbtn->setEnabled(false);
     _reset();
 }
 
@@ -179,6 +180,9 @@ void Grabcut_Widget::mouseReleaseEvent(QMouseEvent *event){
         QPoint p = _scaleTransMouse(event->pos());
         _tool.mouseUp(p.x(), p.y());
         _updateDisplays();
+        if (!_tool.getRectStage()){
+            ui->iter_pushbtn->setEnabled(true);
+        }
     }
 }
 
