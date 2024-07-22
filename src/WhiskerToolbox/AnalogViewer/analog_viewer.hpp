@@ -27,7 +27,8 @@ public:
 
     void openWidget();
 
-    void plotLine(std::string name);
+    void plotAnalog(std::string name);
+    void plotDigital(std::string name);
     void removeGraph(std::string name);
 
 protected:
@@ -54,17 +55,17 @@ private:
 
     void _setZoom();
 
-    void _elementApplyLintrans(std::string name);
+    void _graphApplyLintrans(std::string name);
 
-    std::string _prev_element = ""; 
+    std::string _prev_analog = ""; 
 
     int64_t _current_frame = 0;
 public slots:
     void SetFrame(int i);
 
 private slots:
-    void ElementSetLintrans();
-    void ElementSetShow();
+    void GraphSetLintrans();
+    void GraphSetShow();
     void SetPlotEditor();
     void SetZoom();
     void ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button);

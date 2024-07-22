@@ -24,10 +24,10 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
     ui->setupUi(this);
 
     connect(ui->graphchoose_cbox, &QComboBox::currentTextChanged, this, &Analog_Viewer::SetPlotEditor);
-    connect(ui->ymult_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::ElementSetLintrans);
-    connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::ElementSetLintrans);
+    connect(ui->ymult_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
+    connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
     connect(ui->xwidth_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::SetZoom);
-    connect(ui->show_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::ElementSetShow);
+    connect(ui->show_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::GraphSetShow);
     connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
 }
 
@@ -40,7 +40,7 @@ void Analog_Viewer::openWidget()
     std::cout << "Analog Viewer Opened" << std::endl;
 
     for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
-        plotLine(name);
+        plotAnalog(name);
     }
     _setZoom();
 
@@ -62,16 +62,17 @@ void Analog_Viewer::SetFrame(int i){
  * @brief Plot a line on the analog viewer
  * @param data Vector indexed by frame number 
  */
-void Analog_Viewer::plotLine(std::string name){
+void Analog_Viewer::plotAnalog(std::string name){
     auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
     if (_graphs.find(name) != _graphs.end()) {
         std::cout << "Plot element named " << name << " already exists, data has been replaced" << std::endl;
-        _elementApplyLintrans(name);
+        _graphApplyLintrans(name);
         ui->plot->redrawPlot();
         return;
     }
 
     GraphInfo graphInfo;
+    graphInfo.type = GraphType::analog;
 
     JKQTPDatastore* ds = ui->plot->getDatastore();
     std::vector<int> frame_numbers(data.size());
@@ -104,12 +105,11 @@ void Analog_Viewer::removeGraph(std::string name){
         return;
     }
 
-    JKQTPPlotElement* graph = _graphs[name].graph;
-    ui->plot->deleteGraph(graph);
+    ui->plot->deleteGraph(_graphs[name].graph);
     _graphs.erase(name);
 }
 
-void Analog_Viewer::_elementApplyLintrans(std::string name){
+void Analog_Viewer::_graphApplyLintrans(std::string name){
     if (_graphs.find(name) == _graphs.end()) {
         std::cout << "Plot element named " << name << " does not exist" << std::endl;
         return;
@@ -122,12 +122,12 @@ void Analog_Viewer::_elementApplyLintrans(std::string name){
     }
 }
 
-void Analog_Viewer::ElementSetLintrans(){
+void Analog_Viewer::GraphSetLintrans(){
     std::string name = ui->graphchoose_cbox->currentText().toStdString();
     if (!name.empty()) {
         _graphs[name].mult = ui->ymult_dspinbox->value();
         _graphs[name].add = ui->yoffset_dspinbox->value();
-        _elementApplyLintrans(name);
+        _graphApplyLintrans(name);
         ui->plot->redrawPlot();
     }
 }
@@ -153,7 +153,7 @@ void Analog_Viewer::SetZoom(){
     _setZoom();
 }
 
-void Analog_Viewer::ElementSetShow(){
+void Analog_Viewer::GraphSetShow(){
     std::string name = ui->graphchoose_cbox->currentText().toStdString();
     if (!name.empty()) {
         _graphs[name].show = ui->show_checkbox->isChecked();
