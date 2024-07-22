@@ -27,6 +27,7 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
     connect(ui->ymult_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::ElementSetLintrans);
     connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::ElementSetLintrans);
     connect(ui->xwidth_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::SetZoom);
+    connect(ui->show_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::ElementSetShow);
 }
 
 Analog_Viewer::~Analog_Viewer() {
@@ -42,6 +43,7 @@ void Analog_Viewer::openWidget()
     }
     _setZoom();
 
+    ui->plot->setContextMenuMode(jkqtpcmmNoContextMenu);
     this->show();
 }
 
@@ -127,6 +129,12 @@ void Analog_Viewer::ElementSetLintrans(){
 }
 
 void Analog_Viewer::SetPlotEditor(){
+    std::string name = ui->graphchoose_cbox->currentText().toStdString();
+    ui->ymult_dspinbox->setValue(_graphs[name].mult);
+    ui->yoffset_dspinbox->setValue(_graphs[name].add);
+    ui->show_checkbox->setChecked(_graphs[name].show);
+    if (!_prev_element.empty()) {
+        _graphs[_prev_element].graph->setHighlighted(false);
     }
     _graphs[name].graph->setHighlighted(true);
     _prev_element = name;
@@ -140,6 +148,16 @@ void Analog_Viewer::_setZoom(){
 void Analog_Viewer::SetZoom(){
     _setZoom();
 }
+
+void Analog_Viewer::ElementSetShow(){
+    std::string name = ui->graphchoose_cbox->currentText().toStdString();
+    if (!name.empty()) {
+        _graphs[name].show = ui->show_checkbox->isChecked();
+        _graphs[name].graph->setVisible(_graphs[name].show);
+        ui->plot->redrawPlot();
+    }
+}
+
         }
     }
 }

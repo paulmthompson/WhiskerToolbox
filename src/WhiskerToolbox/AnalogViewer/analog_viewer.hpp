@@ -64,6 +64,7 @@ public slots:
 
 private slots:
     void ElementSetLintrans();
+    void ElementSetShow();
     void SetPlotEditor();
     void SetZoom();
 };

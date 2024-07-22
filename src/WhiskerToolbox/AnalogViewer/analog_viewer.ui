@@ -125,6 +125,19 @@
      <double>0.100000000000000</double>
     </property>
    </widget>
+   <widget class="QCheckBox" name="show_checkbox">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>60</y>
+      <width>85</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Show</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QLabel" name="label_4">
    <property name="geometry">
