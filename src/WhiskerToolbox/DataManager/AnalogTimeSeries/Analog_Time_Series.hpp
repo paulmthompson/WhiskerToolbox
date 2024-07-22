@@ -18,6 +18,6 @@ private:
     std::vector<float> _data {};
 };
 
-std::vector<float> load_series_from_csv(std::string const& filename);
+std::vector<float> load_analog_series_from_csv(std::string const& filename);
 
 #endif // ANALOG_TIME_SERIES_HPP

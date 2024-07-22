@@ -149,7 +149,7 @@ void MainWindow::_loadTimeSeriesCSV()
         return;
     }
 
-    auto series = load_series_from_csv(filename.toStdString());
+    auto series = load_analog_series_from_csv(filename.toStdString());
 
     auto path = std::filesystem::path(filename.toStdString());
     auto key = path.filename().replace_extension("").string();

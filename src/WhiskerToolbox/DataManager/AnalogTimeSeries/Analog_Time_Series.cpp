@@ -15,7 +15,7 @@ std::vector<float> const & AnalogTimeSeries::getAnalogTimeSeries() const
     return _data;
 }
 
-std::vector<float> load_series_from_csv(std::string const& filename)
+std::vector<float> load_analog_series_from_csv(std::string const& filename)
 {
 
     std::string csv_line;
