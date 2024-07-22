@@ -5,6 +5,8 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 
+#include "DigitalTimeSeriesGraph.hpp"
+
 #include "jkqtplotter/jkqtplotter.h"
 #include "jkqtplotter/graphs/jkqtplines.h"
 #include "jkqtplotter/jkqtpgraphsbase.h"
@@ -41,6 +43,9 @@ void Analog_Viewer::openWidget()
 
     for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
         plotAnalog(name);
+    }
+    for (auto name : _data_manager->getDigitalTimeSeriesKeys()) {
+        plotDigital(name);
     }
     _setZoom();
 
@@ -99,6 +104,30 @@ void Analog_Viewer::plotAnalog(std::string name){
     ui->plot->addGraph(graph);
 }
 
+void Analog_Viewer::plotDigital(std::string name){
+    auto data = _data_manager->getDigitalTimeSeries(name)->getDigitalTimeSeries();
+
+    if (_graphs.find(name) != _graphs.end()) {
+        std::cout << "Plot element named " << name << " already exists, data will be replaced" << std::endl;
+        removeGraph(name);
+        plotDigital(name);
+        return;
+    }
+
+    GraphInfo graphInfo;
+    graphInfo.type = GraphType::digital;
+
+    DigitalTimeSeriesGraph* graph = new DigitalTimeSeriesGraph(ui->plot->getPlotter());
+    graph->load_digital_vector(data);
+    graph->setTitle(QObject::tr(name.c_str()));
+    graphInfo.graph = graph;
+
+    _graphs[name] = graphInfo;
+    ui->graphchoose_cbox->addItem(QString::fromStdString(name));
+    
+    ui->plot->addGraph(graph);
+}
+
 void Analog_Viewer::removeGraph(std::string name){
     if (_graphs.find(name) == _graphs.end()) {
         std::cout << "Plot element named " << name << " does not exist" << std::endl;
@@ -134,14 +163,23 @@ void Analog_Viewer::GraphSetLintrans(){
 
 void Analog_Viewer::SetPlotEditor(){
     std::string name = ui->graphchoose_cbox->currentText().toStdString();
-    ui->ymult_dspinbox->setValue(_graphs[name].mult);
-    ui->yoffset_dspinbox->setValue(_graphs[name].add);
-    ui->show_checkbox->setChecked(_graphs[name].show);
-    if (!_prev_element.empty()) {
-        _graphs[_prev_element].graph->setHighlighted(false);
+    if (_graphs[name].type == GraphType::analog){
+
+        ui->ymult_dspinbox->setEnabled(true);
+        ui->yoffset_dspinbox->setEnabled(true);
+        ui->ymult_dspinbox->setValue(_graphs[name].mult);
+        ui->yoffset_dspinbox->setValue(_graphs[name].add);
+        ui->show_checkbox->setChecked(_graphs[name].show);
+        if (!_prev_analog.empty()) {
+            _graphs[_prev_analog].graph->setHighlighted(false);
+        }
+        _graphs[name].graph->setHighlighted(true);
+        _prev_analog = name;
+    } else if (_graphs[name].type == GraphType::digital){
+        ui->ymult_dspinbox->setEnabled(false);
+        ui->yoffset_dspinbox->setEnabled(false);
+        ui->show_checkbox->setChecked(_graphs[name].show);
     }
-    _graphs[name].graph->setHighlighted(true);
-    _prev_element = name;
     ui->plot->redrawPlot();
 }
 
@@ -167,7 +205,7 @@ void Analog_Viewer::ClickEvent(double x, double y, Qt::KeyboardModifiers modifie
         double min_dist = 1e9;
         std::string min_dist_name = "";
         for (auto& [name, graphInfo] : _graphs) {
-            if (graphInfo.show){
+            if (graphInfo.show && graphInfo.type == GraphType::analog) {
                 double dist = graphInfo.graph->hitTest(QPointF(x, y));
                 if (dist < min_dist) {
                     min_dist = dist;
@@ -179,4 +217,8 @@ void Analog_Viewer::ClickEvent(double x, double y, Qt::KeyboardModifiers modifie
             ui->graphchoose_cbox->setCurrentText(QString::fromStdString(min_dist_name));
         }
     }
+}
+
+std::string Analog_Viewer::get_selected_graph_name(){
+    return ui->graphchoose_cbox->currentText().toStdString();
 }

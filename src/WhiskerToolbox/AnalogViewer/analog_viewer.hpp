@@ -42,12 +42,17 @@ private:
 
     Ui::Analog_Viewer *ui;
 
+    enum class GraphType {
+        analog,
+        digital
+    };
     struct GraphInfo {
         double mult = 1.0;
         double add = 0.0;
-        JKQTPPlotElement* graph = nullptr;
+        JKQTPPlotElement* graph;
         bool show = true;
         size_t ds_y_col;
+        GraphType type;
 
         GraphInfo() {}
     };
@@ -60,6 +65,8 @@ private:
     std::string _prev_analog = ""; 
 
     int64_t _current_frame = 0;
+
+    std::string get_selected_graph_name();
 public slots:
     void SetFrame(int i);
 
