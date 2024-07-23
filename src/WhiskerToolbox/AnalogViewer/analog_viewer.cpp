@@ -13,6 +13,7 @@
 #include <QMainWindow>
 #include <QPointer>
 #include <QCheckBox>
+#include <QPushButton>
 
 #include <iostream>
 
@@ -25,11 +26,13 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
 {
     ui->setupUi(this);
 
-    connect(ui->graphchoose_cbox, &QComboBox::currentTextChanged, this, &Analog_Viewer::SetPlotEditor);
-    connect(ui->ymult_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
+    connect(ui->graphchoose_cbox, &QComboBox::currentTextChanged, this, &Analog_Viewer::SetGraphEditor);
+    connect(ui->yheight_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
     connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
     connect(ui->xwidth_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::SetZoom);
     connect(ui->show_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::GraphSetShow);
+    connect(ui->showaxis_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::GraphSetShowAxis);
+    connect(ui->delete_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::GraphDelete);
     connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
 }
 
@@ -37,10 +40,14 @@ Analog_Viewer::~Analog_Viewer() {
     delete ui;
 }
 
+/**
+ * @brief Open the analog viewer
+ */
 void Analog_Viewer::openWidget()
 {
     std::cout << "Analog Viewer Opened" << std::endl;
 
+    // Plot all graphs added before analog viewer was created
     for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
         plotAnalog(name);
     }
@@ -53,60 +60,82 @@ void Analog_Viewer::openWidget()
     ui->plot->clearAllRegisteredMouseDoubleClickActions();
     ui->plot->registerMouseDragAction(Qt::LeftButton, Qt::NoModifier, jkqtpmdaPanPlotOnMove);
 
+    // Delete the default y axis
+    ui->plot->getYAxis()->setDrawMode1(JKQTPCADMnone);
+    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
+    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
+
     this->show();
 }
 
+/**
+ * @brief Set the current frame of the analog viewer
+ * @param i Frame number
+ */
 void Analog_Viewer::SetFrame(int i){
     std::cout << "Analog Viewer: Set Frame " << i << std::endl;
-
     _current_frame = i;
     _setZoom();
 }
 
 /**
  * @brief Plot a line on the analog viewer
- * @param data Vector indexed by frame number 
+ * @param name Name of data sotred in DataManager
  */
 void Analog_Viewer::plotAnalog(std::string name){
-    auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
     if (_graphs.find(name) != _graphs.end()) {
         std::cout << "Plot element named " << name << " already exists, data has been replaced" << std::endl;
-        _graphApplyLintrans(name);
         ui->plot->redrawPlot();
         return;
     }
 
-    GraphInfo graphInfo;
-    graphInfo.type = GraphType::analog;
+    auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
 
+    // Loading data into JKQTPlotter datastore
     JKQTPDatastore* ds = ui->plot->getDatastore();
     std::vector<int> frame_numbers(data.size());
     iota(frame_numbers.begin(), frame_numbers.end(), 0);
     size_t x_col=ds->addCopiedColumn(frame_numbers, QString::fromStdString(name+"_x"));
     size_t y_col=ds->addCopiedColumn(data, QString::fromStdString(name+"_y_trans"));
 
-    graphInfo.ds_y_col = y_col;
-    graphInfo.mult = 1.0;
-    graphInfo.add = 0.0;
-
+    // Configure JKQTPlotter graph object
     JKQTPXYLineGraph* graph=new JKQTPXYLineGraph(ui->plot);
     graph->setSymbolType(JKQTPNoSymbol);
     graph->setXColumn(x_col);
     graph->setYColumn(y_col);
     graph->setTitle(QObject::tr(name.c_str()));
 
-    graphInfo.graph = graph;
+    auto axis_ref = ui->plot->getPlotter()->addSecondaryYAxis(new JKQTPVerticalAxis(ui->plot->getPlotter(), JKQTPPrimaryAxis));
+    ui->plot->getYAxis(axis_ref)->setDrawGrid(false);
+    ui->plot->getYAxis(axis_ref)->setDrawMode1(JKQTPCADMcomplete);
+    ui->plot->getYAxis(axis_ref)->setDrawMode2(JKQTPCADMnone);
+    ui->plot->getYAxis(axis_ref)->setDrawMode0(JKQTPCADMnone);
+    ui->plot->getYAxis(axis_ref)->setShowZeroAxis(false);
+    ui->plot->getYAxis(axis_ref)->setRange(-5, 5);
+    ui->plot->getYAxis(axis_ref)->setColor(graph->getLineColor());
 
+    graph->setYAxis(axis_ref);
+
+    // Configure interal graph object
+    GraphInfo graphInfo;
+    graphInfo.type = GraphType::analog;
+    graphInfo.ds_y_col = y_col;
+    graphInfo.height = 10.0;
+    graphInfo.offset = 0.0;
+    graphInfo.graph = graph;
+    graphInfo.axis = ui->plot->getYAxis(axis_ref);
     _graphs[name] = graphInfo;
 
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
-
     ui->plot->addGraph(graph);
+
 }
 
+/**
+ * @brief Plot a digital time series on the analog viewer
+ * @param name Name of data stored in DataManager
+ */
 void Analog_Viewer::plotDigital(std::string name){
-    auto data = _data_manager->getDigitalTimeSeries(name)->getDigitalTimeSeries();
-
     if (_graphs.find(name) != _graphs.end()) {
         std::cout << "Plot element named " << name << " already exists, data will be replaced" << std::endl;
         removeGraph(name);
@@ -114,85 +143,114 @@ void Analog_Viewer::plotDigital(std::string name){
         return;
     }
 
-    GraphInfo graphInfo;
-    graphInfo.type = GraphType::digital;
+    auto data = _data_manager->getDigitalTimeSeries(name)->getDigitalTimeSeries();
 
+    // Configure JKQTPlotter graph object
     DigitalTimeSeriesGraph* graph = new DigitalTimeSeriesGraph(ui->plot->getPlotter());
     graph->load_digital_vector(data);
     graph->setTitle(QObject::tr(name.c_str()));
-    graphInfo.graph = graph;
 
+    // Configure internal graph object
+    GraphInfo graphInfo;
+    graphInfo.type = GraphType::digital;
+    graphInfo.graph = graph;
     _graphs[name] = graphInfo;
+
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
-    
     ui->plot->addGraph(graph);
 }
 
+/**
+ * @brief Remove a graph from the analog viewer
+ * @param name Name of graph to remove
+ */
 void Analog_Viewer::removeGraph(std::string name){
     if (_graphs.find(name) == _graphs.end()) {
         std::cout << "Plot element named " << name << " does not exist" << std::endl;
         return;
     }
-
     ui->plot->deleteGraph(_graphs[name].graph);
+    // So I don't think there's a way to delete an axis after adding one, I guess hiding it forever will work.
+    _graphs[name].axis->setDrawMode1(JKQTPCADMnone);
     _graphs.erase(name);
 }
 
-void Analog_Viewer::_graphApplyLintrans(std::string name){
-    if (_graphs.find(name) == _graphs.end()) {
-        std::cout << "Plot element named " << name << " does not exist" << std::endl;
-        return;
-    } 
-
-    auto ds = ui->plot->getDatastore();
-    auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
-    for (int i=0; i<data.size(); i++) {
-        ds->set(_graphs[name].ds_y_col, i, data[i]*_graphs[name].mult+_graphs[name].add);
-    }
-}
-
+/**
+ * @brief Slot to apply linear transformation to analog graph when yheight or yoffset is changed in GUI
+ */
 void Analog_Viewer::GraphSetLintrans(){
-    std::string name = ui->graphchoose_cbox->currentText().toStdString();
-    if (!name.empty()) {
-        _graphs[name].mult = ui->ymult_dspinbox->value();
-        _graphs[name].add = ui->yoffset_dspinbox->value();
-        _graphApplyLintrans(name);
-        ui->plot->redrawPlot();
+    std::string name = _getSelectedGraphName();
+    if (name.empty()) {
+        return;
     }
-}
-
-void Analog_Viewer::SetPlotEditor(){
-    std::string name = ui->graphchoose_cbox->currentText().toStdString();
-    if (_graphs[name].type == GraphType::analog){
-
-        ui->ymult_dspinbox->setEnabled(true);
-        ui->yoffset_dspinbox->setEnabled(true);
-        ui->ymult_dspinbox->setValue(_graphs[name].mult);
-        ui->yoffset_dspinbox->setValue(_graphs[name].add);
-        ui->show_checkbox->setChecked(_graphs[name].show);
-        if (!_prev_analog.empty()) {
-            _graphs[_prev_analog].graph->setHighlighted(false);
-        }
-        _graphs[name].graph->setHighlighted(true);
-        _prev_analog = name;
-    } else if (_graphs[name].type == GraphType::digital){
-        ui->ymult_dspinbox->setEnabled(false);
-        ui->yoffset_dspinbox->setEnabled(false);
-        ui->show_checkbox->setChecked(_graphs[name].show);
+    if (_graphs.find(name) == _graphs.end()) {
+        return;
     }
+    if (_graphs[name].type != GraphType::analog) {
+        return;
+    }
+    _graphs[name].height = ui->yheight_dspinbox->value();
+
+    double cur_offset = (_graphs[name].axis->getMax() + _graphs[name].axis->getMin())/2;
+    double final_offset = cur_offset + _graphs[name].offset - ui->yoffset_dspinbox->value();
+
+    _graphs[name].axis->setRange(final_offset - _graphs[name].height/2, final_offset + _graphs[name].height/2);
+
+    _graphs[name].offset = ui->yoffset_dspinbox->value();    //_scaleYAxis();
     ui->plot->redrawPlot();
 }
 
-void Analog_Viewer::_setZoom(){
-    ui->plot->zoom(_current_frame - ui->xwidth_dspinbox->value()/2, _current_frame + ui->xwidth_dspinbox->value()/2, -10, 10);
+/**
+ * @brief Slot to initialize plot editor when a graph is selected in the GUI
+ */
+void Analog_Viewer::SetGraphEditor(){
+    std::string name = _getSelectedGraphName(); 
+    if (name.empty()) {
+        return;
+    }
+    if (_graphs[name].type == GraphType::analog){
+        ui->yheight_dspinbox->setEnabled(true);
+        ui->yoffset_dspinbox->setEnabled(true);
+        ui->showaxis_checkbox->setEnabled(true);
+        ui->yheight_dspinbox->setValue(_graphs[name].height);
+        ui->yoffset_dspinbox->setValue(_graphs[name].offset);
+        ui->show_checkbox->setChecked(_graphs[name].show);
+        ui->showaxis_checkbox->setChecked(_graphs[name].show_axis);
+        //_scaleYAxis();
+    } else if (_graphs[name].type == GraphType::digital){
+        ui->yheight_dspinbox->setEnabled(false);
+        ui->yoffset_dspinbox->setEnabled(false);
+        ui->showaxis_checkbox->setEnabled(false);
+        ui->show_checkbox->setChecked(_graphs[name].show);
+    }
+    if (!_prev_graph_highlighted.empty() && _graphs.find(_prev_graph_highlighted) != _graphs.end()) {
+        _graphs[_prev_graph_highlighted].graph->setHighlighted(false);
+    }
+    _prev_graph_highlighted = name;
+    _graphs[name].graph->setHighlighted(true);
+
+    ui->plot->redrawPlot();
 }
 
+/**
+ * @brief Set the zoom of the plot with accordance to x width specified in GUI and current frame
+ */
+void Analog_Viewer::_setZoom(){
+    ui->plot->getXAxis()->setRange(_current_frame - ui->xwidth_dspinbox->value()/2, _current_frame + ui->xwidth_dspinbox->value()/2);
+}
+
+/**
+ * @brief Slot to call _setZoom
+ */
 void Analog_Viewer::SetZoom(){
     _setZoom();
 }
 
+/**
+ * @brief Slot to set the visibility of current graph when visibility checkbox is used
+ */
 void Analog_Viewer::GraphSetShow(){
-    std::string name = ui->graphchoose_cbox->currentText().toStdString();
+    std::string name = _getSelectedGraphName();
     if (!name.empty()) {
         _graphs[name].show = ui->show_checkbox->isChecked();
         _graphs[name].graph->setVisible(_graphs[name].show);
@@ -200,6 +258,26 @@ void Analog_Viewer::GraphSetShow(){
     }
 }
 
+void Analog_Viewer::GraphSetShowAxis(){
+    std::string name = _getSelectedGraphName();
+    if (!name.empty()) {
+        if (ui->showaxis_checkbox->isChecked()){
+            _graphs[name].axis->setDrawMode1(JKQTPCADMcomplete);
+        } else {
+            _graphs[name].axis->setDrawMode1(JKQTPCADMnone);
+        };
+        _graphs[name].show_axis = ui->showaxis_checkbox->isChecked();
+        ui->plot->redrawPlot();
+    } 
+}
+
+/**
+ * @brief Click event handler to select a graph when clicked using JKQTPlotter Hit Test. Does not work on digital graphs.
+ * @param x X coordinate of click
+ * @param y Y coordinate of click
+ * @param modifiers Keyboard modifiers
+ * @param button Mouse button clicked
+ */
 void Analog_Viewer::ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button){
     if (button == Qt::LeftButton) {
         double min_dist = 1e9;
@@ -219,6 +297,24 @@ void Analog_Viewer::ClickEvent(double x, double y, Qt::KeyboardModifiers modifie
     }
 }
 
-std::string Analog_Viewer::get_selected_graph_name(){
+/**
+ * @brief Get the name of the currently selected graph in the GUI
+ */
+std::string Analog_Viewer::_getSelectedGraphName(){
     return ui->graphchoose_cbox->currentText().toStdString();
+}
+
+/**
+ * @brief Slot to delete a graph when delete button is clicked
+ */
+void Analog_Viewer::GraphDelete(){
+    std::string name = _getSelectedGraphName();
+    if (!name.empty()) {
+        removeGraph(name);
+        ui->graphchoose_cbox->removeItem(ui->graphchoose_cbox->currentIndex());
+    }
+}
+
+void Analog_Viewer::Alert(){
+    std::cout << "Alert" << std::endl;
 }

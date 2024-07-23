@@ -9,8 +9,7 @@
 #include <iostream>
 
 /**
- * @brief Grabcut_Widget::Grabcut_Widget
- * Constructor for Grabcut Widget.
+ * @brief Constructor for Grabcut Widget.
  * @param scene
  * @param data_manager
  * @param time_scrollbar
@@ -41,8 +40,7 @@ Grabcut_Widget::Grabcut_Widget(Media_Window *scene, std::shared_ptr<DataManager>
 }
 
 /**
- * @brief Grabcut_Widget::setup
- * Loads the image to edit and frame number for saving purposes into the widget
+ * @brief Loads the image to edit and frame number for saving purposes into the widget
  * @param img Image data as cv::Mat, must be of pixel type CV_8UC3
  * @param frame_index Frame index number which the mask will be saved to when requested
  */
@@ -60,8 +58,7 @@ void Grabcut_Widget::setup(cv::Mat img, int frame_index) {
 }
 
 /**
- * @brief Grabcut_Widget::_grabcutIter
- * Runs one interation of grabCut and updates the display
+ * @brief Runs one interation of grabCut and updates the display
  */
 void Grabcut_Widget::_grabcutIter(){
     _tool.grabcutIter();
@@ -69,8 +66,7 @@ void Grabcut_Widget::_grabcutIter(){
 }
 
 /**
- * @brief Grabcut_Widget::_setBrushThickness
- * Sets brush thickness to the value in the thickness spinbox in the widget
+ * @brief Sets brush thickness to the value in the thickness spinbox in the widget
  */
 void Grabcut_Widget::_setBrushThickness(){
     _tool.setBrushThickness(ui->thickness_spinbox->value());
@@ -78,8 +74,7 @@ void Grabcut_Widget::_setBrushThickness(){
 }
 
 /**
- * @brief Grabcut_Widget::_setColor
- * Sets color according to the value in the dropbox in the widget
+ * @brief Sets color according to the value in the dropbox in the widget
  */
 void Grabcut_Widget::_setColor(){
     switch (ui->color_combobox->currentIndex()){
@@ -102,8 +97,7 @@ void Grabcut_Widget::_setColor(){
 }
 
 /**
- * @brief Grabcut_Widget::_reset
- * Resets the tool and UI to the intial state
+ * @brief Resets the tool and UI to the intial state
  */
 void Grabcut_Widget::_reset(){
     _tool.reset();
@@ -139,8 +133,7 @@ void Grabcut_Widget::keyPressEvent(QKeyEvent *event) {
 }
 
 /**
- * @brief Grabcut_Widget::_scaleTransMouse
- * Transforms a coordinate of the mouse into the local coordinates of the image
+ * @brief Transforms a coordinate of the mouse into the local coordinates of the image
  * @param p QPoint that holds the mouse position on the widget
  * @return
  */
@@ -151,6 +144,10 @@ QPoint Grabcut_Widget::_scaleTransMouse(QPoint p){
     return p;
 }
 
+/**
+ * @brief Mouse press event handler
+ * @param event Mouse event
+ */
 void Grabcut_Widget::mousePressEvent(QMouseEvent *event){
     if (event->button() == Qt::LeftButton) {
         QPoint p = _scaleTransMouse(event->pos());
@@ -159,6 +156,10 @@ void Grabcut_Widget::mousePressEvent(QMouseEvent *event){
     }
 }
 
+/**
+ * @brief Mouse move event handler
+ * @param event Mouse event
+ */
 void Grabcut_Widget::mouseMoveEvent(QMouseEvent *event){
     if (ui->editor_label->rect().contains(event->pos())){
         if (_tool.getRectStage()){
@@ -175,6 +176,10 @@ void Grabcut_Widget::mouseMoveEvent(QMouseEvent *event){
     _updateDisplays();
 }
 
+/**
+ * @brief Mouse release event handler
+ * @param event Mouse event
+ */
 void Grabcut_Widget::mouseReleaseEvent(QMouseEvent *event){
     if (event->button() == Qt::LeftButton) {
         QPoint p = _scaleTransMouse(event->pos());
@@ -186,12 +191,18 @@ void Grabcut_Widget::mouseReleaseEvent(QMouseEvent *event){
     }
 }
 
+/**
+ * @brief Updates display
+ */
 void Grabcut_Widget::_updateDisplays(){
     _img_disp_pixmap = QPixmap::fromImage(QImage(reinterpret_cast<unsigned char*>(_tool.getDisp().data), _width, _height, QImage::Format_RGB888));
     ui->editor_label->setPixmap(_img_disp_pixmap);
     ui->editor_label->repaint();
 }
 
+/**
+ * @brief Saves the created mask to the data manager, replacing previously drawn masks
+ */
 void Grabcut_Widget::_saveMask(){
     const char* mask_name = "grabcut_masks";
     if (!_data_manager->getMask(mask_name)) {
@@ -222,6 +233,9 @@ void Grabcut_Widget::_saveMask(){
     this->close();
 }
 
+/**
+ * @brief Sets the transparency of the mask overlay 
+ */
 void Grabcut_Widget::_setMaskTransparency(){
     _tool.setMaskDispTransparency(static_cast<float>(ui->transparency_slider->value()) / 100);
     _updateDisplays();

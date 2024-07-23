@@ -157,6 +157,11 @@ void Label_Widget::_saveButton() {
   QString saveFileName = QFileDialog::getSaveFileName(this, tr("Save File"), "",
                                                       tr("CSV (*.csv)"));
 
+  if (saveFileName.isEmpty()) {
+    std::cout << "No file selected" << std::endl;
+    return;
+  }
+
   std::ofstream outFile;
   outFile.open(saveFileName.toStdString());
 

@@ -3,12 +3,20 @@
 #include "jkqtplotter/jkqtplotter.h"
 #include "jkqtplotter/graphs/jkqtprange.h"
 
+/**
+ * @brief Constructor for DigitalTimeSeriesGraph
+ * @param parent Parent plotter
+ */
 DigitalTimeSeriesGraph::DigitalTimeSeriesGraph(JKQTBasePlotter *parent):
     JKQTPPlotElement(parent)
 {
     _parent = parent;
 }
 
+/**
+ * @brief Load a digital time series into the graph and create a vertical range for each ON range
+ * @param digital_vector Vector of pairs of floats representing the start and end of the ON range
+ */
 void DigitalTimeSeriesGraph::load_digital_vector(std::vector<std::pair<float, float>> digital_vector){
     bool first = false;
     QColor color;
@@ -27,6 +35,10 @@ void DigitalTimeSeriesGraph::load_digital_vector(std::vector<std::pair<float, fl
     }
 }
 
+/**
+ * @brief Draw the digital time series graph by calling draw on each vertical range
+ * @param painter Painter object
+ */
 void DigitalTimeSeriesGraph::draw(JKQTPEnhancedPainter &painter)
 {   
     for (auto graph : _graphs){
@@ -34,12 +46,22 @@ void DigitalTimeSeriesGraph::draw(JKQTPEnhancedPainter &painter)
     }
 }
 
+/**
+ * @brief Draw the key marker for the digital time series graph by calling drawKeyMarker on each vertical range
+ * @param painter Painter object
+ */
 void DigitalTimeSeriesGraph::drawKeyMarker(JKQTPEnhancedPainter& painter, const QRectF& rect){
     for (auto graph : _graphs){
         graph->drawKeyMarker(painter, rect);
     }
 }
 
+/**
+ * @brief Get the minimum, maximum, and minimum greater than zero x values of the digital time series graph
+ * @param minx Minimum x value as reference
+ * @param maxx Maximum x value as reference
+ * @param smallestGreaterZero Minimum x value greater than zero as reference
+ */
 bool DigitalTimeSeriesGraph::getXMinMax(double& minx, double& maxx, double& smallestGreaterZero){
     if (_graphs.empty()){
         return false;
@@ -62,6 +84,12 @@ bool DigitalTimeSeriesGraph::getXMinMax(double& minx, double& maxx, double& smal
     return true;
 }
 
+/**
+ * @brief Get the minimum, maximum, and minimum greater than zero y values of the digital time series graph
+ * @param miny Minimum y value as reference
+ * @param maxy Maximum y value as reference
+ * @param smallestGreaterZero Minimum y value greater than zero as reference
+ */
 bool DigitalTimeSeriesGraph::getYMinMax(double& miny, double& maxy, double& smallestGreaterZero){
     if (_graphs.empty()){
         return false;
@@ -84,6 +112,10 @@ bool DigitalTimeSeriesGraph::getYMinMax(double& miny, double& maxy, double& smal
     return true;
 }
 
+/**
+ * @brief Get the color of the key label for the digital time series graph
+ * @return Color of the key label
+ */
 QColor DigitalTimeSeriesGraph::getKeyLabelColor() const{
     // i dont know what this is for
     return QColor(0, 255, 0);

@@ -248,8 +248,19 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#grabcut-tool-operation" id="toc-grabcut-tool-operation" class="nav-link active" data-scroll-target="#grabcut-tool-operation">GrabCut Tool Operation</a>
+  <ul class="collapse">
+  <li><a href="#selecting-roi" id="toc-selecting-roi" class="nav-link" data-scroll-target="#selecting-roi">Selecting ROI</a></li>
+  <li><a href="#user-feedback" id="toc-user-feedback" class="nav-link" data-scroll-target="#user-feedback">User Feedback</a></li>
+  <li><a href="#saving-and-exporting" id="toc-saving-and-exporting" class="nav-link" data-scroll-target="#saving-and-exporting">Saving and Exporting</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -274,10 +285,40 @@ ul.task-list li input[type="checkbox"] {
 
 
 <p>Creating mask labels is done through the GrabCut tool. Currently it can be opened through the Tongue Tracking widget.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../images/gctool.png" class="img-fluid figure-img" style="width:50.0%"></p>
+<figcaption>GrabCut Tool</figcaption>
+</figure>
+</div>
+<section id="grabcut-tool-operation" class="level2">
+<h2 class="anchored" data-anchor-id="grabcut-tool-operation">GrabCut Tool Operation</h2>
+<section id="selecting-roi" class="level3">
+<h3 class="anchored" data-anchor-id="selecting-roi">Selecting ROI</h3>
 <p>To start creating a mask, left click and drag the mouse over the image to form a green rectangle as the region of interest. The objected intended to be masked should be completely within this rectangle. If a mistake is made the reset button returns the tool to the initial state.</p>
-<p>After drawing an ROI the “Iter</p>
+<p>The GrabCut algorithm works as such: the algorithm keeps track of the mask and for each iteration, attempts to refine it. In between iterations, the user can tweak the mask to provide feedback to the algorithm, which will be noted through subsequent iterations.</p>
+<p>After drawing an ROI the “Iterate Grabcut” button becomes functional. Using it completes one iteration of the GrabCut algorithm. The first usage of this button will show the initial mask created by the algorithm. <strong>Ideally the user should press this button throughout the editing process.</strong></p>
+<ul>
+<li>Opacity of the displayed mask can be adjusted with the transparency slider</li>
+</ul>
+</section>
+<section id="user-feedback" class="level3">
+<h3 class="anchored" data-anchor-id="user-feedback">User Feedback</h3>
+<p>In between iterations the user has access to a drawing bush whose radius can be adjusted. It is used to paint feedback for the GrabCut algorithm, which it will take into account upon pressing the “Iterate Grabcut” button. The brush has four colors:</p>
+<ul>
+<li>“Definite Background”: Tells GrabCut the painted area is definitely not part of the mask.</li>
+<li>“Definite Foreground”: Tells GrabCut the painted area is definitely part of the mask.</li>
+<li>“Probable Background”: Suggests to GrabCut the painted area may not be part of the mask. GrabCut uses this information to create a better mask but may partially/fully disobey it.</li>
+<li>“Probable Foreground”: Suggests to GrabCut the painted area is likely part of the mask. GrabCut uses this information to create a better mask but may partially/fully disobey it.</li>
+</ul>
+</section>
+<section id="saving-and-exporting" class="level3">
+<h3 class="anchored" data-anchor-id="saving-and-exporting">Saving and Exporting</h3>
+<p>The GrabCut tool may be exited at any time by pressing the “Exit” button. “Save and Exit” will exit the tool and save the mask into the main application and displayed in the media player. All created masks can be saved to disk using the “Save Drawn Masks” button in the Tongue Tracking widget.</p>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

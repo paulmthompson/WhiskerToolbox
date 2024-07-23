@@ -26,7 +26,7 @@ public:
 
     virtual ~Grabcut_Widget();
 
-    void openWidget(); //
+    void openWidget();
 protected:
     void closeEvent(QCloseEvent *event);
     void keyPressEvent(QKeyEvent *event);

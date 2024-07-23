@@ -47,10 +47,12 @@ private:
         digital
     };
     struct GraphInfo {
-        double mult = 1.0;
-        double add = 0.0;
+        double height = 10.0;
+        double offset = 0.0;
         JKQTPPlotElement* graph;
+        JKQTPVerticalAxisBase* axis;
         bool show = true;
+        bool show_axis = true;
         size_t ds_y_col;
         GraphType type;
 
@@ -60,22 +62,27 @@ private:
 
     void _setZoom();
 
-    void _graphApplyLintrans(std::string name);
 
-    std::string _prev_analog = ""; 
+    std::string _prev_graph_highlighted = ""; 
+
+    void _scaleYAxis();
 
     int64_t _current_frame = 0;
 
-    std::string get_selected_graph_name();
+    std::string _getSelectedGraphName();
 public slots:
     void SetFrame(int i);
 
 private slots:
     void GraphSetLintrans();
     void GraphSetShow();
-    void SetPlotEditor();
+    void GraphSetShowAxis();
+    void GraphDelete();
+    void SetGraphEditor();
     void SetZoom();
     void ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button);
+
+    void Alert();
 };
 
 
