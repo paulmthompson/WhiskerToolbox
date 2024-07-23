@@ -111,6 +111,7 @@ void Analog_Viewer::plotAnalog(std::string name){
     ui->plot->getYAxis(axis_ref)->setDrawMode2(JKQTPCADMnone);
     ui->plot->getYAxis(axis_ref)->setDrawMode0(JKQTPCADMnone);
     ui->plot->getYAxis(axis_ref)->setShowZeroAxis(false);
+    ui->plot->getYAxis(axis_ref)->setRange(-5, 5);
     ui->plot->getYAxis(axis_ref)->setColor(graph->getLineColor());
 
     graph->setYAxis(axis_ref);
@@ -127,6 +128,7 @@ void Analog_Viewer::plotAnalog(std::string name){
 
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
     ui->plot->addGraph(graph);
+
 }
 
 /**
@@ -234,7 +236,7 @@ void Analog_Viewer::SetGraphEditor(){
  * @brief Set the zoom of the plot with accordance to x width specified in GUI and current frame
  */
 void Analog_Viewer::_setZoom(){
-    ui->plot->zoom(_current_frame - ui->xwidth_dspinbox->value()/2, _current_frame + ui->xwidth_dspinbox->value()/2, -10, 10);
+    ui->plot->getXAxis()->setRange(_current_frame - ui->xwidth_dspinbox->value()/2, _current_frame + ui->xwidth_dspinbox->value()/2);
 }
 
 /**
