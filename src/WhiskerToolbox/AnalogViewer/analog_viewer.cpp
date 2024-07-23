@@ -266,6 +266,7 @@ void Analog_Viewer::GraphSetShowAxis(){
         } else {
             _graphs[name].axis->setDrawMode1(JKQTPCADMnone);
         };
+        _graphs[name].show_axis = ui->showaxis_checkbox->isChecked();
         ui->plot->redrawPlot();
     } 
 }
