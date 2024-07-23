@@ -73,6 +73,7 @@ public slots:
 private slots:
     void GraphSetLintrans();
     void GraphSetShow();
+    void GraphDelete();
     void SetPlotEditor();
     void SetZoom();
     void ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button);

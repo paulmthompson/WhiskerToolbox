@@ -13,6 +13,7 @@
 #include <QMainWindow>
 #include <QPointer>
 #include <QCheckBox>
+#include <QPushButton>
 
 #include <iostream>
 
@@ -30,6 +31,7 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
     connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
     connect(ui->xwidth_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::SetZoom);
     connect(ui->show_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::GraphSetShow);
+    connect(ui->delete_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::GraphDelete);
     connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
 }
 
@@ -163,6 +165,9 @@ void Analog_Viewer::GraphSetLintrans(){
 
 void Analog_Viewer::SetPlotEditor(){
     std::string name = ui->graphchoose_cbox->currentText().toStdString();
+    if (name.empty()) {
+        return;
+    }
     if (_graphs[name].type == GraphType::analog){
 
         ui->ymult_dspinbox->setEnabled(true);
@@ -221,4 +226,12 @@ void Analog_Viewer::ClickEvent(double x, double y, Qt::KeyboardModifiers modifie
 
 std::string Analog_Viewer::get_selected_graph_name(){
     return ui->graphchoose_cbox->currentText().toStdString();
+}
+
+void Analog_Viewer::GraphDelete(){
+    std::string name = get_selected_graph_name();
+    if (!name.empty()) {
+        removeGraph(name);
+        ui->graphchoose_cbox->removeItem(ui->graphchoose_cbox->currentIndex());
+    }
 }
