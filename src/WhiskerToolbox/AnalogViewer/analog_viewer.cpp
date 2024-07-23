@@ -168,6 +168,8 @@ void Analog_Viewer::removeGraph(std::string name){
         return;
     }
     ui->plot->deleteGraph(_graphs[name].graph);
+    // So I don't think there's a way to delete an axis after adding one, I guess hiding it forever will work.
+    _graphs[name].axis->setDrawMode1(JKQTPCADMnone);
     _graphs.erase(name);
 }
 
