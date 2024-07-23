@@ -52,6 +52,7 @@ private:
         JKQTPPlotElement* graph;
         JKQTPVerticalAxisBase* axis;
         bool show = true;
+        bool show_axis = true;
         size_t ds_y_col;
         GraphType type;
 
@@ -61,7 +62,6 @@ private:
 
     void _setZoom();
 
-    void _graphApplyLintrans(std::string name);
 
     std::string _prev_graph_highlighted = ""; 
 
@@ -76,8 +76,9 @@ public slots:
 private slots:
     void GraphSetLintrans();
     void GraphSetShow();
+    void GraphSetShowAxis();
     void GraphDelete();
-    void SetPlotEditor();
+    void SetGraphEditor();
     void SetZoom();
     void ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button);
 

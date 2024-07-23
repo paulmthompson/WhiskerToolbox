@@ -26,11 +26,12 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
 {
     ui->setupUi(this);
 
-    connect(ui->graphchoose_cbox, &QComboBox::currentTextChanged, this, &Analog_Viewer::SetPlotEditor);
+    connect(ui->graphchoose_cbox, &QComboBox::currentTextChanged, this, &Analog_Viewer::SetGraphEditor);
     connect(ui->yheight_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
     connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
     connect(ui->xwidth_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::SetZoom);
     connect(ui->show_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::GraphSetShow);
+    connect(ui->showaxis_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::GraphSetShowAxis);
     connect(ui->delete_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::GraphDelete);
     connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
 }
@@ -59,6 +60,11 @@ void Analog_Viewer::openWidget()
     ui->plot->clearAllRegisteredMouseDoubleClickActions();
     ui->plot->registerMouseDragAction(Qt::LeftButton, Qt::NoModifier, jkqtpmdaPanPlotOnMove);
 
+    // Delete the default y axis
+    ui->plot->getYAxis()->setDrawMode1(JKQTPCADMnone);
+    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
+    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
+
     this->show();
 }
 
@@ -79,7 +85,6 @@ void Analog_Viewer::SetFrame(int i){
 void Analog_Viewer::plotAnalog(std::string name){
     if (_graphs.find(name) != _graphs.end()) {
         std::cout << "Plot element named " << name << " already exists, data has been replaced" << std::endl;
-        _graphApplyLintrans(name);
         ui->plot->redrawPlot();
         return;
     }
@@ -107,9 +112,6 @@ void Analog_Viewer::plotAnalog(std::string name){
     ui->plot->getYAxis(axis_ref)->setDrawMode0(JKQTPCADMnone);
     ui->plot->getYAxis(axis_ref)->setShowZeroAxis(false);
     ui->plot->getYAxis(axis_ref)->setColor(graph->getLineColor());
-    ui->plot->getYAxis()->setDrawMode1(JKQTPCADMnone);
-    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
-    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
 
     graph->setYAxis(axis_ref);
 
@@ -170,48 +172,34 @@ void Analog_Viewer::removeGraph(std::string name){
 }
 
 /**
- * @brief Apply linear transformation to analog graph
- * @param name Name of analog graph to apply transformation to
- */
-void Analog_Viewer::_graphApplyLintrans(std::string name){
-    if (_graphs.find(name) == _graphs.end()) {
-        std::cout << "Plot element named " << name << " does not exist" << std::endl;
-        return;
-    }
-    if (_graphs[name].type != GraphType::analog) {
-        std::cout << "Plot element named " << name << " is not an analog graph" << std::endl;
-        return;
-    }
-
-    // Raw data is stored in DataManager, displayed data is in the JKQTPlotter datastore
-    // auto ds = ui->plot->getDatastore();
-    // auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
-    // for (int i=0; i<data.size(); i++) {
-    //     ds->set(_graphs[name].ds_y_col, i, data[i]*_graphs[name].mult+_graphs[name].add);
-    //
-    // }
-    //double cur_offset = (_graphs[name].axis->getMax() + _graphs[name].axis->getMin())/2;
-    _graphs[name].axis->setRange(_graphs[name].offset - _graphs[name].height/2, _graphs[name].offset + _graphs[name].height/2);
-}
-
-/**
  * @brief Slot to apply linear transformation to analog graph when yheight or yoffset is changed in GUI
  */
 void Analog_Viewer::GraphSetLintrans(){
     std::string name = _getSelectedGraphName();
-    if (!name.empty()) {
-        _graphs[name].height = ui->yheight_dspinbox->value();
-        _graphs[name].offset = ui->yoffset_dspinbox->value();
-        _graphApplyLintrans(name);
-        //_scaleYAxis();
-        ui->plot->redrawPlot();
+    if (name.empty()) {
+        return;
     }
+    if (_graphs.find(name) == _graphs.end()) {
+        return;
+    }
+    if (_graphs[name].type != GraphType::analog) {
+        return;
+    }
+    _graphs[name].height = ui->yheight_dspinbox->value();
+
+    double cur_offset = (_graphs[name].axis->getMax() + _graphs[name].axis->getMin())/2;
+    double final_offset = cur_offset + _graphs[name].offset - ui->yoffset_dspinbox->value();
+
+    _graphs[name].axis->setRange(final_offset - _graphs[name].height/2, final_offset + _graphs[name].height/2);
+
+    _graphs[name].offset = ui->yoffset_dspinbox->value();    //_scaleYAxis();
+    ui->plot->redrawPlot();
 }
 
 /**
  * @brief Slot to initialize plot editor when a graph is selected in the GUI
  */
-void Analog_Viewer::SetPlotEditor(){
+void Analog_Viewer::SetGraphEditor(){
     std::string name = _getSelectedGraphName(); 
     if (name.empty()) {
         return;
@@ -219,16 +207,19 @@ void Analog_Viewer::SetPlotEditor(){
     if (_graphs[name].type == GraphType::analog){
         ui->yheight_dspinbox->setEnabled(true);
         ui->yoffset_dspinbox->setEnabled(true);
+        ui->showaxis_checkbox->setEnabled(true);
         ui->yheight_dspinbox->setValue(_graphs[name].height);
         ui->yoffset_dspinbox->setValue(_graphs[name].offset);
         ui->show_checkbox->setChecked(_graphs[name].show);
+        ui->showaxis_checkbox->setChecked(_graphs[name].show_axis);
         //_scaleYAxis();
     } else if (_graphs[name].type == GraphType::digital){
         ui->yheight_dspinbox->setEnabled(false);
         ui->yoffset_dspinbox->setEnabled(false);
+        ui->showaxis_checkbox->setEnabled(false);
         ui->show_checkbox->setChecked(_graphs[name].show);
     }
-    if (!_prev_graph_highlighted.empty()) {
+    if (!_prev_graph_highlighted.empty() && _graphs.find(_prev_graph_highlighted) != _graphs.end()) {
         _graphs[_prev_graph_highlighted].graph->setHighlighted(false);
     }
     _prev_graph_highlighted = name;
@@ -261,6 +252,18 @@ void Analog_Viewer::GraphSetShow(){
         _graphs[name].graph->setVisible(_graphs[name].show);
         ui->plot->redrawPlot();
     }
+}
+
+void Analog_Viewer::GraphSetShowAxis(){
+    std::string name = _getSelectedGraphName();
+    if (!name.empty()) {
+        if (ui->showaxis_checkbox->isChecked()){
+            _graphs[name].axis->setDrawMode1(JKQTPCADMcomplete);
+        } else {
+            _graphs[name].axis->setDrawMode1(JKQTPCADMnone);
+        };
+        ui->plot->redrawPlot();
+    } 
 }
 
 /**
