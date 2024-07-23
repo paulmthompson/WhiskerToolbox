@@ -58,7 +58,7 @@
      <string>Graph of Interest:</string>
     </property>
    </widget>
-   <widget class="QDoubleSpinBox" name="ymult_dspinbox">
+   <widget class="QDoubleSpinBox" name="yheight_dspinbox">
     <property name="geometry">
      <rect>
       <x>90</x>
@@ -74,7 +74,7 @@
      <double>99999.000000000000000</double>
     </property>
     <property name="singleStep">
-     <double>0.010000000000000</double>
+     <double>0.100000000000000</double>
     </property>
     <property name="value">
      <double>1.000000000000000</double>
@@ -90,7 +90,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Y multiplier:</string>
+     <string>Y height:</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_3">

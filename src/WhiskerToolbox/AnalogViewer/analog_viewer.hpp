@@ -47,9 +47,10 @@ private:
         digital
     };
     struct GraphInfo {
-        double mult = 1.0;
-        double add = 0.0;
+        double height = 10.0;
+        double offset = 0.0;
         JKQTPPlotElement* graph;
+        JKQTPVerticalAxisBase* axis;
         bool show = true;
         size_t ds_y_col;
         GraphType type;
@@ -64,6 +65,8 @@ private:
 
     std::string _prev_graph_highlighted = ""; 
 
+    void _scaleYAxis();
+
     int64_t _current_frame = 0;
 
     std::string _getSelectedGraphName();
@@ -77,6 +80,8 @@ private slots:
     void SetPlotEditor();
     void SetZoom();
     void ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button);
+
+    void Alert();
 };
 
 

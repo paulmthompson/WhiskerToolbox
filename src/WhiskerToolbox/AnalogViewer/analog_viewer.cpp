@@ -27,7 +27,7 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
     ui->setupUi(this);
 
     connect(ui->graphchoose_cbox, &QComboBox::currentTextChanged, this, &Analog_Viewer::SetPlotEditor);
-    connect(ui->ymult_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
+    connect(ui->yheight_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
     connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
     connect(ui->xwidth_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::SetZoom);
     connect(ui->show_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::GraphSetShow);
@@ -100,13 +100,27 @@ void Analog_Viewer::plotAnalog(std::string name){
     graph->setYColumn(y_col);
     graph->setTitle(QObject::tr(name.c_str()));
 
+    auto axis_ref = ui->plot->getPlotter()->addSecondaryYAxis(new JKQTPVerticalAxis(ui->plot->getPlotter(), JKQTPPrimaryAxis));
+    ui->plot->getYAxis(axis_ref)->setDrawGrid(false);
+    ui->plot->getYAxis(axis_ref)->setDrawMode1(JKQTPCADMcomplete);
+    ui->plot->getYAxis(axis_ref)->setDrawMode2(JKQTPCADMnone);
+    ui->plot->getYAxis(axis_ref)->setDrawMode0(JKQTPCADMnone);
+    ui->plot->getYAxis(axis_ref)->setShowZeroAxis(false);
+    ui->plot->getYAxis(axis_ref)->setColor(graph->getLineColor());
+    ui->plot->getYAxis()->setDrawMode1(JKQTPCADMnone);
+    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
+    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
+
+    graph->setYAxis(axis_ref);
+
     // Configure interal graph object
     GraphInfo graphInfo;
     graphInfo.type = GraphType::analog;
     graphInfo.ds_y_col = y_col;
-    graphInfo.mult = 1.0;
-    graphInfo.add = 0.0;
+    graphInfo.height = 10.0;
+    graphInfo.offset = 0.0;
     graphInfo.graph = graph;
+    graphInfo.axis = ui->plot->getYAxis(axis_ref);
     _graphs[name] = graphInfo;
 
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
@@ -170,22 +184,26 @@ void Analog_Viewer::_graphApplyLintrans(std::string name){
     }
 
     // Raw data is stored in DataManager, displayed data is in the JKQTPlotter datastore
-    auto ds = ui->plot->getDatastore();
-    auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
-    for (int i=0; i<data.size(); i++) {
-        ds->set(_graphs[name].ds_y_col, i, data[i]*_graphs[name].mult+_graphs[name].add);
-    }
+    // auto ds = ui->plot->getDatastore();
+    // auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
+    // for (int i=0; i<data.size(); i++) {
+    //     ds->set(_graphs[name].ds_y_col, i, data[i]*_graphs[name].mult+_graphs[name].add);
+    //
+    // }
+    //double cur_offset = (_graphs[name].axis->getMax() + _graphs[name].axis->getMin())/2;
+    _graphs[name].axis->setRange(_graphs[name].offset - _graphs[name].height/2, _graphs[name].offset + _graphs[name].height/2);
 }
 
 /**
- * @brief Slot to apply linear transformation to analog graph when ymult or yoffset is changed in GUI
+ * @brief Slot to apply linear transformation to analog graph when yheight or yoffset is changed in GUI
  */
 void Analog_Viewer::GraphSetLintrans(){
     std::string name = _getSelectedGraphName();
     if (!name.empty()) {
-        _graphs[name].mult = ui->ymult_dspinbox->value();
-        _graphs[name].add = ui->yoffset_dspinbox->value();
+        _graphs[name].height = ui->yheight_dspinbox->value();
+        _graphs[name].offset = ui->yoffset_dspinbox->value();
         _graphApplyLintrans(name);
+        //_scaleYAxis();
         ui->plot->redrawPlot();
     }
 }
@@ -199,13 +217,14 @@ void Analog_Viewer::SetPlotEditor(){
         return;
     }
     if (_graphs[name].type == GraphType::analog){
-        ui->ymult_dspinbox->setEnabled(true);
+        ui->yheight_dspinbox->setEnabled(true);
         ui->yoffset_dspinbox->setEnabled(true);
-        ui->ymult_dspinbox->setValue(_graphs[name].mult);
-        ui->yoffset_dspinbox->setValue(_graphs[name].add);
+        ui->yheight_dspinbox->setValue(_graphs[name].height);
+        ui->yoffset_dspinbox->setValue(_graphs[name].offset);
         ui->show_checkbox->setChecked(_graphs[name].show);
+        //_scaleYAxis();
     } else if (_graphs[name].type == GraphType::digital){
-        ui->ymult_dspinbox->setEnabled(false);
+        ui->yheight_dspinbox->setEnabled(false);
         ui->yoffset_dspinbox->setEnabled(false);
         ui->show_checkbox->setChecked(_graphs[name].show);
     }
@@ -286,5 +305,8 @@ void Analog_Viewer::GraphDelete(){
         removeGraph(name);
         ui->graphchoose_cbox->removeItem(ui->graphchoose_cbox->currentIndex());
     }
+}
 
+void Analog_Viewer::Alert(){
+    std::cout << "Alert" << std::endl;
 }
