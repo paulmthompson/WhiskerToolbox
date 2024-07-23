@@ -39,10 +39,14 @@ Analog_Viewer::~Analog_Viewer() {
     delete ui;
 }
 
+/**
+ * @brief Open the analog viewer
+ */
 void Analog_Viewer::openWidget()
 {
     std::cout << "Analog Viewer Opened" << std::endl;
 
+    // Plot all graphs added before analog viewer was created
     for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
         plotAnalog(name);
     }
@@ -58,19 +62,21 @@ void Analog_Viewer::openWidget()
     this->show();
 }
 
+/**
+ * @brief Set the current frame of the analog viewer
+ * @param i Frame number
+ */
 void Analog_Viewer::SetFrame(int i){
     std::cout << "Analog Viewer: Set Frame " << i << std::endl;
-
     _current_frame = i;
     _setZoom();
 }
 
 /**
  * @brief Plot a line on the analog viewer
- * @param data Vector indexed by frame number 
+ * @param name Name of data sotred in DataManager
  */
 void Analog_Viewer::plotAnalog(std::string name){
-    auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
     if (_graphs.find(name) != _graphs.end()) {
         std::cout << "Plot element named " << name << " already exists, data has been replaced" << std::endl;
         _graphApplyLintrans(name);
@@ -78,37 +84,40 @@ void Analog_Viewer::plotAnalog(std::string name){
         return;
     }
 
-    GraphInfo graphInfo;
-    graphInfo.type = GraphType::analog;
+    auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
 
+    // Loading data into JKQTPlotter datastore
     JKQTPDatastore* ds = ui->plot->getDatastore();
     std::vector<int> frame_numbers(data.size());
     iota(frame_numbers.begin(), frame_numbers.end(), 0);
     size_t x_col=ds->addCopiedColumn(frame_numbers, QString::fromStdString(name+"_x"));
     size_t y_col=ds->addCopiedColumn(data, QString::fromStdString(name+"_y_trans"));
 
-    graphInfo.ds_y_col = y_col;
-    graphInfo.mult = 1.0;
-    graphInfo.add = 0.0;
-
+    // Configure JKQTPlotter graph object
     JKQTPXYLineGraph* graph=new JKQTPXYLineGraph(ui->plot);
     graph->setSymbolType(JKQTPNoSymbol);
     graph->setXColumn(x_col);
     graph->setYColumn(y_col);
     graph->setTitle(QObject::tr(name.c_str()));
 
+    // Configure interal graph object
+    GraphInfo graphInfo;
+    graphInfo.type = GraphType::analog;
+    graphInfo.ds_y_col = y_col;
+    graphInfo.mult = 1.0;
+    graphInfo.add = 0.0;
     graphInfo.graph = graph;
-
     _graphs[name] = graphInfo;
 
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
-
     ui->plot->addGraph(graph);
 }
 
+/**
+ * @brief Plot a digital time series on the analog viewer
+ * @param name Name of data stored in DataManager
+ */
 void Analog_Viewer::plotDigital(std::string name){
-    auto data = _data_manager->getDigitalTimeSeries(name)->getDigitalTimeSeries();
-
     if (_graphs.find(name) != _graphs.end()) {
         std::cout << "Plot element named " << name << " already exists, data will be replaced" << std::endl;
         removeGraph(name);
@@ -116,36 +125,51 @@ void Analog_Viewer::plotDigital(std::string name){
         return;
     }
 
-    GraphInfo graphInfo;
-    graphInfo.type = GraphType::digital;
+    auto data = _data_manager->getDigitalTimeSeries(name)->getDigitalTimeSeries();
 
+    // Configure JKQTPlotter graph object
     DigitalTimeSeriesGraph* graph = new DigitalTimeSeriesGraph(ui->plot->getPlotter());
     graph->load_digital_vector(data);
     graph->setTitle(QObject::tr(name.c_str()));
-    graphInfo.graph = graph;
 
+    // Configure internal graph object
+    GraphInfo graphInfo;
+    graphInfo.type = GraphType::digital;
+    graphInfo.graph = graph;
     _graphs[name] = graphInfo;
+
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
-    
     ui->plot->addGraph(graph);
 }
 
+/**
+ * @brief Remove a graph from the analog viewer
+ * @param name Name of graph to remove
+ */
 void Analog_Viewer::removeGraph(std::string name){
     if (_graphs.find(name) == _graphs.end()) {
         std::cout << "Plot element named " << name << " does not exist" << std::endl;
         return;
     }
-
     ui->plot->deleteGraph(_graphs[name].graph);
     _graphs.erase(name);
 }
 
+/**
+ * @brief Apply linear transformation to analog graph
+ * @param name Name of analog graph to apply transformation to
+ */
 void Analog_Viewer::_graphApplyLintrans(std::string name){
     if (_graphs.find(name) == _graphs.end()) {
         std::cout << "Plot element named " << name << " does not exist" << std::endl;
         return;
-    } 
+    }
+    if (_graphs[name].type != GraphType::analog) {
+        std::cout << "Plot element named " << name << " is not an analog graph" << std::endl;
+        return;
+    }
 
+    // Raw data is stored in DataManager, displayed data is in the JKQTPlotter datastore
     auto ds = ui->plot->getDatastore();
     auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
     for (int i=0; i<data.size(); i++) {
@@ -153,6 +177,9 @@ void Analog_Viewer::_graphApplyLintrans(std::string name){
     }
 }
 
+/**
+ * @brief Slot to apply linear transformation to analog graph when ymult or yoffset is changed in GUI
+ */
 void Analog_Viewer::GraphSetLintrans(){
     std::string name = _getSelectedGraphName();
     if (!name.empty()) {
@@ -163,6 +190,9 @@ void Analog_Viewer::GraphSetLintrans(){
     }
 }
 
+/**
+ * @brief Slot to initialize plot editor when a graph is selected in the GUI
+ */
 void Analog_Viewer::SetPlotEditor(){
     std::string name = _getSelectedGraphName(); 
     if (name.empty()) {
@@ -188,14 +218,23 @@ void Analog_Viewer::SetPlotEditor(){
     ui->plot->redrawPlot();
 }
 
+/**
+ * @brief Set the zoom of the plot with accordance to x width specified in GUI and current frame
+ */
 void Analog_Viewer::_setZoom(){
     ui->plot->zoom(_current_frame - ui->xwidth_dspinbox->value()/2, _current_frame + ui->xwidth_dspinbox->value()/2, -10, 10);
 }
 
+/**
+ * @brief Slot to call _setZoom
+ */
 void Analog_Viewer::SetZoom(){
     _setZoom();
 }
 
+/**
+ * @brief Slot to set the visibility of current graph when visibility checkbox is used
+ */
 void Analog_Viewer::GraphSetShow(){
     std::string name = _getSelectedGraphName();
     if (!name.empty()) {
@@ -205,6 +244,13 @@ void Analog_Viewer::GraphSetShow(){
     }
 }
 
+/**
+ * @brief Click event handler to select a graph when clicked using JKQTPlotter Hit Test. Does not work on digital graphs.
+ * @param x X coordinate of click
+ * @param y Y coordinate of click
+ * @param modifiers Keyboard modifiers
+ * @param button Mouse button clicked
+ */
 void Analog_Viewer::ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button){
     if (button == Qt::LeftButton) {
         double min_dist = 1e9;
@@ -224,14 +270,21 @@ void Analog_Viewer::ClickEvent(double x, double y, Qt::KeyboardModifiers modifie
     }
 }
 
+/**
+ * @brief Get the name of the currently selected graph in the GUI
+ */
 std::string Analog_Viewer::_getSelectedGraphName(){
     return ui->graphchoose_cbox->currentText().toStdString();
 }
 
+/**
+ * @brief Slot to delete a graph when delete button is clicked
+ */
 void Analog_Viewer::GraphDelete(){
     std::string name = _getSelectedGraphName();
     if (!name.empty()) {
         removeGraph(name);
         ui->graphchoose_cbox->removeItem(ui->graphchoose_cbox->currentIndex());
     }
+
 }
