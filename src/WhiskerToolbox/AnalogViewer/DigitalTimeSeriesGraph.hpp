@@ -21,7 +21,6 @@ public:
     bool getYMinMax(double& miny, double& maxy, double& smallestGreaterZero) override;
     QColor getKeyLabelColor() const override;
 
-
 private:
     std::vector<JKQTPVerticalRange*> _graphs;
 

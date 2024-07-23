@@ -154,7 +154,7 @@ void Analog_Viewer::_graphApplyLintrans(std::string name){
 }
 
 void Analog_Viewer::GraphSetLintrans(){
-    std::string name = ui->graphchoose_cbox->currentText().toStdString();
+    std::string name = _getSelectedGraphName();
     if (!name.empty()) {
         _graphs[name].mult = ui->ymult_dspinbox->value();
         _graphs[name].add = ui->yoffset_dspinbox->value();
@@ -164,7 +164,7 @@ void Analog_Viewer::GraphSetLintrans(){
 }
 
 void Analog_Viewer::SetPlotEditor(){
-    std::string name = ui->graphchoose_cbox->currentText().toStdString();
+    std::string name = _getSelectedGraphName(); 
     if (name.empty()) {
         return;
     }
@@ -197,7 +197,7 @@ void Analog_Viewer::SetZoom(){
 }
 
 void Analog_Viewer::GraphSetShow(){
-    std::string name = ui->graphchoose_cbox->currentText().toStdString();
+    std::string name = _getSelectedGraphName();
     if (!name.empty()) {
         _graphs[name].show = ui->show_checkbox->isChecked();
         _graphs[name].graph->setVisible(_graphs[name].show);
@@ -224,12 +224,12 @@ void Analog_Viewer::ClickEvent(double x, double y, Qt::KeyboardModifiers modifie
     }
 }
 
-std::string Analog_Viewer::get_selected_graph_name(){
+std::string Analog_Viewer::_getSelectedGraphName(){
     return ui->graphchoose_cbox->currentText().toStdString();
 }
 
 void Analog_Viewer::GraphDelete(){
-    std::string name = get_selected_graph_name();
+    std::string name = _getSelectedGraphName();
     if (!name.empty()) {
         removeGraph(name);
         ui->graphchoose_cbox->removeItem(ui->graphchoose_cbox->currentIndex());

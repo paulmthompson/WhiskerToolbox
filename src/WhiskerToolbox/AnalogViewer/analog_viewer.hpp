@@ -66,7 +66,7 @@ private:
 
     int64_t _current_frame = 0;
 
-    std::string get_selected_graph_name();
+    std::string _getSelectedGraphName();
 public slots:
     void SetFrame(int i);
 
