@@ -169,22 +169,22 @@ void Analog_Viewer::SetPlotEditor(){
         return;
     }
     if (_graphs[name].type == GraphType::analog){
-
         ui->ymult_dspinbox->setEnabled(true);
         ui->yoffset_dspinbox->setEnabled(true);
         ui->ymult_dspinbox->setValue(_graphs[name].mult);
         ui->yoffset_dspinbox->setValue(_graphs[name].add);
         ui->show_checkbox->setChecked(_graphs[name].show);
-        if (!_prev_analog.empty()) {
-            _graphs[_prev_analog].graph->setHighlighted(false);
-        }
-        _graphs[name].graph->setHighlighted(true);
-        _prev_analog = name;
     } else if (_graphs[name].type == GraphType::digital){
         ui->ymult_dspinbox->setEnabled(false);
         ui->yoffset_dspinbox->setEnabled(false);
         ui->show_checkbox->setChecked(_graphs[name].show);
     }
+    if (!_prev_graph_highlighted.empty()) {
+        _graphs[_prev_graph_highlighted].graph->setHighlighted(false);
+    }
+    _prev_graph_highlighted = name;
+    _graphs[name].graph->setHighlighted(true);
+
     ui->plot->redrawPlot();
 }
 

@@ -62,7 +62,7 @@ private:
 
     void _graphApplyLintrans(std::string name);
 
-    std::string _prev_analog = ""; 
+    std::string _prev_graph_highlighted = ""; 
 
     int64_t _current_frame = 0;
 
