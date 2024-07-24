@@ -121,7 +121,7 @@
    <widget class="QDoubleSpinBox" name="sharpen_spinbox">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>200</x>
       <y>40</y>
       <width>91</width>
       <height>22</height>

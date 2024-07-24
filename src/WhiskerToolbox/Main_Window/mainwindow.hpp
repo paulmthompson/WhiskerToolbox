@@ -38,6 +38,7 @@ public:
     void registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area);
     void showDockWidget(std::string const & key);
 
+
 protected:
     void keyPressEvent(QKeyEvent *event);
 

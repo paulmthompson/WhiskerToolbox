@@ -1,6 +1,7 @@
 #include "Main_Window/mainwindow.hpp"
 
 #include <QApplication>
+#include <qstylefactory.h>
 #include <QFile>
 
 #include "jkqtplotter/jkqtplotter.h"
@@ -12,12 +13,19 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
 
+    a.setStyle("Fusion");
+
+
     MainWindow w;
 
     QFile file(":/my_stylesheet.qss");
     file.open(QFile::ReadOnly);
     QString styleSheet { QLatin1String(file.readAll()) };
     a.setStyleSheet(styleSheet);
+
+    if (a.palette().window().color().value() > a.palette().windowText().color().value()){
+        
+    }
 
     w.show();
 
