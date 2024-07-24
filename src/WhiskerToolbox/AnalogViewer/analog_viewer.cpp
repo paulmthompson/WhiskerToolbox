@@ -60,6 +60,8 @@ void Analog_Viewer::openWidget()
     ui->plot->clearAllRegisteredMouseDoubleClickActions();
     ui->plot->registerMouseDragAction(Qt::LeftButton, Qt::NoModifier, jkqtpmdaPanPlotOnMove);
 
+    ui->plot->getXAxis()->setTickLabelType(JKQTPCALTdefault);
+
     // Delete the default y axis
     ui->plot->getYAxis()->setDrawMode1(JKQTPCADMnone);
     ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
