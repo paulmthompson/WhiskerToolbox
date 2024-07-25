@@ -72,7 +72,8 @@ public slots:
     void SetFrame(int i);
 
 private slots:
-    void GraphSetLintrans();
+    void GraphSetHeight();
+    void GraphSetOffset();
     void GraphSetShow();
     void GraphSetShowAxis();
     void GraphDelete();
