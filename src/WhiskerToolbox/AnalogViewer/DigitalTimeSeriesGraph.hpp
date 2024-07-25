@@ -21,7 +21,7 @@ public:
     bool getYMinMax(double& miny, double& maxy, double& smallestGreaterZero) override;
     QColor getKeyLabelColor() const override;
 
-    void setColor(const QColor& color);
+    void setColor(QColor color);
     void setLineStyle(Qt:: PenStyle style);
 
 private:
