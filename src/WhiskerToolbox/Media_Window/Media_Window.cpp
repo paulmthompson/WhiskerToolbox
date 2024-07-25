@@ -328,9 +328,11 @@ void Media_Window::_plotPointData()
 
         auto pointData = _data_manager->getPoint(point_key)->getPointsAtTime(current_time);
 
-        for (const auto& single_point : pointData) {
 
-            auto ellipse = addEllipse(single_point.y * xAspect, single_point.x * yAspect, 10.0, 10.0, QPen(plot_color));
+        auto pen = QPen(plot_color);
+        pen.setWidth(3);
+        for (const auto& single_point : pointData) {
+            auto ellipse = addEllipse(single_point.y * xAspect, single_point.x * yAspect, 10.0, 10.0, pen);
             _points.append(ellipse);
         }
         i ++;
