@@ -120,3 +120,15 @@ QColor DigitalTimeSeriesGraph::getKeyLabelColor() const{
     // i dont know what this is for
     return QColor(0, 255, 0);
 }
+
+void DigitalTimeSeriesGraph::setColor(const QColor& color){
+    for (auto graph : _graphs){
+        graph->setColor(color);
+    }
+}
+
+void DigitalTimeSeriesGraph::setLineStyle(Qt::PenStyle style){
+    for (auto graph : _graphs){
+        graph->setLineStyle(style);
+    }
+}

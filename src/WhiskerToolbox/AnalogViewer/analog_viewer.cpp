@@ -18,6 +18,8 @@
 
 #include <iostream>
 
+
+
 Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QMainWindow(parent),
     _scene{scene},
@@ -117,6 +119,8 @@ void Analog_Viewer::plotAnalog(std::string name){
     graph->setXColumn(x_col);
     graph->setYColumn(y_col);
     graph->setTitle(QObject::tr(escape_latex(name).c_str()));
+    graph->setColor(_next_color());
+    graph->setLineStyle(Qt::SolidLine);
 
     auto axis_ref = ui->plot->getPlotter()->addSecondaryYAxis(new JKQTPVerticalAxis(ui->plot->getPlotter(), JKQTPPrimaryAxis));
     ui->plot->getYAxis(axis_ref)->setDrawGrid(false);
@@ -163,6 +167,8 @@ void Analog_Viewer::plotDigital(std::string name){
     DigitalTimeSeriesGraph* graph = new DigitalTimeSeriesGraph(ui->plot->getPlotter());
     graph->load_digital_vector(data);
     graph->setTitle(QObject::tr(escape_latex(name).c_str()));
+    graph->setColor(_next_color());
+    graph->setLineStyle(Qt::SolidLine);
 
     // Configure internal graph object
     GraphInfo graphInfo;
@@ -351,4 +357,10 @@ void Analog_Viewer::Alert(){
 void Analog_Viewer::SnapFrameToCenter(){
     int center_time = static_cast<int>((ui->plot->getXAxis()->getMax() + ui->plot->getXAxis()->getMin())/2);
     _time_scrollbar->changeScrollBarValue(center_time, false);
+}
+
+QColor Analog_Viewer::_next_color(){
+    auto result = _palette[_palette_idx];
+    _palette_idx = (_palette_idx + 1) % _palette.size();
+    return result;
 }
