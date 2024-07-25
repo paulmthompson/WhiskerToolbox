@@ -72,12 +72,11 @@ private:
     std::vector<QColor> _palette = { 
         QColor("#BF4F51"), // red
         QColor("#007FFF"), // blue
-        QColor("#ffbf00"), // yellow
-        QColor("#50c878"), // green
         QColor("#ed9121"), // orange
+        QColor("#50c878"), // green
         QColor("#8f00ff"), // violet
-        QColor("#ca1f7b"), // magenta
         QColor("#20b2aa"), // turquoise
+        QColor("#ca1f7b"), // magenta
         QColor("#af6e4d") // brown
     };
     int _palette_idx = 0;
