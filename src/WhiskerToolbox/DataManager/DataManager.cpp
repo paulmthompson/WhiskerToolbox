@@ -2,6 +2,7 @@
 #include "DataManager.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "Media/HDF5_Data.hpp"
 #include "Media/Image_Data.hpp"
 #include "Media/Video_Data.hpp"
 #include "TimeFrame.hpp"
@@ -30,6 +31,12 @@ void DataManager::createMedia(MediaType media_type)
     {
         _media.reset();
         _media = std::make_shared<VideoData>();
+        break;
+    }
+    case (MediaType::HDF5):
+    {
+        _media.reset();
+        _media = std::make_shared<HDF5Data>();
         break;
     }
     }

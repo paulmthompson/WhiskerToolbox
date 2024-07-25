@@ -35,6 +35,8 @@ add_library(DataManager SHARED
         utils/opencv_utility.hpp
         utils/opencv_utility.cpp
         utils/string_manip.hpp
+        Media/HDF5_Data.hpp
+        Media/HDF5_Data.cpp
 )
 
 target_include_directories(DataManager PRIVATE

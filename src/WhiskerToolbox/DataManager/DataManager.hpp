@@ -23,6 +23,7 @@ public:
     DataManager();
     enum MediaType {
         Video,
+        HDF5,
         Images,
     };
 

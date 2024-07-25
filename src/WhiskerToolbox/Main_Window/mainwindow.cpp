@@ -106,13 +106,25 @@ void MainWindow::Load_Video()
                 this,
                 "Load Video File",
                 QDir::currentPath(),
-                "All files (*.*) ;; MP4 (*.mp4)");
+                "All files (*.*) ;; MP4 (*.mp4); HDF5 (*.h5); MAT (*.mat)");
 
     if (vid_name.isNull()) {
         return;
     }
 
-    _data_manager->createMedia(DataManager::Video);
+    auto vid_path = std::filesystem::path(vid_name.toStdString());
+
+
+    if (vid_path.extension() == ".mp4") {
+        _data_manager->createMedia(DataManager::Video);
+    } else if (vid_path.extension() == ".h5") {
+        _data_manager->createMedia(DataManager::HDF5);
+    } else if (vid_path.extension() == ".mat") {
+        std::cout << "Loading MAT video file" << std::endl;
+        _data_manager->createMedia(DataManager::HDF5);
+    } else {
+        std::cout << "Video file with extension " << vid_path.extension() << " not supported" << std::endl;
+    }
 
     ui->media_widget->updateMedia();
 
