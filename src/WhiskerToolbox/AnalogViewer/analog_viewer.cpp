@@ -70,6 +70,11 @@ void Analog_Viewer::openWidget()
     ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
     ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
 
+    // Create the playhead "graph"
+    _playhead = new JKQTPGeoInfiniteLine(ui->plot, _current_frame, 0, 0, 1);
+    _playhead->setTwoSided(true);
+    ui->plot->addGraph(_playhead);
+
     this->show();
 }
 
@@ -80,6 +85,8 @@ void Analog_Viewer::openWidget()
 void Analog_Viewer::SetFrame(int i){
     //std::cout << "Analog Viewer: Set Frame " << i << std::endl;
     _current_frame = i;
+    _playhead->setX(_current_frame);
+    ui->plot->redrawPlot();
     _setZoom();
 }
 

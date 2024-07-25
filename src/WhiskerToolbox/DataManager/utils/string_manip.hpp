@@ -47,6 +47,10 @@ inline std::string pad_frame_id(int const number_to_pad, int const pad_digits)
     return ss.str();
 }
 
-
+// https://www.cespedes.org/blog/85/how-to-escape-latex-special-characters
+// For now only underscores are needed
+inline std::string escape_latex(std::string s){
+    return std::regex_replace(s, std::regex("_"), std::string("\\_"));
+}
 
 #endif // STRING_MANIP_HPP
