@@ -3,19 +3,22 @@
 
 #include "ui_analog_viewer.h"
 
+#include "utils/string_manip.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-
 #include "DigitalTimeSeriesGraph.hpp"
 
 #include "jkqtplotter/jkqtplotter.h"
 #include "jkqtplotter/graphs/jkqtplines.h"
 #include "jkqtplotter/jkqtpgraphsbase.h"
+#include "jkqtplotter/graphs/jkqtpgeolines.h"
 #include <QMainWindow>
 #include <QPointer>
 #include <QCheckBox>
 #include <QPushButton>
 
 #include <iostream>
+
+
 
 Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QMainWindow(parent),
@@ -27,13 +30,39 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
     ui->setupUi(this);
 
     connect(ui->graphchoose_cbox, &QComboBox::currentTextChanged, this, &Analog_Viewer::SetGraphEditor);
-    connect(ui->yheight_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
-    connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetLintrans);
+    connect(ui->yheight_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetHeight);
+    connect(ui->yoffset_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::GraphSetOffset);
     connect(ui->xwidth_dspinbox, &QDoubleSpinBox::valueChanged, this, &Analog_Viewer::SetZoom);
     connect(ui->show_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::GraphSetShow);
     connect(ui->showaxis_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::GraphSetShowAxis);
     connect(ui->delete_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::GraphDelete);
     connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
+    connect(ui->snapto_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::SnapFrameToCenter);
+
+    for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
+        plotAnalog(name);
+    }
+    for (auto name : _data_manager->getDigitalTimeSeriesKeys()) {
+        plotDigital(name);
+    }
+    _setZoom();
+
+    ui->plot->setContextMenuMode(jkqtpcmmNoContextMenu);
+    ui->plot->clearAllRegisteredMouseDoubleClickActions();
+    ui->plot->registerMouseDragAction(Qt::LeftButton, Qt::NoModifier, jkqtpmdaPanPlotOnMove);
+
+    // Prevent scientific notation from showing up with large x values
+    ui->plot->getXAxis()->setTickLabelType(JKQTPCALTdefault);
+
+    // Delete the default y axis
+    ui->plot->getYAxis()->setDrawMode1(JKQTPCADMnone);
+    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
+    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
+
+    // Create the playhead "graph"
+    _playhead = new JKQTPGeoInfiniteLine(ui->plot, _current_frame, 0, 0, 1);
+    _playhead->setTwoSided(true);
+    ui->plot->addGraph(_playhead);
 }
 
 Analog_Viewer::~Analog_Viewer() {
@@ -47,23 +76,7 @@ void Analog_Viewer::openWidget()
 {
     std::cout << "Analog Viewer Opened" << std::endl;
 
-    // Plot all graphs added before analog viewer was created
-    for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
-        plotAnalog(name);
-    }
-    for (auto name : _data_manager->getDigitalTimeSeriesKeys()) {
-        plotDigital(name);
-    }
-    _setZoom();
-
-    ui->plot->setContextMenuMode(jkqtpcmmNoContextMenu);
-    ui->plot->clearAllRegisteredMouseDoubleClickActions();
-    ui->plot->registerMouseDragAction(Qt::LeftButton, Qt::NoModifier, jkqtpmdaPanPlotOnMove);
-
-    // Delete the default y axis
-    ui->plot->getYAxis()->setDrawMode1(JKQTPCADMnone);
-    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
-    ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
+   
 
     this->show();
 }
@@ -73,8 +86,10 @@ void Analog_Viewer::openWidget()
  * @param i Frame number
  */
 void Analog_Viewer::SetFrame(int i){
-    std::cout << "Analog Viewer: Set Frame " << i << std::endl;
+    //std::cout << "Analog Viewer: Set Frame " << i << std::endl;
     _current_frame = i;
+    _playhead->setX(_current_frame);
+    ui->plot->redrawPlot();
     _setZoom();
 }
 
@@ -103,7 +118,9 @@ void Analog_Viewer::plotAnalog(std::string name){
     graph->setSymbolType(JKQTPNoSymbol);
     graph->setXColumn(x_col);
     graph->setYColumn(y_col);
-    graph->setTitle(QObject::tr(name.c_str()));
+    graph->setTitle(QObject::tr(escape_latex(name).c_str()));
+    graph->setColor(_next_color());
+    graph->setLineStyle(Qt::SolidLine);
 
     auto axis_ref = ui->plot->getPlotter()->addSecondaryYAxis(new JKQTPVerticalAxis(ui->plot->getPlotter(), JKQTPPrimaryAxis));
     ui->plot->getYAxis(axis_ref)->setDrawGrid(false);
@@ -129,6 +146,7 @@ void Analog_Viewer::plotAnalog(std::string name){
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
     ui->plot->addGraph(graph);
 
+    ui->graphchoose_cbox->setCurrentText(QString::fromStdString(name));
 }
 
 /**
@@ -148,7 +166,9 @@ void Analog_Viewer::plotDigital(std::string name){
     // Configure JKQTPlotter graph object
     DigitalTimeSeriesGraph* graph = new DigitalTimeSeriesGraph(ui->plot->getPlotter());
     graph->load_digital_vector(data);
-    graph->setTitle(QObject::tr(name.c_str()));
+    graph->setTitle(QObject::tr(escape_latex(name).c_str()));
+    graph->setColor(_next_color());
+    graph->setLineStyle(Qt::SolidLine);
 
     // Configure internal graph object
     GraphInfo graphInfo;
@@ -175,10 +195,7 @@ void Analog_Viewer::removeGraph(std::string name){
     _graphs.erase(name);
 }
 
-/**
- * @brief Slot to apply linear transformation to analog graph when yheight or yoffset is changed in GUI
- */
-void Analog_Viewer::GraphSetLintrans(){
+void Analog_Viewer::GraphSetHeight(){
     std::string name = _getSelectedGraphName();
     if (name.empty()) {
         return;
@@ -191,6 +208,24 @@ void Analog_Viewer::GraphSetLintrans(){
     }
     _graphs[name].height = ui->yheight_dspinbox->value();
 
+
+    double cur_offset = (_graphs[name].axis->getMax() + _graphs[name].axis->getMin())/2;
+    _graphs[name].axis->setRange(cur_offset- _graphs[name].height/2, cur_offset+ _graphs[name].height/2);
+
+    ui->plot->redrawPlot();
+}
+
+void Analog_Viewer::GraphSetOffset(){
+    std::string name = _getSelectedGraphName();
+    if (name.empty()) {
+        return;
+    }
+    if (_graphs.find(name) == _graphs.end()) {
+        return;
+    }
+    if (_graphs[name].type != GraphType::analog) {
+        return;
+    }
     double cur_offset = (_graphs[name].axis->getMax() + _graphs[name].axis->getMin())/2;
     double final_offset = cur_offset + _graphs[name].offset - ui->yoffset_dspinbox->value();
 
@@ -209,19 +244,19 @@ void Analog_Viewer::SetGraphEditor(){
         return;
     }
     if (_graphs[name].type == GraphType::analog){
-        ui->yheight_dspinbox->setEnabled(true);
-        ui->yoffset_dspinbox->setEnabled(true);
-        ui->showaxis_checkbox->setEnabled(true);
         ui->yheight_dspinbox->setValue(_graphs[name].height);
         ui->yoffset_dspinbox->setValue(_graphs[name].offset);
         ui->show_checkbox->setChecked(_graphs[name].show);
         ui->showaxis_checkbox->setChecked(_graphs[name].show_axis);
+        ui->yheight_dspinbox->setEnabled(true);
+        ui->yoffset_dspinbox->setEnabled(true);
+        ui->showaxis_checkbox->setEnabled(true);
         //_scaleYAxis();
     } else if (_graphs[name].type == GraphType::digital){
+        ui->show_checkbox->setChecked(_graphs[name].show);
         ui->yheight_dspinbox->setEnabled(false);
         ui->yoffset_dspinbox->setEnabled(false);
         ui->showaxis_checkbox->setEnabled(false);
-        ui->show_checkbox->setChecked(_graphs[name].show);
     }
     if (!_prev_graph_highlighted.empty() && _graphs.find(_prev_graph_highlighted) != _graphs.end()) {
         _graphs[_prev_graph_highlighted].graph->setHighlighted(false);
@@ -317,4 +352,15 @@ void Analog_Viewer::GraphDelete(){
 
 void Analog_Viewer::Alert(){
     std::cout << "Alert" << std::endl;
+}
+
+void Analog_Viewer::SnapFrameToCenter(){
+    int center_time = static_cast<int>((ui->plot->getXAxis()->getMax() + ui->plot->getXAxis()->getMin())/2);
+    _time_scrollbar->changeScrollBarValue(center_time, false);
+}
+
+QColor Analog_Viewer::_next_color(){
+    auto result = _palette[_palette_idx];
+    _palette_idx = (_palette_idx + 1) % _palette.size();
+    return result;
 }

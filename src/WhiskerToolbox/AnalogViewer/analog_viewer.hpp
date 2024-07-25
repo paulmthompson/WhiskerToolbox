@@ -9,6 +9,7 @@
 #include <QMainWindow>
 
 #include "jkqtplotter/jkqtplotter.h"
+#include "jkqtplotter/graphs/jkqtpgeolines.h"
 
 #include "Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
@@ -39,7 +40,6 @@ private:
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
-
     Ui::Analog_Viewer *ui;
 
     enum class GraphType {
@@ -60,27 +60,41 @@ private:
     };
     std::map<std::string, GraphInfo> _graphs;
 
-    void _setZoom();
-
+    JKQTPGeoInfiniteLine* _playhead;
 
     std::string _prev_graph_highlighted = ""; 
-
-    void _scaleYAxis();
-
     int64_t _current_frame = 0;
 
     std::string _getSelectedGraphName();
+    void _setZoom();
+    void _scaleYAxis();
+
+    std::vector<QColor> _palette = { 
+        QColor("#BF4F51"), // red
+        QColor("#007FFF"), // blue
+        QColor("#ed9121"), // orange
+        QColor("#50c878"), // green
+        QColor("#8f00ff"), // violet
+        QColor("#20b2aa"), // turquoise
+        QColor("#ca1f7b"), // magenta
+        QColor("#af6e4d") // brown
+    };
+    int _palette_idx = 0;
+    QColor _next_color();
+
 public slots:
     void SetFrame(int i);
 
 private slots:
-    void GraphSetLintrans();
+    void GraphSetHeight();
+    void GraphSetOffset();
     void GraphSetShow();
     void GraphSetShowAxis();
     void GraphDelete();
     void SetGraphEditor();
     void SetZoom();
     void ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button);
+    void SnapFrameToCenter();
 
     void Alert();
 };
