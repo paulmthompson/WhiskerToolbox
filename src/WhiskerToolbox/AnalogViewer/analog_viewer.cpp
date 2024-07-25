@@ -3,13 +3,14 @@
 
 #include "ui_analog_viewer.h"
 
+#include "utils/string_manip.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-
 #include "DigitalTimeSeriesGraph.hpp"
 
 #include "jkqtplotter/jkqtplotter.h"
 #include "jkqtplotter/graphs/jkqtplines.h"
 #include "jkqtplotter/jkqtpgraphsbase.h"
+#include "jkqtplotter/graphs/jkqtpgeolines.h"
 #include <QMainWindow>
 #include <QPointer>
 #include <QCheckBox>
@@ -34,6 +35,7 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
     connect(ui->showaxis_checkbox, &QCheckBox::stateChanged, this, &Analog_Viewer::GraphSetShowAxis);
     connect(ui->delete_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::GraphDelete);
     connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
+    connect(ui->snapto_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::SnapFrameToCenter);
 }
 
 Analog_Viewer::~Analog_Viewer() {
@@ -60,6 +62,7 @@ void Analog_Viewer::openWidget()
     ui->plot->clearAllRegisteredMouseDoubleClickActions();
     ui->plot->registerMouseDragAction(Qt::LeftButton, Qt::NoModifier, jkqtpmdaPanPlotOnMove);
 
+    // Prevent scientific notation from showing up with large x values
     ui->plot->getXAxis()->setTickLabelType(JKQTPCALTdefault);
 
     // Delete the default y axis
@@ -75,7 +78,7 @@ void Analog_Viewer::openWidget()
  * @param i Frame number
  */
 void Analog_Viewer::SetFrame(int i){
-    std::cout << "Analog Viewer: Set Frame " << i << std::endl;
+    //std::cout << "Analog Viewer: Set Frame " << i << std::endl;
     _current_frame = i;
     _setZoom();
 }
@@ -105,7 +108,7 @@ void Analog_Viewer::plotAnalog(std::string name){
     graph->setSymbolType(JKQTPNoSymbol);
     graph->setXColumn(x_col);
     graph->setYColumn(y_col);
-    graph->setTitle(QObject::tr(name.c_str()));
+    graph->setTitle(QObject::tr(escape_latex(name).c_str()));
 
     auto axis_ref = ui->plot->getPlotter()->addSecondaryYAxis(new JKQTPVerticalAxis(ui->plot->getPlotter(), JKQTPPrimaryAxis));
     ui->plot->getYAxis(axis_ref)->setDrawGrid(false);
@@ -150,7 +153,7 @@ void Analog_Viewer::plotDigital(std::string name){
     // Configure JKQTPlotter graph object
     DigitalTimeSeriesGraph* graph = new DigitalTimeSeriesGraph(ui->plot->getPlotter());
     graph->load_digital_vector(data);
-    graph->setTitle(QObject::tr(name.c_str()));
+    graph->setTitle(QObject::tr(escape_latex(name).c_str()));
 
     // Configure internal graph object
     GraphInfo graphInfo;
@@ -319,4 +322,9 @@ void Analog_Viewer::GraphDelete(){
 
 void Analog_Viewer::Alert(){
     std::cout << "Alert" << std::endl;
+}
+
+void Analog_Viewer::SnapFrameToCenter(){
+    int center_time = static_cast<int>((ui->plot->getXAxis()->getMax() + ui->plot->getXAxis()->getMin())/2);
+    _time_scrollbar->changeScrollBarValue(center_time, false);
 }

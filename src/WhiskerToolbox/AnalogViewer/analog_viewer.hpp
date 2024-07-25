@@ -9,6 +9,7 @@
 #include <QMainWindow>
 
 #include "jkqtplotter/jkqtplotter.h"
+#include "jkqtplotter/graphs/jkqtpgeolines.h"
 
 #include "Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
@@ -39,7 +40,6 @@ private:
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
-
     Ui::Analog_Viewer *ui;
 
     enum class GraphType {
@@ -60,16 +60,14 @@ private:
     };
     std::map<std::string, GraphInfo> _graphs;
 
-    void _setZoom();
-
+    JKQTPGeoInfiniteLine* _playhead;
 
     std::string _prev_graph_highlighted = ""; 
-
-    void _scaleYAxis();
-
     int64_t _current_frame = 0;
 
     std::string _getSelectedGraphName();
+    void _setZoom();
+    void _scaleYAxis();
 public slots:
     void SetFrame(int i);
 
@@ -81,6 +79,7 @@ private slots:
     void SetGraphEditor();
     void SetZoom();
     void ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button);
+    void SnapFrameToCenter();
 
     void Alert();
 };
