@@ -8,12 +8,11 @@
 #include <QWidget>
 #include <QMainWindow>
 
-#include "jkqtplotter/jkqtplotter.h"
-#include "jkqtplotter/graphs/jkqtpgeolines.h"
-
-#include "Media_Window.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
-#include "DataManager.hpp"
+class DataManager;
+class JKQTPGeoInfiniteLine;
+class JKQTPPlotElement;
+class JKQTPVerticalAxisBase;
+class TimeScrollBar;
 
 namespace Ui {
 class Analog_Viewer;
@@ -23,21 +22,20 @@ class Analog_Viewer : public QMainWindow {
     Q_OBJECT
 public:
 
-    Analog_Viewer(Media_Window* scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = 0);
+    Analog_Viewer(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = 0);
     ~Analog_Viewer();
 
     void openWidget();
 
-    void plotAnalog(std::string name);
-    void plotDigital(std::string name);
-    void removeGraph(std::string name);
+    void plotAnalog(std::string const & name);
+    void plotDigital(std::string const & name);
+    void removeGraph(std::string const & name);
 
 protected:
     //void closeEvent(QCloseEvent *event);
     //void keyPressEvent(QKeyEvent *event);
 
 private:
-    Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
     Ui::Analog_Viewer *ui;
