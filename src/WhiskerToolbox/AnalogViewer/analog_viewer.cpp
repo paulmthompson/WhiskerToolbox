@@ -5,7 +5,9 @@
 
 #include "utils/string_manip.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager.hpp"
 #include "DigitalTimeSeriesGraph.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include "jkqtplotter/jkqtplotter.h"
 #include "jkqtplotter/graphs/jkqtplines.h"
@@ -20,9 +22,8 @@
 
 
 
-Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
+Analog_Viewer::Analog_Viewer(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QMainWindow(parent),
-    _scene{scene},
     _data_manager{data_manager},
     _time_scrollbar{time_scrollbar},
     ui(new Ui::Analog_Viewer)
@@ -97,7 +98,7 @@ void Analog_Viewer::SetFrame(int i){
  * @brief Plot a line on the analog viewer
  * @param name Name of data sotred in DataManager
  */
-void Analog_Viewer::plotAnalog(std::string name){
+void Analog_Viewer::plotAnalog(std::string const & name){
     if (_graphs.find(name) != _graphs.end()) {
         std::cout << "Plot element named " << name << " already exists, data has been replaced" << std::endl;
         ui->plot->redrawPlot();
@@ -153,7 +154,7 @@ void Analog_Viewer::plotAnalog(std::string name){
  * @brief Plot a digital time series on the analog viewer
  * @param name Name of data stored in DataManager
  */
-void Analog_Viewer::plotDigital(std::string name){
+void Analog_Viewer::plotDigital(std::string const & name){
     if (_graphs.find(name) != _graphs.end()) {
         std::cout << "Plot element named " << name << " already exists, data will be replaced" << std::endl;
         removeGraph(name);
@@ -184,7 +185,7 @@ void Analog_Viewer::plotDigital(std::string name){
  * @brief Remove a graph from the analog viewer
  * @param name Name of graph to remove
  */
-void Analog_Viewer::removeGraph(std::string name){
+void Analog_Viewer::removeGraph(std::string const & name){
     if (_graphs.find(name) == _graphs.end()) {
         std::cout << "Plot element named " << name << " does not exist" << std::endl;
         return;

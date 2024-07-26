@@ -273,7 +273,7 @@ void MainWindow::openAnalogViewer()
     std::string const key = "analog_viewer";
 
     if (_widgets.find(key) == _widgets.end()) {
-        auto analogViewer = std::make_unique<Analog_Viewer>(_scene, _data_manager, ui->time_scrollbar, this);
+        auto analogViewer = std::make_unique<Analog_Viewer>(_data_manager, ui->time_scrollbar, this);
         analogViewer->setObjectName(key);
         registerDockWidget(key, analogViewer.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(analogViewer);
