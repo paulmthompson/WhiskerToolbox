@@ -15,6 +15,7 @@
 #include <QPointer>
 #include <QCheckBox>
 #include <QPushButton>
+#include <QFileDialog>
 
 #include <iostream>
 
@@ -38,6 +39,7 @@ Analog_Viewer::Analog_Viewer(Media_Window *scene, std::shared_ptr<DataManager> d
     connect(ui->delete_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::GraphDelete);
     connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
     connect(ui->snapto_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::SnapFrameToCenter);
+    connect(ui->loadkeypt_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::LoadKeypoints);
 
     for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
         plotAnalog(name);
@@ -119,7 +121,6 @@ void Analog_Viewer::plotAnalog(std::string name){
     graph->setXColumn(x_col);
     graph->setYColumn(y_col);
     graph->setTitle(QObject::tr(escape_latex(name).c_str()));
-    graph->setColor(_next_color());
     graph->setLineStyle(Qt::SolidLine);
 
     auto axis_ref = ui->plot->getPlotter()->addSecondaryYAxis(new JKQTPVerticalAxis(ui->plot->getPlotter(), JKQTPPrimaryAxis));
@@ -129,7 +130,6 @@ void Analog_Viewer::plotAnalog(std::string name){
     ui->plot->getYAxis(axis_ref)->setDrawMode0(JKQTPCADMnone);
     ui->plot->getYAxis(axis_ref)->setShowZeroAxis(false);
     ui->plot->getYAxis(axis_ref)->setRange(-5, 5);
-    ui->plot->getYAxis(axis_ref)->setColor(graph->getLineColor());
 
     graph->setYAxis(axis_ref);
 
@@ -141,8 +141,12 @@ void Analog_Viewer::plotAnalog(std::string name){
     graphInfo.offset = 0.0;
     graphInfo.graph = graph;
     graphInfo.axis = ui->plot->getYAxis(axis_ref);
+    graphInfo.color = _nextColor();
     _graphs[name] = graphInfo;
 
+    graph->setColor(graphInfo.color);
+    ui->plot->getYAxis(axis_ref)->setColor(graphInfo.color);
+    
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
     ui->plot->addGraph(graph);
 
@@ -167,15 +171,16 @@ void Analog_Viewer::plotDigital(std::string name){
     DigitalTimeSeriesGraph* graph = new DigitalTimeSeriesGraph(ui->plot->getPlotter());
     graph->load_digital_vector(data);
     graph->setTitle(QObject::tr(escape_latex(name).c_str()));
-    graph->setColor(_next_color());
     graph->setLineStyle(Qt::SolidLine);
 
     // Configure internal graph object
     GraphInfo graphInfo;
     graphInfo.type = GraphType::digital;
     graphInfo.graph = graph;
+    graphInfo.color = _nextColor();
     _graphs[name] = graphInfo;
 
+    graph->setColor(graphInfo.color);
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
     ui->plot->addGraph(graph);
 }
@@ -359,8 +364,45 @@ void Analog_Viewer::SnapFrameToCenter(){
     _time_scrollbar->changeScrollBarValue(center_time, false);
 }
 
-QColor Analog_Viewer::_next_color(){
+QColor Analog_Viewer::_nextColor(){
     auto result = _palette[_palette_idx];
     _palette_idx = (_palette_idx + 1) % _palette.size();
     return result;
+}
+
+void Analog_Viewer::LoadKeypoints(){
+    if (_getSelectedGraphName().empty()) {
+        return;
+    }
+
+    auto filename = QFileDialog::getOpenFileName(
+        this,
+        "Load CSV File",
+        QDir::currentPath(),
+        "All files (*.*)");
+
+    if (filename.isNull()) {
+        return;
+    }
+
+    auto keypoints = load_points_from_csv(filename.toStdString(), 0, 1, 2);
+
+    auto point_num = _data_manager->getPointKeys().size();
+
+    std::cout << "There are " << point_num << " keypoints loaded" << std::endl;
+
+    auto keypoint_key = "keypoint_" + std::to_string(point_num);
+
+    _data_manager->createPoint(keypoint_key);
+
+    auto point = _data_manager->getPoint(keypoint_key);
+    point->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    point->setMaskWidth(_data_manager->getMediaData()->getWidth());
+
+    for (auto & [key, val] : keypoints) {
+        point->addPointAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(key), val.x, val.y);
+    }
+
+    _scene->addPointDataToScene(keypoint_key);
+    _scene->changePointColor(keypoint_key, _graphs[_getSelectedGraphName()].color.name().toStdString());
 }
