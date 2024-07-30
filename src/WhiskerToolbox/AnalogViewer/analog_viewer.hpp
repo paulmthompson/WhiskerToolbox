@@ -95,8 +95,6 @@ private slots:
     void ClickEvent(double x, double y, Qt::KeyboardModifiers modifiers, Qt::MouseButton button);
     void SnapFrameToCenter();
 
-    void LoadKeypoints();
-
     void Alert();
 };
 

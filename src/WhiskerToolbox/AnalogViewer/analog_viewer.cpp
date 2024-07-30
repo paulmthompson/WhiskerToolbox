@@ -40,7 +40,6 @@ Analog_Viewer::Analog_Viewer(std::shared_ptr<DataManager> data_manager, TimeScro
     connect(ui->delete_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::GraphDelete);
     connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
     connect(ui->snapto_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::SnapFrameToCenter);
-    connect(ui->loadkeypt_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::LoadKeypoints);
 
     for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
         plotAnalog(name);
@@ -369,41 +368,4 @@ QColor Analog_Viewer::_nextColor(){
     auto result = _palette[_palette_idx];
     _palette_idx = (_palette_idx + 1) % _palette.size();
     return result;
-}
-
-void Analog_Viewer::LoadKeypoints(){
-    if (_getSelectedGraphName().empty()) {
-        return;
-    }
-
-    auto filename = QFileDialog::getOpenFileName(
-        this,
-        "Load CSV File",
-        QDir::currentPath(),
-        "All files (*.*)");
-
-    if (filename.isNull()) {
-        return;
-    }
-
-    auto keypoints = load_points_from_csv(filename.toStdString(), 0, 1, 2);
-
-    auto point_num = _data_manager->getPointKeys().size();
-
-    std::cout << "There are " << point_num << " keypoints loaded" << std::endl;
-
-    auto keypoint_key = "keypoint_" + std::to_string(point_num);
-
-    _data_manager->createPoint(keypoint_key);
-
-    auto point = _data_manager->getPoint(keypoint_key);
-    point->setMaskHeight(_data_manager->getMediaData()->getHeight());
-    point->setMaskWidth(_data_manager->getMediaData()->getWidth());
-
-    for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(key), val.x, val.y);
-    }
-
-    _scene->addPointDataToScene(keypoint_key);
-    _scene->changePointColor(keypoint_key, _graphs[_getSelectedGraphName()].color.name().toStdString());
 }
