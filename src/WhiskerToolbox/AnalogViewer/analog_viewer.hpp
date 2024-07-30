@@ -52,6 +52,7 @@ private:
         bool show = true;
         bool show_axis = true;
         size_t ds_y_col;
+        QColor color;
         GraphType type;
 
         GraphInfo() {}
@@ -78,7 +79,7 @@ private:
         QColor("#af6e4d") // brown
     };
     int _palette_idx = 0;
-    QColor _next_color();
+    QColor _nextColor();
 
 public slots:
     void SetFrame(int i);

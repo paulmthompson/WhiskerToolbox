@@ -10,6 +10,7 @@ class DigitalTimeSeriesGraph : public JKQTPPlotElement {
     
 public:
     DigitalTimeSeriesGraph(JKQTBasePlotter *parent=nullptr);
+    ~DigitalTimeSeriesGraph();
 
 
     void load_digital_vector(std::vector<std::pair<float, float>> digital_vector);
@@ -21,7 +22,7 @@ public:
     bool getYMinMax(double& miny, double& maxy, double& smallestGreaterZero) override;
     QColor getKeyLabelColor() const override;
 
-    void setColor(const QColor& color);
+    void setColor(QColor color);
     void setLineStyle(Qt:: PenStyle style);
 
 private:

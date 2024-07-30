@@ -40,7 +40,7 @@
      <rect>
       <x>120</x>
       <y>30</y>
-      <width>331</width>
+      <width>431</width>
       <height>21</height>
      </rect>
     </property>
@@ -141,7 +141,7 @@
    <widget class="QPushButton" name="delete_pushbtn">
     <property name="geometry">
      <rect>
-      <x>340</x>
+      <x>350</x>
       <y>55</y>
       <width>61</width>
       <height>32</height>

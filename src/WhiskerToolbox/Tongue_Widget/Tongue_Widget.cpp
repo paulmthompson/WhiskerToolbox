@@ -27,8 +27,7 @@
 
 
 const std::vector<std::string> tongue_colors = {
-    "#8b0000", // dark red
-    "#006400", // dark green
+    "#00FF00", // greeeeeeeeen 
     "#8b008b", // dark magenta
     "#9b870c", // dark yellow
     "#00008b" // dark blue

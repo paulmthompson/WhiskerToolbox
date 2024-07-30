@@ -121,7 +121,8 @@ QColor DigitalTimeSeriesGraph::getKeyLabelColor() const{
     return QColor(0, 255, 0);
 }
 
-void DigitalTimeSeriesGraph::setColor(const QColor& color){
+void DigitalTimeSeriesGraph::setColor(QColor color){
+    color.setAlpha(100);
     for (auto graph : _graphs){
         graph->setColor(color);
     }
@@ -131,4 +132,10 @@ void DigitalTimeSeriesGraph::setLineStyle(Qt::PenStyle style){
     for (auto graph : _graphs){
         graph->setLineStyle(style);
     }
+}
+
+DigitalTimeSeriesGraph::~DigitalTimeSeriesGraph(){
+    for (auto graph : _graphs){
+        delete graph;
+    } 
 }

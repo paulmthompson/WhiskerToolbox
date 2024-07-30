@@ -17,6 +17,7 @@
 #include <QPointer>
 #include <QCheckBox>
 #include <QPushButton>
+#include <QFileDialog>
 
 #include <iostream>
 
@@ -40,6 +41,11 @@ Analog_Viewer::Analog_Viewer(std::shared_ptr<DataManager> data_manager, TimeScro
     connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
     connect(ui->snapto_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::SnapFrameToCenter);
 
+    // Create the playhead "graph"
+    _playhead = new JKQTPGeoInfiniteLine(ui->plot, _current_frame, 0, 0, 1);
+    _playhead->setTwoSided(true);
+    ui->plot->addGraph(_playhead);
+
     for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
         plotAnalog(name);
     }
@@ -59,11 +65,6 @@ Analog_Viewer::Analog_Viewer(std::shared_ptr<DataManager> data_manager, TimeScro
     ui->plot->getYAxis()->setDrawMode1(JKQTPCADMnone);
     ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
     ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
-
-    // Create the playhead "graph"
-    _playhead = new JKQTPGeoInfiniteLine(ui->plot, _current_frame, 0, 0, 1);
-    _playhead->setTwoSided(true);
-    ui->plot->addGraph(_playhead);
 }
 
 Analog_Viewer::~Analog_Viewer() {
@@ -120,7 +121,6 @@ void Analog_Viewer::plotAnalog(std::string const & name){
     graph->setXColumn(x_col);
     graph->setYColumn(y_col);
     graph->setTitle(QObject::tr(escape_latex(name).c_str()));
-    graph->setColor(_next_color());
     graph->setLineStyle(Qt::SolidLine);
 
     auto axis_ref = ui->plot->getPlotter()->addSecondaryYAxis(new JKQTPVerticalAxis(ui->plot->getPlotter(), JKQTPPrimaryAxis));
@@ -130,7 +130,6 @@ void Analog_Viewer::plotAnalog(std::string const & name){
     ui->plot->getYAxis(axis_ref)->setDrawMode0(JKQTPCADMnone);
     ui->plot->getYAxis(axis_ref)->setShowZeroAxis(false);
     ui->plot->getYAxis(axis_ref)->setRange(-5, 5);
-    ui->plot->getYAxis(axis_ref)->setColor(graph->getLineColor());
 
     graph->setYAxis(axis_ref);
 
@@ -142,10 +141,15 @@ void Analog_Viewer::plotAnalog(std::string const & name){
     graphInfo.offset = 0.0;
     graphInfo.graph = graph;
     graphInfo.axis = ui->plot->getYAxis(axis_ref);
+    graphInfo.color = _nextColor();
     _graphs[name] = graphInfo;
 
+    graph->setColor(graphInfo.color);
+    ui->plot->getYAxis(axis_ref)->setColor(graphInfo.color);
+    
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
     ui->plot->addGraph(graph);
+    ui->plot->moveGraphTop(_playhead);
 
     ui->graphchoose_cbox->setCurrentText(QString::fromStdString(name));
 }
@@ -168,17 +172,21 @@ void Analog_Viewer::plotDigital(std::string const & name){
     DigitalTimeSeriesGraph* graph = new DigitalTimeSeriesGraph(ui->plot->getPlotter());
     graph->load_digital_vector(data);
     graph->setTitle(QObject::tr(escape_latex(name).c_str()));
-    graph->setColor(_next_color());
     graph->setLineStyle(Qt::SolidLine);
 
     // Configure internal graph object
     GraphInfo graphInfo;
     graphInfo.type = GraphType::digital;
     graphInfo.graph = graph;
+    graphInfo.color = _nextColor();
     _graphs[name] = graphInfo;
 
+    graph->setColor(graphInfo.color);
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
     ui->plot->addGraph(graph);
+    ui->plot->moveGraphTop(_playhead);
+
+    ui->graphchoose_cbox->setCurrentText(QString::fromStdString(name));
 }
 
 /**
@@ -191,8 +199,11 @@ void Analog_Viewer::removeGraph(std::string const & name){
         return;
     }
     ui->plot->deleteGraph(_graphs[name].graph);
+
     // So I don't think there's a way to delete an axis after adding one, I guess hiding it forever will work.
-    _graphs[name].axis->setDrawMode1(JKQTPCADMnone);
+    if (_graphs[name].type == GraphType::analog) {
+        _graphs[name].axis->setDrawMode1(JKQTPCADMnone);
+    }   
     _graphs.erase(name);
 }
 
@@ -360,7 +371,7 @@ void Analog_Viewer::SnapFrameToCenter(){
     _time_scrollbar->changeScrollBarValue(center_time, false);
 }
 
-QColor Analog_Viewer::_next_color(){
+QColor Analog_Viewer::_nextColor(){
     auto result = _palette[_palette_idx];
     _palette_idx = (_palette_idx + 1) % _palette.size();
     return result;
