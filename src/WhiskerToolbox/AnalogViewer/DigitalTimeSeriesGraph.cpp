@@ -133,3 +133,9 @@ void DigitalTimeSeriesGraph::setLineStyle(Qt::PenStyle style){
         graph->setLineStyle(style);
     }
 }
+
+DigitalTimeSeriesGraph::~DigitalTimeSeriesGraph(){
+    for (auto graph : _graphs){
+        delete graph;
+    } 
+}

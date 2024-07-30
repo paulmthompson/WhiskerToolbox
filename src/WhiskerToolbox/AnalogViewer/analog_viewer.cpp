@@ -41,6 +41,11 @@ Analog_Viewer::Analog_Viewer(std::shared_ptr<DataManager> data_manager, TimeScro
     connect(ui->plot, &JKQTPlotter::plotMouseClicked, this, &Analog_Viewer::ClickEvent);
     connect(ui->snapto_pushbtn, &QPushButton::clicked, this, &Analog_Viewer::SnapFrameToCenter);
 
+    // Create the playhead "graph"
+    _playhead = new JKQTPGeoInfiniteLine(ui->plot, _current_frame, 0, 0, 1);
+    _playhead->setTwoSided(true);
+    ui->plot->addGraph(_playhead);
+
     for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
         plotAnalog(name);
     }
@@ -60,11 +65,6 @@ Analog_Viewer::Analog_Viewer(std::shared_ptr<DataManager> data_manager, TimeScro
     ui->plot->getYAxis()->setDrawMode1(JKQTPCADMnone);
     ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
     ui->plot->getYAxis()->setDrawMode2(JKQTPCADMnone);
-
-    // Create the playhead "graph"
-    _playhead = new JKQTPGeoInfiniteLine(ui->plot, _current_frame, 0, 0, 1);
-    _playhead->setTwoSided(true);
-    ui->plot->addGraph(_playhead);
 }
 
 Analog_Viewer::~Analog_Viewer() {

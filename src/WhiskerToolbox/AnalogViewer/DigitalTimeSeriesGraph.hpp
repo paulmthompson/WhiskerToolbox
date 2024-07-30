@@ -10,6 +10,7 @@ class DigitalTimeSeriesGraph : public JKQTPPlotElement {
     
 public:
     DigitalTimeSeriesGraph(JKQTBasePlotter *parent=nullptr);
+    ~DigitalTimeSeriesGraph();
 
 
     void load_digital_vector(std::vector<std::pair<float, float>> digital_vector);
