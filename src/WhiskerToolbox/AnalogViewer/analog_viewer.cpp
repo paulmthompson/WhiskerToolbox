@@ -149,6 +149,7 @@ void Analog_Viewer::plotAnalog(std::string const & name){
     
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
     ui->plot->addGraph(graph);
+    ui->plot->moveGraphTop(_playhead);
 
     ui->graphchoose_cbox->setCurrentText(QString::fromStdString(name));
 }
@@ -183,6 +184,9 @@ void Analog_Viewer::plotDigital(std::string const & name){
     graph->setColor(graphInfo.color);
     ui->graphchoose_cbox->addItem(QString::fromStdString(name));
     ui->plot->addGraph(graph);
+    ui->plot->moveGraphTop(_playhead);
+
+    ui->graphchoose_cbox->setCurrentText(QString::fromStdString(name));
 }
 
 /**
