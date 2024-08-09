@@ -45,7 +45,6 @@ target_include_directories(DataManager PRIVATE
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     )
 
-target_link_libraries(DataManager PRIVATE Qt6::Widgets)
 
 target_link_libraries(DataManager PRIVATE ffmpeg_wrapper::ffmpeg_wrapper)
 

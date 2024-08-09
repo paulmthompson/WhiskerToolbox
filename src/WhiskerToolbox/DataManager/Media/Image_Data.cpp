@@ -3,8 +3,9 @@
 
 #include "utils/string_manip.hpp"
 
-#include <QImage>
-#include <QString>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/core/core.hpp>
 
 #include <cstddef>
 #include <iostream>
@@ -34,15 +35,16 @@ void ImageData::doLoadMedia(std::string dir_name) {
     setTotalFrameCount(_image_paths.size());
 }
 
-QImage _convertToDisplayFormat(QImage& image, ImageData::DisplayFormat format)
-{
-    switch (format)
-    {
-    case ImageData::DisplayFormat::Gray:
-        return image.convertToFormat(QImage::Format_Grayscale8);
-    case ImageData::DisplayFormat::Color:
-        return image.convertToFormat(QImage::Format_ARGB32);
+cv::Mat _convertToDisplayFormat(cv::Mat& image, ImageData::DisplayFormat format){
+    cv::Mat converted_image;
+    if (format == ImageData::DisplayFormat::Gray){
+        cv::cvtColor(image, converted_image, cv::COLOR_BGR2GRAY);
+        // std::cout << "Converting to Gray" << std::endl;
+    } else if (format == ImageData::DisplayFormat::Color){
+        cv::cvtColor(image, converted_image, cv::COLOR_BGR2BGRA);
+        // std::cout << "Converting to 4channel" << std::endl;
     }
+    return converted_image;
 }
 
 void ImageData::doLoadFrame(int frame_id) {
@@ -52,14 +54,16 @@ void ImageData::doLoadFrame(int frame_id) {
         return;
     }
 
-    auto loaded_image = QImage(QString::fromStdString(_image_paths[frame_id].string()));
+    auto loaded_image = cv::imread(_image_paths[frame_id].string());
 
-    updateHeight(loaded_image.height());
-    updateWidth(loaded_image.width());
+    updateHeight(loaded_image.rows);
+    updateWidth(loaded_image.cols);
 
     auto converted_image = _convertToDisplayFormat(loaded_image, this->getFormat());
     
-    this->setRawData(std::vector<uint8_t>(converted_image.bits(), converted_image.bits() + converted_image.sizeInBytes()));
+    size_t num_bytes = converted_image.total() * converted_image.elemSize();
+    // std::cout << converted_image.elemSize() << ' ' << converted_image.total() << std::endl;
+    this->setRawData(std::vector<uint8_t>(static_cast<uint8_t*>(converted_image.data), static_cast<uint8_t*>(converted_image.data) + num_bytes));
 }
 
 std::string ImageData::GetFrameID(int frame_id) {

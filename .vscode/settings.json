@@ -2,6 +2,8 @@
     "files.associations": {
         "qfile": "cpp",
         "qslider": "cpp",
-        "__locale": "cpp"
+        "__locale": "cpp",
+        "qmainwindow": "cpp"
     }
+
 }
