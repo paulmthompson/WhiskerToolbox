@@ -17,16 +17,10 @@ target_include_directories(test_data_manager PRIVATE
 if (APPLE)
     set_target_properties(test_data_manager PROPERTIES
             BUILD_WITH_INSTALL_RPATH TRUE
-            INSTALL_RPATH "@executable_path/../Frameworks"
+            INSTALL_RPATH "@executable_path/../Frameworks;${CMAKE_BINARY_DIR}/_deps/catch2-build/src"
     )
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-    # Ensure Catch2 library is copied to the Frameworks directory
-    add_custom_command(TARGET test_data_manager POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:Catch2::Catch2WithMain>
-            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../Frameworks/
-    )
 endif()
 
 if (WIN32)
