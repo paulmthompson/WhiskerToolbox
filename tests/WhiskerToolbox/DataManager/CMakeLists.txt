@@ -20,6 +20,13 @@ if (APPLE)
             INSTALL_RPATH "@executable_path/../Frameworks"
     )
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+    # Ensure Catch2 library is copied to the Frameworks directory
+    add_custom_command(TARGET test_data_manager POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:Catch2::Catch2WithMain>
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../Frameworks/
+    )
 endif()
 
 if (WIN32)
