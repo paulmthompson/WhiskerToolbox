@@ -196,7 +196,8 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
         return;
     }
 
-    std::string whisker_name = "whisker_" + std::to_string(n_whiskers-1);
+    std::string whisker_prefix = "whisker";
+    std::string whisker_name = whisker_prefix + "_" + std::to_string(n_whiskers-1);
 
     _createNewWhisker(whisker_name, n_whiskers-1);
 }
@@ -324,7 +325,7 @@ std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
 }
 
 /**
- * @brief Whisker_Widget::_checkWhiskerNum
+ * @brief _checkWhiskerNumMatchesExportNum
  *
  * This checks if the number of whiskers that have been ordered in the frame is equal
  * to the number of whiskers we have set to track in the image.
@@ -332,22 +333,24 @@ std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
  * This prevents misclicks where we click export and only 4 whiskers may be present
  * but we wish to track 5.
  *
+ * @param dm
+ * @param num_whiskers_to_export
  *
  * @return
  */
-bool Whisker_Widget::_checkWhiskerNum()
+bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_prefix)
 {
 
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = dm->getTime()->getLastLoadedFrame();
 
     int whiskers_in_frame = 0;
 
-    for (int i = 0; i<_num_whisker_to_track; i++)
+    for (int i = 0; i< num_whiskers_to_export; i++)
     {
-        std::string whisker_name = "whisker_" + std::to_string(i);
+        std::string whisker_name = whisker_prefix + "_" + std::to_string(i);
 
-        if (_data_manager->getLine(whisker_name)) {
-            auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
+        if (dm->getLine(whisker_name)) {
+            auto whiskers = dm->getLine(whisker_name)->getLinesAtTime(current_time);
             if (whiskers.size() > 0) {
                 if (whiskers[0].size() > 0) {
                     whiskers_in_frame += 1;
@@ -358,8 +361,8 @@ bool Whisker_Widget::_checkWhiskerNum()
 
     std::cout << "There are " << whiskers_in_frame << " whiskers in this image" << std::endl;
 
-    if (whiskers_in_frame != _num_whisker_to_track) {
-        std::cout << "There are " << whiskers_in_frame << " in image, but " << _num_whisker_to_track << " are supposed to be tracked" << std::endl;
+    if (whiskers_in_frame != num_whiskers_to_export) {
+        std::cout << "There are " << whiskers_in_frame << " in image, but " << num_whiskers_to_export << " are supposed to be tracked" << std::endl;
         return false;
     } else {
         return true;
@@ -374,7 +377,9 @@ bool Whisker_Widget::_checkWhiskerNum()
 void Whisker_Widget::_exportImageCSV()
 {
 
-    if (!_checkWhiskerNum()) {
+    std::string const whisker_prefix = "whisker";
+
+    if (!_checkWhiskerNumMatchesExportNum(_data_manager.get(), _num_whisker_to_track, whisker_prefix)) {
         return;
     }
 
@@ -387,9 +392,10 @@ void Whisker_Widget::_exportImageCSV()
 
     _addNewTrackedWhisker(current_time);
 
+
     for (int i = 0; i<_num_whisker_to_track; i++)
     {
-        std::string whisker_name = "whisker_" + std::to_string(i);
+        std::string whisker_name = whisker_prefix + "_" + std::to_string(i);
 
         if (_data_manager->getLine(whisker_name)) {
 
@@ -716,7 +722,9 @@ void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename) {
 
     std::cout << "There are already " << line_num << " whiskers " << std::endl; // Unlabled is already created
 
-    std::string const whisker_name = "whisker_" + std::to_string(line_num-1);
+    std::string whisker_prefix = "whisker";
+
+    std::string const whisker_name = whisker_prefix + "_" + std::to_string(line_num-1);
 
     _createNewWhisker(whisker_name, line_num - 1);
 
@@ -747,7 +755,9 @@ std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_
     auto dir_path = std::filesystem::path(dir_name);
     auto const whisker_number = std::stoi(dir_path.filename().string());
 
-    std::string const whisker_name = "whisker_" + std::to_string(whisker_number);
+    std::string whisker_prefix = "whisker";
+
+    std::string const whisker_name = whisker_prefix + "_" + std::to_string(whisker_number);
 
     _createNewWhisker(whisker_name, whisker_number);
 
@@ -862,6 +872,8 @@ void Whisker_Widget::_orderWhiskersByPosition() {
     const auto current_time = _data_manager->getTime()->getLastLoadedFrame();
     std::vector<Line2D> whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
 
+    std::string whisker_prefix = "whisker";
+
     for (std::size_t i = 0; i < static_cast<std::size_t>(_num_whisker_to_track); i++) {
 
         if (i >= base_position_order.size()) {
@@ -872,7 +884,7 @@ void Whisker_Widget::_orderWhiskersByPosition() {
         std::cout << " with follicle at " << "(" << base_positions[base_position_order[i]].x << ","
                   << base_positions[base_position_order[i]].y << ")" << std::endl;
 
-        std::string whisker_name = "whisker_" + std::to_string(i);
+        std::string whisker_name = whisker_prefix + "_" + std::to_string(i);
 
         _data_manager->getLine(whisker_name)->clearLinesAtTime(current_time);
         _data_manager->getLine(whisker_name)->addLineAtTime(current_time, whiskers[base_position_order[i]]);

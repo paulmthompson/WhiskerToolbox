@@ -99,7 +99,6 @@ private:
     void _loadSingleHDF5WhiskerMask(std::string const & filename);
     void _loadSingleHDF5WhiskerLine(std::string const & filename);
     std::vector<int> _loadCSVWhiskerFromDir(std::string const & dir_name);
-    bool _checkWhiskerNum();
 
     void _addNewTrackedWhisker(int const index);
     void _addNewTrackedWhisker(std::vector<int> const & indexes);
@@ -150,5 +149,6 @@ private slots:
 };
 
 void _printBasePositionOrder(const std::vector<Point2D<float>> &base_positions);
+bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_prefix);
 
 #endif // WHISKER_WIDGET_HPP
