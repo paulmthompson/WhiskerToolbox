@@ -88,7 +88,7 @@ private:
 
     void _drawWhiskers();
     void _addWhiskersToData(std::vector<Line2D> & whiskers);
-    void _createNewWhisker(std::string const & whisker_name, int const whisker_id);
+    void _createNewWhisker(std::string const & whisker_prefix, int const whisker_id);
     void _orderWhiskersByPosition();
     std::vector<Point2D<float>> _getWhiskerBasePositions();
 
@@ -97,7 +97,7 @@ private:
     std::string _getWhiskerSaveName(int const frame_id);
 
     void _loadSingleHDF5WhiskerMask(std::string const & filename);
-    void _loadSingleHDF5WhiskerLine(std::string const & filename);
+    void _loadSingleHDF5WhiskerLine(std::string const & filename, std::string const & whisker_prefix, int const whisker_num);
     std::vector<int> _loadCSVWhiskerFromDir(std::string const & dir_name);
 
     void _addNewTrackedWhisker(int const index);
@@ -148,6 +148,7 @@ private slots:
 
 };
 
+void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filename, std::string const & line_key);
 void _printBasePositionOrder(const std::vector<Point2D<float>> &base_positions);
 bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_prefix);
 

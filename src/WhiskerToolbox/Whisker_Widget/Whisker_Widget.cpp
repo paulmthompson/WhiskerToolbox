@@ -197,9 +197,8 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
     }
 
     std::string whisker_prefix = "whisker";
-    std::string whisker_name = whisker_prefix + "_" + std::to_string(n_whiskers-1);
 
-    _createNewWhisker(whisker_name, n_whiskers-1);
+    _createNewWhisker(whisker_prefix, n_whiskers-1);
 }
 
 /////////////////////////////////////////////
@@ -458,8 +457,18 @@ void Whisker_Widget::_loadKeypointCSV()
 
 /////////////////////////////////////////////
 
-void Whisker_Widget::_createNewWhisker(std::string const & whisker_name, const int whisker_id)
+/**
+ * @brief Whisker_Widget::_createNewWhisker
+ *
+ * Whisker name should have the form of whisker_prefix_# and whisker_id should be #
+ *
+ * @param whisker_prefix
+ * @param whisker_id
+ */
+void Whisker_Widget::_createNewWhisker(std::string const & whisker_prefix, const int whisker_id)
 {
+    std::string const whisker_name = whisker_prefix + "_" + std::to_string(whisker_id);
+
     if (!_data_manager->getLine(whisker_name)) {
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->createLine(whisker_name);
@@ -657,7 +666,11 @@ void Whisker_Widget::_loadHDF5WhiskerLine()
         return;
     }
 
-    _loadSingleHDF5WhiskerLine(filename.toStdString());
+    std::string whisker_prefix = "whisker";
+
+    int whisker_num = 0;
+
+    _loadSingleHDF5WhiskerLine(filename.toStdString(), whisker_prefix, whisker_num);
 }
 
 /**
@@ -699,9 +712,13 @@ void Whisker_Widget::_loadHDF5WhiskerLinesFromDir()
     // Sort the files based on their names
     std::sort(whisker_files.begin(), whisker_files.end());
 
+    std::string whisker_prefix = "whisker";
+
     // Load the files in sorted order
+    int whisker_num = 0;
     for (const auto & file : whisker_files) {
-        _loadSingleHDF5WhiskerLine(file.string());
+        _loadSingleHDF5WhiskerLine(file.string(), whisker_prefix, whisker_num);
+        whisker_num += 1;
     }
 }
 
@@ -712,25 +729,28 @@ void Whisker_Widget::_loadHDF5WhiskerLinesFromDir()
  *
  *
  * @param filename
+ * @param whisker_prefix
+ * @param whisker_num
  */
-void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename) {
+void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename, std::string const & whisker_prefix, int const whisker_num)
+{
+
+    _createNewWhisker(whisker_prefix, whisker_num);
+
+    std::string const whisker_name = whisker_prefix + "_" + std::to_string(whisker_num);
+
+    read_hdf5_line_into_datamanager(_data_manager.get(), filename, whisker_name);
+}
+
+void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filename, std::string const & line_key)
+{
     auto frames =  read_array_hdf5(filename, "frames");
     auto y_coords = read_ragged_hdf5(filename, "x");
     auto x_coords = read_ragged_hdf5(filename, "y");
 
-    auto line_num = _data_manager->getLineKeys().size();
+    auto line = dm->getLine(line_key);
 
-    std::cout << "There are already " << line_num << " whiskers " << std::endl; // Unlabled is already created
-
-    std::string whisker_prefix = "whisker";
-
-    std::string const whisker_name = whisker_prefix + "_" + std::to_string(line_num-1);
-
-    _createNewWhisker(whisker_name, line_num - 1);
-
-    auto line = _data_manager->getLine(whisker_name);
-
-    for (int i = 0; i < frames.size(); i ++) {
+    for (std::size_t i = 0; i < frames.size(); i ++) {
         line->addLineAtTime(frames[i], x_coords[i], y_coords[i]);
     }
 }
@@ -757,9 +777,9 @@ std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_
 
     std::string whisker_prefix = "whisker";
 
-    std::string const whisker_name = whisker_prefix + "_" + std::to_string(whisker_number);
+    _createNewWhisker(whisker_prefix, whisker_number);
 
-    _createNewWhisker(whisker_name, whisker_number);
+    std::string const whisker_name = whisker_prefix + "_" + std::to_string(whisker_number);
 
     auto loaded_frames = std::vector<int>{};
 
