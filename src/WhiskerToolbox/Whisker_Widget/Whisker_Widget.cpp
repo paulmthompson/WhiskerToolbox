@@ -154,8 +154,10 @@ void Whisker_Widget::_traceButton() {
     std::vector<Line2D> whisker_lines(whiskers.size());
     std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);
 
+    std::string whisker_group_name = "whisker";
+
     //Add lines to data manager
-    _addWhiskersToData(whisker_lines);
+    _addWhiskersToData(whisker_lines, whisker_group_name);
 
     auto t1 = timer2.elapsed();
     _drawWhiskers();
@@ -196,9 +198,9 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
         return;
     }
 
-    std::string whisker_prefix = "whisker";
+    std::string whisker_group_name = "whisker";
 
-    _createNewWhisker(whisker_prefix, n_whiskers-1);
+    _createNewWhisker(whisker_group_name, n_whiskers-1);
 }
 
 /////////////////////////////////////////////
@@ -324,51 +326,6 @@ std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
 }
 
 /**
- * @brief _checkWhiskerNumMatchesExportNum
- *
- * This checks if the number of whiskers that have been ordered in the frame is equal
- * to the number of whiskers we have set to track in the image.
- *
- * This prevents misclicks where we click export and only 4 whiskers may be present
- * but we wish to track 5.
- *
- * @param dm
- * @param num_whiskers_to_export
- *
- * @return
- */
-bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_prefix)
-{
-
-    auto current_time = dm->getTime()->getLastLoadedFrame();
-
-    int whiskers_in_frame = 0;
-
-    for (int i = 0; i< num_whiskers_to_export; i++)
-    {
-        std::string whisker_name = whisker_prefix + "_" + std::to_string(i);
-
-        if (dm->getLine(whisker_name)) {
-            auto whiskers = dm->getLine(whisker_name)->getLinesAtTime(current_time);
-            if (whiskers.size() > 0) {
-                if (whiskers[0].size() > 0) {
-                    whiskers_in_frame += 1;
-                }
-            }
-        }
-    }
-
-    std::cout << "There are " << whiskers_in_frame << " whiskers in this image" << std::endl;
-
-    if (whiskers_in_frame != num_whiskers_to_export) {
-        std::cout << "There are " << whiskers_in_frame << " in image, but " << num_whiskers_to_export << " are supposed to be tracked" << std::endl;
-        return false;
-    } else {
-        return true;
-    }
-}
-
-/**
  * @brief Whisker_Widget::_exportImageCSV
  *
  *
@@ -376,9 +333,9 @@ bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to
 void Whisker_Widget::_exportImageCSV()
 {
 
-    std::string const whisker_prefix = "whisker";
+    std::string const whisker_group_name = "whisker";
 
-    if (!_checkWhiskerNumMatchesExportNum(_data_manager.get(), _num_whisker_to_track, whisker_prefix)) {
+    if (!_checkWhiskerNumMatchesExportNum(_data_manager.get(), _num_whisker_to_track, whisker_group_name)) {
         return;
     }
 
@@ -394,7 +351,7 @@ void Whisker_Widget::_exportImageCSV()
 
     for (int i = 0; i<_num_whisker_to_track; i++)
     {
-        std::string whisker_name = whisker_prefix + "_" + std::to_string(i);
+        std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
 
         if (_data_manager->getLine(whisker_name)) {
 
@@ -460,14 +417,14 @@ void Whisker_Widget::_loadKeypointCSV()
 /**
  * @brief Whisker_Widget::_createNewWhisker
  *
- * Whisker name should have the form of whisker_prefix_# and whisker_id should be #
+ * Whisker name should have the form of (whisker_group_name)_(whisker_number)
  *
- * @param whisker_prefix
+ * @param whisker_group_name
  * @param whisker_id
  */
-void Whisker_Widget::_createNewWhisker(std::string const & whisker_prefix, const int whisker_id)
+void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, const int whisker_id)
 {
-    std::string const whisker_name = whisker_prefix + "_" + std::to_string(whisker_id);
+    std::string const whisker_name = whisker_group_name + "_" + std::to_string(whisker_id);
 
     if (!_data_manager->getLine(whisker_name)) {
         std::cout << "Creating " << whisker_name << std::endl;
@@ -478,12 +435,12 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_prefix, const
 }
 
 /**
- *
- *
- *
  * @brief Whisker_Widget::_addWhiskersToData
+ *
+ *
+ * @param whiskers
  */
-void Whisker_Widget::_addWhiskersToData(std::vector<Line2D> & whiskers) {
+void Whisker_Widget::_addWhiskersToData(std::vector<Line2D> & whiskers, std::string const & whisker_group_name) {
 
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
     _data_manager->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
@@ -493,7 +450,7 @@ void Whisker_Widget::_addWhiskersToData(std::vector<Line2D> & whiskers) {
     }
 
     if (_num_whisker_to_track > 0) {
-        _orderWhiskersByPosition();
+        order_whiskers_by_position(_data_manager.get(), whisker_group_name,_num_whisker_to_track);
     }
 }
 
@@ -666,11 +623,11 @@ void Whisker_Widget::_loadHDF5WhiskerLine()
         return;
     }
 
-    std::string whisker_prefix = "whisker";
+    std::string whisker_group_name = "whisker";
 
     int whisker_num = 0;
 
-    _loadSingleHDF5WhiskerLine(filename.toStdString(), whisker_prefix, whisker_num);
+    _loadSingleHDF5WhiskerLine(filename.toStdString(), whisker_group_name, whisker_num);
 }
 
 /**
@@ -712,12 +669,12 @@ void Whisker_Widget::_loadHDF5WhiskerLinesFromDir()
     // Sort the files based on their names
     std::sort(whisker_files.begin(), whisker_files.end());
 
-    std::string whisker_prefix = "whisker";
+    std::string whisker_group_name = "whisker";
 
     // Load the files in sorted order
     int whisker_num = 0;
     for (const auto & file : whisker_files) {
-        _loadSingleHDF5WhiskerLine(file.string(), whisker_prefix, whisker_num);
+        _loadSingleHDF5WhiskerLine(file.string(), whisker_group_name, whisker_num);
         whisker_num += 1;
     }
 }
@@ -729,30 +686,17 @@ void Whisker_Widget::_loadHDF5WhiskerLinesFromDir()
  *
  *
  * @param filename
- * @param whisker_prefix
+ * @param whisker_group_name
  * @param whisker_num
  */
-void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename, std::string const & whisker_prefix, int const whisker_num)
+void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename, std::string const & whisker_group_name, int const whisker_num)
 {
 
-    _createNewWhisker(whisker_prefix, whisker_num);
+    _createNewWhisker(whisker_group_name, whisker_num);
 
-    std::string const whisker_name = whisker_prefix + "_" + std::to_string(whisker_num);
+    std::string const whisker_name = whisker_group_name + "_" + std::to_string(whisker_num);
 
     read_hdf5_line_into_datamanager(_data_manager.get(), filename, whisker_name);
-}
-
-void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filename, std::string const & line_key)
-{
-    auto frames =  read_array_hdf5(filename, "frames");
-    auto y_coords = read_ragged_hdf5(filename, "x");
-    auto x_coords = read_ragged_hdf5(filename, "y");
-
-    auto line = dm->getLine(line_key);
-
-    for (std::size_t i = 0; i < frames.size(); i ++) {
-        line->addLineAtTime(frames[i], x_coords[i], y_coords[i]);
-    }
 }
 
 /**
@@ -775,30 +719,15 @@ std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_
     auto dir_path = std::filesystem::path(dir_name);
     auto const whisker_number = std::stoi(dir_path.filename().string());
 
-    std::string whisker_prefix = "whisker";
+    std::string whisker_group_name = "whisker";
 
-    _createNewWhisker(whisker_prefix, whisker_number);
+    _createNewWhisker(whisker_group_name, whisker_number);
 
-    std::string const whisker_name = whisker_prefix + "_" + std::to_string(whisker_number);
+    std::string const whisker_name = whisker_group_name + "_" + std::to_string(whisker_number);
 
-    auto loaded_frames = std::vector<int>{};
-
-    for (const auto & entry : std::filesystem::directory_iterator(dir_name))
-    {
-        auto const frame_num = remove_extension(entry.path().filename().string());
-        auto whisker = load_line_from_csv(entry.path().string());
-
-        //Find the relative frame corresponding to this frame number.
-        auto const frame_index = _data_manager->getMediaData()->getFrameIndexFromNumber(std::stoi(frame_num));
-
-        _data_manager->getLine(whisker_name)->addLineAtTime(frame_index, whisker);
-        loaded_frames.push_back(frame_index);
-    }
-
-    std::cout << "Loaded " << loaded_frames.size() << " whiskers" << std::endl;
-
-    return loaded_frames;
+    auto loaded_frames = load_csv_lines_into_data_manager(_data_manager.get(), dir_name, whisker_name);
 }
+
 
 /**
  *
@@ -851,92 +780,6 @@ void Whisker_Widget::_loadMultiCSVWhiskers()
     _addNewTrackedWhisker(loaded_whisker_ids);
 
 }
-
-
-/**
- * @brief Whisker_Widget::_orderWhiskersByPosition
- *
- * (0,0) coordinate is the top left of the video. Here we arrange the whiskers
- * such that the most posterior whisker is given identity of 1, next most posterior is
- * 2, etc.
- *
- */
-void Whisker_Widget::_orderWhiskersByPosition() {
-    auto base_positions = _getWhiskerBasePositions();
-
-    std::vector<int> base_position_order = std::vector<int>(base_positions.size());
-    std::iota(base_position_order.begin(), base_position_order.end(), 0);
-
-    if (_face_orientation == Facing_Top) {
-        // Facing toward 0 y, so larger Y is more posterior
-        std::sort(std::begin(base_position_order),
-                  std::end(base_position_order),
-                  [&](int i1, int i2) { return base_positions[i1].y > base_positions[i2].y; });
-    } else if (_face_orientation == Facing_Bottom) {
-        // Facing toward maximum y, so smaller y is more posterior
-        std::sort(std::begin(base_position_order),
-                  std::end(base_position_order),
-                  [&](int i1, int i2) { return base_positions[i1].y < base_positions[i2].y; });
-    } else if (_face_orientation == Facing_Left) {
-        // Facing toward 0 x, so larger x is more posterior
-        std::sort(std::begin(base_position_order),
-                  std::end(base_position_order),
-                  [&](int i1, int i2) { return base_positions[i1].x > base_positions[i2].x; });
-    } else {
-        // Facing toward maximum x, so smaller x is more posterior
-        std::sort(std::begin(base_position_order),
-                  std::end(base_position_order),
-                  [&](int i1, int i2) { return base_positions[i1].x < base_positions[i2].x; });
-    }
-
-    const auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-    std::vector<Line2D> whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
-
-    std::string whisker_prefix = "whisker";
-
-    for (std::size_t i = 0; i < static_cast<std::size_t>(_num_whisker_to_track); i++) {
-
-        if (i >= base_position_order.size()) {
-            break;
-        }
-
-        std::cout << "The " << i << " position whisker is " << base_position_order[i];
-        std::cout << " with follicle at " << "(" << base_positions[base_position_order[i]].x << ","
-                  << base_positions[base_position_order[i]].y << ")" << std::endl;
-
-        std::string whisker_name = whisker_prefix + "_" + std::to_string(i);
-
-        _data_manager->getLine(whisker_name)->clearLinesAtTime(current_time);
-        _data_manager->getLine(whisker_name)->addLineAtTime(current_time, whiskers[base_position_order[i]]);
-    }
-
-    _data_manager->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
-
-    std::cout << "The size of remaining whiskers is " << whiskers.size() << std::endl;
-
-    for (std::size_t i = static_cast<std::size_t>(_num_whisker_to_track); i < whiskers.size(); i++) {
-        _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[base_position_order[i]]);
-    }
-}
-
-std::vector<Point2D<float>> Whisker_Widget::_getWhiskerBasePositions() {
-    auto base_positions = std::vector<Point2D<float>>{};
-
-    const auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-
-    const auto whiskers = _data_manager->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
-
-    for (auto &whisker: whiskers) {
-        base_positions.push_back(whisker[0]);
-    }
-
-    //_printBasePositionOrder(base_positions);
-
-    return base_positions;
-}
-
-
-
 
 void Whisker_Widget::_openJaneliaConfig()
 {
@@ -1081,12 +924,133 @@ void Whisker_Widget::_changeOutputDir()
 
 /////////////////////////////////////////////
 
-void _printBasePositionOrder(const std::vector<Point2D<float>> &base_positions) {
-    std::cout << "The order of whisker base positions: " << std::endl;
+/**
+ * @brief load_csv_lines_into_data_manager
+ * @param dm
+ * @param dir_name
+ * @param line_key
+ * @return vector of loaded frame IDs
+ */
+std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string const & dir_name, std::string const & line_key)
+{
+    auto loaded_frames = std::vector<int>{};
 
-    for (std::size_t i = 0; i < base_positions.size(); i++) {
-        std::cout << "Whisker " << i << " at " << "(" << base_positions[i].x << "," << base_positions[i].y << ")"
-                  << std::endl;
+    for (const auto & entry : std::filesystem::directory_iterator(dir_name))
+    {
+        auto const frame_num = remove_extension(entry.path().filename().string());
+        auto whisker = load_line_from_csv(entry.path().string());
+
+        //Find the relative frame corresponding to this frame number.
+        auto const frame_index = dm->getMediaData()->getFrameIndexFromNumber(std::stoi(frame_num));
+
+        dm->getLine(line_key)->addLineAtTime(frame_index, whisker);
+        loaded_frames.push_back(frame_index);
+    }
+
+    std::cout << "Loaded " << loaded_frames.size() << " whiskers" << std::endl;
+
+    return loaded_frames;
+}
+
+/**
+ * @brief read_hdf5_line_into_datamanager
+ * @param dm
+ * @param filename
+ * @param line_key
+ */
+void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filename, std::string const & line_key)
+{
+    auto frames =  read_array_hdf5(filename, "frames");
+    auto y_coords = read_ragged_hdf5(filename, "x");
+    auto x_coords = read_ragged_hdf5(filename, "y");
+
+    auto line = dm->getLine(line_key);
+
+    for (std::size_t i = 0; i < frames.size(); i ++) {
+        line->addLineAtTime(frames[i], x_coords[i], y_coords[i]);
+    }
+}
+
+/**
+ * @brief order_whiskers_by_position
+ *
+ * Here we arrange the whiskers
+ * such that the most posterior whisker is given identity of 1, next most posterior is
+ * 2, etc.
+ *
+ * @param dm
+ * @param whisker_group_name
+ * @param num_whisker_to_track
+ */
+void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whisker_to_track)
+{
+
+    const auto current_time = dm->getTime()->getLastLoadedFrame();
+    std::vector<Line2D> whiskers = dm->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
+
+    for (std::size_t i = 0; i < static_cast<std::size_t>(num_whisker_to_track); i++) {
+
+        if (i >= whiskers.size()) {
+            break;
+        }
+
+        std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
+
+        dm->getLine(whisker_name)->clearLinesAtTime(current_time);
+        dm->getLine(whisker_name)->addLineAtTime(current_time, whiskers[i]);
+    }
+
+    dm->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
+
+    std::cout << "The size of remaining whiskers is " << whiskers.size() << std::endl;
+
+    for (std::size_t i = static_cast<std::size_t>(num_whisker_to_track); i < whiskers.size(); i++) {
+        dm->getLine("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[i]);
+    }
+}
+
+/**
+ * @brief _checkWhiskerNumMatchesExportNum
+ *
+ * This checks if the number of whiskers that have been ordered in the frame is equal
+ * to the number of whiskers we have set to track in the image.
+ *
+ * This prevents misclicks where we click export and only 4 whiskers may be present
+ * but we wish to track 5.
+ *
+ * @param dm
+ * @param num_whiskers_to_export
+ *
+ * @return
+ */
+bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_group_name)
+{
+
+    auto current_time = dm->getTime()->getLastLoadedFrame();
+
+    int whiskers_in_frame = 0;
+
+    for (int i = 0; i< num_whiskers_to_export; i++)
+    {
+        std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
+
+        if (dm->getLine(whisker_name)) {
+            auto whiskers = dm->getLine(whisker_name)->getLinesAtTime(current_time);
+            if (whiskers.size() > 0) {
+                if (whiskers[0].size() > 0) {
+                    whiskers_in_frame += 1;
+                }
+            }
+        }
+    }
+
+    std::cout << "There are " << whiskers_in_frame << " whiskers in this image" << std::endl;
+
+    if (whiskers_in_frame != num_whiskers_to_export) {
+        std::cout << "There are " << whiskers_in_frame << " in image, but " << num_whiskers_to_export << " are supposed to be tracked" << std::endl;
+        return false;
+    } else {
+        return true;
     }
 }
 
