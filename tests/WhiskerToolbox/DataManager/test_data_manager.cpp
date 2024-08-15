@@ -1,7 +1,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "DataManager/DataManager.hpp"
+#include "DataManager.hpp"
 
 TEST_CASE("DataManager - Create", "[DataManager]") {
 
