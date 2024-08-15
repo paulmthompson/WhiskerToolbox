@@ -156,8 +156,7 @@ void Whisker_Widget::_traceButton() {
 
     std::string whisker_group_name = "whisker";
 
-    //Add lines to data manager
-    _addWhiskersToData(whisker_lines, whisker_group_name);
+    add_whiskers_to_data_manager(_data_manager.get(), whisker_lines, whisker_group_name, _num_whisker_to_track);
 
     auto t1 = timer2.elapsed();
     _drawWhiskers();
@@ -434,26 +433,6 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, c
     }
 }
 
-/**
- * @brief Whisker_Widget::_addWhiskersToData
- *
- *
- * @param whiskers
- */
-void Whisker_Widget::_addWhiskersToData(std::vector<Line2D> & whiskers, std::string const & whisker_group_name) {
-
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-    _data_manager->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
-
-    for (auto & w: whiskers) {
-        _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w);
-    }
-
-    if (_num_whisker_to_track > 0) {
-        order_whiskers_by_position(_data_manager.get(), whisker_group_name,_num_whisker_to_track);
-    }
-}
-
 void Whisker_Widget::_drawWhiskers() {
     _scene->UpdateCanvas();
 }
@@ -712,14 +691,14 @@ void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename, st
  * to whisker tip.
  *
  * @param dir_name
+ * @param whisker_group_name
+ *
  * @return vector of frame numbers that were loaded
  */
-std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name)
+std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name, std::string const & whisker_group_name)
 {
     auto dir_path = std::filesystem::path(dir_name);
     auto const whisker_number = std::stoi(dir_path.filename().string());
-
-    std::string whisker_group_name = "whisker";
 
     _createNewWhisker(whisker_group_name, whisker_number);
 
@@ -752,7 +731,9 @@ void Whisker_Widget::_loadSingleCSVWhisker()
         return;
     }
 
-    auto loaded_whisker_ids = _loadCSVWhiskerFromDir(dir_name);
+    std::string whisker_group_name = "whisker";
+
+    auto loaded_whisker_ids = _loadCSVWhiskerFromDir(dir_name, whisker_group_name);
 
     _addNewTrackedWhisker(loaded_whisker_ids);
 }
@@ -768,12 +749,14 @@ void Whisker_Widget::_loadMultiCSVWhiskers()
         return;
     }
 
+    std::string whisker_group_name = "whisker";
+
     std::vector<int> loaded_whisker_ids;
     for (const auto & entry : std::filesystem::directory_iterator(dir_name))
     {
         if (entry.is_directory())
         {
-            loaded_whisker_ids = _loadCSVWhiskerFromDir(entry.path().string());
+            loaded_whisker_ids = _loadCSVWhiskerFromDir(entry.path().string(), whisker_group_name);
         }
     }
 
@@ -1051,6 +1034,30 @@ bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to
         return false;
     } else {
         return true;
+    }
+}
+
+/**
+ * @brief add_whiskers_to_data_manager
+ *
+ *
+ * @param dm
+ * @param whiskers
+ * @param whisker_group_name
+ * @param num_whisker_to_track
+ */
+void add_whiskers_to_data_manager(DataManager* dm, std::vector<Line2D> & whiskers, std::string const & whisker_group_name, int const num_whisker_to_track)
+{
+
+    auto current_time = dm->getTime()->getLastLoadedFrame();
+    dm->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
+
+    for (auto & w: whiskers) {
+        dm->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w);
+    }
+
+    if (num_whisker_to_track > 0) {
+        order_whiskers_by_position(dm, whisker_group_name,num_whisker_to_track);
     }
 }
 
