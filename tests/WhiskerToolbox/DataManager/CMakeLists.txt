@@ -11,10 +11,15 @@ add_executable(test_data_manager
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
 
 target_include_directories(test_data_manager PRIVATE
-
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
-
 )
+
+if (APPLE)
+    set_target_properties(test_data_manager PROPERTIES
+            BUILD_WITH_INSTALL_RPATH TRUE
+            INSTALL_RPATH "@executable_path/../Frameworks"
+    )
+endif()
 
 if (WIN32)
     catch_discover_tests(test_data_manager
