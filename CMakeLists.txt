@@ -4,6 +4,7 @@
 cmake_minimum_required(VERSION 3.25)
 project(BehaviorToolbox VERSION 0.1 LANGUAGES CXX)
 
+include(CTest)
 
 #=============================
 # Project Wide Setup
@@ -55,4 +56,14 @@ add_subdirectory(external)
 
 add_subdirectory(src)
 
+#=============================
+# Testing
+#=============================
 
+#[[
+BUILD_TESTING is a cache variable that defaults to true which was defined by the CTest module
+If we wish to run testing, we should add the tests subdirectory.
+]]
+if (BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
