@@ -10,6 +10,12 @@ add_executable(test_data_manager
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
 
+target_include_directories(test_data_manager PRIVATE
+
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
+
+)
+
 if (WIN32)
     catch_discover_tests(test_data_manager
             DL_PATHS
