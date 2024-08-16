@@ -15,6 +15,8 @@
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
 
+#include "Points/Point_Data.hpp"
+
 #include <QFileDialog>
 #include <QImage>
 #include <QKeyEvent>

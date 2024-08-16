@@ -1,6 +1,7 @@
 
 #include "Point_Data.hpp"
 #include "utils/container.hpp"
+#include "utils/string_manip.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -91,4 +92,50 @@ std::map<int,Point2D<float>> load_points_from_csv(std::string const& filename, i
     std::cout.flush();
 
     return line_output;
+}
+
+std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const& filename, int const frame_column){
+    std::fstream file;
+    file.open(filename, std::fstream::in);
+
+    std::string ln, ele;
+
+    getline(file, ln); // skip the "scorer" row
+    
+    getline(file, ln); // bodyparts row
+    std::vector<std::string> bodyparts;
+    {
+        std::stringstream ss(ln);
+        while (getline(ss, ele, ',')){
+            bodyparts.push_back(ele);
+        }
+    }
+
+    getline(file, ln); // coords row
+    std::vector<std::string> dims;
+    {
+        std::stringstream ss(ln);
+        while (getline(ss, ele, ',')){
+            dims.push_back(ele);
+        }
+    }
+
+    std::map<std::string, std::map<int, Point2D<float>>> data;
+    while (getline(file, ln)){
+        std::stringstream ss(ln);
+        int col_no = 0;
+        int frame_no = -1;
+        while (getline(ss, ele, ',')){
+            if (col_no == frame_column){
+                frame_no = std::stoi(extract_numbers_from_string(ele));
+            } else if (dims[col_no] == "x"){
+                data[bodyparts[col_no]][frame_no].x = std::stof(ele);
+            } else if (dims[col_no] == "y"){
+                data[bodyparts[col_no]][frame_no].y = std::stof(ele);
+            }
+            ++col_no;
+        }
+    }
+
+    return data;
 }
