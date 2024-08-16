@@ -137,17 +137,5 @@ std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_c
         }
     }
 
-    // print data
-    for (auto const& [bp, frames] : data){
-        std::cout << bp << std::endl;
-        int i=0;
-        for (auto const& [frame, pos] : frames){
-            std::cout << frame << ": " << pos.x << ", " << pos.y << std::endl;
-            if (++i > 10){
-                break;
-            }
-        }
-    }
-
     return data;
 }
