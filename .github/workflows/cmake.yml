@@ -1,4 +1,4 @@
-name: CMake
+name: Linux Build
 
 on:
   push:
@@ -21,18 +21,6 @@ jobs:
              compiler: clang,
              shell: bash,
              buildfolder: out/build/Clang/Release}
-          #- {"os": windows-latest, short: windows, compiler: gcc, shell: msys2}
-          #- {"os": windows-latest, short: windows, compiler: clang, shell: msys2}
-          - {"os": windows-latest,
-             short: windows,
-             compiler: msvc,
-             shell: powershell,
-             buildfolder: out/build/MSVC/Release}
-          - {"os": macos-latest,
-             short: mac-arm64,
-             compiler: clang,
-             shell: bash,
-             buildfolder: out/build/Clang/Release}
 
     runs-on: ${{matrix.os}}
 
@@ -48,38 +36,12 @@ jobs:
 
       - uses: seanmiddleditch/gha-setup-ninja@master
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        if: runner.os == 'macOS'
-        with:
-          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
-
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        if: runner.os == 'macOS'
-        uses: Homebrew/actions/setup-homebrew@master
-
-      - uses: ilammy/msvc-dev-cmd@v1
-        if: runner.os == 'Windows' && matrix.compiler == 'msvc'
-
       - name: Export GitHub Actions cache environment variables
         uses: actions/github-script@v7
         with:
           script: |
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-
-      - name: Add clang and and gcc to windows runner
-        uses: msys2/setup-msys2@v2
-        if: runner.os == 'Windows' && matrix.shell == 'msys2'
-        with:
-          update: true
-          install: >-
-            base-devel
-            mingw-w64-x86_64-clang
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-openmp
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -106,40 +68,12 @@ jobs:
       - name: Setup headless display
         uses: pyvista/setup-headless-display-action@v2
 
-      - name: Install nasm on Mac
-        if: runner.os == 'macOS'
-        run: | 
-          brew install nasm libomp
-          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
-
       - name: Install jinja2
         if: runner.os == 'Linux'
         run: pip install jinja2
 
       - name: Configure CMake
         run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release
-
-      #- name: Print error messages from build
-      #  if: runner.os == 'Linux' && failure()
-      #  run: cat   /usr/local/share/vcpkg/buildtrees/gtk3/config-x64-linux-dynamic-dbg-out.log
-
-      - name: Codesign executable
-        if: runner.os == 'macOS'
-        env:
-            MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-            MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
-            MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
-        run: |
-            KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-            echo -n "$MACOS_CERTIFICATE" | base64 --decode -o certificate.p12
-            openssl pkcs12 -in certificate.p12 -nodes -passin pass:$MACOS_CERTIFICATE_PWD | openssl x509 -noout -subject
-            
-            security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-            security default-keychain -s build.keychain
-            security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-            security set-keychain-settings -t 3600 -u build.keychain
-            security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
-            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
 
       - name: Build
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
@@ -151,83 +85,18 @@ jobs:
       - name: Install
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
 
-      - name: Check rpath
-        if: runner.os == 'macOS'
-        run: |
-            otool -l out/install/Clang/Release/WhiskerToolbox.app/Contents/MacOS/WhiskerToolbox | grep -A 2 LC_RPATH
-            otool -l out/install/Clang/Release/WhiskerToolbox.app/Contents/MacOS/WhiskerToolbox
-
       - name: Package with cpack
         run: |
             pushd ${{matrix.buildfolder}}
-            if [ "${{ runner.os }}" = "Windows" ]; then
-              cpack -G ZIP
-            elif [ "${{ runner.os }}" = "macOS" ]; then
-              cpack -G DragNDrop
-            else
-              cpack -G TGZ
-            fi
+            cpack -G TGZ
             popd
         shell: bash
 
       - name: Find CPack Artifact
         run: |
-            if [ "${{ runner.os }}" = "Windows" ]; then
-              ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.zip)
-            elif [ "${{ runner.os }}" = "macOS" ]; then
-              ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.dmg)
-            else
-              ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.tar.gz)
-            fi
+            ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.tar.gz)
             echo "ARTIFACT_PATH=$ARTIFACT_PATH" >> $GITHUB_ENV
         shell: bash
-
-      - name: Sign and Recreate DMG
-        if: runner.os == 'macOS'
-        run: |
-          # Define paths
-          DMG_PATH="${{ env.ARTIFACT_PATH }}"
-          SIGNED_DMG_PATH="${{ matrix.buildfolder }}/YourSignedApplication.dmg"
-
-          # Step 1: Mount the DMG
-          MOUNT_DIR=$(hdiutil attach "$DMG_PATH" | grep "Volumes" | awk '{print $3}')
-          
-          # Step 2: Create a temporary directory
-          TEMP_DIR=$(mktemp -d)
-          
-          # Step 3: Copy all files from the mounted DMG to the temporary directory
-          cp -R "$MOUNT_DIR/"* "$TEMP_DIR"
-          
-          # Debugging: List contents of TEMP_DIR
-          echo "Listing contents of TEMP_DIR:"
-          ls -la "$TEMP_DIR"
-
-          # Step 2: Sign the .app bundle
-          APP_PATH="$TEMP_DIR/WhiskerToolbox.app"
-          codesign --force --deep --verbose=4 --sign "Eric Certificate" "$APP_PATH"
-          
-          # Debugging: List contents of TEMP_DIR
-          echo "Listing contents of TEMP_DIR:"
-          ls -la "$TEMP_DIR"
-
-          # Step 3: Unmount the DMG
-          hdiutil detach "$MOUNT_DIR"
-
-          # Step 4: Recreate the DMG
-          hdiutil create -volname "WhiskerToolbox" -srcfolder "$TEMP_DIR" -ov -format UDZO "$SIGNED_DMG_PATH"
-
-          MOUNT_DIR=$(hdiutil attach "$SIGNED_DMG_PATH" | grep "Volumes" | awk '{print $3}')
-          echo "Listing contents of the mounted DMG:"
-          ls -la "$MOUNT_DIR"
-          hdiutil detach "$MOUNT_DIR"
-          
-          # Update ARTIFACT_PATH to point to the newly created signed DMG
-          echo "ARTIFACT_PATH=$SIGNED_DMG_PATH" >> $GITHUB_ENV
-        shell: bash
-        env:
-          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
-          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
-          MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
 
       - name: Upload CPack Artifact
         uses: actions/upload-artifact@v3
