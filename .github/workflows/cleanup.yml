@@ -19,15 +19,28 @@ jobs:
           #!/bin/bash
           set -e
           echo "Fetching workflow runs..."
-          # Fetch all workflow runs, excluding the most recent
-          runs=$(gh api repos/${{ github.repository }}/actions/runs --paginate --jq '.workflow_runs[1:] | .[].id')
-
-          for run_id in $runs; do
-            echo "Fetching artifacts for run $run_id..."
-            artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[].id')
-
-            for artifact_id in $artifacts; do
-              echo "Deleting artifact $artifact_id from run $run_id..."
-              gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id
+          
+          # Fetch all workflow runs
+          runs=$(gh api repos/${{ github.repository }}/actions/runs --paginate --jq '.workflow_runs[] | {id: .id, name: .name, created_at: .created_at}')
+          
+          # Group runs by workflow name and sort by creation date
+          grouped_runs=$(echo "$runs" | jq -s 'group_by(.name) | map({name: .[0].name, runs: sort_by(.created_at) | reverse})')
+          
+          # Iterate over each workflow group
+          echo "$grouped_runs" | jq -c '.[]' | while read -r group; do
+            workflow_name=$(echo "$group" | jq -r '.name')
+            echo "Processing workflow: $workflow_name"
+          
+            # Get all runs except the most recent one
+            old_runs=$(echo "$group" | jq -r '.runs[1:] | .[].id')
+          
+            for run_id in $old_runs; do
+              echo "Fetching artifacts for run $run_id..."
+              artifacts=$(gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts --jq '.artifacts[].id')
+          
+              for artifact_id in $artifacts; do
+                echo "Deleting artifact $artifact_id from run $run_id..."
+                gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$artifact_id
+              done
             done
           done
