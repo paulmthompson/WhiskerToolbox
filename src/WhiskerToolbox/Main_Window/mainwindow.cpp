@@ -15,6 +15,8 @@
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
 
+#include "Points/Point_Data.hpp"
+
 #include <QFileDialog>
 #include <QImage>
 #include <QKeyEvent>
@@ -32,6 +34,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 {
     ui->setupUi(this);
+
+
+    load_multiple_points_from_csv("/Users/eric/Downloads/m3v1mp4DLC_resnet50_Eric's projectAug7shuffle1_500_filtered.csv", 0);
 
     _m_DockManager = new ads::CDockManager(this);
 

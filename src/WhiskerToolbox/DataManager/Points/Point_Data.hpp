@@ -39,6 +39,6 @@ private:
 };
 
 std::map<int,Point2D<float>> load_points_from_csv(std::string const& filename, int const frame_column, int const x_column, int const y_column);
-
+std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const& filename, int const frame_column);
 
 #endif // POINT_DATA_HPP
