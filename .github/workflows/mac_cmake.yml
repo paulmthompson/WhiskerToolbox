@@ -1,0 +1,174 @@
+name: MacOS Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - {"os": macos-latest,
+             short: mac-arm64,
+             compiler: clang,
+             shell: bash,
+             buildfolder: out/build/Clang/Release}
+
+    runs-on: ${{matrix.os}}
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+    defaults:
+      run:
+        shell: '${{ matrix.shell }} {0}'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        if: runner.os == 'macOS'
+        with:
+          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
+
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        if: runner.os == 'macOS'
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.7.2
+          cache: true
+
+      - name: Set QTDIR and QtToolsPath
+        shell: bash
+        run: |
+          echo "QTDIR=$QT_ROOT_DIR" >> "$GITHUB_ENV"
+          echo "QtToolsPath=$QT_ROOT_DIR/bin" >> "$GITHUB_ENV"
+
+      - name: Setup headless display
+        uses: pyvista/setup-headless-display-action@v2
+
+      - name: Install nasm on Mac
+        if: runner.os == 'macOS'
+        run: |
+          brew install nasm libomp
+          echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
+
+      - name: Configure CMake
+        run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release
+
+      - name: Codesign executable
+        if: runner.os == 'macOS'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          echo -n "$MACOS_CERTIFICATE" | base64 --decode -o certificate.p12
+          openssl pkcs12 -in certificate.p12 -nodes -passin pass:$MACOS_CERTIFICATE_PWD | openssl x509 -noout -subject
+          
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security import certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+
+      - name: Build
+        run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
+
+      - name: Test
+        run: ctest --verbose --preset ${{matrix.short}}-${{matrix.compiler}}-release -C ${{matrix.short}}-${{matrix.compiler}}-release
+        working-directory: ${{ github.workspace }}
+
+      - name: Install
+        run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
+
+      - name: Check rpath
+        if: runner.os == 'macOS'
+        run: |
+          otool -l out/install/Clang/Release/WhiskerToolbox.app/Contents/MacOS/WhiskerToolbox | grep -A 2 LC_RPATH
+          otool -l out/install/Clang/Release/WhiskerToolbox.app/Contents/MacOS/WhiskerToolbox
+
+      - name: Package with cpack
+        run: |
+          pushd ${{matrix.buildfolder}}
+          cpack -G DragNDrop
+          popd
+        shell: bash
+
+      - name: Find CPack Artifact
+        run: |
+          ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.dmg)
+          echo "ARTIFACT_PATH=$ARTIFACT_PATH" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Sign and Recreate DMG
+        if: runner.os == 'macOS'
+        run: |
+          # Define paths
+          DMG_PATH="${{ env.ARTIFACT_PATH }}"
+          SIGNED_DMG_PATH="${{ matrix.buildfolder }}/YourSignedApplication.dmg"
+
+          # Step 1: Mount the DMG
+          MOUNT_DIR=$(hdiutil attach "$DMG_PATH" | grep "Volumes" | awk '{print $3}')
+          
+          # Step 2: Create a temporary directory
+          TEMP_DIR=$(mktemp -d)
+          
+          # Step 3: Copy all files from the mounted DMG to the temporary directory
+          cp -R "$MOUNT_DIR/"* "$TEMP_DIR"
+          
+          # Debugging: List contents of TEMP_DIR
+          echo "Listing contents of TEMP_DIR:"
+          ls -la "$TEMP_DIR"
+
+          # Step 2: Sign the .app bundle
+          APP_PATH="$TEMP_DIR/WhiskerToolbox.app"
+          codesign --force --deep --verbose=4 --sign "Eric Certificate" "$APP_PATH"
+          
+          # Debugging: List contents of TEMP_DIR
+          echo "Listing contents of TEMP_DIR:"
+          ls -la "$TEMP_DIR"
+
+          # Step 3: Unmount the DMG
+          hdiutil detach "$MOUNT_DIR"
+
+          # Step 4: Recreate the DMG
+          hdiutil create -volname "WhiskerToolbox" -srcfolder "$TEMP_DIR" -ov -format UDZO "$SIGNED_DMG_PATH"
+
+          MOUNT_DIR=$(hdiutil attach "$SIGNED_DMG_PATH" | grep "Volumes" | awk '{print $3}')
+          echo "Listing contents of the mounted DMG:"
+          ls -la "$MOUNT_DIR"
+          hdiutil detach "$MOUNT_DIR"
+          
+          # Update ARTIFACT_PATH to point to the newly created signed DMG
+          echo "ARTIFACT_PATH=$SIGNED_DMG_PATH" >> $GITHUB_ENV
+        shell: bash
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
+
+      - name: Upload CPack Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpack-artifact
+          path: ${{ env.ARTIFACT_PATH }}

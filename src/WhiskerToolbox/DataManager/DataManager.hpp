@@ -88,7 +88,10 @@ private:
 };
 
 std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key);
+
 std::vector<int> read_array_hdf5(std::string const & filepath, std::string const & key);
+
+
 
 
 #endif // DATAMANAGER_HPP

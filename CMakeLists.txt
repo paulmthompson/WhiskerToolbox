@@ -4,6 +4,7 @@
 cmake_minimum_required(VERSION 3.25)
 project(BehaviorToolbox VERSION 0.1 LANGUAGES CXX)
 
+include(CTest)
 
 #=============================
 # Project Wide Setup
@@ -31,6 +32,15 @@ include(CompilerWarnings)
 include(set_rpath)
 include(iwyu)
 
+#only have coverage option on linux
+if (LINUX)
+    option(CODE_COVERAGE "Enable coverage reporting" OFF)
+    if(CODE_COVERAGE)
+        add_compile_options(--coverage -O0 -g)
+        add_link_options(--coverage)
+    endif()
+endif()
+
 #[[
 Manifest mode from VCPKG will make all dependencies specified in vcpkg.json be associated and installed
 with this particular project
@@ -55,4 +65,14 @@ add_subdirectory(external)
 
 add_subdirectory(src)
 
+#=============================
+# Testing
+#=============================
 
+#[[
+BUILD_TESTING is a cache variable that defaults to true which was defined by the CTest module
+If we wish to run testing, we should add the tests subdirectory.
+]]
+if (BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
