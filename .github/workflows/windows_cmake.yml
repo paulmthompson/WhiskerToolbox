@@ -1,0 +1,109 @@
+name: Windows Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          #- {"os": windows-latest, short: windows, compiler: gcc, shell: msys2}
+          #- {"os": windows-latest, short: windows, compiler: clang, shell: msys2}
+          - {"os": windows-latest,
+             short: windows,
+             compiler: msvc,
+             shell: powershell,
+             buildfolder: out/build/MSVC/Release}
+
+    runs-on: ${{matrix.os}}
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+    defaults:
+      run:
+        shell: '${{ matrix.shell }} {0}'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: seanmiddleditch/gha-setup-ninja@master
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows' && matrix.compiler == 'msvc'
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Add clang and and gcc to windows runner
+        uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows' && matrix.shell == 'msys2'
+        with:
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-x86_64-clang
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-openmp
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: 6.7.2
+          cache: true
+
+      - name: Set QTDIR and QtToolsPath
+        shell: bash
+        run: |
+          echo "QTDIR=$QT_ROOT_DIR" >> "$GITHUB_ENV"
+          echo "QtToolsPath=$QT_ROOT_DIR/bin" >> "$GITHUB_ENV"
+
+      - name: "Set environmental variables"
+        if: runner.os == 'Linux' || runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
+
+      - name: Setup headless display
+        uses: pyvista/setup-headless-display-action@v2
+
+      - name: Configure CMake
+        run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release
+
+      - name: Build
+        run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release
+
+      - name: Test
+        run: ctest --verbose --preset ${{matrix.short}}-${{matrix.compiler}}-release -C ${{matrix.short}}-${{matrix.compiler}}-release
+        working-directory: ${{ github.workspace }}
+
+      - name: Install
+        run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install
+
+      - name: Package with cpack
+        run: |
+          pushd ${{matrix.buildfolder}}
+          cpack -G ZIP
+          popd
+        shell: bash
+
+      - name: Find CPack Artifact
+        run: |
+          ARTIFACT_PATH=$(ls ${{matrix.buildfolder}}/*.zip)
+          echo "ARTIFACT_PATH=$ARTIFACT_PATH" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Upload CPack Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpack-artifact
+          path: ${{ env.ARTIFACT_PATH }}
