@@ -63,7 +63,7 @@ jobs:
 
       - name: Install nasm and other libraries on Linux
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev libomp-14-dev
+        run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev libomp-14-dev lcov gcovr
 
       - name: Setup headless display
         uses: pyvista/setup-headless-display-action@v2
@@ -72,7 +72,12 @@ jobs:
         if: runner.os == 'Linux'
         run: pip install jinja2
 
-      - name: Configure CMake
+      - name: Configure CMake with coverage
+        if: matrix.compiler == 'gcc'
+        run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release -DCODE_COVERAGE=ON
+
+      - name: Configure CMake without coverage
+        if: matrix.compiler != 'gcc'
         run: cmake --preset ${{matrix.short}}-${{matrix.compiler}}-release
 
       - name: Build
@@ -81,6 +86,20 @@ jobs:
       - name: Test
         run: ctest --verbose --preset ${{matrix.short}}-${{matrix.compiler}}-release -C ${{matrix.short}}-${{matrix.compiler}}-release
         working-directory: ${{ github.workspace }}
+
+      - name: Capture coverage info
+        if: matrix.compiler == 'gcc' && runner.os == 'Linux'
+        run: |
+          lcov --directory /home/runner/work/WhiskerToolbox/WhiskerToolbox/out/build/GCC/Release --capture --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' '*/tests/*' '*/out/*' '*/opt/*' --output-file coverage.info
+          lcov --list coverage.info
+
+      - name: Upload coverage to Coveralls
+        if: matrix.compiler == 'gcc' && runner.os == 'Linux'
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          path-to-lcov: coverage.info
 
       - name: Install
         run: cmake --build --preset ${{matrix.short}}-${{matrix.compiler}}-release --target install

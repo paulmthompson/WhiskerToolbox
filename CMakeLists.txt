@@ -32,6 +32,15 @@ include(CompilerWarnings)
 include(set_rpath)
 include(iwyu)
 
+#only have coverage option on linux
+if (LINUX)
+    option(CODE_COVERAGE "Enable coverage reporting" OFF)
+    if(CODE_COVERAGE)
+        add_compile_options(--coverage -O0 -g)
+        add_link_options(--coverage)
+    endif()
+endif()
+
 #[[
 Manifest mode from VCPKG will make all dependencies specified in vcpkg.json be associated and installed
 with this particular project
