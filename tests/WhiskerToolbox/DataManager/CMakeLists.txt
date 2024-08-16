@@ -17,7 +17,7 @@ target_include_directories(test_data_manager PRIVATE
 if (APPLE)
     set_target_properties(test_data_manager PROPERTIES
             BUILD_WITH_INSTALL_RPATH TRUE
-            INSTALL_RPATH "@executable_path/../Frameworks;${CMAKE_BINARY_DIR};${CMAKE_BINARY_DIR}/_deps/catch2-build/src"
+            INSTALL_RPATH "${CMAKE_BINARY_DIR};${CMAKE_BINARY_DIR}/_deps/catch2-build/src"
     )
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
