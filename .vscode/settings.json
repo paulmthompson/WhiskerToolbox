@@ -3,11 +3,8 @@
         "qfile": "cpp",
         "qslider": "cpp",
         "__locale": "cpp",
-<<<<<<< Updated upstream
-=======
         "qmainwindow": "cpp",
         "vector": "cpp",
->>>>>>> Stashed changes
         "__bit_reference": "cpp",
         "__config": "cpp",
         "__hash_table": "cpp",
@@ -80,10 +77,6 @@
         "unordered_set": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-<<<<<<< Updated upstream
-        "vector": "cpp",
-        "algorithm": "cpp"
-=======
         "algorithm": "cpp",
         "atomic": "cpp",
         "compare": "cpp",
@@ -94,6 +87,5 @@
         "memory_resource": "cpp",
         "type_traits": "cpp",
         "utility": "cpp"
->>>>>>> Stashed changes
     }
 }
