@@ -1,3 +1,5 @@
+#include <fstream>
+#include <filesystem>
 
 #include "DataManager.hpp"
 
@@ -9,6 +11,9 @@
 
 #include "utils/hdf5_mask_load.hpp"
 #include "utils/container.hpp"
+
+#include "nlohmann/json.hpp"
+using namespace nlohmann;
 
 DataManager::DataManager() :
     _media{std::make_shared<MediaData>()},
@@ -146,4 +151,42 @@ std::vector<int> read_array_hdf5(std::string const & filepath, std::string const
 {
     auto myvector = load_array<int>(filepath, key);
     return myvector;
+}
+
+void DataManager::load_A(std::string const & filepath)
+{
+    std::cout << "load_A called with " << filepath << "\n";
+}
+
+void DataManager::load_B(std::string const & filepath)
+{
+    std::cout << "load_B called with " << filepath << "\n";
+}
+
+void DataManager::loadFromJSON(std::string const & filepath)
+{
+    std::ifstream ifs(filepath);
+    json j = json::parse(ifs);
+
+    for (json::iterator it = j.begin(); it != j.end(); ++it) {
+        if (it.key() == "load_A"){
+            for (auto item : it.value()){
+                assert(item.is_string());
+            }
+        } else if (it.key() == "load_B"){
+            for (auto item : it.value()){
+                assert(item.is_string());
+                std::cout << "Loading " << item << R"( using load function for type "B")" << "\n";
+            }
+        } else if (it.key() == "children"){
+            for (auto item : it.value()){
+                assert(item.is_string());
+                std::filesystem::path p(item);
+                std::string child_filepath = p.parent_path().string() + "/" + item.dump();
+                loadFromJSON(child_filepath);
+            }
+        }
+        std::cout << it.key() << " : " << it.value() << "\n";
+    }
+
 }
