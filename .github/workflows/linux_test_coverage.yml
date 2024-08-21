@@ -20,22 +20,22 @@ jobs:
       - name: Common Setup
         uses: ./.github/actions/linux-setup
         with:
-          buildfolder: out/build/GCC/Release
+          buildfolder: out/build/GCC/Debug
           compiler: gcc
 
       - name: Configure CMake with coverage
-        run: cmake --preset linux-gcc-release -DCODE_COVERAGE=ON
+        run: cmake --preset linux-gcc-debug -DCODE_COVERAGE=ON -DenableAddressSanitizer=ON
 
       - name: Build
-        run: cmake --build --preset linux-gcc-release
+        run: cmake --build --preset linux-gcc-debug
 
       - name: Test
-        run: ctest --verbose --preset linux-gcc-release -C linux-gcc-release
+        run: ctest --verbose --preset linux-gcc-debug -C linux-gcc-debug
         working-directory: ${{ github.workspace }}
 
       - name: Capture coverage info
         run: |
-          lcov --directory /home/runner/work/WhiskerToolbox/WhiskerToolbox/out/build/GCC/Release --capture --output-file coverage.info
+          lcov --directory /home/runner/work/WhiskerToolbox/WhiskerToolbox/out/build/GCC/Debug --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' '*/tests/*' '*/out/*' '*/opt/*' --output-file coverage.info
           lcov --list coverage.info
 

@@ -705,6 +705,8 @@ std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_
     std::string const whisker_name = whisker_group_name + "_" + std::to_string(whisker_number);
 
     auto loaded_frames = load_csv_lines_into_data_manager(_data_manager.get(), dir_name, whisker_name);
+
+    return loaded_frames;
 }
 
 
