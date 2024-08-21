@@ -1,0 +1,46 @@
+name: Linux Clang Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Common Setup
+        uses: ./.github/actions/common-setup
+        with:
+          buildfolder: out/build/Clang/Release
+          compiler: clang
+
+      - name: Configure CMake without coverage
+        run: cmake --preset linux-clang-release
+
+      - name: Build
+        run: cmake --build --preset linux-clang-release
+
+      - name: Install
+        run: cmake --build --preset linux-clang-release --target install
+
+      - name: Package with cpack
+        run: |
+          pushd out/build/Clang/Release
+          cpack -G TGZ
+          popd
+        shell: bash
+
+      - name: Find CPack Artifact
+        run: |
+          ARTIFACT_PATH=$(ls out/build/Clang/Release/*.tar.gz)
+          echo "ARTIFACT_PATH=$ARTIFACT_PATH" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Upload CPack Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpack-artifact
+          path: ${{ env.ARTIFACT_PATH }}

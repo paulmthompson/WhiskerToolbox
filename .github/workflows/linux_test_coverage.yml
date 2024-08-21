@@ -1,0 +1,40 @@
+name: Test and Coverage
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Common Setup
+        uses: ./.github/actions/common-setup
+        with:
+          buildfolder: out/build/GCC/Release
+          compiler: gcc
+
+      - name: Configure CMake with coverage
+        run: cmake --preset linux-gcc-release -DCODE_COVERAGE=ON
+
+      - name: Build
+        run: cmake --build --preset linux-gcc-release
+
+      - name: Test
+        run: ctest --verbose --preset linux-gcc-release -C linux-gcc-release
+        working-directory: ${{ github.workspace }}
+
+      - name: Capture coverage info
+        run: |
+          lcov --directory /home/runner/work/WhiskerToolbox/WhiskerToolbox/out/build/GCC/Release --capture --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' '*/tests/*' '*/out/*' '*/opt/*' --output-file coverage.info
+          lcov --list coverage.info
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          path-to-lcov: coverage.info
