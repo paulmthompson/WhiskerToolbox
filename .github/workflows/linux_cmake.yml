@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Common Setup
-        uses: ./.github/actions/common-setup
+        uses: ./.github/actions/linux-setup
         with:
           buildfolder: out/build/Clang/Release
           compiler: clang

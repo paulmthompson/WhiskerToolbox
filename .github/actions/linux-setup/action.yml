@@ -1,4 +1,4 @@
-name: 'Common Setup'
+name: 'Linux Setup'
 description: 'Setup common dependencies and environment for CI'
 inputs:
   buildfolder:
@@ -39,10 +39,12 @@ runs:
         echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
     - name: Install nasm and other libraries on Linux
+      shell: bash
       run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev libomp-14-dev lcov gcovr
 
     - name: Setup headless display
       uses: pyvista/setup-headless-display-action@v2
 
     - name: Install jinja2
+      shell: bash
       run: pip install jinja2
