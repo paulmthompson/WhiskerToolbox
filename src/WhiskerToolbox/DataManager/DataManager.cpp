@@ -11,6 +11,7 @@
 
 #include "utils/hdf5_mask_load.hpp"
 #include "utils/container.hpp"
+#include "utils/glob.hpp"
 
 #include "nlohmann/json.hpp"
 using namespace nlohmann;
@@ -155,38 +156,51 @@ std::vector<int> read_array_hdf5(std::string const & filepath, std::string const
 
 void DataManager::load_A(std::string const & filepath)
 {
-    std::cout << "load_A called with " << filepath << "\n";
+    std::cerr << "load_A called with " << filepath << std::endl;
 }
 
 void DataManager::load_B(std::string const & filepath)
 {
-    std::cout << "load_B called with " << filepath << "\n";
+    std::cerr << "load_B called with " << filepath << std::endl;
 }
 
 void DataManager::loadFromJSON(std::string const & filepath)
 {
-    std::ifstream ifs(filepath);
-    json j = json::parse(ifs);
+    // Set CWD to the directory of the JSON file to allow relative paths
+    auto original_path = std::filesystem::current_path();
+    std::filesystem::current_path(std::filesystem::path(filepath).parent_path());
+
+    // Open JSON
+    std::ifstream ifs(std::filesystem::path(filepath).filename());
+    json j = basic_json<>::parse(ifs);
+
+    // Configure the functions to call based on the JSON keys
+    const std::map<std::string, void(DataManager::*)(std::string const &)> load_functions = {
+        {"load_A", &DataManager::load_A},
+        {"load_B", &DataManager::load_B}
+    };
 
     for (json::iterator it = j.begin(); it != j.end(); ++it) {
-        if (it.key() == "load_A"){
+        if (it.key() == "children"){
+            // Special key "children"
+            // Specifies additinal .json files to recurse into
             for (auto item : it.value()){
                 assert(item.is_string());
+                for (auto& p : glob::glob(item.get<std::string>())){
+                    loadFromJSON(p);
+                }
             }
-        } else if (it.key() == "load_B"){
+        } else if (load_functions.count(it.key())){
             for (auto item : it.value()){
                 assert(item.is_string());
-                std::cout << "Loading " << item << R"( using load function for type "B")" << "\n";
+                for (auto& p : glob::glob(item.get<std::string>())){
+                    (this->*load_functions.at(it.key()))(p);
+                }
             }
-        } else if (it.key() == "children"){
-            for (auto item : it.value()){
-                assert(item.is_string());
-                std::filesystem::path p(item);
-                std::string child_filepath = p.parent_path().string() + "/" + item.dump();
-                loadFromJSON(child_filepath);
-            }
+        } else {
+            std::cout << "Unknown key found in JSON: " << it.key() << "\n";
         }
-        std::cout << it.key() << " : " << it.value() << "\n";
     }
 
+    std::filesystem::current_path(original_path);
 }
