@@ -35,9 +35,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-
-    _data_manager->loadFromJSON("/Users/eric/Workspace/ltest/config.json");
-
     _m_DockManager = new ads::CDockManager(this);
 
     //This is necessary to accept keyboard events
