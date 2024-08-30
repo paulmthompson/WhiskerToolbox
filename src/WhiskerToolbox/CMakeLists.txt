@@ -75,6 +75,10 @@ set(PROJECT_SOURCES
         Grabcut_Widget/Grabcut_Widget.ui
 )
 
+if (WIN32)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
+endif()
+
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
 )
