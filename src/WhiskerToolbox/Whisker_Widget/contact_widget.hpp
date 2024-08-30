@@ -80,6 +80,7 @@ private:
 
 private slots:
     void _contactButton();
+    void _noContactButton();
     void _saveContactFrameByFrame();
     void _loadContact();
     void _poleSelectButton();

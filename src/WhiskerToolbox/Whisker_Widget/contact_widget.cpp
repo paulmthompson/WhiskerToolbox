@@ -56,6 +56,9 @@ Contact_Widget::~Contact_Widget() {
 void Contact_Widget::openWidget() {
 
     connect(ui->contact_button, &QPushButton::clicked, this, &Contact_Widget::_contactButton);
+
+    connect(ui->no_contact_button, &QPushButton::clicked, this, &Contact_Widget::_noContactButton);
+
     connect(ui->save_contact_button, &QPushButton::clicked, this, &Contact_Widget::_saveContactFrameByFrame);
     connect(ui->load_contact_button, &QPushButton::clicked, this, &Contact_Widget::_loadContact);
     connect(ui->pole_select, &QPushButton::clicked,this, &Contact_Widget::_poleSelectButton);
@@ -239,6 +242,39 @@ void Contact_Widget::_contactButton() {
         _contact_epoch = true;
 
         ui->contact_button->setText("Mark Contact End");
+    }
+
+    _calculateContactPeriods();
+}
+
+void Contact_Widget::_noContactButton()
+{
+    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+
+    if (_contact.size() != _data_manager->getTime()->getTotalFrameCount()) {
+        std::cout << "The contact storage and number of frames are not equal" << std::endl;
+        std::cout << "It is possible the video was just loaded after opening the contact widget" << std::endl;
+        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
+    }
+
+    // If we are in a contact epoch, we need to mark the termination frame and add those to block
+    if (_contact_epoch) {
+
+        _contact_epoch = false;
+
+        ui->no_contact_button->setText("Mark No Contact");
+
+        for (int i = _contact_start; i < frame_num; i++) {
+            _contact[i] = Contact::NoContact;
+        }
+
+    } else {
+        // If we are not already in contact epoch, start one
+        _contact_start = frame_num;
+
+        _contact_epoch = true;
+
+        ui->no_contact_button->setText("Mark No Contact End");
     }
 
     _calculateContactPeriods();

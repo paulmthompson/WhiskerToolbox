@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>715</width>
-    <height>434</height>
+    <height>482</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>120</y>
+     <y>160</y>
      <width>91</width>
      <height>24</height>
     </rect>
@@ -30,7 +30,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>90</y>
+     <y>130</y>
      <width>91</width>
      <height>24</height>
     </rect>
@@ -44,7 +44,7 @@
     <rect>
      <x>20</x>
      <y>60</y>
-     <width>101</width>
+     <width>111</width>
      <height>24</height>
     </rect>
    </property>
@@ -76,7 +76,7 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>230</y>
+     <y>270</y>
      <width>650</width>
      <height>150</height>
     </rect>
@@ -92,7 +92,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>190</y>
+     <y>230</y>
      <width>131</width>
      <height>24</height>
     </rect>
@@ -105,7 +105,7 @@
    <property name="geometry">
     <rect>
      <x>470</x>
-     <y>190</y>
+     <y>230</y>
      <width>42</width>
      <height>22</height>
     </rect>
@@ -121,7 +121,7 @@
    <property name="geometry">
     <rect>
      <x>530</x>
-     <y>190</y>
+     <y>230</y>
      <width>141</width>
      <height>16</height>
     </rect>
@@ -134,7 +134,7 @@
    <property name="geometry">
     <rect>
      <x>190</x>
-     <y>190</y>
+     <y>230</y>
      <width>121</width>
      <height>16</height>
     </rect>
@@ -147,7 +147,7 @@
    <property name="geometry">
     <rect>
      <x>350</x>
-     <y>190</y>
+     <y>230</y>
      <width>71</width>
      <height>16</height>
     </rect>
@@ -212,7 +212,7 @@
    <property name="geometry">
     <rect>
      <x>290</x>
-     <y>390</y>
+     <y>430</y>
      <width>130</width>
      <height>24</height>
     </rect>
@@ -225,7 +225,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>150</y>
+     <y>190</y>
      <width>91</width>
      <height>24</height>
     </rect>
@@ -238,7 +238,7 @@
    <property name="geometry">
     <rect>
      <x>130</x>
-     <y>150</y>
+     <y>190</y>
      <width>201</width>
      <height>16</height>
     </rect>
@@ -248,6 +248,19 @@
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="no_contact_button">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>100</y>
+     <width>111</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Mark No Contact</string>
    </property>
   </widget>
  </widget>
