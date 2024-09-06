@@ -24,6 +24,9 @@ Image_Processing_Widget::Image_Processing_Widget(Media_Window* scene, std::share
     connect(ui->beta_spinbox, &QSpinBox::valueChanged, this, &Image_Processing_Widget::_updateContrastBeta);
     connect(ui->contrast_checkbox, &QCheckBox::checkStateChanged, this, &Image_Processing_Widget::_activateContrast);
 
+    connect(ui->gamma_dspinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateGamma);
+    connect(ui->gamma_checkbox, &QCheckBox::checkStateChanged, this, &Image_Processing_Widget::_activateGamma);
+
     connect(ui->sharpen_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateSharpenSigma);
     connect(ui->sharpen_checkbox, &QCheckBox::checkStateChanged, this, &Image_Processing_Widget::_activateSharpen);
 
@@ -83,6 +86,39 @@ void Image_Processing_Widget::_updateContrastBeta(){
     if (!_contrast_active)
     {
         ui->contrast_checkbox->setCheckState(Qt::Checked);
+    }
+}
+
+//////////////////////////////////////////////////
+
+void Image_Processing_Widget::_updateGammaFilter()
+{
+    if (_gamma_active) {
+        _data_manager->getMediaData()->setProcess("1__gamma", std::bind(gamma_transform, std::placeholders::_1, _gamma));
+        _scene->UpdateCanvas();
+    }
+}
+
+void Image_Processing_Widget::_activateGamma()
+{
+    _gamma_active = ui->gamma_checkbox->isChecked();
+
+    if (_gamma_active) {
+        _updateGammaFilter();
+    } else {
+        _data_manager->getMediaData()->removeProcess("1__gamma");
+        _scene->UpdateCanvas();
+    }
+}
+
+void Image_Processing_Widget::_updateGamma(){
+
+    _gamma = ui->gamma_dspinbox->value();
+    _updateGammaFilter();
+
+    if (!_gamma_active)
+    {
+        ui->gamma_checkbox->setCheckState(Qt::Checked);
     }
 }
 

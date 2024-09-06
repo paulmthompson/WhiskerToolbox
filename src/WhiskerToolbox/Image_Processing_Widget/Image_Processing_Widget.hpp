@@ -29,6 +29,9 @@ private:
     int _contrast_beta = 0;
     bool _contrast_active {false};
 
+    double _gamma = 1.0;
+    bool _gamma_active {false};
+
     double _sharpen_sigma = 3.0;
     bool _sharpen_active {false};
 
@@ -42,6 +45,7 @@ private:
     bool _bilateral_active {false};
 
     void _updateContrastFilter();
+    void _updateGammaFilter();
     void _updateSharpenFilter();
     void _updateClaheFilter();
     void _updateBilateralFilter();
@@ -50,6 +54,9 @@ private slots:
     void _updateContrastAlpha();
     void _updateContrastBeta();
     void _activateContrast();
+
+    void _updateGamma();
+    void _activateGamma();
 
     void _updateSharpenSigma();
     void _activateSharpen();
