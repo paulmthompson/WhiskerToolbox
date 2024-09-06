@@ -102,6 +102,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Whisker_Widget::_changeOutputDir);
 
+    connect(ui->whisker_clip, &QSpinBox::valueChanged, this, &Whisker_Widget::_changeWhiskerClip);
+
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -153,6 +155,10 @@ void Whisker_Widget::_traceButton() {
 
     std::vector<Line2D> whisker_lines(whiskers.size());
     std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);
+
+    std::for_each(whisker_lines.begin(), whisker_lines.end(), [this](Line2D& line) {
+        clip_whisker(line, _clip_length);
+    });
 
     std::string whisker_group_name = "whisker";
 
@@ -907,6 +913,13 @@ void Whisker_Widget::_changeOutputDir()
     ui->output_dir_label->setText(dir_name);
 }
 
+void Whisker_Widget::_changeWhiskerClip(int clip_dist)
+{
+    _clip_length = clip_dist;
+
+    _traceButton();
+}
+
 /////////////////////////////////////////////
 
 /**
@@ -1063,3 +1076,10 @@ void add_whiskers_to_data_manager(DataManager* dm, std::vector<Line2D> & whisker
     }
 }
 
+void clip_whisker(Line2D& line, int clip_length)
+{
+    if (clip_length <= 0 || clip_length > line.size()) {
+        return; // Invalid clip length, do nothing
+    }
+    line.erase(line.end() - clip_length, line.end());
+}
