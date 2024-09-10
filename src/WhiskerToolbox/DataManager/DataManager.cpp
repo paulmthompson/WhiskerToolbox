@@ -180,6 +180,7 @@ void DataManager::loadFromJSON(std::string const & filepath)
         {"load_B", &DataManager::load_B}
     };
 
+    /*
     for (json::iterator it = j.begin(); it != j.end(); ++it) {
         if (it.key() == "children"){
             // Special key "children"
@@ -201,6 +202,6 @@ void DataManager::loadFromJSON(std::string const & filepath)
             std::cout << "Unknown key found in JSON: " << it.key() << "\n";
         }
     }
-
+    */
     std::filesystem::current_path(original_path);
 }
