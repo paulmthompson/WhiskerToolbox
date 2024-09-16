@@ -330,12 +330,27 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
     } else if (event->key() == Qt::Key_Left){
         ui->time_scrollbar->changeScrollBarValue(-1,true);
     } else {
-        auto ww = QApplication::focusWidget();
-        if (ww) {
+        auto focusedWidget = QApplication::focusWidget();
+
+        if (focusedWidget && focusedWidget != this) {
+            // Check if the focused widget is a dock widget
+            if (focusedWidget->objectName().toStdString().find("dockWidget") != std::string::npos) {
+                auto dockWidget = _m_DockManager->findDockWidget("whisker_widget");
+                if (dockWidget && dockWidget->widget() != focusedWidget) {
+                    QApplication::sendEvent(dockWidget->widget(), event);
+                }
+            } else {
+                // Pass the event to the focused widget if it is not the main window
+                QApplication::sendEvent(focusedWidget, event);
+            }
+        }
+
+        /*
+        if (focusedWidget) {
             if (!this->isActiveWindow()) {
                 std::cout << "Sending event to another window" << std::endl;
-                QApplication::sendEvent(ww, event);
-            } else if (ww->objectName().toStdString().find("dockWidget") != std::string::npos) {
+                QApplication::sendEvent(focusedWidget, event);
+            } else if (focusedWidget->objectName().toStdString().find("dockWidget") != std::string::npos) {
 
                 std::cout << "Dock widget is active" << std::endl;
                 auto dock_widget = _m_DockManager->findDockWidget("whisker_widget");
@@ -346,14 +361,15 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
 
 
 
-            } else if (ww->objectName().toStdString().find("MainWindow") != std::string::npos) {
+            } else if (focusedWidget->objectName().toStdString().find("MainWindow") != std::string::npos) {
                 // Main window is focus widget. Don't want to send infinite loop
             } else {
 
-                std::cout << "Focus widget: " << ww->objectName().toStdString() << std::endl;
-                QApplication::sendEvent(ww, event);
+                std::cout << "Focus widget: " << focusedWidget->objectName().toStdString() << std::endl;
+                QApplication::sendEvent(focusedWidget, event);
 
             }
         }
+         */
     }
 }
