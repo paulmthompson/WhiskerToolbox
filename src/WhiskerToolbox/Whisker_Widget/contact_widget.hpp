@@ -12,6 +12,7 @@ class DataManager;
 class QGraphicsPathItem;
 class QGraphicsPixmapItem;
 class QGraphicsScene;
+class QTableWidget;
 class TimeScrollBar;
 
 namespace Ui {
@@ -69,6 +70,7 @@ private:
     std::vector<QGraphicsPathItem*> _contact_rectangle_items;
     std::vector<QGraphicsPixmapItem*> _contact_pixmaps;
     std::filesystem::path _output_path;
+    int _highlighted_row {-1};
 
     void _buildContactTable();
     void _calculateContactPeriods();
@@ -90,5 +92,7 @@ private slots:
     void _changeOutputDir();
 };
 
+int find_closest_preceding_event(const std::vector<ContactEvent>& events, int frame);
+int highlight_row(QTableWidget* table, int row_index, Qt::GlobalColor color);
 
 #endif // CONTACT_WIDGET_HPP

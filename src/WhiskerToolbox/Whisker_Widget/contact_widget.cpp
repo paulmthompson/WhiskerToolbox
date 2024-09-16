@@ -144,6 +144,18 @@ void Contact_Widget::updateFrame(int frame_id)
         _drawContactRectangles(frame_id);
     }
 
+    auto nearest_contact = find_closest_preceding_event(_contactEvents, frame_id);
+
+    if (nearest_contact != -1) {
+        //ui->contact_number->setValue(nearest_contact);
+
+        if (_highlighted_row != nearest_contact) {
+            highlight_row(ui->contact_table, _highlighted_row, Qt::white);
+            _highlighted_row = highlight_row(ui->contact_table, nearest_contact, Qt::yellow);
+        }
+
+    }
+
     int t1 = timer2.elapsed();
 
     qDebug() << "Drawing 5 frames took " << t1;
@@ -421,4 +433,30 @@ void Contact_Widget::_changeOutputDir()
 
     _output_path = std::filesystem::path(dir_name.toStdString());
     ui->output_dir_label->setText(dir_name);
+}
+
+int find_closest_preceding_event(const std::vector<ContactEvent>& events, int frame) {
+    int closest_index = -1;
+    for (int i = 0; i < events.size(); ++i) {
+        if (events[i].start <= frame) {
+            closest_index = i;
+            if (frame <= events[i].end) {
+                return i;
+            }
+        } else {
+            break;
+        }
+    }
+    return closest_index;
+}
+
+int highlight_row(QTableWidget* table, int row_index, Qt::GlobalColor color) {
+    if (row_index < 0 || row_index >= table->rowCount()) {
+        return -1; // Invalid row index, do nothing
+    }
+
+    for (int col = 0; col < table->columnCount(); ++col) {
+        table->item(row_index, col)->setBackground(color); // Set the highlight color
+    }
+    return row_index;
 }
