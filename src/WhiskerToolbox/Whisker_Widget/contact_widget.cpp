@@ -147,7 +147,8 @@ void Contact_Widget::updateFrame(int frame_id)
     auto nearest_contact = find_closest_preceding_event(_contactEvents, frame_id);
 
     if (nearest_contact != -1) {
-        //ui->contact_number->setValue(nearest_contact);
+        
+        ui->contact_number->setValue(nearest_contact + 1);
 
         if (_highlighted_row != nearest_contact) {
             highlight_row(ui->contact_table, _highlighted_row, Qt::white);
@@ -399,11 +400,26 @@ void Contact_Widget::_calculateContactPeriods()
     _buildContactTable();
 }
 
-void Contact_Widget::_contactNumberSelect(int value)
-{
+/**
+ * @brief
+ * @param value
+ *
+ * Note that the contact spinbox is 1 indexed, but the contact events are 0 indexed
+ */
+void Contact_Widget::_contactNumberSelect(int value) {
 
-    auto frame_id = _contactEvents[value].start;
-    _time_scrollbar->changeScrollBarValue(frame_id);
+    // We only want to change the scrollbar value if the
+    // user is changing the value, not the program
+    if (sender()->objectName() == "contact_number") {
+        //Check that value does not under or overflow
+        if (value < 1) {
+            value = 1;
+        } else if (value > _contactEvents.size()) {
+            value = static_cast<int>(_contactEvents.size());
+        }
+        auto frame_id = _contactEvents[value - 1].start;
+        _time_scrollbar->changeScrollBarValue(frame_id);
+    }
 }
 
 void Contact_Widget::_flipContactButton()
