@@ -90,6 +90,7 @@ private slots:
     void _contactNumberSelect(int value);
     void _flipContactButton();
     void _changeOutputDir();
+    void _contactTableClicked(int row, int column);
 };
 
 int find_closest_preceding_event(const std::vector<ContactEvent>& events, int frame);

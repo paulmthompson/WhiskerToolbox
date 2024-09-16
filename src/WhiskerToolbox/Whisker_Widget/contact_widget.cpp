@@ -75,6 +75,8 @@ void Contact_Widget::openWidget() {
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Contact_Widget::_changeOutputDir);
 
+    connect(ui->contact_table, &QTableWidget::cellClicked, this, &Contact_Widget::_contactTableClicked);
+
     this->show();
 
 }
@@ -147,7 +149,7 @@ void Contact_Widget::updateFrame(int frame_id)
     auto nearest_contact = find_closest_preceding_event(_contactEvents, frame_id);
 
     if (nearest_contact != -1) {
-        
+
         ui->contact_number->setValue(nearest_contact + 1);
 
         if (_highlighted_row != nearest_contact) {
@@ -449,6 +451,13 @@ void Contact_Widget::_changeOutputDir()
 
     _output_path = std::filesystem::path(dir_name.toStdString());
     ui->output_dir_label->setText(dir_name);
+}
+
+void Contact_Widget::_contactTableClicked(int row, int column) {
+    if (column == 0 || column == 1) {
+        int frame_id = ui->contact_table->item(row, column)->text().toInt();
+        _time_scrollbar->changeScrollBarValue(frame_id);
+    }
 }
 
 int find_closest_preceding_event(const std::vector<ContactEvent>& events, int frame) {
