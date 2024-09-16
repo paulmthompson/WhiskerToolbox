@@ -22,12 +22,14 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
+#include <random>
 #include <string>
 
 
 
-const std::vector<std::string> whisker_colors = {"#ff0000", // Red
+std::vector<std::string> whisker_colors = {"#ff0000", // Red
                                             "#008000", // Green
                                             "#00ffff", // Cyan
                                             "#ff00ff", // Magenta
@@ -414,7 +416,7 @@ void Whisker_Widget::_loadKeypointCSV()
     }
 
     _scene->addPointDataToScene(keypoint_key);
-    _scene->changePointColor(keypoint_key, whisker_colors[point_num]);
+    _scene->changePointColor(keypoint_key, get_whisker_color(point_num));
 }
 
 /////////////////////////////////////////////
@@ -435,7 +437,7 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, c
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->createLine(whisker_name);
         _scene->addLineDataToScene(whisker_name);
-        _scene->changeLineColor(whisker_name, whisker_colors[whisker_id]);
+        _scene->changeLineColor(whisker_name, get_whisker_color(whisker_id));
     }
 }
 
@@ -586,7 +588,7 @@ void Whisker_Widget::_loadSingleHDF5WhiskerMask(std::string const & filename)
     }
 
     _scene->addMaskDataToScene(mask_key);
-    _scene->changeMaskColor(mask_key, whisker_colors[mask_num]);
+    _scene->changeMaskColor(mask_key, get_whisker_color(mask_num));
 }
 
 /**
@@ -1082,4 +1084,23 @@ void clip_whisker(Line2D& line, int clip_length)
         return; // Invalid clip length, do nothing
     }
     line.erase(line.end() - clip_length, line.end());
+}
+
+std::string generate_color() {
+    std::stringstream ss;
+    ss << "#";
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 255);
+    for (int i = 0; i < 3; ++i) {
+        ss << std::setw(2) << std::setfill('0') << std::hex << dis(gen);
+    }
+    return ss.str();
+}
+
+std::string get_whisker_color(int whisker_index) {
+    if (whisker_index >= whisker_colors.size()) {
+        whisker_colors.push_back(generate_color());
+    }
+    return whisker_colors[whisker_index];
 }

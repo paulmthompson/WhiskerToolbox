@@ -161,4 +161,8 @@ void add_whiskers_to_data_manager(DataManager* dm, std::vector<Line2D> & whisker
 
 void clip_whisker(Line2D& line, int clip_length);
 
+std::string generate_color();
+
+std::string get_whisker_color(int whisker_index);
+
 #endif // WHISKER_WIDGET_HPP
