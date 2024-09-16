@@ -79,6 +79,7 @@ private:
     void _createContactRectangles();
     void _createContactPixmaps();
     void _saveContactBlocks();
+    void _updateContactWidgets(int frame_id);
 
 private slots:
     void _contactButton();

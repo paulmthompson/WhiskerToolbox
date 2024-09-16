@@ -146,6 +146,15 @@ void Contact_Widget::updateFrame(int frame_id)
         _drawContactRectangles(frame_id);
     }
 
+    _updateContactWidgets(frame_id);
+
+    int t1 = timer2.elapsed();
+
+    qDebug() << "Drawing 5 frames took " << t1;
+}
+
+void Contact_Widget::_updateContactWidgets(int frame_id)
+{
     auto nearest_contact = find_closest_preceding_event(_contactEvents, frame_id);
 
     if (nearest_contact != -1) {
@@ -156,12 +165,7 @@ void Contact_Widget::updateFrame(int frame_id)
             highlight_row(ui->contact_table, _highlighted_row, Qt::white);
             _highlighted_row = highlight_row(ui->contact_table, nearest_contact, Qt::yellow);
         }
-
     }
-
-    int t1 = timer2.elapsed();
-
-    qDebug() << "Drawing 5 frames took " << t1;
 }
 
 void Contact_Widget::_createContactPixmaps()
@@ -368,6 +372,10 @@ void Contact_Widget::_buildContactTable()
         ui->contact_table->setItem(i,1,new QTableWidgetItem(QString::number(_contactEvents[i].end)));
 
     }
+
+    _highlighted_row = -1;
+    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+    _updateContactWidgets(frame_id);
 }
 
 void Contact_Widget::_calculateContactPeriods()
