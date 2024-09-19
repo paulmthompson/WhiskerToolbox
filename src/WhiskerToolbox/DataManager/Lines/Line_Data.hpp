@@ -24,12 +24,12 @@ protected:
 private:
     std::map<int,std::vector<Line2D>> _data;
     std::vector<Line2D> _empty;
-
-    Line2D _createLine(std::vector<float> const& x, std::vector<float> const& y);
 };
 
 void save_line_as_csv(Line2D const& line, std::string const& filename, int const point_precision = 2);
 
 Line2D load_line_from_csv(std::string const& filename);
+
+Line2D create_line(std::vector<float> const& x, std::vector<float> const& y);
 
 #endif // LINE_DATA_HPP

@@ -19,7 +19,7 @@ void LineData::clearLinesAtTime(int const time)
 
 void LineData::addLineAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y)
 {
-    auto new_line = _createLine(x,y);
+    auto new_line = create_line(x,y);
 
     _data[time].push_back(new_line);
 }
@@ -50,11 +50,11 @@ std::vector<int> LineData::getTimesWithLines() const
     return keys;
 }
 
-Line2D LineData::_createLine(std::vector<float> const& x, std::vector<float> const& y)
+Line2D create_line(std::vector<float> const& x, std::vector<float> const& y)
 {
     auto new_line = Line2D{x.size()};
 
-    for (int i = 0; i < x.size(); i++)
+    for (std::size_t i = 0; i < x.size(); i++)
     {
         new_line[i] = Point2D<float>{x[i],y[i]};
     }

@@ -18,7 +18,7 @@ void MaskData::clearMasksAtTime(int const time)
 
 void MaskData::addMaskAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y)
 {
-    auto new_mask = _createMask(x,y);
+    auto new_mask = create_mask(x,y);
 
     _data[time].push_back(new_mask);
     //NOTIFY
@@ -41,11 +41,11 @@ std::vector<Mask2D> const& MaskData::getMasksAtTime(int const time) const
     }
 }
 
-Mask2D MaskData::_createMask(std::vector<float> const& x, std::vector<float> const& y)
+Mask2D create_mask(std::vector<float> const& x, std::vector<float> const& y)
 {
     auto new_mask = Mask2D{x.size()};
 
-    for (int i = 0; i < x.size(); i++)
+    for (std::size_t i = 0; i < x.size(); i++)
     {
         new_mask[i] = Point2D<float>{x[i],y[i]};
     }
