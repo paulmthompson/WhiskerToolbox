@@ -2,7 +2,7 @@
 #define MAGIC_ERASER_HPP
 
 
-
+#include <cstdint>
 #include <vector>
 
 namespace cv {
