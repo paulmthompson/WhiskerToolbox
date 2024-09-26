@@ -9,6 +9,7 @@
 #include <QImage>
 
 #include <iostream>
+#include <QPainter>
 
 /*
 
@@ -29,6 +30,14 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
     });
 }
 
+/**
+ * @brief Media_Window::addLineDataToScene
+ *
+ * If a new key is added to DataManager, it is added to the scene
+ * by default. This should be observer
+ *
+ * @param line_key
+ */
 void Media_Window::addLineDataToScene(std::string const & line_key)
 {
     _line_configs[line_key] = element_config{"#0000FF",1.0};
@@ -187,6 +196,12 @@ void Media_Window::_createCanvasForData()
 
 void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
+        if (_drawing_mode) {
+            auto pos = event->scenePos();
+            _drawing_points.clear();
+            _drawing_points.push_back(pos);
+            _is_drawing = true;
+        }
         emit leftClick(event->scenePos().x(),event->scenePos().y());
     } else if (event->button() == Qt::RightButton){
 
@@ -195,9 +210,17 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     }
 }
 void Media_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    if (event->button() == Qt::LeftButton && _is_drawing) {
+        _is_drawing = false;
+        emit leftRelease();
+    }
     QGraphicsScene::mouseReleaseEvent(event);
 }
 void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    if (_is_drawing) {
+        auto pos = event->scenePos();
+        _drawing_points.push_back(pos);
+    }
     QGraphicsScene::mouseMoveEvent(event);
 
 }
@@ -337,4 +360,29 @@ void Media_Window::_plotPointData()
         }
         i ++;
     }
+}
+
+std::vector<uint8_t> Media_Window::getDrawingMask() {
+    // Create a QImage with _canvasWidth and _canvasHeight
+    QImage maskImage(_canvasWidth, _canvasHeight, QImage::Format_Grayscale8);
+    maskImage.fill(0);
+
+    QPainter painter(&maskImage);
+    painter.setPen(Qt::white);
+
+    for (const auto& point : _drawing_points) {
+        painter.drawPoint(point.toPoint());
+    }
+    painter.end();
+
+    // Scale the QImage to the size of the media
+    auto media = _data_manager->getMediaData();
+    int mediaWidth = media->getWidth();
+    int mediaHeight = media->getHeight();
+    QImage scaledMaskImage = maskImage.scaled(mediaWidth, mediaHeight);
+
+    // Convert the QImage to a std::vector<uint8_t>
+    std::vector<uint8_t> mask(scaledMaskImage.bits(), scaledMaskImage.bits() + scaledMaskImage.sizeInBytes());
+
+    return mask;
 }

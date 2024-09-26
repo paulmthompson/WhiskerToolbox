@@ -61,7 +61,8 @@ private:
     int _selected_whisker {0};
 
     enum Selection_Type {Whisker_Select,
-                          Whisker_Pad_Select};
+                          Whisker_Pad_Select,
+                          Magic_Eraser};
 
     Whisker_Widget::Selection_Type _selection_mode {Whisker_Select};
 
@@ -101,6 +102,8 @@ private:
 
     void _addNewTrackedWhisker(int const index);
     void _addNewTrackedWhisker(std::vector<int> const & indexes);
+
+    void _traceWhiskers(std::vector<uint8_t> image, int height, int width);
 
 private slots:
     void _traceButton();
@@ -146,6 +149,10 @@ private slots:
     void _changeOutputDir();
 
     void _changeWhiskerClip(int clip_dist);
+
+    void _magicEraserButton();
+
+    void _drawingFinished();
 
 };
 

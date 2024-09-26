@@ -14,6 +14,7 @@
 #include "utils/opencv_utility.hpp"
 #include "utils/string_manip.hpp"
 #include "whiskertracker.hpp"
+#include "Magic_Eraser_Widget/magic_eraser.hpp"
 
 #include <QFileDialog>
 #include <QElapsedTimer>
@@ -44,6 +45,17 @@ Line2D convert_to_Line2D(whisker::Line2D& line)
     return output_line;
 }
 
+/**
+ * @brief Whisker_Widget::Whisker_Widget
+ *
+ *
+ *
+ * @param scene
+ * @param data_manager
+ * @param time_scrollbar
+ * @param mainwindow
+ * @param parent
+ */
 Whisker_Widget::Whisker_Widget(Media_Window *scene,
                                std::shared_ptr<DataManager> data_manager,
                                TimeScrollBar* time_scrollbar,
@@ -106,6 +118,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     connect(ui->whisker_clip, &QSpinBox::valueChanged, this, &Whisker_Widget::_changeWhiskerClip);
 
+    connect(ui->magic_eraser_button, &QPushButton::clicked, this, &Whisker_Widget::_magicEraserButton);
+
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -118,6 +132,7 @@ void Whisker_Widget::openWidget() {
     std::cout << "Whisker Widget Opened" << std::endl;
 
     connect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
+    connect(_scene, &Media_Window::leftRelease, this, &Whisker_Widget::_drawingFinished);
 
     this->show();
 }
@@ -153,7 +168,15 @@ void Whisker_Widget::_traceButton() {
     auto media = _data_manager->getMediaData();
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    auto whiskers = _wt->trace(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+    _traceWhiskers(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+}
+
+void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int width)
+{
+    QElapsedTimer timer2;
+    timer2.start();
+
+    auto whiskers = _wt->trace(image, height, width);
 
     std::vector<Line2D> whisker_lines(whiskers.size());
     std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);
@@ -898,6 +921,39 @@ void Whisker_Widget::_maskDilation(int dilation_size)
 void Whisker_Widget::_maskDilationExtended(int dilation_size)
 {
 
+}
+
+void Whisker_Widget::_magicEraserButton()
+{
+    _selection_mode = Selection_Type::Magic_Eraser;
+    _scene->setDrawingMode(true);
+}
+
+void Whisker_Widget::_drawingFinished()
+{
+    switch (_selection_mode) {
+        case Magic_Eraser: {
+            std::cout << "Drawing finished" << std::endl;
+
+            auto mask = _scene->getDrawingMask();
+
+            auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+
+            auto image = _data_manager->getMediaData()->getRawData(frame_id);
+            auto height = _data_manager->getMediaData()->getHeight();
+            auto width = _data_manager->getMediaData()->getWidth();
+
+            auto erased = apply_magic_eraser(image,width,height,mask);
+
+            _traceWhiskers(erased, height, width);
+
+            _selection_mode = Whisker_Select;
+            _scene->setDrawingMode(false);
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 void Whisker_Widget::_changeOutputDir()
