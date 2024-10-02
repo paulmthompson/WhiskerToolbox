@@ -88,7 +88,6 @@ private slots:
     void _loadContact();
     void _poleSelectButton();
     void _setBoundingBoxWidth(int value);
-    void _contactNumberSelect(int value);
     void _flipContactButton();
     void _changeOutputDir();
     void _contactTableClicked(int row, int column);

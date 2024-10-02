@@ -251,7 +251,6 @@ void Media_Window::_plotLineData()
     auto xAspect = getXAspect();
     auto yAspect = getYAspect();
 
-    int i =0;
     for (auto const & [line_key, _line_config] : _line_configs)
     {
         auto plot_color = _plot_color_with_alpha(_line_config);
@@ -266,16 +265,39 @@ void Media_Window::_plotLineData()
 
             QPainterPath path = QPainterPath();
 
+            auto single_line_thres = 10.0;
+
             path.moveTo(QPointF(static_cast<float>(single_line[0].x) * xAspect, static_cast<float>(single_line[0].y) * yAspect));
 
             for (int i = 1; i < single_line.size(); i++) {
-                path.lineTo(QPointF(static_cast<float>(single_line[i].x) * xAspect , static_cast<float>(single_line[i].y) * yAspect));
+                auto dx = single_line[i].x - single_line[i-1].x;
+                auto dy = single_line[i].y - single_line[i-1].y;
+                auto d = std::sqrt((dx * dx) + (dy * dy));
+                if (d > single_line_thres) {
+                    path.moveTo(QPointF(static_cast<float>(single_line[i].x) * xAspect , static_cast<float>(single_line[i].y) * yAspect));
+                } else {
+                    path.lineTo(QPointF(static_cast<float>(single_line[i].x) * xAspect , static_cast<float>(single_line[i].y) * yAspect));
+                }
             }
 
             auto linePath = addPath(path, QPen(plot_color));
             _line_paths.append(linePath);
+
+            /*
+            // Add dots for each point on the line
+            for (const auto & point : single_line) {
+                auto ellipse = addEllipse(
+                        static_cast<float>(point.x) * xAspect - 2.5,
+                        static_cast<float>(point.y) * yAspect - 2.5,
+                        5.0, 5.0,
+                        QPen(plot_color),
+                        QBrush(plot_color)
+                );
+                _points.append(ellipse);
+            }
+             */
         }
-        i ++;
+
     }
 }
 

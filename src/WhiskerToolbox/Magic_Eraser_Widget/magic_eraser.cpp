@@ -49,13 +49,11 @@ std::vector<uint8_t> apply_magic_eraser(std::vector<uint8_t> & image, int width,
 
     cv::Mat maskImage = convert_vector_to_mat(mask, width, height);
 
-    cv::imwrite("mask_pre_smooth.jpg", maskImage);
-
     cv::Mat smoothedMask;
     cv::GaussianBlur(maskImage, smoothedMask, cv::Size(15, 15), 0);
-    // Replace all 0 pixels with 1
+
     cv::threshold(smoothedMask, smoothedMask, 1, 255, cv::THRESH_BINARY);
-    // Replace all 0 pixels with 1, keeping 255 pixels intact
+
     for (int y = 0; y < smoothedMask.rows; ++y) {
         for (int x = 0; x < smoothedMask.cols; ++x) {
             if (smoothedMask.at<uint8_t>(y, x) == 0) {
@@ -67,14 +65,10 @@ std::vector<uint8_t> apply_magic_eraser(std::vector<uint8_t> & image, int width,
     cv::Mat mask3Channel;
     cv::cvtColor(smoothedMask, mask3Channel, cv::COLOR_GRAY2BGR);
 
-    cv::imwrite("mask_post_smooth.jpg", smoothedMask);
-
     cv::Mat outputImage;
     cv::Point center(width / 2, height / 2);
 
     cv::seamlessClone(medianBlurredImage3Channel, inputImage3Channel, mask3Channel, center, outputImage, cv::NORMAL_CLONE);
-
-    cv::imwrite("seamless_clone_output.jpg", outputImage);
 
     cv::Mat outputImageGray;
     cv::cvtColor(outputImage, outputImageGray, cv::COLOR_BGR2GRAY);

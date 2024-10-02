@@ -67,10 +67,9 @@ void Contact_Widget::openWidget() {
 
     connect(ui->flip_contact_button, &QPushButton::clicked, this, &Contact_Widget::_flipContactButton);
 
-    connect(ui->contact_number, &QSpinBox::valueChanged,this, &Contact_Widget::_contactNumberSelect);
-
+    // Total frame count is giving the index of the last frame, so we ant the size of contact to be + 1
     if (_contact.empty()) {
-        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
+        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount() + 1);
     }
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Contact_Widget::_changeOutputDir);
@@ -120,7 +119,7 @@ void Contact_Widget::updateFrame(int frame_id)
 
     for (int i = -2; i < 3; i++) {
 
-        if ((frame_id + i < 0) | (frame_id + i >= _data_manager->getTime()->getTotalFrameCount())) {
+        if ((frame_id + i < 0) | (frame_id + i > _data_manager->getTime()->getTotalFrameCount())) {
             continue;
         }
 
@@ -155,11 +154,15 @@ void Contact_Widget::updateFrame(int frame_id)
 
 void Contact_Widget::_updateContactWidgets(int frame_id)
 {
+
+    if (_contactEvents.size() == 0)
+    {
+        return;
+    }
+
     auto nearest_contact = find_closest_preceding_event(_contactEvents, frame_id);
 
     if (nearest_contact != -1) {
-
-        ui->contact_number->setValue(nearest_contact + 1);
 
         if (_highlighted_row != nearest_contact) {
             highlight_row(ui->contact_table, _highlighted_row, Qt::white);
@@ -207,7 +210,7 @@ void Contact_Widget::_drawContactRectangles(int frame_id) {
 
     for (int i = -2; i < 3; i++) {
 
-        if ((frame_id + i < 0) | (frame_id + i >= _data_manager->getTime()->getTotalFrameCount())) {
+        if ((frame_id + i < 0) | (frame_id + i > _data_manager->getTime()->getTotalFrameCount())) {
             continue;
         }
 
@@ -237,11 +240,13 @@ void Contact_Widget::_contactButton() {
 
     auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
 
-    if (_contact.size() != _data_manager->getTime()->getTotalFrameCount()) {
+    /*
+    if (_contact.size() != _data_manager->getTime()->getTotalFrameCount() + 1) {
         std::cout << "The contact storage and number of frames are not equal" << std::endl;
         std::cout << "It is possible the video was just loaded after opening the contact widget" << std::endl;
-        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
+        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount() + 1);
     }
+    */
 
     // If we are in a contact epoch, we need to mark the termination frame and add those to block
     if (_contact_epoch) {
@@ -270,11 +275,13 @@ void Contact_Widget::_noContactButton()
 {
     auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
 
+    /*
     if (_contact.size() != _data_manager->getTime()->getTotalFrameCount()) {
         std::cout << "The contact storage and number of frames are not equal" << std::endl;
         std::cout << "It is possible the video was just loaded after opening the contact widget" << std::endl;
         _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
     }
+    */
 
     // If we are in a contact epoch, we need to mark the termination frame and add those to block
     if (_contact_epoch) {
@@ -402,34 +409,16 @@ void Contact_Widget::_calculateContactPeriods()
         }
     }
 
+    if (in_contact)
+    {
+        _contactEvents.push_back(ContactEvent{contact_start,static_cast<int>(_contact.size()-1)});
+    }
+
     std::cout << "There are " << _contactEvents.size() << " contact events" << std::endl;
 
     ui->total_contact_label->setText(QString::number(_contactEvents.size()));
-    ui->contact_number->setMaximum(_contactEvents.size());
 
     _buildContactTable();
-}
-
-/**
- * @brief
- * @param value
- *
- * Note that the contact spinbox is 1 indexed, but the contact events are 0 indexed
- */
-void Contact_Widget::_contactNumberSelect(int value) {
-
-    // We only want to change the scrollbar value if the
-    // user is changing the value, not the program
-    if (sender()->objectName() == "contact_number") {
-        //Check that value does not under or overflow
-        if (value < 1) {
-            value = 1;
-        } else if (value > _contactEvents.size()) {
-            value = static_cast<int>(_contactEvents.size());
-        }
-        auto frame_id = _contactEvents[value - 1].start;
-        _time_scrollbar->changeScrollBarValue(frame_id);
-    }
 }
 
 void Contact_Widget::_flipContactButton()
