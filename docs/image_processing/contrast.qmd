@@ -1,9 +1,10 @@
 ---
 title: "Contrast and Brightness Adjustment"
+format:
+  html: default
+  pdf: default
 ---
 
-These two filters are implemented with a single linear transform taking parameters "alpha" ($\alpha$) and "beta" ($\beta$). Pixel values are multiplied by $\alpha$ to adjust contrast, then have $\beta$ added to adjust brightness:
-$$
+These two filters are implemented with a single linear transform taking parameters "alpha" ($\alpha$) and "beta" ($\beta$). Pixel values are multiplied by $\alpha$ to adjust contrast, then have $\beta$ added to adjust brightness: $$
 g(x) = \alpha f(x) + \beta
-$$
-In effect the magnitude of $\alpha$ corresponds to the amount of contrast and the magnitude of $\beta$ corresponds to the amount of brightness.
+$$ In effect the magnitude of $\alpha$ corresponds to the amount of contrast and the magnitude of $\beta$ corresponds to the amount of brightness.
