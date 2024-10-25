@@ -1,39 +1,39 @@
 project:
   type: book
+  
 
 book:
   title: "BehaviorToolbox"
   author: "P. M. Thompson"
+
   chapters:
-    - part: "Introduction"
-      chapters: 
+      - part: "Introduction"
+        chapters: 
         - index.qmd
         
-    - part: "Image Processing"
-      chapters:
-        - image_processing/contrast.qmd
-        - image_processing/sharpening.qmd
-        - image_processing/clahe.qmd
-        - image_processing/bilateral_filter.qmd
-        
-    - part: "Label Creation"
-      chapters:
-        - labeling/keypoint.qmd
-        - labeling/mask.qmd
-      
-    - part: "Behavior Modules"
-      chapters:
-        - behaviors/whisker.qmd
-        - behaviors/tongue.qmd
-        
-    - part: "Example Uses"
-      chapters:
+      - part: "Tutorials"
+        chapters: 
         - examples/keypoint_labeling.qmd
         
-    - part: "Developer"
-      chapters: 
-        - developer/data_manager.qmd
-        - developer/image_processing.qmd
+      - part: "How-to guides"
+        chapters:
+              - labeling/keypoint.qmd
+              - labeling/mask.qmd
+              
+      - part: "Reference Guides"
+        chapters:
+              - image_processing/contrast.qmd
+              - image_processing/sharpening.qmd
+              - image_processing/clahe.qmd
+              - image_processing/bilateral_filter.qmd
+              - behaviors/whisker.qmd
+              - behaviors/tongue.qmd
+              
+      - part: "Concepts"
+        chapters: 
+              - developer/data_manager.qmd
+              - developer/image_processing.qmd
+
 
 
 

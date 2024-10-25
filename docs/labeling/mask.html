@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>BehaviorToolbox - 7&nbsp; Creating Mask Labels</title>
+<title>Behavior Toolbox - Creating Mask Labels</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -30,8 +30,6 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../behaviors/whisker.html" rel="next">
-<link href="../labeling/keypoint.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -66,7 +64,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="nav-sidebar floating">
+<body class="nav-sidebar docked">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -75,7 +73,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../labeling/keypoint.html">Label Creation</a></li><li class="breadcrumb-item"><a href="../labeling/mask.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Creating Mask Labels</span></a></li></ol></nav>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">How-to guides</li><li class="breadcrumb-item"><a href="../labeling/keypoint.html">Label Creation</a></li><li class="breadcrumb-item"><a href="../labeling/mask.html">Creating Mask Labels</a></li></ol></nav>
       <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
       </a>
       <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
@@ -87,10 +85,10 @@ ul.task-list li input[type="checkbox"] {
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation docked overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="../">BehaviorToolbox</a> 
+      <a href="../">Behavior Toolbox</a> 
     </div>
       </div>
         <div class="mt-2 flex-shrink-0 align-items-center">
@@ -112,7 +110,7 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Behavior Toolbox</span></span></a>
+ <span class="menu-text">Behavior Toolbox</span></a>
   </div>
 </li>
       </ul>
@@ -120,7 +118,7 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true">
- <span class="menu-text">Image Processing</span></a>
+ <span class="menu-text">Tutorials</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -128,26 +126,8 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../image_processing/contrast.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Contrast and Brightness Adjustment</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../image_processing/sharpening.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Image Sharpening</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../image_processing/clahe.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Contrast Limited Adaptive Histogram Equalization</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../image_processing/bilateral_filter.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Bilateral Filter</span></span></a>
+  <a href="../examples/keypoint_labeling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Keypoint Video Labeling</span></a>
   </div>
 </li>
       </ul>
@@ -155,87 +135,138 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true">
- <span class="menu-text">Label Creation</span></a>
+ <span class="menu-text">How-to guides</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true">
+ <span class="menu-text">Label Creation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth2 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../labeling/keypoint.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Creating Keypoint Labels</span></span></a>
+ <span class="menu-text">Creating Keypoint Labels</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../labeling/mask.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Creating Mask Labels</span></span></a>
+ <span class="menu-text">Creating Mask Labels</span></a>
   </div>
 </li>
       </ul>
   </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true">
- <span class="menu-text">Behavior Modules</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../behaviors/whisker.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Whisker Tracking</span></span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../behaviors/tongue.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Tongue Tracking</span></span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true">
- <span class="menu-text">Example Uses</span></a>
+ <span class="menu-text">Reference Guides</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false">
+ <span class="menu-text">Image Processing</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../examples/keypoint_labeling.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Keypoint Video Labeling</span></span></a>
+  <a href="../image_processing/contrast.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contrast and Brightness Adjustment</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../image_processing/sharpening.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Image Sharpening</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../image_processing/clahe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Contrast Limited Adaptive Histogram Equalization</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../image_processing/bilateral_filter.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Bilateral Filter</span></a>
   </div>
 </li>
       </ul>
   </li>
-        <li class="sidebar-item sidebar-item-section">
+          <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true">
- <span class="menu-text">Developer</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="false">
+ <span class="menu-text">Behavior Modules</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth2 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../behaviors/whisker.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Whisker Tracking</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../behaviors/tongue.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Tongue Tracking</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" aria-expanded="true">
+ <span class="menu-text">Concepts</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" aria-expanded="false">
+ <span class="menu-text">Developer</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth2 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Data Manager</span></span></a>
+ <span class="menu-text">Data Manager</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Image Processing</span></span></a>
+ <span class="menu-text">Image Processing</span></a>
   </div>
 </li>
+      </ul>
+  </li>
       </ul>
   </li>
     </ul>
@@ -245,14 +276,14 @@ ul.task-list li input[type="checkbox"] {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Table of contents</h2>
+    <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#grabcut-tool-operation" id="toc-grabcut-tool-operation" class="nav-link active" data-scroll-target="#grabcut-tool-operation"><span class="header-section-number">7.1</span> GrabCut Tool Operation</a>
+  <li><a href="#grabcut-tool-operation" id="toc-grabcut-tool-operation" class="nav-link active" data-scroll-target="#grabcut-tool-operation">GrabCut Tool Operation</a>
   <ul class="collapse">
-  <li><a href="#selecting-roi" id="toc-selecting-roi" class="nav-link" data-scroll-target="#selecting-roi"><span class="header-section-number">7.1.1</span> Selecting ROI</a></li>
-  <li><a href="#user-feedback" id="toc-user-feedback" class="nav-link" data-scroll-target="#user-feedback"><span class="header-section-number">7.1.2</span> User Feedback</a></li>
-  <li><a href="#saving-and-exporting" id="toc-saving-and-exporting" class="nav-link" data-scroll-target="#saving-and-exporting"><span class="header-section-number">7.1.3</span> Saving and Exporting</a></li>
+  <li><a href="#selecting-roi" id="toc-selecting-roi" class="nav-link" data-scroll-target="#selecting-roi">Selecting ROI</a></li>
+  <li><a href="#user-feedback" id="toc-user-feedback" class="nav-link" data-scroll-target="#user-feedback">User Feedback</a></li>
+  <li><a href="#saving-and-exporting" id="toc-saving-and-exporting" class="nav-link" data-scroll-target="#saving-and-exporting">Saving and Exporting</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -262,7 +293,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Creating Mask Labels</span></h1>
+<h1 class="title">Creating Mask Labels</h1>
 </div>
 
 
@@ -284,10 +315,10 @@ ul.task-list li input[type="checkbox"] {
 <figcaption class="figure-caption">GrabCut Tool</figcaption>
 </figure>
 </div>
-<section id="grabcut-tool-operation" class="level2" data-number="7.1">
-<h2 data-number="7.1" class="anchored" data-anchor-id="grabcut-tool-operation"><span class="header-section-number">7.1</span> GrabCut Tool Operation</h2>
-<section id="selecting-roi" class="level3" data-number="7.1.1">
-<h3 data-number="7.1.1" class="anchored" data-anchor-id="selecting-roi"><span class="header-section-number">7.1.1</span> Selecting ROI</h3>
+<section id="grabcut-tool-operation" class="level2">
+<h2 class="anchored" data-anchor-id="grabcut-tool-operation">GrabCut Tool Operation</h2>
+<section id="selecting-roi" class="level3">
+<h3 class="anchored" data-anchor-id="selecting-roi">Selecting ROI</h3>
 <p>To start creating a mask, left click and drag the mouse over the image to form a green rectangle as the region of interest. The objected intended to be masked should be completely within this rectangle. If a mistake is made the reset button returns the tool to the initial state.</p>
 <p>The GrabCut algorithm works as such: the algorithm keeps track of the mask and for each iteration, attempts to refine it. In between iterations, the user can tweak the mask to provide feedback to the algorithm, which will be noted through subsequent iterations.</p>
 <p>After drawing an ROI the “Iterate Grabcut” button becomes functional. Using it completes one iteration of the GrabCut algorithm. The first usage of this button will show the initial mask created by the algorithm. <strong>Ideally the user should press this button throughout the editing process.</strong></p>
@@ -295,8 +326,8 @@ ul.task-list li input[type="checkbox"] {
 <li>Opacity of the displayed mask can be adjusted with the transparency slider</li>
 </ul>
 </section>
-<section id="user-feedback" class="level3" data-number="7.1.2">
-<h3 data-number="7.1.2" class="anchored" data-anchor-id="user-feedback"><span class="header-section-number">7.1.2</span> User Feedback</h3>
+<section id="user-feedback" class="level3">
+<h3 class="anchored" data-anchor-id="user-feedback">User Feedback</h3>
 <p>In between iterations the user has access to a drawing bush whose radius can be adjusted. It is used to paint feedback for the GrabCut algorithm, which it will take into account upon pressing the “Iterate Grabcut” button. The brush has four colors:</p>
 <ul>
 <li>“Definite Background”: Tells GrabCut the painted area is definitely not part of the mask.</li>
@@ -305,8 +336,8 @@ ul.task-list li input[type="checkbox"] {
 <li>“Probable Foreground”: Suggests to GrabCut the painted area is likely part of the mask. GrabCut uses this information to create a better mask but may partially/fully disobey it.</li>
 </ul>
 </section>
-<section id="saving-and-exporting" class="level3" data-number="7.1.3">
-<h3 data-number="7.1.3" class="anchored" data-anchor-id="saving-and-exporting"><span class="header-section-number">7.1.3</span> Saving and Exporting</h3>
+<section id="saving-and-exporting" class="level3">
+<h3 class="anchored" data-anchor-id="saving-and-exporting">Saving and Exporting</h3>
 <p>The GrabCut tool may be exited at any time by pressing the “Exit” button. “Save and Exit” will exit the tool and save the mask into the main application and displayed in the media player. All created masks can be saved to disk using the “Save Drawn Masks” button in the Tongue Tracking widget.</p>
 
 
@@ -547,18 +578,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
-<nav class="page-navigation">
-  <div class="nav-page nav-page-previous">
-      <a href="../labeling/keypoint.html" class="pagination-link">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Creating Keypoint Labels</span></span>
-      </a>          
-  </div>
-  <div class="nav-page nav-page-next">
-      <a href="../behaviors/whisker.html" class="pagination-link">
-        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Whisker Tracking</span></span> <i class="bi bi-arrow-right-short"></i>
-      </a>
-  </div>
-</nav>
 </div> <!-- /content -->
 
 
