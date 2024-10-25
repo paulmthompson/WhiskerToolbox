@@ -76,6 +76,10 @@ set(PROJECT_SOURCES
 
         Magic_Eraser_Widget/magic_eraser.hpp
         Magic_Eraser_Widget/magic_eraser.cpp
+
+        Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.hpp
+        Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.cpp
+        Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.ui
 )
 
 if (WIN32)
