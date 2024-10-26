@@ -73,7 +73,18 @@ set(PROJECT_SOURCES
         Grabcut_Widget/GrabCutTool.cpp
         Grabcut_Widget/GrabCutTool.hpp
         Grabcut_Widget/Grabcut_Widget.ui
+
+        Magic_Eraser_Widget/magic_eraser.hpp
+        Magic_Eraser_Widget/magic_eraser.cpp
+
+        Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.hpp
+        Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.cpp
+        Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.ui
 )
+
+if (WIN32)
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
+endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
@@ -101,7 +112,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 
-target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui)
+target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 
 target_link_libraries(WhiskerToolbox PRIVATE JKQTPlotter6::JKQTPlotter6)
 

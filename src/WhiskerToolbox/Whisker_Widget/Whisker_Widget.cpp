@@ -14,6 +14,7 @@
 #include "utils/opencv_utility.hpp"
 #include "utils/string_manip.hpp"
 #include "whiskertracker.hpp"
+#include "Magic_Eraser_Widget/magic_eraser.hpp"
 
 #include <QFileDialog>
 #include <QElapsedTimer>
@@ -22,12 +23,14 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
+#include <random>
 #include <string>
 
 
 
-const std::vector<std::string> whisker_colors = {"#ff0000", // Red
+std::vector<std::string> whisker_colors = {"#ff0000", // Red
                                             "#008000", // Green
                                             "#00ffff", // Cyan
                                             "#ff00ff", // Magenta
@@ -42,6 +45,17 @@ Line2D convert_to_Line2D(whisker::Line2D& line)
     return output_line;
 }
 
+/**
+ * @brief Whisker_Widget::Whisker_Widget
+ *
+ *
+ *
+ * @param scene
+ * @param data_manager
+ * @param time_scrollbar
+ * @param mainwindow
+ * @param parent
+ */
 Whisker_Widget::Whisker_Widget(Media_Window *scene,
                                std::shared_ptr<DataManager> data_manager,
                                TimeScrollBar* time_scrollbar,
@@ -102,6 +116,10 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Whisker_Widget::_changeOutputDir);
 
+    connect(ui->whisker_clip, &QSpinBox::valueChanged, this, &Whisker_Widget::_changeWhiskerClip);
+
+    connect(ui->magic_eraser_button, &QPushButton::clicked, this, &Whisker_Widget::_magicEraserButton);
+
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -114,6 +132,7 @@ void Whisker_Widget::openWidget() {
     std::cout << "Whisker Widget Opened" << std::endl;
 
     connect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
+    connect(_scene, &Media_Window::leftRelease, this, &Whisker_Widget::_drawingFinished);
 
     this->show();
 }
@@ -149,10 +168,22 @@ void Whisker_Widget::_traceButton() {
     auto media = _data_manager->getMediaData();
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    auto whiskers = _wt->trace(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+    _traceWhiskers(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+}
+
+void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int width)
+{
+    QElapsedTimer timer2;
+    timer2.start();
+
+    auto whiskers = _wt->trace(image, height, width);
 
     std::vector<Line2D> whisker_lines(whiskers.size());
     std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);
+
+    std::for_each(whisker_lines.begin(), whisker_lines.end(), [this](Line2D& line) {
+        clip_whisker(line, _clip_length);
+    });
 
     std::string whisker_group_name = "whisker";
 
@@ -408,7 +439,7 @@ void Whisker_Widget::_loadKeypointCSV()
     }
 
     _scene->addPointDataToScene(keypoint_key);
-    _scene->changePointColor(keypoint_key, whisker_colors[point_num]);
+    _scene->changePointColor(keypoint_key, get_whisker_color(point_num));
 }
 
 /////////////////////////////////////////////
@@ -429,7 +460,7 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, c
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->createLine(whisker_name);
         _scene->addLineDataToScene(whisker_name);
-        _scene->changeLineColor(whisker_name, whisker_colors[whisker_id]);
+        _scene->changeLineColor(whisker_name, get_whisker_color(whisker_id));
     }
 }
 
@@ -580,7 +611,7 @@ void Whisker_Widget::_loadSingleHDF5WhiskerMask(std::string const & filename)
     }
 
     _scene->addMaskDataToScene(mask_key);
-    _scene->changeMaskColor(mask_key, whisker_colors[mask_num]);
+    _scene->changeMaskColor(mask_key, get_whisker_color(mask_num));
 }
 
 /**
@@ -892,6 +923,39 @@ void Whisker_Widget::_maskDilationExtended(int dilation_size)
 
 }
 
+void Whisker_Widget::_magicEraserButton()
+{
+    _selection_mode = Selection_Type::Magic_Eraser;
+    _scene->setDrawingMode(true);
+}
+
+void Whisker_Widget::_drawingFinished()
+{
+    switch (_selection_mode) {
+        case Magic_Eraser: {
+            std::cout << "Drawing finished" << std::endl;
+
+            auto mask = _scene->getDrawingMask();
+
+            auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+
+            auto image = _data_manager->getMediaData()->getRawData(frame_id);
+            auto height = _data_manager->getMediaData()->getHeight();
+            auto width = _data_manager->getMediaData()->getWidth();
+
+            auto erased = apply_magic_eraser(image,width,height,mask);
+
+            _traceWhiskers(erased, height, width);
+
+            _selection_mode = Whisker_Select;
+            _scene->setDrawingMode(false);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 void Whisker_Widget::_changeOutputDir()
 {
     QString dir_name = QFileDialog::getExistingDirectory(
@@ -905,6 +969,13 @@ void Whisker_Widget::_changeOutputDir()
 
     _output_path = std::filesystem::path(dir_name.toStdString());
     ui->output_dir_label->setText(dir_name);
+}
+
+void Whisker_Widget::_changeWhiskerClip(int clip_dist)
+{
+    _clip_length = clip_dist;
+
+    _traceButton();
 }
 
 /////////////////////////////////////////////
@@ -1063,3 +1134,29 @@ void add_whiskers_to_data_manager(DataManager* dm, std::vector<Line2D> & whisker
     }
 }
 
+void clip_whisker(Line2D& line, int clip_length)
+{
+    if (clip_length <= 0 || clip_length > line.size()) {
+        return; // Invalid clip length, do nothing
+    }
+    line.erase(line.end() - clip_length, line.end());
+}
+
+std::string generate_color() {
+    std::stringstream ss;
+    ss << "#";
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 255);
+    for (int i = 0; i < 3; ++i) {
+        ss << std::setw(2) << std::setfill('0') << std::hex << dis(gen);
+    }
+    return ss.str();
+}
+
+std::string get_whisker_color(int whisker_index) {
+    if (whisker_index >= whisker_colors.size()) {
+        whisker_colors.push_back(generate_color());
+    }
+    return whisker_colors[whisker_index];
+}

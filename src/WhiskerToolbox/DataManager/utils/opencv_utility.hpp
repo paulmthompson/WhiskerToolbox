@@ -34,6 +34,8 @@ void median_blur(cv::Mat & mat, int const kernel_size);
 
 void linear_transform(cv::Mat & mat, double alpha, int beta);
 
+void gamma_transform(cv::Mat & mat, double gamma);
+
 void clahe(cv::Mat & mat, double const clip_limit, int const grid_size);
 
 void sharpen_image(cv::Mat& img, const double sigma = 3.0);

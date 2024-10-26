@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="focusPolicy">
-   <enum>Qt::StrongFocus</enum>
+   <enum>Qt::FocusPolicy::StrongFocus</enum>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
@@ -51,11 +51,17 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionLoad_Video"/>
-    <addaction name="actionLoad_Images"/>
+    <widget class="QMenu" name="menuLoad_Data">
+     <property name="title">
+      <string>Load Data</string>
+     </property>
+     <addaction name="actionLoad_Video"/>
+     <addaction name="actionLoad_Images"/>
+     <addaction name="actionLoad_Analog_Time_Series_CSV"/>
+     <addaction name="actionLoad_Digital_Time_Series_CSV"/>
+    </widget>
     <addaction name="separator"/>
-    <addaction name="actionLoad_Analog_Time_Series_CSV"/>
-    <addaction name="actionLoad_Digital_Time_Series_CSV"/>
+    <addaction name="menuLoad_Data"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -84,12 +90,7 @@
    <addaction name="menuModules"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionLoad_Video">
-   <property name="text">
-    <string>Load Video</string>
-   </property>
-  </action>
-  <action name="actionTake_Snapshot">
+    <action name="actionTake_Snapshot">
    <property name="text">
     <string>Take Snapshot</string>
    </property>
@@ -137,6 +138,11 @@
   <action name="actionLoad_Video_mat_hdf5">
    <property name="text">
     <string>Load Video (.mat, .hdf5)</string>
+   </property>
+  </action>
+  <action name="actionLoad_Video">
+   <property name="text">
+    <string>Load Video</string>
    </property>
   </action>
  </widget>

@@ -68,6 +68,16 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
     float getXAspect() const;
     float getYAspect() const;
 
+    void setDrawingMode(bool drawing_mode)
+        {_drawing_mode = drawing_mode;
+        if (!drawing_mode)
+        {
+            _drawing_points.clear();
+        }
+        };
+
+    std::vector<uint8_t> getDrawingMask();
+
 protected:
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
@@ -89,6 +99,10 @@ private:
     QVector<QGraphicsPixmapItem*> _masks;
 
     bool _is_verbose {false};
+    bool _drawing_mode {false};
+    bool _is_drawing {false};
+
+    std::vector<QPointF> _drawing_points;
 
     std::unordered_map<std::string, element_config> _line_configs;
     std::unordered_map<std::string, element_config> _mask_configs;
@@ -107,6 +121,7 @@ public slots:
     void LoadFrame(int frame_id);
 signals:
     void leftClick(qreal,qreal);
+    void leftRelease();
 };
 
 #endif // MEDIA_WINDOW_HPP

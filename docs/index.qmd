@@ -2,6 +2,32 @@
 title: "Behavior Toolbox"
 ---
 
-This is a Quarto website.
+Behavior Toolbox is a cross-platform software package designed for analyzing and visualizing common forms of data generated during systems neuroscience experiments.
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+## Installation
+
+The software comes as compiled .exe, .dmg or tar files and can be immediately used on Windows, Mac and Linux - no install required !
+
+## Supported Data Types
+
+Some currently supported data types include:
+
+-   Multimedia - High speed video and collections of images
+
+-   Arrays of simple 2D shapes - Points, Lines, and masks that vary with time.
+
+-   Digital time series data - Events, timestamps,
+
+-   Analog time series data - Continuous movement variables
+
+## How Documentation is Organized
+
+This documentation will follow the quadrants of the [Diátaxis documentation authoring framework](https://diataxis.fr/)
+
+-   Tutorials
+
+-   How-to Guides
+
+-   Concepts
+
+-   Reference Guides

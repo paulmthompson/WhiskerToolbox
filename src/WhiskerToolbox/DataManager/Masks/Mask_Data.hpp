@@ -30,9 +30,9 @@ private:
     std::vector<Mask2D> _empty;
     int _mask_height;
     int _mask_width;
-
-    Mask2D _createMask(std::vector<float> const& x, std::vector<float> const& y);
 };
+
+ Mask2D create_mask(std::vector<float> const& x, std::vector<float> const& y);
 
 
 #endif // MASK_DATA_HPP

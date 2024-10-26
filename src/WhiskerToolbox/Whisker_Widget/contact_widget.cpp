@@ -56,6 +56,9 @@ Contact_Widget::~Contact_Widget() {
 void Contact_Widget::openWidget() {
 
     connect(ui->contact_button, &QPushButton::clicked, this, &Contact_Widget::_contactButton);
+
+    connect(ui->no_contact_button, &QPushButton::clicked, this, &Contact_Widget::_noContactButton);
+
     connect(ui->save_contact_button, &QPushButton::clicked, this, &Contact_Widget::_saveContactFrameByFrame);
     connect(ui->load_contact_button, &QPushButton::clicked, this, &Contact_Widget::_loadContact);
     connect(ui->pole_select, &QPushButton::clicked,this, &Contact_Widget::_poleSelectButton);
@@ -64,13 +67,14 @@ void Contact_Widget::openWidget() {
 
     connect(ui->flip_contact_button, &QPushButton::clicked, this, &Contact_Widget::_flipContactButton);
 
-    connect(ui->contact_number, &QSpinBox::valueChanged,this, &Contact_Widget::_contactNumberSelect);
-
+    // Total frame count is giving the index of the last frame, so we ant the size of contact to be + 1
     if (_contact.empty()) {
-        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
+        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount() + 1);
     }
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Contact_Widget::_changeOutputDir);
+
+    connect(ui->contact_table, &QTableWidget::cellClicked, this, &Contact_Widget::_contactTableClicked);
 
     this->show();
 
@@ -115,7 +119,7 @@ void Contact_Widget::updateFrame(int frame_id)
 
     for (int i = -2; i < 3; i++) {
 
-        if ((frame_id + i < 0) | (frame_id + i >= _data_manager->getTime()->getTotalFrameCount())) {
+        if ((frame_id + i < 0) | (frame_id + i > _data_manager->getTime()->getTotalFrameCount())) {
             continue;
         }
 
@@ -141,9 +145,30 @@ void Contact_Widget::updateFrame(int frame_id)
         _drawContactRectangles(frame_id);
     }
 
+    _updateContactWidgets(frame_id);
+
     int t1 = timer2.elapsed();
 
     qDebug() << "Drawing 5 frames took " << t1;
+}
+
+void Contact_Widget::_updateContactWidgets(int frame_id)
+{
+
+    if (_contactEvents.size() == 0)
+    {
+        return;
+    }
+
+    auto nearest_contact = find_closest_preceding_event(_contactEvents, frame_id);
+
+    if (nearest_contact != -1) {
+
+        if (_highlighted_row != nearest_contact) {
+            highlight_row(ui->contact_table, _highlighted_row, Qt::white);
+            _highlighted_row = highlight_row(ui->contact_table, nearest_contact, Qt::yellow);
+        }
+    }
 }
 
 void Contact_Widget::_createContactPixmaps()
@@ -185,7 +210,7 @@ void Contact_Widget::_drawContactRectangles(int frame_id) {
 
     for (int i = -2; i < 3; i++) {
 
-        if ((frame_id + i < 0) | (frame_id + i >= _data_manager->getTime()->getTotalFrameCount())) {
+        if ((frame_id + i < 0) | (frame_id + i > _data_manager->getTime()->getTotalFrameCount())) {
             continue;
         }
 
@@ -215,11 +240,13 @@ void Contact_Widget::_contactButton() {
 
     auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
 
-    if (_contact.size() != _data_manager->getTime()->getTotalFrameCount()) {
+    /*
+    if (_contact.size() != _data_manager->getTime()->getTotalFrameCount() + 1) {
         std::cout << "The contact storage and number of frames are not equal" << std::endl;
         std::cout << "It is possible the video was just loaded after opening the contact widget" << std::endl;
-        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
+        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount() + 1);
     }
+    */
 
     // If we are in a contact epoch, we need to mark the termination frame and add those to block
     if (_contact_epoch) {
@@ -239,6 +266,41 @@ void Contact_Widget::_contactButton() {
         _contact_epoch = true;
 
         ui->contact_button->setText("Mark Contact End");
+    }
+
+    _calculateContactPeriods();
+}
+
+void Contact_Widget::_noContactButton()
+{
+    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+
+    /*
+    if (_contact.size() != _data_manager->getTime()->getTotalFrameCount()) {
+        std::cout << "The contact storage and number of frames are not equal" << std::endl;
+        std::cout << "It is possible the video was just loaded after opening the contact widget" << std::endl;
+        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
+    }
+    */
+
+    // If we are in a contact epoch, we need to mark the termination frame and add those to block
+    if (_contact_epoch) {
+
+        _contact_epoch = false;
+
+        ui->no_contact_button->setText("Mark No Contact");
+
+        for (int i = _contact_start; i < frame_num; i++) {
+            _contact[i] = Contact::NoContact;
+        }
+
+    } else {
+        // If we are not already in contact epoch, start one
+        _contact_start = frame_num;
+
+        _contact_epoch = true;
+
+        ui->no_contact_button->setText("Mark No Contact End");
     }
 
     _calculateContactPeriods();
@@ -317,6 +379,10 @@ void Contact_Widget::_buildContactTable()
         ui->contact_table->setItem(i,1,new QTableWidgetItem(QString::number(_contactEvents[i].end)));
 
     }
+
+    _highlighted_row = -1;
+    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+    _updateContactWidgets(frame_id);
 }
 
 void Contact_Widget::_calculateContactPeriods()
@@ -343,19 +409,16 @@ void Contact_Widget::_calculateContactPeriods()
         }
     }
 
+    if (in_contact)
+    {
+        _contactEvents.push_back(ContactEvent{contact_start,static_cast<int>(_contact.size()-1)});
+    }
+
     std::cout << "There are " << _contactEvents.size() << " contact events" << std::endl;
 
     ui->total_contact_label->setText(QString::number(_contactEvents.size()));
-    ui->contact_number->setMaximum(_contactEvents.size());
 
     _buildContactTable();
-}
-
-void Contact_Widget::_contactNumberSelect(int value)
-{
-
-    auto frame_id = _contactEvents[value].start;
-    _time_scrollbar->changeScrollBarValue(frame_id);
 }
 
 void Contact_Widget::_flipContactButton()
@@ -385,4 +448,37 @@ void Contact_Widget::_changeOutputDir()
 
     _output_path = std::filesystem::path(dir_name.toStdString());
     ui->output_dir_label->setText(dir_name);
+}
+
+void Contact_Widget::_contactTableClicked(int row, int column) {
+    if (column == 0 || column == 1) {
+        int frame_id = ui->contact_table->item(row, column)->text().toInt();
+        _time_scrollbar->changeScrollBarValue(frame_id);
+    }
+}
+
+int find_closest_preceding_event(const std::vector<ContactEvent>& events, int frame) {
+    int closest_index = -1;
+    for (int i = 0; i < events.size(); ++i) {
+        if (events[i].start <= frame) {
+            closest_index = i;
+            if (frame <= events[i].end) {
+                return i;
+            }
+        } else {
+            break;
+        }
+    }
+    return closest_index;
+}
+
+int highlight_row(QTableWidget* table, int row_index, Qt::GlobalColor color) {
+    if (row_index < 0 || row_index >= table->rowCount()) {
+        return -1; // Invalid row index, do nothing
+    }
+
+    for (int col = 0; col < table->columnCount(); ++col) {
+        table->item(row_index, col)->setBackground(color); // Set the highlight color
+    }
+    return row_index;
 }

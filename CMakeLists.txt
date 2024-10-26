@@ -2,7 +2,7 @@
 # Preamble
 #=============================
 cmake_minimum_required(VERSION 3.25)
-project(BehaviorToolbox VERSION 0.1 LANGUAGES CXX)
+project(BehaviorToolbox VERSION 0.1.2 LANGUAGES CXX)
 
 include(CTest)
 
@@ -26,7 +26,6 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
 include(enable_sanitizers)
 include(CompilerWarnings)
 include(set_rpath)

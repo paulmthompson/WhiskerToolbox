@@ -61,7 +61,8 @@ private:
     int _selected_whisker {0};
 
     enum Selection_Type {Whisker_Select,
-                          Whisker_Pad_Select};
+                          Whisker_Pad_Select,
+                          Magic_Eraser};
 
     Whisker_Widget::Selection_Type _selection_mode {Whisker_Select};
 
@@ -84,6 +85,8 @@ private:
 
     std::filesystem::path _output_path;
 
+    int _clip_length {0};
+
     Ui::Whisker_Widget *ui;
 
     void _drawWhiskers();
@@ -99,6 +102,8 @@ private:
 
     void _addNewTrackedWhisker(int const index);
     void _addNewTrackedWhisker(std::vector<int> const & indexes);
+
+    void _traceWhiskers(std::vector<uint8_t> image, int height, int width);
 
 private slots:
     void _traceButton();
@@ -143,6 +148,12 @@ private slots:
 
     void _changeOutputDir();
 
+    void _changeWhiskerClip(int clip_dist);
+
+    void _magicEraserButton();
+
+    void _drawingFinished();
+
 };
 
 void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whiskers_to_track);
@@ -154,5 +165,11 @@ void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filen
 bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_group_name);
 
 void add_whiskers_to_data_manager(DataManager* dm, std::vector<Line2D> & whiskers, std::string const & whisker_group_name, int const num_whisker_to_track);
+
+void clip_whisker(Line2D& line, int clip_length);
+
+std::string generate_color();
+
+std::string get_whisker_color(int whisker_index);
 
 #endif // WHISKER_WIDGET_HPP

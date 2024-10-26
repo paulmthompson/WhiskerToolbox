@@ -1,91 +1,73 @@
 [
   {
-    "objectID": "image_processing/bilateral_filter.html",
-    "href": "image_processing/bilateral_filter.html",
-    "title": "Bilateral Filter",
-    "section": "",
-    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html",
-    "crumbs": [
-      "Image Processing",
-      "Bilateral Filter"
-    ]
-  },
-  {
-    "objectID": "image_processing/bilateral_filter.html#references",
-    "href": "image_processing/bilateral_filter.html#references",
-    "title": "Bilateral Filter",
-    "section": "",
-    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html",
-    "crumbs": [
-      "Image Processing",
-      "Bilateral Filter"
-    ]
-  },
-  {
-    "objectID": "behaviors/tongue.html",
-    "href": "behaviors/tongue.html",
-    "title": "Tongue Tracking",
-    "section": "",
-    "text": "The Tongue Tracking widget deals with operations related to the tongue.",
-    "crumbs": [
-      "Behavior Modules",
-      "Tongue Tracking"
-    ]
-  },
-  {
-    "objectID": "behaviors/tongue.html#loading",
-    "href": "behaviors/tongue.html#loading",
-    "title": "Tongue Tracking",
-    "section": "Loading",
-    "text": "Loading\nTongue masks can be loaded through the sparse HDF5 format or binary images (where white is part of the mask, black is not).\nJaw keypoint tracking can also be loaded through CSV format. The first column should indicate frame number, the next indicating \\(x\\) position and the next \\(y\\) position.",
-    "crumbs": [
-      "Behavior Modules",
-      "Tongue Tracking"
-    ]
-  },
-  {
-    "objectID": "behaviors/tongue.html#grabcut-tool",
-    "href": "behaviors/tongue.html#grabcut-tool",
-    "title": "Tongue Tracking",
-    "section": "GrabCut Tool",
-    "text": "GrabCut Tool\nDocumentation on the GrabCut tool can be found here.",
-    "crumbs": [
-      "Behavior Modules",
-      "Tongue Tracking"
-    ]
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Behavior Toolbox",
-    "section": "",
-    "text": "This is a Quarto website.\nTo learn more about Quarto websites visit https://quarto.org/docs/websites.",
-    "crumbs": [
-      "Introduction",
-      "Behavior Toolbox"
-    ]
-  },
-  {
     "objectID": "labeling/mask.html",
     "href": "labeling/mask.html",
     "title": "Creating Mask Labels",
     "section": "",
-    "text": "Creating mask labels is done through the GrabCut tool. Currently it can be opened through the Tongue Tracking widget.",
-    "crumbs": [
-      "Label Creation",
-      "Creating Mask Labels"
-    ]
+    "text": "Creating mask labels is done through the GrabCut tool. Currently it can be opened through the Tongue Tracking widget."
   },
   {
     "objectID": "labeling/mask.html#grabcut-tool-operation",
     "href": "labeling/mask.html#grabcut-tool-operation",
     "title": "Creating Mask Labels",
     "section": "GrabCut Tool Operation",
-    "text": "GrabCut Tool Operation\n\nSelecting ROI\nTo start creating a mask, left click and drag the mouse over the image to form a green rectangle as the region of interest. The objected intended to be masked should be completely within this rectangle. If a mistake is made the reset button returns the tool to the initial state.\nThe GrabCut algorithm works as such: the algorithm keeps track of the mask and for each iteration, attempts to refine it. In between iterations, the user can tweak the mask to provide feedback to the algorithm, which will be noted through subsequent iterations.\nAfter drawing an ROI the “Iterate Grabcut” button becomes functional. Using it completes one iteration of the GrabCut algorithm. The first usage of this button will show the initial mask created by the algorithm. Ideally the user should press this button throughout the editing process.\n\nOpacity of the displayed mask can be adjusted with the transparency slider\n\n\n\nUser Feedback\nIn between iterations the user has access to a drawing bush whose radius can be adjusted. It is used to paint feedback for the GrabCut algorithm, which it will take into account upon pressing the “Iterate Grabcut” button. The brush has four colors:\n\n“Definite Background”: Tells GrabCut the painted area is definitely not part of the mask.\n“Definite Foreground”: Tells GrabCut the painted area is definitely part of the mask.\n“Probable Background”: Suggests to GrabCut the painted area may not be part of the mask. GrabCut uses this information to create a better mask but may partially/fully disobey it.\n“Probable Foreground”: Suggests to GrabCut the painted area is likely part of the mask. GrabCut uses this information to create a better mask but may partially/fully disobey it.\n\n\n\nSaving and Exporting\nThe GrabCut tool may be exited at any time by pressing the “Exit” button. “Save and Exit” will exit the tool and save the mask into the main application and displayed in the media player. All created masks can be saved to disk using the “Save Drawn Masks” button in the Tongue Tracking widget.",
-    "crumbs": [
-      "Label Creation",
-      "Creating Mask Labels"
-    ]
+    "text": "GrabCut Tool Operation\n\nSelecting ROI\nTo start creating a mask, left click and drag the mouse over the image to form a green rectangle as the region of interest. The objected intended to be masked should be completely within this rectangle. If a mistake is made the reset button returns the tool to the initial state.\nThe GrabCut algorithm works as such: the algorithm keeps track of the mask and for each iteration, attempts to refine it. In between iterations, the user can tweak the mask to provide feedback to the algorithm, which will be noted through subsequent iterations.\nAfter drawing an ROI the “Iterate Grabcut” button becomes functional. Using it completes one iteration of the GrabCut algorithm. The first usage of this button will show the initial mask created by the algorithm. Ideally the user should press this button throughout the editing process.\n\nOpacity of the displayed mask can be adjusted with the transparency slider\n\n\n\nUser Feedback\nIn between iterations the user has access to a drawing bush whose radius can be adjusted. It is used to paint feedback for the GrabCut algorithm, which it will take into account upon pressing the “Iterate Grabcut” button. The brush has four colors:\n\n“Definite Background”: Tells GrabCut the painted area is definitely not part of the mask.\n“Definite Foreground”: Tells GrabCut the painted area is definitely part of the mask.\n“Probable Background”: Suggests to GrabCut the painted area may not be part of the mask. GrabCut uses this information to create a better mask but may partially/fully disobey it.\n“Probable Foreground”: Suggests to GrabCut the painted area is likely part of the mask. GrabCut uses this information to create a better mask but may partially/fully disobey it.\n\n\n\nSaving and Exporting\nThe GrabCut tool may be exited at any time by pressing the “Exit” button. “Save and Exit” will exit the tool and save the mask into the main application and displayed in the media player. All created masks can be saved to disk using the “Save Drawn Masks” button in the Tongue Tracking widget."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Behavior Toolbox",
+    "section": "",
+    "text": "Behavior Toolbox is a cross-platform software package designed for analyzing and visualizing common forms of data generated during systems neuroscience experiments."
+  },
+  {
+    "objectID": "index.html#installation",
+    "href": "index.html#installation",
+    "title": "Behavior Toolbox",
+    "section": "Installation",
+    "text": "Installation\nThe software comes as compiled .exe, .dmg or tar files and can be immediately used on Windows, Mac and Linux - no install required !"
+  },
+  {
+    "objectID": "index.html#supported-data-types",
+    "href": "index.html#supported-data-types",
+    "title": "Behavior Toolbox",
+    "section": "Supported Data Types",
+    "text": "Supported Data Types\nSome currently supported data types include:\n\nMultimedia - High speed video and collections of images\nArrays of simple 2D shapes - Points, Lines, and masks that vary with time.\nDigital time series data - Events, timestamps,\nAnalog time series data - Continuous movement variables"
+  },
+  {
+    "objectID": "index.html#how-documentation-is-organized",
+    "href": "index.html#how-documentation-is-organized",
+    "title": "Behavior Toolbox",
+    "section": "How Documentation is Organized",
+    "text": "How Documentation is Organized\nThis documentation will follow the quadrants of the Diátaxis documentation authoring framework\n\nTutorials\nHow-to Guides\nConcepts\nReference Guides"
+  },
+  {
+    "objectID": "image_processing/contrast.html",
+    "href": "image_processing/contrast.html",
+    "title": "Contrast and Brightness Adjustment",
+    "section": "",
+    "text": "These two filters are implemented with a single linear transform taking parameters “alpha” (\\(\\alpha\\)) and “beta” (\\(\\beta\\)). Pixel values are multiplied by \\(\\alpha\\) to adjust contrast, then have \\(\\beta\\) added to adjust brightness: \\[\ng(x) = \\alpha f(x) + \\beta\n\\] In effect the magnitude of \\(\\alpha\\) corresponds to the amount of contrast and the magnitude of \\(\\beta\\) corresponds to the amount of brightness."
+  },
+  {
+    "objectID": "image_processing/bilateral_filter.html",
+    "href": "image_processing/bilateral_filter.html",
+    "title": "Bilateral Filter",
+    "section": "",
+    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html"
+  },
+  {
+    "objectID": "image_processing/bilateral_filter.html#references",
+    "href": "image_processing/bilateral_filter.html#references",
+    "title": "Bilateral Filter",
+    "section": "",
+    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html"
+  },
+  {
+    "objectID": "behaviors/whisker.html",
+    "href": "behaviors/whisker.html",
+    "title": "Whisker Tracking",
+    "section": "",
+    "text": "Load Whiskers\n\nSupported Whisker File Formats\n\n\n\n\n\n\nFile Format\nDescription\n\n\n\n\nJanelia\nBinary format output by janelia whisker tracker\n\n\nCSV\nEach row represents a 2d point (x,y) along the whisker. The points should be arranged from follicle to tip\n\n\nHDF5\n\n\n\n\n\n\nLoad Keypoints\n\n\nTrace Button\n\n\nLength Threshold\nWhisker segments below the length threshold will be discarded. Length threshold is in units of pixels\n\n\nWhisker Pad Selection\nThe whisker pad location in pixel coordinates. Candidate whiskers are ordered so that the base of the whisker is nearest the whisker pad. Whiskers with bases beyond some distance from the whisker pad can also be discarded.\n\n\nHead Orientation\nThe head orientation is the direction that the animal’s nose is pointing in the image. The head orientation is used to determine the identity of the whiskers in the frame (most posterior whisker is 0, next most posterior is 1, etc).\n\n\nNumber of Whiskers Selection\n\n\nExport Image and CSV Button\n\n\nFace Mask\nThe face mask corresponds to the part of the image belonging to the face. This can be used in several ways\n\nWhisker bases can be extended to always connect to the face mask. This eliminates jitter that can occur because of fur\nWhisker bases can be clipped to ensure that the whisker does not enter the face mask.\n\n\n\nJanelia Settings\n\n\nContact Detection"
   },
   {
     "objectID": "about.html",
@@ -95,25 +77,24 @@
     "text": "About this site"
   },
   {
-    "objectID": "behaviors/whisker.html",
-    "href": "behaviors/whisker.html",
-    "title": "Whisker Tracking",
+    "objectID": "behaviors/tongue.html",
+    "href": "behaviors/tongue.html",
+    "title": "Tongue Tracking",
     "section": "",
-    "text": "Load Whiskers\n\nSupported Whisker File Formats\n\n\n\n\n\n\nFile Format\nDescription\n\n\n\n\nJanelia\nBinary format output by janelia whisker tracker\n\n\nCSV\nEach row represents a 2d point (x,y) along the whisker. The points should be arranged from follicle to tip\n\n\nHDF5\n\n\n\n\n\n\nLoad Keypoints\n\n\nTrace Button\n\n\nLength Threshold\nWhisker segments below the length threshold will be discarded. Length threshold is in units of pixels\n\n\nWhisker Pad Selection\nThe whisker pad location in pixel coordinates. Candidate whiskers are ordered so that the base of the whisker is nearest the whisker pad. Whiskers with bases beyond some distance from the whisker pad can also be discarded.\n\n\nHead Orientation\nThe head orientation is the direction that the animal’s nose is pointing in the image. The head orientation is used to determine the identity of the whiskers in the frame (most posterior whisker is 0, next most posterior is 1, etc).\n\n\nNumber of Whiskers Selection\n\n\nExport Image and CSV Button\n\n\nFace Mask\nThe face mask corresponds to the part of the image belonging to the face. This can be used in several ways\n\nWhisker bases can be extended to always connect to the face mask. This eliminates jitter that can occur because of fur\nWhisker bases can be clipped to ensure that the whisker does not enter the face mask.\n\n\n\nJanelia Settings\n\n\nContact Detection",
-    "crumbs": [
-      "Behavior Modules",
-      "Whisker Tracking"
-    ]
+    "text": "The Tongue Tracking widget deals with operations related to the tongue."
   },
   {
-    "objectID": "image_processing/contrast.html",
-    "href": "image_processing/contrast.html",
-    "title": "Contrast and Brightness Adjustment",
-    "section": "",
-    "text": "These two filters are implemented with a single linear transform taking parameters “alpha” (\\(\\alpha\\)) and “beta” (\\(\\beta\\)). Pixel values are multiplied by \\(\\alpha\\) to adjust contrast, then have \\(\\beta\\) added to adjust brightness: \\[\ng(x) = \\alpha f(x) + \\beta\n\\] In effect the magnitude of \\(\\alpha\\) corresponds to the amount of contrast and the magnitude of \\(\\beta\\) corresponds to the amount of brightness.",
-    "crumbs": [
-      "Image Processing",
-      "Contrast and Brightness Adjustment"
-    ]
+    "objectID": "behaviors/tongue.html#loading",
+    "href": "behaviors/tongue.html#loading",
+    "title": "Tongue Tracking",
+    "section": "Loading",
+    "text": "Loading\nTongue masks can be loaded through the sparse HDF5 format or binary images (where white is part of the mask, black is not).\nJaw keypoint tracking can also be loaded through CSV format. The first column should indicate frame number, the next indicating \\(x\\) position and the next \\(y\\) position."
+  },
+  {
+    "objectID": "behaviors/tongue.html#grabcut-tool",
+    "href": "behaviors/tongue.html#grabcut-tool",
+    "title": "Tongue Tracking",
+    "section": "GrabCut Tool",
+    "text": "GrabCut Tool\nDocumentation on the GrabCut tool can be found here."
   }
 ]

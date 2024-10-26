@@ -14,8 +14,8 @@ public:
 
         if (frame_id < 0) {
             frame_id = 0;
-        } else if (frame_id >= _total_frame_count - 1) {
-            frame_id = _total_frame_count - 1;
+        } else if (frame_id >= _total_frame_count) {
+            frame_id = _total_frame_count;
         }
         return frame_id;
     }

@@ -113,6 +113,22 @@ void linear_transform(cv::Mat & mat, double alpha, int beta)
     mat.convertTo(mat, -1, alpha, beta);
 }
 
+void gamma_transform(cv::Mat & mat, double gamma)
+{
+    CV_Assert(gamma >= 0);
+
+    // Create a lookup table for gamma correction
+    cv::Mat lookup_table(1, 256, CV_8U);
+    uchar* p = lookup_table.ptr();
+    for (int i = 0; i < 256; ++i)
+    {
+        p[i] = cv::saturate_cast<uchar>(pow(i / 255.0, gamma) * 255.0);
+    }
+
+    // Apply the gamma correction using the lookup table
+    cv::LUT(mat, lookup_table, mat);
+}
+
 void clahe(cv::Mat & mat, double const clip_limit, int const grid_size)
 {
     cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
