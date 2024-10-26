@@ -15,6 +15,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_data_manager
         test_data_manager.cpp
+        AnalogTimeSeries/test_analog_time_series.cpp
 )
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
@@ -60,4 +61,5 @@ set(DATA_FILES_TO_COPY
         "test_config.json"
         "Media/test_each_frame_number.mp4"
         "Points/test_points.csv"
+        "Analog/single_column.csv"
 )

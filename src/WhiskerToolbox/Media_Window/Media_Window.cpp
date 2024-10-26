@@ -382,7 +382,6 @@ void Media_Window::_plotPointData()
         }
         i ++;
     }
-
 }
 
 std::vector<uint8_t> Media_Window::getDrawingMask() {
