@@ -67,6 +67,11 @@ public:
         }
     }
 
+    void loadFromJSON(std::string const & filepath);
+
+    void load_A(const std::string & filepath);
+    void load_B(const std::string & filepath);
+
 private:
 
     std::shared_ptr<MediaData> _media;
