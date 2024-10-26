@@ -1,5 +1,6 @@
 #include "Analog_Time_Series.hpp"
 
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -23,7 +24,7 @@ std::vector<float> load_analog_series_from_csv(std::string const& filename)
     myfile.open (filename, std::fstream::in);
 
     if (!myfile.is_open()) {
-        std::out << "Error: File " << filename << " not found." << std::endl;
+        std::cout << "Error: File " << filename << " not found." << std::endl;
         return {};
     }
 
