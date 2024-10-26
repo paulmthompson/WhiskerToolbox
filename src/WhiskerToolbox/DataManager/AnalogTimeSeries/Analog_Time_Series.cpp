@@ -19,9 +19,13 @@ std::vector<float> load_analog_series_from_csv(std::string const& filename)
 {
 
     std::string csv_line;
-
     std::fstream myfile;
     myfile.open (filename, std::fstream::in);
+
+    if (!myfile.is_open()) {
+        std::out << "Error: File " << filename << " not found." << std::endl;
+        return {};
+    }
 
     std::string y_str;
     auto output = std::vector<float>{};

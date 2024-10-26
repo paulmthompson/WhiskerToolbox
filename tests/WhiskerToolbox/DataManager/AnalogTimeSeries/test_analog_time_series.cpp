@@ -5,7 +5,7 @@
 
 TEST_CASE("Analog - Load CSV", "[DataManager]") {
 
-auto filename = "data/single_column.csv";
+auto filename = "data/Analog/single_column.csv";
 
 auto data = load_analog_series_from_csv(filename);
 
