@@ -61,6 +61,12 @@ endfunction()
 set(DATA_FILES_TO_COPY
         "test_config.json"
         "Media/test_each_frame_number.mp4"
-        "Points/test_points.csv"
+        "Points/test_point.csv"
         "Analog/single_column.csv"
+)
+
+copy_files(test_data_manager
+        ${CMAKE_CURRENT_SOURCE_DIR}/data
+        ${CMAKE_CURRENT_BINARY_DIR}/data
+        "${DATA_FILES_TO_COPY}"
 )
