@@ -166,7 +166,7 @@ void Analog_Viewer::plotDigital(std::string const & name){
         return;
     }
 
-    auto data = _data_manager->getDigitalTimeSeries(name)->getDigitalTimeSeries();
+    auto data = _data_manager->getDigitalTimeSeries(name)->getDigitalIntervalSeries();
 
     // Configure JKQTPlotter graph object
     DigitalTimeSeriesGraph* graph = new DigitalTimeSeriesGraph(ui->plot->getPlotter());

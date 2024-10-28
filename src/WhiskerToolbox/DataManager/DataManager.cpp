@@ -129,10 +129,10 @@ std::vector<std::string> DataManager::getAnalogTimeSeriesKeys()
 
 void DataManager::createDigitalTimeSeries(std::string const & digital_key)
 {
-    _digital[digital_key] = std::make_shared<DigitalTimeSeries>();
+    _digital[digital_key] = std::make_shared<DigitalIntervalSeries>();
 }
 
-std::shared_ptr<DigitalTimeSeries> DataManager::getDigitalTimeSeries(std::string const & digital_key)
+std::shared_ptr<DigitalIntervalSeries> DataManager::getDigitalTimeSeries(std::string const & digital_key)
 {
     return _digital[digital_key];
 }

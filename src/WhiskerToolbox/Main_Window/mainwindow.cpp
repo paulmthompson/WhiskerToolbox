@@ -202,7 +202,8 @@ void MainWindow::_loadDigitalTimeSeriesCSV(){
     _data_manager->getDigitalTimeSeries(key)->setData(series);
 
     std::cout << "Loaded series " << key << " with " <<
-        _data_manager->getDigitalTimeSeries(key)->getDigitalTimeSeries().size() << " points " << std::endl;
+                                                     _data_manager->getDigitalTimeSeries(
+                                                             key)->getDigitalIntervalSeries().size() << " points " << std::endl;
 
     if (_widgets.find("analog_viewer") != _widgets.end()) {
         dynamic_cast<Analog_Viewer*>(_widgets["analog_viewer"].get())->plotDigital(key);

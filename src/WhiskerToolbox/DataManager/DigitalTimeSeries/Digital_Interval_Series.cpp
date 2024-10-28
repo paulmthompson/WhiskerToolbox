@@ -1,16 +1,16 @@
-#include "Digital_Time_Series.hpp"
+#include "Digital_Interval_Series.hpp"
 
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <utility>
 
-DigitalTimeSeries::DigitalTimeSeries(std::vector<std::pair<float, float>> digital_vector)
+DigitalIntervalSeries::DigitalIntervalSeries(std::vector<std::pair<float, float>> digital_vector)
 {
     _data = digital_vector;
 }
 
-std::vector<std::pair<float, float>> const & DigitalTimeSeries::getDigitalTimeSeries() const
+std::vector<std::pair<float, float>> const & DigitalIntervalSeries::getDigitalIntervalSeries() const
 {
     return _data;
 }
