@@ -30,6 +30,9 @@ add_library(DataManager SHARED
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
 
+        DigitalTimeSeries/Digital_Event_Series.hpp
+        DigitalTimeSeries/Digital_Event_Series.cpp
+
         utils/container.hpp
         utils/hdf5_mask_load.hpp
         utils/opencv_utility.hpp
