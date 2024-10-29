@@ -1,4 +1,5 @@
 #include "Digital_Event_Series.hpp"
+#include "loaders/CSV_Loaders.hpp"
 #include <fstream>
 #include <sstream>
 
@@ -8,17 +9,10 @@ std::vector<float> const& DigitalEventSeries::getEventSeries() const {
     return _data;
 }
 
-std::vector<float> load_event_series_from_csv(std::string const& filename) {
-    std::vector<float> event_series;
-    std::ifstream file(filename);
-    std::string line;
+namespace DigitalEventSeriesLoader {
 
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        float timestamp;
-        ss >> timestamp;
-        event_series.push_back(timestamp);
-    }
-
-    return event_series;
+DigitalEventSeries loadFromCSV(const std::string& filename) {
+    return DigitalEventSeries(CSVLoader::loadSingleColumnCSV(filename));
 }
+
+} // namespace DigitalEventSeriesLoader

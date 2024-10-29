@@ -16,7 +16,9 @@ private:
     std::vector<float> _data {};
 };
 
-std::vector<float> load_event_series_from_csv(std::string const& filename);
+namespace DigitalEventSeriesLoader {
+    DigitalEventSeries loadFromCSV(const std::string& filename);
+} // namespace DigitalEventSeriesLoader
 
 
 #endif //BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
