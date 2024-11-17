@@ -13,6 +13,7 @@
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
+#include "Tracking_Widget/Tracking_Widget.hpp"
 #include "Whisker_Widget.hpp"
 
 #include "Points/Point_Data.hpp"
@@ -92,6 +93,7 @@ void MainWindow::_createActions()
     connect(ui->actionAnalog_Viewer, &QAction::triggered, this, &MainWindow::openAnalogViewer);
     connect(ui->actionImage_Processing, &QAction::triggered, this, &MainWindow::openImageProcessing);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
+    connect(ui->actionTracking_Widget, &QAction::triggered, this, &MainWindow::openTrackingWidget);
 
     connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
 }
@@ -319,6 +321,27 @@ void MainWindow::openTongueTracking()
     }
 
     auto ptr = dynamic_cast<Tongue_Widget*>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openTrackingWidget()
+{
+    std::string const key = "tracking_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto trackingWidget = std::make_unique<Tracking_Widget>(
+            _scene,
+            _data_manager,
+            ui->time_scrollbar,
+            this);
+        trackingWidget->setObjectName(key);
+        registerDockWidget(key, trackingWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(trackingWidget);
+    }
+
+    auto ptr = dynamic_cast<Tracking_Widget*>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);

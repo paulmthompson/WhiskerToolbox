@@ -83,6 +83,7 @@
     <addaction name="actionLabel_Maker"/>
     <addaction name="actionAnalog_Viewer"/>
     <addaction name="actionTongue_Tracking"/>
+    <addaction name="actionTracking_Widget"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -90,7 +91,7 @@
    <addaction name="menuModules"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-    <action name="actionTake_Snapshot">
+  <action name="actionTake_Snapshot">
    <property name="text">
     <string>Take Snapshot</string>
    </property>
@@ -143,6 +144,11 @@
   <action name="actionLoad_Video">
    <property name="text">
     <string>Load Video</string>
+   </property>
+  </action>
+  <action name="actionTracking_Widget">
+   <property name="text">
+    <string>Tracking Widget</string>
    </property>
   </action>
  </widget>

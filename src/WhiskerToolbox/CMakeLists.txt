@@ -64,6 +64,10 @@ set(PROJECT_SOURCES
         Image_Processing_Widget/Image_Processing_Widget.cpp
         Image_Processing_Widget/Image_Processing_Widget.ui
 
+        Tracking_Widget/Tracking_Widget.ui
+        Tracking_Widget/Tracking_Widget.hpp
+        Tracking_Widget/Tracking_Widget.cpp
+
         Tongue_Widget/Tongue_Widget.hpp
         Tongue_Widget/Tongue_Widget.cpp
         Tongue_Widget/Tongue_Widget.ui
