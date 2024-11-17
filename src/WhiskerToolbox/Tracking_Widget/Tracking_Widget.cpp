@@ -45,6 +45,10 @@ void Tracking_Widget::openWidget() {
     connect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
 
     _data_manager->createPoint("tracking_point");
+
+    _data_manager->getPoint("tracking_point")->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    _data_manager->getPoint("tracking_point")->setMaskWidth(_data_manager->getMediaData()->getWidth());
+
     _scene->addPointDataToScene("tracking_point");
 
     connect(ui->tableWidget, &QTableWidget::cellClicked, this, &Tracking_Widget::_tableClicked);
@@ -73,7 +77,7 @@ void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
             ")";
         ui->location_label->setText(QString::fromStdString(tracking_label));
         _data_manager->getPoint("tracking_point")->clearPointsAtTime(frame_id);
-        _data_manager->getPoint("tracking_point")->addPointAtTime(frame_id, x_media, y_media);
+        _data_manager->getPoint("tracking_point")->addPointAtTime(frame_id, y_media, x_media);
 
         _buildContactTable();
         break;
@@ -97,8 +101,8 @@ void Tracking_Widget::_buildContactTable()
 
         ui->tableWidget->insertRow(ui->tableWidget->rowCount());
         ui->tableWidget->setItem(i,0,new QTableWidgetItem(QString::number(point_frames[i])));
-        ui->tableWidget->setItem(i,1,new QTableWidgetItem(QString::number(point.x)));
-        ui->tableWidget->setItem(i,2,new QTableWidgetItem(QString::number(point.y)));
+        ui->tableWidget->setItem(i,1,new QTableWidgetItem(QString::number(point.y)));
+        ui->tableWidget->setItem(i,2,new QTableWidgetItem(QString::number(point.x)));
 
     }
 
