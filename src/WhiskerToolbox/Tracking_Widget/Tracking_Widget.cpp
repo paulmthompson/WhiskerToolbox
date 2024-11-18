@@ -97,6 +97,37 @@ void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
     }
 }
 
+void Tracking_Widget::LoadFrame(int frame_id)
+{
+
+    auto points = _data_manager->getPoint("tracking_point")->getPointsAtTime(frame_id);
+
+    if (!points.empty()) {
+
+        std::string x = "";
+        std::string y = "";
+
+        if (std::isnan(points[0].x))
+        {
+            x = "nan";
+        } else {
+            x = std::to_string(static_cast<int>(points[0].x));
+        }
+
+        if (std::isnan(points[0].y))
+        {
+            y="nan";
+        } else {
+            y = std::to_string(static_cast<int>(points[0].y));
+        }
+
+        std::string tracking_label =
+            "(" + x + " , " + y + ")";
+        ui->location_label->setText(QString::fromStdString(tracking_label));
+    }
+
+}
+
 void Tracking_Widget::_buildContactTable()
 {
 

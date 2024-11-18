@@ -336,6 +336,8 @@ void MainWindow::openTrackingWidget()
             _data_manager,
             ui->time_scrollbar,
             this);
+        connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, trackingWidget.get(), &Tracking_Widget::LoadFrame);
+
         trackingWidget->setObjectName(key);
         registerDockWidget(key, trackingWidget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(trackingWidget);
