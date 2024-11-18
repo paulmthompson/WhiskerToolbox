@@ -100,6 +100,12 @@ void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 void Tracking_Widget::LoadFrame(int frame_id)
 {
 
+    if (ui->propagate_checkbox->isChecked())
+    {
+        _propagateLabel(frame_id);
+    }
+
+
     auto points = _data_manager->getPoint("tracking_point")->getPointsAtTime(frame_id);
 
     if (!points.empty()) {
@@ -125,7 +131,7 @@ void Tracking_Widget::LoadFrame(int frame_id)
             "(" + x + " , " + y + ")";
         ui->location_label->setText(QString::fromStdString(tracking_label));
     }
-
+    _previous_frame = frame_id;
 }
 
 void Tracking_Widget::_buildContactTable()
@@ -164,6 +170,20 @@ void Tracking_Widget::_tableClicked(int row, int column)
         _time_scrollbar->changeScrollBarValue(frame_id);
     }
 
+}
+
+void Tracking_Widget::_propagateLabel(int frame_id)
+{
+
+    auto prev_points = _data_manager->getPoint("tracking_point")->getPointsAtTime(_previous_frame);
+
+    for (int i = _previous_frame + 1; i <= frame_id; i ++)
+    {
+        _data_manager->getPoint("tracking_point")->clearPointsAtTime(i);
+        _data_manager->getPoint("tracking_point")->addPointAtTime(i, prev_points[0].x, prev_points[0].y);
+    }
+
+    _scene->UpdateCanvas();
 }
 
 void Tracking_Widget::_loadKeypointCSV()

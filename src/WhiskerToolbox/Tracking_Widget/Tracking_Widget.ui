@@ -150,6 +150,19 @@
      <string/>
     </property>
    </widget>
+   <widget class="QCheckBox" name="propagate_checkbox">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>410</y>
+      <width>211</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Propagate from last frame</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

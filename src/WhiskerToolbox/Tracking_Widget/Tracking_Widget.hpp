@@ -53,10 +53,12 @@ private:
     Tracking_Widget::Selection_Type _selection_mode {Tracking_Select};
 
     int _highlighted_row {-1};
+    int _previous_frame {0};
 
     std::filesystem::path _output_path;
 
     void _buildContactTable();
+    void _propagateLabel(int frame_id);
 
 private slots:
     void _clickedInVideo(qreal x,qreal y);
