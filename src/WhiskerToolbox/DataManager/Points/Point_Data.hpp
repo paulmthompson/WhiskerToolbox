@@ -27,6 +27,8 @@ public:
     void setMaskWidth(int const width) {_mask_width = width;};
 
     std::vector<Point2D<float>> const& getPointsAtTime(int const time) const;
+
+    std::map<int, std::vector<Point2D<float>>> const& getData() const {return _data;};
 protected:
 
 private:
@@ -38,7 +40,13 @@ private:
 
 };
 
-std::map<int,Point2D<float>> load_points_from_csv(std::string const& filename, int const frame_column, int const x_column, int const y_column);
+std::map<int,Point2D<float>> load_points_from_csv(
+    std::string const& filename,
+    int const frame_column,
+    int const x_column,
+    int const y_column,
+    char const column_delim = ' ');
+
 std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const& filename, int const frame_column);
 
 #endif // POINT_DATA_HPP

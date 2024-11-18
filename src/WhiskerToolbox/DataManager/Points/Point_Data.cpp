@@ -53,11 +53,14 @@ bool is_number(const std::string& s)
                                       s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
 }
 
-std::map<int,Point2D<float>> load_points_from_csv(std::string const& filename, int const frame_column, int const x_column, int const y_column)
+std::map<int,Point2D<float>> load_points_from_csv(
+    std::string const& filename,
+    int const frame_column,
+    int const x_column,
+    int const y_column,
+    char const column_delim)
 {
     std::string csv_line;
-
-    char const column_delim = ' ';
 
     auto line_output = std::map<int,Point2D<float>>{};
 
@@ -68,6 +71,8 @@ std::map<int,Point2D<float>> load_points_from_csv(std::string const& filename, i
     std::string y_str;
     std::string frame_str;
     std::string col_value;
+
+    std::vector<std::pair<int,Point2D<float>>> csv_vector = {};
 
     while (getline(myfile, csv_line)) {
 
@@ -86,10 +91,13 @@ std::map<int,Point2D<float>> load_points_from_csv(std::string const& filename, i
         }
 
         if (is_number(frame_str)) {
-            line_output[std::stoi(frame_str)]=Point2D<float>{std::stof(x_str),std::stof(y_str)};
+            //line_output[std::stoi(frame_str)]=Point2D<float>{std::stof(x_str),std::stof(y_str)};
+            csv_vector.emplace_back(std::make_pair(std::stoi(frame_str),Point2D<float>{std::stof(x_str),std::stof(y_str)}));
         }
     }
     std::cout.flush();
+
+    line_output.insert(csv_vector.begin(), csv_vector.end());
 
     return line_output;
 }

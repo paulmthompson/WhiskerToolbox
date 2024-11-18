@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -53,11 +54,16 @@ private:
 
     int _highlighted_row {-1};
 
+    std::filesystem::path _output_path;
+
     void _buildContactTable();
 
 private slots:
     void _clickedInVideo(qreal x,qreal y);
     void _tableClicked(int row, int column);
+    void _loadKeypointCSV();
+    void _saveKeypointCSV();
+    void _changeOutputDir();
 };
 
 #endif //BEHAVIORTOOLBOX_TRACKING_WIDGET_HPP

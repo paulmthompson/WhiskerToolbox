@@ -8,9 +8,11 @@
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
+#include <QFileDialog>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 
+#include <fstream>
 #include <iostream>
 
 Tracking_Widget::Tracking_Widget(Media_Window *scene,
@@ -23,14 +25,17 @@ Tracking_Widget::Tracking_Widget(Media_Window *scene,
         _data_manager{data_manager},
         _time_scrollbar{time_scrollbar},
         _main_window{mainwindow},
-        ui(new Ui::Tracking_Widget)
+        ui(new Ui::Tracking_Widget),
+        _output_path{std::filesystem::current_path()}
 {
     ui->setupUi(this);
+
+    ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
 
     _selected_scene = new QGraphicsScene();
     _selected_scene->setSceneRect(0, 0, 150, 150);
 
-    ui->graphicsView->setScene(_scene);
+    ui->graphicsView->setScene(_selected_scene);
     ui->graphicsView->show();
 }
 
@@ -52,6 +57,9 @@ void Tracking_Widget::openWidget() {
     _scene->addPointDataToScene("tracking_point");
 
     connect(ui->tableWidget, &QTableWidget::cellClicked, this, &Tracking_Widget::_tableClicked);
+    connect(ui->actionLoad_CSV, &QAction::triggered, this, &Tracking_Widget::_loadKeypointCSV);
+    connect(ui->output_dir_button, &QPushButton::clicked, this, &Tracking_Widget::_changeOutputDir);
+    connect(ui->save_csv_button, &QPushButton::clicked, this, &Tracking_Widget::_saveKeypointCSV);
 
     this->show();
 }
@@ -80,6 +88,8 @@ void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         _data_manager->getPoint("tracking_point")->addPointAtTime(frame_id, y_media, x_media);
 
         _buildContactTable();
+
+        _scene->UpdateCanvas();
         break;
     }
     default:
@@ -92,19 +102,24 @@ void Tracking_Widget::_buildContactTable()
 
     auto point_data = _data_manager->getPoint("tracking_point");
 
-    auto point_frames = point_data->getTimesWithPoints();
+    //auto point_frames = point_data->getTimesWithPoints();
 
-    ui->tableWidget->setRowCount(0);
+    /*
+
+    //ui->tableWidget->setRowCount(0);
+    ui->tableWidget->setRowCount(point_frames.size());
     for (int i=0; i < point_frames.size(); i++)
     {
         auto point = point_data->getPointsAtTime(point_frames[i])[0];
 
-        ui->tableWidget->insertRow(ui->tableWidget->rowCount());
+        //ui->tableWidget->insertRow(ui->tableWidget->rowCount());
         ui->tableWidget->setItem(i,0,new QTableWidgetItem(QString::number(point_frames[i])));
         ui->tableWidget->setItem(i,1,new QTableWidgetItem(QString::number(point.y)));
         ui->tableWidget->setItem(i,2,new QTableWidgetItem(QString::number(point.x)));
 
     }
+
+    */
 
     _highlighted_row = -1;
     //auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
@@ -117,5 +132,72 @@ void Tracking_Widget::_tableClicked(int row, int column)
         int frame_id = ui->tableWidget->item(row, 0)->text().toInt();
         _time_scrollbar->changeScrollBarValue(frame_id);
     }
+
+}
+
+void Tracking_Widget::_loadKeypointCSV()
+{
+    auto keypoint_filename = QFileDialog::getOpenFileName(
+        this,
+        "Load Keypoints",
+        QDir::currentPath(),
+        "All files (*.*)");
+
+    if (keypoint_filename.isNull()) {
+        return;
+    }
+
+    const auto keypoint_key = "tracking_point";
+
+    auto keypoints = load_points_from_csv(keypoint_filename.toStdString(), 0, 1, 2, ',');
+
+    std::cout << "Loaded " << keypoints.size() << " keypoints" << std::endl;
+    auto point_num = _data_manager->getPointKeys().size();
+
+    //_data_manager->createPoint(keypoint_key);
+
+    auto point = _data_manager->getPoint(keypoint_key);
+    point->setMaskHeight(_data_manager->getMediaData()->getHeight());
+    point->setMaskWidth(_data_manager->getMediaData()->getWidth());
+
+    for (auto & [key, val] : keypoints) {
+        point->addPointAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(key), val.x, val.y);
+    }
+
+    _scene->addPointDataToScene(keypoint_key);
+
+}
+
+void Tracking_Widget::_changeOutputDir()
+{
+    QString dir_name = QFileDialog::getExistingDirectory(
+        this,
+        "Select Directory",
+        QDir::currentPath());
+
+    if (dir_name.isEmpty()) {
+        return;
+    }
+
+    _output_path = std::filesystem::path(dir_name.toStdString());
+    ui->output_dir_label->setText(dir_name);
+}
+
+void Tracking_Widget::_saveKeypointCSV() {
+
+    std::fstream fout;
+
+    auto frame_by_frame_output = _output_path;
+
+    fout.open(frame_by_frame_output.append("keypoint.csv").string(), std::fstream::out);
+
+    auto point_data = _data_manager->getPoint("tracking_point")->getData();
+
+    for (auto& [key, val] : point_data)
+    {
+        fout << key << "," << std::to_string(val[0].x) << "," << std::to_string(val[0].y) << "\n";
+    }
+
+    fout.close();
 
 }
