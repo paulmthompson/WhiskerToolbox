@@ -11,6 +11,7 @@
 #include "Label_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "Media_Window.hpp"
+#include "ML_Widget/ML_Widget.hpp"
 #include "TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Tracking_Widget/Tracking_Widget.hpp"
@@ -94,6 +95,7 @@ void MainWindow::_createActions()
     connect(ui->actionImage_Processing, &QAction::triggered, this, &MainWindow::openImageProcessing);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
     connect(ui->actionTracking_Widget, &QAction::triggered, this, &MainWindow::openTrackingWidget);
+    connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
 
     connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
 }
@@ -344,6 +346,28 @@ void MainWindow::openTrackingWidget()
     }
 
     auto ptr = dynamic_cast<Tracking_Widget*>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openMLWidget()
+{
+    std::string const key = "ML_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto MLWidget = std::make_unique<ML_Widget>(
+            _scene,
+            _data_manager,
+            ui->time_scrollbar,
+            this);
+
+        MLWidget->setObjectName(key);
+        registerDockWidget(key, MLWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(MLWidget);
+    }
+
+    auto ptr = dynamic_cast<ML_Widget*>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);

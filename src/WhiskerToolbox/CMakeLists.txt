@@ -64,6 +64,10 @@ set(PROJECT_SOURCES
         Image_Processing_Widget/Image_Processing_Widget.cpp
         Image_Processing_Widget/Image_Processing_Widget.ui
 
+        ML_Widget/ML_Widget.ui
+        ML_Widget/ML_Widget.hpp
+        ML_Widget/ML_Widget.cpp
+
         Tracking_Widget/Tracking_Widget.ui
         Tracking_Widget/Tracking_Widget.hpp
         Tracking_Widget/Tracking_Widget.cpp
