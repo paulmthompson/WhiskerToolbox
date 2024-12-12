@@ -15,6 +15,23 @@ std::vector<std::pair<float, float>> const & DigitalIntervalSeries::getDigitalIn
     return _data;
 }
 
+int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time)
+{
+    auto const events = digital_series->getDigitalIntervalSeries();
+    int closest_index = -1;
+    for (int i = 0; i < events.size(); ++i) {
+        if (events[i].first <= time) {
+            closest_index = i;
+            if (time <= events[i].second) {
+                return i;
+            }
+        } else {
+            break;
+        }
+    }
+    return closest_index;
+}
+
 std::vector<std::pair<float, float>> load_digital_series_from_csv(std::string const& filename){
     std::string csv_line;
 
