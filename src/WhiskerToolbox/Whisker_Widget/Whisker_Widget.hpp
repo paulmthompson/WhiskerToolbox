@@ -87,6 +87,8 @@ private:
 
     int _clip_length {0};
 
+    int _current_whisker {0};
+
     Ui::Whisker_Widget *ui;
 
     void _drawWhiskers();
@@ -153,6 +155,10 @@ private slots:
     void _magicEraserButton();
 
     void _drawingFinished();
+
+    void _selectWhisker(int whisker_num);
+
+    void _deleteWhisker();
 
 };
 

@@ -88,6 +88,10 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     connect(ui->whisker_pad_select, &QPushButton::clicked, this, &Whisker_Widget::_selectWhiskerPad);
     connect(ui->whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectNumWhiskersToTrack);
 
+    connect(ui->manual_whisker_select_spinbox, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectWhisker);
+    connect(ui->delete_whisker_button, &QPushButton::clicked, this, &Whisker_Widget::_deleteWhisker);
+
+
     connect(ui->actionSave_Snapshot, &QAction::triggered, this, &Whisker_Widget::_saveImageButton);
     connect(ui->actionSave_Face_Mask_2, &QAction::triggered, this, &Whisker_Widget::_saveFaceMask);
     connect(ui->actionLoad_Face_Mask, &QAction::triggered, this, &Whisker_Widget::_loadFaceMask);
@@ -230,7 +234,28 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
 
     std::string whisker_group_name = "whisker";
 
+    ui->manual_whisker_select_spinbox->setMaximum(n_whiskers - 1);
+
     _createNewWhisker(whisker_group_name, n_whiskers-1);
+}
+
+void Whisker_Widget::_selectWhisker(int whisker_num) {
+    _current_whisker = whisker_num;
+}
+
+void Whisker_Widget::_deleteWhisker()
+{
+    std::string whisker_group_name = "whisker";
+
+    std::string whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
+
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    if (_data_manager->getLine(whisker_name)) {
+        _data_manager->getLine(whisker_name)->clearLinesAtTime(current_time);
+
+        _scene->UpdateCanvas();
+    }
 }
 
 /////////////////////////////////////////////
