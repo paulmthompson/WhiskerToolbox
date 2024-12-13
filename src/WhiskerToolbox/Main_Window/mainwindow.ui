@@ -85,6 +85,7 @@
     <addaction name="actionTongue_Tracking"/>
     <addaction name="actionTracking_Widget"/>
     <addaction name="actionMachine_Learning"/>
+    <addaction name="actionData_Viewer"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -155,6 +156,11 @@
   <action name="actionMachine_Learning">
    <property name="text">
     <string>Machine Learning</string>
+   </property>
+  </action>
+  <action name="actionData_Viewer">
+   <property name="text">
+    <string>Data Viewer</string>
    </property>
   </action>
  </widget>

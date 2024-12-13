@@ -74,5 +74,6 @@ private slots:
     void openTongueTracking();
     void openTrackingWidget();
     void openMLWidget();
+    void openDataViewer();
 };
 #endif // MAINWINDOW_HPP

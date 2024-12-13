@@ -1,8 +1,9 @@
-#ifndef BEHAVIORTOOLBOX_ML_WIDGET_HPP
-#define BEHAVIORTOOLBOX_ML_WIDGET_HPP
+
+#ifndef DATAVIEWER_WIDGET_HPP
+#define DATAVIEWER_WIDGET_HPP
 
 #include <QMainWindow>
-#include <filesystem>
+
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -14,19 +15,19 @@ class Media_Window;
 class QTableWidget;
 class TimeScrollBar;
 
-namespace Ui { class ML_Widget; }
+namespace Ui { class DataViewer_Widget; }
 
-class ML_Widget : public QMainWindow {
-Q_OBJECT
+class DataViewer_Widget : public QMainWindow {
+    Q_OBJECT
 
 public:
-    ML_Widget(Media_Window *scene,
-              std::shared_ptr<DataManager> data_manager,
-              TimeScrollBar *time_scrollbar,
-              MainWindow *main_window,
-              QWidget *parent = 0);
+    DataViewer_Widget(Media_Window *scene,
+                      std::shared_ptr<DataManager> data_manager,
+                      TimeScrollBar *time_scrollbar,
+                      MainWindow *main_window,
+                      QWidget *parent = 0);
 
-    virtual ~ML_Widget();
+    virtual ~DataViewer_Widget();
 
     void openWidget();
 
@@ -40,21 +41,17 @@ private slots:
     void _highlightAvailableFeature(int row, int column);
     void _highlightModelFeature(int row, int column);
     void _deleteFeatureFromModel();
-    void _addLabelToModel();
-    void _deleteLabel();
-
 private:
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
     MainWindow* _main_window;
-    Ui::ML_Widget *ui;
+    Ui::DataViewer_Widget *ui;
 
     QString _highlighted_available_feature;
     QString _highlighted_model_feature;
     std::unordered_set<std::string> _model_features;
-    QString _selected_label;
 };
 
 
-#endif //BEHAVIORTOOLBOX_ML_WIDGET_HPP
+#endif //DATAVIEWER_WIDGET_HPP
