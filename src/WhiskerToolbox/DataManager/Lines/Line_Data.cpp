@@ -2,6 +2,7 @@
 #include "Line_Data.hpp"
 #include "utils/container.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
