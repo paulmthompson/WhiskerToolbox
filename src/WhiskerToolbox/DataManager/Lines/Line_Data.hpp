@@ -16,6 +16,10 @@ public:
     void addLineAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y);
     void addLineAtTime(int const time, std::vector<Point2D<float>> const & line);
 
+    void addPointToLine(int const time, int const line_id, const float x, const float y);
+
+    void addPointToLineInterpolate(int const time, int const line_id, const float x, const float y);
+
     std::vector<int> getTimesWithLines() const;
 
     std::vector<Line2D> const& getLinesAtTime(int const time) const;
@@ -32,4 +36,5 @@ Line2D load_line_from_csv(std::string const& filename);
 
 Line2D create_line(std::vector<float> const& x, std::vector<float> const& y);
 
+void smooth_line(Line2D& line);
 #endif // LINE_DATA_HPP

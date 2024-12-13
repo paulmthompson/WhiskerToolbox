@@ -62,7 +62,8 @@ private:
 
     enum Selection_Type {Whisker_Select,
                           Whisker_Pad_Select,
-                          Magic_Eraser};
+                          Magic_Eraser,
+                          Manual_Trace};
 
     Whisker_Widget::Selection_Type _selection_mode {Whisker_Select};
 
@@ -159,6 +160,8 @@ private slots:
     void _selectWhisker(int whisker_num);
 
     void _deleteWhisker();
+
+    void _manualWhiskerToggle();
 
 };
 
