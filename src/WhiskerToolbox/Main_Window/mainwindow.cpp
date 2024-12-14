@@ -5,12 +5,14 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "analog_viewer.hpp"
 #include "DataManager.hpp"
+#include "DataViewer_Widget/DataViewer_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "Media_Window.hpp"
+#include "ML_Widget/ML_Widget.hpp"
 #include "TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Tracking_Widget/Tracking_Widget.hpp"
@@ -94,6 +96,8 @@ void MainWindow::_createActions()
     connect(ui->actionImage_Processing, &QAction::triggered, this, &MainWindow::openImageProcessing);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
     connect(ui->actionTracking_Widget, &QAction::triggered, this, &MainWindow::openTrackingWidget);
+    connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
+    connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
 
     connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
 }
@@ -344,6 +348,50 @@ void MainWindow::openTrackingWidget()
     }
 
     auto ptr = dynamic_cast<Tracking_Widget*>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openMLWidget()
+{
+    std::string const key = "ML_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto MLWidget = std::make_unique<ML_Widget>(
+            _scene,
+            _data_manager,
+            ui->time_scrollbar,
+            this);
+
+        MLWidget->setObjectName(key);
+        registerDockWidget(key, MLWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(MLWidget);
+    }
+
+    auto ptr = dynamic_cast<ML_Widget*>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openDataViewer()
+{
+    std::string const key = "DataViewer_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto DataViewerWidget = std::make_unique<DataViewer_Widget>(
+            _scene,
+            _data_manager,
+            ui->time_scrollbar,
+            this);
+
+        DataViewerWidget->setObjectName(key);
+        registerDockWidget(key, DataViewerWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(DataViewerWidget);
+    }
+
+    auto ptr = dynamic_cast<DataViewer_Widget*>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);

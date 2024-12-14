@@ -31,11 +31,6 @@ enum class Contact : int {
     NoContact = 0
 };
 
-struct ContactEvent {
-    int start;
-    int end;
-};
-
 class Contact_Widget : public QWidget
 {
     Q_OBJECT
@@ -59,7 +54,6 @@ private:
     std::vector<Contact> _contact;
     int _contact_start {0};
     bool _contact_epoch {false};
-    std::vector<ContactEvent> _contactEvents;
     QGraphicsScene* _scene;
     std::vector<QImage> _contact_imgs;
     int _image_buffer_size {5};
@@ -93,7 +87,6 @@ private slots:
     void _contactTableClicked(int row, int column);
 };
 
-int find_closest_preceding_event(const std::vector<ContactEvent>& events, int frame);
 int highlight_row(QTableWidget* table, int row_index, Qt::GlobalColor color);
 
 #endif // CONTACT_WIDGET_HPP

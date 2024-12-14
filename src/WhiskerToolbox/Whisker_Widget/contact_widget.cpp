@@ -21,7 +21,6 @@
 Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QWidget(parent),
     _data_manager{data_manager},
-    _contactEvents{std::vector<ContactEvent>()},
     _time_scrollbar{time_scrollbar},
     _output_path{std::filesystem::current_path()},
     ui(new Ui::contact_widget)
@@ -35,6 +34,8 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeSc
     for (int i = 0; i < _image_buffer_size; i++) {
         _contact_imgs.push_back(QImage(130,130,QImage::Format_Grayscale8));
     }
+
+    _data_manager->createDigitalTimeSeries("Contact_Events");
 
     _scene = new QGraphicsScene();
     _scene->setSceneRect(0, 0, 650, 150);
@@ -141,7 +142,9 @@ void Contact_Widget::updateFrame(int frame_id)
 
     }
 
-    if (_contactEvents.size() != 0) {
+    auto contactEvents = _data_manager->getDigitalTimeSeries("Contact_Events");
+
+    if (contactEvents->size() != 0) {
         _drawContactRectangles(frame_id);
     }
 
@@ -155,12 +158,14 @@ void Contact_Widget::updateFrame(int frame_id)
 void Contact_Widget::_updateContactWidgets(int frame_id)
 {
 
-    if (_contactEvents.size() == 0)
+    auto const contactEvents = _data_manager->getDigitalTimeSeries("Contact_Events");
+
+    if (contactEvents->size() == 0)
     {
         return;
     }
 
-    auto nearest_contact = find_closest_preceding_event(_contactEvents, frame_id);
+    auto nearest_contact = find_closest_preceding_event(contactEvents.get(), frame_id);
 
     if (nearest_contact != -1) {
 
@@ -335,8 +340,10 @@ void Contact_Widget::_saveContactBlocks() {
 
     fout.open(block_output.append("contact_BLOCKS.csv").string(), std::fstream::out);
 
-    for (auto & event : _contactEvents) {
-        fout << event.start << "," << event.end << "\n";
+    auto contactEvents = _data_manager->getDigitalTimeSeries("Contact_Events")->getDigitalIntervalSeries();
+
+    for (auto & event : contactEvents) {
+        fout << std::round(event.first) << "," << std::round(event.second) << "\n";
     }
 
     fout.close();
@@ -371,12 +378,14 @@ void Contact_Widget::_loadContact() {
 
 void Contact_Widget::_buildContactTable()
 {
+    auto contactEvents = _data_manager->getDigitalTimeSeries("Contact_Events")->getDigitalIntervalSeries();
+
     ui->contact_table->setRowCount(0);
-    for (int i=0; i < _contactEvents.size(); i++)
+    for (int i=0; i < contactEvents.size(); i++)
     {
         ui->contact_table->insertRow(ui->contact_table->rowCount());
-        ui->contact_table->setItem(i,0,new QTableWidgetItem(QString::number(_contactEvents[i].start)));
-        ui->contact_table->setItem(i,1,new QTableWidgetItem(QString::number(_contactEvents[i].end)));
+        ui->contact_table->setItem(i,0,new QTableWidgetItem(QString::number(std::round(contactEvents[i].first))));
+        ui->contact_table->setItem(i,1,new QTableWidgetItem(QString::number(std::round(contactEvents[i].second))));
 
     }
 
@@ -390,14 +399,14 @@ void Contact_Widget::_calculateContactPeriods()
     bool in_contact = false;
     int contact_start = 0;
 
-    _contactEvents = std::vector<ContactEvent>();
+    auto contactEvents = std::vector<std::pair<float, float>>();
 
     for (int i = 0; i < _contact.size(); i++)
     {
         if (in_contact)
         {
             if (_contact[i] == Contact::NoContact) {
-                _contactEvents.push_back(ContactEvent{contact_start,i - 1});
+                contactEvents.push_back(std::make_pair(contact_start,i - 1));
                 in_contact = false;
             }
         } else {
@@ -411,12 +420,14 @@ void Contact_Widget::_calculateContactPeriods()
 
     if (in_contact)
     {
-        _contactEvents.push_back(ContactEvent{contact_start,static_cast<int>(_contact.size()-1)});
+        contactEvents.push_back(std::make_pair(contact_start,static_cast<int>(_contact.size()-1)));
     }
 
-    std::cout << "There are " << _contactEvents.size() << " contact events" << std::endl;
+    std::cout << "There are " << contactEvents.size() << " contact events" << std::endl;
 
-    ui->total_contact_label->setText(QString::number(_contactEvents.size()));
+    ui->total_contact_label->setText(QString::number(contactEvents.size()));
+
+    _data_manager->getDigitalTimeSeries("Contact_Events")->setData(contactEvents);
 
     _buildContactTable();
 }
@@ -455,21 +466,6 @@ void Contact_Widget::_contactTableClicked(int row, int column) {
         int frame_id = ui->contact_table->item(row, column)->text().toInt();
         _time_scrollbar->changeScrollBarValue(frame_id);
     }
-}
-
-int find_closest_preceding_event(const std::vector<ContactEvent>& events, int frame) {
-    int closest_index = -1;
-    for (int i = 0; i < events.size(); ++i) {
-        if (events[i].start <= frame) {
-            closest_index = i;
-            if (frame <= events[i].end) {
-                return i;
-            }
-        } else {
-            break;
-        }
-    }
-    return closest_index;
 }
 
 int highlight_row(QTableWidget* table, int row_index, Qt::GlobalColor color) {

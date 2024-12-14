@@ -9,7 +9,7 @@ set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
 find_package(Torch REQUIRED)
 
 set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport OpenGLWidgets)
 
 qt_standard_project_setup()
 
@@ -69,6 +69,16 @@ set(PROJECT_SOURCES
         Image_Processing_Widget/Image_Processing_Widget.cpp
         Image_Processing_Widget/Image_Processing_Widget.ui
 
+        DataViewer_Widget/DataViewer_Widget.ui
+        DataViewer_Widget/DataViewer_Widget.cpp
+        DataViewer_Widget/DataViewer_Widget.hpp
+        DataViewer_Widget/OpenGLWidget.cpp
+        DataViewer_Widget/OpenGLWidget.hpp
+
+        ML_Widget/ML_Widget.ui
+        ML_Widget/ML_Widget.hpp
+        ML_Widget/ML_Widget.cpp
+
         Tracking_Widget/Tracking_Widget.ui
         Tracking_Widget/Tracking_Widget.hpp
         Tracking_Widget/Tracking_Widget.cpp
@@ -76,6 +86,9 @@ set(PROJECT_SOURCES
         Tongue_Widget/Tongue_Widget.hpp
         Tongue_Widget/Tongue_Widget.cpp
         Tongue_Widget/Tongue_Widget.ui
+
+        utils/qt_utilities.cpp
+        utils/qt_utilities.hpp
 
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp
@@ -92,14 +105,17 @@ set(PROJECT_SOURCES
 )
 
 if (WIN32)
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
 endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
+        utils/qt_utilities.hpp
+        utils/qt_utilities.cpp
 )
 
-target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml)
+target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets)
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)

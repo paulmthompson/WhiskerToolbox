@@ -88,6 +88,11 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     connect(ui->whisker_pad_select, &QPushButton::clicked, this, &Whisker_Widget::_selectWhiskerPad);
     connect(ui->whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectNumWhiskersToTrack);
 
+    connect(ui->manual_whisker_select_spinbox, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectWhisker);
+    connect(ui->delete_whisker_button, &QPushButton::clicked, this, &Whisker_Widget::_deleteWhisker);
+    connect(ui->manual_whisker_button, &QPushButton::clicked, this, &Whisker_Widget::_manualWhiskerToggle);
+
+
     connect(ui->actionSave_Snapshot, &QAction::triggered, this, &Whisker_Widget::_saveImageButton);
     connect(ui->actionSave_Face_Mask_2, &QAction::triggered, this, &Whisker_Widget::_saveFaceMask);
     connect(ui->actionLoad_Face_Mask, &QAction::triggered, this, &Whisker_Widget::_loadFaceMask);
@@ -230,7 +235,38 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
 
     std::string whisker_group_name = "whisker";
 
+    ui->manual_whisker_select_spinbox->setMaximum(n_whiskers - 1);
+
     _createNewWhisker(whisker_group_name, n_whiskers-1);
+}
+
+void Whisker_Widget::_selectWhisker(int whisker_num) {
+    _current_whisker = whisker_num;
+}
+
+void Whisker_Widget::_deleteWhisker()
+{
+    std::string whisker_group_name = "whisker";
+
+    std::string whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
+
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    if (_data_manager->getLine(whisker_name)) {
+        _data_manager->getLine(whisker_name)->clearLinesAtTime(current_time);
+
+        _scene->UpdateCanvas();
+    }
+}
+
+void Whisker_Widget::_manualWhiskerToggle()
+{
+    //check toggle state
+    if (_selection_mode == Selection_Type::Manual_Trace) {
+        _selection_mode = Selection_Type::Whisker_Select;
+    } else {
+        _selection_mode = Selection_Type::Manual_Trace;
+    }
 }
 
 /////////////////////////////////////////////
@@ -473,6 +509,8 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
     float x_media = x_canvas / _scene->getXAspect();
     float y_media = y_canvas / _scene->getYAspect();
 
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
     switch (_selection_mode) {
         case Whisker_Select: {
         /*
@@ -492,6 +530,24 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
                     ")";
             ui->whisker_pad_pos_label->setText(QString::fromStdString(whisker_pad_label));
             _selection_mode = Whisker_Select;
+            break;
+        }
+
+        case Manual_Trace: {
+
+            std::string whisker_group_name = "whisker";
+            std::string whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
+
+            if (_data_manager->getLine(whisker_name)) {
+                 _data_manager->getLine(whisker_name)->addPointToLineInterpolate(
+                         current_time,
+                         0,
+                         x_media,
+                         y_media);
+
+                _scene->UpdateCanvas();
+            }
+
             break;
         }
         default:

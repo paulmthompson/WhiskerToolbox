@@ -62,7 +62,8 @@ private:
 
     enum Selection_Type {Whisker_Select,
                           Whisker_Pad_Select,
-                          Magic_Eraser};
+                          Magic_Eraser,
+                          Manual_Trace};
 
     Whisker_Widget::Selection_Type _selection_mode {Whisker_Select};
 
@@ -86,6 +87,8 @@ private:
     std::filesystem::path _output_path;
 
     int _clip_length {0};
+
+    int _current_whisker {0};
 
     Ui::Whisker_Widget *ui;
 
@@ -153,6 +156,12 @@ private slots:
     void _magicEraserButton();
 
     void _drawingFinished();
+
+    void _selectWhisker(int whisker_num);
+
+    void _deleteWhisker();
+
+    void _manualWhiskerToggle();
 
 };
 
