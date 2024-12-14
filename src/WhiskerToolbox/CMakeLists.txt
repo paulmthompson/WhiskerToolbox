@@ -3,6 +3,11 @@ find_package(HighFive CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 
+message(STATUS ${CMAKE_PREFIX_PATH})
+
+set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
+find_package(Torch REQUIRED)
+
 set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport)
 
@@ -121,6 +126,8 @@ target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_h
 target_link_libraries(WhiskerToolbox PRIVATE JKQTPlotter6::JKQTPlotter6)
 
 target_link_libraries(WhiskerToolbox PRIVATE qt6advanceddocking)
+
+target_compile_definitions(WhiskerToolbox PRIVATE _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH)
 
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

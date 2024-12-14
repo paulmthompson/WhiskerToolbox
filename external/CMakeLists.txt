@@ -39,8 +39,27 @@ set(JKQtPlotter_BUILD_TOOLS OFF)
 set(JKQtPlotter_BUILD_LIB_JKQTFASTPLOTTER OFF)
 #add_subdirectory(Whisker-Analysis)
 
+if (LINUX)
+    FetchContent_Declare(
+        Torch
+        #URL https://download.pytorch.org/libtorch/cu121/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcu121.zip
+        URL https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcpu.zip
+    )
+elseif (APPLE)
+    FetchContent_Declare(
+        Torch
+        URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-2.5.1.zip
+    )
+elseif (WIN32)
+    FetchContent_Declare(
+        Torch
+        #URL https://download.pytorch.org/libtorch/cu121/libtorch-win-shared-with-deps-2.5.1%2Bcu121.zip
+        URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.5.1%2Bcpu.zip
+    )
+endif()
+
 #We should use make avaiable
-FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking JKQTPlotter6)
+FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking JKQTPlotter6 Torch)
 
 set_target_properties(ffmpeg_wrapper PROPERTIES EXCLUDE_FROM_ALL TRUE)
 set_target_properties(Whisker-Analysis PROPERTIES EXCLUDE_FROM_ALL TRUE)
@@ -49,6 +68,8 @@ set_target_properties(qt6advanceddocking PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${torch_SOURCE_DIR}/share/cmake/Torch" PARENT_SCOPE)
 
 if (WIN32)
     set_target_properties(JKQTPlotter6 JKQTCommon6 JKQTMath6 JKQTMathText6 PROPERTIES
