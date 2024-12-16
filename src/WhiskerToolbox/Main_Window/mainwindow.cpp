@@ -131,11 +131,13 @@ void MainWindow::Load_Video()
     if (vid_path.extension() == ".mp4") {
 
         auto media = std::make_shared<VideoData>();
+        media->LoadMedia(vid_name.toStdString());
         _data_manager->setMedia(media);
 
     } else if (vid_path.extension() == ".h5") {
 
         auto media = std::make_shared<HDF5Data>();
+        media->LoadMedia(vid_name.toStdString());
         _data_manager->setMedia(media);
 
     } else if (vid_path.extension() == ".mat") {
@@ -143,13 +145,14 @@ void MainWindow::Load_Video()
         std::cout << "Loading MAT video file" << std::endl;
 
         auto media = std::make_shared<HDF5Data>();
+        media->LoadMedia(vid_name.toStdString());
         _data_manager->setMedia(media);
 
     } else {
         std::cout << "Video file with extension " << vid_path.extension() << " not supported" << std::endl;
     }
 
-    _LoadData(vid_name.toStdString());
+    _LoadData();
 }
 
 void MainWindow::Load_Images() {
@@ -163,9 +166,10 @@ void MainWindow::Load_Images() {
     }
 
     auto media = std::make_shared<ImageData>();
+    media->LoadMedia(dir_name.toStdString());
     _data_manager->setMedia(media);
 
-    _LoadData(dir_name.toStdString());
+    _LoadData();
 
 }
 
@@ -227,9 +231,7 @@ void MainWindow::_loadDigitalTimeSeriesCSV(){
     }
 }
 
-void MainWindow::_LoadData(std::string filepath) {
-
-    _data_manager->getMediaData()->LoadMedia(filepath);
+void MainWindow::_LoadData() {
 
     _updateFrameCount();
 

@@ -23,7 +23,6 @@ public:
     DataManager();
 
     void setMedia(std::shared_ptr<MediaData> media) {_media.reset(); _media = media;};
-    void loadMedia(std::string filepath);
     std::shared_ptr<MediaData> getMediaData();
 
     void createPoint(std::string const & point_key);

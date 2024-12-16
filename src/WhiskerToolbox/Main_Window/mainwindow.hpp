@@ -58,7 +58,7 @@ private:
     void _createActions();
     void _buildInitialLayout();
 
-    void _LoadData(std::string filepath);
+    void _LoadData();
     void _updateFrameCount();
 
 private slots:

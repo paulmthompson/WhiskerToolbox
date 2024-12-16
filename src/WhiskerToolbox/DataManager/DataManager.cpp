@@ -4,9 +4,6 @@
 #include "DataManager.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "Media/HDF5_Data.hpp"
-#include "Media/Image_Data.hpp"
-#include "Media/Video_Data.hpp"
 #include "TimeFrame.hpp"
 
 #include "utils/hdf5_mask_load.hpp"
@@ -19,11 +16,6 @@ using namespace nlohmann;
 DataManager::DataManager() :
     _media{std::make_shared<MediaData>()},
     _time{std::make_shared<TimeFrame>()}
-{
-
-}
-
-void DataManager::loadMedia(std::string filepath)
 {
 
 }
