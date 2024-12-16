@@ -23,31 +23,6 @@ DataManager::DataManager() :
 
 }
 
-void DataManager::createMedia(MediaType media_type)
-{
-    switch (media_type)
-    {
-    case (MediaType::Images):
-    {
-        _media.reset();
-        _media = std::make_shared<ImageData>();
-        break;
-    }
-    case (MediaType::Video):
-    {
-        _media.reset();
-        _media = std::make_shared<VideoData>();
-        break;
-    }
-    case (MediaType::HDF5):
-    {
-        _media.reset();
-        _media = std::make_shared<HDF5Data>();
-        break;
-    }
-    }
-}
-
 void DataManager::loadMedia(std::string filepath)
 {
 

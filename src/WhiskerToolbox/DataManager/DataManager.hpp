@@ -21,13 +21,8 @@ class DataManager {
 
 public:
     DataManager();
-    enum MediaType {
-        Video,
-        HDF5,
-        Images,
-    };
 
-    void createMedia(MediaType);
+    void setMedia(std::shared_ptr<MediaData> media) {_media.reset(); _media = media;};
     void loadMedia(std::string filepath);
     std::shared_ptr<MediaData> getMediaData();
 

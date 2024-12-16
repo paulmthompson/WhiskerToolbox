@@ -4,7 +4,12 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "analog_viewer.hpp"
+
 #include "DataManager.hpp"
+#include "DataManager/Media/HDF5_Data.hpp"
+#include "DataManager/Media/Image_Data.hpp"
+#include "DataManager/Media/Video_Data.hpp"
+
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
@@ -124,12 +129,22 @@ void MainWindow::Load_Video()
 
 
     if (vid_path.extension() == ".mp4") {
-        _data_manager->createMedia(DataManager::Video);
+
+        auto media = std::make_shared<VideoData>();
+        _data_manager->setMedia(media);
+
     } else if (vid_path.extension() == ".h5") {
-        _data_manager->createMedia(DataManager::HDF5);
+
+        auto media = std::make_shared<HDF5Data>();
+        _data_manager->setMedia(media);
+
     } else if (vid_path.extension() == ".mat") {
+
         std::cout << "Loading MAT video file" << std::endl;
-        _data_manager->createMedia(DataManager::HDF5);
+
+        auto media = std::make_shared<HDF5Data>();
+        _data_manager->setMedia(media);
+
     } else {
         std::cout << "Video file with extension " << vid_path.extension() << " not supported" << std::endl;
     }
@@ -150,7 +165,8 @@ void MainWindow::Load_Images() {
         return;
     }
 
-    _data_manager->createMedia(DataManager::Images);
+    auto media = std::make_shared<ImageData>();
+    _data_manager->setMedia(media);
 
     ui->media_widget->updateMedia();
 
