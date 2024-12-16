@@ -51,8 +51,10 @@ void Tracking_Widget::openWidget() {
 
     _data_manager->createPoint("tracking_point");
 
-    _data_manager->getPoint("tracking_point")->setMaskHeight(_data_manager->getMediaData()->getHeight());
-    _data_manager->getPoint("tracking_point")->setMaskWidth(_data_manager->getMediaData()->getWidth());
+    auto media = _data_manager->getData<MediaData>("media");
+
+    _data_manager->getPoint("tracking_point")->setMaskHeight(media->getHeight());
+    _data_manager->getPoint("tracking_point")->setMaskWidth(media->getWidth());
 
     _scene->addPointDataToScene("tracking_point");
 
@@ -208,11 +210,13 @@ void Tracking_Widget::_loadKeypointCSV()
     //_data_manager->createPoint(keypoint_key);
 
     auto point = _data_manager->getPoint(keypoint_key);
-    point->setMaskHeight(_data_manager->getMediaData()->getHeight());
-    point->setMaskWidth(_data_manager->getMediaData()->getWidth());
+    auto media = _data_manager->getData<MediaData>("media");
+
+    point->setMaskHeight(media->getHeight());
+    point->setMaskWidth(media->getWidth());
 
     for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(key), val.x, val.y);
+        point->addPointAtTime(media->getFrameIndexFromNumber(key), val.x, val.y);
     }
 
     _scene->addPointDataToScene(keypoint_key);

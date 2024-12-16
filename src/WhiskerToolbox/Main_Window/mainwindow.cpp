@@ -34,6 +34,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <variant>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
@@ -233,7 +234,9 @@ void MainWindow::_LoadData() {
 
 void MainWindow::_updateFrameCount()
 {
-    auto frame_count = _data_manager->getMediaData()->getTotalFrameCount() - 1;
+    auto media = _data_manager->getData<MediaData>("media");
+
+    auto frame_count = media->getTotalFrameCount() - 1;
 
     _data_manager->getTime()->updateTotalFrameCount(frame_count);
 

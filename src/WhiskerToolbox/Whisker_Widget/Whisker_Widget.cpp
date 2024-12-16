@@ -170,7 +170,7 @@ void Whisker_Widget::_traceButton() {
     QElapsedTimer timer2;
     timer2.start();
 
-    auto media = _data_manager->getMediaData();
+    auto media = _data_manager->getData<MediaData>("media");
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     _traceWhiskers(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
@@ -277,7 +277,7 @@ void Whisker_Widget::_saveImageButton() {
 
 void Whisker_Widget::_saveImage(std::string const& folder)
 {
-    auto media = _data_manager->getMediaData();
+    auto media = _data_manager->getData<MediaData>("media");
     auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
     auto media_data = media->getRawData(frame_id);
@@ -296,7 +296,7 @@ void Whisker_Widget::_saveImage(std::string const& folder)
 
 void Whisker_Widget::_saveFaceMask() {
 
-    auto const media_data = _data_manager->getMediaData();
+    auto const media_data = _data_manager->getData<MediaData>("media");
 
     auto const width = media_data->getWidth();
     auto const height = media_data->getHeight();
@@ -377,7 +377,8 @@ void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vec
 std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
 
     if (_save_by_frame_name) {
-        auto frame_string = _data_manager->getMediaData()->GetFrameID(frame_id);
+        auto media = _data_manager->getData<MediaData>("media");
+        auto frame_string = media->GetFrameID(frame_id);
         frame_string = remove_extension(frame_string);
 
         //Strip off the img prefix and leave the number
@@ -435,7 +436,8 @@ std::string Whisker_Widget::_getImageSaveName(int const frame_id)
 {
     if (_save_by_frame_name)
     {
-        auto saveName = _data_manager->getMediaData()->GetFrameID(frame_id);
+        auto media = _data_manager->getData<MediaData>("media");
+        auto saveName = media->GetFrameID(frame_id);
         return saveName;
     } else {
 
@@ -467,11 +469,13 @@ void Whisker_Widget::_loadKeypointCSV()
     _data_manager->createPoint(keypoint_key);
 
     auto point = _data_manager->getPoint(keypoint_key);
-    point->setMaskHeight(_data_manager->getMediaData()->getHeight());
-    point->setMaskWidth(_data_manager->getMediaData()->getWidth());
+    auto media = _data_manager->getData<MediaData>("media");
+
+    point->setMaskHeight(media->getHeight());
+    point->setMaskWidth(media->getWidth());
 
     for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(key), val.x, val.y);
+        point->addPointAtTime(media->getFrameIndexFromNumber(key), val.x, val.y);
     }
 
     _scene->addPointDataToScene(keypoint_key);
@@ -991,13 +995,15 @@ void Whisker_Widget::_drawingFinished()
         case Magic_Eraser: {
             std::cout << "Drawing finished" << std::endl;
 
+            auto media = _data_manager->getData<MediaData>("media");
+
             auto mask = _scene->getDrawingMask();
 
             auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
-            auto image = _data_manager->getMediaData()->getRawData(frame_id);
-            auto height = _data_manager->getMediaData()->getHeight();
-            auto width = _data_manager->getMediaData()->getWidth();
+            auto image = media->getRawData(frame_id);
+            auto height = media->getHeight();
+            auto width = media->getWidth();
 
             auto erased = apply_magic_eraser(image,width,height,mask);
 
@@ -1053,7 +1059,8 @@ std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string c
         auto whisker = load_line_from_csv(entry.path().string());
 
         //Find the relative frame corresponding to this frame number.
-        auto const frame_index = dm->getMediaData()->getFrameIndexFromNumber(std::stoi(frame_num));
+        auto media = dm->getData<MediaData>("media");
+        auto const frame_index = media->getFrameIndexFromNumber(std::stoi(frame_num));
 
         dm->getLine(line_key)->addLineAtTime(frame_index, whisker);
         loaded_frames.push_back(frame_index);

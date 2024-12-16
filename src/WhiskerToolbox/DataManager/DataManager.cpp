@@ -14,15 +14,9 @@
 using namespace nlohmann;
 
 DataManager::DataManager() :
-    _media{std::make_shared<MediaData>()},
     _time{std::make_shared<TimeFrame>()}
 {
-
-}
-
-std::shared_ptr<MediaData> DataManager::getMediaData()
-{
-    return _media;
+    _data["media"] = std::make_shared<MediaData>();
 }
 
 void DataManager::createPoint(std::string const & point_key)

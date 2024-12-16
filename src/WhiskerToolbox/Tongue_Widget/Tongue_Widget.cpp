@@ -102,8 +102,9 @@ void Tongue_Widget::_loadHDF5TongueMasks()
     // mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
     // mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
+    auto media = _data_manager->getData<MediaData>("media");
     for (std::size_t i = 0; i < frames.size(); i ++) {
-        mask->addMaskAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(frames[i]), x_coords[i], y_coords[i]);
+        mask->addMaskAtTime(media->getFrameIndexFromNumber(frames[i]), x_coords[i], y_coords[i]);
     }
 
     _scene->addMaskDataToScene(mask_key);
@@ -129,8 +130,9 @@ void Tongue_Widget::_loadImgTongueMasks(){
     _data_manager->createMask(mask_key);
     auto mask = _data_manager->getMask(mask_key);
 
-    mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
-    mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
+    auto media = _data_manager->getData<MediaData>("media");
+    mask->setMaskHeight(media->getHeight());
+    mask->setMaskWidth(media->getWidth());
 
     for (const auto & img_it : std::filesystem::directory_iterator(dir_name))
     {
@@ -140,7 +142,7 @@ void Tongue_Widget::_loadImgTongueMasks(){
         auto img_mask = create_mask(img);
 
         auto const frame_num = remove_extension(extract_numbers_from_string(img_it.path().filename().string()));
-        auto const frame_index = _data_manager->getMediaData()->getFrameIndexFromNumber(std::stoi(frame_num));
+        auto const frame_index = media->getFrameIndexFromNumber(std::stoi(frame_num));
 
         mask->addMaskAtTime(frame_index, img_mask);
         //std::cout << "Added " << x_coords.size() << " pts at frame " << frame_index << '\n';
@@ -173,8 +175,9 @@ void Tongue_Widget::_loadCSVJawKeypoints(){
 
     auto point = _data_manager->getPoint(keypoint_key);
 
+    auto media = _data_manager->getData<MediaData>("media");
     for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(_data_manager->getMediaData()->getFrameIndexFromNumber(key), val.x, val.y);
+        point->addPointAtTime(media->getFrameIndexFromNumber(key), val.x, val.y);
     }
 
     _scene->addPointDataToScene(keypoint_key);
@@ -182,7 +185,7 @@ void Tongue_Widget::_loadCSVJawKeypoints(){
 }
 
 void Tongue_Widget::_startGrabCut(){
-    auto media = _data_manager->getMediaData();
+    auto media = _data_manager->getData<MediaData>("media");
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
     auto media_data = media->getProcessedData(current_time);
 
@@ -221,6 +224,7 @@ void Tongue_Widget::_exportMasks() {
 
     auto mask_name = "grabcut_masks";
     auto mask_data = _data_manager->getMask(mask_name);
+    auto media = _data_manager->getData<MediaData>("media");
 
     for (int i : drawn){
         auto mask = mask_data->getMasksAtTime(i)[0];
@@ -229,7 +233,7 @@ void Tongue_Widget::_exportMasks() {
         for (auto [x, y] : mask){
             mask_img.setPixel(static_cast<int>(x), static_cast<int>(y), 0xFFFFFF);
         }
-        std::string saveName = dir_path.string() + "/" + _data_manager->getMediaData()->GetFrameID(i) + ".png";
+        std::string saveName = dir_path.string() + "/" + media->GetFrameID(i) + ".png";
         std::cout << "Saving file" << saveName << std::endl;
 
         mask_img.save(QString::fromStdString(saveName));

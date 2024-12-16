@@ -44,9 +44,10 @@ until we have finished the most recent one.
 
 void TimeScrollBar::Slider_Drag(int action)
 {
-    if (dynamic_cast<VideoData*>(_data_manager->getMediaData().get())) {
+    auto media = _data_manager->getData<MediaData>("media");
+    if (dynamic_cast<VideoData*>(media.get())) {
         auto current_frame = ui->horizontalScrollBar->sliderPosition();
-        auto keyframe = dynamic_cast<VideoData*>(_data_manager->getMediaData().get())->FindNearestSnapFrame(current_frame);
+        auto keyframe = dynamic_cast<VideoData*>(media.get())->FindNearestSnapFrame(current_frame);
         ui->horizontalScrollBar->setSliderPosition(keyframe);
     }
 }

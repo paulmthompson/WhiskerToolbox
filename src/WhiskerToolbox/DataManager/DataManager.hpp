@@ -12,6 +12,7 @@
 #include <string> // std::string
 #include <unordered_map> // std::unordered_map
 #include <utility> // std::move
+#include <variant> // std::variant
 #include <vector> // std::vector
 
 class AnalogTimeSeries;
@@ -22,8 +23,9 @@ class DataManager {
 public:
     DataManager();
 
-    void setMedia(std::shared_ptr<MediaData> media) {_media.reset(); _media = media;};
-    std::shared_ptr<MediaData> getMediaData();
+    void setMedia(std::shared_ptr<MediaData> media) {
+        _data["media"] = media;
+    };
 
     void createPoint(std::string const & point_key);
     std::shared_ptr<PointData> getPoint(std::string const & point_key);
@@ -66,9 +68,15 @@ public:
     void load_A(const std::string & filepath);
     void load_B(const std::string & filepath);
 
-private:
+    template<typename T>
+    std::shared_ptr<T> getData(const std::string& key) {
+        if (_data.find(key) != _data.end()) {
+            return std::get<std::shared_ptr<T>>(_data[key]);
+        }
+        return nullptr;
+    }
 
-    std::shared_ptr<MediaData> _media;
+private:
 
     std::unordered_map<std::string,std::shared_ptr<PointData>> _points;
 
@@ -83,6 +91,8 @@ private:
     std::shared_ptr<TimeFrame> _time;
 
     std::vector<ObserverCallback> _observers;
+
+    std::unordered_map<std::string, std::variant<std::shared_ptr<MediaData>>> _data;
 
 };
 

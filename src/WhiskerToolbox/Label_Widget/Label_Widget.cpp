@@ -29,8 +29,9 @@ Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> dat
         _scene->addPointDataToScene("labels");
         _scene->changePointColor("labels", "#ffe600");
         auto point = _data_manager->getPoint("labels");
-        point->setMaskHeight(_data_manager->getMediaData()->getHeight());
-        point->setMaskWidth(_data_manager->getMediaData()->getWidth());
+        auto media = _data_manager->getData<MediaData>("media");
+        point->setMaskHeight(media->getHeight());
+        point->setMaskWidth(media->getWidth());
     }
 }
 
@@ -87,7 +88,7 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
   float x_media = x_canvas / _scene->getXAspect();
   float y_media = y_canvas / _scene->getYAspect();
 
-  auto media = _data_manager->getMediaData();
+  auto media = _data_manager->getData<MediaData>("media");
 
   // Generate the image to be labeled
   int frame_number = _data_manager->getTime()->getLastLoadedFrame();
@@ -118,7 +119,7 @@ void Label_Widget::_updateAll() {
 // Is this even necessary anymore?
 void Label_Widget::_updateDraw()
 {
-    auto media = _data_manager->getMediaData();
+    auto media = _data_manager->getData<MediaData>("media");
 
   //_scene->clearPoints();
   for (auto &[frame_name, label] : _label_maker->getLabels()) {

@@ -128,7 +128,8 @@ void Media_Window::setPointAlpha(std::string const & point_key, float const alph
 void Media_Window::LoadFrame(int frame_id)
 {
     // Get MediaData
-    _data_manager->getMediaData()->LoadFrame(frame_id);
+    auto media = _data_manager->getData<MediaData>("media");
+   media->LoadFrame(frame_id);
 
     UpdateCanvas();
 }
@@ -158,7 +159,7 @@ void Media_Window::UpdateCanvas()
 //Canvas size, and the canvas is updated
 void Media_Window::_convertNewMediaToQImage()
 {
-    auto _media = _data_manager->getMediaData();
+    auto _media = _data_manager->getData<MediaData>("media");
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
     auto media_data = _media->getProcessedData(current_time);
 
@@ -173,7 +174,7 @@ void Media_Window::_convertNewMediaToQImage()
 
 QImage::Format Media_Window::_getQImageFormat() {
 
-    auto _media = _data_manager->getMediaData();
+    auto _media = _data_manager->getData<MediaData>("media");
     switch(_media->getFormat())
     {
     case MediaData::DisplayFormat::Gray:
@@ -227,7 +228,7 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
 float Media_Window::getXAspect() const {
 
-    auto _media = _data_manager->getMediaData();
+    auto _media = _data_manager->getData<MediaData>("media");
 
     float scale_width = static_cast<float>(_canvasWidth)
                         / static_cast<float>(_media->getWidth());
@@ -237,7 +238,7 @@ float Media_Window::getXAspect() const {
 
 float Media_Window::getYAspect() const {
 
-    auto _media = _data_manager->getMediaData();
+    auto _media = _data_manager->getData<MediaData>("media");
 
     float scale_height = static_cast<float>(_canvasHeight)
                          / static_cast<float>(_media->getHeight());
@@ -398,7 +399,7 @@ std::vector<uint8_t> Media_Window::getDrawingMask() {
     painter.end();
 
     // Scale the QImage to the size of the media
-    auto media = _data_manager->getMediaData();
+    auto media = _data_manager->getData<MediaData>("media");
     int mediaWidth = media->getWidth();
     int mediaHeight = media->getHeight();
     QImage scaledMaskImage = maskImage.scaled(mediaWidth, mediaHeight);

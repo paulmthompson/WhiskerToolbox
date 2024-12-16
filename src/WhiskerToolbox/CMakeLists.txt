@@ -102,6 +102,9 @@ set(PROJECT_SOURCES
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.hpp
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.cpp
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.ui
+
+        utils/qt_utilities.hpp
+        utils/qt_utilities.cpp
 )
 
 if (WIN32)
@@ -111,8 +114,7 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
-        utils/qt_utilities.hpp
-        utils/qt_utilities.cpp
+
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets)

@@ -113,7 +113,7 @@ void Contact_Widget::updateFrame(int frame_id)
     QElapsedTimer timer2;
     timer2.start();
 
-    auto _media = _data_manager->getMediaData();
+    auto _media = _data_manager->getData<MediaData>("media");
 
     float pole_x = std::get<0>(_pole_pos);
     float pole_y = std::get<1>(_pole_pos);
@@ -231,7 +231,7 @@ void Contact_Widget::_drawContactRectangles(int frame_id) {
 
 QImage::Format Contact_Widget::_getQImageFormat() {
 
-    auto _media = _data_manager->getMediaData();
+    auto _media = _data_manager->getData<MediaData>("media");
     switch(_media->getFormat())
     {
     case MediaData::DisplayFormat::Gray:
