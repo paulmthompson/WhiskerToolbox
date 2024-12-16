@@ -19,38 +19,6 @@ DataManager::DataManager() :
     _data["media"] = std::make_shared<MediaData>();
 }
 
-void DataManager::createPoint(std::string const & point_key)
-{
-    _data[point_key] = std::make_shared<PointData>();
-}
-
-std::vector<std::string> DataManager::getPointKeys()
-{
-    std::vector<std::string> point_keys;
-    for (const auto& [key, value] : _data) {
-        if (std::holds_alternative<std::shared_ptr<PointData>>(value)) {
-            point_keys.push_back(key);
-        }
-    }
-    return point_keys;
-}
-
-void DataManager::createLine(const std::string line_key)
-{
-    _data[line_key] = std::make_shared<LineData>();
-}
-
-std::vector<std::string> DataManager::getLineKeys()
-{
-    std::vector<std::string> line_keys;
-    for (const auto& [key, value] : _data) {
-        if (std::holds_alternative<std::shared_ptr<LineData>>(value)) {
-            line_keys.push_back(key);
-        }
-    }
-    return line_keys;
-}
-
 void DataManager::createMask(const std::string& mask_key)
 {
     _masks[mask_key] = std::make_shared<MaskData>();

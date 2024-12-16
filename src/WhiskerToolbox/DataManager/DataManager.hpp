@@ -27,12 +27,6 @@ public:
         _data["media"] = media;
     };
 
-    void createPoint(std::string const & point_key);
-    std::vector<std::string> getPointKeys();
-
-    void createLine(const std::string line_key);
-    std::vector<std::string> getLineKeys();
-
     void createMask(const std::string& mask_key);
     void createMask(const std::string& mask_key, int const width, int const height);
     std::shared_ptr<MaskData> getMask(const std::string& mask_key);
@@ -67,11 +61,33 @@ public:
     void load_B(const std::string & filepath);
 
     template<typename T>
+    std::vector<std::string> getKeys()
+    {
+        std::vector<std::string> keys;
+        for (const auto& [key, value] : _data) {
+            if (std::holds_alternative<std::shared_ptr<T>>(value)) {
+                keys.push_back(key);
+            }
+        }
+        return keys;
+    }
+
+    template<typename T>
     std::shared_ptr<T> getData(const std::string& key) {
         if (_data.find(key) != _data.end()) {
             return std::get<std::shared_ptr<T>>(_data[key]);
         }
         return nullptr;
+    }
+
+    template<typename T>
+    void setData(const std::string& key){
+        _data[key] = std::make_shared<T>();
+    }
+
+    template<typename T>
+    void setData(const std::string& key, std::shared_ptr<T> data){
+        _data[key] = data;
     }
 
 private:

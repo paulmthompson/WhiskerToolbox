@@ -76,7 +76,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
 
-    _data_manager->createLine("unlabeled_whiskers");
+    _data_manager->setData<LineData>("unlabeled_whiskers");
     _scene->addLineDataToScene("unlabeled_whiskers");
     _scene->changeLineColor("unlabeled_whiskers","#0000ff");
     _janelia_config_widget = new Janelia_Config(_wt);
@@ -462,13 +462,13 @@ void Whisker_Widget::_loadKeypointCSV()
 
     auto keypoints = load_points_from_csv(keypoint_filename.toStdString(), 0, 1, 2);
 
-    auto point_num = _data_manager->getPointKeys().size();
+    auto point_num = _data_manager->getKeys<PointData>().size();
 
     std::cout << "There are " << point_num << " keypoints loaded" << std::endl;
 
     auto keypoint_key = "keypoint_" + std::to_string(point_num);
 
-    _data_manager->createPoint(keypoint_key);
+    _data_manager->setData<PointData>(keypoint_key);
 
     auto point = _data_manager->getData<PointData>(keypoint_key);
     auto media = _data_manager->getData<MediaData>("media");
@@ -500,7 +500,7 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, c
 
     if (!_data_manager->getData<LineData>(whisker_name)) {
         std::cout << "Creating " << whisker_name << std::endl;
-        _data_manager->createLine(whisker_name);
+        _data_manager->setData<LineData>(whisker_name);
         _scene->addLineDataToScene(whisker_name);
         _scene->changeLineColor(whisker_name, get_whisker_color(whisker_id));
     }

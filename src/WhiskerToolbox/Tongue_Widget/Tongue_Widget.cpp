@@ -8,7 +8,6 @@
 
 #include "Grabcut_Widget/Grabcut_Widget.hpp"
 #include "Media_Window.hpp"
-#include "Points/Point_Data.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "utils/opencv_utility.hpp"
@@ -167,13 +166,13 @@ void Tongue_Widget::_loadCSVJawKeypoints(){
 
     auto keypoints = load_points_from_csv(filename.toStdString(), 0, 1, 2);
 
-    auto point_num = _data_manager->getPointKeys().size();
+    auto point_num = _data_manager->getKeys<PointData>().size();
 
     std::cout << "There are " << point_num << " keypoints loaded" << std::endl;
 
     auto keypoint_key = "keypoint_" + std::to_string(point_num);
 
-    _data_manager->createPoint(keypoint_key);
+    _data_manager->setData<PointData>(keypoint_key);
 
     auto point = _data_manager->getData<PointData>(keypoint_key);
 

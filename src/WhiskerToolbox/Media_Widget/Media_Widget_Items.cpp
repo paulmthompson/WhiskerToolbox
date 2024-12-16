@@ -5,7 +5,10 @@
 #include "ui_Media_Widget_Items.h"
 
 #include "DataManager.hpp"
+
 #include "Media_Window/Media_Window.hpp"
+
+class PointData;
 
 enum class Media_Item_Type {
     POINT,
@@ -36,13 +39,13 @@ Media_Widget_Items::~Media_Widget_Items() {
 
 void Media_Widget_Items::_getPointItems()
 {
-    auto keys = _data_manager->getPointKeys();
+    auto keys = _data_manager->getKeys<PointData>();
 
 }
 
 void Media_Widget_Items::_getLineItems()
 {
-    auto keys = _data_manager->getLineKeys();
+    auto keys = _data_manager->getKeys<LineData>();
 }
 
 

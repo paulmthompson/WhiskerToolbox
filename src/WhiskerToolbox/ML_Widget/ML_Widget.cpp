@@ -69,8 +69,8 @@ void ML_Widget::_refreshAvailableFeatures() {
     ui->available_features_table->setColumnCount(1);
     ui->available_features_table->setHorizontalHeaderLabels(headers);
 
-    _insertRows(_data_manager->getPointKeys());
-    _insertRows(_data_manager->getLineKeys());
+    _insertRows(_data_manager->getKeys<PointData>());
+    _insertRows(_data_manager->getKeys<LineData>());
     _insertRows(_data_manager->getMaskKeys());
     _insertRows(_data_manager->getAnalogTimeSeriesKeys());
     _insertRows(_data_manager->getDigitalTimeSeriesKeys());

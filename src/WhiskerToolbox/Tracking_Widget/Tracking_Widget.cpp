@@ -4,6 +4,8 @@
 #include "ui_Tracking_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
@@ -49,7 +51,7 @@ void Tracking_Widget::openWidget() {
 
     connect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
 
-    _data_manager->createPoint("tracking_point");
+    _data_manager->setData<PointData>("tracking_point");
 
     auto media = _data_manager->getData<MediaData>("media");
 
@@ -209,7 +211,7 @@ void Tracking_Widget::_loadKeypointCSV()
     auto keypoints = load_points_from_csv(keypoint_filename.toStdString(), 0, 1, 2, ',');
 
     std::cout << "Loaded " << keypoints.size() << " keypoints" << std::endl;
-    auto point_num = _data_manager->getPointKeys().size();
+    auto point_num = _data_manager->getKeys<PointData>().size();
 
     //_data_manager->createPoint(keypoint_key);
 
