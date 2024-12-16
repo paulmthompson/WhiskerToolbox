@@ -4,12 +4,13 @@
 #include "DataManager.hpp"
 #include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
+#include "Points/Point_Data.hpp"
 
 TEST_CASE("DataManager - Create", "[DataManager]") {
 
     auto dm = DataManager();
 
-    REQUIRE(dm.getPointKeys().size() == 0);
+    REQUIRE(dm.getKeys<PointData>().size() == 0);
 }
 
 TEST_CASE("DataManager - Load Media", "[DataManager]") {
