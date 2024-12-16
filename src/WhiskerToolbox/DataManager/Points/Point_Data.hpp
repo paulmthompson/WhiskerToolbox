@@ -15,6 +15,8 @@ struct Point2D {
 class PointData {
 public:
     PointData();
+    PointData(std::map<int, Point2D<float>> data);
+    PointData(std::map<int,std::vector<Point2D<float>>> data);
     void clearPointsAtTime(int const time);
     void addPointAtTime(int const time, float const x, float const y);
 

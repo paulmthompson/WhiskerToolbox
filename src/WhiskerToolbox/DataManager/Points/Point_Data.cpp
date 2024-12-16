@@ -15,6 +15,19 @@ PointData::PointData()
 
 }
 
+PointData::PointData(std::map<int, Point2D<float>> data)
+{
+    for (auto [key, value] : data)
+    {
+        _data[key].push_back(value);
+    }
+}
+
+PointData::PointData(std::map<int,std::vector<Point2D<float>>> data)
+{
+    _data = data;
+}
+
 void PointData::clearPointsAtTime(int const time)
 {
     _data[time].clear();
@@ -96,6 +109,8 @@ std::map<int,Point2D<float>> load_points_from_csv(
         }
     }
     std::cout.flush();
+
+    std::cout << "Read " << csv_vector.size() << " lines from " << filename << std::endl;
 
     line_output.insert(csv_vector.begin(), csv_vector.end());
 

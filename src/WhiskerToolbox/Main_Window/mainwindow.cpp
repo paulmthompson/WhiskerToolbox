@@ -96,6 +96,8 @@ void MainWindow::_createActions()
     connect(ui->actionLoad_Analog_Time_Series_CSV, &QAction::triggered, this, &MainWindow::_loadAnalogTimeSeriesCSV);
     connect(ui->actionLoad_Digital_Time_Series_CSV, &QAction::triggered, this, &MainWindow::_loadDigitalTimeSeriesCSV);
 
+    connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
+
     connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
@@ -225,6 +227,33 @@ void MainWindow::_loadDigitalTimeSeriesCSV(){
     if (_widgets.find("analog_viewer") != _widgets.end()) {
         dynamic_cast<Analog_Viewer*>(_widgets["analog_viewer"].get())->plotDigital(key);
     }
+}
+
+void MainWindow::_loadJSONConfig()
+{
+    auto filename =  QFileDialog::getOpenFileName(
+        this,
+        "Load JSON File",
+        QDir::currentPath(),
+        "All files (*.*) ;; JSON (*.json)");
+
+    if (filename.isNull()) {
+        return;
+    }
+
+    auto data_info = load_data_from_json_config(_data_manager, filename.toStdString());
+
+    for (auto data : data_info)
+    {
+        if (data.data_class == "VideoData") {
+            _LoadData();
+        } else if (data.data_class == "PointData")
+        {
+            _scene->addPointDataToScene(data.key);
+            _scene->changePointColor(data.key, data.color);
+        }
+    }
+
 }
 
 void MainWindow::_LoadData() {

@@ -68,6 +68,8 @@ private slots:
     void _loadAnalogTimeSeriesCSV();
     void _loadDigitalTimeSeriesCSV();
 
+    void _loadJSONConfig();
+
     void openWhiskerTracking();
     void openLabelMaker();
     void openAnalogViewer();

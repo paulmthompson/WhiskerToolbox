@@ -20,6 +20,12 @@ class MaskData;
 
 class TimeFrame;
 
+struct DataInfo {
+    std::string key;
+    std::string data_class;
+    std::string color;
+};
+
 class DataManager {
 
 public:
@@ -110,7 +116,7 @@ std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, s
 
 std::vector<int> read_array_hdf5(std::string const & filepath, std::string const & key);
 
-
+std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager>, std::string json_filepath);
 
 
 #endif // DATAMANAGER_HPP

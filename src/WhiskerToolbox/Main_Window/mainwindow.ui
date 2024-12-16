@@ -59,6 +59,7 @@
      <addaction name="actionLoad_Images"/>
      <addaction name="actionLoad_Analog_Time_Series_CSV"/>
      <addaction name="actionLoad_Digital_Time_Series_CSV"/>
+     <addaction name="actionLoad_JSON_Config"/>
     </widget>
     <addaction name="separator"/>
     <addaction name="menuLoad_Data"/>
@@ -161,6 +162,11 @@
   <action name="actionData_Viewer">
    <property name="text">
     <string>Data Viewer</string>
+   </property>
+  </action>
+  <action name="actionLoad_JSON_Config">
+   <property name="text">
+    <string>Load JSON Config</string>
    </property>
   </action>
  </widget>

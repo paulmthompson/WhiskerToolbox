@@ -8,6 +8,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "Media/Video_Data.hpp"
 
 #include "TimeFrame.hpp"
 
@@ -86,4 +87,95 @@ void DataManager::loadFromJSON(std::string const & filepath)
     }
     */
     std::filesystem::current_path(original_path);
+}
+
+std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm, std::string json_filepath)
+{
+    std::vector<DataInfo> data_info_list;
+    // Open JSON file
+    std::ifstream ifs(json_filepath);
+    if (!ifs.is_open()) {
+        std::cerr << "Failed to open JSON file: " << json_filepath << std::endl;
+        return data_info_list;
+    }
+
+    // Parse JSON
+    json j;
+    ifs >> j;
+
+    // get base path of filepath
+    std::filesystem::path base_path = std::filesystem::path(json_filepath).parent_path();
+
+    // Iterate through JSON array
+    for (const auto& item : j) {
+
+        // If entry doesn't have a data_type and filepath, skip
+        if (!item.contains("data_type") || !item.contains("filepath")) {
+            std::cerr << "Entry missing data_type or filepath" << std::endl;
+            continue;
+        }
+        std::string data_type = item["data_type"];
+        std::string file_path = item["filepath"];
+        std::string name = item["name"];
+
+        // Check if the file path is relative
+        if (!std::filesystem::path(file_path).is_absolute()) {
+            file_path = (base_path / file_path).string();
+        }
+
+        if (data_type == "video") {
+            // Create VideoData object
+            auto video_data = std::make_shared<VideoData>();
+            //check if the file exists
+            if (!std::filesystem::exists(file_path)) {
+                std::cerr << "File does not exist: " << file_path << std::endl;
+                continue;
+            }
+
+            std::cout << "Loading video file: " << file_path << std::endl;
+            video_data->LoadMedia(file_path);
+
+            std::cout << "Video has " << video_data->getTotalFrameCount() << " frames" << std::endl;
+            // Add VideoData to DataManager
+            dm->setMedia(video_data);
+
+            data_info_list.push_back({name, "VideoData", ""});
+        } else if (data_type == "points") {
+
+            if (!std::filesystem::exists(file_path)) {
+                std::cerr << "File does not exist: " << file_path << std::endl;
+                continue;
+            }
+
+            int frame_column = item["frame_column"];
+            int x_column = item["x_column"];
+            int y_column = item["y_column"];
+
+            std::string color = "0000FF";
+            if (item.contains("color"))
+            {
+                color = item["color"];
+            }
+
+            std::cout << "Loading points file: " << file_path << std::endl;
+
+            auto keypoints = load_points_from_csv(
+                    file_path,
+                    frame_column,
+                    x_column,
+                    y_column);
+
+            auto keypoint_key = name;
+
+            std::cout << "There are " <<  keypoints.size() << " keypoints " << std::endl;
+
+            auto point_data = std::make_shared<PointData>(keypoints);
+
+            dm->setData<PointData>(keypoint_key, point_data);
+
+            data_info_list.push_back({keypoint_key, "PointData", color});
+        }
+    }
+
+    return data_info_list;
 }
