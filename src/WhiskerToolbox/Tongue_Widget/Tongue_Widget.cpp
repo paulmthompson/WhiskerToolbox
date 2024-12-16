@@ -93,13 +93,13 @@ void Tongue_Widget::_loadHDF5TongueMasks()
     auto y_coords = read_ragged_hdf5(filename.toStdString(), "heights");
     auto x_coords = read_ragged_hdf5(filename.toStdString(), "widths");
 
-    auto mask_num = _data_manager->getMaskKeys().size();
+    auto mask_num = _data_manager->getKeys<MaskData>().size();
 
     auto mask_key = "Tongue_Mask" + std::to_string(mask_num);
 
-    _data_manager->createMask(mask_key);
+    _data_manager->setData<MaskData>(mask_key);
 
-    auto mask = _data_manager->getMask(mask_key);
+    auto mask = _data_manager->getData<MaskData>(mask_key);
     // mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
     // mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
 
@@ -126,10 +126,10 @@ void Tongue_Widget::_loadImgTongueMasks(){
     }
     auto dir_path = std::filesystem::path(dir_name);
 
-    auto mask_num = _data_manager->getMaskKeys().size();
+    auto mask_num = _data_manager->getKeys<MaskData>().size();
     auto mask_key = "Tongue_Mask" + std::to_string(mask_num);
-    _data_manager->createMask(mask_key);
-    auto mask = _data_manager->getMask(mask_key);
+    _data_manager->setData<MaskData>(mask_key);
+    auto mask = _data_manager->getData<MaskData>(mask_key);
 
     auto media = _data_manager->getData<MediaData>("media");
     mask->setMaskHeight(media->getHeight());
@@ -224,7 +224,7 @@ void Tongue_Widget::_exportMasks() {
     auto dir_path = std::filesystem::path(dir_name);
 
     auto mask_name = "grabcut_masks";
-    auto mask_data = _data_manager->getMask(mask_name);
+    auto mask_data = _data_manager->getData<MaskData>(mask_name);
     auto media = _data_manager->getData<MediaData>("media");
 
     for (int i : drawn){

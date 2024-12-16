@@ -51,5 +51,5 @@ void Media_Widget_Items::_getLineItems()
 
 void Media_Widget_Items::_getMaskItems()
 {
-    auto keys = _data_manager->getMaskKeys();
+    auto keys = _data_manager->getKeys<MaskData>();
 }

@@ -205,9 +205,9 @@ void Grabcut_Widget::_updateDisplays(){
  */
 void Grabcut_Widget::_saveMask(){
     const char* mask_name = "grabcut_masks";
-    if (!_data_manager->getMask(mask_name)) {
+    if (!_data_manager->getData<MaskData>(mask_name)) {
         std::cout << "Creating " << mask_name << " in data manager " << std::endl;
-        _data_manager->createMask(mask_name);
+        _data_manager->setData<MaskData>(mask_name);
         _scene->addMaskDataToScene(mask_name);
         _scene->changeMaskColor(mask_name, "#fca923");
     }
@@ -223,7 +223,7 @@ void Grabcut_Widget::_saveMask(){
         }
     }
     auto pts = create_mask(mask);
-    auto mask_data = _data_manager->getMask(mask_name);
+    auto mask_data = _data_manager->getData<MaskData>(mask_name);
     mask_data->setMaskHeight(_height);
     mask_data->setMaskWidth(_width);
 

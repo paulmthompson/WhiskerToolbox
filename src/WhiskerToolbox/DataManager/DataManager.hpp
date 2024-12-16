@@ -27,11 +27,6 @@ public:
         _data["media"] = media;
     };
 
-    void createMask(const std::string& mask_key);
-    void createMask(const std::string& mask_key, int const width, int const height);
-    std::shared_ptr<MaskData> getMask(const std::string& mask_key);
-    std::vector<std::string> getMaskKeys();
-
     void createAnalogTimeSeries(std::string const & analog_key);
     std::shared_ptr<AnalogTimeSeries> getAnalogTimeSeries(std::string const & analog_key);
     std::vector<std::string> getAnalogTimeSeriesKeys();
@@ -92,8 +87,6 @@ public:
 
 private:
 
-    std::unordered_map<std::string, std::shared_ptr<MaskData>> _masks;
-
     std::unordered_map<std::string, std::shared_ptr<AnalogTimeSeries>> _analog;
 
     std::unordered_map<std::string, std::shared_ptr<DigitalIntervalSeries>> _digital;
@@ -105,7 +98,8 @@ private:
     std::unordered_map<std::string, std::variant<
                                         std::shared_ptr<MediaData>,
                                         std::shared_ptr<PointData>,
-                                        std::shared_ptr<LineData>>> _data;
+                                        std::shared_ptr<LineData>,
+                                        std::shared_ptr<MaskData>>> _data;
 
 };
 

@@ -321,14 +321,15 @@ void Media_Window::_plotMaskData()
     {
         auto plot_color = _plot_color_with_alpha(_mask_config);
 
-        float mask_height = static_cast<float>(_data_manager->getMask(mask_key)->getMaskHeight());
-        float mask_width = static_cast<float>(_data_manager->getMask(mask_key)->getMaskWidth());
+        auto mask = _data_manager->getData<MaskData>(mask_key);
+        float mask_height = static_cast<float>(mask->getMaskHeight());
+        float mask_width = static_cast<float>(mask->getMaskWidth());
 
-        auto const& maskData = _data_manager->getMask(mask_key)->getMasksAtTime(current_time);
+        auto const& maskData = mask->getMasksAtTime(current_time);
 
         _plotSingleMaskData(maskData, mask_width, mask_height, plot_color);
 
-        auto const& maskData2 = _data_manager->getMask(mask_key)->getMasksAtTime(-1);
+        auto const& maskData2 = mask->getMasksAtTime(-1);
 
         _plotSingleMaskData(maskData2, mask_width, mask_height, plot_color);
 

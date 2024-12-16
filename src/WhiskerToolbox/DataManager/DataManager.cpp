@@ -19,29 +19,6 @@ DataManager::DataManager() :
     _data["media"] = std::make_shared<MediaData>();
 }
 
-void DataManager::createMask(const std::string& mask_key)
-{
-    _masks[mask_key] = std::make_shared<MaskData>();
-}
-
-void DataManager::createMask(const std::string& mask_key, int const width, int const height)
-{
-    _masks[mask_key] = std::make_shared<MaskData>();
-    _masks[mask_key]->setMaskWidth(width);
-    _masks[mask_key]->setMaskHeight(height);
-}
-
-std::shared_ptr<MaskData> DataManager::getMask(const std::string& mask_key)
-{
-
-    return _masks[mask_key];
-}
-
-std::vector<std::string> DataManager::getMaskKeys()
-{
-    return get_keys(_masks);
-}
-
 void DataManager::createAnalogTimeSeries(std::string const & key)
 {
     _analog[key] = std::make_shared<AnalogTimeSeries>();

@@ -71,7 +71,7 @@ void ML_Widget::_refreshAvailableFeatures() {
 
     _insertRows(_data_manager->getKeys<PointData>());
     _insertRows(_data_manager->getKeys<LineData>());
-    _insertRows(_data_manager->getMaskKeys());
+    _insertRows(_data_manager->getKeys<MaskData>());
     _insertRows(_data_manager->getAnalogTimeSeriesKeys());
     _insertRows(_data_manager->getDigitalTimeSeriesKeys());
 }

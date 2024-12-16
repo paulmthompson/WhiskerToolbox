@@ -341,22 +341,30 @@ void Whisker_Widget::_loadFaceMask()
 
     auto mat = load_mask_from_image(face_mask_name.toStdString());
 
-    _data_manager->createMask("Face_Mask_Original", mat.cols, mat.rows);
-    auto mask_points_original = create_mask(mat);
-    _data_manager->getMask("Face_Mask_Original")->addMaskAtTime(-1,mask_points_original);
+    auto mask_original = std::make_shared<MaskData>();
+    mask_original->setMaskWidth(mat.cols);
+    mask_original->setMaskHeight(mat.rows);
+    _data_manager->setData<MaskData>("Face_Mask_Original", mask_original);
 
-    _data_manager->createMask("Face_Mask", mat.cols, mat.rows);
+    auto mask_points_original = create_mask(mat);
+    _data_manager->getData<MaskData>("Face_Mask_Original")->addMaskAtTime(-1,mask_points_original);
+
+
+    auto mask = std::make_shared<MaskData>();
+    mask->setMaskWidth(mat.cols);
+    mask->setMaskHeight(mat.rows);
+    _data_manager->setData<MaskData>("Face_Mask", mask);
 
     const int dilation_size = 5;
     grow_mask(mat, dilation_size);
 
     auto mask_points = create_mask(mat);
 
-    auto mask = _data_manager->getMask("Face_Mask");
+    auto face_mask = _data_manager->getData<MaskData>("Face_Mask");
 
     //std::cout << "Mask has " << mask_points.size() << " pixels " <<  std::endl;
 
-    mask->addMaskAtTime(-1,mask_points);
+    face_mask->addMaskAtTime(-1,mask_points);
 
     _scene->addMaskDataToScene("Face_Mask");
     _scene->changeMaskColor("Face_Mask", "#808080");
@@ -660,13 +668,13 @@ void Whisker_Widget::_loadSingleHDF5WhiskerMask(std::string const & filename)
     auto y_coords = read_ragged_hdf5(filename, "heights");
     auto x_coords = read_ragged_hdf5(filename, "widths");
 
-    auto mask_num = _data_manager->getMaskKeys().size();
+    auto mask_num = _data_manager->getKeys<MaskData>().size();
 
     auto mask_key = "Whisker_Mask" + std::to_string(mask_num);
 
-    _data_manager->createMask(mask_key);
+    _data_manager->setData<MaskData>(mask_key);
 
-    auto mask = _data_manager->getMask(mask_key);
+    auto mask = _data_manager->getData<MaskData>(mask_key);
 
     for (std::size_t i = 0; i < frames.size(); i ++) {
         mask->addMaskAtTime(frames[i], x_coords[i], y_coords[i]);
@@ -947,14 +955,14 @@ void Whisker_Widget::_addNewTrackedWhisker(std::vector<int> const & indexes)
 void Whisker_Widget::_maskDilation(int dilation_size)
 {
 
-    if (!_data_manager->getMask("Face_Mask_Original"))
+    if (!_data_manager->getData<MaskData>("Face_Mask_Original"))
     {
         return;
     }
 
     int const time = -1;
 
-    auto original_mask = _data_manager->getMask("Face_Mask_Original");
+    auto original_mask = _data_manager->getData<MaskData>("Face_Mask_Original");
 
     auto mask_pixels = original_mask->getMasksAtTime(time)[0];
 
@@ -965,7 +973,7 @@ void Whisker_Widget::_maskDilation(int dilation_size)
 
     auto new_mask = create_mask(mat);
 
-    auto dilated_mask = _data_manager->getMask("Face_Mask");
+    auto dilated_mask = _data_manager->getData<MaskData>("Face_Mask");
 
     dilated_mask->clearMasksAtTime(time);
 
