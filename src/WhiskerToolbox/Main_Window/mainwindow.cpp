@@ -149,10 +149,7 @@ void MainWindow::Load_Video()
         std::cout << "Video file with extension " << vid_path.extension() << " not supported" << std::endl;
     }
 
-    ui->media_widget->updateMedia();
-
     _LoadData(vid_name.toStdString());
-
 }
 
 void MainWindow::Load_Images() {
@@ -167,8 +164,6 @@ void MainWindow::Load_Images() {
 
     auto media = std::make_shared<ImageData>();
     _data_manager->setMedia(media);
-
-    ui->media_widget->updateMedia();
 
     _LoadData(dir_name.toStdString());
 
@@ -235,6 +230,14 @@ void MainWindow::_loadDigitalTimeSeriesCSV(){
 void MainWindow::_LoadData(std::string filepath) {
 
     _data_manager->getMediaData()->LoadMedia(filepath);
+
+    _updateFrameCount();
+
+    ui->media_widget->updateMedia();
+}
+
+void MainWindow::_updateFrameCount()
+{
     auto frame_count = _data_manager->getMediaData()->getTotalFrameCount() - 1;
 
     _data_manager->getTime()->updateTotalFrameCount(frame_count);
@@ -242,7 +245,6 @@ void MainWindow::_LoadData(std::string filepath) {
     ui->time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount());
 
     ui->time_scrollbar->changeScrollBarValue(0);
-
 }
 
 void MainWindow::openWhiskerTracking() {

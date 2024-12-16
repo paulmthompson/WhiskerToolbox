@@ -59,6 +59,7 @@ private:
     void _buildInitialLayout();
 
     void _LoadData(std::string filepath);
+    void _updateFrameCount();
 
 private slots:
     void Load_Video();
