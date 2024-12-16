@@ -96,6 +96,8 @@ public:
         _data[key] = data;
     }
 
+    std::string getType(const std::string& key) const;
+
 private:
 
     std::shared_ptr<TimeFrame> _time;

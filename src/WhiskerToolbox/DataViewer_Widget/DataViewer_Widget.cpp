@@ -46,20 +46,27 @@ void DataViewer_Widget::closeEvent(QCloseEvent *event) {
 }
 
 void DataViewer_Widget::_insertRows(const std::vector<std::string>& keys) {
+
     int row = ui->available_features_table->rowCount();
     for (const auto& key : keys) {
         if (_model_features.find(key) == _model_features.end()) {
             ui->available_features_table->insertRow(row);
             ui->available_features_table->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(key)));
+
+            // Retrieve the type of the feature from the _data_manager
+            std::string type = _data_manager->getType(key);
+            ui->available_features_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(type)));
+
             row++;
         }
     }
+
 }
 
 void DataViewer_Widget::_refreshAvailableFeatures() {
     ui->available_features_table->setRowCount(0);
-    QStringList headers = {"Feature"};
-    ui->available_features_table->setColumnCount(1);
+    QStringList headers = {"Feature", "Type"};
+    ui->available_features_table->setColumnCount(2);
     ui->available_features_table->setHorizontalHeaderLabels(headers);
 
     _insertRows(_data_manager->getAllKeys());

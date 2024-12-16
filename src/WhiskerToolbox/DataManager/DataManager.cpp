@@ -216,3 +216,23 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
     return data_info_list;
 }
+
+std::string DataManager::getType(const std::string& key) const {
+    auto it = _data.find(key);
+    if (it != _data.end()) {
+        if (std::holds_alternative<std::shared_ptr<MediaData>>(it->second)) {
+            return "MediaData";
+        } else if (std::holds_alternative<std::shared_ptr<PointData>>(it->second)) {
+            return "PointData";
+        } else if (std::holds_alternative<std::shared_ptr<LineData>>(it->second)) {
+            return "LineData";
+        } else if (std::holds_alternative<std::shared_ptr<MaskData>>(it->second)) {
+            return "MaskData";
+        } else if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(it->second)) {
+            return "AnalogTimeSeries";
+        } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(it->second)) {
+            return "DigitalIntervalSeries";
+        }
+        return "Unknown";
+    }
+}
