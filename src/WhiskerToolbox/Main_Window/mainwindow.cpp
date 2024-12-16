@@ -126,23 +126,15 @@ void MainWindow::Load_Video()
     }
 
     auto vid_path = std::filesystem::path(vid_name.toStdString());
+    auto extension = vid_path.extension();
 
-
-    if (vid_path.extension() == ".mp4") {
+    if (extension == ".mp4") {
 
         auto media = std::make_shared<VideoData>();
         media->LoadMedia(vid_name.toStdString());
         _data_manager->setMedia(media);
 
-    } else if (vid_path.extension() == ".h5") {
-
-        auto media = std::make_shared<HDF5Data>();
-        media->LoadMedia(vid_name.toStdString());
-        _data_manager->setMedia(media);
-
-    } else if (vid_path.extension() == ".mat") {
-
-        std::cout << "Loading MAT video file" << std::endl;
+    } else if (extension == ".h5" || extension == ".mat") {
 
         auto media = std::make_shared<HDF5Data>();
         media->LoadMedia(vid_name.toStdString());
@@ -150,6 +142,7 @@ void MainWindow::Load_Video()
 
     } else {
         std::cout << "Video file with extension " << vid_path.extension() << " not supported" << std::endl;
+        return;
     }
 
     _LoadData();
