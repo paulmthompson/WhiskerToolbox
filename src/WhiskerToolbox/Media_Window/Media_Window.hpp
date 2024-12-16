@@ -2,6 +2,7 @@
 #define MEDIA_WINDOW_HPP
 
 #include "DataManager.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
 
 #include <QGraphicsScene>
 #include <QtCore/QtGlobal>

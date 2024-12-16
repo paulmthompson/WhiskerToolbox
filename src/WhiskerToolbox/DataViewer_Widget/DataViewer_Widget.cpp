@@ -3,8 +3,6 @@
 #include "ui_DataViewer_Widget.h"
 
 #include "DataManager.hpp"
-#include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
 
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
@@ -64,11 +62,8 @@ void DataViewer_Widget::_refreshAvailableFeatures() {
     ui->available_features_table->setColumnCount(1);
     ui->available_features_table->setHorizontalHeaderLabels(headers);
 
-    _insertRows(_data_manager->getKeys<PointData>());
-    _insertRows(_data_manager->getKeys<LineData>());
-    _insertRows(_data_manager->getKeys<MaskData>());
-    _insertRows(_data_manager->getAnalogTimeSeriesKeys());
-    _insertRows(_data_manager->getDigitalTimeSeriesKeys());
+    _insertRows(_data_manager->getAllKeys());
+
 }
 
 void DataViewer_Widget::_highlightAvailableFeature(int row, int column) {

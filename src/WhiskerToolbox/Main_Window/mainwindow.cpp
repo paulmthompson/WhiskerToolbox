@@ -2,13 +2,15 @@
 
 #include "ui_mainwindow.h"
 
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+
 #include "analog_viewer.hpp"
 
 #include "DataManager.hpp"
 #include "DataManager/Media/HDF5_Data.hpp"
 #include "DataManager/Media/Image_Data.hpp"
 #include "DataManager/Media/Video_Data.hpp"
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
 #include "DockAreaWidget.h"
@@ -184,12 +186,12 @@ void MainWindow::_loadAnalogTimeSeriesCSV()
     auto path = std::filesystem::path(filename.toStdString());
     auto key = path.filename().replace_extension("").string();
 
-    _data_manager->createAnalogTimeSeries(key);
+    _data_manager->setData<AnalogTimeSeries>(key);
 
-    _data_manager->getAnalogTimeSeries(key)->setData(series);
+    _data_manager->getData<AnalogTimeSeries>(key)->setData(series);
 
     std::cout << "Loaded series " << key << " with " <<
-        _data_manager->getAnalogTimeSeries(key)->getAnalogTimeSeries().size() << " points " << std::endl;
+        _data_manager->getData<AnalogTimeSeries>(key)->getAnalogTimeSeries().size() << " points " << std::endl;
 
     if (_widgets.find("analog_viewer") != _widgets.end()) {
         dynamic_cast<Analog_Viewer*>(_widgets["analog_viewer"].get())->plotAnalog(key);
@@ -212,12 +214,12 @@ void MainWindow::_loadDigitalTimeSeriesCSV(){
     auto path = std::filesystem::path(filename.toStdString());
     auto key = path.filename().replace_extension("").string();
 
-    _data_manager->createDigitalTimeSeries(key);
+    _data_manager->setData<DigitalIntervalSeries>(key);
 
-    _data_manager->getDigitalTimeSeries(key)->setData(series);
+    _data_manager->getData<DigitalIntervalSeries>(key)->setData(series);
 
     std::cout << "Loaded series " << key << " with " <<
-                                                     _data_manager->getDigitalTimeSeries(
+                                                     _data_manager->getData<DigitalIntervalSeries>(
                                                              key)->getDigitalIntervalSeries().size() << " points " << std::endl;
 
     if (_widgets.find("analog_viewer") != _widgets.end()) {

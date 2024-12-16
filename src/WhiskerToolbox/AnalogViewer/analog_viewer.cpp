@@ -4,8 +4,11 @@
 #include "ui_analog_viewer.h"
 
 #include "utils/string_manip.hpp"
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager.hpp"
+
 #include "DigitalTimeSeriesGraph.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
@@ -46,10 +49,10 @@ Analog_Viewer::Analog_Viewer(std::shared_ptr<DataManager> data_manager, TimeScro
     _playhead->setTwoSided(true);
     ui->plot->addGraph(_playhead);
 
-    for (auto name : _data_manager->getAnalogTimeSeriesKeys()) {
+    for (auto name : _data_manager->getKeys<AnalogTimeSeries>()) {
         plotAnalog(name);
     }
-    for (auto name : _data_manager->getDigitalTimeSeriesKeys()) {
+    for (auto name : _data_manager->getKeys<DigitalIntervalSeries>()) {
         plotDigital(name);
     }
     _setZoom();
@@ -106,7 +109,7 @@ void Analog_Viewer::plotAnalog(std::string const & name){
         return;
     }
 
-    auto data = _data_manager->getAnalogTimeSeries(name)->getAnalogTimeSeries();
+    auto data = _data_manager->getData<AnalogTimeSeries>(name)->getAnalogTimeSeries();
 
     // Loading data into JKQTPlotter datastore
     JKQTPDatastore* ds = ui->plot->getDatastore();
@@ -166,7 +169,7 @@ void Analog_Viewer::plotDigital(std::string const & name){
         return;
     }
 
-    auto data = _data_manager->getDigitalTimeSeries(name)->getDigitalIntervalSeries();
+    auto data = _data_manager->getData<DigitalIntervalSeries>(name)->getDigitalIntervalSeries();
 
     // Configure JKQTPlotter graph object
     DigitalTimeSeriesGraph* graph = new DigitalTimeSeriesGraph(ui->plot->getPlotter());

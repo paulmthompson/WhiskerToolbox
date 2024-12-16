@@ -2,10 +2,6 @@
 #define DATAMANAGER_HPP
 
 #include "Media/Media_Data.hpp"
-#include "Lines/Line_Data.hpp"
-#include "Masks/Mask_Data.hpp"
-#include "Points/Point_Data.hpp"
-#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include <functional> // std::function
 #include <memory> // std::shared_ptr
@@ -16,6 +12,12 @@
 #include <vector> // std::vector
 
 class AnalogTimeSeries;
+class DigitalEventSeries;
+class DigitalIntervalSeries;
+class PointData;
+class LineData;
+class MaskData;
+
 class TimeFrame;
 
 class DataManager {
@@ -26,14 +28,6 @@ public:
     void setMedia(std::shared_ptr<MediaData> media) {
         _data["media"] = media;
     };
-
-    void createAnalogTimeSeries(std::string const & analog_key);
-    std::shared_ptr<AnalogTimeSeries> getAnalogTimeSeries(std::string const & analog_key);
-    std::vector<std::string> getAnalogTimeSeriesKeys();
-
-    void createDigitalTimeSeries(std::string const & digital_key);
-    std::shared_ptr<DigitalIntervalSeries> getDigitalTimeSeries(std::string const & digital_key);
-    std::vector<std::string> getDigitalTimeSeriesKeys();
 
     std::shared_ptr<TimeFrame> getTime() {return _time;};
 
@@ -54,6 +48,17 @@ public:
 
     void load_A(const std::string & filepath);
     void load_B(const std::string & filepath);
+
+    std::vector<std::string> getAllKeys()
+    {
+        std::vector<std::string> keys;
+        for (const auto& [key, value] : _data) {
+
+            keys.push_back(key);
+
+        }
+        return keys;
+    }
 
     template<typename T>
     std::vector<std::string> getKeys()
@@ -87,10 +92,6 @@ public:
 
 private:
 
-    std::unordered_map<std::string, std::shared_ptr<AnalogTimeSeries>> _analog;
-
-    std::unordered_map<std::string, std::shared_ptr<DigitalIntervalSeries>> _digital;
-
     std::shared_ptr<TimeFrame> _time;
 
     std::vector<ObserverCallback> _observers;
@@ -99,7 +100,9 @@ private:
                                         std::shared_ptr<MediaData>,
                                         std::shared_ptr<PointData>,
                                         std::shared_ptr<LineData>,
-                                        std::shared_ptr<MaskData>>> _data;
+                                        std::shared_ptr<MaskData>,
+                                        std::shared_ptr<AnalogTimeSeries>,
+                                        std::shared_ptr<DigitalIntervalSeries>>> _data;
 
 };
 

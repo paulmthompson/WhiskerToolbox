@@ -4,6 +4,8 @@
 #include "ui_contact_widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
@@ -35,7 +37,7 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeSc
         _contact_imgs.push_back(QImage(130,130,QImage::Format_Grayscale8));
     }
 
-    _data_manager->createDigitalTimeSeries("Contact_Events");
+    _data_manager->setData<DigitalIntervalSeries>("Contact_Events");
 
     _scene = new QGraphicsScene();
     _scene->setSceneRect(0, 0, 650, 150);
@@ -142,7 +144,7 @@ void Contact_Widget::updateFrame(int frame_id)
 
     }
 
-    auto contactEvents = _data_manager->getDigitalTimeSeries("Contact_Events");
+    auto contactEvents = _data_manager->getData<DigitalIntervalSeries>("Contact_Events");
 
     if (contactEvents->size() != 0) {
         _drawContactRectangles(frame_id);
@@ -158,7 +160,7 @@ void Contact_Widget::updateFrame(int frame_id)
 void Contact_Widget::_updateContactWidgets(int frame_id)
 {
 
-    auto const contactEvents = _data_manager->getDigitalTimeSeries("Contact_Events");
+    auto const contactEvents = _data_manager->getData<DigitalIntervalSeries>("Contact_Events");
 
     if (contactEvents->size() == 0)
     {
@@ -340,7 +342,7 @@ void Contact_Widget::_saveContactBlocks() {
 
     fout.open(block_output.append("contact_BLOCKS.csv").string(), std::fstream::out);
 
-    auto contactEvents = _data_manager->getDigitalTimeSeries("Contact_Events")->getDigitalIntervalSeries();
+    auto contactEvents = _data_manager->getData<DigitalIntervalSeries>("Contact_Events")->getDigitalIntervalSeries();
 
     for (auto & event : contactEvents) {
         fout << std::round(event.first) << "," << std::round(event.second) << "\n";
@@ -378,7 +380,7 @@ void Contact_Widget::_loadContact() {
 
 void Contact_Widget::_buildContactTable()
 {
-    auto contactEvents = _data_manager->getDigitalTimeSeries("Contact_Events")->getDigitalIntervalSeries();
+    auto contactEvents = _data_manager->getData<DigitalIntervalSeries>("Contact_Events")->getDigitalIntervalSeries();
 
     ui->contact_table->setRowCount(0);
     for (int i=0; i < contactEvents.size(); i++)
@@ -427,7 +429,7 @@ void Contact_Widget::_calculateContactPeriods()
 
     ui->total_contact_label->setText(QString::number(contactEvents.size()));
 
-    _data_manager->getDigitalTimeSeries("Contact_Events")->setData(contactEvents);
+    _data_manager->getData<DigitalIntervalSeries>("Contact_Events")->setData(contactEvents);
 
     _buildContactTable();
 }

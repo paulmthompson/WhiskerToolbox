@@ -2,8 +2,13 @@
 #include <filesystem>
 
 #include "DataManager.hpp"
-
+#include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
+#include "Points/Point_Data.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+
 #include "TimeFrame.hpp"
 
 #include "utils/hdf5_mask_load.hpp"
@@ -17,36 +22,6 @@ DataManager::DataManager() :
     _time{std::make_shared<TimeFrame>()}
 {
     _data["media"] = std::make_shared<MediaData>();
-}
-
-void DataManager::createAnalogTimeSeries(std::string const & key)
-{
-    _analog[key] = std::make_shared<AnalogTimeSeries>();
-}
-
-std::shared_ptr<AnalogTimeSeries> DataManager::getAnalogTimeSeries(std::string const & analog_key)
-{
-    return _analog[analog_key];
-}
-
-std::vector<std::string> DataManager::getAnalogTimeSeriesKeys()
-{
-    return get_keys(_analog);
-}
-
-void DataManager::createDigitalTimeSeries(std::string const & digital_key)
-{
-    _digital[digital_key] = std::make_shared<DigitalIntervalSeries>();
-}
-
-std::shared_ptr<DigitalIntervalSeries> DataManager::getDigitalTimeSeries(std::string const & digital_key)
-{
-    return _digital[digital_key];
-}
-
-std::vector<std::string> DataManager::getDigitalTimeSeriesKeys()
-{
-    return get_keys(_digital);
 }
 
 std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key)
