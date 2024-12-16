@@ -1,7 +1,8 @@
 
 #include "Media_Window.hpp"
 
-#include "Media/Media_Data.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 #include "TimeFrame.hpp"
 
 #include <QGraphicsSceneMouseEvent>
@@ -366,13 +367,15 @@ void Media_Window::_plotPointData()
 
         auto plot_color = _plot_color_with_alpha(_point_config);
 
-        float mask_height = static_cast<float>(_data_manager->getPoint(point_key)->getMaskHeight());
-        float mask_width = static_cast<float>(_data_manager->getPoint(point_key)->getMaskWidth());
+        auto point = _data_manager->getData<PointData>(point_key);
+
+        float mask_height = static_cast<float>(point->getMaskHeight());
+        float mask_width = static_cast<float>(point->getMaskWidth());
 
         auto xAspect = _canvasWidth / mask_width;
         auto yAspect = _canvasHeight / mask_height;
 
-        auto pointData = _data_manager->getPoint(point_key)->getPointsAtTime(current_time);
+        auto pointData = point->getPointsAtTime(current_time);
 
 
         auto pen = QPen(plot_color);

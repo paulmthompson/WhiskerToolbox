@@ -2,9 +2,11 @@
 #include "Whisker_Widget.hpp"
 
 #include "contact_widget.hpp"
+
 #include "DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+
 #include "janelia_config.hpp"
 #include "mainwindow.hpp"
 #include "Media_Window.hpp"
@@ -468,7 +470,7 @@ void Whisker_Widget::_loadKeypointCSV()
 
     _data_manager->createPoint(keypoint_key);
 
-    auto point = _data_manager->getPoint(keypoint_key);
+    auto point = _data_manager->getData<PointData>(keypoint_key);
     auto media = _data_manager->getData<MediaData>("media");
 
     point->setMaskHeight(media->getHeight());

@@ -21,17 +21,18 @@ DataManager::DataManager() :
 
 void DataManager::createPoint(std::string const & point_key)
 {
-    _points[point_key] = std::make_shared<PointData>();
-}
-
-std::shared_ptr<PointData> DataManager::getPoint(std::string const & point_key)
-{
-    return _points[point_key];
+    _data[point_key] = std::make_shared<PointData>();
 }
 
 std::vector<std::string> DataManager::getPointKeys()
 {
-    return get_keys(_points);
+    std::vector<std::string> point_keys;
+    for (const auto& [key, value] : _data) {
+        if (std::holds_alternative<std::shared_ptr<PointData>>(value)) {
+            point_keys.push_back(key);
+        }
+    }
+    return point_keys;
 }
 
 void DataManager::createLine(const std::string line_key)

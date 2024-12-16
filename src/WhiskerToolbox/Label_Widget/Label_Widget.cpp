@@ -3,6 +3,8 @@
 #include "ui_Label_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+
 #include "label_maker.hpp"
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
@@ -24,11 +26,11 @@ Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> dat
 {
     ui->setupUi(this);
 
-    if (!_data_manager->getPoint("labels")){
+    if (!_data_manager->getData<PointData>("labels")){
         _data_manager->createPoint("labels");
         _scene->addPointDataToScene("labels");
         _scene->changePointColor("labels", "#ffe600");
-        auto point = _data_manager->getPoint("labels");
+        auto point = _data_manager->getData<PointData>("labels");
         auto media = _data_manager->getData<MediaData>("media");
         point->setMaskHeight(media->getHeight());
         point->setMaskWidth(media->getWidth());
@@ -99,7 +101,8 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
 
   _label_maker->addLabel(img, static_cast<int>(x_media),
                          static_cast<int>(y_media));
-  auto point = _data_manager->getPoint("labels");
+
+  auto point = _data_manager->getData<PointData>("labels");
   // point->addPointAtTime(_data_manager->getMediaData()->getRawData(_data_manager->getTime()->getLastLoadedFrame()), x_media, y_media);
   point->clearPointsAtTime(frame_number);
   point->addPointAtTime(frame_number, y_media, x_media);

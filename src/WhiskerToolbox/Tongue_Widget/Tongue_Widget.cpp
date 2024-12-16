@@ -4,6 +4,8 @@
 #include "ui_Tongue_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+
 #include "Grabcut_Widget/Grabcut_Widget.hpp"
 #include "Media_Window.hpp"
 #include "Points/Point_Data.hpp"
@@ -173,7 +175,7 @@ void Tongue_Widget::_loadCSVJawKeypoints(){
 
     _data_manager->createPoint(keypoint_key);
 
-    auto point = _data_manager->getPoint(keypoint_key);
+    auto point = _data_manager->getData<PointData>(keypoint_key);
 
     auto media = _data_manager->getData<MediaData>("media");
     for (auto & [key, val] : keypoints) {

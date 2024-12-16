@@ -53,8 +53,10 @@ void Tracking_Widget::openWidget() {
 
     auto media = _data_manager->getData<MediaData>("media");
 
-    _data_manager->getPoint("tracking_point")->setMaskHeight(media->getHeight());
-    _data_manager->getPoint("tracking_point")->setMaskWidth(media->getWidth());
+    auto point = _data_manager->getData<PointData>("tracking_point");
+
+    point->setMaskHeight(media->getHeight());
+    point->setMaskWidth(media->getWidth());
 
     _scene->addPointDataToScene("tracking_point");
 
@@ -86,8 +88,10 @@ void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
             "(" + std::to_string(static_cast<int>(x_media)) + " , " + std::to_string(static_cast<int>(y_media)) +
             ")";
         ui->location_label->setText(QString::fromStdString(tracking_label));
-        _data_manager->getPoint("tracking_point")->clearPointsAtTime(frame_id);
-        _data_manager->getPoint("tracking_point")->addPointAtTime(frame_id, y_media, x_media);
+
+        auto point = _data_manager->getData<PointData>("tracking_point");
+        point->clearPointsAtTime(frame_id);
+        point->addPointAtTime(frame_id, y_media, x_media);
 
         _buildContactTable();
 
@@ -108,7 +112,7 @@ void Tracking_Widget::LoadFrame(int frame_id)
     }
 
 
-    auto points = _data_manager->getPoint("tracking_point")->getPointsAtTime(frame_id);
+    auto points = _data_manager->getData<PointData>("tracking_point")->getPointsAtTime(frame_id);
 
     if (!points.empty()) {
 
@@ -139,7 +143,7 @@ void Tracking_Widget::LoadFrame(int frame_id)
 void Tracking_Widget::_buildContactTable()
 {
 
-    auto point_data = _data_manager->getPoint("tracking_point");
+    auto point_data = _data_manager->getData<PointData>("tracking_point");
 
     //auto point_frames = point_data->getTimesWithPoints();
 
@@ -177,12 +181,12 @@ void Tracking_Widget::_tableClicked(int row, int column)
 void Tracking_Widget::_propagateLabel(int frame_id)
 {
 
-    auto prev_points = _data_manager->getPoint("tracking_point")->getPointsAtTime(_previous_frame);
+    auto prev_points = _data_manager->getData<PointData>("tracking_point")->getPointsAtTime(_previous_frame);
 
     for (int i = _previous_frame + 1; i <= frame_id; i ++)
     {
-        _data_manager->getPoint("tracking_point")->clearPointsAtTime(i);
-        _data_manager->getPoint("tracking_point")->addPointAtTime(i, prev_points[0].x, prev_points[0].y);
+        _data_manager->getData<PointData>("tracking_point")->clearPointsAtTime(i);
+        _data_manager->getData<PointData>("tracking_point")->addPointAtTime(i, prev_points[0].x, prev_points[0].y);
     }
 
     _scene->UpdateCanvas();
@@ -209,7 +213,7 @@ void Tracking_Widget::_loadKeypointCSV()
 
     //_data_manager->createPoint(keypoint_key);
 
-    auto point = _data_manager->getPoint(keypoint_key);
+    auto point = _data_manager->getData<PointData>(keypoint_key);
     auto media = _data_manager->getData<MediaData>("media");
 
     point->setMaskHeight(media->getHeight());
@@ -246,7 +250,7 @@ void Tracking_Widget::_saveKeypointCSV() {
 
     fout.open(frame_by_frame_output.append("keypoint.csv").string(), std::fstream::out);
 
-    auto point_data = _data_manager->getPoint("tracking_point")->getData();
+    auto point_data =_data_manager->getData<PointData>("tracking_point")->getData();
 
     for (auto& [key, val] : point_data)
     {

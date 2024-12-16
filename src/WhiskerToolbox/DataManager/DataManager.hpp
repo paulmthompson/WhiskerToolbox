@@ -28,7 +28,6 @@ public:
     };
 
     void createPoint(std::string const & point_key);
-    std::shared_ptr<PointData> getPoint(std::string const & point_key);
     std::vector<std::string> getPointKeys();
 
     void createLine(const std::string line_key);
@@ -78,8 +77,6 @@ public:
 
 private:
 
-    std::unordered_map<std::string,std::shared_ptr<PointData>> _points;
-
     std::unordered_map<std::string,std::shared_ptr<LineData>> _lines;
 
     std::unordered_map<std::string, std::shared_ptr<MaskData>> _masks;
@@ -92,7 +89,9 @@ private:
 
     std::vector<ObserverCallback> _observers;
 
-    std::unordered_map<std::string, std::variant<std::shared_ptr<MediaData>>> _data;
+    std::unordered_map<std::string, std::variant<
+                                        std::shared_ptr<MediaData>,
+                                        std::shared_ptr<PointData>>> _data;
 
 };
 
