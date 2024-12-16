@@ -251,6 +251,10 @@ void MainWindow::_loadJSONConfig()
         {
             _scene->addPointDataToScene(data.key);
             _scene->changePointColor(data.key, data.color);
+        } else if (data.data_class == "MaskData")
+        {
+            _scene->addMaskDataToScene(data.key);
+            _scene->changeMaskColor(data.key, data.color);
         }
     }
 

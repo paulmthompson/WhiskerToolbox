@@ -174,6 +174,43 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             dm->setData<PointData>(keypoint_key, point_data);
 
             data_info_list.push_back({keypoint_key, "PointData", color});
+
+        } else if (data_type == "mask") {
+
+            if (!std::filesystem::exists(file_path)) {
+                std::cerr << "File does not exist: " << file_path << std::endl;
+                continue;
+            }
+
+            std::string color = "0000FF";
+            if (item.contains("color"))
+            {
+                color = item["color"];
+            }
+
+            std::string frame_key = item["frame_key"];
+            std::string prob_key = item["probability_key"];
+            std::string x_key = item["x_key"];
+            std::string y_key = item["y_key"];
+
+            auto frames =  read_array_hdf5(file_path, frame_key);
+            auto probs = read_ragged_hdf5(file_path, prob_key);
+            auto y_coords = read_ragged_hdf5(file_path, y_key);
+            auto x_coords = read_ragged_hdf5(file_path, x_key);
+
+            auto mask_data = std::make_shared<MaskData>();
+
+            for (std::size_t i = 0; i < frames.size(); i++) {
+                auto frame = frames[i];
+                auto prob = probs[i];
+                auto x = x_coords[i];
+                auto y = y_coords[i];
+                mask_data->addMaskAtTime(frame, x, y);
+            }
+
+            dm->setData<MaskData>(name, mask_data);
+
+            data_info_list.push_back({name, "MaskData", color});
         }
     }
 
