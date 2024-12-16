@@ -1,8 +1,10 @@
 
 #include "Media_Window.hpp"
 
-#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+
 #include "TimeFrame.hpp"
 
 #include <QGraphicsSceneMouseEvent>
@@ -257,7 +259,7 @@ void Media_Window::_plotLineData()
     {
         auto plot_color = _plot_color_with_alpha(_line_config);
 
-        auto lineData = _data_manager->getLine(line_key)->getLinesAtTime(current_time);
+        auto lineData = _data_manager->getData<LineData>(line_key)->getLinesAtTime(current_time);
 
         for (auto const & single_line : lineData) {
 

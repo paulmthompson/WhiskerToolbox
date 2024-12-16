@@ -37,18 +37,18 @@ std::vector<std::string> DataManager::getPointKeys()
 
 void DataManager::createLine(const std::string line_key)
 {
-    _lines[line_key] = std::make_shared<LineData>();
-}
-
-std::shared_ptr<LineData> DataManager::getLine(const std::string line_key)
-{
-
-    return _lines[line_key];
+    _data[line_key] = std::make_shared<LineData>();
 }
 
 std::vector<std::string> DataManager::getLineKeys()
 {
-    return get_keys(_lines);
+    std::vector<std::string> line_keys;
+    for (const auto& [key, value] : _data) {
+        if (std::holds_alternative<std::shared_ptr<LineData>>(value)) {
+            line_keys.push_back(key);
+        }
+    }
+    return line_keys;
 }
 
 void DataManager::createMask(const std::string& mask_key)

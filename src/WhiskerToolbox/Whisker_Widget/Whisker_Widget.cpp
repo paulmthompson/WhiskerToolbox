@@ -254,8 +254,8 @@ void Whisker_Widget::_deleteWhisker()
 
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    if (_data_manager->getLine(whisker_name)) {
-        _data_manager->getLine(whisker_name)->clearLinesAtTime(current_time);
+    if (_data_manager->getData<LineData>(whisker_name)) {
+        _data_manager->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
 
         _scene->UpdateCanvas();
     }
@@ -422,9 +422,9 @@ void Whisker_Widget::_exportImageCSV()
     {
         std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
 
-        if (_data_manager->getLine(whisker_name)) {
+        if (_data_manager->getData<LineData>(whisker_name)) {
 
-            auto whiskers = _data_manager->getLine(whisker_name)->getLinesAtTime(current_time);
+            auto whiskers = _data_manager->getData<LineData>(whisker_name)->getLinesAtTime(current_time);
 
             std::string whisker_folder = _output_path.string() + "/" + std::to_string(i) + "/";
             std::filesystem::create_directory(whisker_folder);
@@ -498,7 +498,7 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, c
 {
     std::string const whisker_name = whisker_group_name + "_" + std::to_string(whisker_id);
 
-    if (!_data_manager->getLine(whisker_name)) {
+    if (!_data_manager->getData<LineData>(whisker_name)) {
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->createLine(whisker_name);
         _scene->addLineDataToScene(whisker_name);
@@ -544,8 +544,8 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
             std::string whisker_group_name = "whisker";
             std::string whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
 
-            if (_data_manager->getLine(whisker_name)) {
-                 _data_manager->getLine(whisker_name)->addPointToLineInterpolate(
+            if (_data_manager->getData<LineData>(whisker_name)) {
+                 _data_manager->getData<LineData>(whisker_name)->addPointToLineInterpolate(
                          current_time,
                          0,
                          x_media,
@@ -580,7 +580,7 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
 
     for (auto &[time, whiskers_in_frame]: whiskers_from_janelia) {
         for (auto &w: whiskers_in_frame) {
-            _data_manager->getLine("unlabeled_whiskers")->addLineAtTime(time, convert_to_Line2D(w));
+            _data_manager->getData<LineData>("unlabeled_whiskers")->addLineAtTime(time, convert_to_Line2D(w));
         }
     }
 }
@@ -1064,7 +1064,7 @@ std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string c
         auto media = dm->getData<MediaData>("media");
         auto const frame_index = media->getFrameIndexFromNumber(std::stoi(frame_num));
 
-        dm->getLine(line_key)->addLineAtTime(frame_index, whisker);
+        dm->getData<LineData>(line_key)->addLineAtTime(frame_index, whisker);
         loaded_frames.push_back(frame_index);
     }
 
@@ -1085,7 +1085,7 @@ void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filen
     auto y_coords = read_ragged_hdf5(filename, "x");
     auto x_coords = read_ragged_hdf5(filename, "y");
 
-    auto line = dm->getLine(line_key);
+    auto line = dm->getData<LineData>(line_key);
 
     for (std::size_t i = 0; i < frames.size(); i ++) {
         line->addLineAtTime(frames[i], x_coords[i], y_coords[i]);
@@ -1107,7 +1107,7 @@ void order_whiskers_by_position(DataManager* dm, std::string const & whisker_gro
 {
 
     const auto current_time = dm->getTime()->getLastLoadedFrame();
-    std::vector<Line2D> whiskers = dm->getLine("unlabeled_whiskers")->getLinesAtTime(current_time);
+    std::vector<Line2D> whiskers = dm->getData<LineData>("unlabeled_whiskers")->getLinesAtTime(current_time);
 
     for (std::size_t i = 0; i < static_cast<std::size_t>(num_whisker_to_track); i++) {
 
@@ -1117,16 +1117,16 @@ void order_whiskers_by_position(DataManager* dm, std::string const & whisker_gro
 
         std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
 
-        dm->getLine(whisker_name)->clearLinesAtTime(current_time);
-        dm->getLine(whisker_name)->addLineAtTime(current_time, whiskers[i]);
+        dm->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
+        dm->getData<LineData>(whisker_name)->addLineAtTime(current_time, whiskers[i]);
     }
 
-    dm->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
+    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
     std::cout << "The size of remaining whiskers is " << whiskers.size() << std::endl;
 
     for (std::size_t i = static_cast<std::size_t>(num_whisker_to_track); i < whiskers.size(); i++) {
-        dm->getLine("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[i]);
+        dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[i]);
     }
 }
 
@@ -1155,8 +1155,8 @@ bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to
     {
         std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
 
-        if (dm->getLine(whisker_name)) {
-            auto whiskers = dm->getLine(whisker_name)->getLinesAtTime(current_time);
+        if (dm->getData<LineData>(whisker_name)) {
+            auto whiskers = dm->getData<LineData>(whisker_name)->getLinesAtTime(current_time);
             if (whiskers.size() > 0) {
                 if (whiskers[0].size() > 0) {
                     whiskers_in_frame += 1;
@@ -1188,10 +1188,10 @@ void add_whiskers_to_data_manager(DataManager* dm, std::vector<Line2D> & whisker
 {
 
     auto current_time = dm->getTime()->getLastLoadedFrame();
-    dm->getLine("unlabeled_whiskers")->clearLinesAtTime(current_time);
+    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
     for (auto & w: whiskers) {
-        dm->getLine("unlabeled_whiskers")->addLineAtTime(current_time, w);
+        dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, w);
     }
 
     if (num_whisker_to_track > 0) {

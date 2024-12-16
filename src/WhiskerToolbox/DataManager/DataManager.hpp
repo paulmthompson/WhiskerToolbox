@@ -31,7 +31,6 @@ public:
     std::vector<std::string> getPointKeys();
 
     void createLine(const std::string line_key);
-    std::shared_ptr<LineData> getLine(const std::string line_key);
     std::vector<std::string> getLineKeys();
 
     void createMask(const std::string& mask_key);
@@ -77,8 +76,6 @@ public:
 
 private:
 
-    std::unordered_map<std::string,std::shared_ptr<LineData>> _lines;
-
     std::unordered_map<std::string, std::shared_ptr<MaskData>> _masks;
 
     std::unordered_map<std::string, std::shared_ptr<AnalogTimeSeries>> _analog;
@@ -91,7 +88,8 @@ private:
 
     std::unordered_map<std::string, std::variant<
                                         std::shared_ptr<MediaData>,
-                                        std::shared_ptr<PointData>>> _data;
+                                        std::shared_ptr<PointData>,
+                                        std::shared_ptr<LineData>>> _data;
 
 };
 
