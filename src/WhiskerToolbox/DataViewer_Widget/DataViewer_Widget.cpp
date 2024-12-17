@@ -8,6 +8,7 @@
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "utils/qt_utilities.hpp"
+#include "OpenGLWidget.hpp"
 
 #include <QTableWidget>
 
@@ -30,6 +31,8 @@ DataViewer_Widget::DataViewer_Widget(Media_Window *scene,
     connect(ui->refresh_dm_features, &QPushButton::clicked, this, &DataViewer_Widget::_refreshAvailableFeatures);
     connect(ui->add_feature_to_model, &QPushButton::clicked, this, &DataViewer_Widget::_addFeatureToModel);
     connect(ui->delete_feature_button, &QPushButton::clicked, this, &DataViewer_Widget::_deleteFeatureFromModel);
+    connect(ui->available_features_table, &QTableWidget::cellClicked, this, &DataViewer_Widget::_highlightAvailableFeature);
+    connect(time_scrollbar, &TimeScrollBar::timeChanged, ui->openGLWidget, &OpenGLWidget::updateCanvas);
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -109,6 +112,9 @@ void DataViewer_Widget::_addFeatureToModel() {
 
         // Clear the highlighted feature
         _highlighted_available_feature.clear();
+
+        // Plot the selected feature
+        _plotSelectedFeature();
     }
 }
 
@@ -128,6 +134,18 @@ void DataViewer_Widget::_deleteFeatureFromModel() {
 
         // Refresh the available features table
         _refreshAvailableFeatures();
+    }
+}
+
+void DataViewer_Widget::_plotSelectedFeature() {
+
+    // Loop through model_features
+    for (const auto& key : _model_features) {
+        if (_data_manager->getType(key) == "AnalogTimeSeries") {
+            std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
+            auto series = _data_manager->getData<AnalogTimeSeries>(key);
+            ui->openGLWidget->addAnalogTimeSeries(series);
+        }
     }
 }
 

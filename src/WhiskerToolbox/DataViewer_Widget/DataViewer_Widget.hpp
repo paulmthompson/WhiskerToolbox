@@ -41,6 +41,7 @@ private slots:
     void _highlightAvailableFeature(int row, int column);
     void _highlightModelFeature(int row, int column);
     void _deleteFeatureFromModel();
+    void _plotSelectedFeature();
 private:
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
@@ -51,6 +52,7 @@ private:
     QString _highlighted_available_feature;
     QString _highlighted_model_feature;
     std::unordered_set<std::string> _model_features;
+
 };
 
 
