@@ -1,6 +1,7 @@
 #ifndef ANALOG_TIME_SERIES_HPP
 #define ANALOG_TIME_SERIES_HPP
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,14 @@ public:
     void setData(std::vector<float> analog_vector) { _data = analog_vector;};
 
     std::vector<float> const& getAnalogTimeSeries() const;
+
+    float getMinValue() const {
+        return *std::min_element(_data.begin(), _data.end());
+    }
+
+    float getMaxValue() const {
+        return *std::max_element(_data.begin(), _data.end());
+    }
 protected:
 
 private:

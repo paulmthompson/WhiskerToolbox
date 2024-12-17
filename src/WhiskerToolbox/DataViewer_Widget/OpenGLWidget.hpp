@@ -49,6 +49,7 @@ private:
     void adjustFakeData();
 
     std::vector<std::shared_ptr<AnalogTimeSeries>> _analog_series;
+    std::vector<std::pair<float, float>> _series_min_max;
     XAxis _xAxis;
 
     QOpenGLShaderProgram *m_program {0};
