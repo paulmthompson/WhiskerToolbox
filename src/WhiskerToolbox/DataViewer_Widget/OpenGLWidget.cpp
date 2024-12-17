@@ -5,6 +5,7 @@
 #include <QOpenGLShader>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QWheelEvent>
 
 #include <iostream>
 #include <sstream>
@@ -113,6 +114,7 @@ void OpenGLWidget::initializeGL()
     m_vbo.allocate(vertices, sizeof(vertices));
     */
     //generateRandomValues(100);
+    generateAndAddFakeData(100000);
 
     setupVertexAttribs();
 
@@ -141,9 +143,22 @@ void OpenGLWidget::paintGL() {
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
+    for (const auto &series : _analog_series) {
+        adjustFakeData();
+        const auto &data = series->getAnalogTimeSeries();
+        m_vertices.clear();
+        for (int i = _xAxis.getStart(); i <= _xAxis.getEnd() && i < data.size(); ++i) {
+            m_vertices.push_back(static_cast<GLfloat>(i - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f); // X coordinate
+            m_vertices.push_back(data[i]); // Y coordinate
+        }
+        m_vbo.bind();
+        m_vbo.allocate(m_vertices.data(), m_vertices.size() * sizeof(GLfloat));
+        m_vbo.release();
+        glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 2);
+    }
     //glDrawArrays(GL_LINES, 0, 2);
-    generateRandomValues(100);
-    glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 2);
+    //generateRandomValues(100);
+    //glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 2);
 
     m_program->release();
 }
@@ -175,4 +190,35 @@ void OpenGLWidget::generateRandomValues(int count) {
     m_vbo.bind();
     m_vbo.allocate(m_vertices.data(), m_vertices.size() * sizeof(GLfloat));
     m_vbo.release();
+}
+
+void OpenGLWidget::generateAndAddFakeData(int count) {
+    std::vector<float> data(count);
+    for (int i = 0; i < count; ++i) {
+        data[i] = static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f;
+    }
+    auto series = std::make_shared<AnalogTimeSeries>(data);
+    addAnalogTimeSeries(series);
+}
+
+void OpenGLWidget::adjustFakeData()
+{
+    std::vector<float> new_series;
+    for (int i = 0; i < _analog_series[0]->getAnalogTimeSeries().size(); i ++)
+    {
+        new_series.push_back(static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f);
+    }
+    _analog_series[0]->setData(new_series);
+}
+
+void OpenGLWidget::wheelEvent(QWheelEvent *event) {
+    int numDegrees = event->angleDelta().y() / 8;
+    int numSteps = numDegrees / 15;
+    int zoomFactor = 10; // Adjust this value to control zoom sensitivity
+
+    int center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
+    int zoom = (_xAxis.getEnd() - _xAxis.getStart()) - numSteps * zoomFactor;
+
+    _xAxis.setCenterAndZoom(center, zoom);
+    updateCanvas();
 }

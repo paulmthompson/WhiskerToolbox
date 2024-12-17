@@ -74,6 +74,7 @@ set(PROJECT_SOURCES
         DataViewer_Widget/DataViewer_Widget.hpp
         DataViewer_Widget/OpenGLWidget.cpp
         DataViewer_Widget/OpenGLWidget.hpp
+        DataViewer_Widget/XAxis.hpp
 
         ML_Widget/ML_Widget.ui
         ML_Widget/ML_Widget.hpp
@@ -114,7 +115,6 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
-
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)

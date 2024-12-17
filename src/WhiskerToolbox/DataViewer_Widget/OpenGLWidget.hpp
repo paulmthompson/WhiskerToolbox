@@ -1,6 +1,8 @@
 #ifndef OPENGLWIDGET_HPP
 #define OPENGLWIDGET_HPP
 
+#include "XAxis.hpp"
+
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
@@ -14,6 +16,7 @@
 
 
 class AnalogTimeSeries;
+class QWheelEvent;
 
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -35,14 +38,18 @@ protected:
     void paintGL() override;
 
     void resizeGL(int w, int h) override;
+    void wheelEvent(QWheelEvent *event) override;
 
     void cleanup();
 
 private:
     void setupVertexAttribs();
     void generateRandomValues(int count);
+    void generateAndAddFakeData(int count);
+    void adjustFakeData();
 
     std::vector<std::shared_ptr<AnalogTimeSeries>> _analog_series;
+    XAxis _xAxis;
 
     QOpenGLShaderProgram *m_program {0};
     QOpenGLBuffer m_vbo;
