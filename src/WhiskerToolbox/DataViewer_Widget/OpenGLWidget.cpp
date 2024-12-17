@@ -150,9 +150,12 @@ void OpenGLWidget::paintGL() {
         float maxY = _series_min_max[i].second;
 
         m_vertices.clear();
-        for (int j = _xAxis.getStart(); j <= _xAxis.getEnd() && j < data.size(); ++j) {
-            m_vertices.push_back(static_cast<GLfloat>(j - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f); // X coordinate
-            m_vertices.push_back((data[j] - minY) / (maxY - minY) * 2.0f - 1.0f); // Y coordinate, scaled to [-1, 1]
+        for (int j = _xAxis.getStart(); j <= _xAxis.getEnd(); ++j) {
+            auto it = data.find(j);
+            if (it != data.end()) {
+                m_vertices.push_back(static_cast<GLfloat>(j - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f); // X coordinate
+                m_vertices.push_back((it->second - minY) / (maxY - minY) * 2.0f - 1.0f); // Y coordinate, scaled to [-1, 1]
+            }
         }
         m_vbo.bind();
         m_vbo.allocate(m_vertices.data(), m_vertices.size() * sizeof(GLfloat));

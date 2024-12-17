@@ -5,13 +5,18 @@
 #include <sstream>
 #include <vector>
 
+AnalogTimeSeries::AnalogTimeSeries(std::map<int,float> analog_map)
+{
+    _data = analog_map;
+}
+
 AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector)
 {
-    _data = analog_vector;
+    setData(analog_vector);
 }
 
 
-std::vector<float> const & AnalogTimeSeries::getAnalogTimeSeries() const
+std::map<int, float> const & AnalogTimeSeries::getAnalogTimeSeries() const
 {
     return _data;
 }
