@@ -44,6 +44,9 @@ add_library(DataManager SHARED
         utils/glob.hpp
         Media/HDF5_Data.hpp
         Media/HDF5_Data.cpp
+
+        transforms/data_transforms.cpp
+        transforms/data_transforms.hpp
 )
 
 target_include_directories(DataManager PRIVATE

@@ -23,6 +23,7 @@ public:
     void setMaskWidth(int const width) {_mask_width = width;};
 
     std::vector<Mask2D> const& getMasksAtTime(int const time) const;
+    std::map<int, std::vector<Mask2D>> getData() {return _data;};
 protected:
 
 private:

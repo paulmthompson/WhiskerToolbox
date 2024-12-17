@@ -9,6 +9,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Media/Video_Data.hpp"
+#include "transforms/data_transforms.hpp"
 
 #include "TimeFrame.hpp"
 
@@ -211,6 +212,18 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             dm->setData<MaskData>(name, mask_data);
 
             data_info_list.push_back({name, "MaskData", color});
+
+            if (item.contains("operations")) {
+                for (const auto& operation : item["operations"]) {
+                    std::string operation_type = operation["type"];
+                    if (operation_type == "area") {
+                        std::cout << "Calculating area for mask: " << name << std::endl;
+                        auto area_data = area(dm->getData<MaskData>(name));
+                        std::string output_name = name + "_area";
+                        dm->setData<AnalogTimeSeries>(output_name, area_data);
+                    }
+                }
+            }
         }
     }
 
