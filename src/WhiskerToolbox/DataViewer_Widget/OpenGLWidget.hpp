@@ -9,6 +9,7 @@
 #include <QMatrix4x4>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 
@@ -24,6 +25,7 @@ public:
 
     void addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series);
     void clearSeries();
+    void setBackgroundColor(const std::string &hexColor);
 
 public slots:
     void updateCanvas();
@@ -51,6 +53,8 @@ private:
     int m_projMatrixLoc;
     int m_viewMatrixLoc;
     int m_modelMatrixLoc;
+
+    std::string m_background_color {"#000000"}; // black
 
     std::vector<GLfloat> m_vertices; // for testing
 };

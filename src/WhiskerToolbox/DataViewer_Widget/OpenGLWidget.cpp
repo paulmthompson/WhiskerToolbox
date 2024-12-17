@@ -7,6 +7,8 @@
 #include <QOpenGLFunctions>
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <cstdlib>
 #include <ctime>
 
@@ -24,6 +26,28 @@ OpenGLWidget::~OpenGLWidget() {
 void OpenGLWidget::updateCanvas()
 {
     std::cout << "Redrawing" << std::endl;
+    update();
+}
+
+void hexToRGB(const std::string &hexColor, int &r, int &g, int &b) {
+    if (hexColor[0] != '#' || hexColor.length() != 7) {
+        throw std::invalid_argument("Invalid hex color format");
+    }
+
+    std::stringstream ss;
+    ss << std::hex << hexColor.substr(1, 2);
+    ss >> r;
+    ss.clear();
+    ss << std::hex << hexColor.substr(3, 2);
+    ss >> g;
+    ss.clear();
+    ss << std::hex << hexColor.substr(5, 2);
+    ss >> b;
+}
+
+void OpenGLWidget::setBackgroundColor(const std::string &hexColor)
+{
+    m_background_color = hexColor;
     update();
 }
 
@@ -60,7 +84,9 @@ void OpenGLWidget::initializeGL()
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &OpenGLWidget::cleanup);
 
     initializeOpenGLFunctions();
-    glClearColor(0, 0, 0, 1);
+    int r, g, b;
+    hexToRGB(m_background_color, r, g, b);
+    glClearColor(r, g, b, 1);
 
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
@@ -103,6 +129,9 @@ void OpenGLWidget::setupVertexAttribs() {
 }
 
 void OpenGLWidget::paintGL() {
+    int r, g, b;
+    hexToRGB(m_background_color, r, g, b);
+    glClearColor(r, g, b, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_program->bind();
