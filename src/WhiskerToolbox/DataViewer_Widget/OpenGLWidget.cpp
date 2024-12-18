@@ -56,18 +56,22 @@ void OpenGLWidget::setBackgroundColor(const std::string &hexColor)
 static const char *vertexShaderSource =
     "#version 150\n"
     "in vec4 vertex;\n"
+    "in vec3 color;\n"
+    "out vec3 fragColor;\n"
     "uniform mat4 projMatrix;\n"
     "uniform mat4 viewMatrix;\n"
     "uniform mat4 modelMatrix;\n"
     "void main() {\n"
     "   gl_Position = projMatrix * viewMatrix * modelMatrix * vertex;\n"
+    "   fragColor = color;\n"
     "}\n";
 
 static const char *fragmentShaderSource =
     "#version 150\n"
-    "out vec4 fragColor;\n"
+    "in vec3 fragColor;\n"
+    "out vec4 outColor;\n"
     "void main() {\n"
-    "   fragColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
+    "   outColor = vec4(fragColor, 1.0);\n"
     "}\n";
 
 
@@ -88,7 +92,7 @@ void OpenGLWidget::initializeGL()
     initializeOpenGLFunctions();
     int r, g, b;
     hexToRGB(m_background_color, r, g, b);
-    glClearColor(r, g, b, 1);
+    glClearColor(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
 
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
@@ -127,14 +131,19 @@ void OpenGLWidget::setupVertexAttribs() {
     m_vbo.bind();
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), nullptr);
+    const int vertex_argument_num = 5;
+    f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), nullptr);
+
+    f->glEnableVertexAttribArray(1);
+    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<void*>(2 * sizeof(GLfloat)));
+
     m_vbo.release();
 }
 
 void OpenGLWidget::paintGL() {
     int r, g, b;
     hexToRGB(m_background_color, r, g, b);
-    glClearColor(r, g, b, 1);
+    glClearColor(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_program->bind();
@@ -155,6 +164,12 @@ void OpenGLWidget::paintGL() {
         float minY = _series_min_max[i].first;
         float maxY = _series_min_max[i].second;
 
+        // Set the color for the current series
+        hexToRGB(_series_colors[i], r, g, b);
+        float rNorm = r / 255.0f;
+        float gNorm = g / 255.0f;
+        float bNorm = b / 255.0f;
+
         m_vertices.clear();
         for (int j = _xAxis.getStart(); j <= _xAxis.getEnd(); ++j) {
             auto it = data.find(j);
@@ -163,18 +178,21 @@ void OpenGLWidget::paintGL() {
                 float yCanvasPos = (it->second - minY) / (maxY - minY) * 2.0f - 1.0f; // Y coordinate, scaled to [-1, 1]
                 m_vertices.push_back(xCanvasPos);
                 m_vertices.push_back(yCanvasPos);
+                m_vertices.push_back(rNorm);
+                m_vertices.push_back(gNorm);
+                m_vertices.push_back(bNorm);
             }
         }
         m_vbo.bind();
         m_vbo.allocate(m_vertices.data(), m_vertices.size() * sizeof(GLfloat));
         m_vbo.release();
-        glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 2);
+        glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 5);
     }
 
     // Draw horizontal line at x=0
     std::vector<GLfloat> lineVertices = {
-            0.0f, -1.0f, // Bottom of the canvas
-            0.0f, 1.0f   // Top of the canvas
+            0.0f, -1.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f, 1.0f
     };
     m_vbo.bind();
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
@@ -196,9 +214,14 @@ void OpenGLWidget::resizeGL(int w, int h) {
     m_view.translate(0, 0, -2);
 }
 
-void OpenGLWidget::addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series) {
+void OpenGLWidget::addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series, std::string color) {
+
+    std::string seriesColor = color.empty() ? generateRandomColor() : color;
+
     _analog_series.push_back(series);
     _series_min_max.emplace_back(series->getMinValue(), series->getMaxValue());
+    _series_colors.push_back(seriesColor);
+
     updateCanvas(_time);
 }
 
@@ -248,4 +271,14 @@ void OpenGLWidget::wheelEvent(QWheelEvent *event) {
 
     _xAxis.setCenterAndZoom(center, zoom);
     updateCanvas(_time);
+}
+
+std::string generateRandomColor() {
+    std::stringstream ss;
+    ss << "#" << std::hex << std::setw(6) << std::setfill('0') << (std::rand() % 0xFFFFFF);
+    auto color_string = ss.str();
+
+    std::cout << "Generated color: " << color_string << std::endl;
+
+    return color_string;
 }

@@ -26,7 +26,7 @@ public:
 
     virtual ~OpenGLWidget();
 
-    void addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series);
+    void addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series, std::string color = "");
     void clearSeries();
     void setBackgroundColor(const std::string &hexColor);
     void setXLimit(int xmax) {_xAxis.setMax(xmax); };
@@ -51,6 +51,8 @@ private:
 
     std::vector<std::shared_ptr<AnalogTimeSeries>> _analog_series;
     std::vector<std::pair<float, float>> _series_min_max;
+    std::vector<std::string> _series_colors;
+
     XAxis _xAxis;
     int _time {0};
 
@@ -68,6 +70,8 @@ private:
 
     std::vector<GLfloat> m_vertices; // for testing
 };
+
+std::string generateRandomColor();
 
 
 #endif //OPENGLWIDGET_HPP
