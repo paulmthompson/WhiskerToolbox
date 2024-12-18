@@ -124,6 +124,17 @@ public:
         return _time_frames[data_key];
     }
 
+    std::vector<std::string> getTimeFrameKeys()
+    {
+        std::vector<std::string> keys;
+        for (const auto& [key, value] : _times) {
+
+            keys.push_back(key);
+
+        }
+        return keys;
+    }
+
 private:
 
     //std::shared_ptr<TimeFrame> _time;

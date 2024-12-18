@@ -162,23 +162,35 @@ void OpenGLWidget::paintGL() {
     _xAxis.setCenterAndZoom(currentTime, zoom);
 
     for (size_t i = 0; i < _analog_series.size(); ++i) {
-        const auto &series = _analog_series[i];
+        const auto &series = _analog_series[i].series;
         const auto &data = series->getAnalogTimeSeries();
-        float minY = _series_min_max[i].first;
-        float maxY = _series_min_max[i].second;
+        float minY = _analog_series[i].min_max.first;
+        float maxY = _analog_series[i].min_max.second;
 
         // Set the color for the current series
-        hexToRGB(_series_colors[i], r, g, b);
+        hexToRGB(_analog_series[i].color, r, g, b);
         float rNorm = r / 255.0f;
         float gNorm = g / 255.0f;
         float bNorm = b / 255.0f;
 
         m_vertices.clear();
+        /*
         for (int j = _xAxis.getStart(); j <= _xAxis.getEnd(); ++j) {
             auto it = data.find(j);
             if (it != data.end()) {
                 float xCanvasPos = static_cast<GLfloat>(j - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f; // X coordinate normalized to [-1, 1]
                 float yCanvasPos = (it->second - minY) / (maxY - minY) * 2.0f - 1.0f; // Y coordinate, scaled to [-1, 1]
+                m_vertices.push_back(xCanvasPos);
+                m_vertices.push_back(yCanvasPos);
+                m_vertices.push_back(rNorm);
+                m_vertices.push_back(gNorm);
+                m_vertices.push_back(bNorm);
+            }
+        }*/
+        for (const auto& [key, value] : data) {
+            if (key >= _xAxis.getStart() && key <= _xAxis.getEnd()) {
+                float xCanvasPos = static_cast<GLfloat>(key - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f; // X coordinate normalized to [-1, 1]
+                float yCanvasPos = (value - minY) / (maxY - minY) * 2.0f - 1.0f; // Y coordinate, scaled to [-1, 1]
                 m_vertices.push_back(xCanvasPos);
                 m_vertices.push_back(yCanvasPos);
                 m_vertices.push_back(rNorm);
@@ -221,10 +233,10 @@ void OpenGLWidget::addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series,
 
     std::string seriesColor = color.empty() ? generateRandomColor() : color;
 
-    _analog_series.push_back(series);
-    _series_min_max.emplace_back(series->getMinValue(), series->getMaxValue());
-    _series_colors.push_back(seriesColor);
-
+    _analog_series.push_back(
+            AnalogSeriesData{series,
+                             std::make_pair(series->getMinValue(), series->getMaxValue()),
+                             seriesColor});
     updateCanvas(_time);
 }
 
@@ -257,11 +269,11 @@ void OpenGLWidget::generateAndAddFakeData(int count) {
 void OpenGLWidget::adjustFakeData()
 {
     std::vector<float> new_series;
-    for (int i = 0; i < _analog_series[0]->getAnalogTimeSeries().size(); i ++)
+    for (int i = 0; i < _analog_series[0].series->getAnalogTimeSeries().size(); i ++)
     {
         new_series.push_back(static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f);
     }
-    _analog_series[0]->setData(new_series);
+    _analog_series[0].series->setData(new_series);
 }
 
 void OpenGLWidget::wheelEvent(QWheelEvent *event) {

@@ -18,6 +18,12 @@
 class AnalogTimeSeries;
 class QWheelEvent;
 
+struct AnalogSeriesData {
+    std::shared_ptr<AnalogTimeSeries> series;
+    std::pair<float, float> min_max;
+    std::string color;
+};
+
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
 
@@ -49,9 +55,7 @@ private:
     void generateAndAddFakeData(int count);
     void adjustFakeData();
 
-    std::vector<std::shared_ptr<AnalogTimeSeries>> _analog_series;
-    std::vector<std::pair<float, float>> _series_min_max;
-    std::vector<std::string> _series_colors;
+    std::vector<AnalogSeriesData> _analog_series;
 
     XAxis _xAxis;
     int _time {0};

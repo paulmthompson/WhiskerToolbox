@@ -35,7 +35,16 @@ DataViewer_Widget::DataViewer_Widget(Media_Window *scene,
     connect(time_scrollbar, &TimeScrollBar::timeChanged, ui->openGLWidget, &OpenGLWidget::updateCanvas);
 
     //We should alwasy get the master clock because we plot
-    ui->openGLWidget->setXLimit(_data_manager->getTime()->getTotalFrameCount());
+    // Check for master clock
+    auto time_keys = _data_manager->getTimeFrameKeys();
+    // if timekeys doesn't have master, we should throw an error
+    if (std::find(time_keys.begin(), time_keys.end(), "master") == time_keys.end()) {
+        std::cout << "No master clock found in DataManager" << std::endl;
+        ui->openGLWidget->setXLimit(_data_manager->getTime("master")->getTotalFrameCount());
+    } else {
+        ui->openGLWidget->setXLimit(_data_manager->getTime("master")->getTotalFrameCount());
+    }
+
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
