@@ -33,6 +33,8 @@ DataViewer_Widget::DataViewer_Widget(Media_Window *scene,
     connect(ui->delete_feature_button, &QPushButton::clicked, this, &DataViewer_Widget::_deleteFeatureFromModel);
     connect(ui->available_features_table, &QTableWidget::cellClicked, this, &DataViewer_Widget::_highlightAvailableFeature);
     connect(time_scrollbar, &TimeScrollBar::timeChanged, ui->openGLWidget, &OpenGLWidget::updateCanvas);
+
+    ui->openGLWidget->setXLimit(_data_manager->getTime()->getTotalFrameCount());
 }
 
 DataViewer_Widget::~DataViewer_Widget() {

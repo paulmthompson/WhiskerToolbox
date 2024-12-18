@@ -29,9 +29,10 @@ public:
     void addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series);
     void clearSeries();
     void setBackgroundColor(const std::string &hexColor);
+    void setXLimit(int xmax) {_xAxis.setMax(xmax); };
 
 public slots:
-    void updateCanvas();
+    void updateCanvas(int time);
 
 protected:
     void initializeGL() override;
@@ -51,6 +52,7 @@ private:
     std::vector<std::shared_ptr<AnalogTimeSeries>> _analog_series;
     std::vector<std::pair<float, float>> _series_min_max;
     XAxis _xAxis;
+    int _time {0};
 
     QOpenGLShaderProgram *m_program {0};
     QOpenGLBuffer m_vbo;

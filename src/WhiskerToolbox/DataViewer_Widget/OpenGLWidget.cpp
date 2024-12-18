@@ -24,9 +24,10 @@ OpenGLWidget::~OpenGLWidget() {
     cleanup();
 }
 
-void OpenGLWidget::updateCanvas()
+void OpenGLWidget::updateCanvas(int time)
 {
-    std::cout << "Redrawing" << std::endl;
+    _time = time;
+    std::cout << "Redrawing at " << _time << std::endl;
     update();
 }
 
@@ -143,6 +144,13 @@ void OpenGLWidget::paintGL() {
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
+    //adjustFakeData();
+    int currentTime = _time;
+    int zoom = _xAxis.getEnd() - _xAxis.getStart();
+    _xAxis.setCenterAndZoom(currentTime, zoom);
+
+    std::cout << "XAxis: " << _xAxis.getStart() << " - " << _xAxis.getEnd() << std::endl;
+
     for (size_t i = 0; i < _analog_series.size(); ++i) {
         const auto &series = _analog_series[i];
         const auto &data = series->getAnalogTimeSeries();
@@ -153,8 +161,10 @@ void OpenGLWidget::paintGL() {
         for (int j = _xAxis.getStart(); j <= _xAxis.getEnd(); ++j) {
             auto it = data.find(j);
             if (it != data.end()) {
-                m_vertices.push_back(static_cast<GLfloat>(j - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f); // X coordinate
-                m_vertices.push_back((it->second - minY) / (maxY - minY) * 2.0f - 1.0f); // Y coordinate, scaled to [-1, 1]
+                float xCanvasPos = static_cast<GLfloat>(j - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f; // X coordinate normalized to [-1, 1]
+                float yCanvasPos = (it->second - minY) / (maxY - minY) * 2.0f - 1.0f; // Y coordinate, scaled to [-1, 1]
+                m_vertices.push_back(xCanvasPos);
+                m_vertices.push_back(yCanvasPos);
             }
         }
         m_vbo.bind();
@@ -172,6 +182,7 @@ void OpenGLWidget::paintGL() {
 void OpenGLWidget::resizeGL(int w, int h) {
     m_proj.setToIdentity();
     m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 100.0f);
+    //m_proj.ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f); // Use orthographic projection for 2D plotting
     m_view.setToIdentity();
     m_view.translate(0, 0, -2);
 }
@@ -179,12 +190,12 @@ void OpenGLWidget::resizeGL(int w, int h) {
 void OpenGLWidget::addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series) {
     _analog_series.push_back(series);
     _series_min_max.emplace_back(series->getMinValue(), series->getMaxValue());
-    updateCanvas();
+    updateCanvas(_time);
 }
 
 void OpenGLWidget::clearSeries() {
     _analog_series.clear();
-    updateCanvas();
+    updateCanvas(_time);
 }
 
 void OpenGLWidget::generateRandomValues(int count) {
@@ -227,5 +238,5 @@ void OpenGLWidget::wheelEvent(QWheelEvent *event) {
     int zoom = (_xAxis.getEnd() - _xAxis.getStart()) - numSteps * zoomFactor;
 
     _xAxis.setCenterAndZoom(center, zoom);
-    updateCanvas();
+    updateCanvas(_time);
 }
