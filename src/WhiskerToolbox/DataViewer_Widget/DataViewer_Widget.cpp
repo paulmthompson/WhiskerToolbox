@@ -63,6 +63,8 @@ void DataViewer_Widget::_insertRows(const std::vector<std::string>& keys) {
             std::string type = _data_manager->getType(key);
             ui->available_features_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(type)));
 
+            std::string clock = _data_manager->getTimeFrame(key);
+            ui->available_features_table->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(clock)));
             row++;
         }
     }
@@ -71,8 +73,8 @@ void DataViewer_Widget::_insertRows(const std::vector<std::string>& keys) {
 
 void DataViewer_Widget::_refreshAvailableFeatures() {
     ui->available_features_table->setRowCount(0);
-    QStringList headers = {"Feature", "Type"};
-    ui->available_features_table->setColumnCount(2);
+    QStringList headers = {"Feature", "Type", "Clock"};
+    ui->available_features_table->setColumnCount(3);
     ui->available_features_table->setHorizontalHeaderLabels(headers);
 
     _insertRows(_data_manager->getAllKeys());

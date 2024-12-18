@@ -120,6 +120,9 @@ public:
     std::string getType(const std::string& key) const;
 
     void setTimeFrame(std::string data_key, std::string time_key);
+    std::string getTimeFrame(std::string data_key) {
+        return _time_frames[data_key];
+    }
 
 private:
 

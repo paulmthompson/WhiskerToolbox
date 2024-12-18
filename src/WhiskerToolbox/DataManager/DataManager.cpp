@@ -294,6 +294,50 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                 dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
 
             }
+        } else if (data_type == "time") {
+
+            if (!std::filesystem::exists(file_path)) {
+                std::cerr << "File does not exist: " << file_path << std::endl;
+                continue;
+            }
+
+            if (item["format"] == "uint16") {
+
+                int channel = item["channel"];
+                std::string transition = item["transition"];
+
+                auto data = readBinaryFile<uint16_t>(file_path);
+
+                auto digital_data = extractDigitalData(data, channel);
+                auto events = extractEvents(digital_data, transition);
+
+                // convert to int with std::transform
+                std::vector<int> events_int;
+                for (auto e : events) {
+                    events_int.push_back(e);
+                }
+                std::cout << "Loaded " << events_int.size() << " events for " << name << std::endl;
+
+                auto timeframe = std::make_shared<TimeFrame>(events_int);
+                dm->setTime(name, timeframe);
+            }
+
+            if (item["format"] == "uint16_length") {
+
+                auto data = readBinaryFile<uint16_t>(file_path);
+
+                std::vector<int> t(data.size()) ;
+                std::iota (std::begin(t), std::end(t), 0);
+
+                std::cout << "Total of " << t.size() << " timestamps for " << name << std::endl;
+
+                auto timeframe = std::make_shared<TimeFrame>(t);
+                dm->setTime(name, timeframe);
+            }
+        }
+        if (item.contains("clock")) {
+            std::string clock = item["clock"];
+            dm->setTimeFrame(name, clock);
         }
     }
 
