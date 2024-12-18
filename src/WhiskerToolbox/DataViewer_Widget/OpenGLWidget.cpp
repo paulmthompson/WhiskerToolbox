@@ -27,7 +27,7 @@ OpenGLWidget::~OpenGLWidget() {
 void OpenGLWidget::updateCanvas(int time)
 {
     _time = time;
-    std::cout << "Redrawing at " << _time << std::endl;
+    //std::cout << "Redrawing at " << _time << std::endl;
     update();
 }
 
@@ -115,7 +115,7 @@ void OpenGLWidget::initializeGL()
     m_vbo.allocate(vertices, sizeof(vertices));
     */
     //generateRandomValues(100);
-    generateAndAddFakeData(100000);
+    //generateAndAddFakeData(100000);
 
     setupVertexAttribs();
 
@@ -149,8 +149,6 @@ void OpenGLWidget::paintGL() {
     int zoom = _xAxis.getEnd() - _xAxis.getStart();
     _xAxis.setCenterAndZoom(currentTime, zoom);
 
-    std::cout << "XAxis: " << _xAxis.getStart() << " - " << _xAxis.getEnd() << std::endl;
-
     for (size_t i = 0; i < _analog_series.size(); ++i) {
         const auto &series = _analog_series[i];
         const auto &data = series->getAnalogTimeSeries();
@@ -172,6 +170,17 @@ void OpenGLWidget::paintGL() {
         m_vbo.release();
         glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 2);
     }
+
+    // Draw horizontal line at x=0
+    std::vector<GLfloat> lineVertices = {
+            0.0f, -1.0f, // Bottom of the canvas
+            0.0f, 1.0f   // Top of the canvas
+    };
+    m_vbo.bind();
+    m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
+    m_vbo.release();
+    glDrawArrays(GL_LINES, 0, 2);
+
     //glDrawArrays(GL_LINES, 0, 2);
     //generateRandomValues(100);
     //glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 2);
