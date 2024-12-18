@@ -17,11 +17,13 @@
 
 class AnalogTimeSeries;
 class QWheelEvent;
+class TimeFrame;
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
     std::pair<float, float> min_max;
     std::string color;
+    std::shared_ptr<TimeFrame> time_frame;
 };
 
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
@@ -32,7 +34,7 @@ public:
 
     virtual ~OpenGLWidget();
 
-    void addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series, std::string color = "");
+    void addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series, std::shared_ptr<TimeFrame> time_frame, std::string color = "");
     void clearSeries();
     void setBackgroundColor(const std::string &hexColor);
     void setXLimit(int xmax) {_xAxis.setMax(xmax); };

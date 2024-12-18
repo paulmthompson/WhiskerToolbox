@@ -158,7 +158,9 @@ void DataViewer_Widget::_plotSelectedFeature() {
         if (_data_manager->getType(key) == "AnalogTimeSeries") {
             std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
             auto series = _data_manager->getData<AnalogTimeSeries>(key);
-            ui->openGLWidget->addAnalogTimeSeries(series);
+            auto time_key = _data_manager->getTimeFrame(key);
+            auto time_frame = _data_manager->getTime(time_key);
+            ui->openGLWidget->addAnalogTimeSeries(series, time_frame);
         }
     }
 }

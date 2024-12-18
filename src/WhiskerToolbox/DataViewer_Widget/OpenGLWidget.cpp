@@ -1,6 +1,7 @@
 #include "OpenGLWidget.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "TimeFrame.hpp"
 
 #include <QOpenGLShader>
 #include <QOpenGLContext>
@@ -229,7 +230,7 @@ void OpenGLWidget::resizeGL(int w, int h) {
     m_view.translate(0, 0, -2);
 }
 
-void OpenGLWidget::addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series, std::string color) {
+void OpenGLWidget::addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series, std::shared_ptr<TimeFrame> time_frame, std::string color) {
 
     std::string seriesColor = color.empty() ? generateRandomColor() : color;
 
@@ -263,7 +264,7 @@ void OpenGLWidget::generateAndAddFakeData(int count) {
         data[i] = static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f;
     }
     auto series = std::make_shared<AnalogTimeSeries>(data);
-    addAnalogTimeSeries(series);
+    //addAnalogTimeSeries(series);
 }
 
 void OpenGLWidget::adjustFakeData()
