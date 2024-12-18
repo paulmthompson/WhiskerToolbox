@@ -109,7 +109,6 @@ void MainWindow::_createActions()
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
 
-    connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
 }
 
 /*
@@ -273,7 +272,12 @@ void MainWindow::_updateFrameCount()
 
     auto frame_count = media->getTotalFrameCount() - 1;
 
-    _data_manager->getTime()->updateTotalFrameCount(frame_count);
+    std::vector<int> t(frame_count) ;
+    std::iota (std::begin(t), std::end(t), 0);
+
+    auto new_timeframe = std::make_shared<TimeFrame>(t);
+
+    _data_manager->setTime("time", new_timeframe);
 
     ui->time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount());
 

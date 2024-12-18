@@ -154,6 +154,9 @@ void OpenGLWidget::paintGL() {
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
     //adjustFakeData();
+
+    //_time is what comes from the scrollbar. We can convert it to
+    // master coordinates.
     int currentTime = _time;
     int zoom = _xAxis.getEnd() - _xAxis.getStart();
     _xAxis.setCenterAndZoom(currentTime, zoom);

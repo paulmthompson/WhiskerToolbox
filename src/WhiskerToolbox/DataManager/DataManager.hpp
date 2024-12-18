@@ -2,6 +2,7 @@
 #define DATAMANAGER_HPP
 
 #include "Media/Media_Data.hpp"
+#include "TimeFrame.hpp"
 
 #include <functional> // std::function
 #include <memory> // std::shared_ptr
@@ -18,8 +19,6 @@ class PointData;
 class LineData;
 class MaskData;
 
-class TimeFrame;
-
 struct DataInfo {
     std::string key;
     std::string data_class;
@@ -35,7 +34,21 @@ public:
         _data["media"] = media;
     };
 
-    std::shared_ptr<TimeFrame> getTime() {return _time;};
+    void setTime(const std::string& key, std::shared_ptr<TimeFrame> timeframe) {
+        _times[key] = timeframe;
+    };
+
+    std::shared_ptr<TimeFrame> getTime() {
+        return _times["time"];
+    };
+
+    std::shared_ptr<TimeFrame> getTime(const std::string& key) {
+        if (_times.find(key) != _times.end()) {
+            return _times[key];
+        }
+        return nullptr;
+    };
+    //std::shared_ptr<TimeFrame> getTime() {return _time;};
 
     using ObserverCallback = std::function<void()>;
 
@@ -89,18 +102,29 @@ public:
     template<typename T>
     void setData(const std::string& key){
         _data[key] = std::make_shared<T>();
+        setTimeFrame(key, "time");
     }
 
     template<typename T>
     void setData(const std::string& key, std::shared_ptr<T> data){
         _data[key] = data;
+        setTimeFrame(key, "time");
+    }
+
+    template<typename T>
+    void setData(const std::string& key, std::shared_ptr<T> data, const std::string time_key){
+        _data[key] = data;
+        setTimeFrame(key, time_key);
     }
 
     std::string getType(const std::string& key) const;
 
+    void setTimeFrame(std::string data_key, std::string time_key);
+
 private:
 
-    std::shared_ptr<TimeFrame> _time;
+    //std::shared_ptr<TimeFrame> _time;
+    std::unordered_map<std::string, std::shared_ptr<TimeFrame>> _times;
 
     std::vector<ObserverCallback> _observers;
 
@@ -112,6 +136,8 @@ private:
                                         std::shared_ptr<AnalogTimeSeries>,
                                         std::shared_ptr<DigitalEventSeries>,
                                         std::shared_ptr<DigitalIntervalSeries>>> _data;
+
+    std::unordered_map<std::string, std::string> _time_frames;
 
 };
 

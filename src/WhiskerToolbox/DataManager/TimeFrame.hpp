@@ -1,9 +1,12 @@
 #ifndef TIMEFRAME_HPP
 #define TIMEFRAME_HPP
 
+#include <vector>
 
 class TimeFrame {
 public:
+    TimeFrame() = default;
+    TimeFrame(std::vector<int> times);
     void updateTotalFrameCount(int frame_count) {_total_frame_count = frame_count;};
     int getTotalFrameCount() const {return _total_frame_count;};
 
@@ -22,6 +25,7 @@ public:
 protected:
 
 private:
+    std::vector<int> _times;
     int _last_loaded_frame;
     int _total_frame_count;
 };

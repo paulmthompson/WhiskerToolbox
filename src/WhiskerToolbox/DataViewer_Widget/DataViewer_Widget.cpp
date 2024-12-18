@@ -34,6 +34,7 @@ DataViewer_Widget::DataViewer_Widget(Media_Window *scene,
     connect(ui->available_features_table, &QTableWidget::cellClicked, this, &DataViewer_Widget::_highlightAvailableFeature);
     connect(time_scrollbar, &TimeScrollBar::timeChanged, ui->openGLWidget, &OpenGLWidget::updateCanvas);
 
+    //We should alwasy get the master clock because we plot
     ui->openGLWidget->setXLimit(_data_manager->getTime()->getTotalFrameCount());
 }
 

@@ -21,10 +21,29 @@
 #include "nlohmann/json.hpp"
 using namespace nlohmann;
 
-DataManager::DataManager() :
-    _time{std::make_shared<TimeFrame>()}
+DataManager::DataManager()
 {
+    _times["time"] = std::make_shared<TimeFrame>();
     _data["media"] = std::make_shared<MediaData>();
+
+    setTimeFrame("media", "time");
+}
+
+void DataManager::setTimeFrame(std::string data_key, std::string time_key)
+{
+    //Check that data_key is in _data
+    if (_data.find(data_key) == _data.end()) {
+        std::cerr << "Data key not found in DataManager: " << data_key << std::endl;
+        return;
+    }
+
+    //Check that time_key is in _times
+    if (_times.find(time_key) == _times.end()) {
+        std::cerr << "Time key not found in DataManager: " << time_key << std::endl;
+        return;
+    }
+
+    _time_frames[data_key] = time_key;
 }
 
 std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key)
