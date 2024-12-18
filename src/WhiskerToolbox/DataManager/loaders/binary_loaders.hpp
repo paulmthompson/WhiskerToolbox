@@ -51,4 +51,41 @@ std::vector<float> extractEvents(const std::vector<int>& digital_data, const std
     return events;
 }
 
+std::vector<std::pair<float,float>> extractIntervals(const std::vector<int>& digital_data, const std::string& transition) {
+
+    // Check if transition is valid
+    if (transition != "rising" && transition != "falling") {
+        throw std::invalid_argument("Invalid transition type");
+    }
+
+    std::string start_transition = transition;
+    std::string end_transition = transition == "rising" ? "falling" : "rising";
+
+    bool in_interval = false;
+    float start_time = 0;
+
+    std::cout << "Checking " << digital_data.size() << " timestamps for intervals" << std::endl;
+    std::vector<std::pair<float,float>> intervals;
+
+
+    for (std::size_t i = 1; i < digital_data.size(); i++) {
+        if (!in_interval &&
+            ((start_transition == "rising" && digital_data[i] == 1 && digital_data[i-1] == 0) ||
+             (start_transition == "falling" && digital_data[i] == 0 && digital_data[i-1] == 1))) {
+
+            start_time = i;
+            in_interval = true;
+
+        } else if (in_interval &&
+                   ((end_transition == "rising" && digital_data[i] == 1 && digital_data[i-1] == 0) ||
+                    (end_transition == "falling" && digital_data[i] == 0 && digital_data[i-1] == 1))) {
+
+            intervals.emplace_back(start_time, i);
+            in_interval = false;
+            
+        }
+    }
+        return intervals;
+}
+
 #endif //BINARY_LOADERS_HPP

@@ -251,6 +251,30 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                 digital_event_series->setData(events);
                 dm->setData<DigitalEventSeries>(name, digital_event_series);
             }
+        } else if (data_type == "digital_interval") {
+
+            if (!std::filesystem::exists(file_path)) {
+                std::cerr << "File does not exist: " << file_path << std::endl;
+                continue;
+            }
+
+            if (item["format"] == "uint16") {
+
+                int channel = item["channel"];
+                std::string transition = item["transition"];
+
+                auto data = readBinaryFile<uint16_t>(file_path);
+
+                auto digital_data = extractDigitalData(data, channel);
+
+                auto intervals = extractIntervals(digital_data, transition);
+                std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
+
+                auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
+                digital_interval_series->setData(intervals);
+                dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
+
+            }
         }
     }
 
