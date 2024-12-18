@@ -110,6 +110,7 @@ private:
                                         std::shared_ptr<LineData>,
                                         std::shared_ptr<MaskData>,
                                         std::shared_ptr<AnalogTimeSeries>,
+                                        std::shared_ptr<DigitalEventSeries>,
                                         std::shared_ptr<DigitalIntervalSeries>>> _data;
 
 };

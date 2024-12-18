@@ -10,6 +10,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Media/Video_Data.hpp"
 #include "transforms/data_transforms.hpp"
+#include "loaders/binary_loaders.hpp"
 
 #include "TimeFrame.hpp"
 
@@ -228,6 +229,28 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                 }
 
             }
+        } else if (data_type == "digital_event") {
+
+            if (!std::filesystem::exists(file_path)) {
+                std::cerr << "File does not exist: " << file_path << std::endl;
+                continue;
+            }
+
+            if (item["format"] == "uint16") {
+
+                int channel = item["channel"];
+                std::string transition = item["transition"];
+
+                auto data = readBinaryFile<uint16_t>(file_path);
+
+                auto digital_data = extractDigitalData(data, channel);
+                auto events = extractEvents(digital_data, transition);
+                std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
+
+                auto digital_event_series = std::make_shared<DigitalEventSeries>();
+                digital_event_series->setData(events);
+                dm->setData<DigitalEventSeries>(name, digital_event_series);
+            }
         }
     }
 
@@ -247,9 +270,12 @@ std::string DataManager::getType(const std::string& key) const {
             return "MaskData";
         } else if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(it->second)) {
             return "AnalogTimeSeries";
+        } else if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(it->second)) {
+                return "DigitalEventSeries";
         } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(it->second)) {
             return "DigitalIntervalSeries";
         }
         return "Unknown";
     }
 }
+
