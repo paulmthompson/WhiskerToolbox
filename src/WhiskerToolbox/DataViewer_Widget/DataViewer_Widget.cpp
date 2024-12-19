@@ -32,7 +32,8 @@ DataViewer_Widget::DataViewer_Widget(Media_Window *scene,
     connect(ui->add_feature_to_model, &QPushButton::clicked, this, &DataViewer_Widget::_addFeatureToModel);
     connect(ui->delete_feature_button, &QPushButton::clicked, this, &DataViewer_Widget::_deleteFeatureFromModel);
     connect(ui->available_features_table, &QTableWidget::cellClicked, this, &DataViewer_Widget::_highlightAvailableFeature);
-    connect(time_scrollbar, &TimeScrollBar::timeChanged, ui->openGLWidget, &OpenGLWidget::updateCanvas);
+    //connect(time_scrollbar, &TimeScrollBar::timeChanged, ui->openGLWidget, &OpenGLWidget::updateCanvas);
+    connect(time_scrollbar, &TimeScrollBar::timeChanged, this, &DataViewer_Widget::_updatePlot);
 
     //We should alwasy get the master clock because we plot
     // Check for master clock
@@ -40,10 +41,12 @@ DataViewer_Widget::DataViewer_Widget(Media_Window *scene,
     // if timekeys doesn't have master, we should throw an error
     if (std::find(time_keys.begin(), time_keys.end(), "master") == time_keys.end()) {
         std::cout << "No master clock found in DataManager" << std::endl;
-        ui->openGLWidget->setXLimit(_data_manager->getTime("master")->getTotalFrameCount());
+        _time_frame = _data_manager->getTime("time");
     } else {
-        ui->openGLWidget->setXLimit(_data_manager->getTime("master")->getTotalFrameCount());
+        _time_frame = _data_manager->getTime("master");
     }
+
+    ui->openGLWidget->setXLimit(_time_frame->getTotalFrameCount());
 
 }
 
@@ -58,6 +61,12 @@ void DataViewer_Widget::openWidget() {
 
 void DataViewer_Widget::closeEvent(QCloseEvent *event) {
     std::cout << "Close event detected" << std::endl;
+}
+
+void DataViewer_Widget::_updatePlot(int time)
+{
+    time = _data_manager->getTime("time")->getTimeAtIndex(time);
+    ui->openGLWidget->updateCanvas(time);
 }
 
 void DataViewer_Widget::_insertRows(const std::vector<std::string>& keys) {

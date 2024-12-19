@@ -14,6 +14,7 @@ class MainWindow;
 class Media_Window;
 class QTableWidget;
 class TimeScrollBar;
+class TimeFrame;
 
 namespace Ui { class DataViewer_Widget; }
 
@@ -42,12 +43,15 @@ private slots:
     void _highlightModelFeature(int row, int column);
     void _deleteFeatureFromModel();
     void _plotSelectedFeature();
+    void _updatePlot(int time);
 private:
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
     MainWindow* _main_window;
     Ui::DataViewer_Widget *ui;
+
+    std::shared_ptr<TimeFrame> _time_frame;
 
     QString _highlighted_available_feature;
     QString _highlighted_model_feature;

@@ -13,6 +13,8 @@ public:
     void updateLastLoadedFrame(int frame) {_last_loaded_frame = frame;};
     int getLastLoadedFrame() const {return _last_loaded_frame;};
 
+    int getTimeAtIndex(int index) {return _times[index];};
+
     int checkFrameInbounds(int frame_id) {
 
         if (frame_id < 0) {

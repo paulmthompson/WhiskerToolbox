@@ -156,8 +156,7 @@ void OpenGLWidget::paintGL() {
 
     //adjustFakeData();
 
-    //_time is what comes from the scrollbar. We can convert it to
-    // master coordinates.
+    //This has been converted to master coordinates
     int currentTime = _time;
     int zoom = _xAxis.getEnd() - _xAxis.getStart();
     _xAxis.setCenterAndZoom(currentTime, zoom);
@@ -165,6 +164,7 @@ void OpenGLWidget::paintGL() {
     for (size_t i = 0; i < _analog_series.size(); ++i) {
         const auto &series = _analog_series[i].series;
         const auto &data = series->getAnalogTimeSeries();
+        const auto &time_frame = _analog_series[i].time_frame;
         float minY = _analog_series[i].min_max.first;
         float maxY = _analog_series[i].min_max.second;
 
@@ -189,8 +189,9 @@ void OpenGLWidget::paintGL() {
             }
         }*/
         for (const auto& [key, value] : data) {
-            if (key >= _xAxis.getStart() && key <= _xAxis.getEnd()) {
-                float xCanvasPos = static_cast<GLfloat>(key - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f; // X coordinate normalized to [-1, 1]
+            const auto ts = time_frame->getTimeAtIndex(key);
+            if (ts >= _xAxis.getStart() && ts <= _xAxis.getEnd()) {
+                float xCanvasPos = static_cast<GLfloat>(ts - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f; // X coordinate normalized to [-1, 1]
                 float yCanvasPos = (value - minY) / (maxY - minY) * 2.0f - 1.0f; // Y coordinate, scaled to [-1, 1]
                 m_vertices.push_back(xCanvasPos);
                 m_vertices.push_back(yCanvasPos);
@@ -237,7 +238,8 @@ void OpenGLWidget::addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series,
     _analog_series.push_back(
             AnalogSeriesData{series,
                              std::make_pair(series->getMinValue(), series->getMaxValue()),
-                             seriesColor});
+                             seriesColor,
+                             time_frame});
     updateCanvas(_time);
 }
 
