@@ -6,3 +6,5 @@ CMakeUserPresets.json
 build
 .idea
 .Rproj.user
+
+style.rst

@@ -21,6 +21,7 @@ Feature_Table_Widget::~Feature_Table_Widget() {
 
 void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = data_manager;}
 
+
 void Feature_Table_Widget::populateTable(const std::vector<std::string>& keys) {
     ui->available_features_table->setRowCount(0);
     QStringList headers = {"Feature", "Type", "Clock"};
