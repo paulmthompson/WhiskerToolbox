@@ -15,6 +15,7 @@ class Media_Window;
 class QTableWidget;
 class TimeScrollBar;
 class TimeFrame;
+class Feature_Table_Widget;
 
 namespace Ui { class DataViewer_Widget; }
 
@@ -36,15 +37,18 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private slots:
-    void _refreshAvailableFeatures();
-    void _insertRows(const std::vector<std::string>& keys);
-    void _addFeatureToModel();
-    void _highlightAvailableFeature(int row, int column);
+    //void _insertRows(const std::vector<std::string>& keys);
+    void _addFeatureToModel(const QString& feature);
+    //void _highlightAvailableFeature(int row, int column);
     void _highlightModelFeature(int row, int column);
     void _deleteFeatureFromModel();
-    void _plotSelectedFeature();
+    void _plotSelectedFeature(const std::string key);
     void _updatePlot(int time);
+    void _handleFeatureSelected(const QString& feature);
 private:
+
+    void _refreshModelFeatures();
+
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;

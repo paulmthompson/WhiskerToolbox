@@ -88,6 +88,10 @@ set(PROJECT_SOURCES
         Tongue_Widget/Tongue_Widget.cpp
         Tongue_Widget/Tongue_Widget.ui
 
+        Feature_Table_Widget/Feature_Table_Widget.hpp
+        Feature_Table_Widget/Feature_Table_Widget.cpp
+        Feature_Table_Widget/feature_table_widget.ui
+
         utils/qt_utilities.cpp
         utils/qt_utilities.hpp
 

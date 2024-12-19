@@ -4,11 +4,12 @@
 
 #include "DataManager.hpp"
 
+#include "Feature_Table_Widget/Feature_Table_Widget.hpp"
+#include "OpenGLWidget.hpp"
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "utils/qt_utilities.hpp"
-#include "OpenGLWidget.hpp"
 
 #include <QTableWidget>
 
@@ -28,10 +29,11 @@ DataViewer_Widget::DataViewer_Widget(Media_Window *scene,
 {
     ui->setupUi(this);
 
-    connect(ui->refresh_dm_features, &QPushButton::clicked, this, &DataViewer_Widget::_refreshAvailableFeatures);
-    connect(ui->add_feature_to_model, &QPushButton::clicked, this, &DataViewer_Widget::_addFeatureToModel);
+    ui->feature_table_widget->setDataManager(_data_manager);
+
+    connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataViewer_Widget::_handleFeatureSelected);
+    connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, &DataViewer_Widget::_addFeatureToModel);
     connect(ui->delete_feature_button, &QPushButton::clicked, this, &DataViewer_Widget::_deleteFeatureFromModel);
-    connect(ui->available_features_table, &QTableWidget::cellClicked, this, &DataViewer_Widget::_highlightAvailableFeature);
     //connect(time_scrollbar, &TimeScrollBar::timeChanged, ui->openGLWidget, &OpenGLWidget::updateCanvas);
     connect(time_scrollbar, &TimeScrollBar::timeChanged, this, &DataViewer_Widget::_updatePlot);
 
@@ -72,43 +74,6 @@ void DataViewer_Widget::_updatePlot(int time)
     ui->openGLWidget->updateCanvas(time);
 }
 
-void DataViewer_Widget::_insertRows(const std::vector<std::string>& keys) {
-
-    int row = ui->available_features_table->rowCount();
-    for (const auto& key : keys) {
-        if (_model_features.find(key) == _model_features.end()) {
-            ui->available_features_table->insertRow(row);
-            ui->available_features_table->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(key)));
-
-            // Retrieve the type of the feature from the _data_manager
-            std::string type = _data_manager->getType(key);
-            ui->available_features_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(type)));
-
-            std::string clock = _data_manager->getTimeFrame(key);
-            ui->available_features_table->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(clock)));
-            row++;
-        }
-    }
-
-}
-
-void DataViewer_Widget::_refreshAvailableFeatures() {
-    ui->available_features_table->setRowCount(0);
-    QStringList headers = {"Feature", "Type", "Clock"};
-    ui->available_features_table->setColumnCount(3);
-    ui->available_features_table->setHorizontalHeaderLabels(headers);
-
-    _insertRows(_data_manager->getAllKeys());
-
-}
-
-void DataViewer_Widget::_highlightAvailableFeature(int row, int column) {
-    QTableWidgetItem* item = ui->available_features_table->item(row, column);
-    if (item) {
-        _highlighted_available_feature = item->text();
-    }
-}
-
 void DataViewer_Widget::_highlightModelFeature(int row, int column) {
     QTableWidgetItem* item = ui->model_features_table->item(row, column);
     if (item) {
@@ -116,31 +81,33 @@ void DataViewer_Widget::_highlightModelFeature(int row, int column) {
     }
 }
 
-void DataViewer_Widget::_addFeatureToModel() {
-    if (!_highlighted_available_feature.isEmpty()) {
-        // Ensure the model features table has the same column headers as the available features table
-        build_feature_table(ui->model_features_table);
+void DataViewer_Widget::_addFeatureToModel(const QString& feature) {
 
-        // Add the highlighted feature to the model features table
-        int row = ui->model_features_table->rowCount();
+    // Add the feature to the set of model features
+    _model_features.insert(feature.toStdString());
+
+    _refreshModelFeatures();
+
+    // Plot the selected feature
+    _plotSelectedFeature(feature.toStdString());
+}
+
+void DataViewer_Widget::_refreshModelFeatures()
+{
+    ui->model_features_table->setRowCount(0);
+    QStringList headers = {"Feature", "Type", "Clock"};
+    ui->model_features_table->setColumnCount(3);
+    ui->model_features_table->setHorizontalHeaderLabels(headers);
+
+    for (const auto& key : _model_features) {
+        auto type = _data_manager->getType(key);
+        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_frame_key = _data_manager->getTimeFrame(time_key);
+        auto row = ui->model_features_table->rowCount();
         ui->model_features_table->insertRow(row);
-        ui->model_features_table->setItem(row, 0, new QTableWidgetItem(_highlighted_available_feature));
-
-        // Add the feature to the set of model features
-        _model_features.insert(_highlighted_available_feature.toStdString());
-
-        // Remove the feature from the available features table
-        QList<QTableWidgetItem*> items = ui->available_features_table->findItems(_highlighted_available_feature, Qt::MatchExactly);
-        if (!items.isEmpty()) {
-            int row = items.first()->row();
-            ui->available_features_table->removeRow(row);
-        }
-
-        // Clear the highlighted feature
-        _highlighted_available_feature.clear();
-
-        // Plot the selected feature
-        _plotSelectedFeature();
+        ui->model_features_table->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(key)));
+        ui->model_features_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(type)));
+        ui->model_features_table->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(time_frame_key)));
     }
 }
 
@@ -159,30 +126,32 @@ void DataViewer_Widget::_deleteFeatureFromModel() {
         _highlighted_model_feature.clear();
 
         // Refresh the available features table
-        _refreshAvailableFeatures();
+        //_refreshAvailableFeatures();
     }
 }
 
-void DataViewer_Widget::_plotSelectedFeature() {
+void DataViewer_Widget::_plotSelectedFeature(const std::string key) {
 
-    // Loop through model_features
-    for (const auto& key : _model_features) {
-        if (_data_manager->getType(key) == "AnalogTimeSeries") {
 
-            std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
-            auto series = _data_manager->getData<AnalogTimeSeries>(key);
-            auto time_key = _data_manager->getTimeFrame(key);
-            auto time_frame = _data_manager->getTime(time_key);
-            ui->openGLWidget->addAnalogTimeSeries(series, time_frame);
+    if (_data_manager->getType(key) == "AnalogTimeSeries") {
 
-        } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
+        std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
+        auto series = _data_manager->getData<AnalogTimeSeries>(key);
+        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_frame = _data_manager->getTime(time_key);
+        ui->openGLWidget->addAnalogTimeSeries(series, time_frame);
 
-            std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
-            auto series = _data_manager->getData<DigitalIntervalSeries>(key);
-            auto time_key = _data_manager->getTimeFrame(key);
-            auto time_frame = _data_manager->getTime(time_key);
-            ui->openGLWidget->addDigitalIntervalSeries(series, time_frame);
-        }
+    } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
+
+        std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
+        auto series = _data_manager->getData<DigitalIntervalSeries>(key);
+        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_frame = _data_manager->getTime(time_key);
+        ui->openGLWidget->addDigitalIntervalSeries(series, time_frame);
     }
+}
+
+void DataViewer_Widget::_handleFeatureSelected(const QString& feature) {
+    _highlighted_available_feature = feature;
 }
 
