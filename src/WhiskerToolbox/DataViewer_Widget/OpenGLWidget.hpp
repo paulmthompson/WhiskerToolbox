@@ -16,12 +16,19 @@
 
 
 class AnalogTimeSeries;
+class DigitalIntervalSeries;
 class QWheelEvent;
 class TimeFrame;
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
     std::pair<float, float> min_max;
+    std::string color;
+    std::shared_ptr<TimeFrame> time_frame;
+};
+
+struct DigitalIntervalSeriesData {
+    std::shared_ptr<DigitalIntervalSeries> series;
     std::string color;
     std::shared_ptr<TimeFrame> time_frame;
 };
@@ -34,7 +41,15 @@ public:
 
     virtual ~OpenGLWidget();
 
-    void addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series, std::shared_ptr<TimeFrame> time_frame, std::string color = "");
+    void addAnalogTimeSeries(
+            std::shared_ptr<AnalogTimeSeries> series,
+            std::shared_ptr<TimeFrame> time_frame,
+            std::string color = "");
+
+    void addDigitalIntervalSeries(
+            std::shared_ptr<DigitalIntervalSeries> series,
+            std::shared_ptr<TimeFrame> time_frame,
+            std::string color = "");
     void clearSeries();
     void setBackgroundColor(const std::string &hexColor);
     void setXLimit(int xmax) {_xAxis.setMax(xmax); };
@@ -58,6 +73,7 @@ private:
     void adjustFakeData();
 
     std::vector<AnalogSeriesData> _analog_series;
+    std::vector<DigitalIntervalSeriesData> _digital_interval_series;
 
     XAxis _xAxis;
     int _time {0};

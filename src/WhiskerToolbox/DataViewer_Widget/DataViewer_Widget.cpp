@@ -46,6 +46,7 @@ DataViewer_Widget::DataViewer_Widget(Media_Window *scene,
         _time_frame = _data_manager->getTime("master");
     }
 
+    std::cout << "Setting GL limit to " << _time_frame->getTotalFrameCount() << std::endl;
     ui->openGLWidget->setXLimit(_time_frame->getTotalFrameCount());
 
 }
@@ -65,7 +66,9 @@ void DataViewer_Widget::closeEvent(QCloseEvent *event) {
 
 void DataViewer_Widget::_updatePlot(int time)
 {
+    //std::cout << "Time is " << time;
     time = _data_manager->getTime("time")->getTimeAtIndex(time);
+    //std::cout << ""
     ui->openGLWidget->updateCanvas(time);
 }
 
@@ -165,11 +168,20 @@ void DataViewer_Widget::_plotSelectedFeature() {
     // Loop through model_features
     for (const auto& key : _model_features) {
         if (_data_manager->getType(key) == "AnalogTimeSeries") {
+
             std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
             auto series = _data_manager->getData<AnalogTimeSeries>(key);
             auto time_key = _data_manager->getTimeFrame(key);
             auto time_frame = _data_manager->getTime(time_key);
             ui->openGLWidget->addAnalogTimeSeries(series, time_frame);
+
+        } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
+
+            std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
+            auto series = _data_manager->getData<DigitalIntervalSeries>(key);
+            auto time_key = _data_manager->getTimeFrame(key);
+            auto time_frame = _data_manager->getTime(time_key);
+            ui->openGLWidget->addDigitalIntervalSeries(series, time_frame);
         }
     }
 }

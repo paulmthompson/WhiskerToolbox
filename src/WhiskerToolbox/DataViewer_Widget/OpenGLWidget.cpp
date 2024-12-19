@@ -1,6 +1,7 @@
 #include "OpenGLWidget.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame.hpp"
 
 #include <QOpenGLShader>
@@ -58,21 +59,25 @@ static const char *vertexShaderSource =
     "#version 150\n"
     "in vec4 vertex;\n"
     "in vec3 color;\n"
+    "in float alpha;\n"
     "out vec3 fragColor;\n"
+    "out float fragAlpha;\n"
     "uniform mat4 projMatrix;\n"
     "uniform mat4 viewMatrix;\n"
     "uniform mat4 modelMatrix;\n"
     "void main() {\n"
     "   gl_Position = projMatrix * viewMatrix * modelMatrix * vertex;\n"
     "   fragColor = color;\n"
+    "   fragAlpha = alpha;\n"
     "}\n";
 
 static const char *fragmentShaderSource =
     "#version 150\n"
     "in vec3 fragColor;\n"
+    "in float fragAlpha;\n"
     "out vec4 outColor;\n"
     "void main() {\n"
-    "   outColor = vec4(fragColor, 1.0);\n"
+    "   outColor = vec4(fragColor, fragAlpha);\n"
     "}\n";
 
 
@@ -132,11 +137,14 @@ void OpenGLWidget::setupVertexAttribs() {
     m_vbo.bind();
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glEnableVertexAttribArray(0);
-    const int vertex_argument_num = 5;
+    const int vertex_argument_num = 6;
     f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), nullptr);
 
     f->glEnableVertexAttribArray(1);
-    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), reinterpret_cast<void*>(2 * sizeof(GLfloat)));
+    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), reinterpret_cast<void*>(2 * sizeof(GLfloat)));
+
+    f->glEnableVertexAttribArray(2);
+    f->glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), reinterpret_cast<void*>(5 * sizeof(GLfloat)));
 
     m_vbo.release();
 }
@@ -158,8 +166,51 @@ void OpenGLWidget::paintGL() {
 
     //This has been converted to master coordinates
     int currentTime = _time;
+
+    std::cout << "Current time: " << currentTime << std::endl;
     int zoom = _xAxis.getEnd() - _xAxis.getStart();
     _xAxis.setCenterAndZoom(currentTime, zoom);
+
+    for (const auto& interval_data : _digital_interval_series) {
+        const auto& series = interval_data.series;
+        const auto& intervals = series->getDigitalIntervalSeries();
+        const auto& time_frame = interval_data.time_frame;
+        hexToRGB(interval_data.color, r, g, b);
+        float rNorm = r / 255.0f;
+        float gNorm = g / 255.0f;
+        float bNorm = b / 255.0f;
+        float alpha = 0.5f; // Set alpha for shading
+
+        for (const auto& interval : intervals) {
+            //std::cout << "Interval: " << interval.first << " " << interval.second << std::endl;
+            //std::cout << "plotting interval " << _xAxis.getStart() << " " << _xAxis.getEnd() << std::endl;
+            float start = time_frame->getTimeAtIndex(interval.first);
+            float end = time_frame->getTimeAtIndex(interval.second);
+            if (end < _xAxis.getStart() || start > _xAxis.getEnd()) {
+                continue;
+            }
+
+            std::cout << "Interval in frame " << std::endl;
+
+            start = std::max(start, static_cast<float>(_xAxis.getStart()));
+            end = std::min(end, static_cast<float>(_xAxis.getEnd()));
+
+            float xStart = static_cast<GLfloat>(start - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
+            float xEnd = static_cast<GLfloat>(end - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
+
+            std::vector<GLfloat> vertices = {
+                    xStart, -1.0f, rNorm, gNorm, bNorm, alpha,
+                    xEnd, -1.0f, rNorm, gNorm, bNorm, alpha,
+                    xEnd, 1.0f, rNorm, gNorm, bNorm, alpha,
+                    xStart, 1.0f, rNorm, gNorm, bNorm, alpha
+            };
+
+            m_vbo.bind();
+            m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
+            m_vbo.release();
+            glDrawArrays(GL_QUADS, 0, 4);
+        }
+    }
 
     for (size_t i = 0; i < _analog_series.size(); ++i) {
         const auto &series = _analog_series[i].series;
@@ -198,18 +249,19 @@ void OpenGLWidget::paintGL() {
                 m_vertices.push_back(rNorm);
                 m_vertices.push_back(gNorm);
                 m_vertices.push_back(bNorm);
+                m_vertices.push_back(1.0f); // alpha
             }
         }
         m_vbo.bind();
         m_vbo.allocate(m_vertices.data(), m_vertices.size() * sizeof(GLfloat));
         m_vbo.release();
-        glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 5);
+        glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 6);
     }
 
     // Draw horizontal line at x=0
     std::vector<GLfloat> lineVertices = {
-            0.0f, -1.0f, 1.0f, 1.0f, 1.0f,
-            0.0f, 1.0f, 1.0f, 1.0f, 1.0f
+            0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
     };
     m_vbo.bind();
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
@@ -231,7 +283,10 @@ void OpenGLWidget::resizeGL(int w, int h) {
     m_view.translate(0, 0, -2);
 }
 
-void OpenGLWidget::addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series, std::shared_ptr<TimeFrame> time_frame, std::string color) {
+void OpenGLWidget::addAnalogTimeSeries(
+        std::shared_ptr<AnalogTimeSeries> series,
+        std::shared_ptr<TimeFrame> time_frame,
+        std::string color) {
 
     std::string seriesColor = color.empty() ? generateRandomColor() : color;
 
@@ -241,6 +296,17 @@ void OpenGLWidget::addAnalogTimeSeries(std::shared_ptr<AnalogTimeSeries> series,
                              seriesColor,
                              time_frame});
     updateCanvas(_time);
+}
+
+void OpenGLWidget::addDigitalIntervalSeries(
+        std::shared_ptr <DigitalIntervalSeries> series,
+        std::shared_ptr <TimeFrame> time_frame,
+        std::string color) {
+
+    std::string seriesColor = color.empty() ? generateRandomColor() : color;
+    _digital_interval_series.push_back(DigitalIntervalSeriesData{series, seriesColor, time_frame});
+    updateCanvas(_time);
+
 }
 
 void OpenGLWidget::clearSeries() {
@@ -282,7 +348,8 @@ void OpenGLWidget::adjustFakeData()
 void OpenGLWidget::wheelEvent(QWheelEvent *event) {
     int numDegrees = event->angleDelta().y() / 8;
     int numSteps = numDegrees / 15;
-    int zoomFactor = 10; // Adjust this value to control zoom sensitivity
+    //int zoomFactor = 10; // Adjust this value to control zoom sensitivity
+    int zoomFactor = _xAxis.getMax() / 10000;
 
     int center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
     int zoom = (_xAxis.getEnd() - _xAxis.getStart()) - numSteps * zoomFactor;

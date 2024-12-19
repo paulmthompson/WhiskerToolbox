@@ -270,14 +270,18 @@ void MainWindow::_updateFrameCount()
 {
     auto media = _data_manager->getData<MediaData>("media");
 
-    auto frame_count = media->getTotalFrameCount() - 1;
+    if (_data_manager->getTime()->getTotalFrameCount() != media->getTotalFrameCount())
+    {
 
-    std::vector<int> t(frame_count) ;
-    std::iota (std::begin(t), std::end(t), 0);
+        auto frame_count = media->getTotalFrameCount() - 1;
 
-    auto new_timeframe = std::make_shared<TimeFrame>(t);
+        std::vector<int> t(frame_count) ;
+        std::iota (std::begin(t), std::end(t), 0);
 
-    _data_manager->setTime("time", new_timeframe);
+        auto new_timeframe = std::make_shared<TimeFrame>(t);
+
+        _data_manager->setTime("time", new_timeframe);
+    }
 
     ui->time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount());
 
