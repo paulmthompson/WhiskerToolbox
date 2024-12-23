@@ -90,7 +90,7 @@ set(PROJECT_SOURCES
 
         Feature_Table_Widget/Feature_Table_Widget.hpp
         Feature_Table_Widget/Feature_Table_Widget.cpp
-        Feature_Table_Widget/feature_table_widget.ui
+        Feature_Table_Widget/Feature_Table_Widget.ui
 
         utils/qt_utilities.cpp
         utils/qt_utilities.hpp
