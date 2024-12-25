@@ -7,6 +7,7 @@ message(STATUS ${CMAKE_PREFIX_PATH})
 
 set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
 find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport OpenGLWidgets OpenGL)
@@ -125,6 +126,8 @@ target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6:
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
+
+target_link_libraries(WhiskerToolbox PRIVATE "${TORCH_LIBRARIES}")
 
 target_include_directories(WhiskerToolbox PRIVATE
 

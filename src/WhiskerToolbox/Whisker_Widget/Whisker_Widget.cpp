@@ -23,6 +23,15 @@
 #include "qevent.h"
 #include "opencv2/core/mat.hpp"
 
+//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
+#undef slots
+
+#include <torch/torch.h>
+
+#include <torch/script.h>
+
+#define slots Q_SLOTS
+
 #include <algorithm>
 #include <filesystem>
 #include <iomanip>
