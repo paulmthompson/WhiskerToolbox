@@ -111,6 +111,9 @@ set(PROJECT_SOURCES
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
+
+        utils/Deep_Learning/Backbones/efficientvit.hpp
+        utils/Deep_Learning/Backbones/efficientvit.cpp
 )
 
 if (WIN32)

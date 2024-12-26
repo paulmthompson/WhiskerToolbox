@@ -32,6 +32,8 @@
 
 #define slots Q_SLOTS
 
+#include "utils/Deep_Learning/Backbones/efficientvit.hpp"
+
 #include <algorithm>
 #include <filesystem>
 #include <iomanip>
@@ -184,7 +186,22 @@ void Whisker_Widget::_traceButton() {
     auto media = _data_manager->getData<MediaData>("media");
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
+    _traceWhiskersDL(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+
     _traceWhiskers(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+}
+
+void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, int width)
+{
+    auto tensor = torch::empty(
+        { height, width, 1},
+        torch::TensorOptions()
+            .dtype(torch::kByte)
+            .device(torch::kCPU));
+
+    std::memcpy(tensor.data_ptr(), image.data(), tensor.numel() * sizeof(at::kByte));
+
+    tensor = tensor.permute({2,0,1});
 }
 
 void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int width)

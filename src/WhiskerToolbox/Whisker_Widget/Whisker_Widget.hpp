@@ -107,6 +107,7 @@ private:
     void _addNewTrackedWhisker(std::vector<int> const & indexes);
 
     void _traceWhiskers(std::vector<uint8_t> image, int height, int width);
+    void _traceWhiskersDL(std::vector<uint8_t> image, int height, int width);
 
 private slots:
     void _traceButton();
