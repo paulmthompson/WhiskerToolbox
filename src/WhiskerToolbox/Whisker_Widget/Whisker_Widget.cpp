@@ -193,6 +193,35 @@ void Whisker_Widget::_traceButton() {
 
 void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, int width)
 {
+
+    torch::Device device(torch::kCPU);
+
+    if (torch::cuda::is_available()) {
+        std::cout << "CUDA is available! Using the GPU." << std::endl;
+        device = torch::Device(torch::kCUDA);
+    } else {
+        std::cout << "No GPU found" << std::endl;
+    }
+
+    /*
+
+    auto model = EfficientViT_B(
+        std::vector<int>{2,2,3,3},
+        std::vector<int>{16,32,64,128},
+        8,
+        std::vector<std::string>{"conv", "conv", "transform", "transform"},
+        std::vector<int>{4},
+        std::vector<bool>{false, false, false, false},
+        16,
+        std::vector<int>{1024, 1280},
+        std::vector<int>{3, 256, 256},
+        0,
+        0,
+        true,
+        false
+        );
+
+
     auto tensor = torch::empty(
         { height, width, 1},
         torch::TensorOptions()
@@ -202,6 +231,16 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, in
     std::memcpy(tensor.data_ptr(), image.data(), tensor.numel() * sizeof(at::kByte));
 
     tensor = tensor.permute({2,0,1});
+
+    auto data_input = torch::nn::functional::interpolate(
+        tensor,
+        torch::nn::functional::InterpolateFuncOptions().size(std::vector<int64_t>({256,256}))
+                                                      .mode(torch::kBilinear)
+                                                      .antialias(true)
+                                                      .align_corners(false));
+
+    //model->forward(tensor);
+    */
 }
 
 void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int width)
