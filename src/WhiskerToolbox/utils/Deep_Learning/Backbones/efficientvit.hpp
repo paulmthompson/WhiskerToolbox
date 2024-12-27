@@ -10,6 +10,15 @@
 struct Conv2dSameImpl : torch::nn::Conv2dImpl {
     using torch::nn::Conv2dImpl::Conv2dImpl;
 
+    Conv2dSameImpl(
+        int64_t input_channels,
+        int64_t output_channels,
+        torch::ExpandingArray<2> kernel_size)
+        : Conv2dImpl(input_channels,output_channels,kernel_size) {}
+
+    explicit Conv2dSameImpl(torch::nn::Conv2dOptions options_)
+        : Conv2dImpl(options_) {}
+
     int calc_same_pad(int i, int k, int s, int d) {
         return std::max((int(std::ceil(float(i) / s)) - 1) * s + (k - 1) * d + 1 - i, 0);
     }
@@ -30,15 +39,16 @@ struct Conv2dSameImpl : torch::nn::Conv2dImpl {
 TORCH_MODULE(Conv2dSame);
 
 struct MBConvImpl : torch::nn::Module {
-    bool shortcut, is_fused, use_norm, use_output_norm, anti_aliasing;
+    bool shortcut, is_fused, use_norm {true}, use_output_norm {true}, anti_aliasing;
     int strides, expansion;
     float drop_rate;
-    Conv2dSame expand_conv{nullptr}, dw_conv{nullptr}, pw_conv{nullptr};
-    torch::nn::BatchNorm2d expand_bn{nullptr}, dw_bn{nullptr}, pw_bn{nullptr};
     torch::nn::Dropout dropout{nullptr};
-    torch::nn::ModuleHolder<torch::nn::ReLUImpl> activation;
 
-    MBConvImpl(
+    torch::nn::Sequential pw_block;
+    torch::nn::Sequential expand_block;
+    torch::nn::Sequential dw_block;
+
+    explicit MBConvImpl(
         int input_channel,
         int output_channel,
         bool shortcut=true,
@@ -46,8 +56,8 @@ struct MBConvImpl : torch::nn::Module {
         int expansion=4,
         bool is_fused=false,
         bool use_bias=true,
-        bool use_norm=false,
-        bool use_output_norm=false,
+        bool use_norm=true,
+        bool use_output_norm=true,
         float drop_rate=0,
         bool anti_aliasing=false)
         : shortcut(shortcut), strides(strides), expansion(expansion), is_fused(is_fused), use_norm(use_norm),
@@ -55,74 +65,67 @@ struct MBConvImpl : torch::nn::Module {
 
         if (is_fused) {
             if (anti_aliasing && strides > 1) {
-                expand_conv = Conv2dSame(torch::nn::Conv2dOptions(input_channel, int(input_channel * expansion), 3).stride(1).bias(true));
                 // Blur2D implementation needed
+                expand_block->push_back(
+                    Conv2dSame(torch::nn::Conv2dOptions(input_channel, int(input_channel * expansion), 3).stride(1).bias(true)));
             } else {
-                expand_conv = Conv2dSame(torch::nn::Conv2dOptions(input_channel, int(input_channel * expansion), 3).stride(strides).bias(true));
+                expand_block->push_back(
+                    Conv2dSame(torch::nn::Conv2dOptions(input_channel, int(input_channel * expansion), 3).stride(strides).bias(true))
+                    );
             }
             if (use_norm) {
-                expand_bn = torch::nn::BatchNorm2d(int(input_channel * expansion));
+                expand_block->push_back(torch::nn::BatchNorm2d(int(input_channel * expansion))
+                                        );
             }
         } else if (expansion > 1) {
-            expand_conv = Conv2dSame(torch::nn::Conv2dOptions(input_channel, int(input_channel * expansion), 1).stride(1).bias(true));
+            expand_block->push_back(
+                Conv2dSame(torch::nn::Conv2dOptions(input_channel, int(input_channel * expansion), 1).stride(1).bias(true)));
             if (use_norm) {
-                expand_bn = torch::nn::BatchNorm2d(int(input_channel * expansion));
+                expand_block->push_back(torch::nn::BatchNorm2d(int(input_channel * expansion)));
             }
         }
+        expand_block->push_back(torch::nn::ModuleHolder<torch::nn::ReLUImpl>(torch::nn::ReLUImpl()));
 
         if (!is_fused) {
             if (anti_aliasing && strides > 1) {
-                dw_conv = Conv2dSame(torch::nn::Conv2dOptions(int(input_channel * expansion), int(input_channel * expansion), 3).stride(1).groups(int(input_channel * expansion)).bias(true));
+                //dw_conv = Conv2dSame(torch::nn::Conv2dOptions(int(input_channel * expansion), int(input_channel * expansion), 3).stride(1).groups(int(input_channel * expansion)).bias(true));
+                dw_block->push_back(
+                    Conv2dSame(torch::nn::Conv2dOptions(int(input_channel * expansion), int(input_channel * expansion), 3).stride(1).groups(int(input_channel * expansion)).bias(true)));
                 // Blur2D implementation needed
             } else {
-                dw_conv = Conv2dSame(torch::nn::Conv2dOptions(int(input_channel * expansion), int(input_channel * expansion), 3).stride(strides).groups(int(input_channel * expansion)).bias(true));
+                dw_block->push_back(
+                    Conv2dSame(torch::nn::Conv2dOptions(int(input_channel * expansion), int(input_channel * expansion), 3).stride(strides).groups(int(input_channel * expansion)).bias(true)));
+                //dw_conv = Conv2dSame(torch::nn::Conv2dOptions(int(input_channel * expansion), int(input_channel * expansion), 3).stride(strides).groups(int(input_channel * expansion)).bias(true));
             }
             if (use_norm) {
-                dw_bn = torch::nn::BatchNorm2d(int(input_channel * expansion));
+                dw_block->push_back(torch::nn::BatchNorm2d(int(input_channel * expansion)));
+                //dw_bn = torch::nn::BatchNorm2d(int(input_channel * expansion));
             }
+            dw_block->push_back(torch::nn::ModuleHolder<torch::nn::ReLUImpl>(torch::nn::ReLUImpl()));
         }
 
         int pw_kernel_size = (is_fused && expansion == 1) ? 3 : 1;
-        pw_conv = Conv2dSame(torch::nn::Conv2dOptions(int(input_channel * expansion), output_channel, pw_kernel_size).stride(1).bias(true));
+        pw_block->push_back(
+            Conv2dSame(torch::nn::Conv2dOptions(int(input_channel * expansion), output_channel, pw_kernel_size).stride(1).bias(true)));
         if (use_output_norm) {
-            pw_bn = torch::nn::BatchNorm2d(output_channel);
+            pw_block->push_back(torch::nn::BatchNorm2d(output_channel));
         }
 
         dropout = torch::nn::Dropout(torch::nn::DropoutOptions().p(drop_rate));
 
-        register_module("expand_conv", expand_conv);
-        register_module("dw_conv", dw_conv);
-        register_module("pw_conv", pw_conv);
-        if (use_norm) {
-            register_module("expand_bn", expand_bn);
-            register_module("dw_bn", dw_bn);
-            register_module("pw_bn", pw_bn);
-        }
+        register_module("expand_block",expand_block);
+        register_module("dw_block",dw_block);
+        register_module("pw_block",pw_block);
         register_module("dropout", dropout);
     }
 
     torch::Tensor forward(torch::Tensor input) {
         auto x = input;
-        if (expand_conv) {
-            x = expand_conv->forward(x);
-            if (use_norm) {
-                x = expand_bn->forward(x);
-            }
-            x = activation->forward(x);
-        }
 
-        if (!is_fused) {
-            x = dw_conv->forward(x);
-            if (use_norm) {
-                x = dw_bn->forward(x);
-            }
-            x = activation->forward(x);
-        }
+        x = expand_block->forward(x);
+        x = dw_block->forward(x);
+        x = pw_block->forward(x);
 
-        x = pw_conv->forward(x);
-        if (use_output_norm) {
-            x = pw_bn->forward(x);
-        }
         x = dropout->forward(x);
 
         if (shortcut) {
@@ -137,9 +140,9 @@ TORCH_MODULE(MBConv);
 struct LiteMHSAImpl : torch::nn::Module {
     int num_heads, key_dim, emb_dim;
     bool use_norm;
-    torch::nn::ModuleHolder<torch::nn::ReLUImpl> activation;
-    Conv2dSame qkv_conv{nullptr}, qkv_dw_conv{nullptr}, qkv_pw_conv{nullptr}, out_conv{nullptr};
-    torch::nn::BatchNorm2d out_bn{nullptr};
+    Conv2dSame qkv_conv{nullptr}, qkv_dw_conv{nullptr}, qkv_pw_conv{nullptr};
+    torch::nn::ReLU activation {torch::nn::ReLU()};
+    torch::nn::Sequential out_block;
 
     LiteMHSAImpl(
         int input_channel,
@@ -163,18 +166,16 @@ struct LiteMHSAImpl : torch::nn::Module {
         qkv_conv = Conv2dSame(torch::nn::Conv2dOptions(input_channel, emb_dim * 3, 1).bias(qkv_bias));
         qkv_dw_conv = Conv2dSame(torch::nn::Conv2dOptions(emb_dim * 3, emb_dim * 3, sr_ratio).groups(emb_dim * 3).bias(qkv_bias));
         qkv_pw_conv = Conv2dSame(torch::nn::Conv2dOptions(emb_dim * 3, emb_dim * 3, 1).groups(3 * num_heads).bias(qkv_bias));
-        out_conv = Conv2dSame(torch::nn::Conv2dOptions(emb_dim * 2, out_shape, 1).bias(out_bias));
+
+        out_block->push_back(Conv2dSame(torch::nn::Conv2dOptions(emb_dim * 2, out_shape, 1).bias(out_bias)));
         if (use_norm) {
-            out_bn = torch::nn::BatchNorm2d(out_shape);
+            out_block->push_back(torch::nn::BatchNorm2d(out_shape));
         }
 
         register_module("qkv_conv", qkv_conv);
         register_module("qkv_dw_conv", qkv_dw_conv);
         register_module("qkv_pw_conv", qkv_pw_conv);
-        register_module("out_conv", out_conv);
-        if (use_norm) {
-            register_module("out_bn", out_bn);
-        }
+        register_module("out_block", out_block);
         register_module("activation", activation);
     }
 
@@ -201,10 +202,7 @@ struct LiteMHSAImpl : torch::nn::Module {
         auto attention_output = torch::matmul(query_key, value.transpose(-2, -1)) / (scale + 1e-7);
 
         auto output = attention_output.permute({0, 1, 3, 2}).contiguous().view({batch_size, -1, height, width});
-        output = out_conv->forward(output);
-        if (use_norm) {
-            output = out_bn->forward(output);
-        }
+        output = out_block->forward(output);
         output = output + input;
         return output;
     }
@@ -218,9 +216,9 @@ struct EfficientViT_BImpl : torch::nn::Module {
     float drop_connect_rate, dropout;
     Conv2dSame stem_conv{nullptr};
     torch::nn::BatchNorm2d stem_bn{nullptr};
-    torch::nn::ModuleHolder<torch::nn::ReLUImpl> stem_activation;
+    torch::nn::ReLU stem_activation {torch::nn::ReLU()};
     MBConv stem_mb_conv{nullptr};
-    torch::nn::Sequential blocks{nullptr};
+    torch::nn::Sequential _blocks;
     Conv2dSame features_conv{nullptr};
     torch::nn::BatchNorm2d features_bn{nullptr};
     std::vector<std::string> block_types;
@@ -231,7 +229,7 @@ struct EfficientViT_BImpl : torch::nn::Module {
         std::vector<int> out_channels,
         int stem_width=8,
         std::vector<std::string> block_types={"conv", "conv", "transform", "transform"},
-        std::vector<int> expansions={4},
+        std::vector<int> expansions={4, 4, 4, 4},
         std::vector<bool> is_fused={false, false, false, false},
         int head_dimension=16,
         std::vector<int> output_filters={1024, 1280},
@@ -244,21 +242,25 @@ struct EfficientViT_BImpl : torch::nn::Module {
         out_channels(out_channels),
         output_filters(output_filters),
         stem_width(stem_width),
+        block_types(block_types),
+        expansions(expansions),
+        is_fused(is_fused),
         head_dimension(head_dimension),
         use_norm(use_norm),
         anti_aliasing(anti_aliasing),
         drop_connect_rate(drop_connect_rate),
-        dropout(dropout),
-        block_types(block_types)
+        dropout(dropout)
     {
 
         stem_conv = Conv2dSame(torch::nn::Conv2dOptions(input_shape[0], stem_width, 3).stride(2));
         if (use_norm) {
             stem_bn = torch::nn::BatchNorm2d(stem_width);
         }
+
         stem_mb_conv = MBConv(stem_width, stem_width, true, 1, 1, is_fused[0], true, use_norm, use_norm, 0, anti_aliasing);
 
-        blocks = _make_blocks(stem_width);
+
+        _blocks = _make_blocks(stem_width);
 
         if (output_filters[0] > 0) {
             features_conv = Conv2dSame(torch::nn::Conv2dOptions(out_channels.back(), output_filters[0], 1).stride(1));
@@ -268,20 +270,24 @@ struct EfficientViT_BImpl : torch::nn::Module {
         }
 
         register_module("stem_conv", stem_conv);
-        register_module("stem_bn", stem_bn);
+        if (use_norm) {
+            register_module("stem_bn", stem_bn);
+        }
         register_module("stem_activation", stem_activation);
         register_module("stem_mb_conv", stem_mb_conv);
-        register_module("blocks", blocks);
+        register_module("_blocks", _blocks);
         register_module("features_conv", features_conv);
         register_module("features_bn", features_bn);
     }
 
     torch::nn::Sequential _make_blocks(int block_input_channels) {
-        torch::nn::Sequential blocks;
+        auto blocks = torch::nn::Sequential();
+        //torch::nn::Sequential blocks;
         int total_blocks = std::accumulate(num_blocks.begin(), num_blocks.end(), 0);
         int global_block_id = 0;
 
         for (size_t stack_id = 0; stack_id < num_blocks.size(); ++stack_id) {
+
             bool is_conv_block = block_types[stack_id][0] == 'c';
             int cur_expansions = expansions[stack_id];
 
@@ -296,6 +302,7 @@ struct EfficientViT_BImpl : torch::nn::Module {
             bool cur_is_fused = is_fused[stack_id];
             for (int block_id = 0; block_id < num_blocks[stack_id]; ++block_id) {
                 std::string name = "stack_" + std::to_string(stack_id + 1) + "_block_" + std::to_string(block_id + 1) + "_";
+
                 int stride = block_id == 0 ? 2 : 1;
                 bool shortcut = block_id != 0;
                 int cur_expansion = cur_expansions;
@@ -326,7 +333,7 @@ struct EfficientViT_BImpl : torch::nn::Module {
         }
         x = stem_activation->forward(x);
         x = stem_mb_conv->forward(x);
-        x = blocks->forward(x);
+        x = _blocks->forward(x);
 
         if (output_filters[0] > 0) {
             x = features_conv->forward(x);
