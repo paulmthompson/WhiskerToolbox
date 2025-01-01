@@ -60,11 +60,17 @@ elseif (APPLE)
         URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-2.5.1.zip
     )
 elseif (WIN32)
-    FetchContent_Declare(
-        Torch
-        #URL https://download.pytorch.org/libtorch/cu121/libtorch-win-shared-with-deps-2.5.1%2Bcu121.zip
-        URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.5.1%2Bcpu.zip
-    )
+    if (CUDA)
+        FetchContent_Declare(
+            Torch
+            URL https://download.pytorch.org/libtorch/cu121/libtorch-win-shared-with-deps-2.5.1%2Bcu121.zip
+        )
+    else()
+        FetchContent_Declare(
+            Torch
+            URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.5.1%2Bcpu.zip
+        )
+    endif()
 endif()
 
 #We should use make avaiable
