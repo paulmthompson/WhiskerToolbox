@@ -46,7 +46,25 @@ std::shared_ptr<torch::jit::Module> load_torchscript_model(std::string model_fil
         std::cerr << "error loading the model\n";
         return std::shared_ptr<torch::jit::Module>(nullptr);
     }
-
 }
+
+torch::Tensor create_tensor_from_gray8(std::vector<uint8_t>& image, int height, int width)
+{
+    auto tensor = torch::empty(
+        { height, width, 1},
+        torch::TensorOptions()
+            .dtype(torch::kByte)
+            .device(torch::kCPU));
+
+    std::memcpy(tensor.data_ptr(), image.data(), tensor.numel() * sizeof(at::kByte));
+    tensor = tensor.permute({2,0,1});
+    tensor = tensor.unsqueeze(0);
+    return tensor;
+}
+
+
+
+
+
 }
 #endif // TORCH_HELPERS_HPP
