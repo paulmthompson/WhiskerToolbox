@@ -39,12 +39,21 @@ set(JKQtPlotter_BUILD_TOOLS OFF)
 set(JKQtPlotter_BUILD_LIB_JKQTFASTPLOTTER OFF)
 #add_subdirectory(Whisker-Analysis)
 
+set(CUDA OFF)
+
 if (LINUX)
-    FetchContent_Declare(
-        Torch
-        #URL https://download.pytorch.org/libtorch/cu121/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcu121.zip
-        URL https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcpu.zip
-    )
+    if (CUDA)
+        message(STATUS "Fetching libtorch with CUDA")
+        FetchContent_Declare(
+            Torch
+            URL https://download.pytorch.org/libtorch/cu121/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcu121.zip
+        )
+    else()
+        FetchContent_Declare(
+            Torch
+            URL https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcpu.zip
+        )
+    endif()
 elseif (APPLE)
     FetchContent_Declare(
         Torch
