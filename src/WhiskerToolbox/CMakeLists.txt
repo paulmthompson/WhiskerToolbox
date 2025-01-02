@@ -116,6 +116,9 @@ set(PROJECT_SOURCES
         utils/Deep_Learning/Backbones/efficientvit.cpp
 
         utils/Deep_Learning/torch_helpers.hpp
+
+        utils/Deep_Learning/scm.hpp
+        utils/Deep_Learning/scm.cpp
 )
 
 if (WIN32)

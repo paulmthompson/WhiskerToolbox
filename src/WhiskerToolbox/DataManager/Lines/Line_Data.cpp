@@ -173,3 +173,19 @@ void smooth_line(Line2D& line)
     smoothed_line.push_back(line.back()); // Last point remains the same
     line = std::move(smoothed_line);
 }
+
+std::vector<uint8_t> line_to_image(Line2D& line, int height, int width)
+{
+    auto image = std::vector<uint8_t>(height * width);
+
+    for (auto point : line) {
+        auto x = std::lround(point.x);
+        auto y = std::lround(point.y);
+
+        auto index = height * x + y;
+        image[index] = 255;
+    }
+
+    return image;
+}
+

@@ -378,4 +378,25 @@ struct Blur2DImpl : torch::nn::Module {
 };
 TORCH_MODULE(Blur2D);
 
+/*
+    auto model = EfficientViT_BImpl(
+        {2,2,3,3},
+        {16,32,64,128},
+        8,
+        {"conv", "conv", "transform", "transform"},
+        {4, 4, 4, 4},
+        {false, false, false, false},
+        16,
+        {1024, 1280},
+        {3, 256, 256},
+        0,
+        0,
+        true,
+        false);
+
+model.eval();
+model.to(device);
+model.to(torch::kFloat32);
+*/
+
 #endif // EFFICIENTVIT_HPP

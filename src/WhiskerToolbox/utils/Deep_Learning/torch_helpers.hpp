@@ -9,7 +9,8 @@
 #include <string>
 
 namespace dl {
-torch::Device get_device(){
+
+inline torch::Device get_device(){
     auto device = torch::Device(torch::kCPU);
     if (torch::cuda::is_available()) {
         std::cout << "CUDA is available! Using the GPU." << std::endl;
@@ -20,7 +21,7 @@ torch::Device get_device(){
     return device;
 }
 
-std::shared_ptr<torch::jit::Module> load_torchscript_model(std::string model_file_path, torch::Device device)
+inline std::shared_ptr<torch::jit::Module> load_torchscript_model(std::string model_file_path, torch::Device device)
 {
     try {
         // Deserialize the ScriptModule from a file using torch::jit::load().
@@ -48,7 +49,7 @@ std::shared_ptr<torch::jit::Module> load_torchscript_model(std::string model_fil
     }
 }
 
-torch::Tensor create_tensor_from_gray8(std::vector<uint8_t>& image, int height, int width)
+inline torch::Tensor create_tensor_from_gray8(std::vector<uint8_t>& image, int height, int width)
 {
     auto tensor = torch::empty(
         { height, width, 1},

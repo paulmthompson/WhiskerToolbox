@@ -31,8 +31,7 @@
 
 #define slots Q_SLOTS
 
-#include "utils/Deep_Learning/Backbones/efficientvit.hpp"
-#include "utils/Deep_Learning/torch_helpers.hpp"
+#include "utils/Deep_Learning/scm.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -57,8 +56,6 @@ Line2D convert_to_Line2D(whisker::Line2D& line)
     }
     return output_line;
 }
-
-torch::Device device(torch::kCPU);
 
 /**
  * @brief Whisker_Widget::Whisker_Widget
@@ -94,6 +91,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     _scene->changeLineColor("unlabeled_whiskers","#0000ff");
     _janelia_config_widget = new Janelia_Config(_wt);
 
+    dl_model = std::make_unique<dl::SCM>();
 
     connect(ui->trace_button, &QPushButton::clicked, this, &Whisker_Widget::_traceButton);
     connect(ui->dl_trace_button, &QPushButton::clicked, this, &Whisker_Widget::_dlTraceButton);
@@ -208,60 +206,11 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, in
     QElapsedTimer timer3;
     timer3.start();
 
-    device = dl::get_device();
-
-    auto model = EfficientViT_BImpl(
-        {2,2,3,3},
-        {16,32,64,128},
-        8,
-        {"conv", "conv", "transform", "transform"},
-        {4, 4, 4, 4},
-        {false, false, false, false},
-        16,
-        {1024, 1280},
-        {3, 256, 256},
-        0,
-        0,
-        true,
-        false);
-
-    model.eval();
-    model.to(device);
-    model.to(torch::kFloat32);
-
-    if (!module) {
-        module = dl::load_torchscript_model("/home/wanglab/Desktop/efficientvit_pytorch_cuda.pt", device);
-    }
-
-    auto tensor = dl::create_tensor_from_gray8(image, height, width);
-    tensor = tensor.repeat({1, 3, 1, 1});
-
-    auto data_input = torch::nn::functional::interpolate(
-        tensor,
-        torch::nn::functional::InterpolateFuncOptions().size(std::vector<int64_t>({256,256}))
-                                                      .mode(torch::kBilinear)
-                                                      .antialias(true)
-                                                      .align_corners(false));
-
-    data_input = data_input.to(torch::kFloat32).div(255).contiguous().to(device);
-
-    //data_input = data_input.repeat({100, 1, 1, 1});
-
-    auto t1 = timer3.elapsed();
-
-    torch::NoGradGuard no_grad;
-
-    //torch::jit::setGraphExecutorOptimize(false);
-    auto output = module->forward({data_input}).toTensor();
-    //auto output = model.forward(data_input);
-
-    //auto output = module->forward(inputs);
-
-    //std::cout << output.index({0,0}) << std::endl;
+    dl_model->process_frame(image, height, width);
 
     auto t2 = timer3.elapsed();
 
-    qDebug() << "Pre-processing took" << t1 << "ms and inference took" << (t2 - t1);
+    qDebug() << "DL took" << t2;
 }
 
 void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int width)

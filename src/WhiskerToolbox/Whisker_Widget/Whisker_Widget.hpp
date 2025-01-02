@@ -21,9 +21,8 @@ class TimeScrollBar;
 
 namespace Ui {class Whisker_Widget;}
 namespace whisker {class WhiskerTracker; struct Line2D;}
-namespace torch::jit {class Module;}
 
-
+namespace dl {class SCM;}
 
 /*
 
@@ -93,7 +92,7 @@ private:
 
     Ui::Whisker_Widget *ui;
 
-    std::shared_ptr<torch::jit::Module> module {nullptr};
+    std::unique_ptr<dl::SCM> dl_model {nullptr};
 
     void _drawWhiskers();
     void _createNewWhisker(std::string const & whisker_group_name, int const whisker_id);
