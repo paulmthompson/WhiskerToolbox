@@ -226,6 +226,12 @@ void Whisker_Widget::_dlAddMemoryButton()
 
     dl_model->add_memory_frame(image, memory_mask);
 
+    //Debugging
+    //auto const width = media->getWidth();
+    //auto const height = media->getHeight();
+    //QImage labeled_image(&memory_mask[0], width, height, QImage::Format_Grayscale8);
+    //labeled_image.save(QString::fromStdString("memory_frame.png"));
+
 }
 
 void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, int width)

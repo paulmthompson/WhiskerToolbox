@@ -182,7 +182,7 @@ std::vector<uint8_t> line_to_image(Line2D& line, int height, int width)
         auto x = std::lround(point.x);
         auto y = std::lround(point.y);
 
-        auto index = height * x + y;
+        auto index = width * y + x;
         image[index] = 255;
     }
 
