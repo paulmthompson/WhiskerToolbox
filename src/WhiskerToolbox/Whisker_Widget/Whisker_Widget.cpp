@@ -208,6 +208,8 @@ void Whisker_Widget::_dlAddMemoryButton()
 
     auto image = media->getProcessedData(current_time);
 
+    dl_model->add_height_width(media->getHeight(), media->getWidth());
+
     std::string whisker_name = "whisker_" + std::to_string(_current_whisker);
 
     if (!_data_manager->getData<LineData>(whisker_name))
