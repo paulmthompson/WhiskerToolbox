@@ -51,6 +51,24 @@ void SCM::process_frame(std::vector<uint8_t>& image, int height, int width) {
     auto output = module->forward({data_input}).toTensor();
 }
 
+void SCM::add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_t> memory_label)
+{
+    int key_index;
+
+    if (_memory.empty())
+    {
+        key_index = 0;
+    }
+
+    if (_memory.rbegin()->first >= memory_frames)
+    {
+        key_index = _memory.rbegin()->first;
+    } else {
+        key_index = _memory.rbegin()->first + 1;
+    }
+
+    _memory[key_index] = memory_frame_pair{memory_frame, memory_label};
+}
 
 
 }
