@@ -27,12 +27,12 @@
 #undef slots
 
 #include <torch/torch.h>
-
 #include <torch/script.h>
 
 #define slots Q_SLOTS
 
 #include "utils/Deep_Learning/Backbones/efficientvit.hpp"
+#include "utils/Deep_Learning/torch_helpers.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -57,6 +57,8 @@ Line2D convert_to_Line2D(whisker::Line2D& line)
     }
     return output_line;
 }
+
+torch::Device device(torch::kCPU);
 
 /**
  * @brief Whisker_Widget::Whisker_Widget
@@ -94,6 +96,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
 
     connect(ui->trace_button, &QPushButton::clicked, this, &Whisker_Widget::_traceButton);
+    connect(ui->dl_trace_button, &QPushButton::clicked, this, &Whisker_Widget::_dlTraceButton);
     connect(ui->actionJanelia_Settings, &QAction::triggered, this, &Whisker_Widget::_openJaneliaConfig);
     connect(ui->face_orientation, &QComboBox::currentIndexChanged, this, &Whisker_Widget::_selectFaceOrientation);
     connect(ui->length_threshold_spinbox, &QDoubleSpinBox::valueChanged, this,
@@ -186,51 +189,52 @@ void Whisker_Widget::_traceButton() {
     auto media = _data_manager->getData<MediaData>("media");
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
+    _traceWhiskers(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+}
+
+void Whisker_Widget::_dlTraceButton()
+{
+
+    auto media = _data_manager->getData<MediaData>("media");
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
     _traceWhiskersDL(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
 
-    _traceWhiskers(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
 }
 
 void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, int width)
 {
 
-    torch::Device device(torch::kCPU);
+    QElapsedTimer timer3;
+    timer3.start();
 
-    if (torch::cuda::is_available()) {
-        std::cout << "CUDA is available! Using the GPU." << std::endl;
-        device = torch::Device(torch::kCUDA);
-    } else {
-        std::cout << "No GPU found" << std::endl;
-    }
+    device = dl::get_device();
 
-    /*
-
-    auto model = EfficientViT_B(
-        std::vector<int>{2,2,3,3},
-        std::vector<int>{16,32,64,128},
+    auto model = EfficientViT_BImpl(
+        {2,2,3,3},
+        {16,32,64,128},
         8,
-        std::vector<std::string>{"conv", "conv", "transform", "transform"},
-        std::vector<int>{4},
-        std::vector<bool>{false, false, false, false},
+        {"conv", "conv", "transform", "transform"},
+        {4, 4, 4, 4},
+        {false, false, false, false},
         16,
-        std::vector<int>{1024, 1280},
-        std::vector<int>{3, 256, 256},
+        {1024, 1280},
+        {3, 256, 256},
         0,
         0,
         true,
-        false
-        );
+        false);
 
+    model.eval();
+    model.to(device);
+    model.to(torch::kFloat32);
 
-    auto tensor = torch::empty(
-        { height, width, 1},
-        torch::TensorOptions()
-            .dtype(torch::kByte)
-            .device(torch::kCPU));
+    if (!module) {
+        module = dl::load_torchscript_model("/home/wanglab/Desktop/efficientvit_pytorch_cuda.pt", device);
+    }
 
-    std::memcpy(tensor.data_ptr(), image.data(), tensor.numel() * sizeof(at::kByte));
-
-    tensor = tensor.permute({2,0,1});
+    auto tensor = dl::create_tensor_from_gray8(image, height, width);
+    tensor = tensor.repeat({1, 3, 1, 1});
 
     auto data_input = torch::nn::functional::interpolate(
         tensor,
@@ -239,8 +243,25 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, in
                                                       .antialias(true)
                                                       .align_corners(false));
 
-    //model->forward(tensor);
-    */
+    data_input = data_input.to(torch::kFloat32).div(255).contiguous().to(device);
+
+    //data_input = data_input.repeat({100, 1, 1, 1});
+
+    auto t1 = timer3.elapsed();
+
+    torch::NoGradGuard no_grad;
+
+    //torch::jit::setGraphExecutorOptimize(false);
+    auto output = module->forward({data_input}).toTensor();
+    //auto output = model.forward(data_input);
+
+    //auto output = module->forward(inputs);
+
+    //std::cout << output.index({0,0}) << std::endl;
+
+    auto t2 = timer3.elapsed();
+
+    qDebug() << "Pre-processing took" << t1 << "ms and inference took" << (t2 - t1);
 }
 
 void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int width)
