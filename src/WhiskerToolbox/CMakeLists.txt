@@ -97,6 +97,7 @@ set(PROJECT_SOURCES
         utils/qt_utilities.hpp
 
         utils/Image_Processing/skeletonize.hpp
+        utils/Image_Processing/order_line.hpp
 
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp

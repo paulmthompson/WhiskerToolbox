@@ -1,6 +1,8 @@
 
 #include "scm.hpp"
 #include "utils/Image_Processing/skeletonize.hpp"
+#include "utils/Image_Processing/order_line.hpp"
+#include "DataManager/Points/Point_Data.hpp"
 
 #include "torch_helpers.hpp"
 #include <torch/torch.h>
@@ -45,7 +47,7 @@ torch::Tensor convert_image_vec_to_tensor(std::vector<uint8_t> image, int height
     return data_input;
 }
 
-std::vector<uint8_t> SCM::process_frame(std::vector<uint8_t>& image, int height, int width) {
+std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, int height, int width) {
 
     device = dl::get_device();
 
@@ -58,7 +60,7 @@ std::vector<uint8_t> SCM::process_frame(std::vector<uint8_t>& image, int height,
     if (_memory.empty())
     {
         std::cout << "Currently no frames in memory. Please select some" << std::endl;
-        return std::vector<uint8_t>();
+        return std::vector<Point2D<float>>();
     }
 
     auto image_tensor = convert_image_vec_to_tensor(image, height, width);
@@ -107,11 +109,17 @@ std::vector<uint8_t> SCM::process_frame(std::vector<uint8_t>& image, int height,
 
     auto output_vec = fast_skeletonize(vec, 256, 256);
 
+    auto output_line = order_line(output_vec, 256, 256, {_x,_y});
+
+    std::cout << "output line is " << output_line.size() << std::endl;
+
+    /*
     std::transform(output_vec.begin(), output_vec.end(), output_vec.begin(), [](uint8_t pixel) {
         return pixel > 0 ? 255 : 0;
     });
+    */
 
-    return output_vec;
+    return output_line;
 }
 
 void SCM::add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_t> memory_label)

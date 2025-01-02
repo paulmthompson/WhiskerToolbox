@@ -243,13 +243,24 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, in
 
     auto output = dl_model->process_frame(image, height, width);
 
+    std::transform(output.begin(), output.end(), output.begin(), [height, width](Point2D<float> p) {
+        return Point2D<float>{p.x / 256 * width, p.y / 256 * height};
+    });
+
     auto t2 = timer3.elapsed();
 
     qDebug() << "DL took" << t2;
 
+    std::string whisker_name = "whisker_" + std::to_string(_current_whisker);
+
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    _data_manager->getData<LineData>(whisker_name)->addLineAtTime(current_time, output);
+
+    _drawWhiskers();
+
     //Debugging
-    QImage labeled_image(&output[0], 256, 256, QImage::Format_Grayscale8);
-    labeled_image.save(QString::fromStdString("memory_frame.png"));
+    //QImage labeled_image(&output[0], 256, 256, QImage::Format_Grayscale8);
+    //labeled_image.save(QString::fromStdString("memory_frame.png"));
 }
 
 void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int width)
@@ -613,6 +624,7 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
         case Whisker_Pad_Select: {
             _wt->setWhiskerPad(x_media,y_media);
+            dl_model->add_origin(x_media, y_media);
             std::string whisker_pad_label =
                     "(" + std::to_string(static_cast<int>(x_media)) + "," + std::to_string(static_cast<int>(y_media)) +
                     ")";
