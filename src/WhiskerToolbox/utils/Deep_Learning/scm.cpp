@@ -103,7 +103,7 @@ std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, int 
     device = dl::get_device();
 
     if (!module) {
-        module = dl::load_torchscript_model("/home/wanglab/Desktop/efficientvit_pytorch_cuda2.pt", device);
+        module = dl::load_torchscript_model("/home/wanglab/Desktop/efficientvit_pytorch_cuda3.pt", device);
     }
 
     module->to(device);

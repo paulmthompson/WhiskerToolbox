@@ -140,6 +140,14 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     connect(ui->magic_eraser_button, &QPushButton::clicked, this, &Whisker_Widget::_magicEraserButton);
 
+    connect(ui->auto_dl_checkbox, &QCheckBox::stateChanged, this, [this](){
+        if (ui->auto_dl_checkbox->isChecked()) {
+            _auto_dl = true;
+        } else {
+            _auto_dl = false;
+        }
+    });
+
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -256,6 +264,7 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, in
     std::string whisker_name = "whisker_" + std::to_string(_current_whisker);
 
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    _data_manager->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
     _data_manager->getData<LineData>(whisker_name)->addLineAtTime(current_time, output);
 
     _drawWhiskers();
@@ -984,6 +993,9 @@ void Whisker_Widget::LoadFrame(int frame_id)
     auto* contact_widget = _main_window->getWidget("Contact_Widget");
     if (contact_widget) {
         dynamic_cast<Contact_Widget*>(contact_widget)->updateFrame(frame_id);
+    }
+    if (_auto_dl) {
+        _dlTraceButton();
     }
 }
 

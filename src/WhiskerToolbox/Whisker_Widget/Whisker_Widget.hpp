@@ -90,6 +90,8 @@ private:
 
     int _current_whisker {0};
 
+    bool _auto_dl {false};
+
     Ui::Whisker_Widget *ui;
 
     std::unique_ptr<dl::SCM> dl_model {nullptr};

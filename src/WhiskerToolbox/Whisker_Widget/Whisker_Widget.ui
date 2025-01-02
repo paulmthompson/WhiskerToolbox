@@ -676,6 +676,19 @@
       <string>Add Memory Frame</string>
      </property>
     </widget>
+    <widget class="QCheckBox" name="auto_dl_checkbox">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>80</y>
+       <width>92</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Auto</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">

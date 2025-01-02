@@ -143,9 +143,21 @@ void Media_Window::UpdateCanvas()
     clearPoints();
     clearMasks();
 
-    _convertNewMediaToQImage();
+    //_convertNewMediaToQImage();
+    auto _media = _data_manager->getData<MediaData>("media");
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto media_data = _media->getProcessedData(current_time);
 
-    _canvasPixmap->setPixmap(QPixmap::fromImage(_canvasImage));
+    auto unscaled_image = QImage(&media_data[0],
+                                 _media->getWidth(),
+                                 _media->getHeight(),
+                                 _getQImageFormat()
+                                 );
+
+    auto new_image = unscaled_image.scaled(_canvasWidth,_canvasHeight);
+
+    _canvasPixmap->setPixmap(QPixmap::fromImage(new_image));
+    _canvasImage = new_image;
 
     // Check for manual selection with the currently rendered frame;
 
