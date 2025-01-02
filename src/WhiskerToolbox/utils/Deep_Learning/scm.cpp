@@ -44,7 +44,7 @@ torch::Tensor convert_image_vec_to_tensor(std::vector<uint8_t> image, int height
     return data_input;
 }
 
-void SCM::process_frame(std::vector<uint8_t>& image, int height, int width) {
+std::vector<uint8_t> SCM::process_frame(std::vector<uint8_t>& image, int height, int width) {
 
     device = dl::get_device();
 
@@ -57,7 +57,7 @@ void SCM::process_frame(std::vector<uint8_t>& image, int height, int width) {
     if (_memory.empty())
     {
         std::cout << "Currently no frames in memory. Please select some" << std::endl;
-        return;
+        return std::vector<uint8_t>();
     }
 
     auto image_tensor = convert_image_vec_to_tensor(image, height, width);
@@ -91,6 +91,15 @@ void SCM::process_frame(std::vector<uint8_t>& image, int height, int width) {
 
     //torch::jit::setGraphExecutorOptimize(false);
     auto output = module->forward({image_tensor, memory_frame_tensor, memory_label_tensor, mask_tensor}).toTensor();
+
+    output = torch::nn::functional::interpolate(
+        output,
+        torch::nn::functional::InterpolateFuncOptions().size(std::vector<int64_t>({height,width})).mode(torch::kBilinear).align_corners(false));
+
+    output = output.mul(255).clamp(0,255).to(torch::kU8).detach().to(torch::kCPU);
+    std::vector<uint8_t> vec(output.data_ptr<uint8_t>(), output.data_ptr<uint8_t>() + output.numel());
+
+    return vec;
 }
 
 void SCM::add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_t> memory_label)

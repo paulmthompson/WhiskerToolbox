@@ -240,11 +240,15 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, in
     QElapsedTimer timer3;
     timer3.start();
 
-    dl_model->process_frame(image, height, width);
+    auto output = dl_model->process_frame(image, height, width);
 
     auto t2 = timer3.elapsed();
 
     qDebug() << "DL took" << t2;
+
+    //Debugging
+    QImage labeled_image(&output[0], width, height, QImage::Format_Grayscale8);
+    labeled_image.save(QString::fromStdString("memory_frame.png"));
 }
 
 void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int width)

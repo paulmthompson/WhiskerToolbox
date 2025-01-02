@@ -20,7 +20,7 @@ public:
     SCM();
     virtual ~SCM() {};
     void load_model();
-    void process_frame(std::vector<uint8_t>& image, int height, int width);
+    std::vector<uint8_t> process_frame(std::vector<uint8_t>& image, int height, int width);
     void add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_t> memory_label);
 
 private:
