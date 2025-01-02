@@ -4,6 +4,8 @@
 #include "torch_helpers.hpp"
 #include <torch/torch.h>
 
+#include <iostream>
+
 namespace dl {
 
 torch::Device device(torch::kCPU);
@@ -29,6 +31,12 @@ void SCM::process_frame(std::vector<uint8_t>& image, int height, int width) {
 
     if (!module) {
         module = dl::load_torchscript_model("/home/wanglab/Desktop/efficientvit_pytorch_cuda2.pt", device);
+    }
+
+    if (_memory.empty())
+    {
+        std::cout << "Currently no frames in memory. Please select some" << std::endl;
+        return;
     }
 
     auto tensor = dl::create_tensor_from_gray8(image, height, width);
@@ -58,9 +66,7 @@ void SCM::add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_
     if (_memory.empty())
     {
         key_index = 0;
-    }
-
-    if (_memory.rbegin()->first >= memory_frames)
+    } else if (_memory.rbegin()->first >= memory_frames)
     {
         key_index = _memory.rbegin()->first;
     } else {
@@ -68,6 +74,8 @@ void SCM::add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_
     }
 
     _memory[key_index] = memory_frame_pair{memory_frame, memory_label};
+
+    std::cout << "memory frame added at " << key_index << std::endl;
 }
 
 

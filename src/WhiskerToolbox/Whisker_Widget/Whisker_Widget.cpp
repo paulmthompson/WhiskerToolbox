@@ -95,6 +95,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     connect(ui->trace_button, &QPushButton::clicked, this, &Whisker_Widget::_traceButton);
     connect(ui->dl_trace_button, &QPushButton::clicked, this, &Whisker_Widget::_dlTraceButton);
+    connect(ui->dl_add_memory_button, &QPushButton::clicked, this, &Whisker_Widget::_dlAddMemoryButton);
     connect(ui->actionJanelia_Settings, &QAction::triggered, this, &Whisker_Widget::_openJaneliaConfig);
     connect(ui->face_orientation, &QComboBox::currentIndexChanged, this, &Whisker_Widget::_selectFaceOrientation);
     connect(ui->length_threshold_spinbox, &QDoubleSpinBox::valueChanged, this,
@@ -197,6 +198,33 @@ void Whisker_Widget::_dlTraceButton()
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     _traceWhiskersDL(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+
+}
+
+void Whisker_Widget::_dlAddMemoryButton()
+{
+    auto media = _data_manager->getData<MediaData>("media");
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    auto image = media->getProcessedData(current_time);
+
+    std::string whisker_name = "whisker_" + std::to_string(_current_whisker);
+
+    if (!_data_manager->getData<LineData>(whisker_name))
+    {
+        std::cout << "Whisker named " << whisker_name << " does not exist" << std::endl;
+        return;
+    }
+    auto whisker = _data_manager->getData<LineData>(whisker_name)->getLinesAtTime(current_time);
+
+    if (whisker.size() == 0) {
+        std::cout << "No whisker available for " << whisker_name << std::endl;
+        return;
+    }
+
+    auto memory_mask = line_to_image(whisker[0], media->getHeight(), media->getWidth());
+
+    dl_model->add_memory_frame(image, memory_mask);
 
 }
 

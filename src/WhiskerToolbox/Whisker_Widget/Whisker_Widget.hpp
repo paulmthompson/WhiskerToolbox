@@ -114,6 +114,7 @@ private:
 private slots:
     void _traceButton();
     void _dlTraceButton();
+    void _dlAddMemoryButton();
     void _saveImageButton();
     void _saveFaceMask();
     void _loadFaceMask();

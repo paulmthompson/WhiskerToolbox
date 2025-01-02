@@ -663,6 +663,19 @@
       <string>DL Trace</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="dl_add_memory_button">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>161</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Add Memory Frame</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
