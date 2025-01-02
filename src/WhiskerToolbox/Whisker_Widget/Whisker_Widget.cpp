@@ -234,6 +234,7 @@ void Whisker_Widget::_dlAddMemoryButton()
 
 }
 
+
 void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, int width)
 {
 
@@ -247,7 +248,7 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, in
     qDebug() << "DL took" << t2;
 
     //Debugging
-    QImage labeled_image(&output[0], width, height, QImage::Format_Grayscale8);
+    QImage labeled_image(&output[0], 256, 256, QImage::Format_Grayscale8);
     labeled_image.save(QString::fromStdString("memory_frame.png"));
 }
 

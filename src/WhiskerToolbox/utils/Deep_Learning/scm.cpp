@@ -1,5 +1,6 @@
 
 #include "scm.hpp"
+#include "utils/Image_Processing/skeletonize.hpp"
 
 #include "torch_helpers.hpp"
 #include <torch/torch.h>
@@ -92,14 +93,25 @@ std::vector<uint8_t> SCM::process_frame(std::vector<uint8_t>& image, int height,
     //torch::jit::setGraphExecutorOptimize(false);
     auto output = module->forward({image_tensor, memory_frame_tensor, memory_label_tensor, mask_tensor}).toTensor();
 
+    /*
     output = torch::nn::functional::interpolate(
         output,
         torch::nn::functional::InterpolateFuncOptions().size(std::vector<int64_t>({height,width})).mode(torch::kBilinear).align_corners(false));
-
+    */
     output = output.mul(255).clamp(0,255).to(torch::kU8).detach().to(torch::kCPU);
     std::vector<uint8_t> vec(output.data_ptr<uint8_t>(), output.data_ptr<uint8_t>() + output.numel());
 
-    return vec;
+    std::transform(vec.begin(), vec.end(), vec.begin(), [](uint8_t pixel) {
+        return pixel > 1 ? 1 : 0;
+    });
+
+    auto output_vec = fast_skeletonize(vec, 256, 256);
+
+    std::transform(output_vec.begin(), output_vec.end(), output_vec.begin(), [](uint8_t pixel) {
+        return pixel > 0 ? 255 : 0;
+    });
+
+    return output_vec;
 }
 
 void SCM::add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_t> memory_label)
