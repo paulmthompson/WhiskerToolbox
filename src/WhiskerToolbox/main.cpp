@@ -10,11 +10,13 @@
 int main(int argc, char *argv[])
 {
 
-
     QApplication a(argc, argv);
 
     a.setStyle("Fusion");
 
+#ifdef __linux__
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+#endif
 
     MainWindow w;
 
