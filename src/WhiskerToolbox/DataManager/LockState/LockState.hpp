@@ -24,6 +24,10 @@ public:
         return false;
     }
 
+    void clear() {
+        _lock_states.clear();
+    }
+
     std::vector<int> getLockedTimes() const {
         std::vector<int> locked_times;
         for (const auto& [time, locked] : _lock_states) {

@@ -170,8 +170,6 @@ inline std::map<int, std::vector<Line2D>> load_line_csv(const std::string& filep
 
         std::getline(ss, frame_num_str, ',');
 
-        std::cout << frame_num_str << std::endl;
-
         if (frame_num_str == "Frame") {
             continue;
             // Skip the header line

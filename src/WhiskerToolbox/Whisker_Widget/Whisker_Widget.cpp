@@ -151,6 +151,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
         }
     });
 
+    connect(ui->manual_whisker_lock_frame, &QSpinBox::valueChanged, this, &Whisker_Widget::_setLockFrame);
+
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -343,6 +345,17 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
 
 void Whisker_Widget::_selectWhisker(int whisker_num) {
     _current_whisker = whisker_num;
+
+}
+
+void Whisker_Widget::_setLockFrame(int lock_frame)
+{
+    std::string whisker_group_name = "whisker";
+
+    std::string whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
+
+    auto whisker = _data_manager->getData<LineData>(whisker_name);
+    whisker->lockUntil(lock_frame);
 }
 
 void Whisker_Widget::_deleteWhisker()

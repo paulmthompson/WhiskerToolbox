@@ -32,6 +32,14 @@ public:
     void lockTime(int time) { _lock_state.lock(time); }
     void unlockTime(int time) { _lock_state.unlock(time); }
     bool isTimeLocked(int time) const { return _lock_state.isLocked(time); }
+
+    void lockUntil(int time)
+    {
+        _lock_state.clear();
+        for (int i = 0; i <= time; i++) {
+            _lock_state.lock(i);
+        }
+    }
 protected:
 
 private:
