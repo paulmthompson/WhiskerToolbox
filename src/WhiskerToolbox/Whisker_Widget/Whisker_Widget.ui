@@ -24,10 +24,10 @@
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QPushButton" name="trace_button">
      <property name="geometry">
@@ -185,7 +185,7 @@
       <string>Whisker Tracing</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
     <widget class="QLabel" name="label_13">
@@ -308,10 +308,10 @@
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QLabel" name="label_4">
      <property name="geometry">
@@ -342,7 +342,7 @@
       <number>50</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
     </widget>
     <widget class="QLabel" name="label_6">
@@ -358,7 +358,7 @@
       <string>Display</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
    </widget>
@@ -372,10 +372,10 @@
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QLabel" name="label_8">
      <property name="geometry">
@@ -390,7 +390,7 @@
       <string>Face Mask</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
     <widget class="QPushButton" name="calculate_mask">
@@ -448,7 +448,7 @@
       <bool>false</bool>
      </property>
      <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QSpinBox" name="mask_dilation">
@@ -526,10 +526,10 @@
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QPushButton" name="output_dir_button">
      <property name="geometry">
@@ -557,7 +557,7 @@
       <string/>
      </property>
      <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QPushButton" name="export_image_csv">
@@ -645,10 +645,10 @@
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QPushButton" name="dl_trace_button">
      <property name="geometry">
@@ -697,7 +697,7 @@
      <x>0</x>
      <y>0</y>
      <width>549</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuWhisker">
@@ -711,14 +711,22 @@
      <addaction name="actionLoad_Janelia_Whiskers"/>
      <addaction name="actionLoad_CSV_Whiskers"/>
      <addaction name="actionLoad_CSV_Whiskers_Multiple"/>
+     <addaction name="actionLoad_CSV_Whisker_Single_File_Multi_Frame"/>
      <addaction name="actionLoad_HDF5_Whisker_Single"/>
      <addaction name="actionLoad_HDF5_Whisker_Multiple"/>
      <addaction name="separator"/>
      <addaction name="actionLoad_Mask"/>
      <addaction name="actionLoad_HDF5_Mask_Multiple"/>
     </widget>
+    <widget class="QMenu" name="menuSave_Whiskers">
+     <property name="title">
+      <string>Save Whiskers</string>
+     </property>
+     <addaction name="actionSave_as_CSV"/>
+    </widget>
     <addaction name="menuLoad_Whiskers"/>
     <addaction name="actionJanelia_Settings"/>
+    <addaction name="menuSave_Whiskers"/>
    </widget>
    <widget class="QMenu" name="menuContact">
     <property name="title">
@@ -772,12 +780,12 @@
   </action>
   <action name="actionLoad_CSV_Whiskers">
    <property name="text">
-    <string>Load CSV Whiskers (Single)</string>
+    <string>Load CSV Whiskers (Single File, Single Frame)</string>
    </property>
   </action>
   <action name="actionLoad_CSV_Whiskers_Multiple">
    <property name="text">
-    <string>Load CSV Whiskers (Multiple)</string>
+    <string>Load CSV Whiskers (Single File, Single Frame, Multiple)</string>
    </property>
   </action>
   <action name="actionSave_Face_Mask_2">
@@ -813,6 +821,16 @@
   <action name="actionLoad_HDF5_Mask_Multiple">
    <property name="text">
     <string>Load HDF5 Mask (Multiple)</string>
+   </property>
+  </action>
+  <action name="actionSave_as_CSV">
+   <property name="text">
+    <string>Save as CSV</string>
+   </property>
+  </action>
+  <action name="actionLoad_CSV_Whisker_Single_File_Multi_Frame">
+   <property name="text">
+    <string>Load CSV Whisker (Single File, Multi Frame)</string>
    </property>
   </action>
  </widget>

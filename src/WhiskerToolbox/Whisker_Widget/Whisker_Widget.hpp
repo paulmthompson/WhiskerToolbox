@@ -170,6 +170,9 @@ private slots:
 
     void _manualWhiskerToggle();
 
+    void _saveWhiskersAsCSV();
+    void _loadMultiFrameCSV();
+
 };
 
 void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whiskers_to_track);

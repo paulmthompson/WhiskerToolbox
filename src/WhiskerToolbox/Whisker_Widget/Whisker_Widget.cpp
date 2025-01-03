@@ -124,6 +124,9 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
     connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
 
+    connect(ui->actionSave_as_CSV, &QAction::triggered, this, &Whisker_Widget::_saveWhiskersAsCSV);
+    connect(ui->actionLoad_CSV_Whisker_Single_File_Multi_Frame, &QAction::triggered, this, &Whisker_Widget::_loadMultiFrameCSV);
+
     connect(ui->actionLoad_Keypoint_CSV, &QAction::triggered, this, &Whisker_Widget::_loadKeypointCSV);
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
@@ -471,6 +474,12 @@ void Whisker_Widget::_loadFaceMask()
 
 }
 
+
+/*
+
+Single frame whisker saving
+
+*/
 void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D<float>>& whisker)
 {
     auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
@@ -478,6 +487,62 @@ void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vec
     auto saveName = _getWhiskerSaveName(frame_id);
 
     save_line_as_csv(whisker, folder + saveName);
+}
+
+/*
+
+Save whisker in all frames
+
+*/
+
+void Whisker_Widget::_saveWhiskersAsCSV()
+{
+    std::string whisker_group_name = "whisker";
+    std::string whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
+
+    auto data = _data_manager->getData<LineData>(whisker_name)->getData();
+
+    save_lines_csv(data, whisker_name + ".csv");
+}
+
+int get_whisker_id(std::string whisker_name)
+{
+    std::string number = "";
+    for (auto c : whisker_name) {
+        if (isdigit(c)) {
+            number += c;
+        }
+    }
+
+    return std::stoi(number);
+}
+
+void Whisker_Widget::_loadMultiFrameCSV()
+{
+    auto whisker_filepath = QFileDialog::getOpenFileName(
+        this,
+        "Load Whisker CSV",
+        QDir::currentPath(),
+        "All files (*.*)");
+
+    auto line_map = load_line_csv(whisker_filepath.toStdString());
+
+    //Get the whisker name from the filename using filesystem
+    auto whisker_filename = std::filesystem::path(whisker_filepath.toStdString()).filename().string();
+
+    //Remove .csv suffix from filename
+    auto whisker_name = remove_extension(whisker_filename);
+
+    std::cout << "Creating whisker " << whisker_name << std::endl;
+
+    _data_manager->setData<LineData>(whisker_name, std::make_shared<LineData>(line_map));
+
+    //If there is a number at the end of whisker_name, that is the whisker_id
+    auto whisker_id = get_whisker_id(whisker_name);
+
+    _scene->addLineDataToScene(whisker_name);
+    _scene->changeLineColor(whisker_name, get_whisker_color(whisker_id));
+
 }
 
 std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {

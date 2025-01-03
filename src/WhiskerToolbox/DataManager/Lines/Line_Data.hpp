@@ -14,6 +14,7 @@
 class LineData {
 public:
     LineData();
+    LineData(std::map<int,std::vector<Line2D>> const& data) : _data(data) {};
     void clearLinesAtTime(int const time);
     void addLineAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y);
     void addLineAtTime(int const time, std::vector<Point2D<float>> const & line);
@@ -25,6 +26,8 @@ public:
     std::vector<int> getTimesWithLines() const;
 
     std::vector<Line2D> const& getLinesAtTime(int const time) const;
+
+    std::map<int, std::vector<Line2D>> const& getData() const {return _data;};
 
     void lockTime(int time) { _lock_state.lock(time); }
     void unlockTime(int time) { _lock_state.unlock(time); }
