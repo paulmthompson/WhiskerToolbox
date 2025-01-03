@@ -2,7 +2,7 @@
 #include "scm.hpp"
 #include "utils/Image_Processing/skeletonize.hpp"
 #include "utils/Image_Processing/order_line.hpp"
-#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Points/points.hpp"
 
 #include "torch_helpers.hpp"
 #include <torch/torch.h>
@@ -27,7 +27,7 @@ struct memory_encoder_tensors {
 
 SCM::SCM()
 {
-    module_path = "/home/wanglab/Desktop/efficientvit_pytorch_cuda2.pt";
+    module_path = "C:/Users/wanglab/Desktop/efficientvit_pytorch_cuda2.pt";
 
     load_model();
 

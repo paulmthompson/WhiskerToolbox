@@ -126,7 +126,7 @@ set(PROJECT_SOURCES
 
 if (WIN32)
 
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
+#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
 endif()
 
 qt_add_executable(WhiskerToolbox

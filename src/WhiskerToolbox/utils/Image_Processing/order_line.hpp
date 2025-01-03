@@ -1,7 +1,7 @@
 #ifndef ORDER_LINE_HPP
 #define ORDER_LINE_HPP
 
-#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Points/points.hpp"
 
 #include <algorithm>
 #include <cmath>

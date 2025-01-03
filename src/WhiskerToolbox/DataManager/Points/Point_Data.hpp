@@ -1,16 +1,12 @@
 #ifndef POINT_DATA_HPP
 #define POINT_DATA_HPP
 
+#include "points.hpp"
 
 #include <map>
 #include <string>
 #include <vector>
 
-template<typename T>
-struct Point2D {
-    T x;
-    T y;
-};
 
 class PointData {
 public:

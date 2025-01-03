@@ -49,6 +49,7 @@ add_library(DataManager SHARED
         transforms/data_transforms.hpp
 
         loaders/binary_loaders.hpp
+        Points/points.hpp
 )
 
 target_include_directories(DataManager PRIVATE
