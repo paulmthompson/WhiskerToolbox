@@ -143,6 +143,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     connect(ui->magic_eraser_button, &QPushButton::clicked, this, &Whisker_Widget::_magicEraserButton);
 
+    connect(ui->export_all_tracked, &QPushButton::clicked, this, &Whisker_Widget::_exportAllTracked);
+
     connect(ui->auto_dl_checkbox, &QCheckBox::stateChanged, this, [this](){
         if (ui->auto_dl_checkbox->isChecked()) {
             _auto_dl = true;
@@ -265,6 +267,8 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, in
     auto t2 = timer3.elapsed();
 
     qDebug() << "DL took" << t2;
+
+    smooth_line(output);
 
     std::string whisker_name = "whisker_" + std::to_string(_current_whisker);
 
@@ -573,6 +577,47 @@ std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
 
         std::string saveName = pad_frame_id(frame_id, 7) + ".csv";
         return saveName;
+    }
+}
+
+
+void Whisker_Widget::_exportAllTracked()
+{
+    std::string const whisker_group_name = "whisker";
+
+    std::string whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
+
+    auto whisker_id = get_whisker_id(whisker_name);
+
+    std::string image_folder = _output_path.string() + "/images/";
+    std::filesystem::create_directory(image_folder);
+
+    std::string whisker_folder = _output_path.string() + "/" + std::to_string(whisker_id) + "/";
+    std::filesystem::create_directory(whisker_folder);
+
+    auto whiskers = _data_manager->getData<LineData>(whisker_name)->getData();
+    auto media = _data_manager->getData<MediaData>("media");
+    auto const width = media->getWidth();
+    auto const height = media->getHeight();
+
+    for (auto & whisker_pair : whiskers) {
+        int frame_id = whisker_pair.first;
+
+        auto media_data = media->getRawData(frame_id);
+
+        QImage labeled_image(&media_data[0], width, height, QImage::Format_Grayscale8);
+
+        auto saveName = _getImageSaveName(frame_id);
+
+        std::cout << "Saving file " << saveName << std::endl;
+
+        labeled_image.save(QString::fromStdString(image_folder + saveName));
+
+        saveName = _getWhiskerSaveName(frame_id);
+
+        save_line_as_csv(whisker_pair.second[0], whisker_folder+ saveName);
+
+
     }
 }
 

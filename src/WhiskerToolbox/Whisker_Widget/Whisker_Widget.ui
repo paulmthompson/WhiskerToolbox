@@ -669,6 +669,19 @@
       <string>0</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="export_all_tracked">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>10</y>
+       <width>141</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Export All tracked</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QFrame" name="frame_5">
     <property name="geometry">

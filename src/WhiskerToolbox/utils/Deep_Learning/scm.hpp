@@ -26,7 +26,7 @@ public:
     void load_model();
     std::vector<Point2D<float>> process_frame(std::vector<uint8_t>& image, int height, int width);
     void add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_t> memory_label);
-    void add_origin(float x, float y) {_x = x / 256; _y = y / 256;};
+    void add_origin(float x, float y) {_x = x /  _width * 256; _y = y / _height * 256;};
     void add_height_width(int height, int width) {_height = height; _width = width;};
 
 private:

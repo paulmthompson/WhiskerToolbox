@@ -3,6 +3,7 @@
 #include "utils/Image_Processing/skeletonize.hpp"
 #include "utils/Image_Processing/order_line.hpp"
 #include "DataManager/Points/points.hpp"
+#include "DataManager/Lines/lines.hpp"
 
 #include "torch_helpers.hpp"
 #include <torch/torch.h>

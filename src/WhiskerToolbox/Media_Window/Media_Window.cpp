@@ -299,6 +299,19 @@ void Media_Window::_plotLineData()
             auto linePath = addPath(path, QPen(plot_color));
             _line_paths.append(linePath);
 
+
+            // Add dot at line base
+
+            auto ellipse = addEllipse(
+                    static_cast<float>(single_line[0].x) * xAspect - 2.5,
+                    static_cast<float>(single_line[0].y) * yAspect - 2.5,
+                    5.0, 5.0,
+                    QPen(plot_color),
+                    QBrush(plot_color)
+            );
+            _points.append(ellipse);
+
+
             /*
             // Add dots for each point on the line
             for (const auto & point : single_line) {
