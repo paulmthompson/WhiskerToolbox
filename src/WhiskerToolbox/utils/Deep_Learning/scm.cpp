@@ -7,6 +7,7 @@
 #include "torch_helpers.hpp"
 #include <torch/torch.h>
 
+#include <chrono>
 #include <iostream>
 
 namespace dl {
@@ -134,17 +135,21 @@ std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, int 
         return pixel > 1 ? 1 : 0;
     });
 
+    auto t1 = std::chrono::high_resolution_clock::now();
+
     auto output_vec = fast_skeletonize(vec, 256, 256);
+
+    auto t2 = std::chrono::high_resolution_clock::now();
 
     auto output_line = order_line(output_vec, 256, 256, {_x,_y});
 
-    std::cout << "output line is " << output_line.size() << std::endl;
+    auto t3 = std::chrono::high_resolution_clock::now();
 
-    /*
-    std::transform(output_vec.begin(), output_vec.end(), output_vec.begin(), [](uint8_t pixel) {
-        return pixel > 0 ? 255 : 0;
-    });
-    */
+    std::chrono::duration<double> elapsed = t2 - t1;
+    //std::cout << "Time for Skeletonization: " << elapsed.count() << std::endl;
+
+    elapsed = t3 - t1;
+    //std::cout << "Time for line ordering: " << elapsed.count() << std::endl;
 
     return output_line;
 }
@@ -163,7 +168,13 @@ void SCM::add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_
         key_index = _memory.rbegin()->first + 1;
     }
 
-    _memory[key_index] = memory_frame_pair{memory_frame, memory_label};
+    if (key_index > 0) {
+        auto temp = std::move(_memory[0]);
+        _memory[0] = memory_frame_pair{memory_frame, memory_label};
+        _memory[key_index] = temp;
+    } else {
+        _memory[key_index] = memory_frame_pair{memory_frame, memory_label};
+    }
 
     _create_memory_tensors();
 
