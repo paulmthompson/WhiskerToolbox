@@ -52,6 +52,7 @@ add_library(DataManager SHARED
         Points/points.hpp
         Masks/masks.hpp
         Lines/lines.hpp
+        LockState/LockState.hpp
 )
 
 target_include_directories(DataManager PRIVATE

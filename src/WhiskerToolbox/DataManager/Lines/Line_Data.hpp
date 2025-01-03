@@ -9,6 +9,7 @@
 
 #include "Points/points.hpp"
 #include "lines.hpp"
+#include "LockState/LockState.hpp"
 
 class LineData {
 public:
@@ -24,11 +25,16 @@ public:
     std::vector<int> getTimesWithLines() const;
 
     std::vector<Line2D> const& getLinesAtTime(int const time) const;
+
+    void lockTime(int time) { _lock_state.lock(time); }
+    void unlockTime(int time) { _lock_state.unlock(time); }
+    bool isTimeLocked(int time) const { return _lock_state.isLocked(time); }
 protected:
 
 private:
     std::map<int,std::vector<Line2D>> _data;
     std::vector<Line2D> _empty;
+    LockState _lock_state;
 };
 
 
