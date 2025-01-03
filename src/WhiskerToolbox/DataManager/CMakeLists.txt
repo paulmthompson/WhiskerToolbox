@@ -50,6 +50,8 @@ add_library(DataManager SHARED
 
         loaders/binary_loaders.hpp
         Points/points.hpp
+        Masks/masks.hpp
+        Lines/lines.hpp
 )
 
 target_include_directories(DataManager PRIVATE

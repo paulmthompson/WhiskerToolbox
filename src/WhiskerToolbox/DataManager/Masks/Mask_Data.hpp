@@ -1,13 +1,12 @@
 #ifndef MASK_DATA_HPP
 #define MASK_DATA_HPP
 
-#include "Points/Point_Data.hpp"
+#include "Points/points.hpp"
+#include "masks.hpp"
 
 #include <vector>
 #include <map>
 
-
-using Mask2D = std::vector<Point2D<float>>;
 
 class MaskData {
 public:
@@ -33,7 +32,6 @@ private:
     int _mask_width;
 };
 
- Mask2D create_mask(std::vector<float> const& x, std::vector<float> const& y);
 
 
 #endif // MASK_DATA_HPP

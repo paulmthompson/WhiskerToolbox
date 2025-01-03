@@ -4,11 +4,11 @@
 #include <cstdint>
 #include <vector>
 #include <map>
+
 #include <string>
 
-#include "Points/Point_Data.hpp"
-
-using Line2D = std::vector<Point2D<float>>;
+#include "Points/points.hpp"
+#include "lines.hpp"
 
 class LineData {
 public:
@@ -31,14 +31,5 @@ private:
     std::vector<Line2D> _empty;
 };
 
-void save_line_as_csv(Line2D const& line, std::string const& filename, int const point_precision = 2);
-
-Line2D load_line_from_csv(std::string const& filename);
-
-Line2D create_line(std::vector<float> const& x, std::vector<float> const& y);
-
-void smooth_line(Line2D& line);
-
-std::vector<uint8_t> line_to_image(Line2D& line, int height, int width);
 
 #endif // LINE_DATA_HPP

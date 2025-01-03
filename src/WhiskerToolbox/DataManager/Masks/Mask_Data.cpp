@@ -40,15 +40,3 @@ std::vector<Mask2D> const& MaskData::getMasksAtTime(int const time) const
         return _empty;
     }
 }
-
-Mask2D create_mask(std::vector<float> const& x, std::vector<float> const& y)
-{
-    auto new_mask = Mask2D{x.size()};
-
-    for (std::size_t i = 0; i < x.size(); i++)
-    {
-        new_mask[i] = Point2D<float>{x[i],y[i]};
-    }
-
-    return new_mask;
-}
