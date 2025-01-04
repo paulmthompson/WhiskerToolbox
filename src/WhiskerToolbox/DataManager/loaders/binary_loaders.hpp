@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 
 /**
@@ -28,7 +29,18 @@ inline std::vector<T> readBinaryFile(const std::string& file_path, int header_si
     return data;
 }
 
-template <typename T>
+/**
+ * @brief extractDigitalData
+ *
+ * This reads a vector of unsigned ints where
+ * each bit represents a digital channel and extracts
+ * the data for a specific channel (1 or 0)
+ *
+ * @param data Vector of data
+ * @param channel Channel to extract
+ * @return std::vector<int> Vector of digital data
+ */
+template <typename T, typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value, int>::type = 0>
 std::vector<int> extractDigitalData(const std::vector<T>& data, int channel) {
 
     const T ttl_mask = 1 << channel;
