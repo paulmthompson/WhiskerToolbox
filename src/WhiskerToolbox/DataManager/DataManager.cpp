@@ -9,6 +9,7 @@
 #include "Media/Video_Data.hpp"
 #include "transforms/data_transforms.hpp"
 #include "loaders/binary_loaders.hpp"
+#include "loaders/CSV_Loaders.hpp"
 
 #include "TimeFrame.hpp"
 
@@ -319,6 +320,13 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                 digital_interval_series->setData(intervals);
                 dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
 
+            } else if (item["format"] == "csv") {
+
+                auto intervals =  CSVLoader::loadPairColumnCSV(file_path);
+                std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
+                auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
+                digital_interval_series->setData(intervals);
+                dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
             }
         } else if (data_type == "time") {
 

@@ -37,7 +37,13 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeSc
         _contact_imgs.push_back(QImage(130,130,QImage::Format_Grayscale8));
     }
 
-    _data_manager->setData<DigitalIntervalSeries>("Contact_Events");
+    if (!_data_manager->getData<DigitalIntervalSeries>("Contact_Events")) {
+        _data_manager->setData<DigitalIntervalSeries>("Contact_Events");
+    } else {
+        std::cout << "Contact Events already exist" << std::endl;
+       _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount() + 1);
+        _assignContactFrameByFrame();
+    }
 
     _scene = new QGraphicsScene();
     _scene->setSceneRect(0, 0, 650, 150);
@@ -394,6 +400,21 @@ void Contact_Widget::_buildContactTable()
     _highlighted_row = -1;
     auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
     _updateContactWidgets(frame_id);
+}
+
+void Contact_Widget::_assignContactFrameByFrame()
+{
+    auto contactEvents = _data_manager->getData<DigitalIntervalSeries>("Contact_Events")->getDigitalIntervalSeries();
+
+    for (auto event : contactEvents) {
+        for (int i=std::lround(event.first); i <= std::lround(event.second); i++)
+        {
+            _contact[i] = Contact::Contact;
+        }
+    }
+
+    _buildContactTable();
+    ui->total_contact_label->setText(QString::number(contactEvents.size()));
 }
 
 void Contact_Widget::_calculateContactPeriods()

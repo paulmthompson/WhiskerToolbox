@@ -27,9 +27,18 @@ std::vector<std::pair<float, float>> loadPairColumnCSV(const std::string& filena
 
     while (std::getline(file, line)) {
         std::stringstream ss(line);
-        float first, second;
-        ss >> first >> second;
-        data.emplace_back(first, second);
+        std::string item;
+        std::vector<std::string> tokens;
+
+        while (std::getline(ss, item, ',')) {
+            tokens.push_back(item);
+        }
+
+        if (tokens.size() >= 2) {
+            float first = std::stof(tokens[0]);
+            float second = std::stof(tokens[1]);
+            data.emplace_back(std::make_pair(first, second));
+        }
     }
 
     return data;

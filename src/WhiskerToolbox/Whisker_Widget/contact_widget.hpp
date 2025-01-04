@@ -74,6 +74,7 @@ private:
     void _createContactPixmaps();
     void _saveContactBlocks();
     void _updateContactWidgets(int frame_id);
+    void _assignContactFrameByFrame();
 
 private slots:
     void _contactButton();
