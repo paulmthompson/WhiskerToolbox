@@ -5,11 +5,21 @@
 #include <stdexcept>
 #include <vector>
 
+/**
+ * @brief readBinaryFile
+ *
+ * Reads a binary file and returns the data as a vector of type T
+ *
+ * @param file_path Path to the binary file
+ * @param header_size_bytes (optional) Number of bytes to skip at the beginning of the file
+ * @return std::vector<T> Vector of data read from the file
+ */
 template <typename T>
-std::vector<T> readBinaryFile(const std::string& file_path) {
+inline std::vector<T> readBinaryFile(const std::string& file_path, int header_size_bytes=0) {
     std::ifstream file(file_path, std::ios::binary);
     std::vector<T> data;
     if (file) {
+        file.seekg(header_size_bytes, std::ios::beg);
         T value;
         while (file.read(reinterpret_cast<char*>(&value), sizeof(T))) {
             data.push_back(value);

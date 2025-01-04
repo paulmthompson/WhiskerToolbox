@@ -1,5 +1,3 @@
-#include <fstream>
-#include <filesystem>
 
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
@@ -19,6 +17,12 @@
 #include "utils/glob.hpp"
 
 #include "nlohmann/json.hpp"
+
+#include <fstream>
+#include <filesystem>
+#include <iostream>
+#include <optional>
+
 using namespace nlohmann;
 
 DataManager::DataManager()
@@ -110,6 +114,26 @@ void DataManager::loadFromJSON(std::string const & filepath)
     std::filesystem::current_path(original_path);
 }
 
+std::optional<std::string> processFilePath(
+        const std::string& file_path,
+        const std::filesystem::path& base_path)
+{
+    std::filesystem::path full_path = file_path;
+
+    // Check if the file path is relative
+    if (!std::filesystem::path(file_path).is_absolute()) {
+        full_path = base_path / file_path;
+    }
+
+    // Check for the presence of the file
+    if (std::filesystem::exists(full_path)) {
+        std::cout << "Loading file " << full_path.string() << std::endl;
+        return full_path.string();
+    } else {
+        return std::nullopt;
+    }
+}
+
 std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm, std::string json_filepath)
 {
     std::vector<DataInfo> data_info_list;
@@ -136,24 +160,20 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             continue;
         }
         std::string data_type = item["data_type"];
-        std::string file_path = item["filepath"];
         std::string name = item["name"];
 
-        // Check if the file path is relative
-        if (!std::filesystem::path(file_path).is_absolute()) {
-            file_path = (base_path / file_path).string();
+        auto file_exists = processFilePath(item["filepath"], base_path);
+        if (!file_exists) {
+            std::cerr << "File does not exist: " << item["filepath"] << std::endl;
+            continue;
         }
+
+        std::string file_path = file_exists.value();
 
         if (data_type == "video") {
             // Create VideoData object
             auto video_data = std::make_shared<VideoData>();
-            //check if the file exists
-            if (!std::filesystem::exists(file_path)) {
-                std::cerr << "File does not exist: " << file_path << std::endl;
-                continue;
-            }
 
-            std::cout << "Loading video file: " << file_path << std::endl;
             video_data->LoadMedia(file_path);
 
             std::cout << "Video has " << video_data->getTotalFrameCount() << " frames" << std::endl;
@@ -162,11 +182,6 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             data_info_list.push_back({name, "VideoData", ""});
         } else if (data_type == "points") {
-
-            if (!std::filesystem::exists(file_path)) {
-                std::cerr << "File does not exist: " << file_path << std::endl;
-                continue;
-            }
 
             int frame_column = item["frame_column"];
             int x_column = item["x_column"];
@@ -197,11 +212,6 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             data_info_list.push_back({keypoint_key, "PointData", color});
 
         } else if (data_type == "mask") {
-
-            if (!std::filesystem::exists(file_path)) {
-                std::cerr << "File does not exist: " << file_path << std::endl;
-                continue;
-            }
 
             std::string color = "0000FF";
             if (item.contains("color"))
@@ -250,11 +260,6 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             }
         } else if (data_type == "digital_event") {
 
-            if (!std::filesystem::exists(file_path)) {
-                std::cerr << "File does not exist: " << file_path << std::endl;
-                continue;
-            }
-
             if (item["format"] == "uint16") {
 
                 int channel = item["channel"];
@@ -271,11 +276,6 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                 dm->setData<DigitalEventSeries>(name, digital_event_series);
             }
         } else if (data_type == "digital_interval") {
-
-            if (!std::filesystem::exists(file_path)) {
-                std::cerr << "File does not exist: " << file_path << std::endl;
-                continue;
-            }
 
             if (item["format"] == "uint16") {
 
@@ -295,11 +295,6 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             }
         } else if (data_type == "time") {
-
-            if (!std::filesystem::exists(file_path)) {
-                std::cerr << "File does not exist: " << file_path << std::endl;
-                continue;
-            }
 
             if (item["format"] == "uint16") {
 

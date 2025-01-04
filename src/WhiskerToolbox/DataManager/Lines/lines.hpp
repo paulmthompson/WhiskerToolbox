@@ -3,6 +3,7 @@
 
 #include "Points/points.hpp"
 
+#include <chrono>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
@@ -141,6 +142,7 @@ inline void save_lines_csv(
     file.close();
 }
 
+
 inline std::vector<float> parse_string_to_float_vector(const std::string& str) {
     std::vector<float> result;
 
@@ -155,6 +157,8 @@ inline std::vector<float> parse_string_to_float_vector(const std::string& str) {
 
 inline std::map<int, std::vector<Line2D>> load_line_csv(const std::string& filepath)
 {
+
+    auto t1 = std::chrono::high_resolution_clock::now();
     std::map<int, std::vector<Line2D>> data_map;
     std::ifstream file(filepath);
     if (!file.is_open()) {
@@ -200,8 +204,10 @@ inline std::map<int, std::vector<Line2D>> load_line_csv(const std::string& filep
     }
 
     file.close();
+    auto t2 = std::chrono::high_resolution_clock::now();
 
-    std::cout << "Loaded " << loaded_lines << " lines from " << filepath << std::endl;
+    auto duration = std::chrono::duration<double>( t2 - t1 ).count();
+    std::cout << "Loaded " << loaded_lines << " lines from " << filepath << " in " << duration << "s" << std::endl;
     return data_map;
 }
 #endif // DATAMANAGER_LINES_HPP
