@@ -17,6 +17,7 @@
 #include "utils/glob.hpp"
 
 #include "nlohmann/json.hpp"
+#include "utils/string_manip.hpp"
 
 #include <fstream>
 #include <filesystem>
@@ -265,6 +266,22 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                 }
 
             }
+        } else if (data_type == "line") {
+
+            auto line_map = load_line_csv(file_path);
+
+            //Get the whisker name from the filename using filesystem
+            auto whisker_filename = std::filesystem::path(file_path).filename().string();
+
+            //Remove .csv suffix from filename
+            auto whisker_name = remove_extension(whisker_filename);
+
+            dm->setData<LineData>(whisker_name, std::make_shared<LineData>(line_map));
+
+            std::string color = item.value("color","0000FF");
+
+            data_info_list.push_back({name, "LineData", color});
+
         } else if (data_type == "digital_event") {
 
             if (item["format"] == "uint16") {
