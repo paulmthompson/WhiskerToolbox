@@ -134,6 +134,24 @@ std::optional<std::string> processFilePath(
     }
 }
 
+bool checkRequiredFields(const json& item, const std::vector<std::string>& requiredFields) {
+    for (const auto& field : requiredFields) {
+        if (!item.contains(field)) {
+            std::cerr << "Error: Missing required field \"" << field << "\" in JSON item." << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+void checkOptionalFields(const json& item, const std::vector<std::string>& optionalFields) {
+    for (const auto& field : optionalFields) {
+        if (!item.contains(field)) {
+            std::cout << "Warning: Optional field \"" << field << "\" is missing in JSON item." << std::endl;
+        }
+    }
+}
+
 std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm, std::string json_filepath)
 {
     std::vector<DataInfo> data_info_list;
@@ -154,11 +172,10 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
     // Iterate through JSON array
     for (const auto& item : j) {
 
-        // If entry doesn't have a data_type and filepath, skip
-        if (!item.contains("data_type") || !item.contains("filepath")) {
-            std::cerr << "Entry missing data_type or filepath" << std::endl;
-            continue;
+        if (!checkRequiredFields(item, {"data_type", "name", "filepath"})) {
+            continue; // Exit if any required field is missing
         }
+
         std::string data_type = item["data_type"];
         std::string name = item["name"];
 
@@ -187,13 +204,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             int x_column = item["x_column"];
             int y_column = item["y_column"];
 
-            std::string color = "0000FF";
-            if (item.contains("color"))
-            {
-                color = item["color"];
-            }
-
-            std::cout << "Loading points file: " << file_path << std::endl;
+            std::string color = item.value("color","0000FF");
 
             auto keypoints = load_points_from_csv(
                     file_path,
@@ -213,16 +224,12 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
         } else if (data_type == "mask") {
 
-            std::string color = "0000FF";
-            if (item.contains("color"))
-            {
-                color = item["color"];
-            }
-
             std::string frame_key = item["frame_key"];
             std::string prob_key = item["probability_key"];
             std::string x_key = item["x_key"];
             std::string y_key = item["y_key"];
+
+            std::string color = item.value("color","0000FF");
 
             auto frames =  read_array_hdf5(file_path, frame_key);
             auto probs = read_ragged_hdf5(file_path, prob_key);
@@ -264,8 +271,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
                 int channel = item["channel"];
                 std::string transition = item["transition"];
+                int header_size = item.value("header_size", 0);
 
-                auto data = readBinaryFile<uint16_t>(file_path);
+                auto data = readBinaryFile<uint16_t>(file_path, header_size);
 
                 auto digital_data = extractDigitalData(data, channel);
                 auto events = extractEvents(digital_data, transition);
@@ -281,8 +289,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
                 int channel = item["channel"];
                 std::string transition = item["transition"];
+                int header_size = item.value("header_size", 0);
 
-                auto data = readBinaryFile<uint16_t>(file_path);
+                auto data = readBinaryFile<uint16_t>(file_path, header_size);
 
                 auto digital_data = extractDigitalData(data, channel);
 
@@ -300,8 +309,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
                 int channel = item["channel"];
                 std::string transition = item["transition"];
+                int header_size = item.value("header_size", 0);
 
-                auto data = readBinaryFile<uint16_t>(file_path);
+                auto data = readBinaryFile<uint16_t>(file_path, header_size);
 
                 auto digital_data = extractDigitalData(data, channel);
                 auto events = extractEvents(digital_data, transition);
@@ -319,7 +329,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             if (item["format"] == "uint16_length") {
 
-                auto data = readBinaryFile<uint16_t>(file_path);
+                int header_size = item.value("header_size", 0);
+
+                auto data = readBinaryFile<uint16_t>(file_path, header_size);
 
                 std::vector<int> t(data.size()) ;
                 std::iota (std::begin(t), std::end(t), 0);
