@@ -397,11 +397,18 @@ void Media_Window::_plotPointData()
 
         auto point = _data_manager->getData<PointData>(point_key);
 
-        float mask_height = static_cast<float>(point->getMaskHeight());
-        float mask_width = static_cast<float>(point->getMaskWidth());
+        auto xAspect = 1.0f;
+        auto yAspect = 1.0f;
 
-        auto xAspect = _canvasWidth / mask_width;
-        auto yAspect = _canvasHeight / mask_height;
+        if (point->getMaskHeight() != -1) {
+            float mask_height = static_cast<float>(point->getMaskHeight());
+            yAspect = _canvasHeight / mask_height;
+        }
+
+        if (point->getMaskWidth() != -1) {
+            float mask_width = static_cast<float>(point->getMaskWidth());
+            xAspect = _canvasWidth / mask_width;
+        }
 
         auto pointData = point->getPointsAtTime(current_time);
 

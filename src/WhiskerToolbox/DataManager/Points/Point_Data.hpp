@@ -33,8 +33,8 @@ private:
     std::map<int,std::vector<Point2D<float>>> _data;
     std::vector<Point2D<float>> _empty;
 
-    int _mask_height {256};
-    int _mask_width {256};
+    int _mask_height {-1};
+    int _mask_width {-1};
 
 };
 

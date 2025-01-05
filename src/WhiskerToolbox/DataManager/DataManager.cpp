@@ -371,6 +371,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
         }
         if (item.contains("clock")) {
             std::string clock = item["clock"];
+            std::cout << "Setting time for " << name << " to " << clock << std::endl;
             dm->setTimeFrame(name, clock);
         }
     }
