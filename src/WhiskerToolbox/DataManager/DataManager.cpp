@@ -207,12 +207,14 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             int y_column = item["y_column"];
 
             std::string color = item.value("color","0000FF");
+            std::string delim = item.value("delim", " ");
 
             auto keypoints = load_points_from_csv(
                     file_path,
                     frame_column,
                     x_column,
-                    y_column);
+                    y_column,
+                    delim.c_str()[0]);
 
             auto keypoint_key = name;
 
