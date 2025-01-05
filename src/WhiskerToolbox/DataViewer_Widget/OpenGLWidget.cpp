@@ -1,6 +1,7 @@
 #include "OpenGLWidget.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame.hpp"
 
@@ -167,9 +168,34 @@ void OpenGLWidget::paintGL() {
     //This has been converted to master coordinates
     int currentTime = _time;
 
-    std::cout << "Current time: " << currentTime << std::endl;
     int zoom = _xAxis.getEnd() - _xAxis.getStart();
     _xAxis.setCenterAndZoom(currentTime, zoom);
+
+    for (const auto& event_data : _digital_event_series) {
+        const auto& series = event_data.series;
+        const auto& events = series->getEventSeries();
+        const auto& time_frame = event_data.time_frame;
+        hexToRGB(event_data.color, r, g, b);
+        float rNorm = r / 255.0f;
+        float gNorm = g / 255.0f;
+        float bNorm = b / 255.0f;
+        float alpha = 1.0f;
+
+        for (const auto& event : events) {
+            float time = time_frame->getTimeAtIndex(event);
+            if (time >= _xAxis.getStart() && time <= _xAxis.getEnd()) {
+                float xCanvasPos = static_cast<GLfloat>(time - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
+                std::vector<GLfloat> vertices = {
+                        xCanvasPos, -1.0f, rNorm, gNorm, bNorm, alpha,
+                        xCanvasPos, 1.0f, rNorm, gNorm, bNorm, alpha
+                };
+                m_vbo.bind();
+                m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
+                m_vbo.release();
+                glDrawArrays(GL_LINES, 0, 2);
+            }
+        }
+    }
 
     for (const auto& interval_data : _digital_interval_series) {
         const auto& series = interval_data.series;
@@ -189,8 +215,6 @@ void OpenGLWidget::paintGL() {
             if (end < _xAxis.getStart() || start > _xAxis.getEnd()) {
                 continue;
             }
-
-            std::cout << "Interval in frame " << std::endl;
 
             start = std::max(start, static_cast<float>(_xAxis.getStart()));
             end = std::min(end, static_cast<float>(_xAxis.getEnd()));
@@ -295,6 +319,15 @@ void OpenGLWidget::addAnalogTimeSeries(
                              std::make_pair(series->getMinValue(), series->getMaxValue()),
                              seriesColor,
                              time_frame});
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::addDigitalEventSeries(
+        std::shared_ptr <DigitalEventSeries> series,
+        std::shared_ptr <TimeFrame> time_frame,
+        std::string color) {
+    std::string seriesColor = color.empty() ? generateRandomColor() : color;
+    _digital_event_series.push_back(DigitalEventSeriesData{series, seriesColor, time_frame});
     updateCanvas(_time);
 }
 

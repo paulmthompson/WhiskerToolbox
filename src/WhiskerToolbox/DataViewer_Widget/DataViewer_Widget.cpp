@@ -141,6 +141,13 @@ void DataViewer_Widget::_plotSelectedFeature(const std::string key) {
         auto time_frame = _data_manager->getTime(time_key);
         ui->openGLWidget->addAnalogTimeSeries(series, time_frame);
 
+    } else if (_data_manager->getType(key) == "DigitalEventSeries") {
+
+            std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
+            auto series = _data_manager->getData<DigitalEventSeries>(key);
+            auto time_key = _data_manager->getTimeFrame(key);
+            auto time_frame = _data_manager->getTime(time_key);
+            ui->openGLWidget->addDigitalEventSeries(series, time_frame);
     } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
 
         std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
@@ -148,6 +155,8 @@ void DataViewer_Widget::_plotSelectedFeature(const std::string key) {
         auto time_key = _data_manager->getTimeFrame(key);
         auto time_frame = _data_manager->getTime(time_key);
         ui->openGLWidget->addDigitalIntervalSeries(series, time_frame);
+    } else {
+        std::cout << "Feature type not supported" << std::endl;
     }
 }
 

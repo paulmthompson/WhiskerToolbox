@@ -326,6 +326,21 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                 auto digital_event_series = std::make_shared<DigitalEventSeries>();
                 digital_event_series->setData(events);
                 dm->setData<DigitalEventSeries>(name, digital_event_series);
+            } else if (item["format"] == "csv") {
+
+                auto events =  CSVLoader::loadSingleColumnCSV(file_path);
+                std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
+
+                float scale = item.value("scale", 1.0);
+                for (auto& e : events) {
+                    e *= scale;
+                }
+                auto digital_event_series = std::make_shared<DigitalEventSeries>();
+                digital_event_series->setData(events);
+                dm->setData<DigitalEventSeries>(name, digital_event_series);
+
+            } else {
+                std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
             }
         } else if (data_type == "digital_interval") {
 
@@ -353,6 +368,8 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                 auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
                 digital_interval_series->setData(intervals);
                 dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
+            } else {
+                std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
             }
         } else if (data_type == "time") {
 

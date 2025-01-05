@@ -44,7 +44,7 @@ protected:
 
 private:
     std::map<int,std::vector<Line2D>> _data;
-    std::vector<Line2D> _empty;
+    std::vector<Line2D> _empty {};
     LockState _lock_state;
 };
 
