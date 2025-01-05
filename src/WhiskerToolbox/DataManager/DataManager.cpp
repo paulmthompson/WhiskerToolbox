@@ -284,6 +284,30 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             std::string color = item.value("color","0000FF");
 
             data_info_list.push_back({name, "LineData", color});
+        } else if (data_type == "analog") {
+
+            if (item["format"] == "int16") {
+
+                int header_size = item.value("header_size", 0);
+
+                auto data = readBinaryFile<int16_t>(file_path, header_size);
+
+                // convert to float with std::transform
+                std::vector<float> data_float;
+                std::transform(
+                        data.begin(),
+                        data.end(),
+                        std::back_inserter(data_float), [](int16_t i){return i;}
+                        );
+
+                auto analog_time_series = std::make_shared<AnalogTimeSeries>();
+                analog_time_series->setData(data_float);
+                dm->setData<AnalogTimeSeries>(name, analog_time_series);
+
+
+            } else {
+                std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
+            }
 
         } else if (data_type == "digital_event") {
 
