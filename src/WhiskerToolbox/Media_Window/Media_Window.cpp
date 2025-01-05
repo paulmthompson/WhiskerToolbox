@@ -273,6 +273,10 @@ void Media_Window::_plotLineData()
 
         auto lineData = _data_manager->getData<LineData>(line_key)->getLinesAtTime(current_time);
 
+        if (lineData.size() == 0) {
+            continue;
+        }
+
         for (auto const & single_line : lineData) {
 
             if (single_line.size() == 0) {
@@ -397,8 +401,8 @@ void Media_Window::_plotPointData()
 
         auto point = _data_manager->getData<PointData>(point_key);
 
-        auto xAspect = 1.0f;
-        auto yAspect = 1.0f;
+        auto xAspect = getXAspect();
+        auto yAspect = getYAspect();
 
         if (point->getMaskHeight() != -1) {
             float mask_height = static_cast<float>(point->getMaskHeight());
