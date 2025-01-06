@@ -1408,19 +1408,22 @@ void order_whiskers_by_position(
         }
     }
 
-    std::vector<bool> matched_previous(previous_whiskers.size(), false);
+    std::map<int,bool> matched_previous;
+    for (auto [key, prev_whisker] : previous_whiskers) {
+        matched_previous[key] = false;
+    }
     std::vector<int> assigned_ids(whiskers.size(), -1);
 
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
-        for (std::size_t j = 0; j < previous_whiskers.size(); ++j) {
-            if (matched_previous[j]) continue;
+        for (auto [prev_key, prev_whisker] : previous_whiskers) {
+            if (matched_previous[prev_key]) continue;
 
             float similarity = whisker::fast_discrete_frechet_matrix(
                 convert_to_whisker_Line2D(whiskers[i]),
-                convert_to_whisker_Line2D(previous_whiskers[j]));
+                convert_to_whisker_Line2D(prev_whisker));
             if (similarity < similarity_threshold) {
-                assigned_ids[i] = j;
-                matched_previous[j] = true;
+                assigned_ids[i] = prev_key;
+                matched_previous[prev_key] = true;
                 break;
             }
         }
