@@ -48,13 +48,13 @@ std::vector<std::string> whisker_colors = {"#ff0000", // Red
                                             "#ff00ff", // Magenta
                                             "#ffff00"}; // Yellow
 
-Line2D convert_to_Line2D(whisker::Line2D& line)
-{
-    auto output_line = Line2D();
-    for (auto const & p : line) {
-        output_line.push_back(Point2D<float>{p.x,p.y});
-    }
-    return output_line;
+Line2D& convert_to_Line2D(whisker::Line2D& whisker_line) {
+    return reinterpret_cast<Line2D&>(whisker_line);
+}
+
+// Function to convert Line2D to whisker::Line2D without copying
+whisker::Line2D& convert_to_whisker_Line2D(Line2D& line) {
+    return reinterpret_cast<whisker::Line2D&>(line);
 }
 
 /**
@@ -1008,7 +1008,8 @@ void Whisker_Widget::_loadHDF5WhiskerLinesFromDir()
 
     for (const auto & entry : std::filesystem::directory_iterator(directory)) {
         std::string filename = entry.path().filename().string();
-        if (filename.find("whisker_") != std::string::npos) {
+
+        if (filename.find("whisker_") != std::string::npos && filename.find(".h5") != std::string::npos) {
             whisker_files.push_back(entry.path());
         }
     }
@@ -1381,11 +1382,79 @@ void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filen
  * @param whisker_group_name
  * @param num_whisker_to_track
  */
-void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whisker_to_track, int current_time)
+void order_whiskers_by_position(
+        DataManager* dm,
+        std::string const & whisker_group_name,
+        int const num_whisker_to_track,
+        int current_time)
 {
+
+    float similarity_threshold = 10.0f;
 
     std::vector<Line2D> whiskers = dm->getData<LineData>("unlabeled_whiskers")->getLinesAtTime(current_time);
 
+    std::map<int,Line2D> previous_whiskers;
+    for (std::size_t i = 0; i < static_cast<std::size_t>(num_whisker_to_track); i++) {
+
+        std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
+
+        if (dm->getData<LineData>(whisker_name)) {
+            auto whisker = dm->getData<LineData>(whisker_name)->getLinesAtTime(current_time - 1);
+            if (whisker.size() > 0) {
+                if (whisker[0].size() > 0) {
+                    previous_whiskers[i] = whisker[0];
+                }
+            }
+        }
+    }
+
+    std::vector<bool> matched_previous(previous_whiskers.size(), false);
+    std::vector<int> assigned_ids(whiskers.size(), -1);
+
+    for (std::size_t i = 0; i < whiskers.size(); ++i) {
+        for (std::size_t j = 0; j < previous_whiskers.size(); ++j) {
+            if (matched_previous[j]) continue;
+
+            float similarity = whisker::fast_discrete_frechet_matrix(
+                convert_to_whisker_Line2D(whiskers[i]),
+                convert_to_whisker_Line2D(previous_whiskers[j]));
+            if (similarity < similarity_threshold) {
+                assigned_ids[i] = j;
+                matched_previous[j] = true;
+                break;
+            }
+        }
+    }
+
+    for (std::size_t i = 0; i < whiskers.size(); ++i) {
+        if (assigned_ids[i] != -1) {
+            std::string whisker_name = whisker_group_name + "_" + std::to_string(assigned_ids[i]);
+            dm->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
+            dm->getData<LineData>(whisker_name)->addLineAtTime(current_time, whiskers[i]);
+        }
+    }
+
+    int next_id = 0;
+    for (std::size_t i = 0; i < whiskers.size(); ++i) {
+        if (assigned_ids[i] == -1) {
+            while (std::find(assigned_ids.begin(), assigned_ids.end(), next_id) != assigned_ids.end()) {
+                ++next_id;
+            }
+            std::string whisker_name = whisker_group_name + "_" + std::to_string(next_id);
+            dm->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
+            dm->getData<LineData>(whisker_name)->addLineAtTime(current_time, whiskers[i]);
+            assigned_ids[i] = next_id;
+        }
+    }
+
+    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
+    for (std::size_t i = 0; i < whiskers.size(); ++i) {
+        if (assigned_ids[i] == -1) {
+            dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[i]);
+        }
+    }
+
+    /*
     for (std::size_t i = 0; i < static_cast<std::size_t>(num_whisker_to_track); i++) {
 
         if (i >= whiskers.size()) {
@@ -1405,6 +1474,7 @@ void order_whiskers_by_position(DataManager* dm, std::string const & whisker_gro
     for (std::size_t i = static_cast<std::size_t>(num_whisker_to_track); i < whiskers.size(); i++) {
         dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[i]);
     }
+*/
 }
 
 /**
