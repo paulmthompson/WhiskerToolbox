@@ -203,7 +203,42 @@ void Whisker_Widget::_traceButton() {
     auto media = _data_manager->getData<MediaData>("media");
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    _traceWhiskers(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+    if (ui->num_frames_to_trace->value() <= 1) {
+        _traceWhiskers(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+    } else {
+
+        auto height = media->getHeight(); auto width = media->getWidth();
+        int num_to_trace = 0;
+        int start_time = current_time;
+
+        while (num_to_trace < ui->num_frames_to_trace->value()) {
+
+            auto image = media->getProcessedData(num_to_trace + current_time);
+
+            auto whiskers = _wt->trace(image, height, width);
+
+            std::vector<Line2D> whisker_lines(whiskers.size());
+            std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);
+
+            std::for_each(whisker_lines.begin(), whisker_lines.end(), [this](Line2D& line) {
+                clip_whisker(line, _clip_length);
+            });
+
+            std::string whisker_group_name = "whisker";
+
+            add_whiskers_to_data_manager(
+                _data_manager.get(),
+                whisker_lines,
+                whisker_group_name,
+                _num_whisker_to_track,
+                start_time + num_to_trace);
+
+            num_to_trace += 1;
+            std::cout << num_to_trace << std::endl;
+        }
+
+        _drawWhiskers();
+    }
 }
 
 void Whisker_Widget::_dlTraceButton()
@@ -299,7 +334,12 @@ void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int 
 
     std::string whisker_group_name = "whisker";
 
-    add_whiskers_to_data_manager(_data_manager.get(), whisker_lines, whisker_group_name, _num_whisker_to_track);
+    add_whiskers_to_data_manager(
+        _data_manager.get(),
+        whisker_lines,
+        whisker_group_name,
+        _num_whisker_to_track,
+        _data_manager->getTime()->getLastLoadedFrame());
 
     auto t1 = timer2.elapsed();
     _drawWhiskers();
@@ -600,8 +640,15 @@ void Whisker_Widget::_exportAllTracked()
     auto const width = media->getWidth();
     auto const height = media->getHeight();
 
+    auto start_frame = ui->export_all_start_spinbox->value();
+    auto last_frame = ui->export_all_end_spinbox->value();
+
     for (auto & whisker_pair : whiskers) {
         int frame_id = whisker_pair.first;
+
+        if ((frame_id < start_frame) | (frame_id > last_frame)) {
+            continue;
+        }
 
         auto media_data = media->getRawData(frame_id);
 
@@ -1334,10 +1381,9 @@ void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filen
  * @param whisker_group_name
  * @param num_whisker_to_track
  */
-void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whisker_to_track)
+void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whisker_to_track, int current_time)
 {
 
-    const auto current_time = dm->getTime()->getLastLoadedFrame();
     std::vector<Line2D> whiskers = dm->getData<LineData>("unlabeled_whiskers")->getLinesAtTime(current_time);
 
     for (std::size_t i = 0; i < static_cast<std::size_t>(num_whisker_to_track); i++) {
@@ -1415,10 +1461,13 @@ bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to
  * @param whisker_group_name
  * @param num_whisker_to_track
  */
-void add_whiskers_to_data_manager(DataManager* dm, std::vector<Line2D> & whiskers, std::string const & whisker_group_name, int const num_whisker_to_track)
+void add_whiskers_to_data_manager(
+    DataManager* dm,
+    std::vector<Line2D> & whiskers,
+    std::string const & whisker_group_name,
+    int const num_whisker_to_track,
+    int current_time)
 {
-
-    auto current_time = dm->getTime()->getLastLoadedFrame();
     dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
     for (auto & w: whiskers) {
@@ -1426,7 +1475,7 @@ void add_whiskers_to_data_manager(DataManager* dm, std::vector<Line2D> & whisker
     }
 
     if (num_whisker_to_track > 0) {
-        order_whiskers_by_position(dm, whisker_group_name,num_whisker_to_track);
+        order_whiskers_by_position(dm, whisker_group_name,num_whisker_to_track, current_time);
     }
 }
 

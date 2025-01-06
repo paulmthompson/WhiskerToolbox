@@ -109,7 +109,7 @@ void Analog_Viewer::plotAnalog(std::string const & name){
         return;
     }
 
-    auto data = _data_manager->getData<AnalogTimeSeries>(name)->getVector();
+    auto data = _data_manager->getData<AnalogTimeSeries>(name)->getAnalogTimeSeries();
 
     // Loading data into JKQTPlotter datastore
     JKQTPDatastore* ds = ui->plot->getDatastore();

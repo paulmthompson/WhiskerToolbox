@@ -179,7 +179,7 @@ private slots:
 
 };
 
-void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whiskers_to_track);
+void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whiskers_to_track, int current_time);
 
 std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string const & dir_name, std::string const & line_key);
 
@@ -187,7 +187,12 @@ void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filen
 
 bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_group_name);
 
-void add_whiskers_to_data_manager(DataManager* dm, std::vector<Line2D> & whiskers, std::string const & whisker_group_name, int const num_whisker_to_track);
+void add_whiskers_to_data_manager(
+    DataManager* dm,
+    std::vector<Line2D> & whiskers,
+    std::string const & whisker_group_name,
+    int const num_whisker_to_track,
+    int current_time);
 
 void clip_whisker(Line2D& line, int clip_length);
 

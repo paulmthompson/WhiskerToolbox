@@ -239,9 +239,9 @@ void OpenGLWidget::paintGL() {
     for (size_t i = 0; i < _analog_series.size(); ++i) {
         const auto &series = _analog_series[i].series;
         const auto &data = series->getAnalogTimeSeries();
+        const auto &data_time = series->getTimeSeries();
         const auto &time_frame = _analog_series[i].time_frame;
-        float minY = _analog_series[i].min_max.first;
-        float maxY = _analog_series[i].min_max.second;
+
 
         // Set the color for the current series
         hexToRGB(_analog_series[i].color, r, g, b);
@@ -250,19 +250,33 @@ void OpenGLWidget::paintGL() {
         float bNorm = b / 255.0f;
 
         m_vertices.clear();
+
+        auto start_it = std::lower_bound(data_time.begin(), data_time.end(), _xAxis.getStart());
+        auto end_it = std::upper_bound(data_time.begin(), data_time.end(), _xAxis.getEnd());
+
+        float maxY = series->getMaxValue(start_it - data_time.begin(), end_it - data_time.begin());
+        float minY = series->getMinValue(start_it - data_time.begin(), end_it - data_time.begin());
+
+        float absMaxY = std::max(std::abs(maxY), std::abs(minY));
+        if (absMaxY == 0) {
+            absMaxY = 1.0f;
+        }
+
+
+        for (auto it = start_it; it != end_it; ++it) {
+            size_t index = std::distance(data_time.begin(), it);
+            float xCanvasPos = static_cast<GLfloat>(data_time[index] - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
+            float yCanvasPos = data[index] / absMaxY;
+            m_vertices.push_back(xCanvasPos);
+            m_vertices.push_back(yCanvasPos);
+            m_vertices.push_back(rNorm);
+            m_vertices.push_back(gNorm);
+            m_vertices.push_back(bNorm);
+            m_vertices.push_back(1.0f); // alpha
+        }
+
+
         /*
-        for (int j = _xAxis.getStart(); j <= _xAxis.getEnd(); ++j) {
-            auto it = data.find(j);
-            if (it != data.end()) {
-                float xCanvasPos = static_cast<GLfloat>(j - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f; // X coordinate normalized to [-1, 1]
-                float yCanvasPos = (it->second - minY) / (maxY - minY) * 2.0f - 1.0f; // Y coordinate, scaled to [-1, 1]
-                m_vertices.push_back(xCanvasPos);
-                m_vertices.push_back(yCanvasPos);
-                m_vertices.push_back(rNorm);
-                m_vertices.push_back(gNorm);
-                m_vertices.push_back(bNorm);
-            }
-        }*/
         for (const auto& [key, value] : data) {
             const auto ts = time_frame->getTimeAtIndex(key);
             if (ts >= _xAxis.getStart() && ts <= _xAxis.getEnd()) {
@@ -276,6 +290,7 @@ void OpenGLWidget::paintGL() {
                 m_vertices.push_back(1.0f); // alpha
             }
         }
+         */
         m_vbo.bind();
         m_vbo.allocate(m_vertices.data(), m_vertices.size() * sizeof(GLfloat));
         m_vbo.release();
@@ -312,11 +327,12 @@ void OpenGLWidget::addAnalogTimeSeries(
         std::shared_ptr<TimeFrame> time_frame,
         std::string color) {
 
-    std::string seriesColor = color.empty() ? generateRandomColor() : color;
+    //std::string seriesColor = color.empty() ? generateRandomColor() : color;
+    //white by default
+    std::string seriesColor = color.empty() ? "#FFFFFF" : color;
 
     _analog_series.push_back(
             AnalogSeriesData{series,
-                             std::make_pair(series->getMinValue(), series->getMaxValue()),
                              seriesColor,
                              time_frame});
     updateCanvas(_time);

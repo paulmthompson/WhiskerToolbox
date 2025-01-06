@@ -7,7 +7,7 @@
 
 AnalogTimeSeries::AnalogTimeSeries(std::map<int,float> analog_map)
 {
-    _data = analog_map;
+    setData(analog_map);
 }
 
 AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector)
@@ -15,10 +15,9 @@ AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector)
     setData(analog_vector);
 }
 
-
-std::map<int, float> const & AnalogTimeSeries::getAnalogTimeSeries() const
+AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, std::vector<size_t> time_vector)
 {
-    return _data;
+    setData(analog_vector, time_vector);
 }
 
 std::vector<float> load_analog_series_from_csv(std::string const& filename)

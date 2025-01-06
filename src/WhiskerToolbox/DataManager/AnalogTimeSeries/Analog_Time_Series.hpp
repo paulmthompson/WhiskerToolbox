@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath> // std::nan
 #include <map>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -16,54 +17,57 @@ class AnalogTimeSeries {
 public:
     AnalogTimeSeries() = default;
     AnalogTimeSeries(std::vector<float> analog_vector);
+    AnalogTimeSeries(std::vector<float> analog_vector, std::vector<size_t> time_vector);
     AnalogTimeSeries(std::map<int, float> analog_map);
 
-    void setData(std::map<int, float> analog_map) { _data = analog_map; };
     void setData(std::vector<float> analog_vector) {
         _data.clear();
-        for (int i = 0; i < analog_vector.size(); i++) {
-            _data[i] = analog_vector[i];
+        _data = analog_vector;
+        _time = std::vector<size_t>(analog_vector.size());
+        std::iota(_time.begin(), _time.end(), 0);
+    };
+    void setData(std::vector<float> analog_vector, std::vector<size_t> time_vector) {
+        _data.clear();
+        _time.clear();
+        _data = analog_vector;
+        _time = time_vector;
+    };
+    void setData(std::map<int, float> analog_map) {
+        _data.clear();
+        _time.clear();
+        _data = std::vector<float>(analog_map.size());
+        _time = std::vector<size_t>(analog_map.size());
+        size_t i = 0;
+        for (auto& [key, value] : analog_map) {
+            _time[i] = key;
+            _data[i] = value;
         }
     };
 
-    std::map<int, float> const& getAnalogTimeSeries() const;
+    std::vector<float>& getAnalogTimeSeries() {return _data;};
+    std::vector<size_t>& getTimeSeries() {return _time;};
 
     float getMinValue() const {
-        auto min_elem = std::min_element(_data.begin(), _data.end(),
-                                         [](const auto& lhs, const auto& rhs) {
-                                             return lhs.second < rhs.second;
-                                         });
-        return min_elem->second;
+        return *std::min_element(_data.begin(), _data.end());
+    }
+
+    float getMinValue(size_t start, size_t end) const {
+        return *std::min_element(_data.begin() + start, _data.begin() + end);
     }
 
     float getMaxValue() const {
-        auto max_elem = std::max_element(_data.begin(), _data.end(),
-                                         [](const auto& lhs, const auto& rhs) {
-                                             return lhs.second < rhs.second;
-                                         });
-        return max_elem->second;
+        return *std::max_element(_data.begin(), _data.end());
     }
 
-    std::vector<float> getVector() const {
-        if (_data.empty()) {
-            return {};
-        }
-
-        int minKey = _data.begin()->first;
-        int maxKey = _data.rbegin()->first;
-        std::vector<float> result(maxKey - minKey + 1, std::nanf(""));
-
-        for (const auto& [key, value] : _data) {
-            result[key - minKey] = value;
-        }
-
-        return result;
+    float getMaxValue(size_t start, size_t end) const {
+        return *std::max_element(_data.begin() + start, _data.begin() + end);
     }
+
 protected:
 
 private:
-    //std::vector<float> _data {};
-    std::map<int, float> _data {};
+    std::vector<float> _data;
+    std::vector<size_t> _time;
 };
 
 /**
