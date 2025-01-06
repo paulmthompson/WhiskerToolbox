@@ -1440,6 +1440,9 @@ void order_whiskers_by_position(
             while (std::find(assigned_ids.begin(), assigned_ids.end(), next_id) != assigned_ids.end()) {
                 ++next_id;
             }
+            if (next_id >= num_whisker_to_track) {
+                continue;
+            }
             std::string whisker_name = whisker_group_name + "_" + std::to_string(next_id);
             dm->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
             dm->getData<LineData>(whisker_name)->addLineAtTime(current_time, whiskers[i]);
