@@ -57,6 +57,10 @@ whisker::Line2D& convert_to_whisker_Line2D(Line2D& line) {
     return reinterpret_cast<whisker::Line2D&>(line);
 }
 
+std::vector<whisker::Line2D>& convert_to_whisker_Line2D(std::vector<Line2D>& lines) {
+    return reinterpret_cast<std::vector<whisker::Line2D>&>(lines);
+}
+
 /**
  * @brief Whisker_Widget::Whisker_Widget
  *
@@ -153,6 +157,14 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
         }
     });
 
+    connect(ui->linking_tol_spinbox, &QSpinBox::valueChanged, this, [this](int val){
+        _linking_tolerance = static_cast<float>(val);
+    });
+
+    connect(ui->select_whisker_button, &QPushButton::clicked, this, [this]() {
+        _selection_mode = Whisker_Select;
+    });
+
     connect(ui->manual_whisker_lock_frame, &QSpinBox::valueChanged, this, &Whisker_Widget::_setLockFrame);
 
 };
@@ -231,7 +243,8 @@ void Whisker_Widget::_traceButton() {
                 whisker_lines,
                 whisker_group_name,
                 _num_whisker_to_track,
-                start_time + num_to_trace);
+                start_time + num_to_trace,
+                _linking_tolerance);
 
             num_to_trace += 1;
             std::cout << num_to_trace << std::endl;
@@ -339,7 +352,8 @@ void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int 
         whisker_lines,
         whisker_group_name,
         _num_whisker_to_track,
-        _data_manager->getTime()->getLastLoadedFrame());
+        _data_manager->getTime()->getLastLoadedFrame(),
+        _linking_tolerance);
 
     auto t1 = timer2.elapsed();
     _drawWhiskers();
@@ -793,14 +807,27 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
     switch (_selection_mode) {
         case Whisker_Select: {
-        /*
-        std::tuple<float, int> nearest_whisker = whisker::get_nearest_whisker(x_media, y_media);
+
+            auto whiskers = _data_manager->getData<LineData>("unlabeled_whiskers")->getLinesAtTime(current_time);
+            std::tuple<float, int> nearest_whisker = whisker::get_nearest_whisker(
+                convert_to_whisker_Line2D(whiskers),
+                x_media,
+                y_media);
             if (std::get<0>(nearest_whisker) < 10.0f) {
                 _selected_whisker = std::get<1>(nearest_whisker);
-                _drawWhiskers();
+
+                std::string whisker_group_name = "whisker_" + std::to_string(_current_whisker);
+                if (_data_manager->getData<LineData>(whisker_group_name)) {
+                    _data_manager->getData<LineData>(whisker_group_name)->addLineAtTime(current_time, whiskers[_selected_whisker]);
+               // _data_manager->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
+                //whiskers.erase(whiskers.begin() + _selected_whisker);
+               // _data_manager->getData<LineData>("unlabeled_whiskers")->addLineAtTime()
+
+                    _drawWhiskers();
+                }
             }
             break;
-        */
+
         }
 
         case Whisker_Pad_Select: {
@@ -1386,10 +1413,9 @@ void order_whiskers_by_position(
         DataManager* dm,
         std::string const & whisker_group_name,
         int const num_whisker_to_track,
-        int current_time)
+        int current_time,
+        float similarity_threshold)
 {
-
-    float similarity_threshold = 10.0f;
 
     std::vector<Line2D> whiskers = dm->getData<LineData>("unlabeled_whiskers")->getLinesAtTime(current_time);
 
@@ -1418,6 +1444,7 @@ void order_whiskers_by_position(
             float similarity = whisker::fast_discrete_frechet_matrix(
                 convert_to_whisker_Line2D(whiskers[i]),
                 convert_to_whisker_Line2D(previous_whiskers[j]));
+            std::cout << "Similarity " << similarity << std::endl;
             if (similarity < similarity_threshold) {
                 assigned_ids[i] = j;
                 matched_previous[j] = true;
@@ -1433,7 +1460,7 @@ void order_whiskers_by_position(
             dm->getData<LineData>(whisker_name)->addLineAtTime(current_time, whiskers[i]);
         }
     }
-
+    /*
     int next_id = 0;
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
         if (assigned_ids[i] == -1) {
@@ -1449,6 +1476,7 @@ void order_whiskers_by_position(
             assigned_ids[i] = next_id;
         }
     }
+    */
 
     dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
@@ -1539,7 +1567,8 @@ void add_whiskers_to_data_manager(
     std::vector<Line2D> & whiskers,
     std::string const & whisker_group_name,
     int const num_whisker_to_track,
-    int current_time)
+    int current_time,
+    float similarity_threshold)
 {
     dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
@@ -1548,7 +1577,7 @@ void add_whiskers_to_data_manager(
     }
 
     if (num_whisker_to_track > 0) {
-        order_whiskers_by_position(dm, whisker_group_name,num_whisker_to_track, current_time);
+        order_whiskers_by_position(dm, whisker_group_name,num_whisker_to_track, current_time, similarity_threshold);
     }
 }
 

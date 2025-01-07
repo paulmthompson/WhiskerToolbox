@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>549</width>
-    <height>568</height>
+    <height>651</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>10</x>
       <y>10</y>
       <width>261</width>
-      <height>381</height>
+      <height>471</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -238,12 +238,12 @@
       <rect>
        <x>10</x>
        <y>260</y>
-       <width>121</width>
+       <width>191</width>
        <height>24</height>
       </rect>
      </property>
      <property name="text">
-      <string>Manual Whisker</string>
+      <string>Manual Whisker Define</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -253,7 +253,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>290</y>
+       <y>320</y>
        <width>71</width>
        <height>22</height>
       </rect>
@@ -275,7 +275,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>290</y>
+       <y>320</y>
        <width>141</width>
        <height>16</height>
       </rect>
@@ -288,7 +288,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>320</y>
+       <y>350</y>
        <width>121</width>
        <height>24</height>
       </rect>
@@ -301,7 +301,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>350</y>
+       <y>380</y>
        <width>111</width>
        <height>22</height>
       </rect>
@@ -323,7 +323,7 @@
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>350</y>
+       <y>380</y>
        <width>81</width>
        <height>16</height>
       </rect>
@@ -346,6 +346,51 @@
      </property>
      <property name="maximum">
       <number>1000000</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="select_whisker_button">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>290</y>
+       <width>131</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Select Whisker</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="linking_tol_spinbox">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>420</y>
+       <width>111</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>400</number>
+     </property>
+     <property name="value">
+      <number>20</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_18">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>420</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Linking Tol</string>
      </property>
     </widget>
    </widget>
@@ -571,7 +616,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>390</y>
+      <y>480</y>
       <width>511</width>
       <height>131</height>
      </rect>
@@ -757,7 +802,7 @@
       <x>270</x>
       <y>250</y>
       <width>251</width>
-      <height>141</height>
+      <height>231</height>
      </rect>
     </property>
     <property name="frameShape">

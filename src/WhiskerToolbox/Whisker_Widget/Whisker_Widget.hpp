@@ -60,6 +60,8 @@ private:
 
     int _selected_whisker {0};
 
+    float _linking_tolerance {20.0f};
+
     enum Selection_Type {Whisker_Select,
                           Whisker_Pad_Select,
                           Magic_Eraser,
@@ -179,7 +181,7 @@ private slots:
 
 };
 
-void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whiskers_to_track, int current_time);
+void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whiskers_to_track, int current_time, float similarity_threshold);
 
 std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string const & dir_name, std::string const & line_key);
 
@@ -192,7 +194,8 @@ void add_whiskers_to_data_manager(
     std::vector<Line2D> & whiskers,
     std::string const & whisker_group_name,
     int const num_whisker_to_track,
-    int current_time);
+    int current_time,
+    float similarity_threshold);
 
 void clip_whisker(Line2D& line, int clip_length);
 
