@@ -20,7 +20,7 @@ public:
     virtual ~Feature_Table_Widget();
     void setDataManager(std::shared_ptr<DataManager> data_manager);
 
-    void populateTable(const std::vector<std::string>& keys);
+    void populateTable();
 
 signals:
     void featureSelected(const QString& feature);

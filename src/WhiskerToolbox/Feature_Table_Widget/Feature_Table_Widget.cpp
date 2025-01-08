@@ -22,28 +22,51 @@ Feature_Table_Widget::~Feature_Table_Widget() {
 void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = data_manager;}
 
 
-void Feature_Table_Widget::populateTable(const std::vector<std::string>& keys) {
+void Feature_Table_Widget::populateTable() {
     ui->available_features_table->setRowCount(0);
-    QStringList headers = {"Feature", "Type", "Clock"};
-    ui->available_features_table->setColumnCount(3);
+    QStringList headers = {"Feature", "Type", "Clock", "Elements"};
+    ui->available_features_table->setColumnCount(4);
     ui->available_features_table->setHorizontalHeaderLabels(headers);
 
-    int row = 0;
-    for (const auto& key : keys) {
+    // Get all keys and group names
+    auto allKeys = _data_manager->getAllKeys();
+    auto groupNames = _data_manager->getDataGroupNames();
+
+    // Add group names to the table
+    for (const auto& groupName : groupNames) {
+        int row = ui->available_features_table->rowCount();
         ui->available_features_table->insertRow(row);
-        ui->available_features_table->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(key)));
+        ui->available_features_table->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(groupName)));
+        ui->available_features_table->setItem(row, 1, new QTableWidgetItem("Group"));
+        ui->available_features_table->setItem(row, 2, new QTableWidgetItem(""));
+        ui->available_features_table->setItem(row, 3, new QTableWidgetItem(QString::number(_data_manager->getDataGroup(groupName).size())));
+    }
 
-        std::string type = _data_manager->getType(key);
-        ui->available_features_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(type)));
-
-        std::string clock = _data_manager->getTimeFrame(key);
-        ui->available_features_table->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(clock)));
-        row++;
+    // Add keys not in groups to the table
+    for (const auto& key : allKeys) {
+        bool isInGroup = false;
+        for (const auto& groupName : groupNames) {
+            auto groupKeys = _data_manager->getDataGroup(groupName);
+            if (std::find(groupKeys.begin(), groupKeys.end(), key) != groupKeys.end()) {
+                isInGroup = true;
+                break;
+            }
+        }
+        if (!isInGroup) {
+            int row = ui->available_features_table->rowCount();
+            ui->available_features_table->insertRow(row);
+            ui->available_features_table->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(key)));
+            std::string type = _data_manager->getType(key);
+            ui->available_features_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(type)));
+            std::string clock = _data_manager->getTimeFrame(key);
+            ui->available_features_table->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(clock)));
+            ui->available_features_table->setItem(row, 3, new QTableWidgetItem("1"));
+        }
     }
 }
 
 void Feature_Table_Widget::_refreshFeatures() {
-    populateTable(_data_manager->getAllKeys());
+    populateTable();
 }
 
 void Feature_Table_Widget::_highlightFeature(int row, int column) {
