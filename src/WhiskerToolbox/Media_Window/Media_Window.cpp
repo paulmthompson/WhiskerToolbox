@@ -285,7 +285,7 @@ void Media_Window::_plotLineData()
 
             QPainterPath path = QPainterPath();
 
-            auto single_line_thres = 10.0;
+            auto single_line_thres = 1000.0;
 
             path.moveTo(QPointF(static_cast<float>(single_line[0].x) * xAspect, static_cast<float>(single_line[0].y) * yAspect));
 

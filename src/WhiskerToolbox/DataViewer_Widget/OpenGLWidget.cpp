@@ -251,8 +251,15 @@ void OpenGLWidget::paintGL() {
 
         m_vertices.clear();
 
-        auto start_it = std::lower_bound(data_time.begin(), data_time.end(), _xAxis.getStart());
-        auto end_it = std::upper_bound(data_time.begin(), data_time.end(), _xAxis.getEnd());
+        //auto start_it = std::lower_bound(data_time.begin(), data_time.end(), _xAxis.getStart());
+        //auto end_it = std::upper_bound(data_time.begin(), data_time.end(), _xAxis.getEnd());
+
+        auto start_time = _xAxis.getStart();
+        auto end_time = _xAxis.getEnd();
+        auto start_it = std::lower_bound(data_time.begin(), data_time.end(), start_time,
+                                         [&time_frame](const auto& time, const auto& value) { return time_frame->getTimeAtIndex(time) < value; });
+        auto end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
+                                       [&time_frame](const auto& value, const auto& time) { return value < time_frame->getTimeAtIndex(time); });
 
         float maxY = series->getMaxValue(start_it - data_time.begin(), end_it - data_time.begin());
         float minY = series->getMinValue(start_it - data_time.begin(), end_it - data_time.begin());
@@ -262,10 +269,10 @@ void OpenGLWidget::paintGL() {
             absMaxY = 1.0f;
         }
 
-
         for (auto it = start_it; it != end_it; ++it) {
             size_t index = std::distance(data_time.begin(), it);
-            float xCanvasPos = static_cast<GLfloat>(data_time[index] - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
+            float time = time_frame->getTimeAtIndex(index);
+            float xCanvasPos = static_cast<GLfloat>(time - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
             float yCanvasPos = data[index] / absMaxY;
             m_vertices.push_back(xCanvasPos);
             m_vertices.push_back(yCanvasPos);
