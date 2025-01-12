@@ -80,6 +80,9 @@ private:
     void generateRandomValues(int count);
     void generateAndAddFakeData(int count);
     void adjustFakeData();
+    void drawDigitalEventSeries();
+    void drawDigitalIntervalSeries();
+    void drawAnalogSeries();
 
     std::vector<AnalogSeriesData> _analog_series;
     std::vector<DigitalEventSeriesData> _digital_event_series;

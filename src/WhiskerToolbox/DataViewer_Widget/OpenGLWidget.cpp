@@ -150,26 +150,9 @@ void OpenGLWidget::setupVertexAttribs() {
     m_vbo.release();
 }
 
-void OpenGLWidget::paintGL() {
+void OpenGLWidget::drawDigitalEventSeries()
+{
     int r, g, b;
-    hexToRGB(m_background_color, r, g, b);
-    glClearColor(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    m_program->bind();
-    m_program->setUniformValue(m_projMatrixLoc, m_proj);
-    m_program->setUniformValue(m_viewMatrixLoc, m_view);
-    m_program->setUniformValue(m_modelMatrixLoc, m_model);
-
-    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
-
-    //adjustFakeData();
-
-    //This has been converted to master coordinates
-    int currentTime = _time;
-
-    int zoom = _xAxis.getEnd() - _xAxis.getStart();
-    _xAxis.setCenterAndZoom(currentTime, zoom);
 
     for (const auto& event_data : _digital_event_series) {
         const auto& series = event_data.series;
@@ -196,7 +179,11 @@ void OpenGLWidget::paintGL() {
             }
         }
     }
+}
 
+void OpenGLWidget::drawDigitalIntervalSeries()
+{
+    int r, g, b;
     for (const auto& interval_data : _digital_interval_series) {
         const auto& series = interval_data.series;
         const auto& intervals = series->getDigitalIntervalSeries();
@@ -235,7 +222,11 @@ void OpenGLWidget::paintGL() {
             glDrawArrays(GL_QUADS, 0, 4);
         }
     }
+}
 
+void OpenGLWidget::drawAnalogSeries()
+{
+    int r, g, b;
     for (size_t i = 0; i < _analog_series.size(); ++i) {
         const auto &series = _analog_series[i].series;
         const auto &data = series->getAnalogTimeSeries();
@@ -282,32 +273,43 @@ void OpenGLWidget::paintGL() {
             m_vertices.push_back(1.0f); // alpha
         }
 
-
-        /*
-        for (const auto& [key, value] : data) {
-            const auto ts = time_frame->getTimeAtIndex(key);
-            if (ts >= _xAxis.getStart() && ts <= _xAxis.getEnd()) {
-                float xCanvasPos = static_cast<GLfloat>(ts - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f; // X coordinate normalized to [-1, 1]
-                float yCanvasPos = (value - minY) / (maxY - minY) * 2.0f - 1.0f; // Y coordinate, scaled to [-1, 1]
-                m_vertices.push_back(xCanvasPos);
-                m_vertices.push_back(yCanvasPos);
-                m_vertices.push_back(rNorm);
-                m_vertices.push_back(gNorm);
-                m_vertices.push_back(bNorm);
-                m_vertices.push_back(1.0f); // alpha
-            }
-        }
-         */
         m_vbo.bind();
         m_vbo.allocate(m_vertices.data(), m_vertices.size() * sizeof(GLfloat));
         m_vbo.release();
         glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 6);
     }
+}
+
+void OpenGLWidget::paintGL() {
+    int r, g, b;
+    hexToRGB(m_background_color, r, g, b);
+    glClearColor(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    m_program->bind();
+    m_program->setUniformValue(m_projMatrixLoc, m_proj);
+    m_program->setUniformValue(m_viewMatrixLoc, m_view);
+    m_program->setUniformValue(m_modelMatrixLoc, m_model);
+
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+
+    //adjustFakeData();
+
+    //This has been converted to master coordinates
+    int currentTime = _time;
+
+    int zoom = _xAxis.getEnd() - _xAxis.getStart();
+    _xAxis.setCenterAndZoom(currentTime, zoom);
+
+    // Draw the series
+    drawDigitalEventSeries();
+    drawDigitalIntervalSeries();
+    drawAnalogSeries();
 
     // Draw horizontal line at x=0
-    std::vector<GLfloat> lineVertices = {
-            0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-            0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
+    std::array<GLfloat, 12> lineVertices = {
+        0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
     };
     m_vbo.bind();
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
