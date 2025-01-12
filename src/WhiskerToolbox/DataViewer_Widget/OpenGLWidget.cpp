@@ -271,7 +271,7 @@ void OpenGLWidget::paintGL() {
 
         for (auto it = start_it; it != end_it; ++it) {
             size_t index = std::distance(data_time.begin(), it);
-            float time = time_frame->getTimeAtIndex(index);
+            float time = time_frame->getTimeAtIndex(data_time[index]);
             float xCanvasPos = static_cast<GLfloat>(time - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
             float yCanvasPos = data[index] / absMaxY;
             m_vertices.push_back(xCanvasPos);
