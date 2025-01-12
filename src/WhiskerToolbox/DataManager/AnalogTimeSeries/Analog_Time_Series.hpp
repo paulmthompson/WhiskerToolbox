@@ -35,12 +35,11 @@ public:
     void setData(std::map<int, float> analog_map) {
         _data.clear();
         _time.clear();
-        _data = std::vector<float>(analog_map.size());
-        _time = std::vector<size_t>(analog_map.size());
-        size_t i = 0;
+        _data = std::vector<float>();
+        _time = std::vector<size_t>();
         for (auto& [key, value] : analog_map) {
-            _time[i] = key;
-            _data[i] = value;
+            _time.push_back(key);
+            _data.push_back(value);
         }
     };
 
