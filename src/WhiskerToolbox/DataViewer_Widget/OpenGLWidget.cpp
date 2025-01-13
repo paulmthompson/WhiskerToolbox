@@ -153,6 +153,8 @@ void OpenGLWidget::setupVertexAttribs() {
 void OpenGLWidget::drawDigitalEventSeries()
 {
     int r, g, b;
+    const auto start_time = _xAxis.getStart();
+    const auto end_time = _xAxis.getEnd();
 
     for (const auto& event_data : _digital_event_series) {
         const auto& series = event_data.series;
@@ -166,8 +168,8 @@ void OpenGLWidget::drawDigitalEventSeries()
 
         for (const auto& event : events) {
             float time = time_frame->getTimeAtIndex(event);
-            if (time >= _xAxis.getStart() && time <= _xAxis.getEnd()) {
-                float xCanvasPos = static_cast<GLfloat>(time - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
+            if (time >= start_time && time <= end_time) {
+                float xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
                 std::vector<GLfloat> vertices = {
                         xCanvasPos, -1.0f, rNorm, gNorm, bNorm, alpha,
                         xCanvasPos, 1.0f, rNorm, gNorm, bNorm, alpha
@@ -184,6 +186,9 @@ void OpenGLWidget::drawDigitalEventSeries()
 void OpenGLWidget::drawDigitalIntervalSeries()
 {
     int r, g, b;
+    const auto start_time = _xAxis.getStart();
+    const auto end_time = _xAxis.getEnd();
+
     for (const auto& interval_data : _digital_interval_series) {
         const auto& series = interval_data.series;
         const auto& intervals = series->getDigitalIntervalSeries();
@@ -195,19 +200,18 @@ void OpenGLWidget::drawDigitalIntervalSeries()
         float alpha = 0.5f; // Set alpha for shading
 
         for (const auto& interval : intervals) {
-            //std::cout << "Interval: " << interval.first << " " << interval.second << std::endl;
-            //std::cout << "plotting interval " << _xAxis.getStart() << " " << _xAxis.getEnd() << std::endl;
+
             float start = time_frame->getTimeAtIndex(interval.first);
             float end = time_frame->getTimeAtIndex(interval.second);
-            if (end < _xAxis.getStart() || start > _xAxis.getEnd()) {
+            if (end < start_time || start > end_time) {
                 continue;
             }
 
-            start = std::max(start, static_cast<float>(_xAxis.getStart()));
-            end = std::min(end, static_cast<float>(_xAxis.getEnd()));
+            start = std::max(start, static_cast<float>(start_time));
+            end = std::min(end, static_cast<float>(end_time));
 
-            float xStart = static_cast<GLfloat>(start - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
-            float xEnd = static_cast<GLfloat>(end - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
+            float xStart = static_cast<GLfloat>(start - start_time) / (end_time - start_time) * 2.0f - 1.0f;
+            float xEnd = static_cast<GLfloat>(end - start_time) / (end_time - start_time) * 2.0f - 1.0f;
 
             std::vector<GLfloat> vertices = {
                     xStart, -1.0f, rNorm, gNorm, bNorm, alpha,
@@ -227,12 +231,15 @@ void OpenGLWidget::drawDigitalIntervalSeries()
 void OpenGLWidget::drawAnalogSeries()
 {
     int r, g, b;
+
+    const auto start_time = _xAxis.getStart();
+    const auto end_time = _xAxis.getEnd();
+
     for (size_t i = 0; i < _analog_series.size(); ++i) {
         const auto &series = _analog_series[i].series;
         const auto &data = series->getAnalogTimeSeries();
         const auto &data_time = series->getTimeSeries();
         const auto &time_frame = _analog_series[i].time_frame;
-
 
         // Set the color for the current series
         hexToRGB(_analog_series[i].color, r, g, b);
@@ -242,11 +249,6 @@ void OpenGLWidget::drawAnalogSeries()
 
         m_vertices.clear();
 
-        //auto start_it = std::lower_bound(data_time.begin(), data_time.end(), _xAxis.getStart());
-        //auto end_it = std::upper_bound(data_time.begin(), data_time.end(), _xAxis.getEnd());
-
-        auto start_time = _xAxis.getStart();
-        auto end_time = _xAxis.getEnd();
         auto start_it = std::lower_bound(data_time.begin(), data_time.end(), start_time,
                                          [&time_frame](const auto& time, const auto& value) { return time_frame->getTimeAtIndex(time) < value; });
         auto end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
@@ -263,7 +265,7 @@ void OpenGLWidget::drawAnalogSeries()
         for (auto it = start_it; it != end_it; ++it) {
             size_t index = std::distance(data_time.begin(), it);
             float time = time_frame->getTimeAtIndex(data_time[index]);
-            float xCanvasPos = static_cast<GLfloat>(time - _xAxis.getStart()) / (_xAxis.getEnd() - _xAxis.getStart()) * 2.0f - 1.0f;
+            float xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
             float yCanvasPos = data[index] / absMaxY;
             m_vertices.push_back(xCanvasPos);
             m_vertices.push_back(yCanvasPos);
@@ -293,8 +295,6 @@ void OpenGLWidget::paintGL() {
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
-    //adjustFakeData();
-
     //This has been converted to master coordinates
     int currentTime = _time;
 
@@ -315,10 +315,6 @@ void OpenGLWidget::paintGL() {
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
     m_vbo.release();
     glDrawArrays(GL_LINES, 0, 2);
-
-    //glDrawArrays(GL_LINES, 0, 2);
-    //generateRandomValues(100);
-    //glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 2);
 
     m_program->release();
 }
