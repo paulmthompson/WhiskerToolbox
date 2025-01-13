@@ -39,8 +39,8 @@ std::vector<uint8_t> fast_skeletonize(const std::vector<uint8_t>& image, int hei
                               0, 0, 3, 3, 0, 1, 0, 0, 0, 0, 2, 2, 0, 0,
                               2, 0, 0, 0};
 
-    int nrows = height + 2;
-    int ncols = width + 2;
+    const int nrows = height + 2;
+    const int ncols = width + 2;
 
     // Create skeleton and cleaned_skeleton with border
     std::vector<uint8_t> skeleton(nrows * ncols, 0);
