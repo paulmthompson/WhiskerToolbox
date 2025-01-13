@@ -170,7 +170,8 @@ void OpenGLWidget::drawDigitalEventSeries()
             float time = time_frame->getTimeAtIndex(event);
             if (time >= start_time && time <= end_time) {
                 float xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
-                std::vector<GLfloat> vertices = {
+
+                std::array<GLfloat, 6*2> vertices = {
                         xCanvasPos, -1.0f, rNorm, gNorm, bNorm, alpha,
                         xCanvasPos, 1.0f, rNorm, gNorm, bNorm, alpha
                 };
@@ -213,7 +214,7 @@ void OpenGLWidget::drawDigitalIntervalSeries()
             float xStart = static_cast<GLfloat>(start - start_time) / (end_time - start_time) * 2.0f - 1.0f;
             float xEnd = static_cast<GLfloat>(end - start_time) / (end_time - start_time) * 2.0f - 1.0f;
 
-            std::vector<GLfloat> vertices = {
+            std::array<GLfloat, 6*4> vertices = {
                     xStart, -1.0f, rNorm, gNorm, bNorm, alpha,
                     xEnd, -1.0f, rNorm, gNorm, bNorm, alpha,
                     xEnd, 1.0f, rNorm, gNorm, bNorm, alpha,
