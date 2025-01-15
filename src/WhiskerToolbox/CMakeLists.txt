@@ -99,6 +99,7 @@ set(PROJECT_SOURCES
         utils/Image_Processing/skeletonize.hpp
         utils/Image_Processing/order_line.hpp
         utils/Image_Processing/mask_operations.hpp
+        utils/Image_Processing/connected_component.hpp
 
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp

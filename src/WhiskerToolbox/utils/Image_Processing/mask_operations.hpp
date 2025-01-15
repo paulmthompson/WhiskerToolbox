@@ -4,6 +4,7 @@
 #include "DataManager/Points/points.hpp"
 #include "order_line.hpp"
 #include "skeletonize.hpp"
+#include "connected_component.hpp"
 
 
 #include <chrono>
@@ -26,6 +27,8 @@ std::vector<Point2D<float>> convert_mask_to_line(
     auto output_vec = fast_skeletonize(binary_mask, 256, 256);
 
     auto t2 = std::chrono::high_resolution_clock::now();
+
+    output_vec = remove_small_clusters(output_vec, 256, 256, 10);
 
     auto output_line = order_line(output_vec, 256, 256, base_point);
 
