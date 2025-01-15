@@ -39,7 +39,7 @@ set(JKQtPlotter_BUILD_TOOLS OFF)
 set(JKQtPlotter_BUILD_LIB_JKQTFASTPLOTTER OFF)
 #add_subdirectory(Whisker-Analysis)
 
-set(CUDA OFF)
+set(CUDA ON)
 
 if (LINUX)
     if (CUDA)

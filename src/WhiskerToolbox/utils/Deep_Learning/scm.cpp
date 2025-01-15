@@ -1,7 +1,6 @@
 
 #include "scm.hpp"
-#include "utils/Image_Processing/skeletonize.hpp"
-#include "utils/Image_Processing/order_line.hpp"
+#include "utils/Image_Processing/mask_operations.hpp"
 #include "DataManager/Points/points.hpp"
 #include "DataManager/Lines/lines.hpp"
 
@@ -132,25 +131,7 @@ std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, int 
     output = output.mul(255).clamp(0,255).to(torch::kU8).detach().to(torch::kCPU);
     std::vector<uint8_t> vec(output.data_ptr<uint8_t>(), output.data_ptr<uint8_t>() + output.numel());
 
-    std::transform(vec.begin(), vec.end(), vec.begin(), [](uint8_t pixel) {
-        return pixel > 1 ? 1 : 0;
-    });
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-
-    auto output_vec = fast_skeletonize(vec, 256, 256);
-
-    auto t2 = std::chrono::high_resolution_clock::now();
-
-    auto output_line = order_line(output_vec, 256, 256, {_x,_y});
-
-    auto t3 = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double> elapsed = t2 - t1;
-    //std::cout << "Time for Skeletonization: " << elapsed.count() << std::endl;
-
-    elapsed = t3 - t1;
-    //std::cout << "Time for line ordering: " << elapsed.count() << std::endl;
+    auto output_line = convert_mask_to_line(vec, {_x, _y});
 
     return output_line;
 }

@@ -1,7 +1,7 @@
 #ifndef SCM_HPP
 #define SCM_HPP
 
-#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Points/points.hpp"
 
 #include <map>
 #include <memory>
