@@ -5,6 +5,7 @@
 #include "order_line.hpp"
 #include "skeletonize.hpp"
 #include "connected_component.hpp"
+#include "simplify_line.hpp"
 
 
 #include <chrono>
@@ -31,6 +32,8 @@ std::vector<Point2D<float>> convert_mask_to_line(
     output_vec = remove_small_clusters(output_vec, 256, 256, 10);
 
     auto output_line = order_line(output_vec, 256, 256, base_point);
+
+    remove_extreme_angles(output_line, Degree(45.0f));
 
     auto t3 = std::chrono::high_resolution_clock::now();
 
