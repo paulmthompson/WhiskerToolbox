@@ -20,6 +20,7 @@ set(PROJECT_SOURCES
         main.cpp
         whiskertoolbox.qrc
         my_stylesheet.qss
+        color_scheme.hpp
 
         AnalogViewer/analog_viewer.hpp
         AnalogViewer/analog_viewer.cpp
