@@ -26,6 +26,10 @@ jobs:
       - name: Configure CMake without coverage
         run: cmake --preset linux-clang-release
 
+      - name: Display Log on failure
+        if: failure()
+        run: cat /usr/local/share/vcpkg/buildtrees/libxcrypt/autoconf-x64-linux-dynamic-out.log
+
       - name: Build
         run: cmake --build --preset linux-clang-release
 
