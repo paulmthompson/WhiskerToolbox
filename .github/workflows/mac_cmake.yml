@@ -168,7 +168,7 @@ jobs:
           MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
 
       - name: Upload CPack Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cpack-artifact
           path: ${{ env.ARTIFACT_PATH }}
