@@ -85,11 +85,22 @@ set(EXTRA_DLLS
         "${CMAKE_BINARY_DIR}/liblzma.dll"
 )
 
+set(TORCH_DLLS
+        "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/asmjit.dll"
+        "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/c10.dll"
+        "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/fbgemm.dll"
+        "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libiomp5md.dll"
+        "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libiompstubs5md.dll"
+        "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/torch.dll"
+        "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/torch_cpu.dll"
+)
+
 copy_dlls_during_install("${OPENCV_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${HDF5_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${WHISKER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${EXTRA_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${JKQTPLOTTER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
+copy_dlls_during_install("${TORCH_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 
 # Print support and xml are dependencies of JKQTPlotter6
 # But they are not automatically found by qt windows deployment
