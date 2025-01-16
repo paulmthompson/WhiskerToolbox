@@ -40,7 +40,7 @@ runs:
 
     - name: Install nasm and other libraries on Linux
       shell: bash
-      run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev libomp-18-dev lcov gcovr autoconf automake libtool pkg-config
+      run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev libomp-18-dev lcov gcovr libltdl-dev
 
     - name: Setup headless display
       uses: pyvista/setup-headless-display-action@v3
