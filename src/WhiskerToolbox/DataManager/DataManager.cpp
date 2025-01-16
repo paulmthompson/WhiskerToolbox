@@ -209,6 +209,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             std::string color = item.value("color","0000FF");
             std::string delim = item.value("delim", " ");
 
+            int height = item.value("height", -1);
+            int width = item.value("width", -1);
+
             auto keypoints = load_points_from_csv(
                     file_path,
                     frame_column,
@@ -221,6 +224,8 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             std::cout << "There are " <<  keypoints.size() << " keypoints " << std::endl;
 
             auto point_data = std::make_shared<PointData>(keypoints);
+            point_data->setMaskHeight(height);
+            point_data->setMaskWidth(width);
 
             dm->setData<PointData>(keypoint_key, point_data);
 

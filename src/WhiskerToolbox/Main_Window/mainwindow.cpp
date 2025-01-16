@@ -314,6 +314,7 @@ void MainWindow::openWhiskerTracking() {
 void MainWindow::registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area)
 {
     auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
+    //dock_widget->setWidget(widget, ads::CDockWidget::ForceScrollArea);
     dock_widget->setWidget(widget);
     _m_DockManager->addDockWidget(area, dock_widget);
 }
