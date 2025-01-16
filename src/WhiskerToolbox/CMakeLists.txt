@@ -141,6 +141,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6:
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
+message(STATUS ${TORCH_LIBRARIES})
 target_link_libraries(WhiskerToolbox PRIVATE "${TORCH_LIBRARIES}")
 
 target_include_directories(WhiskerToolbox PRIVATE
