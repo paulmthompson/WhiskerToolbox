@@ -93,6 +93,7 @@ set(TORCH_DLLS
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/libiompstubs5md.dll"
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/torch.dll"
         "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/torch_cpu.dll"
+        "${CMAKE_BINARY_DIR}/_deps/torch-src/lib/uv.dll"
 )
 
 copy_dlls_during_install("${OPENCV_DLLS}" "${CMAKE_INSTALL_BINDIR}")
