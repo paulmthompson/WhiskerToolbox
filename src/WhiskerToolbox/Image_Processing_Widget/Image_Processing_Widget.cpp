@@ -38,6 +38,10 @@ Image_Processing_Widget::Image_Processing_Widget(Media_Window* scene, std::share
     connect(ui->bilateral_spatial_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateBilateralSpatialSigma);
     connect(ui->bilateral_color_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateBilateralColorSigma);
     connect(ui->bilateral_checkbox, &QCheckBox::checkStateChanged, this, &Image_Processing_Widget::_activateBilateral);
+
+    _data_manager->addCallbackToData("media", [this]() {
+        _scene->UpdateCanvas();
+    });
 }
 
 void Image_Processing_Widget::openWidget() {
@@ -54,7 +58,6 @@ void Image_Processing_Widget::_updateContrastFilter()
     if (_contrast_active) {
         auto media = _data_manager->getData<MediaData>("media");
         media->setProcess("1__lineartransform", std::bind(linear_transform, std::placeholders::_1, _contrast_alpha, _contrast_beta));
-        _scene->UpdateCanvas();
     }
 }
 
@@ -67,7 +70,6 @@ void Image_Processing_Widget::_activateContrast()
     } else {
         auto media = _data_manager->getData<MediaData>("media");
         media->removeProcess("1__lineartransform");
-        _scene->UpdateCanvas();
     }
 }
 
@@ -98,7 +100,6 @@ void Image_Processing_Widget::_updateGammaFilter()
     if (_gamma_active) {
         auto media = _data_manager->getData<MediaData>("media");
         media->setProcess("1__gamma", std::bind(gamma_transform, std::placeholders::_1, _gamma));
-        _scene->UpdateCanvas();
     }
 }
 
@@ -111,7 +112,6 @@ void Image_Processing_Widget::_activateGamma()
     } else {
         auto media = _data_manager->getData<MediaData>("media");
         media->removeProcess("1__gamma");
-        _scene->UpdateCanvas();
     }
 }
 
@@ -133,7 +133,6 @@ void Image_Processing_Widget::_updateSharpenFilter()
     if (_sharpen_active) {
         auto media = _data_manager->getData<MediaData>("media");
         media->setProcess("2__sharpentransform", std::bind(sharpen_image, std::placeholders::_1, _sharpen_sigma));
-        _scene->UpdateCanvas();
     }
 }
 
@@ -146,7 +145,6 @@ void Image_Processing_Widget::_activateSharpen()
     } else {
         auto media = _data_manager->getData<MediaData>("media");
         media->removeProcess("2__sharpentransform");
-        _scene->UpdateCanvas();
     }
 }
 
@@ -167,7 +165,6 @@ void Image_Processing_Widget::_updateClaheFilter()
     if (_clahe_active) {
         auto media = _data_manager->getData<MediaData>("media");
         media->setProcess("3__clahetransform", std::bind(clahe, std::placeholders::_1, _clahe_clip, _clahe_grid));
-        _scene->UpdateCanvas();
     }
 }
 
@@ -180,7 +177,6 @@ void Image_Processing_Widget::_activateClahe()
     } else {
         auto media = _data_manager->getData<MediaData>("media");
         media->removeProcess("3__clahetransform");
-        _scene->UpdateCanvas();
     }
 }
 
@@ -215,7 +211,6 @@ void Image_Processing_Widget::_updateBilateralFilter()
                                                             _bilateral_d,
                                                             _bilateral_color_sigma,
                                                             _bilateral_spatial_sigma));
-        _scene->UpdateCanvas();
     }
 }
 
@@ -228,7 +223,6 @@ void Image_Processing_Widget::_activateBilateral()
     } else {
         auto media = _data_manager->getData<MediaData>("media");
         media->removeProcess("4__bilateraltransform");
-        _scene->UpdateCanvas();
     }
 }
 

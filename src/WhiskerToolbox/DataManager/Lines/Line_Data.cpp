@@ -7,15 +7,12 @@
 #include <iostream>
 
 
-LineData::LineData()
-{
-
-}
-
 void LineData::clearLinesAtTime(int const time)
 {
     if (!_lock_state.isLocked(time)) {
         _data[time].clear();
+
+        notifyObservers();
     }
 }
 
@@ -24,6 +21,8 @@ void LineData::addLineAtTime(int const time, std::vector<float> const& x, std::v
     if (!_lock_state.isLocked(time)) {
         auto new_line = create_line(x, y);
         _data[time].push_back(new_line);
+
+        notifyObservers();
     }
 }
 
@@ -31,6 +30,8 @@ void LineData::addLineAtTime(int const time, std::vector<Point2D<float>> const &
 {
     if (!_lock_state.isLocked(time)) {
         _data[time].push_back(std::move(line));
+
+        notifyObservers();
     }
 }
 
@@ -44,6 +45,8 @@ void LineData::addPointToLine(int const time, int const line_id, const float x, 
             _data[time].push_back(Line2D{});
             _data[time].back().push_back(Point2D<float>{x, y});
         }
+
+        notifyObservers();
     }
 }
 
@@ -70,6 +73,8 @@ void LineData::addPointToLineInterpolate(int const time, int const line_id, cons
         }
         line.push_back(new_point);
         smooth_line(line);
+
+        notifyObservers();
     }
 }
 

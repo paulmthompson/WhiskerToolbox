@@ -1,6 +1,8 @@
 #ifndef ANALOG_TIME_SERIES_HPP
 #define ANALOG_TIME_SERIES_HPP
 
+#include "Observer/Observer_Data.hpp"
+
 #include <algorithm>
 #include <cmath> // std::nan
 #include <map>
@@ -13,7 +15,7 @@
  *
  *
  */
-class AnalogTimeSeries {
+class AnalogTimeSeries : public ObserverData {
 public:
     AnalogTimeSeries() = default;
     AnalogTimeSeries(std::vector<float> analog_vector);

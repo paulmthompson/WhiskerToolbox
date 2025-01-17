@@ -53,6 +53,8 @@ add_library(DataManager SHARED
         Masks/masks.hpp
         Lines/lines.hpp
         LockState/LockState.hpp
+        Observer/Observer_Data.hpp
+        Observer/Observer_Data.cpp
 )
 
 target_include_directories(DataManager PRIVATE

@@ -93,6 +93,8 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     _data_manager->setData<LineData>("unlabeled_whiskers");
     _scene->addLineDataToScene("unlabeled_whiskers");
     _scene->changeLineColor("unlabeled_whiskers","#0000ff");
+
+    _addDrawingCallback("unlabeled_data");
     _janelia_config_widget = new Janelia_Config(_wt);
 
     dl_model = std::make_unique<dl::SCM>();
@@ -247,8 +249,6 @@ void Whisker_Widget::_traceButton() {
             num_to_trace += 1;
             std::cout << num_to_trace << std::endl;
         }
-
-        _drawWhiskers();
     }
 }
 
@@ -322,8 +322,6 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, in
     _data_manager->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
     _data_manager->getData<LineData>(whisker_name)->addLineAtTime(current_time, output);
 
-    _drawWhiskers();
-
     //Debugging
     //QImage labeled_image(&output[0], 256, 256, QImage::Format_Grayscale8);
     //labeled_image.save(QString::fromStdString("memory_frame.png"));
@@ -354,11 +352,8 @@ void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int 
         _linking_tolerance);
 
     auto t1 = timer2.elapsed();
-    _drawWhiskers();
 
-    auto t2 = timer2.elapsed();
-
-    qDebug() << "The tracing took" << t1 << "ms and drawing took" << (t2 - t1);
+    qDebug() << "The tracing took" << t1 << "ms";
 }
 
 void Whisker_Widget::_selectWhiskerPad() {
@@ -424,8 +419,6 @@ void Whisker_Widget::_deleteWhisker()
 
     if (_data_manager->getData<LineData>(whisker_name)) {
         _data_manager->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
-
-        _scene->UpdateCanvas();
     }
 }
 
@@ -539,8 +532,7 @@ void Whisker_Widget::_loadFaceMask()
 
     ui->mask_file_label->setText(face_mask_name);
 
-    _scene->UpdateCanvas();
-
+    _addDrawingCallback("Face_Mask");
 }
 
 
@@ -611,6 +603,8 @@ void Whisker_Widget::_loadMultiFrameCSV()
 
     _scene->addLineDataToScene(whisker_name);
     _scene->changeLineColor(whisker_name, get_whisker_color(whisker_id));
+
+    _addDrawingCallback(whisker_name);
 
 }
 
@@ -789,11 +783,9 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, c
         _data_manager->setData<LineData>(whisker_name);
         _scene->addLineDataToScene(whisker_name);
         _scene->changeLineColor(whisker_name, get_whisker_color(whisker_id));
-    }
-}
 
-void Whisker_Widget::_drawWhiskers() {
-    _scene->UpdateCanvas();
+        _addDrawingCallback(whisker_name);
+    }
 }
 
 void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
@@ -819,11 +811,6 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
                 std::string whisker_group_name = "whisker_" + std::to_string(_current_whisker);
                 if (_data_manager->getData<LineData>(whisker_group_name)) {
                     _data_manager->getData<LineData>(whisker_group_name)->addLineAtTime(current_time, whiskers[_selected_whisker]);
-               // _data_manager->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
-                //whiskers.erase(whiskers.begin() + _selected_whisker);
-               // _data_manager->getData<LineData>("unlabeled_whiskers")->addLineAtTime()
-
-                    _drawWhiskers();
                 }
             }
             break;
@@ -1277,8 +1264,6 @@ void Whisker_Widget::_maskDilation(int dilation_size)
         mask_for_tracker.push_back(whisker::Point2D<float>{p.x, p.y});
     }
     _wt->setFaceMask(mask_for_tracker);
-
-    _scene->UpdateCanvas();
 }
 
 void Whisker_Widget::_maskDilationExtended(int dilation_size)
@@ -1341,6 +1326,13 @@ void Whisker_Widget::_changeWhiskerClip(int clip_dist)
     _clip_length = clip_dist;
 
     _traceButton();
+}
+
+void Whisker_Widget::_addDrawingCallback(std::string data_name)
+{
+    _data_manager->addCallbackToData(data_name, [this]() {
+        _scene->UpdateCanvas();
+    });
 }
 
 /////////////////////////////////////////////

@@ -98,7 +98,6 @@ private:
 
     std::unique_ptr<dl::SCM> dl_model {nullptr};
 
-    void _drawWhiskers();
     void _createNewWhisker(std::string const & whisker_group_name, int const whisker_id);
 
     void _saveImage(std::string const& folder);
@@ -114,6 +113,9 @@ private:
 
     void _traceWhiskers(std::vector<uint8_t> image, int height, int width);
     void _traceWhiskersDL(std::vector<uint8_t> image, int height, int width);
+
+    void _addDrawingCallback(std::string data_name);
+
 
 private slots:
     void _traceButton();

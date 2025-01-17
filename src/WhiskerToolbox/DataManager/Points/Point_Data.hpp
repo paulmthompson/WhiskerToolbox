@@ -1,6 +1,7 @@
 #ifndef POINT_DATA_HPP
 #define POINT_DATA_HPP
 
+#include "Observer/Observer_Data.hpp"
 #include "points.hpp"
 
 #include <map>
@@ -8,7 +9,7 @@
 #include <vector>
 
 
-class PointData {
+class PointData : public ObserverData {
 public:
     PointData();
     PointData(std::map<int, Point2D<float>> data);

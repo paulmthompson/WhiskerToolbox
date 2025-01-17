@@ -1,10 +1,12 @@
 #ifndef BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
 #define BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
 
+#include "Observer/Observer_Data.hpp"
+
 #include <string>
 #include <vector>
 
-class DigitalEventSeries {
+class DigitalEventSeries : public ObserverData {
 public:
     DigitalEventSeries() = default;
     DigitalEventSeries(std::vector<float> event_vector);

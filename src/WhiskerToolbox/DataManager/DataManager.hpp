@@ -207,6 +207,8 @@ public:
         }
     }
 
+    void addCallbackToData(std::string key, ObserverCallback callback);
+
 private:
 
     //std::shared_ptr<TimeFrame> _time;

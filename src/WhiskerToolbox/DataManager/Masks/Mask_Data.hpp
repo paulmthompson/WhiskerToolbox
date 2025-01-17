@@ -1,14 +1,15 @@
 #ifndef MASK_DATA_HPP
 #define MASK_DATA_HPP
 
-#include "Points/points.hpp"
 #include "masks.hpp"
+#include "Observer/Observer_Data.hpp"
+#include "Points/points.hpp"
 
 #include <vector>
 #include <map>
 
 
-class MaskData {
+class MaskData : public ObserverData {
 public:
     MaskData();
     void clearMasksAtTime(int const time);

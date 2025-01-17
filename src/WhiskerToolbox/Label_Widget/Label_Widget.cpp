@@ -35,6 +35,10 @@ Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> dat
         auto media = _data_manager->getData<MediaData>("media");
         point->setMaskHeight(media->getHeight());
         point->setMaskWidth(media->getWidth());
+
+        _data_manager->addCallbackToData("labels", [this]() {
+            _scene->UpdateCanvas();
+        });
     }
 }
 
@@ -116,24 +120,7 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
 }
 
 void Label_Widget::_updateAll() {
-    _scene->UpdateCanvas();
   _updateTable();
-}
-
-// If current frame has label, it should be redrawn
-
-// Is this even necessary anymore?
-void Label_Widget::_updateDraw()
-{
-    auto media = _data_manager->getData<MediaData>("media");
-
-  //_scene->clearPoints();
-  for (auto &[frame_name, label] : _label_maker->getLabels()) {
-      if (frame_name == media->GetFrameID(_data_manager->getTime()->getLastLoadedFrame())) {
-      auto &[img, point] = label;
-      //_scene->addPoint(point.x, point.y, QPen(QColor(Qt::red)));
-    }
-  }
 }
 
 void Label_Widget::_updateTable() {

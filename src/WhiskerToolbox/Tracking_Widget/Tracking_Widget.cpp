@@ -62,6 +62,10 @@ void Tracking_Widget::openWidget() {
 
     _scene->addPointDataToScene("tracking_point");
 
+    _data_manager->addCallbackToData("tracking_point", [this]() {
+        _scene->UpdateCanvas();
+    });
+
     connect(ui->tableWidget, &QTableWidget::cellClicked, this, &Tracking_Widget::_tableClicked);
     connect(ui->actionLoad_CSV, &QAction::triggered, this, &Tracking_Widget::_loadKeypointCSV);
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Tracking_Widget::_changeOutputDir);
@@ -192,8 +196,6 @@ void Tracking_Widget::_propagateLabel(int frame_id)
         _data_manager->getData<PointData>("tracking_point")->clearPointsAtTime(i);
         _data_manager->getData<PointData>("tracking_point")->addPointAtTime(i, prev_points[0].x, prev_points[0].y);
     }
-
-    _scene->UpdateCanvas();
 }
 
 void Tracking_Widget::_loadKeypointCSV()

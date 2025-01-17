@@ -1,19 +1,18 @@
 #ifndef LINE_DATA_HPP
 #define LINE_DATA_HPP
 
-#include <cstdint>
-#include <vector>
-#include <map>
-
-#include <string>
-
 #include "Points/points.hpp"
 #include "lines.hpp"
 #include "LockState/LockState.hpp"
+#include "Observer/Observer_Data.hpp"
 
-class LineData {
+#include <map>
+#include <vector>
+
+
+class LineData : public ObserverData {
 public:
-    LineData();
+    LineData() = default;
     LineData(std::map<int,std::vector<Line2D>> const& data) : _data(data) {};
     void clearLinesAtTime(int const time);
     void addLineAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y);
@@ -40,6 +39,7 @@ public:
             _lock_state.lock(i);
         }
     }
+
 protected:
 
 private:

@@ -146,6 +146,16 @@ bool checkRequiredFields(const json& item, const std::vector<std::string>& requi
     return true;
 }
 
+void DataManager::addCallbackToData(std::string key, ObserverCallback callback) {
+    if (_data.find(key) != _data.end()) {
+        auto data = _data[key];
+
+        std::visit([callback](auto& x) {
+                x.get()->addObserver(callback);
+        }, data);
+    }
+}
+
 void checkOptionalFields(const json& item, const std::vector<std::string>& optionalFields) {
     for (const auto& field : optionalFields) {
         if (!item.contains(field)) {

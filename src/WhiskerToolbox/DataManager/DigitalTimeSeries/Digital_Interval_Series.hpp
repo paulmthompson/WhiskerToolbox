@@ -1,11 +1,13 @@
 #ifndef DIGITAL_INTERVAL_SERIES_HPP
 #define DIGITAL_INTERVAL_SERIES_HPP
 
+#include "Observer/Observer_Data.hpp"
+
 #include <string>
 #include <vector>
 #include <utility>
 
-class DigitalIntervalSeries {
+class DigitalIntervalSeries : public ObserverData {
 public:
     DigitalIntervalSeries() = default;
     DigitalIntervalSeries(std::vector<std::pair<float, float>> digital_vector);
