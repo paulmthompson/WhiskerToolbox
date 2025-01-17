@@ -427,7 +427,6 @@ void MainWindow::openMLWidget()
 
     if (_widgets.find(key) == _widgets.end()) {
         auto MLWidget = std::make_unique<ML_Widget>(
-            _scene,
             _data_manager,
             ui->time_scrollbar,
             this);

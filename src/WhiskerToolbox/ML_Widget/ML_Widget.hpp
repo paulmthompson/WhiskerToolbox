@@ -10,7 +10,6 @@
 
 class DataManager;
 class MainWindow;
-class Media_Window;
 class QTableWidget;
 class TimeScrollBar;
 
@@ -20,8 +19,7 @@ class ML_Widget : public QMainWindow {
 Q_OBJECT
 
 public:
-    ML_Widget(Media_Window *scene,
-              std::shared_ptr<DataManager> data_manager,
+    ML_Widget(std::shared_ptr<DataManager> data_manager,
               TimeScrollBar *time_scrollbar,
               MainWindow *main_window,
               QWidget *parent = 0);
@@ -44,7 +42,6 @@ private slots:
     void _deleteLabel();
 
 private:
-    Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
     MainWindow* _main_window;
