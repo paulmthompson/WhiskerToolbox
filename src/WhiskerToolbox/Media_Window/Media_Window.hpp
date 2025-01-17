@@ -69,6 +69,11 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
     float getXAspect() const;
     float getYAspect() const;
 
+    void setCanvasSize(int width, int height) {
+        _canvasWidth = width;
+        _canvasHeight = height;
+    }
+
     void setDrawingMode(bool drawing_mode)
         {_drawing_mode = drawing_mode;
         if (!drawing_mode)

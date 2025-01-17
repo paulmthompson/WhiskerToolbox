@@ -27,6 +27,7 @@ public:
     void updateMedia();
 
 protected:
+    void resizeEvent(QResizeEvent* event) override;
 private:
     Ui::Media_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
@@ -39,6 +40,7 @@ private:
 
 private slots:
     void _openDataViewer();
+    void _updateCanvasSize();
 
 signals:
 

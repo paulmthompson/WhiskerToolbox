@@ -43,3 +43,17 @@ void Media_Widget::_openDataViewer()
 
     _main_window->showDockWidget(key);
 }
+
+void Media_Widget::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    _updateCanvasSize();
+}
+
+void Media_Widget::_updateCanvasSize() {
+    if (_scene) {
+        _scene->setCanvasSize(
+                ui->graphicsView->width(),
+                ui->graphicsView->height());
+        _scene->UpdateCanvas();
+    }
+}
