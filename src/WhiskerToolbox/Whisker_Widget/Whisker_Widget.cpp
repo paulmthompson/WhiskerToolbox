@@ -135,8 +135,6 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
-    connect(ui->mask_alpha_slider, &QSlider::valueChanged, this, &Whisker_Widget::_setMaskAlpha);
-
     connect(ui->tracked_whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_skipToTrackedFrame);
 
     connect(ui->mask_dilation, &QSpinBox::valueChanged, this, &Whisker_Widget::_maskDilation);
@@ -1197,11 +1195,6 @@ void Whisker_Widget::LoadFrame(int frame_id)
     if (_auto_dl) {
         _dlTraceButton();
     }
-}
-
-void Whisker_Widget::_setMaskAlpha(int alpha)
-{
-    _scene->changeMaskAlpha(alpha);
 }
 
 /**

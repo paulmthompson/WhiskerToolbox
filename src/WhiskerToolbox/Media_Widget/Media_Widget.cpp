@@ -7,6 +7,8 @@
 #include "Media_Widget/Media_Widget_Items.hpp"
 #include "Media_Window/Media_Window.hpp"
 
+#include <QSlider>
+
 
 Media_Widget::Media_Widget(QWidget *parent) :
     QWidget(parent),
@@ -15,6 +17,7 @@ Media_Widget::Media_Widget(QWidget *parent) :
     ui->setupUi(this);
 
     connect(ui->data_viewer_button, &QPushButton::clicked, this, &Media_Widget::_openDataViewer);
+    connect(ui->mask_slider, &QSlider::valueChanged, this, &Media_Widget::_setMaskAlpha);
 }
 
 Media_Widget::~Media_Widget() {
@@ -56,4 +59,10 @@ void Media_Widget::_updateCanvasSize() {
                 ui->graphicsView->height());
         _scene->UpdateCanvas();
     }
+}
+
+void Media_Widget::_setMaskAlpha(int alpha)
+{
+    float alpha_float = static_cast<float>(alpha) / 100;
+    _scene->changeMaskAlpha(alpha_float);
 }

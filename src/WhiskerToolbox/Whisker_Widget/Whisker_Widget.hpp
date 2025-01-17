@@ -149,8 +149,6 @@ private slots:
     void _openJaneliaConfig();
     void _openContactWidget();
 
-    void _setMaskAlpha(int);
-
     void _skipToTrackedFrame(int index);
 
     void _maskDilation(int dilation_size);

@@ -18,7 +18,6 @@
 #include <QFileDialog>
 #include <QPushButton>
 #include "qevent.h"
-#include <QSlider>
 
 #include <iomanip>
 #include <iostream>
@@ -46,7 +45,6 @@ Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> d
     connect(ui->load_img_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadImgTongueMasks);
     connect(ui->load_jaw_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadCSVJawKeypoints);
     connect(ui->begin_grabcut_btn, &QPushButton::clicked, this, &Tongue_Widget::_startGrabCut);
-    connect(ui->transparency_slider, &QSlider::valueChanged, this, &Tongue_Widget::_upd_mask_transparency);
     connect(ui->savemasks_btn, &QPushButton::clicked, this, &Tongue_Widget::_exportMasks);
 };
 
@@ -207,10 +205,6 @@ void Tongue_Widget::_startGrabCut(){
     _grabcut_widget->setup(img, frame);
     drawn.push_back(frame);
     _grabcut_widget->openWidget();
-}
-
-void Tongue_Widget::_upd_mask_transparency(){
-    _scene->changeMaskAlpha(ui->transparency_slider->value());
 }
 
 void Tongue_Widget::_exportMasks() {

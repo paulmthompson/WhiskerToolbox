@@ -41,6 +41,7 @@ private:
 private slots:
     void _openDataViewer();
     void _updateCanvasSize();
+    void _setMaskAlpha(int alpha);
 
 signals:
 

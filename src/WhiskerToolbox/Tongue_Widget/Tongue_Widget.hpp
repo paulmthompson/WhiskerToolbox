@@ -44,7 +44,6 @@ private slots:
     void _loadImgTongueMasks();
     void _loadCSVJawKeypoints();
     void _startGrabCut();
-    void _upd_mask_transparency();
     void _exportMasks();
 };
 
