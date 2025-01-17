@@ -11,7 +11,6 @@
 
 class DataManager;
 class MainWindow;
-class Media_Window;
 class QTableWidget;
 class TimeScrollBar;
 class TimeFrame;
@@ -23,8 +22,7 @@ class DataViewer_Widget : public QMainWindow {
     Q_OBJECT
 
 public:
-    DataViewer_Widget(Media_Window *scene,
-                      std::shared_ptr<DataManager> data_manager,
+    DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
                       TimeScrollBar *time_scrollbar,
                       MainWindow *main_window,
                       QWidget *parent = 0);
@@ -49,7 +47,6 @@ private:
 
     void _refreshModelFeatures();
 
-    Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
     MainWindow* _main_window;

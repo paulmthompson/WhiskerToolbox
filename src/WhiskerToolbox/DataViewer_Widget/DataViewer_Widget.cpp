@@ -6,7 +6,6 @@
 
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 #include "OpenGLWidget.hpp"
-#include "Media_Window.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "utils/qt_utilities.hpp"
@@ -15,13 +14,11 @@
 
 #include <iostream>
 
-DataViewer_Widget::DataViewer_Widget(Media_Window *scene,
-                                     std::shared_ptr<DataManager> data_manager,
+DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
                                      TimeScrollBar* time_scrollbar,
                                      MainWindow* main_window,
                                      QWidget *parent) :
         QMainWindow(parent),
-        _scene{scene},
         _data_manager{data_manager},
         _time_scrollbar{time_scrollbar},
         _main_window{main_window},

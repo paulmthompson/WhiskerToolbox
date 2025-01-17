@@ -448,7 +448,6 @@ void MainWindow::openDataViewer()
 
     if (_widgets.find(key) == _widgets.end()) {
         auto DataViewerWidget = std::make_unique<DataViewer_Widget>(
-            _scene,
             _data_manager,
             ui->time_scrollbar,
             this);
