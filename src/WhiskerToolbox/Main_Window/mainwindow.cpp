@@ -268,6 +268,10 @@ void MainWindow::_LoadData() {
     _updateFrameCount();
 
     ui->media_widget->updateMedia();
+
+    _data_manager->addCallbackToData("media", [this]() {
+        _scene->UpdateCanvas();
+    });
 }
 
 void MainWindow::_updateFrameCount()
@@ -365,7 +369,7 @@ void MainWindow::openImageProcessing()
     std::string const key = "image_processing";
 
     if (_widgets.find(key) == _widgets.end()) {
-        auto imageProcessing = std::make_unique<Image_Processing_Widget>(_scene, _data_manager);
+        auto imageProcessing = std::make_unique<Image_Processing_Widget>(_data_manager);
         imageProcessing->setObjectName(key);
         registerDockWidget(key, imageProcessing.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(imageProcessing);

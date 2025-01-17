@@ -3,7 +3,6 @@
 #include "ui_Image_Processing_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "Media_Window.hpp"
 #include "utils/opencv_utility.hpp"
 
 #include <QCheckBox>
@@ -12,11 +11,10 @@
 #include <iostream>
 
 
-Image_Processing_Widget::Image_Processing_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, QWidget *parent) :
+Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::Image_Processing_Widget),
-    _data_manager{data_manager},
-    _scene{scene}
+    _data_manager{data_manager}
 {
     ui->setupUi(this);
 
@@ -38,10 +36,6 @@ Image_Processing_Widget::Image_Processing_Widget(Media_Window* scene, std::share
     connect(ui->bilateral_spatial_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateBilateralSpatialSigma);
     connect(ui->bilateral_color_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateBilateralColorSigma);
     connect(ui->bilateral_checkbox, &QCheckBox::checkStateChanged, this, &Image_Processing_Widget::_activateBilateral);
-
-    _data_manager->addCallbackToData("media", [this]() {
-        _scene->UpdateCanvas();
-    });
 }
 
 void Image_Processing_Widget::openWidget() {

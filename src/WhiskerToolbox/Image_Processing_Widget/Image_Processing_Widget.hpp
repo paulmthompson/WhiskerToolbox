@@ -4,7 +4,6 @@
 #include <QMainWindow>
 
 class DataManager;
-class Media_Window;
 
 namespace Ui {
 class Image_Processing_Widget;
@@ -15,15 +14,12 @@ class Image_Processing_Widget : public QMainWindow
     Q_OBJECT
 public:
 
-    Image_Processing_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);
+    Image_Processing_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);
     void openWidget();
-
-void hello();
 
 private:
     Ui::Image_Processing_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
-    Media_Window * _scene;
 
     double _contrast_alpha = 1;
     int _contrast_beta = 0;
