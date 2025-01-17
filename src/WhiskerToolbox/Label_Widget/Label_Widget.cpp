@@ -88,8 +88,10 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
 // Change
 void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
 
-  float x_media = x_canvas / _scene->getXAspect();
-  float y_media = y_canvas / _scene->getYAspect();
+    auto scene = dynamic_cast<Media_Window*>(sender());
+
+  float x_media = x_canvas / scene->getXAspect();
+  float y_media = y_canvas / scene->getYAspect();
 
   auto media = _data_manager->getData<MediaData>("media");
 
@@ -108,7 +110,7 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
   point->clearPointsAtTime(frame_number);
   point->addPointAtTime(frame_number, y_media, x_media);
 
-  _scene->UpdateCanvas();
+  scene->UpdateCanvas();
 
   this->_updateAll();
 }

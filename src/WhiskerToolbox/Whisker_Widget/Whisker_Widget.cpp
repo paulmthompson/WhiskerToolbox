@@ -800,8 +800,10 @@ void Whisker_Widget::_drawWhiskers() {
 
 void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
-    float x_media = x_canvas / _scene->getXAspect();
-    float y_media = y_canvas / _scene->getYAspect();
+    auto scene = dynamic_cast<Media_Window*>(sender());
+
+    float x_media = x_canvas / scene->getXAspect();
+    float y_media = y_canvas / scene->getYAspect();
 
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
@@ -853,7 +855,7 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
                          x_media,
                          y_media);
 
-                _scene->UpdateCanvas();
+                scene->UpdateCanvas();
             }
 
             break;

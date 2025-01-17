@@ -78,8 +78,10 @@ void Tracking_Widget::closeEvent(QCloseEvent *event) {
 
 void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
-    float x_media = x_canvas / _scene->getXAspect();
-    float y_media = y_canvas / _scene->getYAspect();
+    auto scene = dynamic_cast<Media_Window*>(sender());
+
+    float x_media = x_canvas / scene->getXAspect();
+    float y_media = y_canvas / scene->getYAspect();
 
     auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
@@ -97,7 +99,7 @@ void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
         _buildContactTable();
 
-        _scene->UpdateCanvas();
+        scene->UpdateCanvas();
         break;
     }
     default:
