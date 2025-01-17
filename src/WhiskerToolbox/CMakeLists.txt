@@ -134,6 +134,9 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
+        PointLoaderWidget/Point_Loader_Widget.hpp
+        PointLoaderWidget/Point_Loader_Widget.cpp
+        PointLoaderWidget/Point_Loader_Widget.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)

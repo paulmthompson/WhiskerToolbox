@@ -1,5 +1,6 @@
 #include "mainwindow.hpp"
 
+#include "PointLoaderWidget/Point_Loader_Widget.hpp"
 #include "ui_mainwindow.h"
 
 
@@ -108,6 +109,7 @@ void MainWindow::_createActions()
     connect(ui->actionTracking_Widget, &QAction::triggered, this, &MainWindow::openTrackingWidget);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
+    connect(ui->actionLoad_Points, &QAction::triggered, this, &MainWindow::openPointLoaderWidget);
 
 }
 
@@ -464,6 +466,40 @@ void MainWindow::openDataViewer()
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
+    static QWidget* lastSender = nullptr;
+
+    auto handleEvent = [this, event](QWidget* sender) {
+        if (sender == lastSender) {
+            return;
+        }
+        lastSender = sender;
+
+        if (sender->objectName().toStdString().find("dockWidget") != std::string::npos) {
+            auto dockWidget = _m_DockManager->findDockWidget("whisker_widget");
+            if (dockWidget && dockWidget->widget() != sender) {
+                QApplication::sendEvent(dockWidget->widget(), event);
+            }
+        } else {
+            QApplication::sendEvent(sender, event);
+        }
+    };
+
+    if (event->key() == Qt::Key_Right) {
+        ui->time_scrollbar->changeScrollBarValue(1, true);
+    } else if (event->key() == Qt::Key_Left) {
+        ui->time_scrollbar->changeScrollBarValue(-1, true);
+    } else {
+        auto focusedWidget = QApplication::focusWidget();
+        if (focusedWidget && focusedWidget != this) {
+            handleEvent(focusedWidget);
+        }
+    }
+
+    lastSender=nullptr;
+}
+
+/*
+void MainWindow::keyPressEvent(QKeyEvent *event) {
 
     if (event->key() == Qt::Key_Right) {
         ui->time_scrollbar->changeScrollBarValue(1,true);
@@ -511,5 +547,22 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
             }
         }
          */
+
+void MainWindow::openPointLoaderWidget()
+{
+    std::string const key = "PointLoader_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto PointLoaderWidget = std::make_unique<Point_Loader_Widget>(
+            _data_manager,
+            this);
+
+        PointLoaderWidget->setObjectName(key);
+        registerDockWidget(key, PointLoaderWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(PointLoaderWidget);
     }
+
+    auto ptr = dynamic_cast<Point_Loader_Widget*>(_widgets[key].get());
+
+    showDockWidget(key);
 }

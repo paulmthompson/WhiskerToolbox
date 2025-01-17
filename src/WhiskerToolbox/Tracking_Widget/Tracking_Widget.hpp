@@ -57,6 +57,8 @@ private:
 
     std::filesystem::path _output_path;
 
+    std::string _current_tracking_key;
+
     void _buildContactTable();
     void _propagateLabel(int frame_id);
 

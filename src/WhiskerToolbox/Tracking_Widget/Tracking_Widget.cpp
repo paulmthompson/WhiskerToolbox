@@ -34,6 +34,8 @@ Tracking_Widget::Tracking_Widget(Media_Window *scene,
 
     ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
 
+    _current_tracking_key = "tracking_point";
+
     _selected_scene = new QGraphicsScene();
     _selected_scene->setSceneRect(0, 0, 150, 150);
 
@@ -51,18 +53,21 @@ void Tracking_Widget::openWidget() {
 
     connect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
 
-    _data_manager->setData<PointData>("tracking_point");
+    if (_data_manager->getData<PointData>(_current_tracking_key))
+    {
+        _data_manager->setData<PointData>(_current_tracking_key);
+    }
 
     auto media = _data_manager->getData<MediaData>("media");
 
-    auto point = _data_manager->getData<PointData>("tracking_point");
+    auto point = _data_manager->getData<PointData>(_current_tracking_key);
 
     point->setMaskHeight(media->getHeight());
     point->setMaskWidth(media->getWidth());
 
-    _scene->addPointDataToScene("tracking_point");
+    _scene->addPointDataToScene(_current_tracking_key);
 
-    _data_manager->addCallbackToData("tracking_point", [this]() {
+    _data_manager->addCallbackToData(_current_tracking_key, [this]() {
         _scene->UpdateCanvas();
     });
 
@@ -97,7 +102,7 @@ void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
             ")";
         ui->location_label->setText(QString::fromStdString(tracking_label));
 
-        auto point = _data_manager->getData<PointData>("tracking_point");
+        auto point = _data_manager->getData<PointData>(_current_tracking_key);
         point->clearPointsAtTime(frame_id);
         point->addPointAtTime(frame_id, y_media, x_media);
 
@@ -120,7 +125,7 @@ void Tracking_Widget::LoadFrame(int frame_id)
     }
 
 
-    auto points = _data_manager->getData<PointData>("tracking_point")->getPointsAtTime(frame_id);
+    auto points = _data_manager->getData<PointData>(_current_tracking_key)->getPointsAtTime(frame_id);
 
     if (!points.empty()) {
 
@@ -151,7 +156,7 @@ void Tracking_Widget::LoadFrame(int frame_id)
 void Tracking_Widget::_buildContactTable()
 {
 
-    auto point_data = _data_manager->getData<PointData>("tracking_point");
+    auto point_data = _data_manager->getData<PointData>(_current_tracking_key);
 
     //auto point_frames = point_data->getTimesWithPoints();
 
@@ -189,12 +194,12 @@ void Tracking_Widget::_tableClicked(int row, int column)
 void Tracking_Widget::_propagateLabel(int frame_id)
 {
 
-    auto prev_points = _data_manager->getData<PointData>("tracking_point")->getPointsAtTime(_previous_frame);
+    auto prev_points = _data_manager->getData<PointData>(_current_tracking_key)->getPointsAtTime(_previous_frame);
 
     for (int i = _previous_frame + 1; i <= frame_id; i ++)
     {
-        _data_manager->getData<PointData>("tracking_point")->clearPointsAtTime(i);
-        _data_manager->getData<PointData>("tracking_point")->addPointAtTime(i, prev_points[0].x, prev_points[0].y);
+        _data_manager->getData<PointData>(_current_tracking_key)->clearPointsAtTime(i);
+        _data_manager->getData<PointData>(_current_tracking_key)->addPointAtTime(i, prev_points[0].x, prev_points[0].y);
     }
 }
 
@@ -210,7 +215,7 @@ void Tracking_Widget::_loadKeypointCSV()
         return;
     }
 
-    const auto keypoint_key = "tracking_point";
+    const auto keypoint_key = _current_tracking_key;
 
     auto keypoints = load_points_from_csv(keypoint_filename.toStdString(), 0, 1, 2, ',');
 
@@ -256,7 +261,7 @@ void Tracking_Widget::_saveKeypointCSV() {
 
     fout.open(frame_by_frame_output.append("keypoint.csv").string(), std::fstream::out);
 
-    auto point_data =_data_manager->getData<PointData>("tracking_point")->getData();
+    auto point_data =_data_manager->getData<PointData>(_current_tracking_key)->getData();
 
     for (auto& [key, val] : point_data)
     {

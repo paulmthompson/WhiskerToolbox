@@ -57,6 +57,7 @@
      </property>
      <addaction name="actionLoad_Video"/>
      <addaction name="actionLoad_Images"/>
+     <addaction name="actionLoad_Points"/>
      <addaction name="actionLoad_Analog_Time_Series_CSV"/>
      <addaction name="actionLoad_Digital_Time_Series_CSV"/>
      <addaction name="actionLoad_JSON_Config"/>
@@ -167,6 +168,11 @@
   <action name="actionLoad_JSON_Config">
    <property name="text">
     <string>Load JSON Config</string>
+   </property>
+  </action>
+  <action name="actionLoad_Points">
+   <property name="text">
+    <string>Load Points</string>
    </property>
   </action>
  </widget>
