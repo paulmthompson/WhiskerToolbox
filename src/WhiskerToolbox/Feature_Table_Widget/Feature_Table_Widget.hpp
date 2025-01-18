@@ -29,11 +29,12 @@ public:
 signals:
     void featureSelected(const QString& feature);
     void addFeature(const QString& feature);
+    void removeFeature(const QString& feature);
+    void colorChange(const QString& feature, const QString& hex_color);
 
 private slots:
     void _refreshFeatures();
     void _highlightFeature(int row, int column);
-    void _addFeature();
 
 private:
     std::shared_ptr<DataManager> _data_manager;
@@ -46,6 +47,8 @@ private:
     void _addFeatureType(std::string key, int row, int col, bool group);
     void _addFeatureClock(std::string key, int row, int col, bool group);
     void _addFeatureElements(std::string key, int row, int col, bool group);
+    void _addFeatureEnabled(std::string key, int row, int col, bool group);
+    void _addFeatureColor(std::string key, int row, int col, bool group);
 
 };
 

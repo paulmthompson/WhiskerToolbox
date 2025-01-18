@@ -115,6 +115,11 @@ set(PROJECT_SOURCES
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.cpp
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.ui
 
+        PointLoaderWidget/Point_Loader_Widget.hpp
+        PointLoaderWidget/Point_Loader_Widget.cpp
+        PointLoaderWidget/Point_Loader_Widget.ui
+        Feature_Table_Widget/Color_Widget.hpp
+
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
 
@@ -134,9 +139,6 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
-        PointLoaderWidget/Point_Loader_Widget.hpp
-        PointLoaderWidget/Point_Loader_Widget.cpp
-        PointLoaderWidget/Point_Loader_Widget.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)

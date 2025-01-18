@@ -2,9 +2,14 @@
 #include "ui_Feature_Table_Widget.h"
 #include "DataManager.hpp"
 
+#include "Color_Widget.hpp"
+
 #include <QTableWidget>
 #include <QPushButton>
 #include <QStringList>
+#include <qcheckbox.h>
+
+#include <iostream>
 
 Feature_Table_Widget::Feature_Table_Widget(QWidget *parent)
         : QWidget(parent),
@@ -13,7 +18,6 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget *parent)
 
     connect(ui->refresh_dm_features, &QPushButton::clicked, this, &Feature_Table_Widget::_refreshFeatures);
     connect(ui->available_features_table, &QTableWidget::cellClicked, this, &Feature_Table_Widget::_highlightFeature);
-    connect(ui->add_feature_to_model, &QPushButton::clicked, this, &Feature_Table_Widget::_addFeature);
 }
 
 Feature_Table_Widget::~Feature_Table_Widget() {
@@ -56,6 +60,33 @@ void Feature_Table_Widget::_addFeatureElements(std::string key, int row, int col
     }
 }
 
+void Feature_Table_Widget::_addFeatureEnabled(std::string key, int row, int col, bool group)
+{
+    auto checkboxItem = new QCheckBox();
+    checkboxItem->setCheckState(Qt::Unchecked);
+    ui->available_features_table->setCellWidget(row, col, checkboxItem);
+
+    connect(checkboxItem, &QCheckBox::stateChanged, [this, key](int state) {
+        if (state == Qt::Checked) {
+            emit addFeature(QString::fromStdString(key));
+        }
+    });
+}
+
+void Feature_Table_Widget::_addFeatureColor(std::string key, int row, int col, bool group) {
+
+    auto colorWidget = new ColorWidget();
+    colorWidget->setText("#000000"); // Default color
+    ui->available_features_table->setCellWidget(row, col, colorWidget);
+
+    connect(colorWidget, &ColorWidget::colorChanged, [this, key](const QString &color) {
+
+        std::cout << "Color received as " << color.toStdString() << std::endl;
+        colorChange(QString::fromStdString(key), color);
+    });
+
+}
+
 void Feature_Table_Widget::populateTable() {
     ui->available_features_table->setRowCount(0);
     ui->available_features_table->setColumnCount(_columns.size());
@@ -79,6 +110,10 @@ void Feature_Table_Widget::populateTable() {
                 _addFeatureClock(groupName, row, i, true);
             } else if (_columns[i] == "Elements") {
                 _addFeatureElements(groupName, row, i, true);
+            } else if (_columns[i] == "Enabled") {
+                _addFeatureEnabled(groupName, row, i, true);
+            } else if (_columns[i] == "Color") {
+                _addFeatureColor(groupName, row, i, true);
             }
         }
     }
@@ -105,6 +140,10 @@ void Feature_Table_Widget::populateTable() {
                     _addFeatureClock(key, row, i, false);
                 } else if (_columns[i] == "Elements") {
                     _addFeatureElements(key, row, i, false);
+                } else if (_columns[i] == "Enabled") {
+                    _addFeatureEnabled(key, row, i, false);
+                } else if (_columns[i] == "Color") {
+                    _addFeatureColor(key, row, i, false);
                 }
             }
         }
@@ -120,23 +159,5 @@ void Feature_Table_Widget::_highlightFeature(int row, int column) {
     if (item) {
         _highlighted_feature = item->text();
         emit featureSelected(_highlighted_feature);
-    }
-}
-
-void Feature_Table_Widget::_addFeature()
-{
-    if (!_highlighted_feature.isEmpty()) {
-
-        // Remove the feature from the available features table
-        QList<QTableWidgetItem*> items = ui->available_features_table->findItems(_highlighted_feature, Qt::MatchExactly);
-        if (!items.isEmpty()) {
-            int row = items.first()->row();
-            ui->available_features_table->removeRow(row);
-        }
-
-        emit addFeature(_highlighted_feature);
-
-        // Clear the highlighted feature
-        _highlighted_feature.clear();
     }
 }
