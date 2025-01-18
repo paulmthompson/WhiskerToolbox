@@ -7,12 +7,15 @@
 #include <QStringList>
 
 Feature_Table_Widget::Feature_Table_Widget(QWidget *parent)
-        : QWidget(parent), ui(new Ui::Feature_Table_Widget) {
+        : QWidget(parent),
+        ui(new Ui::Feature_Table_Widget) {
     ui->setupUi(this);
 
     connect(ui->refresh_dm_features, &QPushButton::clicked, this, &Feature_Table_Widget::_refreshFeatures);
     connect(ui->available_features_table, &QTableWidget::cellClicked, this, &Feature_Table_Widget::_highlightFeature);
     connect(ui->add_feature_to_model, &QPushButton::clicked, this, &Feature_Table_Widget::_addFeature);
+
+    _columns = {"Feature", "Type", "Clock", "Elements"};
 }
 
 Feature_Table_Widget::~Feature_Table_Widget() {
@@ -21,12 +24,44 @@ Feature_Table_Widget::~Feature_Table_Widget() {
 
 void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = data_manager;}
 
+void Feature_Table_Widget::_addFeatureName(std::string key, int row, int col, bool group)
+{
+    ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(key)));
+}
+
+void Feature_Table_Widget::_addFeatureType(std::string key, int row, int col, bool group)
+{
+    if (group) {
+        ui->available_features_table->setItem(row, col, new QTableWidgetItem("Group"));
+    } else {
+        std::string type = _data_manager->getType(key);
+        ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(type)));
+    }
+}
+
+void Feature_Table_Widget::_addFeatureClock(std::string key, int row, int col, bool group)
+{
+    if (group) {
+        ui->available_features_table->setItem(row, col, new QTableWidgetItem(""));
+    } else {
+        std::string clock = _data_manager->getTimeFrame(key);
+        ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(clock)));
+    }
+}
+
+void Feature_Table_Widget::_addFeatureElements(std::string key, int row, int col, bool group)
+{
+    if (group) {
+        ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::number(_data_manager->getDataGroup(key).size())));
+    } else {
+        ui->available_features_table->setItem(row, col, new QTableWidgetItem("1"));
+    }
+}
 
 void Feature_Table_Widget::populateTable() {
     ui->available_features_table->setRowCount(0);
-    QStringList headers = {"Feature", "Type", "Clock", "Elements"};
-    ui->available_features_table->setColumnCount(4);
-    ui->available_features_table->setHorizontalHeaderLabels(headers);
+    ui->available_features_table->setColumnCount(_columns.size());
+    ui->available_features_table->setHorizontalHeaderLabels(_columns);
 
     // Get all keys and group names
     auto allKeys = _data_manager->getAllKeys();
@@ -36,10 +71,10 @@ void Feature_Table_Widget::populateTable() {
     for (const auto& groupName : groupNames) {
         int row = ui->available_features_table->rowCount();
         ui->available_features_table->insertRow(row);
-        ui->available_features_table->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(groupName)));
-        ui->available_features_table->setItem(row, 1, new QTableWidgetItem("Group"));
-        ui->available_features_table->setItem(row, 2, new QTableWidgetItem(""));
-        ui->available_features_table->setItem(row, 3, new QTableWidgetItem(QString::number(_data_manager->getDataGroup(groupName).size())));
+        _addFeatureName(groupName, row, 0, true);
+        _addFeatureType(groupName, row, 1, true);
+        _addFeatureClock(groupName, row, 2, true);
+        _addFeatureElements(groupName, row, 3, true);
     }
 
     // Add keys not in groups to the table
@@ -55,12 +90,10 @@ void Feature_Table_Widget::populateTable() {
         if (!isInGroup) {
             int row = ui->available_features_table->rowCount();
             ui->available_features_table->insertRow(row);
-            ui->available_features_table->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(key)));
-            std::string type = _data_manager->getType(key);
-            ui->available_features_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(type)));
-            std::string clock = _data_manager->getTimeFrame(key);
-            ui->available_features_table->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(clock)));
-            ui->available_features_table->setItem(row, 3, new QTableWidgetItem("1"));
+            _addFeatureName(key, row, 0, false);
+            _addFeatureType(key, row, 1, false);
+            _addFeatureClock(key, row, 2, false);
+            _addFeatureElements(key, row, 3, false);
         }
     }
 }

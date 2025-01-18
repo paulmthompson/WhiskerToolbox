@@ -56,6 +56,7 @@ DataViewer_Widget::~DataViewer_Widget() {
 
 void DataViewer_Widget::openWidget() {
     std::cout << "DataViewer Widget Opened" << std::endl;
+    ui->feature_table_widget->populateTable();
     this->show();
 }
 

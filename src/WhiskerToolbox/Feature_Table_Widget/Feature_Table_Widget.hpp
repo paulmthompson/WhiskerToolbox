@@ -2,6 +2,9 @@
 #define FEATURE_TABLE_WIDGET_HPP
 
 #include <QWidget>
+#include <QString>
+#include <QStringList>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,6 +39,13 @@ private:
     Ui::Feature_Table_Widget *ui;
 
     QString _highlighted_feature;
+    QStringList _columns;
+
+    void _addFeatureName(std::string key, int row, int col, bool group);
+    void _addFeatureType(std::string key, int row, int col, bool group);
+    void _addFeatureClock(std::string key, int row, int col, bool group);
+    void _addFeatureElements(std::string key, int row, int col, bool group);
+
 };
 
 #endif // FEATURE_TABLE_WIDGET_HPP
