@@ -43,7 +43,7 @@ Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> d
 
     connect(ui->load_hdf_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadHDF5TongueMasks);
     connect(ui->load_img_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadImgTongueMasks);
-    connect(ui->load_jaw_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadCSVJawKeypoints);
+
     connect(ui->begin_grabcut_btn, &QPushButton::clicked, this, &Tongue_Widget::_startGrabCut);
     connect(ui->savemasks_btn, &QPushButton::clicked, this, &Tongue_Widget::_exportMasks);
 };
@@ -149,38 +149,6 @@ void Tongue_Widget::_loadImgTongueMasks(){
 
     _scene->addMaskDataToScene(mask_key);
     _scene->changeMaskColor(mask_key, tongue_colors[mask_num]);
-}
-
-void Tongue_Widget::_loadCSVJawKeypoints(){
-    auto filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Jaw CSV File",
-        QDir::currentPath(),
-        "All files (*.*)");
-
-    if (filename.isNull()) {
-        return;
-    }
-
-    auto keypoints = load_points_from_csv(filename.toStdString(), 0, 1, 2);
-
-    auto point_num = _data_manager->getKeys<PointData>().size();
-
-    std::cout << "There are " << point_num << " keypoints loaded" << std::endl;
-
-    auto keypoint_key = "keypoint_" + std::to_string(point_num);
-
-    _data_manager->setData<PointData>(keypoint_key);
-
-    auto point = _data_manager->getData<PointData>(keypoint_key);
-
-    auto media = _data_manager->getData<MediaData>("media");
-    for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(media->getFrameIndexFromNumber(key), val.x, val.y);
-    }
-
-    _scene->addPointDataToScene(keypoint_key);
-    _scene->changePointColor(keypoint_key, tongue_colors[point_num]);
 }
 
 void Tongue_Widget::_startGrabCut(){

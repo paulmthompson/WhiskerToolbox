@@ -42,7 +42,6 @@ private:
 private slots:
     void _loadHDF5TongueMasks();
     void _loadImgTongueMasks();
-    void _loadCSVJawKeypoints();
     void _startGrabCut();
     void _exportMasks();
 };
