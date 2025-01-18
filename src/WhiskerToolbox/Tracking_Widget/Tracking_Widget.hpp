@@ -65,7 +65,6 @@ private:
 private slots:
     void _clickedInVideo(qreal x,qreal y);
     void _tableClicked(int row, int column);
-    void _loadKeypointCSV();
     void _saveKeypointCSV();
     void _changeOutputDir();
 };

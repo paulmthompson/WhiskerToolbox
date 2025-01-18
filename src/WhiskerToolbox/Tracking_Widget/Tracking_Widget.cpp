@@ -72,7 +72,6 @@ void Tracking_Widget::openWidget() {
     });
 
     connect(ui->tableWidget, &QTableWidget::cellClicked, this, &Tracking_Widget::_tableClicked);
-    connect(ui->actionLoad_CSV, &QAction::triggered, this, &Tracking_Widget::_loadKeypointCSV);
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Tracking_Widget::_changeOutputDir);
     connect(ui->save_csv_button, &QPushButton::clicked, this, &Tracking_Widget::_saveKeypointCSV);
 
@@ -201,41 +200,6 @@ void Tracking_Widget::_propagateLabel(int frame_id)
         _data_manager->getData<PointData>(_current_tracking_key)->clearPointsAtTime(i);
         _data_manager->getData<PointData>(_current_tracking_key)->addPointAtTime(i, prev_points[0].x, prev_points[0].y);
     }
-}
-
-void Tracking_Widget::_loadKeypointCSV()
-{
-    auto keypoint_filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Keypoints",
-        QDir::currentPath(),
-        "All files (*.*)");
-
-    if (keypoint_filename.isNull()) {
-        return;
-    }
-
-    const auto keypoint_key = _current_tracking_key;
-
-    auto keypoints = load_points_from_csv(keypoint_filename.toStdString(), 0, 1, 2, ',');
-
-    std::cout << "Loaded " << keypoints.size() << " keypoints" << std::endl;
-    auto point_num = _data_manager->getKeys<PointData>().size();
-
-    //_data_manager->createPoint(keypoint_key);
-
-    auto point = _data_manager->getData<PointData>(keypoint_key);
-    auto media = _data_manager->getData<MediaData>("media");
-
-    point->setMaskHeight(media->getHeight());
-    point->setMaskWidth(media->getWidth());
-
-    for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(media->getFrameIndexFromNumber(key), val.x, val.y);
-    }
-
-    _scene->addPointDataToScene(keypoint_key);
-
 }
 
 void Tracking_Widget::_changeOutputDir()
