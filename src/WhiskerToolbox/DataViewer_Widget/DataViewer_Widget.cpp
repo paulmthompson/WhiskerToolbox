@@ -24,7 +24,10 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         _main_window{main_window},
         ui(new Ui::DataViewer_Widget)
 {
+
     ui->setupUi(this);
+
+    ui->feature_table_widget->setColumns({"Feature", "Type", "Clock", "Elements"});
 
     ui->feature_table_widget->setDataManager(_data_manager);
 

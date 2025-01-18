@@ -24,6 +24,7 @@ public:
     void setDataManager(std::shared_ptr<DataManager> data_manager);
 
     void populateTable();
+    void setColumns(QStringList columns) { _columns = columns; }
 
 signals:
     void featureSelected(const QString& feature);

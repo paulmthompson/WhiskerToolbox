@@ -14,8 +14,6 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget *parent)
     connect(ui->refresh_dm_features, &QPushButton::clicked, this, &Feature_Table_Widget::_refreshFeatures);
     connect(ui->available_features_table, &QTableWidget::cellClicked, this, &Feature_Table_Widget::_highlightFeature);
     connect(ui->add_feature_to_model, &QPushButton::clicked, this, &Feature_Table_Widget::_addFeature);
-
-    _columns = {"Feature", "Type", "Clock", "Elements"};
 }
 
 Feature_Table_Widget::~Feature_Table_Widget() {
@@ -71,10 +69,18 @@ void Feature_Table_Widget::populateTable() {
     for (const auto& groupName : groupNames) {
         int row = ui->available_features_table->rowCount();
         ui->available_features_table->insertRow(row);
-        _addFeatureName(groupName, row, 0, true);
-        _addFeatureType(groupName, row, 1, true);
-        _addFeatureClock(groupName, row, 2, true);
-        _addFeatureElements(groupName, row, 3, true);
+
+        for (int i = 0; i < _columns.size(); i++) {
+            if (_columns[i] == "Feature") {
+                _addFeatureName(groupName, row, i, true);
+            } else if (_columns[i] == "Type") {
+                _addFeatureType(groupName, row, i, true);
+            } else if (_columns[i] == "Clock") {
+                _addFeatureClock(groupName, row, i, true);
+            } else if (_columns[i] == "Elements") {
+                _addFeatureElements(groupName, row, i, true);
+            }
+        }
     }
 
     // Add keys not in groups to the table
@@ -90,10 +96,17 @@ void Feature_Table_Widget::populateTable() {
         if (!isInGroup) {
             int row = ui->available_features_table->rowCount();
             ui->available_features_table->insertRow(row);
-            _addFeatureName(key, row, 0, false);
-            _addFeatureType(key, row, 1, false);
-            _addFeatureClock(key, row, 2, false);
-            _addFeatureElements(key, row, 3, false);
+            for (int i = 0; i < _columns.size(); i++) {
+                if (_columns[i] == "Feature") {
+                    _addFeatureName(key, row, i, false);
+                } else if (_columns[i] == "Type") {
+                    _addFeatureType(key, row, i, false);
+                } else if (_columns[i] == "Clock") {
+                    _addFeatureClock(key, row, i, false);
+                } else if (_columns[i] == "Elements") {
+                    _addFeatureElements(key, row, i, false);
+                }
+            }
         }
     }
 }
