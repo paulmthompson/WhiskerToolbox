@@ -96,7 +96,7 @@
      <item>
       <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>

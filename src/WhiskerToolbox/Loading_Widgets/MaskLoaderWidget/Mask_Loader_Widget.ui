@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>544</width>
     <height>300</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <rect>
      <x>20</x>
      <y>20</y>
-     <width>261</width>
+     <width>411</width>
      <height>111</height>
     </rect>
    </property>
@@ -39,6 +39,45 @@
     </property>
     <property name="text">
      <string>Load Single HDF5 Mask</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="load_multi_hdf5_mask">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>161</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Load Multiple HDF5 Mask</string>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="multi_hdf5_name_pattern">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>40</y>
+      <width>104</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="plainText">
+     <string>*.h5</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>40</y>
+      <width>101</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Filename Pattern</string>
     </property>
    </widget>
   </widget>

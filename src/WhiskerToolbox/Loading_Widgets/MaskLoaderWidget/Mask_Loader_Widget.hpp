@@ -26,10 +26,11 @@ private:
     Ui::Mask_Loader_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
 
-    void _loadSingleHDF5Mask(std::string filename);
+    void _loadSingleHDF5Mask(std::string filename, std::string mask_suffix = "");
 
 private slots:
     void _loadSingleHdf5Mask();
+    void _loadMultiHdf5Mask();
 };
 
 #endif // MASK_LOADER_WIDGET_HPP
