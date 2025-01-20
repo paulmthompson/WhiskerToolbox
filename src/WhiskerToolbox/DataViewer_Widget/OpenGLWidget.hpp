@@ -113,7 +113,5 @@ private:
     std::vector<GLfloat> m_vertices; // for testing
 };
 
-std::string generateRandomColor();
-
 
 #endif //OPENGLWIDGET_HPP

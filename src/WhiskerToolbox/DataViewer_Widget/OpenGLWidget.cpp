@@ -4,15 +4,13 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame.hpp"
+#include "utils/color.hpp"
 
 #include <QOpenGLShader>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QWheelEvent>
 
-#include <iostream>
-#include <sstream>
-#include <iomanip>
 #include <cstdlib>
 #include <ctime>
 
@@ -32,22 +30,6 @@ void OpenGLWidget::updateCanvas(int time)
     _time = time;
     //std::cout << "Redrawing at " << _time << std::endl;
     update();
-}
-
-void hexToRGB(const std::string &hexColor, int &r, int &g, int &b) {
-    if (hexColor[0] != '#' || hexColor.length() != 7) {
-        throw std::invalid_argument("Invalid hex color format");
-    }
-
-    std::stringstream ss;
-    ss << std::hex << hexColor.substr(1, 2);
-    ss >> r;
-    ss.clear();
-    ss << std::hex << hexColor.substr(3, 2);
-    ss >> g;
-    ss.clear();
-    ss << std::hex << hexColor.substr(5, 2);
-    ss >> b;
 }
 
 void OpenGLWidget::setBackgroundColor(const std::string &hexColor)
@@ -334,8 +316,6 @@ void OpenGLWidget::addAnalogTimeSeries(
         std::shared_ptr<TimeFrame> time_frame,
         std::string color) {
 
-    //std::string seriesColor = color.empty() ? generateRandomColor() : color;
-    //white by default
     std::string seriesColor = color.empty() ? "#FFFFFF" : color;
 
     _analog_series[key] =
@@ -437,14 +417,4 @@ void OpenGLWidget::wheelEvent(QWheelEvent *event) {
 
     _xAxis.setCenterAndZoom(center, zoom);
     updateCanvas(_time);
-}
-
-std::string generateRandomColor() {
-    std::stringstream ss;
-    ss << "#" << std::hex << std::setw(6) << std::setfill('0') << (std::rand() % 0xFFFFFF);
-    auto color_string = ss.str();
-
-    std::cout << "Generated color: " << color_string << std::endl;
-
-    return color_string;
 }

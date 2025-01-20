@@ -130,6 +130,8 @@ set(PROJECT_SOURCES
 
         utils/Deep_Learning/scm.hpp
         utils/Deep_Learning/scm.cpp
+
+        utils/color.hpp
 )
 
 if (WIN32)

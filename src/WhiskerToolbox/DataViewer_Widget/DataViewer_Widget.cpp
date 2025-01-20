@@ -91,6 +91,7 @@ void DataViewer_Widget::_addFeatureToModel(const QString& feature, bool enabled)
 
 void DataViewer_Widget::_plotSelectedFeature(const std::string key) {
 
+    auto color = ui->feature_table_widget->getFeatureColor(key);
 
     if (_data_manager->getType(key) == "AnalogTimeSeries") {
 
@@ -98,7 +99,7 @@ void DataViewer_Widget::_plotSelectedFeature(const std::string key) {
         auto series = _data_manager->getData<AnalogTimeSeries>(key);
         auto time_key = _data_manager->getTimeFrame(key);
         auto time_frame = _data_manager->getTime(time_key);
-        ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame);
+        ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame, color);
 
     } else if (_data_manager->getType(key) == "DigitalEventSeries") {
 
@@ -106,14 +107,14 @@ void DataViewer_Widget::_plotSelectedFeature(const std::string key) {
             auto series = _data_manager->getData<DigitalEventSeries>(key);
             auto time_key = _data_manager->getTimeFrame(key);
             auto time_frame = _data_manager->getTime(time_key);
-            ui->openGLWidget->addDigitalEventSeries(key, series, time_frame);
+            ui->openGLWidget->addDigitalEventSeries(key, series, time_frame, color);
     } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
 
         std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);
         auto time_key = _data_manager->getTimeFrame(key);
         auto time_frame = _data_manager->getTime(time_key);
-        ui->openGLWidget->addDigitalIntervalSeries(key, series, time_frame);
+        ui->openGLWidget->addDigitalIntervalSeries(key, series, time_frame, color);
     } else {
         std::cout << "Feature type not supported" << std::endl;
     }

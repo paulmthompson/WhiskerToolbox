@@ -7,13 +7,14 @@
 
 #include "TimeFrame.hpp"
 
+#include "utils/color.hpp"
+
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPixmapItem>
 #include <QImage>
 #include <QPainter>
 
 #include <iostream>
-#include <regex>
 
 
 /*
@@ -33,15 +34,6 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
     _data_manager->addObserver([this]() {
         UpdateCanvas();
     });
-}
-
-bool isValidHexColor(const std::string& hex_color) {
-    const std::regex hex_color_pattern("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
-    return std::regex_match(hex_color, hex_color_pattern);
-}
-
-bool isValidAlpha(float alpha) {
-    return alpha >= 0.0f && alpha <= 1.0f;
 }
 
 /**
