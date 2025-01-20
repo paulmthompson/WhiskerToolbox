@@ -18,6 +18,9 @@ Media_Widget::Media_Widget(QWidget *parent) :
 
     connect(ui->data_viewer_button, &QPushButton::clicked, this, &Media_Widget::_openDataViewer);
     connect(ui->mask_slider, &QSlider::valueChanged, this, &Media_Widget::_setMaskAlpha);
+
+    connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, &Media_Widget::_addFeatureToDisplay);
+
 }
 
 Media_Widget::~Media_Widget() {
@@ -74,4 +77,14 @@ void Media_Widget::_setMaskAlpha(int alpha)
 {
     float alpha_float = static_cast<float>(alpha) / 100;
     _scene->changeMaskAlpha(alpha_float);
+}
+
+void Media_Widget::_addFeatureToDisplay()
+{
+    /*
+    auto features = ui->feature_table_widget->getSelectedFeatures();
+    for (const auto& feature : features) {
+        _scene->addFeatureToDisplay(feature);
+    }
+    */
 }

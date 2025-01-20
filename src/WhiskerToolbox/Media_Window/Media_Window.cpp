@@ -10,9 +10,11 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPixmapItem>
 #include <QImage>
+#include <QPainter>
 
 #include <iostream>
-#include <QPainter>
+#include <regex>
+
 
 /*
 
@@ -33,17 +35,33 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
     });
 }
 
+bool isValidHexColor(const std::string& hex_color) {
+    const std::regex hex_color_pattern("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+    return std::regex_match(hex_color, hex_color_pattern);
+}
+
+bool isValidAlpha(float alpha) {
+    return alpha >= 0.0f && alpha <= 1.0f;
+}
+
 /**
  * @brief Media_Window::addLineDataToScene
  *
- * If a new key is added to DataManager, it is added to the scene
- * by default. This should be observer
  *
  * @param line_key
  */
-void Media_Window::addLineDataToScene(std::string const & line_key)
+void Media_Window::addLineDataToScene(std::string const & line_key, std::string const & hex_color, float alpha)
 {
-    _line_configs[line_key] = element_config{"#0000FF",1.0};
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+
+    _line_configs[line_key] = element_config{hex_color, alpha};
 }
 
 void Media_Window::changeLineColor(std::string const & line_key, std::string const & hex_color)
@@ -66,9 +84,18 @@ void Media_Window::clearLines() {
     _line_paths.clear();
 }
 
-void Media_Window::addMaskDataToScene(const std::string& mask_key)
+void Media_Window::addMaskDataToScene(const std::string& mask_key, std::string const & hex_color, float alpha)
 {
-     _mask_configs[mask_key] = element_config{"#0000FF",1.0};
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+
+     _mask_configs[mask_key] = element_config{hex_color, alpha};
 }
 
 void Media_Window::changeMaskColor(const std::string& mask_key, std::string const & hex_color)
@@ -102,10 +129,19 @@ void Media_Window::clearMasks()
     _masks.clear();
 }
 
-void Media_Window::addPointDataToScene(const std::string& point_key)
+void Media_Window::addPointDataToScene(const std::string& point_key, std::string const & hex_color, float alpha)
 {
 
-    _point_configs[point_key] = element_config{"#0000FF",1.0};
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+
+    _point_configs[point_key] = element_config{hex_color, alpha};
 }
 
 void Media_Window::changePointColor(std::string const& point_key, std::string const & hex_color)
