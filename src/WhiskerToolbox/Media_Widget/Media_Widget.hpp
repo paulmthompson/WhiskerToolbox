@@ -20,7 +20,7 @@ public:
 
     virtual ~Media_Widget();
 
-    void setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = data_manager;};
+    void setDataManager(std::shared_ptr<DataManager> data_manager);
     void setScene(Media_Window* scene) {_scene = scene;};
     void setMainWindow(MainWindow* mainwindow) {_main_window = mainwindow;};
 

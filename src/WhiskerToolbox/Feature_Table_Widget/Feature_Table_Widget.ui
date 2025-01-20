@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>312</width>
+    <width>270</width>
     <height>279</height>
    </rect>
   </property>
@@ -22,17 +22,34 @@
   <widget class="QTableWidget" name="available_features_table">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>0</x>
      <y>20</y>
      <width>271</width>
      <height>201</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <pointsize>6</pointsize>
+    </font>
+   </property>
+   <attribute name="horizontalHeaderDefaultSectionSize">
+    <number>36</number>
+   </attribute>
+   <attribute name="verticalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <attribute name="verticalHeaderMinimumSectionSize">
+    <number>19</number>
+   </attribute>
+   <attribute name="verticalHeaderDefaultSectionSize">
+    <number>19</number>
+   </attribute>
   </widget>
   <widget class="QPushButton" name="refresh_dm_features">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>0</x>
      <y>230</y>
      <width>111</width>
      <height>31</height>
@@ -45,7 +62,7 @@
   <widget class="QPushButton" name="add_feature_to_model">
    <property name="geometry">
     <rect>
-     <x>180</x>
+     <x>160</x>
      <y>230</y>
      <width>111</width>
      <height>31</height>

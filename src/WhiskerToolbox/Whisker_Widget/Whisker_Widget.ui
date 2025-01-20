@@ -844,7 +844,6 @@
     </widget>
     <addaction name="actionSave_Snapshot"/>
     <addaction name="menuFace_Mask"/>
-    <addaction name="actionLoad_Keypoint_CSV"/>
    </widget>
    <addaction name="menuImage"/>
    <addaction name="menuWhisker"/>

@@ -156,8 +156,6 @@ private slots:
     void _maskDilation(int dilation_size);
     void _maskDilationExtended(int dilation_size);
 
-    void _loadKeypointCSV();
-
     void _changeOutputDir();
 
     void _changeWhiskerClip(int clip_dist);

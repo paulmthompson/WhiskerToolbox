@@ -31,6 +31,15 @@ void Media_Widget::updateMedia() {
 
 }
 
+void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager)
+{
+    _data_manager = data_manager;
+
+    ui->feature_table_widget->setColumns({"Feature", "Color", "Enabled", "Type"});
+    ui->feature_table_widget->setDataManager(_data_manager);
+    ui->feature_table_widget->populateTable();
+}
+
 void Media_Widget::_openDataViewer()
 {
     std::string const key = "media_widget_item_list";

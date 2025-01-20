@@ -133,8 +133,6 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     connect(ui->actionSave_as_CSV, &QAction::triggered, this, &Whisker_Widget::_saveWhiskersAsCSV);
     connect(ui->actionLoad_CSV_Whisker_Single_File_Multi_Frame, &QAction::triggered, this, &Whisker_Widget::_loadMultiFrameCSV);
 
-    connect(ui->actionLoad_Keypoint_CSV, &QAction::triggered, this, &Whisker_Widget::_loadKeypointCSV);
-
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
     connect(ui->tracked_whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_skipToTrackedFrame);
@@ -726,42 +724,6 @@ std::string Whisker_Widget::_getImageSaveName(int const frame_id)
         std::string saveName = "img" + pad_frame_id(frame_id, 7) + ".png";
         return saveName;
     }
-}
-
-void Whisker_Widget::_loadKeypointCSV()
-{
-    auto keypoint_filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Keypoints",
-        QDir::currentPath(),
-        "All files (*.*)");
-
-    if (keypoint_filename.isNull()) {
-        return;
-    }
-
-    auto keypoints = load_points_from_csv(keypoint_filename.toStdString(), 0, 1, 2);
-
-    auto point_num = _data_manager->getKeys<PointData>().size();
-
-    std::cout << "There are " << point_num << " keypoints loaded" << std::endl;
-
-    auto keypoint_key = "keypoint_" + std::to_string(point_num);
-
-    _data_manager->setData<PointData>(keypoint_key);
-
-    auto point = _data_manager->getData<PointData>(keypoint_key);
-    auto media = _data_manager->getData<MediaData>("media");
-
-    point->setMaskHeight(media->getHeight());
-    point->setMaskWidth(media->getWidth());
-
-    for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(media->getFrameIndexFromNumber(key), val.x, val.y);
-    }
-
-    _scene->addPointDataToScene(keypoint_key);
-    _scene->changePointColor(keypoint_key, get_whisker_color(point_num));
 }
 
 /////////////////////////////////////////////

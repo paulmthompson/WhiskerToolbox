@@ -61,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->media_widget->setMainWindow(this);
     ui->media_widget->setScene(_scene);
     ui->media_widget->updateMedia();
+    ui->media_widget->setDataManager(_data_manager);
 
     _createActions(); // Creates callback functions
 

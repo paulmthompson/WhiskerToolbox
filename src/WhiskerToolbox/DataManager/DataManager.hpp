@@ -128,18 +128,21 @@ public:
     void setData(const std::string& key){
         _data[key] = std::make_shared<T>();
         setTimeFrame(key, "time");
+        notifyObservers();
     }
 
     template<typename T>
     void setData(const std::string& key, std::shared_ptr<T> data){
         _data[key] = data;
         setTimeFrame(key, "time");
+        notifyObservers();
     }
 
     template<typename T>
     void setData(const std::string& key, std::shared_ptr<T> data, const std::string time_key){
         _data[key] = data;
         setTimeFrame(key, time_key);
+        notifyObservers();
     }
 
     std::string getType(const std::string& key) const;

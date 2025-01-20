@@ -16,6 +16,10 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget *parent)
         ui(new Ui::Feature_Table_Widget) {
     ui->setupUi(this);
 
+    QFont font = ui->available_features_table->horizontalHeader()->font();
+    font.setPointSize( 6 );
+    ui->available_features_table->horizontalHeader()->setFont( font );
+
     connect(ui->refresh_dm_features, &QPushButton::clicked, this, &Feature_Table_Widget::_refreshFeatures);
     connect(ui->available_features_table, &QTableWidget::cellClicked, this, &Feature_Table_Widget::_highlightFeature);
 }
@@ -24,7 +28,15 @@ Feature_Table_Widget::~Feature_Table_Widget() {
     delete ui;
 }
 
-void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = data_manager;}
+void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_manager)
+{
+    _data_manager = data_manager;
+    // I want to add a callback to the data manager to be called when the data manager is updated
+
+    _data_manager->addObserver([this]() {
+        _refreshFeatures();
+    });
+}
 
 void Feature_Table_Widget::_addFeatureName(std::string key, int row, int col, bool group)
 {
