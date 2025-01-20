@@ -93,9 +93,7 @@ set(PROJECT_SOURCES
         Feature_Table_Widget/Feature_Table_Widget.hpp
         Feature_Table_Widget/Feature_Table_Widget.cpp
         Feature_Table_Widget/Feature_Table_Widget.ui
-
-        utils/qt_utilities.cpp
-        utils/qt_utilities.hpp
+        Feature_Table_Widget/Color_Widget.hpp
 
         utils/Image_Processing/skeletonize.hpp
         utils/Image_Processing/order_line.hpp
@@ -115,10 +113,14 @@ set(PROJECT_SOURCES
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.cpp
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.ui
 
-        PointLoaderWidget/Point_Loader_Widget.hpp
-        PointLoaderWidget/Point_Loader_Widget.cpp
-        PointLoaderWidget/Point_Loader_Widget.ui
-        Feature_Table_Widget/Color_Widget.hpp
+        Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp
+        Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.cpp
+        Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.ui
+
+        Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp
+        Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.cpp
+        Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.ui
+
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
@@ -141,6 +143,7 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
+
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)

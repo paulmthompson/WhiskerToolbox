@@ -3,8 +3,8 @@
 
 #include "ui_Point_Loader_Widget.h"
 
-#include "DataManager/DataManager.hpp"
-#include "Points/Point_Data.hpp"
+#include "../../DataManager/DataManager.hpp"
+#include "../../DataManager/Points/Point_Data.hpp"
 
 #include <QFileDialog>
 

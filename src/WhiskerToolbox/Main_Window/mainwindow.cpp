@@ -1,6 +1,5 @@
 #include "mainwindow.hpp"
 
-#include "PointLoaderWidget/Point_Loader_Widget.hpp"
 #include "ui_mainwindow.h"
 
 
@@ -18,6 +17,8 @@
 #include "DockSplitter.h"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
+#include "Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp"
+#include "Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "Media_Window.hpp"
 #include "ML_Widget/ML_Widget.hpp"
@@ -111,6 +112,7 @@ void MainWindow::_createActions()
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
     connect(ui->actionLoad_Points, &QAction::triggered, this, &MainWindow::openPointLoaderWidget);
+    connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
 
 }
 
@@ -564,6 +566,25 @@ void MainWindow::openPointLoaderWidget()
     }
 
     auto ptr = dynamic_cast<Point_Loader_Widget*>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+void MainWindow::openMaskLoaderWidget()
+{
+    std::string const key = "MaskLoader_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto MaskLoaderWidget = std::make_unique<Mask_Loader_Widget>(
+            _data_manager,
+            this);
+
+        MaskLoaderWidget->setObjectName(key);
+        registerDockWidget(key, MaskLoaderWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(MaskLoaderWidget);
+    }
+
+    auto ptr = dynamic_cast<Mask_Loader_Widget*>(_widgets[key].get());
 
     showDockWidget(key);
 }
