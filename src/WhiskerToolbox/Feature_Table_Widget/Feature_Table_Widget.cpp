@@ -81,6 +81,8 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string key, int row, int col,
     connect(checkboxItem, &QCheckBox::stateChanged, [this, key](int state) {
         if (state == Qt::Checked) {
             emit addFeature(QString::fromStdString(key));
+        } else {
+            emit removeFeature(QString::fromStdString(key));
         }
     });
 }

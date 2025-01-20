@@ -19,7 +19,14 @@ Media_Widget::Media_Widget(QWidget *parent) :
     connect(ui->data_viewer_button, &QPushButton::clicked, this, &Media_Widget::_openDataViewer);
     connect(ui->mask_slider, &QSlider::valueChanged, this, &Media_Widget::_setMaskAlpha);
 
-    connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, &Media_Widget::_addFeatureToDisplay);
+
+    connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, [this](const QString& feature) {
+        Media_Widget::_addFeatureToDisplay(feature, true);
+    });
+
+    connect(ui->feature_table_widget, &Feature_Table_Widget::removeFeature, this, [this](const QString& feature) {
+        Media_Widget::_addFeatureToDisplay(feature, false);
+    });
 
 }
 
@@ -79,12 +86,37 @@ void Media_Widget::_setMaskAlpha(int alpha)
     _scene->changeMaskAlpha(alpha_float);
 }
 
-void Media_Widget::_addFeatureToDisplay()
+void Media_Widget::_addFeatureToDisplay(const QString& feature, bool enabled)
 {
-    /*
-    auto features = ui->feature_table_widget->getSelectedFeatures();
-    for (const auto& feature : features) {
-        _scene->addFeatureToDisplay(feature);
+    std::cout << "Feature: " << feature.toStdString() << std::endl;
+
+    std::string type = _data_manager->getType(feature.toStdString());
+
+    if (type == "LineData") {
+        if (enabled) {
+            std::cout << "Adding line data to scene" << std::endl;
+            _scene->addLineDataToScene(feature.toStdString());
+        } else {
+            std::cout << "Removing line data from scene" << std::endl;
+            _scene->removeLineDataFromScene(feature.toStdString());
+        }
+    } else if (type == "MaskData") {
+        if (enabled) {
+            std::cout << "Adding mask data to scene" << std::endl;
+            _scene->addMaskDataToScene(feature.toStdString());
+        } else {
+            std::cout << "Removing mask data from scene" << std::endl;
+            _scene->removeMaskDataFromScene(feature.toStdString());
+        }
+    } else if (type == "PointData") {
+        if (enabled) {
+            std::cout << "Adding point data to scene" << std::endl;
+            _scene->addPointDataToScene(feature.toStdString());
+        } else {
+            std::cout << "Removing point data from scene" << std::endl;
+            _scene->removePointDataFromScene(feature.toStdString());
+        }
+    } else {
+        std::cout << "Feature type " << type << " not supported" << std::endl;
     }
-    */
 }

@@ -62,6 +62,8 @@ void Media_Window::addLineDataToScene(std::string const & line_key, std::string 
     }
 
     _line_configs[line_key] = element_config{hex_color, alpha};
+
+    UpdateCanvas();
 }
 
 void Media_Window::changeLineColor(std::string const & line_key, std::string const & hex_color)
@@ -84,6 +86,15 @@ void Media_Window::clearLines() {
     _line_paths.clear();
 }
 
+void Media_Window::removeLineDataFromScene(const std::string &line_key) {
+    auto lineItem = _line_configs.find(line_key);
+    if (lineItem != _line_configs.end()) {
+        _line_configs.erase(lineItem);
+    }
+
+    UpdateCanvas();
+}
+
 void Media_Window::addMaskDataToScene(const std::string& mask_key, std::string const & hex_color, float alpha)
 {
     if (!isValidHexColor(hex_color)) {
@@ -96,6 +107,8 @@ void Media_Window::addMaskDataToScene(const std::string& mask_key, std::string c
     }
 
      _mask_configs[mask_key] = element_config{hex_color, alpha};
+
+    UpdateCanvas();
 }
 
 void Media_Window::changeMaskColor(const std::string& mask_key, std::string const & hex_color)
@@ -129,6 +142,16 @@ void Media_Window::clearMasks()
     _masks.clear();
 }
 
+void Media_Window::removeMaskDataFromScene(const std::string &mask_key)
+{
+    auto maskItem = _mask_configs.find(mask_key);
+    if (maskItem != _mask_configs.end()) {
+        _mask_configs.erase(maskItem);
+    }
+
+    UpdateCanvas();
+}
+
 void Media_Window::addPointDataToScene(const std::string& point_key, std::string const & hex_color, float alpha)
 {
 
@@ -142,6 +165,8 @@ void Media_Window::addPointDataToScene(const std::string& point_key, std::string
     }
 
     _point_configs[point_key] = element_config{hex_color, alpha};
+
+    UpdateCanvas();
 }
 
 void Media_Window::changePointColor(std::string const& point_key, std::string const & hex_color)
@@ -157,6 +182,16 @@ void Media_Window::clearPoints() {
         delete pathItem;
     }
     _points.clear();
+}
+
+void Media_Window::removePointDataFromScene(const std::string &point_key)
+{
+    auto pointItem = _point_configs.find(point_key);
+    if (pointItem != _point_configs.end()) {
+        _point_configs.erase(pointItem);
+    }
+
+    UpdateCanvas();
 }
 
 void Media_Window::setPointAlpha(std::string const & point_key, float const alpha)

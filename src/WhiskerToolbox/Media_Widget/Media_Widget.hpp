@@ -42,7 +42,7 @@ private slots:
     void _openDataViewer();
     void _updateCanvasSize();
     void _setMaskAlpha(int alpha);
-    void _addFeatureToDisplay();
+    void _addFeatureToDisplay(const QString& feature, bool enabled);
 
 signals:
 
