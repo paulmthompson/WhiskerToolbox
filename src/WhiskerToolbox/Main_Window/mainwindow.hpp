@@ -80,5 +80,6 @@ private slots:
     void openDataViewer();
     void openPointLoaderWidget();
     void openMaskLoaderWidget();
+    void openLineLoaderWidget();
 };
 #endif // MAINWINDOW_HPP

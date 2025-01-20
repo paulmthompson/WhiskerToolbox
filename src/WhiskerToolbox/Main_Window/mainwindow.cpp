@@ -17,6 +17,7 @@
 #include "DockSplitter.h"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
+#include "Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp"
 #include "Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp"
 #include "Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
@@ -113,7 +114,7 @@ void MainWindow::_createActions()
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
     connect(ui->actionLoad_Points, &QAction::triggered, this, &MainWindow::openPointLoaderWidget);
     connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
-
+    connect(ui->actionLoad_Lines, &QAction::triggered, this, &MainWindow::openLineLoaderWidget);
 }
 
 /*
@@ -585,6 +586,25 @@ void MainWindow::openMaskLoaderWidget()
     }
 
     auto ptr = dynamic_cast<Mask_Loader_Widget*>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+void MainWindow::openLineLoaderWidget()
+{
+    std::string const key = "LineLoader_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto LineLoaderWidget = std::make_unique<Line_Loader_Widget>(
+            _data_manager,
+            this);
+
+        LineLoaderWidget->setObjectName(key);
+        registerDockWidget(key, LineLoaderWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(LineLoaderWidget);
+    }
+
+    auto ptr = dynamic_cast<Line_Loader_Widget*>(_widgets[key].get());
 
     showDockWidget(key);
 }

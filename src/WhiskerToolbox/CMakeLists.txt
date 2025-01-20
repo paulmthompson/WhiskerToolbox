@@ -121,6 +121,9 @@ set(PROJECT_SOURCES
         Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.cpp
         Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.ui
 
+        Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp
+        Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.cpp
+        Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.ui
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
@@ -143,7 +146,6 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
-
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)
