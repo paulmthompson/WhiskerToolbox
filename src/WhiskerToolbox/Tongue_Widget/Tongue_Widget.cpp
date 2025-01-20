@@ -41,7 +41,6 @@ Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> d
 {
     ui->setupUi(this);
 
-    connect(ui->load_hdf_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadHDF5TongueMasks);
     connect(ui->load_img_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadImgTongueMasks);
 
     connect(ui->begin_grabcut_btn, &QPushButton::clicked, this, &Tongue_Widget::_startGrabCut);
@@ -72,42 +71,6 @@ void Tongue_Widget::keyPressEvent(QKeyEvent *event) {
 
     QMainWindow::keyPressEvent(event);
 
-}
-
-void Tongue_Widget::_loadHDF5TongueMasks()
-{
-    auto filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Tongue File",
-        QDir::currentPath(),
-        "All files (*.*)");
-
-    if (filename.isNull()) {
-        return;
-    }
-
-    auto frames =  read_array_hdf5(filename.toStdString(), "frames");
-    auto probs = read_ragged_hdf5(filename.toStdString(), "probs");
-    auto y_coords = read_ragged_hdf5(filename.toStdString(), "heights");
-    auto x_coords = read_ragged_hdf5(filename.toStdString(), "widths");
-
-    auto mask_num = _data_manager->getKeys<MaskData>().size();
-
-    auto mask_key = "Tongue_Mask" + std::to_string(mask_num);
-
-    _data_manager->setData<MaskData>(mask_key);
-
-    auto mask = _data_manager->getData<MaskData>(mask_key);
-    // mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
-    // mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
-
-    auto media = _data_manager->getData<MediaData>("media");
-    for (std::size_t i = 0; i < frames.size(); i ++) {
-        mask->addMaskAtTime(media->getFrameIndexFromNumber(frames[i]), x_coords[i], y_coords[i]);
-    }
-
-    _scene->addMaskDataToScene(mask_key);
-    _scene->changeMaskColor(mask_key, tongue_colors[mask_num]);
 }
 
 /**
