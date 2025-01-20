@@ -104,7 +104,6 @@ private:
     std::string _getImageSaveName(int const frame_id);
     std::string _getWhiskerSaveName(int const frame_id);
 
-    void _loadSingleHDF5WhiskerMask(std::string const & filename);
     void _loadSingleHDF5WhiskerLine(std::string const & filename, std::string const & whisker_group_name, int const whisker_num);
     std::vector<int> _loadCSVWhiskerFromDir(std::string const & dir_name, std::string const & whisker_group_name);
 
@@ -126,9 +125,6 @@ private slots:
     void _loadFaceMask();
 
     void _loadJaneliaWhiskers();
-
-    void _loadHDF5WhiskerMask();
-    void _loadHDF5WhiskerMasksFromDir();
 
     void _loadHDF5WhiskerLine();
     void _loadHDF5WhiskerLinesFromDir();

@@ -812,8 +812,6 @@
      <addaction name="actionLoad_HDF5_Whisker_Single"/>
      <addaction name="actionLoad_HDF5_Whisker_Multiple"/>
      <addaction name="separator"/>
-     <addaction name="actionLoad_Mask"/>
-     <addaction name="actionLoad_HDF5_Mask_Multiple"/>
     </widget>
     <widget class="QMenu" name="menuSave_Whiskers">
      <property name="title">
