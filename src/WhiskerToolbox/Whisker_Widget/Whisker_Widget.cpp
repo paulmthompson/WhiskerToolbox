@@ -525,8 +525,7 @@ void Whisker_Widget::_loadFaceMask()
 
     face_mask->addMaskAtTime(-1,mask_points);
 
-    _scene->addMaskDataToScene("Face_Mask");
-    _scene->changeMaskColor("Face_Mask", "#808080");
+    _scene->addMaskDataToScene("Face_Mask", "#808080");
 
     ui->mask_file_label->setText(face_mask_name);
 
@@ -599,8 +598,7 @@ void Whisker_Widget::_loadMultiFrameCSV()
     //If there is a number at the end of whisker_name, that is the whisker_id
     auto whisker_id = get_whisker_id(whisker_name);
 
-    _scene->addLineDataToScene(whisker_name);
-    _scene->changeLineColor(whisker_name, get_whisker_color(whisker_id));
+    _scene->addLineDataToScene(whisker_name, get_whisker_color(whisker_id));
 
     _addDrawingCallback(whisker_name);
 
@@ -743,8 +741,7 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, c
     if (!_data_manager->getData<LineData>(whisker_name)) {
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->setData<LineData>(whisker_name);
-        _scene->addLineDataToScene(whisker_name);
-        _scene->changeLineColor(whisker_name, get_whisker_color(whisker_id));
+        _scene->addLineDataToScene(whisker_name, get_whisker_color(whisker_id));
 
         _addDrawingCallback(whisker_name);
     }
@@ -923,8 +920,7 @@ void Whisker_Widget::_loadSingleHDF5WhiskerMask(std::string const & filename)
         mask->addMaskAtTime(frames[i], x_coords[i], y_coords[i]);
     }
 
-    _scene->addMaskDataToScene(mask_key);
-    _scene->changeMaskColor(mask_key, get_whisker_color(mask_num));
+    _scene->addMaskDataToScene(mask_key, get_whisker_color(mask_num));
 }
 
 /**
