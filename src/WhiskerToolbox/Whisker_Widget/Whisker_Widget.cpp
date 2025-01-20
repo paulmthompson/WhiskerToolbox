@@ -91,10 +91,10 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
 
     _data_manager->setData<LineData>("unlabeled_whiskers");
-    _scene->addLineDataToScene("unlabeled_whiskers");
-    _scene->changeLineColor("unlabeled_whiskers","#0000ff");
+    _scene->addLineDataToScene("unlabeled_whiskers", "#0000ff");
 
-    _addDrawingCallback("unlabeled_data");
+    _addDrawingCallback("unlabeled_whiskers");
+
     _janelia_config_widget = new Janelia_Config(_wt);
 
     dl_model = std::make_unique<dl::SCM>();
