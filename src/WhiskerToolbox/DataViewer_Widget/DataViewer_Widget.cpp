@@ -8,7 +8,6 @@
 #include "OpenGLWidget.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
-#include "utils/qt_utilities.hpp"
 
 #include <QTableWidget>
 
@@ -32,9 +31,14 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     ui->feature_table_widget->setDataManager(_data_manager);
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataViewer_Widget::_handleFeatureSelected);
-    connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, &DataViewer_Widget::_addFeatureToModel);
-    connect(ui->delete_feature_button, &QPushButton::clicked, this, &DataViewer_Widget::_deleteFeatureFromModel);
-    //connect(time_scrollbar, &TimeScrollBar::timeChanged, ui->openGLWidget, &OpenGLWidget::updateCanvas);
+    connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, [this](const QString& feature) {
+        DataViewer_Widget::_addFeatureToModel(feature, true);
+    });
+    connect(ui->feature_table_widget, &Feature_Table_Widget::removeFeature, this, [this](const QString& feature) {
+        DataViewer_Widget::_addFeatureToModel(feature, false);
+    });
+
+
     connect(time_scrollbar, &TimeScrollBar::timeChanged, this, &DataViewer_Widget::_updatePlot);
 
     //We should alwasy get the master clock because we plot
@@ -75,59 +79,13 @@ void DataViewer_Widget::_updatePlot(int time)
     ui->openGLWidget->updateCanvas(time);
 }
 
-void DataViewer_Widget::_highlightModelFeature(int row, int column) {
-    QTableWidgetItem* item = ui->model_features_table->item(row, column);
-    if (item) {
-        _highlighted_model_feature = item->text();
-    }
-}
 
-void DataViewer_Widget::_addFeatureToModel(const QString& feature) {
+void DataViewer_Widget::_addFeatureToModel(const QString& feature, bool enabled) {
 
-    // Add the feature to the set of model features
-    _model_features.insert(feature.toStdString());
-
-    _refreshModelFeatures();
-
-    // Plot the selected feature
-    _plotSelectedFeature(feature.toStdString());
-}
-
-void DataViewer_Widget::_refreshModelFeatures()
-{
-    ui->model_features_table->setRowCount(0);
-    QStringList headers = {"Feature", "Type", "Clock"};
-    ui->model_features_table->setColumnCount(3);
-    ui->model_features_table->setHorizontalHeaderLabels(headers);
-
-    for (const auto& key : _model_features) {
-        auto type = _data_manager->getType(key);
-        auto time_key = _data_manager->getTimeFrame(key);
-        auto time_frame_key = _data_manager->getTimeFrame(time_key);
-        auto row = ui->model_features_table->rowCount();
-        ui->model_features_table->insertRow(row);
-        ui->model_features_table->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(key)));
-        ui->model_features_table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(type)));
-        ui->model_features_table->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(time_frame_key)));
-    }
-}
-
-void DataViewer_Widget::_deleteFeatureFromModel() {
-    if (!_highlighted_model_feature.isEmpty()) {
-        // Find and remove the highlighted feature from the model features table
-        QList<QTableWidgetItem*> items = ui->model_features_table->findItems(_highlighted_model_feature, Qt::MatchExactly);
-        if (!items.isEmpty()) {
-            int row = items.first()->row();
-            ui->model_features_table->removeRow(row);
-        }
-
-        // Remove the feature from the set of model features
-        _model_features.erase(_highlighted_model_feature.toStdString());
-
-        _highlighted_model_feature.clear();
-
-        // Refresh the available features table
-        //_refreshAvailableFeatures();
+    if (enabled) {
+        _plotSelectedFeature(feature.toStdString());
+    } else {
+        _removeSelectedFeature(feature.toStdString());
     }
 }
 
@@ -140,7 +98,7 @@ void DataViewer_Widget::_plotSelectedFeature(const std::string key) {
         auto series = _data_manager->getData<AnalogTimeSeries>(key);
         auto time_key = _data_manager->getTimeFrame(key);
         auto time_frame = _data_manager->getTime(time_key);
-        ui->openGLWidget->addAnalogTimeSeries(series, time_frame);
+        ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame);
 
     } else if (_data_manager->getType(key) == "DigitalEventSeries") {
 
@@ -148,14 +106,26 @@ void DataViewer_Widget::_plotSelectedFeature(const std::string key) {
             auto series = _data_manager->getData<DigitalEventSeries>(key);
             auto time_key = _data_manager->getTimeFrame(key);
             auto time_frame = _data_manager->getTime(time_key);
-            ui->openGLWidget->addDigitalEventSeries(series, time_frame);
+            ui->openGLWidget->addDigitalEventSeries(key, series, time_frame);
     } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
 
         std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);
         auto time_key = _data_manager->getTimeFrame(key);
         auto time_frame = _data_manager->getTime(time_key);
-        ui->openGLWidget->addDigitalIntervalSeries(series, time_frame);
+        ui->openGLWidget->addDigitalIntervalSeries(key, series, time_frame);
+    } else {
+        std::cout << "Feature type not supported" << std::endl;
+    }
+}
+
+void DataViewer_Widget::_removeSelectedFeature(const std::string key) {
+    if (_data_manager->getType(key) == "AnalogTimeSeries") {
+        ui->openGLWidget->removeAnalogTimeSeries(key);
+    } else if (_data_manager->getType(key) == "DigitalEventSeries") {
+        ui->openGLWidget->removeDigitalEventSeries(key);
+    } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
+        ui->openGLWidget->removeDigitalIntervalSeries(key);
     } else {
         std::cout << "Feature type not supported" << std::endl;
     }

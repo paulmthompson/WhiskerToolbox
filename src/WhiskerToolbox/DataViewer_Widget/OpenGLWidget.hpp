@@ -10,6 +10,7 @@
 #include <QOpenGLVertexArrayObject>
 #include <QMatrix4x4>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -48,17 +49,23 @@ public:
     virtual ~OpenGLWidget();
 
     void addAnalogTimeSeries(
+            std::string key,
             std::shared_ptr<AnalogTimeSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
+    void removeAnalogTimeSeries(const std::string &key);
     void addDigitalEventSeries(
+            std::string key,
             std::shared_ptr<DigitalEventSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
+    void removeDigitalEventSeries(const std::string &key);
     void addDigitalIntervalSeries(
+            std::string key,
             std::shared_ptr<DigitalIntervalSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
+    void removeDigitalIntervalSeries(const std::string &key);
     void clearSeries();
     void setBackgroundColor(const std::string &hexColor);
     void setXLimit(int xmax) {_xAxis.setMax(xmax); };
@@ -84,9 +91,9 @@ private:
     void drawDigitalIntervalSeries();
     void drawAnalogSeries();
 
-    std::vector<AnalogSeriesData> _analog_series;
-    std::vector<DigitalEventSeriesData> _digital_event_series;
-    std::vector<DigitalIntervalSeriesData> _digital_interval_series;
+    std::map<std::string, AnalogSeriesData> _analog_series;
+    std::map<std::string, DigitalEventSeriesData> _digital_event_series;
+    std::map<std::string, DigitalIntervalSeriesData> _digital_interval_series;
 
     XAxis _xAxis;
     int _time {0};

@@ -156,7 +156,7 @@ void OpenGLWidget::drawDigitalEventSeries()
     const auto start_time = _xAxis.getStart();
     const auto end_time = _xAxis.getEnd();
 
-    for (const auto& event_data : _digital_event_series) {
+    for (const auto& [key, event_data] : _digital_event_series) {
         const auto& series = event_data.series;
         const auto& events = series->getEventSeries();
         const auto& time_frame = event_data.time_frame;
@@ -190,7 +190,7 @@ void OpenGLWidget::drawDigitalIntervalSeries()
     const auto start_time = _xAxis.getStart();
     const auto end_time = _xAxis.getEnd();
 
-    for (const auto& interval_data : _digital_interval_series) {
+    for (const auto& [key, interval_data] : _digital_interval_series) {
         const auto& series = interval_data.series;
         const auto& intervals = series->getDigitalIntervalSeries();
         const auto& time_frame = interval_data.time_frame;
@@ -236,14 +236,14 @@ void OpenGLWidget::drawAnalogSeries()
     const auto start_time = _xAxis.getStart();
     const auto end_time = _xAxis.getEnd();
 
-    for (size_t i = 0; i < _analog_series.size(); ++i) {
-        const auto &series = _analog_series[i].series;
+    for (const auto&  [key, analog_data] : _analog_series) {
+        const auto &series = analog_data.series;
         const auto &data = series->getAnalogTimeSeries();
         const auto &data_time = series->getTimeSeries();
-        const auto &time_frame = _analog_series[i].time_frame;
+        const auto &time_frame = analog_data.time_frame;
 
         // Set the color for the current series
-        hexToRGB(_analog_series[i].color, r, g, b);
+        hexToRGB(analog_data.color, r, g, b);
         float rNorm = r / 255.0f;
         float gNorm = g / 255.0f;
         float bNorm = b / 255.0f;
@@ -329,6 +329,7 @@ void OpenGLWidget::resizeGL(int w, int h) {
 }
 
 void OpenGLWidget::addAnalogTimeSeries(
+        std::string key,
         std::shared_ptr<AnalogTimeSeries> series,
         std::shared_ptr<TimeFrame> time_frame,
         std::string color) {
@@ -337,31 +338,56 @@ void OpenGLWidget::addAnalogTimeSeries(
     //white by default
     std::string seriesColor = color.empty() ? "#FFFFFF" : color;
 
-    _analog_series.push_back(
+    _analog_series[key] =
             AnalogSeriesData{series,
                              seriesColor,
-                             time_frame});
+                             time_frame};
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::removeAnalogTimeSeries(const std::string &key) {
+    auto item = _analog_series.find(key);
+    if (item != _analog_series.end()) {
+        _analog_series.erase(item);
+    }
     updateCanvas(_time);
 }
 
 void OpenGLWidget::addDigitalEventSeries(
+        std::string key,
         std::shared_ptr <DigitalEventSeries> series,
         std::shared_ptr <TimeFrame> time_frame,
         std::string color) {
     std::string seriesColor = color.empty() ? generateRandomColor() : color;
-    _digital_event_series.push_back(DigitalEventSeriesData{series, seriesColor, time_frame});
+    _digital_event_series[key] = DigitalEventSeriesData{series, seriesColor, time_frame};
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::removeDigitalEventSeries(const std::string &key) {
+    auto item = _digital_event_series.find(key);
+    if (item != _digital_event_series.end()) {
+        _digital_event_series.erase(item);
+    }
     updateCanvas(_time);
 }
 
 void OpenGLWidget::addDigitalIntervalSeries(
+        std::string key,
         std::shared_ptr <DigitalIntervalSeries> series,
         std::shared_ptr <TimeFrame> time_frame,
         std::string color) {
 
     std::string seriesColor = color.empty() ? generateRandomColor() : color;
-    _digital_interval_series.push_back(DigitalIntervalSeriesData{series, seriesColor, time_frame});
+    _digital_interval_series[key] = DigitalIntervalSeriesData{series, seriesColor, time_frame};
     updateCanvas(_time);
+}
 
+void OpenGLWidget::removeDigitalIntervalSeries(const std::string &key) {
+    auto item = _digital_interval_series.find(key);
+    if (item != _digital_interval_series.end()) {
+        _digital_interval_series.erase(item);
+    }
+    updateCanvas(_time);
 }
 
 void OpenGLWidget::clearSeries() {

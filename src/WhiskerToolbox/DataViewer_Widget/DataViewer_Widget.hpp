@@ -36,16 +36,13 @@ protected:
 
 private slots:
     //void _insertRows(const std::vector<std::string>& keys);
-    void _addFeatureToModel(const QString& feature);
+    void _addFeatureToModel(const QString& feature, bool enabled);
     //void _highlightAvailableFeature(int row, int column);
-    void _highlightModelFeature(int row, int column);
-    void _deleteFeatureFromModel();
     void _plotSelectedFeature(const std::string key);
+    void _removeSelectedFeature(const std::string key);
     void _updatePlot(int time);
     void _handleFeatureSelected(const QString& feature);
 private:
-
-    void _refreshModelFeatures();
 
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
@@ -55,8 +52,6 @@ private:
     std::shared_ptr<TimeFrame> _time_frame;
 
     QString _highlighted_available_feature;
-    QString _highlighted_model_feature;
-    std::unordered_set<std::string> _model_features;
 
 };
 
