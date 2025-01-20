@@ -25,6 +25,7 @@ public:
 
     void populateTable();
     void setColumns(QStringList columns) { _columns = columns; }
+    std::string getFeatureColor(std::string key);
 
 signals:
     void featureSelected(const QString& feature);

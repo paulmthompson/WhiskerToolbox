@@ -101,6 +101,35 @@ void Feature_Table_Widget::_addFeatureColor(std::string key, int row, int col, b
 
 }
 
+//If there is a column named "Color" in the table, this function should return the color of the feature
+std::string Feature_Table_Widget::getFeatureColor(std::string key) {
+    // Get the color of the feature
+
+    //Find row by key
+    int row = -1;
+    for (int i = 0; i < ui->available_features_table->rowCount(); i++) {
+        if (ui->available_features_table->item(i, 0)->text() == QString::fromStdString(key)) {
+            row = i;
+            break;
+        }
+    }
+    if (row == -1) {
+        return "";
+    }
+    int col = -1;
+    for (int i = 0; i < _columns.size(); i++) {
+        if (_columns[i] == "Color") {
+            col = i;
+            break;
+        }
+    }
+    auto colorWidget = ui->available_features_table->cellWidget(row, col);
+    if (colorWidget) {
+        return dynamic_cast<ColorWidget*>(colorWidget)->text().toStdString();
+    }
+    return "";
+}
+
 void Feature_Table_Widget::populateTable() {
     ui->available_features_table->setRowCount(0);
     ui->available_features_table->setColumnCount(_columns.size());

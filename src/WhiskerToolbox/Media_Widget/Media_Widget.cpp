@@ -92,10 +92,14 @@ void Media_Widget::_addFeatureToDisplay(const QString& feature, bool enabled)
 
     std::string type = _data_manager->getType(feature.toStdString());
 
+    std::string color = ui->feature_table_widget->getFeatureColor(feature.toStdString());
+
+    std::cout << "Color: " << color << std::endl;
+
     if (type == "LineData") {
         if (enabled) {
             std::cout << "Adding line data to scene" << std::endl;
-            _scene->addLineDataToScene(feature.toStdString());
+            _scene->addLineDataToScene(feature.toStdString(), color);
         } else {
             std::cout << "Removing line data from scene" << std::endl;
             _scene->removeLineDataFromScene(feature.toStdString());
@@ -103,7 +107,7 @@ void Media_Widget::_addFeatureToDisplay(const QString& feature, bool enabled)
     } else if (type == "MaskData") {
         if (enabled) {
             std::cout << "Adding mask data to scene" << std::endl;
-            _scene->addMaskDataToScene(feature.toStdString());
+            _scene->addMaskDataToScene(feature.toStdString(), color);
         } else {
             std::cout << "Removing mask data from scene" << std::endl;
             _scene->removeMaskDataFromScene(feature.toStdString());
@@ -111,7 +115,7 @@ void Media_Widget::_addFeatureToDisplay(const QString& feature, bool enabled)
     } else if (type == "PointData") {
         if (enabled) {
             std::cout << "Adding point data to scene" << std::endl;
-            _scene->addPointDataToScene(feature.toStdString());
+            _scene->addPointDataToScene(feature.toStdString(), color);
         } else {
             std::cout << "Removing point data from scene" << std::endl;
             _scene->removePointDataFromScene(feature.toStdString());
