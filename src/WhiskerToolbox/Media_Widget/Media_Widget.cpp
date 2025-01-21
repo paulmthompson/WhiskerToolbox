@@ -125,3 +125,8 @@ void Media_Widget::_addFeatureToDisplay(const QString& feature, bool enabled)
         std::cout << "Feature type " << type << " not supported" << std::endl;
     }
 }
+
+void Media_Widget::setFeatureColor(std::string feature, std::string hex_color)
+{
+    ui->feature_table_widget->setFeatureColor(feature, hex_color);
+}

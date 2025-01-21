@@ -254,16 +254,14 @@ void MainWindow::_loadJSONConfig()
             _LoadData();
         } else if (data.data_class == "PointData")
         {
-            _scene->addPointDataToScene(data.key);
-            _scene->changePointColor(data.key, data.color);
+            ui->media_widget->setFeatureColor(data.key, data.color);
+
         } else if (data.data_class == "MaskData")
         {
-            _scene->addMaskDataToScene(data.key);
-            _scene->changeMaskColor(data.key, data.color);
+            ui->media_widget->setFeatureColor(data.key, data.color);
         } else if (data.data_class == "LineData")
         {
-            _scene->addLineDataToScene(data.key);
-            _scene->changeLineColor(data.key, data.color);
+           ui->media_widget->setFeatureColor(data.key, data.color);
         }
     }
 

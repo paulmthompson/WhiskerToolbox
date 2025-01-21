@@ -26,6 +26,8 @@ public:
 
     void updateMedia();
 
+    void setFeatureColor(std::string feature, std::string hex_color);
+
 protected:
     void resizeEvent(QResizeEvent* event) override;
 private:
