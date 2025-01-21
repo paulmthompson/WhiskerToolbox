@@ -19,7 +19,6 @@
 class AnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
-class QWheelEvent;
 class TimeFrame;
 
 struct AnalogSeriesData {
@@ -69,6 +68,14 @@ public:
     void clearSeries();
     void setBackgroundColor(const std::string &hexColor);
     void setXLimit(int xmax) {_xAxis.setMax(xmax); };
+    void changeZoom(int zoom)
+    {
+        int center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
+
+        zoom = (_xAxis.getEnd() - _xAxis.getStart()) - zoom;
+       _xAxis.setCenterAndZoom(center, zoom);
+        updateCanvas(_time);
+    }
 
 public slots:
     void updateCanvas(int time);
@@ -78,7 +85,6 @@ protected:
     void paintGL() override;
 
     void resizeGL(int w, int h) override;
-    void wheelEvent(QWheelEvent *event) override;
 
     void cleanup();
 
@@ -90,6 +96,7 @@ private:
     void drawDigitalEventSeries();
     void drawDigitalIntervalSeries();
     void drawAnalogSeries();
+    void drawAxis();
 
     std::map<std::string, AnalogSeriesData> _analog_series;
     std::map<std::string, DigitalEventSeriesData> _digital_event_series;

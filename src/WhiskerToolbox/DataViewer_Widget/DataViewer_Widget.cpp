@@ -10,6 +10,7 @@
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QTableWidget>
+#include <QWheelEvent>
 
 #include <iostream>
 
@@ -38,6 +39,8 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->feature_table_widget, &Feature_Table_Widget::removeFeature, this, [this](const QString& feature) {
         DataViewer_Widget::_addFeatureToModel(feature, false);
     });
+
+    connect(ui->x_axis_samples, QOverload<int>::of(&QSpinBox::valueChanged), this, &DataViewer_Widget::_handleXAxisSamplesChanged);
 
 
     connect(time_scrollbar, &TimeScrollBar::timeChanged, this, &DataViewer_Widget::_updatePlot);
@@ -137,3 +140,29 @@ void DataViewer_Widget::_handleFeatureSelected(const QString& feature) {
     _highlighted_available_feature = feature;
 }
 
+void DataViewer_Widget::_handleXAxisSamplesChanged(int value) {
+    ui->openGLWidget->changeZoom(value);
+}
+
+void DataViewer_Widget::updateXAxisSamples(int value) {
+    ui->x_axis_samples->blockSignals(true);
+    ui->x_axis_samples->setValue(value);
+    ui->x_axis_samples->blockSignals(false);
+}
+
+void DataViewer_Widget::wheelEvent(QWheelEvent *event) {
+    int numDegrees = event->angleDelta().y() / 8;
+    int numSteps = numDegrees / 15;
+    int zoomFactor = _time_frame->getTotalFrameCount() / 10000;
+
+    auto curent_zoom = ui->x_axis_samples->value();
+    ui->openGLWidget->changeZoom(numSteps * zoomFactor);
+
+    auto new_zoom = -1 * zoomFactor * numSteps + curent_zoom;
+
+    if (new_zoom < 1) {
+        new_zoom = 1;
+    }
+
+    updateXAxisSamples(new_zoom);
+}

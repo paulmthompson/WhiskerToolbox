@@ -15,6 +15,7 @@ class QTableWidget;
 class TimeScrollBar;
 class TimeFrame;
 class Feature_Table_Widget;
+class QWheelEvent;
 
 namespace Ui { class DataViewer_Widget; }
 
@@ -31,9 +32,11 @@ public:
 
     void openWidget();
 
+    void updateXAxisSamples(int value);
+
 protected:
     void closeEvent(QCloseEvent *event);
-
+    void wheelEvent(QWheelEvent *event) override;
 private slots:
     //void _insertRows(const std::vector<std::string>& keys);
     void _addFeatureToModel(const QString& feature, bool enabled);
@@ -42,6 +45,7 @@ private slots:
     void _removeSelectedFeature(const std::string key);
     void _updatePlot(int time);
     void _handleFeatureSelected(const QString& feature);
+    void _handleXAxisSamplesChanged(int value);
 private:
 
     std::shared_ptr<DataManager> _data_manager;

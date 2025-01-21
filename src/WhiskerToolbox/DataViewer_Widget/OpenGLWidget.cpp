@@ -1,6 +1,7 @@
 #include "OpenGLWidget.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataViewer_Widget.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame.hpp"
@@ -9,7 +10,7 @@
 #include <QOpenGLShader>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
-#include <QWheelEvent>
+#include <QPainter>
 
 #include <cstdlib>
 #include <ctime>
@@ -294,12 +295,15 @@ void OpenGLWidget::paintGL() {
         0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
         0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
     };
+
     m_vbo.bind();
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
     m_vbo.release();
     glDrawArrays(GL_LINES, 0, 2);
 
     m_program->release();
+
+    //drawAxis();
 }
 
 void OpenGLWidget::resizeGL(int w, int h) {
@@ -308,6 +312,13 @@ void OpenGLWidget::resizeGL(int w, int h) {
     //m_proj.ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f); // Use orthographic projection for 2D plotting
     m_view.setToIdentity();
     m_view.translate(0, 0, -2);
+}
+
+void OpenGLWidget::drawAxis()
+{
+    const auto start_time = _xAxis.getStart();
+    const auto end_time = _xAxis.getEnd();
+
 }
 
 void OpenGLWidget::addAnalogTimeSeries(
@@ -406,15 +417,3 @@ void OpenGLWidget::adjustFakeData()
     _analog_series[0].series->setData(new_series);
 }
 
-void OpenGLWidget::wheelEvent(QWheelEvent *event) {
-    int numDegrees = event->angleDelta().y() / 8;
-    int numSteps = numDegrees / 15;
-    //int zoomFactor = 10; // Adjust this value to control zoom sensitivity
-    int zoomFactor = _xAxis.getMax() / 10000;
-
-    int center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
-    int zoom = (_xAxis.getEnd() - _xAxis.getStart()) - numSteps * zoomFactor;
-
-    _xAxis.setCenterAndZoom(center, zoom);
-    updateCanvas(_time);
-}
