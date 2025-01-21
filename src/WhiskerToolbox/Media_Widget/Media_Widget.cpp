@@ -46,6 +46,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager)
     _data_manager = data_manager;
 
     ui->feature_table_widget->setColumns({"Feature", "Color", "Enabled", "Type"});
+    ui->feature_table_widget->setTypeFilter({"LineData", "MaskData", "PointData"});
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
 }

@@ -25,6 +25,7 @@ public:
 
     void populateTable();
     void setColumns(QStringList columns) { _columns = columns; }
+    void setTypeFilter(std::vector<std::string> type) { _type_filters = type; }
     std::string getFeatureColor(std::string key);
 
 signals:
@@ -43,6 +44,7 @@ private:
 
     QString _highlighted_feature;
     QStringList _columns;
+    std::vector<std::string> _type_filters;
 
     void _addFeatureName(std::string key, int row, int col, bool group);
     void _addFeatureType(std::string key, int row, int col, bool group);

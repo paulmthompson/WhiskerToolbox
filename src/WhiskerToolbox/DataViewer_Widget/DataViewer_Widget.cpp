@@ -27,6 +27,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     ui->setupUi(this);
 
     ui->feature_table_widget->setColumns({"Feature", "Color", "Enabled", "Type", "Clock", "Elements"});
+    ui->feature_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalEventSeries", "DigitalIntervalSeries"});
 
     ui->feature_table_widget->setDataManager(_data_manager);
 

@@ -141,6 +141,14 @@ void Feature_Table_Widget::populateTable() {
 
     // Add group names to the table
     for (const auto& groupName : groupNames) {
+
+        if (_type_filters.size() > 0) {
+            std::string type = _data_manager->getType(groupName);
+            if (std::find(_type_filters.begin(), _type_filters.end(), type) == _type_filters.end()) {
+                continue;
+            }
+        }
+
         int row = ui->available_features_table->rowCount();
         ui->available_features_table->insertRow(row);
 
@@ -171,6 +179,15 @@ void Feature_Table_Widget::populateTable() {
                 break;
             }
         }
+
+
+        if (_type_filters.size() > 0) {
+            std::string type = _data_manager->getType(key);
+            if (std::find(_type_filters.begin(), _type_filters.end(), type) == _type_filters.end()) {
+                continue;
+            }
+        }
+
         if (!isInGroup) {
             int row = ui->available_features_table->rowCount();
             ui->available_features_table->insertRow(row);
