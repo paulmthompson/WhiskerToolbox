@@ -102,6 +102,8 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string filename, std::string l
     auto y_coords = read_ragged_hdf5(filename, "x");
     auto x_coords = read_ragged_hdf5(filename, "y");
 
+    _data_manager->setData<LineData>(line_key);
+
     auto line = _data_manager->getData<LineData>(line_key);
 
     for (std::size_t i = 0; i < frames.size(); i ++) {
