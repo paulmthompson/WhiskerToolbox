@@ -217,7 +217,12 @@ void Media_Window::UpdateCanvas()
                                  _getQImageFormat()
                                  );
 
-    auto new_image = unscaled_image.scaled(_canvasWidth,_canvasHeight);
+    auto new_image = unscaled_image.scaled(
+        _canvasWidth,
+        _canvasHeight,
+        Qt::IgnoreAspectRatio,
+        Qt::SmoothTransformation
+        );
 
     _canvasPixmap->setPixmap(QPixmap::fromImage(new_image));
     _canvasImage = new_image;
