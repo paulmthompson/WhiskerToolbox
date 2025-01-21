@@ -104,7 +104,6 @@ private:
     std::string _getImageSaveName(int const frame_id);
     std::string _getWhiskerSaveName(int const frame_id);
 
-    void _loadSingleHDF5WhiskerLine(std::string const & filename, std::string const & whisker_group_name, int const whisker_num);
     std::vector<int> _loadCSVWhiskerFromDir(std::string const & dir_name, std::string const & whisker_group_name);
 
     void _addNewTrackedWhisker(int const index);
@@ -125,9 +124,6 @@ private slots:
     void _loadFaceMask();
 
     void _loadJaneliaWhiskers();
-
-    void _loadHDF5WhiskerLine();
-    void _loadHDF5WhiskerLinesFromDir();
 
     void _loadSingleCSVWhisker();
     void _loadMultiCSVWhiskers();
@@ -178,8 +174,6 @@ private slots:
 void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whiskers_to_track, int current_time, float similarity_threshold);
 
 std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string const & dir_name, std::string const & line_key);
-
-void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filename, std::string const & line_key);
 
 bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_group_name);
 

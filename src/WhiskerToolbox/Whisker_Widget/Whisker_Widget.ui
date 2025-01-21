@@ -809,8 +809,6 @@
      <addaction name="actionLoad_CSV_Whiskers"/>
      <addaction name="actionLoad_CSV_Whiskers_Multiple"/>
      <addaction name="actionLoad_CSV_Whisker_Single_File_Multi_Frame"/>
-     <addaction name="actionLoad_HDF5_Whisker_Single"/>
-     <addaction name="actionLoad_HDF5_Whisker_Multiple"/>
      <addaction name="separator"/>
     </widget>
     <widget class="QMenu" name="menuSave_Whiskers">

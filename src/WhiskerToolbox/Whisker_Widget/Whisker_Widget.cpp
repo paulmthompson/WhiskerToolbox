@@ -121,9 +121,6 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
 
-    connect(ui->actionLoad_HDF5_Whisker_Single, &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerLine);
-    connect(ui->actionLoad_HDF5_Whisker_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadHDF5WhiskerLinesFromDir);
-
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
     connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
 
@@ -830,101 +827,6 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
     }
 }
 
-/**
- * @brief Whisker_Widget::_loadHDF5WhiskerLine
- *
- * Creates a dialog box for the user to select a single hdf5 file
- * that defines whisker *lines*
- *
- */
-void Whisker_Widget::_loadHDF5WhiskerLine()
-{
-    auto filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Whisker File",
-        QDir::currentPath(),
-        "All files (*.*)");
-
-    if (filename.isNull()) {
-        return;
-    }
-
-    std::string whisker_group_name = "whisker";
-
-    int whisker_num = 0;
-
-    _loadSingleHDF5WhiskerLine(filename.toStdString(), whisker_group_name, whisker_num);
-}
-
-/**
- * @brief Whisker_Widget::_loadHDF5WhiskerLinesFromDir
- *
- * Creates a dialog box for the user to select a directory
- * containing one or multiple hdf5 files that define
- * whisker *lines*
- *
- * This will look for entries following the format
- * whisker_x where x is the whisker ID number.
- *
- * 0 signifies most posterior
- *
- */
-void Whisker_Widget::_loadHDF5WhiskerLinesFromDir()
-{
-    QString dir_name = QFileDialog::getExistingDirectory(
-            this,
-            "Select Directory",
-            QDir::currentPath());
-
-    if (dir_name.isEmpty()) {
-        return;
-    }
-
-    std::filesystem::path directory(dir_name.toStdString());
-
-    // Store the paths of all files that match the criteria
-    std::vector<std::filesystem::path> whisker_files;
-
-    for (const auto & entry : std::filesystem::directory_iterator(directory)) {
-        std::string filename = entry.path().filename().string();
-
-        if (filename.find("whisker_") != std::string::npos && filename.find(".h5") != std::string::npos) {
-            whisker_files.push_back(entry.path());
-        }
-    }
-
-    // Sort the files based on their names
-    std::sort(whisker_files.begin(), whisker_files.end());
-
-    std::string whisker_group_name = "whisker";
-
-    // Load the files in sorted order
-    int whisker_num = 0;
-    for (const auto & file : whisker_files) {
-        _loadSingleHDF5WhiskerLine(file.string(), whisker_group_name, whisker_num);
-        whisker_num += 1;
-    }
-}
-
-
-/**
- * @brief Whisker_Widget::_loadSingleHDF5WhiskerLine
- *
- *
- *
- * @param filename
- * @param whisker_group_name
- * @param whisker_num
- */
-void Whisker_Widget::_loadSingleHDF5WhiskerLine(std::string const & filename, std::string const & whisker_group_name, int const whisker_num)
-{
-
-    _createNewWhisker(whisker_group_name, whisker_num);
-
-    std::string const whisker_name = whisker_group_name + "_" + std::to_string(whisker_num);
-
-    read_hdf5_line_into_datamanager(_data_manager.get(), filename, whisker_name);
-}
 
 /**
  * @brief Whisker_Widget::_loadCSVWhiskerFromDir
@@ -1229,25 +1131,6 @@ std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string c
     std::cout << "Loaded " << loaded_frames.size() << " whiskers" << std::endl;
 
     return loaded_frames;
-}
-
-/**
- * @brief read_hdf5_line_into_datamanager
- * @param dm
- * @param filename
- * @param line_key
- */
-void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filename, std::string const & line_key)
-{
-    auto frames =  read_array_hdf5(filename, "frames");
-    auto y_coords = read_ragged_hdf5(filename, "x");
-    auto x_coords = read_ragged_hdf5(filename, "y");
-
-    auto line = dm->getData<LineData>(line_key);
-
-    for (std::size_t i = 0; i < frames.size(); i ++) {
-        line->addLineAtTime(frames[i], x_coords[i], y_coords[i]);
-    }
 }
 
 /**
