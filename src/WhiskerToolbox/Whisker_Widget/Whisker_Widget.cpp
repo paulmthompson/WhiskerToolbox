@@ -1316,22 +1316,3 @@ void clip_whisker(Line2D& line, int clip_length)
     }
     line.erase(line.end() - clip_length, line.end());
 }
-
-std::string generate_color() {
-    std::stringstream ss;
-    ss << "#";
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 255);
-    for (int i = 0; i < 3; ++i) {
-        ss << std::setw(2) << std::setfill('0') << std::hex << dis(gen);
-    }
-    return ss.str();
-}
-
-std::string get_whisker_color(int whisker_index) {
-    if (whisker_index >= whisker_colors.size()) {
-        whisker_colors.push_back(generate_color());
-    }
-    return whisker_colors[whisker_index];
-}
