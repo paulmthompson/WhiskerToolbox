@@ -24,6 +24,7 @@
 #include <filesystem>
 #include <iostream>
 #include <optional>
+#include <regex>
 
 using namespace nlohmann;
 
@@ -90,29 +91,6 @@ void DataManager::loadFromJSON(std::string const & filepath)
         {"load_B", &DataManager::load_B}
     };
 
-    /*
-    for (json::iterator it = j.begin(); it != j.end(); ++it) {
-        if (it.key() == "children"){
-            // Special key "children"
-            // Specifies additinal .json files to recurse into
-            for (auto item : it.value()){
-                assert(item.is_string());
-                for (auto& p : glob::glob(item.get<std::string>())){
-                    loadFromJSON(p);
-                }
-            }
-        } else if (load_functions.count(it.key())){
-            for (auto item : it.value()){
-                assert(item.is_string());
-                for (auto& p : glob::glob(item.get<std::string>())){
-                    (this->*load_functions.at(it.key()))(p);
-                }
-            }
-        } else {
-            std::cout << "Unknown key found in JSON: " << it.key() << "\n";
-        }
-    }
-    */
     std::filesystem::current_path(original_path);
 }
 
@@ -122,17 +100,33 @@ std::optional<std::string> processFilePath(
 {
     std::filesystem::path full_path = file_path;
 
-    // Check if the file path is relative
-    if (!std::filesystem::path(file_path).is_absolute()) {
-        full_path = base_path / file_path;
-    }
+    // Check for wildcard character
+    if (file_path.find('*') != std::string::npos) {
+        // Convert wildcard pattern to regex
+        std::string pattern = std::regex_replace(full_path.string(), std::regex("\\*"), ".*");
+        std::regex regex_pattern(pattern);
 
-    // Check for the presence of the file
-    if (std::filesystem::exists(full_path)) {
-        std::cout << "Loading file " << full_path.string() << std::endl;
-        return full_path.string();
-    } else {
+        // Iterate through the directory to find matching files
+        for (const auto& entry : std::filesystem::directory_iterator(base_path)) {
+            std::cout << "Checking " << entry.path().string() << " with full path " << full_path << std::endl;
+            if (std::regex_match(entry.path().string(), regex_pattern)) {
+                std::cout << "Loading file " << entry.path().string() << std::endl;
+                return entry.path().string();
+            }
+        }
         return std::nullopt;
+    } else {
+        // Check if the file path is relative
+        if (!std::filesystem::path(file_path).is_absolute()) {
+            full_path = base_path / file_path;
+        }
+        // Check for the presence of the file
+        if (std::filesystem::exists(full_path)) {
+            std::cout << "Loading file " << full_path.string() << std::endl;
+            return full_path.string();
+        } else {
+            return std::nullopt;
+        }
     }
 }
 
