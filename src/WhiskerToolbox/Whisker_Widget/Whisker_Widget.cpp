@@ -91,8 +91,6 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
 
     _data_manager->setData<LineData>("unlabeled_whiskers");
-    _scene->addLineDataToScene("unlabeled_whiskers", "#0000ff");
-
     _addDrawingCallback("unlabeled_whiskers");
 
     _janelia_config_widget = new Janelia_Config(_wt);
@@ -519,8 +517,6 @@ void Whisker_Widget::_loadFaceMask()
 
     face_mask->addMaskAtTime(-1,mask_points);
 
-    _scene->addMaskDataToScene("Face_Mask", "#808080");
-
     ui->mask_file_label->setText(face_mask_name);
 
     _addDrawingCallback("Face_Mask");
@@ -588,11 +584,6 @@ void Whisker_Widget::_loadMultiFrameCSV()
     std::cout << "Creating whisker " << whisker_name << std::endl;
 
     _data_manager->setData<LineData>(whisker_name, std::make_shared<LineData>(line_map));
-
-    //If there is a number at the end of whisker_name, that is the whisker_id
-    auto whisker_id = get_whisker_id(whisker_name);
-
-    _scene->addLineDataToScene(whisker_name, get_whisker_color(whisker_id));
 
     _addDrawingCallback(whisker_name);
 
@@ -735,7 +726,6 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, c
     if (!_data_manager->getData<LineData>(whisker_name)) {
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->setData<LineData>(whisker_name);
-        _scene->addLineDataToScene(whisker_name, get_whisker_color(whisker_id));
 
         _addDrawingCallback(whisker_name);
     }
