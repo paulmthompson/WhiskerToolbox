@@ -754,6 +754,8 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
                 std::string whisker_group_name = "whisker_" + std::to_string(_current_whisker);
                 if (_data_manager->getData<LineData>(whisker_group_name)) {
                     _data_manager->getData<LineData>(whisker_group_name)->addLineAtTime(current_time, whiskers[_selected_whisker]);
+
+                    _data_manager->getData<LineData>("unlabeled_whiskers")->clearLineAtTime(current_time, _selected_whisker);
                 }
             }
             break;

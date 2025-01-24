@@ -14,6 +14,7 @@ class LineData : public ObserverData {
 public:
     LineData() = default;
     LineData(std::map<int,std::vector<Line2D>> const& data) : _data(data) {};
+    void clearLineAtTime(int const time, int const line_id);
     void clearLinesAtTime(int const time);
     void addLineAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y);
     void addLineAtTime(int const time, std::vector<Point2D<float>> const & line);

@@ -16,6 +16,17 @@ void LineData::clearLinesAtTime(int const time)
     }
 }
 
+void LineData::clearLineAtTime(int const time, int const line_id)
+{
+    if (!_lock_state.isLocked(time)) {
+        if (line_id < _data[time].size()) {
+            _data[time].erase(_data[time].begin() + line_id);
+        }
+
+        notifyObservers();
+    }
+}
+
 void LineData::addLineAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y)
 {
     if (!_lock_state.isLocked(time)) {
