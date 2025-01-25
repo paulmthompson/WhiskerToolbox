@@ -1,5 +1,6 @@
 #include "Digital_Interval_Series.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -8,6 +9,7 @@
 DigitalIntervalSeries::DigitalIntervalSeries(std::vector<std::pair<float, float>> digital_vector)
 {
     _data = digital_vector;
+    _sortData();
 }
 
 std::vector<std::pair<float, float>> const & DigitalIntervalSeries::getDigitalIntervalSeries() const
@@ -18,6 +20,13 @@ std::vector<std::pair<float, float>> const & DigitalIntervalSeries::getDigitalIn
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time)
 {
     auto const events = digital_series->getDigitalIntervalSeries();
+
+    // Check if sorted
+    for (int i = 1; i < events.size(); ++i) {
+        if (events[i].first < events[i-1].first) {
+            throw std::runtime_error("DigitalIntervalSeries is not sorted");
+        }
+    }
     int closest_index = -1;
     for (int i = 0; i < events.size(); ++i) {
         if (events[i].first <= time) {
@@ -47,4 +56,40 @@ std::vector<std::pair<float, float>> load_digital_series_from_csv(std::string co
     }
 
     return output;
+}
+
+bool DigitalIntervalSeries::isEventAtTime(int time) const
+{
+    for (auto event : _data) {
+        if (time >= event.first && time <= event.second) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void DigitalIntervalSeries::setEventAtTime(int time, bool event)
+{
+    if (!event)
+    {
+        for (auto it = _data.begin(); it != _data.end(); ++it) {
+            if (time >= it->first && time <= it->second) {
+                auto preceding_event = std::make_pair(it->first, time - 1);
+                auto following_event = std::make_pair(time + 1, it->second);
+                _data.erase(it);
+                _data.push_back(preceding_event);
+                _data.push_back(following_event);
+
+                _sortData();
+
+                notifyObservers();
+                return;
+            }
+        }
+    }
+}
+
+void DigitalIntervalSeries::_sortData()
+{
+    std::sort(_data.begin(), _data.end());
 }
