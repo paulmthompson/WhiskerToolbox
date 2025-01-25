@@ -68,25 +68,75 @@ bool DigitalIntervalSeries::isEventAtTime(int time) const
     return false;
 }
 
+void DigitalIntervalSeries::createIntervalsFromBool(std::vector<uint8_t> const& bool_vector)
+{
+    bool in_interval = false;
+    int start = 0;
+    for (int i = 0; i < bool_vector.size(); ++i) {
+        if (bool_vector[i] && !in_interval) {
+            start = i;
+            in_interval = true;
+        } else if (!bool_vector[i] && in_interval) {
+            _data.push_back(std::make_pair(start, i - 1));
+            in_interval = false;
+        }
+    }
+    if (in_interval) {
+        _data.push_back(std::make_pair(start, bool_vector.size() - 1));
+    }
+
+    _sortData();
+    notifyObservers();
+}
+
 void DigitalIntervalSeries::setEventAtTime(int time, bool event)
 {
     if (!event)
     {
         for (auto it = _data.begin(); it != _data.end(); ++it) {
             if (time >= it->first && time <= it->second) {
-                auto preceding_event = std::make_pair(it->first, time - 1);
-                auto following_event = std::make_pair(time + 1, it->second);
-                _data.erase(it);
-                _data.push_back(preceding_event);
-                _data.push_back(following_event);
+                if (time == it->first && time == it->second) {
+                    _data.erase(it);
+                } else if (time == it->first) {
+                    it->first = time + 1;
+                } else if (time == it->second) {
+                    it->second = time - 1;
+                } else {
+                    auto preceding_event = std::make_pair(it->first, time - 1);
+                    auto following_event = std::make_pair(time + 1, it->second);
+                    _data.erase(it);
+                    _data.push_back(preceding_event);
+                    _data.push_back(following_event);
 
-                _sortData();
-
-                notifyObservers();
-                return;
+                    _sortData();
+                    notifyObservers();
+                    return;
+                }
+            }
+        }
+    } else {
+        // Find the closest event.
+        //If adjacent, merge
+        //If not adjacent, add new event
+        int closest_index = find_closest_preceding_event(this, time);
+        if (closest_index == -1) {
+            _data.push_back(std::make_pair(time, time));
+        } else {
+            if (time == _data[closest_index].second + 1) {
+                _data[closest_index].second = time;
+                if (closest_index < _data.size() - 1 && time == _data[closest_index + 1].first - 1) {
+                    _data[closest_index].second = _data[closest_index + 1].second;
+                    _data.erase(_data.begin() + closest_index + 1);
+                }
+            } else if (time == _data[closest_index].first - 1) {
+                _data[closest_index].first = time;
+            } else {
+                _data.insert(_data.begin() + closest_index + 1, std::make_pair(time, time));
             }
         }
     }
+    _sortData();
+    notifyObservers();
 }
 
 void DigitalIntervalSeries::_sortData()

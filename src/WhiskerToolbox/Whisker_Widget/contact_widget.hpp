@@ -51,7 +51,7 @@ private:
     Ui::contact_widget *ui;
     std::shared_ptr<DataManager> _data_manager;
 
-    std::vector<Contact> _contact;
+    //std::vector<Contact> _contact;
     int _contact_start {0};
     bool _contact_epoch {false};
     QGraphicsScene* _scene;

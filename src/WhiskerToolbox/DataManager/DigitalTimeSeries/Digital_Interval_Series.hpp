@@ -30,6 +30,8 @@ public:
     bool isEventAtTime(int time) const;
     void setEventAtTime(int time, bool event);
 
+    void createIntervalsFromBool(std::vector<uint8_t> const& bool_vector);
+
     size_t size() {return _data.size();};
 
 private:
