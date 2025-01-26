@@ -3,6 +3,7 @@
 
 #include "Observer/Observer_Data.hpp"
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <utility>
