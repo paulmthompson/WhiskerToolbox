@@ -41,8 +41,7 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeSc
         _data_manager->setData<DigitalIntervalSeries>("Contact_Events");
     } else {
         std::cout << "Contact Events already exist" << std::endl;
-       //_contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount() + 1);
-        _assignContactFrameByFrame();
+        _calculateContactPeriods();
     }
 
     _scene = new QGraphicsScene();
@@ -75,11 +74,6 @@ void Contact_Widget::openWidget() {
     connect(ui->bounding_box_size, &QSpinBox::valueChanged,this, &Contact_Widget::_setBoundingBoxWidth);
 
     connect(ui->flip_contact_button, &QPushButton::clicked, this, &Contact_Widget::_flipContactButton);
-
-    // Total frame count is giving the index of the last frame, so we ant the size of contact to be + 1
-    //if (_contact.empty()) {
-    //    _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount() + 1);
-    //}
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Contact_Widget::_changeOutputDir);
 
@@ -256,14 +250,6 @@ void Contact_Widget::_contactButton() {
     auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
     auto contactIntervals = _data_manager->getData<DigitalIntervalSeries>("Contact_Events");
 
-    /*
-    if (_contact.size() != _data_manager->getTime()->getTotalFrameCount() + 1) {
-        std::cout << "The contact storage and number of frames are not equal" << std::endl;
-        std::cout << "It is possible the video was just loaded after opening the contact widget" << std::endl;
-        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount() + 1);
-    }
-    */
-
     // If we are in a contact epoch, we need to mark the termination frame and add those to block
     if (_contact_epoch) {
 
@@ -272,9 +258,6 @@ void Contact_Widget::_contactButton() {
         ui->contact_button->setText("Mark Contact");
 
         contactIntervals->addEvent(_contact_start, frame_num);
-        //for (int i = _contact_start; i < frame_num; i++) {
-        //    _contact[i] = Contact::Contact;
-        //}
 
     } else {
         // If we are not already in contact epoch, start one
@@ -293,14 +276,6 @@ void Contact_Widget::_noContactButton()
     auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
     auto contactIntervals = _data_manager->getData<DigitalIntervalSeries>("Contact_Events");
 
-    /*
-    if (_contact.size() != _data_manager->getTime()->getTotalFrameCount()) {
-        std::cout << "The contact storage and number of frames are not equal" << std::endl;
-        std::cout << "It is possible the video was just loaded after opening the contact widget" << std::endl;
-        _contact = std::vector<Contact>(_data_manager->getTime()->getTotalFrameCount());
-    }
-    */
-
     // If we are in a contact epoch, we need to mark the termination frame and add those to block
     if (_contact_epoch) {
 
@@ -309,7 +284,6 @@ void Contact_Widget::_noContactButton()
         ui->no_contact_button->setText("Mark No Contact");
 
         for (int i = _contact_start; i < frame_num; i++) {
-            //_contact[i] = Contact::NoContact;
             contactIntervals->setEventAtTime(i, false);
         }
 
@@ -334,7 +308,6 @@ void Contact_Widget::_saveContactFrameByFrame() {
 
     fout.open(frame_by_frame_output.append("contact_FRAME_BY_FRAME.csv").string(), std::fstream::out);
 
-    //for (auto &frame_contact: _contact) {
     for (auto frame = 0; frame < _data_manager->getTime()->getTotalFrameCount(); frame++) {
         if (contactIntervals->isEventAtTime(frame)) {
             fout << "Contact" << "\n";
@@ -414,58 +387,11 @@ void Contact_Widget::_buildContactTable()
     _updateContactWidgets(frame_id);
 }
 
-void Contact_Widget::_assignContactFrameByFrame()
-{
-
-    auto contactEvents = _data_manager->getData<DigitalIntervalSeries>("Contact_Events")->getDigitalIntervalSeries();
-    /*
-    for (auto event : contactEvents) {
-        for (int i=std::lround(event.first); i <= std::lround(event.second); i++)
-        {
-            _contact[i] = Contact::Contact;
-        }
-    }
-    */
-    _buildContactTable();
-    ui->total_contact_label->setText(QString::number(contactEvents.size()));
-}
-
 void Contact_Widget::_calculateContactPeriods()
 {
-    /*
-    bool in_contact = false;
-    int contact_start = 0;
-
-    auto contactEvents = std::vector<std::pair<float, float>>();
-
-    for (int i = 0; i < _contact.size(); i++)
-    {
-        if (in_contact)
-        {
-            if (_contact[i] == Contact::NoContact) {
-                contactEvents.push_back(std::make_pair(contact_start,i - 1));
-                in_contact = false;
-            }
-        } else {
-            if (_contact[i] == Contact::Contact)
-            {
-                in_contact = true;
-                contact_start = i;
-            }
-        }
-    }
-
-    if (in_contact)
-    {
-        contactEvents.push_back(std::make_pair(contact_start,static_cast<int>(_contact.size()-1)));
-    }
-
-    std::cout << "There are " << contactEvents.size() << " contact events" << std::endl;
-    */
 
     auto contactEvents = _data_manager->getData<DigitalIntervalSeries>("Contact_Events");
     ui->total_contact_label->setText(QString::number(contactEvents->size()));
-
 
     _buildContactTable();
 }
@@ -477,10 +403,8 @@ void Contact_Widget::_flipContactButton()
     auto contact = _data_manager->getData<DigitalIntervalSeries>("Contact_Events");
 
     if (contact->isEventAtTime(frame_num)) {
-        //_contact[frame_num] = Contact::NoContact;
         contact->setEventAtTime(frame_num, false);
     } else {
-        //_contact[frame_num] = Contact::Contact;
         contact->setEventAtTime(frame_num, true);
     }
     _drawContactRectangles(frame_num);
