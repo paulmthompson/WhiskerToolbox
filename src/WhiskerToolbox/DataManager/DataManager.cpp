@@ -228,8 +228,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             std::cout << "There are " <<  keypoints.size() << " keypoints " << std::endl;
 
             auto point_data = std::make_shared<PointData>(keypoints);
-            point_data->setMaskHeight(height);
-            point_data->setMaskWidth(width);
+            point_data->setImageSize(ImageSize{width,height});
 
             dm->setData<PointData>(keypoint_key, point_data);
 

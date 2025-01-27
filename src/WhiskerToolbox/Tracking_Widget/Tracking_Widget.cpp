@@ -62,8 +62,7 @@ void Tracking_Widget::openWidget() {
 
     auto point = _data_manager->getData<PointData>(_current_tracking_key);
 
-    point->setMaskHeight(media->getHeight());
-    point->setMaskWidth(media->getWidth());
+    point->setImageSize({media->getWidth(), media->getHeight()});
 
     _scene->addPointDataToScene(_current_tracking_key);
 

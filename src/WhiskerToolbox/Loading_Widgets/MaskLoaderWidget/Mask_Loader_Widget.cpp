@@ -111,7 +111,6 @@ void Mask_Loader_Widget::_loadSingleHDF5Mask(std::string filename, std::string m
         mask->addMaskAtTime(frames[i], x_coords[i], y_coords[i]);
     }
 
-    mask->setMaskHeight(ui->height_scaling->value());
-    mask->setMaskWidth(ui->width_scaling->value());
+    mask->setImageSize({ui->width_scaling->value(), ui->height_scaling->value()});
 
 }

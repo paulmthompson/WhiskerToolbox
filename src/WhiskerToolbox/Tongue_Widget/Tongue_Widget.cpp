@@ -93,8 +93,7 @@ void Tongue_Widget::_loadImgTongueMasks(){
     auto mask = _data_manager->getData<MaskData>(mask_key);
 
     auto media = _data_manager->getData<MediaData>("media");
-    mask->setMaskHeight(media->getHeight());
-    mask->setMaskWidth(media->getWidth());
+    mask->setImageSize({media->getWidth(), media->getHeight()});
 
     for (const auto & img_it : std::filesystem::directory_iterator(dir_name))
     {
@@ -154,7 +153,7 @@ void Tongue_Widget::_exportMasks() {
 
     for (int i : drawn){
         auto mask = mask_data->getMasksAtTime(i)[0];
-        QImage mask_img(mask_data->getMaskWidth(), mask_data->getMaskHeight(), QImage::Format_Grayscale8);
+        QImage mask_img(mask_data->getImageSize().getWidth(), mask_data->getImageSize().getHeight(), QImage::Format_Grayscale8);
         mask_img.fill(0);
         for (auto [x, y] : mask){
             mask_img.setPixel(static_cast<int>(x), static_cast<int>(y), 0xFFFFFF);

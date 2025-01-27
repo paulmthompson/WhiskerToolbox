@@ -2,6 +2,7 @@
 #define LINE_DATA_HPP
 
 #include "Points/points.hpp"
+#include "ImageSize/ImageSize.hpp"
 #include "lines.hpp"
 #include "LockState/LockState.hpp"
 #include "Observer/Observer_Data.hpp"
@@ -47,12 +48,16 @@ public:
         }
     }
 
+    ImageSize getImageSize() const { return _image_size; }
+    void setImageSize(const ImageSize& image_size) { _image_size = image_size; }
+
 protected:
 
 private:
     std::map<int,std::vector<Line2D>> _data;
     std::vector<Line2D> _empty {};
     LockState _lock_state;
+    ImageSize _image_size;
 };
 
 

@@ -55,6 +55,7 @@ add_library(DataManager SHARED
         LockState/LockState.hpp
         Observer/Observer_Data.hpp
         Observer/Observer_Data.cpp
+        ImageSize/ImageSize.hpp
 )
 
 target_include_directories(DataManager PRIVATE

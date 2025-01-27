@@ -419,8 +419,9 @@ void Media_Window::_plotMaskData()
         auto plot_color = _plot_color_with_alpha(_mask_config);
 
         auto mask = _data_manager->getData<MaskData>(mask_key);
-        float mask_height = static_cast<float>(mask->getMaskHeight());
-        float mask_width = static_cast<float>(mask->getMaskWidth());
+        auto image_size = mask->getImageSize();
+        float mask_height = static_cast<float>(image_size.getHeight());
+        float mask_width = static_cast<float>(image_size.getWidth());
 
         auto const& maskData = mask->getMasksAtTime(current_time);
 
@@ -472,13 +473,15 @@ void Media_Window::_plotPointData()
         auto xAspect = getXAspect();
         auto yAspect = getYAspect();
 
-        if (point->getMaskHeight() != -1) {
-            float mask_height = static_cast<float>(point->getMaskHeight());
+        auto image_size = point->getImageSize();
+
+        if (image_size.getHeight() != -1) {
+            float mask_height = static_cast<float>(image_size.getHeight());
             yAspect = _canvasHeight / mask_height;
         }
 
-        if (point->getMaskWidth() != -1) {
-            float mask_width = static_cast<float>(point->getMaskWidth());
+        if (image_size.getWidth() != -1) {
+            float mask_width = static_cast<float>(image_size.getWidth());
             xAspect = _canvasWidth / mask_width;
         }
 

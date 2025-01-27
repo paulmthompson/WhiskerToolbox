@@ -57,8 +57,7 @@ void Point_Loader_Widget::_loadSingleKeypoint()
 
     auto point = _data_manager->getData<PointData>(keypoint_key);
 
-    point->setMaskHeight(ui->height_scaling->value());
-    point->setMaskWidth(ui->width_scaling->value());
+    point->setImageSize({ui->width_scaling->value(),ui->height_scaling->value()});
 
     for (auto & [key, val] : keypoints) {
         point->addPointAtTime(key, val.x, val.y);

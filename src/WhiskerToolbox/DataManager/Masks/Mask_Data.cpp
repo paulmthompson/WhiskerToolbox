@@ -3,12 +3,6 @@
 #include <iostream>
 #include <string>
 
-MaskData::MaskData() :
-    _mask_height{256},
-    _mask_width{256}
-{
-
-}
 
 void MaskData::clearMasksAtTime(int const time)
 {

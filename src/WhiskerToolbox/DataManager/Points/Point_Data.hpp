@@ -1,6 +1,7 @@
 #ifndef POINT_DATA_HPP
 #define POINT_DATA_HPP
 
+#include "ImageSize/ImageSize.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "points.hpp"
 
@@ -25,11 +26,8 @@ public:
 
     std::vector<int> getTimesWithPoints() const;
 
-    int getMaskHeight() const {return _mask_height;};
-    int getMaskWidth() const {return _mask_width;};
-
-    void setMaskHeight(int const height) {_mask_height = height;};
-    void setMaskWidth(int const width) {_mask_width = width;};
+    ImageSize getImageSize() const { return _image_size; }
+    void setImageSize(const ImageSize& image_size) { _image_size = image_size; }
 
     std::vector<Point2D<float>> const& getPointsAtTime(int const time) const;
 
@@ -40,8 +38,7 @@ private:
     std::map<int,std::vector<Point2D<float>>> _data;
     std::vector<Point2D<float>> _empty;
 
-    int _mask_height {-1};
-    int _mask_width {-1};
+    ImageSize _image_size;
 
 };
 
