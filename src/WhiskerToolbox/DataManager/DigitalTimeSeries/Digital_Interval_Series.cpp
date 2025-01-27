@@ -17,47 +17,6 @@ std::vector<std::pair<float, float>> const & DigitalIntervalSeries::getDigitalIn
     return _data;
 }
 
-int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time)
-{
-    auto const events = digital_series->getDigitalIntervalSeries();
-
-    // Check if sorted
-    for (int i = 1; i < events.size(); ++i) {
-        if (events[i].first < events[i-1].first) {
-            throw std::runtime_error("DigitalIntervalSeries is not sorted");
-        }
-    }
-    int closest_index = -1;
-    for (int i = 0; i < events.size(); ++i) {
-        if (events[i].first <= time) {
-            closest_index = i;
-            if (time <= events[i].second) {
-                return i;
-            }
-        } else {
-            break;
-        }
-    }
-    return closest_index;
-}
-
-std::vector<std::pair<float, float>> load_digital_series_from_csv(std::string const& filename){
-    std::string csv_line;
-
-    std::fstream myfile;
-    myfile.open (filename, std::fstream::in);
-
-    float start, end;
-    auto output = std::vector<std::pair<float, float>>();
-    while (getline(myfile, csv_line)) {
-        std::stringstream ss(csv_line);
-        ss >> start >> end;
-        output.emplace_back(start, end);
-    }
-
-    return output;
-}
-
 bool DigitalIntervalSeries::isEventAtTime(int time) const
 {
     for (auto event : _data) {
@@ -142,4 +101,45 @@ void DigitalIntervalSeries::setEventAtTime(int time, bool event)
 void DigitalIntervalSeries::_sortData()
 {
     std::sort(_data.begin(), _data.end());
+}
+
+int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time)
+{
+    auto const events = digital_series->getDigitalIntervalSeries();
+
+    // Check if sorted
+    for (int i = 1; i < events.size(); ++i) {
+        if (events[i].first < events[i-1].first) {
+            throw std::runtime_error("DigitalIntervalSeries is not sorted");
+        }
+    }
+    int closest_index = -1;
+    for (int i = 0; i < events.size(); ++i) {
+        if (events[i].first <= time) {
+            closest_index = i;
+            if (time <= events[i].second) {
+                return i;
+            }
+        } else {
+            break;
+        }
+    }
+    return closest_index;
+}
+
+std::vector<std::pair<float, float>> load_digital_series_from_csv(std::string const& filename){
+    std::string csv_line;
+
+    std::fstream myfile;
+    myfile.open (filename, std::fstream::in);
+
+    float start, end;
+    auto output = std::vector<std::pair<float, float>>();
+    while (getline(myfile, csv_line)) {
+        std::stringstream ss(csv_line);
+        ss >> start >> end;
+        output.emplace_back(start, end);
+    }
+
+    return output;
 }

@@ -31,11 +31,20 @@ public:
     };
 
     void addEvent(float start, float end)
-    {
-        _data.emplace_back(start, end);
-        _sortData();
-        notifyObservers();
+{
+    for (auto& event : _data) {
+        if ((start <= event.second && end >= event.first) || (end == event.first) || (start == event.second)) {
+            event.first = std::min(event.first, start);
+            event.second = std::max(event.second, end);
+            _sortData();
+            notifyObservers();
+            return;
+        }
     }
+    _data.emplace_back(start, end);
+    _sortData();
+    notifyObservers();
+}
     std::vector<std::pair<float, float>> const& getDigitalIntervalSeries() const;
 
     bool isEventAtTime(int time) const;
