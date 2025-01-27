@@ -4,6 +4,7 @@
 #include "Observer/Observer_Data.hpp"
 
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <vector>
 #include <utility>
@@ -31,20 +32,32 @@ public:
     };
 
     void addEvent(float start, float end)
-{
-    for (auto& event : _data) {
-        if ((start <= event.second && end >= event.first) || (end == event.first) || (start == event.second)) {
-            event.first = std::min(event.first, start);
-            event.second = std::max(event.second, end);
-            _sortData();
-            notifyObservers();
+    {
+
+        if (start > end) {
+            std::cout << "Start time is greater than end time" << std::endl;
             return;
         }
+
+        auto start_overlap = _findOverlapWithStart(start, end);
+        auto end_overlap = _findOverlapWithEnd(start, end);
+
+        if (start_overlap != _data.end() && end_overlap != _data.end()) {
+            start = std::min(start, start_overlap->first);
+            end = std::max(end, end_overlap->second);
+            _data.erase(start_overlap, end_overlap + 1);
+        } else if (start_overlap != _data.end()) {
+            start = std::min(start, start_overlap->first);
+            _data.erase(start_overlap);
+        } else if (end_overlap != _data.end()) {
+            end = std::max(end, end_overlap->second);
+            _data.erase(end_overlap);
+        }
+
+        _data.emplace_back(start, end);
+        _sortData();
+        notifyObservers();
     }
-    _data.emplace_back(start, end);
-    _sortData();
-    notifyObservers();
-}
     std::vector<std::pair<float, float>> const& getDigitalIntervalSeries() const;
 
     bool isEventAtTime(int time) const;
@@ -58,6 +71,24 @@ private:
     std::vector<std::pair<float, float>> _data {};
 
     void _sortData();
+
+    auto _findOverlapWithStart(float start, float end) -> decltype(_data.begin()) {
+        for (auto it = _data.begin(); it != _data.end(); ++it) {
+            if (end >= it->first - 1 && start <= it->first) {
+                return it;
+            }
+        }
+        return _data.end();
+    }
+
+    auto _findOverlapWithEnd(float start, float end) -> decltype(_data.begin()) {
+        for (auto it = _data.begin(); it != _data.end(); ++it) {
+            if (start <= it->second + 1 && end >= it->second) {
+                return it;
+            }
+        }
+        return _data.end();
+    }
 
 };
 

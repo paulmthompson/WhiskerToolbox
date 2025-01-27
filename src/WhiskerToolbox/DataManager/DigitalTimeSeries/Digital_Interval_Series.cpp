@@ -74,25 +74,7 @@ void DigitalIntervalSeries::setEventAtTime(int time, bool event)
             }
         }
     } else {
-        // Find the closest event.
-        //If adjacent, merge
-        //If not adjacent, add new event
-        int closest_index = find_closest_preceding_event(this, time);
-        if (closest_index == -1) {
-            _data.push_back(std::make_pair(time, time));
-        } else {
-            if (time == _data[closest_index].second + 1) {
-                _data[closest_index].second = time;
-                if (closest_index < _data.size() - 1 && time == _data[closest_index + 1].first - 1) {
-                    _data[closest_index].second = _data[closest_index + 1].second;
-                    _data.erase(_data.begin() + closest_index + 1);
-                }
-            } else if (time == _data[closest_index].first - 1) {
-                _data[closest_index].first = time;
-            } else {
-                _data.insert(_data.begin() + closest_index + 1, std::make_pair(time, time));
-            }
-        }
+        addEvent(time, time);
     }
     _sortData();
     notifyObservers();
