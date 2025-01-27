@@ -12,6 +12,7 @@
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 
+#include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
@@ -117,6 +118,7 @@ void MainWindow::_createActions()
     connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
     connect(ui->actionLoad_Lines, &QAction::triggered, this, &MainWindow::openLineLoaderWidget);
     connect(ui->actionLoad_Intervals, &QAction::triggered, this, &MainWindow::openIntervalLoaderWidget);
+    connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
 }
 
 /*
@@ -624,6 +626,25 @@ void MainWindow::openIntervalLoaderWidget()
     }
 
     auto ptr = dynamic_cast<Digital_Interval_Loader_Widget*>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+void MainWindow::openDataManager()
+{
+    std::string const key = "DataManager_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto dm_widget = std::make_unique<DataManager_Widget>(
+            _data_manager,
+            this);
+
+        dm_widget->setObjectName(key);
+        registerDockWidget(key, dm_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(dm_widget);
+    }
+
+    auto ptr = dynamic_cast<DataManager_Widget*>(_widgets[key].get());
 
     showDockWidget(key);
 }

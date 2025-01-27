@@ -37,6 +37,10 @@ set(PROJECT_SOURCES
         Covariate_Widget/Covariate_Config.h
         Covariate_Widget/Covariate_Config.ui
 
+        DataManager_Widget/DataManager_Widget.hpp
+        DataManager_Widget/DataManager_Widget.cpp
+        DataManager_Widget/DataManager_Widget.ui
+
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
         Whisker_Widget/Whisker_Widget.cpp

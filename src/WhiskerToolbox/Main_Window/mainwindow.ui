@@ -84,6 +84,7 @@
     <property name="title">
      <string>Modules</string>
     </property>
+    <addaction name="actionData_Manager"/>
     <addaction name="actionWhisker_Tracking"/>
     <addaction name="actionLabel_Maker"/>
     <addaction name="actionAnalog_Viewer"/>
@@ -191,6 +192,11 @@
   <action name="actionLoad_Intervals">
    <property name="text">
     <string>Load Intervals</string>
+   </property>
+  </action>
+  <action name="actionData_Manager">
+   <property name="text">
+    <string>Data Manager</string>
    </property>
   </action>
  </widget>
