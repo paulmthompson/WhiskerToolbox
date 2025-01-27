@@ -13,6 +13,8 @@
 /**
  * @brief The AnalogTimeSeries class
  *
+ * Analog time series is used for storing continuous data
+ * The data may be sampled at irregular intervals as long as the time vector is provided
  *
  */
 class AnalogTimeSeries : public ObserverData {

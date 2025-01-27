@@ -8,6 +8,16 @@
 #include <vector>
 #include <utility>
 
+/**
+ * @brief Digital IntervalSeries class
+ *
+ * A digital interval series is a series of intervals where each interval is defined by a start and end time.
+ * (Compare to DigitalEventSeries which is a series of events at specific times)
+ *
+ * Use digital events where you wish to specify a beginning and end time for each event.
+ *
+ *
+ */
 class DigitalIntervalSeries : public ObserverData {
 public:
     DigitalIntervalSeries() = default;

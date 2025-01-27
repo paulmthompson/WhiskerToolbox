@@ -8,7 +8,13 @@
 #include <vector>
 #include <map>
 
-
+/**
+ * @brief The MaskData class
+ *
+ * MaskData is used for 2D data where the collection of 2D points has *no* order
+ * Compare to LineData where the collection of 2D points has an order
+ *
+ */
 class MaskData : public ObserverData {
 public:
     MaskData();

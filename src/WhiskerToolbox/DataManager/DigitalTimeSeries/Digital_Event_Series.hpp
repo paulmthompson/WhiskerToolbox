@@ -6,6 +6,16 @@
 #include <string>
 #include <vector>
 
+/**
+ * @brief Digital Event Series class
+ *
+ * A digital event series is a series of events where each event is defined by a time.
+ * (Compare to DigitalIntervalSeries which is a series of intervals with start and end times)
+ *
+ * Use digital events where you wish to specify a time for each event.
+ *
+ *
+ */
 class DigitalEventSeries : public ObserverData {
 public:
     DigitalEventSeries() = default;

@@ -9,7 +9,13 @@
 #include <map>
 #include <vector>
 
-
+/*
+ * @brief LineData
+ *
+ * LineData is used for storing 2D lines
+ * Line data implies that the elements in the line have an order
+ * Compare to MaskData where the elements in the mask have no order
+ */
 class LineData : public ObserverData {
 public:
     LineData() = default;

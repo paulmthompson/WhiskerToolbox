@@ -8,7 +8,13 @@
 #include <string>
 #include <vector>
 
-
+/*
+ * @brief PointData
+ *
+ * PointData is used for storing 2D points
+ * There are specialized classes for handling groupings of points
+ * LineData for ordered points, MaskData for unordered points
+ */
 class PointData : public ObserverData {
 public:
     PointData();
