@@ -46,6 +46,8 @@ private:
     std::map<int,std::vector<Point2D<float>>> _data;
     std::vector<Point2D<float>> _empty;
 
+
+
     ImageSize _image_size;
 
 };

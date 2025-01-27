@@ -17,6 +17,7 @@ public:
         _lock_states[time] = false;
     }
 
+    // Returns true if the time is locked, false otherwise
     bool isLocked(int time) const {
         auto it = _lock_states.find(time);
         if (it != _lock_states.end()) {

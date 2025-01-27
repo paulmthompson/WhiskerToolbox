@@ -2,6 +2,7 @@
 #define BEHAVIORTOOLBOX_ML_WIDGET_HPP
 
 #include <QMainWindow>
+
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -32,25 +33,16 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private slots:
-    void _refreshAvailableFeatures();
-    void _insertRows(const std::vector<std::string>& keys);
-    void _addFeatureToModel();
-    void _highlightAvailableFeature(int row, int column);
-    void _highlightModelFeature(int row, int column);
-    void _deleteFeatureFromModel();
-    void _addLabelToModel();
-    void _deleteLabel();
-
+    void _handleFeatureSelected(const QString& feature);
+    void _addFeatureToModel(const QString& feature, bool enabled);
+    void _removeSelectedFeature(const std::string key);
 private:
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
     MainWindow* _main_window;
     Ui::ML_Widget *ui;
-
     QString _highlighted_available_feature;
-    QString _highlighted_model_feature;
-    std::unordered_set<std::string> _model_features;
-    QString _selected_label;
+
 };
 
 
