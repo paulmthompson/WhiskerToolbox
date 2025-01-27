@@ -30,6 +30,11 @@ PointData::PointData(std::map<int,std::vector<Point2D<float>>> data)
 
 void PointData::clearPointsAtTime(int const time)
 {
+    if (_data.find(time) == _data.end())
+    {
+        return;
+    }
+
     _data[time].clear();
 }
 

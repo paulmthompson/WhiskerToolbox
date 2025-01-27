@@ -15,6 +15,9 @@
  * PointData is used for storing 2D points
  * There are specialized classes for handling groupings of points
  * LineData for ordered points, MaskData for unordered points
+ * Both Mask and LineData assume that the points form a single object
+ * A PointData object is used when the points are not part of a single object
+ * For example, keypoints for multiple body points could be a PointData object
  */
 class PointData : public ObserverData {
 public:
