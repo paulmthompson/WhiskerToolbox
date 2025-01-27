@@ -81,6 +81,7 @@ set(PROJECT_SOURCES
         ML_Widget/ML_Widget.ui
         ML_Widget/ML_Widget.hpp
         ML_Widget/ML_Widget.cpp
+        ML_Widget/mlpack_conversion.hpp
 
         Tracking_Widget/Tracking_Widget.ui
         Tracking_Widget/Tracking_Widget.hpp

@@ -25,7 +25,12 @@ public:
     PointData(std::map<int, Point2D<float>> data);
     PointData(std::map<int,std::vector<Point2D<float>>> data);
     void clearPointsAtTime(int const time);
+
     void addPointAtTime(int const time, float const x, float const y);
+    void addPointsAtTime(int const time, std::vector<Point2D<float>> const& points);
+
+    void overwritePointAtTime(int const time, float const x, float const y);
+    void overwritePointsAtTime(int const time, std::vector<Point2D<float>> const& points);
 
     std::vector<int> getTimesWithPoints() const;
 
