@@ -92,7 +92,7 @@ private:
 
 };
 
-std::vector<std::pair<float, float>> load_digital_series_from_csv(std::string const& filename);
+std::vector<std::pair<float, float>> load_digital_series_from_csv(std::string const& filename, char delimiter = ' ');
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time);
 

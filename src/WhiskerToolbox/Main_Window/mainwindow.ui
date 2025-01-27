@@ -57,6 +57,7 @@
      </property>
      <addaction name="actionLoad_Video"/>
      <addaction name="actionLoad_Images"/>
+     <addaction name="actionLoad_Intervals"/>
      <addaction name="actionLoad_Points"/>
      <addaction name="actionLoad_Lines"/>
      <addaction name="actionLoad_Masks"/>
@@ -185,6 +186,11 @@
   <action name="actionLoad_Lines">
    <property name="text">
     <string>Load Lines</string>
+   </property>
+  </action>
+  <action name="actionLoad_Intervals">
+   <property name="text">
+    <string>Load Intervals</string>
    </property>
   </action>
  </widget>

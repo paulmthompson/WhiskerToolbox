@@ -20,6 +20,7 @@
 #include "Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp"
 #include "Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp"
 #include "Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp"
+#include "Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "Media_Window.hpp"
 #include "ML_Widget/ML_Widget.hpp"
@@ -115,6 +116,7 @@ void MainWindow::_createActions()
     connect(ui->actionLoad_Points, &QAction::triggered, this, &MainWindow::openPointLoaderWidget);
     connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
     connect(ui->actionLoad_Lines, &QAction::triggered, this, &MainWindow::openLineLoaderWidget);
+    connect(ui->actionLoad_Intervals, &QAction::triggered, this, &MainWindow::openIntervalLoaderWidget);
 }
 
 /*
@@ -603,6 +605,25 @@ void MainWindow::openLineLoaderWidget()
     }
 
     auto ptr = dynamic_cast<Line_Loader_Widget*>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+void MainWindow::openIntervalLoaderWidget()
+{
+    std::string const key = "IntervalLoader_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto DigitalIntervalLoaderWidget = std::make_unique<Digital_Interval_Loader_Widget>(
+            _data_manager,
+            this);
+
+        DigitalIntervalLoaderWidget->setObjectName(key);
+        registerDockWidget(key, DigitalIntervalLoaderWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(DigitalIntervalLoaderWidget);
+    }
+
+    auto ptr = dynamic_cast<Digital_Interval_Loader_Widget*>(_widgets[key].get());
 
     showDockWidget(key);
 }

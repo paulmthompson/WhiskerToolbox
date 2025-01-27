@@ -109,7 +109,10 @@ int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int tim
     return closest_index;
 }
 
-std::vector<std::pair<float, float>> load_digital_series_from_csv(std::string const& filename){
+std::vector<std::pair<float, float>> load_digital_series_from_csv(
+        std::string const& filename,
+        char delimiter)
+{
     std::string csv_line;
 
     std::fstream myfile;
@@ -119,7 +122,7 @@ std::vector<std::pair<float, float>> load_digital_series_from_csv(std::string co
     auto output = std::vector<std::pair<float, float>>();
     while (getline(myfile, csv_line)) {
         std::stringstream ss(csv_line);
-        ss >> start >> end;
+        ss >> start >> delimiter >> end;
         output.emplace_back(start, end);
     }
 

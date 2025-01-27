@@ -6,7 +6,6 @@
 #include "mlpack_conversion.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
-#include "utils/qt_utilities.hpp"
 
 #include <QFileDialog>
 #include <QGraphicsPixmapItem>

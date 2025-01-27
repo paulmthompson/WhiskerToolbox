@@ -126,6 +126,10 @@ set(PROJECT_SOURCES
         Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.cpp
         Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.ui
 
+        Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp
+        Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.cpp
+        Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.ui
+
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
 
