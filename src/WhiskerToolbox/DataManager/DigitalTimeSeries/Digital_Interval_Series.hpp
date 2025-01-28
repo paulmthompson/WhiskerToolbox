@@ -74,7 +74,7 @@ private:
 
     auto _findOverlapWithStart(float start, float end) -> decltype(_data.begin()) {
         for (auto it = _data.begin(); it != _data.end(); ++it) {
-            if (end >= it->first - 1 && start <= it->first) {
+            if (end >= it->first -1  && start <= it->first) {
                 return it;
             }
         }
@@ -83,7 +83,7 @@ private:
 
     auto _findOverlapWithEnd(float start, float end) -> decltype(_data.begin()) {
         for (auto it = _data.begin(); it != _data.end(); ++it) {
-            if (start <= it->second + 1 && end >= it->second) {
+            if (start <= it->second +1 && end >= it->second) {
                 return it;
             }
         }

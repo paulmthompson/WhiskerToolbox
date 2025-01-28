@@ -438,19 +438,6 @@
       <string>Calculate</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="view_mask">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>140</y>
-       <width>75</width>
-       <height>24</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>View Mask</string>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_9">
      <property name="geometry">
       <rect>

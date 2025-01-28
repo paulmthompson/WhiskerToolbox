@@ -41,8 +41,11 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeSc
         _data_manager->setData<DigitalIntervalSeries>("Contact_Events");
     } else {
         std::cout << "Contact Events already exist" << std::endl;
-        _calculateContactPeriods();
     }
+
+    _data_manager->addCallbackToData("Contact_Events", [this]() {
+        _calculateContactPeriods();
+    });
 
     _scene = new QGraphicsScene();
     _scene->setSceneRect(0, 0, 650, 150);
@@ -267,8 +270,6 @@ void Contact_Widget::_contactButton() {
 
         ui->contact_button->setText("Mark Contact End");
     }
-
-    _calculateContactPeriods();
 }
 
 void Contact_Widget::_noContactButton()
@@ -295,8 +296,6 @@ void Contact_Widget::_noContactButton()
 
         ui->no_contact_button->setText("Mark No Contact End");
     }
-
-    _calculateContactPeriods();
 }
 
 void Contact_Widget::_saveContactFrameByFrame() {
@@ -365,8 +364,6 @@ void Contact_Widget::_loadContact() {
     _data_manager->getData<DigitalIntervalSeries>("Contact_Events")->createIntervalsFromBool(event);
 
     fin.close();
-
-    _calculateContactPeriods();
 }
 
 void Contact_Widget::_buildContactTable()
@@ -408,7 +405,6 @@ void Contact_Widget::_flipContactButton()
         contact->setEventAtTime(frame_num, true);
     }
     _drawContactRectangles(frame_num);
-    _calculateContactPeriods();
 }
 
 void Contact_Widget::_changeOutputDir()
