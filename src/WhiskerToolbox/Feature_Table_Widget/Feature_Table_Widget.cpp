@@ -27,7 +27,7 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget *parent)
     font.setPointSize( 6 );
     ui->available_features_table->horizontalHeader()->setFont( font );
 
-    connect(ui->refresh_dm_features, &QPushButton::clicked, this, &Feature_Table_Widget::_refreshFeatures);
+    //connect(ui->refresh_dm_features, &QPushButton::clicked, this, &Feature_Table_Widget::_refreshFeatures);
     connect(ui->available_features_table, &QTableWidget::cellClicked, this, &Feature_Table_Widget::_highlightFeature);
 }
 

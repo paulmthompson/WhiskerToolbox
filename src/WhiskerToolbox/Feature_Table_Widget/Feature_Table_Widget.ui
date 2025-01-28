@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>270</width>
+    <width>274</width>
     <height>310</height>
    </rect>
   </property>
@@ -39,13 +39,6 @@
      <attribute name="verticalHeaderDefaultSectionSize">
       <number>19</number>
      </attribute>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="refresh_dm_features">
-     <property name="text">
-      <string>Refresh</string>
-     </property>
     </widget>
    </item>
   </layout>
