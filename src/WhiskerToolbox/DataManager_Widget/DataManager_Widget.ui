@@ -52,6 +52,17 @@
     <string>Set Output Dir</string>
    </property>
   </widget>
+  <widget class="QStackedWidget" name="stackedWidget">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>220</y>
+     <width>331</width>
+     <height>181</height>
+    </rect>
+   </property>
+   <widget class="QWidget" name="blank"/>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>

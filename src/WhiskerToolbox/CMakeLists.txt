@@ -40,6 +40,12 @@ set(PROJECT_SOURCES
         DataManager_Widget/DataManager_Widget.hpp
         DataManager_Widget/DataManager_Widget.cpp
         DataManager_Widget/DataManager_Widget.ui
+        DataManager_Widget/Mask_Widget/Mask_Widget.hpp
+        DataManager_Widget/Mask_Widget/Mask_Widget.cpp
+        DataManager_Widget/Mask_Widget/Mask_Widget.ui
+        DataManager_Widget/Point_Widget/Point_Widget.hpp
+        DataManager_Widget/Point_Widget/Point_Widget.cpp
+        DataManager_Widget/Point_Widget/Point_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
