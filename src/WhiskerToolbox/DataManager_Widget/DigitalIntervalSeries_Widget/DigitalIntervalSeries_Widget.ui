@@ -26,6 +26,19 @@
     <string>Digital Interval</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="save_csv">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>80</y>
+     <width>131</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save as CSV</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

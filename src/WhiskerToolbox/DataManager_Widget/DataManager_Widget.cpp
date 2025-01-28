@@ -16,8 +16,7 @@
 DataManager_Widget::DataManager_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::DataManager_Widget),
-    _data_manager{data_manager},
-    _output_path{std::filesystem::current_path()}
+    _data_manager{data_manager}
 {
     ui->setupUi(this);
 
@@ -82,6 +81,7 @@ void DataManager_Widget::_changeOutputDir()
         return;
     }
 
-    _output_path = std::filesystem::path(dir_name.toStdString());
+    _data_manager->setOutputPath(dir_name.toStdString());
     ui->output_dir_label->setText(dir_name);
+
 }

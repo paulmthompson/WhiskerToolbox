@@ -2,7 +2,9 @@
 #define DIGITALINTERVALSERIES_WIDGET_HPP
 
 #include <QWidget>
+
 #include <memory>
+#include <filesystem>
 #include <string>
 
 namespace Ui { class DigitalIntervalSeries_Widget; }
@@ -17,13 +19,14 @@ public:
     ~DigitalIntervalSeries_Widget();
 
     void openWidget(); // Call to open the widget
+    void setOutputPath(std::filesystem::path path) {_output_path = path;};
 
 private:
     Ui::DigitalIntervalSeries_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
-
+    std::filesystem::path _output_path;
 private slots:
-               // Add any slots needed for handling user interactions
+    void _saveCSV();
 };
 
 #endif // DIGITALINTERVALSERIES_WIDGET_HPP

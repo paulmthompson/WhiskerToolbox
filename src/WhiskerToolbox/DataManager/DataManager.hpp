@@ -4,6 +4,7 @@
 #include "Media/Media_Data.hpp"
 #include "TimeFrame.hpp"
 
+#include <filesystem>
 #include <functional> // std::function
 #include <memory> // std::shared_ptr
 #include <iostream>
@@ -212,6 +213,12 @@ public:
 
     void addCallbackToData(std::string key, ObserverCallback callback);
 
+    void setOutputPath(const std::filesystem::path& output_path) { _output_path = output_path;};
+
+    std::filesystem::path getOutputPath() const {
+        return _output_path;
+    }
+
 private:
 
     //std::shared_ptr<TimeFrame> _time;
@@ -231,6 +238,8 @@ private:
     std::unordered_map<std::string, std::string> _time_frames;
 
     std::unordered_map<std::string, std::vector<std::string>> _dataGroups;
+
+    std::filesystem::path _output_path;
 
 };
 
