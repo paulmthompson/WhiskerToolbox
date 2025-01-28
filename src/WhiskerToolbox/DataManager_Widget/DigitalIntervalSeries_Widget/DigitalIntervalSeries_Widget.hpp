@@ -35,6 +35,7 @@ private slots:
     void _saveCSV();
     void _createIntervalButton();
     void _removeIntervalButton();
+    void _flipIntervalButton();
 };
 
 #endif // DIGITALINTERVALSERIES_WIDGET_HPP

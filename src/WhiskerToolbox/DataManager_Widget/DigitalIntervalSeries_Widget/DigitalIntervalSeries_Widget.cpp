@@ -19,6 +19,7 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     connect(ui->save_csv, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_saveCSV);
     connect(ui->create_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_createIntervalButton);
     connect(ui->remove_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_removeIntervalButton);
+    connect(ui->flip_single_frame, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_flipIntervalButton);
 }
 
 DigitalIntervalSeries_Widget::~DigitalIntervalSeries_Widget() {
@@ -133,5 +134,18 @@ void DigitalIntervalSeries_Widget::_removeIntervalButton()
         _interval_epoch = true;
 
         ui->remove_interval_button->setText("Mark Remove Interval End");
+    }
+}
+
+void DigitalIntervalSeries_Widget::_flipIntervalButton()
+{
+
+    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+    auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
+
+    if (intervals->isEventAtTime(frame_num)) {
+        intervals->setEventAtTime(frame_num, false);
+    } else {
+        intervals->setEventAtTime(frame_num, true);
     }
 }
