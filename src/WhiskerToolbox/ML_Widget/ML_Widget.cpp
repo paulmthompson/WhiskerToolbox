@@ -4,6 +4,7 @@
 
 #include "DataManager.hpp"
 #include "mlpack_conversion.hpp"
+#include "ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
@@ -25,6 +26,8 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
         ui(new Ui::ML_Widget)
 {
     ui->setupUi(this);
+
+    ui->stackedWidget->addWidget(new ML_Random_Forest_Widget(_data_manager));
 
     //Feature Table Widget
     ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
@@ -67,6 +70,8 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->outcome_table_widget, &Feature_Table_Widget::removeFeature, this, [this](const QString& feature) {
         ML_Widget::_addOutcomeToModel(feature, false);
     });
+
+    connect(ui->model_select_combo, &QComboBox::currentTextChanged, this, &ML_Widget::_selectModelType);
 }
 
 ML_Widget::~ML_Widget() {
@@ -158,6 +163,16 @@ void ML_Widget::_removeSelectedOutcome(const std::string key) {
         //ui->openGLWidget->removeDigitalIntervalSeries(key);
     } else {
         std::cout << "Feature type not supported" << std::endl;
+    }
+}
+
+void ML_Widget::_selectModelType(const QString& model_type)
+{
+    if (model_type == "Random Forest")
+    {
+        ui->stackedWidget->setCurrentIndex(0);
+    } else {
+        std::cout << "Unsupported Model Type Selected" << std::endl;
     }
 }
 

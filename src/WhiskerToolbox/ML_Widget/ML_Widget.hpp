@@ -44,6 +44,8 @@ private slots:
     void _handleOutcomeSelected(const QString& feature);
     void _addOutcomeToModel(const QString& feature, bool enabled);
     void _removeSelectedOutcome(const std::string key);
+
+    void _selectModelType(const QString& model_type);
 private:
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;

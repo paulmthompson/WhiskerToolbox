@@ -9,7 +9,7 @@
 
 #include <memory>
 
-arma::Row<double> convertToMlpackArray(
+inline arma::Row<double> convertToMlpackArray(
         const std::shared_ptr<DigitalIntervalSeries>& series,
         std::size_t length)
 {
@@ -26,7 +26,7 @@ arma::Row<double> convertToMlpackArray(
     return result;
 }
 
-void updateDigitalIntervalSeriesFromMlpackArray(
+inline void updateDigitalIntervalSeriesFromMlpackArray(
         const arma::Row<double>& array,
         std::shared_ptr<DigitalIntervalSeries> series)
 {
@@ -53,7 +53,7 @@ void updateDigitalIntervalSeriesFromMlpackArray(
 
 
 
-arma::Mat<double> convertToMlpackMatrix(
+inline arma::Mat<double> convertToMlpackMatrix(
         const std::shared_ptr<PointData>& pointData,
         std::size_t length)
 {
@@ -81,7 +81,7 @@ arma::Mat<double> convertToMlpackMatrix(
     return result;
 }
 
-void updatePointDataFromMlpackMatrix(
+inline void updatePointDataFromMlpackMatrix(
         const arma::Mat<double>& matrix,
         std::shared_ptr<PointData> pointData)
 {
