@@ -3,6 +3,12 @@
 #include "ui_DataManager_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 
 #include "Mask_Widget/Mask_Widget.hpp"
 #include "Point_Widget/Point_Widget.hpp"
@@ -10,6 +16,8 @@
 #include "AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp"
 #include "DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp"
 #include "DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp"
+
+
 
 #include <QFileDialog>
 
@@ -34,6 +42,7 @@ DataManager_Widget::DataManager_Widget(std::shared_ptr<DataManager> data_manager
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &DataManager_Widget::_changeOutputDir);
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataManager_Widget::_handleFeatureSelected);
+    connect(ui->new_data_button, &QPushButton::clicked, this, &DataManager_Widget::_createNewData);
 }
 
 DataManager_Widget::~DataManager_Widget() {
@@ -89,4 +98,31 @@ void DataManager_Widget::_changeOutputDir()
     _data_manager->setOutputPath(dir_name.toStdString());
     ui->output_dir_label->setText(dir_name);
 
+}
+
+void DataManager_Widget::_createNewData()
+{
+    auto key = ui->new_data_name->toPlainText().toStdString();
+
+    if (key.empty()) {
+        return;
+    }
+
+    auto type = ui->new_data_type_combo->currentText().toStdString();
+
+    if (type == "Point") {
+        _data_manager->setData<PointData>(key);
+    } else if (type == "Mask") {
+        _data_manager->setData<MaskData>(key);
+    } else if (type == "Line") {
+        _data_manager->setData<LineData>(key);
+    } else if (type == "Analog Time Series") {
+        _data_manager->setData<AnalogTimeSeries>(key);
+    } else if (type == "Interval") {
+        _data_manager->setData<DigitalIntervalSeries>(key);
+    } else if (type == "Event") {
+        _data_manager->setData<DigitalEventSeries>(key);
+    } else {
+        std::cout << "Unsupported data type" << std::endl;
+    }
 }

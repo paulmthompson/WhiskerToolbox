@@ -30,6 +30,7 @@ private:
 private slots:
     void _changeOutputDir();
     void _handleFeatureSelected(const QString& feature);
+    void _createNewData();
 
 };
 

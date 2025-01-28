@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>513</width>
-    <height>435</height>
+    <height>462</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,7 +27,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>210</y>
+     <y>170</y>
      <width>361</width>
      <height>16</height>
     </rect>
@@ -43,7 +43,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>180</y>
+     <y>190</y>
      <width>101</width>
      <height>24</height>
     </rect>
@@ -56,12 +56,104 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>220</y>
+     <y>260</y>
      <width>461</width>
      <height>181</height>
     </rect>
    </property>
    <widget class="QWidget" name="blank"/>
+  </widget>
+  <widget class="QPushButton" name="new_data_button">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>220</y>
+     <width>111</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Create New Data</string>
+   </property>
+  </widget>
+  <widget class="QPlainTextEdit" name="new_data_name">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>220</y>
+     <width>104</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="plainText">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="new_data_type_combo">
+   <property name="geometry">
+    <rect>
+     <x>280</x>
+     <y>220</y>
+     <width>69</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>Event</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Interval</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Analog Time Series</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Point</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Mask</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Line</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>200</y>
+     <width>49</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Name:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>200</y>
+     <width>49</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Type:</string>
+   </property>
   </widget>
  </widget>
  <customwidgets>
