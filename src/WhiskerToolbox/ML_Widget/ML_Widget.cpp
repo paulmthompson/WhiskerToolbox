@@ -53,6 +53,20 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->mask_table_widget, &Feature_Table_Widget::removeFeature, this, [this](const QString& feature) {
         ML_Widget::_addMaskToModel(feature, false);
     });
+
+    //Outcome Table Widget
+    ui->outcome_table_widget->setColumns({"Feature", "Enabled", "Type"});
+    ui->outcome_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData"});
+
+    ui->outcome_table_widget->setDataManager(_data_manager);
+
+    connect(ui->outcome_table_widget, &Feature_Table_Widget::featureSelected, this, &ML_Widget::_handleOutcomeSelected);
+    connect(ui->outcome_table_widget, &Feature_Table_Widget::addFeature, this, [this](const QString& feature) {
+        ML_Widget::_addOutcomeToModel(feature, true);
+    });
+    connect(ui->outcome_table_widget, &Feature_Table_Widget::removeFeature, this, [this](const QString& feature) {
+        ML_Widget::_addOutcomeToModel(feature, false);
+    });
 }
 
 ML_Widget::~ML_Widget() {
@@ -64,6 +78,7 @@ void ML_Widget::openWidget() {
 
     ui->feature_table_widget->populateTable();
     ui->mask_table_widget->populateTable();
+    ui->outcome_table_widget->populateTable();
 
     this->show();
 }
@@ -119,3 +134,30 @@ void ML_Widget::_removeSelectedMask(const std::string key) {
         std::cout << "Feature type not supported" << std::endl;
     }
 }
+
+void ML_Widget::_handleOutcomeSelected(const QString& feature)
+{
+    return;
+}
+
+void ML_Widget::_addOutcomeToModel(const QString& feature, bool enabled)
+{
+    if (enabled) {
+        //_plotSelectedFeature(feature.toStdString());
+    } else {
+        _removeSelectedOutcome(feature.toStdString());
+    }
+}
+
+void ML_Widget::_removeSelectedOutcome(const std::string key) {
+    if (_data_manager->getType(key) == "AnalogTimeSeries") {
+        //ui->openGLWidget->removeAnalogTimeSeries(key);
+    } else if (_data_manager->getType(key) == "PointData") {
+        //ui->openGLWidget->removeDigitalEventSeries(key);
+    } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
+        //ui->openGLWidget->removeDigitalIntervalSeries(key);
+    } else {
+        std::cout << "Feature type not supported" << std::endl;
+    }
+}
+
