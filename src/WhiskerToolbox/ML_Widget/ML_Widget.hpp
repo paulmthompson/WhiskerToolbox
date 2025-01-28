@@ -36,6 +36,10 @@ private slots:
     void _handleFeatureSelected(const QString& feature);
     void _addFeatureToModel(const QString& feature, bool enabled);
     void _removeSelectedFeature(const std::string key);
+
+    void _handleMaskSelected(const QString& feature);
+    void _addMaskToModel(const QString& feature, bool enabled);
+    void _removeSelectedMask(const std::string key);
 private:
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
