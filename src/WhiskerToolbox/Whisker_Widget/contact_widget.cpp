@@ -322,19 +322,16 @@ void Contact_Widget::_saveContactFrameByFrame() {
 
 void Contact_Widget::_saveContactBlocks() {
 
-    std::fstream fout;
+    auto filename = "contact_BLOCKS.csv";
+    auto key = "Contact_Events";
 
     auto block_output = _output_path;
+    block_output.append(filename);
 
-    fout.open(block_output.append("contact_BLOCKS.csv").string(), std::fstream::out);
+    auto contactEvents = _data_manager->getData<DigitalIntervalSeries>(key)->getDigitalIntervalSeries();
 
-    auto contactEvents = _data_manager->getData<DigitalIntervalSeries>("Contact_Events")->getDigitalIntervalSeries();
+    save_intervals(contactEvents, block_output.string());
 
-    for (auto & event : contactEvents) {
-        fout << std::round(event.start) << "," << std::round(event.end) << "\n";
-    }
-
-    fout.close();
 }
 
 void Contact_Widget::_loadContact() {

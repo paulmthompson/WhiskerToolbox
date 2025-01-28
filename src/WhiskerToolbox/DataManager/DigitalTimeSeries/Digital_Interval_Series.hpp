@@ -94,6 +94,9 @@ private:
 
 std::vector<Interval> load_digital_series_from_csv(std::string const& filename, char delimiter = ' ');
 
+void save_intervals(std::vector<Interval> const & intervals,
+                    std::string const block_output);
+
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time);
 
 #endif // DIGITAL_INTERVAL_SERIES_HPP

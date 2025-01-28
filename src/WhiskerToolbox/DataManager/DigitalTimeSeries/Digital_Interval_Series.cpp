@@ -114,6 +114,21 @@ int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int tim
     return closest_index;
 }
 
+void save_intervals(
+    std::vector<Interval> const & intervals,
+    std::string const block_output
+    )
+{
+    std::fstream fout;
+    fout.open(block_output, std::fstream::out);
+
+    for (auto & interval : intervals) {
+        fout << std::round(interval.start) << "," << std::round(interval.end) << "\n";
+    }
+
+    fout.close();
+}
+
 std::vector<Interval> load_digital_series_from_csv(
         std::string const& filename,
         char delimiter)
