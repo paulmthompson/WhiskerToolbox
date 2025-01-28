@@ -26,11 +26,15 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     std::string _active_key;
     int _callback_id;
+    bool _interval_epoch {false};
+    int _interval_start {0};
 
     void _calculateIntervals();
     void _buildIntervalTable();
 private slots:
     void _saveCSV();
+    void _createIntervalButton();
+    void _removeIntervalButton();
 };
 
 #endif // DIGITALINTERVALSERIES_WIDGET_HPP

@@ -17,6 +17,8 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     ui->setupUi(this);
 
     connect(ui->save_csv, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_saveCSV);
+    connect(ui->create_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_createIntervalButton);
+    connect(ui->remove_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_removeIntervalButton);
 }
 
 DigitalIntervalSeries_Widget::~DigitalIntervalSeries_Widget() {
@@ -77,4 +79,59 @@ void DigitalIntervalSeries_Widget::_buildIntervalTable()
 
     }
 
+}
+
+void DigitalIntervalSeries_Widget::_createIntervalButton()
+{
+    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+
+
+    //Convert to clock coordinates
+    //auto time_key = _data_manager->getTimeFrame(_active_key);
+    //auto time_frame = _data_manager->getTime(time_key);
+
+    //frame_num = time_frame->getTimeAtIndex(frame_num);
+
+    auto contactIntervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
+
+    if (_interval_epoch) {
+
+        _interval_epoch = false;
+
+        ui->create_interval_button->setText("Create Interval");
+
+        contactIntervals->addEvent(_interval_start, frame_num);
+
+    } else {
+        _interval_start = frame_num;
+
+        _interval_epoch = true;
+
+        ui->create_interval_button->setText("Mark Interval End");
+    }
+}
+
+void DigitalIntervalSeries_Widget::_removeIntervalButton()
+{
+    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+    auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
+
+    // If we are in a contact epoch, we need to mark the termination frame and add those to block
+    if (_interval_epoch) {
+
+        _interval_epoch = false;
+
+        ui->remove_interval_button->setText("Remove Interval");
+
+        for (int i = _interval_start; i < frame_num; i++) {
+            intervals->setEventAtTime(i, false);
+        }
+
+    } else {
+        _interval_start = frame_num;
+
+        _interval_epoch = true;
+
+        ui->remove_interval_button->setText("Mark Remove Interval End");
+    }
 }
