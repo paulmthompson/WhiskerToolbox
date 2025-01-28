@@ -55,6 +55,9 @@ set(PROJECT_SOURCES
         DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp
         DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.cpp
         DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.ui
+        DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp
+        DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.cpp
+        DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
