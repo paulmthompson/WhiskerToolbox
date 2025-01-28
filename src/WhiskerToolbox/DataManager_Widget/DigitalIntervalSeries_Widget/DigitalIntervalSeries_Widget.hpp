@@ -4,7 +4,6 @@
 #include <QWidget>
 
 #include <memory>
-#include <filesystem>
 #include <string>
 
 namespace Ui { class DigitalIntervalSeries_Widget; }
@@ -19,12 +18,17 @@ public:
     ~DigitalIntervalSeries_Widget();
 
     void openWidget(); // Call to open the widget
-    void setOutputPath(std::filesystem::path path) {_output_path = path;};
+
+    void setActiveKey(std::string key);
 
 private:
     Ui::DigitalIntervalSeries_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
-    std::filesystem::path _output_path;
+    std::string _active_key;
+    int _callback_id;
+
+    void _calculateIntervals();
+    void _buildIntervalTable();
 private slots:
     void _saveCSV();
 };

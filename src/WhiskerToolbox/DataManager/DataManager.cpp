@@ -34,6 +34,7 @@ DataManager::DataManager()
     _data["media"] = std::make_shared<MediaData>();
 
     setTimeFrame("media", "time");
+    _output_path = std::filesystem::current_path();
 }
 
 void DataManager::setTimeFrame(std::string data_key, std::string time_key)
@@ -140,12 +141,27 @@ bool checkRequiredFields(const json& item, const std::vector<std::string>& requi
     return true;
 }
 
-void DataManager::addCallbackToData(std::string key, ObserverCallback callback) {
+int DataManager::addCallbackToData(std::string key, ObserverCallback callback) {
+
+   int id = -1;
+
     if (_data.find(key) != _data.end()) {
         auto data = _data[key];
 
-        std::visit([callback](auto& x) {
-                x.get()->addObserver(callback);
+        id = std::visit([callback](auto& x) {
+                return x.get()->addObserver(callback);
+        }, data);
+    }
+
+    return id;
+}
+
+void DataManager::removeCallbackFromData(std::string key, int callback_id) {
+    if (_data.find(key) != _data.end()) {
+        auto data = _data[key];
+
+        std::visit([callback_id](auto& x) {
+            x.get()->removeObserver(callback_id);
         }, data);
     }
 }

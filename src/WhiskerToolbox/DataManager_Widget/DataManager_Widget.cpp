@@ -50,6 +50,8 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
 {
     _highlighted_available_feature = feature;
 
+    auto key = feature.toStdString();
+
     auto feature_type = _data_manager->getType(feature.toStdString());
 
     if (feature_type == "PointData") {
@@ -61,7 +63,10 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
     } else if (feature_type == "AnalogTimeSeries") {
         ui->stackedWidget->setCurrentIndex(4);
     } else if (feature_type == "DigitalIntervalSeries") {
+
         ui->stackedWidget->setCurrentIndex(5);
+        dynamic_cast<DigitalIntervalSeries_Widget*>(ui->stackedWidget->widget(5))->setActiveKey(key);
+
     } else if (feature_type == "DigitalEventSeries") {
         ui->stackedWidget->setCurrentIndex(6);
     } else {

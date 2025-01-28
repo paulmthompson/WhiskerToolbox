@@ -211,7 +211,8 @@ public:
         }
     }
 
-    void addCallbackToData(std::string key, ObserverCallback callback);
+    int addCallbackToData(std::string key, ObserverCallback callback);
+    void removeCallbackFromData(std::string key, int callback_id);
 
     void setOutputPath(const std::filesystem::path& output_path) { _output_path = output_path;};
 
