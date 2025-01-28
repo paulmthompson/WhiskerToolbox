@@ -16,8 +16,8 @@ arma::Row<double> convertToMlpackArray(
     arma::Row<double> result(length, arma::fill::zeros);
 
     for (const auto& interval : series->getDigitalIntervalSeries()) {
-        int start = static_cast<int>(interval.first);
-        int end = static_cast<int>(interval.second);
+        int start = static_cast<int>(interval.start);
+        int end = static_cast<int>(interval.end);
         for (std::size_t i = start; i <= end && i < length; ++i) {
             result[i] = 1.0;
         }

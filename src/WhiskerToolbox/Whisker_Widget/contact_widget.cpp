@@ -331,7 +331,7 @@ void Contact_Widget::_saveContactBlocks() {
     auto contactEvents = _data_manager->getData<DigitalIntervalSeries>("Contact_Events")->getDigitalIntervalSeries();
 
     for (auto & event : contactEvents) {
-        fout << std::round(event.first) << "," << std::round(event.second) << "\n";
+        fout << std::round(event.start) << "," << std::round(event.end) << "\n";
     }
 
     fout.close();
@@ -374,8 +374,8 @@ void Contact_Widget::_buildContactTable()
     for (int i=0; i < contactEvents.size(); i++)
     {
         ui->contact_table->insertRow(ui->contact_table->rowCount());
-        ui->contact_table->setItem(i,0,new QTableWidgetItem(QString::number(std::round(contactEvents[i].first))));
-        ui->contact_table->setItem(i,1,new QTableWidgetItem(QString::number(std::round(contactEvents[i].second))));
+        ui->contact_table->setItem(i,0,new QTableWidgetItem(QString::number(std::round(contactEvents[i].start))));
+        ui->contact_table->setItem(i,1,new QTableWidgetItem(QString::number(std::round(contactEvents[i].end))));
 
     }
 

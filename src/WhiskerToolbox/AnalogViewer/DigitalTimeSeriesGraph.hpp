@@ -1,10 +1,14 @@
 #ifndef DIGITAL_TIME_SERIES_GRAPH_HPP
 #define DIGITAL_TIME_SERIES_GRAPH_HPP
 
-#include <vector>
+#include "DataManager/DigitalTimeSeries/interval_data.hpp"
 
 #include "jkqtplotter/jkqtplotter.h"
 #include "jkqtplotter/graphs/jkqtprange.h"
+
+#include <vector>
+
+
 
 class DigitalTimeSeriesGraph : public JKQTPPlotElement {
     
@@ -13,7 +17,7 @@ public:
     ~DigitalTimeSeriesGraph();
 
 
-    void load_digital_vector(std::vector<std::pair<float, float>> digital_vector);
+    void load_digital_vector(std::vector<Interval> digital_vector);
 
 
     void draw(JKQTPEnhancedPainter& painter) override;

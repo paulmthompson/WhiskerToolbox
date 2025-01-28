@@ -185,8 +185,8 @@ void OpenGLWidget::drawDigitalIntervalSeries()
 
         for (const auto& interval : intervals) {
 
-            float start = time_frame->getTimeAtIndex(interval.first);
-            float end = time_frame->getTimeAtIndex(interval.second);
+            float start = time_frame->getTimeAtIndex(interval.start);
+            float end = time_frame->getTimeAtIndex(interval.end);
             if (end < start_time || start > end_time) {
                 continue;
             }

@@ -29,6 +29,7 @@ add_library(DataManager SHARED
 
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
+        DigitalTimeSeries/interval_data.hpp
 
         DigitalTimeSeries/Digital_Event_Series.hpp
         DigitalTimeSeries/Digital_Event_Series.cpp

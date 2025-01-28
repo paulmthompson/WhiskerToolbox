@@ -17,10 +17,12 @@ DigitalTimeSeriesGraph::DigitalTimeSeriesGraph(JKQTBasePlotter *parent):
  * @brief Load a digital time series into the graph and create a vertical range for each ON range
  * @param digital_vector Vector of pairs of floats representing the start and end of the ON range
  */
-void DigitalTimeSeriesGraph::load_digital_vector(std::vector<std::pair<float, float>> digital_vector){
+void DigitalTimeSeriesGraph::load_digital_vector(std::vector<Interval> digital_vector){
     bool first = false;
     QColor color;
-    for (auto [start, end] : digital_vector){
+    for (auto interval : digital_vector){
+        auto start = interval.start;
+        auto end = interval.end;
         JKQTPVerticalRange* graph = new JKQTPVerticalRange(_parent);
         graph->setPlotCenterLine(false);
         if (!first){

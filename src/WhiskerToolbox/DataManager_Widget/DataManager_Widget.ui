@@ -13,7 +13,25 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <widget class="Feature_Table_Widget" name="widget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>20</y>
+     <width>341</width>
+     <height>131</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Feature_Table_Widget</class>
+   <extends>QWidget</extends>
+   <header>Feature_Table_Widget/Feature_Table_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
