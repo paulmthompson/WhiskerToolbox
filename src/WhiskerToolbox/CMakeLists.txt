@@ -46,6 +46,15 @@ set(PROJECT_SOURCES
         DataManager_Widget/Point_Widget/Point_Widget.hpp
         DataManager_Widget/Point_Widget/Point_Widget.cpp
         DataManager_Widget/Point_Widget/Point_Widget.ui
+        DataManager_Widget/Line_Widget/Line_Widget.hpp
+        DataManager_Widget/Line_Widget/Line_Widget.cpp
+        DataManager_Widget/Line_Widget/Line_Widget.ui
+        DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp
+        DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.cpp
+        DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.ui
+        DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp
+        DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.cpp
+        DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui

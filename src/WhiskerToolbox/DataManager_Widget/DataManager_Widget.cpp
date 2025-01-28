@@ -6,6 +6,9 @@
 
 #include "Mask_Widget/Mask_Widget.hpp"
 #include "Point_Widget/Point_Widget.hpp"
+#include "Line_Widget/Line_Widget.hpp"
+#include "AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp"
+#include "DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp"
 
 #include <QFileDialog>
 
@@ -24,6 +27,9 @@ DataManager_Widget::DataManager_Widget(std::shared_ptr<DataManager> data_manager
 
     ui->stackedWidget->addWidget(new Point_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Mask_Widget(_data_manager));
+    ui->stackedWidget->addWidget(new Line_Widget(_data_manager));
+    ui->stackedWidget->addWidget(new AnalogTimeSeries_Widget(_data_manager));
+    ui->stackedWidget->addWidget(new DigitalIntervalSeries_Widget(_data_manager));
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &DataManager_Widget::_changeOutputDir);
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataManager_Widget::_handleFeatureSelected);
@@ -51,6 +57,12 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
     } else if (feature_type == "MaskData")
     {
         ui->stackedWidget->setCurrentIndex(2);
+    } else if (feature_type == "LineData") {
+        ui->stackedWidget->setCurrentIndex(3);
+    } else if (feature_type == "AnalogTimeSeries") {
+        ui->stackedWidget->setCurrentIndex(4);
+    } else if (feature_type == "DigitalIntervalSeries") {
+        ui->stackedWidget->setCurrentIndex(5);
     } else {
         std::cout << "Unsupported feature type" << std::endl;
     }
