@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="Feature_Table_Widget" name="widget" native="true">
+  <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
    <property name="geometry">
     <rect>
      <x>30</x>
@@ -21,6 +21,35 @@
      <width>341</width>
      <height>131</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="output_dir_label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>210</y>
+     <width>361</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="output_dir_button">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>180</y>
+     <width>101</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Set Output Dir</string>
    </property>
   </widget>
  </widget>

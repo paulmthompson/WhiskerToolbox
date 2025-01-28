@@ -12,6 +12,6 @@ TEST_CASE("Digital Interval Overlap Left", "[DataManager]") {
     auto data = dis.getDigitalIntervalSeries();
 
     REQUIRE(data.size() == 1);
-    REQUIRE(data[0].first == 0);
-    REQUIRE(data[0].second == 15);
+    REQUIRE(data[0].start == 0);
+    REQUIRE(data[0].end == 15);
 }

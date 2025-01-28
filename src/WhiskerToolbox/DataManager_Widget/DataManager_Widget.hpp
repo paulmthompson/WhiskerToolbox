@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+
+#include <filesystem>
 #include <memory>
 #include <string>
 
@@ -19,11 +21,16 @@ public:
     DataManager_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);
     ~DataManager_Widget();
 
+    void openWidget(); // Call
 private:
     Ui::DataManager_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
+    std::filesystem::path _output_path;
+    QString _highlighted_available_feature;
 
 private slots:
+    void _changeOutputDir();
+    void _handleFeatureSelected(const QString& feature);
 
 };
 
