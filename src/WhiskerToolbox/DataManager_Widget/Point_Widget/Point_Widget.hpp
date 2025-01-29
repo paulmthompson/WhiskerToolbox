@@ -22,6 +22,8 @@ public:
     void setActiveKey(const std::string &key);
     void assignPoint(qreal x,qreal y);
 
+    void updateTable();
+
 private:
     Ui::Point_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;

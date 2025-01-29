@@ -80,6 +80,10 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
             _scene->UpdateCanvas();
         }));
 
+        _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [point_widget]() {
+            point_widget->updateTable();
+        }));
+
     } else if (feature_type == "MaskData") {
         ui->stackedWidget->setCurrentIndex(2);
     } else if (feature_type == "LineData") {

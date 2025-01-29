@@ -38,6 +38,11 @@ void Point_Widget::openWidget()
 void Point_Widget::setActiveKey(const std::string &key)
 {
     _active_key = key;
+    updateTable();
+}
+
+void Point_Widget::updateTable()
+{
     auto points = _data_manager->getData<PointData>(_active_key)->getData();
     _point_table_model->setPoints(points);
 }
@@ -73,8 +78,6 @@ void Point_Widget::assignPoint(qreal x_media, qreal y_media) {
         auto point = _data_manager->getData<PointData>(_active_key);
         point->clearPointsAtTime(frame_id);
         point->addPointAtTime(frame_id, y_media, x_media);
-
-        std::cout << "Point added at " << x_media << "," << y_media << std::endl;
 
         break;
     }
