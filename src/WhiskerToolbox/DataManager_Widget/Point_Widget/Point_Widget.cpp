@@ -6,6 +6,7 @@
 #include "PointTableModel.hpp"
 
 #include <QFileDialog>
+#include <QPlainTextEdit>
 #include <QPushButton>
 
 #include <fstream>
@@ -49,7 +50,7 @@ void Point_Widget::updateTable()
 
 void Point_Widget::_saveKeypointCSV()
 {
-    const auto filename = "keypoint.csv";
+    const auto filename = ui->save_filename->toPlainText().toStdString();
 
     std::fstream fout;
 
