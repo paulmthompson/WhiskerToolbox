@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -11,7 +10,6 @@
 class DataManager;
 class MainWindow;
 class Media_Window;
-class QGraphicsScene;
 class TimeScrollBar;
 
 namespace Ui {class Tracking_Widget;}
@@ -46,15 +44,11 @@ private:
     MainWindow* _main_window;
     Ui::Tracking_Widget *ui;
 
-    QGraphicsScene* _selected_scene;
-
     enum Selection_Type {Tracking_Select};
 
     Tracking_Widget::Selection_Type _selection_mode {Tracking_Select};
 
     int _previous_frame {0};
-
-    std::filesystem::path _output_path;
 
     std::string _current_tracking_key;
 
@@ -62,8 +56,6 @@ private:
 
 private slots:
     void _clickedInVideo(qreal x,qreal y);
-    void _saveKeypointCSV();
-    void _changeOutputDir();
 };
 
 #endif //BEHAVIORTOOLBOX_TRACKING_WIDGET_HPP

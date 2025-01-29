@@ -27,8 +27,7 @@ Tracking_Widget::Tracking_Widget(Media_Window *scene,
         _data_manager{data_manager},
         _time_scrollbar{time_scrollbar},
         _main_window{mainwindow},
-        ui(new Ui::Tracking_Widget),
-        _output_path{std::filesystem::current_path()}
+        ui(new Ui::Tracking_Widget)
 {
     ui->setupUi(this);
 
@@ -36,11 +35,6 @@ Tracking_Widget::Tracking_Widget(Media_Window *scene,
 
     _current_tracking_key = "tracking_point";
 
-    _selected_scene = new QGraphicsScene();
-    _selected_scene->setSceneRect(0, 0, 150, 150);
-
-    ui->graphicsView->setScene(_selected_scene);
-    ui->graphicsView->show();
 }
 
 Tracking_Widget::~Tracking_Widget() {
@@ -69,9 +63,6 @@ void Tracking_Widget::openWidget() {
     _data_manager->addCallbackToData(_current_tracking_key, [this]() {
         _scene->UpdateCanvas();
     });
-
-    connect(ui->output_dir_button, &QPushButton::clicked, this, &Tracking_Widget::_changeOutputDir);
-    connect(ui->save_csv_button, &QPushButton::clicked, this, &Tracking_Widget::_saveKeypointCSV);
 
     this->show();
 }
@@ -160,38 +151,4 @@ void Tracking_Widget::_propagateLabel(int frame_id)
         _data_manager->getData<PointData>(_current_tracking_key)->clearPointsAtTime(i);
         _data_manager->getData<PointData>(_current_tracking_key)->addPointAtTime(i, prev_points[0].x, prev_points[0].y);
     }
-}
-
-void Tracking_Widget::_changeOutputDir()
-{
-    QString dir_name = QFileDialog::getExistingDirectory(
-        this,
-        "Select Directory",
-        QDir::currentPath());
-
-    if (dir_name.isEmpty()) {
-        return;
-    }
-
-    _output_path = std::filesystem::path(dir_name.toStdString());
-    ui->output_dir_label->setText(dir_name);
-}
-
-void Tracking_Widget::_saveKeypointCSV() {
-
-    std::fstream fout;
-
-    auto frame_by_frame_output = _output_path;
-
-    fout.open(frame_by_frame_output.append("keypoint.csv").string(), std::fstream::out);
-
-    auto point_data =_data_manager->getData<PointData>(_current_tracking_key)->getData();
-
-    for (auto& [key, val] : point_data)
-    {
-        fout << key << "," << std::to_string(val[0].x) << "," << std::to_string(val[0].y) << "\n";
-    }
-
-    fout.close();
-
 }

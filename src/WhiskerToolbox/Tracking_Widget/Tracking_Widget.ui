@@ -53,16 +53,6 @@
      <string>( , )</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="graphicsView">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>230</y>
-      <width>256</width>
-      <height>192</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QSpinBox" name="spinBox">
     <property name="geometry">
      <rect>
@@ -84,32 +74,6 @@
     </property>
     <property name="text">
      <string>Focus Bounding Box</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="save_csv_button">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>120</y>
-      <width>131</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Save to CSV</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="output_dir_button">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>160</y>
-      <width>131</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Select Output Dir</string>
     </property>
    </widget>
    <widget class="QLabel" name="output_dir_label">
