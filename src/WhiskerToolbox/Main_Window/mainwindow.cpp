@@ -586,6 +586,7 @@ void MainWindow::openDataManager()
 
     if (_widgets.find(key) == _widgets.end()) {
         auto dm_widget = std::make_unique<DataManager_Widget>(
+            _scene,
             _data_manager,
             this);
 

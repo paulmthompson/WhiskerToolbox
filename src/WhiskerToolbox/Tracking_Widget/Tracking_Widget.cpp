@@ -45,7 +45,7 @@ void Tracking_Widget::openWidget() {
 
     std::cout << "Tracking Widget Opened" << std::endl;
 
-    connect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
+    connect(_scene, SIGNAL(leftClickMedia(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
 
     if (_data_manager->getData<PointData>(_current_tracking_key))
     {
@@ -70,15 +70,10 @@ void Tracking_Widget::openWidget() {
 void Tracking_Widget::closeEvent(QCloseEvent *event) {
     std::cout << "Close event detected" << std::endl;
 
-    disconnect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
+    disconnect(_scene, SIGNAL(leftClickMedia(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
 }
 
-void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
-
-    auto scene = dynamic_cast<Media_Window*>(sender());
-
-    float x_media = x_canvas / scene->getXAspect();
-    float y_media = y_canvas / scene->getYAspect();
+void Tracking_Widget::_clickedInVideo(qreal x_media, qreal y_media) {
 
     auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
@@ -94,7 +89,6 @@ void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         point->clearPointsAtTime(frame_id);
         point->addPointAtTime(frame_id, y_media, x_media);
 
-        scene->UpdateCanvas();
         break;
     }
     default:

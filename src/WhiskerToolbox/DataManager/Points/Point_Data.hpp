@@ -46,9 +46,11 @@ private:
     std::map<int,std::vector<Point2D<float>>> _data;
     std::vector<Point2D<float>> _empty;
 
-
-
     ImageSize _image_size;
+
+    void _clearPointsAtTime(int const time);
+    void _addPointAtTime(int const time, float const x, float const y);
+    void _addPointsAtTime(int const time, std::vector<Point2D<float>> const& points);
 
 };
 

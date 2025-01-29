@@ -17,13 +17,19 @@
 #include "DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp"
 #include "DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp"
 
+#include "Media_Window/Media_Window.hpp"
+
 
 
 #include <QFileDialog>
 
-DataManager_Widget::DataManager_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
+DataManager_Widget::DataManager_Widget(
+    Media_Window* scene,
+    std::shared_ptr<DataManager> data_manager,
+    QWidget *parent) :
     QWidget(parent),
     ui(new Ui::DataManager_Widget),
+    _scene{scene},
     _data_manager{data_manager}
 {
     ui->setupUi(this);
@@ -66,7 +72,13 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
     if (feature_type == "PointData") {
 
         ui->stackedWidget->setCurrentIndex(1);
-        dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(1))->setActiveKey(key);
+        auto point_widget = dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(1));
+        point_widget->setActiveKey(key);
+        connect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
+
+        _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
+            _scene->UpdateCanvas();
+        }));
 
     } else if (feature_type == "MaskData") {
         ui->stackedWidget->setCurrentIndex(2);
@@ -81,6 +93,40 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
 
     } else if (feature_type == "DigitalEventSeries") {
         ui->stackedWidget->setCurrentIndex(6);
+    } else {
+        std::cout << "Unsupported feature type" << std::endl;
+    }
+}
+
+void DataManager_Widget::_disablePreviousFeature(const QString& feature)
+{
+
+    auto key = feature.toStdString();
+
+    for (auto callback : _current_data_callbacks) {
+        _data_manager->removeCallbackFromData(key, callback);
+    }
+
+    _current_data_callbacks.clear();
+
+    auto feature_type = _data_manager->getType(feature.toStdString());
+
+    if (feature_type == "PointData") {
+
+        auto point_widget = dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(1));
+        disconnect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
+
+    } else if (feature_type == "MaskData") {
+
+    } else if (feature_type == "LineData") {
+
+    } else if (feature_type == "AnalogTimeSeries") {
+
+    } else if (feature_type == "DigitalIntervalSeries") {
+
+
+    } else if (feature_type == "DigitalEventSeries") {
+
     } else {
         std::cout << "Unsupported feature type" << std::endl;
     }

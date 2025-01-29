@@ -20,12 +20,17 @@ public:
     void openWidget(); // Call to open the widget
 
     void setActiveKey(const std::string &key);
+    void assignPoint(qreal x,qreal y);
 
 private:
     Ui::Point_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
     PointTableModel* _point_table_model;
     std::string _active_key;
+
+    enum Selection_Type {Point_Select};
+
+    Point_Widget::Selection_Type _selection_mode {Point_Select};
 
     //void refreshTable();
 

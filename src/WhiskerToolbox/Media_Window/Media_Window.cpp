@@ -287,6 +287,9 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
             _is_drawing = true;
         }
         emit leftClick(event->scenePos().x(),event->scenePos().y());
+        emit leftClickMedia(
+                event->scenePos().x() / getXAspect(),
+                event->scenePos().y() / getYAspect());
     } else if (event->button() == Qt::RightButton){
 
     } else {

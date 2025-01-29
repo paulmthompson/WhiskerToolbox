@@ -61,3 +61,24 @@ void Point_Widget::_saveKeypointCSV()
 
     fout.close();
 }
+
+void Point_Widget::assignPoint(qreal x_media, qreal y_media) {
+
+    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+
+    switch (_selection_mode) {
+
+    case Point_Select: {
+
+        auto point = _data_manager->getData<PointData>(_active_key);
+        point->clearPointsAtTime(frame_id);
+        point->addPointAtTime(frame_id, y_media, x_media);
+
+        std::cout << "Point added at " << x_media << "," << y_media << std::endl;
+
+        break;
+    }
+    default:
+        break;
+    }
+}

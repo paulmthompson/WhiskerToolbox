@@ -142,6 +142,7 @@ public slots:
     void LoadFrame(int frame_id);
 signals:
     void leftClick(qreal,qreal);
+    void leftClickMedia(qreal,qreal);
     void leftRelease();
 };
 
