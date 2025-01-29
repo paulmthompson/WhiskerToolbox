@@ -9,6 +9,7 @@
 namespace Ui { class DigitalIntervalSeries_Widget; }
 
 class DataManager;
+class IntervalTableModel;
 
 class DigitalIntervalSeries_Widget : public QWidget
 {
@@ -28,9 +29,10 @@ private:
     int _callback_id;
     bool _interval_epoch {false};
     int _interval_start {0};
+    IntervalTableModel* _interval_table_model;
+
 
     void _calculateIntervals();
-    void _buildIntervalTable();
 private slots:
     void _saveCSV();
     void _createIntervalButton();

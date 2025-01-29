@@ -3,6 +3,7 @@
 
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "IntervalTableModel.hpp"
 
 #include <QPushButton>
 
@@ -15,6 +16,9 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     _data_manager{data_manager}
 {
     ui->setupUi(this);
+
+    _interval_table_model = new IntervalTableModel(this);
+    ui->tableView->setModel(_interval_table_model);
 
     connect(ui->save_csv, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_saveCSV);
     connect(ui->create_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_createIntervalButton);
@@ -64,23 +68,9 @@ void DigitalIntervalSeries_Widget::_calculateIntervals()
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     ui->total_interval_label->setText(QString::number(intervals->size()));
 
-    _buildIntervalTable();
+    _interval_table_model->setIntervals(intervals->getDigitalIntervalSeries());
 }
 
-void DigitalIntervalSeries_Widget::_buildIntervalTable()
-{
-    auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key)->getDigitalIntervalSeries();
-
-    ui->interval_table->setRowCount(0);
-    for (int i=0; i < intervals.size(); i++)
-    {
-        ui->interval_table->insertRow(ui->interval_table->rowCount());
-        ui->interval_table->setItem(i,0,new QTableWidgetItem(QString::number(std::round(intervals[i].start))));
-        ui->interval_table->setItem(i,1,new QTableWidgetItem(QString::number(std::round(intervals[i].end))));
-
-    }
-
-}
 
 void DigitalIntervalSeries_Widget::_createIntervalButton()
 {

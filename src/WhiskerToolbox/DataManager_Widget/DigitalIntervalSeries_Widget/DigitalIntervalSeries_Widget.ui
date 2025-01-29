@@ -39,37 +39,6 @@
     <string>interval.csv</string>
    </property>
   </widget>
-  <widget class="QTableWidget" name="interval_table">
-   <property name="geometry">
-    <rect>
-     <x>200</x>
-     <y>50</y>
-     <width>161</width>
-     <height>192</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>7</pointsize>
-    </font>
-   </property>
-   <attribute name="horizontalHeaderMinimumSectionSize">
-    <number>20</number>
-   </attribute>
-   <attribute name="horizontalHeaderDefaultSectionSize">
-    <number>75</number>
-   </attribute>
-   <column>
-    <property name="text">
-     <string>Event Start</string>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Event End</string>
-    </property>
-   </column>
-  </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
@@ -133,6 +102,16 @@
    </property>
    <property name="text">
     <string>Flip Single Frame</string>
+   </property>
+  </widget>
+  <widget class="QTableView" name="tableView">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>60</y>
+     <width>221</width>
+     <height>192</height>
+    </rect>
    </property>
   </widget>
  </widget>
