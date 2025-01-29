@@ -8,6 +8,7 @@
 namespace Ui { class Point_Widget; }
 
 class DataManager;
+class PointTableModel;
 
 class Point_Widget : public QWidget
 {
@@ -18,12 +19,18 @@ public:
 
     void openWidget(); // Call to open the widget
 
+    void setActiveKey(const std::string &key);
+
 private:
     Ui::Point_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
+    PointTableModel* _point_table_model;
+    std::string _active_key;
+
+    //void refreshTable();
 
 private slots:
-               // Add any slots needed for handling user interactions
+
 };
 
 #endif // POINT_WIDGET_HPP

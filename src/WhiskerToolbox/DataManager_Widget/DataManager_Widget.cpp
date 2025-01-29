@@ -64,7 +64,10 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
     auto feature_type = _data_manager->getType(feature.toStdString());
 
     if (feature_type == "PointData") {
+
         ui->stackedWidget->setCurrentIndex(1);
+        dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(1))->setActiveKey(key);
+
     } else if (feature_type == "MaskData") {
         ui->stackedWidget->setCurrentIndex(2);
     } else if (feature_type == "LineData") {
