@@ -70,7 +70,6 @@ void Tracking_Widget::openWidget() {
         _scene->UpdateCanvas();
     });
 
-    connect(ui->tableWidget, &QTableWidget::cellClicked, this, &Tracking_Widget::_tableClicked);
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Tracking_Widget::_changeOutputDir);
     connect(ui->save_csv_button, &QPushButton::clicked, this, &Tracking_Widget::_saveKeypointCSV);
 
@@ -103,8 +102,6 @@ void Tracking_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         auto point = _data_manager->getData<PointData>(_current_tracking_key);
         point->clearPointsAtTime(frame_id);
         point->addPointAtTime(frame_id, y_media, x_media);
-
-        _buildContactTable();
 
         scene->UpdateCanvas();
         break;
@@ -151,43 +148,7 @@ void Tracking_Widget::LoadFrame(int frame_id)
     _previous_frame = frame_id;
 }
 
-void Tracking_Widget::_buildContactTable()
-{
 
-    auto point_data = _data_manager->getData<PointData>(_current_tracking_key);
-
-    //auto point_frames = point_data->getTimesWithPoints();
-
-    /*
-
-    //ui->tableWidget->setRowCount(0);
-    ui->tableWidget->setRowCount(point_frames.size());
-    for (int i=0; i < point_frames.size(); i++)
-    {
-        auto point = point_data->getPointsAtTime(point_frames[i])[0];
-
-        //ui->tableWidget->insertRow(ui->tableWidget->rowCount());
-        ui->tableWidget->setItem(i,0,new QTableWidgetItem(QString::number(point_frames[i])));
-        ui->tableWidget->setItem(i,1,new QTableWidgetItem(QString::number(point.y)));
-        ui->tableWidget->setItem(i,2,new QTableWidgetItem(QString::number(point.x)));
-
-    }
-
-    */
-
-    _highlighted_row = -1;
-    //auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
-    //_updateContactWidgets(frame_id);
-}
-
-void Tracking_Widget::_tableClicked(int row, int column)
-{
-    if (column == 0 || column == 1) {
-        int frame_id = ui->tableWidget->item(row, 0)->text().toInt();
-        _time_scrollbar->changeScrollBarValue(frame_id);
-    }
-
-}
 
 void Tracking_Widget::_propagateLabel(int frame_id)
 {
