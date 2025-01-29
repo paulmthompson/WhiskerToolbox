@@ -7,20 +7,16 @@
 #include "DataManager/Points/Point_Data.hpp"
 
 #include "Media_Window.hpp"
-#include "TimeFrame.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <iostream>
 
 Tracking_Widget::Tracking_Widget(Media_Window *scene,
                                std::shared_ptr<DataManager> data_manager,
-                               TimeScrollBar* time_scrollbar,
                                MainWindow* mainwindow,
                                QWidget *parent) :
         QMainWindow(parent),
         _scene{scene},
         _data_manager{data_manager},
-        _time_scrollbar{time_scrollbar},
         _main_window{mainwindow},
         ui(new Ui::Tracking_Widget)
 {
@@ -45,12 +41,10 @@ void Tracking_Widget::closeEvent(QCloseEvent *event) {
 
 void Tracking_Widget::LoadFrame(int frame_id)
 {
-
     if (ui->propagate_checkbox->isChecked())
     {
         _propagateLabel(frame_id);
     }
-
 
     auto points = _data_manager->getData<PointData>(_current_tracking_key)->getPointsAtTime(frame_id);
 

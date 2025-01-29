@@ -10,7 +10,6 @@
 class DataManager;
 class MainWindow;
 class Media_Window;
-class TimeScrollBar;
 
 namespace Ui {class Tracking_Widget;}
 
@@ -21,7 +20,6 @@ public:
 
     Tracking_Widget(Media_Window *scene,
                     std::shared_ptr<DataManager> data_manager,
-                    TimeScrollBar *time_scrollbar,
                     MainWindow *main_window,
                     QWidget *parent = 0);
 
@@ -40,7 +38,6 @@ protected:
 private:
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
-    TimeScrollBar* _time_scrollbar;
     MainWindow* _main_window;
     Ui::Tracking_Widget *ui;
 

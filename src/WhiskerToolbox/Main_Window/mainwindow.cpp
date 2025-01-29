@@ -414,7 +414,6 @@ void MainWindow::openTrackingWidget()
         auto trackingWidget = std::make_unique<Tracking_Widget>(
             _scene,
             _data_manager,
-            ui->time_scrollbar,
             this);
         connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, trackingWidget.get(), &Tracking_Widget::LoadFrame);
 
