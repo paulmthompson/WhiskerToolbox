@@ -44,10 +44,6 @@ private:
     MainWindow* _main_window;
     Ui::Tracking_Widget *ui;
 
-    enum Selection_Type {Tracking_Select};
-
-    Tracking_Widget::Selection_Type _selection_mode {Tracking_Select};
-
     int _previous_frame {0};
 
     std::string _current_tracking_key;
@@ -55,7 +51,7 @@ private:
     void _propagateLabel(int frame_id);
 
 private slots:
-    void _clickedInVideo(qreal x,qreal y);
+
 };
 
 #endif //BEHAVIORTOOLBOX_TRACKING_WIDGET_HPP
