@@ -232,6 +232,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             int height = item.value("height", -1);
             int width = item.value("width", -1);
 
+            int scaled_height = item.value("scale_to_height", -1);
+            int scaled_width = item.value("scale_to_width", -1);
+
             auto keypoints = load_points_from_csv(
                     file_path,
                     frame_column,
@@ -245,6 +248,10 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             auto point_data = std::make_shared<PointData>(keypoints);
             point_data->setImageSize(ImageSize{width,height});
+
+            if (scaled_height > 0 && scaled_width > 0) {
+                scale(point_data, ImageSize{scaled_width, scaled_height});
+            }
 
             dm->setData<PointData>(keypoint_key, point_data);
 
