@@ -412,9 +412,7 @@ void MainWindow::openTrackingWidget()
 
     if (_widgets.find(key) == _widgets.end()) {
         auto trackingWidget = std::make_unique<Tracking_Widget>(
-            _scene,
-            _data_manager,
-            this);
+            _data_manager);
         connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, trackingWidget.get(), &Tracking_Widget::LoadFrame);
 
         trackingWidget->setObjectName(key);

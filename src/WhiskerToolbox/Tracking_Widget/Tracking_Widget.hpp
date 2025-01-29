@@ -8,8 +8,6 @@
 #include <vector>
 
 class DataManager;
-class MainWindow;
-class Media_Window;
 
 namespace Ui {class Tracking_Widget;}
 
@@ -18,9 +16,7 @@ Q_OBJECT
 
 public:
 
-    Tracking_Widget(Media_Window *scene,
-                    std::shared_ptr<DataManager> data_manager,
-                    MainWindow *main_window,
+    Tracking_Widget(std::shared_ptr<DataManager> data_manager,
                     QWidget *parent = 0);
 
     virtual ~Tracking_Widget();
@@ -36,9 +32,7 @@ protected:
     //void keyPressEvent(QKeyEvent *event);
 
 private:
-    Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
-    MainWindow* _main_window;
     Ui::Tracking_Widget *ui;
 
     int _previous_frame {0};

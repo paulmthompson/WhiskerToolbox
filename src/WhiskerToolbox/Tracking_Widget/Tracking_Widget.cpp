@@ -6,18 +6,13 @@
 #include "DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 
-#include "Media_Window.hpp"
 
 #include <iostream>
 
-Tracking_Widget::Tracking_Widget(Media_Window *scene,
-                               std::shared_ptr<DataManager> data_manager,
-                               MainWindow* mainwindow,
+Tracking_Widget::Tracking_Widget(std::shared_ptr<DataManager> data_manager,
                                QWidget *parent) :
         QMainWindow(parent),
-        _scene{scene},
         _data_manager{data_manager},
-        _main_window{mainwindow},
         ui(new Ui::Tracking_Widget)
 {
     ui->setupUi(this);
