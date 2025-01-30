@@ -21,4 +21,6 @@ private:
     std::map<int, torch::Tensor> _data;
 };
 
+void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data);
+
 #endif // TENSOR_DATA_HPP
