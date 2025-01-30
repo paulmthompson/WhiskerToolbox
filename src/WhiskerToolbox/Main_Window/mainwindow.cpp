@@ -606,6 +606,7 @@ void MainWindow::openDataManager()
         auto dm_widget = std::make_unique<DataManager_Widget>(
             _scene,
             _data_manager,
+            ui->time_scrollbar,
             this);
 
         dm_widget->setObjectName(key);
@@ -614,6 +615,7 @@ void MainWindow::openDataManager()
     }
 
     auto ptr = dynamic_cast<DataManager_Widget*>(_widgets[key].get());
+    //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
     ptr->openWidget();
 
     showDockWidget(key);

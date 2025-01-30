@@ -77,8 +77,7 @@ void Point_Widget::assignPoint(qreal x_media, qreal y_media) {
     case Point_Select: {
 
         auto point = _data_manager->getData<PointData>(_active_key);
-        point->clearPointsAtTime(frame_id);
-        point->addPointAtTime(frame_id, y_media, x_media);
+        point->overwritePointAtTime(frame_id, y_media, x_media);
 
         break;
     }
@@ -86,3 +85,27 @@ void Point_Widget::assignPoint(qreal x_media, qreal y_media) {
         break;
     }
 }
+
+void Point_Widget::loadFrame(int frame_id)
+{
+    if (ui->propagate_checkbox->isChecked())
+    {
+        _propagateLabel(frame_id);
+    }
+
+    _previous_frame = frame_id;
+}
+
+void Point_Widget::_propagateLabel(int frame_id)
+{
+
+    auto point_data = _data_manager->getData<PointData>(_active_key);
+
+    auto prev_points = point_data->getPointsAtTime(_previous_frame);
+
+    for (int i = _previous_frame + 1; i <= frame_id; i ++)
+    {
+        point_data->overwritePointsAtTime(i, prev_points);
+    }
+}
+

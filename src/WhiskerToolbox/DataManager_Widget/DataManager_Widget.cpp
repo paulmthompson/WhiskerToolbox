@@ -24,16 +24,19 @@
 #include "Tensor_Widget/Tensor_Widget.hpp"
 
 #include "Media_Window/Media_Window.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QFileDialog>
 
 DataManager_Widget::DataManager_Widget(
     Media_Window* scene,
     std::shared_ptr<DataManager> data_manager,
+    TimeScrollBar* time_scrollbar,
     QWidget *parent) :
     QWidget(parent),
     ui(new Ui::DataManager_Widget),
     _scene{scene},
+    _time_scrollbar{time_scrollbar},
     _data_manager{data_manager}
 {
     ui->setupUi(this);
@@ -89,6 +92,8 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
             point_widget->updateTable();
         }));
 
+        connect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
+
     } else if (feature_type == "MaskData") {
         ui->stackedWidget->setCurrentIndex(2);
     } else if (feature_type == "LineData") {
@@ -129,6 +134,7 @@ void DataManager_Widget::_disablePreviousFeature(const QString& feature)
 
         auto point_widget = dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(1));
         disconnect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
+        disconnect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
 
     } else if (feature_type == "MaskData") {
 
@@ -192,3 +198,4 @@ void DataManager_Widget::_createNewData()
         std::cout << "Unsupported data type" << std::endl;
     }
 }
+

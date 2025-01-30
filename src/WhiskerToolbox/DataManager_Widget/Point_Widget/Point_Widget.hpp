@@ -24,17 +24,21 @@ public:
 
     void updateTable();
 
+    void loadFrame(int frame_id);
+
 private:
     Ui::Point_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
     PointTableModel* _point_table_model;
     std::string _active_key;
+    int _previous_frame {0};
 
     enum Selection_Type {Point_Select};
 
     Point_Widget::Selection_Type _selection_mode {Point_Select};
 
     //void refreshTable();
+    void _propagateLabel(int frame_id);
 
 private slots:
     void _saveKeypointCSV();

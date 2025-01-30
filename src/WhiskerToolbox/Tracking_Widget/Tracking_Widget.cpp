@@ -43,30 +43,8 @@ void Tracking_Widget::LoadFrame(int frame_id)
 
     auto points = _data_manager->getData<PointData>(_current_tracking_key)->getPointsAtTime(frame_id);
 
-    if (!points.empty()) {
-
-        std::string x = "";
-        std::string y = "";
-
-        if (std::isnan(points[0].x))
-        {
-            x = "nan";
-        } else {
-            x = std::to_string(static_cast<int>(points[0].x));
-        }
-
-        if (std::isnan(points[0].y))
-        {
-            y="nan";
-        } else {
-            y = std::to_string(static_cast<int>(points[0].y));
-        }
-
-    }
     _previous_frame = frame_id;
 }
-
-
 
 void Tracking_Widget::_propagateLabel(int frame_id)
 {

@@ -12,6 +12,7 @@ namespace Ui { class DataManager_Widget; }
 
 class DataManager;
 class Media_Window;
+class TimeScrollBar;
 
 class DataManager_Widget : public QWidget
 {
@@ -20,6 +21,7 @@ public:
 
     DataManager_Widget(Media_Window* scene,
                        std::shared_ptr<DataManager> data_manager,
+                       TimeScrollBar* time_scrollbar,
                        QWidget *parent = 0);
     ~DataManager_Widget();
 
@@ -28,6 +30,7 @@ public:
 private:
     Ui::DataManager_Widget *ui;
     Media_Window* _scene;
+    TimeScrollBar* _time_scrollbar;
     std::shared_ptr<DataManager> _data_manager;
     QString _highlighted_available_feature;
     std::vector<int> _current_data_callbacks;
