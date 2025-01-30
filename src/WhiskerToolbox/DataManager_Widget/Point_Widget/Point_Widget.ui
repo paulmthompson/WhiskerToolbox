@@ -21,7 +21,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0">
      <property name="sizeConstraint">
       <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
      </property>
@@ -72,6 +72,13 @@
        </property>
        <property name="tabStopDistance">
         <double>80.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="propagate_checkbox">
+       <property name="text">
+        <string>Propogate</string>
        </property>
       </widget>
      </item>

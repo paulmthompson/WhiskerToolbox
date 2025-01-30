@@ -17,9 +17,10 @@
 class AnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
-class PointData;
 class LineData;
 class MaskData;
+class PointData;
+class TensorData;
 
 struct DataInfo {
     std::string key;
@@ -234,7 +235,8 @@ private:
                                         std::shared_ptr<MaskData>,
                                         std::shared_ptr<AnalogTimeSeries>,
                                         std::shared_ptr<DigitalEventSeries>,
-                                        std::shared_ptr<DigitalIntervalSeries>>> _data;
+                                        std::shared_ptr<DigitalIntervalSeries>,
+                                        std::shared_ptr<TensorData>>> _data;
 
     std::unordered_map<std::string, std::string> _time_frames;
 

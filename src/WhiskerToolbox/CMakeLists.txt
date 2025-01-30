@@ -67,6 +67,11 @@ set(PROJECT_SOURCES
         DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.cpp
         DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.ui
 
+        DataManager_Widget/Tensor_Widget/Tensor_Widget.hpp
+        DataManager_Widget/Tensor_Widget/Tensor_Widget.cpp
+        DataManager_Widget/Tensor_Widget/Tensor_Widget.ui
+        DataManager_Widget/Tensor_Widget/TensorTableModel.hpp
+
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
         Whisker_Widget/Whisker_Widget.cpp
@@ -162,6 +167,10 @@ set(PROJECT_SOURCES
         Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp
         Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.cpp
         Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.ui
+
+        Loading_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.hpp
+        Loading_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.cpp
+        Loading_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.ui
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp

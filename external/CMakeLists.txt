@@ -26,6 +26,12 @@ FetchContent_Declare(
   CMAKE_ARGS -DBUILD_EXAMPLES=OFF
 )
 
+FetchContent_Declare(
+  npy
+  GIT_REPOSITORY https://github.com/llohse/libnpy.git
+  GIT_TAG v1.0.1
+)
+
 Set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare(JKQTPlotter6
                      GIT_REPOSITORY https://github.com/jkriege2/JKQtPlotter.git
@@ -74,7 +80,7 @@ elseif (WIN32)
 endif()
 
 #We should use make avaiable
-FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking JKQTPlotter6 Torch)
+FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking JKQTPlotter6 Torch npy)
 
 set_target_properties(ffmpeg_wrapper PROPERTIES EXCLUDE_FROM_ALL TRUE)
 set_target_properties(Whisker-Analysis PROPERTIES EXCLUDE_FROM_ALL TRUE)
@@ -93,3 +99,5 @@ if (WIN32)
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 endif()
+
+set(npy_SOURCE_DIR ${npy_SOURCE_DIR} PARENT_SCOPE)
