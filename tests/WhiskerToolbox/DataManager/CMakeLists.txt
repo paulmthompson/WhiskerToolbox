@@ -16,6 +16,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_data_manager
         test_data_manager.cpp
         AnalogTimeSeries/test_analog_time_series.cpp
+        DigitalTimeSeries/test_digital_interval_series.cpp
 )
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)

@@ -1,28 +1,111 @@
 #include "Digital_Interval_Series.hpp"
 
+#include <algorithm>
+#include <cmath> // std::round
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <utility>
 
-DigitalIntervalSeries::DigitalIntervalSeries(std::vector<std::pair<float, float>> digital_vector)
+DigitalIntervalSeries::DigitalIntervalSeries(std::vector<Interval> digital_vector)
 {
     _data = digital_vector;
+    _sortData();
 }
 
-std::vector<std::pair<float, float>> const & DigitalIntervalSeries::getDigitalIntervalSeries() const
+std::vector<Interval> const & DigitalIntervalSeries::getDigitalIntervalSeries() const
 {
     return _data;
+}
+
+bool DigitalIntervalSeries::isEventAtTime(int time) const
+{
+    for (auto event : _data) {
+        if (is_contained(event, time)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void DigitalIntervalSeries::createIntervalsFromBool(std::vector<uint8_t> const& bool_vector)
+{
+    bool in_interval = false;
+    int start = 0;
+    for (int i = 0; i < bool_vector.size(); ++i) {
+        if (bool_vector[i] && !in_interval) {
+            start = i;
+            in_interval = true;
+        } else if (!bool_vector[i] && in_interval) {
+            _data.push_back(Interval{start, i - 1});
+            in_interval = false;
+        }
+    }
+    if (in_interval) {
+        _data.push_back(Interval{start, static_cast<int64_t>(bool_vector.size() - 1)});
+    }
+
+    _sortData();
+    notifyObservers();
+}
+
+void DigitalIntervalSeries::setEventAtTime(int time, bool event)
+{
+    if (!event)
+    {
+        removeEventAtTime(time);
+    } else {
+        addEvent(time, time);
+    }
+    _sortData();
+    notifyObservers();
+}
+
+void DigitalIntervalSeries::removeEventAtTime(int time)
+{
+    for (auto it = _data.begin(); it != _data.end(); ++it) {
+        if (is_contained(*it, time)) {
+            if (time == it->start && time == it->end) {
+                _data.erase(it);
+            } else if (time == it->start) {
+                it->start = time + 1;
+            } else if (time == it->end) {
+                it->end = time - 1;
+            } else {
+                auto preceding_event = Interval{it->start, time - 1};
+                auto following_event = Interval{time + 1, it->end};
+                _data.erase(it);
+                _data.push_back(preceding_event);
+                _data.push_back(following_event);
+
+                _sortData();
+                notifyObservers();
+                return;
+            }
+        }
+    }
+}
+
+void DigitalIntervalSeries::_sortData()
+{
+    std::sort(_data.begin(), _data.end());
 }
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time)
 {
     auto const events = digital_series->getDigitalIntervalSeries();
+
+    // Check if sorted
+    for (int i = 1; i < events.size(); ++i) {
+        if (events[i].start < events[i-1].start) {
+            throw std::runtime_error("DigitalIntervalSeries is not sorted");
+        }
+    }
     int closest_index = -1;
     for (int i = 0; i < events.size(); ++i) {
-        if (events[i].first <= time) {
+        if (events[i].start <= time) {
             closest_index = i;
-            if (time <= events[i].second) {
+            if (time <= events[i].end) {
                 return i;
             }
         } else {
@@ -32,18 +115,36 @@ int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int tim
     return closest_index;
 }
 
-std::vector<std::pair<float, float>> load_digital_series_from_csv(std::string const& filename){
+void save_intervals(
+    std::vector<Interval> const & intervals,
+    std::string const block_output
+    )
+{
+    std::fstream fout;
+    fout.open(block_output, std::fstream::out);
+
+    for (auto & interval : intervals) {
+        fout << std::round(interval.start) << "," << std::round(interval.end) << "\n";
+    }
+
+    fout.close();
+}
+
+std::vector<Interval> load_digital_series_from_csv(
+        std::string const& filename,
+        char delimiter)
+{
     std::string csv_line;
 
     std::fstream myfile;
     myfile.open (filename, std::fstream::in);
 
-    float start, end;
-    auto output = std::vector<std::pair<float, float>>();
+    int64_t start, end;
+    auto output = std::vector<Interval>();
     while (getline(myfile, csv_line)) {
         std::stringstream ss(csv_line);
-        ss >> start >> end;
-        output.emplace_back(start, end);
+        ss >> start >> delimiter >> end;
+        output.emplace_back(Interval{start, end});
     }
 
     return output;

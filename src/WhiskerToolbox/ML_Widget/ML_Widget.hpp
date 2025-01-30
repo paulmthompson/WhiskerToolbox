@@ -2,6 +2,7 @@
 #define BEHAVIORTOOLBOX_ML_WIDGET_HPP
 
 #include <QMainWindow>
+
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -10,7 +11,6 @@
 
 class DataManager;
 class MainWindow;
-class Media_Window;
 class QTableWidget;
 class TimeScrollBar;
 
@@ -20,8 +20,7 @@ class ML_Widget : public QMainWindow {
 Q_OBJECT
 
 public:
-    ML_Widget(Media_Window *scene,
-              std::shared_ptr<DataManager> data_manager,
+    ML_Widget(std::shared_ptr<DataManager> data_manager,
               TimeScrollBar *time_scrollbar,
               MainWindow *main_window,
               QWidget *parent = 0);
@@ -34,26 +33,26 @@ protected:
     void closeEvent(QCloseEvent *event);
 
 private slots:
-    void _refreshAvailableFeatures();
-    void _insertRows(const std::vector<std::string>& keys);
-    void _addFeatureToModel();
-    void _highlightAvailableFeature(int row, int column);
-    void _highlightModelFeature(int row, int column);
-    void _deleteFeatureFromModel();
-    void _addLabelToModel();
-    void _deleteLabel();
+    void _handleFeatureSelected(const QString& feature);
+    void _addFeatureToModel(const QString& feature, bool enabled);
+    void _removeSelectedFeature(const std::string key);
 
+    void _handleMaskSelected(const QString& feature);
+    void _addMaskToModel(const QString& feature, bool enabled);
+    void _removeSelectedMask(const std::string key);
+
+    void _handleOutcomeSelected(const QString& feature);
+    void _addOutcomeToModel(const QString& feature, bool enabled);
+    void _removeSelectedOutcome(const std::string key);
+
+    void _selectModelType(const QString& model_type);
 private:
-    Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
     MainWindow* _main_window;
     Ui::ML_Widget *ui;
-
     QString _highlighted_available_feature;
-    QString _highlighted_model_feature;
-    std::unordered_set<std::string> _model_features;
-    QString _selected_label;
+
 };
 
 

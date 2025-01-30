@@ -4,8 +4,10 @@
 #include "Media/Media_Data.hpp"
 #include "TimeFrame.hpp"
 
+#include <filesystem>
 #include <functional> // std::function
 #include <memory> // std::shared_ptr
+#include <iostream>
 #include <string> // std::string
 #include <unordered_map> // std::unordered_map
 #include <utility> // std::move
@@ -23,6 +25,11 @@ struct DataInfo {
     std::string key;
     std::string data_class;
     std::string color;
+};
+
+struct DataGroup {
+    std::string groupName;
+    std::vector<std::string> dataKeys;
 };
 
 class DataManager {
@@ -100,21 +107,43 @@ public:
     }
 
     template<typename T>
+    std::shared_ptr<T> getDataFromGroup(const std::string& group_key, int index) {
+        if (_dataGroups.find(group_key) != _dataGroups.end()) {
+
+            if (index >= _dataGroups.at(group_key).size()) {
+                return nullptr;
+            }
+            if (index < 0) {
+                return nullptr;
+            }
+
+            auto keys = _dataGroups.at(group_key);
+            if (std::holds_alternative<std::shared_ptr<T>>(_data[keys[index]])) {
+                return std::get<std::shared_ptr<T>>(_data[keys[index]]);
+            }
+        }
+        return nullptr;
+    }
+
+    template<typename T>
     void setData(const std::string& key){
         _data[key] = std::make_shared<T>();
         setTimeFrame(key, "time");
+        notifyObservers();
     }
 
     template<typename T>
     void setData(const std::string& key, std::shared_ptr<T> data){
         _data[key] = data;
         setTimeFrame(key, "time");
+        notifyObservers();
     }
 
     template<typename T>
     void setData(const std::string& key, std::shared_ptr<T> data, const std::string time_key){
         _data[key] = data;
         setTimeFrame(key, time_key);
+        notifyObservers();
     }
 
     std::string getType(const std::string& key) const;
@@ -135,6 +164,62 @@ public:
         return keys;
     }
 
+    void createDataGroup(const std::string& groupName) {
+        _dataGroups[groupName] = {};
+    }
+
+    void createDataGroup(const std::string& groupName, const std::vector<std::string>& dataKeys) {
+        _dataGroups[groupName] = dataKeys;
+    }
+
+    std::vector<std::string> getDataGroup(const std::string& groupName) const {
+        if (_dataGroups.find(groupName) != _dataGroups.end()) {
+            return _dataGroups.at(groupName);
+        }
+        return {};
+    }
+
+    bool isDataGroup(const std::string& groupName) const {
+        return _dataGroups.find(groupName) != _dataGroups.end();
+    }
+
+    std::vector<std::string> getKeysInDataGroup(const std::string& groupName) const {
+        if (_dataGroups.find(groupName) != _dataGroups.end()) {
+            return _dataGroups.at(groupName);
+        }
+        return {};
+    }
+
+    std::vector<std::string> getDataGroupNames() {
+        std::vector<std::string> groupNames;
+        for (const auto& [key, value] : _dataGroups) {
+            groupNames.push_back(key);
+        }
+        return groupNames;
+    }
+
+    void addDataToGroup(const std::string& groupName, const std::string& dataKey) {
+
+        //Check if key is in _data
+        if (_data.find(dataKey) == _data.end()) {
+            std::cerr << "Data key not found in DataManager: " << dataKey << std::endl;
+            return;
+        }
+
+        if (_dataGroups.find(groupName) != _dataGroups.end()) {
+            _dataGroups[groupName].push_back(dataKey);
+        }
+    }
+
+    int addCallbackToData(std::string key, ObserverCallback callback);
+    void removeCallbackFromData(std::string key, int callback_id);
+
+    void setOutputPath(const std::filesystem::path& output_path) { _output_path = output_path;};
+
+    std::filesystem::path getOutputPath() const {
+        return _output_path;
+    }
+
 private:
 
     //std::shared_ptr<TimeFrame> _time;
@@ -152,6 +237,10 @@ private:
                                         std::shared_ptr<DigitalIntervalSeries>>> _data;
 
     std::unordered_map<std::string, std::string> _time_frames;
+
+    std::unordered_map<std::string, std::vector<std::string>> _dataGroups;
+
+    std::filesystem::path _output_path;
 
 };
 

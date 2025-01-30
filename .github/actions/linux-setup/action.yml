@@ -40,10 +40,10 @@ runs:
 
     - name: Install nasm and other libraries on Linux
       shell: bash
-      run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev libomp-14-dev lcov gcovr
+      run: sudo apt-get install -y nasm libxi-dev libxtst-dev libxrandr-dev libomp-18-dev lcov gcovr libltdl-dev
 
     - name: Setup headless display
-      uses: pyvista/setup-headless-display-action@v2
+      uses: pyvista/setup-headless-display-action@v3
 
     - name: Install jinja2
       shell: bash

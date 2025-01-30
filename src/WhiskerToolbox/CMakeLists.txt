@@ -20,6 +20,7 @@ set(PROJECT_SOURCES
         main.cpp
         whiskertoolbox.qrc
         my_stylesheet.qss
+        color_scheme.hpp
 
         AnalogViewer/analog_viewer.hpp
         AnalogViewer/analog_viewer.cpp
@@ -35,6 +36,36 @@ set(PROJECT_SOURCES
         Covariate_Widget/covariate_widget.ui
         Covariate_Widget/Covariate_Config.h
         Covariate_Widget/Covariate_Config.ui
+
+        DataManager_Widget/DataManager_Widget.hpp
+        DataManager_Widget/DataManager_Widget.cpp
+        DataManager_Widget/DataManager_Widget.ui
+
+        DataManager_Widget/Mask_Widget/Mask_Widget.hpp
+        DataManager_Widget/Mask_Widget/Mask_Widget.cpp
+        DataManager_Widget/Mask_Widget/Mask_Widget.ui
+
+        DataManager_Widget/Point_Widget/Point_Widget.hpp
+        DataManager_Widget/Point_Widget/Point_Widget.cpp
+        DataManager_Widget/Point_Widget/Point_Widget.ui
+        DataManager_Widget/Point_Widget/PointTableModel.hpp
+
+        DataManager_Widget/Line_Widget/Line_Widget.hpp
+        DataManager_Widget/Line_Widget/Line_Widget.cpp
+        DataManager_Widget/Line_Widget/Line_Widget.ui
+
+        DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp
+        DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.cpp
+        DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.ui
+
+        DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp
+        DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.cpp
+        DataManager_Widget/DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.ui
+        DataManager_Widget/DigitalIntervalSeries_Widget/IntervalTableModel.hpp
+
+        DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp
+        DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.cpp
+        DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
@@ -80,6 +111,10 @@ set(PROJECT_SOURCES
         ML_Widget/ML_Widget.ui
         ML_Widget/ML_Widget.hpp
         ML_Widget/ML_Widget.cpp
+        ML_Widget/mlpack_conversion.hpp
+        ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp
+        ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.cpp
+        ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.ui
 
         Tracking_Widget/Tracking_Widget.ui
         Tracking_Widget/Tracking_Widget.hpp
@@ -92,12 +127,12 @@ set(PROJECT_SOURCES
         Feature_Table_Widget/Feature_Table_Widget.hpp
         Feature_Table_Widget/Feature_Table_Widget.cpp
         Feature_Table_Widget/Feature_Table_Widget.ui
-
-        utils/qt_utilities.cpp
-        utils/qt_utilities.hpp
+        Feature_Table_Widget/Color_Widget.hpp
 
         utils/Image_Processing/skeletonize.hpp
         utils/Image_Processing/order_line.hpp
+        utils/Image_Processing/mask_operations.hpp
+        utils/Image_Processing/connected_component.hpp
 
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp
@@ -112,6 +147,22 @@ set(PROJECT_SOURCES
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.cpp
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.ui
 
+        Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp
+        Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.cpp
+        Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.ui
+
+        Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp
+        Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.cpp
+        Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.ui
+
+        Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp
+        Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.cpp
+        Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.ui
+
+        Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp
+        Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.cpp
+        Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.ui
+
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
 
@@ -122,11 +173,13 @@ set(PROJECT_SOURCES
 
         utils/Deep_Learning/scm.hpp
         utils/Deep_Learning/scm.cpp
+
+        utils/color.hpp
 )
 
 if (WIN32)
 
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
+#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /fsanitize=address")
 endif()
 
 qt_add_executable(WhiskerToolbox
@@ -138,6 +191,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6:
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
+message(STATUS ${TORCH_LIBRARIES})
 target_link_libraries(WhiskerToolbox PRIVATE "${TORCH_LIBRARIES}")
 
 target_include_directories(WhiskerToolbox PRIVATE

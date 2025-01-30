@@ -1,32 +1,41 @@
 #ifndef POINT_DATA_HPP
 #define POINT_DATA_HPP
 
+#include "ImageSize/ImageSize.hpp"
+#include "Observer/Observer_Data.hpp"
+#include "points.hpp"
 
 #include <map>
 #include <string>
 #include <vector>
 
-template<typename T>
-struct Point2D {
-    T x;
-    T y;
-};
-
-class PointData {
+/*
+ * @brief PointData
+ *
+ * PointData is used for storing 2D points
+ * There are specialized classes for handling groupings of points
+ * LineData for ordered points, MaskData for unordered points
+ * Both Mask and LineData assume that the points form a single object
+ * A PointData object is used when the points are not part of a single object
+ * For example, keypoints for multiple body points could be a PointData object
+ */
+class PointData : public ObserverData {
 public:
     PointData();
     PointData(std::map<int, Point2D<float>> data);
     PointData(std::map<int,std::vector<Point2D<float>>> data);
     void clearPointsAtTime(int const time);
+
     void addPointAtTime(int const time, float const x, float const y);
+    void addPointsAtTime(int const time, std::vector<Point2D<float>> const& points);
+
+    void overwritePointAtTime(int const time, float const x, float const y);
+    void overwritePointsAtTime(int const time, std::vector<Point2D<float>> const& points);
 
     std::vector<int> getTimesWithPoints() const;
 
-    int getMaskHeight() const {return _mask_height;};
-    int getMaskWidth() const {return _mask_width;};
-
-    void setMaskHeight(int const height) {_mask_height = height;};
-    void setMaskWidth(int const width) {_mask_width = width;};
+    ImageSize getImageSize() const { return _image_size; }
+    void setImageSize(const ImageSize& image_size) { _image_size = image_size; }
 
     std::vector<Point2D<float>> const& getPointsAtTime(int const time) const;
 
@@ -37,8 +46,11 @@ private:
     std::map<int,std::vector<Point2D<float>>> _data;
     std::vector<Point2D<float>> _empty;
 
-    int _mask_height {256};
-    int _mask_width {256};
+    ImageSize _image_size;
+
+    void _clearPointsAtTime(int const time);
+    void _addPointAtTime(int const time, float const x, float const y);
+    void _addPointsAtTime(int const time, std::vector<Point2D<float>> const& points);
 
 };
 

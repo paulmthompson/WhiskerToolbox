@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DigitalIntervalSeries_Widget</class>
+ <widget class="QWidget" name="DigitalIntervalSeries_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>481</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QPushButton" name="save_csv">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>30</y>
+     <width>131</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save as CSV</string>
+   </property>
+  </widget>
+  <widget class="QPlainTextEdit" name="filename_textbox">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>60</y>
+     <width>131</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="plainText">
+    <string>interval.csv</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>20</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Total Intervals:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="total_interval_label">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>20</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="create_interval_button">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>110</y>
+     <width>161</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Create Interval</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="remove_interval_button">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>140</y>
+     <width>161</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Remove Interval</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="flip_single_frame">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>170</y>
+     <width>161</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Flip Single Frame</string>
+   </property>
+  </widget>
+  <widget class="QTableView" name="tableView">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>60</y>
+     <width>221</width>
+     <height>192</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

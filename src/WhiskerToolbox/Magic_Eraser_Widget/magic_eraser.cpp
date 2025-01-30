@@ -25,8 +25,6 @@ cv::Mat MagicEraser::_createBackgroundImage(std::vector<uint8_t> const & image, 
     cv::Mat inputImage{image, false};
 
     // The number of rows = height, number of columns = width
-    inputImage = inputImage.reshape(0, height);
-
     // Apply median blur filter
     cv::Mat medianBlurredImage;
     cv::medianBlur(inputImage, medianBlurredImage, 25);

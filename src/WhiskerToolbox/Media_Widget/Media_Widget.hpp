@@ -20,13 +20,16 @@ public:
 
     virtual ~Media_Widget();
 
-    void setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = data_manager;};
+    void setDataManager(std::shared_ptr<DataManager> data_manager);
     void setScene(Media_Window* scene) {_scene = scene;};
     void setMainWindow(MainWindow* mainwindow) {_main_window = mainwindow;};
 
     void updateMedia();
 
+    void setFeatureColor(std::string feature, std::string hex_color);
+
 protected:
+    void resizeEvent(QResizeEvent* event) override;
 private:
     Ui::Media_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
@@ -39,6 +42,9 @@ private:
 
 private slots:
     void _openDataViewer();
+    void _updateCanvasSize();
+    void _setMaskAlpha(int alpha);
+    void _addFeatureToDisplay(const QString& feature, bool enabled);
 
 signals:
 

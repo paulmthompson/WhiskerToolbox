@@ -90,6 +90,8 @@ void MediaData::setProcess(std::string key, std::function<void(cv::Mat& input)> 
 {
     this->_process_chain[key] = process;
     _processData();
+
+    notifyObservers();
     //NOTIFY
 }
 
@@ -97,6 +99,8 @@ void MediaData::removeProcess(std::string const & key)
 {
     _process_chain.erase(key);
     _processData();
+
+    notifyObservers();
     //NOTIFY
 }
 

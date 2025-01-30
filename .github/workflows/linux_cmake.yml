@@ -26,6 +26,12 @@ jobs:
       - name: Configure CMake without coverage
         run: cmake --preset linux-clang-release
 
+      - name: Display Log on failure
+        if: failure()
+        run: |
+          cat /usr/local/share/vcpkg/buildtrees/libxcrypt/autoconf-x64-linux-dynamic-out.log
+          cat /usr/local/share/vcpkg/buildtrees/libxcrypt/autoconf-x64-linux-dynamic-err.log
+
       - name: Build
         run: cmake --build --preset linux-clang-release
 
@@ -46,7 +52,7 @@ jobs:
         shell: bash
 
       - name: Upload CPack Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cpack-artifact
           path: ${{ env.ARTIFACT_PATH }}

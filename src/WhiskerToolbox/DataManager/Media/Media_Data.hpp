@@ -1,6 +1,8 @@
 #ifndef WHISKERTOOLBOX_MEDIA_DATA_HPP
 #define WHISKERTOOLBOX_MEDIA_DATA_HPP
 
+#include "Observer/Observer_Data.hpp"
+
 #include <functional>
 #include <map>
 #include <stdint.h>
@@ -9,7 +11,7 @@
 
 namespace cv { class Mat; }
 
-class MediaData {
+class MediaData : public ObserverData {
 public:
 
     MediaData();

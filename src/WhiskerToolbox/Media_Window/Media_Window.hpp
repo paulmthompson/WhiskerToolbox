@@ -44,20 +44,35 @@ public:
 Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
 
 
-    void addLineDataToScene(std::string const & line_key);
+    void addLineDataToScene(
+            std::string const & line_key,
+            std::string const & hex_color = "#0000FF",
+            float alpha = 1.0);
+
     void changeLineColor(std::string const & line_key, std::string const & hex_color);
     void changeLineAlpha(std::string const & line_key, float const alpha);
+    void removeLineDataFromScene(std::string const & line_key);
     void clearLines();
 
-    void addMaskDataToScene(const std::string& mask_key);
+    void addMaskDataToScene(
+            const std::string& mask_key,
+            std::string const & hex_color = "#0000FF",
+            float alpha = 1.0);
+
     void changeMaskColor(std::string const & mask_key, std::string const & hex_color);
     void changeMaskAlpha(float const alpha);
     void changeMaskAlpha(std::string const & line_key, float const alpha);
+    void removeMaskDataFromScene(std::string const & mask_key);
     void clearMasks();
 
-    void addPointDataToScene(const std::string& point_key);
+    void addPointDataToScene(
+            const std::string& point_key,
+            std::string const & hex_color = "#0000FF",
+            float alpha = 1.0);
+
     void changePointColor(std::string const & point_key, std::string const & hex_color);
     void setPointAlpha(std::string const & point_key, float const alpha);
+    void removePointDataFromScene(std::string const & point_key);
     void clearPoints();
 
     /**
@@ -68,6 +83,11 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
 
     float getXAspect() const;
     float getYAspect() const;
+
+    void setCanvasSize(int width, int height) {
+        _canvasWidth = width;
+        _canvasHeight = height;
+    }
 
     void setDrawingMode(bool drawing_mode)
         {_drawing_mode = drawing_mode;
@@ -122,6 +142,7 @@ public slots:
     void LoadFrame(int frame_id);
 signals:
     void leftClick(qreal,qreal);
+    void leftClickMedia(qreal,qreal);
     void leftRelease();
 };
 

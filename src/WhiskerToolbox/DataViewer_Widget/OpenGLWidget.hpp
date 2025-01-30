@@ -10,19 +10,25 @@
 #include <QOpenGLVertexArrayObject>
 #include <QMatrix4x4>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
 
 class AnalogTimeSeries;
+class DigitalEventSeries;
 class DigitalIntervalSeries;
-class QWheelEvent;
 class TimeFrame;
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
-    std::pair<float, float> min_max;
+    std::string color;
+    std::shared_ptr<TimeFrame> time_frame;
+};
+
+struct DigitalEventSeriesData {
+    std::shared_ptr<DigitalEventSeries> series;
     std::string color;
     std::shared_ptr<TimeFrame> time_frame;
 };
@@ -42,17 +48,34 @@ public:
     virtual ~OpenGLWidget();
 
     void addAnalogTimeSeries(
+            std::string key,
             std::shared_ptr<AnalogTimeSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
-
+    void removeAnalogTimeSeries(const std::string &key);
+    void addDigitalEventSeries(
+            std::string key,
+            std::shared_ptr<DigitalEventSeries> series,
+            std::shared_ptr<TimeFrame> time_frame,
+            std::string color = "");
+    void removeDigitalEventSeries(const std::string &key);
     void addDigitalIntervalSeries(
+            std::string key,
             std::shared_ptr<DigitalIntervalSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
+    void removeDigitalIntervalSeries(const std::string &key);
     void clearSeries();
     void setBackgroundColor(const std::string &hexColor);
     void setXLimit(int xmax) {_xAxis.setMax(xmax); };
+    void changeZoom(int zoom)
+    {
+        int center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
+
+        zoom = (_xAxis.getEnd() - _xAxis.getStart()) - zoom;
+       _xAxis.setCenterAndZoom(center, zoom);
+        updateCanvas(_time);
+    }
 
 public slots:
     void updateCanvas(int time);
@@ -62,7 +85,6 @@ protected:
     void paintGL() override;
 
     void resizeGL(int w, int h) override;
-    void wheelEvent(QWheelEvent *event) override;
 
     void cleanup();
 
@@ -71,9 +93,14 @@ private:
     void generateRandomValues(int count);
     void generateAndAddFakeData(int count);
     void adjustFakeData();
+    void drawDigitalEventSeries();
+    void drawDigitalIntervalSeries();
+    void drawAnalogSeries();
+    void drawAxis();
 
-    std::vector<AnalogSeriesData> _analog_series;
-    std::vector<DigitalIntervalSeriesData> _digital_interval_series;
+    std::map<std::string, AnalogSeriesData> _analog_series;
+    std::map<std::string, DigitalEventSeriesData> _digital_event_series;
+    std::map<std::string, DigitalIntervalSeriesData> _digital_interval_series;
 
     XAxis _xAxis;
     int _time {0};
@@ -92,8 +119,6 @@ private:
 
     std::vector<GLfloat> m_vertices; // for testing
 };
-
-std::string generateRandomColor();
 
 
 #endif //OPENGLWIDGET_HPP

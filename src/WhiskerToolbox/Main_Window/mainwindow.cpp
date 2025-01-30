@@ -12,11 +12,16 @@
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 
+#include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
+#include "Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp"
+#include "Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp"
+#include "Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp"
+#include "Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "Media_Window.hpp"
 #include "ML_Widget/ML_Widget.hpp"
@@ -60,6 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->media_widget->setMainWindow(this);
     ui->media_widget->setScene(_scene);
     ui->media_widget->updateMedia();
+    ui->media_widget->setDataManager(_data_manager);
 
     _createActions(); // Creates callback functions
 
@@ -108,7 +114,11 @@ void MainWindow::_createActions()
     connect(ui->actionTracking_Widget, &QAction::triggered, this, &MainWindow::openTrackingWidget);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
-
+    connect(ui->actionLoad_Points, &QAction::triggered, this, &MainWindow::openPointLoaderWidget);
+    connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
+    connect(ui->actionLoad_Lines, &QAction::triggered, this, &MainWindow::openLineLoaderWidget);
+    connect(ui->actionLoad_Intervals, &QAction::triggered, this, &MainWindow::openIntervalLoaderWidget);
+    connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
 }
 
 /*
@@ -248,12 +258,14 @@ void MainWindow::_loadJSONConfig()
             _LoadData();
         } else if (data.data_class == "PointData")
         {
-            _scene->addPointDataToScene(data.key);
-            _scene->changePointColor(data.key, data.color);
+            ui->media_widget->setFeatureColor(data.key, data.color);
+
         } else if (data.data_class == "MaskData")
         {
-            _scene->addMaskDataToScene(data.key);
-            _scene->changeMaskColor(data.key, data.color);
+            ui->media_widget->setFeatureColor(data.key, data.color);
+        } else if (data.data_class == "LineData")
+        {
+           ui->media_widget->setFeatureColor(data.key, data.color);
         }
     }
 
@@ -264,6 +276,10 @@ void MainWindow::_LoadData() {
     _updateFrameCount();
 
     ui->media_widget->updateMedia();
+
+    _data_manager->addCallbackToData("media", [this]() {
+        _scene->UpdateCanvas();
+    });
 }
 
 void MainWindow::_updateFrameCount()
@@ -310,6 +326,7 @@ void MainWindow::openWhiskerTracking() {
 void MainWindow::registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area)
 {
     auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
+    //dock_widget->setWidget(widget, ads::CDockWidget::ForceScrollArea);
     dock_widget->setWidget(widget);
     _m_DockManager->addDockWidget(area, dock_widget);
 }
@@ -360,7 +377,7 @@ void MainWindow::openImageProcessing()
     std::string const key = "image_processing";
 
     if (_widgets.find(key) == _widgets.end()) {
-        auto imageProcessing = std::make_unique<Image_Processing_Widget>(_scene, _data_manager);
+        auto imageProcessing = std::make_unique<Image_Processing_Widget>(_data_manager);
         imageProcessing->setObjectName(key);
         registerDockWidget(key, imageProcessing.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(imageProcessing);
@@ -395,10 +412,7 @@ void MainWindow::openTrackingWidget()
 
     if (_widgets.find(key) == _widgets.end()) {
         auto trackingWidget = std::make_unique<Tracking_Widget>(
-            _scene,
-            _data_manager,
-            ui->time_scrollbar,
-            this);
+            _data_manager);
         connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, trackingWidget.get(), &Tracking_Widget::LoadFrame);
 
         trackingWidget->setObjectName(key);
@@ -418,7 +432,6 @@ void MainWindow::openMLWidget()
 
     if (_widgets.find(key) == _widgets.end()) {
         auto MLWidget = std::make_unique<ML_Widget>(
-            _scene,
             _data_manager,
             ui->time_scrollbar,
             this);
@@ -440,7 +453,6 @@ void MainWindow::openDataViewer()
 
     if (_widgets.find(key) == _widgets.end()) {
         auto DataViewerWidget = std::make_unique<DataViewer_Widget>(
-            _scene,
             _data_manager,
             ui->time_scrollbar,
             this);
@@ -457,52 +469,131 @@ void MainWindow::openDataViewer()
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event) {
+    static QWidget* lastSender = nullptr;
+
+    auto handleEvent = [this, event](QWidget* sender) {
+        if (sender == lastSender) {
+            return;
+        }
+        lastSender = sender;
+
+        if (sender->objectName().toStdString().find("dockWidget") != std::string::npos) {
+            auto dockWidget = _m_DockManager->findDockWidget("whisker_widget");
+            if (dockWidget && dockWidget->widget() != sender) {
+                QApplication::sendEvent(dockWidget->widget(), event);
+            }
+        } else {
+            QApplication::sendEvent(sender, event);
+        }
+    };
 
     if (event->key() == Qt::Key_Right) {
-        ui->time_scrollbar->changeScrollBarValue(1,true);
-    } else if (event->key() == Qt::Key_Left){
-        ui->time_scrollbar->changeScrollBarValue(-1,true);
+        ui->time_scrollbar->changeScrollBarValue(1, true);
+    } else if (event->key() == Qt::Key_Left) {
+        ui->time_scrollbar->changeScrollBarValue(-1, true);
     } else {
         auto focusedWidget = QApplication::focusWidget();
-
         if (focusedWidget && focusedWidget != this) {
-            // Check if the focused widget is a dock widget
-            if (focusedWidget->objectName().toStdString().find("dockWidget") != std::string::npos) {
-                auto dockWidget = _m_DockManager->findDockWidget("whisker_widget");
-                if (dockWidget && dockWidget->widget() != focusedWidget) {
-                    QApplication::sendEvent(dockWidget->widget(), event);
-                }
-            } else {
-                // Pass the event to the focused widget if it is not the main window
-                QApplication::sendEvent(focusedWidget, event);
-            }
+            handleEvent(focusedWidget);
         }
-
-        /*
-        if (focusedWidget) {
-            if (!this->isActiveWindow()) {
-                std::cout << "Sending event to another window" << std::endl;
-                QApplication::sendEvent(focusedWidget, event);
-            } else if (focusedWidget->objectName().toStdString().find("dockWidget") != std::string::npos) {
-
-                std::cout << "Dock widget is active" << std::endl;
-                auto dock_widget = _m_DockManager->findDockWidget("whisker_widget");
-                if (dock_widget)
-                {
-                    QApplication::sendEvent(dock_widget->widget(), event);
-                }
-
-
-
-            } else if (focusedWidget->objectName().toStdString().find("MainWindow") != std::string::npos) {
-                // Main window is focus widget. Don't want to send infinite loop
-            } else {
-
-                std::cout << "Focus widget: " << focusedWidget->objectName().toStdString() << std::endl;
-                QApplication::sendEvent(focusedWidget, event);
-
-            }
-        }
-         */
     }
+
+    lastSender=nullptr;
+}
+
+void MainWindow::openPointLoaderWidget()
+{
+    std::string const key = "PointLoader_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto PointLoaderWidget = std::make_unique<Point_Loader_Widget>(
+            _data_manager,
+            this);
+
+        PointLoaderWidget->setObjectName(key);
+        registerDockWidget(key, PointLoaderWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(PointLoaderWidget);
+    }
+
+    auto ptr = dynamic_cast<Point_Loader_Widget*>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+void MainWindow::openMaskLoaderWidget()
+{
+    std::string const key = "MaskLoader_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto MaskLoaderWidget = std::make_unique<Mask_Loader_Widget>(
+            _data_manager,
+            this);
+
+        MaskLoaderWidget->setObjectName(key);
+        registerDockWidget(key, MaskLoaderWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(MaskLoaderWidget);
+    }
+
+    auto ptr = dynamic_cast<Mask_Loader_Widget*>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+void MainWindow::openLineLoaderWidget()
+{
+    std::string const key = "LineLoader_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto LineLoaderWidget = std::make_unique<Line_Loader_Widget>(
+            _data_manager,
+            this);
+
+        LineLoaderWidget->setObjectName(key);
+        registerDockWidget(key, LineLoaderWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(LineLoaderWidget);
+    }
+
+    auto ptr = dynamic_cast<Line_Loader_Widget*>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+void MainWindow::openIntervalLoaderWidget()
+{
+    std::string const key = "IntervalLoader_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto DigitalIntervalLoaderWidget = std::make_unique<Digital_Interval_Loader_Widget>(
+            _data_manager,
+            this);
+
+        DigitalIntervalLoaderWidget->setObjectName(key);
+        registerDockWidget(key, DigitalIntervalLoaderWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(DigitalIntervalLoaderWidget);
+    }
+
+    auto ptr = dynamic_cast<Digital_Interval_Loader_Widget*>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+void MainWindow::openDataManager()
+{
+    std::string const key = "DataManager_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto dm_widget = std::make_unique<DataManager_Widget>(
+            _scene,
+            _data_manager,
+            this);
+
+        dm_widget->setObjectName(key);
+        registerDockWidget(key, dm_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(dm_widget);
+    }
+
+    auto ptr = dynamic_cast<DataManager_Widget*>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
 }

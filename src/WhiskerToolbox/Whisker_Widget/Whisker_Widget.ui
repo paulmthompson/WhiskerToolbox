@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>549</width>
-    <height>568</height>
+    <height>651</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,14 +20,14 @@
       <x>10</x>
       <y>10</y>
       <width>261</width>
-      <height>381</height>
+      <height>471</height>
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QPushButton" name="trace_button">
      <property name="geometry">
@@ -185,7 +185,7 @@
       <string>Whisker Tracing</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
     <widget class="QLabel" name="label_13">
@@ -238,12 +238,12 @@
       <rect>
        <x>10</x>
        <y>260</y>
-       <width>121</width>
+       <width>191</width>
        <height>24</height>
       </rect>
      </property>
      <property name="text">
-      <string>Manual Whisker</string>
+      <string>Manual Whisker Define</string>
      </property>
      <property name="checkable">
       <bool>true</bool>
@@ -253,7 +253,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>290</y>
+       <y>320</y>
        <width>71</width>
        <height>22</height>
       </rect>
@@ -275,7 +275,7 @@
      <property name="geometry">
       <rect>
        <x>100</x>
-       <y>290</y>
+       <y>320</y>
        <width>141</width>
        <height>16</height>
       </rect>
@@ -288,7 +288,7 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>320</y>
+       <y>350</y>
        <width>121</width>
        <height>24</height>
       </rect>
@@ -297,68 +297,100 @@
       <string>Delete Selected</string>
      </property>
     </widget>
-   </widget>
-   <widget class="QFrame" name="frame_2">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>10</y>
-      <width>251</width>
-      <height>71</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
-    </property>
-    <widget class="QLabel" name="label_4">
+    <widget class="QSpinBox" name="manual_whisker_lock_frame">
      <property name="geometry">
       <rect>
-       <x>50</x>
-       <y>50</y>
+       <x>20</x>
+       <y>380</y>
        <width>111</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Mask Alpha</string>
-     </property>
-    </widget>
-    <widget class="QSlider" name="mask_alpha_slider">
-     <property name="geometry">
-      <rect>
-       <x>40</x>
-       <y>30</y>
-       <width>171</width>
        <height>22</height>
       </rect>
      </property>
+     <property name="minimum">
+      <number>0</number>
+     </property>
      <property name="maximum">
-      <number>255</number>
+      <number>1000000</number>
+     </property>
+     <property name="singleStep">
+      <number>1</number>
      </property>
      <property name="value">
-      <number>50</number>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <number>0</number>
      </property>
     </widget>
-    <widget class="QLabel" name="label_6">
+    <widget class="QLabel" name="label_15">
      <property name="geometry">
       <rect>
-       <x>60</x>
-       <y>10</y>
-       <width>121</width>
+       <x>150</x>
+       <y>380</y>
+       <width>81</width>
        <height>16</height>
       </rect>
      </property>
      <property name="text">
-      <string>Display</string>
+      <string>Lock until</string>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
+    </widget>
+    <widget class="QSpinBox" name="num_frames_to_trace">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>30</y>
+       <width>61</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>1000000</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="select_whisker_button">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>290</y>
+       <width>131</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Select Whisker</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="linking_tol_spinbox">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>420</y>
+       <width>111</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>400</number>
+     </property>
+     <property name="value">
+      <number>20</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_18">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>420</y>
+       <width>91</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Linking Tol</string>
      </property>
     </widget>
    </widget>
@@ -372,10 +404,10 @@
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QLabel" name="label_8">
      <property name="geometry">
@@ -390,7 +422,7 @@
       <string>Face Mask</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
     <widget class="QPushButton" name="calculate_mask">
@@ -404,19 +436,6 @@
      </property>
      <property name="text">
       <string>Calculate</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="view_mask">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>140</y>
-       <width>75</width>
-       <height>24</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>View Mask</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_9">
@@ -448,7 +467,7 @@
       <bool>false</bool>
      </property>
      <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QSpinBox" name="mask_dilation">
@@ -520,16 +539,16 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>390</y>
+      <y>480</y>
       <width>511</width>
       <height>131</height>
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QPushButton" name="output_dir_button">
      <property name="geometry">
@@ -557,7 +576,7 @@
       <string/>
      </property>
      <property name="alignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QPushButton" name="export_image_csv">
@@ -634,6 +653,71 @@
       <string>0</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="export_all_tracked">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>10</y>
+       <width>141</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Export All tracked</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="export_all_start_spinbox">
+     <property name="geometry">
+      <rect>
+       <x>290</x>
+       <y>40</y>
+       <width>71</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>1000000</number>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="export_all_end_spinbox">
+     <property name="geometry">
+      <rect>
+       <x>290</x>
+       <y>70</y>
+       <width>71</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>1000000</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_16">
+     <property name="geometry">
+      <rect>
+       <x>380</x>
+       <y>40</y>
+       <width>71</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>First Frame</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_17">
+     <property name="geometry">
+      <rect>
+       <x>380</x>
+       <y>70</y>
+       <width>71</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Last Frame</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QFrame" name="frame_5">
     <property name="geometry">
@@ -641,14 +725,14 @@
       <x>270</x>
       <y>250</y>
       <width>251</width>
-      <height>141</height>
+      <height>231</height>
      </rect>
     </property>
     <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
+     <enum>QFrame::Shape::StyledPanel</enum>
     </property>
     <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
+     <enum>QFrame::Shadow::Raised</enum>
     </property>
     <widget class="QPushButton" name="dl_trace_button">
      <property name="geometry">
@@ -676,6 +760,19 @@
       <string>Add Memory Frame</string>
      </property>
     </widget>
+    <widget class="QCheckBox" name="auto_dl_checkbox">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>80</y>
+       <width>92</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Auto</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -684,7 +781,7 @@
      <x>0</x>
      <y>0</y>
      <width>549</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuWhisker">
@@ -698,14 +795,18 @@
      <addaction name="actionLoad_Janelia_Whiskers"/>
      <addaction name="actionLoad_CSV_Whiskers"/>
      <addaction name="actionLoad_CSV_Whiskers_Multiple"/>
-     <addaction name="actionLoad_HDF5_Whisker_Single"/>
-     <addaction name="actionLoad_HDF5_Whisker_Multiple"/>
+     <addaction name="actionLoad_CSV_Whisker_Single_File_Multi_Frame"/>
      <addaction name="separator"/>
-     <addaction name="actionLoad_Mask"/>
-     <addaction name="actionLoad_HDF5_Mask_Multiple"/>
+    </widget>
+    <widget class="QMenu" name="menuSave_Whiskers">
+     <property name="title">
+      <string>Save Whiskers</string>
+     </property>
+     <addaction name="actionSave_as_CSV"/>
     </widget>
     <addaction name="menuLoad_Whiskers"/>
     <addaction name="actionJanelia_Settings"/>
+    <addaction name="menuSave_Whiskers"/>
    </widget>
    <widget class="QMenu" name="menuContact">
     <property name="title">
@@ -726,7 +827,6 @@
     </widget>
     <addaction name="actionSave_Snapshot"/>
     <addaction name="menuFace_Mask"/>
-    <addaction name="actionLoad_Keypoint_CSV"/>
    </widget>
    <addaction name="menuImage"/>
    <addaction name="menuWhisker"/>
@@ -759,12 +859,12 @@
   </action>
   <action name="actionLoad_CSV_Whiskers">
    <property name="text">
-    <string>Load CSV Whiskers (Single)</string>
+    <string>Load CSV Whiskers (Single File, Single Frame)</string>
    </property>
   </action>
   <action name="actionLoad_CSV_Whiskers_Multiple">
    <property name="text">
-    <string>Load CSV Whiskers (Multiple)</string>
+    <string>Load CSV Whiskers (Single File, Single Frame, Multiple)</string>
    </property>
   </action>
   <action name="actionSave_Face_Mask_2">
@@ -800,6 +900,16 @@
   <action name="actionLoad_HDF5_Mask_Multiple">
    <property name="text">
     <string>Load HDF5 Mask (Multiple)</string>
+   </property>
+  </action>
+  <action name="actionSave_as_CSV">
+   <property name="text">
+    <string>Save as CSV</string>
+   </property>
+  </action>
+  <action name="actionLoad_CSV_Whisker_Single_File_Multi_Frame">
+   <property name="text">
+    <string>Load CSV Whisker (Single File, Multi Frame)</string>
    </property>
   </action>
  </widget>

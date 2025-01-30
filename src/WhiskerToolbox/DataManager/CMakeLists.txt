@@ -29,6 +29,7 @@ add_library(DataManager SHARED
 
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
+        DigitalTimeSeries/interval_data.hpp
 
         DigitalTimeSeries/Digital_Event_Series.hpp
         DigitalTimeSeries/Digital_Event_Series.cpp
@@ -49,6 +50,13 @@ add_library(DataManager SHARED
         transforms/data_transforms.hpp
 
         loaders/binary_loaders.hpp
+        Points/points.hpp
+        Masks/masks.hpp
+        Lines/lines.hpp
+        LockState/LockState.hpp
+        Observer/Observer_Data.hpp
+        Observer/Observer_Data.cpp
+        ImageSize/ImageSize.hpp
 )
 
 target_include_directories(DataManager PRIVATE

@@ -78,5 +78,10 @@ private slots:
     void openTrackingWidget();
     void openMLWidget();
     void openDataViewer();
+    void openPointLoaderWidget();
+    void openMaskLoaderWidget();
+    void openLineLoaderWidget();
+    void openIntervalLoaderWidget();
+    void openDataManager();
 };
 #endif // MAINWINDOW_HPP

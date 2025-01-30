@@ -1,7 +1,7 @@
 #ifndef ORDER_LINE_HPP
 #define ORDER_LINE_HPP
 
-#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Points/points.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -43,7 +43,7 @@ std::vector<Point2D<float>> order_line(
     // Calculate distances from each pixel to the origin
     std::vector<float> distances_to_origin(line_pixels.size());
     std::transform(line_pixels.begin(), line_pixels.end(), distances_to_origin.begin(), [&origin](const Point2D<float>& p) {
-        return std::sqrt(std::pow(p.x - origin.x, 2) + std::pow(p.y - origin.y, 2));
+        return std::pow(p.x - origin.x, 2) + std::pow(p.y - origin.y, 2);
     });
 
     // Find the base point (closest to the origin)
@@ -63,7 +63,7 @@ std::vector<Point2D<float>> order_line(
     while (!line_pixels.empty()) {
         std::vector<float> distances_to_current(line_pixels.size());
         std::transform(line_pixels.begin(), line_pixels.end(), distances_to_current.begin(), [&current_point](const Point2D<float>& p) {
-            return std::sqrt(std::pow(p.x - current_point.x, 2) + std::pow(p.y - current_point.y, 2));
+            return std::pow(p.x - current_point.x, 2) + std::pow(p.y - current_point.y, 2);
         });
 
         auto nearest_neighbor_iter = std::min_element(distances_to_current.begin(), distances_to_current.end());

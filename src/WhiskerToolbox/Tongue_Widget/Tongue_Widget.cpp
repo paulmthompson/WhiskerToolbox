@@ -18,7 +18,6 @@
 #include <QFileDialog>
 #include <QPushButton>
 #include "qevent.h"
-#include <QSlider>
 
 #include <iomanip>
 #include <iostream>
@@ -42,11 +41,9 @@ Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> d
 {
     ui->setupUi(this);
 
-    connect(ui->load_hdf_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadHDF5TongueMasks);
     connect(ui->load_img_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadImgTongueMasks);
-    connect(ui->load_jaw_btn, &QPushButton::clicked, this, &Tongue_Widget::_loadCSVJawKeypoints);
+
     connect(ui->begin_grabcut_btn, &QPushButton::clicked, this, &Tongue_Widget::_startGrabCut);
-    connect(ui->transparency_slider, &QSlider::valueChanged, this, &Tongue_Widget::_upd_mask_transparency);
     connect(ui->savemasks_btn, &QPushButton::clicked, this, &Tongue_Widget::_exportMasks);
 };
 
@@ -76,42 +73,6 @@ void Tongue_Widget::keyPressEvent(QKeyEvent *event) {
 
 }
 
-void Tongue_Widget::_loadHDF5TongueMasks()
-{
-    auto filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Tongue File",
-        QDir::currentPath(),
-        "All files (*.*)");
-
-    if (filename.isNull()) {
-        return;
-    }
-
-    auto frames =  read_array_hdf5(filename.toStdString(), "frames");
-    auto probs = read_ragged_hdf5(filename.toStdString(), "probs");
-    auto y_coords = read_ragged_hdf5(filename.toStdString(), "heights");
-    auto x_coords = read_ragged_hdf5(filename.toStdString(), "widths");
-
-    auto mask_num = _data_manager->getKeys<MaskData>().size();
-
-    auto mask_key = "Tongue_Mask" + std::to_string(mask_num);
-
-    _data_manager->setData<MaskData>(mask_key);
-
-    auto mask = _data_manager->getData<MaskData>(mask_key);
-    // mask->setMaskHeight(_data_manager->getMediaData()->getHeight());
-    // mask->setMaskWidth(_data_manager->getMediaData()->getWidth());
-
-    auto media = _data_manager->getData<MediaData>("media");
-    for (std::size_t i = 0; i < frames.size(); i ++) {
-        mask->addMaskAtTime(media->getFrameIndexFromNumber(frames[i]), x_coords[i], y_coords[i]);
-    }
-
-    _scene->addMaskDataToScene(mask_key);
-    _scene->changeMaskColor(mask_key, tongue_colors[mask_num]);
-}
-
 /**
  * @brief Tongue_Widget::_loadImgTongueMasks
  * Loads masks of tongue from image sequence
@@ -132,8 +93,7 @@ void Tongue_Widget::_loadImgTongueMasks(){
     auto mask = _data_manager->getData<MaskData>(mask_key);
 
     auto media = _data_manager->getData<MediaData>("media");
-    mask->setMaskHeight(media->getHeight());
-    mask->setMaskWidth(media->getWidth());
+    mask->setImageSize({media->getWidth(), media->getHeight()});
 
     for (const auto & img_it : std::filesystem::directory_iterator(dir_name))
     {
@@ -151,38 +111,6 @@ void Tongue_Widget::_loadImgTongueMasks(){
 
     _scene->addMaskDataToScene(mask_key);
     _scene->changeMaskColor(mask_key, tongue_colors[mask_num]);
-}
-
-void Tongue_Widget::_loadCSVJawKeypoints(){
-    auto filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Jaw CSV File",
-        QDir::currentPath(),
-        "All files (*.*)");
-
-    if (filename.isNull()) {
-        return;
-    }
-
-    auto keypoints = load_points_from_csv(filename.toStdString(), 0, 1, 2);
-
-    auto point_num = _data_manager->getKeys<PointData>().size();
-
-    std::cout << "There are " << point_num << " keypoints loaded" << std::endl;
-
-    auto keypoint_key = "keypoint_" + std::to_string(point_num);
-
-    _data_manager->setData<PointData>(keypoint_key);
-
-    auto point = _data_manager->getData<PointData>(keypoint_key);
-
-    auto media = _data_manager->getData<MediaData>("media");
-    for (auto & [key, val] : keypoints) {
-        point->addPointAtTime(media->getFrameIndexFromNumber(key), val.x, val.y);
-    }
-
-    _scene->addPointDataToScene(keypoint_key);
-    _scene->changePointColor(keypoint_key, tongue_colors[point_num]);
 }
 
 void Tongue_Widget::_startGrabCut(){
@@ -209,10 +137,6 @@ void Tongue_Widget::_startGrabCut(){
     _grabcut_widget->openWidget();
 }
 
-void Tongue_Widget::_upd_mask_transparency(){
-    _scene->changeMaskAlpha(ui->transparency_slider->value());
-}
-
 void Tongue_Widget::_exportMasks() {
     auto const dir_name =  QFileDialog::getExistingDirectory(
                               this,
@@ -229,7 +153,7 @@ void Tongue_Widget::_exportMasks() {
 
     for (int i : drawn){
         auto mask = mask_data->getMasksAtTime(i)[0];
-        QImage mask_img(mask_data->getMaskWidth(), mask_data->getMaskHeight(), QImage::Format_Grayscale8);
+        QImage mask_img(mask_data->getImageSize().getWidth(), mask_data->getImageSize().getHeight(), QImage::Format_Grayscale8);
         mask_img.fill(0);
         for (auto [x, y] : mask){
             mask_img.setPixel(static_cast<int>(x), static_cast<int>(y), 0xFFFFFF);

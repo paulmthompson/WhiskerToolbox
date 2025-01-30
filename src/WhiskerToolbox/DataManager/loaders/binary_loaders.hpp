@@ -3,13 +3,24 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 
+/**
+ * @brief readBinaryFile
+ *
+ * Reads a binary file and returns the data as a vector of type T
+ *
+ * @param file_path Path to the binary file
+ * @param header_size_bytes (optional) Number of bytes to skip at the beginning of the file
+ * @return std::vector<T> Vector of data read from the file
+ */
 template <typename T>
-std::vector<T> readBinaryFile(const std::string& file_path) {
+inline std::vector<T> readBinaryFile(const std::string& file_path, int header_size_bytes=0) {
     std::ifstream file(file_path, std::ios::binary);
     std::vector<T> data;
     if (file) {
+        file.seekg(header_size_bytes, std::ios::beg);
         T value;
         while (file.read(reinterpret_cast<char*>(&value), sizeof(T))) {
             data.push_back(value);
@@ -18,7 +29,18 @@ std::vector<T> readBinaryFile(const std::string& file_path) {
     return data;
 }
 
-template <typename T>
+/**
+ * @brief extractDigitalData
+ *
+ * This reads a vector of unsigned ints where
+ * each bit represents a digital channel and extracts
+ * the data for a specific channel (1 or 0)
+ *
+ * @param data Vector of data
+ * @param channel Channel to extract
+ * @return std::vector<int> Vector of digital data
+ */
+template <typename T, typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value, int>::type = 0>
 std::vector<int> extractDigitalData(const std::vector<T>& data, int channel) {
 
     const T ttl_mask = 1 << channel;

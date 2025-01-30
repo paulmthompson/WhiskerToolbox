@@ -1,18 +1,27 @@
 #ifndef LINE_DATA_HPP
 #define LINE_DATA_HPP
 
-#include <cstdint>
-#include <vector>
+#include "Points/points.hpp"
+#include "ImageSize/ImageSize.hpp"
+#include "lines.hpp"
+#include "LockState/LockState.hpp"
+#include "Observer/Observer_Data.hpp"
+
 #include <map>
-#include <string>
+#include <vector>
 
-#include "Points/Point_Data.hpp"
-
-using Line2D = std::vector<Point2D<float>>;
-
-class LineData {
+/*
+ * @brief LineData
+ *
+ * LineData is used for storing 2D lines
+ * Line data implies that the elements in the line have an order
+ * Compare to MaskData where the elements in the mask have no order
+ */
+class LineData : public ObserverData {
 public:
-    LineData();
+    LineData() = default;
+    LineData(std::map<int,std::vector<Line2D>> const& data) : _data(data) {};
+    void clearLineAtTime(int const time, int const line_id);
     void clearLinesAtTime(int const time);
     void addLineAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y);
     void addLineAtTime(int const time, std::vector<Point2D<float>> const & line);
@@ -24,21 +33,32 @@ public:
     std::vector<int> getTimesWithLines() const;
 
     std::vector<Line2D> const& getLinesAtTime(int const time) const;
+
+    std::map<int, std::vector<Line2D>> const& getData() const {return _data;};
+
+    void lockTime(int time) { _lock_state.lock(time); }
+    void unlockTime(int time) { _lock_state.unlock(time); }
+    bool isTimeLocked(int time) const { return _lock_state.isLocked(time); }
+
+    void lockUntil(int time)
+    {
+        _lock_state.clear();
+        for (int i = 0; i <= time; i++) {
+            _lock_state.lock(i);
+        }
+    }
+
+    ImageSize getImageSize() const { return _image_size; }
+    void setImageSize(const ImageSize& image_size) { _image_size = image_size; }
+
 protected:
 
 private:
     std::map<int,std::vector<Line2D>> _data;
-    std::vector<Line2D> _empty;
+    std::vector<Line2D> _empty {};
+    LockState _lock_state;
+    ImageSize _image_size;
 };
 
-void save_line_as_csv(Line2D const& line, std::string const& filename, int const point_precision = 2);
-
-Line2D load_line_from_csv(std::string const& filename);
-
-Line2D create_line(std::vector<float> const& x, std::vector<float> const& y);
-
-void smooth_line(Line2D& line);
-
-std::vector<uint8_t> line_to_image(Line2D& line, int height, int width);
 
 #endif // LINE_DATA_HPP

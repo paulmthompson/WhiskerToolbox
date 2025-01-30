@@ -33,8 +33,11 @@ Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> dat
         _scene->changePointColor("labels", "#ffe600");
         auto point = _data_manager->getData<PointData>("labels");
         auto media = _data_manager->getData<MediaData>("media");
-        point->setMaskHeight(media->getHeight());
-        point->setMaskWidth(media->getWidth());
+        point->setImageSize({media->getWidth(), media->getHeight()});
+
+        _data_manager->addCallbackToData("labels", [this]() {
+            _scene->UpdateCanvas();
+        });
     }
 }
 
@@ -88,8 +91,10 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
 // Change
 void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
 
-  float x_media = x_canvas / _scene->getXAspect();
-  float y_media = y_canvas / _scene->getYAspect();
+    auto scene = dynamic_cast<Media_Window*>(sender());
+
+  float x_media = x_canvas / scene->getXAspect();
+  float y_media = y_canvas / scene->getYAspect();
 
   auto media = _data_manager->getData<MediaData>("media");
 
@@ -108,30 +113,13 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
   point->clearPointsAtTime(frame_number);
   point->addPointAtTime(frame_number, y_media, x_media);
 
-  _scene->UpdateCanvas();
+  scene->UpdateCanvas();
 
   this->_updateAll();
 }
 
 void Label_Widget::_updateAll() {
-    _scene->UpdateCanvas();
   _updateTable();
-}
-
-// If current frame has label, it should be redrawn
-
-// Is this even necessary anymore?
-void Label_Widget::_updateDraw()
-{
-    auto media = _data_manager->getData<MediaData>("media");
-
-  //_scene->clearPoints();
-  for (auto &[frame_name, label] : _label_maker->getLabels()) {
-      if (frame_name == media->GetFrameID(_data_manager->getTime()->getLastLoadedFrame())) {
-      auto &[img, point] = label;
-      //_scene->addPoint(point.x, point.y, QPen(QColor(Qt::red)));
-    }
-  }
 }
 
 void Label_Widget::_updateTable() {

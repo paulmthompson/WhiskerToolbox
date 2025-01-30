@@ -19,17 +19,6 @@ namespace Ui {
 class contact_widget;
 }
 
-/*
-
-This is our interface to using the Janelia whisker tracker.
-
-*/
-
-
-enum class Contact : int {
-    Contact = 1,
-    NoContact = 0
-};
 
 class Contact_Widget : public QWidget
 {
@@ -51,7 +40,6 @@ private:
     Ui::contact_widget *ui;
     std::shared_ptr<DataManager> _data_manager;
 
-    std::vector<Contact> _contact;
     int _contact_start {0};
     bool _contact_epoch {false};
     QGraphicsScene* _scene;

@@ -60,6 +60,8 @@ private:
 
     int _selected_whisker {0};
 
+    float _linking_tolerance {20.0f};
+
     enum Selection_Type {Whisker_Select,
                           Whisker_Pad_Select,
                           Magic_Eraser,
@@ -90,19 +92,18 @@ private:
 
     int _current_whisker {0};
 
+    bool _auto_dl {false};
+
     Ui::Whisker_Widget *ui;
 
     std::unique_ptr<dl::SCM> dl_model {nullptr};
 
-    void _drawWhiskers();
     void _createNewWhisker(std::string const & whisker_group_name, int const whisker_id);
 
     void _saveImage(std::string const& folder);
     std::string _getImageSaveName(int const frame_id);
     std::string _getWhiskerSaveName(int const frame_id);
 
-    void _loadSingleHDF5WhiskerMask(std::string const & filename);
-    void _loadSingleHDF5WhiskerLine(std::string const & filename, std::string const & whisker_group_name, int const whisker_num);
     std::vector<int> _loadCSVWhiskerFromDir(std::string const & dir_name, std::string const & whisker_group_name);
 
     void _addNewTrackedWhisker(int const index);
@@ -110,6 +111,9 @@ private:
 
     void _traceWhiskers(std::vector<uint8_t> image, int height, int width);
     void _traceWhiskersDL(std::vector<uint8_t> image, int height, int width);
+
+    void _addDrawingCallback(std::string data_name);
+
 
 private slots:
     void _traceButton();
@@ -120,12 +124,6 @@ private slots:
     void _loadFaceMask();
 
     void _loadJaneliaWhiskers();
-
-    void _loadHDF5WhiskerMask();
-    void _loadHDF5WhiskerMasksFromDir();
-
-    void _loadHDF5WhiskerLine();
-    void _loadHDF5WhiskerLinesFromDir();
 
     void _loadSingleCSVWhisker();
     void _loadMultiCSVWhiskers();
@@ -145,14 +143,10 @@ private slots:
     void _openJaneliaConfig();
     void _openContactWidget();
 
-    void _setMaskAlpha(int);
-
     void _skipToTrackedFrame(int index);
 
     void _maskDilation(int dilation_size);
     void _maskDilationExtended(int dilation_size);
-
-    void _loadKeypointCSV();
 
     void _changeOutputDir();
 
@@ -168,17 +162,28 @@ private slots:
 
     void _manualWhiskerToggle();
 
+    void _saveWhiskersAsCSV();
+    void _loadMultiFrameCSV();
+
+    void _setLockFrame(int lock_frame);
+
+    void _exportAllTracked();
+
 };
 
-void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whiskers_to_track);
+void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whiskers_to_track, int current_time, float similarity_threshold);
 
 std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string const & dir_name, std::string const & line_key);
 
-void read_hdf5_line_into_datamanager(DataManager* dm, std::string const  & filename, std::string const & line_key);
-
 bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_group_name);
 
-void add_whiskers_to_data_manager(DataManager* dm, std::vector<Line2D> & whiskers, std::string const & whisker_group_name, int const num_whisker_to_track);
+void add_whiskers_to_data_manager(
+    DataManager* dm,
+    std::vector<Line2D> & whiskers,
+    std::string const & whisker_group_name,
+    int const num_whisker_to_track,
+    int current_time,
+    float similarity_threshold);
 
 void clip_whisker(Line2D& line, int clip_length);
 

@@ -7,12 +7,15 @@
 
 #include "TimeFrame.hpp"
 
+#include "utils/color.hpp"
+
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPixmapItem>
 #include <QImage>
+#include <QPainter>
 
 #include <iostream>
-#include <QPainter>
+
 
 /*
 
@@ -36,14 +39,23 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject *p
 /**
  * @brief Media_Window::addLineDataToScene
  *
- * If a new key is added to DataManager, it is added to the scene
- * by default. This should be observer
  *
  * @param line_key
  */
-void Media_Window::addLineDataToScene(std::string const & line_key)
+void Media_Window::addLineDataToScene(std::string const & line_key, std::string const & hex_color, float alpha)
 {
-    _line_configs[line_key] = element_config{"#0000FF",1.0};
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+
+    _line_configs[line_key] = element_config{hex_color, alpha};
+
+    UpdateCanvas();
 }
 
 void Media_Window::changeLineColor(std::string const & line_key, std::string const & hex_color)
@@ -66,9 +78,29 @@ void Media_Window::clearLines() {
     _line_paths.clear();
 }
 
-void Media_Window::addMaskDataToScene(const std::string& mask_key)
+void Media_Window::removeLineDataFromScene(const std::string &line_key) {
+    auto lineItem = _line_configs.find(line_key);
+    if (lineItem != _line_configs.end()) {
+        _line_configs.erase(lineItem);
+    }
+
+    UpdateCanvas();
+}
+
+void Media_Window::addMaskDataToScene(const std::string& mask_key, std::string const & hex_color, float alpha)
 {
-     _mask_configs[mask_key] = element_config{"#0000FF",1.0};
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+
+     _mask_configs[mask_key] = element_config{hex_color, alpha};
+
+    UpdateCanvas();
 }
 
 void Media_Window::changeMaskColor(const std::string& mask_key, std::string const & hex_color)
@@ -102,10 +134,31 @@ void Media_Window::clearMasks()
     _masks.clear();
 }
 
-void Media_Window::addPointDataToScene(const std::string& point_key)
+void Media_Window::removeMaskDataFromScene(const std::string &mask_key)
+{
+    auto maskItem = _mask_configs.find(mask_key);
+    if (maskItem != _mask_configs.end()) {
+        _mask_configs.erase(maskItem);
+    }
+
+    UpdateCanvas();
+}
+
+void Media_Window::addPointDataToScene(const std::string& point_key, std::string const & hex_color, float alpha)
 {
 
-    _point_configs[point_key] = element_config{"#0000FF",1.0};
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+
+    _point_configs[point_key] = element_config{hex_color, alpha};
+
+    UpdateCanvas();
 }
 
 void Media_Window::changePointColor(std::string const& point_key, std::string const & hex_color)
@@ -121,6 +174,16 @@ void Media_Window::clearPoints() {
         delete pathItem;
     }
     _points.clear();
+}
+
+void Media_Window::removePointDataFromScene(const std::string &point_key)
+{
+    auto pointItem = _point_configs.find(point_key);
+    if (pointItem != _point_configs.end()) {
+        _point_configs.erase(pointItem);
+    }
+
+    UpdateCanvas();
 }
 
 void Media_Window::setPointAlpha(std::string const & point_key, float const alpha)
@@ -143,9 +206,26 @@ void Media_Window::UpdateCanvas()
     clearPoints();
     clearMasks();
 
-    _convertNewMediaToQImage();
+    //_convertNewMediaToQImage();
+    auto _media = _data_manager->getData<MediaData>("media");
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto media_data = _media->getProcessedData(current_time);
 
-    _canvasPixmap->setPixmap(QPixmap::fromImage(_canvasImage));
+    auto unscaled_image = QImage(&media_data[0],
+                                 _media->getWidth(),
+                                 _media->getHeight(),
+                                 _getQImageFormat()
+                                 );
+
+    auto new_image = unscaled_image.scaled(
+        _canvasWidth,
+        _canvasHeight,
+        Qt::IgnoreAspectRatio,
+        Qt::SmoothTransformation
+        );
+
+    _canvasPixmap->setPixmap(QPixmap::fromImage(new_image));
+    _canvasImage = new_image;
 
     // Check for manual selection with the currently rendered frame;
 
@@ -207,6 +287,9 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent *event) {
             _is_drawing = true;
         }
         emit leftClick(event->scenePos().x(),event->scenePos().y());
+        emit leftClickMedia(
+                event->scenePos().x() / getXAspect(),
+                event->scenePos().y() / getYAspect());
     } else if (event->button() == Qt::RightButton){
 
     } else {
@@ -261,6 +344,10 @@ void Media_Window::_plotLineData()
 
         auto lineData = _data_manager->getData<LineData>(line_key)->getLinesAtTime(current_time);
 
+        if (lineData.size() == 0) {
+            continue;
+        }
+
         for (auto const & single_line : lineData) {
 
             if (single_line.size() == 0) {
@@ -269,7 +356,7 @@ void Media_Window::_plotLineData()
 
             QPainterPath path = QPainterPath();
 
-            auto single_line_thres = 10.0;
+            auto single_line_thres = 1000.0;
 
             path.moveTo(QPointF(static_cast<float>(single_line[0].x) * xAspect, static_cast<float>(single_line[0].y) * yAspect));
 
@@ -286,6 +373,19 @@ void Media_Window::_plotLineData()
 
             auto linePath = addPath(path, QPen(plot_color));
             _line_paths.append(linePath);
+
+
+            // Add dot at line base
+
+            auto ellipse = addEllipse(
+                    static_cast<float>(single_line[0].x) * xAspect - 2.5,
+                    static_cast<float>(single_line[0].y) * yAspect - 2.5,
+                    5.0, 5.0,
+                    QPen(plot_color),
+                    QBrush(plot_color)
+            );
+            _points.append(ellipse);
+
 
             /*
             // Add dots for each point on the line
@@ -322,8 +422,9 @@ void Media_Window::_plotMaskData()
         auto plot_color = _plot_color_with_alpha(_mask_config);
 
         auto mask = _data_manager->getData<MaskData>(mask_key);
-        float mask_height = static_cast<float>(mask->getMaskHeight());
-        float mask_width = static_cast<float>(mask->getMaskWidth());
+        auto image_size = mask->getImageSize();
+        float mask_height = static_cast<float>(image_size.getHeight());
+        float mask_width = static_cast<float>(image_size.getWidth());
 
         auto const& maskData = mask->getMasksAtTime(current_time);
 
@@ -372,11 +473,20 @@ void Media_Window::_plotPointData()
 
         auto point = _data_manager->getData<PointData>(point_key);
 
-        float mask_height = static_cast<float>(point->getMaskHeight());
-        float mask_width = static_cast<float>(point->getMaskWidth());
+        auto xAspect = getXAspect();
+        auto yAspect = getYAspect();
 
-        auto xAspect = _canvasWidth / mask_width;
-        auto yAspect = _canvasHeight / mask_height;
+        auto image_size = point->getImageSize();
+
+        if (image_size.getHeight() != -1) {
+            float mask_height = static_cast<float>(image_size.getHeight());
+            yAspect = _canvasHeight / mask_height;
+        }
+
+        if (image_size.getWidth() != -1) {
+            float mask_width = static_cast<float>(image_size.getWidth());
+            xAspect = _canvasWidth / mask_width;
+        }
 
         auto pointData = point->getPointsAtTime(current_time);
 

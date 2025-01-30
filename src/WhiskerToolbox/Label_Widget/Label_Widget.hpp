@@ -33,7 +33,6 @@ private:
   std::unique_ptr<LabelMaker> _label_maker;
   void _updateAll();
   void _updateTable();
-  void _updateDraw();
   void _addLabeltoTable(int row, std::string frame_id, label_point label);
   void _exportFrames(std::string saveFileName);
   std::filesystem::path _createImagePath(std::string saveFileName);

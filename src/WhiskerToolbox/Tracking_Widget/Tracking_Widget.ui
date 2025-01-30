@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>330</width>
     <height>600</height>
    </rect>
   </property>
@@ -14,129 +14,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="select_point_button">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>100</y>
-      <width>111</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Select Point</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>110</y>
-      <width>91</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Point Location</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="location_label">
-    <property name="geometry">
-     <rect>
-      <x>240</x>
-      <y>110</y>
-      <width>71</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>( , )</string>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="graphicsView">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>160</y>
-      <width>256</width>
-      <height>192</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="spinBox">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>370</y>
-      <width>81</width>
-      <height>22</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>130</x>
-      <y>370</y>
-      <width>151</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Focus Bounding Box</string>
-    </property>
-   </widget>
-   <widget class="QTableWidget" name="tableWidget">
-    <property name="geometry">
-     <rect>
-      <x>330</x>
-      <y>20</y>
-      <width>311</width>
-      <height>361</height>
-     </rect>
-    </property>
-    <column>
-     <property name="text">
-      <string>Frame</string>
-     </property>
-    </column>
-    <column>
-     <property name="text">
-      <string>X</string>
-     </property>
-    </column>
-    <column>
-     <property name="text">
-      <string>Y</string>
-     </property>
-    </column>
-   </widget>
-   <widget class="QPushButton" name="save_csv_button">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>20</y>
-      <width>131</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Save to CSV</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="output_dir_button">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>60</y>
-      <width>131</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Select Output Dir</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="output_dir_label">
     <property name="geometry">
      <rect>
@@ -154,7 +31,7 @@
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>410</y>
+      <y>470</y>
       <width>211</width>
       <height>20</height>
      </rect>
@@ -169,17 +46,10 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>330</width>
      <height>22</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>File</string>
-    </property>
-    <addaction name="actionLoad_CSV"/>
-   </widget>
-   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionLoad_CSV">
