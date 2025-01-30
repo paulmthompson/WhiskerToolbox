@@ -127,6 +127,11 @@
       <string>Line</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>Tensor</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="label_2">
     <property name="geometry">

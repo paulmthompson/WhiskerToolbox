@@ -10,16 +10,20 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 
+//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
+#undef slots
+#include "DataManager/Tensors/Tensor_Data.hpp"
+#define slots Q_SLOTS
+
 #include "Mask_Widget/Mask_Widget.hpp"
 #include "Point_Widget/Point_Widget.hpp"
 #include "Line_Widget/Line_Widget.hpp"
 #include "AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp"
 #include "DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp"
 #include "DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp"
+#include "Tensor_Widget/Tensor_Widget.hpp"
 
 #include "Media_Window/Media_Window.hpp"
-
-
 
 #include <QFileDialog>
 
@@ -45,6 +49,7 @@ DataManager_Widget::DataManager_Widget(
     ui->stackedWidget->addWidget(new AnalogTimeSeries_Widget(_data_manager));
     ui->stackedWidget->addWidget(new DigitalIntervalSeries_Widget(_data_manager));
     ui->stackedWidget->addWidget(new DigitalEventSeries_Widget(_data_manager));
+    ui->stackedWidget->addWidget(new Tensor_Widget(_data_manager));
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &DataManager_Widget::_changeOutputDir);
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataManager_Widget::_handleFeatureSelected);
@@ -97,6 +102,11 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
 
     } else if (feature_type == "DigitalEventSeries") {
         ui->stackedWidget->setCurrentIndex(6);
+    } else if (feature_type == "TensorData") {
+
+        ui->stackedWidget->setCurrentIndex(7);
+        dynamic_cast<Tensor_Widget*>(ui->stackedWidget->widget(7))->setActiveKey(key);
+
     } else {
         std::cout << "Unsupported feature type" << std::endl;
     }
@@ -131,6 +141,7 @@ void DataManager_Widget::_disablePreviousFeature(const QString& feature)
 
     } else if (feature_type == "DigitalEventSeries") {
 
+    } else if (feature_type == "TensorData") {
     } else {
         std::cout << "Unsupported feature type" << std::endl;
     }
@@ -175,6 +186,8 @@ void DataManager_Widget::_createNewData()
         _data_manager->setData<DigitalIntervalSeries>(key);
     } else if (type == "Event") {
         _data_manager->setData<DigitalEventSeries>(key);
+    } else if (type == "Tensor") {
+        _data_manager->setData<TensorData>(key);
     } else {
         std::cout << "Unsupported data type" << std::endl;
     }

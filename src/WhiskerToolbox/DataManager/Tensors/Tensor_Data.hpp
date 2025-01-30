@@ -17,6 +17,8 @@ public:
 
     const std::map<int, torch::Tensor>& getData() const { return _data; }
 
+    std::size_t size() const {return _data.size();}
+
 private:
     std::map<int, torch::Tensor> _data;
 };

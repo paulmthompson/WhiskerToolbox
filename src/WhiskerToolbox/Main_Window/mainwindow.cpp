@@ -22,6 +22,7 @@
 #include "Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp"
 #include "Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp"
 #include "Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp"
+#include "Loading_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "Media_Window.hpp"
 #include "ML_Widget/ML_Widget.hpp"
@@ -118,6 +119,7 @@ void MainWindow::_createActions()
     connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
     connect(ui->actionLoad_Lines, &QAction::triggered, this, &MainWindow::openLineLoaderWidget);
     connect(ui->actionLoad_Intervals, &QAction::triggered, this, &MainWindow::openIntervalLoaderWidget);
+    connect(ui->actionLoad_Tensor, &QAction::triggered, this, &MainWindow::openTensorLoaderWidget);
     connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
 }
 
@@ -573,6 +575,25 @@ void MainWindow::openIntervalLoaderWidget()
     }
 
     auto ptr = dynamic_cast<Digital_Interval_Loader_Widget*>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+void MainWindow::openTensorLoaderWidget()
+{
+    std::string const key = "TensorLoader_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto tensor_loader_widget = std::make_unique<Tensor_Loader_Widget>(
+            _data_manager,
+            this);
+
+       tensor_loader_widget->setObjectName(key);
+        registerDockWidget(key, tensor_loader_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(tensor_loader_widget);
+    }
+
+    auto ptr = dynamic_cast<Tensor_Loader_Widget*>(_widgets[key].get());
 
     showDockWidget(key);
 }

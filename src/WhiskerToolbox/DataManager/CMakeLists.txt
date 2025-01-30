@@ -67,10 +67,13 @@ add_library(DataManager SHARED
         ImageSize/ImageSize.hpp
 )
 
+message(STATUS "NPY source dir:")
+message(STATUS ${npy_SOURCE_DIR})
+
 target_include_directories(DataManager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
-
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+        "${npy_SOURCE_DIR}/include"
     )
 
 
