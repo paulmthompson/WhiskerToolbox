@@ -30,6 +30,20 @@ std::vector<int> TensorData::getTimesWithTensors() const {
     return times;
 }
 
+#ifdef _WIN32
+std::vector<long long> convertShape(const std::vector<unsigned long>& shape) {
+    std::vector<long long> convertedShape(shape.size());
+    std::transform(shape.begin(), shape.end(), convertedShape.begin(), [](unsigned long i) { return static_cast<long long>(i); });
+    return convertedShape;
+}
+#else
+std::vector<long> convertShape(const std::vector<unsigned long>& shape) {
+    std::vector<long> convertedShape(shape.size());
+    std::transform(shape.begin(), shape.end(), convertedShape.begin(), [](unsigned long i) { return static_cast<long>(i); });
+    return convertedShape;
+}
+#endif
+
 void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data) {
     if (!std::filesystem::exists(filepath)) {
         std::cout << "File does not exist: " << filepath << std::endl;
@@ -44,9 +58,7 @@ void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data) {
 
         std::cout << "Loaded numpy tensor with " << npy_data.shape << std::endl;
 
-        std::vector<long long> shape(npy_data.shape.size());
-        std::transform(npy_data.shape.begin(), npy_data.shape.end(), shape.begin(), [](unsigned long i) { return static_cast<long long>(i); });
-
+        auto shape = convertShape(npy_data.shape);
         torch::Tensor tensor = torch::from_blob(&npy_data.data[0], {shape}, options);
 
         // Assuming the tensor is a 2D tensor where the first dimension is time
