@@ -1,6 +1,11 @@
 
 find_package(HDF5 COMPONENTS CXX REQUIRED)
 
+set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
+
+find_package(Torch REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
 add_library(DataManager SHARED
         DataManager.hpp
         DataManager.cpp
@@ -33,6 +38,9 @@ add_library(DataManager SHARED
 
         DigitalTimeSeries/Digital_Event_Series.hpp
         DigitalTimeSeries/Digital_Event_Series.cpp
+
+        Tensors/Tensor_Data.hpp
+        Tensors/Tensor_Data.cpp
 
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp
@@ -77,6 +85,8 @@ else()
 endif()
 
 target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
+
+target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManager PRIVATE ${CLANG_OPTIONS})

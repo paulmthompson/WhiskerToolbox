@@ -7,6 +7,8 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Media/Video_Data.hpp"
+#include "Tensors/Tensor_Data.hpp"
+
 #include "transforms/data_transforms.hpp"
 #include "loaders/binary_loaders.hpp"
 #include "loaders/CSV_Loaders.hpp"
@@ -468,6 +470,8 @@ std::string DataManager::getType(const std::string& key) const {
                 return "DigitalEventSeries";
         } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(it->second)) {
             return "DigitalIntervalSeries";
+        } else if (std::holds_alternative<std::shared_ptr<TensorData>>(it->second)) {
+            return "TensorData";
         }
         return "Unknown";
     }
