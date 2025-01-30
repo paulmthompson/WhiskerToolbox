@@ -30,7 +30,7 @@ std::vector<int> TensorData::getTimesWithTensors() const {
     return times;
 }
 
-#ifdef _WIN32
+#ifdef _WIN32 || __APPLE__
 std::vector<long long> convertShape(const std::vector<unsigned long>& shape) {
     std::vector<long long> convertedShape(shape.size());
     std::transform(shape.begin(), shape.end(), convertedShape.begin(), [](unsigned long i) { return static_cast<long long>(i); });
