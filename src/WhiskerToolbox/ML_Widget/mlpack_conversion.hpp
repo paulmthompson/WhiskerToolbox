@@ -9,16 +9,26 @@
 
 #include <memory>
 
+////////////////////////////////////////////////////////
+
+// DigitalIntervalSeries
+
+/**
+ * Convert a DigitalIntervalSeries to an mlpack row vector
+ * @param series The DigitalIntervalSeries to convert
+ * @param timestamps The timestamps to convert
+ * @return arma::Row<double> The mlpack row vector
+ */
 inline arma::Row<double> convertToMlpackArray(
         const std::shared_ptr<DigitalIntervalSeries>& series,
-        std::size_t length)
+        std::vector<std::size_t> timestamps)
 {
+
+    auto length = timestamps.size();
     arma::Row<double> result(length, arma::fill::zeros);
 
-    for (const auto& interval : series->getDigitalIntervalSeries()) {
-        int start = static_cast<int>(interval.start);
-        int end = static_cast<int>(interval.end);
-        for (std::size_t i = start; i <= end && i < length; ++i) {
+    for (std::size_t i = 0; i < length; ++i) {
+        if (series->isEventAtTime(timestamps[i])) {
             result[i] = 1.0;
         }
     }
@@ -26,8 +36,15 @@ inline arma::Row<double> convertToMlpackArray(
     return result;
 }
 
+/**
+ * Update a DigitalIntervalSeries from an mlpack row vector
+ * @param array The mlpack row vector
+ * @param timestamps The timestamps to update
+ * @param series The DigitalIntervalSeries to update
+ */
 inline void updateDigitalIntervalSeriesFromMlpackArray(
         const arma::Row<double>& array,
+        std::vector<std::size_t> timestamps,
         std::shared_ptr<DigitalIntervalSeries> series)
 {
     std::vector<std::pair<float, float>> intervals;
@@ -51,7 +68,9 @@ inline void updateDigitalIntervalSeriesFromMlpackArray(
     series->setData(intervals);
 }
 
+////////////////////////////////////////////////////////
 
+// PointData
 
 inline arma::Mat<double> convertToMlpackMatrix(
         const std::shared_ptr<PointData>& pointData,
@@ -100,6 +119,17 @@ inline void updatePointDataFromMlpackMatrix(
     }
 
 }
+
+////////////////////////////////////////////////////////
+
+// TensorData
+
+
+
+
+////////////////////////////////////////////////////////
+
+//AnalogTimeSeries
 
 
 #endif //WHISKERTOOLBOX_MLPACK_CONVERSION_HPP

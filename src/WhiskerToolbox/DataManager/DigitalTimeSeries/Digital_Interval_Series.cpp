@@ -28,6 +28,36 @@ bool DigitalIntervalSeries::isEventAtTime(int time) const
     return false;
 }
 
+void DigitalIntervalSeries::addEvent(Interval new_interval)
+{
+    _addEvent(new_interval);
+
+    notifyObservers();
+}
+
+void DigitalIntervalSeries::_addEvent(Interval new_interval)
+{
+    bool merged = false;
+
+    for (auto it = _data.begin(); it != _data.end(); ) {
+        if (is_overlapping(*it, new_interval) || is_contiguous(*it, new_interval)) {
+            new_interval.start = std::min(new_interval.start, it->start);
+            new_interval.end = std::max(new_interval.end, it->end);
+            it = _data.erase(it);
+            merged = true;
+        } else if (is_contained(new_interval, *it)) {
+            return;
+        } else {
+            ++it;
+        }
+    }
+
+    _data.push_back(new_interval);
+
+    _sortData();
+
+}
+
 void DigitalIntervalSeries::createIntervalsFromBool(std::vector<uint8_t> const& bool_vector)
 {
     bool in_interval = false;
@@ -63,6 +93,12 @@ void DigitalIntervalSeries::setEventAtTime(int time, bool event)
 
 void DigitalIntervalSeries::removeEventAtTime(int time)
 {
+    _removeEventAtTime(time);
+    notifyObservers();
+}
+
+void DigitalIntervalSeries::_removeEventAtTime(int time)
+{
     for (auto it = _data.begin(); it != _data.end(); ++it) {
         if (is_contained(*it, time)) {
             if (time == it->start && time == it->end) {
@@ -79,9 +115,8 @@ void DigitalIntervalSeries::removeEventAtTime(int time)
                 _data.push_back(following_event);
 
                 _sortData();
-                notifyObservers();
-                return;
             }
+            return;
         }
     }
 }
