@@ -169,8 +169,9 @@ inline arma::Mat<double> convertTensorDataToMlpackMatrix(
     return result;
 }
 
-std::vector<double> copyMatrixRowToVector(const arma::Row<double>& row) {
-    std::vector<double> vec(row.n_elem);
+template <typename T>
+std::vector<T> copyMatrixRowToVector(const arma::Row<T>& row) {
+    std::vector<T> vec(row.n_elem);
     for (std::size_t i = 0; i < row.n_elem; ++i) {
         vec[i] = row[i];
     }
@@ -192,7 +193,7 @@ inline void updateTensorDataFromMlpackMatrix(
     std::vector<int64_t> shape(feature_shape.begin(), feature_shape.end());
 
     for (std::size_t i = 0; i < timestamps.size(); ++i) {
-        auto col = copyMatrixRowToVector(matrix.col(i));
+        auto col = copyMatrixRowToVector<double>(matrix.col(i));
         torch::Tensor tensor = torch::from_blob(col.data(), shape, torch::kDouble).clone();
         tensor_data.overwriteTensorAtTime(timestamps[i], tensor);
     }

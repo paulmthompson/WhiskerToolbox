@@ -58,27 +58,6 @@ void DigitalIntervalSeries::_addEvent(Interval new_interval)
 
 }
 
-void DigitalIntervalSeries::createIntervalsFromBool(std::vector<uint8_t> const& bool_vector)
-{
-    bool in_interval = false;
-    int start = 0;
-    for (int i = 0; i < bool_vector.size(); ++i) {
-        if (bool_vector[i] && !in_interval) {
-            start = i;
-            in_interval = true;
-        } else if (!bool_vector[i] && in_interval) {
-            _data.push_back(Interval{start, i - 1});
-            in_interval = false;
-        }
-    }
-    if (in_interval) {
-        _data.push_back(Interval{start, static_cast<int64_t>(bool_vector.size() - 1)});
-    }
-
-    _sortData();
-    notifyObservers();
-}
-
 void DigitalIntervalSeries::setEventAtTime(int time, bool event)
 {
     _setEventAtTime(time, event);

@@ -60,8 +60,8 @@ public:
     void setEventAtTime(int time, bool event);
     void removeEventAtTime(int time);
 
-    template <typename T>
-    void setEventsAtTimes(std::vector<T> times, std::vector<bool> events)
+    template <typename T, typename B>
+    void setEventsAtTimes(std::vector<T> times, std::vector<B> events)
     {
         for (int i = 0; i < times.size(); ++i) {
             _setEventAtTime(times[i], events[i]);
@@ -69,7 +69,27 @@ public:
         notifyObservers();
     }
 
-    void createIntervalsFromBool(std::vector<uint8_t> const& bool_vector);
+    template <typename T>
+    void createIntervalsFromBool(std::vector<T> const& bool_vector)
+    {
+        bool in_interval = false;
+        int start = 0;
+        for (int i = 0; i < bool_vector.size(); ++i) {
+            if (bool_vector[i] && !in_interval) {
+                start = i;
+                in_interval = true;
+            } else if (!bool_vector[i] && in_interval) {
+                _data.push_back(Interval{start, i - 1});
+                in_interval = false;
+            }
+        }
+        if (in_interval) {
+            _data.push_back(Interval{start, static_cast<int64_t>(bool_vector.size() - 1)});
+        }
+
+        _sortData();
+        notifyObservers();
+    }
 
     size_t size() {return _data.size();};
 

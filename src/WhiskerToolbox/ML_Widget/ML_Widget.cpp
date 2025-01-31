@@ -225,7 +225,29 @@ void ML_Widget::_fitModel()
                       labels.n_elem;
     std::cout << "After training 10 trees, test set accuracy is " << accuracy
               << "%." << std::endl;
-    
+
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    // Prediction timestamps
+    auto prediction_interval = std::vector<Interval>{Interval{
+        masks->getDigitalIntervalSeries().back().end,
+        current_time
+    }};
+
+    auto prediction_timestamps = create_timestamps(prediction_interval);
+
+    arma::Mat<double> prediction_feature_array = create_arrays(
+            _selected_features,
+            prediction_timestamps,
+            _data_manager);
+
+    arma::Row<size_t> prediction_labels;
+    model.Classify(prediction_feature_array, prediction_labels);
+
+    auto prediction_vec = copyMatrixRowToVector<size_t>(prediction_labels);
+
+    for (auto key : _selected_outcomes) {
+        _data_manager->getData<DigitalIntervalSeries>(key)->setEventsAtTimes(prediction_timestamps, prediction_vec);
+    }
 }
 
 std::vector<std::size_t> create_timestamps(std::vector<Interval>& intervals)
