@@ -41,6 +41,7 @@ inline arma::Row<double> convertToMlpackArray(
  * @param array The mlpack row vector
  * @param timestamps The timestamps to update
  * @param series The DigitalIntervalSeries to update
+ * @param threshold The threshold to use for the update
  */
 inline void updateDigitalIntervalSeriesFromMlpackArray(
         const arma::Row<double>& array,
@@ -62,29 +63,34 @@ inline void updateDigitalIntervalSeriesFromMlpackArray(
 
 // PointData
 
+/**
+ * Convert a PointData to an mlpack matrix
+ * @param pointData The PointData to convert
+ * @param timestamps The timestamps to convert
+ * @return arma::Mat<double> The mlpack matrix
+ */
 inline arma::Mat<double> convertToMlpackMatrix(
         const std::shared_ptr<PointData>& pointData,
-        std::size_t length)
+        std::vector<std::size_t> timestamps)
 {
 
-    const auto& data = pointData->getData();
-    size_t numRows = length;
-    size_t numCols = 0;
-
-    // Determine the maximum number of points at any time step
-    for (const auto& [time, points] : data) {
-        if (points.size() > numCols) {
-            numCols = points.size();
-        }
-    }
+    const size_t numRows = timestamps.size();
+    const size_t numCols = pointData->getMaxPoints();
 
     arma::Mat<double> result(numRows, numCols * 2, arma::fill::zeros);
 
-    for (const auto& [time, points] : data) {
-        for (size_t col = 0; col < points.size(); ++col) {
-            result(time, col * 2) = points[col].x;
-            result(time, col * 2 + 1) = points[col].y;
+    auto row = 0;
+    for (auto t : timestamps)
+    {
+        auto points = pointData->getPointsAtTime(t);
+
+        auto col = 0;
+        for (auto p : points) {
+            result(row, col * 2) = p.x;
+            result(row, col * 2 + 1) = p.y;
+            col++;
         }
+        row++;
     }
 
     return result;

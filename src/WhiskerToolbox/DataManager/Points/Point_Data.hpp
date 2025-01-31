@@ -39,6 +39,19 @@ public:
 
     std::vector<Point2D<float>> const& getPointsAtTime(int const time) const;
 
+    std::size_t getMaxPoints() const
+    {
+        std::size_t max_points = 1;
+        for (const auto& [time, points] : _data)
+        {
+            if (points.size() > max_points)
+            {
+                max_points = points.size();
+            }
+        }
+        return max_points;
+    }
+
     std::map<int, std::vector<Point2D<float>>> const& getData() const {return _data;};
 protected:
 
