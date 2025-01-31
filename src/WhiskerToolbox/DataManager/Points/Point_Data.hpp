@@ -6,6 +6,7 @@
 #include "points.hpp"
 
 #include <map>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,24 @@ public:
 
     void overwritePointAtTime(int const time, float const x, float const y);
     void overwritePointsAtTime(int const time, std::vector<Point2D<float>> const& points);
+
+    template <typename T>
+    void overwritePointsAtTimes(
+            std::vector<T> const& times,
+            std::vector<std::vector<Point2D<float>>> const& points)
+    {
+        if (times.size() != points.size())
+        {
+            std::cout << "overwritePointsAtTimes: times and points must be the same size" << std::endl;
+            return;
+        }
+
+        for (std::size_t i = 0; i < times.size(); i++)
+        {
+            _overwritePointsAtTime(times[i], points[i]);
+        }
+        notifyObservers();
+    }
 
     std::vector<int> getTimesWithPoints() const;
 
@@ -64,6 +83,9 @@ private:
     void _clearPointsAtTime(int const time);
     void _addPointAtTime(int const time, float const x, float const y);
     void _addPointsAtTime(int const time, std::vector<Point2D<float>> const& points);
+
+    void _overwritePointAtTime(int const time, float const x, float const y);
+    void _overwritePointsAtTime(int const time, std::vector<Point2D<float>> const& points);
 
 };
 

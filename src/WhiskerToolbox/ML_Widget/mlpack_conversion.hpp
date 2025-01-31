@@ -98,22 +98,24 @@ inline arma::Mat<double> convertToMlpackMatrix(
 
 inline void updatePointDataFromMlpackMatrix(
         const arma::Mat<double>& matrix,
+        std::vector<std::size_t> timestamps,
         std::shared_ptr<PointData> pointData)
 {
 
+    std::vector<std::vector<Point2D<float>>> points;
+
     for (std::size_t row = 0; row < matrix.n_rows; ++row) {
-        std::vector<Point2D<float>> points;
+        points.push_back(std::vector<Point2D<float>>());
         for (std::size_t col = 0; col < matrix.n_cols; col += 2) {
             if (matrix(row, col) != 0.0 || matrix(row, col + 1) != 0.0) {
-                points.emplace_back(Point2D<float>{
+                points.back().emplace_back(Point2D<float>{
                         static_cast<float>(matrix(row, col)),
                         static_cast<float>(matrix(row, col + 1))
                 });
             }
         }
-        pointData->addPointsAtTime(row, points); // need to find time at row
     }
-
+    pointData->overwritePointsAtTimes(timestamps, points);
 }
 
 ////////////////////////////////////////////////////////
