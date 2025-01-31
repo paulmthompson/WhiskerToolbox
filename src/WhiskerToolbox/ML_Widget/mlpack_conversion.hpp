@@ -5,6 +5,7 @@
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Tensors/Tensor_Data.hpp"
 
 #include <mlpack/core.hpp>
 
@@ -129,8 +130,34 @@ inline void updatePointDataFromMlpackMatrix(
 
 // TensorData
 
+inline arma::Mat<double> convertTensorDataToMlpackMatrix(
+        const TensorData& tensor_data,
+        const std::vector<std::size_t>& timestamps)
+{
+    // Determine the number of rows and columns for the Armadillo matrix
+    std::size_t numRows = timestamps.size();
 
+    auto feature_shape = tensor_data.getFeatureShape();
+    std::size_t numCols = std::accumulate(
+            feature_shape.begin(),
+            feature_shape.end(),
+            1,
+            std::multiplies<std::size_t>());
 
+    // Initialize the Armadillo matrix
+    arma::Mat<double> result(numRows, numCols, arma::fill::zeros);
+
+    // Fill the matrix with the tensor data
+    for (std::size_t i = 0; i < numRows; ++i) {
+        auto tensor = tensor_data.getTensorAtTime(timestamps[i]);
+        auto flattened_tensor = tensor.flatten().to(torch::kDouble);
+        for (std::size_t j = 0; j < flattened_tensor.numel(); ++j) {
+            result(i, j) = flattened_tensor[j].item<double>();
+        }
+    }
+
+    return result;
+}
 
 ////////////////////////////////////////////////////////
 

@@ -71,7 +71,8 @@ void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data) {
 
         std::cout << "Loaded " << data.size() << " timestamps of tensors" << std::endl;
 
-        tensor_data = TensorData(data);
+        shape.erase(shape.begin());
+        tensor_data = TensorData(data, shape);
     } catch (const std::exception& e) {
         std::cout << "Error loading tensor from file: " << e.what() << std::endl;
     }
