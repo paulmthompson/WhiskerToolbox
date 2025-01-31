@@ -66,7 +66,7 @@ void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data) {
 
         std::map<int, torch::Tensor> data;
         for (int t = 0; t < time_steps; ++t) {
-            data[t] = tensor[t];
+            data[t] = tensor[t].clone();
         }
 
         std::cout << "Loaded " << data.size() << " timestamps of tensors" << std::endl;
