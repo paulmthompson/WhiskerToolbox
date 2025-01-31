@@ -13,6 +13,8 @@
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
+#include <mlpack/mlpack.hpp>
+
 #include <QFileDialog>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
@@ -203,6 +205,18 @@ void ML_Widget::_fitModel()
     auto feature_array = create_arrays(_selected_features, timestamps, _data_manager);
 
     std::cout << "Feature array size: " << feature_array.n_rows << " x " << feature_array.n_cols << std::endl;
+
+    auto outcome_array = create_arrays(_selected_outcomes, timestamps, _data_manager);
+
+    std::cout << "Outcome array size: " << outcome_array.n_rows << " x " << outcome_array.n_cols << std::endl;
+
+    arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array);
+    mlpack::RandomForest model;
+    model.Train(feature_array, labels, 2);
+
+    std::cout << "Model trained" << std::endl;
+
+    
 }
 
 std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries>& series)
