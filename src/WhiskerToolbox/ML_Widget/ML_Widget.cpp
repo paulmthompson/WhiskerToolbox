@@ -216,13 +216,21 @@ void ML_Widget::_fitModel()
 
     std::cout << "Model trained" << std::endl;
 
+    // Predict the labels of the test points.
+
+    arma::Row<size_t> predictions;
+    model.Classify(feature_array, predictions);
+
+    double accuracy = 100.0 * ((double) arma::accu(predictions == labels)) /
+                      labels.n_elem;
+    std::cout << "After training 10 trees, test set accuracy is " << accuracy
+              << "%." << std::endl;
     
 }
 
-std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries>& series)
+std::vector<std::size_t> create_timestamps(std::vector<Interval>& intervals)
 {
     std::vector<std::size_t> timestamps;
-    auto intervals = series->getDigitalIntervalSeries();
     for (auto interval : intervals)
     {
         //I want to generate timestamps for each value between interval.start and interval.end
@@ -234,6 +242,14 @@ std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries
 
     return timestamps;
 }
+
+std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries>& series)
+{
+    auto intervals = series->getDigitalIntervalSeries();
+    return create_timestamps(intervals);
+}
+
+
 
 arma::Mat<double> create_arrays(
         std::unordered_set<std::string> features,

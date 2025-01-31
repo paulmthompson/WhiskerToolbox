@@ -1,6 +1,8 @@
 #ifndef BEHAVIORTOOLBOX_ML_WIDGET_HPP
 #define BEHAVIORTOOLBOX_ML_WIDGET_HPP
 
+#include "DataManager/DigitalTimeSeries/interval_data.hpp"
+
 #include <QMainWindow>
 
 #include <mlpack/core.hpp>
@@ -72,5 +74,6 @@ arma::Mat<double> create_arrays(std::unordered_set<std::string> features,
                                 std::shared_ptr<DataManager> data_manager);
 
 std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries>& series);
+std::vector<std::size_t> create_timestamps(std::vector<Interval>& intervals);
 
 #endif //BEHAVIORTOOLBOX_ML_WIDGET_HPP
