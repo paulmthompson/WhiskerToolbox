@@ -164,4 +164,20 @@ inline arma::Row<double> convertAnalogTimeSeriesToMlpackArray(
     return result;
 }
 
+/**
+ * Update an AnalogTimeSeries from an mlpack row vector
+ * @param array The mlpack row vector
+ * @param timestamps The timestamps to update
+ * @param analogTimeSeries The AnalogTimeSeries to update
+ */
+inline void updateAnalogTimeSeriesFromMlpackArray(
+        const arma::Row<double>& array,
+        std::vector<std::size_t>& timestamps,
+        std::shared_ptr<AnalogTimeSeries> analogTimeSeries)
+{
+    std::vector<float> data(array.n_elem);
+
+    analogTimeSeries->overwriteAtTimes(data, timestamps);
+}
+
 #endif //WHISKERTOOLBOX_MLPACK_CONVERSION_HPP
