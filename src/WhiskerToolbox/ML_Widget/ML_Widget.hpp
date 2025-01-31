@@ -48,6 +48,8 @@ private slots:
     void _removeSelectedOutcome(const std::string key);
 
     void _selectModelType(const QString& model_type);
+
+    void _fitModel();
 private:
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar* _time_scrollbar;
@@ -63,6 +65,10 @@ private:
     arma::Mat<double> _outcomes;
 
 };
+
+arma::Mat<double> create_arrays(std::unordered_set<std::string> features,
+                                std::vector<std::size_t>& timestamps,
+                                std::shared_ptr<DataManager> data_manager);
 
 
 #endif //BEHAVIORTOOLBOX_ML_WIDGET_HPP

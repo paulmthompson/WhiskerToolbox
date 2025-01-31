@@ -36,7 +36,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 
     //Feature Table Widget
     ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->feature_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData"});
+    ui->feature_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData", "TensorData"});
 
     ui->feature_table_widget->setDataManager(_data_manager);
 
@@ -64,7 +64,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 
     //Outcome Table Widget
     ui->outcome_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->outcome_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData"});
+    ui->outcome_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData", "TensorData"});
 
     ui->outcome_table_widget->setDataManager(_data_manager);
 
@@ -77,6 +77,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
     });
 
     connect(ui->model_select_combo, &QComboBox::currentTextChanged, this, &ML_Widget::_selectModelType);
+    connect(ui->fit_button, &QPushButton::clicked, this, &ML_Widget::_fitModel);
 }
 
 ML_Widget::~ML_Widget() {
@@ -113,19 +114,9 @@ void ML_Widget::_addFeatureToModel(const QString& feature, bool enabled)
 }
 
 void ML_Widget::_removeSelectedFeature(const std::string key) {
-    if (_data_manager->getType(key) == "AnalogTimeSeries") {
-        //ui->openGLWidget->removeAnalogTimeSeries(key);
-    } else if (_data_manager->getType(key) == "PointData") {
-        //ui->openGLWidget->removeDigitalEventSeries(key);
-    } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
-        //ui->openGLWidget->removeDigitalIntervalSeries(key);
-    } else {
-        std::cout << "Feature type not supported" << std::endl;
-    }
 
     if (auto iter = _selected_features.find(key); iter != _selected_features.end())
         _selected_features.erase(iter);
-
 }
 
 void ML_Widget::_handleMaskSelected(const QString& feature)
@@ -190,5 +181,62 @@ void ML_Widget::_selectModelType(const QString& model_type)
     } else {
         std::cout << "Unsupported Model Type Selected" << std::endl;
     }
+}
+
+void ML_Widget::_fitModel()
+{
+
+    auto timestamps = std::vector<size_t>(100);
+    std::iota(timestamps.begin(), timestamps.end(), 0);
+
+    auto feature_array = create_arrays(_selected_features, timestamps, _data_manager);
+
+    std::cout << "Feature array size: " << feature_array.n_rows << " x " << feature_array.n_cols << std::endl;
+}
+
+arma::Mat<double> create_arrays(
+        std::unordered_set<std::string> features,
+        std::vector<std::size_t>& timestamps,
+        std::shared_ptr<DataManager> data_manager)
+{
+    //Create the input and output arrays
+
+    std::vector<arma::Mat<double>> feature_arrays;
+
+    for (const auto& feature : features) {
+        std::string feature_type = data_manager->getType(feature);
+
+        if (feature_type == "AnalogTimeSeries") {
+            auto analog_series = data_manager->getData<AnalogTimeSeries>(feature);
+            arma::Row<double> array = convertAnalogTimeSeriesToMlpackArray(analog_series, timestamps);
+            feature_arrays.push_back(array);
+        } else if (feature_type == "DigitalIntervalSeries") {
+            auto digital_series = data_manager->getData<DigitalIntervalSeries>(feature);
+            arma::Row<double> array = convertToMlpackArray(digital_series, timestamps);
+            feature_arrays.push_back(array);
+        } else if (feature_type == "PointData") {
+            auto point_data = data_manager->getData<PointData>(feature);
+            arma::Mat<double> array = convertToMlpackMatrix(point_data, timestamps);
+            feature_arrays.push_back(array);
+        } else if (feature_type == "TensorData") {
+            auto tensor_data = data_manager->getData<TensorData>(feature);
+            arma::Mat<double> array = convertTensorDataToMlpackMatrix(*tensor_data, timestamps);
+            feature_arrays.push_back(array);
+        } else {
+            std::cerr << "Unsupported feature type: " << feature_type << std::endl;
+        }
+    }
+
+    // Concatenate all feature arrays column-wise
+    arma::Mat<double> concatenated_array;
+    if (!feature_arrays.empty()) {
+        concatenated_array = feature_arrays[0];
+
+        for (std::size_t i = 1; i < feature_arrays.size(); i++) {
+            concatenated_array = arma::join_cols(concatenated_array, feature_arrays[i]);
+        }
+    }
+
+    return concatenated_array;
 }
 
