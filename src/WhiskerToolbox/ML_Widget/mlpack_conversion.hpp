@@ -130,6 +130,12 @@ inline void updatePointDataFromMlpackMatrix(
 
 // TensorData
 
+/**
+ * Convert a TensorData to an mlpack matrix
+ * @param tensor_data The TensorData to convert
+ * @param timestamps The timestamps to convert
+ * @return arma::Mat<double> The mlpack matrix
+ */
 inline arma::Mat<double> convertTensorDataToMlpackMatrix(
         const TensorData& tensor_data,
         const std::vector<std::size_t>& timestamps)
@@ -157,6 +163,35 @@ inline arma::Mat<double> convertTensorDataToMlpackMatrix(
     }
 
     return result;
+}
+
+std::vector<double> copyMatrixRowToVector(const arma::Row<double>& row) {
+    std::vector<double> vec(row.n_elem);
+    for (std::size_t i = 0; i < row.n_elem; ++i) {
+        vec[i] = row[i];
+    }
+    return vec;
+}
+
+/**
+ * Update a TensorData from an mlpack matrix
+ * @param matrix The mlpack matrix
+ * @param timestamps The timestamps to update
+ * @param tensor_data The TensorData to update
+ */
+inline void updateTensorDataFromMlpackMatrix(
+        const arma::Mat<double>& matrix,
+        const std::vector<std::size_t>& timestamps,
+        TensorData& tensor_data)
+{
+    auto feature_shape = tensor_data.getFeatureShape();
+    std::vector<int64_t> shape(feature_shape.begin(), feature_shape.end());
+
+    for (std::size_t i = 0; i < timestamps.size(); ++i) {
+        auto row = copyMatrixRowToVector(matrix.row(i));
+        torch::Tensor tensor = torch::from_blob(row.data(), shape, torch::kDouble).clone();
+        tensor_data.overwriteTensorAtTime(timestamps[i], tensor);
+    }
 }
 
 ////////////////////////////////////////////////////////
