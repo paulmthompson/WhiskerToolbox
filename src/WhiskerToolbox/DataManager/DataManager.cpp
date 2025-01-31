@@ -404,6 +404,20 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             } else {
                 std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
             }
+        } else if (data_type == "tensor"){
+
+            if (item["format"] == "numpy")
+            {
+
+                TensorData tensor_data;
+                loadNpyToTensorData(file_path, tensor_data);
+
+                dm->setData<TensorData>(name, std::make_shared<TensorData>(tensor_data));
+
+            } else {
+                std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
+            }
+
         } else if (data_type == "time") {
 
             if (item["format"] == "uint16") {
