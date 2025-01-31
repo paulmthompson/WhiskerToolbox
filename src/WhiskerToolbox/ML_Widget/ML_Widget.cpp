@@ -106,6 +106,7 @@ void ML_Widget::_addFeatureToModel(const QString& feature, bool enabled)
 {
     if (enabled) {
         //_plotSelectedFeature(feature.toStdString());
+        _selected_features.insert(feature.toStdString());
     } else {
         _removeSelectedFeature(feature.toStdString());
     }
@@ -121,6 +122,10 @@ void ML_Widget::_removeSelectedFeature(const std::string key) {
     } else {
         std::cout << "Feature type not supported" << std::endl;
     }
+
+    if (auto iter = _selected_features.find(key); iter != _selected_features.end())
+        _selected_features.erase(iter);
+
 }
 
 void ML_Widget::_handleMaskSelected(const QString& feature)
@@ -132,6 +137,7 @@ void ML_Widget::_addMaskToModel(const QString& feature, bool enabled)
 {
     if (enabled) {
         //_plotSelectedFeature(feature.toStdString());
+        _selected_masks.insert(feature.toStdString());
     } else {
         _removeSelectedMask(feature.toStdString());
     }
@@ -143,6 +149,8 @@ void ML_Widget::_removeSelectedMask(const std::string key) {
     } else {
         std::cout << "Feature type not supported" << std::endl;
     }
+    if (auto iter = _selected_masks.find(key); iter != _selected_masks.end())
+        _selected_masks.erase(iter);
 }
 
 void ML_Widget::_handleOutcomeSelected(const QString& feature)
@@ -154,6 +162,7 @@ void ML_Widget::_addOutcomeToModel(const QString& feature, bool enabled)
 {
     if (enabled) {
         //_plotSelectedFeature(feature.toStdString());
+        _selected_outcomes.insert(feature.toStdString());
     } else {
         _removeSelectedOutcome(feature.toStdString());
     }
@@ -169,6 +178,8 @@ void ML_Widget::_removeSelectedOutcome(const std::string key) {
     } else {
         std::cout << "Feature type not supported" << std::endl;
     }
+    if (auto iter = _selected_outcomes.find(key); iter != _selected_outcomes.end())
+        _selected_outcomes.erase(iter);
 }
 
 void ML_Widget::_selectModelType(const QString& model_type)

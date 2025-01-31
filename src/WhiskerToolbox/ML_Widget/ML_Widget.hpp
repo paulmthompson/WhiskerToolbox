@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include <mlpack/core.hpp>
+
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -52,6 +54,13 @@ private:
     MainWindow* _main_window;
     Ui::ML_Widget *ui;
     QString _highlighted_available_feature;
+
+    std::unordered_set<std::string> _selected_features;
+    std::unordered_set<std::string> _selected_masks;
+    std::unordered_set<std::string> _selected_outcomes;
+
+    arma::Mat<double> _features;
+    arma::Mat<double> _outcomes;
 
 };
 
