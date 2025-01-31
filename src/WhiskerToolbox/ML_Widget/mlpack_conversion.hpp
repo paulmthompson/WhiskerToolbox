@@ -45,27 +45,17 @@ inline arma::Row<double> convertToMlpackArray(
 inline void updateDigitalIntervalSeriesFromMlpackArray(
         const arma::Row<double>& array,
         std::vector<std::size_t> timestamps,
-        std::shared_ptr<DigitalIntervalSeries> series)
+        std::shared_ptr<DigitalIntervalSeries> series,
+        float threshold = 0.5)
 {
-    std::vector<std::pair<float, float>> intervals;
-    bool in_interval = false;
-    int start = 0;
+    //convert array to vector of bool based on some threshold
 
+    std::vector<bool> events;
     for (std::size_t i = 0; i < array.n_elem; ++i) {
-        if (array[i] == 1.0 && !in_interval) {
-            start = i;
-            in_interval = true;
-        } else if (array[i] == 0.0 && in_interval) {
-            intervals.emplace_back(start, i - 1);
-            in_interval = false;
-        }
+        events.push_back(array[i] > threshold);
     }
 
-    if (in_interval) {
-        intervals.emplace_back(start, array.n_elem - 1);
-    }
-
-    series->setData(intervals);
+    series->setEventsAtTimes(timestamps, events);
 }
 
 ////////////////////////////////////////////////////////

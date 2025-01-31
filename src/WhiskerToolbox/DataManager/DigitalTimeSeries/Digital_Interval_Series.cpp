@@ -81,14 +81,18 @@ void DigitalIntervalSeries::createIntervalsFromBool(std::vector<uint8_t> const& 
 
 void DigitalIntervalSeries::setEventAtTime(int time, bool event)
 {
+    _setEventAtTime(time, event);
+    notifyObservers();
+}
+
+void DigitalIntervalSeries::_setEventAtTime(int time, bool event)
+{
     if (!event)
     {
-        removeEventAtTime(time);
+        _removeEventAtTime(time);
     } else {
-        addEvent(time, time);
+        _addEvent(Interval{static_cast<int64_t>(time), static_cast<int64_t>(time)});
     }
-    _sortData();
-    notifyObservers();
 }
 
 void DigitalIntervalSeries::removeEventAtTime(int time)
