@@ -21,6 +21,8 @@ public:
     void openWidget(); // Call to open the widget
 
     void setActiveKey(std::string key);
+signals:
+    void frameSelected(int frame_id);
 
 private:
     Ui::DigitalIntervalSeries_Widget *ui;
@@ -38,6 +40,7 @@ private slots:
     void _createIntervalButton();
     void _removeIntervalButton();
     void _flipIntervalButton();
+    void _handleCellClicked(const QModelIndex &index);
 };
 
 #endif // DIGITALINTERVALSERIES_WIDGET_HPP

@@ -24,6 +24,7 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     connect(ui->create_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_createIntervalButton);
     connect(ui->remove_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_removeIntervalButton);
     connect(ui->flip_single_frame, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_flipIntervalButton);
+    connect(ui->tableView, &QTableView::clicked, this, &DigitalIntervalSeries_Widget::_handleCellClicked);
 }
 
 DigitalIntervalSeries_Widget::~DigitalIntervalSeries_Widget() {
@@ -138,4 +139,17 @@ void DigitalIntervalSeries_Widget::_flipIntervalButton()
     } else {
         intervals->setEventAtTime(frame_num, true);
     }
+}
+
+void DigitalIntervalSeries_Widget::_handleCellClicked(const QModelIndex &index)
+{
+    if (!index.isValid()) {
+        return;
+    }
+
+    // Assuming the frame number is stored in the clicked cell
+    int frameNumber = index.data().toInt();
+
+    // Emit the signal with the frame number
+    emit frameSelected(frameNumber);
 }
