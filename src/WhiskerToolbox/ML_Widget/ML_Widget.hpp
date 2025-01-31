@@ -12,6 +12,7 @@
 #include <vector>
 
 class DataManager;
+class DigitalIntervalSeries;
 class MainWindow;
 class QTableWidget;
 class TimeScrollBar;
@@ -70,5 +71,6 @@ arma::Mat<double> create_arrays(std::unordered_set<std::string> features,
                                 std::vector<std::size_t>& timestamps,
                                 std::shared_ptr<DataManager> data_manager);
 
+std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries>& series);
 
 #endif //BEHAVIORTOOLBOX_ML_WIDGET_HPP

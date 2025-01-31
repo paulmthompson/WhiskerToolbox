@@ -186,12 +186,39 @@ void ML_Widget::_selectModelType(const QString& model_type)
 void ML_Widget::_fitModel()
 {
 
-    auto timestamps = std::vector<size_t>(100);
-    std::iota(timestamps.begin(), timestamps.end(), 0);
+    if (_selected_features.empty() || _selected_masks.empty() || _selected_outcomes.empty())
+    {
+        std::cerr << "Please select features, masks, and outcomes" << std::endl;
+        return;
+    }
+
+    if (_selected_masks.size() > 1)
+    {
+        std::cerr << "Only one mask is supported" << std::endl;
+        return;
+    }
+    auto masks = _data_manager->getData<DigitalIntervalSeries>(*_selected_masks.begin());
+    auto timestamps = create_timestamps(masks);
 
     auto feature_array = create_arrays(_selected_features, timestamps, _data_manager);
 
     std::cout << "Feature array size: " << feature_array.n_rows << " x " << feature_array.n_cols << std::endl;
+}
+
+std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries>& series)
+{
+    std::vector<std::size_t> timestamps;
+    auto intervals = series->getDigitalIntervalSeries();
+    for (auto interval : intervals)
+    {
+        //I want to generate timestamps for each value between interval.start and interval.end
+        for (std::size_t i = interval.start; i < interval.end; i++)
+        {
+            timestamps.push_back(i);
+        }
+    }
+
+    return timestamps;
 }
 
 arma::Mat<double> create_arrays(

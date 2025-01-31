@@ -156,10 +156,11 @@ inline arma::Mat<double> convertTensorDataToMlpackMatrix(
     // Fill the matrix with the tensor data
     for (std::size_t i = 0; i < numRows; ++i) {
         auto tensor = tensor_data.getTensorAtTime(timestamps[i]);
-        //auto flattened_tensor = tensor.flatten().to(torch::kDouble);
         auto flattened_tensor = tensor.flatten();
+        auto tensor_data_ptr = flattened_tensor.data_ptr<float>();
+
         for (std::size_t j = 0; j < flattened_tensor.numel(); ++j) {
-            result(i, j) = flattened_tensor[j].item<float>();
+            result(i, j) = static_cast<double>(tensor_data_ptr[j]);
         }
     }
 
