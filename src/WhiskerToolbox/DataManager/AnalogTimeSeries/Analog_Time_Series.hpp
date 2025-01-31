@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath> // std::nan
+#include <iostream>
 #include <map>
 #include <numeric>
 #include <string>
@@ -46,6 +47,23 @@ public:
             _data.push_back(value);
         }
     };
+
+    template <typename T>
+    void overwriteAtTimes(std::vector<float>& analog_data, std::vector<T>& time)
+    {
+        if (analog_data.size() != time.size()) {
+            std::cerr << "Analog data and time vectors must be the same size" << std::endl;
+            return;
+        }
+        for (size_t i = 0; i < time.size(); ++i) {
+            auto it = std::find(_time.begin(), _time.end(), time[i]);
+            if (it != _time.end()) {
+                _data[std::distance(_time.begin(), it)] = analog_data[i];
+            } else {
+                std::cerr << "Time " << time[i] << " not found in time series" << std::endl;
+            }
+        }
+    }
 
     std::vector<float>& getAnalogTimeSeries() {return _data;};
     std::vector<size_t>& getTimeSeries() {return _time;};

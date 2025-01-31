@@ -3,7 +3,12 @@
 #include "ui_ML_Widget.h"
 
 #include "DataManager.hpp"
+
+//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
+#undef slots
 #include "mlpack_conversion.hpp"
+#define slots Q_SLOTS
+
 #include "ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"

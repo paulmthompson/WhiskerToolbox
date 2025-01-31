@@ -6,6 +6,7 @@
 #include "points.hpp"
 
 #include <map>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -32,12 +33,43 @@ public:
     void overwritePointAtTime(int const time, float const x, float const y);
     void overwritePointsAtTime(int const time, std::vector<Point2D<float>> const& points);
 
+    template <typename T>
+    void overwritePointsAtTimes(
+            std::vector<T> const& times,
+            std::vector<std::vector<Point2D<float>>> const& points)
+    {
+        if (times.size() != points.size())
+        {
+            std::cout << "overwritePointsAtTimes: times and points must be the same size" << std::endl;
+            return;
+        }
+
+        for (std::size_t i = 0; i < times.size(); i++)
+        {
+            _overwritePointsAtTime(times[i], points[i]);
+        }
+        notifyObservers();
+    }
+
     std::vector<int> getTimesWithPoints() const;
 
     ImageSize getImageSize() const { return _image_size; }
     void setImageSize(const ImageSize& image_size) { _image_size = image_size; }
 
     std::vector<Point2D<float>> const& getPointsAtTime(int const time) const;
+
+    std::size_t getMaxPoints() const
+    {
+        std::size_t max_points = 1;
+        for (const auto& [time, points] : _data)
+        {
+            if (points.size() > max_points)
+            {
+                max_points = points.size();
+            }
+        }
+        return max_points;
+    }
 
     std::map<int, std::vector<Point2D<float>>> const& getData() const {return _data;};
 protected:
@@ -51,6 +83,9 @@ private:
     void _clearPointsAtTime(int const time);
     void _addPointAtTime(int const time, float const x, float const y);
     void _addPointsAtTime(int const time, std::vector<Point2D<float>> const& points);
+
+    void _overwritePointAtTime(int const time, float const x, float const y);
+    void _overwritePointsAtTime(int const time, std::vector<Point2D<float>> const& points);
 
 };
 

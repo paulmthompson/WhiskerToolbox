@@ -46,12 +46,24 @@ void PointData::_clearPointsAtTime(int const time)
 
 void PointData::overwritePointAtTime(int const time, float const x, float const y)
 {
+    _overwritePointAtTime(time, x, y);
+    notifyObservers();
+}
+
+void PointData::_overwritePointAtTime(int const time, float const x, float const y)
+{
     _clearPointsAtTime(time);
     _addPointAtTime(time, x, y);
     notifyObservers();
 }
 
 void PointData::overwritePointsAtTime(int const time, std::vector<Point2D<float>> const& points)
+{
+    _overwritePointsAtTime(time, points);
+    notifyObservers();
+}
+
+void PointData::_overwritePointsAtTime(int const time, std::vector<Point2D<float>> const& points)
 {
     _clearPointsAtTime(time);
     _addPointsAtTime(time, points);

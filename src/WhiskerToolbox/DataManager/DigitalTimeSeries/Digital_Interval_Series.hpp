@@ -41,28 +41,7 @@ public:
         setData(intervals);
     }
 
-    void addEvent(Interval new_interval)
-    {
-        bool merged = false;
-
-        for (auto it = _data.begin(); it != _data.end(); ) {
-            if (is_overlapping(*it, new_interval) || is_contiguous(*it, new_interval)) {
-                new_interval.start = std::min(new_interval.start, it->start);
-                new_interval.end = std::max(new_interval.end, it->end);
-                it = _data.erase(it);
-                merged = true;
-            } else if (is_contained(new_interval, *it)) {
-                return;
-            } else {
-                ++it;
-            }
-        }
-
-        _data.push_back(new_interval);
-
-        _sortData();
-        notifyObservers();
-    }
+    void addEvent(Interval new_interval);
 
     template <typename T>
     void addEvent(T start, T end)
@@ -81,12 +60,25 @@ public:
     void setEventAtTime(int time, bool event);
     void removeEventAtTime(int time);
 
+    template <typename T>
+    void setEventsAtTimes(std::vector<T> times, std::vector<bool> events)
+    {
+        for (int i = 0; i < times.size(); ++i) {
+            _setEventAtTime(times[i], events[i]);
+        }
+        notifyObservers();
+    }
+
     void createIntervalsFromBool(std::vector<uint8_t> const& bool_vector);
 
     size_t size() {return _data.size();};
 
 private:
     std::vector<Interval> _data {};
+
+    void _addEvent(Interval new_interval);
+    void _setEventAtTime(int time, bool event);
+    void _removeEventAtTime(int time);
 
     void _sortData();
 
