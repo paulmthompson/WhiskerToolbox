@@ -4,7 +4,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "Datamanager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include "TimeFrame.hpp"
 
