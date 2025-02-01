@@ -226,7 +226,12 @@ void ML_Widget::_fitModel()
     std::cout << "After training 10 trees, test set accuracy is " << accuracy
               << "%." << std::endl;
 
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    int current_time;
+    if (ui->predict_all_check->isChecked()) {
+        current_time = _data_manager->getTime()->getTotalFrameCount();
+    } else {
+        current_time = _data_manager->getTime()->getLastLoadedFrame();
+    }
     // Prediction timestamps
     auto prediction_interval = std::vector<Interval>{Interval{
         masks->getDigitalIntervalSeries().back().end,

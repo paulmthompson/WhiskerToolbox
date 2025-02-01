@@ -19,6 +19,10 @@ public:
         endResetModel();
     }
 
+    Interval getInterval(int row) const {
+        return _intervals[row];
+    }
+
     int rowCount(const QModelIndex &parent = QModelIndex()) const override {
         Q_UNUSED(parent);
         return static_cast<int>(_intervals.size());
@@ -59,6 +63,28 @@ public:
 
         return QVariant();
     }
+
+    Qt::ItemFlags flags(const QModelIndex &index) const override {
+        if (!index.isValid()) {
+            return Qt::ItemIsEnabled;
+        }
+        return QAbstractTableModel::flags(index) | Qt::ItemIsEditable;
+    }
+
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override {
+        if (index.isValid() && role == Qt::EditRole) {
+            Interval &interval = _intervals[index.row()];
+            if (index.column() == 0) {
+                interval.start = value.toInt();
+            } else if (index.column() == 1) {
+                interval.end = value.toInt();
+            }
+            emit dataChanged(index, index, {role});
+            return true;
+        }
+        return false;
+    }
+
 
 private:
     std::vector<Interval> _intervals;

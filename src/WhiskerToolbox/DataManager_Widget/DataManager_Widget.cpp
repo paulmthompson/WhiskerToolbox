@@ -151,6 +151,7 @@ void DataManager_Widget::_disablePreviousFeature(const QString& feature)
         auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget*>(ui->stackedWidget->widget(5));
 
         disconnect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+        interval_widget->removeCallbacks();
         
     } else if (feature_type == "DigitalEventSeries") {
 

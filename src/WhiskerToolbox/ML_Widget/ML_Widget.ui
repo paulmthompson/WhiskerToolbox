@@ -150,6 +150,19 @@
      <string>Fit Model</string>
     </property>
    </widget>
+   <widget class="QCheckBox" name="predict_all_check">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>550</y>
+      <width>151</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Predict All Frames</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

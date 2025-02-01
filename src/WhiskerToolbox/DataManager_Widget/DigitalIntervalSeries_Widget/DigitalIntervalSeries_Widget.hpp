@@ -21,6 +21,7 @@ public:
     void openWidget(); // Call to open the widget
 
     void setActiveKey(std::string key);
+    void removeCallbacks();
 signals:
     void frameSelected(int frame_id);
 
@@ -35,12 +36,16 @@ private:
 
 
     void _calculateIntervals();
+    void _assignCallbacks();
+
 private slots:
     void _saveCSV();
     void _createIntervalButton();
     void _removeIntervalButton();
     void _flipIntervalButton();
     void _handleCellClicked(const QModelIndex &index);
+    void _changeDataTable(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);
+    void _extendInterval();
 };
 
 #endif // DIGITALINTERVALSERIES_WIDGET_HPP
