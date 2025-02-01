@@ -222,13 +222,14 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             dm->setMedia(video_data);
 
             data_info_list.push_back({name, "VideoData", ""});
+
         } else if (data_type == "points") {
 
             int frame_column = item["frame_column"];
             int x_column = item["x_column"];
             int y_column = item["y_column"];
 
-            std::string color = item.value("color","0000FF");
+            std::string color = item.value("color","#0000FF");
             std::string delim = item.value("delim", " ");
 
             int height = item.value("height", -1);
@@ -317,6 +318,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             std::string color = item.value("color","0000FF");
 
             data_info_list.push_back({name, "LineData", color});
+
         } else if (data_type == "analog") {
 
             if (item["format"] == "int16") {

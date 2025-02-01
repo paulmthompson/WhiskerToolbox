@@ -98,7 +98,6 @@ inline arma::Mat<double> convertToMlpackMatrix(
         for (auto p : points) {
             result(row * 2, col) = p.x;
             result(row * 2 + 1, col) = p.y;
-            col++;
         }
         col++;
     }
