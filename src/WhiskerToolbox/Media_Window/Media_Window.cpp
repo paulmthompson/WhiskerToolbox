@@ -4,6 +4,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "Datamanager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include "TimeFrame.hpp"
 
@@ -191,6 +192,45 @@ void Media_Window::setPointAlpha(std::string const & point_key, float const alph
     _point_configs[point_key].alpha = alpha;
 }
 
+void Media_Window::addDigitalIntervalSeries(
+        std::string const & key,
+        std::string const & hex_color,
+        float alpha)
+{
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+
+    _interval_configs[key] = element_config{hex_color, alpha};
+
+    UpdateCanvas();
+}
+
+void Media_Window::removeDigitalIntervalSeries(std::string const & key)
+{
+    auto item = _interval_configs.find(key);
+    if (item != _interval_configs.end()) {
+        _interval_configs.erase(item);
+    }
+}
+
+void Media_Window::clearIntervals()
+{
+    for (auto item : _intervals) {
+        removeItem(item);
+    }
+
+    for (auto item : _intervals) {
+        delete item;
+    }
+    _intervals.clear();
+}
+
 void Media_Window::LoadFrame(int frame_id)
 {
     // Get MediaData
@@ -205,6 +245,7 @@ void Media_Window::UpdateCanvas()
     clearLines();
     clearPoints();
     clearMasks();
+    clearIntervals();
 
     //_convertNewMediaToQImage();
     auto _media = _data_manager->getData<MediaData>("media");
@@ -234,6 +275,8 @@ void Media_Window::UpdateCanvas()
     _plotMaskData();
 
     _plotPointData();
+
+    _plotDigitalIntervalSeries();
 }
 
 
@@ -498,6 +541,41 @@ void Media_Window::_plotPointData()
             _points.append(ellipse);
         }
         i ++;
+    }
+}
+
+void Media_Window::_plotDigitalIntervalSeries()
+{
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    for (auto const & [key, _interval_config] : _interval_configs)
+    {
+        auto plot_color = _plot_color_with_alpha(_interval_config);
+
+        auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
+
+        std::vector<int> relative_times = {-2, -1, 0, 1, 2};
+        int square_size = 20;
+        int top_right_x = _canvasWidth - square_size;
+        int top_right_y = 0;
+
+        for (int i = 0; i < relative_times.size(); ++i) {
+            int time = current_time + relative_times[i];
+            bool event_present = interval_series->isEventAtTime(time);
+
+            auto color = event_present ? plot_color : QColor(255, 255, 255, 10);            // Transparent if no event
+
+            auto intervalPixmap = addRect(
+                top_right_x - (relative_times.size() - 1 - i) * square_size,
+                top_right_y,
+                square_size,
+                square_size,
+                QPen(Qt::black), // Black border
+                QBrush(color) // Fill with color if event is present
+                );
+
+            _intervals.append(intervalPixmap);
+        }
     }
 }
 

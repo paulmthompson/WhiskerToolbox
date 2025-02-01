@@ -75,6 +75,14 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
     void removePointDataFromScene(std::string const & point_key);
     void clearPoints();
 
+    void addDigitalIntervalSeries(
+            std::string const & key,
+            std::string const & hex_color = "#0000FF",
+            float alpha = 1.0);
+
+    void removeDigitalIntervalSeries(std::string const & key);
+    void clearIntervals();
+
     /**
      *
      *
@@ -118,6 +126,7 @@ private:
     QVector<QGraphicsPathItem*> _line_paths;
     QVector<QGraphicsEllipseItem*> _points;
     QVector<QGraphicsPixmapItem*> _masks;
+    QVector<QGraphicsRectItem*> _intervals;
 
     bool _is_verbose {false};
     bool _drawing_mode {false};
@@ -128,6 +137,7 @@ private:
     std::unordered_map<std::string, element_config> _line_configs;
     std::unordered_map<std::string, element_config> _mask_configs;
     std::unordered_map<std::string, element_config> _point_configs;
+    std::unordered_map<std::string, element_config> _interval_configs;
 
     QImage::Format _getQImageFormat();
     QRgb _plot_color_with_alpha(element_config elem);
@@ -137,6 +147,7 @@ private:
     void _plotMaskData();
     void _plotSingleMaskData(std::vector<Mask2D> const & maskData, int const mask_width, int const mask_height, QRgb plot_color);
     void _plotPointData();
+    void _plotDigitalIntervalSeries();
 
 public slots:
     void LoadFrame(int frame_id);

@@ -46,7 +46,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager)
     _data_manager = data_manager;
 
     ui->feature_table_widget->setColumns({"Feature", "Color", "Enabled", "Type"});
-    ui->feature_table_widget->setTypeFilter({"LineData", "MaskData", "PointData"});
+    ui->feature_table_widget->setTypeFilter({"LineData", "MaskData", "PointData", "DigitalIntervalSeries"});
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
 }
@@ -120,6 +120,14 @@ void Media_Widget::_addFeatureToDisplay(const QString& feature, bool enabled)
         } else {
             std::cout << "Removing point data from scene" << std::endl;
             _scene->removePointDataFromScene(feature.toStdString());
+        }
+    } else if (type == "DigitalIntervalSeries") {
+        if (enabled) {
+            std::cout << "Adding digital interval series to scene" << std::endl;
+            _scene->addDigitalIntervalSeries(feature.toStdString(), color);
+        } else {
+            std::cout << "Removing digital interval series from scene" << std::endl;
+            _scene->removeDigitalIntervalSeries(feature.toStdString());
         }
     } else {
         std::cout << "Feature type " << type << " not supported" << std::endl;
