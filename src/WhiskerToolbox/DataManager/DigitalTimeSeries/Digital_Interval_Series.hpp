@@ -56,8 +56,8 @@ public:
     }
     std::vector<Interval> const& getDigitalIntervalSeries() const;
 
-    bool isEventAtTime(int time) const;
-    void setEventAtTime(int time, bool event);
+    bool isEventAtTime(int const time) const;
+    void setEventAtTime(int time, bool const event);
     void removeEventAtTime(int time);
 
     template <typename T, typename B>
@@ -91,14 +91,14 @@ public:
         notifyObservers();
     }
 
-    size_t size() {return _data.size();};
+    size_t size() const {return _data.size();};
 
 private:
     std::vector<Interval> _data {};
 
     void _addEvent(Interval new_interval);
-    void _setEventAtTime(int time, bool event);
-    void _removeEventAtTime(int time);
+    void _setEventAtTime(int time, bool const event);
+    void _removeEventAtTime(int const time);
 
     void _sortData();
 

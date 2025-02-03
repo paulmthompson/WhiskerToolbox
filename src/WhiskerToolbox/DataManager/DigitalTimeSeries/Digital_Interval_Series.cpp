@@ -18,9 +18,9 @@ std::vector<Interval> const & DigitalIntervalSeries::getDigitalIntervalSeries() 
     return _data;
 }
 
-bool DigitalIntervalSeries::isEventAtTime(int time) const
+bool DigitalIntervalSeries::isEventAtTime(int const time) const
 {
-    for (auto event : _data) {
+    for (auto const event : _data) {
         if (is_contained(event, time)) {
             return true;
         }
@@ -58,13 +58,13 @@ void DigitalIntervalSeries::_addEvent(Interval new_interval)
 
 }
 
-void DigitalIntervalSeries::setEventAtTime(int time, bool event)
+void DigitalIntervalSeries::setEventAtTime(int time, bool const event)
 {
     _setEventAtTime(time, event);
     notifyObservers();
 }
 
-void DigitalIntervalSeries::_setEventAtTime(int time, bool event)
+void DigitalIntervalSeries::_setEventAtTime(int time, bool const event)
 {
     if (!event)
     {
@@ -74,13 +74,13 @@ void DigitalIntervalSeries::_setEventAtTime(int time, bool event)
     }
 }
 
-void DigitalIntervalSeries::removeEventAtTime(int time)
+void DigitalIntervalSeries::removeEventAtTime(int const time)
 {
     _removeEventAtTime(time);
     notifyObservers();
 }
 
-void DigitalIntervalSeries::_removeEventAtTime(int time)
+void DigitalIntervalSeries::_removeEventAtTime(int const time)
 {
     for (auto it = _data.begin(); it != _data.end(); ++it) {
         if (is_contained(*it, time)) {
