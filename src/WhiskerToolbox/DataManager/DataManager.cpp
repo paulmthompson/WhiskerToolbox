@@ -267,6 +267,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             std::string x_key = item["x_key"];
             std::string y_key = item["y_key"];
 
+            int height = item.value("height", -1);
+            int width = item.value("width", -1);
+
             std::string color = item.value("color","0000FF");
 
             auto frames =  read_array_hdf5(file_path, frame_key);
@@ -275,6 +278,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             auto x_coords = read_ragged_hdf5(file_path, x_key);
 
             auto mask_data = std::make_shared<MaskData>();
+            mask_data->setImageSize(ImageSize{width,height});
 
             for (std::size_t i = 0; i < frames.size(); i++) {
                 auto frame = frames[i];
