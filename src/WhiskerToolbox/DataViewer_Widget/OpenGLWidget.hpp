@@ -77,6 +77,8 @@ public:
         updateCanvas(_time);
     }
 
+    XAxis getXAxis() const {return _xAxis;}
+
 public slots:
     void updateCanvas(int time);
 
@@ -97,6 +99,8 @@ private:
     void drawDigitalIntervalSeries();
     void drawAnalogSeries();
     void drawAxis();
+    void drawGridLines();
+    void drawDashedLine(float xStart, float xEnd, float yStart, float yEnd, int dashLength, int gapLength);
 
     std::map<std::string, AnalogSeriesData> _analog_series;
     std::map<std::string, DigitalEventSeriesData> _digital_event_series;
@@ -115,10 +119,20 @@ private:
     int m_viewMatrixLoc;
     int m_modelMatrixLoc;
 
+    QOpenGLShaderProgram *m_dashedProgram {0};
+    int m_dashedProjMatrixLoc;
+    int m_dashedViewMatrixLoc;
+    int m_dashedModelMatrixLoc;
+    int m_dashedResolutionLoc;
+    int m_dashedDashSizeLoc;
+    int m_dashedGapSizeLoc;
+
     std::string m_background_color {"#000000"}; // black
 
     std::vector<GLfloat> m_vertices; // for testing
 };
+
+
 
 
 #endif //OPENGLWIDGET_HPP
