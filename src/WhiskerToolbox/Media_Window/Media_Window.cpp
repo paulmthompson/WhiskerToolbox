@@ -257,7 +257,14 @@ void Media_Window::setTensorChannel(std::string const & tensor_key, int channel)
 
 void Media_Window::clearTensors()
 {
+    for (auto item : _tensors) {
+        removeItem(item);
+    }
 
+    for (auto item : _tensors) {
+        delete item;
+    }
+    _tensors.clear();
 }
 
 void Media_Window::LoadFrame(int frame_id)
@@ -615,10 +622,29 @@ void Media_Window::_plotTensorData()
 {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    for (auto const & [key, _interval_config] : _tensor_configs) {
+    for (auto const & [key, config] : _tensor_configs) {
         auto tensor_data = _data_manager->getData<TensorData>(key);
 
+        auto tensor_shape = tensor_data->getFeatureShape();
 
+        auto tensor_slice = tensor_data->getChannelSlice(current_time, config.channel);
+
+        // Create a QImage from the tensor data
+        QImage tensor_image(tensor_shape[1], tensor_shape[0], QImage::Format::Format_ARGB32);
+        for (int y = 0; y < tensor_shape[0]; ++y) {
+            for (int x = 0; x < tensor_shape[1]; ++x) {
+                float value = tensor_slice[y * tensor_shape[1] + x];
+                int pixel_value = static_cast<int>(value * 255); // Assuming the tensor values are normalized between 0 and 1
+                tensor_image.setPixel(x, y, qRgba(pixel_value, 0, 0, pixel_value));
+            }
+        }
+
+        // Scale the tensor image to the size of the canvas
+        QImage scaled_tensor_image = tensor_image.scaled(_canvasWidth, _canvasHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+
+        auto tensor_pixmap = addPixmap(QPixmap::fromImage(scaled_tensor_image));
+
+        _tensors.append(tensor_pixmap);
     }
 }
 

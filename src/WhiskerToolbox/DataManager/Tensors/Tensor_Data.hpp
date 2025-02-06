@@ -25,6 +25,7 @@ public:
     void overwriteTensorAtTime(int time, const torch::Tensor& tensor);
     torch::Tensor getTensorAtTime(int time) const;
     std::vector<int> getTimesWithTensors() const;
+    std::vector<float> getChannelSlice(int time, int channel);
 
     const std::map<int, torch::Tensor>& getData() const { return _data; }
 

@@ -137,6 +137,7 @@ private:
     QVector<QGraphicsEllipseItem*> _points;
     QVector<QGraphicsPixmapItem*> _masks;
     QVector<QGraphicsRectItem*> _intervals;
+    QVector<QGraphicsPixmapItem*> _tensors;
 
     bool _is_verbose {false};
     bool _drawing_mode {false};
