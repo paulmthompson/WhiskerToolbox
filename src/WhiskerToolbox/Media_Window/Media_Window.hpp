@@ -83,6 +83,10 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
     void removeDigitalIntervalSeries(std::string const & key);
     void clearIntervals();
 
+    void addTensorDataToScene(
+        const std::string& tensor_key);
+    void removeTensorDataFromScene(std::string const & tensor_key);
+
     /**
      *
      *

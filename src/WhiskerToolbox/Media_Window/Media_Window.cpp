@@ -231,6 +231,17 @@ void Media_Window::clearIntervals()
     _intervals.clear();
 }
 
+void Media_Window::addTensorDataToScene(
+    const std::string& tensor_key)
+{
+
+}
+
+void Media_Window::removeTensorDataFromScene(std::string const & tensor_key)
+{
+
+}
+
 void Media_Window::LoadFrame(int frame_id)
 {
     // Get MediaData

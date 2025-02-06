@@ -18,6 +18,7 @@ Media_Widget::Media_Widget(QWidget *parent) :
 
     connect(ui->data_viewer_button, &QPushButton::clicked, this, &Media_Widget::_openDataViewer);
     connect(ui->mask_slider, &QSlider::valueChanged, this, &Media_Widget::_setMaskAlpha);
+    connect(ui->tensor_slider, &QSlider::valueChanged, this, &Media_Widget::_setTensorChannel);
 
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, [this](const QString& feature) {
@@ -46,7 +47,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager)
     _data_manager = data_manager;
 
     ui->feature_table_widget->setColumns({"Feature", "Color", "Enabled", "Type"});
-    ui->feature_table_widget->setTypeFilter({"LineData", "MaskData", "PointData", "DigitalIntervalSeries"});
+    ui->feature_table_widget->setTypeFilter({"LineData", "MaskData", "PointData", "DigitalIntervalSeries", "TensorData"});
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
 }
@@ -85,6 +86,11 @@ void Media_Widget::_setMaskAlpha(int alpha)
 {
     float alpha_float = static_cast<float>(alpha) / 100;
     _scene->changeMaskAlpha(alpha_float);
+}
+
+void Media_Widget::_setTensorChannel(int channel)
+{
+
 }
 
 void Media_Widget::_addFeatureToDisplay(const QString& feature, bool enabled)
@@ -128,6 +134,14 @@ void Media_Widget::_addFeatureToDisplay(const QString& feature, bool enabled)
         } else {
             std::cout << "Removing digital interval series from scene" << std::endl;
             _scene->removeDigitalIntervalSeries(feature.toStdString());
+        }
+    } else if (type == "TensorData") {
+        if (enabled) {
+            std::cout << "Adding Tensor data to scene" << std::endl;
+            _scene->addTensorDataToScene(feature.toStdString());
+        } else {
+            std::cout << "Removing tensor data from scene" << std::endl;
+            _scene->removeTensorDataFromScene(feature.toStdString());
         }
     } else {
         std::cout << "Feature type " << type << " not supported" << std::endl;
