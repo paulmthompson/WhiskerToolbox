@@ -148,6 +148,10 @@ set(PROJECT_SOURCES
         Magic_Eraser_Widget/magic_eraser.hpp
         Magic_Eraser_Widget/magic_eraser.cpp
 
+        Export_Widgets/Export_Video_Widget/Export_Video_Widget.hpp
+        Export_Widgets/Export_Video_Widget/Export_Video_Widget.cpp
+        Export_Widgets/Export_Video_Widget/Export_Video_Widget.ui
+
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.hpp
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.cpp
         Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.ui

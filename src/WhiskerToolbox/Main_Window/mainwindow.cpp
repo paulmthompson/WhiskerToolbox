@@ -16,6 +16,7 @@
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
+#include "Export_Widgets/Export_Video_Widget/Export_Video_Widget.hpp"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
 #include "Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp"
@@ -121,6 +122,7 @@ void MainWindow::_createActions()
     connect(ui->actionLoad_Intervals, &QAction::triggered, this, &MainWindow::openIntervalLoaderWidget);
     connect(ui->actionLoad_Tensor, &QAction::triggered, this, &MainWindow::openTensorLoaderWidget);
     connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
+    connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
 }
 
 /*
@@ -615,6 +617,27 @@ void MainWindow::openDataManager()
     }
 
     auto ptr = dynamic_cast<DataManager_Widget*>(_widgets[key].get());
+    //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openVideoExportWidget()
+{
+    std::string const key = "VideoExport_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto vid_widget = std::make_unique<Export_Video_Widget>(
+            _data_manager,
+            this);
+
+        vid_widget->setObjectName(key);
+        registerDockWidget(key, vid_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(vid_widget);
+    }
+
+    auto ptr = dynamic_cast<Export_Video_Widget*>(_widgets[key].get());
     //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
     ptr->openWidget();
 
