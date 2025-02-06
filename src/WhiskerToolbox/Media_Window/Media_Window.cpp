@@ -6,6 +6,11 @@
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 
+//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
+#undef slots
+#include "DataManager/Tensors/Tensor_Data.hpp"
+#define slots Q_SLOTS
+
 #include "TimeFrame.hpp"
 
 #include "utils/color.hpp"
@@ -234,10 +239,23 @@ void Media_Window::clearIntervals()
 void Media_Window::addTensorDataToScene(
     const std::string& tensor_key)
 {
-
+    _tensor_configs[tensor_key] = tensor_config{0};
 }
 
 void Media_Window::removeTensorDataFromScene(std::string const & tensor_key)
+{
+    auto item = _tensor_configs.find(tensor_key);
+    if (item != _tensor_configs.end()) {
+        _tensor_configs.erase(item);
+    }
+}
+
+void Media_Window::setTensorChannel(std::string const & tensor_key, int channel)
+{
+    _tensor_configs[tensor_key].channel = channel;
+}
+
+void Media_Window::clearTensors()
 {
 
 }
@@ -257,6 +275,7 @@ void Media_Window::UpdateCanvas()
     clearPoints();
     clearMasks();
     clearIntervals();
+    clearTensors();
 
     //_convertNewMediaToQImage();
     auto _media = _data_manager->getData<MediaData>("media");
@@ -288,6 +307,8 @@ void Media_Window::UpdateCanvas()
     _plotPointData();
 
     _plotDigitalIntervalSeries();
+
+    _plotTensorData();
 }
 
 
@@ -587,6 +608,17 @@ void Media_Window::_plotDigitalIntervalSeries()
 
             _intervals.append(intervalPixmap);
         }
+    }
+}
+
+void Media_Window::_plotTensorData()
+{
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    for (auto const & [key, _interval_config] : _tensor_configs) {
+        auto tensor_data = _data_manager->getData<TensorData>(key);
+
+
     }
 }
 

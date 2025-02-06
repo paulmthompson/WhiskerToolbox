@@ -23,6 +23,10 @@ struct element_config {
     float alpha;
 };
 
+struct tensor_config {
+    int channel;
+};
+
 
 /**
  * The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
@@ -86,6 +90,8 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
     void addTensorDataToScene(
         const std::string& tensor_key);
     void removeTensorDataFromScene(std::string const & tensor_key);
+    void setTensorChannel(std::string const & tensor_key, int channel);
+    void clearTensors();
 
     /**
      *
@@ -142,6 +148,7 @@ private:
     std::unordered_map<std::string, element_config> _mask_configs;
     std::unordered_map<std::string, element_config> _point_configs;
     std::unordered_map<std::string, element_config> _interval_configs;
+    std::unordered_map<std::string, tensor_config> _tensor_configs;
 
     QImage::Format _getQImageFormat();
     QRgb _plot_color_with_alpha(element_config elem);
@@ -152,6 +159,7 @@ private:
     void _plotSingleMaskData(std::vector<Mask2D> const & maskData, int const mask_width, int const mask_height, QRgb plot_color);
     void _plotPointData();
     void _plotDigitalIntervalSeries();
+    void _plotTensorData();
 
 public slots:
     void LoadFrame(int frame_id);
