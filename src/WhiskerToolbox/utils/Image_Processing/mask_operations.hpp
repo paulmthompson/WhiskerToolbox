@@ -15,7 +15,7 @@
 std::vector<Point2D<float>> convert_mask_to_line(
     std::vector<uint8_t> mask,
     Point2D<float> base_point,
-    const uint8_t mask_threshold = 1)
+    const uint8_t mask_threshold = 128)
 {
 
     std::vector<uint8_t> binary_mask;
@@ -33,7 +33,7 @@ std::vector<Point2D<float>> convert_mask_to_line(
 
     auto output_line = order_line(output_vec, 256, 256, base_point);
 
-    remove_extreme_angles(output_line, Degree(45.0f));
+    //remove_extreme_angles(output_line, Degree(45.0f));
 
     auto t3 = std::chrono::high_resolution_clock::now();
 

@@ -12,6 +12,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 set(QT_ENABLE_VERBOSE_DEPLOYMENT TRUE)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport OpenGLWidgets OpenGL)
 
+find_package(LAPACK REQUIRED)
+find_package(OpenBLAS REQUIRED)
+
 qt_standard_project_setup()
 
 add_subdirectory(DataManager)
@@ -204,6 +207,8 @@ target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6:
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
+find_path(MLPACK_INCLUDE_DIRS "mlpack/mlpack.hpp")
+
 message(STATUS ${TORCH_LIBRARIES})
 target_link_libraries(WhiskerToolbox PRIVATE "${TORCH_LIBRARIES}")
 
@@ -218,6 +223,8 @@ target_include_directories(WhiskerToolbox PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Whisker_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Grabcut_Widget>"
 
+        ${MLPACK_INCLUDE_DIRS}
+
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
@@ -225,6 +232,9 @@ target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
+
+target_link_libraries(WhiskerToolbox PRIVATE LAPACK::LAPACK)
+target_link_libraries(WhiskerToolbox PRIVATE OpenBLAS::OpenBLAS)
 
 target_link_libraries(WhiskerToolbox PRIVATE JKQTPlotter6::JKQTPlotter6)
 

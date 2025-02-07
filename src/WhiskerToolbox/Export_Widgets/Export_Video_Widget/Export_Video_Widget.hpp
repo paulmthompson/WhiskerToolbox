@@ -27,7 +27,7 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
 private slots:
-
+    void _exportVideo();
 };
 
 

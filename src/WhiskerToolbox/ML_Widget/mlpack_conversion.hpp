@@ -157,6 +157,14 @@ inline arma::Mat<double> convertTensorDataToMlpackMatrix(
     // Fill the matrix with the tensor data
     for (std::size_t col = 0; col < numCols; ++col) {
         auto tensor = tensor_data.getTensorAtTime(timestamps[col]);
+
+        if (tensor.numel() == 0) {
+            for (std::size_t row = 0; row < numRows; ++row) {
+                result(row, col) = arma::datum::nan;
+            }
+            continue;
+        }
+
         auto flattened_tensor = tensor.flatten();
         auto tensor_data_ptr = flattened_tensor.data_ptr<float>();
 

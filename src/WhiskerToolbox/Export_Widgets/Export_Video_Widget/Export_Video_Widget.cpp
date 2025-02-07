@@ -30,3 +30,8 @@ void Export_Video_Widget::openWidget()
 {
     this->show();
 }
+
+void Export_Video_Widget::_exportVideo()
+{
+
+}

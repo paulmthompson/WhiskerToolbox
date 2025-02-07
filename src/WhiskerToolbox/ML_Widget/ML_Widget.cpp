@@ -211,7 +211,8 @@ void ML_Widget::_fitModel()
     std::cout << "Outcome array size: " << outcome_array.n_rows << " x " << outcome_array.n_cols << std::endl;
 
     arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array);
-    mlpack::RandomForest model;
+    //mlpack::RandomForest model;
+    mlpack::NaiveBayesClassifier model;
     model.Train(feature_array, labels, 2);
 
     std::cout << "Model trained" << std::endl;
