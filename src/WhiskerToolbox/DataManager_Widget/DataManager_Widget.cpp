@@ -103,7 +103,10 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
     } else if (feature_type == "DigitalIntervalSeries") {
 
         ui->stackedWidget->setCurrentIndex(5);
-        dynamic_cast<DigitalIntervalSeries_Widget*>(ui->stackedWidget->widget(5))->setActiveKey(key);
+        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget*>(ui->stackedWidget->widget(5));
+        interval_widget->setActiveKey(key);
+
+        connect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
 
     } else if (feature_type == "DigitalEventSeries") {
         ui->stackedWidget->setCurrentIndex(6);
@@ -111,6 +114,7 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
 
         ui->stackedWidget->setCurrentIndex(7);
         dynamic_cast<Tensor_Widget*>(ui->stackedWidget->widget(7))->setActiveKey(key);
+
 
     } else {
         std::cout << "Unsupported feature type" << std::endl;
@@ -144,7 +148,11 @@ void DataManager_Widget::_disablePreviousFeature(const QString& feature)
 
     } else if (feature_type == "DigitalIntervalSeries") {
 
+        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget*>(ui->stackedWidget->widget(5));
 
+        disconnect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+        interval_widget->removeCallbacks();
+        
     } else if (feature_type == "DigitalEventSeries") {
 
     } else if (feature_type == "TensorData") {
@@ -197,5 +205,10 @@ void DataManager_Widget::_createNewData()
     } else {
         std::cout << "Unsupported data type" << std::endl;
     }
+}
+
+void DataManager_Widget::_changeScrollbar(int frame_id)
+{
+    _time_scrollbar->changeScrollBarValue(frame_id);
 }
 

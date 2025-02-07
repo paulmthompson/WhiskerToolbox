@@ -4,6 +4,12 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+
+//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
+#undef slots
+#include "DataManager/Tensors/Tensor_Data.hpp"
+#define slots Q_SLOTS
 
 #include "TimeFrame.hpp"
 
@@ -191,6 +197,76 @@ void Media_Window::setPointAlpha(std::string const & point_key, float const alph
     _point_configs[point_key].alpha = alpha;
 }
 
+void Media_Window::addDigitalIntervalSeries(
+        std::string const & key,
+        std::string const & hex_color,
+        float alpha)
+{
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+
+    _interval_configs[key] = element_config{hex_color, alpha};
+
+    UpdateCanvas();
+}
+
+void Media_Window::removeDigitalIntervalSeries(std::string const & key)
+{
+    auto item = _interval_configs.find(key);
+    if (item != _interval_configs.end()) {
+        _interval_configs.erase(item);
+    }
+}
+
+void Media_Window::clearIntervals()
+{
+    for (auto item : _intervals) {
+        removeItem(item);
+    }
+
+    for (auto item : _intervals) {
+        delete item;
+    }
+    _intervals.clear();
+}
+
+void Media_Window::addTensorDataToScene(
+    const std::string& tensor_key)
+{
+    _tensor_configs[tensor_key] = tensor_config{0};
+}
+
+void Media_Window::removeTensorDataFromScene(std::string const & tensor_key)
+{
+    auto item = _tensor_configs.find(tensor_key);
+    if (item != _tensor_configs.end()) {
+        _tensor_configs.erase(item);
+    }
+}
+
+void Media_Window::setTensorChannel(std::string const & tensor_key, int channel)
+{
+    _tensor_configs[tensor_key].channel = channel;
+}
+
+void Media_Window::clearTensors()
+{
+    for (auto item : _tensors) {
+        removeItem(item);
+    }
+
+    for (auto item : _tensors) {
+        delete item;
+    }
+    _tensors.clear();
+}
+
 void Media_Window::LoadFrame(int frame_id)
 {
     // Get MediaData
@@ -205,6 +281,8 @@ void Media_Window::UpdateCanvas()
     clearLines();
     clearPoints();
     clearMasks();
+    clearIntervals();
+    clearTensors();
 
     //_convertNewMediaToQImage();
     auto _media = _data_manager->getData<MediaData>("media");
@@ -234,6 +312,10 @@ void Media_Window::UpdateCanvas()
     _plotMaskData();
 
     _plotPointData();
+
+    _plotDigitalIntervalSeries();
+
+    _plotTensorData();
 }
 
 
@@ -498,6 +580,71 @@ void Media_Window::_plotPointData()
             _points.append(ellipse);
         }
         i ++;
+    }
+}
+
+void Media_Window::_plotDigitalIntervalSeries()
+{
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    for (auto const & [key, _interval_config] : _interval_configs)
+    {
+        auto plot_color = _plot_color_with_alpha(_interval_config);
+
+        auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
+
+        std::vector<int> relative_times = {-2, -1, 0, 1, 2};
+        int square_size = 20;
+        int top_right_x = _canvasWidth - square_size;
+        int top_right_y = 0;
+
+        for (int i = 0; i < relative_times.size(); ++i) {
+            int time = current_time + relative_times[i];
+            bool event_present = interval_series->isEventAtTime(time);
+
+            auto color = event_present ? plot_color : QColor(255, 255, 255, 10);            // Transparent if no event
+
+            auto intervalPixmap = addRect(
+                top_right_x - (relative_times.size() - 1 - i) * square_size,
+                top_right_y,
+                square_size,
+                square_size,
+                QPen(Qt::black), // Black border
+                QBrush(color) // Fill with color if event is present
+                );
+
+            _intervals.append(intervalPixmap);
+        }
+    }
+}
+
+void Media_Window::_plotTensorData()
+{
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    for (auto const & [key, config] : _tensor_configs) {
+        auto tensor_data = _data_manager->getData<TensorData>(key);
+
+        auto tensor_shape = tensor_data->getFeatureShape();
+
+        auto tensor_slice = tensor_data->getChannelSlice(current_time, config.channel);
+
+        // Create a QImage from the tensor data
+        QImage tensor_image(tensor_shape[1], tensor_shape[0], QImage::Format::Format_ARGB32);
+        for (int y = 0; y < tensor_shape[0]; ++y) {
+            for (int x = 0; x < tensor_shape[1]; ++x) {
+                float value = tensor_slice[y * tensor_shape[1] + x];
+                int pixel_value = static_cast<int>(value * 255); // Assuming the tensor values are normalized between 0 and 1
+                tensor_image.setPixel(x, y, qRgba(pixel_value, 0, 0, pixel_value));
+            }
+        }
+
+        // Scale the tensor image to the size of the canvas
+        QImage scaled_tensor_image = tensor_image.scaled(_canvasWidth, _canvasHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+
+        auto tensor_pixmap = addPixmap(QPixmap::fromImage(scaled_tensor_image));
+
+        _tensors.append(tensor_pixmap);
     }
 }
 

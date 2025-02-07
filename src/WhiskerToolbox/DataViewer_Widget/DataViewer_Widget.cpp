@@ -69,6 +69,8 @@ void DataViewer_Widget::openWidget() {
     std::cout << "DataViewer Widget Opened" << std::endl;
     ui->feature_table_widget->populateTable();
     this->show();
+
+    _updateLabels();
 }
 
 void DataViewer_Widget::closeEvent(QCloseEvent *event) {
@@ -81,6 +83,8 @@ void DataViewer_Widget::_updatePlot(int time)
     time = _data_manager->getTime("time")->getTimeAtIndex(time);
     //std::cout << ""
     ui->openGLWidget->updateCanvas(time);
+
+    _updateLabels();
 }
 
 
@@ -165,4 +169,13 @@ void DataViewer_Widget::wheelEvent(QWheelEvent *event) {
     }
 
     updateXAxisSamples(new_zoom);
+
+    _updateLabels();
+}
+
+void DataViewer_Widget::_updateLabels()
+{
+    auto x_axis = ui->openGLWidget->getXAxis();
+    ui->neg_x_label->setText(QString::number(x_axis.getStart()));
+    ui->pos_x_label->setText(QString::number(x_axis.getEnd()));
 }

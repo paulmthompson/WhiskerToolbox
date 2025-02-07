@@ -76,29 +76,30 @@ inline arma::Mat<double> convertToMlpackMatrix(
         std::vector<std::size_t>& timestamps)
 {
 
-    const size_t numRows = timestamps.size();
-    const size_t numCols = pointData->getMaxPoints();
+    const size_t numCols = timestamps.size();
+    const size_t numRows = pointData->getMaxPoints() * 2;
 
-    arma::Mat<double> result(numRows, numCols * 2, arma::fill::zeros);
+    arma::Mat<double> result(numRows, numCols, arma::fill::zeros);
 
-    auto row = 0;
+    auto col = 0;
     for (auto t : timestamps)
     {
         auto points = pointData->getPointsAtTime(t);
 
         if (points.empty()) {
-            result(row, 0) = arma::datum::nan;
-            row++;
+            for (std::size_t i = 0; i < numRows; ++i) {
+                result(i, col) = arma::datum::nan;
+            }
+            col++;
             continue;
         }
 
-        auto col = 0;
+        auto row = 0;
         for (auto p : points) {
-            result(row, col * 2) = p.x;
-            result(row, col * 2 + 1) = p.y;
-            col++;
+            result(row * 2, col) = p.x;
+            result(row * 2 + 1, col) = p.y;
         }
-        row++;
+        col++;
     }
 
     return result;
@@ -112,13 +113,13 @@ inline void updatePointDataFromMlpackMatrix(
 
     std::vector<std::vector<Point2D<float>>> points;
 
-    for (std::size_t row = 0; row < matrix.n_rows; ++row) {
+    for (std::size_t col = 0; col < matrix.n_cols; ++col) {
         points.push_back(std::vector<Point2D<float>>());
-        for (std::size_t col = 0; col < matrix.n_cols; col += 2) {
-            if (matrix(row, col) != 0.0 || matrix(row, col + 1) != 0.0) {
+        for (std::size_t row = 0; row < matrix.n_cols; row += 2) {
+            if (matrix(row, col) != 0.0 || matrix(row + 1, col) != 0.0) {
                 points.back().emplace_back(Point2D<float>{
                         static_cast<float>(matrix(row, col)),
-                        static_cast<float>(matrix(row, col + 1))
+                        static_cast<float>(matrix(row + 1, col))
                 });
             }
         }
@@ -141,10 +142,10 @@ inline arma::Mat<double> convertTensorDataToMlpackMatrix(
         const std::vector<std::size_t>& timestamps)
 {
     // Determine the number of rows and columns for the Armadillo matrix
-    std::size_t numRows = timestamps.size();
+    std::size_t numCols = timestamps.size();
 
     auto feature_shape = tensor_data.getFeatureShape();
-    std::size_t numCols = std::accumulate(
+    std::size_t numRows = std::accumulate(
             feature_shape.begin(),
             feature_shape.end(),
             1,
@@ -154,19 +155,22 @@ inline arma::Mat<double> convertTensorDataToMlpackMatrix(
     arma::Mat<double> result(numRows, numCols, arma::fill::zeros);
 
     // Fill the matrix with the tensor data
-    for (std::size_t i = 0; i < numRows; ++i) {
-        auto tensor = tensor_data.getTensorAtTime(timestamps[i]);
-        auto flattened_tensor = tensor.flatten().to(torch::kDouble);
-        for (std::size_t j = 0; j < flattened_tensor.numel(); ++j) {
-            result(i, j) = flattened_tensor[j].item<double>();
+    for (std::size_t col = 0; col < numCols; ++col) {
+        auto tensor = tensor_data.getTensorAtTime(timestamps[col]);
+        auto flattened_tensor = tensor.flatten();
+        auto tensor_data_ptr = flattened_tensor.data_ptr<float>();
+
+        for (std::size_t row = 0; row < flattened_tensor.numel(); ++row) {
+            result(row, col) = static_cast<double>(tensor_data_ptr[row]);
         }
     }
 
     return result;
 }
 
-std::vector<double> copyMatrixRowToVector(const arma::Row<double>& row) {
-    std::vector<double> vec(row.n_elem);
+template <typename T>
+std::vector<T> copyMatrixRowToVector(const arma::Row<T>& row) {
+    std::vector<T> vec(row.n_elem);
     for (std::size_t i = 0; i < row.n_elem; ++i) {
         vec[i] = row[i];
     }
@@ -188,8 +192,8 @@ inline void updateTensorDataFromMlpackMatrix(
     std::vector<int64_t> shape(feature_shape.begin(), feature_shape.end());
 
     for (std::size_t i = 0; i < timestamps.size(); ++i) {
-        auto row = copyMatrixRowToVector(matrix.row(i));
-        torch::Tensor tensor = torch::from_blob(row.data(), shape, torch::kDouble).clone();
+        auto col = copyMatrixRowToVector<double>(matrix.col(i));
+        torch::Tensor tensor = torch::from_blob(col.data(), shape, torch::kDouble).clone();
         tensor_data.overwriteTensorAtTime(timestamps[i], tensor);
     }
 }

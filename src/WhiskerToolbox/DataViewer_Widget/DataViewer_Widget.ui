@@ -58,7 +58,7 @@
       <property name="geometry">
        <rect>
         <x>40</x>
-        <y>390</y>
+        <y>400</y>
         <width>351</width>
         <height>301</height>
        </rect>
@@ -68,7 +68,7 @@
       <property name="geometry">
        <rect>
         <x>410</x>
-        <y>390</y>
+        <y>400</y>
         <width>121</width>
         <height>22</height>
        </rect>
@@ -84,13 +84,65 @@
       <property name="geometry">
        <rect>
         <x>540</x>
-        <y>390</y>
+        <y>400</y>
         <width>111</width>
         <height>16</height>
        </rect>
       </property>
       <property name="text">
        <string>X Axis Samples</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="neg_x_mid_label">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>380</y>
+        <width>49</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="neg_x_label">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>380</y>
+        <width>49</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="pos_x_mid_label">
+      <property name="geometry">
+       <rect>
+        <x>510</x>
+        <y>380</y>
+        <width>49</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLabel" name="pos_x_label">
+      <property name="geometry">
+       <rect>
+        <x>670</x>
+        <y>380</y>
+        <width>49</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
       </property>
      </widget>
     </widget>

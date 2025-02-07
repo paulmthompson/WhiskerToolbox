@@ -66,8 +66,15 @@
      <addaction name="actionLoad_Digital_Time_Series_CSV"/>
      <addaction name="actionLoad_JSON_Config"/>
     </widget>
+    <widget class="QMenu" name="menuExport">
+     <property name="title">
+      <string>Export</string>
+     </property>
+     <addaction name="actionExport_Video"/>
+    </widget>
     <addaction name="separator"/>
     <addaction name="menuLoad_Data"/>
+    <addaction name="menuExport"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -203,6 +210,11 @@
   <action name="actionLoad_Tensor">
    <property name="text">
     <string>Load Tensor</string>
+   </property>
+  </action>
+  <action name="actionExport_Video">
+   <property name="text">
+    <string>Export Video</string>
    </property>
   </action>
  </widget>

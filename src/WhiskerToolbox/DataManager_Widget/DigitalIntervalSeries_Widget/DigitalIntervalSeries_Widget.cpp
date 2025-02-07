@@ -10,6 +10,10 @@
 #include <filesystem>
 #include <iostream>
 
+#include <QItemDelegate>
+#include <QEvent>
+#include <QKeyEvent>
+
 DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::DigitalIntervalSeries_Widget),
@@ -20,10 +24,14 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     _interval_table_model = new IntervalTableModel(this);
     ui->tableView->setModel(_interval_table_model);
 
+    ui->tableView->setEditTriggers(QAbstractItemView::SelectedClicked);
+
     connect(ui->save_csv, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_saveCSV);
     connect(ui->create_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_createIntervalButton);
     connect(ui->remove_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_removeIntervalButton);
     connect(ui->flip_single_frame, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_flipIntervalButton);
+    connect(ui->tableView, &QTableView::doubleClicked, this, &DigitalIntervalSeries_Widget::_handleCellClicked);
+    connect(ui->extend_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_extendInterval);
 }
 
 DigitalIntervalSeries_Widget::~DigitalIntervalSeries_Widget() {
@@ -57,10 +65,39 @@ void DigitalIntervalSeries_Widget::setActiveKey(std::string key)
 
     _data_manager->removeCallbackFromData(key, _callback_id);
 
-    _callback_id = _data_manager->addCallbackToData(key, [this]() {
+    _assignCallbacks();
+
+    _calculateIntervals();
+}
+
+void DigitalIntervalSeries_Widget::_changeDataTable(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
+{
+
+    auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
+
+    for (int row = topLeft.row(); row <= bottomRight.row(); ++row) {
+        const Interval interval = _interval_table_model->getInterval(row);
+        std::cout << "Interval changed to " << interval.start << " , " << interval.end << std::endl;
+        intervals->addEvent(interval.start, interval.end);
+    }
+
+}
+
+void DigitalIntervalSeries_Widget::_assignCallbacks()
+{
+    _callback_id = _data_manager->addCallbackToData(_active_key, [this]() {
         _calculateIntervals();
     });
-    _calculateIntervals();
+
+    //auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
+
+    //connect(_interval_table_model, &IntervalTableModel::dataChanged, this, &DigitalIntervalSeries_Widget::_changeDataTable);
+
+}
+
+void DigitalIntervalSeries_Widget::removeCallbacks()
+{
+    //disconnect(_interval_table_model, &IntervalTableModel::dataChanged, this, &DigitalIntervalSeries_Widget::_changeDataTable);
 }
 
 void DigitalIntervalSeries_Widget::_calculateIntervals()
@@ -137,5 +174,45 @@ void DigitalIntervalSeries_Widget::_flipIntervalButton()
         intervals->setEventAtTime(frame_num, false);
     } else {
         intervals->setEventAtTime(frame_num, true);
+    }
+}
+
+void DigitalIntervalSeries_Widget::_handleCellClicked(const QModelIndex &index)
+{
+    if (!index.isValid()) {
+        return;
+    }
+
+    // Assuming the frame number is stored in the clicked cell
+    int frameNumber = index.data().toInt();
+
+    // Emit the signal with the frame number
+    emit frameSelected(frameNumber);
+}
+
+void DigitalIntervalSeries_Widget::_extendInterval()
+{
+    auto selectedIndexes = ui->tableView->selectionModel()->selectedIndexes();
+
+    if (selectedIndexes.isEmpty()) {
+        std::cout << "Error: No frame selected in the table view." << std::endl;
+        return;
+    }
+
+    auto currentFrame = _data_manager->getTime()->getLastLoadedFrame();
+    auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
+
+    for (const auto &index : selectedIndexes) {
+        if (index.column() == 0) { // Only process the first column to avoid duplicate processing
+            Interval interval = _interval_table_model->getInterval(index.row());
+
+            if (currentFrame < interval.start) {
+                intervals->addEvent(Interval{currentFrame, interval.end});
+            } else if (currentFrame > interval.end) {
+                intervals->addEvent(Interval{interval.start, currentFrame});
+            } else {
+                std::cout << "Error: Current frame is within the selected interval." << std::endl;
+            }
+        }
     }
 }

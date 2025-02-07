@@ -44,8 +44,9 @@ private slots:
     void _openDataViewer();
     void _updateCanvasSize();
     void _setMaskAlpha(int alpha);
+    void _setTensorChannel(int channel);
     void _addFeatureToDisplay(const QString& feature, bool enabled);
-
+    void _featureSelected(QString const & feature);
 signals:
 
 };

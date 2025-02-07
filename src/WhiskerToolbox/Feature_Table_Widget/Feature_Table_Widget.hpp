@@ -28,6 +28,7 @@ public:
     void setTypeFilter(std::vector<std::string> type) { _type_filters = type; }
     std::string getFeatureColor(std::string key);
     void setFeatureColor(std::string key, std::string hex_color);
+    QString getHighlightedFeature() const {return _highlighted_feature;}
 
 signals:
     void featureSelected(const QString& feature);

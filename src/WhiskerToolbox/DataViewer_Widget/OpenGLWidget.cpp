@@ -15,6 +15,8 @@
 #include <cstdlib>
 #include <ctime>
 
+// This was a helpful resource for making a dashed line:
+//https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
 
 OpenGLWidget::OpenGLWidget(QWidget *parent)
     : QOpenGLWidget(parent)
@@ -64,6 +66,36 @@ static const char *fragmentShaderSource =
     "   outColor = vec4(fragColor, fragAlpha);\n"
     "}\n";
 
+static const char *dashedVertexShaderSource =
+        "#version 330 core\n"
+        "layout (location = 0) in vec3 inPos;\n"
+        "flat out vec3 startPos;\n"
+        "out vec3 vertPos;\n"
+        "uniform mat4 u_mvp;\n"
+        "void main()\n"
+        "{\n"
+        "    vec4 pos = u_mvp * vec4(inPos, 1.0);\n"
+        "    gl_Position = pos;\n"
+        "    vertPos = pos.xyz / pos.w;\n"
+        "    startPos = vertPos;\n"
+        "}\n";
+
+static const char *dashedFragmentShaderSource =
+        "#version 330 core\n"
+        "flat in vec3 startPos;\n"
+        "in vec3 vertPos;\n"
+        "out vec4 fragColor;\n"
+        "uniform vec2 u_resolution;\n"
+        "uniform float u_dashSize;\n"
+        "uniform float u_gapSize;\n"
+        "void main()\n"
+        "{\n"
+        "    vec2 dir = (vertPos.xy - startPos.xy) * u_resolution / 2.0;\n"
+        "    float dist = length(dir);\n"
+        "    if (fract(dist / (u_dashSize + u_gapSize)) > u_dashSize / (u_dashSize + u_gapSize))\n"
+        "        discard;\n"
+        "    fragColor = vec4(1.0);\n"
+        "}\n";
 
 void OpenGLWidget::cleanup()
 {
@@ -71,7 +103,9 @@ void OpenGLWidget::cleanup()
         return;
     makeCurrent();
     delete m_program;
+    delete m_dashedProgram;
     m_program = 0;
+    m_dashedProgram = 0;
     doneCurrent();
 }
 
@@ -87,12 +121,24 @@ void OpenGLWidget::initializeGL()
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
+
     m_program->link();
     m_program->bind();
 
     m_projMatrixLoc = m_program->uniformLocation("projMatrix");
     m_viewMatrixLoc = m_program->uniformLocation("viewMatrix");
     m_modelMatrixLoc = m_program->uniformLocation("modelMatrix");
+
+    m_dashedProgram = new QOpenGLShaderProgram;
+    m_dashedProgram->addShaderFromSourceCode(QOpenGLShader::Vertex, dashedVertexShaderSource);
+    m_dashedProgram->addShaderFromSourceCode(QOpenGLShader::Fragment, dashedFragmentShaderSource);
+    m_dashedProgram->link();
+    m_dashedProgram->bind();
+
+    m_dashedProjMatrixLoc = m_dashedProgram->uniformLocation("u_mvp");
+    m_dashedResolutionLoc = m_dashedProgram->uniformLocation("u_resolution");
+    m_dashedDashSizeLoc = m_dashedProgram->uniformLocation("u_dashSize");
+    m_dashedGapSizeLoc = m_dashedProgram->uniformLocation("u_gapSize");
 
     m_vao.create();
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
@@ -114,6 +160,7 @@ void OpenGLWidget::initializeGL()
     setupVertexAttribs();
 
     m_program->release();
+    m_dashedProgram->release();
 
 }
 
@@ -278,6 +325,7 @@ void OpenGLWidget::paintGL() {
     m_program->setUniformValue(m_modelMatrixLoc, m_model);
 
     QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    setupVertexAttribs();
 
     //This has been converted to master coordinates
     int currentTime = _time;
@@ -302,6 +350,17 @@ void OpenGLWidget::paintGL() {
     glDrawArrays(GL_LINES, 0, 2);
 
     m_program->release();
+
+    // Use the dashed line shader program for drawing dashed lines
+    m_dashedProgram->bind();
+    m_dashedProgram->setUniformValue(m_dashedProjMatrixLoc, m_proj * m_view * m_model);
+    m_dashedProgram->setUniformValue(m_dashedResolutionLoc, QVector2D(width(), height()));
+    m_dashedProgram->setUniformValue(m_dashedDashSizeLoc, 10.0f);
+    m_dashedProgram->setUniformValue(m_dashedGapSizeLoc, 10.0f);
+
+    drawGridLines();
+
+    m_dashedProgram->release();
 
     //drawAxis();
 }
@@ -415,5 +474,45 @@ void OpenGLWidget::adjustFakeData()
         new_series.push_back(static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f);
     }
     _analog_series[0].series->setData(new_series);
+}
+
+void OpenGLWidget::drawDashedLine(float xStart, float xEnd, float yStart, float yEnd, int dashLength, int gapLength)
+{
+    std::vector<float> vertices = {
+            xStart, yStart, 0.0f,
+            xEnd, yEnd, 0.0f
+    };
+
+    m_vbo.bind();
+    m_vbo.allocate(vertices.data(), vertices.size() * sizeof(float));
+
+    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+    f->glEnableVertexAttribArray(0);
+    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
+
+    m_dashedProgram->bind();
+    m_dashedProgram->setUniformValue(m_dashedProjMatrixLoc, m_proj * m_view * m_model);
+    m_dashedProgram->setUniformValue(m_dashedResolutionLoc, QVector2D(width(), height()));
+    m_dashedProgram->setUniformValue(m_dashedDashSizeLoc, dashLength);
+    m_dashedProgram->setUniformValue(m_dashedGapSizeLoc, gapLength);
+
+    glDrawArrays(GL_LINES, 0, 2);
+
+    m_dashedProgram->release();
+    m_vbo.release();
+}
+
+void OpenGLWidget::drawGridLines()
+{
+    // Draw dashed vertical lines at edge of canvas
+    const auto start_time = _xAxis.getStart();
+    const auto end_time = _xAxis.getEnd();
+
+    float xStartCanvasPos = static_cast<GLfloat>(start_time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
+    float xEndCanvasPos = static_cast<GLfloat>(end_time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
+
+    drawDashedLine(xStartCanvasPos, xStartCanvasPos, -1.0f, 1.0f, 5, 5);
+    drawDashedLine(xEndCanvasPos, xEndCanvasPos, -1.0f, 1.0f, 5, 5);
+
 }
 

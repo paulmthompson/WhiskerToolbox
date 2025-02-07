@@ -57,6 +57,8 @@ private:
 
     QString _highlighted_available_feature;
 
+    void _updateLabels();
+
 };
 
 

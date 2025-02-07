@@ -41,6 +41,7 @@ private slots:
     void _handleFeatureSelected(const QString& feature);
     void _disablePreviousFeature(const QString& feature);
     void _createNewData();
+    void _changeScrollbar(int frame_id);
 
 };
 

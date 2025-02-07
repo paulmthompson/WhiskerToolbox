@@ -13,6 +13,8 @@
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
+#include <mlpack/mlpack.hpp>
+
 #include <QFileDialog>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
@@ -36,7 +38,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 
     //Feature Table Widget
     ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->feature_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData"});
+    ui->feature_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData", "TensorData"});
 
     ui->feature_table_widget->setDataManager(_data_manager);
 
@@ -64,7 +66,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 
     //Outcome Table Widget
     ui->outcome_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->outcome_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData"});
+    ui->outcome_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData", "TensorData"});
 
     ui->outcome_table_widget->setDataManager(_data_manager);
 
@@ -77,6 +79,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
     });
 
     connect(ui->model_select_combo, &QComboBox::currentTextChanged, this, &ML_Widget::_selectModelType);
+    connect(ui->fit_button, &QPushButton::clicked, this, &ML_Widget::_fitModel);
 }
 
 ML_Widget::~ML_Widget() {
@@ -106,21 +109,16 @@ void ML_Widget::_addFeatureToModel(const QString& feature, bool enabled)
 {
     if (enabled) {
         //_plotSelectedFeature(feature.toStdString());
+        _selected_features.insert(feature.toStdString());
     } else {
         _removeSelectedFeature(feature.toStdString());
     }
 }
 
 void ML_Widget::_removeSelectedFeature(const std::string key) {
-    if (_data_manager->getType(key) == "AnalogTimeSeries") {
-        //ui->openGLWidget->removeAnalogTimeSeries(key);
-    } else if (_data_manager->getType(key) == "PointData") {
-        //ui->openGLWidget->removeDigitalEventSeries(key);
-    } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
-        //ui->openGLWidget->removeDigitalIntervalSeries(key);
-    } else {
-        std::cout << "Feature type not supported" << std::endl;
-    }
+
+    if (auto iter = _selected_features.find(key); iter != _selected_features.end())
+        _selected_features.erase(iter);
 }
 
 void ML_Widget::_handleMaskSelected(const QString& feature)
@@ -132,6 +130,7 @@ void ML_Widget::_addMaskToModel(const QString& feature, bool enabled)
 {
     if (enabled) {
         //_plotSelectedFeature(feature.toStdString());
+        _selected_masks.insert(feature.toStdString());
     } else {
         _removeSelectedMask(feature.toStdString());
     }
@@ -143,6 +142,8 @@ void ML_Widget::_removeSelectedMask(const std::string key) {
     } else {
         std::cout << "Feature type not supported" << std::endl;
     }
+    if (auto iter = _selected_masks.find(key); iter != _selected_masks.end())
+        _selected_masks.erase(iter);
 }
 
 void ML_Widget::_handleOutcomeSelected(const QString& feature)
@@ -154,6 +155,7 @@ void ML_Widget::_addOutcomeToModel(const QString& feature, bool enabled)
 {
     if (enabled) {
         //_plotSelectedFeature(feature.toStdString());
+        _selected_outcomes.insert(feature.toStdString());
     } else {
         _removeSelectedOutcome(feature.toStdString());
     }
@@ -169,6 +171,8 @@ void ML_Widget::_removeSelectedOutcome(const std::string key) {
     } else {
         std::cout << "Feature type not supported" << std::endl;
     }
+    if (auto iter = _selected_outcomes.find(key); iter != _selected_outcomes.end())
+        _selected_outcomes.erase(iter);
 }
 
 void ML_Widget::_selectModelType(const QString& model_type)
@@ -179,5 +183,144 @@ void ML_Widget::_selectModelType(const QString& model_type)
     } else {
         std::cout << "Unsupported Model Type Selected" << std::endl;
     }
+}
+
+void ML_Widget::_fitModel()
+{
+
+    if (_selected_features.empty() || _selected_masks.empty() || _selected_outcomes.empty())
+    {
+        std::cerr << "Please select features, masks, and outcomes" << std::endl;
+        return;
+    }
+
+    if (_selected_masks.size() > 1)
+    {
+        std::cerr << "Only one mask is supported" << std::endl;
+        return;
+    }
+    auto masks = _data_manager->getData<DigitalIntervalSeries>(*_selected_masks.begin());
+    auto timestamps = create_timestamps(masks);
+
+    auto feature_array = create_arrays(_selected_features, timestamps, _data_manager);
+
+    std::cout << "Feature array size: " << feature_array.n_rows << " x " << feature_array.n_cols << std::endl;
+
+    auto outcome_array = create_arrays(_selected_outcomes, timestamps, _data_manager);
+
+    std::cout << "Outcome array size: " << outcome_array.n_rows << " x " << outcome_array.n_cols << std::endl;
+
+    arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array);
+    mlpack::RandomForest model;
+    model.Train(feature_array, labels, 2);
+
+    std::cout << "Model trained" << std::endl;
+
+    // Predict the labels of the test points.
+
+    arma::Row<size_t> predictions;
+    model.Classify(feature_array, predictions);
+
+    double accuracy = 100.0 * ((double) arma::accu(predictions == labels)) /
+                      labels.n_elem;
+    std::cout << "After training 10 trees, test set accuracy is " << accuracy
+              << "%." << std::endl;
+
+    int current_time;
+    if (ui->predict_all_check->isChecked()) {
+        current_time = _data_manager->getTime()->getTotalFrameCount();
+    } else {
+        current_time = _data_manager->getTime()->getLastLoadedFrame();
+    }
+    // Prediction timestamps
+    auto prediction_interval = std::vector<Interval>{Interval{
+        masks->getDigitalIntervalSeries().back().end,
+        current_time
+    }};
+
+    auto prediction_timestamps = create_timestamps(prediction_interval);
+
+    arma::Mat<double> prediction_feature_array = create_arrays(
+            _selected_features,
+            prediction_timestamps,
+            _data_manager);
+
+    arma::Row<size_t> prediction_labels;
+    model.Classify(prediction_feature_array, prediction_labels);
+
+    auto prediction_vec = copyMatrixRowToVector<size_t>(prediction_labels);
+
+    for (auto key : _selected_outcomes) {
+        _data_manager->getData<DigitalIntervalSeries>(key)->setEventsAtTimes(prediction_timestamps, prediction_vec);
+    }
+}
+
+std::vector<std::size_t> create_timestamps(std::vector<Interval>& intervals)
+{
+    std::vector<std::size_t> timestamps;
+    for (auto interval : intervals)
+    {
+        //I want to generate timestamps for each value between interval.start and interval.end
+        for (std::size_t i = interval.start; i < interval.end; i++)
+        {
+            timestamps.push_back(i);
+        }
+    }
+
+    return timestamps;
+}
+
+std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries>& series)
+{
+    auto intervals = series->getDigitalIntervalSeries();
+    return create_timestamps(intervals);
+}
+
+
+
+arma::Mat<double> create_arrays(
+        std::unordered_set<std::string> features,
+        std::vector<std::size_t>& timestamps,
+        std::shared_ptr<DataManager> data_manager)
+{
+    //Create the input and output arrays
+
+    std::vector<arma::Mat<double>> feature_arrays;
+
+    for (const auto& feature : features) {
+        std::string feature_type = data_manager->getType(feature);
+
+        if (feature_type == "AnalogTimeSeries") {
+            auto analog_series = data_manager->getData<AnalogTimeSeries>(feature);
+            arma::Row<double> array = convertAnalogTimeSeriesToMlpackArray(analog_series, timestamps);
+            feature_arrays.push_back(array);
+        } else if (feature_type == "DigitalIntervalSeries") {
+            auto digital_series = data_manager->getData<DigitalIntervalSeries>(feature);
+            arma::Row<double> array = convertToMlpackArray(digital_series, timestamps);
+            feature_arrays.push_back(array);
+        } else if (feature_type == "PointData") {
+            auto point_data = data_manager->getData<PointData>(feature);
+            arma::Mat<double> array = convertToMlpackMatrix(point_data, timestamps);
+            feature_arrays.push_back(array);
+        } else if (feature_type == "TensorData") {
+            auto tensor_data = data_manager->getData<TensorData>(feature);
+            arma::Mat<double> array = convertTensorDataToMlpackMatrix(*tensor_data, timestamps);
+            feature_arrays.push_back(array);
+        } else {
+            std::cerr << "Unsupported feature type: " << feature_type << std::endl;
+        }
+    }
+
+    // Concatenate all feature arrays column-wise
+    arma::Mat<double> concatenated_array;
+    if (!feature_arrays.empty()) {
+        concatenated_array = feature_arrays[0];
+
+        for (std::size_t i = 1; i < feature_arrays.size(); i++) {
+            concatenated_array = arma::join_cols(concatenated_array, feature_arrays[i]);
+        }
+    }
+
+    return concatenated_array;
 }
 

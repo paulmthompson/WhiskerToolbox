@@ -56,12 +56,12 @@ public:
     }
     std::vector<Interval> const& getDigitalIntervalSeries() const;
 
-    bool isEventAtTime(int time) const;
-    void setEventAtTime(int time, bool event);
+    bool isEventAtTime(int const time) const;
+    void setEventAtTime(int time, bool const event);
     void removeEventAtTime(int time);
 
-    template <typename T>
-    void setEventsAtTimes(std::vector<T> times, std::vector<bool> events)
+    template <typename T, typename B>
+    void setEventsAtTimes(std::vector<T> times, std::vector<B> events)
     {
         for (int i = 0; i < times.size(); ++i) {
             _setEventAtTime(times[i], events[i]);
@@ -69,16 +69,36 @@ public:
         notifyObservers();
     }
 
-    void createIntervalsFromBool(std::vector<uint8_t> const& bool_vector);
+    template <typename T>
+    void createIntervalsFromBool(std::vector<T> const& bool_vector)
+    {
+        bool in_interval = false;
+        int start = 0;
+        for (int i = 0; i < bool_vector.size(); ++i) {
+            if (bool_vector[i] && !in_interval) {
+                start = i;
+                in_interval = true;
+            } else if (!bool_vector[i] && in_interval) {
+                _data.push_back(Interval{start, i - 1});
+                in_interval = false;
+            }
+        }
+        if (in_interval) {
+            _data.push_back(Interval{start, static_cast<int64_t>(bool_vector.size() - 1)});
+        }
 
-    size_t size() {return _data.size();};
+        _sortData();
+        notifyObservers();
+    }
+
+    size_t size() const {return _data.size();};
 
 private:
     std::vector<Interval> _data {};
 
     void _addEvent(Interval new_interval);
-    void _setEventAtTime(int time, bool event);
-    void _removeEventAtTime(int time);
+    void _setEventAtTime(int time, bool const event);
+    void _removeEventAtTime(int const time);
 
     void _sortData();
 

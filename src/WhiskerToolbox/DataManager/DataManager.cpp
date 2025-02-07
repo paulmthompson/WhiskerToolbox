@@ -222,13 +222,14 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             dm->setMedia(video_data);
 
             data_info_list.push_back({name, "VideoData", ""});
+
         } else if (data_type == "points") {
 
             int frame_column = item["frame_column"];
             int x_column = item["x_column"];
             int y_column = item["y_column"];
 
-            std::string color = item.value("color","0000FF");
+            std::string color = item.value("color","#0000FF");
             std::string delim = item.value("delim", " ");
 
             int height = item.value("height", -1);
@@ -266,6 +267,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             std::string x_key = item["x_key"];
             std::string y_key = item["y_key"];
 
+            int height = item.value("height", -1);
+            int width = item.value("width", -1);
+
             std::string color = item.value("color","0000FF");
 
             auto frames =  read_array_hdf5(file_path, frame_key);
@@ -274,6 +278,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             auto x_coords = read_ragged_hdf5(file_path, x_key);
 
             auto mask_data = std::make_shared<MaskData>();
+            mask_data->setImageSize(ImageSize{width,height});
 
             for (std::size_t i = 0; i < frames.size(); i++) {
                 auto frame = frames[i];
@@ -317,6 +322,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             std::string color = item.value("color","0000FF");
 
             data_info_list.push_back({name, "LineData", color});
+
         } else if (data_type == "analog") {
 
             if (item["format"] == "int16") {
@@ -404,6 +410,20 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             } else {
                 std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
             }
+        } else if (data_type == "tensor"){
+
+            if (item["format"] == "numpy")
+            {
+
+                TensorData tensor_data;
+                loadNpyToTensorData(file_path, tensor_data);
+
+                dm->setData<TensorData>(name, std::make_shared<TensorData>(tensor_data));
+
+            } else {
+                std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
+            }
+
         } else if (data_type == "time") {
 
             if (item["format"] == "uint16") {

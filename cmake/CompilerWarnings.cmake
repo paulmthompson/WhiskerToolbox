@@ -50,6 +50,7 @@ if("${MSVC_WARNINGS}" STREQUAL "")
         /w14906 # string literal cast to 'LPWSTR'
         /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /permissive- # standards conformance mode for MSVC compiler.
+        /openmp:llvm
     )
   endif()
 

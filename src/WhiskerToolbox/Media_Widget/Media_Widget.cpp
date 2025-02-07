@@ -7,6 +7,12 @@
 #include "Media_Widget/Media_Widget_Items.hpp"
 #include "Media_Window/Media_Window.hpp"
 
+//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
+#undef slots
+#include "DataManager/Tensors/Tensor_Data.hpp"
+#define slots Q_SLOTS
+
+
 #include <QSlider>
 
 
@@ -18,7 +24,9 @@ Media_Widget::Media_Widget(QWidget *parent) :
 
     connect(ui->data_viewer_button, &QPushButton::clicked, this, &Media_Widget::_openDataViewer);
     connect(ui->mask_slider, &QSlider::valueChanged, this, &Media_Widget::_setMaskAlpha);
+    connect(ui->tensor_slider, &QSlider::valueChanged, this, &Media_Widget::_setTensorChannel);
 
+    connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &Media_Widget::_featureSelected);
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, [this](const QString& feature) {
         Media_Widget::_addFeatureToDisplay(feature, true);
@@ -46,7 +54,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager)
     _data_manager = data_manager;
 
     ui->feature_table_widget->setColumns({"Feature", "Color", "Enabled", "Type"});
-    ui->feature_table_widget->setTypeFilter({"LineData", "MaskData", "PointData"});
+    ui->feature_table_widget->setTypeFilter({"LineData", "MaskData", "PointData", "DigitalIntervalSeries", "TensorData"});
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
 }
@@ -67,6 +75,20 @@ void Media_Widget::_openDataViewer()
     _main_window->showDockWidget(key);
 }
 
+void Media_Widget::_featureSelected(QString const & feature)
+{
+    std::string type = _data_manager->getType(feature.toStdString());
+
+    if (type == "TensorData")
+    {
+        auto tensor_data = _data_manager->getData<TensorData>(feature.toStdString());
+        auto shape = tensor_data->getFeatureShape();
+        ui->tensor_slider->setMaximum(shape.back());
+    } else {
+        std::cout << "Unsupported feature type" << std::endl;
+    }
+}
+
 void Media_Widget::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
     _updateCanvasSize();
@@ -85,6 +107,18 @@ void Media_Widget::_setMaskAlpha(int alpha)
 {
     float alpha_float = static_cast<float>(alpha) / 100;
     _scene->changeMaskAlpha(alpha_float);
+}
+
+void Media_Widget::_setTensorChannel(int channel)
+{
+    auto feature = ui->feature_table_widget->getHighlightedFeature().toStdString();
+
+    std::string type = _data_manager->getType(feature);
+
+    if (type == "TensorData")
+    {
+        _scene->setTensorChannel(feature, channel);
+    }
 }
 
 void Media_Widget::_addFeatureToDisplay(const QString& feature, bool enabled)
@@ -120,6 +154,22 @@ void Media_Widget::_addFeatureToDisplay(const QString& feature, bool enabled)
         } else {
             std::cout << "Removing point data from scene" << std::endl;
             _scene->removePointDataFromScene(feature.toStdString());
+        }
+    } else if (type == "DigitalIntervalSeries") {
+        if (enabled) {
+            std::cout << "Adding digital interval series to scene" << std::endl;
+            _scene->addDigitalIntervalSeries(feature.toStdString(), color);
+        } else {
+            std::cout << "Removing digital interval series from scene" << std::endl;
+            _scene->removeDigitalIntervalSeries(feature.toStdString());
+        }
+    } else if (type == "TensorData") {
+        if (enabled) {
+            std::cout << "Adding Tensor data to scene" << std::endl;
+            _scene->addTensorDataToScene(feature.toStdString());
+        } else {
+            std::cout << "Removing tensor data from scene" << std::endl;
+            _scene->removeTensorDataFromScene(feature.toStdString());
         }
     } else {
         std::cout << "Feature type " << type << " not supported" << std::endl;

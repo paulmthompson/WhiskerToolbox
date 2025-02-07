@@ -30,6 +30,30 @@ std::vector<int> TensorData::getTimesWithTensors() const {
     return times;
 }
 
+std::vector<float> TensorData::getChannelSlice(int time, int channel)
+{
+
+    torch::Tensor tensor = getTensorAtTime(time);
+
+    //std::cout << "Tensor at time " << time << " with " << tensor.numel() << " elements" << std::endl;
+
+    auto sub_tensor = tensor.index({
+                                    torch::indexing::Slice(),
+                                    torch::indexing::Slice(),
+                                    channel});
+
+    // Apply sigmoid
+    sub_tensor = torch::sigmoid(sub_tensor);
+
+    //std::cout << "Sub tensor with" << sub_tensor.numel() << " elements " << std::endl;
+
+    std::vector<float> vec(sub_tensor.data_ptr<float>(), sub_tensor.data_ptr<float>() + sub_tensor.numel());
+
+    //std::cout << "Tensor data has " << vec.size() << " elements" << std::endl;
+
+    return vec;
+}
+
 #if defined(_WIN32) || defined(__APPLE__)
 std::vector<long long> convertShape(const std::vector<unsigned long>& shape) {
     std::vector<long long> convertedShape(shape.size());
@@ -66,7 +90,7 @@ void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data) {
 
         std::map<int, torch::Tensor> data;
         for (int t = 0; t < time_steps; ++t) {
-            data[t] = tensor[t];
+            data[t] = tensor[t].clone();
         }
 
         std::cout << "Loaded " << data.size() << " timestamps of tensors" << std::endl;
