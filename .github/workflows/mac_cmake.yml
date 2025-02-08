@@ -35,7 +35,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         if: runner.os == 'macOS'
         with:
-          vcpkgGitCommitId: 'f7423ee180c4b7f40d43402c2feb3859161ef625'
+          vcpkgGitCommitId: '3508985146f1b1d248c67ead13f8f54be5b4f5da'
 
       - name: Set up Homebrew
         id: set-up-homebrew
