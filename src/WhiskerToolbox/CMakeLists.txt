@@ -14,6 +14,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport OpenG
 
 find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
+find_package(Armadillo REQUIRED)
 
 qt_standard_project_setup()
 
@@ -233,6 +234,7 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 
+target_link_libraries(WhiskerToolbox PRIVATE armadillo)
 target_link_libraries(WhiskerToolbox PRIVATE LAPACK::LAPACK)
 target_link_libraries(WhiskerToolbox PRIVATE OpenBLAS::OpenBLAS)
 
