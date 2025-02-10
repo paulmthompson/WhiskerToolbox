@@ -15,6 +15,7 @@
 
 #include "utils/color.hpp"
 
+#include <QElapsedTimer>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsPixmapItem>
 #include <QImage>
@@ -316,6 +317,14 @@ void Media_Window::UpdateCanvas()
     _plotDigitalIntervalSeries();
 
     _plotTensorData();
+
+    // Save the entire QGraphicsScene as an image
+    QImage scene_image(_canvasWidth, _canvasHeight, QImage::Format_ARGB32);
+    scene_image.fill(Qt::transparent); // Optional: fill with transparent background
+    QPainter painter(&scene_image);
+    this->render(&painter);
+
+    emit canvasUpdated(scene_image);
 }
 
 

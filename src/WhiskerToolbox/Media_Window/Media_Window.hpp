@@ -107,13 +107,18 @@ Media_Window(std::shared_ptr<DataManager> data_manager, QObject *parent = 0);
         _canvasHeight = height;
     }
 
+    std::pair<int, int> getCanvasSize() const {
+        return std::make_pair(_canvasWidth, _canvasHeight);
+    }
+
     void setDrawingMode(bool drawing_mode)
-        {_drawing_mode = drawing_mode;
+    {
+        _drawing_mode = drawing_mode;
         if (!drawing_mode)
         {
             _drawing_points.clear();
         }
-        };
+    }
 
     std::vector<uint8_t> getDrawingMask();
 
@@ -168,6 +173,7 @@ signals:
     void leftClick(qreal,qreal);
     void leftClickMedia(qreal,qreal);
     void leftRelease();
+    void canvasUpdated(const QImage &canvasImage);
 };
 
 #endif // MEDIA_WINDOW_HPP

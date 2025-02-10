@@ -630,6 +630,8 @@ void MainWindow::openVideoExportWidget()
     if (_widgets.find(key) == _widgets.end()) {
         auto vid_widget = std::make_unique<Export_Video_Widget>(
             _data_manager,
+            _scene,
+            ui->time_scrollbar,
             this);
 
         vid_widget->setObjectName(key);
