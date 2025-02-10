@@ -13,7 +13,7 @@
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
-#include <mlpack/mlpack.hpp>
+#include "mlpack.hpp"
 
 #include <QFileDialog>
 #include <QGraphicsPixmapItem>

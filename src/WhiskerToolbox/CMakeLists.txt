@@ -14,6 +14,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui Xml Svg PrintSupport OpenG
 
 find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
+find_package(Armadillo REQUIRED)
 
 qt_standard_project_setup()
 
@@ -207,10 +208,13 @@ target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6:
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
 
-find_path(MLPACK_INCLUDE_DIRS "mlpack/mlpack.hpp")
+find_path(MLPACK_INCLUDE_DIRS "mlpack.hpp")
 
 message(STATUS ${TORCH_LIBRARIES})
 target_link_libraries(WhiskerToolbox PRIVATE "${TORCH_LIBRARIES}")
+
+message(STATUS "Find MLPack include DIRS")
+message(STATUS ${MLPACK_INCLUDE_DIRS})
 
 target_include_directories(WhiskerToolbox PRIVATE
 
@@ -233,6 +237,7 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 
+target_link_libraries(WhiskerToolbox PRIVATE armadillo)
 target_link_libraries(WhiskerToolbox PRIVATE LAPACK::LAPACK)
 target_link_libraries(WhiskerToolbox PRIVATE OpenBLAS::OpenBLAS)
 
