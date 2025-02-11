@@ -3,53 +3,57 @@ project:
   output-dir: .
 
 website:
-  title: "Behavior Toolbox"
-  sidebar:
-    style: docked
-    contents:
-      - section: "Introduction"
-        contents: 
-        - index.qmd
+  title: "Neuralyzer" # Title of the website
+ # favicon:
+  navbar:
+    collapse-below: lg
+    pinned: true
+    right:
+      - id: intro
+        text: "Introduction"
+        href: index.qmd
         
-      - section: "Tutorials"
-        contents: 
-        - examples/keypoint_labeling.qmd
-        
-      - section: "How-to guides"
-        contents:
-          - section: "Label Creation"
-            contents:
-              - labeling/keypoint.qmd
-              - labeling/mask.qmd
-              
-      - section: "Reference Guides"
-        contents:
-        
-          - section: "Image Processing"
-            contents:
-              - image_processing/contrast.qmd
-              - image_processing/sharpening.qmd
-              - image_processing/clahe.qmd
-              - image_processing/bilateral_filter.qmd
-      
-          - section: "Behavior Modules"
-            contents:
-              - behaviors/whisker.qmd
-              - behaviors/tongue.qmd
-              
-      - section: "Concepts"
-        contents:
-        
-          - section: "Developer"
-            contents: 
-              - developer/data_manager.qmd
-              - developer/image_processing.qmd
-
-
+      - text: "Tutorials"
+        menu:
+          - text: "Keypoint Labeling"
+            href: examples/keypoint_labeling.qmd
+            
+      - text: "How-to guides"
+        menu:
+          - text: "Label Creation"
+            href: labeling/keypoint.qmd
+          - text: "Mask Creation"
+            href: labeling/mask.qmd
+            
+      - text: "Reference Guides"
+        menu:
+          - text: "Image Processing"
+          - text: "Contrast"
+            href: image_processing/contrast.qmd
+          - text: "Sharpening"
+            href: image_processing/sharpening.qmd
+          - text: "CLAHE"
+            href: image_processing/clahe.qmd
+          - text: "Bilateral Filter"
+            href: image_processing/bilateral_filter.qmd
+            
+          - text: "Behavior Modules"
+          - text: "Whisker"
+            href: behaviors/whisker.qmd
+          - text: "Tongue"
+            href: behaviors/tongue.qmd
+                
+      - text: "Concepts"
+        menu:
+          - text: "Data Manager"
+            href: developer/data_manager.qmd
+          - text: "Image Processing"
+            href: developer/image_processing.qmd
 
 format:
   html:
-    theme: cosmo
+    theme: github-dark
+    smooth-scroll: true
     css: styles.css
     toc: true
 

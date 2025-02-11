@@ -1,8 +1,8 @@
 ---
-title: "Behavior Toolbox"
+title: "Neuralyzer"
 ---
 
-Behavior Toolbox is a cross-platform software package designed for analyzing and visualizing common forms of data generated during systems neuroscience experiments.
+Neuralyzer is a cross-platform software package designed for analyzing and visualizing common forms of data generated during systems neuroscience experiments.
 
 ## Installation
 
