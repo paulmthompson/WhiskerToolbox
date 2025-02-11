@@ -9,6 +9,7 @@
 #include "mlpack_conversion.hpp"
 #define slots Q_SLOTS
 
+#include "ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.hpp"
 #include "ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
@@ -34,6 +35,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 {
     ui->setupUi(this);
 
+    ui->stackedWidget->addWidget(new ML_Naive_Bayes_Widget(_data_manager));
     ui->stackedWidget->addWidget(new ML_Random_Forest_Widget(_data_manager));
 
     //Feature Table Widget
@@ -177,9 +179,10 @@ void ML_Widget::_removeSelectedOutcome(const std::string key) {
 
 void ML_Widget::_selectModelType(const QString& model_type)
 {
-    if (model_type == "Random Forest")
-    {
+    if (model_type == "Naive Bayes") {
         ui->stackedWidget->setCurrentIndex(0);
+    } else if (model_type == "Random Forest") {
+        ui->stackedWidget->setCurrentIndex(1);
     } else {
         std::cout << "Unsupported Model Type Selected" << std::endl;
     }

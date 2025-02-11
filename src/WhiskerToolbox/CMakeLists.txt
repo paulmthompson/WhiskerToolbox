@@ -124,6 +124,9 @@ set(PROJECT_SOURCES
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.cpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.ui
+        ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.hpp
+        ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.cpp
+        ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.ui
 
         Tracking_Widget/Tracking_Widget.ui
         Tracking_Widget/Tracking_Widget.hpp
