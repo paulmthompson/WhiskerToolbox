@@ -45,6 +45,12 @@ Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> da
     ui->clahe_box->autoSetContentLayout();
     ui->bilateral_filter_box->autoSetContentLayout();
 
+    ui->lin_trans_box->setTitle("Linear Transform");
+    ui->gamma_box->setTitle("Gamma");
+    ui->sharpen_box->setTitle("Sharpen");
+    ui->clahe_box->setTitle("Clahe");
+    ui->bilateral_filter_box->setTitle("Bilateral Filter");
+
     // auto layout = ui->lin_trans_box->layout();
     // ui->lin_trans_box->setContentLayout(*layout);
     // {
