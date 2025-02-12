@@ -28,9 +28,26 @@
             "name": "opencv4"
         },
         {
-            "name": "mlpack"
+            "name": "mlpack",
+            "version>=": "4.4.0"
+        },
+        {
+            "name": "armadillo"
+        },
+        {
+            "name": "lapack"
+        },
+        {
+            "name": "openblas"
         }
     ],
-    "builtin-baseline": "f7423ee180c4b7f40d43402c2feb3859161ef625",
-    "$comment": "hash corresponds to 2024.06.15"
+    "builtin-baseline": "3508985146f1b1d248c67ead13f8f54be5b4f5da",
+    "$comment": "hash corresponds to 2024.08.23",
+    "overrides": [
+            {
+                "name": "ffmpeg",
+                "version": "6.1.1#9"
+            }
+        ]
+
 }

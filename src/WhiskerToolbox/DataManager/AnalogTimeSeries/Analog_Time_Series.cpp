@@ -46,3 +46,18 @@ std::vector<float> load_analog_series_from_csv(std::string const& filename)
 
     return output;
 }
+
+void save_analog(
+        std::vector<float> const & analog_series,
+        std::vector<size_t> const & time_series,
+        std::string const block_output)
+{
+    std::fstream fout;
+    fout.open(block_output, std::fstream::out);
+
+    for (size_t i = 0; i < analog_series.size(); ++i) {
+        fout << time_series[i] << "," << analog_series[i] << "\n";
+    }
+
+    fout.close();
+}

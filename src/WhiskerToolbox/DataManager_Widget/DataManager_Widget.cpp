@@ -79,8 +79,10 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
 
     if (feature_type == "PointData") {
 
-        ui->stackedWidget->setCurrentIndex(1);
-        auto point_widget = dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(1));
+        const int stacked_widget_index = 1;
+
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto point_widget = dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(stacked_widget_index));
         point_widget->setActiveKey(key);
         connect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
 
@@ -99,7 +101,12 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
     } else if (feature_type == "LineData") {
         ui->stackedWidget->setCurrentIndex(3);
     } else if (feature_type == "AnalogTimeSeries") {
-        ui->stackedWidget->setCurrentIndex(4);
+
+        const int stacked_widget_index = 4;
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto analog_widget = dynamic_cast<AnalogTimeSeries_Widget*>(ui->stackedWidget->widget(stacked_widget_index));
+        analog_widget->setActiveKey(key);
+
     } else if (feature_type == "DigitalIntervalSeries") {
 
         ui->stackedWidget->setCurrentIndex(5);

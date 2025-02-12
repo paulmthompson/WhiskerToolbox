@@ -18,12 +18,15 @@ public:
 
     void openWidget(); // Call to open the widget
 
+    void setActiveKey(std::string key);
+
 private:
     Ui::AnalogTimeSeries_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
+    std::string _active_key;
 
 private slots:
-               // Add any slots needed for handling user interactions
+    void _saveCSV();
 };
 
 #endif // ANALOGTIMESERIES_WIDGET_HPP

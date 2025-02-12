@@ -27,7 +27,8 @@ struct memory_encoder_tensors {
 
 SCM::SCM()
 {
-    module_path = "C:/Users/wanglab/Desktop/efficientvit_pytorch_cuda2.pt";
+    //module_path = "C:/Users/wanglab/Desktop/efficientvit_pytorch_cuda2.pt";
+    module_path = "C:/Users/wanglab/Desktop/efficientvit_pytorch_cuda.pt";
 
     load_model();
 
@@ -134,6 +135,7 @@ std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, int 
     auto output_line = convert_mask_to_line(vec, {_x, _y});
 
     return output_line;
+
 }
 
 void SCM::add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_t> memory_label)

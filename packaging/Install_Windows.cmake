@@ -55,6 +55,7 @@ set(OPENCV_DLLS
         "${CMAKE_BINARY_DIR}/opencv_core4.dll"
         "${CMAKE_BINARY_DIR}/opencv_imgcodecs4.dll"
         "${CMAKE_BINARY_DIR}/opencv_photo4.dll"
+        "${CMAKE_BINARY_DIR}/opencv_videoio4.dll"
         "${CMAKE_BINARY_DIR}/jpeg62.dll"
         "${CMAKE_BINARY_DIR}/libwebpdecoder.dll"
         "${CMAKE_BINARY_DIR}/libwebp.dll"
@@ -83,6 +84,7 @@ set(WHISKER_DLLS
 set(EXTRA_DLLS
         "${CMAKE_BINARY_DIR}/szip.dll"
         "${CMAKE_BINARY_DIR}/liblzma.dll"
+        "${CMAKE_BINARY_DIR}/openblas.dll"
 )
 
 set(TORCH_DLLS

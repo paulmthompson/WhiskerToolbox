@@ -9,11 +9,12 @@
 #include "mlpack_conversion.hpp"
 #define slots Q_SLOTS
 
+#include "ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.hpp"
 #include "ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
-#include <mlpack/mlpack.hpp>
+#include "mlpack.hpp"
 
 #include <QFileDialog>
 #include <QGraphicsPixmapItem>
@@ -34,6 +35,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 {
     ui->setupUi(this);
 
+    ui->stackedWidget->addWidget(new ML_Naive_Bayes_Widget(_data_manager));
     ui->stackedWidget->addWidget(new ML_Random_Forest_Widget(_data_manager));
 
     //Feature Table Widget
@@ -177,9 +179,10 @@ void ML_Widget::_removeSelectedOutcome(const std::string key) {
 
 void ML_Widget::_selectModelType(const QString& model_type)
 {
-    if (model_type == "Random Forest")
-    {
+    if (model_type == "Naive Bayes") {
         ui->stackedWidget->setCurrentIndex(0);
+    } else if (model_type == "Random Forest") {
+        ui->stackedWidget->setCurrentIndex(1);
     } else {
         std::cout << "Unsupported Model Type Selected" << std::endl;
     }
@@ -211,7 +214,8 @@ void ML_Widget::_fitModel()
     std::cout << "Outcome array size: " << outcome_array.n_rows << " x " << outcome_array.n_cols << std::endl;
 
     arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array);
-    mlpack::RandomForest model;
+    //mlpack::RandomForest model;
+    mlpack::NaiveBayesClassifier model;
     model.Train(feature_array, labels, 2);
 
     std::cout << "Model trained" << std::endl;

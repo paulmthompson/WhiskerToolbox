@@ -18,12 +18,50 @@
     <rect>
      <x>150</x>
      <y>10</y>
-     <width>49</width>
+     <width>111</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
     <string>Analog Data</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="save_csv">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>50</y>
+     <width>111</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save to CSV</string>
+   </property>
+  </widget>
+  <widget class="QPlainTextEdit" name="filename_textbox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>90</y>
+     <width>100</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>100</width>
+     <height>30</height>
+    </size>
+   </property>
+   <property name="plainText">
+    <string>analog.csv</string>
    </property>
   </widget>
  </widget>

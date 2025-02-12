@@ -120,6 +120,11 @@
     </property>
     <item>
      <property name="text">
+      <string>Naive Bayes</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
       <string>Random Forest</string>
      </property>
     </item>

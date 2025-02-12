@@ -16,28 +16,28 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Behavior Toolbox",
+    "title": "Neuralyzer",
     "section": "",
-    "text": "Behavior Toolbox is a cross-platform software package designed for analyzing and visualizing common forms of data generated during systems neuroscience experiments."
+    "text": "Neuralyzer is a cross-platform software package designed for analyzing and visualizing common forms of data generated during systems neuroscience experiments."
   },
   {
     "objectID": "index.html#installation",
     "href": "index.html#installation",
-    "title": "Behavior Toolbox",
+    "title": "Neuralyzer",
     "section": "Installation",
     "text": "Installation\nThe software comes as compiled .exe, .dmg or tar files and can be immediately used on Windows, Mac and Linux - no install required !"
   },
   {
     "objectID": "index.html#supported-data-types",
     "href": "index.html#supported-data-types",
-    "title": "Behavior Toolbox",
+    "title": "Neuralyzer",
     "section": "Supported Data Types",
     "text": "Supported Data Types\nSome currently supported data types include:\n\nMultimedia - High speed video and collections of images\nArrays of simple 2D shapes - Points, Lines, and masks that vary with time.\nDigital time series data - Events, timestamps,\nAnalog time series data - Continuous movement variables"
   },
   {
     "objectID": "index.html#how-documentation-is-organized",
     "href": "index.html#how-documentation-is-organized",
-    "title": "Behavior Toolbox",
+    "title": "Neuralyzer",
     "section": "How Documentation is Organized",
     "text": "How Documentation is Organized\nThis documentation will follow the quadrants of the Diátaxis documentation authoring framework\n\nTutorials\nHow-to Guides\nConcepts\nReference Guides"
   },

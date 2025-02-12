@@ -13,6 +13,81 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <widget class="QSpinBox" name="start_frame_spinbox">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>20</y>
+     <width>71</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="end_frame_spinbox">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>60</y>
+     <width>71</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <number>-1</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>20</y>
+     <width>91</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Start Frame</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>60</y>
+     <width>81</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>End Frame</string>
+   </property>
+  </widget>
+  <widget class="QPlainTextEdit" name="output_filename">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>110</y>
+     <width>104</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="plainText">
+    <string>output.mp4</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="export_video_button">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>170</y>
+     <width>75</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Export!</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
