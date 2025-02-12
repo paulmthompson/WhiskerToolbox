@@ -6,44 +6,41 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>591</width>
-    <height>1198</height>
+    <width>571</width>
+    <height>609</height>
    </rect>
   </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
-    <verstretch>1</verstretch>
+    <verstretch>0</verstretch>
    </sizepolicy>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>400</width>
-    <height>675</height>
-   </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="layoutDirection">
+   <enum>Qt::LeftToRight</enum>
+  </property>
   <property name="styleSheet">
    <string notr="true">border: 1px solid red</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0">
    <property name="spacing">
-    <number>-1</number>
+    <number>1</number>
    </property>
    <property name="sizeConstraint">
     <enum>QLayout::SetMaximumSize</enum>
    </property>
-   <item>
+   <item alignment="Qt::AlignTop">
     <widget class="Section" name="lin_trans_box" native="true">
      <property name="enabled">
       <bool>true</bool>
      </property>
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>1</horstretch>
-       <verstretch>1</verstretch>
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="minimumSize">
@@ -53,15 +50,15 @@
       </size>
      </property>
      <property name="styleSheet">
-      <string notr="true">border: 1px solid blue;</string>
+      <string notr="true"/>
      </property>
      <widget class="QWidget" name="lin_trans_wrap" native="true">
       <property name="geometry">
        <rect>
         <x>12</x>
         <y>12</y>
-        <width>541</width>
-        <height>201</height>
+        <width>521</width>
+        <height>80</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -71,6 +68,9 @@
        </sizepolicy>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
+       <property name="spacing">
+        <number>1</number>
+       </property>
        <item row="1" column="0">
         <widget class="QLabel" name="alpha_label">
          <property name="text">
@@ -125,33 +125,33 @@
      </widget>
     </widget>
    </item>
-   <item>
+   <item alignment="Qt::AlignTop">
     <widget class="Section" name="bilateral_filter_box" native="true">
      <property name="enabled">
       <bool>true</bool>
      </property>
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>1</horstretch>
-       <verstretch>1</verstretch>
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>101</height>
+       <height>120</height>
       </size>
      </property>
      <property name="styleSheet">
-      <string notr="true">border: 1px solid blue;</string>
+      <string notr="true"/>
      </property>
      <widget class="QWidget" name="bilateral_filter_wrap" native="true">
       <property name="geometry">
        <rect>
         <x>12</x>
         <y>12</y>
-        <width>541</width>
-        <height>201</height>
+        <width>521</width>
+        <height>101</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -161,6 +161,9 @@
        </sizepolicy>
       </property>
       <layout class="QGridLayout" name="gridLayout">
+       <property name="spacing">
+        <number>1</number>
+       </property>
        <item row="1" column="0">
         <widget class="QLabel" name="label_6">
          <property name="text">
@@ -220,12 +223,12 @@
      </widget>
     </widget>
    </item>
-   <item>
+   <item alignment="Qt::AlignTop">
     <widget class="Section" name="clahe_box" native="true">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>1</horstretch>
-       <verstretch>1</verstretch>
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="minimumSize">
@@ -238,15 +241,15 @@
       <bool>false</bool>
      </property>
      <property name="styleSheet">
-      <string notr="true">border: 1px solid blue;</string>
+      <string notr="true"/>
      </property>
      <widget class="QWidget" name="clahe_wrap" native="true">
       <property name="geometry">
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>541</width>
-        <height>201</height>
+        <width>521</width>
+        <height>80</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -256,6 +259,9 @@
        </sizepolicy>
       </property>
       <layout class="QGridLayout" name="gridLayout_3">
+       <property name="spacing">
+        <number>1</number>
+       </property>
        <item row="0" column="0">
         <widget class="QCheckBox" name="clahe_checkbox">
          <property name="text">
@@ -298,30 +304,30 @@
      </widget>
     </widget>
    </item>
-   <item>
+   <item alignment="Qt::AlignTop">
     <widget class="Section" name="sharpen_box" native="true">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>1</horstretch>
-       <verstretch>1</verstretch>
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>100</height>
+       <height>80</height>
       </size>
      </property>
      <property name="styleSheet">
-      <string notr="true">border: 1px solid blue;</string>
+      <string notr="true"/>
      </property>
      <widget class="QWidget" name="sharpen_wrap" native="true">
       <property name="geometry">
        <rect>
-        <x>12</x>
-        <y>12</y>
-        <width>541</width>
-        <height>201</height>
+        <x>10</x>
+        <y>10</y>
+        <width>521</width>
+        <height>60</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -330,7 +336,13 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
       <layout class="QGridLayout" name="gridLayout_4">
+       <property name="spacing">
+        <number>1</number>
+       </property>
        <item row="0" column="0">
         <widget class="QCheckBox" name="sharpen_checkbox">
          <property name="text">
@@ -362,30 +374,30 @@
      </widget>
     </widget>
    </item>
-   <item>
+   <item alignment="Qt::AlignTop">
     <widget class="Section" name="gamma_box" native="true">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>1</horstretch>
-       <verstretch>1</verstretch>
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>100</height>
+       <height>80</height>
       </size>
      </property>
      <property name="styleSheet">
-      <string notr="true">border: 1px solid blue;</string>
+      <string notr="true"/>
      </property>
      <widget class="QWidget" name="gamma_wrap" native="true">
       <property name="geometry">
        <rect>
         <x>10</x>
         <y>10</y>
-        <width>541</width>
-        <height>201</height>
+        <width>521</width>
+        <height>60</height>
        </rect>
       </property>
       <property name="sizePolicy">
@@ -395,6 +407,9 @@
        </sizepolicy>
       </property>
       <layout class="QGridLayout" name="gridLayout_5">
+       <property name="spacing">
+        <number>1</number>
+       </property>
        <item row="0" column="0">
         <widget class="QCheckBox" name="gamma_checkbox">
          <property name="text">
@@ -431,6 +446,19 @@
       </layout>
      </widget>
     </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>0</width>
+       <height>1000000</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>
