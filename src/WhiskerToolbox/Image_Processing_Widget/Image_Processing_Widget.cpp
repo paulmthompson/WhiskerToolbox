@@ -12,7 +12,7 @@
 
 
 Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
-    QMainWindow(parent),
+    QWidget(parent),
     ui(new Ui::Image_Processing_Widget),
     _data_manager{data_manager}
 {
