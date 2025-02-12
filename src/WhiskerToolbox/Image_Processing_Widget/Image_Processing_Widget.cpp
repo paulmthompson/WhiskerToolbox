@@ -16,6 +16,8 @@ Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> da
     ui(new Ui::Image_Processing_Widget),
     _data_manager{data_manager}
 {
+
+    
     ui->setupUi(this);
 
     connect(ui->alpha_dspinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateContrastAlpha);
@@ -36,6 +38,41 @@ Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> da
     connect(ui->bilateral_spatial_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateBilateralSpatialSigma);
     connect(ui->bilateral_color_spinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateBilateralColorSigma);
     connect(ui->bilateral_checkbox, &QCheckBox::checkStateChanged, this, &Image_Processing_Widget::_activateBilateral);
+
+    ui->lin_trans_box->autoSetContentLayout();
+    ui->gamma_box->autoSetContentLayout();
+    ui->sharpen_box->autoSetContentLayout();
+    ui->clahe_box->autoSetContentLayout();
+    ui->bilateral_filter_box->autoSetContentLayout();
+
+    // auto layout = ui->lin_trans_box->layout();
+    // ui->lin_trans_box->setContentLayout(*layout);
+    // {
+    //     auto* layout = new QVBoxLayout();
+    //     layout->addWidget(ui->lin_trans_wrap);
+    //     ui->lin_trans_box->setContentLayout(*layout);
+    // }
+    // {
+    //     auto* layout = new QVBoxLayout();
+    //     layout->addWidget(ui->gamma_wrap);
+    //     ui->gamma_box->setContentLayout(*layout);
+    // }
+    // {
+    //     auto* layout = new QVBoxLayout();
+    //     layout->addWidget(ui->sharpen_wrap);
+    //     ui->sharpen_box->setContentLayout(*layout);
+    // }
+    // {
+    //     auto* layout = new QVBoxLayout();
+    //     layout->addWidget(ui->clahe_wrap);
+    //     ui->clahe_box->setContentLayout(*layout);
+    // }
+    // {
+    //     auto* layout = new QVBoxLayout();
+    //     layout->addWidget(ui->bilateral_filter_wrap);
+    //     ui->bilateral_filter_box->setContentLayout(*layout);
+    // }
+
 }
 
 void Image_Processing_Widget::openWidget() {
@@ -43,6 +80,21 @@ void Image_Processing_Widget::openWidget() {
     std::cout << "Image Processing Widget Opened" << std::endl;
 
     this->show();
+    // this->adjustSize();
+    // this->updateGeometry();
+    // ui->lin_trans_box->adjustSize();
+    // ui->lin_trans_box->updateGeometry();
+    // ui->gamma_box->adjustSize();
+    // ui->gamma_box->updateGeometry();
+    // ui->sharpen_box->adjustSize();
+    // ui->sharpen_box->updateGeometry();
+    // ui->clahe_box->adjustSize();
+    // ui->clahe_box->updateGeometry();
+    // ui->bilateral_filter_box->adjustSize();
+    // ui->bilateral_filter_box->updateGeometry();
+
+    // this->layout()->invalidate()hhhhhhhhdsfsdVVkj;
+
 }
 
 //////////////////////////////////////////////////
@@ -248,3 +300,4 @@ void Image_Processing_Widget::_updateBilateralColorSigma()
         ui->bilateral_checkbox->setCheckState(Qt::Checked);
     }
 }
+
