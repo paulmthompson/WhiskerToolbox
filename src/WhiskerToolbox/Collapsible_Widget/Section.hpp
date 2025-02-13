@@ -47,7 +47,7 @@ public slots:
     void toggle(bool collapsed);
 
 public:
-    static const int DEFAULT_DURATION = 0;
+    static const int DEFAULT_DURATION = 100;
 
     // initialize section
     explicit Section(QWidget* parent = 0, const QString& title = "", const int animationDuration = DEFAULT_DURATION);
