@@ -152,6 +152,9 @@ set(PROJECT_SOURCES
         Grabcut_Widget/GrabCutTool.hpp
         Grabcut_Widget/Grabcut_Widget.ui
 
+        Collapsible_Widget/Section.cpp
+        Collapsible_Widget/Section.hpp
+
         Magic_Eraser_Widget/magic_eraser.hpp
         Magic_Eraser_Widget/magic_eraser.cpp
 

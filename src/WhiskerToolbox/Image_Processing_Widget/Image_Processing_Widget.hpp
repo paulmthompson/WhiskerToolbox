@@ -9,7 +9,7 @@ namespace Ui {
 class Image_Processing_Widget;
 }
 
-class Image_Processing_Widget : public QMainWindow
+class Image_Processing_Widget : public QWidget 
 {
     Q_OBJECT
 public:
@@ -65,6 +65,7 @@ private slots:
     void _updateBilateralSpatialSigma();
     void _updateBilateralColorSigma();
     void _activateBilateral();
+
 };
 
 #endif // IMAGE_PROCESSING_WIDGET_HPP

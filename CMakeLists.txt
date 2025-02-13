@@ -51,6 +51,10 @@ set(VCPKG_INSTALL_OPTIONS "--allow-unsupported")
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set(CMAKE_SUPPORT_WINDOWS_EXPORT_ALL_SYMBOLS 1)
 
+#Fix header linting on vscode
+#e.g. add "compileCommands": "${workspaceFolder}/out/build/Clang/Release/compile_commands.json" to c_cpp_properties.json for Mac config
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 #set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 #=============================
 # Externally Provided Content
