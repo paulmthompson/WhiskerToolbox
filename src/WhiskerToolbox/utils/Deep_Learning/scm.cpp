@@ -27,8 +27,8 @@ struct memory_encoder_tensors {
 
 SCM::SCM()
 {
-    //module_path = "C:/Users/wanglab/Desktop/efficientvit_pytorch_cuda2.pt";
-    module_path = "C:/Users/wanglab/Desktop/efficientvit_pytorch_cuda.pt";
+    //module_path = "resources/efficientvit_pytorch_cuda2.pt";
+    module_path = "resources/efficientvit_pytorch_cuda.pt";
 
     load_model();
 

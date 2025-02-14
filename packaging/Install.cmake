@@ -7,6 +7,13 @@ set_target_properties(WhiskerToolbox PROPERTIES
         WIN32_EXECUTABLE TRUE
 )
 
+add_custom_command(TARGET WhiskerToolbox POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/resources
+        $<TARGET_FILE_DIR:WhiskerToolbox>/resources
+    )
+
+
 # Example that follows the above guidelines
 set(CPACK_PACKAGE_NAME WhiskerToolbox)
 set(CPACK_PACKAGE_VENDOR PMT)
