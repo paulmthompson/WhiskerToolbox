@@ -12,8 +12,6 @@
 
 namespace dl {
 
-torch::Device device(torch::kCPU);
-
 struct memory_encoder_tensors {
     torch::Tensor memory_frame_tensor;
     torch::Tensor memory_label_tensor;

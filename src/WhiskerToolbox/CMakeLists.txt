@@ -197,6 +197,9 @@ set(PROJECT_SOURCES
         utils/Deep_Learning/scm.hpp
         utils/Deep_Learning/scm.cpp
 
+        utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp
+        utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.cpp
+
         utils/color.hpp
 )
 

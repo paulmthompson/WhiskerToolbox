@@ -26,6 +26,19 @@
     <string>Mask</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="load_sam_button">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>70</y>
+     <width>111</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load SAM</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

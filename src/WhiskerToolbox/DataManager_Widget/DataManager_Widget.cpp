@@ -97,7 +97,14 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
         connect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
 
     } else if (feature_type == "MaskData") {
-        ui->stackedWidget->setCurrentIndex(2);
+
+        const int stacked_widget_index = 2;
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto mask_widget = dynamic_cast<Mask_Widget*>(ui->stackedWidget->widget(stacked_widget_index));
+        mask_widget->setActiveKey(key);
+
+        connect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
+
     } else if (feature_type == "LineData") {
         ui->stackedWidget->setCurrentIndex(3);
     } else if (feature_type == "AnalogTimeSeries") {
@@ -143,11 +150,18 @@ void DataManager_Widget::_disablePreviousFeature(const QString& feature)
 
     if (feature_type == "PointData") {
 
-        auto point_widget = dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(1));
+        const int stacked_widget_index = 1;
+
+        auto point_widget = dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(stacked_widget_index));
         disconnect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
         disconnect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
 
     } else if (feature_type == "MaskData") {
+
+        const int stacked_widget_index = 2;
+        auto mask_widget = dynamic_cast<Mask_Widget*>(ui->stackedWidget->widget(stacked_widget_index));
+        disconnect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
+
 
     } else if (feature_type == "LineData") {
 

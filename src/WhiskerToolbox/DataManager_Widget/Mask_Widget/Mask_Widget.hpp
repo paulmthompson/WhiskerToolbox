@@ -3,6 +3,7 @@
 
 #include <QWidget>
 
+namespace dl {class EfficientSAM;};
 
 #include <filesystem>
 #include <memory>
@@ -21,12 +22,16 @@ public:
     ~Mask_Widget();
 
     void openWidget(); // Call
+    void selectPoint(float const x, float const y);
+    void setActiveKey(const std::string &key);
 private:
     Ui::Mask_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
+    std::unique_ptr<dl::EfficientSAM> _sam_model;
+    std::string _active_key;
 
 private slots:
-
+    void _loadSamModel();
 };
 
 

@@ -10,6 +10,8 @@
 
 namespace dl {
 
+static torch::Device device(torch::kCPU);
+
 inline torch::Device get_device(){
     auto device = torch::Device(torch::kCPU);
     if (torch::cuda::is_available()) {
@@ -49,7 +51,7 @@ inline std::shared_ptr<torch::jit::Module> load_torchscript_model(std::string mo
     }
 }
 
-inline torch::Tensor create_tensor_from_gray8(std::vector<uint8_t>& image, int height, int width)
+inline torch::Tensor create_tensor_from_gray8(std::vector<uint8_t> const & image, int height, int width)
 {
     auto tensor = torch::empty(
         { height, width, 1},
