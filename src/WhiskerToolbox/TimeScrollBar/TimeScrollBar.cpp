@@ -137,14 +137,14 @@ void TimeScrollBar::changeScrollBarValue(int new_value, bool relative)
     auto min_value = ui->horizontalScrollBar->minimum();
     auto max_value = ui->horizontalScrollBar->maximum();
 
-    if (new_value < min_value) {
-        std::cout << "Cannot set value below minimum" << std::endl;
-        return;
-    }
-
     if (relative)
     {
         new_value = _data_manager->getTime()->getLastLoadedFrame() + new_value;
+    }
+
+    if (new_value < min_value) {
+        std::cout << "Cannot set value below minimum" << std::endl;
+        return;
     }
 
     if (new_value > max_value) {

@@ -4,6 +4,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/points.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
 
 #include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"
 
@@ -47,11 +48,13 @@ void Mask_Widget::selectPoint(float const x, float const y)
     for (size_t i = 0; i < mask_image.size(); i++)
     {
         if (mask_image[i] > 0) {
-            mask.push_back(Point2D<float>{static_cast<float>(i % image_height), static_cast<float>(i / image_height)});
+            mask.push_back(Point2D<float>{static_cast<float>(i % image_width), static_cast<float>(i / image_width)});
         }
     }
 
     std::cout << "Mask is size " << mask.size() << std::endl;
+
+    _data_manager->getData<MaskData>(_active_key)->addMaskAtTime(current_time, mask);
 }
 
 void Mask_Widget::_loadSamModel()

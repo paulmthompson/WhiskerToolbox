@@ -10,6 +10,8 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 
+#include "DataManager/ImageSize/ImageSize.hpp"
+
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
 #include "DataManager/Tensors/Tensor_Data.hpp"
@@ -212,7 +214,13 @@ void DataManager_Widget::_createNewData()
     if (type == "Point") {
         _data_manager->setData<PointData>(key);
     } else if (type == "Mask") {
+
+        auto height = _data_manager->getData<MediaData>("media")->getHeight();
+        auto width = _data_manager->getData<MediaData>("media")->getWidth();
+
         _data_manager->setData<MaskData>(key);
+        _data_manager->getData<MaskData>(key)->setImageSize(ImageSize(width, height));
+
     } else if (type == "Line") {
         _data_manager->setData<LineData>(key);
     } else if (type == "Analog Time Series") {
