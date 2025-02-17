@@ -46,11 +46,34 @@ std::vector<uint8_t> EfficientSAM::process_frame(
     auto predicted_logits = output->elements()[0].toTensor();
     auto predicted_iou = output->elements()[1].toTensor();
 
-    auto sorted_ids = std::get<1>(predicted_iou.sort(-1, true));
-    predicted_iou = predicted_iou.gather(2, sorted_ids);
-    predicted_logits = predicted_logits.gather(2, sorted_ids.unsqueeze(-1).unsqueeze(-1));
+    std::cout << "The shape of predicted logits is " << predicted_logits.sizes() << std::endl;
 
-    auto mask = torch::ge(predicted_logits[0][0][0], 0).to(torch::kUInt8).cpu();
+    auto sorted_ids = std::get<1>(predicted_iou.sort(-1, true));
+
+    std::cout << "The shape of sorted_ids is " << sorted_ids.sizes() << std::endl;
+
+    predicted_iou = predicted_iou.gather(2, sorted_ids);
+
+    std::cout << "The shape of predicted ious is " << predicted_iou.sizes() << std::endl;
+
+    sorted_ids = sorted_ids.unsqueeze(-1);
+    sorted_ids = sorted_ids.unsqueeze(-1);
+
+    predicted_logits = predicted_logits.take_along_dim(sorted_ids, 2);
+
+    std::cout << "The shape of predicted logits is " << predicted_logits.sizes() << std::endl;
+
+    auto sub_mask = predicted_logits.index({
+        0,
+        0,
+        0,
+        torch::indexing::Slice(),
+        torch::indexing::Slice()
+    });
+
+    std::cout << "The shape of the sub mask is " << sub_mask.sizes() << std::endl;
+
+    auto mask = torch::ge(sub_mask, 0).to(torch::kUInt8).cpu();
 
     std::vector<uint8_t> mask_vector(mask.data_ptr<uint8_t>(), mask.data_ptr<uint8_t>() + mask.numel());
 
