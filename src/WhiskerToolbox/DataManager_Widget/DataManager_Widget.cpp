@@ -107,6 +107,10 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
 
         connect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
 
+        _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
+            _scene->UpdateCanvas();
+        }));
+
     } else if (feature_type == "LineData") {
         ui->stackedWidget->setCurrentIndex(3);
     } else if (feature_type == "AnalogTimeSeries") {

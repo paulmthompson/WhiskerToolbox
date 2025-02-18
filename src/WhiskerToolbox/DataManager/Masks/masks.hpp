@@ -20,5 +20,23 @@ inline Mask2D create_mask(std::vector<float> const& x, std::vector<float> const&
     return new_mask;
 }
 
+inline std::pair<Point2D<float>,Point2D<float>> get_bounding_box(Mask2D const& mask)
+{
+    float min_x = mask[0].x;
+    float max_x = mask[0].x;
+    float min_y = mask[0].y;
+    float max_y = mask[0].y;
+
+    for (auto const& point : mask)
+    {
+        min_x = std::min(min_x, point.x);
+        max_x = std::max(max_x, point.x);
+        min_y = std::min(min_y, point.y);
+        max_y = std::max(max_y, point.y);
+    }
+
+    return {Point2D<float>{min_x, min_y}, Point2D<float>{max_x, max_y}};
+}
+
 
 #endif // DATAMANAGER_MASKS_HPP

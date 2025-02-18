@@ -52,8 +52,6 @@ void Mask_Widget::selectPoint(float const x, float const y)
         }
     }
 
-    std::cout << "Mask is size " << mask.size() << std::endl;
-
     _data_manager->getData<MaskData>(_active_key)->addMaskAtTime(current_time, mask);
 }
 

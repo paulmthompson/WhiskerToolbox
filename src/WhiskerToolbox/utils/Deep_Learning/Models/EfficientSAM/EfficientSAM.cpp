@@ -38,6 +38,8 @@ std::vector<uint8_t> EfficientSAM::process_frame(
         image_tensor = image_tensor.repeat({1, channels, 1, 1});
     }
 
+    image_tensor = image_tensor.to(torch::kFloat32).div(255).to(device);
+
     auto input_points = torch::tensor({{{{x, y}}}}, torch::kInt32);
     auto input_labels = torch::tensor({{{1}}}, torch::kInt32);
 
