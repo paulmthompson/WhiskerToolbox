@@ -1,0 +1,22 @@
+# Syntax: gitignore rules
+
+# Ignore files and directories for all sections from gitignore file
+# Default: True
+gitignore-import-and-ignore: False
+
+# Ignore files and directories for tree
+# and "Contents of ..." sections
+ignore-tree-and-content:
+    - ".repo-to-text-settings.yaml"
+
+ignore-content:
+    - "LICENSE"
+    - "tests/WhiskerToolbox/DataManager/data"
+    - "docs/"
+    - "out/"
+    - ".idea/"
+    - "resources/"
+    - "packaging/WhiskerToolbox.icns"
+    - "src/WhiskerToolbox/images"
+
+
