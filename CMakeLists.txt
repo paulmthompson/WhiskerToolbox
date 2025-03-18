@@ -12,6 +12,8 @@ include(CTest)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 #[[
 Best practice for looking for cmake modules cmake folder in root of the project
 Currently, this project does not have any cmake modules
