@@ -2,7 +2,7 @@
 #ifndef WHISKERTOOLBOX_SIMPLIFY_LINE_HPP
 #define WHISKERTOOLBOX_SIMPLIFY_LINE_HPP
 
-#define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES // Why is this here?
 
 #include "DataManager/Points/points.hpp"
 
