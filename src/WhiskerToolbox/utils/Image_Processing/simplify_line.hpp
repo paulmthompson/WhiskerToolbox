@@ -2,31 +2,31 @@
 #ifndef WHISKERTOOLBOX_SIMPLIFY_LINE_HPP
 #define WHISKERTOOLBOX_SIMPLIFY_LINE_HPP
 
-#define _USE_MATH_DEFINES // Why is this here?
+#define _USE_MATH_DEFINES// Why is this here?
 
 #include "DataManager/Points/points.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <math.h>
 #include <iostream>
+#include <math.h>
 #include <vector>
 
 class Radian {
 public:
-    explicit Radian(float value) : value_(value) {}
+    explicit Radian(float value)
+        : value_(value) {}
 
     float getValue() const {
         return value_;
     }
 
-
-    bool operator>(const Radian& other) const {
+    bool operator>(Radian const & other) const {
         return value_ > other.value_;
     }
 
-    bool operator<(const Radian& other) const {
+    bool operator<(Radian const & other) const {
         return value_ < other.value_;
     }
 
@@ -36,17 +36,18 @@ private:
 
 class Degree {
 public:
-    explicit Degree(float value) : value_(value) {}
+    explicit Degree(float value)
+        : value_(value) {}
 
     float getValue() const {
         return value_;
     }
 
-    bool operator>(const Degree& other) const {
+    bool operator>(Degree const & other) const {
         return value_ > other.value_;
     }
 
-    bool operator<(const Degree& other) const {
+    bool operator<(Degree const & other) const {
         return value_ < other.value_;
     }
 
@@ -55,7 +56,7 @@ private:
 };
 
 
-Radian calculate_angle_radian(const Point2D<float>& p1, const Point2D<float>& p2, const Point2D<float>& p3) {
+Radian calculate_angle_radian(Point2D<float> const & p1, Point2D<float> const & p2, Point2D<float> const & p3) {
     float dx1 = p2.x - p1.x;
     float dy1 = p2.y - p1.y;
     float dx2 = p3.x - p2.x;
@@ -66,12 +67,11 @@ Radian calculate_angle_radian(const Point2D<float>& p1, const Point2D<float>& p2
     return Radian(std::acos(dot_product / (magnitude1 * magnitude2)));
 }
 
-Degree calculate_angle_degree(const Point2D<float>& p1, const Point2D<float>& p2, const Point2D<float>& p3) {
+Degree calculate_angle_degree(Point2D<float> const & p1, Point2D<float> const & p2, Point2D<float> const & p3) {
     return Degree(calculate_angle_radian(p1, p2, p3).getValue() * 180.0f / M_PI);
 }
 
-void remove_extreme_angles(std::vector<Point2D<float>>& line, Degree tolerance)
-{
+void remove_extreme_angles(std::vector<Point2D<float>> & line, Degree tolerance) {
     if (line.size() < 3) {
         return;
     }
@@ -86,10 +86,9 @@ void remove_extreme_angles(std::vector<Point2D<float>>& line, Degree tolerance)
                 line.erase(line.begin() + i + 1);
                 std::cout << "Removed point with angle " << angle.getValue() << " at position " << i << std::endl;
             }
-            --i; // Recalculate angle with the new neighbor
-
+            --i;// Recalculate angle with the new neighbor
         }
     }
 }
 
-#endif //WHISKERTOOLBOX_SIMPLIFY_LINE_HPP
+#endif//WHISKERTOOLBOX_SIMPLIFY_LINE_HPP
