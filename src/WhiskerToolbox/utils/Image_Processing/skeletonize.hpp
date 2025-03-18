@@ -17,30 +17,31 @@ License: BSD-3-Clause
 #include <stdint.h>
 #include <vector>
 
-std::vector<uint8_t> fast_skeletonize(const std::vector<uint8_t>& image, int height, int width) {
-    // Look up table
-    const std::array<uint8_t, 256> lut = {0, 0, 0, 1, 0, 0, 1, 3, 0, 0, 3, 1, 1, 0,
-                              1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0,
-                              3, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0,
-                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                              2, 0, 0, 0, 3, 0, 2, 2, 0, 0, 0, 0, 0, 0,
-                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0,
-                              0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0,
-                              3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 3, 0,
-                              2, 0, 0, 0, 3, 1, 0, 0, 1, 3, 0, 0, 0, 0,
-                              0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                              0, 0, 0, 0, 0, 1, 3, 1, 0, 0, 0, 0, 0, 0,
-                              0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0,
-                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 1, 3,
-                              0, 0, 1, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                              2, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
-                              0, 0, 3, 3, 0, 1, 0, 0, 0, 0, 2, 2, 0, 0,
-                              2, 0, 0, 0};
+std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, int height, int width) {
 
-    const int nrows = height + 2;
-    const int ncols = width + 2;
+    // Look up table
+    static std::array<uint8_t, 256> const lut = {0, 0, 0, 1, 0, 0, 1, 3, 0, 0, 3, 1, 1, 0,
+                                                 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0,
+                                                 3, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0,
+                                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                 2, 0, 0, 0, 3, 0, 2, 2, 0, 0, 0, 0, 0, 0,
+                                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0,
+                                                 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0,
+                                                 3, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 3, 0,
+                                                 2, 0, 0, 0, 3, 1, 0, 0, 1, 3, 0, 0, 0, 0,
+                                                 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                 0, 0, 0, 0, 0, 1, 3, 1, 0, 0, 0, 0, 0, 0,
+                                                 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0,
+                                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 1, 3,
+                                                 0, 0, 1, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                 2, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+                                                 0, 0, 3, 3, 0, 1, 0, 0, 0, 0, 2, 2, 0, 0,
+                                                 2, 0, 0, 0};
+
+    int const nrows = height + 2;
+    int const ncols = width + 2;
 
     // Create skeleton and cleaned_skeleton with border
     std::vector<uint8_t> skeleton(nrows * ncols, 0);
@@ -60,21 +61,19 @@ std::vector<uint8_t> fast_skeletonize(const std::vector<uint8_t>& image, int hei
         pixel_removed = false;
 
         for (int pass_num = 0; pass_num < 2; ++pass_num) {
-            bool first_pass = (pass_num == 0);
+            bool const first_pass = (pass_num == 0);
 
             for (int row = 1; row < nrows - 1; ++row) {
                 for (int col = 1; col < ncols - 1; ++col) {
                     if (skeleton[row * ncols + col]) {
-                        uint8_t neighbors = lut[
-                            skeleton[(row - 1) * ncols + (col - 1)] +
-                            2 * skeleton[(row - 1) * ncols + col] +
-                            4 * skeleton[(row - 1) * ncols + (col + 1)] +
-                            8 * skeleton[row * ncols + (col + 1)] +
-                            16 * skeleton[(row + 1) * ncols + (col + 1)] +
-                            32 * skeleton[(row + 1) * ncols + col] +
-                            64 * skeleton[(row + 1) * ncols + (col - 1)] +
-                            128 * skeleton[row * ncols + (col - 1)]
-                        ];
+                        uint8_t const neighbors = lut[skeleton[(row - 1) * ncols + (col - 1)] +
+                                                      2 * skeleton[(row - 1) * ncols + col] +
+                                                      4 * skeleton[(row - 1) * ncols + (col + 1)] +
+                                                      8 * skeleton[row * ncols + (col + 1)] +
+                                                      16 * skeleton[(row + 1) * ncols + (col + 1)] +
+                                                      32 * skeleton[(row + 1) * ncols + col] +
+                                                      64 * skeleton[(row + 1) * ncols + (col - 1)] +
+                                                      128 * skeleton[row * ncols + (col - 1)]];
 
                         if (neighbors == 0) {
                             continue;
@@ -101,4 +100,4 @@ std::vector<uint8_t> fast_skeletonize(const std::vector<uint8_t>& image, int hei
 }
 
 
-#endif // SKELETONIZE_HPP
+#endif// SKELETONIZE_HPP
