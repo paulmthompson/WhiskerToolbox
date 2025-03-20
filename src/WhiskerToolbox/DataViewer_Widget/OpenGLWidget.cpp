@@ -7,9 +7,9 @@
 #include "TimeFrame.hpp"
 #include "utils/color.hpp"
 
-#include <QOpenGLShader>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QOpenGLShader>
 #include <QPainter>
 
 #include <cstdlib>
@@ -18,9 +18,8 @@
 // This was a helpful resource for making a dashed line:
 //https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
 
-OpenGLWidget::OpenGLWidget(QWidget *parent)
-    : QOpenGLWidget(parent)
-{
+OpenGLWidget::OpenGLWidget(QWidget * parent)
+    : QOpenGLWidget(parent) {
     std::srand(std::time(nullptr));
 }
 
@@ -28,45 +27,43 @@ OpenGLWidget::~OpenGLWidget() {
     cleanup();
 }
 
-void OpenGLWidget::updateCanvas(int time)
-{
+void OpenGLWidget::updateCanvas(int time) {
     _time = time;
     //std::cout << "Redrawing at " << _time << std::endl;
     update();
 }
 
-void OpenGLWidget::setBackgroundColor(const std::string &hexColor)
-{
+void OpenGLWidget::setBackgroundColor(std::string const & hexColor) {
     m_background_color = hexColor;
     update();
 }
 
-static const char *vertexShaderSource =
-    "#version 150\n"
-    "in vec4 vertex;\n"
-    "in vec3 color;\n"
-    "in float alpha;\n"
-    "out vec3 fragColor;\n"
-    "out float fragAlpha;\n"
-    "uniform mat4 projMatrix;\n"
-    "uniform mat4 viewMatrix;\n"
-    "uniform mat4 modelMatrix;\n"
-    "void main() {\n"
-    "   gl_Position = projMatrix * viewMatrix * modelMatrix * vertex;\n"
-    "   fragColor = color;\n"
-    "   fragAlpha = alpha;\n"
-    "}\n";
+static char const * vertexShaderSource =
+        "#version 150\n"
+        "in vec4 vertex;\n"
+        "in vec3 color;\n"
+        "in float alpha;\n"
+        "out vec3 fragColor;\n"
+        "out float fragAlpha;\n"
+        "uniform mat4 projMatrix;\n"
+        "uniform mat4 viewMatrix;\n"
+        "uniform mat4 modelMatrix;\n"
+        "void main() {\n"
+        "   gl_Position = projMatrix * viewMatrix * modelMatrix * vertex;\n"
+        "   fragColor = color;\n"
+        "   fragAlpha = alpha;\n"
+        "}\n";
 
-static const char *fragmentShaderSource =
-    "#version 150\n"
-    "in vec3 fragColor;\n"
-    "in float fragAlpha;\n"
-    "out vec4 outColor;\n"
-    "void main() {\n"
-    "   outColor = vec4(fragColor, fragAlpha);\n"
-    "}\n";
+static char const * fragmentShaderSource =
+        "#version 150\n"
+        "in vec3 fragColor;\n"
+        "in float fragAlpha;\n"
+        "out vec4 outColor;\n"
+        "void main() {\n"
+        "   outColor = vec4(fragColor, fragAlpha);\n"
+        "}\n";
 
-static const char *dashedVertexShaderSource =
+static char const * dashedVertexShaderSource =
         "#version 330 core\n"
         "layout (location = 0) in vec3 inPos;\n"
         "flat out vec3 startPos;\n"
@@ -80,7 +77,7 @@ static const char *dashedVertexShaderSource =
         "    startPos = vertPos;\n"
         "}\n";
 
-static const char *dashedFragmentShaderSource =
+static char const * dashedFragmentShaderSource =
         "#version 330 core\n"
         "flat in vec3 startPos;\n"
         "in vec3 vertPos;\n"
@@ -97,8 +94,7 @@ static const char *dashedFragmentShaderSource =
         "    fragColor = vec4(1.0);\n"
         "}\n";
 
-void OpenGLWidget::cleanup()
-{
+void OpenGLWidget::cleanup() {
     if (m_program == nullptr)
         return;
     makeCurrent();
@@ -109,8 +105,7 @@ void OpenGLWidget::cleanup()
     doneCurrent();
 }
 
-void OpenGLWidget::initializeGL()
-{
+void OpenGLWidget::initializeGL() {
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &OpenGLWidget::cleanup);
 
     initializeOpenGLFunctions();
@@ -161,76 +156,85 @@ void OpenGLWidget::initializeGL()
 
     m_program->release();
     m_dashedProgram->release();
-
 }
 
 void OpenGLWidget::setupVertexAttribs() {
     m_vbo.bind();
-    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+    QOpenGLFunctions * f = QOpenGLContext::currentContext()->functions();
     f->glEnableVertexAttribArray(0);
-    const int vertex_argument_num = 6;
+    int const vertex_argument_num = 6;
     f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), nullptr);
 
     f->glEnableVertexAttribArray(1);
-    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), reinterpret_cast<void*>(2 * sizeof(GLfloat)));
+    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), reinterpret_cast<void *>(2 * sizeof(GLfloat)));
 
     f->glEnableVertexAttribArray(2);
-    f->glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), reinterpret_cast<void*>(5 * sizeof(GLfloat)));
+    f->glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), reinterpret_cast<void *>(5 * sizeof(GLfloat)));
 
     m_vbo.release();
 }
 
-void OpenGLWidget::drawDigitalEventSeries()
-{
+/**
+ * @brief OpenGLWidget::drawDigitalEventSeries
+ *
+ * Each event is specified by a single time point.
+ * We can find which of the time points are within the visible time frame
+ * After those are found, we will draw a vertical line at that time point
+ */
+void OpenGLWidget::drawDigitalEventSeries() {
     int r, g, b;
-    const auto start_time = _xAxis.getStart();
-    const auto end_time = _xAxis.getEnd();
+    auto const start_time = _xAxis.getStart();
+    auto const end_time = _xAxis.getEnd();
 
-    for (const auto& [key, event_data] : _digital_event_series) {
-        const auto& series = event_data.series;
-        const auto& events = series->getEventSeries();
-        const auto& time_frame = event_data.time_frame;
+    for (auto const & [key, event_data]: _digital_event_series) {
+        auto const & series = event_data.series;
+        auto const & events = series->getEventSeries();
+        auto const & time_frame = event_data.time_frame;
         hexToRGB(event_data.color, r, g, b);
-        float rNorm = r / 255.0f;
-        float gNorm = g / 255.0f;
-        float bNorm = b / 255.0f;
-        float alpha = 1.0f;
+        float const rNorm = r / 255.0f;
+        float const gNorm = g / 255.0f;
+        float const bNorm = b / 255.0f;
+        float const alpha = 1.0f;
 
-        for (const auto& event : events) {
+        // There is lots of duplication here. Every vertex is the same
+        // color and alpha.
+        for (auto const & event: events) {
             float time = time_frame->getTimeAtIndex(event);
             if (time >= start_time && time <= end_time) {
                 float xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
 
-                std::array<GLfloat, 6*2> vertices = {
+                std::array<GLfloat, 6 * 2> vertices = {
                         xCanvasPos, -1.0f, rNorm, gNorm, bNorm, alpha,
-                        xCanvasPos, 1.0f, rNorm, gNorm, bNorm, alpha
-                };
+                        xCanvasPos, 1.0f, rNorm, gNorm, bNorm, alpha};
+
                 m_vbo.bind();
                 m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
                 m_vbo.release();
-                glDrawArrays(GL_LINES, 0, 2);
+
+                GLint const first = 0;  // Starting index of enabled array
+                GLsizei const count = 2;// number of indexes to render
+                glDrawArrays(GL_LINES, first, count);
             }
         }
     }
 }
 
-void OpenGLWidget::drawDigitalIntervalSeries()
-{
+void OpenGLWidget::drawDigitalIntervalSeries() {
     int r, g, b;
-    const auto start_time = _xAxis.getStart();
-    const auto end_time = _xAxis.getEnd();
+    auto const start_time = _xAxis.getStart();
+    auto const end_time = _xAxis.getEnd();
 
-    for (const auto& [key, interval_data] : _digital_interval_series) {
-        const auto& series = interval_data.series;
-        const auto& intervals = series->getDigitalIntervalSeries();
-        const auto& time_frame = interval_data.time_frame;
+    for (auto const & [key, interval_data]: _digital_interval_series) {
+        auto const & series = interval_data.series;
+        auto const & intervals = series->getDigitalIntervalSeries();
+        auto const & time_frame = interval_data.time_frame;
         hexToRGB(interval_data.color, r, g, b);
         float rNorm = r / 255.0f;
         float gNorm = g / 255.0f;
         float bNorm = b / 255.0f;
-        float alpha = 0.5f; // Set alpha for shading
+        float alpha = 0.5f;// Set alpha for shading
 
-        for (const auto& interval : intervals) {
+        for (auto const & interval: intervals) {
 
             float start = time_frame->getTimeAtIndex(interval.start);
             float end = time_frame->getTimeAtIndex(interval.end);
@@ -244,33 +248,34 @@ void OpenGLWidget::drawDigitalIntervalSeries()
             float xStart = static_cast<GLfloat>(start - start_time) / (end_time - start_time) * 2.0f - 1.0f;
             float xEnd = static_cast<GLfloat>(end - start_time) / (end_time - start_time) * 2.0f - 1.0f;
 
-            std::array<GLfloat, 6*4> vertices = {
+            std::array<GLfloat, 6 * 4> vertices = {
                     xStart, -1.0f, rNorm, gNorm, bNorm, alpha,
                     xEnd, -1.0f, rNorm, gNorm, bNorm, alpha,
                     xEnd, 1.0f, rNorm, gNorm, bNorm, alpha,
-                    xStart, 1.0f, rNorm, gNorm, bNorm, alpha
-            };
+                    xStart, 1.0f, rNorm, gNorm, bNorm, alpha};
 
             m_vbo.bind();
             m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
             m_vbo.release();
-            glDrawArrays(GL_QUADS, 0, 4);
+
+            GLint const first = 0;  // Starting index of enabled array
+            GLsizei const count = 4;// number of indexes to render
+            glDrawArrays(GL_QUADS, first, count);
         }
     }
 }
 
-void OpenGLWidget::drawAnalogSeries()
-{
+void OpenGLWidget::drawAnalogSeries() {
     int r, g, b;
 
-    const auto start_time = _xAxis.getStart();
-    const auto end_time = _xAxis.getEnd();
+    auto const start_time = _xAxis.getStart();
+    auto const end_time = _xAxis.getEnd();
 
-    for (const auto&  [key, analog_data] : _analog_series) {
-        const auto &series = analog_data.series;
-        const auto &data = series->getAnalogTimeSeries();
-        const auto &data_time = series->getTimeSeries();
-        const auto &time_frame = analog_data.time_frame;
+    for (auto const & [key, analog_data]: _analog_series) {
+        auto const & series = analog_data.series;
+        auto const & data = series->getAnalogTimeSeries();
+        auto const & data_time = series->getTimeSeries();
+        auto const & time_frame = analog_data.time_frame;
 
         // Set the color for the current series
         hexToRGB(analog_data.color, r, g, b);
@@ -281,9 +286,9 @@ void OpenGLWidget::drawAnalogSeries()
         m_vertices.clear();
 
         auto start_it = std::lower_bound(data_time.begin(), data_time.end(), start_time,
-                                         [&time_frame](const auto& time, const auto& value) { return time_frame->getTimeAtIndex(time) < value; });
+                                         [&time_frame](auto const & time, auto const & value) { return time_frame->getTimeAtIndex(time) < value; });
         auto end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
-                                       [&time_frame](const auto& value, const auto& time) { return value < time_frame->getTimeAtIndex(time); });
+                                       [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(time); });
 
         float maxY = series->getMaxValue(start_it - data_time.begin(), end_it - data_time.begin());
         float minY = series->getMinValue(start_it - data_time.begin(), end_it - data_time.begin());
@@ -303,12 +308,14 @@ void OpenGLWidget::drawAnalogSeries()
             m_vertices.push_back(rNorm);
             m_vertices.push_back(gNorm);
             m_vertices.push_back(bNorm);
-            m_vertices.push_back(1.0f); // alpha
+            m_vertices.push_back(1.0f);// alpha
         }
 
         m_vbo.bind();
         m_vbo.allocate(m_vertices.data(), m_vertices.size() * sizeof(GLfloat));
         m_vbo.release();
+
+
         glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 6);
     }
 }
@@ -340,9 +347,8 @@ void OpenGLWidget::paintGL() {
 
     // Draw horizontal line at x=0
     std::array<GLfloat, 12> lineVertices = {
-        0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-        0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
-    };
+            0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 
     m_vbo.bind();
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
@@ -373,11 +379,9 @@ void OpenGLWidget::resizeGL(int w, int h) {
     m_view.translate(0, 0, -2);
 }
 
-void OpenGLWidget::drawAxis()
-{
-    const auto start_time = _xAxis.getStart();
-    const auto end_time = _xAxis.getEnd();
-
+void OpenGLWidget::drawAxis() {
+    auto const start_time = _xAxis.getStart();
+    auto const end_time = _xAxis.getEnd();
 }
 
 void OpenGLWidget::addAnalogTimeSeries(
@@ -395,7 +399,7 @@ void OpenGLWidget::addAnalogTimeSeries(
     updateCanvas(_time);
 }
 
-void OpenGLWidget::removeAnalogTimeSeries(const std::string &key) {
+void OpenGLWidget::removeAnalogTimeSeries(std::string const & key) {
     auto item = _analog_series.find(key);
     if (item != _analog_series.end()) {
         _analog_series.erase(item);
@@ -405,15 +409,15 @@ void OpenGLWidget::removeAnalogTimeSeries(const std::string &key) {
 
 void OpenGLWidget::addDigitalEventSeries(
         std::string key,
-        std::shared_ptr <DigitalEventSeries> series,
-        std::shared_ptr <TimeFrame> time_frame,
+        std::shared_ptr<DigitalEventSeries> series,
+        std::shared_ptr<TimeFrame> time_frame,
         std::string color) {
     std::string seriesColor = color.empty() ? generateRandomColor() : color;
     _digital_event_series[key] = DigitalEventSeriesData{series, seriesColor, time_frame};
     updateCanvas(_time);
 }
 
-void OpenGLWidget::removeDigitalEventSeries(const std::string &key) {
+void OpenGLWidget::removeDigitalEventSeries(std::string const & key) {
     auto item = _digital_event_series.find(key);
     if (item != _digital_event_series.end()) {
         _digital_event_series.erase(item);
@@ -423,8 +427,8 @@ void OpenGLWidget::removeDigitalEventSeries(const std::string &key) {
 
 void OpenGLWidget::addDigitalIntervalSeries(
         std::string key,
-        std::shared_ptr <DigitalIntervalSeries> series,
-        std::shared_ptr <TimeFrame> time_frame,
+        std::shared_ptr<DigitalIntervalSeries> series,
+        std::shared_ptr<TimeFrame> time_frame,
         std::string color) {
 
     std::string seriesColor = color.empty() ? generateRandomColor() : color;
@@ -432,7 +436,7 @@ void OpenGLWidget::addDigitalIntervalSeries(
     updateCanvas(_time);
 }
 
-void OpenGLWidget::removeDigitalIntervalSeries(const std::string &key) {
+void OpenGLWidget::removeDigitalIntervalSeries(std::string const & key) {
     auto item = _digital_interval_series.find(key);
     if (item != _digital_interval_series.end()) {
         _digital_interval_series.erase(item);
@@ -448,8 +452,8 @@ void OpenGLWidget::clearSeries() {
 void OpenGLWidget::generateRandomValues(int count) {
     m_vertices.clear();
     for (int i = 0; i < count; ++i) {
-        m_vertices.push_back(static_cast<GLfloat>(i) / (count - 1) * 2.0f - 1.0f); // X coordinate
-        m_vertices.push_back(static_cast<GLfloat>(std::rand()) / RAND_MAX * 2.0f - 1.0f); // Y coordinate
+        m_vertices.push_back(static_cast<GLfloat>(i) / (count - 1) * 2.0f - 1.0f);       // X coordinate
+        m_vertices.push_back(static_cast<GLfloat>(std::rand()) / RAND_MAX * 2.0f - 1.0f);// Y coordinate
     }
 
     m_vbo.bind();
@@ -466,27 +470,23 @@ void OpenGLWidget::generateAndAddFakeData(int count) {
     //addAnalogTimeSeries(series);
 }
 
-void OpenGLWidget::adjustFakeData()
-{
+void OpenGLWidget::adjustFakeData() {
     std::vector<float> new_series;
-    for (int i = 0; i < _analog_series[0].series->getAnalogTimeSeries().size(); i ++)
-    {
+    for (int i = 0; i < _analog_series[0].series->getAnalogTimeSeries().size(); i++) {
         new_series.push_back(static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f);
     }
     _analog_series[0].series->setData(new_series);
 }
 
-void OpenGLWidget::drawDashedLine(float xStart, float xEnd, float yStart, float yEnd, int dashLength, int gapLength)
-{
-    std::vector<float> vertices = {
+void OpenGLWidget::drawDashedLine(float const xStart, float const xEnd, float const yStart, float const yEnd, int const dashLength, int const gapLength) {
+    std::array<float, 6> vertices = {
             xStart, yStart, 0.0f,
-            xEnd, yEnd, 0.0f
-    };
+            xEnd, yEnd, 0.0f};
 
     m_vbo.bind();
     m_vbo.allocate(vertices.data(), vertices.size() * sizeof(float));
 
-    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+    QOpenGLFunctions * f = QOpenGLContext::currentContext()->functions();
     f->glEnableVertexAttribArray(0);
     f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
 
@@ -502,17 +502,14 @@ void OpenGLWidget::drawDashedLine(float xStart, float xEnd, float yStart, float 
     m_vbo.release();
 }
 
-void OpenGLWidget::drawGridLines()
-{
+void OpenGLWidget::drawGridLines() {
     // Draw dashed vertical lines at edge of canvas
-    const auto start_time = _xAxis.getStart();
-    const auto end_time = _xAxis.getEnd();
+    auto const start_time = _xAxis.getStart();
+    auto const end_time = _xAxis.getEnd();
 
     float xStartCanvasPos = static_cast<GLfloat>(start_time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
     float xEndCanvasPos = static_cast<GLfloat>(end_time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
 
     drawDashedLine(xStartCanvasPos, xStartCanvasPos, -1.0f, 1.0f, 5, 5);
     drawDashedLine(xEndCanvasPos, xEndCanvasPos, -1.0f, 1.0f, 5, 5);
-
 }
-
