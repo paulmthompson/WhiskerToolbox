@@ -142,16 +142,6 @@ void OpenGLWidget::initializeGL() {
     m_vbo.bind();
     m_vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
 
-    /*
-    GLfloat vertices[] = {
-        -0.5f, 0.0f,
-        0.5f, 0.0f
-    };
-    m_vbo.allocate(vertices, sizeof(vertices));
-    */
-    //generateRandomValues(100);
-    //generateAndAddFakeData(100000);
-
     setupVertexAttribs();
 
     m_program->release();
@@ -161,13 +151,17 @@ void OpenGLWidget::initializeGL() {
 void OpenGLWidget::setupVertexAttribs() {
     m_vbo.bind();
     QOpenGLFunctions * f = QOpenGLContext::currentContext()->functions();
-    f->glEnableVertexAttribArray(0);
     int const vertex_argument_num = 6;
+
+    // Attribute 0: vertex positions (x, y)
+    f->glEnableVertexAttribArray(0);
     f->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), nullptr);
 
+    // Attribute 1: color (r, g, b)
     f->glEnableVertexAttribArray(1);
     f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), reinterpret_cast<void *>(2 * sizeof(GLfloat)));
 
+    // Attribute 2: alpha
     f->glEnableVertexAttribArray(2);
     f->glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), reinterpret_cast<void *>(5 * sizeof(GLfloat)));
 
@@ -197,7 +191,10 @@ void OpenGLWidget::drawDigitalEventSeries() {
         float const alpha = 1.0f;
 
         // There is lots of duplication here. Every vertex is the same
-        // color and alpha.
+        // color and alpha. Should be using a vertex that can be set with
+        // uniform variables (like projection matrix).
+        // We should also move the searching for events within a range to
+        // The data manager. It can return reference to the range of events.
         for (auto const & event: events) {
             float time = time_frame->getTimeAtIndex(event);
             if (time >= start_time && time <= end_time) {
