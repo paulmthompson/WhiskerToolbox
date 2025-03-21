@@ -100,10 +100,13 @@ private:
     void drawAxis();
     void drawGridLines();
     void drawDashedLine(float const xStart, float const xEnd, float const yStart, float const yEnd, int const dashLength, int const gapLength);
+    void _addSeries(std::string const & key);
+    void _removeSeries(std::string const & key);
 
     std::map<std::string, AnalogSeriesData> _analog_series;
     std::map<std::string, DigitalEventSeriesData> _digital_event_series;
     std::map<std::string, DigitalIntervalSeriesData> _digital_interval_series;
+    std::map<std::string, int> _series_y_position;
 
     XAxis _xAxis;
     int _time{0};
@@ -111,9 +114,9 @@ private:
     QOpenGLShaderProgram * m_program{0};
     QOpenGLBuffer m_vbo;
     QOpenGLVertexArrayObject m_vao;
-    QMatrix4x4 m_proj;
-    QMatrix4x4 m_view;
-    QMatrix4x4 m_model;
+    QMatrix4x4 m_proj; // Initialized as identity
+    QMatrix4x4 m_view; // Initialized as identity
+    QMatrix4x4 m_model; // Initialized as identity
     int m_projMatrixLoc;
     int m_viewMatrixLoc;
     int m_modelMatrixLoc;

@@ -16,6 +16,8 @@ find_package(LAPACK REQUIRED)
 find_package(OpenBLAS REQUIRED)
 find_package(Armadillo REQUIRED)
 
+find_package(glm CONFIG REQUIRED)
+
 qt_standard_project_setup()
 
 add_subdirectory(DataManager)
@@ -216,6 +218,8 @@ target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6:
 
 target_link_libraries(WhiskerToolbox PRIVATE HighFive)
 target_link_libraries(WhiskerToolbox PRIVATE nlohmann_json::nlohmann_json)
+
+target_link_libraries(WhiskerToolbox PRIVATE glm::glm)
 
 find_path(MLPACK_INCLUDE_DIRS "mlpack.hpp")
 

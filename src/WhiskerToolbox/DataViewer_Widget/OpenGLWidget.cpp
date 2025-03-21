@@ -7,6 +7,7 @@
 #include "TimeFrame.hpp"
 #include "utils/color.hpp"
 
+#include <glm/glm.hpp>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLShader>
@@ -17,6 +18,26 @@
 
 // This was a helpful resource for making a dashed line:
 //https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
+
+/*
+
+Currently this is pretty hacky OpenGL code that will be refactored to take advantage of
+OpenGL.
+
+I will establish a Model-View-Projection matrix framework.
+
+1) model matrix (object to world space)
+    - can be used to shift data up or down?
+2) view matrix (world space to camera space)
+    - Camera panning
+3) projection matrix (camera space to clip space)
+    - orthographic projection
+    - zooming and visible area definition
+
+I will also only select the data that is present
+
+
+*/
 
 OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
@@ -180,6 +201,14 @@ void OpenGLWidget::drawDigitalEventSeries() {
     auto const start_time = _xAxis.getStart();
     auto const end_time = _xAxis.getEnd();
 
+    m_program->bind();
+    m_program->setUniformValue(m_projMatrixLoc, m_proj);
+    m_program->setUniformValue(m_viewMatrixLoc, m_view);
+    m_program->setUniformValue(m_modelMatrixLoc, m_model);
+
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    setupVertexAttribs();
+
     for (auto const & [key, event_data]: _digital_event_series) {
         auto const & series = event_data.series;
         auto const & events = series->getEventSeries();
@@ -214,12 +243,22 @@ void OpenGLWidget::drawDigitalEventSeries() {
             }
         }
     }
+
+    m_program->release();
 }
 
 void OpenGLWidget::drawDigitalIntervalSeries() {
     int r, g, b;
     auto const start_time = _xAxis.getStart();
     auto const end_time = _xAxis.getEnd();
+
+    m_program->bind();
+    m_program->setUniformValue(m_projMatrixLoc, m_proj);
+    m_program->setUniformValue(m_viewMatrixLoc, m_view);
+    m_program->setUniformValue(m_modelMatrixLoc, m_model);
+
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    setupVertexAttribs();
 
     for (auto const & [key, interval_data]: _digital_interval_series) {
         auto const & series = interval_data.series;
@@ -260,6 +299,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
             glDrawArrays(GL_QUADS, first, count);
         }
     }
+
+    m_program->release();
 }
 
 void OpenGLWidget::drawAnalogSeries() {
@@ -267,6 +308,14 @@ void OpenGLWidget::drawAnalogSeries() {
 
     auto const start_time = _xAxis.getStart();
     auto const end_time = _xAxis.getEnd();
+
+    m_program->bind();
+    m_program->setUniformValue(m_projMatrixLoc, m_proj);
+    m_program->setUniformValue(m_viewMatrixLoc, m_view);
+    m_program->setUniformValue(m_modelMatrixLoc, m_model);
+
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    setupVertexAttribs();
 
     for (auto const & [key, analog_data]: _analog_series) {
         auto const & series = analog_data.series;
@@ -315,6 +364,8 @@ void OpenGLWidget::drawAnalogSeries() {
 
         glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 6);
     }
+
+    m_program->release();
 }
 
 void OpenGLWidget::paintGL() {
@@ -322,14 +373,6 @@ void OpenGLWidget::paintGL() {
     hexToRGB(m_background_color, r, g, b);
     glClearColor(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    m_program->bind();
-    m_program->setUniformValue(m_projMatrixLoc, m_proj);
-    m_program->setUniformValue(m_viewMatrixLoc, m_view);
-    m_program->setUniformValue(m_modelMatrixLoc, m_model);
-
-    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
-    setupVertexAttribs();
 
     //This has been converted to master coordinates
     int currentTime = _time;
@@ -341,6 +384,14 @@ void OpenGLWidget::paintGL() {
     drawDigitalEventSeries();
     drawDigitalIntervalSeries();
     drawAnalogSeries();
+
+    m_program->bind();
+    m_program->setUniformValue(m_projMatrixLoc, m_proj);
+    m_program->setUniformValue(m_viewMatrixLoc, m_view);
+    m_program->setUniformValue(m_modelMatrixLoc, m_model);
+
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    setupVertexAttribs();
 
     // Draw horizontal line at x=0
     std::array<GLfloat, 12> lineVertices = {
@@ -439,6 +490,17 @@ void OpenGLWidget::removeDigitalIntervalSeries(std::string const & key) {
         _digital_interval_series.erase(item);
     }
     updateCanvas(_time);
+}
+
+void OpenGLWidget::_addSeries(std::string const & key) {
+    auto item = _series_y_position.find(key);
+}
+
+void OpenGLWidget::_removeSeries(std::string const & key) {
+    auto item = _series_y_position.find(key);
+    if (item != _series_y_position.end()) {
+        _series_y_position.erase(item);
+    }
 }
 
 void OpenGLWidget::clearSeries() {
