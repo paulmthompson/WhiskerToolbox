@@ -7,11 +7,11 @@
 #include "TimeFrame.hpp"
 #include "utils/color.hpp"
 
-#include <glm/glm.hpp>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLShader>
 #include <QPainter>
+#include <glm/glm.hpp>
 
 #include <cstdlib>
 #include <ctime>

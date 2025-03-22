@@ -116,7 +116,7 @@ private:
     QOpenGLVertexArrayObject m_vao;
     QMatrix4x4 m_proj; // Initialized as identity
     QMatrix4x4 m_view; // Initialized as identity
-    QMatrix4x4 m_model; // Initialized as identity
+    QMatrix4x4 m_model;// Initialized as identity
     int m_projMatrixLoc;
     int m_viewMatrixLoc;
     int m_modelMatrixLoc;
