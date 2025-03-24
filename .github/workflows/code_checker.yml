@@ -37,6 +37,8 @@ jobs:
         with:
           logfile:  /home/runner/work/WhiskerToolbox/WhiskerToolbox/out/build/Clang/Release/compile_commands.json
           version: 6.25.1
+          config: /home/runner/work/WhiskerToolbox/WhiskerToolbox/code-checker.json
+
 
       - name: Upload codechecker analysis
         uses: actions/upload-artifact@v4
