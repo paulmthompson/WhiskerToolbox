@@ -30,7 +30,7 @@ jobs:
 
       - name: Install Infer static analyzer
         run: |
-          VERSION=1.2.0; && \
+          VERSION=1.2.0; \
           curl -SL "https://github.com/facebook/infer/releases/download/v$VERSION/infer-linux-x86_64-v$VERSION.tar.xz" \
           | sudo tar -C /opt -xJ && \
           sudo ln -s "/opt/infer-linux-x86_64-v$VERSION/bin/infer" /usr/local/bin/infer
