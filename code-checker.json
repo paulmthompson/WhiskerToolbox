@@ -1,0 +1,6 @@
+{
+    "analyze": [
+      "--file src/*"
+
+    ]
+}
