@@ -1,0 +1,44 @@
+name: Code-Checker
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for comparison
+
+      - name: Common Setup
+        uses: ./.github/actions/linux-setup
+        with:
+          buildfolder: out/build/Clang/Release
+          compiler: clang
+
+      - name: Install code-checker dependencies
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      - name: Configure CMake without coverage
+        run: cmake --preset linux-clang-release
+
+      - name: Run Codechecker
+        uses: whisperity/codechecker-analysis-action@v1
+        id: codechecker
+        with:
+          logfile:  /home/runner/work/WhiskerToolbox/WhiskerToolbox/out/build/Clang/Release/compile_commands.json
+            -
+      - name: Upload codechecker analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: "CodeChecker Bug Reports"
+          path: ${{ steps.codechecker.outputs.result-html-dir }}
