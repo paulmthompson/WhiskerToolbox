@@ -1,6 +1,6 @@
 {
     "analyze": [
-      "--file src/*"
+      "--file", "*/src/WhiskerToolbox/*.cpp"
 
     ]
 }
