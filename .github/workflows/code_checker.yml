@@ -42,3 +42,4 @@ jobs:
         with:
           name: "CodeChecker Bug Reports"
           path: ${{ steps.codechecker.outputs.result-html-dir }}
+          version: 6.25.1
