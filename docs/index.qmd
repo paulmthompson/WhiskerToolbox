@@ -8,6 +8,10 @@ Neuralyzer is a cross-platform software package designed for analyzing and visua
 
 The software comes as compiled .exe, .dmg or tar files and can be immediately used on Windows, Mac and Linux - no install required !
 
+Latest Release: [link](https://github.com/paulmthompson/WhiskerToolbox/releases/latest)
+
+Old Releases: [link](https://github.com/paulmthompson/WhiskerToolbox/releases/)
+
 ## Supported Data Types
 
 Some currently supported data types include:

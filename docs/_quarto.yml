@@ -45,10 +45,16 @@ website:
                 
       - text: "Concepts"
         menu:
-          - text: "Data Manager"
-            href: developer/data_manager.qmd
-          - text: "Image Processing"
-            href: developer/image_processing.qmd
+          - text: "Developer Documentation"
+            href: developer/index.qmd
+            
+  sidebar:
+    title: "Developer Documentation"
+    style: "docked"
+    contents:
+      - developer/index.qmd
+      - developer/data_manager.qmd 
+      - developer/image_processing.qmd
 
 format:
   html:
