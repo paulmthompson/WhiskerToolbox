@@ -2,7 +2,7 @@
 #define WHISKERTOOLBOX_COLORED_VERTEX_SHADER_HPP
 
 static char const * vertexShaderSource =
-        "#version 150\n"
+        "#version 410 core\n"
         "in vec4 vertex;\n"
         "in vec3 color;\n"
         "in float alpha;\n"
@@ -18,7 +18,7 @@ static char const * vertexShaderSource =
         "}\n";
 
 static char const * fragmentShaderSource =
-        "#version 150\n"
+        "#version 410 core\n"
         "in vec3 fragColor;\n"
         "in float fragAlpha;\n"
         "out vec4 outColor;\n"

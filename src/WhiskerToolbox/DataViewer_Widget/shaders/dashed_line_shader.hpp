@@ -2,7 +2,7 @@
 #define WHISKERTOOLBOX_DASHED_LINE_SHADER_HPP
 
 static char const * dashedVertexShaderSource =
-        "#version 330 core\n"
+        "#version 410 core\n"
         "layout (location = 0) in vec3 inPos;\n"
         "flat out vec3 startPos;\n"
         "out vec3 vertPos;\n"
@@ -16,7 +16,7 @@ static char const * dashedVertexShaderSource =
         "}\n";
 
 static char const * dashedFragmentShaderSource =
-        "#version 330 core\n"
+        "#version 410 core\n"
         "flat in vec3 startPos;\n"
         "in vec3 vertPos;\n"
         "out vec4 fragColor;\n"
