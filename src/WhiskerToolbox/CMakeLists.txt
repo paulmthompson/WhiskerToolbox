@@ -118,6 +118,8 @@ set(PROJECT_SOURCES
         DataViewer_Widget/OpenGLWidget.cpp
         DataViewer_Widget/OpenGLWidget.hpp
         DataViewer_Widget/XAxis.hpp
+        DataViewer_Widget/shaders/dashed_line_shader.hpp
+        DataViewer_Widget/shaders/colored_vertex_shader.hpp
 
         ML_Widget/ML_Widget.ui
         ML_Widget/ML_Widget.hpp

@@ -5,6 +5,8 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame.hpp"
+#include "shaders/colored_vertex_shader.hpp"
+#include "shaders/dashed_line_shader.hpp"
 #include "utils/color.hpp"
 
 #include <QOpenGLContext>
@@ -59,61 +61,6 @@ void OpenGLWidget::setBackgroundColor(std::string const & hexColor) {
     update();
 }
 
-static char const * vertexShaderSource =
-        "#version 150\n"
-        "in vec4 vertex;\n"
-        "in vec3 color;\n"
-        "in float alpha;\n"
-        "out vec3 fragColor;\n"
-        "out float fragAlpha;\n"
-        "uniform mat4 projMatrix;\n"
-        "uniform mat4 viewMatrix;\n"
-        "uniform mat4 modelMatrix;\n"
-        "void main() {\n"
-        "   gl_Position = projMatrix * viewMatrix * modelMatrix * vertex;\n"
-        "   fragColor = color;\n"
-        "   fragAlpha = alpha;\n"
-        "}\n";
-
-static char const * fragmentShaderSource =
-        "#version 150\n"
-        "in vec3 fragColor;\n"
-        "in float fragAlpha;\n"
-        "out vec4 outColor;\n"
-        "void main() {\n"
-        "   outColor = vec4(fragColor, fragAlpha);\n"
-        "}\n";
-
-static char const * dashedVertexShaderSource =
-        "#version 330 core\n"
-        "layout (location = 0) in vec3 inPos;\n"
-        "flat out vec3 startPos;\n"
-        "out vec3 vertPos;\n"
-        "uniform mat4 u_mvp;\n"
-        "void main()\n"
-        "{\n"
-        "    vec4 pos = u_mvp * vec4(inPos, 1.0);\n"
-        "    gl_Position = pos;\n"
-        "    vertPos = pos.xyz / pos.w;\n"
-        "    startPos = vertPos;\n"
-        "}\n";
-
-static char const * dashedFragmentShaderSource =
-        "#version 330 core\n"
-        "flat in vec3 startPos;\n"
-        "in vec3 vertPos;\n"
-        "out vec4 fragColor;\n"
-        "uniform vec2 u_resolution;\n"
-        "uniform float u_dashSize;\n"
-        "uniform float u_gapSize;\n"
-        "void main()\n"
-        "{\n"
-        "    vec2 dir = (vertPos.xy - startPos.xy) * u_resolution / 2.0;\n"
-        "    float dist = length(dir);\n"
-        "    if (fract(dist / (u_dashSize + u_gapSize)) > u_dashSize / (u_dashSize + u_gapSize))\n"
-        "        discard;\n"
-        "    fragColor = vec4(1.0);\n"
-        "}\n";
 
 void OpenGLWidget::cleanup() {
     if (m_program == nullptr)
