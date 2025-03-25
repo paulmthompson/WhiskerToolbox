@@ -30,7 +30,7 @@ jobs:
 
       - name: Install Infer static analyzer
         run: |
-          VERSION=1.2.0; && \
+          VERSION=1.2.0; \
           curl -SL "https://github.com/facebook/infer/releases/download/v$VERSION/infer-linux-x86_64-v$VERSION.tar.xz" \
           | sudo tar -C /opt -xJ && \
           sudo ln -s "/opt/infer-linux-x86_64-v$VERSION/bin/infer" /usr/local/bin/infer
@@ -43,8 +43,9 @@ jobs:
         id: codechecker
         with:
           logfile:  /home/runner/work/WhiskerToolbox/WhiskerToolbox/out/build/Clang/Release/compile_commands.json
-          version: 6.25.1
+          version: v6.25.1
           config: /home/runner/work/WhiskerToolbox/WhiskerToolbox/code-checker.json
+          install-custom: true
 
 
       - name: Upload codechecker analysis
