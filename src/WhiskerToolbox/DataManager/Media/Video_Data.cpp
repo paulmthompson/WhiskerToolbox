@@ -5,6 +5,8 @@
 VideoData::VideoData()
     : _vd{std::make_unique<ffmpeg_wrapper::VideoDecoder>()} {}
 
+VideoData::~VideoData() = default;
+
 void VideoData::doLoadMedia(std::string name) {
     setFilename(name);
     _vd->createMedia(name);

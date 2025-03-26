@@ -18,7 +18,7 @@ class VideoData : public MediaData {
 public:
     VideoData();
 
-    ~VideoData() = default;
+    ~VideoData();
 
     std::string GetFrameID(int frame_id) override;
 
