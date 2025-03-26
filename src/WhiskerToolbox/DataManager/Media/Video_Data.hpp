@@ -10,13 +10,15 @@
 // But i need a destructor declaration in header and empty definition
 // in the cpp file for it to be a complete type
 //https://stackoverflow.com/questions/6012157/is-stdunique-ptrt-required-to-know-the-full-definition-of-t
-namespace ffmpeg_wrapper {class VideoDecoder;}
+namespace ffmpeg_wrapper {
+class VideoDecoder;
+}
 
 class VideoData : public MediaData {
 public:
     VideoData();
 
-    ~VideoData();
+    ~VideoData() = default;
 
     std::string GetFrameID(int frame_id) override;
 
@@ -30,14 +32,16 @@ public:
      */
     int FindNearestSnapFrame(int frame_id) const;
 
-    int getFrameIndexFromNumber(int frame_id) override {return frame_id;};
+    int getFrameIndexFromNumber(int frame_id) override { return frame_id; };
+
 protected:
     void doLoadMedia(std::string name) override;
     void doLoadFrame(int frame_id) override;
+
 private:
-    int _last_decoded_frame {0};
+    int _last_decoded_frame{0};
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> _vd;
 };
 
 
-#endif //WHISKERTOOLBOX_VIDEO_DATA_HPP
+#endif//WHISKERTOOLBOX_VIDEO_DATA_HPP

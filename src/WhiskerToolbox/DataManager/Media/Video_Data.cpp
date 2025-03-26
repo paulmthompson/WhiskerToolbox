@@ -2,12 +2,8 @@
 
 #include "ffmpeg_wrapper/videodecoder.h"
 
-VideoData::VideoData() :
-    _vd{std::make_unique<ffmpeg_wrapper::VideoDecoder>()}
-{}
-
-VideoData::~VideoData()
-{}
+VideoData::VideoData()
+    : _vd{std::make_unique<ffmpeg_wrapper::VideoDecoder>()} {}
 
 void VideoData::doLoadMedia(std::string name) {
     setFilename(name);
@@ -17,14 +13,14 @@ void VideoData::doLoadMedia(std::string name) {
     updateWidth(_vd->getWidth());
 
     switch (getFormat()) {
-    case DisplayFormat::Gray:
-        _vd->setFormat(ffmpeg_wrapper::VideoDecoder::Gray8);
-        break;
-    case DisplayFormat::Color:
-        _vd->setFormat(ffmpeg_wrapper::VideoDecoder::ARGB);
-        break;
-    default:
-        _vd->setFormat(ffmpeg_wrapper::VideoDecoder::Gray8);
+        case DisplayFormat::Gray:
+            _vd->setFormat(ffmpeg_wrapper::VideoDecoder::Gray8);
+            break;
+        case DisplayFormat::Color:
+            _vd->setFormat(ffmpeg_wrapper::VideoDecoder::ARGB);
+            break;
+        default:
+            _vd->setFormat(ffmpeg_wrapper::VideoDecoder::Gray8);
     }
 
     // Set format of video decoder to the format currently
@@ -49,9 +45,8 @@ void VideoData::doLoadFrame(int frame_id) {
     }
 
     //We load the data associated with the frame
-    this->setRawData(_vd->getFrame( frame_id, frame_by_frame));
+    this->setRawData(_vd->getFrame(frame_id, frame_by_frame));
     _last_decoded_frame = frame_id;
-
 }
 
 std::string VideoData::GetFrameID(int frame_id) {
