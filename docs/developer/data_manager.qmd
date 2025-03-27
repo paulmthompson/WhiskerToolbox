@@ -6,12 +6,90 @@ title: "Data Manager"
 
 ### Point
 
+A Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The `PointData` structure can hold multiple points per unit time.
+
+| Examples of Point Data |
+|------------------------|
+|                        |
+|                        |
+|                        |
+
 ### Line
+
+A Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is **ordered**, meaning that each point is positioned relative to its neighbors. The `LineData` structure can hold multiple lines per unit time.
+
+| Examples of Line Data |
+|-----------------------|
+|                       |
+|                       |
+|                       |
 
 ### Mask
 
+A mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not **ordered**. These would correspond to something like a binary segmentation mask over an image. The `MaskData` structure can hold multiple masks per unit time.
+
+| Examples of Mask Data               |
+|-------------------------------------|
+| Binary Semantic Segmentation Labels |
+|                                     |
+|                                     |
+
+### Tensors
+
+Tensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.
+
+| Examples of Tensor Data |
+|-------------------------|
+|                         |
+|                         |
+|                         |
+
+### Analog Time Series
+
+An analog time series has values that can vary continuously
+
+| Examples of Analog Time Series Data                |
+|----------------------------------------------------|
+| Voltage traces from electrode recordings           |
+| Fluorescence intensity traces from Calcium imaging |
+|                                                    |
+
+### Digital Event Series
+
+A digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology
+
+| Examples of Event Data |
+|------------------------|
+|                        |
+|                        |
+|                        |
+
+### Digital Interval Series
+
+| Examples of Interval Data |
+|---------------------------|
+|                           |
+|                           |
+|                           |
+
 ### Media
+
+Media is a sequence of images.
 
 #### Image
 
+| Examples of Image Data                                    |
+|-----------------------------------------------------------|
+| Image sequence from two photon calcium imaging experiment |
+|                                                           |
+|                                                           |
+
 #### Video
+
+| Examples of Video Data                                  |
+|---------------------------------------------------------|
+| MP4 video from high speed scientific camera of behavior |
+|                                                         |
+|                                                         |
+
+### Time Frame

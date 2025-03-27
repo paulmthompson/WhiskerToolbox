@@ -53,6 +53,7 @@ website:
     style: "docked"
     contents:
       - developer/index.qmd
+      - developer/contributing_code.qmd
       - developer/data_manager.qmd 
       - developer/image_processing.qmd
 
