@@ -38,9 +38,11 @@ jobs:
           lcov --directory /home/runner/work/WhiskerToolbox/WhiskerToolbox/out/build/GCC/Debug \
           --capture \
           --ignore-errors empty --ignore-errors mismatch \
+          --exclude '*/tests/*' \
           --exclude '*/catch2/*' \
           --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' '*/tests/*' '*/out/*' '*/opt/*' --output-file coverage.info
+          lcov --ignore-errors unused \
+          --remove coverage.info '/usr/*' '*/tests/*' '*/out/*' '*/opt/*' --output-file coverage.info
           lcov --list coverage.info
 
       - name: Upload coverage to Coveralls
