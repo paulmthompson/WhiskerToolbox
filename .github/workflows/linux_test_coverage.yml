@@ -37,7 +37,7 @@ jobs:
         run: |
           lcov --directory /home/runner/work/WhiskerToolbox/WhiskerToolbox/out/build/GCC/Debug \
           --capture \
-          --ignore-errors empty --ignore-errors mismatch \
+          --ignore-errors empty --ignore-errors mismatch --ignore-errors unused \
           --exclude '*/tests/*' \
           --exclude '*/catch2/*' \
           --output-file coverage.info
