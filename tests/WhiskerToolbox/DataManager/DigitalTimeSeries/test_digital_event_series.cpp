@@ -3,6 +3,8 @@
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 
+#include <fstream>
+
 TEST_CASE("Digital Event Series - Constructor", "[DataManager]") {
     DigitalEventSeries des;
     REQUIRE(des.size() == 0);
