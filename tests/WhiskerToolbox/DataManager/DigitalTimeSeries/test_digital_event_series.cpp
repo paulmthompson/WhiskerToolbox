@@ -4,6 +4,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 
 #include <fstream>
+#include <vector>
 
 TEST_CASE("Digital Event Series - Constructor", "[DataManager]") {
     DigitalEventSeries des;
@@ -153,4 +154,135 @@ TEST_CASE("Digital Event Series - Empty Series", "[DataManager]") {
 
     des.removeEvent(5.0f);
     REQUIRE(des.size() == 0);
+}
+
+TEST_CASE("DigitalEventSeries - Range-based access (C++20)", "[DataManager]") {
+    std::vector<float> events = {1.0f, 2.0f, 3.5f, 5.0f, 7.5f, 10.0f};
+    DigitalEventSeries des(events);
+
+    SECTION("getEventsInRange returns correct view") {
+        // Get events between 2.0 and 7.5 inclusive
+        auto range = des.getEventsInRange(2.0f, 7.5f);
+
+        // Count elements in the range
+        size_t count = 0;
+        std::vector<float> collected;
+        for (float event : range) {
+            collected.push_back(event);
+            count++;
+        }
+
+        REQUIRE(count == 4);
+        REQUIRE(collected[0] == 2.0f);
+        REQUIRE(collected[1] == 3.5f);
+        REQUIRE(collected[2] == 5.0f);
+        REQUIRE(collected[3] == 7.5f);
+    }
+
+    SECTION("getEventsAsVector returns correct vector") {
+        // Get events between 3.0 and 9.0 inclusive
+        auto vector_range = des.getEventsAsVector(3.0f, 9.0f);
+
+        REQUIRE(vector_range.size() == 3);
+        REQUIRE(vector_range[0] == 3.5f);
+        REQUIRE(vector_range[1] == 5.0f);
+        REQUIRE(vector_range[2] == 7.5f);
+    }
+}
+
+TEST_CASE("DigitalEventSeries - Range edge cases", "[DataManager]") {
+    std::vector<float> events = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+    DigitalEventSeries des(events);
+
+    SECTION("Exact boundary matches") {
+        auto vector_range = des.getEventsAsVector(2.0f, 4.0f);
+        REQUIRE(vector_range.size() == 3);
+        REQUIRE(vector_range[0] == 2.0f);
+        REQUIRE(vector_range[1] == 3.0f);
+        REQUIRE(vector_range[2] == 4.0f);
+    }
+
+    SECTION("Range includes all events") {
+        auto vector_range = des.getEventsAsVector(0.0f, 10.0f);
+        REQUIRE(vector_range.size() == 5);
+    }
+
+    SECTION("Range outside all events (before)") {
+        auto range = des.getEventsInRange(-5.0f, 0.5f);
+        bool is_empty = std::ranges::empty(range);
+        REQUIRE(is_empty);
+
+        auto vector_range = des.getEventsAsVector(-5.0f, 0.5f);
+        REQUIRE(vector_range.empty());
+    }
+
+    SECTION("Range outside all events (after)") {
+        auto vector_range = des.getEventsAsVector(6.0f, 10.0f);
+        REQUIRE(vector_range.empty());
+    }
+
+    SECTION("Single point range") {
+        auto vector_range = des.getEventsAsVector(3.0f, 3.0f);
+        REQUIRE(vector_range.size() == 1);
+        REQUIRE(vector_range[0] == 3.0f);
+    }
+
+    SECTION("Empty range (start > stop)") {
+        auto vector_range = des.getEventsAsVector(4.0f, 2.0f);
+        REQUIRE(vector_range.empty());
+    }
+}
+
+TEST_CASE("DigitalEventSeries - Range with empty series", "[DataManager]") {
+    DigitalEventSeries des;
+
+    auto range = des.getEventsInRange(1.0f, 10.0f);
+    bool is_empty = std::ranges::empty(range);
+    REQUIRE(is_empty);
+
+    auto vector_range = des.getEventsAsVector(1.0f, 10.0f);
+    REQUIRE(vector_range.empty());
+}
+
+TEST_CASE("DigitalEventSeries - Range with duplicate events", "[DataManager]") {
+    std::vector<float> events = {1.0f, 2.0f, 2.0f, 3.0f, 3.0f, 3.0f};
+    DigitalEventSeries des(events);
+
+    auto vector_range = des.getEventsAsVector(2.0f, 3.0f);
+    REQUIRE(vector_range.size() == 5);
+    REQUIRE(vector_range[0] == 2.0f);
+    REQUIRE(vector_range[1] == 2.0f);
+    REQUIRE(vector_range[2] == 3.0f);
+    REQUIRE(vector_range[3] == 3.0f);
+    REQUIRE(vector_range[4] == 3.0f);
+}
+
+TEST_CASE("DigitalEventSeries - Range interaction with add/remove", "[DataManager]") {
+    DigitalEventSeries des;
+
+    // Add events
+    des.addEvent(1.0f);
+    des.addEvent(3.0f);
+    des.addEvent(5.0f);
+
+    // Initial check
+    auto vector_range = des.getEventsAsVector(2.0f, 6.0f);
+    REQUIRE(vector_range.size() == 2);
+    REQUIRE(vector_range[0] == 3.0f);
+    REQUIRE(vector_range[1] == 5.0f);
+
+    // Add another event in range
+    des.addEvent(4.0f);
+    vector_range = des.getEventsAsVector(2.0f, 6.0f);
+    REQUIRE(vector_range.size() == 3);
+    REQUIRE(vector_range[0] == 3.0f);
+    REQUIRE(vector_range[1] == 4.0f);
+    REQUIRE(vector_range[2] == 5.0f);
+
+    // Remove an event
+    des.removeEvent(3.0f);
+    vector_range = des.getEventsAsVector(2.0f, 6.0f);
+    REQUIRE(vector_range.size() == 2);
+    REQUIRE(vector_range[0] == 4.0f);
+    REQUIRE(vector_range[1] == 5.0f);
 }

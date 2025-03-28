@@ -4,6 +4,7 @@
 #include "Observer/Observer_Data.hpp"
 
 #include <algorithm>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -38,6 +39,19 @@ public:
     void clear() {
         _data.clear();
         notifyObservers();
+    }
+
+    // Range-based access to events within a time range (C++20)
+    auto getEventsInRange(float start_time, float stop_time) const {
+        return _data | std::views::filter([start_time, stop_time](float time) {
+                   return time >= start_time && time <= stop_time;
+               });
+    }
+
+    // Get vector of events in range (for backward compatibility)
+    std::vector<float> getEventsAsVector(float start_time, float stop_time) const {
+        auto range = getEventsInRange(start_time, stop_time);
+        return {std::ranges::begin(range), std::ranges::end(range)};
     }
 
 private:
