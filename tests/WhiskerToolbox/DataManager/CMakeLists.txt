@@ -16,6 +16,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_data_manager
         test_data_manager.cpp
         AnalogTimeSeries/test_analog_time_series.cpp
+        DigitalTimeSeries/test_digital_event_series.cpp
         DigitalTimeSeries/test_digital_interval_series.cpp
 )
 
@@ -64,6 +65,7 @@ set(DATA_FILES_TO_COPY
         "Media/test_each_frame_number.mp4"
         "Points/test_point.csv"
         "Analog/single_column.csv"
+        "DigitalEvents/events.csv"
 )
 
 copy_files(test_data_manager
