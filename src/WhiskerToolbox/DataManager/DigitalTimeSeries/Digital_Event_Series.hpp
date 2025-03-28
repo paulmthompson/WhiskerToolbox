@@ -3,6 +3,7 @@
 
 #include "Observer/Observer_Data.hpp"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -21,11 +22,26 @@ public:
     DigitalEventSeries() = default;
     DigitalEventSeries(std::vector<float> event_vector);
 
-    void setData(std::vector<float> event_vector) { _data = event_vector; }
+    void setData(std::vector<float> event_vector);
     std::vector<float> const & getEventSeries() const;
+
+    // Add a single event to the series
+    void addEvent(float const event_time);
+
+    // Remove an event at a specific time (exact match)
+    bool removeEvent(float const event_time);
+
+    // Get the number of events in the series
+    size_t size() const { return _data.size(); }
+
+    // Clear all events
+    void clear() { _data.clear(); notifyObservers(); }
 
 private:
     std::vector<float> _data{};
+
+    // Sort the events in ascending order
+    void _sortEvents();
 };
 
 namespace DigitalEventSeriesLoader {
