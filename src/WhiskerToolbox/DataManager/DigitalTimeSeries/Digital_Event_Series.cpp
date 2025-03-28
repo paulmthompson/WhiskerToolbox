@@ -17,13 +17,13 @@ std::vector<float> const & DigitalEventSeries::getEventSeries() const {
     return _data;
 }
 
-void DigitalEventSeries::addEvent(float event_time) {
+void DigitalEventSeries::addEvent(float const event_time) {
     _data.push_back(event_time);
     _sortEvents();
     notifyObservers();
 }
 
-bool DigitalEventSeries::removeEvent(float event_time) {
+bool DigitalEventSeries::removeEvent(float const event_time) {
     auto it = std::find(_data.begin(), _data.end(), event_time);
     if (it != _data.end()) {
         _data.erase(it);

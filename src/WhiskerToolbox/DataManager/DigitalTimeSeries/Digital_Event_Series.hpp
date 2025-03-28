@@ -21,16 +21,16 @@
 class DigitalEventSeries : public ObserverData {
 public:
     DigitalEventSeries() = default;
-    DigitalEventSeries(std::vector<float> event_vector);
+    explicit DigitalEventSeries(std::vector<float> event_vector);
 
     void setData(std::vector<float> event_vector);
     std::vector<float> const & getEventSeries() const;
 
     // Add a single event to the series
-    void addEvent(float const event_time);
+    void addEvent(float event_time);
 
     // Remove an event at a specific time (exact match)
-    bool removeEvent(float const event_time);
+    bool removeEvent(float event_time);
 
     // Get the number of events in the series
     size_t size() const { return _data.size(); }
