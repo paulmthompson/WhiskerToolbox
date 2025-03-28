@@ -35,7 +35,10 @@ public:
     size_t size() const { return _data.size(); }
 
     // Clear all events
-    void clear() { _data.clear(); notifyObservers(); }
+    void clear() {
+        _data.clear();
+        notifyObservers();
+    }
 
 private:
     std::vector<float> _data{};

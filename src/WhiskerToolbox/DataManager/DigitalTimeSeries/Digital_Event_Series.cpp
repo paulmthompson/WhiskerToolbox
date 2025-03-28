@@ -9,7 +9,7 @@ DigitalEventSeries::DigitalEventSeries(std::vector<float> event_vector) {
 
 void DigitalEventSeries::setData(std::vector<float> event_vector) {
     _data = std::move(event_vector);
-    sortEvents();
+    _sortEvents();
     notifyObservers();
 }
 

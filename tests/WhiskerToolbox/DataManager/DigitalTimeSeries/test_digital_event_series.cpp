@@ -108,7 +108,7 @@ TEST_CASE("Digital Event Series - Load From CSV", "[DataManager]") {
 
             // Verify data is sorted
             for (size_t i = 1; i < data.size(); ++i) {
-                REQUIRE(data[i-1] <= data[i]);
+                REQUIRE(data[i - 1] <= data[i]);
             }
         }
     }
