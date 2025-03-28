@@ -24,17 +24,17 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
 
     SECTION("CONTAINED mode") {
         // Test contained mode with various ranges
-        auto intervals = dis.getIntervalsAsVector(5, 30, DigitalIntervalSeries::RangeMode::CONTAINED);
+        auto intervals = dis.getIntervalsAsVector<DigitalIntervalSeries::RangeMode::CONTAINED>(5, 30);
         REQUIRE(intervals.size() == 1);
         REQUIRE(intervals[0].start == 15);
         REQUIRE(intervals[0].end == 25);
 
         // Range that doesn't fully contain any interval
-        intervals = dis.getIntervalsAsVector(11, 14, DigitalIntervalSeries::RangeMode::CONTAINED);
+        intervals = dis.getIntervalsAsVector<DigitalIntervalSeries::RangeMode::CONTAINED>(11, 14);
         REQUIRE(intervals.empty());
 
         // Range that exactly matches an interval
-        intervals = dis.getIntervalsAsVector(15, 25, DigitalIntervalSeries::RangeMode::CONTAINED);
+        intervals = dis.getIntervalsAsVector<DigitalIntervalSeries::RangeMode::CONTAINED>(15, 25);
         REQUIRE(intervals.size() == 1);
         REQUIRE(intervals[0].start == 15);
         REQUIRE(intervals[0].end == 25);
@@ -42,7 +42,7 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
 
     SECTION("OVERLAPPING mode") {
         // Test overlapping mode with various ranges
-        auto intervals = dis.getIntervalsAsVector(5, 20, DigitalIntervalSeries::RangeMode::OVERLAPPING);
+        auto intervals = dis.getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(5, 20);
         REQUIRE(intervals.size() == 2);
         REQUIRE(intervals[0].start == 0);
         REQUIRE(intervals[0].end == 10);
@@ -50,11 +50,11 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
         REQUIRE(intervals[1].end == 25);
 
         // Range between intervals
-        intervals = dis.getIntervalsAsVector(11, 14, DigitalIntervalSeries::RangeMode::OVERLAPPING);
+        intervals = dis.getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(11, 14);
         REQUIRE(intervals.empty());
 
         // Range that overlaps with the end of an interval
-        intervals = dis.getIntervalsAsVector(8, 12, DigitalIntervalSeries::RangeMode::OVERLAPPING);
+        intervals = dis.getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(8, 12);
         REQUIRE(intervals.size() == 1);
         REQUIRE(intervals[0].start == 0);
         REQUIRE(intervals[0].end == 10);
@@ -62,7 +62,7 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
 
     SECTION("CLIP mode") {
         // Test clip mode with various ranges
-        auto intervals = dis.getIntervalsAsVector(5, 20, DigitalIntervalSeries::RangeMode::CLIP);
+        auto intervals = dis.getIntervalsAsVector<DigitalIntervalSeries::RangeMode::CLIP>(5, 20);
         REQUIRE(intervals.size() == 2);
         REQUIRE(intervals[0].start == 5);// Clipped from 0
         REQUIRE(intervals[0].end == 10);
@@ -70,7 +70,7 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
         REQUIRE(intervals[1].end == 20);// Clipped from 25
 
         // Range that spans multiple intervals
-        intervals = dis.getIntervalsAsVector(5, 35, DigitalIntervalSeries::RangeMode::CLIP);
+        intervals = dis.getIntervalsAsVector<DigitalIntervalSeries::RangeMode::CLIP>(5, 35);
         REQUIRE(intervals.size() == 3);
         REQUIRE(intervals[0].start == 5);// Clipped
         REQUIRE(intervals[0].end == 10);
@@ -82,7 +82,7 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
 
     SECTION("View-based iteration") {
         // Test using the range view directly
-        auto range = dis.getIntervalsInRange(5, 35, DigitalIntervalSeries::RangeMode::OVERLAPPING);
+        auto range = dis.getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(5, 35);
 
         std::vector<Interval> collected;
         for (auto const & interval: range) {

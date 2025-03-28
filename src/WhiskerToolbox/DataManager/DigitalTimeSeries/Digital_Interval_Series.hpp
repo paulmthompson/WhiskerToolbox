@@ -97,37 +97,36 @@ public:
 
     size_t size() const { return _data.size(); };
 
-    // Range-based access to intervals within a time range (C++20)
-    auto getIntervalsInRange(int64_t start_time, int64_t stop_time,
-                             RangeMode mode = RangeMode::OVERLAPPING) const {
-        switch (mode) {
-            case RangeMode::CONTAINED:
-                return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
-                           return interval.start >= start_time && interval.end <= stop_time;
-                       });
-            case RangeMode::OVERLAPPING:
-                return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
-                           return interval.start <= stop_time && interval.end >= start_time;
-                       });
-            case RangeMode::CLIP:
-                // For CLIP mode, we return a vector since we need to modify intervals
-                return _getIntervalsAsVectorClipped(start_time, stop_time);
-            default:
-                // Default to OVERLAPPING
-                return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
-                           return interval.start <= stop_time && interval.end >= start_time;
-                       });
+    template<RangeMode mode = RangeMode::CONTAINED>
+    auto getIntervalsInRange(int64_t start_time, int64_t stop_time) const {
+
+        if constexpr (mode == RangeMode::CONTAINED) {
+            return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
+                       return interval.start >= start_time && interval.end <= stop_time;
+                   });
+        } else if constexpr (mode == RangeMode::OVERLAPPING) {
+            return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
+                       return interval.start <= stop_time && interval.end >= start_time;
+                   });
+        } else if constexpr (mode == RangeMode::CLIP) {
+            // For CLIP mode, we return a vector since we need to modify intervals
+            return _getIntervalsAsVectorClipped(start_time, stop_time);
+        } else {
+
+            static_assert(true, "Unhandled IntervalQueryMode");
+            // Return an empty view or handle error appropriately
+            return std::views::empty<Interval>;
         }
     }
 
     // Get vector of intervals in range (for backward compatibility)
-    std::vector<Interval> getIntervalsAsVector(int64_t start_time, int64_t stop_time,
-                                               RangeMode mode = RangeMode::OVERLAPPING) const {
-        if (mode == RangeMode::CLIP) {
+    template<RangeMode mode = RangeMode::CONTAINED>
+    std::vector<Interval> getIntervalsAsVector(int64_t start_time, int64_t stop_time) const {
+        if constexpr (mode == RangeMode::CLIP) {
             return _getIntervalsAsVectorClipped(start_time, stop_time);
         }
 
-        auto range = getIntervalsInRange(start_time, stop_time, mode);
+        auto range = getIntervalsInRange<mode>(start_time, stop_time);
         return {std::ranges::begin(range), std::ranges::end(range)};
     }
 
