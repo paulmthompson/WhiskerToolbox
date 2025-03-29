@@ -41,9 +41,10 @@ public:
     };
 
     void setData(std::vector<std::pair<float, float>> const & digital_vector) {
-        auto intervals = std::vector<Interval>(digital_vector.size());
+        std::vector<Interval> intervals;
+        intervals.reserve(digital_vector.size());
         for (auto & interval: digital_vector) {
-            intervals = Interval{static_cast<int64_t>(interval.first), static_cast<int64_t>(interval.second)};
+            intervals.emplace_back(Interval{static_cast<int64_t>(interval.first), static_cast<int64_t>(interval.second)});
         }
         setData(intervals);
     }
@@ -134,7 +135,7 @@ private:
     std::vector<Interval> _data{};
 
     void _addEvent(Interval new_interval);
-    void _setEventAtTime(int time, bool const event);
+    void _setEventAtTime(int time, bool event);
     void _removeEventAtTime(int time);
 
     void _sortData();
