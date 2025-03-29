@@ -127,14 +127,14 @@ TEST_CASE("DigitalIntervalSeries - Empty and edge cases", "[DataManager]") {
     }
 
     SECTION("Single-point range at start boundary") {
-        auto intervals = dis.getIntervalsAsVector(10, 10);
+        auto intervals = dis.getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(10, 10);
         REQUIRE(intervals.size() == 1);
         REQUIRE(intervals[0].start == 10);
         REQUIRE(intervals[0].end == 20);
     }
 
     SECTION("Single-point range at end boundary") {
-        auto intervals = dis.getIntervalsAsVector(20, 20);
+        auto intervals = dis.getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(20, 20);
         REQUIRE(intervals.size() == 1);
         REQUIRE(intervals[0].start == 10);
         REQUIRE(intervals[0].end == 20);

@@ -25,7 +25,7 @@
 class DigitalIntervalSeries : public ObserverData {
 public:
     DigitalIntervalSeries() = default;
-    DigitalIntervalSeries(std::vector<Interval> digital_vector);
+    explicit DigitalIntervalSeries(std::vector<Interval> digital_vector);
 
     // Defines how to handle intervals that overlap with range boundaries
     enum class RangeMode {
@@ -35,15 +35,15 @@ public:
     };
 
     void setData(std::vector<Interval> digital_vector) {
-        _data = digital_vector;
+        _data = std::move(digital_vector);
         _sortData();
         notifyObservers();
     };
 
-    void setData(std::vector<std::pair<float, float>> digital_vector) {
-        std::vector<Interval> intervals;
-        for (auto const & interval: digital_vector) {
-            intervals.push_back(Interval{static_cast<int64_t>(interval.first), static_cast<int64_t>(interval.second)});
+    void setData(std::vector<std::pair<float, float>> const & digital_vector) {
+        auto intervals = std::vector<Interval>(digital_vector.size());
+        for (auto & interval: digital_vector) {
+            intervals = Interval{static_cast<int64_t>(interval.first), static_cast<int64_t>(interval.second)};
         }
         setData(intervals);
     }
@@ -62,8 +62,8 @@ public:
     }
     std::vector<Interval> const & getDigitalIntervalSeries() const;
 
-    bool isEventAtTime(int const time) const;
-    void setEventAtTime(int time, bool const event);
+    bool isEventAtTime(int time) const;
+    void setEventAtTime(int time, bool event);
     void removeEventAtTime(int time);
 
     template<typename T, typename B>
@@ -135,7 +135,7 @@ private:
 
     void _addEvent(Interval new_interval);
     void _setEventAtTime(int time, bool const event);
-    void _removeEventAtTime(int const time);
+    void _removeEventAtTime(int time);
 
     void _sortData();
 
@@ -149,7 +149,7 @@ private:
                 continue;
 
             // Create a new clipped interval
-            Interval clipped{
+            Interval const clipped{
                     std::max(interval.start, start_time),
                     std::min(interval.end, stop_time)};
 
@@ -163,7 +163,7 @@ private:
 std::vector<Interval> load_digital_series_from_csv(std::string const & filename, char delimiter = ' ');
 
 void save_intervals(std::vector<Interval> const & intervals,
-                    std::string const block_output);
+                    std::string block_output);
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time);
 
