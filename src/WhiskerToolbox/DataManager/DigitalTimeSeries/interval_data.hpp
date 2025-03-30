@@ -29,4 +29,4 @@ inline bool is_contained(Interval const & a, int64_t const time) {
 }
 
 
-#endif //INTERVAL_DATA_HPP
+#endif//INTERVAL_DATA_HPP
