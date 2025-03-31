@@ -1,6 +1,7 @@
 #ifndef TIMEFRAME_HPP
 #define TIMEFRAME_HPP
 
+#include <cmath>
 #include <vector>
 
 class TimeFrame {
