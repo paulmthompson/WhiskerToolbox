@@ -5,10 +5,12 @@
 
 #include <algorithm>
 #include <cmath>// std::nan
+#include <concepts>
 #include <cstdint>
 #include <iostream>
 #include <map>
 #include <numeric>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -68,20 +70,54 @@ public:
     std::vector<float> & getAnalogTimeSeries() { return _data; };
     std::vector<size_t> & getTimeSeries() { return _time; };
 
-    float getMinValue() const {
+    [[nodiscard]] float getMinValue() const {
         return *std::min_element(_data.begin(), _data.end());
     }
 
-    float getMinValue(int64_t start, int64_t end) const {
+    [[nodiscard]] float getMinValue(int64_t start, int64_t end) const {
         return *std::min_element(_data.begin() + start, _data.begin() + end);
     }
 
-    float getMaxValue() const {
+    [[nodiscard]] float getMaxValue() const {
         return *std::max_element(_data.begin(), _data.end());
     }
 
-    float getMaxValue(int64_t start, int64_t end) const {
+    [[nodiscard]] float getMaxValue(int64_t start, int64_t end) const {
         return *std::max_element(_data.begin() + start, _data.begin() + end);
+    }
+
+    template<typename TransformFunc = std::identity>
+    auto getDataInRange(float start_time, float stop_time,
+                        TransformFunc && time_transform = {}) const {
+        struct DataPoint {
+            size_t time_idx;
+            float value;
+        };
+
+        return std::views::iota(size_t{0}, _data.size()) |
+               std::views::filter([this, start_time, stop_time, time_transform](size_t i) {
+                   auto transformed_time = time_transform(_time[i]);
+                   return transformed_time >= start_time && transformed_time <= stop_time;
+               }) |
+               std::views::transform([this](size_t i) {
+                   return DataPoint{_time[i], _data[i]};
+               });
+    }
+
+    template<typename TransformFunc = std::identity>
+    std::pair<std::vector<size_t>, std::vector<float>> getDataVectorsInRange(
+            float start_time, float stop_time,
+            TransformFunc && time_transform = {}) const {
+        std::vector<size_t> times;
+        std::vector<float> values;
+
+        auto range = getDataInRange(start_time, stop_time, time_transform);
+        for (auto const & point: range) {
+            times.push_back(point.time_idx);
+            values.push_back(point.value);
+        }
+
+        return {times, values};
     }
 
 protected:
