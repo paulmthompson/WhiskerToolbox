@@ -53,21 +53,21 @@ public:
             std::shared_ptr<AnalogTimeSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
-    void removeAnalogTimeSeries(std::string & key);
+    void removeAnalogTimeSeries(std::string const & key);
     void addDigitalEventSeries(
             std::string key,
             std::shared_ptr<DigitalEventSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
-    void removeDigitalEventSeries(std::string & key);
+    void removeDigitalEventSeries(std::string const & key);
     void addDigitalIntervalSeries(
             std::string key,
             std::shared_ptr<DigitalIntervalSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
-    void removeDigitalIntervalSeries(std::string & key);
+    void removeDigitalIntervalSeries(std::string const & key);
     void clearSeries();
-    void setBackgroundColor(std::string & hexColor);
+    void setBackgroundColor(std::string const & hexColor);
     void setXLimit(int xmax) { _xAxis.setMax(xmax); };
     void changeZoom(int64_t zoom) {
         int64_t const center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
@@ -101,8 +101,8 @@ private:
     void drawAxis();
     void drawGridLines();
     void drawDashedLine(float xStart, float xEnd, float yStart, float yEnd, int dashLength, int gapLength);
-    void _addSeries(std::string & key);
-    void _removeSeries(std::string & key);
+    void _addSeries(std::string const & key);
+    void _removeSeries(std::string const & key);
 
     std::map<std::string, AnalogSeriesData> _analog_series;
     std::map<std::string, DigitalEventSeriesData> _digital_event_series;
