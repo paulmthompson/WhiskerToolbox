@@ -27,6 +27,7 @@ struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
     std::string color;
     std::shared_ptr<TimeFrame> time_frame;
+    float scaleFactor = 1.0f;
 };
 
 struct DigitalEventSeriesData {

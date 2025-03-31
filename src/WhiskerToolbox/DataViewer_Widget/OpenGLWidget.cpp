@@ -169,14 +169,13 @@ void OpenGLWidget::drawDigitalEventSeries() {
         float const bNorm = static_cast<float>(b) / 255.0f;
         float const alpha = 1.0f;
 
-        // Get events in the visible range using the new C++20 range-based method
+        // Get events in the visible range using the time transform
         auto visible_events = series->getEventsInRange(
-                static_cast<float>(time_frame->getIndexAtTime(start_time)),
-                static_cast<float>(time_frame->getIndexAtTime(end_time)));
+                start_time, end_time,
+                [&time_frame](float idx) {
+                    return static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(idx)));
+                });
 
-        // There is lots of duplication here. Every vertex is the same
-        // color and alpha. Should be using a vertex that can be set with
-        // uniform variables (like projection matrix).
         for (auto const & event: visible_events) {
             auto const time = static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(event)));
             float const xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
@@ -214,9 +213,6 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
     for (auto const & [key, interval_data]: _digital_interval_series) {
         auto const & series = interval_data.series;
         auto const & time_frame = interval_data.time_frame;
-
-        auto const start_idx = time_frame->getIndexAtTime(start_time);
-        auto const end_idx = time_frame->getIndexAtTime(end_time);
 
         // Get only the intervals that overlap with the visible range
         auto visible_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
@@ -408,7 +404,8 @@ void OpenGLWidget::addAnalogTimeSeries(
     _analog_series[key] =
             AnalogSeriesData{std::move(series),
                              seriesColor,
-                             std::move(time_frame)};
+                             std::move(time_frame),
+                             1.0f};
     updateCanvas(_time);
 }
 

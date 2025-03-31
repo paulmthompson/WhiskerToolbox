@@ -4,6 +4,7 @@
 #include "Observer/Observer_Data.hpp"
 
 #include <algorithm>
+#include <concepts>
 #include <ranges>
 #include <string>
 #include <vector>
@@ -24,7 +25,7 @@ public:
     explicit DigitalEventSeries(std::vector<float> event_vector);
 
     void setData(std::vector<float> event_vector);
-    std::vector<float> const & getEventSeries() const;
+    [[nodiscard]] std::vector<float> const & getEventSeries() const;
 
     // Add a single event to the series
     void addEvent(float event_time);
@@ -33,7 +34,7 @@ public:
     bool removeEvent(float event_time);
 
     // Get the number of events in the series
-    size_t size() const { return _data.size(); }
+    [[nodiscard]] size_t size() const { return _data.size(); }
 
     // Clear all events
     void clear() {
@@ -41,16 +42,26 @@ public:
         notifyObservers();
     }
 
-    // Range-based access to events within a time range (C++20)
-    auto getEventsInRange(float start_time, float stop_time) const {
-        return _data | std::views::filter([start_time, stop_time](float time) {
-                   return time >= start_time && time <= stop_time;
+    // Add to DigitalEventSeries class in Digital_Event_Series.hpp
+    template<typename TransformFunc = std::identity>
+    auto getEventsInRange(float start_time, float stop_time,
+                          TransformFunc && time_transform = {}) const {
+        return _data | std::views::filter([start_time, stop_time, time_transform](float time) {
+                   auto transformed_time = time_transform(time);
+                   return transformed_time >= start_time && transformed_time <= stop_time;
                });
     }
 
-    // Get vector of events in range (for backward compatibility)
-    std::vector<float> getEventsAsVector(float start_time, float stop_time) const {
-        auto range = getEventsInRange(start_time, stop_time);
+    // Update the existing method to use the new one for consistency
+    [[nodiscard]] auto getEventsInRange(float start_time, float stop_time) const {
+        return getEventsInRange(start_time, stop_time, std::identity{});
+    }
+
+    // Update vector-returning helper method
+    template<typename TransformFunc = std::identity>
+    std::vector<float> getEventsAsVector(float start_time, float stop_time,
+                                         TransformFunc && time_transform = {}) const {
+        auto range = getEventsInRange(start_time, stop_time, time_transform);
         return {std::ranges::begin(range), std::ranges::end(range)};
     }
 
