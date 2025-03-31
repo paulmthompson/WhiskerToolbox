@@ -10,6 +10,7 @@
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
@@ -43,40 +44,40 @@ class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
 
 public:
-    OpenGLWidget(QWidget * parent = nullptr);
+    explicit OpenGLWidget(QWidget * parent = nullptr);
 
-    virtual ~OpenGLWidget();
+    ~OpenGLWidget() override;
 
     void addAnalogTimeSeries(
             std::string key,
             std::shared_ptr<AnalogTimeSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
-    void removeAnalogTimeSeries(std::string const & key);
+    void removeAnalogTimeSeries(std::string & key);
     void addDigitalEventSeries(
             std::string key,
             std::shared_ptr<DigitalEventSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
-    void removeDigitalEventSeries(std::string const & key);
+    void removeDigitalEventSeries(std::string & key);
     void addDigitalIntervalSeries(
             std::string key,
             std::shared_ptr<DigitalIntervalSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
             std::string color = "");
-    void removeDigitalIntervalSeries(std::string const & key);
+    void removeDigitalIntervalSeries(std::string & key);
     void clearSeries();
-    void setBackgroundColor(std::string const & hexColor);
+    void setBackgroundColor(std::string & hexColor);
     void setXLimit(int xmax) { _xAxis.setMax(xmax); };
-    void changeZoom(int zoom) {
-        int center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
+    void changeZoom(int64_t zoom) {
+        int64_t const center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
 
         zoom = (_xAxis.getEnd() - _xAxis.getStart()) - zoom;
         _xAxis.setCenterAndZoom(center, zoom);
         updateCanvas(_time);
     }
 
-    XAxis getXAxis() const { return _xAxis; }
+    [[nodiscard]] XAxis getXAxis() const { return _xAxis; }
 
 public slots:
     void updateCanvas(int time);
@@ -99,9 +100,9 @@ private:
     void drawAnalogSeries();
     void drawAxis();
     void drawGridLines();
-    void drawDashedLine(float const xStart, float const xEnd, float const yStart, float const yEnd, int const dashLength, int const gapLength);
-    void _addSeries(std::string const & key);
-    void _removeSeries(std::string const & key);
+    void drawDashedLine(float xStart, float xEnd, float yStart, float yEnd, int dashLength, int gapLength);
+    void _addSeries(std::string & key);
+    void _removeSeries(std::string & key);
 
     std::map<std::string, AnalogSeriesData> _analog_series;
     std::map<std::string, DigitalEventSeriesData> _digital_event_series;
@@ -111,7 +112,7 @@ private:
     XAxis _xAxis;
     int _time{0};
 
-    QOpenGLShaderProgram * m_program{0};
+    QOpenGLShaderProgram * m_program{nullptr};
     QOpenGLBuffer m_vbo;
     QOpenGLVertexArrayObject m_vao;
     QMatrix4x4 m_proj; // Initialized as identity
@@ -121,7 +122,7 @@ private:
     int m_viewMatrixLoc;
     int m_modelMatrixLoc;
 
-    QOpenGLShaderProgram * m_dashedProgram{0};
+    QOpenGLShaderProgram * m_dashedProgram{nullptr};
     int m_dashedProjMatrixLoc;
     int m_dashedViewMatrixLoc;
     int m_dashedModelMatrixLoc;
