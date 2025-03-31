@@ -3,12 +3,13 @@
 #include <algorithm>
 #include <cmath>// std::round
 #include <fstream>
+#include <ranges>
 #include <sstream>
 #include <utility>
 #include <vector>
 
 DigitalIntervalSeries::DigitalIntervalSeries(std::vector<Interval> digital_vector) {
-    _data = digital_vector;
+    _data = std::move(digital_vector);
     _sortData();
 }
 
@@ -17,11 +18,13 @@ std::vector<Interval> const & DigitalIntervalSeries::getDigitalIntervalSeries() 
 }
 
 bool DigitalIntervalSeries::isEventAtTime(int const time) const {
-    for (auto const event: _data) {
-        if (is_contained(event, time)) {
-            return true;
-        }
-    }
+
+    auto Contained = [time](auto const & event) {
+        return is_contained(event, time);
+    };
+
+    if (std::ranges::any_of(_data, Contained)) return true;
+
     return false;
 }
 
@@ -98,7 +101,7 @@ void DigitalIntervalSeries::_sortData() {
 }
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time) {
-    auto const events = digital_series->getDigitalIntervalSeries();
+    auto const & events = digital_series->getDigitalIntervalSeries();
 
     // Check if sorted
     for (int i = 1; i < events.size(); ++i) {
@@ -122,7 +125,7 @@ int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int tim
 
 void save_intervals(
         std::vector<Interval> const & intervals,
-        std::string const block_output) {
+        std::string const & block_output) {
     std::fstream fout;
     fout.open(block_output, std::fstream::out);
 

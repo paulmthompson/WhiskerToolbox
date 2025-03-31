@@ -65,9 +65,9 @@ public:
 
         addEvent(Interval{static_cast<int64_t>(start), static_cast<int64_t>(end)});
     }
-    std::vector<Interval> const & getDigitalIntervalSeries() const;
+    [[nodiscard]] std::vector<Interval> const & getDigitalIntervalSeries() const;
 
-    bool isEventAtTime(int time) const;
+    [[nodiscard]] bool isEventAtTime(int time) const;
     void setEventAtTime(int time, bool event);
     void removeEventAtTime(int time);
 
@@ -100,7 +100,7 @@ public:
         notifyObservers();
     }
 
-    size_t size() const { return _data.size(); };
+    [[nodiscard]] size_t size() const { return _data.size(); };
 
     template<RangeMode mode = RangeMode::CONTAINED, typename TransformFunc = std::identity>
     auto getIntervalsInRange(
@@ -131,7 +131,7 @@ public:
 
     // Get vector of intervals in range (for backward compatibility)
     template<RangeMode mode = RangeMode::CONTAINED>
-    std::vector<Interval> getIntervalsAsVector(int64_t start_time, int64_t stop_time) const {
+    [[nodiscard]] std::vector<Interval> getIntervalsAsVector(int64_t start_time, int64_t stop_time) const {
         if constexpr (mode == RangeMode::CLIP) {
             return _getIntervalsAsVectorClipped(start_time, stop_time);
         }
@@ -194,7 +194,7 @@ private:
 std::vector<Interval> load_digital_series_from_csv(std::string const & filename, char delimiter = ' ');
 
 void save_intervals(std::vector<Interval> const & intervals,
-                    std::string block_output);
+                    std::string const & block_output);
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time);
 

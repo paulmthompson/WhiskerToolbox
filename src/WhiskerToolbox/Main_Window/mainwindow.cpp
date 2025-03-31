@@ -292,7 +292,6 @@ void MainWindow::_updateFrameCount()
 
     if (_data_manager->getTime()->getTotalFrameCount() != media->getTotalFrameCount())
     {
-
         auto frame_count = media->getTotalFrameCount() - 1;
 
         std::vector<int> t(frame_count) ;

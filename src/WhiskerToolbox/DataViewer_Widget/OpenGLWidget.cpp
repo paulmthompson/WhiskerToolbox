@@ -220,7 +220,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 
         // Get only the intervals that overlap with the visible range
         auto visible_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-                start_time, end_time,
+                static_cast<int64_t>(start_time),
+                static_cast<int64_t>(end_time),
                 [&time_frame](int64_t idx) {
                     return static_cast<float>(time_frame->getTimeAtIndex(idx));
                 });
