@@ -9,14 +9,14 @@ public:
     TimeFrame() = default;
     explicit TimeFrame(std::vector<int> times);
     void updateTotalFrameCount(int frame_count) { _total_frame_count = frame_count; };
-    int getTotalFrameCount() const { return _total_frame_count; };
+    [[nodiscard]] int getTotalFrameCount() const { return _total_frame_count; };
 
     void updateLastLoadedFrame(int frame) { _last_loaded_frame = frame; };
-    int getLastLoadedFrame() const { return _last_loaded_frame; };
+    [[nodiscard]] int getLastLoadedFrame() const { return _last_loaded_frame; };
 
-    int getTimeAtIndex(int index) { return _times[index]; };
+    [[nodiscard]] int getTimeAtIndex(int index) { return _times[index]; };
 
-    int getIndexAtTime(float time) const {
+    [[nodiscard]] int getIndexAtTime(float time) const {
         // Binary search to find the index closest to the given time
         auto it = std::lower_bound(_times.begin(), _times.end(), time);
 
@@ -44,7 +44,7 @@ public:
         }
     }
 
-    int checkFrameInbounds(int frame_id) const {
+    [[nodiscard]] int checkFrameInbounds(int frame_id) const {
 
         if (frame_id < 0) {
             frame_id = 0;
