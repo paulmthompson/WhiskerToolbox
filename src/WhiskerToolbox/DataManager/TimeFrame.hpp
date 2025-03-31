@@ -19,7 +19,7 @@ public:
     template<std::integral T>
     [[nodiscard]] int getTimeAtIndex(T index) const {
         if (index < 0 || static_cast<size_t>(index) >= _times.size()) {
-            std::cout << "Out of range" << std::endl;
+            std::cout << "Index " << index << " out of range" << " for time frame of size " << _times.size() << std::endl;
             return 0;
         }
         return _times[static_cast<size_t>(index)];
