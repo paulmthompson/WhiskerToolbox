@@ -6,16 +6,44 @@
 class TimeFrame {
 public:
     TimeFrame() = default;
-    TimeFrame(std::vector<int> times);
-    void updateTotalFrameCount(int frame_count) {_total_frame_count = frame_count;};
-    int getTotalFrameCount() const {return _total_frame_count;};
+    explicit TimeFrame(std::vector<int> times);
+    void updateTotalFrameCount(int frame_count) { _total_frame_count = frame_count; };
+    int getTotalFrameCount() const { return _total_frame_count; };
 
-    void updateLastLoadedFrame(int frame) {_last_loaded_frame = frame;};
-    int getLastLoadedFrame() const {return _last_loaded_frame;};
+    void updateLastLoadedFrame(int frame) { _last_loaded_frame = frame; };
+    int getLastLoadedFrame() const { return _last_loaded_frame; };
 
-    int getTimeAtIndex(int index) {return _times[index];};
+    int getTimeAtIndex(int index) { return _times[index]; };
 
-    int checkFrameInbounds(int frame_id) {
+    int getIndexAtTime(float time) const {
+        // Binary search to find the index closest to the given time
+        auto it = std::lower_bound(_times.begin(), _times.end(), time);
+
+        // If exact match found
+        if (it != _times.end() && static_cast<float>(*it) == time) {
+            return static_cast<int>(std::distance(_times.begin(), it));
+        }
+
+        // If time is beyond the last time point
+        if (it == _times.end()) {
+            return static_cast<int>(_times.size() - 1);
+        }
+
+        // If time is before the first time point
+        if (it == _times.begin()) {
+            return 0;
+        }
+
+        // Find the closest time point
+        auto prev = it - 1;
+        if (std::abs(static_cast<float>(*prev) - time) <= std::abs(static_cast<float>(*it) - time)) {
+            return static_cast<int>(std::distance(_times.begin(), prev));
+        } else {
+            return static_cast<int>(std::distance(_times.begin(), it));
+        }
+    }
+
+    int checkFrameInbounds(int frame_id) const {
 
         if (frame_id < 0) {
             frame_id = 0;
@@ -24,13 +52,13 @@ public:
         }
         return frame_id;
     }
-protected:
 
+protected:
 private:
     std::vector<int> _times;
-    int _last_loaded_frame;
-    int _total_frame_count;
+    int _last_loaded_frame{0};
+    int _total_frame_count{0};
 };
 
 
-#endif // TIMEFRAME_HPP
+#endif// TIMEFRAME_HPP
