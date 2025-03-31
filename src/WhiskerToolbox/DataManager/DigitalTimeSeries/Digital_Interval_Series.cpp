@@ -1,26 +1,23 @@
 #include "Digital_Interval_Series.hpp"
 
 #include <algorithm>
-#include <cmath> // std::round
+#include <cmath>// std::round
 #include <fstream>
 #include <sstream>
-#include <vector>
 #include <utility>
+#include <vector>
 
-DigitalIntervalSeries::DigitalIntervalSeries(std::vector<Interval> digital_vector)
-{
+DigitalIntervalSeries::DigitalIntervalSeries(std::vector<Interval> digital_vector) {
     _data = digital_vector;
     _sortData();
 }
 
-std::vector<Interval> const & DigitalIntervalSeries::getDigitalIntervalSeries() const
-{
+std::vector<Interval> const & DigitalIntervalSeries::getDigitalIntervalSeries() const {
     return _data;
 }
 
-bool DigitalIntervalSeries::isEventAtTime(int const time) const
-{
-    for (auto const event : _data) {
+bool DigitalIntervalSeries::isEventAtTime(int const time) const {
+    for (auto const event: _data) {
         if (is_contained(event, time)) {
             return true;
         }
@@ -28,18 +25,16 @@ bool DigitalIntervalSeries::isEventAtTime(int const time) const
     return false;
 }
 
-void DigitalIntervalSeries::addEvent(Interval new_interval)
-{
+void DigitalIntervalSeries::addEvent(Interval new_interval) {
     _addEvent(new_interval);
 
     notifyObservers();
 }
 
-void DigitalIntervalSeries::_addEvent(Interval new_interval)
-{
+void DigitalIntervalSeries::_addEvent(Interval new_interval) {
     bool merged = false;
 
-    for (auto it = _data.begin(); it != _data.end(); ) {
+    for (auto it = _data.begin(); it != _data.end();) {
         if (is_overlapping(*it, new_interval) || is_contiguous(*it, new_interval)) {
             new_interval.start = std::min(new_interval.start, it->start);
             new_interval.end = std::max(new_interval.end, it->end);
@@ -55,33 +50,27 @@ void DigitalIntervalSeries::_addEvent(Interval new_interval)
     _data.push_back(new_interval);
 
     _sortData();
-
 }
 
-void DigitalIntervalSeries::setEventAtTime(int time, bool const event)
-{
+void DigitalIntervalSeries::setEventAtTime(int time, bool const event) {
     _setEventAtTime(time, event);
     notifyObservers();
 }
 
-void DigitalIntervalSeries::_setEventAtTime(int time, bool const event)
-{
-    if (!event)
-    {
+void DigitalIntervalSeries::_setEventAtTime(int time, bool const event) {
+    if (!event) {
         _removeEventAtTime(time);
     } else {
         _addEvent(Interval{static_cast<int64_t>(time), static_cast<int64_t>(time)});
     }
 }
 
-void DigitalIntervalSeries::removeEventAtTime(int const time)
-{
+void DigitalIntervalSeries::removeEventAtTime(int const time) {
     _removeEventAtTime(time);
     notifyObservers();
 }
 
-void DigitalIntervalSeries::_removeEventAtTime(int const time)
-{
+void DigitalIntervalSeries::_removeEventAtTime(int const time) {
     for (auto it = _data.begin(); it != _data.end(); ++it) {
         if (is_contained(*it, time)) {
             if (time == it->start && time == it->end) {
@@ -104,18 +93,16 @@ void DigitalIntervalSeries::_removeEventAtTime(int const time)
     }
 }
 
-void DigitalIntervalSeries::_sortData()
-{
+void DigitalIntervalSeries::_sortData() {
     std::sort(_data.begin(), _data.end());
 }
 
-int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time)
-{
+int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time) {
     auto const events = digital_series->getDigitalIntervalSeries();
 
     // Check if sorted
     for (int i = 1; i < events.size(); ++i) {
-        if (events[i].start < events[i-1].start) {
+        if (events[i].start < events[i - 1].start) {
             throw std::runtime_error("DigitalIntervalSeries is not sorted");
         }
     }
@@ -134,14 +121,12 @@ int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int tim
 }
 
 void save_intervals(
-    std::vector<Interval> const & intervals,
-    std::string const block_output
-    )
-{
+        std::vector<Interval> const & intervals,
+        std::string const block_output) {
     std::fstream fout;
     fout.open(block_output, std::fstream::out);
 
-    for (auto & interval : intervals) {
+    for (auto & interval: intervals) {
         fout << std::round(interval.start) << "," << std::round(interval.end) << "\n";
     }
 
@@ -149,13 +134,12 @@ void save_intervals(
 }
 
 std::vector<Interval> load_digital_series_from_csv(
-        std::string const& filename,
-        char delimiter)
-{
+        std::string const & filename,
+        char delimiter) {
     std::string csv_line;
 
     std::fstream myfile;
-    myfile.open (filename, std::fstream::in);
+    myfile.open(filename, std::fstream::in);
 
     int64_t start, end;
     auto output = std::vector<Interval>();

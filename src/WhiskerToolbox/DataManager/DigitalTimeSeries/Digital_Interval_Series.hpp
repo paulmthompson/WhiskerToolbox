@@ -12,6 +12,10 @@
 #include <utility>
 #include <vector>
 
+template<typename T>
+inline constexpr bool always_false_v = false;
+
+
 /**
  * @brief Digital IntervalSeries class
  *
@@ -98,24 +102,29 @@ public:
 
     size_t size() const { return _data.size(); };
 
-    template<RangeMode mode = RangeMode::CONTAINED>
-    auto getIntervalsInRange(int64_t start_time, int64_t stop_time) const {
+    template<RangeMode mode = RangeMode::CONTAINED, typename TransformFunc = std::identity>
+    auto getIntervalsInRange(
+            int64_t start_time,
+            int64_t stop_time,
+            TransformFunc && time_transform = {}) const {
 
         if constexpr (mode == RangeMode::CONTAINED) {
-            return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
-                       return interval.start >= start_time && interval.end <= stop_time;
+            return _data | std::views::filter([start_time, stop_time, time_transform](Interval const & interval) {
+                       auto transformed_start = time_transform(interval.start);
+                       auto transformed_end = time_transform(interval.end);
+                       return transformed_start >= start_time && transformed_end <= stop_time;
                    });
         } else if constexpr (mode == RangeMode::OVERLAPPING) {
-            return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
-                       return interval.start <= stop_time && interval.end >= start_time;
+            return _data | std::views::filter([start_time, stop_time, time_transform](Interval const & interval) {
+                       auto transformed_start = time_transform(interval.start);
+                       auto transformed_end = time_transform(interval.end);
+                       return transformed_start <= stop_time && transformed_end >= start_time;
                    });
         } else if constexpr (mode == RangeMode::CLIP) {
             // For CLIP mode, we return a vector since we need to modify intervals
-            return _getIntervalsAsVectorClipped(start_time, stop_time);
+            return _getIntervalsAsVectorClipped(start_time, stop_time, time_transform);
         } else {
-
-            static_assert(true, "Unhandled IntervalQueryMode");
-            // Return an empty view or handle error appropriately
+            static_assert(always_false_v<TransformFunc>, "Unhandled IntervalQueryMode");
             return std::views::empty<Interval>;
         }
     }
@@ -141,20 +150,41 @@ private:
     void _sortData();
 
     // Helper method to handle clipping intervals at range boundaries
-    std::vector<Interval> _getIntervalsAsVectorClipped(int64_t start_time, int64_t stop_time) const {
+    template<typename TransformFunc = std::identity>
+    std::vector<Interval> _getIntervalsAsVectorClipped(
+            int64_t start_time,
+            int64_t stop_time,
+            TransformFunc && time_transform = {}) const {
+
         std::vector<Interval> result;
 
         for (auto const & interval: _data) {
+
+            auto transformed_start = time_transform(interval.start);
+            auto transformed_end = time_transform(interval.end);
+
             // Skip if not overlapping
-            if (interval.end < start_time || interval.start > stop_time)
+            if (transformed_end < start_time || transformed_start > stop_time)
                 continue;
 
-            // Create a new clipped interval
-            Interval const clipped{
-                    std::max(interval.start, start_time),
-                    std::min(interval.end, stop_time)};
+            // Create a new clipped interval based on original interval values
+            // but clipped at the transformed boundaries
+            int64_t clipped_start = interval.start;
+            if (transformed_start < start_time) {
+                // Binary search or interpolation to find the original value
+                // that transforms to start_time would be ideal here
+                // For now, use a simple approach:
+                while (time_transform(clipped_start) < start_time && clipped_start < interval.end)
+                    clipped_start++;
+            }
 
-            result.push_back(clipped);
+            int64_t clipped_end = interval.end;
+            if (transformed_end > stop_time) {
+                while (time_transform(clipped_end) > stop_time && clipped_end > interval.start)
+                    clipped_end--;
+            }
+
+            result.push_back(Interval{clipped_start, clipped_end});
         }
 
         return result;

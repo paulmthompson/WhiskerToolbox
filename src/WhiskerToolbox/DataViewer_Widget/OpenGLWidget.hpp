@@ -11,6 +11,7 @@
 #include <QOpenGLWidget>
 
 #include <cstdint>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <string>
@@ -77,7 +78,11 @@ public:
     void removeDigitalIntervalSeries(std::string const & key);
     void clearSeries();
     void setBackgroundColor(std::string const & hexColor);
-    void setXLimit(int xmax) { _xAxis.setMax(xmax); };
+
+    void setXLimit(int xmax) {
+        _xAxis.setMax(xmax);
+    };
+
     void changeZoom(int64_t zoom) {
         int64_t const center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
 

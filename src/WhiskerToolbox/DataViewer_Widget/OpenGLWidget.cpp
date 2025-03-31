@@ -17,6 +17,7 @@
 
 #include <cstdlib>
 #include <ctime>
+#include <ranges>
 
 // This was a helpful resource for making a dashed line:
 //https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
@@ -212,22 +213,30 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 
     for (auto const & [key, interval_data]: _digital_interval_series) {
         auto const & series = interval_data.series;
-        auto const & intervals = series->getDigitalIntervalSeries();
         auto const & time_frame = interval_data.time_frame;
+
+        auto const start_idx = time_frame->getIndexAtTime(start_time);
+        auto const end_idx = time_frame->getIndexAtTime(end_time);
+
+        // Get only the intervals that overlap with the visible range
+        auto visible_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
+                start_time, end_time,
+                [&time_frame](int64_t idx) {
+                    return static_cast<float>(time_frame->getTimeAtIndex(idx));
+                });
+
         hexToRGB(interval_data.color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
         float const gNorm = static_cast<float>(g) / 255.0f;
         float const bNorm = static_cast<float>(b) / 255.0f;
         float const alpha = 0.5f;// Set alpha for shading
 
-        for (auto const & interval: intervals) {
+        for (auto const & interval: visible_intervals) {
 
             auto start = static_cast<float>(time_frame->getTimeAtIndex(interval.start));
             auto end = static_cast<float>(time_frame->getTimeAtIndex(interval.end));
-            if (end < start_time || start > end_time) {
-                continue;
-            }
 
+            //Clip the interval to the visible range
             start = std::max(start, start_time);
             end = std::min(end, end_time);
 
