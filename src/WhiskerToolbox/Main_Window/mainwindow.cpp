@@ -6,11 +6,11 @@
 #include "analog_viewer.hpp"
 
 #include "DataManager.hpp"
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Media/HDF5_Data.hpp"
 #include "DataManager/Media/Image_Data.hpp"
 #include "DataManager/Media/Video_Data.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 #include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
@@ -19,14 +19,14 @@
 #include "Export_Widgets/Export_Video_Widget/Export_Video_Widget.hpp"
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
+#include "Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp"
 #include "Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp"
 #include "Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp"
 #include "Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp"
-#include "Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp"
 #include "Loading_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.hpp"
+#include "ML_Widget/ML_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "Media_Window.hpp"
-#include "ML_Widget/ML_Widget.hpp"
 #include "TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Tracking_Widget/Tracking_Widget.hpp"
@@ -38,17 +38,17 @@
 #include <QImage>
 #include <QKeyEvent>
 
-#include <QTimer>
 #include <QElapsedTimer>
+#include <QTimer>
 
 #include <filesystem>
 #include <iostream>
 #include <variant>
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget * parent)
     : QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    _data_manager{std::make_shared<DataManager>()}
+      ui(new Ui::MainWindow),
+      _data_manager{std::make_shared<DataManager>()}
 
 {
     ui->setupUi(this);
@@ -69,37 +69,33 @@ MainWindow::MainWindow(QWidget *parent)
     ui->media_widget->updateMedia();
     ui->media_widget->setDataManager(_data_manager);
 
-    _createActions(); // Creates callback functions
+    _createActions();// Creates callback functions
 
     QWidget::grabKeyboard();
 
     _buildInitialLayout();
-
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     delete ui;
 }
 
-void MainWindow::_buildInitialLayout()
-{
+void MainWindow::_buildInitialLayout() {
     auto media_dock_widget = new ads::CDockWidget(QString::fromStdString("media"));
     media_dock_widget->setWidget(ui->media_widget);
     auto dockArea = _m_DockManager->addDockWidget(ads::TopDockWidgetArea, media_dock_widget);
 
     registerDockWidget("scrollbar", ui->time_scrollbar, ads::BottomDockWidgetArea);
 
-    ads::CDockSplitter* splitter = ads::internal::findParent<ads::CDockSplitter*>(dockArea);
-    int height = splitter->height();
-    splitter->setSizes({height*85/100,height*15/100});
+    auto * splitter = ads::internal::findParent<ads::CDockSplitter *>(dockArea);
+    int const height = splitter->height();
+    splitter->setSizes({height * 85 / 100, height * 15 / 100});
 }
 
-void MainWindow::_createActions()
-{
+void MainWindow::_createActions() {
     connect(ui->actionLoad_Video, &QAction::triggered, this, &MainWindow::Load_Video);
 
-    connect(ui->actionLoad_Images, &QAction::triggered,this, &MainWindow::Load_Images);
+    connect(ui->actionLoad_Images, &QAction::triggered, this, &MainWindow::Load_Images);
 
     connect(ui->actionLoad_Analog_Time_Series_CSV, &QAction::triggered, this, &MainWindow::_loadAnalogTimeSeriesCSV);
     connect(ui->actionLoad_Digital_Time_Series_CSV, &QAction::triggered, this, &MainWindow::_loadDigitalTimeSeriesCSV);
@@ -131,13 +127,12 @@ If a video is selected, that video will be loaded and the first frame will be
 drawn on the video screen.
 
 */
-void MainWindow::Load_Video()
-{
-    auto vid_name =  QFileDialog::getOpenFileName(
-                this,
-                "Load Video File",
-                QDir::currentPath(),
-                "All files (*.*) ;; MP4 (*.mp4); HDF5 (*.h5); MAT (*.mat)");
+void MainWindow::Load_Video() {
+    auto vid_name = QFileDialog::getOpenFileName(
+            this,
+            "Load Video File",
+            QDir::currentPath(),
+            "All files (*.*) ;; MP4 (*.mp4); HDF5 (*.h5); MAT (*.mat)");
 
     if (vid_name.isNull()) {
         return;
@@ -167,10 +162,10 @@ void MainWindow::Load_Video()
 }
 
 void MainWindow::Load_Images() {
-    auto dir_name =  QFileDialog::getExistingDirectory(
-        this,
-        "Load Video File",
-        QDir::currentPath());
+    auto dir_name = QFileDialog::getExistingDirectory(
+            this,
+            "Load Video File",
+            QDir::currentPath());
 
     if (dir_name.isNull()) {
         return;
@@ -181,16 +176,14 @@ void MainWindow::Load_Images() {
     _data_manager->setMedia(media);
 
     _LoadData();
-
 }
 
-void MainWindow::_loadAnalogTimeSeriesCSV()
-{
-    auto filename =  QFileDialog::getOpenFileName(
-        this,
-        "Load Video File",
-        QDir::currentPath(),
-        "All files (*.*) ;; CSV (*.csv)");
+void MainWindow::_loadAnalogTimeSeriesCSV() {
+    auto filename = QFileDialog::getOpenFileName(
+            this,
+            "Load Video File",
+            QDir::currentPath(),
+            "All files (*.*) ;; CSV (*.csv)");
 
     if (filename.isNull()) {
         return;
@@ -205,20 +198,19 @@ void MainWindow::_loadAnalogTimeSeriesCSV()
 
     _data_manager->getData<AnalogTimeSeries>(key)->setData(series);
 
-    std::cout << "Loaded series " << key << " with " <<
-        _data_manager->getData<AnalogTimeSeries>(key)->getAnalogTimeSeries().size() << " points " << std::endl;
+    std::cout << "Loaded series " << key << " with " << _data_manager->getData<AnalogTimeSeries>(key)->getAnalogTimeSeries().size() << " points " << std::endl;
 
     if (_widgets.find("analog_viewer") != _widgets.end()) {
-        dynamic_cast<Analog_Viewer*>(_widgets["analog_viewer"].get())->plotAnalog(key);
+        dynamic_cast<Analog_Viewer *>(_widgets["analog_viewer"].get())->plotAnalog(key);
     }
 }
 
-void MainWindow::_loadDigitalTimeSeriesCSV(){
-    auto filename =  QFileDialog::getOpenFileName(
-        this,
-        "Load Video File",
-        QDir::currentPath(),
-        "All files (*.*) ;; CSV (*.csv)");
+void MainWindow::_loadDigitalTimeSeriesCSV() {
+    auto filename = QFileDialog::getOpenFileName(
+            this,
+            "Load Video File",
+            QDir::currentPath(),
+            "All files (*.*) ;; CSV (*.csv)");
 
     if (filename.isNull()) {
         return;
@@ -233,22 +225,19 @@ void MainWindow::_loadDigitalTimeSeriesCSV(){
 
     _data_manager->getData<DigitalIntervalSeries>(key)->setData(series);
 
-    std::cout << "Loaded series " << key << " with " <<
-                                                     _data_manager->getData<DigitalIntervalSeries>(
-                                                             key)->getDigitalIntervalSeries().size() << " points " << std::endl;
+    std::cout << "Loaded series " << key << " with " << _data_manager->getData<DigitalIntervalSeries>(key)->getDigitalIntervalSeries().size() << " points " << std::endl;
 
     if (_widgets.find("analog_viewer") != _widgets.end()) {
-        dynamic_cast<Analog_Viewer*>(_widgets["analog_viewer"].get())->plotDigital(key);
+        dynamic_cast<Analog_Viewer *>(_widgets["analog_viewer"].get())->plotDigital(key);
     }
 }
 
-void MainWindow::_loadJSONConfig()
-{
-    auto filename =  QFileDialog::getOpenFileName(
-        this,
-        "Load JSON File",
-        QDir::currentPath(),
-        "All files (*.*) ;; JSON (*.json)");
+void MainWindow::_loadJSONConfig() {
+    auto filename = QFileDialog::getOpenFileName(
+            this,
+            "Load JSON File",
+            QDir::currentPath(),
+            "All files (*.*) ;; JSON (*.json)");
 
     if (filename.isNull()) {
         return;
@@ -256,23 +245,16 @@ void MainWindow::_loadJSONConfig()
 
     auto data_info = load_data_from_json_config(_data_manager, filename.toStdString());
 
-    for (auto data : data_info)
-    {
+    for (auto const & data: data_info) {
         if (data.data_class == "VideoData") {
             _LoadData();
-        } else if (data.data_class == "PointData")
-        {
+        } else if (
+                (data.data_class == "PointData") ||
+                (data.data_class == "MaskData") ||
+                (data.data_class == "LineData")) {
             ui->media_widget->setFeatureColor(data.key, data.color);
-
-        } else if (data.data_class == "MaskData")
-        {
-            ui->media_widget->setFeatureColor(data.key, data.color);
-        } else if (data.data_class == "LineData")
-        {
-           ui->media_widget->setFeatureColor(data.key, data.color);
         }
     }
-
 }
 
 void MainWindow::_LoadData() {
@@ -286,16 +268,14 @@ void MainWindow::_LoadData() {
     });
 }
 
-void MainWindow::_updateFrameCount()
-{
+void MainWindow::_updateFrameCount() {
     auto media = _data_manager->getData<MediaData>("media");
 
-    if (_data_manager->getTime()->getTotalFrameCount() != media->getTotalFrameCount())
-    {
+    if (_data_manager->getTime()->getTotalFrameCount() != media->getTotalFrameCount()) {
         auto frame_count = media->getTotalFrameCount() - 1;
 
-        std::vector<int> t(frame_count) ;
-        std::iota (std::begin(t), std::end(t), 0);
+        std::vector<int> t(frame_count);
+        std::iota(std::begin(t), std::end(t), 0);
 
         auto new_timeframe = std::make_shared<TimeFrame>(t);
 
@@ -322,20 +302,18 @@ void MainWindow::openWhiskerTracking() {
         registerDockWidget(key, _widgets[key].get(), ads::RightDockWidgetArea);
     }
 
-    dynamic_cast<Whisker_Widget*>(_widgets[key].get())->openWidget();
+    dynamic_cast<Whisker_Widget *>(_widgets[key].get())->openWidget();
     showDockWidget(key);
 }
 
-void MainWindow::registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area)
-{
+void MainWindow::registerDockWidget(std::string const & key, QWidget * widget, ads::DockWidgetArea area) {
     auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
     //dock_widget->setWidget(widget, ads::CDockWidget::ForceScrollArea);
     dock_widget->setWidget(widget);
     _m_DockManager->addDockWidget(area, dock_widget);
 }
 
-void MainWindow::showDockWidget(std::string const & key)
-{
+void MainWindow::showDockWidget(std::string const & key) {
     _m_DockManager->findDockWidget(QString::fromStdString(key))->toggleView();
 }
 
@@ -350,14 +328,13 @@ void MainWindow::openLabelMaker() {
         _widgets[key] = std::move(labelMaker);
     }
 
-    auto ptr = dynamic_cast<Label_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Label_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);
 }
 
-void MainWindow::openAnalogViewer()
-{
+void MainWindow::openAnalogViewer() {
     std::string const key = "analog_viewer";
 
     if (_widgets.find(key) == _widgets.end()) {
@@ -366,17 +343,16 @@ void MainWindow::openAnalogViewer()
         registerDockWidget(key, analogViewer.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(analogViewer);
 
-        connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, dynamic_cast<Analog_Viewer*>(_widgets[key].get()), &Analog_Viewer::SetFrame);
+        connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, dynamic_cast<Analog_Viewer *>(_widgets[key].get()), &Analog_Viewer::SetFrame);
     }
 
-    auto ptr = dynamic_cast<Analog_Viewer*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Analog_Viewer *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);
 }
 
-void MainWindow::openImageProcessing()
-{
+void MainWindow::openImageProcessing() {
     std::string const key = "image_processing";
 
     if (_widgets.find(key) == _widgets.end()) {
@@ -386,14 +362,13 @@ void MainWindow::openImageProcessing()
         _widgets[key] = std::move(imageProcessing);
     }
 
-    auto ptr = dynamic_cast<Image_Processing_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Image_Processing_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);
 }
 
-void MainWindow::openTongueTracking()
-{
+void MainWindow::openTongueTracking() {
     std::string const key = "tongue_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
@@ -403,19 +378,18 @@ void MainWindow::openTongueTracking()
         _widgets[key] = std::move(tongueWidget);
     }
 
-    auto ptr = dynamic_cast<Tongue_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Tongue_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);
 }
 
-void MainWindow::openTrackingWidget()
-{
+void MainWindow::openTrackingWidget() {
     std::string const key = "tracking_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
         auto trackingWidget = std::make_unique<Tracking_Widget>(
-            _data_manager);
+                _data_manager);
         connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, trackingWidget.get(), &Tracking_Widget::LoadFrame);
 
         trackingWidget->setObjectName(key);
@@ -423,58 +397,56 @@ void MainWindow::openTrackingWidget()
         _widgets[key] = std::move(trackingWidget);
     }
 
-    auto ptr = dynamic_cast<Tracking_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Tracking_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);
 }
 
-void MainWindow::openMLWidget()
-{
+void MainWindow::openMLWidget() {
     std::string const key = "ML_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
         auto MLWidget = std::make_unique<ML_Widget>(
-            _data_manager,
-            ui->time_scrollbar,
-            this);
+                _data_manager,
+                ui->time_scrollbar,
+                this);
 
         MLWidget->setObjectName(key);
         registerDockWidget(key, MLWidget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(MLWidget);
     }
 
-    auto ptr = dynamic_cast<ML_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<ML_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);
 }
 
-void MainWindow::openDataViewer()
-{
+void MainWindow::openDataViewer() {
     std::string const key = "DataViewer_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
         auto DataViewerWidget = std::make_unique<DataViewer_Widget>(
-            _data_manager,
-            ui->time_scrollbar,
-            this);
+                _data_manager,
+                ui->time_scrollbar,
+                this);
 
         DataViewerWidget->setObjectName(key);
         registerDockWidget(key, DataViewerWidget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(DataViewerWidget);
     }
 
-    auto ptr = dynamic_cast<DataViewer_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<DataViewer_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *event) {
-    static QWidget* lastSender = nullptr;
+void MainWindow::keyPressEvent(QKeyEvent * event) {
+    static QWidget * lastSender = nullptr;
 
-    auto handleEvent = [this, event](QWidget* sender) {
+    auto handleEvent = [this, event](QWidget * sender) {
         if (sender == lastSender) {
             return;
         }
@@ -501,144 +473,137 @@ void MainWindow::keyPressEvent(QKeyEvent *event) {
         }
     }
 
-    lastSender=nullptr;
+    lastSender = nullptr;
 }
 
-void MainWindow::openPointLoaderWidget()
-{
+void MainWindow::openPointLoaderWidget() {
     std::string const key = "PointLoader_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
         auto PointLoaderWidget = std::make_unique<Point_Loader_Widget>(
-            _data_manager,
-            this);
+                _data_manager,
+                this);
 
         PointLoaderWidget->setObjectName(key);
         registerDockWidget(key, PointLoaderWidget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(PointLoaderWidget);
     }
 
-    auto ptr = dynamic_cast<Point_Loader_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Point_Loader_Widget *>(_widgets[key].get());
 
     showDockWidget(key);
 }
 
-void MainWindow::openMaskLoaderWidget()
-{
+void MainWindow::openMaskLoaderWidget() {
     std::string const key = "MaskLoader_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
         auto MaskLoaderWidget = std::make_unique<Mask_Loader_Widget>(
-            _data_manager,
-            this);
+                _data_manager,
+                this);
 
         MaskLoaderWidget->setObjectName(key);
         registerDockWidget(key, MaskLoaderWidget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(MaskLoaderWidget);
     }
 
-    auto ptr = dynamic_cast<Mask_Loader_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Mask_Loader_Widget *>(_widgets[key].get());
 
     showDockWidget(key);
 }
 
-void MainWindow::openLineLoaderWidget()
-{
+void MainWindow::openLineLoaderWidget() {
     std::string const key = "LineLoader_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
         auto LineLoaderWidget = std::make_unique<Line_Loader_Widget>(
-            _data_manager,
-            this);
+                _data_manager,
+                this);
 
         LineLoaderWidget->setObjectName(key);
         registerDockWidget(key, LineLoaderWidget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(LineLoaderWidget);
     }
 
-    auto ptr = dynamic_cast<Line_Loader_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Line_Loader_Widget *>(_widgets[key].get());
 
     showDockWidget(key);
 }
 
-void MainWindow::openIntervalLoaderWidget()
-{
+void MainWindow::openIntervalLoaderWidget() {
     std::string const key = "IntervalLoader_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
         auto DigitalIntervalLoaderWidget = std::make_unique<Digital_Interval_Loader_Widget>(
-            _data_manager,
-            this);
+                _data_manager,
+                this);
 
         DigitalIntervalLoaderWidget->setObjectName(key);
         registerDockWidget(key, DigitalIntervalLoaderWidget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(DigitalIntervalLoaderWidget);
     }
 
-    auto ptr = dynamic_cast<Digital_Interval_Loader_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Digital_Interval_Loader_Widget *>(_widgets[key].get());
 
     showDockWidget(key);
 }
 
-void MainWindow::openTensorLoaderWidget()
-{
+void MainWindow::openTensorLoaderWidget() {
     std::string const key = "TensorLoader_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
         auto tensor_loader_widget = std::make_unique<Tensor_Loader_Widget>(
-            _data_manager,
-            this);
+                _data_manager,
+                this);
 
-       tensor_loader_widget->setObjectName(key);
+        tensor_loader_widget->setObjectName(key);
         registerDockWidget(key, tensor_loader_widget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(tensor_loader_widget);
     }
 
-    auto ptr = dynamic_cast<Tensor_Loader_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Tensor_Loader_Widget *>(_widgets[key].get());
 
     showDockWidget(key);
 }
 
-void MainWindow::openDataManager()
-{
+void MainWindow::openDataManager() {
     std::string const key = "DataManager_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
         auto dm_widget = std::make_unique<DataManager_Widget>(
-            _scene,
-            _data_manager,
-            ui->time_scrollbar,
-            this);
+                _scene,
+                _data_manager,
+                ui->time_scrollbar,
+                this);
 
         dm_widget->setObjectName(key);
         registerDockWidget(key, dm_widget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(dm_widget);
     }
 
-    auto ptr = dynamic_cast<DataManager_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<DataManager_Widget *>(_widgets[key].get());
     //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
     ptr->openWidget();
 
     showDockWidget(key);
 }
 
-void MainWindow::openVideoExportWidget()
-{
+void MainWindow::openVideoExportWidget() {
     std::string const key = "VideoExport_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
         auto vid_widget = std::make_unique<Export_Video_Widget>(
-            _data_manager,
-            _scene,
-            ui->time_scrollbar,
-            this);
+                _data_manager,
+                _scene,
+                ui->time_scrollbar,
+                this);
 
         vid_widget->setObjectName(key);
         registerDockWidget(key, vid_widget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(vid_widget);
     }
 
-    auto ptr = dynamic_cast<Export_Video_Widget*>(_widgets[key].get());
+    auto ptr = dynamic_cast<Export_Video_Widget *>(_widgets[key].get());
     //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
     ptr->openWidget();
 
