@@ -40,6 +40,15 @@ struct DigitalIntervalSeriesData {
     std::shared_ptr<TimeFrame> time_frame;
 };
 
+struct LineParameters {
+    float xStart = 0.0f;
+    float xEnd = 0.0f;
+    float yStart = 0.0f;
+    float yEnd = 0.0f;
+    int dashLength = 5;
+    int gapLength = 5;
+};
+
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
 
@@ -49,22 +58,22 @@ public:
     ~OpenGLWidget() override;
 
     void addAnalogTimeSeries(
-            std::string key,
+            std::string const & key,
             std::shared_ptr<AnalogTimeSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
-            std::string color = "");
+            std::string const & color = "");
     void removeAnalogTimeSeries(std::string const & key);
     void addDigitalEventSeries(
-            std::string key,
+            std::string const & key,
             std::shared_ptr<DigitalEventSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
-            std::string color = "");
+            std::string const & color = "");
     void removeDigitalEventSeries(std::string const & key);
     void addDigitalIntervalSeries(
-            std::string key,
+            std::string const & key,
             std::shared_ptr<DigitalIntervalSeries> series,
             std::shared_ptr<TimeFrame> time_frame,
-            std::string color = "");
+            std::string const & color = "");
     void removeDigitalIntervalSeries(std::string const & key);
     void clearSeries();
     void setBackgroundColor(std::string const & hexColor);
@@ -92,15 +101,15 @@ protected:
 
 private:
     void setupVertexAttribs();
-    void generateRandomValues(int count);
-    void generateAndAddFakeData(int count);
-    void adjustFakeData();
+    //void generateRandomValues(int count);
+    //void generateAndAddFakeData(int count);
+    //void adjustFakeData();
     void drawDigitalEventSeries();
     void drawDigitalIntervalSeries();
     void drawAnalogSeries();
     void drawAxis();
     void drawGridLines();
-    void drawDashedLine(float xStart, float xEnd, float yStart, float yEnd, int dashLength, int gapLength);
+    void drawDashedLine(LineParameters const & params);
     void _addSeries(std::string const & key);
     void _removeSeries(std::string const & key);
 
@@ -118,17 +127,17 @@ private:
     QMatrix4x4 m_proj; // Initialized as identity
     QMatrix4x4 m_view; // Initialized as identity
     QMatrix4x4 m_model;// Initialized as identity
-    int m_projMatrixLoc;
-    int m_viewMatrixLoc;
-    int m_modelMatrixLoc;
+    int m_projMatrixLoc{};
+    int m_viewMatrixLoc{};
+    int m_modelMatrixLoc{};
 
     QOpenGLShaderProgram * m_dashedProgram{nullptr};
-    int m_dashedProjMatrixLoc;
-    int m_dashedViewMatrixLoc;
-    int m_dashedModelMatrixLoc;
-    int m_dashedResolutionLoc;
-    int m_dashedDashSizeLoc;
-    int m_dashedGapSizeLoc;
+    int m_dashedProjMatrixLoc{};
+    int m_dashedViewMatrixLoc{};
+    int m_dashedModelMatrixLoc{};
+    int m_dashedResolutionLoc{};
+    int m_dashedDashSizeLoc{};
+    int m_dashedGapSizeLoc{};
 
     std::string m_background_color{"#000000"};// black
 

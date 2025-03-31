@@ -43,7 +43,6 @@ I will also only select the data that is present
 
 OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
-    std::srand(std::time(nullptr));
 }
 
 OpenGLWidget::~OpenGLWidget() {
@@ -68,8 +67,8 @@ void OpenGLWidget::cleanup() {
     makeCurrent();
     delete m_program;
     delete m_dashedProgram;
-    m_program = 0;
-    m_dashedProgram = 0;
+    m_program = nullptr;
+    m_dashedProgram = nullptr;
     doneCurrent();
 }
 
@@ -79,7 +78,11 @@ void OpenGLWidget::initializeGL() {
     initializeOpenGLFunctions();
     int r, g, b;
     hexToRGB(m_background_color, r, g, b);
-    glClearColor(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
+    glClearColor(
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f,
+            1.0f);
 
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
@@ -104,7 +107,7 @@ void OpenGLWidget::initializeGL() {
     m_dashedGapSizeLoc = m_dashedProgram->uniformLocation("u_gapSize");
 
     m_vao.create();
-    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
 
     m_vbo.create();
     m_vbo.bind();
@@ -145,49 +148,49 @@ void OpenGLWidget::setupVertexAttribs() {
  */
 void OpenGLWidget::drawDigitalEventSeries() {
     int r, g, b;
-    auto const start_time = _xAxis.getStart();
-    auto const end_time = _xAxis.getEnd();
+    auto const start_time = static_cast<float>(_xAxis.getStart());
+    auto const end_time = static_cast<float>(_xAxis.getEnd());
 
     m_program->bind();
     m_program->setUniformValue(m_projMatrixLoc, m_proj);
     m_program->setUniformValue(m_viewMatrixLoc, m_view);
     m_program->setUniformValue(m_modelMatrixLoc, m_model);
 
-    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
 
     for (auto const & [key, event_data]: _digital_event_series) {
         auto const & series = event_data.series;
-        auto const & events = series->getEventSeries();
         auto const & time_frame = event_data.time_frame;
         hexToRGB(event_data.color, r, g, b);
-        float const rNorm = r / 255.0f;
-        float const gNorm = g / 255.0f;
-        float const bNorm = b / 255.0f;
+        float const rNorm = static_cast<float>(r) / 255.0f;
+        float const gNorm = static_cast<float>(g) / 255.0f;
+        float const bNorm = static_cast<float>(b) / 255.0f;
         float const alpha = 1.0f;
+
+        // Get events in the visible range using the new C++20 range-based method
+        auto visible_events = series->getEventsInRange(
+                static_cast<float>(time_frame->getIndexAtTime(start_time)),
+                static_cast<float>(time_frame->getIndexAtTime(end_time)));
 
         // There is lots of duplication here. Every vertex is the same
         // color and alpha. Should be using a vertex that can be set with
         // uniform variables (like projection matrix).
-        // We should also move the searching for events within a range to
-        // The data manager. It can return reference to the range of events.
-        for (auto const & event: events) {
-            float time = time_frame->getTimeAtIndex(event);
-            if (time >= start_time && time <= end_time) {
-                float xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
+        for (auto const & event: visible_events) {
+            auto const time = static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(event)));
+            float const xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
 
-                std::array<GLfloat, 6 * 2> vertices = {
-                        xCanvasPos, -1.0f, rNorm, gNorm, bNorm, alpha,
-                        xCanvasPos, 1.0f, rNorm, gNorm, bNorm, alpha};
+            std::array<GLfloat, 12> vertices = {
+                    xCanvasPos, -1.0f, rNorm, gNorm, bNorm, alpha,
+                    xCanvasPos, 1.0f, rNorm, gNorm, bNorm, alpha};
 
-                m_vbo.bind();
-                m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
-                m_vbo.release();
+            m_vbo.bind();
+            m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
+            m_vbo.release();
 
-                GLint const first = 0;  // Starting index of enabled array
-                GLsizei const count = 2;// number of indexes to render
-                glDrawArrays(GL_LINES, first, count);
-            }
+            GLint const first = 0;  // Starting index of enabled array
+            GLsizei const count = 2;// number of indexes to render
+            glDrawArrays(GL_LINES, first, count);
         }
     }
 
@@ -196,15 +199,15 @@ void OpenGLWidget::drawDigitalEventSeries() {
 
 void OpenGLWidget::drawDigitalIntervalSeries() {
     int r, g, b;
-    auto const start_time = _xAxis.getStart();
-    auto const end_time = _xAxis.getEnd();
+    auto const start_time = static_cast<float>(_xAxis.getStart());
+    auto const end_time = static_cast<float>(_xAxis.getEnd());
 
     m_program->bind();
     m_program->setUniformValue(m_projMatrixLoc, m_proj);
     m_program->setUniformValue(m_viewMatrixLoc, m_view);
     m_program->setUniformValue(m_modelMatrixLoc, m_model);
 
-    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
 
     for (auto const & [key, interval_data]: _digital_interval_series) {
@@ -212,26 +215,26 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         auto const & intervals = series->getDigitalIntervalSeries();
         auto const & time_frame = interval_data.time_frame;
         hexToRGB(interval_data.color, r, g, b);
-        float rNorm = r / 255.0f;
-        float gNorm = g / 255.0f;
-        float bNorm = b / 255.0f;
-        float alpha = 0.5f;// Set alpha for shading
+        float const rNorm = static_cast<float>(r) / 255.0f;
+        float const gNorm = static_cast<float>(g) / 255.0f;
+        float const bNorm = static_cast<float>(b) / 255.0f;
+        float const alpha = 0.5f;// Set alpha for shading
 
         for (auto const & interval: intervals) {
 
-            float start = time_frame->getTimeAtIndex(interval.start);
-            float end = time_frame->getTimeAtIndex(interval.end);
+            auto start = static_cast<float>(time_frame->getTimeAtIndex(interval.start));
+            auto end = static_cast<float>(time_frame->getTimeAtIndex(interval.end));
             if (end < start_time || start > end_time) {
                 continue;
             }
 
-            start = std::max(start, static_cast<float>(start_time));
-            end = std::min(end, static_cast<float>(end_time));
+            start = std::max(start, start_time);
+            end = std::min(end, end_time);
 
-            float xStart = static_cast<GLfloat>(start - start_time) / (end_time - start_time) * 2.0f - 1.0f;
-            float xEnd = static_cast<GLfloat>(end - start_time) / (end_time - start_time) * 2.0f - 1.0f;
+            float const xStart = static_cast<GLfloat>(start - start_time) / (end_time - start_time) * 2.0f - 1.0f;
+            float const xEnd = static_cast<GLfloat>(end - start_time) / (end_time - start_time) * 2.0f - 1.0f;
 
-            std::array<GLfloat, 6 * 4> vertices = {
+            std::array<GLfloat, 24> vertices = {
                     xStart, -1.0f, rNorm, gNorm, bNorm, alpha,
                     xEnd, -1.0f, rNorm, gNorm, bNorm, alpha,
                     xEnd, 1.0f, rNorm, gNorm, bNorm, alpha,
@@ -253,15 +256,15 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 void OpenGLWidget::drawAnalogSeries() {
     int r, g, b;
 
-    auto const start_time = _xAxis.getStart();
-    auto const end_time = _xAxis.getEnd();
+    auto const start_time = static_cast<float>(_xAxis.getStart());
+    auto const end_time = static_cast<float>(_xAxis.getEnd());
 
     m_program->bind();
     m_program->setUniformValue(m_projMatrixLoc, m_proj);
     m_program->setUniformValue(m_viewMatrixLoc, m_view);
     m_program->setUniformValue(m_modelMatrixLoc, m_model);
 
-    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
 
     for (auto const & [key, analog_data]: _analog_series) {
@@ -272,9 +275,9 @@ void OpenGLWidget::drawAnalogSeries() {
 
         // Set the color for the current series
         hexToRGB(analog_data.color, r, g, b);
-        float rNorm = r / 255.0f;
-        float gNorm = g / 255.0f;
-        float bNorm = b / 255.0f;
+        float const rNorm = static_cast<float>(r) / 255.0f;
+        float const gNorm = static_cast<float>(g) / 255.0f;
+        float const bNorm = static_cast<float>(b) / 255.0f;
 
         m_vertices.clear();
 
@@ -283,8 +286,8 @@ void OpenGLWidget::drawAnalogSeries() {
         auto end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
                                        [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(time); });
 
-        float maxY = series->getMaxValue(start_it - data_time.begin(), end_it - data_time.begin());
-        float minY = series->getMinValue(start_it - data_time.begin(), end_it - data_time.begin());
+        float const maxY = series->getMaxValue(start_it - data_time.begin(), end_it - data_time.begin());
+        float const minY = series->getMinValue(start_it - data_time.begin(), end_it - data_time.begin());
 
         float absMaxY = std::max(std::abs(maxY), std::abs(minY));
         if (absMaxY == 0) {
@@ -292,10 +295,10 @@ void OpenGLWidget::drawAnalogSeries() {
         }
 
         for (auto it = start_it; it != end_it; ++it) {
-            size_t index = std::distance(data_time.begin(), it);
-            float time = time_frame->getTimeAtIndex(data_time[index]);
-            float xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
-            float yCanvasPos = data[index] / absMaxY;
+            size_t const index = std::distance(data_time.begin(), it);
+            auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
+            float const xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
+            float const yCanvasPos = data[index] / absMaxY;
             m_vertices.push_back(xCanvasPos);
             m_vertices.push_back(yCanvasPos);
             m_vertices.push_back(rNorm);
@@ -305,11 +308,11 @@ void OpenGLWidget::drawAnalogSeries() {
         }
 
         m_vbo.bind();
-        m_vbo.allocate(m_vertices.data(), m_vertices.size() * sizeof(GLfloat));
+        m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
         m_vbo.release();
 
 
-        glDrawArrays(GL_LINE_STRIP, 0, m_vertices.size() / 6);
+        glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 6));
     }
 
     m_program->release();
@@ -318,13 +321,16 @@ void OpenGLWidget::drawAnalogSeries() {
 void OpenGLWidget::paintGL() {
     int r, g, b;
     hexToRGB(m_background_color, r, g, b);
-    glClearColor(r / 255.0f, g / 255.0f, b / 255.0f, 1.0f);
+    glClearColor(
+            static_cast<float>(r) / 255.0f,
+            static_cast<float>(g) / 255.0f,
+            static_cast<float>(b) / 255.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //This has been converted to master coordinates
-    int currentTime = _time;
+    int const currentTime = _time;
 
-    int zoom = _xAxis.getEnd() - _xAxis.getStart();
+    int64_t const zoom = _xAxis.getEnd() - _xAxis.getStart();
     _xAxis.setCenterAndZoom(currentTime, zoom);
 
     // Draw the series
@@ -337,7 +343,7 @@ void OpenGLWidget::paintGL() {
     m_program->setUniformValue(m_viewMatrixLoc, m_view);
     m_program->setUniformValue(m_modelMatrixLoc, m_model);
 
-    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
 
     // Draw horizontal line at x=0
@@ -355,7 +361,9 @@ void OpenGLWidget::paintGL() {
     // Use the dashed line shader program for drawing dashed lines
     m_dashedProgram->bind();
     m_dashedProgram->setUniformValue(m_dashedProjMatrixLoc, m_proj * m_view * m_model);
-    m_dashedProgram->setUniformValue(m_dashedResolutionLoc, QVector2D(width(), height()));
+    m_dashedProgram->setUniformValue(
+            m_dashedResolutionLoc,
+            QVector2D(static_cast<float>(width()), static_cast<float>(height())));
     m_dashedProgram->setUniformValue(m_dashedDashSizeLoc, 10.0f);
     m_dashedProgram->setUniformValue(m_dashedGapSizeLoc, 10.0f);
 
@@ -368,7 +376,7 @@ void OpenGLWidget::paintGL() {
 
 void OpenGLWidget::resizeGL(int w, int h) {
     m_proj.setToIdentity();
-    m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 100.0f);
+    m_proj.perspective(45.0f, GLfloat(w) / GLfloat(h), 0.01f, 100.0f);
     //m_proj.ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f); // Use orthographic projection for 2D plotting
     m_view.setToIdentity();
     m_view.translate(0, 0, -2);
@@ -380,17 +388,17 @@ void OpenGLWidget::drawAxis() {
 }
 
 void OpenGLWidget::addAnalogTimeSeries(
-        std::string key,
+        std::string const & key,
         std::shared_ptr<AnalogTimeSeries> series,
         std::shared_ptr<TimeFrame> time_frame,
-        std::string color) {
+        std::string const & color) {
 
-    std::string seriesColor = color.empty() ? "#FFFFFF" : color;
+    std::string const seriesColor = color.empty() ? "#FFFFFF" : color;
 
     _analog_series[key] =
-            AnalogSeriesData{series,
+            AnalogSeriesData{std::move(series),
                              seriesColor,
-                             time_frame};
+                             std::move(time_frame)};
     updateCanvas(_time);
 }
 
@@ -403,12 +411,16 @@ void OpenGLWidget::removeAnalogTimeSeries(std::string const & key) {
 }
 
 void OpenGLWidget::addDigitalEventSeries(
-        std::string key,
+        std::string const & key,
         std::shared_ptr<DigitalEventSeries> series,
         std::shared_ptr<TimeFrame> time_frame,
-        std::string color) {
-    std::string seriesColor = color.empty() ? generateRandomColor() : color;
-    _digital_event_series[key] = DigitalEventSeriesData{series, seriesColor, time_frame};
+        std::string const & color) {
+
+    std::string const seriesColor = color.empty() ? generateRandomColor() : color;
+    _digital_event_series[key] = DigitalEventSeriesData{
+            std::move(series),
+            seriesColor,
+            std::move(time_frame)};
     updateCanvas(_time);
 }
 
@@ -421,13 +433,16 @@ void OpenGLWidget::removeDigitalEventSeries(std::string const & key) {
 }
 
 void OpenGLWidget::addDigitalIntervalSeries(
-        std::string key,
+        std::string const & key,
         std::shared_ptr<DigitalIntervalSeries> series,
         std::shared_ptr<TimeFrame> time_frame,
-        std::string color) {
+        std::string const & color) {
 
-    std::string seriesColor = color.empty() ? generateRandomColor() : color;
-    _digital_interval_series[key] = DigitalIntervalSeriesData{series, seriesColor, time_frame};
+    std::string const seriesColor = color.empty() ? generateRandomColor() : color;
+    _digital_interval_series[key] = DigitalIntervalSeriesData{
+            std::move(series),
+            seriesColor,
+            std::move(time_frame)};
     updateCanvas(_time);
 }
 
@@ -455,6 +470,7 @@ void OpenGLWidget::clearSeries() {
     updateCanvas(_time);
 }
 
+/*
 void OpenGLWidget::generateRandomValues(int count) {
     m_vertices.clear();
     for (int i = 0; i < count; ++i) {
@@ -478,16 +494,16 @@ void OpenGLWidget::generateAndAddFakeData(int count) {
 
 void OpenGLWidget::adjustFakeData() {
     std::vector<float> new_series;
-    for (int i = 0; i < _analog_series[0].series->getAnalogTimeSeries().size(); i++) {
+    for (size_t i = 0; i < _analog_series[0].series->getAnalogTimeSeries().size(); i++) {
         new_series.push_back(static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f);
     }
     _analog_series[0].series->setData(new_series);
 }
-
-void OpenGLWidget::drawDashedLine(float const xStart, float const xEnd, float const yStart, float const yEnd, int const dashLength, int const gapLength) {
+*/
+void OpenGLWidget::drawDashedLine(LineParameters const & params) {
     std::array<float, 6> vertices = {
-            xStart, yStart, 0.0f,
-            xEnd, yEnd, 0.0f};
+            params.xStart, params.yStart, 0.0f,
+            params.xEnd, params.yEnd, 0.0f};
 
     m_vbo.bind();
     m_vbo.allocate(vertices.data(), vertices.size() * sizeof(float));
@@ -498,9 +514,11 @@ void OpenGLWidget::drawDashedLine(float const xStart, float const xEnd, float co
 
     m_dashedProgram->bind();
     m_dashedProgram->setUniformValue(m_dashedProjMatrixLoc, m_proj * m_view * m_model);
-    m_dashedProgram->setUniformValue(m_dashedResolutionLoc, QVector2D(width(), height()));
-    m_dashedProgram->setUniformValue(m_dashedDashSizeLoc, dashLength);
-    m_dashedProgram->setUniformValue(m_dashedGapSizeLoc, gapLength);
+    m_dashedProgram->setUniformValue(
+            m_dashedResolutionLoc,
+            QVector2D(static_cast<float>(width()), static_cast<float>(height())));
+    m_dashedProgram->setUniformValue(m_dashedDashSizeLoc, params.dashLength);
+    m_dashedProgram->setUniformValue(m_dashedGapSizeLoc, params.gapLength);
 
     glDrawArrays(GL_LINES, 0, 2);
 
@@ -513,9 +531,23 @@ void OpenGLWidget::drawGridLines() {
     auto const start_time = _xAxis.getStart();
     auto const end_time = _xAxis.getEnd();
 
-    float xStartCanvasPos = static_cast<GLfloat>(start_time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
-    float xEndCanvasPos = static_cast<GLfloat>(end_time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
+    auto const xCanvasWidth = static_cast<float>(end_time - start_time);
+    auto const xCanvasStart = static_cast<float>(start_time - start_time);
 
-    drawDashedLine(xStartCanvasPos, xStartCanvasPos, -1.0f, 1.0f, 5, 5);
-    drawDashedLine(xEndCanvasPos, xEndCanvasPos, -1.0f, 1.0f, 5, 5);
+    float const xStartCanvasPos = xCanvasStart / xCanvasWidth * 2.0f - 1.0f;
+    float const xEndCanvasPos = xCanvasWidth / xCanvasWidth * 2.0f - 1.0f;
+
+    LineParameters startLine;
+    startLine.xStart = xStartCanvasPos;
+    startLine.xEnd = xStartCanvasPos;
+    startLine.yStart = -1.0f;
+    startLine.yEnd = 1.0f;
+    drawDashedLine(startLine);
+
+    LineParameters endLine;
+    endLine.xStart = xEndCanvasPos;
+    endLine.xEnd = xEndCanvasPos;
+    endLine.yStart = -1.0f;
+    endLine.yEnd = 1.0f;
+    drawDashedLine(endLine);
 }

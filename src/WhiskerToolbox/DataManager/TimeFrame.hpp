@@ -2,6 +2,8 @@
 #define TIMEFRAME_HPP
 
 #include <cmath>
+#include <concepts>
+#include <iostream>
 #include <vector>
 
 class TimeFrame {
@@ -14,7 +16,14 @@ public:
     void updateLastLoadedFrame(int frame) { _last_loaded_frame = frame; };
     [[nodiscard]] int getLastLoadedFrame() const { return _last_loaded_frame; };
 
-    [[nodiscard]] int getTimeAtIndex(int index) { return _times[index]; };
+    template<std::integral T>
+    [[nodiscard]] int getTimeAtIndex(T index) const {
+        if (index < 0 || static_cast<size_t>(index) >= _times.size()) {
+            std::cout << "Out of range" << std::endl;
+            return 0;
+        }
+        return _times[static_cast<size_t>(index)];
+    }
 
     [[nodiscard]] int getIndexAtTime(float time) const {
         // Binary search to find the index closest to the given time
