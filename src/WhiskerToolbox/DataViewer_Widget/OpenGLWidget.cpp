@@ -278,6 +278,7 @@ void OpenGLWidget::drawAnalogSeries() {
         auto const & data = series->getAnalogTimeSeries();
         auto const & data_time = series->getTimeSeries();
         auto const & time_frame = analog_data.time_frame;
+        auto const stdDev = analog_data.scaleFactor;
 
         // Set the color for the current series
         hexToRGB(analog_data.color, r, g, b);
@@ -292,19 +293,11 @@ void OpenGLWidget::drawAnalogSeries() {
         auto end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
                                        [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(time); });
 
-        float const maxY = series->getMaxValue(start_it - data_time.begin(), end_it - data_time.begin());
-        float const minY = series->getMinValue(start_it - data_time.begin(), end_it - data_time.begin());
-
-        float absMaxY = std::max(std::abs(maxY), std::abs(minY));
-        if (absMaxY == 0) {
-            absMaxY = 1.0f;
-        }
-
         for (auto it = start_it; it != end_it; ++it) {
             size_t const index = std::distance(data_time.begin(), it);
             auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
             float const xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
-            float const yCanvasPos = data[index] / absMaxY;
+            float const yCanvasPos = data[index] / stdDev;
             m_vertices.push_back(xCanvasPos);
             m_vertices.push_back(yCanvasPos);
             m_vertices.push_back(rNorm);
@@ -316,7 +309,6 @@ void OpenGLWidget::drawAnalogSeries() {
         m_vbo.bind();
         m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
         m_vbo.release();
-
 
         glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 6));
     }
@@ -401,11 +393,13 @@ void OpenGLWidget::addAnalogTimeSeries(
 
     std::string const seriesColor = color.empty() ? "#FFFFFF" : color;
 
+    float const stdDev = series->getStdDevValue();
+
     _analog_series[key] =
             AnalogSeriesData{std::move(series),
                              seriesColor,
                              std::move(time_frame),
-                             1.0f};
+                             stdDev * 5.0f};
     updateCanvas(_time);
 }
 

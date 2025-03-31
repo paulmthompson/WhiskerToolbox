@@ -70,6 +70,28 @@ public:
     std::vector<float> & getAnalogTimeSeries() { return _data; };
     std::vector<size_t> & getTimeSeries() { return _time; };
 
+    [[nodiscard]] float getMeanValue() const {
+        return std::accumulate(_data.begin(), _data.end(), 0.0f) / static_cast<float>(_data.size());
+    }
+
+    [[nodiscard]] float getMeanValue(int64_t start, int64_t end) const {
+        return std::accumulate(_data.begin() + start, _data.begin() + end, 0.0f) / static_cast<float>(end - start);
+    }
+
+    [[nodiscard]] float getStdDevValue() const {
+        float const mean = getMeanValue();
+        float const sum = std::accumulate(_data.begin(), _data.end(), 0.0f,
+                                          [mean](float acc, float val) { return acc + (val - mean) * (val - mean); });
+        return std::sqrt(sum / static_cast<float>(_data.size()));
+    }
+
+    [[nodiscard]] float getStdDevValue(int64_t start, int64_t end) const {
+        float const mean = getMeanValue(start, end);
+        float const sum = std::accumulate(_data.begin() + start, _data.begin() + end, 0.0f,
+                                          [mean](float acc, float val) { return acc + (val - mean) * (val - mean); });
+        return std::sqrt(sum / static_cast<float>((end - start)));
+    }
+
     [[nodiscard]] float getMinValue() const {
         return *std::min_element(_data.begin(), _data.end());
     }
