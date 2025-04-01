@@ -5,6 +5,7 @@
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
+//#include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
@@ -47,10 +48,11 @@ struct LineParameters {
     float xEnd = 0.0f;
     float yStart = 0.0f;
     float yEnd = 0.0f;
-    int dashLength = 5;
-    int gapLength = 5;
+    float dashLength = 5.0f;
+    float gapLength = 5.0f;
 };
 
+//class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
 
