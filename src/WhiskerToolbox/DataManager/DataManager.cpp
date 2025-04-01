@@ -292,20 +292,50 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             if (item["format"] == "int16") {
 
                 int const header_size = item.value("header_size", 0);
+                int const channel_count = item.value("channel_count", 1);
 
-                auto data = readBinaryFile<int16_t>(file_path, header_size);
+                if (channel_count > 1) {
 
-                // convert to float with std::transform
-                std::vector<float> data_float;
-                std::transform(
+                    auto data =  readBinaryFileMultiChannel<int16_t>(file_path, channel_count, header_size);
+
+                    std::cout << "Read " << data.size() << " channels" << std::endl;
+
+                    for (int channel = 0; channel < data.size(); channel++) {
+                        // convert to float with std::transform
+                        std::vector<float> data_float;
+                        std::transform(
+                            data[channel].begin(),
+                            data[channel].end(),
+                            std::back_inserter(data_float), [](int16_t i) { return i; });
+
+                        auto analog_time_series = std::make_shared<AnalogTimeSeries>();
+                        analog_time_series->setData(data_float);
+
+                        std::string const channel_name = name + "_" + std::to_string(channel);
+
+                        dm->setData<AnalogTimeSeries>(channel_name, analog_time_series);
+
+                        if (item.contains("clock")) {
+                            std::string const clock = item["clock"];
+                            dm->setTimeFrame(channel_name, clock);
+                        }
+                    }
+
+                } else {
+
+                    auto data = readBinaryFile<int16_t>(file_path, header_size);
+
+                    // convert to float with std::transform
+                    std::vector<float> data_float;
+                    std::transform(
                         data.begin(),
                         data.end(),
                         std::back_inserter(data_float), [](int16_t i) { return i; });
 
-                auto analog_time_series = std::make_shared<AnalogTimeSeries>();
-                analog_time_series->setData(data_float);
-                dm->setData<AnalogTimeSeries>(name, analog_time_series);
-
+                    auto analog_time_series = std::make_shared<AnalogTimeSeries>();
+                    analog_time_series->setData(data_float);
+                    dm->setData<AnalogTimeSeries>(name, analog_time_series);
+                }
 
             } else {
                 std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
