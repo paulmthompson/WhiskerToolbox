@@ -14,6 +14,8 @@
 #include <QOpenGLShader>
 #include <QPainter>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+//#include <glm/gtx/transform.hpp>
 
 #include <cstdlib>
 #include <ctime>
@@ -173,10 +175,6 @@ void OpenGLWidget::drawDigitalEventSeries() {
     //QOpenGLFunctions_4_1_Core::glBindVertexArray(m_vao.objectId());
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);// glBindVertexArray
 
-    glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, m_proj.constData());
-    glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, m_view.constData());
-    glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, m_model.constData());
-
     for (auto const & [key, event_data]: _digital_event_series) {
         auto const & series = event_data.series;
         auto const & time_frame = event_data.time_frame;
@@ -193,9 +191,22 @@ void OpenGLWidget::drawDigitalEventSeries() {
                     return static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(idx)));
                 });
 
+        // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
+        auto Model = glm::mat4(1.0f);
+
+        // View Matrix. Panning (all lines moved together).
+        auto View = glm::mat4(1.0f);
+
+        // Projection Matrix. Orthographic. Horizontal Zoom. Vertical Zoom.
+        auto Projection = glm::ortho(start_time, end_time,
+                                     -1.0f, 1.0f);
+
+        glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
+        glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
+        glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
+
         for (auto const & event: visible_events) {
-            auto const time = static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(event)));
-            float const xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
+            auto const xCanvasPos = static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(event)));
 
             std::array<GLfloat, 12> vertices = {
                     xCanvasPos, -1.0f, rNorm, gNorm, bNorm, alpha,
@@ -223,10 +234,6 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 
     glUseProgram(m_program_ID);
 
-    glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, m_proj.constData());
-    glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, m_view.constData());
-    glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, m_model.constData());
-
     //QOpenGLFunctions_4_1_Core::glBindVertexArray(m_vao.objectId());
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);// glBindVertexArray
     setupVertexAttribs();
@@ -249,6 +256,20 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         float const bNorm = static_cast<float>(b) / 255.0f;
         float const alpha = 0.5f;// Set alpha for shading
 
+        // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
+        auto Model = glm::mat4(1.0f);
+
+        // View Matrix. Panning (all lines moved together).
+        auto View = glm::mat4(1.0f);
+
+        // Projection Matrix. Orthographic. Horizontal Zoom. Vertical Zoom.
+        auto Projection = glm::ortho(start_time, end_time,
+                                     -1.0f, 1.0f);
+
+        glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
+        glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
+        glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
+
         for (auto const & interval: visible_intervals) {
 
             auto start = static_cast<float>(time_frame->getTimeAtIndex(interval.start));
@@ -258,8 +279,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
             start = std::max(start, start_time);
             end = std::min(end, end_time);
 
-            float const xStart = static_cast<GLfloat>(start - start_time) / (end_time - start_time) * 2.0f - 1.0f;
-            float const xEnd = static_cast<GLfloat>(end - start_time) / (end_time - start_time) * 2.0f - 1.0f;
+            float const xStart = start;
+            float const xEnd = end;
 
             std::array<GLfloat, 24> vertices = {
                     xStart, -1.0f, rNorm, gNorm, bNorm, alpha,
@@ -291,10 +312,6 @@ void OpenGLWidget::drawAnalogSeries() {
 
     glUseProgram(m_program_ID);
 
-    glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, m_proj.constData());
-    glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, m_view.constData());
-    glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, m_model.constData());
-
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
 
@@ -303,7 +320,7 @@ void OpenGLWidget::drawAnalogSeries() {
         auto const & data = series->getAnalogTimeSeries();
         auto const & data_time = series->getTimeSeries();
         auto const & time_frame = analog_data.time_frame;
-        auto const stdDev = analog_data.scaleFactor;
+        auto const stdDev = analog_data.scaleFactor * 5.0f;
 
         // Set the color for the current series
         hexToRGB(analog_data.color, r, g, b);
@@ -318,11 +335,26 @@ void OpenGLWidget::drawAnalogSeries() {
         auto end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
                                        [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(time); });
 
+        // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
+        auto Model = glm::mat4(1.0f);
+        Model = glm::scale(Model, glm::vec3(1, 1 / stdDev, 1));
+
+        // View Matrix. Panning (all lines moved together).
+        auto View = glm::mat4(1.0f);
+
+        // Projection Matrix. Orthographic. Horizontal Zoom. Vertical Zoom.
+        auto Projection = glm::ortho(start_time, end_time,
+                                     -1.0f, 1.0f);
+
+        glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
+        glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
+        glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
+
         for (auto it = start_it; it != end_it; ++it) {
             size_t const index = std::distance(data_time.begin(), it);
             auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
-            float const xCanvasPos = static_cast<GLfloat>(time - start_time) / (end_time - start_time) * 2.0f - 1.0f;
-            float const yCanvasPos = data[index] / stdDev;
+            float const xCanvasPos = time;
+            float const yCanvasPos = data[index];
             m_vertices.push_back(xCanvasPos);
             m_vertices.push_back(yCanvasPos);
             m_vertices.push_back(rNorm);
