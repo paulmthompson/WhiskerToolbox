@@ -243,7 +243,7 @@ void MainWindow::_loadJSONConfig() {
         return;
     }
 
-    auto data_info = load_data_from_json_config(_data_manager, filename.toStdString());
+    auto data_info = load_data_from_json_config(_data_manager.get(), filename.toStdString());
 
     for (auto const & data: data_info) {
         if (data.data_class == "VideoData") {

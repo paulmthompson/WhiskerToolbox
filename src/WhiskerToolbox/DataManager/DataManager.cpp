@@ -1,37 +1,36 @@
 
 #include "DataManager.hpp"
-#include "Lines/Line_Data.hpp"
-#include "Masks/Mask_Data.hpp"
-#include "Points/Point_Data.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "Media/Video_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "Tensors/Tensor_Data.hpp"
 
-#include "transforms/data_transforms.hpp"
-#include "loaders/binary_loaders.hpp"
 #include "loaders/CSV_Loaders.hpp"
+#include "loaders/binary_loaders.hpp"
+#include "transforms/data_transforms.hpp"
 
 #include "TimeFrame.hpp"
 
-#include "utils/hdf5_mask_load.hpp"
 #include "utils/container.hpp"
 #include "utils/glob.hpp"
+#include "utils/hdf5_mask_load.hpp"
 
 #include "nlohmann/json.hpp"
 #include "utils/string_manip.hpp"
 
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <optional>
 #include <regex>
 
 using namespace nlohmann;
 
-DataManager::DataManager()
-{
+DataManager::DataManager() {
     _times["time"] = std::make_shared<TimeFrame>();
     _data["media"] = std::make_shared<MediaData>();
 
@@ -39,8 +38,7 @@ DataManager::DataManager()
     _output_path = std::filesystem::current_path();
 }
 
-void DataManager::setTimeFrame(std::string data_key, std::string time_key)
-{
+void DataManager::setTimeFrame(std::string const & data_key, std::string const & time_key) {
     //Check that data_key is in _data
     if (_data.find(data_key) == _data.end()) {
         std::cerr << "Data key not found in DataManager: " << data_key << std::endl;
@@ -56,61 +54,29 @@ void DataManager::setTimeFrame(std::string data_key, std::string time_key)
     _time_frames[data_key] = time_key;
 }
 
-std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key)
-{
+std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key) {
     auto myvector = load_ragged_array<float>(filepath, key);
     return myvector;
 }
 
-std::vector<int> read_array_hdf5(std::string const & filepath, std::string const & key)
-{
+std::vector<int> read_array_hdf5(std::string const & filepath, std::string const & key) {
     auto myvector = load_array<int>(filepath, key);
     return myvector;
 }
 
-void DataManager::load_A(std::string const & filepath)
-{
-    std::cerr << "load_A called with " << filepath << std::endl;
-}
-
-void DataManager::load_B(std::string const & filepath)
-{
-    std::cerr << "load_B called with " << filepath << std::endl;
-}
-
-void DataManager::loadFromJSON(std::string const & filepath)
-{
-    // Set CWD to the directory of the JSON file to allow relative paths
-    auto original_path = std::filesystem::current_path();
-    std::filesystem::current_path(std::filesystem::path(filepath).parent_path());
-
-    // Open JSON
-    std::ifstream ifs(std::filesystem::path(filepath).filename());
-    json j = basic_json<>::parse(ifs);
-
-    // Configure the functions to call based on the JSON keys
-    const std::map<std::string, void(DataManager::*)(std::string const &)> load_functions = {
-        {"load_A", &DataManager::load_A},
-        {"load_B", &DataManager::load_B}
-    };
-
-    std::filesystem::current_path(original_path);
-}
-
 std::optional<std::string> processFilePath(
-        const std::string& file_path,
-        const std::filesystem::path& base_path)
-{
+        std::string const & file_path,
+        std::filesystem::path const & base_path) {
     std::filesystem::path full_path = file_path;
 
     // Check for wildcard character
     if (file_path.find('*') != std::string::npos) {
         // Convert wildcard pattern to regex
-        std::string pattern = std::regex_replace(full_path.string(), std::regex("\\*"), ".*");
-        std::regex regex_pattern(pattern);
+        std::string const pattern = std::regex_replace(full_path.string(), std::regex("\\*"), ".*");
+        std::regex const regex_pattern(pattern);
 
         // Iterate through the directory to find matching files
-        for (const auto& entry : std::filesystem::directory_iterator(base_path)) {
+        for (auto const & entry: std::filesystem::directory_iterator(base_path)) {
             std::cout << "Checking " << entry.path().string() << " with full path " << full_path << std::endl;
             if (std::regex_match(entry.path().string(), regex_pattern)) {
                 std::cout << "Loading file " << entry.path().string() << std::endl;
@@ -133,8 +99,8 @@ std::optional<std::string> processFilePath(
     }
 }
 
-bool checkRequiredFields(const json& item, const std::vector<std::string>& requiredFields) {
-    for (const auto& field : requiredFields) {
+bool checkRequiredFields(json const & item, std::vector<std::string> const & requiredFields) {
+    for (auto const & field: requiredFields) {
         if (!item.contains(field)) {
             std::cerr << "Error: Missing required field \"" << field << "\" in JSON item." << std::endl;
             return false;
@@ -143,41 +109,42 @@ bool checkRequiredFields(const json& item, const std::vector<std::string>& requi
     return true;
 }
 
-int DataManager::addCallbackToData(std::string key, ObserverCallback callback) {
+int DataManager::addCallbackToData(std::string const & key, ObserverCallback callback) {
 
-   int id = -1;
+    int id = -1;
 
     if (_data.find(key) != _data.end()) {
         auto data = _data[key];
 
-        id = std::visit([callback](auto& x) {
-                return x.get()->addObserver(callback);
-        }, data);
+        id = std::visit([callback](auto & x) {
+            return x.get()->addObserver(callback);
+        },
+                        data);
     }
 
     return id;
 }
 
-void DataManager::removeCallbackFromData(std::string key, int callback_id) {
+void DataManager::removeCallbackFromData(std::string const & key, int callback_id) {
     if (_data.find(key) != _data.end()) {
         auto data = _data[key];
 
-        std::visit([callback_id](auto& x) {
+        std::visit([callback_id](auto & x) {
             x.get()->removeObserver(callback_id);
-        }, data);
+        },
+                   data);
     }
 }
 
-void checkOptionalFields(const json& item, const std::vector<std::string>& optionalFields) {
-    for (const auto& field : optionalFields) {
+void checkOptionalFields(json const & item, std::vector<std::string> const & optionalFields) {
+    for (auto const & field: optionalFields) {
         if (!item.contains(field)) {
             std::cout << "Warning: Optional field \"" << field << "\" is missing in JSON item." << std::endl;
         }
     }
 }
 
-std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm, std::string json_filepath)
-{
+std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath) {
     std::vector<DataInfo> data_info_list;
     // Open JSON file
     std::ifstream ifs(json_filepath);
@@ -191,17 +158,17 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
     ifs >> j;
 
     // get base path of filepath
-    std::filesystem::path base_path = std::filesystem::path(json_filepath).parent_path();
+    std::filesystem::path const base_path = std::filesystem::path(json_filepath).parent_path();
 
     // Iterate through JSON array
-    for (const auto& item : j) {
+    for (auto const & item: j) {
 
         if (!checkRequiredFields(item, {"data_type", "name", "filepath"})) {
-            continue; // Exit if any required field is missing
+            continue;// Exit if any required field is missing
         }
 
-        std::string data_type = item["data_type"];
-        std::string name = item["name"];
+        std::string const data_type = item["data_type"];
+        std::string const name = item["name"];
 
         auto file_exists = processFilePath(item["filepath"], base_path);
         if (!file_exists) {
@@ -209,7 +176,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             continue;
         }
 
-        std::string file_path = file_exists.value();
+        std::string const file_path = file_exists.value();
 
         if (data_type == "video") {
             // Create VideoData object
@@ -225,18 +192,18 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
         } else if (data_type == "points") {
 
-            int frame_column = item["frame_column"];
-            int x_column = item["x_column"];
-            int y_column = item["y_column"];
+            int const frame_column = item["frame_column"];
+            int const x_column = item["x_column"];
+            int const y_column = item["y_column"];
 
-            std::string color = item.value("color","#0000FF");
-            std::string delim = item.value("delim", " ");
+            std::string const color = item.value("color", "#0000FF");
+            std::string const delim = item.value("delim", " ");
 
-            int height = item.value("height", -1);
-            int width = item.value("width", -1);
+            int const height = item.value("height", -1);
+            int const width = item.value("width", -1);
 
-            int scaled_height = item.value("scale_to_height", -1);
-            int scaled_width = item.value("scale_to_width", -1);
+            int const scaled_height = item.value("scale_to_height", -1);
+            int const scaled_width = item.value("scale_to_width", -1);
 
             auto keypoints = load_points_from_csv(
                     file_path,
@@ -245,40 +212,38 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                     y_column,
                     delim.c_str()[0]);
 
-            auto keypoint_key = name;
-
-            std::cout << "There are " <<  keypoints.size() << " keypoints " << std::endl;
+            std::cout << "There are " << keypoints.size() << " keypoints " << std::endl;
 
             auto point_data = std::make_shared<PointData>(keypoints);
-            point_data->setImageSize(ImageSize{width,height});
+            point_data->setImageSize(ImageSize{width, height});
 
             if (scaled_height > 0 && scaled_width > 0) {
                 scale(point_data, ImageSize{scaled_width, scaled_height});
             }
 
-            dm->setData<PointData>(keypoint_key, point_data);
+            dm->setData<PointData>(name, point_data);
 
-            data_info_list.push_back({keypoint_key, "PointData", color});
+            data_info_list.push_back({name, "PointData", color});
 
         } else if (data_type == "mask") {
 
-            std::string frame_key = item["frame_key"];
-            std::string prob_key = item["probability_key"];
-            std::string x_key = item["x_key"];
-            std::string y_key = item["y_key"];
+            std::string const frame_key = item["frame_key"];
+            std::string const prob_key = item["probability_key"];
+            std::string const x_key = item["x_key"];
+            std::string const y_key = item["y_key"];
 
-            int height = item.value("height", -1);
-            int width = item.value("width", -1);
+            int const height = item.value("height", -1);
+            int const width = item.value("width", -1);
 
-            std::string color = item.value("color","0000FF");
+            std::string const color = item.value("color", "0000FF");
 
-            auto frames =  read_array_hdf5(file_path, frame_key);
+            auto frames = read_array_hdf5(file_path, frame_key);
             auto probs = read_ragged_hdf5(file_path, prob_key);
             auto y_coords = read_ragged_hdf5(file_path, y_key);
             auto x_coords = read_ragged_hdf5(file_path, x_key);
 
             auto mask_data = std::make_shared<MaskData>();
-            mask_data->setImageSize(ImageSize{width,height});
+            mask_data->setImageSize(ImageSize{width, height});
 
             for (std::size_t i = 0; i < frames.size(); i++) {
                 auto frame = frames[i];
@@ -294,18 +259,17 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             if (item.contains("operations")) {
 
-                for (const auto& operation : item["operations"]) {
+                for (auto const & operation: item["operations"]) {
 
-                    std::string operation_type = operation["type"];
+                    std::string const operation_type = operation["type"];
 
                     if (operation_type == "area") {
                         std::cout << "Calculating area for mask: " << name << std::endl;
                         auto area_data = area(dm->getData<MaskData>(name));
-                        std::string output_name = name + "_area";
+                        std::string const output_name = name + "_area";
                         dm->setData<AnalogTimeSeries>(output_name, area_data);
                     }
                 }
-
             }
         } else if (data_type == "line") {
 
@@ -319,7 +283,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             dm->setData<LineData>(whisker_name, std::make_shared<LineData>(line_map));
 
-            std::string color = item.value("color","0000FF");
+            std::string const color = item.value("color", "0000FF");
 
             data_info_list.push_back({name, "LineData", color});
 
@@ -327,7 +291,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             if (item["format"] == "int16") {
 
-                int header_size = item.value("header_size", 0);
+                int const header_size = item.value("header_size", 0);
 
                 auto data = readBinaryFile<int16_t>(file_path, header_size);
 
@@ -336,8 +300,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                 std::transform(
                         data.begin(),
                         data.end(),
-                        std::back_inserter(data_float), [](int16_t i){return i;}
-                        );
+                        std::back_inserter(data_float), [](int16_t i) { return i; });
 
                 auto analog_time_series = std::make_shared<AnalogTimeSeries>();
                 analog_time_series->setData(data_float);
@@ -352,9 +315,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             if (item["format"] == "uint16") {
 
-                int channel = item["channel"];
-                std::string transition = item["transition"];
-                int header_size = item.value("header_size", 0);
+                int const channel = item["channel"];
+                std::string const transition = item["transition"];
+                int const header_size = item.value("header_size", 0);
 
                 auto data = readBinaryFile<uint16_t>(file_path, header_size);
 
@@ -367,11 +330,11 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
                 dm->setData<DigitalEventSeries>(name, digital_event_series);
             } else if (item["format"] == "csv") {
 
-                auto events =  CSVLoader::loadSingleColumnCSV(file_path);
+                auto events = CSVLoader::loadSingleColumnCSV(file_path);
                 std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
 
-                float scale = item.value("scale", 1.0);
-                for (auto& e : events) {
+                float const scale = item.value("scale", 1.0f);
+                for (auto & e: events) {
                     e *= scale;
                 }
                 auto digital_event_series = std::make_shared<DigitalEventSeries>();
@@ -385,9 +348,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             if (item["format"] == "uint16") {
 
-                int channel = item["channel"];
-                std::string transition = item["transition"];
-                int header_size = item.value("header_size", 0);
+                int const channel = item["channel"];
+                std::string const transition = item["transition"];
+                int const header_size = item.value("header_size", 0);
 
                 auto data = readBinaryFile<uint16_t>(file_path, header_size);
 
@@ -402,7 +365,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             } else if (item["format"] == "csv") {
 
-                auto intervals =  CSVLoader::loadPairColumnCSV(file_path);
+                auto intervals = CSVLoader::loadPairColumnCSV(file_path);
                 std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
                 auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
                 digital_interval_series->setData(intervals);
@@ -410,10 +373,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             } else {
                 std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
             }
-        } else if (data_type == "tensor"){
+        } else if (data_type == "tensor") {
 
-            if (item["format"] == "numpy")
-            {
+            if (item["format"] == "numpy") {
 
                 TensorData tensor_data;
                 loadNpyToTensorData(file_path, tensor_data);
@@ -428,9 +390,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             if (item["format"] == "uint16") {
 
-                int channel = item["channel"];
-                std::string transition = item["transition"];
-                int header_size = item.value("header_size", 0);
+                int const channel = item["channel"];
+                std::string const transition = item["transition"];
+                int const header_size = item.value("header_size", 0);
 
                 auto data = readBinaryFile<uint16_t>(file_path, header_size);
 
@@ -439,8 +401,9 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
                 // convert to int with std::transform
                 std::vector<int> events_int;
-                for (auto e : events) {
-                    events_int.push_back(e);
+                events_int.reserve(events.size());
+                for (auto e: events) {
+                    events_int.push_back(static_cast<int>(e));
                 }
                 std::cout << "Loaded " << events_int.size() << " events for " << name << std::endl;
 
@@ -450,12 +413,12 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
 
             if (item["format"] == "uint16_length") {
 
-                int header_size = item.value("header_size", 0);
+                int const header_size = item.value("header_size", 0);
 
                 auto data = readBinaryFile<uint16_t>(file_path, header_size);
 
-                std::vector<int> t(data.size()) ;
-                std::iota (std::begin(t), std::end(t), 0);
+                std::vector<int> t(data.size());
+                std::iota(std::begin(t), std::end(t), 0);
 
                 std::cout << "Total of " << t.size() << " timestamps for " << name << std::endl;
 
@@ -464,7 +427,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
             }
         }
         if (item.contains("clock")) {
-            std::string clock = item["clock"];
+            std::string const clock = item["clock"];
             std::cout << "Setting time for " << name << " to " << clock << std::endl;
             dm->setTimeFrame(name, clock);
         }
@@ -473,7 +436,7 @@ std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager> dm
     return data_info_list;
 }
 
-std::string DataManager::getType(const std::string& key) const {
+std::string DataManager::getType(std::string const & key) const {
     auto it = _data.find(key);
     if (it != _data.end()) {
         if (std::holds_alternative<std::shared_ptr<MediaData>>(it->second)) {
@@ -487,7 +450,7 @@ std::string DataManager::getType(const std::string& key) const {
         } else if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(it->second)) {
             return "AnalogTimeSeries";
         } else if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(it->second)) {
-                return "DigitalEventSeries";
+            return "DigitalEventSeries";
         } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(it->second)) {
             return "DigitalIntervalSeries";
         } else if (std::holds_alternative<std::shared_ptr<TensorData>>(it->second)) {
@@ -496,4 +459,3 @@ std::string DataManager::getType(const std::string& key) const {
         return "Unknown";
     }
 }
-

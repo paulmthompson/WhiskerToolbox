@@ -5,14 +5,14 @@
 #include "TimeFrame.hpp"
 
 #include <filesystem>
-#include <functional> // std::function
-#include <memory> // std::shared_ptr
+#include <functional>// std::function
 #include <iostream>
-#include <string> // std::string
-#include <unordered_map> // std::unordered_map
-#include <utility> // std::move
-#include <variant> // std::variant
-#include <vector> // std::vector
+#include <memory>       // std::shared_ptr
+#include <string>       // std::string
+#include <unordered_map>// std::unordered_map
+#include <utility>      // std::move
+#include <variant>      // std::variant
+#include <vector>       // std::vector
 
 class AnalogTimeSeries;
 class DigitalEventSeries;
@@ -42,15 +42,15 @@ public:
         _data["media"] = media;
     };
 
-    void setTime(const std::string& key, std::shared_ptr<TimeFrame> timeframe) {
-        _times[key] = timeframe;
+    void setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe) {
+        _times[key] = std::move(timeframe);
     };
 
     std::shared_ptr<TimeFrame> getTime() {
         return _times["time"];
     };
 
-    std::shared_ptr<TimeFrame> getTime(const std::string& key) {
+    std::shared_ptr<TimeFrame> getTime(std::string const & key) {
         if (_times.find(key) != _times.end()) {
             return _times[key];
         }
@@ -66,32 +66,25 @@ public:
 
     // Method to notify all observers of a change
     void notifyObservers() {
-        for (auto& observer : _observers) {
-            observer(); // Call the observer callback
+        for (auto & observer: _observers) {
+            observer();// Call the observer callback
         }
     }
 
-    void loadFromJSON(std::string const & filepath);
-
-    void load_A(const std::string & filepath);
-    void load_B(const std::string & filepath);
-
-    std::vector<std::string> getAllKeys()
-    {
+    std::vector<std::string> getAllKeys() {
         std::vector<std::string> keys;
-        for (const auto& [key, value] : _data) {
+        keys.reserve(_data.size());
+        for (auto const & [key, value]: _data) {
 
             keys.push_back(key);
-
         }
         return keys;
     }
 
     template<typename T>
-    std::vector<std::string> getKeys()
-    {
+    std::vector<std::string> getKeys() {
         std::vector<std::string> keys;
-        for (const auto& [key, value] : _data) {
+        for (auto const & [key, value]: _data) {
             if (std::holds_alternative<std::shared_ptr<T>>(value)) {
                 keys.push_back(key);
             }
@@ -100,7 +93,7 @@ public:
     }
 
     template<typename T>
-    std::shared_ptr<T> getData(const std::string& key) {
+    std::shared_ptr<T> getData(std::string const & key) {
         if (_data.find(key) != _data.end()) {
             return std::get<std::shared_ptr<T>>(_data[key]);
         }
@@ -108,7 +101,7 @@ public:
     }
 
     template<typename T>
-    std::shared_ptr<T> getDataFromGroup(const std::string& group_key, int index) {
+    std::shared_ptr<T> getDataFromGroup(std::string const & group_key, int index) {
         if (_dataGroups.find(group_key) != _dataGroups.end()) {
 
             if (index >= _dataGroups.at(group_key).size()) {
@@ -127,64 +120,63 @@ public:
     }
 
     template<typename T>
-    void setData(const std::string& key){
+    void setData(std::string const & key) {
         _data[key] = std::make_shared<T>();
         setTimeFrame(key, "time");
         notifyObservers();
     }
 
     template<typename T>
-    void setData(const std::string& key, std::shared_ptr<T> data){
+    void setData(std::string const & key, std::shared_ptr<T> data) {
         _data[key] = data;
         setTimeFrame(key, "time");
         notifyObservers();
     }
 
     template<typename T>
-    void setData(const std::string& key, std::shared_ptr<T> data, const std::string time_key){
+    void setData(std::string const & key, std::shared_ptr<T> data, std::string const & time_key) {
         _data[key] = data;
         setTimeFrame(key, time_key);
         notifyObservers();
     }
 
-    std::string getType(const std::string& key) const;
+    [[nodiscard]] std::string getType(std::string const & key) const;
 
-    void setTimeFrame(std::string data_key, std::string time_key);
-    std::string getTimeFrame(std::string data_key) {
+    void setTimeFrame(std::string const & data_key, std::string const & time_key);
+    std::string getTimeFrame(std::string const & data_key) {
         return _time_frames[data_key];
     }
 
-    std::vector<std::string> getTimeFrameKeys()
-    {
+    std::vector<std::string> getTimeFrameKeys() {
         std::vector<std::string> keys;
-        for (const auto& [key, value] : _times) {
+        keys.reserve(_times.size());
+        for (auto const & [key, value]: _times) {
 
             keys.push_back(key);
-
         }
         return keys;
     }
 
-    void createDataGroup(const std::string& groupName) {
+    void createDataGroup(std::string const & groupName) {
         _dataGroups[groupName] = {};
     }
 
-    void createDataGroup(const std::string& groupName, const std::vector<std::string>& dataKeys) {
+    void createDataGroup(std::string const & groupName, std::vector<std::string> const & dataKeys) {
         _dataGroups[groupName] = dataKeys;
     }
 
-    std::vector<std::string> getDataGroup(const std::string& groupName) const {
+    [[nodiscard]] std::vector<std::string> getDataGroup(std::string const & groupName) const {
         if (_dataGroups.find(groupName) != _dataGroups.end()) {
             return _dataGroups.at(groupName);
         }
         return {};
     }
 
-    bool isDataGroup(const std::string& groupName) const {
+    [[nodiscard]] bool isDataGroup(std::string const & groupName) const {
         return _dataGroups.find(groupName) != _dataGroups.end();
     }
 
-    std::vector<std::string> getKeysInDataGroup(const std::string& groupName) const {
+    [[nodiscard]] std::vector<std::string> getKeysInDataGroup(std::string const & groupName) const {
         if (_dataGroups.find(groupName) != _dataGroups.end()) {
             return _dataGroups.at(groupName);
         }
@@ -193,13 +185,14 @@ public:
 
     std::vector<std::string> getDataGroupNames() {
         std::vector<std::string> groupNames;
-        for (const auto& [key, value] : _dataGroups) {
+        groupNames.reserve(_dataGroups.size());
+        for (auto const & [key, value]: _dataGroups) {
             groupNames.push_back(key);
         }
         return groupNames;
     }
 
-    void addDataToGroup(const std::string& groupName, const std::string& dataKey) {
+    void addDataToGroup(std::string const & groupName, std::string const & dataKey) {
 
         //Check if key is in _data
         if (_data.find(dataKey) == _data.end()) {
@@ -212,45 +205,44 @@ public:
         }
     }
 
-    int addCallbackToData(std::string key, ObserverCallback callback);
-    void removeCallbackFromData(std::string key, int callback_id);
+    int addCallbackToData(std::string const & key, ObserverCallback callback);
+    void removeCallbackFromData(std::string const & key, int callback_id);
 
-    void setOutputPath(const std::filesystem::path& output_path) { _output_path = output_path;};
+    void setOutputPath(std::filesystem::path const & output_path) { _output_path = output_path; };
 
-    std::filesystem::path getOutputPath() const {
+    [[nodiscard]] std::filesystem::path getOutputPath() const {
         return _output_path;
     }
 
 private:
-
     //std::shared_ptr<TimeFrame> _time;
     std::unordered_map<std::string, std::shared_ptr<TimeFrame>> _times;
 
     std::vector<ObserverCallback> _observers;
 
     std::unordered_map<std::string, std::variant<
-                                        std::shared_ptr<MediaData>,
-                                        std::shared_ptr<PointData>,
-                                        std::shared_ptr<LineData>,
-                                        std::shared_ptr<MaskData>,
-                                        std::shared_ptr<AnalogTimeSeries>,
-                                        std::shared_ptr<DigitalEventSeries>,
-                                        std::shared_ptr<DigitalIntervalSeries>,
-                                        std::shared_ptr<TensorData>>> _data;
+                                            std::shared_ptr<MediaData>,
+                                            std::shared_ptr<PointData>,
+                                            std::shared_ptr<LineData>,
+                                            std::shared_ptr<MaskData>,
+                                            std::shared_ptr<AnalogTimeSeries>,
+                                            std::shared_ptr<DigitalEventSeries>,
+                                            std::shared_ptr<DigitalIntervalSeries>,
+                                            std::shared_ptr<TensorData>>>
+            _data;
 
     std::unordered_map<std::string, std::string> _time_frames;
 
     std::unordered_map<std::string, std::vector<std::string>> _dataGroups;
 
     std::filesystem::path _output_path;
-
 };
 
 std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key);
 
 std::vector<int> read_array_hdf5(std::string const & filepath, std::string const & key);
 
-std::vector<DataInfo> load_data_from_json_config(std::shared_ptr<DataManager>, std::string json_filepath);
+std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
 
 
-#endif // DATAMANAGER_HPP
+#endif// DATAMANAGER_HPP
