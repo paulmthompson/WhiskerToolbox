@@ -254,7 +254,7 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         float const rNorm = static_cast<float>(r) / 255.0f;
         float const gNorm = static_cast<float>(g) / 255.0f;
         float const bNorm = static_cast<float>(b) / 255.0f;
-        float const alpha = 0.5f;// Set alpha for shading
+        float const alpha = 0.2f;// Set alpha for shading
 
         // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
         auto Model = glm::mat4(1.0f);
@@ -336,7 +336,9 @@ void OpenGLWidget::drawAnalogSeries() {
                                        [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(time); });
 
         // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
+        float const y_offset = 0.0;
         auto Model = glm::mat4(1.0f);
+        Model = glm::translate(Model, glm::vec3(0, y_offset, 0));
         Model = glm::scale(Model, glm::vec3(1, 1 / stdDev, 1));
 
         // View Matrix. Panning (all lines moved together).
