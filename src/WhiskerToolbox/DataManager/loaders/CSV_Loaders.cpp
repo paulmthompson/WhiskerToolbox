@@ -5,7 +5,7 @@
 
 namespace CSVLoader {
 
-std::vector<float> loadSingleColumnCSV(const std::string& filename) {
+std::vector<float> loadSingleColumnCSV(std::string const & filename) {
     std::vector<float> data;
     std::ifstream file(filename);
     std::string line;
@@ -20,7 +20,7 @@ std::vector<float> loadSingleColumnCSV(const std::string& filename) {
     return data;
 }
 
-std::vector<std::pair<float, float>> loadPairColumnCSV(const std::string& filename) {
+std::vector<std::pair<float, float>> loadPairColumnCSV(std::string const & filename) {
     std::vector<std::pair<float, float>> data;
     std::ifstream file(filename);
     std::string line;
@@ -35,13 +35,13 @@ std::vector<std::pair<float, float>> loadPairColumnCSV(const std::string& filena
         }
 
         if (tokens.size() >= 2) {
-            float first = std::stof(tokens[0]);
-            float second = std::stof(tokens[1]);
-            data.emplace_back(std::make_pair(first, second));
+            float const first = std::stof(tokens[0]);
+            float const second = std::stof(tokens[1]);
+            data.emplace_back(first, second);
         }
     }
 
     return data;
 }
 
-} // namespace CSVLoader
+}// namespace CSVLoader

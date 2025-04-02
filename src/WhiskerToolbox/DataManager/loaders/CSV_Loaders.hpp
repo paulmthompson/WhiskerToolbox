@@ -6,11 +6,11 @@
 
 namespace CSVLoader {
 
-std::vector<float> loadSingleColumnCSV(const std::string& filename);
+std::vector<float> loadSingleColumnCSV(std::string const & filename);
 
-std::vector<std::pair<float, float>> loadPairColumnCSV(const std::string& filename);
+std::vector<std::pair<float, float>> loadPairColumnCSV(std::string const & filename);
 
-} // namespace CSVLoader
+}// namespace CSVLoader
 
 
-#endif //BEHAVIORTOOLBOX_CSV_LOADERS_HPP
+#endif//BEHAVIORTOOLBOX_CSV_LOADERS_HPP
