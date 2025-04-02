@@ -168,12 +168,11 @@ void OpenGLWidget::drawDigitalEventSeries() {
     auto const end_time = static_cast<float>(_xAxis.getEnd());
     auto const m_program_ID = m_program->programId();
 
-    setupVertexAttribs();
-
     glUseProgram(m_program_ID);
 
     //QOpenGLFunctions_4_1_Core::glBindVertexArray(m_vao.objectId());
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);// glBindVertexArray
+    setupVertexAttribs();
 
     for (auto const & [key, event_data]: _digital_event_series) {
         auto const & series = event_data.series;
@@ -214,7 +213,6 @@ void OpenGLWidget::drawDigitalEventSeries() {
 
             glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
-
 
             GLint const first = 0;  // Starting index of enabled array
             GLsizei const count = 2;// number of indexes to render

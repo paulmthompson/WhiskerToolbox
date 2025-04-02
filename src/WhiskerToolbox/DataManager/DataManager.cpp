@@ -296,7 +296,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 if (channel_count > 1) {
 
-                    auto data =  readBinaryFileMultiChannel<int16_t>(file_path, channel_count, header_size);
+                    auto data = readBinaryFileMultiChannel<int16_t>(file_path, channel_count, header_size);
 
                     std::cout << "Read " << data.size() << " channels" << std::endl;
 
@@ -304,9 +304,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                         // convert to float with std::transform
                         std::vector<float> data_float;
                         std::transform(
-                            data[channel].begin(),
-                            data[channel].end(),
-                            std::back_inserter(data_float), [](int16_t i) { return i; });
+                                data[channel].begin(),
+                                data[channel].end(),
+                                std::back_inserter(data_float), [](int16_t i) { return i; });
 
                         auto analog_time_series = std::make_shared<AnalogTimeSeries>();
                         analog_time_series->setData(data_float);
@@ -328,9 +328,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     // convert to float with std::transform
                     std::vector<float> data_float;
                     std::transform(
-                        data.begin(),
-                        data.end(),
-                        std::back_inserter(data_float), [](int16_t i) { return i; });
+                            data.begin(),
+                            data.end(),
+                            std::back_inserter(data_float), [](int16_t i) { return i; });
 
                     auto analog_time_series = std::make_shared<AnalogTimeSeries>();
                     analog_time_series->setData(data_float);
@@ -364,9 +364,18 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
 
                 float const scale = item.value("scale", 1.0f);
-                for (auto & e: events) {
-                    e *= scale;
+                float const scale_divide = item.value("scale_divide", false);
+
+                if (scale_divide) {
+                    for (auto & e: events) {
+                        e /= scale;
+                    }
+                } else {
+                    for (auto & e: events) {
+                        e *= scale;
+                    }
                 }
+
                 auto digital_event_series = std::make_shared<DigitalEventSeries>();
                 digital_event_series->setData(events);
                 dm->setData<DigitalEventSeries>(name, digital_event_series);
