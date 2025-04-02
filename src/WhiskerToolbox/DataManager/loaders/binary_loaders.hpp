@@ -1,6 +1,8 @@
 #ifndef BINARY_LOADERS_HPP
 #define BINARY_LOADERS_HPP
 
+#include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -18,35 +20,93 @@
  */
 template<typename T>
 inline std::vector<T> readBinaryFile(std::string const & file_path, int header_size_bytes = 0) {
-    std::ifstream file(file_path, std::ios::binary);
-    std::vector<T> data;
-    if (file) {
-        file.seekg(header_size_bytes, std::ios::beg);
-        T value;
-        while (file.read(reinterpret_cast<char *>(&value), sizeof(T))) {
-            data.push_back(value);
-        }
+
+    auto t1 = std::chrono::steady_clock::now();
+
+    std::ifstream file(file_path, std::ios::binary | std::ios::ate);// seeks to end
+
+    if (!file) {
+        std::cout << "Cannot open file: " << file_path << std::endl;
+        return std::vector<T>();
     }
+
+    std::streampos const file_size = file.tellg();
+
+    size_t const data_size_bytes = static_cast<size_t>(file_size) - header_size_bytes;
+    size_t num_samples = data_size_bytes / sizeof(T);
+
+    std::vector<T> data(num_samples);
+
+    file.seekg(header_size_bytes, std::ios::beg);
+    file.read(reinterpret_cast<char *>(data.data()), static_cast<std::streamsize>(data_size_bytes));
+
+    auto t2 = std::chrono::steady_clock::now();
+
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+
+    std::cout << "Total time to load " << file_path << ": " << elapsed << std::endl;
+
     return data;
 }
 
-// I want to make a function that reads a binary file that is structure as n-channels worth of data
-// for each time step. It should return a vector<vector<T>> where each vector<T> is a channel
-// and the vector<T> is the data for that channel
 template<typename T>
 inline std::vector<std::vector<T>> readBinaryFileMultiChannel(std::string const & file_path, int num_channels, int header_size_bytes = 0) {
-    std::ifstream file(file_path, std::ios::binary);
+
+    auto t1 = std::chrono::steady_clock::now();
+
+    if (num_channels <= 0) {
+        std::cout << "Channels cannot be less than 1" << std::endl;
+        return std::vector<std::vector<T>>();
+    }
+
+    std::ifstream file(file_path, std::ios::binary | std::ios::ate);// Opens file at end
+
+    if (!file) {
+        std::cout << "Cannot open file: " << file_path << std::endl;
+        return std::vector<std::vector<T>>();
+    }
+
+    std::streampos const file_size_bytes = file.tellg();
+    if (file_size_bytes < header_size_bytes) {
+        std::cout << "File size is smaller than header size" << std::endl;
+        return std::vector<std::vector<T>>();
+    }
+
+    size_t const data_size_bytes = static_cast<size_t>(file_size_bytes) - header_size_bytes;
+    size_t bytes_per_sample_set = num_channels * sizeof(T);
+
+    if (data_size_bytes % bytes_per_sample_set != 0) {
+        std::cout << "Warning: The bytes in data is not a multiple of number of channels" << std::endl;
+    }
+
+    size_t num_samples_per_channel = data_size_bytes / bytes_per_sample_set;
+
     std::vector<std::vector<T>> data;
     data.resize(num_channels);
-    if (file) {
-        file.seekg(header_size_bytes, std::ios::beg);
-        std::vector<T> channel_data(num_channels);
-        while (file.read(reinterpret_cast<char *>(&channel_data[0]), sizeof(T) * num_channels)) {
-            for (size_t i = 0; i < num_channels; ++i) {
-                data[i].push_back(channel_data[i]);
-            }
-        }
+
+    for (size_t i = 0; i < num_channels; i++) {
+        //data[i].reserve(num_samples_per_channel);
+        data[i].resize(num_samples_per_channel);
     }
+
+    file.seekg(header_size_bytes, std::ios::beg);
+
+    std::vector<T> time_slice_buffer(num_channels);
+
+    size_t current_time_index = 0;
+    while (file.read(reinterpret_cast<char *>(&time_slice_buffer[0]), sizeof(T) * num_channels)) {
+        for (size_t i = 0; i < num_channels; ++i) {
+            //data[i].push_back(time_slice_buffer[i]);
+            data[i][current_time_index] = time_slice_buffer[i];
+        }
+        current_time_index++;
+    }
+
+    auto t2 = std::chrono::steady_clock::now();
+
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+
+    std::cout << "Total time to load " << elapsed << std::endl;
     return data;
 }
 
