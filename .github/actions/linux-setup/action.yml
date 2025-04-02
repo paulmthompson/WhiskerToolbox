@@ -12,6 +12,11 @@ runs:
   steps:
     - uses: seanmiddleditch/gha-setup-ninja@master
 
+    - name: Setup cmake
+      uses: jwlawson/actions-setup-cmake@v2
+      with:
+        cmake-version: '3.30.x'
+
     - name: Export GitHub Actions cache environment variables
       uses: actions/github-script@v7
       with:
