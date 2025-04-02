@@ -1,31 +1,27 @@
 #include "Analog_Time_Series.hpp"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <vector>
 
-AnalogTimeSeries::AnalogTimeSeries(std::map<int,float> analog_map)
-{
-    setData(analog_map);
+AnalogTimeSeries::AnalogTimeSeries(std::map<int, float> analog_map) {
+    setData(std::move(analog_map));
 }
 
-AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector)
-{
-    setData(analog_vector);
+AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector) {
+    setData(std::move(analog_vector));
 }
 
-AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, std::vector<size_t> time_vector)
-{
-    setData(analog_vector, time_vector);
+AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, std::vector<size_t> time_vector) {
+    setData(std::move(analog_vector), std::move(time_vector));
 }
 
-std::vector<float> load_analog_series_from_csv(std::string const& filename)
-{
+std::vector<float> load_analog_series_from_csv(std::string const & filename) {
 
     std::string csv_line;
     std::fstream myfile;
-    myfile.open (filename, std::fstream::in);
+    myfile.open(filename, std::fstream::in);
 
     if (!myfile.is_open()) {
         std::cout << "Error: File " << filename << " not found." << std::endl;
@@ -50,8 +46,7 @@ std::vector<float> load_analog_series_from_csv(std::string const& filename)
 void save_analog(
         std::vector<float> const & analog_series,
         std::vector<size_t> const & time_series,
-        std::string const block_output)
-{
+        std::string const & block_output) {
     std::fstream fout;
     fout.open(block_output, std::fstream::out);
 
