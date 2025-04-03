@@ -9,6 +9,13 @@
 #include <type_traits>
 #include <vector>
 
+
+struct BinaryAnalogOptions {
+    std::string file_path;
+    size_t header_size_bytes = 0;
+    size_t num_channels = 1;
+};
+
 /**
  * @brief readBinaryFile
  *
@@ -19,61 +26,61 @@
  * @return std::vector<T> Vector of data read from the file
  */
 template<typename T>
-inline std::vector<T> readBinaryFile(std::string const & file_path, int header_size_bytes = 0) {
+inline std::vector<T> readBinaryFile(BinaryAnalogOptions const & options) {
 
     auto t1 = std::chrono::steady_clock::now();
 
-    std::ifstream file(file_path, std::ios::binary | std::ios::ate);// seeks to end
+    std::ifstream file(options.file_path, std::ios::binary | std::ios::ate);// seeks to end
 
     if (!file) {
-        std::cout << "Cannot open file: " << file_path << std::endl;
+        std::cout << "Cannot open file: " << options.file_path << std::endl;
         return std::vector<T>();
     }
 
     std::streampos const file_size = file.tellg();
 
-    size_t const data_size_bytes = static_cast<size_t>(file_size) - header_size_bytes;
+    size_t const data_size_bytes = static_cast<size_t>(file_size) - options.header_size_bytes;
     size_t num_samples = data_size_bytes / sizeof(T);
 
     std::vector<T> data(num_samples);
 
-    file.seekg(header_size_bytes, std::ios::beg);
+    file.seekg(static_cast<std::ios::off_type>(options.header_size_bytes), std::ios::beg);
     file.read(reinterpret_cast<char *>(data.data()), static_cast<std::streamsize>(data_size_bytes));
 
     auto t2 = std::chrono::steady_clock::now();
 
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 
-    std::cout << "Total time to load " << file_path << ": " << elapsed << std::endl;
+    std::cout << "Total time to load " << options.file_path << ": " << elapsed << std::endl;
 
     return data;
 }
 
 template<typename T>
-inline std::vector<std::vector<T>> readBinaryFileMultiChannel(std::string const & file_path, int num_channels, int header_size_bytes = 0) {
+inline std::vector<std::vector<T>> readBinaryFileMultiChannel(BinaryAnalogOptions const & options) {
 
     auto t1 = std::chrono::steady_clock::now();
 
-    if (num_channels <= 0) {
+    if (options.num_channels <= 0) {
         std::cout << "Channels cannot be less than 1" << std::endl;
         return std::vector<std::vector<T>>();
     }
 
-    std::ifstream file(file_path, std::ios::binary | std::ios::ate);// Opens file at end
+    std::ifstream file(options.file_path, std::ios::binary | std::ios::ate);// Opens file at end
 
     if (!file) {
-        std::cout << "Cannot open file: " << file_path << std::endl;
+        std::cout << "Cannot open file: " << options.file_path << std::endl;
         return std::vector<std::vector<T>>();
     }
 
     std::streampos const file_size_bytes = file.tellg();
-    if (file_size_bytes < header_size_bytes) {
+    if (file_size_bytes < options.header_size_bytes) {
         std::cout << "File size is smaller than header size" << std::endl;
         return std::vector<std::vector<T>>();
     }
 
-    size_t const data_size_bytes = static_cast<size_t>(file_size_bytes) - header_size_bytes;
-    size_t bytes_per_sample_set = num_channels * sizeof(T);
+    size_t const data_size_bytes = static_cast<size_t>(file_size_bytes) - options.header_size_bytes;
+    size_t bytes_per_sample_set = options.num_channels * sizeof(T);
 
     if (data_size_bytes % bytes_per_sample_set != 0) {
         std::cout << "Warning: The bytes in data is not a multiple of number of channels" << std::endl;
@@ -82,20 +89,20 @@ inline std::vector<std::vector<T>> readBinaryFileMultiChannel(std::string const 
     size_t num_samples_per_channel = data_size_bytes / bytes_per_sample_set;
 
     std::vector<std::vector<T>> data;
-    data.resize(num_channels);
+    data.resize(options.num_channels);
 
-    for (size_t i = 0; i < num_channels; i++) {
+    for (size_t i = 0; i < options.num_channels; i++) {
         //data[i].reserve(num_samples_per_channel);
         data[i].resize(num_samples_per_channel);
     }
 
-    file.seekg(header_size_bytes, std::ios::beg);
+    file.seekg(options.header_size_bytes, std::ios::beg);
 
-    std::vector<T> time_slice_buffer(num_channels);
+    std::vector<T> time_slice_buffer(options.num_channels);
 
     size_t current_time_index = 0;
-    while (file.read(reinterpret_cast<char *>(&time_slice_buffer[0]), sizeof(T) * num_channels)) {
-        for (size_t i = 0; i < num_channels; ++i) {
+    while (file.read(reinterpret_cast<char *>(&time_slice_buffer[0]), sizeof(T) * options.num_channels)) {
+        for (size_t i = 0; i < options.num_channels; ++i) {
             //data[i].push_back(time_slice_buffer[i]);
             data[i][current_time_index] = time_slice_buffer[i];
         }

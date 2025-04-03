@@ -144,6 +144,20 @@ void checkOptionalFields(json const & item, std::vector<std::string> const & opt
     }
 }
 
+
+BinaryAnalogOptions createBinaryAnalogOptions(std::string const & file_path, nlohmann::basic_json<> const & item) {
+
+    int const header_size = item.value("header_size", 0);
+    int const num_channels = item.value("channel_count", 1);
+
+    auto opts = BinaryAnalogOptions{
+            .file_path = file_path,
+            .header_size_bytes = static_cast<size_t>(header_size),
+            .num_channels = static_cast<size_t>(num_channels)};
+
+    return opts;
+}
+
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath) {
     std::vector<DataInfo> data_info_list;
     // Open JSON file
@@ -291,12 +305,11 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
             if (item["format"] == "int16") {
 
-                int const header_size = item.value("header_size", 0);
-                int const channel_count = item.value("channel_count", 1);
+                auto opts = createBinaryAnalogOptions(file_path, item);
 
-                if (channel_count > 1) {
+                if (opts.num_channels > 1) {
 
-                    auto data = readBinaryFileMultiChannel<int16_t>(file_path, channel_count, header_size);
+                    auto data = readBinaryFileMultiChannel<int16_t>(opts);
 
                     std::cout << "Read " << data.size() << " channels" << std::endl;
 
@@ -323,7 +336,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 } else {
 
-                    auto data = readBinaryFile<int16_t>(file_path, header_size);
+                    auto data = readBinaryFile<int16_t>(opts);
 
                     // convert to float with std::transform
                     std::vector<float> data_float;
@@ -347,9 +360,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 int const channel = item["channel"];
                 std::string const transition = item["transition"];
-                int const header_size = item.value("header_size", 0);
 
-                auto data = readBinaryFile<uint16_t>(file_path, header_size);
+                auto opts = createBinaryAnalogOptions(file_path, item);
+                auto data = readBinaryFile<uint16_t>(opts);
 
                 auto digital_data = extractDigitalData(data, channel);
                 auto events = extractEvents(digital_data, transition);
@@ -364,7 +377,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
 
                 float const scale = item.value("scale", 1.0f);
-                float const scale_divide = item.value("scale_divide", false);
+                bool const scale_divide = item.value("scale_divide", false);
 
                 if (scale_divide) {
                     for (auto & e: events) {
@@ -389,9 +402,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 int const channel = item["channel"];
                 std::string const transition = item["transition"];
-                int const header_size = item.value("header_size", 0);
 
-                auto data = readBinaryFile<uint16_t>(file_path, header_size);
+                auto opts = createBinaryAnalogOptions(file_path, item);
+                auto data = readBinaryFile<uint16_t>(opts);
 
                 auto digital_data = extractDigitalData(data, channel);
 
@@ -431,9 +444,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 int const channel = item["channel"];
                 std::string const transition = item["transition"];
-                int const header_size = item.value("header_size", 0);
 
-                auto data = readBinaryFile<uint16_t>(file_path, header_size);
+                auto opts = createBinaryAnalogOptions(file_path, item);
+                auto data = readBinaryFile<uint16_t>(opts);
 
                 auto digital_data = extractDigitalData(data, channel);
                 auto events = extractEvents(digital_data, transition);
@@ -452,9 +465,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
             if (item["format"] == "uint16_length") {
 
-                int const header_size = item.value("header_size", 0);
-
-                auto data = readBinaryFile<uint16_t>(file_path, header_size);
+                auto opts = createBinaryAnalogOptions(file_path, item);
+                auto data = readBinaryFile<uint16_t>(opts);
 
                 std::vector<int> t(data.size());
                 std::iota(std::begin(t), std::end(t), 0);
