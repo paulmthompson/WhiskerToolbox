@@ -35,13 +35,16 @@ std::vector<std::pair<float, float>> loadPairColumnCSV(CSVMultiColumnOptions con
         std::string item;
         std::vector<std::string> tokens;
 
-        while (std::getline(ss, item, ',')) {
+        while (std::getline(ss, item, opts.col_delimiter[0])) {
             tokens.push_back(item);
         }
 
         if (tokens.size() >= 2) {
-            float const first = std::stof(tokens[0]);
-            float const second = std::stof(tokens[1]);
+            float first = std::stof(tokens[0]);
+            float second = std::stof(tokens[1]);
+            if (opts.flip_column_order) {
+                std::swap(first, second);
+            }
             data.emplace_back(first, second);
         }
     }

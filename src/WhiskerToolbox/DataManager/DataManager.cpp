@@ -9,6 +9,9 @@
 #include "Points/Point_Data.hpp"
 #include "Tensors/Tensor_Data.hpp"
 
+#include "Media/Video_Data_Loader.hpp"
+#include "Points/Point_Data_Loader.hpp"
+
 #include "loaders/CSV_Loaders.hpp"
 #include "loaders/binary_loaders.hpp"
 #include "transforms/data_transforms.hpp"
@@ -62,6 +65,32 @@ std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, s
 std::vector<int> read_array_hdf5(std::string const & filepath, std::string const & key) {
     auto myvector = load_array<int>(filepath, key);
     return myvector;
+}
+
+enum class DataType {
+    Video,
+    Points,
+    Mask,
+    Line,
+    Analog,
+    DigitalEvent,
+    DigitalInterval,
+    Tensor,
+    Time,
+    Unknown
+};
+
+DataType stringToDataType(std::string const & data_type_str) {
+    if (data_type_str == "video") return DataType::Video;
+    if (data_type_str == "points") return DataType::Points;
+    if (data_type_str == "mask") return DataType::Mask;
+    if (data_type_str == "line") return DataType::Line;
+    if (data_type_str == "analog") return DataType::Analog;
+    if (data_type_str == "digital_event") return DataType::DigitalEvent;
+    if (data_type_str == "digital_interval") return DataType::DigitalInterval;
+    if (data_type_str == "tensor") return DataType::Tensor;
+    if (data_type_str == "time") return DataType::Time;
+    return DataType::Unknown;
 }
 
 std::optional<std::string> processFilePath(
@@ -181,7 +210,13 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             continue;// Exit if any required field is missing
         }
 
-        std::string const data_type = item["data_type"];
+        std::string const data_type_str = item["data_type"];
+        DataType data_type = stringToDataType(data_type_str);
+        if (data_type == DataType::Unknown) {
+            std::cout << "Unknown data type: " << data_type_str << std::endl;
+            continue;
+        }
+
         std::string const name = item["name"];
 
         auto file_exists = processFilePath(item["filepath"], base_path);
@@ -192,294 +227,283 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
         std::string const file_path = file_exists.value();
 
-        if (data_type == "video") {
-            // Create VideoData object
-            auto video_data = std::make_shared<VideoData>();
+        switch (data_type) {
+            case DataType::Video: {
+                // Create VideoData object
+                auto video_data = load_video_into_VideoData(file_path);
 
-            video_data->LoadMedia(file_path);
+                // Add VideoData to DataManager
+                dm->setMedia(video_data);
 
-            std::cout << "Video has " << video_data->getTotalFrameCount() << " frames" << std::endl;
-            // Add VideoData to DataManager
-            dm->setMedia(video_data);
-
-            data_info_list.push_back({name, "VideoData", ""});
-
-        } else if (data_type == "points") {
-
-            int const frame_column = item["frame_column"];
-            int const x_column = item["x_column"];
-            int const y_column = item["y_column"];
-
-            std::string const color = item.value("color", "#0000FF");
-            std::string const delim = item.value("delim", " ");
-
-            int const height = item.value("height", -1);
-            int const width = item.value("width", -1);
-
-            int const scaled_height = item.value("scale_to_height", -1);
-            int const scaled_width = item.value("scale_to_width", -1);
-
-            auto keypoints = load_points_from_csv(
-                    file_path,
-                    frame_column,
-                    x_column,
-                    y_column,
-                    delim.c_str()[0]);
-
-            std::cout << "There are " << keypoints.size() << " keypoints " << std::endl;
-
-            auto point_data = std::make_shared<PointData>(keypoints);
-            point_data->setImageSize(ImageSize{width, height});
-
-            if (scaled_height > 0 && scaled_width > 0) {
-                scale(point_data, ImageSize{scaled_width, scaled_height});
+                data_info_list.push_back({name, "VideoData", ""});
+                break;
             }
+            case DataType::Points: {
 
-            dm->setData<PointData>(name, point_data);
+                auto point_data = load_into_PointData(file_path, item);
 
-            data_info_list.push_back({name, "PointData", color});
+                dm->setData<PointData>(name, point_data);
 
-        } else if (data_type == "mask") {
-
-            std::string const frame_key = item["frame_key"];
-            std::string const prob_key = item["probability_key"];
-            std::string const x_key = item["x_key"];
-            std::string const y_key = item["y_key"];
-
-            int const height = item.value("height", -1);
-            int const width = item.value("width", -1);
-
-            std::string const color = item.value("color", "0000FF");
-
-            auto frames = read_array_hdf5(file_path, frame_key);
-            auto probs = read_ragged_hdf5(file_path, prob_key);
-            auto y_coords = read_ragged_hdf5(file_path, y_key);
-            auto x_coords = read_ragged_hdf5(file_path, x_key);
-
-            auto mask_data = std::make_shared<MaskData>();
-            mask_data->setImageSize(ImageSize{width, height});
-
-            for (std::size_t i = 0; i < frames.size(); i++) {
-                auto frame = frames[i];
-                auto prob = probs[i];
-                auto x = x_coords[i];
-                auto y = y_coords[i];
-                mask_data->addMaskAtTime(frame, x, y);
+                std::string const color = item.value("color", "#0000FF");
+                data_info_list.push_back({name, "PointData", color});
+                break;
             }
+            case DataType::Mask: {
 
-            dm->setData<MaskData>(name, mask_data);
+                std::string const frame_key = item["frame_key"];
+                std::string const prob_key = item["probability_key"];
+                std::string const x_key = item["x_key"];
+                std::string const y_key = item["y_key"];
 
-            data_info_list.push_back({name, "MaskData", color});
+                int const height = item.value("height", -1);
+                int const width = item.value("width", -1);
 
-            if (item.contains("operations")) {
+                std::string const color = item.value("color", "0000FF");
 
-                for (auto const & operation: item["operations"]) {
+                auto frames = read_array_hdf5(file_path, frame_key);
+                auto probs = read_ragged_hdf5(file_path, prob_key);
+                auto y_coords = read_ragged_hdf5(file_path, y_key);
+                auto x_coords = read_ragged_hdf5(file_path, x_key);
 
-                    std::string const operation_type = operation["type"];
+                auto mask_data = std::make_shared<MaskData>();
+                mask_data->setImageSize(ImageSize{width, height});
 
-                    if (operation_type == "area") {
-                        std::cout << "Calculating area for mask: " << name << std::endl;
-                        auto area_data = area(dm->getData<MaskData>(name));
-                        std::string const output_name = name + "_area";
-                        dm->setData<AnalogTimeSeries>(output_name, area_data);
+                for (std::size_t i = 0; i < frames.size(); i++) {
+                    auto frame = frames[i];
+                    auto prob = probs[i];
+                    auto x = x_coords[i];
+                    auto y = y_coords[i];
+                    mask_data->addMaskAtTime(frame, x, y);
+                }
+
+                dm->setData<MaskData>(name, mask_data);
+
+                data_info_list.push_back({name, "MaskData", color});
+
+                if (item.contains("operations")) {
+
+                    for (auto const & operation: item["operations"]) {
+
+                        std::string const operation_type = operation["type"];
+
+                        if (operation_type == "area") {
+                            std::cout << "Calculating area for mask: " << name << std::endl;
+                            auto area_data = area(dm->getData<MaskData>(name));
+                            std::string const output_name = name + "_area";
+                            dm->setData<AnalogTimeSeries>(output_name, area_data);
+                        }
                     }
                 }
+                break;
             }
-        } else if (data_type == "line") {
+            case DataType::Line: {
 
-            auto line_map = load_line_csv(file_path);
+                auto line_map = load_line_csv(file_path);
 
-            //Get the whisker name from the filename using filesystem
-            auto whisker_filename = std::filesystem::path(file_path).filename().string();
+                //Get the whisker name from the filename using filesystem
+                auto whisker_filename = std::filesystem::path(file_path).filename().string();
 
-            //Remove .csv suffix from filename
-            auto whisker_name = remove_extension(whisker_filename);
+                //Remove .csv suffix from filename
+                auto whisker_name = remove_extension(whisker_filename);
 
-            dm->setData<LineData>(whisker_name, std::make_shared<LineData>(line_map));
+                dm->setData<LineData>(whisker_name, std::make_shared<LineData>(line_map));
 
-            std::string const color = item.value("color", "0000FF");
+                std::string const color = item.value("color", "0000FF");
 
-            data_info_list.push_back({name, "LineData", color});
+                data_info_list.push_back({name, "LineData", color});
 
-        } else if (data_type == "analog") {
+                break;
+            }
+            case DataType::Analog: {
 
-            if (item["format"] == "int16") {
+                if (item["format"] == "int16") {
 
-                auto opts = createBinaryAnalogOptions(file_path, item);
+                    auto opts = createBinaryAnalogOptions(file_path, item);
 
-                if (opts.num_channels > 1) {
+                    if (opts.num_channels > 1) {
 
-                    auto data = readBinaryFileMultiChannel<int16_t>(opts);
+                        auto data = readBinaryFileMultiChannel<int16_t>(opts);
 
-                    std::cout << "Read " << data.size() << " channels" << std::endl;
+                        std::cout << "Read " << data.size() << " channels" << std::endl;
 
-                    for (int channel = 0; channel < data.size(); channel++) {
+                        for (int channel = 0; channel < data.size(); channel++) {
+                            // convert to float with std::transform
+                            std::vector<float> data_float;
+                            std::transform(
+                                    data[channel].begin(),
+                                    data[channel].end(),
+                                    std::back_inserter(data_float), [](int16_t i) { return i; });
+
+                            auto analog_time_series = std::make_shared<AnalogTimeSeries>();
+                            analog_time_series->setData(data_float);
+
+                            std::string const channel_name = name + "_" + std::to_string(channel);
+
+                            dm->setData<AnalogTimeSeries>(channel_name, analog_time_series);
+
+                            if (item.contains("clock")) {
+                                std::string const clock = item["clock"];
+                                dm->setTimeFrame(channel_name, clock);
+                            }
+                        }
+
+                    } else {
+
+                        auto data = readBinaryFile<int16_t>(opts);
+
                         // convert to float with std::transform
                         std::vector<float> data_float;
                         std::transform(
-                                data[channel].begin(),
-                                data[channel].end(),
+                                data.begin(),
+                                data.end(),
                                 std::back_inserter(data_float), [](int16_t i) { return i; });
 
                         auto analog_time_series = std::make_shared<AnalogTimeSeries>();
                         analog_time_series->setData(data_float);
+                        dm->setData<AnalogTimeSeries>(name, analog_time_series);
+                    }
 
-                        std::string const channel_name = name + "_" + std::to_string(channel);
+                } else {
+                    std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
+                }
+                break;
+            }
+            case DataType::DigitalEvent: {
 
-                        dm->setData<AnalogTimeSeries>(channel_name, analog_time_series);
+                if (item["format"] == "uint16") {
 
-                        if (item.contains("clock")) {
-                            std::string const clock = item["clock"];
-                            dm->setTimeFrame(channel_name, clock);
+                    int const channel = item["channel"];
+                    std::string const transition = item["transition"];
+
+                    auto opts = createBinaryAnalogOptions(file_path, item);
+                    auto data = readBinaryFile<uint16_t>(opts);
+
+                    auto digital_data = Loader::extractDigitalData(data, channel);
+                    auto events = Loader::extractEvents(digital_data, transition);
+                    std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
+
+                    auto digital_event_series = std::make_shared<DigitalEventSeries>();
+                    digital_event_series->setData(events);
+                    dm->setData<DigitalEventSeries>(name, digital_event_series);
+                } else if (item["format"] == "csv") {
+
+                    auto opts = Loader::CSVSingleColumnOptions{.filename = file_path};
+
+                    auto events = Loader::loadSingleColumnCSV(opts);
+                    std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
+
+                    float const scale = item.value("scale", 1.0f);
+                    bool const scale_divide = item.value("scale_divide", false);
+
+                    if (scale_divide) {
+                        for (auto & e: events) {
+                            e /= scale;
+                        }
+                    } else {
+                        for (auto & e: events) {
+                            e *= scale;
                         }
                     }
 
+                    auto digital_event_series = std::make_shared<DigitalEventSeries>();
+                    digital_event_series->setData(events);
+                    dm->setData<DigitalEventSeries>(name, digital_event_series);
+
                 } else {
-
-                    auto data = readBinaryFile<int16_t>(opts);
-
-                    // convert to float with std::transform
-                    std::vector<float> data_float;
-                    std::transform(
-                            data.begin(),
-                            data.end(),
-                            std::back_inserter(data_float), [](int16_t i) { return i; });
-
-                    auto analog_time_series = std::make_shared<AnalogTimeSeries>();
-                    analog_time_series->setData(data_float);
-                    dm->setData<AnalogTimeSeries>(name, analog_time_series);
+                    std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
                 }
-
-            } else {
-                std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
+                break;
             }
+            case DataType::DigitalInterval: {
 
-        } else if (data_type == "digital_event") {
+                if (item["format"] == "uint16") {
 
-            if (item["format"] == "uint16") {
+                    int const channel = item["channel"];
+                    std::string const transition = item["transition"];
 
-                int const channel = item["channel"];
-                std::string const transition = item["transition"];
+                    auto opts = createBinaryAnalogOptions(file_path, item);
+                    auto data = readBinaryFile<uint16_t>(opts);
 
-                auto opts = createBinaryAnalogOptions(file_path, item);
-                auto data = readBinaryFile<uint16_t>(opts);
+                    auto digital_data = Loader::extractDigitalData(data, channel);
 
-                auto digital_data = Loader::extractDigitalData(data, channel);
-                auto events = Loader::extractEvents(digital_data, transition);
-                std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
+                    auto intervals = Loader::extractIntervals(digital_data, transition);
+                    std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
 
-                auto digital_event_series = std::make_shared<DigitalEventSeries>();
-                digital_event_series->setData(events);
-                dm->setData<DigitalEventSeries>(name, digital_event_series);
-            } else if (item["format"] == "csv") {
+                    auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
+                    digital_interval_series->setData(intervals);
+                    dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
 
-                auto opts = Loader::CSVSingleColumnOptions{.filename = file_path};
+                } else if (item["format"] == "csv") {
 
-                auto events = Loader::loadSingleColumnCSV(opts);
-                std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
+                    auto opts = Loader::CSVMultiColumnOptions{.filename = file_path};
 
-                float const scale = item.value("scale", 1.0f);
-                bool const scale_divide = item.value("scale_divide", false);
-
-                if (scale_divide) {
-                    for (auto & e: events) {
-                        e /= scale;
-                    }
+                    auto intervals = Loader::loadPairColumnCSV(opts);
+                    std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
+                    auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
+                    digital_interval_series->setData(intervals);
+                    dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
                 } else {
-                    for (auto & e: events) {
-                        e *= scale;
+                    std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
+                }
+                break;
+            }
+            case DataType::Tensor: {
+
+                if (item["format"] == "numpy") {
+
+                    TensorData tensor_data;
+                    loadNpyToTensorData(file_path, tensor_data);
+
+                    dm->setData<TensorData>(name, std::make_shared<TensorData>(tensor_data));
+
+                } else {
+                    std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
+                }
+                break;
+            }
+            case DataType::Time: {
+
+                if (item["format"] == "uint16") {
+
+                    int const channel = item["channel"];
+                    std::string const transition = item["transition"];
+
+                    auto opts = createBinaryAnalogOptions(file_path, item);
+                    auto data = readBinaryFile<uint16_t>(opts);
+
+                    auto digital_data = Loader::extractDigitalData(data, channel);
+                    auto events = Loader::extractEvents(digital_data, transition);
+
+                    // convert to int with std::transform
+                    std::vector<int> events_int;
+                    events_int.reserve(events.size());
+                    for (auto e: events) {
+                        events_int.push_back(static_cast<int>(e));
                     }
+                    std::cout << "Loaded " << events_int.size() << " events for " << name << std::endl;
+
+                    auto timeframe = std::make_shared<TimeFrame>(events_int);
+                    dm->setTime(name, timeframe);
                 }
 
-                auto digital_event_series = std::make_shared<DigitalEventSeries>();
-                digital_event_series->setData(events);
-                dm->setData<DigitalEventSeries>(name, digital_event_series);
+                if (item["format"] == "uint16_length") {
 
-            } else {
-                std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
-            }
-        } else if (data_type == "digital_interval") {
+                    auto opts = createBinaryAnalogOptions(file_path, item);
+                    auto data = readBinaryFile<uint16_t>(opts);
 
-            if (item["format"] == "uint16") {
+                    std::vector<int> t(data.size());
+                    std::iota(std::begin(t), std::end(t), 0);
 
-                int const channel = item["channel"];
-                std::string const transition = item["transition"];
+                    std::cout << "Total of " << t.size() << " timestamps for " << name << std::endl;
 
-                auto opts = createBinaryAnalogOptions(file_path, item);
-                auto data = readBinaryFile<uint16_t>(opts);
-
-                auto digital_data = Loader::extractDigitalData(data, channel);
-
-                auto intervals = Loader::extractIntervals(digital_data, transition);
-                std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
-
-                auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
-                digital_interval_series->setData(intervals);
-                dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
-
-            } else if (item["format"] == "csv") {
-
-                auto opts = Loader::CSVMultiColumnOptions{.filename = file_path};
-
-                auto intervals = Loader::loadPairColumnCSV(opts);
-                std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
-                auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
-                digital_interval_series->setData(intervals);
-                dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
-            } else {
-                std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
-            }
-        } else if (data_type == "tensor") {
-
-            if (item["format"] == "numpy") {
-
-                TensorData tensor_data;
-                loadNpyToTensorData(file_path, tensor_data);
-
-                dm->setData<TensorData>(name, std::make_shared<TensorData>(tensor_data));
-
-            } else {
-                std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
-            }
-
-        } else if (data_type == "time") {
-
-            if (item["format"] == "uint16") {
-
-                int const channel = item["channel"];
-                std::string const transition = item["transition"];
-
-                auto opts = createBinaryAnalogOptions(file_path, item);
-                auto data = readBinaryFile<uint16_t>(opts);
-
-                auto digital_data = Loader::extractDigitalData(data, channel);
-                auto events = Loader::extractEvents(digital_data, transition);
-
-                // convert to int with std::transform
-                std::vector<int> events_int;
-                events_int.reserve(events.size());
-                for (auto e: events) {
-                    events_int.push_back(static_cast<int>(e));
+                    auto timeframe = std::make_shared<TimeFrame>(t);
+                    dm->setTime(name, timeframe);
                 }
-                std::cout << "Loaded " << events_int.size() << " events for " << name << std::endl;
-
-                auto timeframe = std::make_shared<TimeFrame>(events_int);
-                dm->setTime(name, timeframe);
+                break;
             }
-
-            if (item["format"] == "uint16_length") {
-
-                auto opts = createBinaryAnalogOptions(file_path, item);
-                auto data = readBinaryFile<uint16_t>(opts);
-
-                std::vector<int> t(data.size());
-                std::iota(std::begin(t), std::end(t), 0);
-
-                std::cout << "Total of " << t.size() << " timestamps for " << name << std::endl;
-
-                auto timeframe = std::make_shared<TimeFrame>(t);
-                dm->setTime(name, timeframe);
-            }
+            default:
+                std::cout << "Unsupported data type: " << data_type_str << std::endl;
+                continue;
         }
         if (item.contains("clock")) {
             std::string const clock = item["clock"];

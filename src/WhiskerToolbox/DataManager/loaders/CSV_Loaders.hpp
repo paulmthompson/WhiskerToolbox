@@ -17,6 +17,7 @@ struct CSVMultiColumnOptions {
     std::string line_delimiter = "\n";
     std::string col_delimiter = ",";
     bool skip_header = false;
+    bool flip_column_order = false;
 };
 
 std::vector<float> loadSingleColumnCSV(CSVSingleColumnOptions const & opts);

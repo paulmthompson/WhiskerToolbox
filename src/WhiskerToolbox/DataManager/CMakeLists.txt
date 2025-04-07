@@ -22,9 +22,12 @@ add_library(DataManager SHARED
         Media/Video_Data.hpp
         Media/Media_Data.hpp
         Media/Media_Data.cpp
+        Media/Video_Data_Loader.hpp
 
         Points/Point_Data.hpp
         Points/Point_Data.cpp
+        Points/Point_Data_Loader.hpp
+        Points/points.hpp
 
         Masks/Mask_Data.hpp
         Masks/Mask_Data.cpp
@@ -58,13 +61,13 @@ add_library(DataManager SHARED
         transforms/data_transforms.hpp
 
         loaders/binary_loaders.hpp
-        Points/points.hpp
         Masks/masks.hpp
         Lines/lines.hpp
         LockState/LockState.hpp
         Observer/Observer_Data.hpp
         Observer/Observer_Data.cpp
         ImageSize/ImageSize.hpp
+
 )
 
 message(STATUS "NPY source dir:")
