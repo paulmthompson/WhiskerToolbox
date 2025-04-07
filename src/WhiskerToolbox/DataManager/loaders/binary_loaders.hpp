@@ -97,7 +97,7 @@ inline std::vector<std::vector<T>> readBinaryFileMultiChannel(BinaryAnalogOption
         data[i].resize(num_samples_per_channel);
     }
 
-    file.seekg(options.header_size_bytes, std::ios::beg);
+    file.seekg(static_cast<std::ios::off_type>(options.header_size_bytes), std::ios::beg);
 
     std::vector<T> time_slice_buffer(options.num_channels);
 
@@ -199,6 +199,6 @@ std::vector<std::pair<float, float>> extractIntervals(std::vector<int> const & d
     return intervals;
 }
 
-} // namespace Loader
+}// namespace Loader
 
 #endif//BINARY_LOADERS_HPP
