@@ -37,10 +37,10 @@ void DigitalEventSeries::_sortEvents() {
     std::sort(_data.begin(), _data.end());
 }
 
-namespace DigitalEventSeriesLoader {
+//namespace Loader {
 
-DigitalEventSeries loadFromCSV(std::string const & filename) {
-    return DigitalEventSeries(CSVLoader::loadSingleColumnCSV(filename));
-}
+//DigitalEventSeries loadEventsFromCSV(CSVSingleColumnOptions const & opts) {
+//    return DigitalEventSeries(loadSingleColumnCSV(opts));
+//}
 
-}// namespace DigitalEventSeriesLoader
+//}// namespace Loader

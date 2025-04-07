@@ -3,14 +3,19 @@
 #include <fstream>
 #include <sstream>
 
-namespace CSVLoader {
+namespace Loader {
 
-std::vector<float> loadSingleColumnCSV(std::string const & filename) {
+std::vector<float> loadSingleColumnCSV(CSVSingleColumnOptions const & opts) {
     std::vector<float> data;
-    std::ifstream file(filename);
+    std::ifstream file(opts.filename);
     std::string line;
 
-    while (std::getline(file, line)) {
+    // Skip header if specified
+    if (opts.skip_header) {
+        std::getline(file, line, opts.delimiter[0]);
+    }
+
+    while (std::getline(file, line, opts.delimiter[0])) {
         std::stringstream ss(line);
         float value;
         ss >> value;
@@ -20,9 +25,9 @@ std::vector<float> loadSingleColumnCSV(std::string const & filename) {
     return data;
 }
 
-std::vector<std::pair<float, float>> loadPairColumnCSV(std::string const & filename) {
+std::vector<std::pair<float, float>> loadPairColumnCSV(CSVMultiColumnOptions const & opts) {
     std::vector<std::pair<float, float>> data;
-    std::ifstream file(filename);
+    std::ifstream file(opts.filename);
     std::string line;
 
     while (std::getline(file, line)) {
@@ -44,4 +49,4 @@ std::vector<std::pair<float, float>> loadPairColumnCSV(std::string const & filen
     return data;
 }
 
-}// namespace CSVLoader
+}// namespace Loader

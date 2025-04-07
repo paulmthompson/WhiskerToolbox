@@ -72,9 +72,9 @@ private:
     void _sortEvents();
 };
 
-namespace DigitalEventSeriesLoader {
-DigitalEventSeries loadFromCSV(std::string const & filename);
-}// namespace DigitalEventSeriesLoader
+//namespace Loader {
+//DigitalEventSeries loadEventsFromCSV(CSVSingleColumnOptions const & opts);
+//}// namespace Loader
 
 
 #endif//BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP

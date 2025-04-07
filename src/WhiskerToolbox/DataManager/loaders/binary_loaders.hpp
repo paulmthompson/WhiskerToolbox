@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <vector>
 
+namespace Loader {
 
 struct BinaryAnalogOptions {
     std::string file_path;
@@ -197,5 +198,7 @@ std::vector<std::pair<float, float>> extractIntervals(std::vector<int> const & d
     }
     return intervals;
 }
+
+} // namespace Loader
 
 #endif//BINARY_LOADERS_HPP

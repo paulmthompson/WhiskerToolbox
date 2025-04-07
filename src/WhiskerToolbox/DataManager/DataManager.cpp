@@ -145,12 +145,12 @@ void checkOptionalFields(json const & item, std::vector<std::string> const & opt
 }
 
 
-BinaryAnalogOptions createBinaryAnalogOptions(std::string const & file_path, nlohmann::basic_json<> const & item) {
+Loader::BinaryAnalogOptions createBinaryAnalogOptions(std::string const & file_path, nlohmann::basic_json<> const & item) {
 
     int const header_size = item.value("header_size", 0);
     int const num_channels = item.value("channel_count", 1);
 
-    auto opts = BinaryAnalogOptions{
+    auto opts = Loader::BinaryAnalogOptions{
             .file_path = file_path,
             .header_size_bytes = static_cast<size_t>(header_size),
             .num_channels = static_cast<size_t>(num_channels)};
@@ -364,8 +364,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 auto opts = createBinaryAnalogOptions(file_path, item);
                 auto data = readBinaryFile<uint16_t>(opts);
 
-                auto digital_data = extractDigitalData(data, channel);
-                auto events = extractEvents(digital_data, transition);
+                auto digital_data = Loader::extractDigitalData(data, channel);
+                auto events = Loader::extractEvents(digital_data, transition);
                 std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
 
                 auto digital_event_series = std::make_shared<DigitalEventSeries>();
@@ -373,7 +373,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 dm->setData<DigitalEventSeries>(name, digital_event_series);
             } else if (item["format"] == "csv") {
 
-                auto events = CSVLoader::loadSingleColumnCSV(file_path);
+                auto opts = Loader::CSVSingleColumnOptions{.filename = file_path};
+
+                auto events = Loader::loadSingleColumnCSV(opts);
                 std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
 
                 float const scale = item.value("scale", 1.0f);
@@ -406,9 +408,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 auto opts = createBinaryAnalogOptions(file_path, item);
                 auto data = readBinaryFile<uint16_t>(opts);
 
-                auto digital_data = extractDigitalData(data, channel);
+                auto digital_data = Loader::extractDigitalData(data, channel);
 
-                auto intervals = extractIntervals(digital_data, transition);
+                auto intervals = Loader::extractIntervals(digital_data, transition);
                 std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
 
                 auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -417,7 +419,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
             } else if (item["format"] == "csv") {
 
-                auto intervals = CSVLoader::loadPairColumnCSV(file_path);
+                auto opts = Loader::CSVMultiColumnOptions{.filename = file_path};
+
+                auto intervals = Loader::loadPairColumnCSV(opts);
                 std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
                 auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
                 digital_interval_series->setData(intervals);
@@ -448,8 +452,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 auto opts = createBinaryAnalogOptions(file_path, item);
                 auto data = readBinaryFile<uint16_t>(opts);
 
-                auto digital_data = extractDigitalData(data, channel);
-                auto events = extractEvents(digital_data, transition);
+                auto digital_data = Loader::extractDigitalData(data, channel);
+                auto events = Loader::extractEvents(digital_data, transition);
 
                 // convert to int with std::transform
                 std::vector<int> events_int;
