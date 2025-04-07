@@ -39,9 +39,9 @@ inline std::shared_ptr<DigitalIntervalSeries> load_into_DigitalIntervalSeries(st
             int const num_channels = item.value("channel_count", 1);
 
             auto opts = Loader::BinaryAnalogOptions{
-                                                    .file_path = file_path,
-                                                    .header_size_bytes = static_cast<size_t>(header_size),
-                                                    .num_channels = static_cast<size_t>(num_channels)};
+                    .file_path = file_path,
+                    .header_size_bytes = static_cast<size_t>(header_size),
+                    .num_channels = static_cast<size_t>(num_channels)};
             auto data = readBinaryFile<uint16_t>(opts);
 
             auto digital_data = Loader::extractDigitalData(data, channel);
@@ -70,7 +70,6 @@ inline std::shared_ptr<DigitalIntervalSeries> load_into_DigitalIntervalSeries(st
 
     return digital_interval_series;
 }
-
 
 
 #endif// DIGITAL_INTERVAL_SERIES_LOADER_HPP

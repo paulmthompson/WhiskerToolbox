@@ -23,16 +23,52 @@ EventDataType stringToEventDataType(std::string const & data_type_str) {
     return EventDataType::Unknown;
 }
 
+bool checkForRequiredEventFields(
+        nlohmann::basic_json<> const & item,
+        std::vector<std::string> const & requiredFields,
+        std::string const & base_error_message) {
+
+    std::vector<std::string> missingFields;
+
+    for (auto const & field: requiredFields) {
+        if (!item.contains(field)) {
+            missingFields.push_back(field);
+        }
+    }
+
+    if (!missingFields.empty()) {
+        std::cout << base_error_message << std::endl;
+        std::cout << "Missing required fields: ";
+        for (auto const & field: missingFields) {
+            std::cout << field << " ";
+        }
+        std::cout << std::endl;
+        return false;
+    }
+    return true;
+}
 
 inline std::shared_ptr<DigitalEventSeries> load_into_DigitalEventSeries(std::string const & file_path, nlohmann::basic_json<> const & item) {
     auto digital_event_series = std::make_shared<DigitalEventSeries>();
 
+    if (checkForRequiredEventFields(
+                item,
+                {"format"},
+                "Error: Missing required fields in DigitalEventSeries")) {
+        return digital_event_series;
+    }
     std::string const data_type_str = item["format"];
     EventDataType const data_type = stringToEventDataType(data_type_str);
 
     switch (data_type) {
         case EventDataType::uint16: {
 
+            if (checkForRequiredEventFields(
+                        item,
+                        {"channel", "transition"},
+                        "Error: Missing required fields in uint16 DigitalEventSeries")) {
+                return digital_event_series;
+            }
             int const channel = item["channel"];
             std::string const transition = item["transition"];
 

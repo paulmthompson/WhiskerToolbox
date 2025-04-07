@@ -53,12 +53,12 @@ inline std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries
 
                 std::cout << "Read " << data.size() << " channels" << std::endl;
 
-                for (int channel = 0; channel < data.size(); channel++) {
+                for (auto & channel: data) {
                     // convert to float with std::transform
                     std::vector<float> data_float;
                     std::transform(
-                            data[channel].begin(),
-                            data[channel].end(),
+                            channel.begin(),
+                            channel.end(),
                             std::back_inserter(data_float), [](int16_t i) { return i; });
 
                     analog_time_series.push_back(std::make_shared<AnalogTimeSeries>());
