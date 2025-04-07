@@ -7,6 +7,7 @@
 #include "nlohmann/json.hpp"
 
 #include <memory>
+#include <string>
 
 inline std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nlohmann::basic_json<> const & item) {
 

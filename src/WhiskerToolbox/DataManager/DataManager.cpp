@@ -9,6 +9,8 @@
 #include "Points/Point_Data.hpp"
 #include "Tensors/Tensor_Data.hpp"
 
+#include "AnalogTimeSeries/Analog_Time_Series_Loader.hpp"
+#include "Masks/Mask_Data_Loader.hpp"
 #include "Media/Video_Data_Loader.hpp"
 #include "Points/Point_Data_Loader.hpp"
 
@@ -173,20 +175,6 @@ void checkOptionalFields(json const & item, std::vector<std::string> const & opt
     }
 }
 
-
-Loader::BinaryAnalogOptions createBinaryAnalogOptions(std::string const & file_path, nlohmann::basic_json<> const & item) {
-
-    int const header_size = item.value("header_size", 0);
-    int const num_channels = item.value("channel_count", 1);
-
-    auto opts = Loader::BinaryAnalogOptions{
-            .file_path = file_path,
-            .header_size_bytes = static_cast<size_t>(header_size),
-            .num_channels = static_cast<size_t>(num_channels)};
-
-    return opts;
-}
-
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath) {
     std::vector<DataInfo> data_info_list;
     // Open JSON file
@@ -211,7 +199,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
         }
 
         std::string const data_type_str = item["data_type"];
-        DataType data_type = stringToDataType(data_type_str);
+        DataType const data_type = stringToDataType(data_type_str);
         if (data_type == DataType::Unknown) {
             std::cout << "Unknown data type: " << data_type_str << std::endl;
             continue;
@@ -250,32 +238,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             }
             case DataType::Mask: {
 
-                std::string const frame_key = item["frame_key"];
-                std::string const prob_key = item["probability_key"];
-                std::string const x_key = item["x_key"];
-                std::string const y_key = item["y_key"];
-
-                int const height = item.value("height", -1);
-                int const width = item.value("width", -1);
+                auto mask_data = load_into_MaskData(file_path, item);
 
                 std::string const color = item.value("color", "0000FF");
-
-                auto frames = read_array_hdf5(file_path, frame_key);
-                auto probs = read_ragged_hdf5(file_path, prob_key);
-                auto y_coords = read_ragged_hdf5(file_path, y_key);
-                auto x_coords = read_ragged_hdf5(file_path, x_key);
-
-                auto mask_data = std::make_shared<MaskData>();
-                mask_data->setImageSize(ImageSize{width, height});
-
-                for (std::size_t i = 0; i < frames.size(); i++) {
-                    auto frame = frames[i];
-                    auto prob = probs[i];
-                    auto x = x_coords[i];
-                    auto y = y_coords[i];
-                    mask_data->addMaskAtTime(frame, x, y);
-                }
-
                 dm->setData<MaskData>(name, mask_data);
 
                 data_info_list.push_back({name, "MaskData", color});
@@ -316,55 +281,17 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             }
             case DataType::Analog: {
 
-                if (item["format"] == "int16") {
+                auto analog_time_series = load_into_AnalogTimeSeries(file_path, item);
 
-                    auto opts = createBinaryAnalogOptions(file_path, item);
+                for (int channel = 0; channel < analog_time_series.size(); channel++) {
+                    std::string const channel_name = name + "_" + std::to_string(channel);
 
-                    if (opts.num_channels > 1) {
+                    dm->setData<AnalogTimeSeries>(channel_name, analog_time_series[channel]);
 
-                        auto data = readBinaryFileMultiChannel<int16_t>(opts);
-
-                        std::cout << "Read " << data.size() << " channels" << std::endl;
-
-                        for (int channel = 0; channel < data.size(); channel++) {
-                            // convert to float with std::transform
-                            std::vector<float> data_float;
-                            std::transform(
-                                    data[channel].begin(),
-                                    data[channel].end(),
-                                    std::back_inserter(data_float), [](int16_t i) { return i; });
-
-                            auto analog_time_series = std::make_shared<AnalogTimeSeries>();
-                            analog_time_series->setData(data_float);
-
-                            std::string const channel_name = name + "_" + std::to_string(channel);
-
-                            dm->setData<AnalogTimeSeries>(channel_name, analog_time_series);
-
-                            if (item.contains("clock")) {
-                                std::string const clock = item["clock"];
-                                dm->setTimeFrame(channel_name, clock);
-                            }
-                        }
-
-                    } else {
-
-                        auto data = readBinaryFile<int16_t>(opts);
-
-                        // convert to float with std::transform
-                        std::vector<float> data_float;
-                        std::transform(
-                                data.begin(),
-                                data.end(),
-                                std::back_inserter(data_float), [](int16_t i) { return i; });
-
-                        auto analog_time_series = std::make_shared<AnalogTimeSeries>();
-                        analog_time_series->setData(data_float);
-                        dm->setData<AnalogTimeSeries>(name, analog_time_series);
+                    if (item.contains("clock")) {
+                        std::string const clock = item["clock"];
+                        dm->setTimeFrame(channel_name, clock);
                     }
-
-                } else {
-                    std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
                 }
                 break;
             }
