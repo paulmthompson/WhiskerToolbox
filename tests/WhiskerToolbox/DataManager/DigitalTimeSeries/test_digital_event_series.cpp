@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "loaders/CSV_Loaders.hpp"
 
 #include <fstream>
 #include <vector>
@@ -103,7 +104,11 @@ TEST_CASE("Digital Event Series - Load From CSV", "[DataManager]") {
         if (file.good()) {
             file.close();
 
-            auto des = DigitalEventSeriesLoader::loadFromCSV(filename);
+            auto opts = Loader::CSVSingleColumnOptions{.filename = filename};
+
+            auto events = Loader::loadSingleColumnCSV(opts);
+
+            auto des = DigitalEventSeries(events);
             auto data = des.getEventSeries();
 
             // Check that the data is loaded and sorted
