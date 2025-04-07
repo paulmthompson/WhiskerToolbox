@@ -24,50 +24,66 @@ Loader::BinaryAnalogOptions createBinaryAnalogOptions(std::string const & file_p
     return opts;
 }
 
+enum class AnalogDataType {
+    int16,
+    Unknown
+};
+
+AnalogDataType stringToAnalogDataType(std::string const & data_type_str) {
+    if (data_type_str == "int16") return AnalogDataType::int16;
+    return AnalogDataType::Unknown;
+}
+
 
 inline std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::string const & file_path, nlohmann::basic_json<> const & item) {
 
     auto analog_time_series = std::vector<std::shared_ptr<AnalogTimeSeries>>();
 
-    if (item["format"] == "int16") {
+    std::string const data_type_str = item["format"];
+    AnalogDataType const data_type = stringToAnalogDataType(data_type_str);
 
-        auto opts = createBinaryAnalogOptions(file_path, item);
+    switch (data_type) {
+        case AnalogDataType::int16: {
 
-        if (opts.num_channels > 1) {
+            auto opts = createBinaryAnalogOptions(file_path, item);
 
-            auto data = readBinaryFileMultiChannel<int16_t>(opts);
+            if (opts.num_channels > 1) {
 
-            std::cout << "Read " << data.size() << " channels" << std::endl;
+                auto data = readBinaryFileMultiChannel<int16_t>(opts);
 
-            for (int channel = 0; channel < data.size(); channel++) {
+                std::cout << "Read " << data.size() << " channels" << std::endl;
+
+                for (int channel = 0; channel < data.size(); channel++) {
+                    // convert to float with std::transform
+                    std::vector<float> data_float;
+                    std::transform(
+                            data[channel].begin(),
+                            data[channel].end(),
+                            std::back_inserter(data_float), [](int16_t i) { return i; });
+
+                    analog_time_series.push_back(std::make_shared<AnalogTimeSeries>());
+                    analog_time_series.back()->setData(data_float);
+                }
+
+            } else {
+
+                auto data = readBinaryFile<int16_t>(opts);
+
                 // convert to float with std::transform
                 std::vector<float> data_float;
                 std::transform(
-                        data[channel].begin(),
-                        data[channel].end(),
+                        data.begin(),
+                        data.end(),
                         std::back_inserter(data_float), [](int16_t i) { return i; });
 
                 analog_time_series.push_back(std::make_shared<AnalogTimeSeries>());
                 analog_time_series.back()->setData(data_float);
             }
-
-        } else {
-
-            auto data = readBinaryFile<int16_t>(opts);
-
-            // convert to float with std::transform
-            std::vector<float> data_float;
-            std::transform(
-                    data.begin(),
-                    data.end(),
-                    std::back_inserter(data_float), [](int16_t i) { return i; });
-
-            analog_time_series.push_back(std::make_shared<AnalogTimeSeries>());
-            analog_time_series.back()->setData(data_float);
+            break;
         }
-
-    } else {
-        std::cout << "Format " << item["format"] << " not found " << std::endl;
+        default: {
+            std::cout << "Format " << data_type_str << " not found " << std::endl;
+        }
     }
 
     return analog_time_series;

@@ -10,6 +10,8 @@
 #include "Tensors/Tensor_Data.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series_Loader.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series_Loader.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series_Loader.hpp"
 #include "Masks/Mask_Data_Loader.hpp"
 #include "Media/Video_Data_Loader.hpp"
 #include "Points/Point_Data_Loader.hpp"
@@ -297,81 +299,16 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             }
             case DataType::DigitalEvent: {
 
-                if (item["format"] == "uint16") {
+                auto digital_event_series = load_into_DigitalEventSeries(file_path, item);
+                dm->setData<DigitalEventSeries>(name, digital_event_series);
 
-                    int const channel = item["channel"];
-                    std::string const transition = item["transition"];
-
-                    auto opts = createBinaryAnalogOptions(file_path, item);
-                    auto data = readBinaryFile<uint16_t>(opts);
-
-                    auto digital_data = Loader::extractDigitalData(data, channel);
-                    auto events = Loader::extractEvents(digital_data, transition);
-                    std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
-
-                    auto digital_event_series = std::make_shared<DigitalEventSeries>();
-                    digital_event_series->setData(events);
-                    dm->setData<DigitalEventSeries>(name, digital_event_series);
-                } else if (item["format"] == "csv") {
-
-                    auto opts = Loader::CSVSingleColumnOptions{.filename = file_path};
-
-                    auto events = Loader::loadSingleColumnCSV(opts);
-                    std::cout << "Loaded " << events.size() << " events for " << name << std::endl;
-
-                    float const scale = item.value("scale", 1.0f);
-                    bool const scale_divide = item.value("scale_divide", false);
-
-                    if (scale_divide) {
-                        for (auto & e: events) {
-                            e /= scale;
-                        }
-                    } else {
-                        for (auto & e: events) {
-                            e *= scale;
-                        }
-                    }
-
-                    auto digital_event_series = std::make_shared<DigitalEventSeries>();
-                    digital_event_series->setData(events);
-                    dm->setData<DigitalEventSeries>(name, digital_event_series);
-
-                } else {
-                    std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
-                }
                 break;
             }
             case DataType::DigitalInterval: {
 
-                if (item["format"] == "uint16") {
+                auto digital_interval_series = load_into_DigitalIntervalSeries(file_path, item);
+                dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
 
-                    int const channel = item["channel"];
-                    std::string const transition = item["transition"];
-
-                    auto opts = createBinaryAnalogOptions(file_path, item);
-                    auto data = readBinaryFile<uint16_t>(opts);
-
-                    auto digital_data = Loader::extractDigitalData(data, channel);
-
-                    auto intervals = Loader::extractIntervals(digital_data, transition);
-                    std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
-
-                    auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
-                    digital_interval_series->setData(intervals);
-                    dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
-
-                } else if (item["format"] == "csv") {
-
-                    auto opts = Loader::CSVMultiColumnOptions{.filename = file_path};
-
-                    auto intervals = Loader::loadPairColumnCSV(opts);
-                    std::cout << "Loaded " << intervals.size() << " intervals for " << name << std::endl;
-                    auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
-                    digital_interval_series->setData(intervals);
-                    dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
-                } else {
-                    std::cout << "Format " << item["format"] << " not found for " << name << std::endl;
-                }
                 break;
             }
             case DataType::Tensor: {

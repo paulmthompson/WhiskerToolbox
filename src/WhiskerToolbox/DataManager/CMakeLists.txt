@@ -35,13 +35,16 @@ add_library(DataManager SHARED
 
         AnalogTimeSeries/Analog_Time_Series.hpp
         AnalogTimeSeries/Analog_Time_Series.cpp
+        AnalogTimeSeries/Analog_Time_Series_Loader.hpp
 
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
         DigitalTimeSeries/interval_data.hpp
+        DigitalTimeSeries/Digital_Event_Series_Loader.hpp
 
         DigitalTimeSeries/Digital_Event_Series.hpp
         DigitalTimeSeries/Digital_Event_Series.cpp
+        DigitalTimeSeries/Digital_Interval_Series_Loader.hpp
 
         Tensors/Tensor_Data.hpp
         Tensors/Tensor_Data.cpp
@@ -68,7 +71,6 @@ add_library(DataManager SHARED
         Observer/Observer_Data.hpp
         Observer/Observer_Data.cpp
         ImageSize/ImageSize.hpp
-        AnalogTimeSeries/Analog_Time_Series_Loader.hpp
 )
 
 message(STATUS "NPY source dir:")
