@@ -22,6 +22,8 @@ add_library(DataManager SHARED
         Media/Video_Data.hpp
         Media/Media_Data.hpp
         Media/Media_Data.cpp
+        Media/HDF5_Data.hpp
+        Media/HDF5_Data.cpp
         Media/Video_Data_Loader.hpp
 
         Points/Point_Data.hpp
@@ -58,8 +60,7 @@ add_library(DataManager SHARED
         utils/opencv_utility.cpp
         utils/string_manip.hpp
         utils/glob.hpp
-        Media/HDF5_Data.hpp
-        Media/HDF5_Data.cpp
+        utils/json_helpers.hpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp

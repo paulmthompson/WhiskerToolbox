@@ -4,6 +4,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "loaders/CSV_Loaders.hpp"
 #include "loaders/binary_loaders.hpp"
+#include "utils/json_helpers.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -23,35 +24,23 @@ EventDataType stringToEventDataType(std::string const & data_type_str) {
     return EventDataType::Unknown;
 }
 
-bool checkForRequiredEventFields(
-        nlohmann::basic_json<> const & item,
-        std::vector<std::string> const & requiredFields,
-        std::string const & base_error_message) {
-
-    std::vector<std::string> missingFields;
-
-    for (auto const & field: requiredFields) {
-        if (!item.contains(field)) {
-            missingFields.push_back(field);
+void scale_events(std::vector<float> & events, float const scale, bool const scale_divide)
+{
+    if (scale_divide) {
+        for (auto & e: events) {
+            e /= scale;
+        }
+    } else {
+        for (auto & e: events) {
+            e *= scale;
         }
     }
-
-    if (!missingFields.empty()) {
-        std::cout << base_error_message << std::endl;
-        std::cout << "Missing required fields: ";
-        for (auto const & field: missingFields) {
-            std::cout << field << " ";
-        }
-        std::cout << std::endl;
-        return false;
-    }
-    return true;
 }
 
-inline std::shared_ptr<DigitalEventSeries> load_into_DigitalEventSeries(std::string const & file_path, nlohmann::basic_json<> const & item) {
-    auto digital_event_series = std::make_shared<DigitalEventSeries>();
+inline std::vector<std::shared_ptr<DigitalEventSeries>> load_into_DigitalEventSeries(std::string const & file_path, nlohmann::basic_json<> const & item) {
+    auto digital_event_series = std::vector<std::shared_ptr<DigitalEventSeries>>();
 
-    if (checkForRequiredEventFields(
+    if (!requiredFieldsExist(
                 item,
                 {"format"},
                 "Error: Missing required fields in DigitalEventSeries")) {
@@ -63,12 +52,13 @@ inline std::shared_ptr<DigitalEventSeries> load_into_DigitalEventSeries(std::str
     switch (data_type) {
         case EventDataType::uint16: {
 
-            if (checkForRequiredEventFields(
+            if (!requiredFieldsExist(
                         item,
                         {"channel", "transition"},
                         "Error: Missing required fields in uint16 DigitalEventSeries")) {
                 return digital_event_series;
             }
+
             int const channel = item["channel"];
             std::string const transition = item["transition"];
 
@@ -85,30 +75,46 @@ inline std::shared_ptr<DigitalEventSeries> load_into_DigitalEventSeries(std::str
             auto events = Loader::extractEvents(digital_data, transition);
             std::cout << "Loaded " << events.size() << " events " << std::endl;
 
-            digital_event_series->setData(events);
+            digital_event_series.push_back(std::make_shared<DigitalEventSeries>());
+            digital_event_series.back()->setData(events);
             break;
         }
         case EventDataType::csv: {
 
-            auto opts = Loader::CSVSingleColumnOptions{.filename = file_path};
-
-            auto events = Loader::loadSingleColumnCSV(opts);
-            std::cout << "Loaded " << events.size() << " events " << std::endl;
-
+            int const num_channels = item.value("channel_count", 1);
             float const scale = item.value("scale", 1.0f);
             bool const scale_divide = item.value("scale_divide", false);
 
-            if (scale_divide) {
-                for (auto & e: events) {
-                    e /= scale;
-                }
+            if (num_channels == 1) {
+
+                auto opts = Loader::CSVSingleColumnOptions{.filename = file_path};
+
+                auto events = Loader::loadSingleColumnCSV(opts);
+                std::cout << "Loaded " << events.size() << " events " << std::endl;
+
+                scale_events(events, scale, scale_divide);
+
+                digital_event_series.push_back(std::make_shared<DigitalEventSeries>());
+                digital_event_series.back()->setData(events);
             } else {
-                for (auto & e: events) {
-                    e *= scale;
+
+                int const event_column = item["event_column"];
+                int const label_column = item["label_column"];
+
+                auto opts = Loader::CSVMultiColumnOptions {.filename = file_path,
+                                                          .key_column = static_cast<size_t>(label_column),
+                                                          .value_column = static_cast<size_t>(event_column)};
+
+                auto events = Loader::loadMultiColumnCSV(opts);
+
+                for (auto & [event_id, event] : events){
+
+                    scale_events(event, scale, scale_divide);
+
+                    digital_event_series.push_back(std::make_shared<DigitalEventSeries>());
+                    digital_event_series.back()->setData(event);
                 }
             }
-
-            digital_event_series->setData(events);
             break;
         }
         default: {

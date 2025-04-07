@@ -4,6 +4,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "loaders/CSV_Loaders.hpp"
 #include "loaders/binary_loaders.hpp"
+#include "utils/json_helpers.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -26,11 +27,24 @@ IntervalDataType stringToIntervalDataType(std::string const & data_type_str) {
 inline std::shared_ptr<DigitalIntervalSeries> load_into_DigitalIntervalSeries(std::string const & file_path, nlohmann::basic_json<> const & item) {
     auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
 
+    if (!requiredFieldsExist(
+                item,
+                {"format"},
+                "Error: Missing required fields in DigitalIntervalSeries")) {
+        return digital_interval_series;
+    }
     std::string const data_type_str = item["format"];
     IntervalDataType const data_type = stringToIntervalDataType(data_type_str);
 
     switch (data_type) {
         case IntervalDataType::uint16: {
+
+            if (!requiredFieldsExist(
+                        item,
+                        {"channel", "transition"},
+                        "Error: Missing required fields in uint16 DigitalIntervalSeries")) {
+                return digital_interval_series;
+            }
 
             int const channel = item["channel"];
             std::string const transition = item["transition"];
@@ -49,17 +63,15 @@ inline std::shared_ptr<DigitalIntervalSeries> load_into_DigitalIntervalSeries(st
             auto intervals = Loader::extractIntervals(digital_data, transition);
             std::cout << "Loaded " << intervals.size() << " intervals " << std::endl;
 
-            auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
             digital_interval_series->setData(intervals);
             break;
         }
         case IntervalDataType::csv: {
 
-            auto opts = Loader::CSVMultiColumnOptions{.filename = file_path};
+            auto opts = Loader::CSVPairColumnOptions{.filename = file_path};
 
             auto intervals = Loader::loadPairColumnCSV(opts);
             std::cout << "Loaded " << intervals.size() << " intervals " << std::endl;
-            auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
             digital_interval_series->setData(intervals);
             break;
         }

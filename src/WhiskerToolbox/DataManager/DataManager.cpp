@@ -300,8 +300,17 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             case DataType::DigitalEvent: {
 
                 auto digital_event_series = load_into_DigitalEventSeries(file_path, item);
-                dm->setData<DigitalEventSeries>(name, digital_event_series);
 
+                for (int channel = 0; channel < digital_event_series.size(); channel++) {
+                    std::string const channel_name = name + "_" + std::to_string(channel);
+
+                    dm->setData<DigitalEventSeries>(channel_name, digital_event_series[channel]);
+
+                    if (item.contains("clock")) {
+                        std::string const clock = item["clock"];
+                        dm->setTimeFrame(channel_name, clock);
+                    }
+                }
                 break;
             }
             case DataType::DigitalInterval: {
@@ -332,7 +341,10 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     int const channel = item["channel"];
                     std::string const transition = item["transition"];
 
-                    auto opts = createBinaryAnalogOptions(file_path, item);
+                    int const header_size = item.value("header_size", 0);
+
+                    auto opts = Loader::BinaryAnalogOptions{.file_path = file_path,
+                                                            .header_size_bytes = static_cast<size_t>(header_size)};
                     auto data = readBinaryFile<uint16_t>(opts);
 
                     auto digital_data = Loader::extractDigitalData(data, channel);
@@ -352,7 +364,10 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 if (item["format"] == "uint16_length") {
 
-                    auto opts = createBinaryAnalogOptions(file_path, item);
+                    int const header_size = item.value("header_size", 0);
+
+                    auto opts = Loader::BinaryAnalogOptions{.file_path = file_path,
+                                                            .header_size_bytes = static_cast<size_t>(header_size)};
                     auto data = readBinaryFile<uint16_t>(opts);
 
                     std::vector<int> t(data.size());

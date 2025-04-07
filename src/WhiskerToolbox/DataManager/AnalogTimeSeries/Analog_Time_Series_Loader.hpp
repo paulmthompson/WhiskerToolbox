@@ -3,26 +3,13 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "loaders/binary_loaders.hpp"
+#include "utils/json_helpers.hpp"
 
 #include "nlohmann/json.hpp"
 
 #include <memory>
 #include <string>
 #include <vector>
-
-
-Loader::BinaryAnalogOptions createBinaryAnalogOptions(std::string const & file_path, nlohmann::basic_json<> const & item) {
-
-    int const header_size = item.value("header_size", 0);
-    int const num_channels = item.value("channel_count", 1);
-
-    auto opts = Loader::BinaryAnalogOptions{
-            .file_path = file_path,
-            .header_size_bytes = static_cast<size_t>(header_size),
-            .num_channels = static_cast<size_t>(num_channels)};
-
-    return opts;
-}
 
 enum class AnalogDataType {
     int16,
@@ -37,15 +24,27 @@ AnalogDataType stringToAnalogDataType(std::string const & data_type_str) {
 
 inline std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::string const & file_path, nlohmann::basic_json<> const & item) {
 
-    auto analog_time_series = std::vector<std::shared_ptr<AnalogTimeSeries>>();
+    std::vector<std::shared_ptr<AnalogTimeSeries>> analog_time_series;
 
+    if (!requiredFieldsExist(
+                item,
+                {"format"},
+                "Error: Missing required fields in AnalogTimeSeries")) {
+        return analog_time_series;
+    }
     std::string const data_type_str = item["format"];
     AnalogDataType const data_type = stringToAnalogDataType(data_type_str);
 
     switch (data_type) {
         case AnalogDataType::int16: {
 
-            auto opts = createBinaryAnalogOptions(file_path, item);
+            int const header_size = item.value("header_size", 0);
+            int const num_channels = item.value("channel_count", 1);
+
+            auto opts = Loader::BinaryAnalogOptions{
+                                                    .file_path = file_path,
+                                                    .header_size_bytes = static_cast<size_t>(header_size),
+                                                    .num_channels = static_cast<size_t>(num_channels)};
 
             if (opts.num_channels > 1) {
 
