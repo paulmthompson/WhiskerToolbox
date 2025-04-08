@@ -42,9 +42,9 @@ inline std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries
             int const num_channels = item.value("channel_count", 1);
 
             auto opts = Loader::BinaryAnalogOptions{
-                                                    .file_path = file_path,
-                                                    .header_size_bytes = static_cast<size_t>(header_size),
-                                                    .num_channels = static_cast<size_t>(num_channels)};
+                    .file_path = file_path,
+                    .header_size_bytes = static_cast<size_t>(header_size),
+                    .num_channels = static_cast<size_t>(num_channels)};
 
             if (opts.num_channels > 1) {
 

@@ -96,6 +96,12 @@ public:
 
     [[nodiscard]] XAxis getXAxis() const { return _xAxis; }
 
+    void setGlobalScale(float scale) {
+        _global_zoom = scale;
+
+        update();
+    };
+
 public slots:
     void updateCanvas(int time);
 
@@ -146,6 +152,8 @@ private:
     int m_dashedResolutionLoc{};
     int m_dashedDashSizeLoc{};
     int m_dashedGapSizeLoc{};
+
+    float _global_zoom{1.0f};
 
     std::string m_background_color{"#000000"};// black
 

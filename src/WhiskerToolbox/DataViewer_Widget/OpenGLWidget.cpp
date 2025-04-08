@@ -318,7 +318,7 @@ void OpenGLWidget::drawAnalogSeries() {
         auto const & data = series->getAnalogTimeSeries();
         auto const & data_time = series->getTimeSeries();
         auto const & time_frame = analog_data.time_frame;
-        auto const stdDev = analog_data.scaleFactor * 5.0f;
+        auto const stdDev = analog_data.scaleFactor * 5.0f / _global_zoom;
 
         // Set the color for the current series
         hexToRGB(analog_data.color, r, g, b);
