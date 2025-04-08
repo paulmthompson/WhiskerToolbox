@@ -23,6 +23,7 @@ class AnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
 class TimeFrame;
+class QMouseEvent;
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
@@ -51,6 +52,7 @@ struct LineParameters {
     float dashLength = 5.0f;
     float gapLength = 5.0f;
 };
+
 
 //class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
@@ -113,6 +115,10 @@ protected:
 
     void cleanup();
 
+    void mousePressEvent(QMouseEvent * event) override;
+    void mouseMoveEvent(QMouseEvent * event) override;
+    void mouseReleaseEvent(QMouseEvent * event) override;
+
 private:
     void setupVertexAttribs();
     //void generateRandomValues(int count);
@@ -126,6 +132,7 @@ private:
     void drawDashedLine(LineParameters const & params);
     void _addSeries(std::string const & key);
     void _removeSeries(std::string const & key);
+    void _updateYViewBoundaries();
 
     std::map<std::string, AnalogSeriesData> _analog_series;
     std::map<std::string, DigitalEventSeriesData> _digital_event_series;
@@ -154,6 +161,11 @@ private:
     int m_dashedGapSizeLoc{};
 
     float _global_zoom{1.0f};
+    float _verticalPanOffset{0.0f};
+    QPoint _lastMousePos{};
+    bool _isPanning{false};
+    float _yMin{-1.0f};
+    float _yMax{1.0f};
 
     std::string m_background_color{"#000000"};// black
 

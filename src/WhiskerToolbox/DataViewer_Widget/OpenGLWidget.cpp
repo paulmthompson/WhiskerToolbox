@@ -9,6 +9,7 @@
 #include "shaders/dashed_line_shader.hpp"
 #include "utils/color.hpp"
 
+#include <QMouseEvent>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLShader>
@@ -56,6 +57,40 @@ void OpenGLWidget::updateCanvas(int time) {
     _time = time;
     //std::cout << "Redrawing at " << _time << std::endl;
     update();
+}
+
+// Add these implementations:
+void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
+    if (event->button() == Qt::LeftButton) {
+        _isPanning = true;
+        _lastMousePos = event->pos();
+    }
+    QOpenGLWidget::mousePressEvent(event);
+}
+
+void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
+    if (_isPanning) {
+        // Calculate vertical movement in pixels
+        int deltaY = event->pos().y() - _lastMousePos.y();
+
+        // Convert to normalized device coordinates
+        // A positive deltaY (moving down) should move the view up
+        float normalizedDeltaY = -deltaY / static_cast<float>(height()) * 2.0f;
+
+        // Adjust vertical offset based on movement
+        _verticalPanOffset += normalizedDeltaY;
+
+        _lastMousePos = event->pos();
+        update();// Request redraw
+    }
+    QOpenGLWidget::mouseMoveEvent(event);
+}
+
+void OpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
+    if (event->button() == Qt::LeftButton) {
+        _isPanning = false;
+    }
+    QOpenGLWidget::mouseReleaseEvent(event);
 }
 
 void OpenGLWidget::setBackgroundColor(std::string const & hexColor) {
@@ -168,6 +203,9 @@ void OpenGLWidget::drawDigitalEventSeries() {
     auto const end_time = static_cast<float>(_xAxis.getEnd());
     auto const m_program_ID = m_program->programId();
 
+    auto const min_y = _yMin;
+    auto const max_y = _yMax;
+
     glUseProgram(m_program_ID);
 
     //QOpenGLFunctions_4_1_Core::glBindVertexArray(m_vao.objectId());
@@ -195,10 +233,11 @@ void OpenGLWidget::drawDigitalEventSeries() {
 
         // View Matrix. Panning (all lines moved together).
         auto View = glm::mat4(1.0f);
+        View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0));
 
         // Projection Matrix. Orthographic. Horizontal Zoom. Vertical Zoom.
         auto Projection = glm::ortho(start_time, end_time,
-                                     -1.0f, 1.0f);
+                                     min_y, max_y);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
@@ -208,8 +247,8 @@ void OpenGLWidget::drawDigitalEventSeries() {
             auto const xCanvasPos = static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(event)));
 
             std::array<GLfloat, 12> vertices = {
-                    xCanvasPos, -1.0f, rNorm, gNorm, bNorm, alpha,
-                    xCanvasPos, 1.0f, rNorm, gNorm, bNorm, alpha};
+                    xCanvasPos, min_y, rNorm, gNorm, bNorm, alpha,
+                    xCanvasPos, max_y, rNorm, gNorm, bNorm, alpha};
 
             glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
@@ -227,6 +266,9 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
     int r, g, b;
     auto const start_time = static_cast<float>(_xAxis.getStart());
     auto const end_time = static_cast<float>(_xAxis.getEnd());
+
+    auto const min_y = _yMin;
+    auto const max_y = _yMax;
 
     auto const m_program_ID = m_program->programId();
 
@@ -259,10 +301,11 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 
         // View Matrix. Panning (all lines moved together).
         auto View = glm::mat4(1.0f);
+        //View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0));
 
         // Projection Matrix. Orthographic. Horizontal Zoom. Vertical Zoom.
         auto Projection = glm::ortho(start_time, end_time,
-                                     -1.0f, 1.0f);
+                                     min_y, max_y);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
@@ -281,10 +324,10 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
             float const xEnd = end;
 
             std::array<GLfloat, 24> vertices = {
-                    xStart, -1.0f, rNorm, gNorm, bNorm, alpha,
-                    xEnd, -1.0f, rNorm, gNorm, bNorm, alpha,
-                    xEnd, 1.0f, rNorm, gNorm, bNorm, alpha,
-                    xStart, 1.0f, rNorm, gNorm, bNorm, alpha};
+                    xStart, min_y, rNorm, gNorm, bNorm, alpha,
+                    xEnd, min_y, rNorm, gNorm, bNorm, alpha,
+                    xEnd, max_y, rNorm, gNorm, bNorm, alpha,
+                    xStart, max_y, rNorm, gNorm, bNorm, alpha};
 
             //glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.bind();
@@ -305,6 +348,9 @@ void OpenGLWidget::drawAnalogSeries() {
 
     auto const start_time = static_cast<float>(_xAxis.getStart());
     auto const end_time = static_cast<float>(_xAxis.getEnd());
+
+    auto const min_y = _yMin;
+    auto const max_y = _yMax;
 
     auto const m_program_ID = m_program->programId();
 
@@ -341,10 +387,11 @@ void OpenGLWidget::drawAnalogSeries() {
 
         // View Matrix. Panning (all lines moved together).
         auto View = glm::mat4(1.0f);
+        View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0));
 
         // Projection Matrix. Orthographic. Horizontal Zoom. Vertical Zoom.
         auto Projection = glm::ortho(start_time, end_time,
-                                     -1.0f, 1.0f);
+                                     min_y, max_y);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
@@ -388,6 +435,9 @@ void OpenGLWidget::paintGL() {
     int64_t const zoom = _xAxis.getEnd() - _xAxis.getStart();
     _xAxis.setCenterAndZoom(currentTime, zoom);
 
+    // Update Y boundaries based on pan and zoom
+    _updateYViewBoundaries();
+
     // Draw the series
     drawDigitalEventSeries();
     drawDigitalIntervalSeries();
@@ -421,8 +471,8 @@ void OpenGLWidget::drawAxis() {
 
     // Draw horizontal line at x=0
     std::array<GLfloat, 12> lineVertices = {
-            0.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-            0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+            0.0f, _yMin, 1.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, _yMax, 1.0f, 1.0f, 1.0f, 1.0f};
 
     m_vbo.bind();
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
@@ -592,14 +642,27 @@ void OpenGLWidget::drawGridLines() {
     LineParameters startLine;
     startLine.xStart = xStartCanvasPos;
     startLine.xEnd = xStartCanvasPos;
-    startLine.yStart = -1.0f;
-    startLine.yEnd = 1.0f;
+    startLine.yStart = _yMin;
+    startLine.yEnd = _yMax;
     drawDashedLine(startLine);
 
     LineParameters endLine;
     endLine.xStart = xEndCanvasPos;
     endLine.xEnd = xEndCanvasPos;
-    endLine.yStart = -1.0f;
-    endLine.yEnd = 1.0f;
+    endLine.yStart = _yMin;
+    endLine.yEnd = _yMax;
     drawDashedLine(endLine);
+}
+
+void OpenGLWidget::_updateYViewBoundaries() {
+    /*
+    float viewHeight = 2.0f;
+
+    // Calculate center point (adjusted by vertical pan)
+    float centerY = _verticalPanOffset;
+    
+    // Calculate min and max values
+    _yMin = centerY - (viewHeight / 2.0f);
+    _yMax = centerY + (viewHeight / 2.0f);
+     */
 }
