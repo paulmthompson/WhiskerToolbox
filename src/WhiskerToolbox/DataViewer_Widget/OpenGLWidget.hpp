@@ -166,6 +166,7 @@ private:
     bool _isPanning{false};
     float _yMin{-1.0f};
     float _yMax{1.0f};
+    float _ySpacing{0.1f};
 
     std::string m_background_color{"#000000"};// black
 

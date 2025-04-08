@@ -71,11 +71,11 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
 void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     if (_isPanning) {
         // Calculate vertical movement in pixels
-        int deltaY = event->pos().y() - _lastMousePos.y();
+        int const deltaY = event->pos().y() - _lastMousePos.y();
 
         // Convert to normalized device coordinates
         // A positive deltaY (moving down) should move the view up
-        float normalizedDeltaY = -deltaY / static_cast<float>(height()) * 2.0f;
+        float const normalizedDeltaY = -1.0f * static_cast<float>(deltaY) / static_cast<float>(height()) * 2.0f;
 
         // Adjust vertical offset based on movement
         _verticalPanOffset += normalizedDeltaY;
@@ -352,12 +352,16 @@ void OpenGLWidget::drawAnalogSeries() {
     auto const min_y = _yMin;
     auto const max_y = _yMax;
 
+    float const center_coord = -0.5f * _ySpacing * (static_cast<float>(_analog_series.size() - 1));
+
     auto const m_program_ID = m_program->programId();
 
     glUseProgram(m_program_ID);
 
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
+
+    int i = 0;
 
     for (auto const & [key, analog_data]: _analog_series) {
         auto const & series = analog_data.series;
@@ -380,9 +384,12 @@ void OpenGLWidget::drawAnalogSeries() {
                                        [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(time); });
 
         // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
-        float const y_offset = 0.0;
+        float const y_offset = static_cast<float>(i) * _ySpacing;
         auto Model = glm::mat4(1.0f);
         Model = glm::translate(Model, glm::vec3(0, y_offset, 0));
+
+        //Now move so that center of all series is at zero
+        Model = glm::translate(Model, glm::vec3(0, center_coord, 0));
         Model = glm::scale(Model, glm::vec3(1, 1 / stdDev, 1));
 
         // View Matrix. Panning (all lines moved together).
@@ -415,6 +422,8 @@ void OpenGLWidget::drawAnalogSeries() {
         m_vbo.release();
 
         glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 6));
+
+        i++;
     }
 
     glUseProgram(0);
