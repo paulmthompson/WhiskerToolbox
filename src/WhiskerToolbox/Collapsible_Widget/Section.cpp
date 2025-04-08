@@ -18,16 +18,16 @@
     along with Elypson/qt-collapsible-section. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QPropertyAnimation>
-
 #include "Section.hpp"
-#include <QDebug>
+
+#include <QPropertyAnimation>
 
 #include <iostream>
 #include <vector>
-Section::Section(QWidget* parent, const QString& title, const int animationDuration)
-    : QWidget(parent), animationDuration(animationDuration)
-{
+
+Section::Section(QWidget * parent, QString const & title, int const animationDuration)
+    : QWidget(parent),
+      animationDuration(animationDuration) {
 
     toggleButton = new QToolButton(this);
     headerLine = new QFrame(this);
@@ -66,74 +66,65 @@ Section::Section(QWidget* parent, const QString& title, const int animationDurat
     mainLayout->addWidget(contentArea, row, 0, 1, 3);
     setLayout(mainLayout);
 
-    for (QWidget* widget : this->findChildren<QWidget*>())
-    {
+    for (QWidget * widget: this->findChildren<QWidget *>()) {
         widget->setProperty("internal", true);
     }
 
     connect(toggleButton, &QToolButton::toggled, this, &Section::toggle);
 }
 
-void Section::toggle(bool expanded)
-{
+void Section::toggle(bool expanded) {
     toggleButton->setArrowType(expanded ? Qt::ArrowType::DownArrow : Qt::ArrowType::RightArrow);
     toggleAnimation->setDirection(expanded ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);
     toggleAnimation->start();
-    
+
     this->isExpanded = expanded;
-    
-    qDebug() << "MV: toggle: isExpanded " << isExpanded;
+
+    //qDebug() << "MV: toggle: isExpanded " << isExpanded;
 }
 
-void Section::setContentLayout(QLayout& contentLayout)
-{
+void Section::setContentLayout(QLayout & contentLayout) {
     delete contentArea->layout();
     contentArea->setLayout(&contentLayout);
     collapsedHeight = sizeHint().height() - contentArea->maximumHeight();
-    
+
     updateHeights();
 }
 
-void Section::autoSetContentLayout()
-{
-    auto* layout = new QVBoxLayout();
+void Section::autoSetContentLayout() {
+    auto * layout = new QVBoxLayout();
     int added = 0;
-    for (QWidget* widget : this->findChildren<QWidget*>())
-    {
-        if (widget->property("internal").toBool() || widget->parent() != this)
-        {
+    for (QWidget * widget: this->findChildren<QWidget *>()) {
+        if (widget->property("internal").toBool() || widget->parent() != this) {
             continue;
         }
-        qDebug() << "MV: autoSetContentLayout: adding widget " << widget->objectName();
+        //qDebug() << "MV: autoSetContentLayout: adding widget " << widget->objectName();
         layout->addWidget(widget);
         ++added;
     }
-    qDebug() << "MV: autoSetContentLayout: added " << added << " widgets";
+    //qDebug() << "MV: autoSetContentLayout: added " << added << " widgets";
     setContentLayout(*layout);
 }
 
-void Section::setTitle(QString title)
-{
-    toggleButton->setText(std::move(title));
+void Section::setTitle(QString const & title) {
+    toggleButton->setText(title);
 }
 
-void Section::updateHeights()
-{
-    int contentHeight = contentArea->layout()->sizeHint().height();
+void Section::updateHeights() {
+    int const contentHeight = contentArea->layout()->sizeHint().height();
 
-    for (int i = 0; i < toggleAnimation->animationCount() - 1; ++i)
-    {
-        QPropertyAnimation* SectionAnimation = static_cast<QPropertyAnimation *>(toggleAnimation->animationAt(i));
+    for (int i = 0; i < toggleAnimation->animationCount() - 1; ++i) {
+        auto * SectionAnimation = dynamic_cast<QPropertyAnimation *>(toggleAnimation->animationAt(i));
         SectionAnimation->setDuration(animationDuration);
         SectionAnimation->setStartValue(collapsedHeight);
         SectionAnimation->setEndValue(collapsedHeight + contentHeight);
     }
 
-    QPropertyAnimation* contentAnimation = static_cast<QPropertyAnimation *>(toggleAnimation->animationAt(toggleAnimation->animationCount() - 1));
+    auto * contentAnimation = dynamic_cast<QPropertyAnimation *>(toggleAnimation->animationAt(toggleAnimation->animationCount() - 1));
     contentAnimation->setDuration(animationDuration);
     contentAnimation->setStartValue(0);
     contentAnimation->setEndValue(contentHeight);
-    
+
     toggleAnimation->setDirection(isExpanded ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);
     toggleAnimation->start();
 }

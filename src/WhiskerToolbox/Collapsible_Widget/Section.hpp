@@ -28,41 +28,40 @@
 #include <QToolButton>
 #include <QWidget>
 
-class Section : public QWidget
-{
+class Section : public QWidget {
     Q_OBJECT
-    
+
 private:
-    QGridLayout* mainLayout;
-    QToolButton* toggleButton;
-    QFrame* headerLine;
-    QParallelAnimationGroup* toggleAnimation;
-    QScrollArea* contentArea;
+    QGridLayout * mainLayout;
+    QToolButton * toggleButton;
+    QFrame * headerLine;
+    QParallelAnimationGroup * toggleAnimation;
+    QScrollArea * contentArea;
     int animationDuration;
     int collapsedHeight;
     bool isExpanded = false;
 
-    
+
 public slots:
-    void toggle(bool collapsed);
+    void toggle(bool expanded);
 
 public:
-    static const int DEFAULT_DURATION = 100;
+    static int const DEFAULT_DURATION = 100;
 
     // initialize section
-    explicit Section(QWidget* parent = 0, const QString& title = "", const int animationDuration = DEFAULT_DURATION);
+    explicit Section(QWidget * parent = nullptr, QString const & title = "", int animationDuration = DEFAULT_DURATION);
 
     // set layout of content
-    void setContentLayout(QLayout& contentLayout);
+    void setContentLayout(QLayout & contentLayout);
 
     // automatically set content layout with original children
     void autoSetContentLayout();
-    
+
     // set title
-    void setTitle(QString title);
-    
+    void setTitle(QString const & title);
+
     // update animations and their heights
     void updateHeights();
 };
 
-#endif // SECTION_H
+#endif// SECTION_H
