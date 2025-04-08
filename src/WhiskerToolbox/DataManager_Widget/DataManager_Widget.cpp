@@ -3,12 +3,12 @@
 #include "ui_DataManager_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 
 #include "DataManager/ImageSize/ImageSize.hpp"
 
@@ -17,12 +17,12 @@
 #include "DataManager/Tensors/Tensor_Data.hpp"
 #define slots Q_SLOTS
 
+#include "AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp"
+#include "DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp"
+#include "DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp"
+#include "Line_Widget/Line_Widget.hpp"
 #include "Mask_Widget/Mask_Widget.hpp"
 #include "Point_Widget/Point_Widget.hpp"
-#include "Line_Widget/Line_Widget.hpp"
-#include "AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp"
-#include "DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp"
-#include "DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp"
 #include "Tensor_Widget/Tensor_Widget.hpp"
 
 #include "Media_Window/Media_Window.hpp"
@@ -31,16 +31,15 @@
 #include <QFileDialog>
 
 DataManager_Widget::DataManager_Widget(
-    Media_Window* scene,
-    std::shared_ptr<DataManager> data_manager,
-    TimeScrollBar* time_scrollbar,
-    QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::DataManager_Widget),
-    _scene{scene},
-    _time_scrollbar{time_scrollbar},
-    _data_manager{data_manager}
-{
+        Media_Window * scene,
+        std::shared_ptr<DataManager> data_manager,
+        TimeScrollBar * time_scrollbar,
+        QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::DataManager_Widget),
+      _scene{scene},
+      _time_scrollbar{time_scrollbar},
+      _data_manager{data_manager} {
     ui->setupUi(this);
 
     ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
@@ -65,14 +64,12 @@ DataManager_Widget::~DataManager_Widget() {
     delete ui;
 }
 
-void DataManager_Widget::openWidget()
-{
+void DataManager_Widget::openWidget() {
     ui->feature_table_widget->populateTable();
     this->show();
 }
 
-void DataManager_Widget::_handleFeatureSelected(const QString& feature)
-{
+void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
     _highlighted_available_feature = feature;
 
     auto key = feature.toStdString();
@@ -81,10 +78,10 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
 
     if (feature_type == "PointData") {
 
-        const int stacked_widget_index = 1;
+        int const stacked_widget_index = 1;
 
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto point_widget = dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(stacked_widget_index));
+        auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         point_widget->setActiveKey(key);
         connect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
 
@@ -100,9 +97,9 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
 
     } else if (feature_type == "MaskData") {
 
-        const int stacked_widget_index = 2;
+        int const stacked_widget_index = 2;
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto mask_widget = dynamic_cast<Mask_Widget*>(ui->stackedWidget->widget(stacked_widget_index));
+        auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         mask_widget->setActiveKey(key);
 
         connect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
@@ -115,15 +112,15 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
         ui->stackedWidget->setCurrentIndex(3);
     } else if (feature_type == "AnalogTimeSeries") {
 
-        const int stacked_widget_index = 4;
+        int const stacked_widget_index = 4;
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto analog_widget = dynamic_cast<AnalogTimeSeries_Widget*>(ui->stackedWidget->widget(stacked_widget_index));
+        auto analog_widget = dynamic_cast<AnalogTimeSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         analog_widget->setActiveKey(key);
 
     } else if (feature_type == "DigitalIntervalSeries") {
 
         ui->stackedWidget->setCurrentIndex(5);
-        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget*>(ui->stackedWidget->widget(5));
+        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(5));
         interval_widget->setActiveKey(key);
 
         connect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
@@ -133,7 +130,7 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
     } else if (feature_type == "TensorData") {
 
         ui->stackedWidget->setCurrentIndex(7);
-        dynamic_cast<Tensor_Widget*>(ui->stackedWidget->widget(7))->setActiveKey(key);
+        dynamic_cast<Tensor_Widget *>(ui->stackedWidget->widget(7))->setActiveKey(key);
 
 
     } else {
@@ -141,12 +138,11 @@ void DataManager_Widget::_handleFeatureSelected(const QString& feature)
     }
 }
 
-void DataManager_Widget::_disablePreviousFeature(const QString& feature)
-{
+void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
 
     auto key = feature.toStdString();
 
-    for (auto callback : _current_data_callbacks) {
+    for (auto callback: _current_data_callbacks) {
         _data_manager->removeCallbackFromData(key, callback);
     }
 
@@ -156,16 +152,16 @@ void DataManager_Widget::_disablePreviousFeature(const QString& feature)
 
     if (feature_type == "PointData") {
 
-        const int stacked_widget_index = 1;
+        int const stacked_widget_index = 1;
 
-        auto point_widget = dynamic_cast<Point_Widget*>(ui->stackedWidget->widget(stacked_widget_index));
+        auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         disconnect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
         disconnect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
 
     } else if (feature_type == "MaskData") {
 
-        const int stacked_widget_index = 2;
-        auto mask_widget = dynamic_cast<Mask_Widget*>(ui->stackedWidget->widget(stacked_widget_index));
+        int const stacked_widget_index = 2;
+        auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         disconnect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
 
 
@@ -175,11 +171,11 @@ void DataManager_Widget::_disablePreviousFeature(const QString& feature)
 
     } else if (feature_type == "DigitalIntervalSeries") {
 
-        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget*>(ui->stackedWidget->widget(5));
+        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(5));
 
         disconnect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
         interval_widget->removeCallbacks();
-        
+
     } else if (feature_type == "DigitalEventSeries") {
 
     } else if (feature_type == "TensorData") {
@@ -189,12 +185,11 @@ void DataManager_Widget::_disablePreviousFeature(const QString& feature)
 }
 
 
-void DataManager_Widget::_changeOutputDir()
-{
+void DataManager_Widget::_changeOutputDir() {
     QString dir_name = QFileDialog::getExistingDirectory(
-        this,
-        "Select Directory",
-        QDir::currentPath());
+            this,
+            "Select Directory",
+            QDir::currentPath());
 
     if (dir_name.isEmpty()) {
         return;
@@ -202,11 +197,9 @@ void DataManager_Widget::_changeOutputDir()
 
     _data_manager->setOutputPath(dir_name.toStdString());
     ui->output_dir_label->setText(dir_name);
-
 }
 
-void DataManager_Widget::_createNewData()
-{
+void DataManager_Widget::_createNewData() {
     auto key = ui->new_data_name->toPlainText().toStdString();
 
     if (key.empty()) {
@@ -223,7 +216,7 @@ void DataManager_Widget::_createNewData()
         auto width = _data_manager->getData<MediaData>("media")->getWidth();
 
         _data_manager->setData<MaskData>(key);
-        _data_manager->getData<MaskData>(key)->setImageSize(ImageSize(width, height));
+        _data_manager->getData<MaskData>(key)->setImageSize(ImageSize{.width = width, .height = height});
 
     } else if (type == "Line") {
         _data_manager->setData<LineData>(key);
@@ -240,8 +233,6 @@ void DataManager_Widget::_createNewData()
     }
 }
 
-void DataManager_Widget::_changeScrollbar(int frame_id)
-{
+void DataManager_Widget::_changeScrollbar(int frame_id) {
     _time_scrollbar->changeScrollBarValue(frame_id);
 }
-

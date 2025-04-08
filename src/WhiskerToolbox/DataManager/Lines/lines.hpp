@@ -15,43 +15,38 @@
 using Line2D = std::vector<Point2D<float>>;
 
 
-inline Line2D create_line(std::vector<float> const& x, std::vector<float> const& y)
-{
+inline Line2D create_line(std::vector<float> const & x, std::vector<float> const & y) {
     auto new_line = Line2D{x.size()};
 
-    for (std::size_t i = 0; i < x.size(); i++)
-    {
-        new_line[i] = Point2D<float>{x[i],y[i]};
+    for (std::size_t i = 0; i < x.size(); i++) {
+        new_line[i] = Point2D<float>{x[i], y[i]};
     }
 
     return new_line;
 }
 
 
-inline void smooth_line(Line2D& line)
-{
-    if (line.size() < 3) return; // No need to smooth if less than 3 points
+inline void smooth_line(Line2D & line) {
+    if (line.size() < 3) return;// No need to smooth if less than 3 points
 
     Line2D smoothed_line;
-    smoothed_line.push_back(line.front()); // First point remains the same
+    smoothed_line.push_back(line.front());// First point remains the same
 
-    for (std::size_t i = 1; i < line.size() - 1; ++i)
-    {
+    for (std::size_t i = 1; i < line.size() - 1; ++i) {
         float const smoothed_x = (line[i - 1].x + line[i].x + line[i + 1].x) / 3.0f;
         float const smoothed_y = (line[i - 1].y + line[i].y + line[i + 1].y) / 3.0f;
         smoothed_line.push_back(Point2D<float>{smoothed_x, smoothed_y});
     }
 
-    smoothed_line.push_back(line.back()); // Last point remains the same
+    smoothed_line.push_back(line.back());// Last point remains the same
     line = std::move(smoothed_line);
 }
 
 
-inline std::vector<uint8_t> line_to_image(Line2D& line, int height, int width)
-{
+inline std::vector<uint8_t> line_to_image(Line2D & line, int height, int width) {
     auto image = std::vector<uint8_t>(static_cast<size_t>(height * width));
 
-    for (auto point : line) {
+    for (auto point: line) {
         auto x = std::lround(point.x);
         auto y = std::lround(point.y);
 
@@ -63,28 +58,25 @@ inline std::vector<uint8_t> line_to_image(Line2D& line, int height, int width)
 }
 
 
-inline void save_line_as_csv(Line2D const& line, std::string const& filename, int const point_precision = 2)
-{
+inline void save_line_as_csv(Line2D const & line, std::string const & filename, int const point_precision = 2) {
     std::fstream myfile;
-    myfile.open (filename, std::fstream::out);
+    myfile.open(filename, std::fstream::out);
 
     myfile << std::fixed << std::setprecision(point_precision);
-    for (auto& point: line)
-    {
+    for (auto & point: line) {
         myfile << point.x << "," << point.y << "\n";
     }
 
     myfile.close();
 }
 
-inline Line2D load_line_from_csv(std::string const& filename)
-{
+inline Line2D load_line_from_csv(std::string const & filename) {
     std::string csv_line;
 
     auto line_output = Line2D();
 
     std::fstream myfile;
-    myfile.open (filename, std::fstream::in);
+    myfile.open(filename, std::fstream::in);
 
     std::string x_str;
     std::string y_str;
@@ -98,17 +90,16 @@ inline Line2D load_line_from_csv(std::string const& filename)
 
         //std::cout << x_str << " , " << y_str << std::endl;
 
-        line_output.push_back(Point2D<float>{std::stof(x_str),std::stof(y_str)});
+        line_output.push_back(Point2D<float>{std::stof(x_str), std::stof(y_str)});
     }
 
     return line_output;
 }
 
 inline void save_lines_csv(
-        const std::map<int,std::vector<Line2D>>& data,
-        const std::string& filename,
-        const std::string& header = "Frame,X,Y")
-{
+        std::map<int, std::vector<Line2D>> const & data,
+        std::string const & filename,
+        std::string const & header = "Frame,X,Y") {
 
     std::ofstream file(filename);
     if (!file.is_open()) {
@@ -119,12 +110,12 @@ inline void save_lines_csv(
     file << header << "\n";
 
     // Write the data
-    for (const auto& [frame, lines] : data) {
-        for (const auto& line : lines) {
+    for (auto const & [frame, lines]: data) {
+        for (auto const & line: lines) {
             std::ostringstream x_values;
             std::ostringstream y_values;
 
-            for (const auto& point : line) {
+            for (auto const & point: line) {
                 x_values << std::fixed << std::setprecision(1) << point.x << ",";
                 y_values << std::fixed << std::setprecision(1) << point.y << ",";
             }
@@ -143,7 +134,7 @@ inline void save_lines_csv(
 }
 
 
-inline std::vector<float> parse_string_to_float_vector(const std::string& str) {
+inline std::vector<float> parse_string_to_float_vector(std::string const & str) {
     std::vector<float> result;
 
     std::stringstream ss(str);
@@ -155,8 +146,7 @@ inline std::vector<float> parse_string_to_float_vector(const std::string& str) {
     return result;
 }
 
-inline std::map<int, std::vector<Line2D>> load_line_csv(const std::string& filepath)
-{
+inline std::map<int, std::vector<Line2D>> load_line_csv(std::string const & filepath) {
 
     auto t1 = std::chrono::high_resolution_clock::now();
     std::map<int, std::vector<Line2D>> data_map;
@@ -206,8 +196,8 @@ inline std::map<int, std::vector<Line2D>> load_line_csv(const std::string& filep
     file.close();
     auto t2 = std::chrono::high_resolution_clock::now();
 
-    auto duration = std::chrono::duration<double>( t2 - t1 ).count();
+    auto duration = std::chrono::duration<double>(t2 - t1).count();
     std::cout << "Loaded " << loaded_lines << " lines from " << filepath << " in " << duration << "s" << std::endl;
     return data_map;
 }
-#endif // DATAMANAGER_LINES_HPP
+#endif// DATAMANAGER_LINES_HPP
