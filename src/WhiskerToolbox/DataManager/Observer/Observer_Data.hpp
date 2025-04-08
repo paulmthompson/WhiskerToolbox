@@ -16,21 +16,20 @@ public:
 
     CallbackID addObserver(ObserverCallback callback) {
 
-        auto id = _observers.size() + 1;
+        auto id = static_cast<int>(_observers.size() + 1);
 
-        _observers[id] = callback;
+        _observers[id] = std::move(callback);
 
         return id;
     }
 
     void notifyObservers() {
-        for (auto& [id, observer] : _observers) {
-            observer(); // Call the observer callback
+        for (auto & [id, observer]: _observers) {
+            observer();// Call the observer callback
         }
     }
 
-    void removeObserver(CallbackID id)
-    {
+    void removeObserver(CallbackID id) {
         _observers.erase(id);
     }
 
@@ -38,4 +37,4 @@ private:
     std::unordered_map<CallbackID, ObserverCallback> _observers;
 };
 
-#endif // OBSERVER_DATA_HPP
+#endif// OBSERVER_DATA_HPP
