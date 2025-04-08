@@ -35,7 +35,7 @@ public:
     int getFrameIndexFromNumber(int frame_id) override { return frame_id; };
 
 protected:
-    void doLoadMedia(std::string name) override;
+    void doLoadMedia(std::string const & name) override;
     void doLoadFrame(int frame_id) override;
 
 private:

@@ -7,7 +7,7 @@ VideoData::VideoData()
 
 VideoData::~VideoData() = default;
 
-void VideoData::doLoadMedia(std::string name) {
+void VideoData::doLoadMedia(std::string const & name) {
     setFilename(name);
     _vd->createMedia(name);
 
@@ -38,11 +38,9 @@ void VideoData::doLoadFrame(int frame_id) {
     // the current frame without reseeking to a keyframe
     bool frame_by_frame = true;
 
-    if (frame_id == 0) {
-        frame_by_frame = false;
-    } else if (frame_id >= this->getTotalFrameCount() - 1) {
-        frame_by_frame = false;
-    } else if (frame_id <= _last_decoded_frame) {
+    if ((frame_id == 0) ||
+        (frame_id >= this->getTotalFrameCount() - 1) ||
+        (frame_id <= _last_decoded_frame)) {
         frame_by_frame = false;
     }
 
@@ -56,5 +54,5 @@ std::string VideoData::GetFrameID(int frame_id) {
 }
 
 int VideoData::FindNearestSnapFrame(int frame_id) const {
-    return _vd->nearest_iframe(frame_id);
+    return static_cast<int>(_vd->nearest_iframe(frame_id));
 }

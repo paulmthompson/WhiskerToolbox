@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <iostream>
 
-void HDF5Data::doLoadMedia(std::string name) {
+void HDF5Data::doLoadMedia(std::string const & name) {
 
     int const frame_dim = 0;
     int const height_dim = 1;
@@ -15,7 +15,7 @@ void HDF5Data::doLoadMedia(std::string name) {
     auto c_str = name.c_str();
     H5::H5File file(c_str, H5F_ACC_RDONLY);
 
-    for (int i = 0; i < file.getNumObjs(); i++) {
+    for (hsize_t i = 0; i < file.getNumObjs(); i++) {
         std::cout << file.getObjnameByIdx(i) << std::endl;
     }
 
@@ -31,7 +31,7 @@ void HDF5Data::doLoadMedia(std::string name) {
     std::cout << "n_dims: " << dims.size() << '\n';
 
     std::cout << "shape: (";
-    for (hsize_t dim: dims) {
+    for (hsize_t const dim: dims) {
         std::cout << dim << ", ";
     }
     std::cout << ")\n"
@@ -41,8 +41,8 @@ void HDF5Data::doLoadMedia(std::string name) {
 
     dataset.read(static_cast<void *>(_data.data()), H5::PredType::NATIVE_UINT16);
 
-    updateWidth(dims[width_dim]);
-    updateHeight(dims[height_dim]);
+    updateWidth(static_cast<int>(dims[width_dim]));
+    updateHeight(static_cast<int>(dims[height_dim]));
     _max_val = *std::max_element(std::begin(_data), std::end(_data));
 
     std::cout << "Read data" << std::endl;
@@ -50,14 +50,14 @@ void HDF5Data::doLoadMedia(std::string name) {
 
     file.close();
 
-    setTotalFrameCount(dims[frame_dim]);
+    setTotalFrameCount(static_cast<int>(dims[frame_dim]));
 }
 
 void HDF5Data::doLoadFrame(int frame_id) {
     auto start_position = frame_id * getHeight() * getWidth();
-    auto frame_data = std::vector<uint8_t>(getHeight() * getWidth());
-    for (int i = 0; i < frame_data.size(); i++) {
-        auto normalized_data = static_cast<float>(_data[start_position + i]) / _max_val;
+    auto frame_data = std::vector<uint8_t>(static_cast<size_t>(getHeight() * getWidth()));
+    for (size_t i = 0; i < frame_data.size(); i++) {
+        auto normalized_data = static_cast<float>(_data[start_position + i]) / static_cast<float>(_max_val);
         frame_data[i] = static_cast<uint8_t>(normalized_data * 256.0f);
     }
     this->setRawData(frame_data);

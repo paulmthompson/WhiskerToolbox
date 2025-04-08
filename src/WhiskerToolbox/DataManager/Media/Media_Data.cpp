@@ -5,11 +5,10 @@
 
 #include <opencv2/core/mat.hpp>
 
-MediaData::MediaData()
-    : _width{640},
-      _height{480} {
-    _rawData = std::vector<uint8_t>(_height * _width);
-    _processedData = std::vector<uint8_t>(_height * _width);
+MediaData::MediaData() {
+    int const new_size = _height * _width * _display_format_bytes;
+    _rawData.resize(static_cast<size_t>(new_size));
+    _processedData.resize(static_cast<size_t>(new_size));
     setFormat(DisplayFormat::Gray);
 };
 
@@ -26,20 +25,23 @@ void MediaData::setFormat(DisplayFormat const format) {
             _display_format_bytes = 1;
             break;
     }
-    _rawData.resize(_height * _width * _display_format_bytes);
-    _processedData.resize(_height * _width * _display_format_bytes);
+    int const new_size = _height * _width * _display_format_bytes;
+    _rawData.resize(static_cast<size_t>(new_size));
+    _processedData.resize(static_cast<size_t>(new_size));
 };
 
 void MediaData::updateHeight(int const height) {
     _height = height;
-    _rawData.resize(_height * _width * _display_format_bytes);
-    _processedData.resize(_height * _width * _display_format_bytes);
+    int const new_size = _height * _width * _display_format_bytes;
+    _rawData.resize(static_cast<size_t>(new_size));
+    _processedData.resize(static_cast<size_t>(new_size));
 };
 
 void MediaData::updateWidth(int const width) {
     _width = width;
-    _rawData.resize(_height * _width * _display_format_bytes);
-    _processedData.resize(_height * _width * _display_format_bytes);
+    int const new_size = _height * _width * _display_format_bytes;
+    _rawData.resize(static_cast<size_t>(new_size));
+    _processedData.resize(static_cast<size_t>(new_size));
 };
 
 void MediaData::LoadMedia(std::string const & name) {
@@ -72,8 +74,8 @@ std::vector<uint8_t> MediaData::getProcessedData(int const frame_number) {
     return _processedData;
 }
 
-void MediaData::setProcess(std::string key, std::function<void(cv::Mat & input)> process) {
-    this->_process_chain[key] = process;
+void MediaData::setProcess(std::string const & key, std::function<void(cv::Mat & input)> process) {
+    this->_process_chain[key] = std::move(process);
     _processData();
 
     notifyObservers();

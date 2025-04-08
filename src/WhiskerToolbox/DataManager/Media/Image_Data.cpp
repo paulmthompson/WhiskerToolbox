@@ -3,9 +3,9 @@
 
 #include "utils/string_manip.hpp"
 
+#include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
-#include <opencv2/core/core.hpp>
 
 #include <cstddef>
 #include <iostream>
@@ -14,33 +14,33 @@
 
 ImageData::ImageData() = default;
 
-void ImageData::doLoadMedia(std::string dir_name) {
+void ImageData::doLoadMedia(std::string const & dir_name) {
 
-    auto file_extensions = std::set<std::string>{".png",".jpg"};
+    auto file_extensions = std::set<std::string>{".png", ".jpg"};
 
-    for (const auto & entry : std::filesystem::directory_iterator(dir_name)) {
+    for (auto const & entry: std::filesystem::directory_iterator(dir_name)) {
         if (file_extensions.count(entry.path().extension().string())) {
             _image_paths.push_back(dir_name / entry.path());
         }
     }
 
-    if (_image_paths.size() == 0) {
+    if (_image_paths.empty()) {
         std::cout << "Warning: No images found in directory with matching extensions ";
-        for (auto const &i : file_extensions) {
+        for (auto const & i: file_extensions) {
             std::cout << i << " ";
         }
         std::cout << std::endl;
     }
 
-    setTotalFrameCount(_image_paths.size());
+    setTotalFrameCount(static_cast<int>(_image_paths.size()));
 }
 
-cv::Mat _convertToDisplayFormat(cv::Mat& image, ImageData::DisplayFormat format){
+cv::Mat convert_to_display_format(cv::Mat & image, ImageData::DisplayFormat format) {
     cv::Mat converted_image;
-    if (format == ImageData::DisplayFormat::Gray){
+    if (format == ImageData::DisplayFormat::Gray) {
         cv::cvtColor(image, converted_image, cv::COLOR_BGR2GRAY);
         // std::cout << "Converting to Gray" << std::endl;
-    } else if (format == ImageData::DisplayFormat::Color){
+    } else if (format == ImageData::DisplayFormat::Color) {
         cv::cvtColor(image, converted_image, cv::COLOR_BGR2BGRA);
         // std::cout << "Converting to 4channel" << std::endl;
     }
@@ -59,23 +59,22 @@ void ImageData::doLoadFrame(int frame_id) {
     updateHeight(loaded_image.rows);
     updateWidth(loaded_image.cols);
 
-    auto converted_image = _convertToDisplayFormat(loaded_image, this->getFormat());
-    
-    size_t num_bytes = converted_image.total() * converted_image.elemSize();
+    auto converted_image = convert_to_display_format(loaded_image, this->getFormat());
+
+    size_t const num_bytes = converted_image.total() * converted_image.elemSize();
     // std::cout << converted_image.elemSize() << ' ' << converted_image.total() << std::endl;
-    this->setRawData(std::vector<uint8_t>(static_cast<uint8_t*>(converted_image.data), static_cast<uint8_t*>(converted_image.data) + num_bytes));
+    this->setRawData(std::vector<uint8_t>(static_cast<uint8_t *>(converted_image.data), static_cast<uint8_t *>(converted_image.data) + num_bytes));
 }
 
 std::string ImageData::GetFrameID(int frame_id) {
     return _image_paths[frame_id].filename().string();
 }
 
-int ImageData::getFrameIndexFromNumber(int frame_id)
-{
+int ImageData::getFrameIndexFromNumber(int frame_id) {
     for (std::size_t i = 0; i < _image_paths.size(); i++) {
         auto image_frame_id = extract_numbers_from_string(_image_paths[i].filename().string());
         if (std::stoi(image_frame_id) == frame_id) {
-            return i;
+            return static_cast<int>(i);
         }
     }
     std::cout << "No matching frame found for requested ID" << std::endl;
