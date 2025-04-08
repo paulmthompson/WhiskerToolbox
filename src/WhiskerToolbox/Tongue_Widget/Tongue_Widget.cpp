@@ -153,7 +153,7 @@ void Tongue_Widget::_exportMasks() {
 
     for (int i : drawn){
         auto mask = mask_data->getMasksAtTime(i)[0];
-        QImage mask_img(mask_data->getImageSize().getWidth(), mask_data->getImageSize().getHeight(), QImage::Format_Grayscale8);
+        QImage mask_img(mask_data->getImageSize().width, mask_data->getImageSize().height, QImage::Format_Grayscale8);
         mask_img.fill(0);
         for (auto [x, y] : mask){
             mask_img.setPixel(static_cast<int>(x), static_cast<int>(y), 0xFFFFFF);

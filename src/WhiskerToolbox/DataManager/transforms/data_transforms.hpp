@@ -13,9 +13,9 @@ class MediaData;
 class PointData;
 
 
-std::shared_ptr<AnalogTimeSeries> area(const std::shared_ptr<MaskData>& mask_data);
+std::shared_ptr<AnalogTimeSeries> area(std::shared_ptr<MaskData> const & mask_data);
 
-void scale(std::shared_ptr<PointData>& point_data, ImageSize const& image_size_media);
+void scale(std::shared_ptr<PointData> & point_data, ImageSize const & image_size_media);
 
 
-#endif //WHISKERTOOLBOX_DATA_TRANSFORMS_HPP
+#endif//WHISKERTOOLBOX_DATA_TRANSFORMS_HPP

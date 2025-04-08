@@ -1004,7 +1004,7 @@ void Whisker_Widget::_maskDilation(int dilation_size)
     auto mask_pixels = original_mask->getMasksAtTime(time)[0];
 
     //convert mask to opencv
-    auto mat = convert_vector_to_mat(mask_pixels, original_mask->getImageSize().getWidth(), original_mask->getImageSize().getHeight());
+    auto mat = convert_vector_to_mat(mask_pixels, original_mask->getImageSize().width, original_mask->getImageSize().height);
 
     grow_mask(mat, dilation_size);
 

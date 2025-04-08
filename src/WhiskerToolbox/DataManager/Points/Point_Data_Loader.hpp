@@ -33,7 +33,7 @@ inline std::shared_ptr<PointData> load_into_PointData(std::string const & file_p
     std::cout << "There are " << keypoints.size() << " keypoints " << std::endl;
 
     auto point_data = std::make_shared<PointData>(keypoints);
-    point_data->setImageSize(ImageSize{width, height});
+    point_data->setImageSize(ImageSize{.width=width, .height=height});
 
     if (scaled_height > 0 && scaled_width > 0) {
         scale(point_data, ImageSize{scaled_width, scaled_height});

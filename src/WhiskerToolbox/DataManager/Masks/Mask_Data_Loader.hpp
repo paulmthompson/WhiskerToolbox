@@ -26,7 +26,7 @@ inline std::shared_ptr<MaskData> load_into_MaskData(std::string const & file_pat
     auto x_coords = load_ragged_array<float>(file_path, x_key);
 
     auto mask_data = std::make_shared<MaskData>();
-    mask_data->setImageSize(ImageSize{width, height});
+    mask_data->setImageSize(ImageSize{.width=width, .height=height});
 
     for (std::size_t i = 0; i < frames.size(); i++) {
         auto frame = frames[i];
