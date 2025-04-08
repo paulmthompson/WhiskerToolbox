@@ -18,7 +18,7 @@ class VideoData : public MediaData {
 public:
     VideoData();
 
-    ~VideoData();
+    ~VideoData() override;
 
     std::string GetFrameID(int frame_id) override;
 
@@ -30,7 +30,7 @@ public:
      * @param frame_id
      * @return Nearest keyframe to frame_id
      */
-    int FindNearestSnapFrame(int frame_id) const;
+    [[nodiscard]] int FindNearestSnapFrame(int frame_id) const;
 
     int getFrameIndexFromNumber(int frame_id) override { return frame_id; };
 

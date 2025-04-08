@@ -8,11 +8,11 @@
 #include <vector>
 #include <string>
 
-cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int const width, int const height);
+cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int width, int height);
 
-cv::Mat convert_vector_to_mat(std::vector<Point2D<float>>& vec, int const width, int const height);
+cv::Mat convert_vector_to_mat(std::vector<Point2D<float>>& vec, int width, int height);
 
-void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat & mat, const int width, const int height);
+void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat & mat, int width, int height);
 
 std::vector<Point2D<float>> create_mask(cv::Mat const & mat);
 
@@ -26,19 +26,19 @@ std::vector<Point2D<float>> create_mask(cv::Mat const & mat);
  * @param invert
  * @return
  */
-cv::Mat load_mask_from_image(std::string const & filename, bool const invert=false);
+cv::Mat load_mask_from_image(std::string const & filename, bool invert=false);
 
-void grow_mask(cv::Mat & mat, int const dilation_size);
+void grow_mask(cv::Mat & mat, int dilation_size);
 
-void median_blur(cv::Mat & mat, int const kernel_size);
+void median_blur(cv::Mat & mat, int kernel_size);
 
 void linear_transform(cv::Mat & mat, double alpha, int beta);
 
 void gamma_transform(cv::Mat & mat, double gamma);
 
-void clahe(cv::Mat & mat, double const clip_limit, int const grid_size);
+void clahe(cv::Mat & mat, double clip_limit, int grid_size);
 
-void sharpen_image(cv::Mat& img, const double sigma = 3.0);
+void sharpen_image(cv::Mat& img, double sigma = 3.0);
 
 void bilateral_filter(cv::Mat& img, int d = 5, double sigmaColor = 75.0, double sigmaSpace = 75.0);
 

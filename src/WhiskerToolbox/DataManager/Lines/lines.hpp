@@ -37,8 +37,8 @@ inline void smooth_line(Line2D& line)
 
     for (std::size_t i = 1; i < line.size() - 1; ++i)
     {
-        float smoothed_x = (line[i - 1].x + line[i].x + line[i + 1].x) / 3.0f;
-        float smoothed_y = (line[i - 1].y + line[i].y + line[i + 1].y) / 3.0f;
+        float const smoothed_x = (line[i - 1].x + line[i].x + line[i + 1].x) / 3.0f;
+        float const smoothed_y = (line[i - 1].y + line[i].y + line[i + 1].y) / 3.0f;
         smoothed_line.push_back(Point2D<float>{smoothed_x, smoothed_y});
     }
 
@@ -49,7 +49,7 @@ inline void smooth_line(Line2D& line)
 
 inline std::vector<uint8_t> line_to_image(Line2D& line, int height, int width)
 {
-    auto image = std::vector<uint8_t>(height * width);
+    auto image = std::vector<uint8_t>(static_cast<size_t>(height * width));
 
     for (auto point : line) {
         auto x = std::lround(point.x);
@@ -185,10 +185,10 @@ inline std::map<int, std::vector<Line2D>> load_line_csv(const std::string& filep
         std::getline(ss, y_str, '"');
         std::getline(ss, y_str, '"');
 
-        int frame_num = std::stoi(frame_num_str);
+        int const frame_num = std::stoi(frame_num_str);
 
-        std::vector<float> x_values = parse_string_to_float_vector(x_str);
-        std::vector<float> y_values = parse_string_to_float_vector(y_str);
+        std::vector<float> const x_values = parse_string_to_float_vector(x_str);
+        std::vector<float> const y_values = parse_string_to_float_vector(y_str);
 
         if (x_values.size() != y_values.size()) {
             std::cerr << "Mismatched x and y values at frame: " << frame_num << std::endl;

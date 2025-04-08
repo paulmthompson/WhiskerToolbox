@@ -1,11 +1,11 @@
 #ifndef LINE_DATA_HPP
 #define LINE_DATA_HPP
 
-#include "Points/points.hpp"
 #include "ImageSize/ImageSize.hpp"
-#include "lines.hpp"
 #include "LockState/LockState.hpp"
 #include "Observer/Observer_Data.hpp"
+#include "Points/points.hpp"
+#include "lines.hpp"
 
 #include <map>
 #include <vector>
@@ -20,45 +20,44 @@
 class LineData : public ObserverData {
 public:
     LineData() = default;
-    LineData(std::map<int,std::vector<Line2D>> const& data) : _data(data) {};
-    void clearLineAtTime(int const time, int const line_id);
-    void clearLinesAtTime(int const time);
-    void addLineAtTime(int const time, std::vector<float> const& x, std::vector<float> const& y);
-    void addLineAtTime(int const time, std::vector<Point2D<float>> const & line);
+    explicit LineData(std::map<int, std::vector<Line2D>> const & data)
+        : _data(data){};
+    void clearLineAtTime(int time, int line_id);
+    void clearLinesAtTime(int time);
+    void addLineAtTime(int time, std::vector<float> const & x, std::vector<float> const & y);
+    void addLineAtTime(int time, std::vector<Point2D<float>> const & line);
 
-    void addPointToLine(int const time, int const line_id, const float x, const float y);
+    void addPointToLine(int time, int line_id, float x, float y);
 
-    void addPointToLineInterpolate(int const time, int const line_id, const float x, const float y);
+    void addPointToLineInterpolate(int time, int line_id, float x, float y);
 
-    std::vector<int> getTimesWithLines() const;
+    [[nodiscard]] std::vector<int> getTimesWithLines() const;
 
-    std::vector<Line2D> const& getLinesAtTime(int const time) const;
+    [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(int time) const;
 
-    std::map<int, std::vector<Line2D>> const& getData() const {return _data;};
+    [[nodiscard]] std::map<int, std::vector<Line2D>> const & getData() const { return _data; };
 
     void lockTime(int time) { _lock_state.lock(time); }
     void unlockTime(int time) { _lock_state.unlock(time); }
-    bool isTimeLocked(int time) const { return _lock_state.isLocked(time); }
+    [[nodiscard]] bool isTimeLocked(int time) const { return _lock_state.isLocked(time); }
 
-    void lockUntil(int time)
-    {
+    void lockUntil(int time) {
         _lock_state.clear();
         for (int i = 0; i <= time; i++) {
             _lock_state.lock(i);
         }
     }
 
-    ImageSize getImageSize() const { return _image_size; }
-    void setImageSize(const ImageSize& image_size) { _image_size = image_size; }
+    [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
+    void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
 protected:
-
 private:
-    std::map<int,std::vector<Line2D>> _data;
-    std::vector<Line2D> _empty {};
+    std::map<int, std::vector<Line2D>> _data;
+    std::vector<Line2D> _empty{};
     LockState _lock_state;
     ImageSize _image_size;
 };
 
 
-#endif // LINE_DATA_HPP
+#endif// LINE_DATA_HPP

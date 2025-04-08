@@ -9,7 +9,7 @@
 class TimeFrame {
 public:
     TimeFrame() = default;
-    explicit TimeFrame(std::vector<int> times);
+    explicit TimeFrame(std::vector<int> const & times);
     void updateTotalFrameCount(int frame_count) { _total_frame_count = frame_count; };
     [[nodiscard]] int getTotalFrameCount() const { return _total_frame_count; };
 

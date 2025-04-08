@@ -18,7 +18,7 @@ public:
     }
 
     // Returns true if the time is locked, false otherwise
-    bool isLocked(int time) const {
+    [[nodiscard]] bool isLocked(int time) const {
         auto it = _lock_states.find(time);
         if (it != _lock_states.end()) {
             return it->second;
@@ -30,9 +30,9 @@ public:
         _lock_states.clear();
     }
 
-    std::vector<int> getLockedTimes() const {
+    [[nodiscard]] std::vector<int> getLockedTimes() const {
         std::vector<int> locked_times;
-        for (const auto& [time, locked] : _lock_states) {
+        for (auto const & [time, locked]: _lock_states) {
             if (locked) {
                 locked_times.push_back(time);
             }
@@ -44,4 +44,4 @@ private:
     std::unordered_map<int, bool> _lock_states;
 };
 
-#endif // LOCKSTATE_HPP
+#endif// LOCKSTATE_HPP
