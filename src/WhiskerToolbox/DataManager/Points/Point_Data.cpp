@@ -10,14 +10,14 @@
 #include <sstream>
 
 
-PointData::PointData(std::map<int, Point2D<float>> data) {
+PointData::PointData(std::map<int, Point2D<float>> const & data) {
     for (auto [key, value]: data) {
         _data[key].push_back(value);
     }
 }
 
 PointData::PointData(std::map<int, std::vector<Point2D<float>>> data) {
-    _data = data;
+    _data = std::move(data);
 }
 
 void PointData::clearPointsAtTime(int const time) {
@@ -83,7 +83,7 @@ void PointData::_addPointsAtTime(int const time, std::vector<Point2D<float>> con
 std::vector<int> PointData::getTimesWithPoints() const {
     std::vector<int> keys;
     keys.reserve(_data.size());
-    for (auto kv: _data) {
+    for (auto const & kv: _data) {
         keys.push_back(kv.first);
     }
     return keys;
@@ -104,18 +104,13 @@ bool is_number(std::string const & s) {
                                       s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
 }
 
-std::map<int, Point2D<float>> load_points_from_csv(
-        std::string const & filename,
-        int const frame_column,
-        int const x_column,
-        int const y_column,
-        char const column_delim) {
+std::map<int, Point2D<float>> load_points_from_csv(CSVPointLoaderOptions const & opts) {
     std::string csv_line;
 
     auto line_output = std::map<int, Point2D<float>>{};
 
     std::fstream myfile;
-    myfile.open(filename, std::fstream::in);
+    myfile.open(opts.filename, std::fstream::in);
 
     std::string x_str;
     std::string y_str;
@@ -129,12 +124,12 @@ std::map<int, Point2D<float>> load_points_from_csv(
         std::stringstream ss(csv_line);
 
         int cols_read = 0;
-        while (getline(ss, col_value, column_delim)) {
-            if (cols_read == frame_column) {
+        while (getline(ss, col_value, opts.column_delim)) {
+            if (cols_read == opts.frame_column) {
                 frame_str = col_value;
-            } else if (cols_read == x_column) {
+            } else if (cols_read == opts.x_column) {
                 x_str = col_value;
-            } else if (cols_read == y_column) {
+            } else if (cols_read == opts.y_column) {
                 y_str = col_value;
             }
             cols_read++;
@@ -142,12 +137,12 @@ std::map<int, Point2D<float>> load_points_from_csv(
 
         if (is_number(frame_str)) {
             //line_output[std::stoi(frame_str)]=Point2D<float>{std::stof(x_str),std::stof(y_str)};
-            csv_vector.emplace_back(std::make_pair(std::stoi(frame_str), Point2D<float>{std::stof(x_str), std::stof(y_str)}));
+            csv_vector.emplace_back(std::stoi(frame_str), Point2D<float>{std::stof(x_str), std::stof(y_str)});
         }
     }
     std::cout.flush();
 
-    std::cout << "Read " << csv_vector.size() << " lines from " << filename << std::endl;
+    std::cout << "Read " << csv_vector.size() << " lines from " << opts.filename << std::endl;
 
     line_output.insert(csv_vector.begin(), csv_vector.end());
 

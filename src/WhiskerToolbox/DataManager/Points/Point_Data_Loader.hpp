@@ -23,12 +23,13 @@ inline std::shared_ptr<PointData> load_into_PointData(std::string const & file_p
     int const scaled_height = item.value("scale_to_height", -1);
     int const scaled_width = item.value("scale_to_width", -1);
 
-    auto keypoints = load_points_from_csv(
-            file_path,
-            frame_column,
-            x_column,
-            y_column,
-            delim.c_str()[0]);
+    auto opts = CSVPointLoaderOptions{.filename=file_path,
+                                      .frame_column=frame_column,
+                                      .x_column=x_column,
+                                      .y_column=y_column,
+                                      .column_delim=delim.c_str()[0]};
+
+    auto keypoints = load_points_from_csv(opts);
 
     std::cout << "There are " << keypoints.size() << " keypoints " << std::endl;
 

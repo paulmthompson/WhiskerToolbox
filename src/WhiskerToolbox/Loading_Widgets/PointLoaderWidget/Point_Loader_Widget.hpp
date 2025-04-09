@@ -12,20 +12,18 @@ namespace Ui {
 class Point_Loader_Widget;
 }
 
-class Point_Loader_Widget : public QWidget
-{
+class Point_Loader_Widget : public QWidget {
     Q_OBJECT
 public:
-
-    Point_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);
-    ~Point_Loader_Widget();
+    explicit Point_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
+    ~Point_Loader_Widget() override;
 
 private:
-    Ui::Point_Loader_Widget *ui;
+    Ui::Point_Loader_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
 
 private slots:
     void _loadSingleKeypoint();
 };
 
-#endif // POINT_LOADER_WIDGET_HPP
+#endif// POINT_LOADER_WIDGET_HPP

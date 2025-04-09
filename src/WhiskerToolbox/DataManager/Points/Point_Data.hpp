@@ -23,7 +23,7 @@
 class PointData : public ObserverData {
 public:
     PointData() = default;
-    explicit PointData(std::map<int, Point2D<float>> data);
+    explicit PointData(std::map<int, Point2D<float>> const & data);
     explicit PointData(std::map<int, std::vector<Point2D<float>>> data);
     void clearPointsAtTime(int time);
 
@@ -82,12 +82,15 @@ private:
     void _overwritePointsAtTime(int time, std::vector<Point2D<float>> const & points);
 };
 
-std::map<int, Point2D<float>> load_points_from_csv(
-        std::string const & filename,
-        int frame_column,
-        int x_column,
-        int y_column,
-        char column_delim = ' ');
+struct CSVPointLoaderOptions {
+    std::string filename;
+    int frame_column = 0;
+    int x_column = 1;
+    int y_column = 2;
+    char column_delim = ' ';
+};
+
+std::map<int, Point2D<float>> load_points_from_csv(CSVPointLoaderOptions const & opts);
 
 std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
 
