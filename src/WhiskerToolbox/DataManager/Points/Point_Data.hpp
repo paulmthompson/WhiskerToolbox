@@ -23,15 +23,15 @@
 class PointData : public ObserverData {
 public:
     PointData() = default;
-    PointData(std::map<int, Point2D<float>> data);
-    PointData(std::map<int, std::vector<Point2D<float>>> data);
-    void clearPointsAtTime(int const time);
+    explicit PointData(std::map<int, Point2D<float>> data);
+    explicit PointData(std::map<int, std::vector<Point2D<float>>> data);
+    void clearPointsAtTime(int time);
 
-    void addPointAtTime(int const time, float const x, float const y);
-    void addPointsAtTime(int const time, std::vector<Point2D<float>> const & points);
+    void addPointAtTime(int time, float x, float y);
+    void addPointsAtTime(int time, std::vector<Point2D<float>> const & points);
 
-    void overwritePointAtTime(int const time, float const x, float const y);
-    void overwritePointsAtTime(int const time, std::vector<Point2D<float>> const & points);
+    void overwritePointAtTime(int time, float x, float y);
+    void overwritePointsAtTime(int time, std::vector<Point2D<float>> const & points);
 
     template<typename T>
     void overwritePointsAtTimes(
@@ -48,14 +48,14 @@ public:
         notifyObservers();
     }
 
-    std::vector<int> getTimesWithPoints() const;
+    [[nodiscard]] std::vector<int> getTimesWithPoints() const;
 
-    ImageSize getImageSize() const { return _image_size; }
+    [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
-    std::vector<Point2D<float>> const & getPointsAtTime(int const time) const;
+    [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(int time) const;
 
-    std::size_t getMaxPoints() const {
+    [[nodiscard]] std::size_t getMaxPoints() const {
         std::size_t max_points = 1;
         for (auto const & [time, points]: _data) {
             if (points.size() > max_points) {
@@ -65,7 +65,7 @@ public:
         return max_points;
     }
 
-    std::map<int, std::vector<Point2D<float>>> const & getData() const { return _data; };
+    [[nodiscard]] std::map<int, std::vector<Point2D<float>>> const & getData() const { return _data; };
 
 protected:
 private:
@@ -74,21 +74,21 @@ private:
 
     ImageSize _image_size;
 
-    void _clearPointsAtTime(int const time);
-    void _addPointAtTime(int const time, float const x, float const y);
-    void _addPointsAtTime(int const time, std::vector<Point2D<float>> const & points);
+    void _clearPointsAtTime(int time);
+    void _addPointAtTime(int time, float x, float y);
+    void _addPointsAtTime(int time, std::vector<Point2D<float>> const & points);
 
-    void _overwritePointAtTime(int const time, float const x, float const y);
-    void _overwritePointsAtTime(int const time, std::vector<Point2D<float>> const & points);
+    void _overwritePointAtTime(int time, float x, float y);
+    void _overwritePointsAtTime(int time, std::vector<Point2D<float>> const & points);
 };
 
 std::map<int, Point2D<float>> load_points_from_csv(
         std::string const & filename,
-        int const frame_column,
-        int const x_column,
-        int const y_column,
-        char const column_delim = ' ');
+        int frame_column,
+        int x_column,
+        int y_column,
+        char column_delim = ' ');
 
-std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int const frame_column);
+std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
 
 #endif// POINT_DATA_HPP
