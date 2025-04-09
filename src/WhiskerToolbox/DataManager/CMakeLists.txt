@@ -59,7 +59,6 @@ add_library(DataManager SHARED
         utils/opencv_utility.hpp
         utils/opencv_utility.cpp
         utils/string_manip.hpp
-        utils/glob.hpp
         utils/json_helpers.hpp
 
         transforms/data_transforms.cpp

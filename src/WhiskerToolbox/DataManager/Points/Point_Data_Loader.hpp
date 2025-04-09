@@ -23,18 +23,18 @@ inline std::shared_ptr<PointData> load_into_PointData(std::string const & file_p
     int const scaled_height = item.value("scale_to_height", -1);
     int const scaled_width = item.value("scale_to_width", -1);
 
-    auto opts = CSVPointLoaderOptions{.filename=file_path,
-                                      .frame_column=frame_column,
-                                      .x_column=x_column,
-                                      .y_column=y_column,
-                                      .column_delim=delim.c_str()[0]};
+    auto opts = CSVPointLoaderOptions{.filename = file_path,
+                                      .frame_column = frame_column,
+                                      .x_column = x_column,
+                                      .y_column = y_column,
+                                      .column_delim = delim.c_str()[0]};
 
     auto keypoints = load_points_from_csv(opts);
 
     std::cout << "There are " << keypoints.size() << " keypoints " << std::endl;
 
     auto point_data = std::make_shared<PointData>(keypoints);
-    point_data->setImageSize(ImageSize{.width=width, .height=height});
+    point_data->setImageSize(ImageSize{.width = width, .height = height});
 
     if (scaled_height > 0 && scaled_width > 0) {
         scale(point_data, ImageSize{scaled_width, scaled_height});
