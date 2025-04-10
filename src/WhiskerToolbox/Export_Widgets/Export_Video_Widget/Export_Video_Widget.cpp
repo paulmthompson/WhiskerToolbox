@@ -9,8 +9,8 @@
 #include "Media_Window/Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
-#include <QFileDialog>
 #include "opencv2/opencv.hpp"
+#include <QFileDialog>
 
 #include <filesystem>
 #include <iostream>
@@ -18,15 +18,14 @@
 
 Export_Video_Widget::Export_Video_Widget(
         std::shared_ptr<DataManager> data_manager,
-        Media_Window* media_window,
-        TimeScrollBar* time_scrollbar,
-        QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::Export_Video_Widget),
-    _data_manager{data_manager},
-    _scene{media_window},
-    _time_scrollbar{time_scrollbar}
-{
+        Media_Window * scene,
+        TimeScrollBar * time_scrollbar,
+        QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::Export_Video_Widget),
+      _data_manager{std::move(data_manager)},
+      _scene{scene},
+      _time_scrollbar{time_scrollbar} {
     ui->setupUi(this);
 
     connect(ui->export_video_button, &QPushButton::clicked, this, &Export_Video_Widget::_exportVideo);
@@ -41,13 +40,11 @@ Export_Video_Widget::~Export_Video_Widget() {
     delete ui;
 }
 
-void Export_Video_Widget::openWidget()
-{
+void Export_Video_Widget::openWidget() {
     this->show();
 }
 
-void Export_Video_Widget::_exportVideo()
-{
+void Export_Video_Widget::_exportVideo() {
 
     auto start_num = ui->start_frame_spinbox->value();
 
@@ -73,8 +70,8 @@ void Export_Video_Widget::_exportVideo()
 
     std::cout << "Initial height x width: " << width << " x " << height << std::endl;
 
-    int fps = 30; // Set the desired frame rate
-    _video_writer->open(filename, cv::VideoWriter::fourcc('X','2','6','4'), fps, cv::Size(width, height), true);
+    int const fps = 30;// Set the desired frame rate
+    _video_writer->open(filename, cv::VideoWriter::fourcc('X', '2', '6', '4'), fps, cv::Size(width, height), true);
 
     if (!_video_writer->isOpened()) {
         std::cout << "Could not open the output video file for write" << std::endl;
@@ -92,19 +89,17 @@ void Export_Video_Widget::_exportVideo()
     _video_writer->release();
 }
 
-void Export_Video_Widget::_handleCanvasUpdated(const QImage canvasImage)
-{
+void Export_Video_Widget::_handleCanvasUpdated(QImage const & canvasImage) {
     auto frame = _data_manager->getTime()->getLastLoadedFrame();
     std::cout << "saving frame " << frame << std::endl;
     std::cout << canvasImage.height() << " x " << canvasImage.width() << std::endl;
 
     // Convert QImage to cv::Mat
     QImage convertedImage = canvasImage.convertToFormat(QImage::Format_RGB888);
-    cv::Mat mat(convertedImage.height(), convertedImage.width(), CV_8UC3, const_cast<uchar*>(convertedImage.bits()), convertedImage.bytesPerLine());
+    cv::Mat const mat(convertedImage.height(), convertedImage.width(), CV_8UC3, const_cast<uchar *>(convertedImage.bits()), convertedImage.bytesPerLine());
     cv::Mat matBGR;
     cv::cvtColor(mat, matBGR, cv::COLOR_RGB2BGR);
 
     // Write the frame to the video
     _video_writer->write(matBGR);
-
 }
