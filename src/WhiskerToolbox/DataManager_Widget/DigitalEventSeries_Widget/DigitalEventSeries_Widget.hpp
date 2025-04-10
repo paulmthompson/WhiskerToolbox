@@ -5,25 +5,26 @@
 #include <memory>
 #include <string>
 
-namespace Ui { class DigitalEventSeries_Widget; }
+namespace Ui {
+class DigitalEventSeries_Widget;
+}
 
 class DataManager;
 
-class DigitalEventSeries_Widget : public QWidget
-{
+class DigitalEventSeries_Widget : public QWidget {
     Q_OBJECT
 public:
-    explicit DigitalEventSeries_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent = nullptr);
-    ~DigitalEventSeries_Widget();
+    explicit DigitalEventSeries_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
+    ~DigitalEventSeries_Widget() override;
 
-    void openWidget(); // Call to open the widget
+    void openWidget();// Call to open the widget
 
 private:
-    Ui::DigitalEventSeries_Widget *ui;
+    Ui::DigitalEventSeries_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
 
 private slots:
-               // Add any slots needed for handling user interactions
+    // Add any slots needed for handling user interactions
 };
 
-#endif // DIGITALEVENTSERIES_WIDGET_HPP
+#endif// DIGITALEVENTSERIES_WIDGET_HPP

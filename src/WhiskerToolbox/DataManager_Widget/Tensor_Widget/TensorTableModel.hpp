@@ -14,7 +14,7 @@ class TensorTableModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
-    TensorTableModel(QObject *parent = nullptr) : QAbstractTableModel(parent) {}
+    explicit TensorTableModel(QObject *parent = nullptr) : QAbstractTableModel(parent) {}
 
     void setTensors(const std::map<int, torch::Tensor>& tensors) {
         beginResetModel();
@@ -22,19 +22,19 @@ public:
         endResetModel();
     }
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override {
+    [[nodiscard]] int rowCount(const QModelIndex &parent = QModelIndex()) const override {
         Q_UNUSED(parent);
         return static_cast<int>(_tensors.size());
     }
 
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override {
+    [[nodiscard]] int columnCount(const QModelIndex &parent = QModelIndex()) const override {
         Q_UNUSED(parent);
         return 2; // Frame and Shape columns
     }
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override {
         if (!index.isValid() || role != Qt::DisplayRole) {
-            return QVariant();
+            return QVariant{};
         }
 
         auto it = std::next(_tensors.begin(), index.row());
@@ -53,12 +53,12 @@ public:
             return shape;
         }
 
-        return QVariant();
+        return QVariant{};
     }
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
         if (role != Qt::DisplayRole) {
-            return QVariant();
+            return QVariant{};
         }
 
         if (orientation == Qt::Horizontal) {
@@ -69,7 +69,7 @@ public:
             }
         }
 
-        return QVariant();
+        return QVariant{};
     }
 
 private:

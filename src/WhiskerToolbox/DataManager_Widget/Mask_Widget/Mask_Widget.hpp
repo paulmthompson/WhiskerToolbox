@@ -3,29 +3,32 @@
 
 #include <QWidget>
 
-namespace dl {class EfficientSAM;};
-
 #include <filesystem>
 #include <memory>
 #include <string>
 
-namespace Ui { class Mask_Widget; }
+namespace dl {
+class EfficientSAM;
+};
+
+namespace Ui {
+class Mask_Widget;
+}
 
 class DataManager;
 
-class Mask_Widget : public QWidget
-{
+class Mask_Widget : public QWidget {
     Q_OBJECT
 public:
+    explicit Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
+    ~Mask_Widget() override;
 
-    Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);
-    ~Mask_Widget();
+    void openWidget();// Call
+    void selectPoint(float x, float y);
+    void setActiveKey(std::string const & key);
 
-    void openWidget(); // Call
-    void selectPoint(float const x, float const y);
-    void setActiveKey(const std::string &key);
 private:
-    Ui::Mask_Widget *ui;
+    Ui::Mask_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     std::unique_ptr<dl::EfficientSAM> _sam_model;
     std::string _active_key;
@@ -35,4 +38,4 @@ private slots:
 };
 
 
-#endif // MASK_WIDGET_HPP
+#endif// MASK_WIDGET_HPP

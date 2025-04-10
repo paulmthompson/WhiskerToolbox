@@ -11,46 +11,47 @@ class IntervalTableModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
-    IntervalTableModel(QObject *parent = nullptr) : QAbstractTableModel(parent) {}
+    explicit IntervalTableModel(QObject * parent = nullptr)
+        : QAbstractTableModel(parent) {}
 
-    void setIntervals(const std::vector<Interval>& intervals) {
+    void setIntervals(std::vector<Interval> const & intervals) {
         beginResetModel();
         _intervals = intervals;
         endResetModel();
     }
 
-    Interval getInterval(int row) const {
+    [[nodiscard]] Interval getInterval(int row) const {
         return _intervals[row];
     }
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override {
+    [[nodiscard]] int rowCount(QModelIndex const & parent = QModelIndex()) const override {
         Q_UNUSED(parent);
         return static_cast<int>(_intervals.size());
     }
 
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override {
+    [[nodiscard]] int columnCount(QModelIndex const & parent = QModelIndex()) const override {
         Q_UNUSED(parent);
-        return 2; // Start and End columns
+        return 2;// Start and End columns
     }
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant data(QModelIndex const & index, int role = Qt::DisplayRole) const override {
         if (!index.isValid() || role != Qt::DisplayRole) {
-            return QVariant();
+            return QVariant{};
         }
 
-        const Interval &interval = _intervals.at(index.row());
+        Interval const & interval = _intervals.at(index.row());
         if (index.column() == 0) {
             return QVariant::fromValue(interval.start);
         } else if (index.column() == 1) {
             return QVariant::fromValue(interval.end);
         }
 
-        return QVariant();
+        return QVariant{};
     }
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
         if (role != Qt::DisplayRole) {
-            return QVariant();
+            return QVariant{};
         }
 
         if (orientation == Qt::Horizontal) {
@@ -61,19 +62,19 @@ public:
             }
         }
 
-        return QVariant();
+        return QVariant{};
     }
 
-    Qt::ItemFlags flags(const QModelIndex &index) const override {
+    [[nodiscard]] Qt::ItemFlags flags(QModelIndex const & index) const override {
         if (!index.isValid()) {
             return Qt::ItemIsEnabled;
         }
         return QAbstractTableModel::flags(index) | Qt::ItemIsEditable;
     }
 
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override {
+    bool setData(QModelIndex const & index, QVariant const & value, int role = Qt::EditRole) override {
         if (index.isValid() && role == Qt::EditRole) {
-            Interval &interval = _intervals[index.row()];
+            Interval & interval = _intervals[index.row()];
             if (index.column() == 0) {
                 interval.start = value.toInt();
             } else if (index.column() == 1) {
@@ -90,4 +91,4 @@ private:
     std::vector<Interval> _intervals;
 };
 
-#endif //WHISKERTOOLBOX_INTERVALTABLEMODEL_HPP
+#endif//WHISKERTOOLBOX_INTERVALTABLEMODEL_HPP

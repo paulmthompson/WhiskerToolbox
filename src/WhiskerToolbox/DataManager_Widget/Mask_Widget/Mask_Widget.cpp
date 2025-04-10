@@ -13,7 +13,7 @@
 Mask_Widget::Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Mask_Widget),
-      _data_manager{data_manager} {
+      _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
     connect(ui->load_sam_button, &QPushButton::clicked, this, &Mask_Widget::_loadSamModel);
@@ -38,8 +38,8 @@ void Mask_Widget::selectPoint(float const x, float const y) {
             media->getProcessedData(current_time),
             image_height,
             image_width,
-            std::round(x),
-            std::round(y));
+            static_cast<int>(std::round(x)),
+            static_cast<int>(std::round(y)));
 
     std::vector<Point2D<float>> mask;
     for (size_t i = 0; i < mask_image.size(); i++) {

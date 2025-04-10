@@ -5,20 +5,19 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "IntervalTableModel.hpp"
 
+#include <QEvent>
+#include <QItemDelegate>
+#include <QKeyEvent>
 #include <QPushButton>
 
 #include <filesystem>
 #include <iostream>
 
-#include <QItemDelegate>
-#include <QEvent>
-#include <QKeyEvent>
 
-DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::DigitalIntervalSeries_Widget),
-    _data_manager{data_manager}
-{
+DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::DigitalIntervalSeries_Widget),
+      _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
     _interval_table_model = new IntervalTableModel(this);
@@ -38,15 +37,12 @@ DigitalIntervalSeries_Widget::~DigitalIntervalSeries_Widget() {
     delete ui;
 }
 
-void DigitalIntervalSeries_Widget::openWidget()
-{
+void DigitalIntervalSeries_Widget::openWidget() {
     // Populate the widget with data if needed
     this->show();
-
 }
 
-void DigitalIntervalSeries_Widget::_saveCSV()
-{
+void DigitalIntervalSeries_Widget::_saveCSV() {
     auto output_path = _data_manager->getOutputPath();
     std::cout << output_path.string() << std::endl;
     std::cout << _active_key << std::endl;
@@ -59,32 +55,28 @@ void DigitalIntervalSeries_Widget::_saveCSV()
     save_intervals(contactEvents, output_path.string());
 }
 
-void DigitalIntervalSeries_Widget::setActiveKey(std::string key)
-{
-    _active_key = key;
+void DigitalIntervalSeries_Widget::setActiveKey(std::string key) {
+    _active_key = std::move(key);
 
-    _data_manager->removeCallbackFromData(key, _callback_id);
+    _data_manager->removeCallbackFromData(_active_key, _callback_id);
 
     _assignCallbacks();
 
     _calculateIntervals();
 }
 
-void DigitalIntervalSeries_Widget::_changeDataTable(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
-{
+void DigitalIntervalSeries_Widget::_changeDataTable(QModelIndex const & topLeft, QModelIndex const & bottomRight, QVector<int> const & roles) {
 
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
 
     for (int row = topLeft.row(); row <= bottomRight.row(); ++row) {
-        const Interval interval = _interval_table_model->getInterval(row);
+        Interval const interval = _interval_table_model->getInterval(row);
         std::cout << "Interval changed to " << interval.start << " , " << interval.end << std::endl;
         intervals->addEvent(interval.start, interval.end);
     }
-
 }
 
-void DigitalIntervalSeries_Widget::_assignCallbacks()
-{
+void DigitalIntervalSeries_Widget::_assignCallbacks() {
     _callback_id = _data_manager->addCallbackToData(_active_key, [this]() {
         _calculateIntervals();
     });
@@ -92,16 +84,13 @@ void DigitalIntervalSeries_Widget::_assignCallbacks()
     //auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
 
     //connect(_interval_table_model, &IntervalTableModel::dataChanged, this, &DigitalIntervalSeries_Widget::_changeDataTable);
-
 }
 
-void DigitalIntervalSeries_Widget::removeCallbacks()
-{
+void DigitalIntervalSeries_Widget::removeCallbacks() {
     //disconnect(_interval_table_model, &IntervalTableModel::dataChanged, this, &DigitalIntervalSeries_Widget::_changeDataTable);
 }
 
-void DigitalIntervalSeries_Widget::_calculateIntervals()
-{
+void DigitalIntervalSeries_Widget::_calculateIntervals() {
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     ui->total_interval_label->setText(QString::number(intervals->size()));
 
@@ -109,8 +98,7 @@ void DigitalIntervalSeries_Widget::_calculateIntervals()
 }
 
 
-void DigitalIntervalSeries_Widget::_createIntervalButton()
-{
+void DigitalIntervalSeries_Widget::_createIntervalButton() {
     auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
 
 
@@ -139,8 +127,7 @@ void DigitalIntervalSeries_Widget::_createIntervalButton()
     }
 }
 
-void DigitalIntervalSeries_Widget::_removeIntervalButton()
-{
+void DigitalIntervalSeries_Widget::_removeIntervalButton() {
     auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
 
@@ -164,8 +151,7 @@ void DigitalIntervalSeries_Widget::_removeIntervalButton()
     }
 }
 
-void DigitalIntervalSeries_Widget::_flipIntervalButton()
-{
+void DigitalIntervalSeries_Widget::_flipIntervalButton() {
 
     auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
@@ -177,21 +163,19 @@ void DigitalIntervalSeries_Widget::_flipIntervalButton()
     }
 }
 
-void DigitalIntervalSeries_Widget::_handleCellClicked(const QModelIndex &index)
-{
+void DigitalIntervalSeries_Widget::_handleCellClicked(QModelIndex const & index) {
     if (!index.isValid()) {
         return;
     }
 
     // Assuming the frame number is stored in the clicked cell
-    int frameNumber = index.data().toInt();
+    int const frameNumber = index.data().toInt();
 
     // Emit the signal with the frame number
     emit frameSelected(frameNumber);
 }
 
-void DigitalIntervalSeries_Widget::_extendInterval()
-{
+void DigitalIntervalSeries_Widget::_extendInterval() {
     auto selectedIndexes = ui->tableView->selectionModel()->selectedIndexes();
 
     if (selectedIndexes.isEmpty()) {
@@ -202,9 +186,9 @@ void DigitalIntervalSeries_Widget::_extendInterval()
     auto currentFrame = _data_manager->getTime()->getLastLoadedFrame();
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
 
-    for (const auto &index : selectedIndexes) {
-        if (index.column() == 0) { // Only process the first column to avoid duplicate processing
-            Interval interval = _interval_table_model->getInterval(index.row());
+    for (auto const & index: selectedIndexes) {
+        if (index.column() == 0) {// Only process the first column to avoid duplicate processing
+            Interval const interval = _interval_table_model->getInterval(index.row());
 
             if (currentFrame < interval.start) {
                 intervals->addEvent(Interval{currentFrame, interval.end});

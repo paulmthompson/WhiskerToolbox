@@ -14,49 +14,50 @@ class PointTableModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
-    PointTableModel(QObject *parent = nullptr) : QAbstractTableModel(parent) {}
+    explicit PointTableModel(QObject * parent = nullptr)
+        : QAbstractTableModel(parent) {}
 
-    void setPoints(const std::map<int, std::vector<Point2D<float>>>& points) {
+    void setPoints(std::map<int, std::vector<Point2D<float>>> const & points) {
         beginResetModel();
         _points = points;
         endResetModel();
     }
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override {
+    [[nodiscard]] int rowCount(QModelIndex const & parent = QModelIndex()) const override {
         Q_UNUSED(parent);
         return static_cast<int>(_points.size());
     }
 
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override {
+    [[nodiscard]] int columnCount(QModelIndex const & parent = QModelIndex()) const override {
         Q_UNUSED(parent);
-        return 2; // Frame and Points columns
+        return 2;// Frame and Points columns
     }
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant data(QModelIndex const & index, int role = Qt::DisplayRole) const override {
         if (!index.isValid() || role != Qt::DisplayRole) {
-            return QVariant();
+            return QVariant{};
         }
 
         auto it = std::next(_points.begin(), index.row());
-        const int frame = it->first;
-        const std::vector<Point2D<float>> &points = it->second;
+        int const frame = it->first;
+        std::vector<Point2D<float>> const & points = it->second;
 
         if (index.column() == 0) {
             return QVariant::fromValue(frame);
         } else if (index.column() == 1) {
             std::stringstream ss;
-            for (const auto &point : points) {
+            for (auto const & point: points) {
                 ss << "(" << point.x << "," << point.y << ") ";
             }
             return QString::fromStdString(ss.str());
         }
 
-        return QVariant();
+        return QVariant{};
     }
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
         if (role != Qt::DisplayRole) {
-            return QVariant();
+            return QVariant{};
         }
 
         if (orientation == Qt::Horizontal) {
@@ -67,7 +68,7 @@ public:
             }
         }
 
-        return QVariant();
+        return QVariant{};
     }
 
 private:
@@ -75,4 +76,4 @@ private:
 };
 
 
-#endif //WHISKERTOOLBOX_POINTTABLEMODEL_HPP
+#endif//WHISKERTOOLBOX_POINTTABLEMODEL_HPP

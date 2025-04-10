@@ -39,7 +39,7 @@ DataManager_Widget::DataManager_Widget(
       ui(new Ui::DataManager_Widget),
       _scene{scene},
       _time_scrollbar{time_scrollbar},
-      _data_manager{data_manager} {
+      _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
     ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
@@ -186,7 +186,7 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
 
 
 void DataManager_Widget::_changeOutputDir() {
-    QString dir_name = QFileDialog::getExistingDirectory(
+    QString const dir_name = QFileDialog::getExistingDirectory(
             this,
             "Select Directory",
             QDir::currentPath());

@@ -17,11 +17,10 @@
 #include <fstream>
 #include <iostream>
 
-Tensor_Widget::Tensor_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::Tensor_Widget),
-    _data_manager{data_manager}
-{
+Tensor_Widget::Tensor_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::Tensor_Widget),
+      _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
     _tensor_table_model = new TensorTableModel(this);
@@ -34,26 +33,22 @@ Tensor_Widget::~Tensor_Widget() {
     delete ui;
 }
 
-void Tensor_Widget::openWidget()
-{
+void Tensor_Widget::openWidget() {
     // Populate the widget with data if needed
     this->show();
 }
 
-void Tensor_Widget::setActiveKey(const std::string &key)
-{
+void Tensor_Widget::setActiveKey(std::string const & key) {
     _active_key = key;
     updateTable();
 }
 
-void Tensor_Widget::updateTable()
-{
+void Tensor_Widget::updateTable() {
     auto tensors = _data_manager->getData<TensorData>(_active_key)->getData();
     _tensor_table_model->setTensors(tensors);
 }
 
-void Tensor_Widget::_saveTensorCSV()
-{
+void Tensor_Widget::_saveTensorCSV() {
 
     /*
     const auto filename = ui->save_filename->toPlainText().toStdString();
