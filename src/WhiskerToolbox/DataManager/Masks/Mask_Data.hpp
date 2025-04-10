@@ -21,7 +21,7 @@ public:
     MaskData() = default;
     void clearMasksAtTime(int time);
     void addMaskAtTime(int time, std::vector<float> const & x, std::vector<float> const & y);
-    void addMaskAtTime(int time, std::vector<Point2D<float>> const & mask);
+    void addMaskAtTime(int time, std::vector<Point2D<float>> mask);
 
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }

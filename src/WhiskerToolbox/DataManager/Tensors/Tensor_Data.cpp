@@ -19,21 +19,22 @@ torch::Tensor TensorData::getTensorAtTime(int time) const {
     if (_data.find(time) != _data.end()) {
         return _data.at(time);
     }
-    return torch::Tensor();
+    return torch::Tensor{};
 }
 
 std::vector<int> TensorData::getTimesWithTensors() const {
     std::vector<int> times;
+    times.reserve(_data.size());
     for (const auto& [time, tensor] : _data) {
         times.push_back(time);
     }
     return times;
 }
 
-std::vector<float> TensorData::getChannelSlice(int time, int channel)
+std::vector<float> TensorData::getChannelSlice(int time, int channel) const
 {
 
-    torch::Tensor tensor = getTensorAtTime(time);
+    torch::Tensor const tensor = getTensorAtTime(time);
 
     //std::cout << "Tensor at time " << time << " with " << tensor.numel() << " elements" << std::endl;
 
@@ -83,10 +84,10 @@ void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data) {
         std::cout << "Loaded numpy tensor with " << npy_data.shape << std::endl;
 
         auto shape = convertShape(npy_data.shape);
-        torch::Tensor tensor = torch::from_blob(&npy_data.data[0], {shape}, options);
+        torch::Tensor const tensor = torch::from_blob(&npy_data.data[0], {shape}, options);
 
         // Assuming the tensor is a 2D tensor where the first dimension is time
-        int time_steps = tensor.size(0);
+        int const time_steps = static_cast<int>(tensor.size(0));
 
         std::map<int, torch::Tensor> data;
         for (int t = 0; t < time_steps; ++t) {
