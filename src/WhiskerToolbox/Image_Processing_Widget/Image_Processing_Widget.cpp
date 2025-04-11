@@ -11,13 +11,11 @@
 #include <iostream>
 
 
-Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::Image_Processing_Widget),
-    _data_manager{data_manager}
-{
+Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::Image_Processing_Widget),
+      _data_manager{std::move(data_manager)} {
 
-    
     ui->setupUi(this);
 
     connect(ui->alpha_dspinbox, &QDoubleSpinBox::valueChanged, this, &Image_Processing_Widget::_updateContrastAlpha);
@@ -78,7 +76,6 @@ Image_Processing_Widget::Image_Processing_Widget(std::shared_ptr<DataManager> da
     //     layout->addWidget(ui->bilateral_filter_wrap);
     //     ui->bilateral_filter_box->setContentLayout(*layout);
     // }
-
 }
 
 void Image_Processing_Widget::openWidget() {
@@ -100,21 +97,20 @@ void Image_Processing_Widget::openWidget() {
     // ui->bilateral_filter_box->updateGeometry();
 
     // this->layout()->invalidate()hhhhhhhhdsfsdVVkj;
-
 }
 
 //////////////////////////////////////////////////
 
-void Image_Processing_Widget::_updateContrastFilter()
-{
+void Image_Processing_Widget::_updateContrastFilter() {
     if (_contrast_active) {
         auto media = _data_manager->getData<MediaData>("media");
-        media->setProcess("1__lineartransform", std::bind(linear_transform, std::placeholders::_1, _contrast_alpha, _contrast_beta));
+        media->setProcess("1__lineartransform", [this](cv::Mat & input) {
+            return linear_transform(input, _contrast_alpha, _contrast_beta);
+        });
     }
 }
 
-void Image_Processing_Widget::_activateContrast()
-{
+void Image_Processing_Widget::_activateContrast() {
     _contrast_active = ui->contrast_checkbox->isChecked();
 
     if (_contrast_active) {
@@ -125,38 +121,36 @@ void Image_Processing_Widget::_activateContrast()
     }
 }
 
-void Image_Processing_Widget::_updateContrastAlpha(){
+void Image_Processing_Widget::_updateContrastAlpha() {
     _contrast_alpha = ui->alpha_dspinbox->value();
     _updateContrastFilter();
 
-    if (!_contrast_active)
-    {
+    if (!_contrast_active) {
         ui->contrast_checkbox->setCheckState(Qt::Checked);
     }
 }
 
-void Image_Processing_Widget::_updateContrastBeta(){
+void Image_Processing_Widget::_updateContrastBeta() {
     _contrast_beta = ui->beta_spinbox->value();
     _updateContrastFilter();
 
-    if (!_contrast_active)
-    {
+    if (!_contrast_active) {
         ui->contrast_checkbox->setCheckState(Qt::Checked);
     }
 }
 
 //////////////////////////////////////////////////
 
-void Image_Processing_Widget::_updateGammaFilter()
-{
+void Image_Processing_Widget::_updateGammaFilter() {
     if (_gamma_active) {
         auto media = _data_manager->getData<MediaData>("media");
-        media->setProcess("1__gamma", std::bind(gamma_transform, std::placeholders::_1, _gamma));
+        media->setProcess("1__gamma", [this](cv::Mat & input) {
+            return gamma_transform(input, _gamma);
+        });
     }
 }
 
-void Image_Processing_Widget::_activateGamma()
-{
+void Image_Processing_Widget::_activateGamma() {
     _gamma_active = ui->gamma_checkbox->isChecked();
 
     if (_gamma_active) {
@@ -167,29 +161,28 @@ void Image_Processing_Widget::_activateGamma()
     }
 }
 
-void Image_Processing_Widget::_updateGamma(){
+void Image_Processing_Widget::_updateGamma() {
 
     _gamma = ui->gamma_dspinbox->value();
     _updateGammaFilter();
 
-    if (!_gamma_active)
-    {
+    if (!_gamma_active) {
         ui->gamma_checkbox->setCheckState(Qt::Checked);
     }
 }
 
 //////////////////////////////////////////////////
 
-void Image_Processing_Widget::_updateSharpenFilter()
-{
+void Image_Processing_Widget::_updateSharpenFilter() {
     if (_sharpen_active) {
         auto media = _data_manager->getData<MediaData>("media");
-        media->setProcess("2__sharpentransform", std::bind(sharpen_image, std::placeholders::_1, _sharpen_sigma));
+        media->setProcess("2__sharpentransform", [this](cv::Mat & input) {
+            return sharpen_image(input, _sharpen_sigma);
+        });
     }
 }
 
-void Image_Processing_Widget::_activateSharpen()
-{
+void Image_Processing_Widget::_activateSharpen() {
     _sharpen_active = ui->sharpen_checkbox->isChecked();
 
     if (_sharpen_active) {
@@ -200,28 +193,27 @@ void Image_Processing_Widget::_activateSharpen()
     }
 }
 
-void Image_Processing_Widget::_updateSharpenSigma()
-{
+void Image_Processing_Widget::_updateSharpenSigma() {
     _sharpen_sigma = ui->sharpen_spinbox->value();
     _updateSharpenFilter();
 
-    if (!_sharpen_active){
+    if (!_sharpen_active) {
         ui->sharpen_checkbox->setCheckState(Qt::Checked);
     }
 }
 
 //////////////////////////////////////////////////
 
-void Image_Processing_Widget::_updateClaheFilter()
-{
+void Image_Processing_Widget::_updateClaheFilter() {
     if (_clahe_active) {
         auto media = _data_manager->getData<MediaData>("media");
-        media->setProcess("3__clahetransform", std::bind(clahe, std::placeholders::_1, _clahe_clip, _clahe_grid));
+        media->setProcess("3__clahetransform", [this](cv::Mat & input) {
+            return clahe(input, _clahe_clip, _clahe_grid);
+        });
     }
 }
 
-void Image_Processing_Widget::_activateClahe()
-{
+void Image_Processing_Widget::_activateClahe() {
     _clahe_active = ui->clahe_checkbox->isChecked();
 
     if (_clahe_active) {
@@ -232,8 +224,7 @@ void Image_Processing_Widget::_activateClahe()
     }
 }
 
-void Image_Processing_Widget::_updateClaheClip()
-{
+void Image_Processing_Widget::_updateClaheClip() {
     _clahe_clip = ui->clahe_clip_spinbox->value();
     _updateClaheFilter();
 
@@ -242,8 +233,7 @@ void Image_Processing_Widget::_updateClaheClip()
     }
 }
 
-void Image_Processing_Widget::_updateClaheGrid()
-{
+void Image_Processing_Widget::_updateClaheGrid() {
     _clahe_grid = ui->clahe_grid_spinbox->value();
     _updateClaheFilter();
 
@@ -254,20 +244,16 @@ void Image_Processing_Widget::_updateClaheGrid()
 
 //////////////////////////////////////////////////
 
-void Image_Processing_Widget::_updateBilateralFilter()
-{
+void Image_Processing_Widget::_updateBilateralFilter() {
     if (_bilateral_active) {
         auto media = _data_manager->getData<MediaData>("media");
-        media->setProcess("4__bilateraltransform", std::bind(bilateral_filter,
-                                                            std::placeholders::_1,
-                                                            _bilateral_d,
-                                                            _bilateral_color_sigma,
-                                                            _bilateral_spatial_sigma));
+        media->setProcess("4__bilateraltransform", [this](cv::Mat & input) {
+            return bilateral_filter(input, _bilateral_d, _bilateral_color_sigma, _bilateral_spatial_sigma);
+        });
     }
 }
 
-void Image_Processing_Widget::_activateBilateral()
-{
+void Image_Processing_Widget::_activateBilateral() {
     _bilateral_active = ui->bilateral_checkbox->isChecked();
 
     if (_bilateral_active) {
@@ -278,8 +264,7 @@ void Image_Processing_Widget::_activateBilateral()
     }
 }
 
-void Image_Processing_Widget::_updateBilateralD()
-{
+void Image_Processing_Widget::_updateBilateralD() {
     _bilateral_d = ui->bilateral_d_spinbox->value();
     _updateBilateralFilter();
 
@@ -288,8 +273,7 @@ void Image_Processing_Widget::_updateBilateralD()
     }
 }
 
-void Image_Processing_Widget::_updateBilateralSpatialSigma()
-{
+void Image_Processing_Widget::_updateBilateralSpatialSigma() {
     _bilateral_spatial_sigma = ui->bilateral_spatial_spinbox->value();
     _updateBilateralFilter();
 
@@ -297,8 +281,7 @@ void Image_Processing_Widget::_updateBilateralSpatialSigma()
         ui->bilateral_checkbox->setCheckState(Qt::Checked);
     }
 }
-void Image_Processing_Widget::_updateBilateralColorSigma()
-{
+void Image_Processing_Widget::_updateBilateralColorSigma() {
     _bilateral_color_sigma = ui->bilateral_color_spinbox->value();
     _updateBilateralFilter();
 
@@ -306,4 +289,3 @@ void Image_Processing_Widget::_updateBilateralColorSigma()
         ui->bilateral_checkbox->setCheckState(Qt::Checked);
     }
 }
-
