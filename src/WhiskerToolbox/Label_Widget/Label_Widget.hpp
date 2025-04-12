@@ -18,14 +18,14 @@ class Label_Widget;
 class Label_Widget : public QWidget {
   Q_OBJECT
 public:
-  Label_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, QWidget *parent = 0);
-    ~Label_Widget();
+  Label_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, QWidget *parent = nullptr);
+    ~Label_Widget() override;
 
   void openWidget(); // Call
 
 protected:
-  void closeEvent(QCloseEvent *event);
-  void keyPressEvent(QKeyEvent *event);
+  void closeEvent(QCloseEvent *event) override;
+  void keyPressEvent(QKeyEvent *event) override;
 
 private:
   Media_Window *_scene;

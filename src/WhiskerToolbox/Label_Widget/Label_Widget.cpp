@@ -19,7 +19,7 @@
 
 Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     _scene{scene},
-    _data_manager{data_manager},
+      _data_manager{std::move(data_manager)},
     _label_maker{std::make_unique<LabelMaker>()},
     QWidget(parent),
     ui(new Ui::Label_Widget)
@@ -74,7 +74,7 @@ void Label_Widget::keyPressEvent(QKeyEvent *event) {
       if (ui->tableWidget->selectedItems().empty()) {
       std::cout << "No items in the table are selected" << std::endl;
     } else {
-          int selected_row_number = ui->tableWidget->selectedItems().first()->row();
+          int const selected_row_number = ui->tableWidget->selectedItems().first()->row();
       std::cout << "Row selected is " << selected_row_number << std::endl;
 
       auto selected_frame =
@@ -93,14 +93,14 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
 
     auto scene = dynamic_cast<Media_Window*>(sender());
 
-  float x_media = x_canvas / scene->getXAspect();
-  float y_media = y_canvas / scene->getYAspect();
+    float const x_media = static_cast<float>(x_canvas) / scene->getXAspect();
+    float const y_media = static_cast<float>(y_canvas) / scene->getYAspect();
 
   auto media = _data_manager->getData<MediaData>("media");
 
   // Generate the image to be labeled
-  int frame_number = _data_manager->getTime()->getLastLoadedFrame();
-  std::string frame_id = media->GetFrameID(frame_number);
+  int const frame_number = _data_manager->getTime()->getLastLoadedFrame();
+  std::string const frame_id = media->GetFrameID(frame_number);
   auto img = _label_maker->createImage(media->getHeight(),
                                        media->getWidth(), frame_number,
                                        frame_id, media->getRawData(frame_number));
@@ -147,7 +147,7 @@ void Label_Widget::_saveButton() {
 
   auto output_stream = _label_maker->saveLabelsCSV();
   // std::cout << output_stream.str() << std::endl;
-  QString saveFileName = QFileDialog::getSaveFileName(this, tr("Save File"), "",
+  QString const saveFileName = QFileDialog::getSaveFileName(this, tr("Save File"), "",
                                                       tr("CSV (*.csv)"));
 
   if (saveFileName.isEmpty()) {
@@ -174,15 +174,15 @@ void Label_Widget::_changeLabelName() {
 
 void Label_Widget::_exportFrames(std::string saveFileName) {
 
-  std::filesystem::path saveFilePath = _createImagePath(saveFileName);
+  std::filesystem::path const saveFilePath = _createImagePath(saveFileName);
 
   for (auto &[frame_name, label] : _label_maker->getLabels()) {
     auto &[img, point] = label;
 
-    QImage labeled_image(&img.data[0], img.width, img.height,
+    QImage const labeled_image(&img.data[0], img.width, img.height,
                          QImage::Format_Grayscale8);
 
-    std::string saveName = saveFilePath.string() + "/" + img.frame_id + ".png";
+    std::string const saveName = saveFilePath.string() + "/" + img.frame_id + ".png";
     std::cout << "Saving file" << saveName << std::endl;
 
     labeled_image.save(QString::fromStdString(saveName));

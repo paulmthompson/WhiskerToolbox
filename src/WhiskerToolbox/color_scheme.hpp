@@ -37,7 +37,7 @@ QPalette create_palette()
     //ezColorGammaUB highlightColorDisabled = ezColorScheme::DarkUI(ezColorScheme::Yellow) * 0.5f;
     //ezColorGammaUB linkVisitedColor = ezColorScheme::LightUI(ezColorScheme::Yellow);
 
-    QBrush NoRoleBrush(QColor(0, 0, 0), Qt::NoBrush);
+    QBrush const NoRoleBrush(QColor(0, 0, 0), Qt::NoBrush);
     palette.setBrush(QPalette::NoRole, NoRoleBrush);
 
     palette.setColor(QPalette::WindowText, QColor(255, 255, 255));          // labels, tabs, property grid

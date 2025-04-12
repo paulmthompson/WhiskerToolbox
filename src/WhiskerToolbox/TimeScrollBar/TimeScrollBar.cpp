@@ -42,7 +42,7 @@ In the case that we are dragging the slider, to make this optimally smooth, we s
 until we have finished the most recent one.
  */
 
-void TimeScrollBar::Slider_Drag(int action)
+void TimeScrollBar::Slider_Drag(int newPos)
 {
     auto media = _data_manager->getData<MediaData>("media");
     if (dynamic_cast<VideoData*>(media.get())) {

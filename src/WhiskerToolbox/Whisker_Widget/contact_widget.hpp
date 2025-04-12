@@ -25,16 +25,16 @@ class Contact_Widget : public QWidget
     Q_OBJECT
 public:
 
-    Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = 0);
+    explicit Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = nullptr);
 
-    virtual ~Contact_Widget();
+    ~Contact_Widget() override;
 
     void openWidget(); // Call
 
     void updateFrame(int frame_id);
     void setPolePos(float pole_x, float pole_y);
 protected:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     Ui::contact_widget *ui;

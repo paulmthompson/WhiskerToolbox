@@ -17,7 +17,7 @@
  */
 class XAxis {
 public:
-    XAxis(int64_t start = 0, int64_t end = 100, int64_t min = 0, int64_t max = 1000)
+    explicit XAxis(int64_t start = 0, int64_t end = 100, int64_t min = 0, int64_t max = 1000)
         : _start(start),
           _end(end),
           _min(min),
@@ -38,17 +38,17 @@ public:
     }
 
     void setCenterAndZoom(int64_t center, int64_t zoom) {
-        int64_t halfRange = zoom / 2;
+        int64_t const halfRange = zoom / 2;
         _start = center - halfRange;
         _end = center + halfRange;
         clampVisibleRange();
         if (_start >= _end) _end = _start + 1;// Ensure _start is less than _end
     }
 
-    int64_t getStart() const { return _start; }
-    int64_t getEnd() const { return _end; }
-    int64_t getMin() const { return _min; }
-    int64_t getMax() const { return _max; }
+    [[nodiscard]] int64_t getStart() const { return _start; }
+    [[nodiscard]] int64_t getEnd() const { return _end; }
+    [[nodiscard]] int64_t getMin() const { return _min; }
+    [[nodiscard]] int64_t getMax() const { return _max; }
     void setMax(int64_t max) { _max = max; }
 
 private:

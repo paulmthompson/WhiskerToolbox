@@ -24,13 +24,13 @@ class Janelia_Config : public QWidget
     Q_OBJECT
 public:
 
-    Janelia_Config(std::shared_ptr<whisker::WhiskerTracker> tracker, QWidget *parent = 0);
+    explicit Janelia_Config(std::shared_ptr<whisker::WhiskerTracker> tracker, QWidget *parent = nullptr);
 
-    virtual ~Janelia_Config();
+    ~Janelia_Config() override;
 
     void openWidget(); // Call
 protected:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
 
 private:
     std::shared_ptr<whisker::WhiskerTracker> _wt;
