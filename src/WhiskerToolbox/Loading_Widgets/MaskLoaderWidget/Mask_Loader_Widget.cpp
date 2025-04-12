@@ -12,11 +12,10 @@
 #include <iostream>
 #include <regex>
 
-Mask_Loader_Widget::Mask_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::Mask_Loader_Widget),
-    _data_manager{data_manager}
-{
+Mask_Loader_Widget::Mask_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::Mask_Loader_Widget),
+      _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
     connect(ui->load_single_hdf5_mask, &QPushButton::clicked, this, &Mask_Loader_Widget::_loadSingleHdf5Mask);
@@ -27,13 +26,12 @@ Mask_Loader_Widget::~Mask_Loader_Widget() {
     delete ui;
 }
 
-void Mask_Loader_Widget::_loadSingleHdf5Mask()
-{
+void Mask_Loader_Widget::_loadSingleHdf5Mask() {
     auto filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Mask File",
-        QDir::currentPath(),
-        "All files (*.*)");
+            this,
+            "Load Mask File",
+            QDir::currentPath(),
+            "All files (*.*)");
 
     if (filename.isNull()) {
         return;
@@ -42,18 +40,17 @@ void Mask_Loader_Widget::_loadSingleHdf5Mask()
     _loadSingleHDF5Mask(filename.toStdString());
 }
 
-void Mask_Loader_Widget::_loadMultiHdf5Mask()
-{
-    QString dir_name = QFileDialog::getExistingDirectory(
-        this,
-        "Select Directory",
-        QDir::currentPath());
+void Mask_Loader_Widget::_loadMultiHdf5Mask() {
+    QString const dir_name = QFileDialog::getExistingDirectory(
+            this,
+            "Select Directory",
+            QDir::currentPath());
 
     if (dir_name.isEmpty()) {
         return;
     }
 
-    std::filesystem::path directory(dir_name.toStdString());
+    std::filesystem::path const directory(dir_name.toStdString());
 
     // Store the paths of all files that match the criteria
     std::vector<std::filesystem::path> mask_files;
@@ -63,10 +60,10 @@ void Mask_Loader_Widget::_loadMultiHdf5Mask()
     if (filename_pattern.empty()) {
         filename_pattern = "*.h5";
     }
-    std::regex pattern(std::regex_replace(filename_pattern, std::regex("\\*"), ".*"));
+    std::regex const pattern(std::regex_replace(filename_pattern, std::regex("\\*"), ".*"));
 
-    for (const auto & entry : std::filesystem::directory_iterator(directory)) {
-        std::string filename = entry.path().filename().string();
+    for (auto const & entry: std::filesystem::directory_iterator(directory)) {
+        std::string const filename = entry.path().filename().string();
         std::cout << filename << std::endl;
         if (std::regex_match(filename, pattern)) {
             mask_files.push_back(entry.path());
@@ -80,14 +77,13 @@ void Mask_Loader_Widget::_loadMultiHdf5Mask()
 
     // Load the files in sorted order
     int mask_num = 0;
-    for (const auto & file : mask_files) {
+    for (auto const & file: mask_files) {
         _loadSingleHDF5Mask(file.string(), std::to_string(mask_num));
         mask_num += 1;
     }
 }
 
-void Mask_Loader_Widget::_loadSingleHDF5Mask(std::string filename, std::string mask_suffix)
-{
+void Mask_Loader_Widget::_loadSingleHDF5Mask(std::string const & filename, std::string const & mask_suffix) {
 
     auto mask_key = ui->data_name_text->toPlainText().toStdString();
 
@@ -98,7 +94,7 @@ void Mask_Loader_Widget::_loadSingleHDF5Mask(std::string filename, std::string m
         mask_key += "_" + mask_suffix;
     }
 
-    auto frames =  read_array_hdf5(filename, "frames");
+    auto frames = read_array_hdf5(filename, "frames");
     auto probs = read_ragged_hdf5(filename, "probs");
     auto y_coords = read_ragged_hdf5(filename, "heights");
     auto x_coords = read_ragged_hdf5(filename, "widths");
@@ -107,10 +103,9 @@ void Mask_Loader_Widget::_loadSingleHDF5Mask(std::string filename, std::string m
 
     auto mask = _data_manager->getData<MaskData>(mask_key);
 
-    for (std::size_t i = 0; i < frames.size(); i ++) {
+    for (std::size_t i = 0; i < frames.size(); i++) {
         mask->addMaskAtTime(frames[i], x_coords[i], y_coords[i]);
     }
 
     mask->setImageSize({ui->width_scaling->value(), ui->height_scaling->value()});
-
 }

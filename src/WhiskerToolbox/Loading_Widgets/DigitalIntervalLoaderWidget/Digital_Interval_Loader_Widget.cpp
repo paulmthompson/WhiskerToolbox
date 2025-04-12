@@ -11,33 +11,31 @@
 
 #include <iostream>
 
-Digital_Interval_Loader_Widget::Digital_Interval_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::Digital_Interval_Loader_Widget),
-    _data_manager{data_manager}
-{
+Digital_Interval_Loader_Widget::Digital_Interval_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::Digital_Interval_Loader_Widget),
+      _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
-    connect(ui->load_from_csv, &QPushButton::clicked, this, &Digital_Interval_Loader_Widget::_loadSingleInterval );
+    connect(ui->load_from_csv, &QPushButton::clicked, this, &Digital_Interval_Loader_Widget::_loadSingleInterval);
 }
 
 Digital_Interval_Loader_Widget::~Digital_Interval_Loader_Widget() {
     delete ui;
 }
 
-void Digital_Interval_Loader_Widget::_loadSingleInterval()
-{
+void Digital_Interval_Loader_Widget::_loadSingleInterval() {
     auto interval_filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Intervals",
-        QDir::currentPath(),
-        "All files (*.*)");
+            this,
+            "Load Intervals",
+            QDir::currentPath(),
+            "All files (*.*)");
 
     if (interval_filename.isNull()) {
         return;
     }
 
-    const auto interval_key = ui->data_name_text->toPlainText().toStdString();
+    auto const interval_key = ui->data_name_text->toPlainText().toStdString();
 
     char delimiter;
     if (ui->delimiter_combo->currentText() == "Space") {
@@ -56,5 +54,4 @@ void Digital_Interval_Loader_Widget::_loadSingleInterval()
     _data_manager->setData<DigitalIntervalSeries>(interval_key);
 
     _data_manager->getData<DigitalIntervalSeries>(interval_key)->setData(intervals);
-
 }

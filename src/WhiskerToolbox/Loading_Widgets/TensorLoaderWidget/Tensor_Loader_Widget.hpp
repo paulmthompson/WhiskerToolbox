@@ -10,19 +10,18 @@ namespace Ui {
 class Tensor_Loader_Widget;
 }
 
-class Tensor_Loader_Widget : public QWidget
-{
+class Tensor_Loader_Widget : public QWidget {
     Q_OBJECT
 public:
-    Tensor_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent = nullptr);
-    ~Tensor_Loader_Widget();
+    explicit Tensor_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
+    ~Tensor_Loader_Widget() override;
 
 private:
-    Ui::Tensor_Loader_Widget *ui;
+    Ui::Tensor_Loader_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
 
 private slots:
     void _loadNumpyArray();
 };
 
-#endif // TENSOR_LOADER_WIDGET_HPP
+#endif// TENSOR_LOADER_WIDGET_HPP

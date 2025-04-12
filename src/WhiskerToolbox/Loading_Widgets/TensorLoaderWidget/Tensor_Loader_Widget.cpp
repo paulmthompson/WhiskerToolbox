@@ -13,11 +13,10 @@
 
 #include <iostream>
 
-Tensor_Loader_Widget::Tensor_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::Tensor_Loader_Widget),
-    _data_manager{data_manager}
-{
+Tensor_Loader_Widget::Tensor_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::Tensor_Loader_Widget),
+      _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
     connect(ui->load_numpy_button, &QPushButton::clicked, this, &Tensor_Loader_Widget::_loadNumpyArray);
@@ -27,19 +26,18 @@ Tensor_Loader_Widget::~Tensor_Loader_Widget() {
     delete ui;
 }
 
-void Tensor_Loader_Widget::_loadNumpyArray()
-{
+void Tensor_Loader_Widget::_loadNumpyArray() {
     auto numpy_filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Numpy Array",
-        QDir::currentPath(),
-        "Numpy files (*.npy)");
+            this,
+            "Load Numpy Array",
+            QDir::currentPath(),
+            "Numpy files (*.npy)");
 
     if (numpy_filename.isNull()) {
         return;
     }
 
-    const auto tensor_key = ui->data_name_text->toPlainText().toStdString();
+    auto const tensor_key = ui->data_name_text->toPlainText().toStdString();
 
     TensorData tensor_data;
     loadNpyToTensorData(numpy_filename.toStdString(), tensor_data);

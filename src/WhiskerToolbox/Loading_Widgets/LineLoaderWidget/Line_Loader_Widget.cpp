@@ -12,11 +12,10 @@
 #include <iostream>
 #include <regex>
 
-Line_Loader_Widget::Line_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::Line_Loader_Widget),
-    _data_manager{data_manager}
-{
+Line_Loader_Widget::Line_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::Line_Loader_Widget),
+      _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
     connect(ui->load_single_hdf5_line, &QPushButton::clicked, this, &Line_Loader_Widget::_loadSingleHdf5Line);
@@ -27,13 +26,12 @@ Line_Loader_Widget::~Line_Loader_Widget() {
     delete ui;
 }
 
-void Line_Loader_Widget::_loadSingleHdf5Line()
-{
+void Line_Loader_Widget::_loadSingleHdf5Line() {
     auto filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Line File",
-        QDir::currentPath(),
-        "All files (*.*)");
+            this,
+            "Load Line File",
+            QDir::currentPath(),
+            "All files (*.*)");
 
     if (filename.isNull()) {
         return;
@@ -42,18 +40,17 @@ void Line_Loader_Widget::_loadSingleHdf5Line()
     _loadSingleHDF5Line(filename.toStdString());
 }
 
-void Line_Loader_Widget::_loadMultiHdf5Line()
-{
-    QString dir_name = QFileDialog::getExistingDirectory(
-        this,
-        "Select Directory",
-        QDir::currentPath());
+void Line_Loader_Widget::_loadMultiHdf5Line() {
+    QString const dir_name = QFileDialog::getExistingDirectory(
+            this,
+            "Select Directory",
+            QDir::currentPath());
 
     if (dir_name.isEmpty()) {
         return;
     }
 
-    std::filesystem::path directory(dir_name.toStdString());
+    std::filesystem::path const directory(dir_name.toStdString());
 
     // Store the paths of all files that match the criteria
     std::vector<std::filesystem::path> line_files;
@@ -63,10 +60,10 @@ void Line_Loader_Widget::_loadMultiHdf5Line()
     if (filename_pattern.empty()) {
         filename_pattern = "*.h5";
     }
-    std::regex pattern(std::regex_replace(filename_pattern, std::regex("\\*"), ".*"));
+    std::regex const pattern(std::regex_replace(filename_pattern, std::regex("\\*"), ".*"));
 
-    for (const auto & entry : std::filesystem::directory_iterator(directory)) {
-        std::string filename = entry.path().filename().string();
+    for (auto const & entry: std::filesystem::directory_iterator(directory)) {
+        std::string const filename = entry.path().filename().string();
         std::cout << filename << std::endl;
         if (std::regex_match(filename, pattern)) {
             line_files.push_back(entry.path());
@@ -80,14 +77,13 @@ void Line_Loader_Widget::_loadMultiHdf5Line()
 
     // Load the files in sorted order
     int line_num = 0;
-    for (const auto & file : line_files) {
+    for (auto const & file: line_files) {
         _loadSingleHDF5Line(file.string(), std::to_string(line_num));
         line_num += 1;
     }
 }
 
-void Line_Loader_Widget::_loadSingleHDF5Line(std::string filename, std::string line_suffix)
-{
+void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::string const & line_suffix) {
 
     auto line_key = ui->data_name_text->toPlainText().toStdString();
 
@@ -98,7 +94,7 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string filename, std::string l
         line_key += "_" + line_suffix;
     }
 
-    auto frames =  read_array_hdf5(filename, "frames");
+    auto frames = read_array_hdf5(filename, "frames");
     auto y_coords = read_ragged_hdf5(filename, "x");
     auto x_coords = read_ragged_hdf5(filename, "y");
 
@@ -106,8 +102,7 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string filename, std::string l
 
     auto line = _data_manager->getData<LineData>(line_key);
 
-    for (std::size_t i = 0; i < frames.size(); i ++) {
+    for (std::size_t i = 0; i < frames.size(); i++) {
         line->addLineAtTime(frames[i], x_coords[i], y_coords[i]);
     }
-
 }

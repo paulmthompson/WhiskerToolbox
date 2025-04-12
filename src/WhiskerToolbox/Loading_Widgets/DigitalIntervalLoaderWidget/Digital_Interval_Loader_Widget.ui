@@ -1,94 +1,94 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Digital_Interval_Loader_Widget</class>
- <widget class="QWidget" name="Digital_Interval_Loader_Widget">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>400</width>
-    <height>300</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>Form</string>
-  </property>
-  <widget class="QPlainTextEdit" name="data_name_text">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>190</y>
-     <width>104</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="plainText">
-    <string>interval_1</string>
-   </property>
-  </widget>
-  <widget class="QFrame" name="frame">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>20</y>
-     <width>271</width>
-     <height>111</height>
-    </rect>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::Shape::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Shadow::Raised</enum>
-   </property>
-   <widget class="QPushButton" name="load_from_csv">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>191</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Load Interval from CSV</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>90</x>
-      <y>80</y>
-      <width>51</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Delimiter</string>
-    </property>
-   </widget>
-   <widget class="QComboBox" name="delimiter_combo">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>80</y>
-      <width>69</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <item>
-     <property name="text">
-      <string>Space</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Comma</string>
-     </property>
-    </item>
-   </widget>
-  </widget>
- </widget>
- <resources/>
- <connections/>
+    <class>Digital_Interval_Loader_Widget</class>
+    <widget class="QWidget" name="Digital_Interval_Loader_Widget">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>400</width>
+                <height>300</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>Form</string>
+        </property>
+        <widget class="QPlainTextEdit" name="data_name_text">
+            <property name="geometry">
+                <rect>
+                    <x>10</x>
+                    <y>190</y>
+                    <width>104</width>
+                    <height>21</height>
+                </rect>
+            </property>
+            <property name="plainText">
+                <string>interval_1</string>
+            </property>
+        </widget>
+        <widget class="QFrame" name="frame">
+            <property name="geometry">
+                <rect>
+                    <x>10</x>
+                    <y>20</y>
+                    <width>271</width>
+                    <height>111</height>
+                </rect>
+            </property>
+            <property name="frameShape">
+                <enum>QFrame::Shape::StyledPanel</enum>
+            </property>
+            <property name="frameShadow">
+                <enum>QFrame::Shadow::Raised</enum>
+            </property>
+            <widget class="QPushButton" name="load_from_csv">
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>10</y>
+                        <width>191</width>
+                        <height>24</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>Load Interval from CSV</string>
+                </property>
+            </widget>
+            <widget class="QLabel" name="label_2">
+                <property name="geometry">
+                    <rect>
+                        <x>90</x>
+                        <y>80</y>
+                        <width>51</width>
+                        <height>16</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>Delimiter</string>
+                </property>
+            </widget>
+            <widget class="QComboBox" name="delimiter_combo">
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>80</y>
+                        <width>69</width>
+                        <height>22</height>
+                    </rect>
+                </property>
+                <item>
+                    <property name="text">
+                        <string>Space</string>
+                    </property>
+                </item>
+                <item>
+                    <property name="text">
+                        <string>Comma</string>
+                    </property>
+                </item>
+            </widget>
+        </widget>
+    </widget>
+    <resources/>
+    <connections/>
 </ui>
