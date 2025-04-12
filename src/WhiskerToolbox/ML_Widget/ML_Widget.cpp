@@ -24,15 +24,14 @@
 #include <iostream>
 
 ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
-                     TimeScrollBar* time_scrollbar,
-                     MainWindow* mainwindow,
-                     QWidget *parent) :
-        QMainWindow(parent),
-        _data_manager{data_manager},
-        _time_scrollbar{time_scrollbar},
-        _main_window{mainwindow},
-        ui(new Ui::ML_Widget)
-{
+                     TimeScrollBar * time_scrollbar,
+                     MainWindow * main_window,
+                     QWidget * parent)
+    : QMainWindow(parent),
+      _data_manager{std::move(data_manager)},
+      _time_scrollbar{time_scrollbar},
+      _main_window{main_window},
+      ui(new Ui::ML_Widget) {
     ui->setupUi(this);
 
     ui->stackedWidget->addWidget(new ML_Naive_Bayes_Widget(_data_manager));
@@ -40,15 +39,15 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 
     //Feature Table Widget
     ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->feature_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData", "TensorData"});
+    ui->feature_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries", "PointData", "TensorData"});
 
     ui->feature_table_widget->setDataManager(_data_manager);
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &ML_Widget::_handleFeatureSelected);
-    connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, [this](const QString& feature) {
+    connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, [this](QString const & feature) {
         ML_Widget::_addFeatureToModel(feature, true);
     });
-    connect(ui->feature_table_widget, &Feature_Table_Widget::removeFeature, this, [this](const QString& feature) {
+    connect(ui->feature_table_widget, &Feature_Table_Widget::removeFeature, this, [this](QString const & feature) {
         ML_Widget::_addFeatureToModel(feature, false);
     });
 
@@ -59,24 +58,24 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
     ui->mask_table_widget->setDataManager(_data_manager);
 
     connect(ui->mask_table_widget, &Feature_Table_Widget::featureSelected, this, &ML_Widget::_handleMaskSelected);
-    connect(ui->mask_table_widget, &Feature_Table_Widget::addFeature, this, [this](const QString& feature) {
+    connect(ui->mask_table_widget, &Feature_Table_Widget::addFeature, this, [this](QString const & feature) {
         ML_Widget::_addMaskToModel(feature, true);
     });
-    connect(ui->mask_table_widget, &Feature_Table_Widget::removeFeature, this, [this](const QString& feature) {
+    connect(ui->mask_table_widget, &Feature_Table_Widget::removeFeature, this, [this](QString const & feature) {
         ML_Widget::_addMaskToModel(feature, false);
     });
 
     //Outcome Table Widget
     ui->outcome_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->outcome_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries","PointData", "TensorData"});
+    ui->outcome_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries", "PointData", "TensorData"});
 
     ui->outcome_table_widget->setDataManager(_data_manager);
 
     connect(ui->outcome_table_widget, &Feature_Table_Widget::featureSelected, this, &ML_Widget::_handleOutcomeSelected);
-    connect(ui->outcome_table_widget, &Feature_Table_Widget::addFeature, this, [this](const QString& feature) {
+    connect(ui->outcome_table_widget, &Feature_Table_Widget::addFeature, this, [this](QString const & feature) {
         ML_Widget::_addOutcomeToModel(feature, true);
     });
-    connect(ui->outcome_table_widget, &Feature_Table_Widget::removeFeature, this, [this](const QString& feature) {
+    connect(ui->outcome_table_widget, &Feature_Table_Widget::removeFeature, this, [this](QString const & feature) {
         ML_Widget::_addOutcomeToModel(feature, false);
     });
 
@@ -98,17 +97,15 @@ void ML_Widget::openWidget() {
     this->show();
 }
 
-void ML_Widget::closeEvent(QCloseEvent *event) {
+void ML_Widget::closeEvent(QCloseEvent * event) {
     std::cout << "Close event detected" << std::endl;
 }
 
-void ML_Widget::_handleFeatureSelected(const QString& feature)
-{
+void ML_Widget::_handleFeatureSelected(QString const & feature) {
     _highlighted_available_feature = feature;
 }
 
-void ML_Widget::_addFeatureToModel(const QString& feature, bool enabled)
-{
+void ML_Widget::_addFeatureToModel(QString const & feature, bool enabled) {
     if (enabled) {
         //_plotSelectedFeature(feature.toStdString());
         _selected_features.insert(feature.toStdString());
@@ -117,19 +114,17 @@ void ML_Widget::_addFeatureToModel(const QString& feature, bool enabled)
     }
 }
 
-void ML_Widget::_removeSelectedFeature(const std::string key) {
+void ML_Widget::_removeSelectedFeature(std::string const & key) {
 
     if (auto iter = _selected_features.find(key); iter != _selected_features.end())
         _selected_features.erase(iter);
 }
 
-void ML_Widget::_handleMaskSelected(const QString& feature)
-{
+void ML_Widget::_handleMaskSelected(QString const & feature) {
     return;
 }
 
-void ML_Widget::_addMaskToModel(const QString& feature, bool enabled)
-{
+void ML_Widget::_addMaskToModel(QString const & feature, bool enabled) {
     if (enabled) {
         //_plotSelectedFeature(feature.toStdString());
         _selected_masks.insert(feature.toStdString());
@@ -138,7 +133,7 @@ void ML_Widget::_addMaskToModel(const QString& feature, bool enabled)
     }
 }
 
-void ML_Widget::_removeSelectedMask(const std::string key) {
+void ML_Widget::_removeSelectedMask(std::string const & key) {
     if (_data_manager->getType(key) == "DigitalIntervalSeries") {
         //ui->openGLWidget->removeDigitalIntervalSeries(key);
     } else {
@@ -148,13 +143,11 @@ void ML_Widget::_removeSelectedMask(const std::string key) {
         _selected_masks.erase(iter);
 }
 
-void ML_Widget::_handleOutcomeSelected(const QString& feature)
-{
+void ML_Widget::_handleOutcomeSelected(QString const & feature) {
     return;
 }
 
-void ML_Widget::_addOutcomeToModel(const QString& feature, bool enabled)
-{
+void ML_Widget::_addOutcomeToModel(QString const & feature, bool enabled) {
     if (enabled) {
         //_plotSelectedFeature(feature.toStdString());
         _selected_outcomes.insert(feature.toStdString());
@@ -163,7 +156,7 @@ void ML_Widget::_addOutcomeToModel(const QString& feature, bool enabled)
     }
 }
 
-void ML_Widget::_removeSelectedOutcome(const std::string key) {
+void ML_Widget::_removeSelectedOutcome(std::string const & key) {
     if (_data_manager->getType(key) == "AnalogTimeSeries") {
         //ui->openGLWidget->removeAnalogTimeSeries(key);
     } else if (_data_manager->getType(key) == "PointData") {
@@ -177,8 +170,7 @@ void ML_Widget::_removeSelectedOutcome(const std::string key) {
         _selected_outcomes.erase(iter);
 }
 
-void ML_Widget::_selectModelType(const QString& model_type)
-{
+void ML_Widget::_selectModelType(QString const & model_type) {
     if (model_type == "Naive Bayes") {
         ui->stackedWidget->setCurrentIndex(0);
     } else if (model_type == "Random Forest") {
@@ -188,32 +180,29 @@ void ML_Widget::_selectModelType(const QString& model_type)
     }
 }
 
-void ML_Widget::_fitModel()
-{
+void ML_Widget::_fitModel() {
 
-    if (_selected_features.empty() || _selected_masks.empty() || _selected_outcomes.empty())
-    {
+    if (_selected_features.empty() || _selected_masks.empty() || _selected_outcomes.empty()) {
         std::cerr << "Please select features, masks, and outcomes" << std::endl;
         return;
     }
 
-    if (_selected_masks.size() > 1)
-    {
+    if (_selected_masks.size() > 1) {
         std::cerr << "Only one mask is supported" << std::endl;
         return;
     }
     auto masks = _data_manager->getData<DigitalIntervalSeries>(*_selected_masks.begin());
     auto timestamps = create_timestamps(masks);
 
-    auto feature_array = create_arrays(_selected_features, timestamps, _data_manager);
+    auto feature_array = create_arrays(_selected_features, timestamps, _data_manager.get());
 
     std::cout << "Feature array size: " << feature_array.n_rows << " x " << feature_array.n_cols << std::endl;
 
-    auto outcome_array = create_arrays(_selected_outcomes, timestamps, _data_manager);
+    auto outcome_array = create_arrays(_selected_outcomes, timestamps, _data_manager.get());
 
     std::cout << "Outcome array size: " << outcome_array.n_rows << " x " << outcome_array.n_cols << std::endl;
 
-    arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array);
+    arma::Row<size_t> const labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array);
     //mlpack::RandomForest model;
     mlpack::NaiveBayesClassifier model;
     model.Train(feature_array, labels, 2);
@@ -225,8 +214,8 @@ void ML_Widget::_fitModel()
     arma::Row<size_t> predictions;
     model.Classify(feature_array, predictions);
 
-    double accuracy = 100.0 * ((double) arma::accu(predictions == labels)) /
-                      labels.n_elem;
+    double const accuracy = 100.0 * (static_cast<double>(arma::accu(predictions == labels))) /
+                      static_cast<double>(labels.n_elem);
     std::cout << "After training 10 trees, test set accuracy is " << accuracy
               << "%." << std::endl;
 
@@ -238,35 +227,31 @@ void ML_Widget::_fitModel()
     }
     // Prediction timestamps
     auto prediction_interval = std::vector<Interval>{Interval{
-        masks->getDigitalIntervalSeries().back().end,
-        current_time
-    }};
+            masks->getDigitalIntervalSeries().back().end,
+            current_time}};
 
     auto prediction_timestamps = create_timestamps(prediction_interval);
 
-    arma::Mat<double> prediction_feature_array = create_arrays(
+    arma::Mat<double> const prediction_feature_array = create_arrays(
             _selected_features,
             prediction_timestamps,
-            _data_manager);
+            _data_manager.get());
 
     arma::Row<size_t> prediction_labels;
     model.Classify(prediction_feature_array, prediction_labels);
 
     auto prediction_vec = copyMatrixRowToVector<size_t>(prediction_labels);
 
-    for (auto key : _selected_outcomes) {
+    for (auto const & key: _selected_outcomes) {
         _data_manager->getData<DigitalIntervalSeries>(key)->setEventsAtTimes(prediction_timestamps, prediction_vec);
     }
 }
 
-std::vector<std::size_t> create_timestamps(std::vector<Interval>& intervals)
-{
+std::vector<std::size_t> create_timestamps(std::vector<Interval> & intervals) {
     std::vector<std::size_t> timestamps;
-    for (auto interval : intervals)
-    {
+    for (auto interval: intervals) {
         //I want to generate timestamps for each value between interval.start and interval.end
-        for (std::size_t i = interval.start; i < interval.end; i++)
-        {
+        for (std::size_t i = interval.start; i < interval.end; i++) {
             timestamps.push_back(i);
         }
     }
@@ -274,41 +259,38 @@ std::vector<std::size_t> create_timestamps(std::vector<Interval>& intervals)
     return timestamps;
 }
 
-std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries>& series)
-{
+std::vector<std::size_t> create_timestamps(std::shared_ptr<DigitalIntervalSeries> & series) {
     auto intervals = series->getDigitalIntervalSeries();
     return create_timestamps(intervals);
 }
 
 
-
 arma::Mat<double> create_arrays(
-        std::unordered_set<std::string> features,
-        std::vector<std::size_t>& timestamps,
-        std::shared_ptr<DataManager> data_manager)
-{
+        std::unordered_set<std::string> const & features,
+        std::vector<std::size_t> & timestamps,
+        DataManager * data_manager) {
     //Create the input and output arrays
 
     std::vector<arma::Mat<double>> feature_arrays;
 
-    for (const auto& feature : features) {
-        std::string feature_type = data_manager->getType(feature);
+    for (auto const & feature: features) {
+        std::string const feature_type = data_manager->getType(feature);
 
         if (feature_type == "AnalogTimeSeries") {
             auto analog_series = data_manager->getData<AnalogTimeSeries>(feature);
-            arma::Row<double> array = convertAnalogTimeSeriesToMlpackArray(analog_series, timestamps);
+            arma::Row<double> const array = convertAnalogTimeSeriesToMlpackArray(analog_series, timestamps);
             feature_arrays.push_back(array);
         } else if (feature_type == "DigitalIntervalSeries") {
             auto digital_series = data_manager->getData<DigitalIntervalSeries>(feature);
-            arma::Row<double> array = convertToMlpackArray(digital_series, timestamps);
+            arma::Row<double> const array = convertToMlpackArray(digital_series, timestamps);
             feature_arrays.push_back(array);
         } else if (feature_type == "PointData") {
             auto point_data = data_manager->getData<PointData>(feature);
-            arma::Mat<double> array = convertToMlpackMatrix(point_data, timestamps);
+            arma::Mat<double> const array = convertToMlpackMatrix(point_data, timestamps);
             feature_arrays.push_back(array);
         } else if (feature_type == "TensorData") {
             auto tensor_data = data_manager->getData<TensorData>(feature);
-            arma::Mat<double> array = convertTensorDataToMlpackMatrix(*tensor_data, timestamps);
+            arma::Mat<double> const array = convertTensorDataToMlpackMatrix(*tensor_data, timestamps);
             feature_arrays.push_back(array);
         } else {
             std::cerr << "Unsupported feature type: " << feature_type << std::endl;
@@ -327,4 +309,3 @@ arma::Mat<double> create_arrays(
 
     return concatenated_array;
 }
-

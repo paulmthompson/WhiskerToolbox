@@ -7,27 +7,26 @@
 
 class DataManager;
 
-namespace Ui { class ML_Naive_Bayes_Widget; }
+namespace Ui {
+class ML_Naive_Bayes_Widget;
+}
 
 class ML_Naive_Bayes_Widget : public QWidget {
     Q_OBJECT
 
 public:
-    ML_Naive_Bayes_Widget(std::shared_ptr<DataManager> data_manager,
-                            QWidget *parent = 0);
+    explicit ML_Naive_Bayes_Widget(std::shared_ptr<DataManager> data_manager,
+                                   QWidget * parent = nullptr);
 
-    virtual ~ML_Naive_Bayes_Widget();
+    ~ML_Naive_Bayes_Widget() override;
 
 protected:
-
 private slots:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
-    Ui::ML_Naive_Bayes_Widget *ui;
-
+    Ui::ML_Naive_Bayes_Widget * ui;
 };
 
 
-
-#endif // ML_NAIVE_BAYES_WIDGET_HPP
+#endif// ML_NAIVE_BAYES_WIDGET_HPP
