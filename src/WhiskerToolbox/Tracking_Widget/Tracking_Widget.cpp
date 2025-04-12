@@ -12,7 +12,7 @@
 Tracking_Widget::Tracking_Widget(std::shared_ptr<DataManager> data_manager,
                                QWidget *parent) :
         QMainWindow(parent),
-        _data_manager{data_manager},
+      _data_manager{std::move(data_manager)},
         ui(new Ui::Tracking_Widget)
 {
     ui->setupUi(this);

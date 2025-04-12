@@ -16,10 +16,10 @@ Q_OBJECT
 
 public:
 
-    Tracking_Widget(std::shared_ptr<DataManager> data_manager,
-                    QWidget *parent = 0);
+    explicit Tracking_Widget(std::shared_ptr<DataManager> data_manager,
+                    QWidget *parent = nullptr);
 
-    virtual ~Tracking_Widget();
+    ~Tracking_Widget() override;
 
     void openWidget(); // Call
 public slots:
@@ -27,7 +27,7 @@ public slots:
     void LoadFrame(int frame_id);
 
 protected:
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
 
     //void keyPressEvent(QKeyEvent *event);
 

@@ -35,7 +35,7 @@ const std::vector<std::string> tongue_colors = {
 Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QMainWindow(parent),
     _scene{scene},
-    _data_manager{data_manager},
+      _data_manager{std::move(data_manager)},
     _time_scrollbar{time_scrollbar},
     ui(new Ui::Tongue_Widget)
 {
@@ -119,7 +119,7 @@ void Tongue_Widget::_startGrabCut(){
     auto media_data = media->getProcessedData(current_time);
 
 
-    bool is_gray = media->getFormat() == MediaData::DisplayFormat::Gray;
+    bool const is_gray = media->getFormat() == MediaData::DisplayFormat::Gray;
     cv::Mat img(
         media->getHeight(),
         media->getWidth(),
@@ -151,14 +151,14 @@ void Tongue_Widget::_exportMasks() {
     auto mask_data = _data_manager->getData<MaskData>(mask_name);
     auto media = _data_manager->getData<MediaData>("media");
 
-    for (int i : drawn){
+    for (int const i : drawn){
         auto mask = mask_data->getMasksAtTime(i)[0];
         QImage mask_img(mask_data->getImageSize().width, mask_data->getImageSize().height, QImage::Format_Grayscale8);
         mask_img.fill(0);
         for (auto [x, y] : mask){
             mask_img.setPixel(static_cast<int>(x), static_cast<int>(y), 0xFFFFFF);
         }
-        std::string saveName = dir_path.string() + "/" + media->GetFrameID(i) + ".png";
+        std::string const saveName = dir_path.string() + "/" + media->GetFrameID(i) + ".png";
         std::cout << "Saving file" << saveName << std::endl;
 
         mask_img.save(QString::fromStdString(saveName));
