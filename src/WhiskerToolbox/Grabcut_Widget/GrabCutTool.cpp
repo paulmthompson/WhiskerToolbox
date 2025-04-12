@@ -8,17 +8,10 @@
 #include <iostream>
 
 /**
- * @brief Default constructor for the GrabCutTool
- */
-GrabCutTool::GrabCutTool(){
-
-}
-
-/**
  * @brief Constructor for the GrabCutTool given a path to an image
  * @param path Path to the image to use for the grabcut tool
  */
-GrabCutTool::GrabCutTool(std::string path){
+GrabCutTool::GrabCutTool(std::string const & path){
     _img = cv::imread(path);
     if (_img.empty()){
         std::cout << "Error: Image not found\n";
@@ -31,8 +24,8 @@ GrabCutTool::GrabCutTool(std::string path){
  * @param img Image to use for the grabcut tool, must be of format CV_8UC3
  */
 GrabCutTool::GrabCutTool(cv::Mat img){
-    _img = img;
-    _mask = cv::Mat::zeros(img.size(), CV_8UC1);
+    _img = std::move(img);
+    _mask = cv::Mat::zeros(_img.size(), CV_8UC1);
 }
 
 /**
@@ -80,6 +73,8 @@ void GrabCutTool::runHighgui(){
             setColor(cv::GC_PR_FGD);
             std::cout << "Drawing probable foreground\n";
             break;
+        default:
+            std::cout << "you shouldn't be here" << std::endl;
         }
     }
     cv::destroyAllWindows();
@@ -215,7 +210,7 @@ void GrabCutTool::grabcutIter(){
 void GrabCutTool::_brushOutline(cv::Mat& img){
     for (int y = std::max(_mouse_cur.y - _brush_thickness, 0); y < std::min(_mouse_cur.y + _brush_thickness, img.rows); ++y) {
         for (int x = std::max(_mouse_cur.x - _brush_thickness, 0); x < std::min(_mouse_cur.x + _brush_thickness, img.cols); ++x) {
-            double dist = cv::norm(_mouse_cur - cv::Point(x, y));
+            double const dist = cv::norm(_mouse_cur - cv::Point(x, y));
             if (dist <= _brush_thickness && dist >= _brush_thickness - 2){
                 img.at<cv::Vec3b>(y, x) = cv::Vec3b(255, 255, 255) - img.at<cv::Vec3b>(y, x);
             }
@@ -280,7 +275,7 @@ void GrabCutTool::reset(){
 /**
  * @brief Expose rect stage variable
  */
-bool GrabCutTool::getRectStage(){
+bool GrabCutTool::getRectStage() const {
     return _rect_stage;
 }
 

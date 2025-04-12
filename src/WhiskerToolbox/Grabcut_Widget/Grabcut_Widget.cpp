@@ -18,7 +18,7 @@
 Grabcut_Widget::Grabcut_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QMainWindow(parent),
     _scene{scene},
-    _data_manager{data_manager},
+    _data_manager{std::move(data_manager)},
     _time_scrollbar{time_scrollbar},
     ui(new Ui::Grabcut_Widget)
 {
@@ -45,11 +45,11 @@ Grabcut_Widget::Grabcut_Widget(Media_Window *scene, std::shared_ptr<DataManager>
  * @param frame_index Frame index number which the mask will be saved to when requested
  */
 void Grabcut_Widget::setup(cv::Mat img, int frame_index) {
-    _img = img;
-    _height = img.rows;
-    _width = img.cols;
+    _img = std::move(img);
+    _height = _img.rows;
+    _width = _img.cols;
     _frame_index = frame_index;
-    _tool = GrabCutTool(img);
+    _tool = GrabCutTool(_img);
     _updateDisplays();
     ui->editor_label->setPixmap(_img_disp_pixmap);
     ui->editor_label->setScaledContents(true);
@@ -150,7 +150,7 @@ QPoint Grabcut_Widget::_scaleTransMouse(QPoint p){
  */
 void Grabcut_Widget::mousePressEvent(QMouseEvent *event){
     if (event->button() == Qt::LeftButton) {
-        QPoint p = _scaleTransMouse(event->pos());
+        QPoint const p = _scaleTransMouse(event->pos());
         _tool.mouseDown(p.x(), p.y());
         _updateDisplays();
     }
@@ -171,7 +171,7 @@ void Grabcut_Widget::mouseMoveEvent(QMouseEvent *event){
         setCursor(Qt::ArrowCursor);
     }
 
-    QPoint p = _scaleTransMouse(event->pos());
+    QPoint const p = _scaleTransMouse(event->pos());
     _tool.mouseMove(p.x(), p.y());
     _updateDisplays();
 }
@@ -182,7 +182,7 @@ void Grabcut_Widget::mouseMoveEvent(QMouseEvent *event){
  */
 void Grabcut_Widget::mouseReleaseEvent(QMouseEvent *event){
     if (event->button() == Qt::LeftButton) {
-        QPoint p = _scaleTransMouse(event->pos());
+        QPoint const p = _scaleTransMouse(event->pos());
         _tool.mouseUp(p.x(), p.y());
         _updateDisplays();
         if (!_tool.getRectStage()){

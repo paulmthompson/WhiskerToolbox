@@ -4,19 +4,18 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
-class GrabCutTool
-{
+class GrabCutTool {
 public:
-    GrabCutTool();
-    GrabCutTool(std::string img_path);
-    GrabCutTool(cv::Mat img);
+    GrabCutTool() = default;
+    explicit GrabCutTool(std::string const & img_path);
+    explicit GrabCutTool(cv::Mat img);
 
     void runHighgui();
 
     cv::Mat getDisp();
     cv::Mat getMask();
 
-    bool getRectStage();
+    [[nodiscard]] bool getRectStage() const;
 
     void setMaskDispTransparency(float transparency);
 
@@ -52,12 +51,11 @@ private:
     cv::Mat _mask;
     cv::Mat _bg_model, _fg_model;
 
-    void _brushOutline(cv::Mat& img);
+    void _brushOutline(cv::Mat & img);
 
     // Testing with OpenCV highlevel GUI
-    static void _mouseHandlerWrapper(int event, int x, int y, int flags, void* params);
+    static void _mouseHandlerWrapper(int event, int x, int y, int flags, void * params);
     void _mouseHandler(int event, int x, int y, int flags);
 };
 
-#endif // GRABCUTTOOL_HPP
-
+#endif// GRABCUTTOOL_HPP
