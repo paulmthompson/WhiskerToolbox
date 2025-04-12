@@ -6,13 +6,12 @@
 #include <vector>
 
 namespace cv {
-    class Mat;
+class Mat;
 }
 
-class MagicEraser
-{
+class MagicEraser {
 public:
-    MagicEraser();
+    MagicEraser() = default;
     std::vector<uint8_t> applyMagicEraser(std::vector<uint8_t> & image, int width, int height, std::vector<uint8_t> & mask);
 
 private:
@@ -22,6 +21,4 @@ private:
 std::vector<uint8_t> apply_magic_eraser(std::vector<uint8_t> & image, int width, int height, std::vector<uint8_t> & mask);
 
 
-
-
-#endif // MAGIC_ERASER_HPP
+#endif// MAGIC_ERASER_HPP

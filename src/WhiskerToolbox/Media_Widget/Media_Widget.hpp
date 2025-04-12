@@ -11,33 +11,30 @@ namespace Ui {
 class Media_Widget;
 }
 
-class Media_Widget : public QWidget
-{
+class Media_Widget : public QWidget {
     Q_OBJECT
 public:
+    explicit Media_Widget(QWidget * parent = nullptr);
 
-    explicit Media_Widget(QWidget *parent = 0);
-
-    virtual ~Media_Widget();
+    ~Media_Widget() override;
 
     void setDataManager(std::shared_ptr<DataManager> data_manager);
-    void setScene(Media_Window* scene) {_scene = scene;};
-    void setMainWindow(MainWindow* mainwindow) {_main_window = mainwindow;};
+    void setScene(Media_Window * scene) { _scene = scene; };
+    void setMainWindow(MainWindow * mainwindow) { _main_window = mainwindow; };
 
     void updateMedia();
 
-    void setFeatureColor(std::string feature, std::string hex_color);
+    void setFeatureColor(std::string const & feature, std::string const & hex_color);
 
 protected:
-    void resizeEvent(QResizeEvent* event) override;
+    void resizeEvent(QResizeEvent * event) override;
+
 private:
-    Ui::Media_Widget *ui;
+    Ui::Media_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
-    Media_Window* _scene;
+    Media_Window * _scene = nullptr;
 
-    MainWindow* _main_window;
-
-
+    MainWindow * _main_window = nullptr;
 
 
 private slots:
@@ -45,10 +42,9 @@ private slots:
     void _updateCanvasSize();
     void _setMaskAlpha(int alpha);
     void _setTensorChannel(int channel);
-    void _addFeatureToDisplay(const QString& feature, bool enabled);
+    void _addFeatureToDisplay(QString const & feature, bool enabled);
     void _featureSelected(QString const & feature);
 signals:
-
 };
 
-#endif // MEDIA_WIDGET_HPP
+#endif// MEDIA_WIDGET_HPP

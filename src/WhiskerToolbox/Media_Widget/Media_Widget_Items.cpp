@@ -24,12 +24,11 @@ struct Media_Item {
     float alpha;
 };
 
-Media_Widget_Items::Media_Widget_Items(std::shared_ptr<DataManager> data_manager, Media_Window* scene, QWidget *parent) :
-    QWidget(parent),
-    _data_manager{data_manager},
-    _scene{scene},
-    ui(new Ui::Media_Widget_Items)
-{
+Media_Widget_Items::Media_Widget_Items(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::Media_Widget_Items),
+      _data_manager{std::move(data_manager)},
+      _scene{scene} {
     ui->setupUi(this);
 }
 
@@ -37,19 +36,15 @@ Media_Widget_Items::~Media_Widget_Items() {
     delete ui;
 }
 
-void Media_Widget_Items::_getPointItems()
-{
+void Media_Widget_Items::_getPointItems() {
     auto keys = _data_manager->getKeys<PointData>();
-
 }
 
-void Media_Widget_Items::_getLineItems()
-{
+void Media_Widget_Items::_getLineItems() {
     auto keys = _data_manager->getKeys<LineData>();
 }
 
 
-void Media_Widget_Items::_getMaskItems()
-{
+void Media_Widget_Items::_getMaskItems() {
     auto keys = _data_manager->getKeys<MaskData>();
 }

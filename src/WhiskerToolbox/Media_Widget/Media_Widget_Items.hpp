@@ -10,28 +10,25 @@ namespace Ui {
 class Media_Widget_Items;
 }
 
-class Media_Widget_Items : public QWidget
-{
+class Media_Widget_Items : public QWidget {
     Q_OBJECT
 public:
+    explicit Media_Widget_Items(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
 
-    explicit Media_Widget_Items(std::shared_ptr<DataManager> data_manager, Media_Window* scene, QWidget *parent = 0);
+    ~Media_Widget_Items() override;
 
-    virtual ~Media_Widget_Items();
-
-    void setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = data_manager;};
-    void setScene(Media_Window* scene) {_scene = scene;};
+    void setDataManager(std::shared_ptr<DataManager> data_manager) { _data_manager = std::move(data_manager); };
+    void setScene(Media_Window * scene) { _scene = scene; };
 
 protected:
 private:
-    Ui::Media_Widget_Items *ui;
+    Ui::Media_Widget_Items * ui;
     std::shared_ptr<DataManager> _data_manager;
-    Media_Window* _scene;
+    Media_Window * _scene;
 
     void _getPointItems();
     void _getLineItems();
     void _getMaskItems();
-
 };
 
-#endif // MEDIA_WIDGET_ITEMS_HPP
+#endif// MEDIA_WIDGET_ITEMS_HPP
