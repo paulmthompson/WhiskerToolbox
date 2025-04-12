@@ -38,11 +38,6 @@ set(PROJECT_SOURCES
         Main_Window/mainwindow.hpp
         Main_Window/mainwindow.ui
 
-        Covariate_Widget/Covariate_Widget.h
-        Covariate_Widget/covariate_widget.ui
-        Covariate_Widget/Covariate_Config.h
-        Covariate_Widget/Covariate_Config.ui
-
         DataManager_Widget/DataManager_Widget.hpp
         DataManager_Widget/DataManager_Widget.cpp
         DataManager_Widget/DataManager_Widget.ui
