@@ -24,17 +24,17 @@ public:
         return _intervals[row];
     }
 
-    [[nodiscard]] int rowCount(QModelIndex const & parent = QModelIndex()) const override {
+    [[nodiscard]] int rowCount(QModelIndex const & parent) const override {
         Q_UNUSED(parent);
         return static_cast<int>(_intervals.size());
     }
 
-    [[nodiscard]] int columnCount(QModelIndex const & parent = QModelIndex()) const override {
+    [[nodiscard]] int columnCount(QModelIndex const & parent) const override {
         Q_UNUSED(parent);
         return 2;// Start and End columns
     }
 
-    [[nodiscard]] QVariant data(QModelIndex const & index, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override {
         if (!index.isValid() || role != Qt::DisplayRole) {
             return QVariant{};
         }
@@ -49,7 +49,7 @@ public:
         return QVariant{};
     }
 
-    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override {
         if (role != Qt::DisplayRole) {
             return QVariant{};
         }
@@ -72,7 +72,7 @@ public:
         return QAbstractTableModel::flags(index) | Qt::ItemIsEditable;
     }
 
-    bool setData(QModelIndex const & index, QVariant const & value, int role = Qt::EditRole) override {
+    bool setData(QModelIndex const & index, QVariant const & value, int role) override {
         if (index.isValid() && role == Qt::EditRole) {
             Interval & interval = _intervals[index.row()];
             if (index.column() == 0) {

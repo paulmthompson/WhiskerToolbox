@@ -23,17 +23,17 @@ public:
         endResetModel();
     }
 
-    [[nodiscard]] int rowCount(QModelIndex const & parent = QModelIndex()) const override {
+    [[nodiscard]] int rowCount(QModelIndex const & parent) const override {
         Q_UNUSED(parent);
         return static_cast<int>(_points.size());
     }
 
-    [[nodiscard]] int columnCount(QModelIndex const & parent = QModelIndex()) const override {
+    [[nodiscard]] int columnCount(QModelIndex const & parent) const override {
         Q_UNUSED(parent);
         return 2;// Frame and Points columns
     }
 
-    [[nodiscard]] QVariant data(QModelIndex const & index, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override {
         if (!index.isValid() || role != Qt::DisplayRole) {
             return QVariant{};
         }
@@ -55,7 +55,7 @@ public:
         return QVariant{};
     }
 
-    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override {
         if (role != Qt::DisplayRole) {
             return QVariant{};
         }

@@ -14,32 +14,33 @@ class TensorTableModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
-    explicit TensorTableModel(QObject *parent = nullptr) : QAbstractTableModel(parent) {}
+    explicit TensorTableModel(QObject * parent = nullptr)
+        : QAbstractTableModel(parent) {}
 
-    void setTensors(const std::map<int, torch::Tensor>& tensors) {
+    void setTensors(std::map<int, torch::Tensor> const & tensors) {
         beginResetModel();
         _tensors = tensors;
         endResetModel();
     }
 
-    [[nodiscard]] int rowCount(const QModelIndex &parent = QModelIndex()) const override {
+    [[nodiscard]] int rowCount(QModelIndex const & parent) const override {
         Q_UNUSED(parent);
         return static_cast<int>(_tensors.size());
     }
 
-    [[nodiscard]] int columnCount(const QModelIndex &parent = QModelIndex()) const override {
+    [[nodiscard]] int columnCount(QModelIndex const & parent) const override {
         Q_UNUSED(parent);
-        return 2; // Frame and Shape columns
+        return 2;// Frame and Shape columns
     }
 
-    [[nodiscard]] QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override {
         if (!index.isValid() || role != Qt::DisplayRole) {
             return QVariant{};
         }
 
         auto it = std::next(_tensors.begin(), index.row());
-        const int frame = it->first;
-        const torch::Tensor &tensor = it->second;
+        int const frame = it->first;
+        torch::Tensor const & tensor = it->second;
 
         if (index.column() == 0) {
             return QVariant::fromValue(frame);
@@ -56,7 +57,7 @@ public:
         return QVariant{};
     }
 
-    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
+    [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override {
         if (role != Qt::DisplayRole) {
             return QVariant{};
         }
@@ -76,4 +77,4 @@ private:
     std::map<int, torch::Tensor> _tensors;
 };
 
-#endif // TENSORTABLEMODEL_HPP
+#endif// TENSORTABLEMODEL_HPP
