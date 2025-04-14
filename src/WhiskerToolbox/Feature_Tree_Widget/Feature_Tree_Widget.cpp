@@ -270,7 +270,7 @@ void Feature_Tree_Widget::_populateTree() {
                 childItem->setText(1, QString::fromStdString(childFeature.type));
                 childItem->setFlags(childItem->flags() | Qt::ItemIsUserCheckable);
 
-                _setupCheckboxColumn(childItem, 2, false);
+                setup_checkbox_column(childItem, 2, false);
                 _setupColorColumn(childItem, 3, childFeature.color);
 
                 _feature_items[member] = childItem;
@@ -347,7 +347,7 @@ void Feature_Tree_Widget::_addFeatureToTree(std::string const & key, bool isGrou
     item->setText(1, QString::fromStdString(_features[key].type));
     item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 
-    _setupCheckboxColumn(item, 2, false);
+    setup_checkbox_column(item, 2, false);
     _setupColorColumn(item, 3, _features[key].color);
 
     if (isGroup) {
@@ -361,7 +361,7 @@ void Feature_Tree_Widget::_setupTreeItem(QTreeWidgetItem * item, TreeFeature con
     item->setText(0, QString::fromStdString(feature.key));
     item->setText(1, QString::fromStdString(feature.type));
 
-    _setupCheckboxColumn(item, 2, feature.enabled);
+    setup_checkbox_column(item, 2, feature.enabled);
     _setupColorColumn(item, 3, feature.color);
 }
 

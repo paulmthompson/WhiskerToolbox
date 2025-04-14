@@ -396,7 +396,7 @@ void Media_Window::_plotLineData() {
     auto yAspect = getYAspect();
 
     for (auto const & [line_key, _line_config]: _line_configs) {
-        auto plot_color = _plot_color_with_alpha(_line_config);
+        auto plot_color = plot_color_with_alpha(_line_config);
 
         auto lineData = _data_manager->getData<LineData>(line_key)->getLinesAtTime(current_time);
 
@@ -470,7 +470,7 @@ void Media_Window::_plotMaskData() {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     for (auto const & [mask_key, _mask_config]: _mask_configs) {
-        auto plot_color = _plot_color_with_alpha(_mask_config);
+        auto plot_color = plot_color_with_alpha(_mask_config);
 
         auto mask = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask->getImageSize();
@@ -515,7 +515,7 @@ void Media_Window::_plotPointData() {
 
     for (auto const & [point_key, _point_config]: _point_configs) {
 
-        auto plot_color = _plot_color_with_alpha(_point_config);
+        auto plot_color = plot_color_with_alpha(_point_config);
 
         auto point = _data_manager->getData<PointData>(point_key);
 
@@ -551,7 +551,7 @@ void Media_Window::_plotDigitalIntervalSeries() {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     for (auto const & [key, _interval_config]: _interval_configs) {
-        auto plot_color = _plot_color_with_alpha(_interval_config);
+        auto plot_color = plot_color_with_alpha(_interval_config);
 
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
 
