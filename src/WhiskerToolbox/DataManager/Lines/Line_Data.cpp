@@ -1,9 +1,9 @@
 
 #include "Line_Data.hpp"
+#include "Points/points.hpp"
 #include "utils/container.hpp"
 
 #include <cmath>
-
 #include <iostream>
 
 
@@ -36,47 +36,46 @@ void LineData::addLineAtTime(int const time, std::vector<float> const & x, std::
 
 void LineData::addLineAtTime(int const time, std::vector<Point2D<float>> const & line) {
     if (!_lock_state.isLocked(time)) {
-        _data[time].push_back(std::move(line));
+        _data[time].push_back(line);
 
         notifyObservers();
     }
 }
 
-void LineData::addPointToLine(int const time, int const line_id, float const x, float const y) {
+void LineData::addPointToLine(int const time, int const line_id, Point2D<float> point) {
     if (!_lock_state.isLocked(time)) {
         if (line_id < _data[time].size()) {
-            _data[time][line_id].push_back(Point2D<float>{x, y});
+            _data[time][line_id].push_back(point);
         } else {
             std::cerr << "LineData::addPointToLine: line_id out of range" << std::endl;
-            _data[time].emplace_back(Line2D());
-            _data[time].back().push_back(Point2D<float>{x, y});
+            _data[time].emplace_back();
+            _data[time].back().push_back(point);
         }
 
         notifyObservers();
     }
 }
 
-void LineData::addPointToLineInterpolate(int const time, int const line_id, float const x, float const y) {
+void LineData::addPointToLineInterpolate(int const time, int const line_id, Point2D<float> point) {
     if (!_lock_state.isLocked(time)) {
         if (line_id >= _data[time].size()) {
             std::cerr << "LineData::addPointToLineInterpolate: line_id out of range" << std::endl;
-            _data[time].emplace_back(Line2D{});
+            _data[time].emplace_back();
         }
 
         Line2D & line = _data[time][line_id];
-        Point2D<float> const new_point{x, y};
         if (!line.empty()) {
             Point2D<float> const last_point = line.back();
-            float const distance = std::sqrt(std::pow(new_point.x - last_point.x, 2) + std::pow(new_point.y - last_point.y, 2));
+            double const distance = std::sqrt(std::pow(point.x - last_point.x, 2) + std::pow(point.y - last_point.y, 2));
             int const n = static_cast<int>(distance / 2.0f);
             for (int i = 1; i <= n; ++i) {
                 float const t = static_cast<float>(i) / static_cast<float>(n + 1);
-                float const interp_x = last_point.x + t * (new_point.x - last_point.x);
-                float const interp_y = last_point.y + t * (new_point.y - last_point.y);
+                float const interp_x = last_point.x + t * (point.x - last_point.x);
+                float const interp_y = last_point.y + t * (point.y - last_point.y);
                 line.push_back(Point2D<float>{interp_x, interp_y});
             }
         }
-        line.push_back(new_point);
+        line.push_back(point);
         smooth_line(line);
 
         notifyObservers();

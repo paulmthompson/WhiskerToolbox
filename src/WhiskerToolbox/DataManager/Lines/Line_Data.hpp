@@ -27,9 +27,9 @@ public:
     void addLineAtTime(int time, std::vector<float> const & x, std::vector<float> const & y);
     void addLineAtTime(int time, std::vector<Point2D<float>> const & line);
 
-    void addPointToLine(int time, int line_id, float x, float y);
+    void addPointToLine(int time, int line_id, Point2D<float> point);
 
-    void addPointToLineInterpolate(int time, int line_id, float x, float y);
+    void addPointToLineInterpolate(int time, int line_id, Point2D<float> point);
 
     [[nodiscard]] std::vector<int> getTimesWithLines() const;
 

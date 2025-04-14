@@ -780,8 +780,7 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
                  _data_manager->getData<LineData>(whisker_name)->addPointToLineInterpolate(
                          current_time,
                          0,
-                         x_media,
-                         y_media);
+                         Point2D<float>{x_media, y_media});
 
                 scene->UpdateCanvas();
             }
