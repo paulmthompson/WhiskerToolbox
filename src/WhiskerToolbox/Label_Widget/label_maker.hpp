@@ -59,7 +59,9 @@ private:
     std::filesystem::path _saveFilePath;
 
     void _printLabels();
-    std::string _makeFrameName(std::string frame_id);
+
 };
+
+std::string make_frame_name(std::string frame_id);
 
 #endif // LABEL_MAKER_HPP

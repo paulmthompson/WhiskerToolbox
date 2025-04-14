@@ -40,16 +40,16 @@ public:
                    std::shared_ptr<DataManager> data_manager,
                    TimeScrollBar* time_scrollbar,
                    MainWindow* main_window,
-                   QWidget *parent = 0);
+                   QWidget *parent = nullptr);
 
-    virtual ~Whisker_Widget();
+    ~Whisker_Widget() override;
 
     void openWidget(); // Call
 public slots:
     void LoadFrame(int frame_id);
 protected:
-    void closeEvent(QCloseEvent *event);
-    void keyPressEvent(QKeyEvent *event);
+    void closeEvent(QCloseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 private:
     std::shared_ptr<whisker::WhiskerTracker> _wt;
@@ -98,15 +98,15 @@ private:
 
     std::unique_ptr<dl::SCM> dl_model {nullptr};
 
-    void _createNewWhisker(std::string const & whisker_group_name, int const whisker_id);
+    void _createNewWhisker(std::string const & whisker_group_name, int whisker_id);
 
     void _saveImage(std::string const& folder);
-    std::string _getImageSaveName(int const frame_id);
-    std::string _getWhiskerSaveName(int const frame_id);
+    std::string _getImageSaveName(int frame_id);
+    std::string _getWhiskerSaveName(int frame_id);
 
     std::vector<int> _loadCSVWhiskerFromDir(std::string const & dir_name, std::string const & whisker_group_name);
 
-    void _addNewTrackedWhisker(int const index);
+    void _addNewTrackedWhisker(int index);
     void _addNewTrackedWhisker(std::vector<int> const & indexes);
 
     void _traceWhiskers(std::vector<uint8_t> image, int height, int width);
@@ -171,17 +171,17 @@ private slots:
 
 };
 
-void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int const num_whiskers_to_track, int current_time, float similarity_threshold);
+void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int num_whiskers_to_track, int current_time, float similarity_threshold);
 
 std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string const & dir_name, std::string const & line_key);
 
-bool _checkWhiskerNumMatchesExportNum(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_group_name);
+bool check_whisker_num_matches_export_num(DataManager* dm, int num_whiskers_to_export, std::string const & whisker_group_name);
 
 void add_whiskers_to_data_manager(
     DataManager* dm,
     std::vector<Line2D> & whiskers,
     std::string const & whisker_group_name,
-    int const num_whisker_to_track,
+    int num_whisker_to_track,
     int current_time,
     float similarity_threshold);
 

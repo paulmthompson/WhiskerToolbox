@@ -49,7 +49,7 @@ std::stringstream LabelMaker::saveLabelsJSON() {
 
         json json_object = json::object();
 
-        json_object["image"] = _makeFrameName(frame_name);
+        json_object["image"] = make_frame_name(frame_name);
         json_object["labels"][_label_name] = {point.x, point.y};
         j.push_back(json_object);
     }
@@ -60,7 +60,7 @@ std::stringstream LabelMaker::saveLabelsJSON() {
 
 }
 
-std::string LabelMaker::_makeFrameName(std::string frame_id) {
+std::string make_frame_name(std::string frame_id) {
 
     //We create a 7 digit number, padding with leading zeros
     std::stringstream a;
