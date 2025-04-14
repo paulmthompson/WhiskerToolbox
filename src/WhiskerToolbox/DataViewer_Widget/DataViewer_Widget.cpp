@@ -19,7 +19,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
                                      MainWindow * main_window,
                                      QWidget * parent)
     : QMainWindow(parent),
-      _data_manager{data_manager},
+      _data_manager{std::move(data_manager)},
       _time_scrollbar{time_scrollbar},
       _main_window{main_window},
       ui(new Ui::DataViewer_Widget) {

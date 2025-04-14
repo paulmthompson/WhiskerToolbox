@@ -13,21 +13,22 @@ class DataManager;
 class Media_Window;
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui {
+class MainWindow;
+}
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    explicit MainWindow(QWidget * parent = nullptr);
+    ~MainWindow() override;
 
     void addWidget(std::string const & key, std::unique_ptr<QWidget> widget) {
         _widgets[key] = std::move(widget);
     }
 
-    QWidget* getWidget(std::string const & key) {
+    QWidget * getWidget(std::string const & key) {
         auto it = _widgets.find(key);
         if (it != _widgets.end()) {
             return it->second.get();
@@ -35,19 +36,19 @@ public:
         return nullptr;
     }
 
-    void registerDockWidget(std::string const & key, QWidget* widget, ads::DockWidgetArea area);
+    void registerDockWidget(std::string const & key, QWidget * widget, ads::DockWidgetArea area);
     void showDockWidget(std::string const & key);
 
 
 protected:
-    void keyPressEvent(QKeyEvent *event);
+    void keyPressEvent(QKeyEvent * event) override;
 
 private:
-    Ui::MainWindow *ui;
+    Ui::MainWindow * ui;
 
-    Media_Window* _scene;
+    Media_Window * _scene;
 
-    ads::CDockManager* _m_DockManager;
+    ads::CDockManager * _m_DockManager;
 
     bool _verbose;
 
@@ -86,4 +87,4 @@ private slots:
     void openDataManager();
     void openVideoExportWidget();
 };
-#endif // MAINWINDOW_HPP
+#endif// MAINWINDOW_HPP

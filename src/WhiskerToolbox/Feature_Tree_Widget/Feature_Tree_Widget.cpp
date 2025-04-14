@@ -63,7 +63,7 @@ std::vector<std::string> Feature_Tree_Widget::getSelectedFeatures() const {
     }
 
     // Get feature key
-    std::string key = item->text(0).toStdString();
+    std::string const key = item->text(0).toStdString();
 
     // Check if it's a group
     if (_features.find(key) != _features.end() && _features.at(key).isGroup) {
@@ -124,7 +124,7 @@ void Feature_Tree_Widget::refreshTree() {
 void Feature_Tree_Widget::_itemSelected(QTreeWidgetItem * item, int column) {
     if (!item) return;
 
-    std::string key = item->text(0).toStdString();
+    std::string const key = item->text(0).toStdString();
     std::vector<std::string> selectedFeatures;
 
     // Check if it's a group
@@ -142,8 +142,8 @@ void Feature_Tree_Widget::_itemSelected(QTreeWidgetItem * item, int column) {
 void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
     if (!item || column != 2) return;// Only process checkbox column
 
-    std::string key = item->text(0).toStdString();
-    bool enabled = item->checkState(2) == Qt::Checked;
+    std::string const key = item->text(0).toStdString();
+    bool const enabled = item->checkState(2) == Qt::Checked;
 
     // Update the feature state
     if (_features.find(key) != _features.end()) {
@@ -223,13 +223,13 @@ void Feature_Tree_Widget::_populateTree() {
 
     for (auto const & key: allKeys) {
         // Skip if type doesn't match filter
-        std::string type = _data_manager->getType(key);
+        std::string const type = _data_manager->getType(key);
         if (!_type_filters.empty() && !_hasTypeFilter(type)) {
             continue;
         }
 
         // Try to extract group name
-        std::string groupName = _extractGroupName(key);
+        std::string const groupName = _extractGroupName(key);
 
         if (!groupName.empty() && groupName != key) {
             // This is part of a group
@@ -265,7 +265,7 @@ void Feature_Tree_Widget::_populateTree() {
 
                 // Add as child to tree
                 QTreeWidgetItem * groupItem = _group_items[groupName];
-                QTreeWidgetItem * childItem = new QTreeWidgetItem(groupItem);
+                auto * childItem = new QTreeWidgetItem(groupItem);
                 childItem->setText(0, QString::fromStdString(member));
                 childItem->setText(1, QString::fromStdString(childFeature.type));
                 childItem->setFlags(childItem->flags() | Qt::ItemIsUserCheckable);
@@ -281,7 +281,7 @@ void Feature_Tree_Widget::_populateTree() {
     // Add standalone items (not in any group)
     for (auto const & key: allKeys) {
         // Skip if type doesn't match filter
-        std::string type = _data_manager->getType(key);
+        std::string const type = _data_manager->getType(key);
         if (!_type_filters.empty() && !_hasTypeFilter(type)) {
             continue;
         }
@@ -315,7 +315,7 @@ void Feature_Tree_Widget::_populateTree() {
 }
 
 std::string Feature_Tree_Widget::_extractGroupName(std::string const & key) {
-    std::regex pattern(_grouping_pattern);
+    std::regex const pattern(_grouping_pattern);
     std::smatch matches;
 
     if (std::regex_search(key, matches, pattern) && matches.size() > 1) {
@@ -342,7 +342,7 @@ void Feature_Tree_Widget::_addFeatureToTree(std::string const & key, bool isGrou
         return;
     }
 
-    QTreeWidgetItem * item = new QTreeWidgetItem(ui->treeWidget);
+    auto * item = new QTreeWidgetItem(ui->treeWidget);
     item->setText(0, QString::fromStdString(key));
     item->setText(1, QString::fromStdString(_features[key].type));
     item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
@@ -366,7 +366,7 @@ void Feature_Tree_Widget::_setupTreeItem(QTreeWidgetItem * item, TreeFeature con
 }
 
 void Feature_Tree_Widget::_setupColorColumn(QTreeWidgetItem * item, int column, std::string const & color) {
-    ColorWidget * colorWidget = new ColorWidget();
+    auto * colorWidget = new ColorWidget();
     colorWidget->setText(QString::fromStdString(color));
     ui->treeWidget->setItemWidget(item, column, colorWidget);
 
@@ -387,7 +387,7 @@ bool Feature_Tree_Widget::_hasTypeFilter(std::string const & type) {
 void Feature_Tree_Widget::_updateChildrenState(QTreeWidgetItem * parent, int column) {
     if (!parent) return;
 
-    Qt::CheckState parentState = parent->checkState(column);
+    Qt::CheckState const parentState = parent->checkState(column);
 
     // Update all children with parent's state
     for (int i = 0; i < parent->childCount(); i++) {
@@ -395,7 +395,7 @@ void Feature_Tree_Widget::_updateChildrenState(QTreeWidgetItem * parent, int col
         child->setCheckState(column, parentState);
 
         // Update feature state
-        std::string childKey = child->text(0).toStdString();
+        std::string const childKey = child->text(0).toStdString();
         if (_features.find(childKey) != _features.end()) {
             _features[childKey].enabled = (parentState == Qt::Checked);
         }
@@ -429,7 +429,7 @@ void Feature_Tree_Widget::_updateParentState(QTreeWidgetItem * child, int column
     }
 
     // Update feature state
-    std::string parentKey = parent->text(0).toStdString();
+    std::string const parentKey = parent->text(0).toStdString();
     if (_features.find(parentKey) != _features.end()) {
         _features[parentKey].enabled = (parent->checkState(column) == Qt::Checked);
     }

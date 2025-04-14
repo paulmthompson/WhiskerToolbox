@@ -36,7 +36,7 @@ public:
     void setTypeFilters(std::vector<std::string> types);
 
     // Get selected features (single item or group)
-    std::vector<std::string> getSelectedFeatures() const;
+    [[nodiscard]] std::vector<std::string> getSelectedFeatures() const;
 
     // Get/set feature color
     std::string getFeatureColor(std::string const & key);
