@@ -3,6 +3,7 @@
 
 #include "ui_Media_Widget.h"
 
+#include "DataManager/ImageSize/ImageSize.hpp"
 #include "Main_Window/mainwindow.hpp"
 #include "Media_Widget/Media_Widget_Items.hpp"
 #include "Media_Window/Media_Window.hpp"
@@ -90,8 +91,8 @@ void Media_Widget::resizeEvent(QResizeEvent * event) {
 void Media_Widget::_updateCanvasSize() {
     if (_scene) {
         _scene->setCanvasSize(
-                ui->graphicsView->width(),
-                ui->graphicsView->height());
+                ImageSize{ui->graphicsView->width(),
+                ui->graphicsView->height()});
         _scene->UpdateCanvas();
     }
 }

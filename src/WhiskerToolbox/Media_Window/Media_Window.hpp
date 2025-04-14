@@ -3,6 +3,7 @@
 
 #include "DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
+#include "Datamanager/ImageSize/ImageSize.hpp"
 
 #include <QGraphicsScene>
 #include <QtCore/QtGlobal>
@@ -101,9 +102,9 @@ public:
     [[nodiscard]] float getXAspect() const;
     [[nodiscard]] float getYAspect() const;
 
-    void setCanvasSize(int width, int height) {
-        _canvasWidth = width;
-        _canvasHeight = height;
+    void setCanvasSize(ImageSize image_size) {
+        _canvasWidth = image_size.width;
+        _canvasHeight = image_size.height;
     }
 
     [[nodiscard]] std::pair<int, int> getCanvasSize() const {
