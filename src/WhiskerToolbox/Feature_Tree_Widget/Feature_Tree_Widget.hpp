@@ -89,14 +89,16 @@ private:
     // Helper methods
     void _populateTree();
     std::string _extractGroupName(std::string const & key);
-    std::vector<std::string> _getChildFeatures(QTreeWidgetItem * item);
     void _addFeatureToTree(std::string const & key, bool isGroup = false);
     void _setupTreeItem(QTreeWidgetItem * item, TreeFeature const & feature);
     void _setupColorColumn(QTreeWidgetItem * item, int column, std::string const & color);
-    void _setupCheckboxColumn(QTreeWidgetItem * item, int column, bool checked);
     bool _hasTypeFilter(std::string const & type);
     void _updateChildrenState(QTreeWidgetItem * parent, int column);
     void _updateParentState(QTreeWidgetItem * child, int column);
 };
+
+void setup_checkbox_column(QTreeWidgetItem * item, int column, bool checked);
+
+std::vector<std::string> get_child_features(QTreeWidgetItem * item);
 
 #endif// FEATURE_TREE_WIDGET_HPP

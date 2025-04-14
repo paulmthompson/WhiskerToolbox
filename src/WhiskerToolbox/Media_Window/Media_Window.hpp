@@ -3,7 +3,7 @@
 
 #include "DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
-#include "Datamanager/ImageSize/ImageSize.hpp"
+#include "DataManager/ImageSize/ImageSize.hpp"
 
 #include <QGraphicsScene>
 #include <QtCore/QtGlobal>
@@ -154,7 +154,6 @@ private:
     std::unordered_map<std::string, tensor_config> _tensor_configs;
 
     QImage::Format _getQImageFormat();
-    QRgb _plot_color_with_alpha(element_config const & elem);
     void _createCanvasForData();
     void _convertNewMediaToQImage();
     void _plotLineData();
@@ -172,5 +171,7 @@ signals:
     void leftRelease();
     void canvasUpdated(QImage const & canvasImage);
 };
+
+QRgb plot_color_with_alpha(element_config const & elem);
 
 #endif// MEDIA_WINDOW_HPP

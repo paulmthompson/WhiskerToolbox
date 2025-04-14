@@ -177,7 +177,7 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
 void Feature_Tree_Widget::_handleColorChange(QTreeWidgetItem * item, std::string const & color) {
     if (!item) return;
 
-    std::string key = item->text(0).toStdString();
+    std::string const key = item->text(0).toStdString();
 
     // Update color in data structure
     if (_features.find(key) != _features.end()) {
@@ -325,7 +325,7 @@ std::string Feature_Tree_Widget::_extractGroupName(std::string const & key) {
     return key;// Return the key itself if no match
 }
 
-std::vector<std::string> Feature_Tree_Widget::_getChildFeatures(QTreeWidgetItem * item) {
+std::vector<std::string> get_child_features(QTreeWidgetItem * item) {
     std::vector<std::string> children;
     if (!item) return children;
 
@@ -376,7 +376,7 @@ void Feature_Tree_Widget::_setupColorColumn(QTreeWidgetItem * item, int column, 
     });
 }
 
-void Feature_Tree_Widget::_setupCheckboxColumn(QTreeWidgetItem * item, int column, bool checked) {
+void setup_checkbox_column(QTreeWidgetItem * item, int column, bool checked) {
     item->setCheckState(column, checked ? Qt::Checked : Qt::Unchecked);
 }
 
