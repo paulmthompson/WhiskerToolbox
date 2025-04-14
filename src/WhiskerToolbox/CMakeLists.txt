@@ -145,6 +145,10 @@ set(PROJECT_SOURCES
         Feature_Table_Widget/Feature_Table_Widget.ui
         Color_Widget/Color_Widget.hpp
 
+        Feature_Tree_Widget/Feature_Tree_Widget.cpp
+        Feature_Tree_Widget/Feature_Tree_Widget.hpp
+        Feature_Tree_Widget/Feature_Tree_Widget.ui
+
         utils/Image_Processing/skeletonize.hpp
         utils/Image_Processing/order_line.hpp
         utils/Image_Processing/mask_operations.hpp
@@ -214,6 +218,7 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
+        Feature_Tree_Widget/Feature_Tree_Widget.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)
