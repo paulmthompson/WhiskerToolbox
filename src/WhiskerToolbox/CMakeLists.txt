@@ -143,7 +143,7 @@ set(PROJECT_SOURCES
         Feature_Table_Widget/Feature_Table_Widget.hpp
         Feature_Table_Widget/Feature_Table_Widget.cpp
         Feature_Table_Widget/Feature_Table_Widget.ui
-        Feature_Table_Widget/Color_Widget.hpp
+        Color_Widget/Color_Widget.hpp
 
         utils/Image_Processing/skeletonize.hpp
         utils/Image_Processing/order_line.hpp
