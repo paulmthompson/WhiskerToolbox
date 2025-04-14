@@ -764,7 +764,7 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         case Whisker_Pad_Select: {
             _wt->setWhiskerPad(x_media,y_media);
             dl_model->add_origin(x_media, y_media);
-            std::string whisker_pad_label =
+            std::string const whisker_pad_label =
                     "(" + std::to_string(static_cast<int>(x_media)) + "," + std::to_string(static_cast<int>(y_media)) +
                     ")";
             ui->whisker_pad_pos_label->setText(QString::fromStdString(whisker_pad_label));

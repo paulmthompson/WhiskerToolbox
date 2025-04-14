@@ -49,7 +49,7 @@ std::vector<Point2D<float>> order_line(
     // Find the base point (closest to the origin)
     auto base_point_iter = std::min_element(distances_to_origin.begin(), distances_to_origin.end());
     size_t base_point_index = std::distance(distances_to_origin.begin(), base_point_iter);
-    Point2D base_point = line_pixels[base_point_index];
+    Point2D const base_point = line_pixels[base_point_index];
 
     // Initialize the ordered list with the base point
     std::vector<Point2D<float>> ordered_pixels = {base_point};
@@ -67,8 +67,8 @@ std::vector<Point2D<float>> order_line(
         });
 
         auto nearest_neighbor_iter = std::min_element(distances_to_current.begin(), distances_to_current.end());
-        size_t nearest_neighbor_index = std::distance(distances_to_current.begin(), nearest_neighbor_iter);
-        Point2D nearest_neighbor = line_pixels[nearest_neighbor_index];
+        size_t const nearest_neighbor_index = std::distance(distances_to_current.begin(), nearest_neighbor_iter);
+        Point2D const nearest_neighbor = line_pixels[nearest_neighbor_index];
         min_distances.push_back(distances_to_current[nearest_neighbor_index]);
         ordered_pixels.push_back(nearest_neighbor);
         line_pixels.erase(line_pixels.begin() + nearest_neighbor_index);

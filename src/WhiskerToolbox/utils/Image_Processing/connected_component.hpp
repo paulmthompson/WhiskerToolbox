@@ -6,7 +6,7 @@
 #include <algorithm>
 
 std::vector<uint8_t> remove_small_clusters(const std::vector<uint8_t>& image, int height, int width, int threshold) {
-    std::vector<uint8_t> labeled_image(height * width, 0);
+    std::vector<uint8_t> labeled_image(static_cast<size_t>(height * width), 0);
     std::vector<int> cluster_sizes;
     int current_label = 1;
 
@@ -18,7 +18,7 @@ std::vector<uint8_t> remove_small_clusters(const std::vector<uint8_t>& image, in
         for (int col = 0; col < width; ++col) {
             if (image[get_index(row, col)] && !labeled_image[get_index(row, col)]) {
                 std::queue<std::pair<int, int>> q;
-                q.push({row, col});
+                q.emplace(row, col);
                 labeled_image[get_index(row, col)] = current_label;
                 int cluster_size = 0;
 
@@ -29,11 +29,11 @@ std::vector<uint8_t> remove_small_clusters(const std::vector<uint8_t>& image, in
 
                     for (int dr = -1; dr <= 1; ++dr) {
                         for (int dc = -1; dc <= 1; ++dc) {
-                            int nr = r + dr;
-                            int nc = c + dc;
+                            int const nr = r + dr;
+                            int const nc = c + dc;
                             if (nr >= 0 && nr < height && nc >= 0 && nc < width &&
                                 image[get_index(nr, nc)] && !labeled_image[get_index(nr, nc)]) {
-                                q.push({nr, nc});
+                                q.emplace(nr, nc);
                                 labeled_image[get_index(nr, nc)] = current_label;
                             }
                         }
@@ -46,10 +46,10 @@ std::vector<uint8_t> remove_small_clusters(const std::vector<uint8_t>& image, in
         }
     }
 
-    std::vector<uint8_t> result(height * width, 0);
+    std::vector<uint8_t> result(static_cast<size_t>(height * width), 0);
     for (int row = 0; row < height; ++row) {
         for (int col = 0; col < width; ++col) {
-            int label = labeled_image[get_index(row, col)];
+            int const label = labeled_image[get_index(row, col)];
             if (label && cluster_sizes[label - 1] >= threshold) {
                 result[get_index(row, col)] = 1;
             }
