@@ -38,7 +38,7 @@ private:
     QParallelAnimationGroup * toggleAnimation;
     QScrollArea * contentArea;
     int animationDuration;
-    int collapsedHeight;
+    int collapsedHeight = 10;
     bool isExpanded = false;
 
 

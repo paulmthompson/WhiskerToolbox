@@ -44,7 +44,8 @@ void Mask_Widget::selectPoint(float const x, float const y) {
     std::vector<Point2D<float>> mask;
     for (size_t i = 0; i < mask_image.size(); i++) {
         if (mask_image[i] > 0) {
-            mask.push_back(Point2D<float>{static_cast<float>(i % image_width), static_cast<float>(i / image_width)});
+            mask.push_back(Point2D<float>{static_cast<float>(i % image_width),
+                                          static_cast<float>(i / image_width)});
         }
     }
 

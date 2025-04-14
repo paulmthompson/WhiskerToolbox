@@ -134,8 +134,7 @@ void Label_Widget::_updateTable() {
   }
 }
 
-void Label_Widget::_addLabeltoTable(int row, std::string frame_id,
-                                    label_point label) {
+void Label_Widget::_addLabeltoTable(int row, std::string const & frame_id, label_point label) {
     ui->tableWidget->insertRow(ui->tableWidget->rowCount());
     ui->tableWidget->setItem(row, 0,
                        new QTableWidgetItem(QString::fromStdString(frame_id)));
@@ -172,9 +171,9 @@ void Label_Widget::_changeLabelName() {
     _label_maker->changeLabelName(ui->label_name_box->toPlainText().toStdString());
 }
 
-void Label_Widget::_exportFrames(std::string saveFileName) {
+void Label_Widget::_exportFrames(std::string const & saveFileName) {
 
-  std::filesystem::path const saveFilePath = _createImagePath(saveFileName);
+  std::filesystem::path const saveFilePath = create_image_path(saveFileName);
 
   for (auto &[frame_name, label] : _label_maker->getLabels()) {
     auto &[img, point] = label;
@@ -189,7 +188,7 @@ void Label_Widget::_exportFrames(std::string saveFileName) {
   }
 }
 
-std::filesystem::path Label_Widget::_createImagePath(std::string saveFileName) {
+std::filesystem::path create_image_path(std::string const & saveFileName) {
 
   std::filesystem::path saveFilePath = saveFileName;
 

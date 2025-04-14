@@ -166,19 +166,20 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
 
 
     } else if (feature_type == "LineData") {
-
+        int const stacked_widget_index = 3;
     } else if (feature_type == "AnalogTimeSeries") {
-
+        int const stacked_widget_index = 4;
     } else if (feature_type == "DigitalIntervalSeries") {
-
-        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(5));
+        int const stacked_widget_index = 5;
+        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
 
         disconnect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
         interval_widget->removeCallbacks();
 
     } else if (feature_type == "DigitalEventSeries") {
-
+        int const stacked_widget_index = 6;
     } else if (feature_type == "TensorData") {
+        int const stacked_widget_index = 7;
     } else {
         std::cout << "Unsupported feature type" << std::endl;
     }
