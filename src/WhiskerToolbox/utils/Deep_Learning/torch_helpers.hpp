@@ -23,7 +23,7 @@ inline torch::Device get_device(){
     return device;
 }
 
-inline std::shared_ptr<torch::jit::Module> load_torchscript_model(std::string model_file_path, torch::Device device)
+inline std::shared_ptr<torch::jit::Module> load_torchscript_model(std::string const & model_file_path, torch::Device device)
 {
     try {
         // Deserialize the ScriptModule from a file using torch::jit::load().
@@ -47,7 +47,7 @@ inline std::shared_ptr<torch::jit::Module> load_torchscript_model(std::string mo
     }
     catch (const c10::Error& e) {
         std::cerr << "error loading the model\n";
-        return std::shared_ptr<torch::jit::Module>(nullptr);
+        return std::shared_ptr<torch::jit::Module>{nullptr};
     }
 }
 

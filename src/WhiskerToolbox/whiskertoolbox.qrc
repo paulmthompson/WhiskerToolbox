@@ -3,6 +3,5 @@
         <file>images/fastforward.png</file>
         <file>images/rewind.png</file>
         <file>my_stylesheet.qss</file>
-        <file>Covariate_Widget/covariate_widget.ui</file>
     </qresource>
 </RCC>

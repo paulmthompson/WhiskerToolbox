@@ -17,11 +17,11 @@ class TimeScrollBar : public QWidget
     Q_OBJECT
 public:
 
-    explicit TimeScrollBar(QWidget *parent = 0);
+    explicit TimeScrollBar(QWidget *parent = nullptr);
 
-    virtual ~TimeScrollBar();
+    ~TimeScrollBar() override;
 
-    void setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = data_manager;};
+    void setDataManager(std::shared_ptr<DataManager> data_manager) {_data_manager = std::move(data_manager);};
     void updateScrollBarNewMax(int new_max);
     void changeScrollBarValue(int new_value, bool relative=false); // Should be friend
 

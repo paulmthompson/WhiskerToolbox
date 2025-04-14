@@ -20,14 +20,14 @@ class Tongue_Widget : public QMainWindow
     Q_OBJECT
 public:
 
-    Tongue_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = 0);
+    Tongue_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = nullptr);
 
-    virtual ~Tongue_Widget();
+    ~Tongue_Widget() override;
 
     void openWidget(); //
 protected:
-    void closeEvent(QCloseEvent *event);
-    void keyPressEvent(QKeyEvent *event);
+    void closeEvent(QCloseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 private:
     Media_Window * _scene;

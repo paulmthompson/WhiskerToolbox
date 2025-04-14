@@ -22,7 +22,7 @@
 
 Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
     QWidget(parent),
-    _data_manager{data_manager},
+      _data_manager{std::move(data_manager)},
     _time_scrollbar{time_scrollbar},
     _output_path{std::filesystem::current_path()},
     ui(new Ui::contact_widget)
@@ -34,7 +34,7 @@ Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeSc
     _contact_imgs = std::vector<QImage>();
 
     for (int i = 0; i < _image_buffer_size; i++) {
-        _contact_imgs.push_back(QImage(130,130,QImage::Format_Grayscale8));
+        _contact_imgs.emplace_back(130,130,QImage::Format_Grayscale8);
     }
 
     if (!_data_manager->getData<DigitalIntervalSeries>("Contact_Events")) {
@@ -94,7 +94,7 @@ void Contact_Widget::setPolePos(float pole_x, float pole_y)
 {
     if (_pole_select_mode) {
         _pole_pos = std::make_tuple(static_cast<int>(pole_x),static_cast<int>(pole_y));
-        std::string new_label = "(" + std::to_string(static_cast<int>(pole_x)) + ", " + std::to_string(static_cast<int>(pole_y)) + ")";
+        std::string const new_label = "(" + std::to_string(static_cast<int>(pole_x)) + ", " + std::to_string(static_cast<int>(pole_y)) + ")";
         ui->current_location_label->setText(QString::fromStdString(new_label));
         _pole_select_mode = false;
         updateFrame(_data_manager->getTime()->getLastLoadedFrame());
@@ -120,8 +120,8 @@ void Contact_Widget::updateFrame(int frame_id)
 
     auto _media = _data_manager->getData<MediaData>("media");
 
-    float pole_x = std::get<0>(_pole_pos);
-    float pole_y = std::get<1>(_pole_pos);
+    auto const pole_x = static_cast<float>(std::get<0>(_pole_pos));
+    auto const pole_y = static_cast<float>(std::get<1>(_pole_pos));
 
     for (int i = -2; i < 3; i++) {
 
@@ -137,7 +137,7 @@ void Contact_Widget::updateFrame(int frame_id)
                                  _getQImageFormat()
                                  );
 
-        QRect rect(pole_x - _bounding_box_width/2, pole_y - _bounding_box_width/2, _bounding_box_width, _bounding_box_width);
+        QRect const rect(pole_x - _bounding_box_width/2, pole_y - _bounding_box_width/2, _bounding_box_width, _bounding_box_width);
 
         auto cropped_image = unscaled_image.copy(rect);
 
@@ -155,7 +155,7 @@ void Contact_Widget::updateFrame(int frame_id)
 
     _updateContactWidgets(frame_id);
 
-    int t1 = timer2.elapsed();
+    int const t1 = timer2.elapsed();
 
     qDebug() << "Drawing 5 frames took " << t1;
 }
@@ -406,7 +406,7 @@ void Contact_Widget::_flipContactButton()
 
 void Contact_Widget::_changeOutputDir()
 {
-    QString dir_name = QFileDialog::getExistingDirectory(
+    QString const dir_name = QFileDialog::getExistingDirectory(
         this,
         "Select Directory",
         QDir::currentPath());
@@ -421,7 +421,7 @@ void Contact_Widget::_changeOutputDir()
 
 void Contact_Widget::_contactTableClicked(int row, int column) {
     if (column == 0 || column == 1) {
-        int frame_id = ui->contact_table->item(row, column)->text().toInt();
+        int const frame_id = ui->contact_table->item(row, column)->text().toInt();
         _time_scrollbar->changeScrollBarValue(frame_id);
     }
 }

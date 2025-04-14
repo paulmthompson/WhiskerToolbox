@@ -7,7 +7,7 @@
 
 Janelia_Config::Janelia_Config(std::shared_ptr<whisker::WhiskerTracker> tracker, QWidget *parent) :
     QWidget(parent),
-    _wt{tracker},
+      _wt{std::move(tracker)},
     ui(new Ui::janelia_config) {
     ui->setupUi(this);
 };

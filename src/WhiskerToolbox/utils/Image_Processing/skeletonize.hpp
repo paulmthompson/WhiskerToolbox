@@ -14,10 +14,10 @@ License: BSD-3-Clause
 
 #include <array>
 #include <cstring>
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
-std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, int height, int width) {
+std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t height, size_t width) {
 
     // Look up table
     static std::array<uint8_t, 256> const lut = {0, 0, 0, 1, 0, 0, 1, 3, 0, 0, 3, 1, 1, 0,
@@ -40,8 +40,8 @@ std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, int he
                                                  0, 0, 3, 3, 0, 1, 0, 0, 0, 0, 2, 2, 0, 0,
                                                  2, 0, 0, 0};
 
-    int const nrows = height + 2;
-    int const ncols = width + 2;
+    size_t const nrows = height + 2;
+    size_t const ncols = width + 2;
 
     // Create skeleton and cleaned_skeleton with border
     std::vector<uint8_t> skeleton(nrows * ncols, 0);

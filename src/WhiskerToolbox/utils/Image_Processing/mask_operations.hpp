@@ -37,7 +37,7 @@ std::vector<Point2D<float>> convert_mask_to_line(
 
     auto t3 = std::chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double> elapsed = t2 - t1;
+    std::chrono::duration<double> const elapsed = t2 - t1;
 
     return output_line;
 }
