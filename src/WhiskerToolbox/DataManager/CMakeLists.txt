@@ -15,6 +15,7 @@ add_library(DataManager SHARED
 
         Lines/Line_Data.hpp
         Lines/Line_Data.cpp
+        Lines/lines.hpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp
@@ -34,6 +35,7 @@ add_library(DataManager SHARED
         Masks/Mask_Data.hpp
         Masks/Mask_Data.cpp
         Masks/Mask_Data_Loader.hpp
+        Masks/masks.hpp
 
         AnalogTimeSeries/Analog_Time_Series.hpp
         AnalogTimeSeries/Analog_Time_Series.cpp
@@ -65,12 +67,14 @@ add_library(DataManager SHARED
         transforms/data_transforms.hpp
 
         loaders/binary_loaders.hpp
-        Masks/masks.hpp
-        Lines/lines.hpp
+        loaders/hdf5_loaders.hpp
+        loaders/hdf5_loaders.cpp
+
         LockState/LockState.hpp
         Observer/Observer_Data.hpp
         Observer/Observer_Data.cpp
         ImageSize/ImageSize.hpp
+
 )
 
 message(STATUS "NPY source dir:")

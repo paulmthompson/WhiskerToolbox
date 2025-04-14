@@ -11,6 +11,8 @@
 // Much appreciation to comments provided here for ragged array loading
 // https://github.com/BlueBrain/HighFive/issues/369#issuecomment-961133649
 
+namespace hdf5 {
+
 /**
  *
  *
@@ -103,16 +105,21 @@ std::vector<T> load_array(H5::DataSet & dataset) {
     return data;
 }
 
+struct HDF5LoadOptions {
+    std::string filepath;
+    std::string key;
+};
+
 template<typename T>
-std::vector<T> load_array(std::string const & filepath, std::string const & key) {
-    auto c_str = filepath.c_str();
+std::vector<T> load_array(HDF5LoadOptions const & opts) {
+    auto c_str = opts.filepath.c_str();
     H5::H5File file(c_str, H5F_ACC_RDONLY);
 
     for (int i = 0; i < file.getNumObjs(); i++) {
         std::cout << file.getObjnameByIdx(i) << std::endl;
     }
 
-    H5::DataSet dataset{file.openDataSet(key)};
+    H5::DataSet dataset{file.openDataSet(opts.key)};
 
     auto data = load_array<T>(dataset);
 
@@ -122,15 +129,15 @@ std::vector<T> load_array(std::string const & filepath, std::string const & key)
 }
 
 template<typename T>
-std::vector<std::vector<T>> load_ragged_array(std::string const & filepath, std::string const & key) {
-    auto c_str = filepath.c_str();
+std::vector<std::vector<T>> load_ragged_array(HDF5LoadOptions const & opts) {
+    auto c_str = opts.filepath.c_str();
     H5::H5File file(c_str, H5F_ACC_RDONLY);
 
     for (int i = 0; i < file.getNumObjs(); i++) {
         std::cout << file.getObjnameByIdx(i) << std::endl;
     }
 
-    H5::DataSet dataset{file.openDataSet(key)};
+    H5::DataSet dataset{file.openDataSet(opts.key)};
 
     auto data = load_ragged_array<T>(dataset);
 
@@ -139,5 +146,6 @@ std::vector<std::vector<T>> load_ragged_array(std::string const & filepath, std:
     return data;
 }
 
+} // hdf5
 
 #endif// HDF5_MASK_LOAD_HPP

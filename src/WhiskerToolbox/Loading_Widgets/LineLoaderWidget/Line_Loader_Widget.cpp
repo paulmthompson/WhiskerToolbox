@@ -3,8 +3,9 @@
 
 #include "ui_Line_Loader_Widget.h"
 
-#include "../../DataManager/DataManager.hpp"
-#include "../../DataManager/Lines/Line_Data.hpp"
+#include "DataManager/DataManager.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/loaders/hdf5_loaders.hpp"
 
 #include <QFileDialog>
 
@@ -94,9 +95,9 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
         line_key += "_" + line_suffix;
     }
 
-    auto frames = read_array_hdf5(filename, "frames");
-    auto y_coords = read_ragged_hdf5(filename, "x");
-    auto x_coords = read_ragged_hdf5(filename, "y");
+    auto frames = Loader::read_array_hdf5({filename,  "frames"});
+    auto y_coords = Loader::read_ragged_hdf5({filename, "x"});
+    auto x_coords = Loader::read_ragged_hdf5({filename, "y"});
 
     _data_manager->setData<LineData>(line_key);
 

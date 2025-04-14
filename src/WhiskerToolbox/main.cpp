@@ -6,11 +6,18 @@
 #include <qstylefactory.h>
 #include <QFile>
 #include <QPalette>
+#include <QSurfaceFormat>
 
 
 
 int main(int argc, char *argv[])
 {
+
+    //QSurfaceFormat format;
+    //format.setOption(QSurfaceFormat::DebugContext);
+    //format.setProfile(QSurfaceFormat::CoreProfile);
+    //format.setVersion(4, 1);
+    //QSurfaceFormat::setDefaultFormat(format);
 
     QApplication a(argc, argv);
 

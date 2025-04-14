@@ -3,8 +3,9 @@
 
 #include "ui_Mask_Loader_Widget.h"
 
-#include "../../DataManager/DataManager.hpp"
-#include "../../DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/DataManager.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/loaders/hdf5_loaders.hpp"
 
 #include <QFileDialog>
 
@@ -94,10 +95,10 @@ void Mask_Loader_Widget::_loadSingleHDF5Mask(std::string const & filename, std::
         mask_key += "_" + mask_suffix;
     }
 
-    auto frames = read_array_hdf5(filename, "frames");
-    auto probs = read_ragged_hdf5(filename, "probs");
-    auto y_coords = read_ragged_hdf5(filename, "heights");
-    auto x_coords = read_ragged_hdf5(filename, "widths");
+    auto frames = Loader::read_array_hdf5({filename,  "frames"});
+    auto probs = Loader::read_ragged_hdf5({filename, "probs"});
+    auto y_coords = Loader::read_ragged_hdf5({filename, "heights"});
+    auto x_coords = Loader::read_ragged_hdf5({filename, "widths"});
 
     _data_manager->setData<MaskData>(mask_key);
 

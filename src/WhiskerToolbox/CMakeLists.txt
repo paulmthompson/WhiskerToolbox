@@ -213,7 +213,6 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
-        Feature_Tree_Widget/Feature_Tree_Widget.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)

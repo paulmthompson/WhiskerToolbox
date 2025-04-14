@@ -238,10 +238,6 @@ private:
     std::filesystem::path _output_path;
 };
 
-std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key);
-
-std::vector<int> read_array_hdf5(std::string const & filepath, std::string const & key);
-
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
 
 

@@ -16,14 +16,10 @@
 #include "Media/Video_Data_Loader.hpp"
 #include "Points/Point_Data_Loader.hpp"
 
-#include "loaders/CSV_Loaders.hpp"
 #include "loaders/binary_loaders.hpp"
 #include "transforms/data_transforms.hpp"
 
 #include "TimeFrame.hpp"
-
-#include "utils/container.hpp"
-#include "utils/hdf5_mask_load.hpp"
 
 #include "nlohmann/json.hpp"
 #include "utils/string_manip.hpp"
@@ -58,16 +54,6 @@ void DataManager::setTimeFrame(std::string const & data_key, std::string const &
     }
 
     _time_frames[data_key] = time_key;
-}
-
-std::vector<std::vector<float>> read_ragged_hdf5(std::string const & filepath, std::string const & key) {
-    auto myvector = load_ragged_array<float>(filepath, key);
-    return myvector;
-}
-
-std::vector<int> read_array_hdf5(std::string const & filepath, std::string const & key) {
-    auto myvector = load_array<int>(filepath, key);
-    return myvector;
 }
 
 enum class DataType {

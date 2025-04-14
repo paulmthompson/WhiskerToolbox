@@ -4,9 +4,8 @@
 #include "DataManager.hpp"
 #include "ImageSize/ImageSize.hpp"
 #include "Masks/Mask_Data.hpp"
-#include "utils/hdf5_mask_load.hpp"// load_array, load_ragged_array
-
 #include "nlohmann/json.hpp"
+#include "loaders/hdf5_loaders.hpp"
 
 #include <memory>
 #include <string>
@@ -20,10 +19,10 @@ inline std::shared_ptr<MaskData> load_into_MaskData(std::string const & file_pat
     int const height = item.value("height", -1);
     int const width = item.value("width", -1);
 
-    auto frames = load_array<int>(file_path, frame_key);
-    auto probs = load_ragged_array<float>(file_path, prob_key);
-    auto y_coords = load_ragged_array<float>(file_path, y_key);
-    auto x_coords = load_ragged_array<float>(file_path, x_key);
+    auto frames = Loader::read_array_hdf5({file_path, frame_key});
+    auto probs = Loader::read_ragged_hdf5({file_path, prob_key});
+    auto y_coords = Loader::read_ragged_hdf5({file_path, y_key});
+    auto x_coords = Loader::read_ragged_hdf5({file_path, x_key});
 
     auto mask_data = std::make_shared<MaskData>();
     mask_data->setImageSize(ImageSize{.width = width, .height = height});
