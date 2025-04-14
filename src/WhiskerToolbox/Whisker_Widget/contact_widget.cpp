@@ -137,7 +137,10 @@ void Contact_Widget::updateFrame(int frame_id)
                                  _getQImageFormat()
                                  );
 
-        QRect const rect(pole_x - _bounding_box_width/2, pole_y - _bounding_box_width/2, _bounding_box_width, _bounding_box_width);
+        QRect const rect(static_cast<int>(pole_x) - _bounding_box_width/2,
+                         static_cast<int>(pole_y) - _bounding_box_width/2,
+                         _bounding_box_width,
+                         _bounding_box_width);
 
         auto cropped_image = unscaled_image.copy(rect);
 
@@ -155,7 +158,7 @@ void Contact_Widget::updateFrame(int frame_id)
 
     _updateContactWidgets(frame_id);
 
-    int const t1 = timer2.elapsed();
+    auto const t1 = timer2.elapsed();
 
     qDebug() << "Drawing 5 frames took " << t1;
 }

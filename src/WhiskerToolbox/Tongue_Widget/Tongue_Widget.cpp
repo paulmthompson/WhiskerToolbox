@@ -85,7 +85,7 @@ void Tongue_Widget::_loadImgTongueMasks(){
     if (dir_name.empty()) {
         return;
     }
-    auto dir_path = std::filesystem::path(dir_name);
+    //auto dir_path = std::filesystem::path(dir_name);
 
     auto mask_num = _data_manager->getKeys<MaskData>().size();
     auto mask_key = "Tongue_Mask" + std::to_string(mask_num);
