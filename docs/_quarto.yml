@@ -46,14 +46,21 @@ website:
     - title: "User Guide"
       style: "docked"
       contents:
-        - user_guide/index.qmd
-        - user_guide/JSON_loading.qmd
-        - user_guide/image_processing/contrast.qmd
-        - user_guide/image_processing/sharpening.qmd
-        - user_guide/image_processing/clahe.qmd
-        - user_guide/image_processing/bilateral_filter.qmd
-        - user_guide/behaviors/whisker.qmd
-        - user_guide/behaviors/tongue.qmd
+        - text: "Introduction"
+          href: user_guide/index.qmd
+        - section: "Data Loading"
+          contents:
+            - user_guide/JSON_loading.qmd
+        - section: "Image Processing"
+          contents:
+            - user_guide/image_processing/contrast.qmd
+            - user_guide/image_processing/sharpening.qmd
+            - user_guide/image_processing/clahe.qmd
+            - user_guide/image_processing/bilateral_filter.qmd
+        - section: "Behavioral Modules"
+          contents:
+            - user_guide/behaviors/whisker.qmd
+            - user_guide/behaviors/tongue.qmd
 
 
 format:
