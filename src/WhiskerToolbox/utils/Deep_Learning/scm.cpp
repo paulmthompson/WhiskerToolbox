@@ -1,7 +1,6 @@
 
 #include "scm.hpp"
 #include "utils/Image_Processing/mask_operations.hpp"
-#include "DataManager/Points/points.hpp"
 #include "DataManager/Lines/lines.hpp"
 
 #include "torch_helpers.hpp"
@@ -33,7 +32,8 @@ SCM::SCM()
     _memory_tensors = std::make_unique<memory_encoder_tensors>();
 }
 
-SCM::~SCM() {}
+// using forward declared unique pointer to memory_encoder_tensors. I need destructor in cpp file.
+SCM::~SCM() = default;
 
 void SCM::load_model()
 {

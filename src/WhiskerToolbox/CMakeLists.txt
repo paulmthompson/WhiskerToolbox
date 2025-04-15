@@ -145,9 +145,15 @@ set(PROJECT_SOURCES
         Feature_Tree_Widget/Feature_Tree_Widget.ui
 
         utils/Image_Processing/skeletonize.hpp
+        utils/Image_Processing/skeletonize.cpp
         utils/Image_Processing/order_line.hpp
+        utils/Image_Processing/order_line.cpp
         utils/Image_Processing/mask_operations.hpp
+        utils/Image_Processing/mask_operations.cpp
         utils/Image_Processing/connected_component.hpp
+        utils/Image_Processing/connected_component.cpp
+        utils/Image_Processing/simplify_line.cpp
+        utils/Image_Processing/simplify_line.hpp
 
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp
