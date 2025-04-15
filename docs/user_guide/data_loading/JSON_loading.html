@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Bilateral Filter – Neuralyzer</title>
+<title>JSON_loading – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +19,40 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -149,7 +183,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/image_processing/contrast.html">Image Processing</a></li><li class="breadcrumb-item"><a href="../../user_guide/image_processing/bilateral_filter.html">Bilateral Filter</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_loading/JSON_loading.html">Data Loading</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_loading/JSON_loading.html">JSON_loading</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -178,7 +212,7 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_loading/JSON_loading.html" class="sidebar-item-text sidebar-link">
+  <a href="../../user_guide/data_loading/JSON_loading.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">JSON_loading</span></a>
   </div>
 </li>
@@ -249,7 +283,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/image_processing/bilateral_filter.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../user_guide/image_processing/bilateral_filter.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Bilateral Filter</span></a>
   </div>
 </li>
@@ -385,16 +419,17 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#references" id="toc-references" class="nav-link active" data-scroll-target="#references">References</a></li>
+  <li><a href="#digital-event-series" id="toc-digital-event-series" class="nav-link active" data-scroll-target="#digital-event-series">Digital Event Series</a></li>
+  <li><a href="#digital-interval-series" id="toc-digital-interval-series" class="nav-link" data-scroll-target="#digital-interval-series">Digital Interval Series</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/image_processing/contrast.html">Image Processing</a></li><li class="breadcrumb-item"><a href="../../user_guide/image_processing/bilateral_filter.html">Bilateral Filter</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_loading/JSON_loading.html">Data Loading</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_loading/JSON_loading.html">JSON_loading</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Bilateral Filter</h1>
+<h1 class="title">JSON_loading</h1>
 </div>
 
 
@@ -411,13 +446,165 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="references" class="level2">
-<h2 class="anchored" data-anchor-id="references">References</h2>
-<p><a href="https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html" class="uri">https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html</a></p>
-<p><a href="https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed" class="uri">https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed</a></p>
-<p><a href="https://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html" class="uri">https://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html</a></p>
+<section id="digital-event-series" class="level3">
+<h3 class="anchored" data-anchor-id="digital-event-series">Digital Event Series</h3>
+<p>Digital event series are data represented by an ordered sequence of timestamps. Examples include spike timestamps from extracellular recordings or behavioral events (e.g.&nbsp;go cue, reward given).</p>
+</section>
+<section id="digital-interval-series" class="level3">
+<h3 class="anchored" data-anchor-id="digital-interval-series">Digital Interval Series</h3>
+<section id="bit-binary-representation" class="level4">
+<h4 class="anchored" data-anchor-id="bit-binary-representation">16 bit binary representation</h4>
+<div class="sourceCode" id="cb1"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"ttl.bin"</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"digital_interval"</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"laser"</span><span class="fu">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"uint16"</span><span class="fu">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"channel"</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span> <span class="er">//</span> <span class="er">REQUIRED</span><span class="fu">,</span> <span class="er">bit</span> <span class="er">(0</span> <span class="er">based)</span> <span class="er">for</span> <span class="er">channel</span> <span class="er">of</span> <span class="er">interest</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"transition"</span><span class="fu">:</span> <span class="st">"rising"</span><span class="fu">,</span> <span class="er">//optional</span><span class="fu">,</span> </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"clock"</span><span class="fu">:</span> <span class="st">"master"</span><span class="fu">,</span> <span class="er">//optional</span><span class="fu">,</span> <span class="er">clock</span> <span class="er">signal</span> <span class="er">to</span> <span class="er">assign</span> <span class="er">to</span> <span class="er">these</span> <span class="er">events</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"header_size"</span><span class="fu">:</span> <span class="dv">0</span> <span class="er">//optional</span><span class="fu">,</span> <span class="er">number</span> <span class="er">of</span> <span class="er">bytes</span> <span class="er">to</span> <span class="er">skip</span> <span class="er">at</span> <span class="er">start</span> <span class="er">of</span> <span class="er">file</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Element</th>
+<th>Description</th>
+<th>Required?</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>filepath</td>
+<td>Path to binary file, relative to JSON file.</td>
+<td>Yes</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>data_type</td>
+<td></td>
+<td>Yes</td>
+<td>string</td>
+<td>“digital_interval”</td>
+</tr>
+<tr class="odd">
+<td>name</td>
+<td>Name of the data once it is loaded into Neuralyzer</td>
+<td>Yes</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>format</td>
+<td></td>
+<td>Yes</td>
+<td>string</td>
+<td>“uint16”</td>
+</tr>
+<tr class="odd">
+<td>channel</td>
+<td>Specifies which bit in binary representation should be extracted as digital interval</td>
+<td>No</td>
+<td>number</td>
+<td>Default is 0. Valid values range from 0-15</td>
+</tr>
+<tr class="even">
+<td>Transition</td>
+<td>“rising” will count a TTL interval as one extending from low-to-high transitions to high-to-low transitions. “falling” will count a TTL interval as one extending from high-to-low to low-to-high transitions.</td>
+<td>No</td>
+<td>string</td>
+<td>Default is “rising”. Valid values are “rising” or “falling”.</td>
+</tr>
+<tr class="odd">
+<td>clock</td>
+<td>Clock signal to associate with this digital interval</td>
+<td>No</td>
+<td>string</td>
+<td>The clock string must match the name of a loaded clock signal.</td>
+</tr>
+<tr class="even">
+<td>header_size</td>
+<td>This many bytes will be skipped at the beginning of the file before reading the rest.</td>
+<td>No</td>
+<td>number</td>
+<td>Default is 0. Accepted values range from 0 to size of file in bytes.</td>
+</tr>
+</tbody>
+</table>
+<section id="section" class="level5">
+<h5 class="anchored" data-anchor-id="section"></h5>
+</section>
+</section>
+<section id="csv" class="level4">
+<h4 class="anchored" data-anchor-id="csv">CSV</h4>
+<div class="sourceCode" id="cb2"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"ttl.bin"</span><span class="fu">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"digital_interval"</span><span class="fu">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"laser"</span><span class="fu">,</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv"</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Element</th>
+<th>Description</th>
+<th>Required?</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>filepath</td>
+<td>Path to csv file, relative to JSON file.</td>
+<td>Yes</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>data_type</td>
+<td></td>
+<td>Yes</td>
+<td>string</td>
+<td>“digital_interval”</td>
+</tr>
+<tr class="odd">
+<td>name</td>
+<td>Name of the data once it is loaded into Neuralyzer</td>
+<td>Yes</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>format</td>
+<td></td>
+<td>Yes</td>
+<td>string</td>
+<td>“csv”</td>
+</tr>
+</tbody>
+</table>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

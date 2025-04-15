@@ -50,13 +50,36 @@ website:
           href: user_guide/index.qmd
         - section: "Data Loading"
           contents:
-            - user_guide/JSON_loading.qmd
+            - user_guide/data_loading/JSON_loading.qmd
+            - user_guide/data_loading/Point_Loading.qmd
+            - user_guide/data_loading/Mask_Loading.qmd
+            - user_guide/data_loading/Video_Loading.qmd
+            - user_guide/data_loading/Line_Loading.qmd
+            - user_guide/data_loading/Tensor_Loading.qmd
         - section: "Image Processing"
           contents:
             - user_guide/image_processing/contrast.qmd
+            - user_guide/image_processing/gamma.qmd
             - user_guide/image_processing/sharpening.qmd
             - user_guide/image_processing/clahe.qmd
             - user_guide/image_processing/bilateral_filter.qmd
+        - section: "Data Viewer"
+          contents:
+            - user_guide/data_viewer/overview.qmd
+        - section: "Media Viewer"
+          contents:
+            - user_guide/media_viewer/overview.qmd
+        - section: "Data Manager"
+          contents:
+            - user_guide/data_manager/overview.qmd
+        - section: "Machine Learning"
+          contents:
+            - user_guide/machine_learning/ML_intro.qmd
+            - user_guide/machine_learning/Naive_Bayes.qmd
+            - user_guide/machine_learning/Random_Forest.qmd
+        - section: "Export"
+          contents:
+            - user_guide/export/video_export.qmd
         - section: "Behavioral Modules"
           contents:
             - user_guide/behaviors/whisker.qmd
