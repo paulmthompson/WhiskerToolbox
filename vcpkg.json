@@ -3,6 +3,9 @@
     "version-string": "0.0.1",
     "dependencies": [
         {
+            "name": "armadillo"
+        },
+        {
             "name": "boost-circular-buffer"
         },
         {
@@ -16,41 +19,78 @@
             ]
         },
         {
+            "name": "glm"
+        },
+        {
             "name": "hdf5",
             "features": ["cpp"]
         },
         {
             "name": "highfive"
         },
-        {   "name": "nlohmann-json"
-        },
         {
-            "name": "opencv4"
+            "name": "lapack"
         },
         {
             "name": "mlpack",
             "version>=": "4.4.0"
         },
-        {
-            "name": "armadillo"
-        },
-        {
-            "name": "lapack"
+        {   "name": "nlohmann-json"
         },
         {
             "name": "openblas"
         },
         {
-            "name": "glm"
+            "name": "opencv4"
         }
+
     ],
     "builtin-baseline": "3508985146f1b1d248c67ead13f8f54be5b4f5da",
     "$comment": "hash corresponds to 2024.08.23",
     "overrides": [
-            {
-                "name": "ffmpeg",
-                "version": "6.1.1#9"
-            }
+        {
+            "name": "armadillo",
+            "version": "12.8.4"
+        },
+        {
+            "name": "boost-circular-buffer",
+            "version": "1.85.0"
+        },
+        {
+            "name": "ffmpeg",
+            "version": "6.1.1#9"
+        },
+        {
+            "name": "glm",
+            "version": "1.0.1#3"
+        },
+        {
+            "name": "hdf5",
+            "version": "1.14.4.3"
+        },
+        {
+            "name": "highfive",
+            "version": "2.10.0"
+        },
+        {
+            "name": "lapack",
+            "version": "2023-06-10"
+        },
+        {
+            "name": "mlpack",
+            "version": "4.4.0"
+        },
+        {   "name": "nlohmann-json",
+            "version": "3.11.3"
+        },
+        {
+            "name": "openblas",
+            "version": "0.3.27"
+        },
+        {
+            "name": "opencv4",
+            "version": "4.8.0"
+        }
         ]
 
 }
