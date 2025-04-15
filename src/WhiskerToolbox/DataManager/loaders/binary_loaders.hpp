@@ -144,7 +144,7 @@ std::vector<int> extractDigitalData(std::vector<T> const & data, int channel) {
     return digital_data;
 }
 
-std::vector<float> extractEvents(std::vector<int> const & digital_data, std::string const & transition) {
+inline std::vector<float> extractEvents(std::vector<int> const & digital_data, std::string const & transition) {
 
     // Check if transition is valid
     if (transition != "rising" && transition != "falling") {
@@ -163,7 +163,7 @@ std::vector<float> extractEvents(std::vector<int> const & digital_data, std::str
     return events;
 }
 
-std::vector<std::pair<float, float>> extractIntervals(std::vector<int> const & digital_data, std::string const & transition) {
+inline std::vector<std::pair<float, float>> extractIntervals(std::vector<int> const & digital_data, std::string const & transition) {
 
     // Check if transition is valid
     if (transition != "rising" && transition != "falling") {

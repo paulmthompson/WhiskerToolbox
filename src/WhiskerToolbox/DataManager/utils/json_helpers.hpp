@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-bool requiredFieldsExist(
+inline bool requiredFieldsExist(
         nlohmann::basic_json<> const & item,
         std::vector<std::string> const & requiredFields,
         std::string const & base_error_message) {

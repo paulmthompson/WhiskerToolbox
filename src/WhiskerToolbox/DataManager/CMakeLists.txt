@@ -45,12 +45,13 @@ add_library(DataManager SHARED
 
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
+        DigitalTimeSeries/Digital_Interval_Series_Loader.hpp
         DigitalTimeSeries/interval_data.hpp
-        DigitalTimeSeries/Digital_Event_Series_Loader.hpp
 
         DigitalTimeSeries/Digital_Event_Series.hpp
         DigitalTimeSeries/Digital_Event_Series.cpp
-        DigitalTimeSeries/Digital_Interval_Series_Loader.hpp
+        DigitalTimeSeries/Digital_Event_Series_Loader.cpp
+        DigitalTimeSeries/Digital_Event_Series_Loader.hpp
 
         Tensors/Tensor_Data.hpp
         Tensors/Tensor_Data.cpp
