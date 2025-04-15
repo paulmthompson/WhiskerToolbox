@@ -30,6 +30,7 @@ add_library(DataManager SHARED
         Points/Point_Data.hpp
         Points/Point_Data.cpp
         Points/Point_Data_Loader.hpp
+        Points/Point_Data_Loader.cpp
         Points/points.hpp
 
         Masks/Mask_Data.hpp
