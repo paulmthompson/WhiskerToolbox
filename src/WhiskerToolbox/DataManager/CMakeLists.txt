@@ -35,6 +35,7 @@ add_library(DataManager SHARED
         Masks/Mask_Data.hpp
         Masks/Mask_Data.cpp
         Masks/Mask_Data_Loader.hpp
+        Masks/Mask_Data_Loader.cpp
         Masks/masks.hpp
 
         AnalogTimeSeries/Analog_Time_Series.hpp
@@ -74,7 +75,6 @@ add_library(DataManager SHARED
         Observer/Observer_Data.hpp
         Observer/Observer_Data.cpp
         ImageSize/ImageSize.hpp
-
 )
 
 message(STATUS "NPY source dir:")
