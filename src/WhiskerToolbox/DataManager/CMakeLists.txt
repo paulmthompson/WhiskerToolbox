@@ -42,10 +42,12 @@ add_library(DataManager SHARED
         AnalogTimeSeries/Analog_Time_Series.hpp
         AnalogTimeSeries/Analog_Time_Series.cpp
         AnalogTimeSeries/Analog_Time_Series_Loader.hpp
+        AnalogTimeSeries/Analog_Time_Series_Loader.cpp
 
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
         DigitalTimeSeries/Digital_Interval_Series_Loader.hpp
+        DigitalTimeSeries/Digital_Interval_Series_Loader.cpp
         DigitalTimeSeries/interval_data.hpp
 
         DigitalTimeSeries/Digital_Event_Series.hpp
