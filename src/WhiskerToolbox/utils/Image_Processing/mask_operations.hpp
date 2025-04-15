@@ -3,6 +3,7 @@
 
 #include "DataManager/Points/points.hpp"
 
+#include <cstdint>
 #include <vector>
 
 std::vector<Point2D<float>> convert_mask_to_line(
