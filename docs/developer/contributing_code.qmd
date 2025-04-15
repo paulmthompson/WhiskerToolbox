@@ -3,3 +3,26 @@ title: "contributing_code"
 format: html
 ---
 
+## Design Guidelines
+
+-   Header files should use the hpp suffix, and source files should use the cpp suffix
+-   Includes should follow the “Lakos” include order, that is
+    -   The prototype/interface header for this implementation (ie, the .h/.hh file that corresponds to this .cpp/.cc file).
+    -   Other headers from the same project, as needed.
+    -   Headers from other non-standard, non-system libraries (for example, Qt, Eigen, etc).
+    -   Headers from other "almost-standard" libraries (for example, Boost)
+    -   Standard C++ headers (for example, iostream, functional, etc.)
+    -   Standard C headers (for example, cstdint, dirent.h, etc.)
+-   Prefer returning std::optional as a mechanism of error handling
+-   This is a scientific computing library. Performance is critical. Helping the user to understand where errors have occurred is helpful, but keeping the program alive after an error is not critical. Functions should fail gracefully and provide informative error messages when they do. Logging should use spdlog.
+-   Prefer free functions as much as possible. Ideally, class member functions will be simple and pass member variables to free functions.
+-   Prefer standard library algorithms where possible
+-   Public member functions and free function declarations should include doxygen comments above them. Private member function definitions should include doxygen comments above them.
+-   Prefer forward declarations in header files
+-   This is a C++20 project. Prefer standard library algorithms and std::ranges where possible.
+
+## Testing
+
+## Further Reading and References
+
+### Testing

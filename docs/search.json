@@ -1,5 +1,25 @@
 [
   {
+    "objectID": "user_guide/JSON_loading.html",
+    "href": "user_guide/JSON_loading.html",
+    "title": "JSON_loading",
+    "section": "",
+    "text": "Digital Event Series\nDigital event series are data represented by an ordered sequence of timestamps. Examples include spike timestamps from extracellular recordings or behavioral events (e.g. go cue, reward given).\n\n\nDigital Interval Series\n\n16 bit binary representation\n{\n  \"filepath\": \"ttl.bin\",\n  \"data_type\": \"digital_interval\",\n  \"name\": \"laser\",\n  \"format\": \"uint16\",\n  \"channel\": 2, // REQUIRED, bit (0 based) for channel of interest\n  \"transition\": \"rising\", //optional, \n  \"clock\": \"master\", //optional, clock signal to assign to these events\n  \"header_size\": 0 //optional, number of bytes to skip at start of file\n}\n\n\n\n\n\n\n\n\n\n\nElement\nDescription\nRequired?\nType\nNotes\n\n\n\n\nfilepath\nPath to binary file, relative to JSON file.\nYes\nstring\n\n\n\ndata_type\n\nYes\nstring\n“digital_interval”\n\n\nname\nName of the data once it is loaded into Neuralyzer\nYes\nstring\n\n\n\nformat\n\nYes\nstring\n“uint16”\n\n\nchannel\nSpecifies which bit in binary representation should be extracted as digital interval\nNo\nnumber\nDefault is 0. Valid values range from 0-15\n\n\nTransition\n“rising” will count a TTL interval as one extending from low-to-high transitions to high-to-low transitions. “falling” will count a TTL interval as one extending from high-to-low to low-to-high transitions.\nNo\nstring\nDefault is “rising”. Valid values are “rising” or “falling”.\n\n\nclock\nClock signal to associate with this digital interval\nNo\nstring\nThe clock string must match the name of a loaded clock signal.\n\n\nheader_size\nThis many bytes will be skipped at the beginning of the file before reading the rest.\nNo\nnumber\nDefault is 0. Accepted values range from 0 to size of file in bytes.\n\n\n\n\n\n\n\n\nCSV\n\n{\n  \"filepath\": \"ttl.bin\",\n  \"data_type\": \"digital_interval\",\n  \"name\": \"laser\",\n  \"format\": \"csv\"\n\n}\n\n\n\n\n\n\n\n\n\n\nElement\nDescription\nRequired?\nType\nNotes\n\n\n\n\nfilepath\nPath to csv file, relative to JSON file.\nYes\nstring\n\n\n\ndata_type\n\nYes\nstring\n“digital_interval”\n\n\nname\nName of the data once it is loaded into Neuralyzer\nYes\nstring\n\n\n\nformat\n\nYes\nstring\n“csv”",
+    "crumbs": [
+      "JSON_loading"
+    ]
+  },
+  {
+    "objectID": "user_guide/behaviors/whisker.html",
+    "href": "user_guide/behaviors/whisker.html",
+    "title": "Whisker Tracking",
+    "section": "",
+    "text": "Load Whiskers\n\nSupported Whisker File Formats\n\n\n\n\n\n\nFile Format\nDescription\n\n\n\n\nJanelia\nBinary format output by janelia whisker tracker\n\n\nCSV\nEach row represents a 2d point (x,y) along the whisker. The points should be arranged from follicle to tip\n\n\nHDF5\n\n\n\n\n\n\nLoad Keypoints\n\n\nTrace Button\n\n\nLength Threshold\nWhisker segments below the length threshold will be discarded. Length threshold is in units of pixels\n\n\nWhisker Pad Selection\nThe whisker pad location in pixel coordinates. Candidate whiskers are ordered so that the base of the whisker is nearest the whisker pad. Whiskers with bases beyond some distance from the whisker pad can also be discarded.\n\n\nHead Orientation\nThe head orientation is the direction that the animal’s nose is pointing in the image. The head orientation is used to determine the identity of the whiskers in the frame (most posterior whisker is 0, next most posterior is 1, etc).\n\n\nNumber of Whiskers Selection\n\n\nExport Image and CSV Button\n\n\nFace Mask\nThe face mask corresponds to the part of the image belonging to the face. This can be used in several ways\n\nWhisker bases can be extended to always connect to the face mask. This eliminates jitter that can occur because of fur\nWhisker bases can be clipped to ensure that the whisker does not enter the face mask.\n\n\n\nJanelia Settings\n\n\nContact Detection",
+    "crumbs": [
+      "Whisker Tracking"
+    ]
+  },
+  {
     "objectID": "labeling/mask.html",
     "href": "labeling/mask.html",
     "title": "Creating Mask Labels",
@@ -42,46 +62,24 @@
     "text": "How Documentation is Organized\nThis documentation will follow the quadrants of the Diátaxis documentation authoring framework\n\nTutorials\nHow-to Guides\nConcepts\nReference Guides"
   },
   {
-    "objectID": "image_processing/contrast.html",
-    "href": "image_processing/contrast.html",
-    "title": "Contrast and Brightness Adjustment",
+    "objectID": "developer/data_manager.html",
+    "href": "developer/data_manager.html",
+    "title": "Data Manager",
     "section": "",
-    "text": "These two filters are implemented with a single linear transform taking parameters “alpha” (\\(\\alpha\\)) and “beta” (\\(\\beta\\)). Pixel values are multiplied by \\(\\alpha\\) to adjust contrast, then have \\(\\beta\\) added to adjust brightness: \\[\ng(x) = \\alpha f(x) + \\beta\n\\] In effect the magnitude of \\(\\alpha\\) corresponds to the amount of contrast and the magnitude of \\(\\beta\\) corresponds to the amount of brightness."
+    "text": "A Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The PointData structure can hold multiple points per unit time.\n\n\n\nExamples of Point Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nA Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is ordered, meaning that each point is positioned relative to its neighbors. The LineData structure can hold multiple lines per unit time.\n\n\n\nExamples of Line Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nA mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not ordered. These would correspond to something like a binary segmentation mask over an image. The MaskData structure can hold multiple masks per unit time.\n\n\n\nExamples of Mask Data\n\n\n\n\nBinary Semantic Segmentation Labels\n\n\n\n\n\n\n\n\n\n\n\n\nTensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.\n\n\n\nExamples of Tensor Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nAn analog time series has values that can vary continuously\n\n\n\nExamples of Analog Time Series Data\n\n\n\n\nVoltage traces from electrode recordings\n\n\nFluorescence intensity traces from Calcium imaging\n\n\n\n\n\n\n\n\n\nA digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology\n\n\n\nExamples of Event Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExamples of Interval Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMedia is a sequence of images.\n\n\n\n\n\nExamples of Image Data\n\n\n\n\nImage sequence from two photon calcium imaging experiment\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExamples of Video Data\n\n\n\n\nMP4 video from high speed scientific camera of behavior",
+    "crumbs": [
+      "Data Manager"
+    ]
   },
   {
-    "objectID": "image_processing/bilateral_filter.html",
-    "href": "image_processing/bilateral_filter.html",
-    "title": "Bilateral Filter",
+    "objectID": "developer/data_manager.html#data-types",
+    "href": "developer/data_manager.html#data-types",
+    "title": "Data Manager",
     "section": "",
-    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html"
-  },
-  {
-    "objectID": "image_processing/bilateral_filter.html#references",
-    "href": "image_processing/bilateral_filter.html#references",
-    "title": "Bilateral Filter",
-    "section": "",
-    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html"
-  },
-  {
-    "objectID": "behaviors/tongue.html",
-    "href": "behaviors/tongue.html",
-    "title": "Tongue Tracking",
-    "section": "",
-    "text": "The Tongue Tracking widget deals with operations related to the tongue."
-  },
-  {
-    "objectID": "behaviors/tongue.html#loading",
-    "href": "behaviors/tongue.html#loading",
-    "title": "Tongue Tracking",
-    "section": "Loading",
-    "text": "Loading\nTongue masks can be loaded through the sparse HDF5 format or binary images (where white is part of the mask, black is not).\nJaw keypoint tracking can also be loaded through CSV format. The first column should indicate frame number, the next indicating \\(x\\) position and the next \\(y\\) position."
-  },
-  {
-    "objectID": "behaviors/tongue.html#grabcut-tool",
-    "href": "behaviors/tongue.html#grabcut-tool",
-    "title": "Tongue Tracking",
-    "section": "GrabCut Tool",
-    "text": "GrabCut Tool\nDocumentation on the GrabCut tool can be found here."
+    "text": "A Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The PointData structure can hold multiple points per unit time.\n\n\n\nExamples of Point Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nA Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is ordered, meaning that each point is positioned relative to its neighbors. The LineData structure can hold multiple lines per unit time.\n\n\n\nExamples of Line Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nA mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not ordered. These would correspond to something like a binary segmentation mask over an image. The MaskData structure can hold multiple masks per unit time.\n\n\n\nExamples of Mask Data\n\n\n\n\nBinary Semantic Segmentation Labels\n\n\n\n\n\n\n\n\n\n\n\n\nTensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.\n\n\n\nExamples of Tensor Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nAn analog time series has values that can vary continuously\n\n\n\nExamples of Analog Time Series Data\n\n\n\n\nVoltage traces from electrode recordings\n\n\nFluorescence intensity traces from Calcium imaging\n\n\n\n\n\n\n\n\n\nA digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology\n\n\n\nExamples of Event Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExamples of Interval Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMedia is a sequence of images.\n\n\n\n\n\nExamples of Image Data\n\n\n\n\nImage sequence from two photon calcium imaging experiment\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExamples of Video Data\n\n\n\n\nMP4 video from high speed scientific camera of behavior",
+    "crumbs": [
+      "Data Manager"
+    ]
   },
   {
     "objectID": "about.html",
@@ -91,10 +89,113 @@
     "text": "About this site"
   },
   {
-    "objectID": "behaviors/whisker.html",
-    "href": "behaviors/whisker.html",
-    "title": "Whisker Tracking",
+    "objectID": "developer/contributing_code.html",
+    "href": "developer/contributing_code.html",
+    "title": "contributing_code",
     "section": "",
-    "text": "Load Whiskers\n\nSupported Whisker File Formats\n\n\n\n\n\n\nFile Format\nDescription\n\n\n\n\nJanelia\nBinary format output by janelia whisker tracker\n\n\nCSV\nEach row represents a 2d point (x,y) along the whisker. The points should be arranged from follicle to tip\n\n\nHDF5\n\n\n\n\n\n\nLoad Keypoints\n\n\nTrace Button\n\n\nLength Threshold\nWhisker segments below the length threshold will be discarded. Length threshold is in units of pixels\n\n\nWhisker Pad Selection\nThe whisker pad location in pixel coordinates. Candidate whiskers are ordered so that the base of the whisker is nearest the whisker pad. Whiskers with bases beyond some distance from the whisker pad can also be discarded.\n\n\nHead Orientation\nThe head orientation is the direction that the animal’s nose is pointing in the image. The head orientation is used to determine the identity of the whiskers in the frame (most posterior whisker is 0, next most posterior is 1, etc).\n\n\nNumber of Whiskers Selection\n\n\nExport Image and CSV Button\n\n\nFace Mask\nThe face mask corresponds to the part of the image belonging to the face. This can be used in several ways\n\nWhisker bases can be extended to always connect to the face mask. This eliminates jitter that can occur because of fur\nWhisker bases can be clipped to ensure that the whisker does not enter the face mask.\n\n\n\nJanelia Settings\n\n\nContact Detection"
+    "text": "Header files should use the hpp suffix, and source files should use the cpp suffix\nIncludes should follow the “Lakos” include order, that is\n\nThe prototype/interface header for this implementation (ie, the .h/.hh file that corresponds to this .cpp/.cc file).\nOther headers from the same project, as needed.\nHeaders from other non-standard, non-system libraries (for example, Qt, Eigen, etc).\nHeaders from other “almost-standard” libraries (for example, Boost)\nStandard C++ headers (for example, iostream, functional, etc.)\nStandard C headers (for example, cstdint, dirent.h, etc.)\n\nPrefer returning std::optional as a mechanism of error handling\nThis is a scientific computing library. Performance is critical. Helping the user to understand where errors have occurred is helpful, but keeping the program alive after an error is not critical. Functions should fail gracefully and provide informative error messages when they do. Logging should use spdlog.\nPrefer free functions as much as possible. Ideally, class member functions will be simple and pass member variables to free functions.\nPrefer standard library algorithms where possible\nPublic member functions and free function declarations should include doxygen comments above them. Private member function definitions should include doxygen comments above them.\nPrefer forward declarations in header files\nThis is a C++20 project. Prefer standard library algorithms and std::ranges where possible.",
+    "crumbs": [
+      "contributing_code"
+    ]
+  },
+  {
+    "objectID": "developer/contributing_code.html#design-guidelines",
+    "href": "developer/contributing_code.html#design-guidelines",
+    "title": "contributing_code",
+    "section": "",
+    "text": "Header files should use the hpp suffix, and source files should use the cpp suffix\nIncludes should follow the “Lakos” include order, that is\n\nThe prototype/interface header for this implementation (ie, the .h/.hh file that corresponds to this .cpp/.cc file).\nOther headers from the same project, as needed.\nHeaders from other non-standard, non-system libraries (for example, Qt, Eigen, etc).\nHeaders from other “almost-standard” libraries (for example, Boost)\nStandard C++ headers (for example, iostream, functional, etc.)\nStandard C headers (for example, cstdint, dirent.h, etc.)\n\nPrefer returning std::optional as a mechanism of error handling\nThis is a scientific computing library. Performance is critical. Helping the user to understand where errors have occurred is helpful, but keeping the program alive after an error is not critical. Functions should fail gracefully and provide informative error messages when they do. Logging should use spdlog.\nPrefer free functions as much as possible. Ideally, class member functions will be simple and pass member variables to free functions.\nPrefer standard library algorithms where possible\nPublic member functions and free function declarations should include doxygen comments above them. Private member function definitions should include doxygen comments above them.\nPrefer forward declarations in header files\nThis is a C++20 project. Prefer standard library algorithms and std::ranges where possible.",
+    "crumbs": [
+      "contributing_code"
+    ]
+  },
+  {
+    "objectID": "developer/contributing_code.html#testing",
+    "href": "developer/contributing_code.html#testing",
+    "title": "contributing_code",
+    "section": "Testing",
+    "text": "Testing",
+    "crumbs": [
+      "contributing_code"
+    ]
+  },
+  {
+    "objectID": "developer/contributing_code.html#further-reading-and-references",
+    "href": "developer/contributing_code.html#further-reading-and-references",
+    "title": "contributing_code",
+    "section": "Further Reading and References",
+    "text": "Further Reading and References\n\nTesting",
+    "crumbs": [
+      "contributing_code"
+    ]
+  },
+  {
+    "objectID": "user_guide/behaviors/tongue.html",
+    "href": "user_guide/behaviors/tongue.html",
+    "title": "Tongue Tracking",
+    "section": "",
+    "text": "The Tongue Tracking widget deals with operations related to the tongue.",
+    "crumbs": [
+      "Tongue Tracking"
+    ]
+  },
+  {
+    "objectID": "user_guide/behaviors/tongue.html#loading",
+    "href": "user_guide/behaviors/tongue.html#loading",
+    "title": "Tongue Tracking",
+    "section": "Loading",
+    "text": "Loading\nTongue masks can be loaded through the sparse HDF5 format or binary images (where white is part of the mask, black is not).\nJaw keypoint tracking can also be loaded through CSV format. The first column should indicate frame number, the next indicating \\(x\\) position and the next \\(y\\) position.",
+    "crumbs": [
+      "Tongue Tracking"
+    ]
+  },
+  {
+    "objectID": "user_guide/behaviors/tongue.html#grabcut-tool",
+    "href": "user_guide/behaviors/tongue.html#grabcut-tool",
+    "title": "Tongue Tracking",
+    "section": "GrabCut Tool",
+    "text": "GrabCut Tool\nDocumentation on the GrabCut tool can be found here.",
+    "crumbs": [
+      "Tongue Tracking"
+    ]
+  },
+  {
+    "objectID": "user_guide/image_processing/bilateral_filter.html",
+    "href": "user_guide/image_processing/bilateral_filter.html",
+    "title": "Bilateral Filter",
+    "section": "",
+    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html",
+    "crumbs": [
+      "Bilateral Filter"
+    ]
+  },
+  {
+    "objectID": "user_guide/image_processing/bilateral_filter.html#references",
+    "href": "user_guide/image_processing/bilateral_filter.html#references",
+    "title": "Bilateral Filter",
+    "section": "",
+    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html",
+    "crumbs": [
+      "Bilateral Filter"
+    ]
+  },
+  {
+    "objectID": "user_guide/image_processing/contrast.html",
+    "href": "user_guide/image_processing/contrast.html",
+    "title": "Contrast and Brightness Adjustment",
+    "section": "",
+    "text": "These two filters are implemented with a single linear transform taking parameters “alpha” (\\(\\alpha\\)) and “beta” (\\(\\beta\\)). Pixel values are multiplied by \\(\\alpha\\) to adjust contrast, then have \\(\\beta\\) added to adjust brightness: \\[\ng(x) = \\alpha f(x) + \\beta\n\\] In effect the magnitude of \\(\\alpha\\) corresponds to the amount of contrast and the magnitude of \\(\\beta\\) corresponds to the amount of brightness.",
+    "crumbs": [
+      "Contrast and Brightness Adjustment"
+    ]
+  },
+  {
+    "objectID": "user_guide/index.html",
+    "href": "user_guide/index.html",
+    "title": "User Guide",
+    "section": "",
+    "text": "This is the user guide for neuralyzer",
+    "crumbs": [
+      "User Guide"
+    ]
   }
 ]

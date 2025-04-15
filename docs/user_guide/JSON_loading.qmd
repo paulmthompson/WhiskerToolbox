@@ -1,0 +1,58 @@
+---
+title: "JSON_loading"
+format: html
+---
+
+### Digital Event Series
+
+Digital event series are data represented by an ordered sequence of timestamps. Examples include spike timestamps from extracellular recordings or behavioral events (e.g. go cue, reward given).
+
+### Digital Interval Series
+
+#### 16 bit binary representation
+
+``` json
+{
+  "filepath": "ttl.bin",
+  "data_type": "digital_interval",
+  "name": "laser",
+  "format": "uint16",
+  "channel": 2, // REQUIRED, bit (0 based) for channel of interest
+  "transition": "rising", //optional, 
+  "clock": "master", //optional, clock signal to assign to these events
+  "header_size": 0 //optional, number of bytes to skip at start of file
+}
+```
+
+| Element | Description | Required? | Type | Notes |
+|----|----|----|----|----|
+| filepath | Path to binary file, relative to JSON file. | Yes | string |  |
+| data_type |  | Yes | string | "digital_interval" |
+| name | Name of the data once it is loaded into Neuralyzer | Yes | string |  |
+| format |  | Yes | string | "uint16" |
+| channel | Specifies which bit in binary representation should be extracted as digital interval | No | number | Default is 0. Valid values range from 0-15 |
+| Transition | "rising" will count a TTL interval as one extending from low-to-high transitions to high-to-low transitions. "falling" will count a TTL interval as one extending from high-to-low to low-to-high transitions. | No | string | Default is "rising". Valid values are "rising" or "falling". |
+| clock | Clock signal to associate with this digital interval | No | string | The clock string must match the name of a loaded clock signal. |
+| header_size | This many bytes will be skipped at the beginning of the file before reading the rest. | No | number | Default is 0. Accepted values range from 0 to size of file in bytes. |
+
+##### 
+
+#### CSV
+
+``` json
+
+{
+  "filepath": "ttl.bin",
+  "data_type": "digital_interval",
+  "name": "laser",
+  "format": "csv"
+
+}
+```
+
+| Element | Description | Required? | Type | Notes |
+|----|----|----|----|----|
+| filepath | Path to csv file, relative to JSON file. | Yes | string |  |
+| data_type |  | Yes | string | "digital_interval" |
+| name | Name of the data once it is loaded into Neuralyzer | Yes | string |  |
+| format |  | Yes | string | "csv" |

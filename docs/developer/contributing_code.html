@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Data Manager – Neuralyzer</title>
+<title>contributing_code – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -149,7 +149,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/data_manager.html">Data Manager</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/contributing_code.html">contributing_code</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -169,13 +169,13 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">contributing_code</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link active">
+  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Data Manager</span></a>
   </div>
 </li>
@@ -195,17 +195,11 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#data-types" id="toc-data-types" class="nav-link active" data-scroll-target="#data-types">Data Types</a>
+  <li><a href="#design-guidelines" id="toc-design-guidelines" class="nav-link active" data-scroll-target="#design-guidelines">Design Guidelines</a></li>
+  <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a></li>
+  <li><a href="#further-reading-and-references" id="toc-further-reading-and-references" class="nav-link" data-scroll-target="#further-reading-and-references">Further Reading and References</a>
   <ul class="collapse">
-  <li><a href="#point" id="toc-point" class="nav-link" data-scroll-target="#point">Point</a></li>
-  <li><a href="#line" id="toc-line" class="nav-link" data-scroll-target="#line">Line</a></li>
-  <li><a href="#mask" id="toc-mask" class="nav-link" data-scroll-target="#mask">Mask</a></li>
-  <li><a href="#tensors" id="toc-tensors" class="nav-link" data-scroll-target="#tensors">Tensors</a></li>
-  <li><a href="#analog-time-series" id="toc-analog-time-series" class="nav-link" data-scroll-target="#analog-time-series">Analog Time Series</a></li>
-  <li><a href="#digital-event-series" id="toc-digital-event-series" class="nav-link" data-scroll-target="#digital-event-series">Digital Event Series</a></li>
-  <li><a href="#digital-interval-series" id="toc-digital-interval-series" class="nav-link" data-scroll-target="#digital-interval-series">Digital Interval Series</a></li>
-  <li><a href="#media" id="toc-media" class="nav-link" data-scroll-target="#media">Media</a></li>
-  <li><a href="#time-frame" id="toc-time-frame" class="nav-link" data-scroll-target="#time-frame">Time Frame</a></li>
+  <li><a href="#testing-1" id="toc-testing-1" class="nav-link" data-scroll-target="#testing-1">Testing</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -215,7 +209,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Data Manager</h1>
+<h1 class="title">contributing_code</h1>
 </div>
 
 
@@ -232,209 +226,35 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="data-types" class="level2">
-<h2 class="anchored" data-anchor-id="data-types">Data Types</h2>
-<section id="point" class="level3">
-<h3 class="anchored" data-anchor-id="point">Point</h3>
-<p>A Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The <code>PointData</code> structure can hold multiple points per unit time.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Point Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
+<section id="design-guidelines" class="level2">
+<h2 class="anchored" data-anchor-id="design-guidelines">Design Guidelines</h2>
+<ul>
+<li>Header files should use the hpp suffix, and source files should use the cpp suffix</li>
+<li>Includes should follow the “Lakos” include order, that is
+<ul>
+<li>The prototype/interface header for this implementation (ie, the .h/.hh file that corresponds to this .cpp/.cc file).</li>
+<li>Other headers from the same project, as needed.</li>
+<li>Headers from other non-standard, non-system libraries (for example, Qt, Eigen, etc).</li>
+<li>Headers from other “almost-standard” libraries (for example, Boost)</li>
+<li>Standard C++ headers (for example, iostream, functional, etc.)</li>
+<li>Standard C headers (for example, cstdint, dirent.h, etc.)</li>
+</ul></li>
+<li>Prefer returning std::optional as a mechanism of error handling</li>
+<li>This is a scientific computing library. Performance is critical. Helping the user to understand where errors have occurred is helpful, but keeping the program alive after an error is not critical. Functions should fail gracefully and provide informative error messages when they do. Logging should use spdlog.</li>
+<li>Prefer free functions as much as possible. Ideally, class member functions will be simple and pass member variables to free functions.</li>
+<li>Prefer standard library algorithms where possible</li>
+<li>Public member functions and free function declarations should include doxygen comments above them. Private member function definitions should include doxygen comments above them.</li>
+<li>Prefer forward declarations in header files</li>
+<li>This is a C++20 project. Prefer standard library algorithms and std::ranges where possible.</li>
+</ul>
 </section>
-<section id="line" class="level3">
-<h3 class="anchored" data-anchor-id="line">Line</h3>
-<p>A Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is <strong>ordered</strong>, meaning that each point is positioned relative to its neighbors. The <code>LineData</code> structure can hold multiple lines per unit time.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Line Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
+<section id="testing" class="level2">
+<h2 class="anchored" data-anchor-id="testing">Testing</h2>
 </section>
-<section id="mask" class="level3">
-<h3 class="anchored" data-anchor-id="mask">Mask</h3>
-<p>A mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not <strong>ordered</strong>. These would correspond to something like a binary segmentation mask over an image. The <code>MaskData</code> structure can hold multiple masks per unit time.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Mask Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Binary Semantic Segmentation Labels</td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="tensors" class="level3">
-<h3 class="anchored" data-anchor-id="tensors">Tensors</h3>
-<p>Tensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Tensor Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="analog-time-series" class="level3">
-<h3 class="anchored" data-anchor-id="analog-time-series">Analog Time Series</h3>
-<p>An analog time series has values that can vary continuously</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Analog Time Series Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Voltage traces from electrode recordings</td>
-</tr>
-<tr class="even">
-<td>Fluorescence intensity traces from Calcium imaging</td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="digital-event-series" class="level3">
-<h3 class="anchored" data-anchor-id="digital-event-series">Digital Event Series</h3>
-<p>A digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Event Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="digital-interval-series" class="level3">
-<h3 class="anchored" data-anchor-id="digital-interval-series">Digital Interval Series</h3>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Interval Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="media" class="level3">
-<h3 class="anchored" data-anchor-id="media">Media</h3>
-<p>Media is a sequence of images.</p>
-<section id="image" class="level4">
-<h4 class="anchored" data-anchor-id="image">Image</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Image Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Image sequence from two photon calcium imaging experiment</td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="video" class="level4">
-<h4 class="anchored" data-anchor-id="video">Video</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Video Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>MP4 video from high speed scientific camera of behavior</td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-</section>
-<section id="time-frame" class="level3">
-<h3 class="anchored" data-anchor-id="time-frame">Time Frame</h3>
+<section id="further-reading-and-references" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading-and-references">Further Reading and References</h2>
+<section id="testing-1" class="level3">
+<h3 class="anchored" data-anchor-id="testing-1">Testing</h3>
 
 
 </section>

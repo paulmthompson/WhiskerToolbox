@@ -27,35 +27,34 @@ website:
             
       - text: "Reference Guides"
         menu:
-          - text: "Image Processing"
-          - text: "Contrast"
-            href: image_processing/contrast.qmd
-          - text: "Sharpening"
-            href: image_processing/sharpening.qmd
-          - text: "CLAHE"
-            href: image_processing/clahe.qmd
-          - text: "Bilateral Filter"
-            href: image_processing/bilateral_filter.qmd
-            
-          - text: "Behavior Modules"
-          - text: "Whisker"
-            href: behaviors/whisker.qmd
-          - text: "Tongue"
-            href: behaviors/tongue.qmd
+          - text: "User Guide"
+            href: user_guide/index.qmd
+          - text: "Developer Guide"
+            href: developer/index.qmd
                 
       - text: "Concepts"
-        menu:
-          - text: "Developer Documentation"
-            href: developer/index.qmd
             
   sidebar:
-    title: "Developer Documentation"
-    style: "docked"
-    contents:
-      - developer/index.qmd
-      - developer/contributing_code.qmd
-      - developer/data_manager.qmd 
-      - developer/image_processing.qmd
+    - title: "Developer Documentation"
+      style: "docked"
+      contents:
+        - developer/index.qmd
+        - developer/contributing_code.qmd
+        - developer/data_manager.qmd 
+        - developer/image_processing.qmd
+
+    - title: "User Guide"
+      style: "docked"
+      contents:
+        - user_guide/index.qmd
+        - user_guide/JSON_loading.qmd
+        - user_guide/image_processing/contrast.qmd
+        - user_guide/image_processing/sharpening.qmd
+        - user_guide/image_processing/clahe.qmd
+        - user_guide/image_processing/bilateral_filter.qmd
+        - user_guide/behaviors/whisker.qmd
+        - user_guide/behaviors/tongue.qmd
+
 
 format:
   html:

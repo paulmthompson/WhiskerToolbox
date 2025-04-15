@@ -4,11 +4,11 @@ title: "Whisker Tracking"
 
 ### Load Whiskers
 
-| File Format | Description                                                                                                |
-|-------------|------------------------------------------------------------------------------------------------------------|
-| Janelia     | Binary format output by janelia whisker tracker                                                            |
-| CSV         | Each row represents a 2d point (x,y) along the whisker. The points should be arranged from follicle to tip |
-| HDF5        |                                                                                                            |
+| File Format | Description |
+|--------------|----------------------------------------------------------|
+| Janelia | Binary format output by janelia whisker tracker |
+| CSV | Each row represents a 2d point (x,y) along the whisker. The points should be arranged from follicle to tip |
+| HDF5 |  |
 
 : Supported Whisker File Formats
 
