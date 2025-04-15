@@ -1,0 +1,46 @@
+name: Linux IWYU Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  iwyu:
+    runs-on: ubuntu-latest
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Common Setup
+        uses: ./.github/actions/linux-setup
+        with:
+          buildfolder: out/build/GCC/Release
+          compiler: gcc
+
+      - name: Install IWYU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iwyu
+
+      - name: Configure CMake with IWYU enabled
+        run: |
+          cmake --preset linux-gcc-release \
+                -DENABLE_IWYU=ON
+
+      - name: Build with IWYU enabled
+        run: cmake --build --preset linux-gcc-release
+
+      - name: Run IWYU report (if not already run during build)
+        # This step assumes your CMake project is configured to generate an IWYU report, e.g. to a file "iwyu_report.txt"
+        run: |
+          echo "IWYU report generated at: ${{ github.workspace }}/build/iwyu_report.txt"
+          # Optionally, you can run a script here to post-process or validate the IWYU report.
+
+      - name: Upload IWYU Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iwyu-report
+          path: ${{ github.workspace }}/build/iwyu_report.txt

@@ -1,0 +1,58 @@
+name: Optimization Report
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+    defaults:
+      run:
+        shell: 'bash {0}'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Common Setup
+        uses: ./.github/actions/linux-setup
+        with:
+          buildfolder: out/build/Clang/Release
+          compiler: clang
+
+      - name: optview2 dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libyaml-dev
+          pip --no-cache-dir install --verbose --force-reinstall -I pyyaml
+          pip install pygments
+
+      - name: Configure CMake without coverage
+        run: cmake --preset linux-clang-release
+
+      - name: Build
+        run: cmake --build --preset linux-clang-release
+
+      - name: Download optview2
+        run: git clone https://github.com/OfekShilon/optview2.git
+        shell: bash
+
+      - name: Run Optview2
+        run: |
+          mkdir opt_output
+          optview2/opt-viewer.py --output-dir opt_output \
+          --source-dir out/build/Clang/Release out/build/Clang/Release/src
+          zip -r opt_output.zip opt_output
+
+      - name: Upload Optimization Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: optview2-report
+          path: ${{ github.workspace }}/opt_output.zip
