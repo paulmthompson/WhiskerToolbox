@@ -45,10 +45,12 @@ website:
 
     - title: "User Guide"
       style: "docked"
+      collapse-level: 1
       contents:
         - text: "Introduction"
           href: user_guide/index.qmd
         - section: "Data Loading"
+          href: user_guide/data_loading/index.qmd
           contents:
             - user_guide/data_loading/JSON_loading.qmd
             - user_guide/data_loading/Point_Loading.qmd
@@ -57,6 +59,7 @@ website:
             - user_guide/data_loading/Line_Loading.qmd
             - user_guide/data_loading/Tensor_Loading.qmd
         - section: "Image Processing"
+          href: user_guide/image_processing/index.qmd
           contents:
             - user_guide/image_processing/contrast.qmd
             - user_guide/image_processing/gamma.qmd

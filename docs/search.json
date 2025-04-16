@@ -10,14 +10,36 @@
     ]
   },
   {
-    "objectID": "user_guide/data_loading/JSON_loading.html",
-    "href": "user_guide/data_loading/JSON_loading.html",
-    "title": "JSON_loading",
+    "objectID": "user_guide/image_processing/contrast.html",
+    "href": "user_guide/image_processing/contrast.html",
+    "title": "Contrast and Brightness Adjustment",
     "section": "",
-    "text": "Digital Event Series\nDigital event series are data represented by an ordered sequence of timestamps. Examples include spike timestamps from extracellular recordings or behavioral events (e.g. go cue, reward given).\n\n\nDigital Interval Series\n\n16 bit binary representation\n{\n  \"filepath\": \"ttl.bin\",\n  \"data_type\": \"digital_interval\",\n  \"name\": \"laser\",\n  \"format\": \"uint16\",\n  \"channel\": 2, // REQUIRED, bit (0 based) for channel of interest\n  \"transition\": \"rising\", //optional, \n  \"clock\": \"master\", //optional, clock signal to assign to these events\n  \"header_size\": 0 //optional, number of bytes to skip at start of file\n}\n\n\n\n\n\n\n\n\n\n\nElement\nDescription\nRequired?\nType\nNotes\n\n\n\n\nfilepath\nPath to binary file, relative to JSON file.\nYes\nstring\n\n\n\ndata_type\n\nYes\nstring\n“digital_interval”\n\n\nname\nName of the data once it is loaded into Neuralyzer\nYes\nstring\n\n\n\nformat\n\nYes\nstring\n“uint16”\n\n\nchannel\nSpecifies which bit in binary representation should be extracted as digital interval\nNo\nnumber\nDefault is 0. Valid values range from 0-15\n\n\nTransition\n“rising” will count a TTL interval as one extending from low-to-high transitions to high-to-low transitions. “falling” will count a TTL interval as one extending from high-to-low to low-to-high transitions.\nNo\nstring\nDefault is “rising”. Valid values are “rising” or “falling”.\n\n\nclock\nClock signal to associate with this digital interval\nNo\nstring\nThe clock string must match the name of a loaded clock signal.\n\n\nheader_size\nThis many bytes will be skipped at the beginning of the file before reading the rest.\nNo\nnumber\nDefault is 0. Accepted values range from 0 to size of file in bytes.\n\n\n\n\n\n\n\n\nCSV\n\n{\n  \"filepath\": \"ttl.bin\",\n  \"data_type\": \"digital_interval\",\n  \"name\": \"laser\",\n  \"format\": \"csv\"\n\n}\n\n\n\n\n\n\n\n\n\n\nElement\nDescription\nRequired?\nType\nNotes\n\n\n\n\nfilepath\nPath to csv file, relative to JSON file.\nYes\nstring\n\n\n\ndata_type\n\nYes\nstring\n“digital_interval”\n\n\nname\nName of the data once it is loaded into Neuralyzer\nYes\nstring\n\n\n\nformat\n\nYes\nstring\n“csv”",
+    "text": "These two filters are implemented with a single linear transform taking parameters “alpha” (\\(\\alpha\\)) and “beta” (\\(\\beta\\)). Pixel values are multiplied by \\(\\alpha\\) to adjust contrast, then have \\(\\beta\\) added to adjust brightness: \\[\ng(x) = \\alpha f(x) + \\beta\n\\] In effect the magnitude of \\(\\alpha\\) corresponds to the amount of contrast and the magnitude of \\(\\beta\\) corresponds to the amount of brightness.",
     "crumbs": [
-      "Data Loading",
-      "JSON_loading"
+      "Image Processing",
+      "Contrast and Brightness Adjustment"
+    ]
+  },
+  {
+    "objectID": "user_guide/image_processing/bilateral_filter.html",
+    "href": "user_guide/image_processing/bilateral_filter.html",
+    "title": "Bilateral Filter",
+    "section": "",
+    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html",
+    "crumbs": [
+      "Image Processing",
+      "Bilateral Filter"
+    ]
+  },
+  {
+    "objectID": "user_guide/image_processing/bilateral_filter.html#references",
+    "href": "user_guide/image_processing/bilateral_filter.html#references",
+    "title": "Bilateral Filter",
+    "section": "",
+    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html",
+    "crumbs": [
+      "Image Processing",
+      "Bilateral Filter"
     ]
   },
   {
@@ -174,36 +196,14 @@
     ]
   },
   {
-    "objectID": "user_guide/image_processing/bilateral_filter.html",
-    "href": "user_guide/image_processing/bilateral_filter.html",
-    "title": "Bilateral Filter",
+    "objectID": "user_guide/data_loading/JSON_loading.html",
+    "href": "user_guide/data_loading/JSON_loading.html",
+    "title": "JSON_loading",
     "section": "",
-    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html",
+    "text": "Digital Event Series\nDigital event series are data represented by an ordered sequence of timestamps. Examples include spike timestamps from extracellular recordings or behavioral events (e.g. go cue, reward given).\n\n\nDigital Interval Series\n\n16 bit binary representation\n{\n  \"filepath\": \"ttl.bin\",\n  \"data_type\": \"digital_interval\",\n  \"name\": \"laser\",\n  \"format\": \"uint16\",\n  \"channel\": 2, // REQUIRED, bit (0 based) for channel of interest\n  \"transition\": \"rising\", //optional, \n  \"clock\": \"master\", //optional, clock signal to assign to these events\n  \"header_size\": 0 //optional, number of bytes to skip at start of file\n}\n\n\n\n\n\n\n\n\n\n\nElement\nDescription\nRequired?\nType\nNotes\n\n\n\n\nfilepath\nPath to binary file, relative to JSON file.\nYes\nstring\n\n\n\ndata_type\n\nYes\nstring\n“digital_interval”\n\n\nname\nName of the data once it is loaded into Neuralyzer\nYes\nstring\n\n\n\nformat\n\nYes\nstring\n“uint16”\n\n\nchannel\nSpecifies which bit in binary representation should be extracted as digital interval\nNo\nnumber\nDefault is 0. Valid values range from 0-15\n\n\nTransition\n“rising” will count a TTL interval as one extending from low-to-high transitions to high-to-low transitions. “falling” will count a TTL interval as one extending from high-to-low to low-to-high transitions.\nNo\nstring\nDefault is “rising”. Valid values are “rising” or “falling”.\n\n\nclock\nClock signal to associate with this digital interval\nNo\nstring\nThe clock string must match the name of a loaded clock signal.\n\n\nheader_size\nThis many bytes will be skipped at the beginning of the file before reading the rest.\nNo\nnumber\nDefault is 0. Accepted values range from 0 to size of file in bytes.\n\n\n\n\n\n\n\n\nCSV\n\n{\n  \"filepath\": \"ttl.bin\",\n  \"data_type\": \"digital_interval\",\n  \"name\": \"laser\",\n  \"format\": \"csv\"\n\n}\n\n\n\n\n\n\n\n\n\n\nElement\nDescription\nRequired?\nType\nNotes\n\n\n\n\nfilepath\nPath to csv file, relative to JSON file.\nYes\nstring\n\n\n\ndata_type\n\nYes\nstring\n“digital_interval”\n\n\nname\nName of the data once it is loaded into Neuralyzer\nYes\nstring\n\n\n\nformat\n\nYes\nstring\n“csv”",
     "crumbs": [
-      "Image Processing",
-      "Bilateral Filter"
-    ]
-  },
-  {
-    "objectID": "user_guide/image_processing/bilateral_filter.html#references",
-    "href": "user_guide/image_processing/bilateral_filter.html#references",
-    "title": "Bilateral Filter",
-    "section": "",
-    "text": "https://docs.opencv.org/4.x/js_filtering_bilateralFilter.html\nhttps://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga9d7064d478c95d60003cf839430737ed\nhttps://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MANDUCHI1/Bilateral_Filtering.html",
-    "crumbs": [
-      "Image Processing",
-      "Bilateral Filter"
-    ]
-  },
-  {
-    "objectID": "user_guide/image_processing/contrast.html",
-    "href": "user_guide/image_processing/contrast.html",
-    "title": "Contrast and Brightness Adjustment",
-    "section": "",
-    "text": "These two filters are implemented with a single linear transform taking parameters “alpha” (\\(\\alpha\\)) and “beta” (\\(\\beta\\)). Pixel values are multiplied by \\(\\alpha\\) to adjust contrast, then have \\(\\beta\\) added to adjust brightness: \\[\ng(x) = \\alpha f(x) + \\beta\n\\] In effect the magnitude of \\(\\alpha\\) corresponds to the amount of contrast and the magnitude of \\(\\beta\\) corresponds to the amount of brightness.",
-    "crumbs": [
-      "Image Processing",
-      "Contrast and Brightness Adjustment"
+      "Data Loading",
+      "JSON_loading"
     ]
   }
 ]
