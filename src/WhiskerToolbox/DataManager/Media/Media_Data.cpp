@@ -92,11 +92,10 @@ void MediaData::removeProcess(std::string const & key) {
 }
 
 void MediaData::_processData() {
+
     _processedData = _rawData;
 
-    auto const image_size = ImageSize{.width = getWidth(), .height = getHeight()};
-
-    auto m2 = convert_vector_to_mat(_processedData, image_size);
+    auto m2 = convert_vector_to_mat(_processedData, getImageSize());
 
     for (auto const & [key, process]: _process_chain) {
         process(m2);

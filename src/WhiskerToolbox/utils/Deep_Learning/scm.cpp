@@ -42,9 +42,9 @@ void SCM::load_model()
     }
 }
 
-torch::Tensor convert_image_vec_to_tensor(std::vector<uint8_t> image, int height, int width, int channels=3, bool smooth=false)
+torch::Tensor convert_image_vec_to_tensor(std::vector<uint8_t> image, ImageSize image_size, int channels=3, bool smooth=false)
 {
-    auto image_tensor = dl::create_tensor_from_gray8(image, height, width);
+    auto image_tensor = dl::create_tensor_from_gray8(image, image_size);
     if (channels > 1) {
         image_tensor = image_tensor.repeat({1, channels, 1, 1});
     }
@@ -71,13 +71,15 @@ torch::Tensor convert_image_vec_to_tensor(std::vector<uint8_t> image, int height
 
 void SCM::_create_memory_tensors()
 {
+    auto const image_size = ImageSize{.width=_width, .height=_height};
+
     auto memory_frame_tensor_list = std::vector<torch::Tensor>(memory_frames + 1);
     auto memory_label_tensor_list = std::vector<torch::Tensor>(memory_frames + 1);
     auto mask_vector = std::vector<float>(memory_frames + 1);
     for (auto & memory_pair : _memory) {
-        memory_frame_tensor_list[memory_pair.first] = convert_image_vec_to_tensor(memory_pair.second.memory_frame, _height, _width);
+        memory_frame_tensor_list[memory_pair.first] = convert_image_vec_to_tensor(memory_pair.second.memory_frame, image_size);
 
-        auto memory_label = convert_image_vec_to_tensor(memory_pair.second.memory_label, _height, _width, 1, true);
+        auto memory_label = convert_image_vec_to_tensor(memory_pair.second.memory_label, image_size, 1, true);
         memory_label = (memory_label > 0.0).to(torch::kFloat32);
             memory_label_tensor_list[memory_pair.first] = memory_label;
         mask_vector[memory_pair.first] = 1.0;
@@ -98,7 +100,7 @@ void SCM::_create_memory_tensors()
 
 }
 
-std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, int height, int width) {
+std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, ImageSize const image_size) {
 
     device = dl::get_device();
 
@@ -111,14 +113,14 @@ std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, int 
     if (_memory.empty())
     {
         std::cout << "Currently no frames in memory. Please select some" << std::endl;
-        return std::vector<Point2D<float>>();
+        return std::vector<Point2D<float>>{};
     }
 
-    auto image_tensor = convert_image_vec_to_tensor(image, height, width);
+    auto image_tensor = convert_image_vec_to_tensor(image, image_size);
 
     //data_input = data_input.repeat({100, 1, 1, 1});
 
-    torch::NoGradGuard no_grad;
+    torch::NoGradGuard const no_grad;
 
     //torch::jit::setGraphExecutorOptimize(false);
     auto output = module->forward(
@@ -128,7 +130,7 @@ std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, int 
                              _memory_tensors->mask_tensor.to(device)}).toTensor();
 
     output = output.mul(255).clamp(0,255).to(torch::kU8).detach().to(torch::kCPU);
-    std::vector<uint8_t> vec(output.data_ptr<uint8_t>(), output.data_ptr<uint8_t>() + output.numel());
+    std::vector<uint8_t> const vec(output.data_ptr<uint8_t>(), output.data_ptr<uint8_t>() + output.numel());
 
     auto output_line = convert_mask_to_line(vec, {_x, _y});
 

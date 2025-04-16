@@ -213,11 +213,10 @@ void DataManager_Widget::_createNewData() {
         _data_manager->setData<PointData>(key);
     } else if (type == "Mask") {
 
-        auto height = _data_manager->getData<MediaData>("media")->getHeight();
-        auto width = _data_manager->getData<MediaData>("media")->getWidth();
+        auto const image_size = _data_manager->getData<MediaData>("media")->getImageSize();
 
         _data_manager->setData<MaskData>(key);
-        _data_manager->getData<MaskData>(key)->setImageSize(ImageSize{.width = width, .height = height});
+        _data_manager->getData<MaskData>(key)->setImageSize(image_size);
 
     } else if (type == "Line") {
         _data_manager->setData<LineData>(key);

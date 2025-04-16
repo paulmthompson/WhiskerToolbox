@@ -2,6 +2,7 @@
 #define SCM_HPP
 
 #include "DataManager/Points/points.hpp"
+#include "DataManager/ImageSize/ImageSize.hpp"
 //#include "DataManager/Tensors/Tensor_Data.hpp"
 
 #include <map>
@@ -25,10 +26,13 @@ public:
     SCM();
     ~SCM();
     void load_model();
-    std::vector<Point2D<float>> process_frame(std::vector<uint8_t>& image, int height, int width);
+    std::vector<Point2D<float>> process_frame(std::vector<uint8_t>& image, ImageSize image_size);
     void add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_t> memory_label);
-    void add_origin(float x, float y) {_x = x /  _width * 256; _y = y / _height * 256;};
-    void add_height_width(int height, int width) {_height = height; _width = width;};
+    void add_origin(float x, float y) {
+        _x = x / static_cast<float>(_width) * 256;
+        _y = y / static_cast<float>(_height) * 256;
+    };
+    void add_height_width(ImageSize const image_size) {_height = image_size.height; _width = image_size.width;};
 
 private:
     void _create_memory_tensors();

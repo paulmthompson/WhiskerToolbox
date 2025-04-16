@@ -93,7 +93,7 @@ void Tongue_Widget::_loadImgTongueMasks(){
     auto mask = _data_manager->getData<MaskData>(mask_key);
 
     auto media = _data_manager->getData<MediaData>("media");
-    mask->setImageSize({media->getWidth(), media->getHeight()});
+    mask->setImageSize(media->getImageSize());
 
     for (const auto & img_it : std::filesystem::directory_iterator(dir_name))
     {

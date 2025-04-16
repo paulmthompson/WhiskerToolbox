@@ -12,10 +12,7 @@ EfficientSAM::EfficientSAM()
     _module_path = "resources/efficient_sam_vitt_torchscript.pt";
 }
 
-EfficientSAM::~EfficientSAM()
-{
-
-}
+EfficientSAM::~EfficientSAM()= default;
 
 void EfficientSAM::load_model()
 {
@@ -26,14 +23,13 @@ void EfficientSAM::load_model()
 
 std::vector<uint8_t> EfficientSAM::process_frame(
     std::vector<uint8_t> const & image,
-    int const height,
-    int const width,
+    ImageSize const image_size,
     int const x,
     int const y)
 {
     const int channels = 3;
 
-    auto image_tensor = dl::create_tensor_from_gray8(image, height, width);
+    auto image_tensor = dl::create_tensor_from_gray8(image, image_size);
     if (channels > 1) {
         image_tensor = image_tensor.repeat({1, channels, 1, 1});
     }

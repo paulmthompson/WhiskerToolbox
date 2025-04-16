@@ -1,6 +1,7 @@
 #ifndef WHISKERTOOLBOX_MEDIA_DATA_HPP
 #define WHISKERTOOLBOX_MEDIA_DATA_HPP
 
+#include "ImageSize/ImageSize.hpp"
 #include "Observer/Observer_Data.hpp"
 
 #include <cstdint>
@@ -33,6 +34,7 @@ public:
 
     [[nodiscard]] int getHeight() const { return _height; };
     [[nodiscard]] int getWidth() const { return _width; };
+    [[nodiscard]] ImageSize getImageSize() const {return ImageSize{.width=_width, .height=_height};};
 
     void updateHeight(int height);
 

@@ -1,6 +1,8 @@
 #ifndef EFFICIENTSAM_HPP
 #define EFFICIENTSAM_HPP
 
+#include "DataManager/ImageSize/ImageSize.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -18,7 +20,7 @@ public:
 
     void load_model();
 
-    std::vector<uint8_t> process_frame(std::vector<uint8_t> const & image, int const height, int const width, int const x, int const y);
+    std::vector<uint8_t> process_frame(std::vector<uint8_t> const & image, ImageSize image_size, int x, int y);
 
 private:
     std::shared_ptr<torch::jit::Module> _module {nullptr};

@@ -209,10 +209,11 @@ void Whisker_Widget::_traceButton() {
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     if (ui->num_frames_to_trace->value() <= 1) {
-        _traceWhiskers(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+        _traceWhiskers(media->getProcessedData(current_time), media->getImageSize());
     } else {
 
-        auto height = media->getHeight(); auto width = media->getWidth();
+        auto height = media->getHeight();
+        auto width = media->getWidth();
         int num_to_trace = 0;
         int const start_time = current_time;
 
@@ -251,7 +252,7 @@ void Whisker_Widget::_dlTraceButton()
     auto media = _data_manager->getData<MediaData>("media");
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    _traceWhiskersDL(media->getProcessedData(current_time), media->getHeight(), media->getWidth());
+    _traceWhiskersDL(media->getProcessedData(current_time), media->getImageSize());
 
 }
 
@@ -262,7 +263,7 @@ void Whisker_Widget::_dlAddMemoryButton()
 
     auto image = media->getProcessedData(current_time);
 
-    dl_model->add_height_width(media->getHeight(), media->getWidth());
+    dl_model->add_height_width(media->getImageSize());
 
     std::string const whisker_name = "whisker_" + std::to_string(_current_whisker);
 
@@ -291,17 +292,17 @@ void Whisker_Widget::_dlAddMemoryButton()
 }
 
 
-void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, int width)
+void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize const image_size)
 {
 
     QElapsedTimer timer3;
     timer3.start();
 
-    auto output = dl_model->process_frame(image, height, width);
+    auto output = dl_model->process_frame(image, image_size);
 
-    std::transform(output.begin(), output.end(), output.begin(), [height, width](Point2D<float> p) {
-        return Point2D<float>{p.x / 256.0f * static_cast<float>(width),
-                              p.y / 256.0f * static_cast<float>(height)};
+    std::transform(output.begin(), output.end(), output.begin(), [image_size](Point2D<float> p) {
+        return Point2D<float>{p.x / 256.0f * static_cast<float>(image_size.width),
+                              p.y / 256.0f * static_cast<float>(image_size.height)};
     });
 
     auto t2 = timer3.elapsed();
@@ -321,12 +322,12 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, int height, in
     //labeled_image.save(QString::fromStdString("memory_frame.png"));
 }
 
-void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, int height, int width)
+void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const image_size)
 {
     QElapsedTimer timer2;
     timer2.start();
 
-    auto whiskers = _wt->trace(image, height, width);
+    auto whiskers = _wt->trace(image, image_size.height, image_size.width);
 
     std::vector<Line2D> whisker_lines(whiskers.size());
     std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);
@@ -1049,11 +1050,11 @@ void Whisker_Widget::_drawingFinished()
             auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
             auto image = media->getRawData(frame_id);
-            auto const image_size = ImageSize{.width = media->getWidth(), .height = media->getHeight()};
+            auto const image_size = media->getImageSize();
 
             auto erased = apply_magic_eraser(image, image_size, mask);
 
-            _traceWhiskers(erased,image_size.height, image_size.width);
+            _traceWhiskers(erased, image_size);
 
             _selection_mode = Whisker_Select;
             _scene->setDrawingMode(false);

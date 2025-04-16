@@ -1,6 +1,7 @@
 #ifndef WHISKER_WIDGET_HPP
 #define WHISKER_WIDGET_HPP
 
+#include "ImageSize/ImageSize.hpp" // for ImageSize
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"  // for Point2D
 
@@ -109,8 +110,8 @@ private:
     void _addNewTrackedWhisker(int index);
     void _addNewTrackedWhisker(std::vector<int> const & indexes);
 
-    void _traceWhiskers(std::vector<uint8_t> image, int height, int width);
-    void _traceWhiskersDL(std::vector<uint8_t> image, int height, int width);
+    void _traceWhiskers(std::vector<uint8_t> image, ImageSize image_size);
+    void _traceWhiskersDL(std::vector<uint8_t> image, ImageSize image_size);
 
     void _addDrawingCallback(std::string data_name);
 

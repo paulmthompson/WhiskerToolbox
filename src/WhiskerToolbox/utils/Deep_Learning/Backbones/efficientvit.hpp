@@ -1,8 +1,8 @@
 #ifndef EFFICIENTVIT_HPP
 #define EFFICIENTVIT_HPP
 
-
 #include <torch/torch.h>
+
 #include <cmath>
 #include <vector>
 #include <string>
@@ -104,7 +104,7 @@ struct MBConvImpl : torch::nn::Module {
             dw_block->push_back(torch::nn::ModuleHolder<torch::nn::ReLUImpl>(torch::nn::ReLUImpl()));
         }
 
-        int pw_kernel_size = (is_fused && expansion == 1) ? 3 : 1;
+        int const pw_kernel_size = (is_fused && expansion == 1) ? 3 : 1;
         pw_block->push_back(
             Conv2dSame(torch::nn::Conv2dOptions(int(input_channel * expansion), output_channel, pw_kernel_size).stride(1).bias(true)));
         if (use_output_norm) {
@@ -283,13 +283,13 @@ struct EfficientViT_BImpl : torch::nn::Module {
     torch::nn::Sequential _make_blocks(int block_input_channels) {
         auto blocks = torch::nn::Sequential();
         //torch::nn::Sequential blocks;
-        int total_blocks = std::accumulate(num_blocks.begin(), num_blocks.end(), 0);
+        int const total_blocks = std::accumulate(num_blocks.begin(), num_blocks.end(), 0);
         int global_block_id = 0;
 
         for (size_t stack_id = 0; stack_id < num_blocks.size(); ++stack_id) {
 
-            bool is_conv_block = block_types[stack_id][0] == 'c';
-            int cur_expansions = expansions[stack_id];
+            bool const is_conv_block = block_types[stack_id][0] == 'c';
+            int const cur_expansions = expansions[stack_id];
 
             bool block_use_bias = stack_id >= 2;
             bool block_use_norm = stack_id < 2;
@@ -301,16 +301,16 @@ struct EfficientViT_BImpl : torch::nn::Module {
 
             bool cur_is_fused = is_fused[stack_id];
             for (int block_id = 0; block_id < num_blocks[stack_id]; ++block_id) {
-                std::string name = "stack_" + std::to_string(stack_id + 1) + "_block_" + std::to_string(block_id + 1) + "_";
+                std::string const name = "stack_" + std::to_string(stack_id + 1) + "_block_" + std::to_string(block_id + 1) + "_";
 
                 int stride = block_id == 0 ? 2 : 1;
                 bool shortcut = block_id != 0;
                 int cur_expansion = cur_expansions;
 
-                float block_drop_rate = drop_connect_rate * global_block_id / total_blocks;
+                float block_drop_rate = drop_connect_rate * static_cast<float>(global_block_id) / static_cast<float>(total_blocks);
 
                 if (is_conv_block || block_id == 0) {
-                    std::string cur_name = stride > 1 ? name + "downsample_" : name;
+                    std::string const cur_name = stride > 1 ? name + "downsample_" : name;
                     blocks->push_back(MBConv(block_input_channels, out_channels[stack_id], shortcut, stride, cur_expansion, cur_is_fused, block_use_bias, block_use_norm, use_norm, block_drop_rate, anti_aliasing));
                 } else {
                     int num_heads = out_channels[stack_id] / head_dimension;

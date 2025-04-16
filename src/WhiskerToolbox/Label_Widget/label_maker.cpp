@@ -12,7 +12,7 @@ LabelMaker::LabelMaker() {
 
 void LabelMaker::addLabel(image img, int x, int y) {
 
-    std::pair<image,label_point> pair = std::make_pair(img,label_point{x,y});
+    std::pair<image,label_point> const pair = std::make_pair(img,label_point{x,y});
     _point_labels[img.frame_id] = pair;
 
     _printLabels();

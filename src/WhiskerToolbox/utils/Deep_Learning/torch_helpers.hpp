@@ -1,6 +1,7 @@
 #ifndef TORCH_HELPERS_HPP
 #define TORCH_HELPERS_HPP
 
+#include "DataManager/ImageSize/ImageSize.hpp"
 
 #include <torch/torch.h>
 #include <torch/script.h>
@@ -51,10 +52,10 @@ inline std::shared_ptr<torch::jit::Module> load_torchscript_model(std::string co
     }
 }
 
-inline torch::Tensor create_tensor_from_gray8(std::vector<uint8_t> const & image, int height, int width)
+inline torch::Tensor create_tensor_from_gray8(std::vector<uint8_t> const & image, ImageSize const image_size)
 {
     auto tensor = torch::empty(
-        { height, width, 1},
+        { image_size.height, image_size.width, 1},
         torch::TensorOptions()
             .dtype(torch::kByte)
             .device(torch::kCPU));

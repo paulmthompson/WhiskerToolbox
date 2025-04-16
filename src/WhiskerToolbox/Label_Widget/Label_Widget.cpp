@@ -33,7 +33,7 @@ Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> dat
         _scene->changePointColor("labels", "#ffe600");
         auto point = _data_manager->getData<PointData>("labels");
         auto media = _data_manager->getData<MediaData>("media");
-        point->setImageSize({media->getWidth(), media->getHeight()});
+        point->setImageSize(media->getImageSize());
 
         _data_manager->addCallbackToData("labels", [this]() {
             _scene->UpdateCanvas();
