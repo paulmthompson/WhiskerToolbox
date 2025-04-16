@@ -8,13 +8,13 @@
 #include "opencv2/photo.hpp"
 
 
-std::vector<uint8_t> MagicEraser::applyMagicEraser(std::vector<uint8_t> & image, int width, int height, std::vector<uint8_t> & mask) {
+std::vector<uint8_t> MagicEraser::applyMagicEraser(std::vector<uint8_t> & image, ImageSize const image_size, std::vector<uint8_t> & mask) {
 
-    auto output = apply_magic_eraser(image, width, height, mask);
+    auto output = apply_magic_eraser(image, image_size, mask);
     return output;
 }
 
-cv::Mat MagicEraser::_createBackgroundImage(std::vector<uint8_t> const & image, int width, int height) {
+cv::Mat MagicEraser::_createBackgroundImage(std::vector<uint8_t> const & image, ImageSize const image_size) {
     // Convert the input vector to a cv::Mat
     cv::Mat const inputImage{image, false};
 
@@ -26,9 +26,9 @@ cv::Mat MagicEraser::_createBackgroundImage(std::vector<uint8_t> const & image, 
     return medianBlurredImage;
 }
 
-std::vector<uint8_t> apply_magic_eraser(std::vector<uint8_t> & image, int width, int height, std::vector<uint8_t> & mask) {
+std::vector<uint8_t> apply_magic_eraser(std::vector<uint8_t> & image, ImageSize const image_size, std::vector<uint8_t> & mask) {
     // Convert the input vector to a cv::Mat
-    cv::Mat const inputImage = convert_vector_to_mat(image, width, height);
+    cv::Mat const inputImage = convert_vector_to_mat(image, image_size);
     cv::Mat inputImage3Channel;
     cv::cvtColor(inputImage, inputImage3Channel, cv::COLOR_GRAY2BGR);
 
@@ -38,7 +38,7 @@ std::vector<uint8_t> apply_magic_eraser(std::vector<uint8_t> & image, int width,
     cv::Mat medianBlurredImage3Channel;
     cv::cvtColor(medianBlurredImage, medianBlurredImage3Channel, cv::COLOR_GRAY2BGR);
 
-    cv::Mat const maskImage = convert_vector_to_mat(mask, width, height);
+    cv::Mat const maskImage = convert_vector_to_mat(mask, image_size);
 
     cv::Mat smoothedMask;
     cv::GaussianBlur(maskImage, smoothedMask, cv::Size(15, 15), 0);
@@ -57,15 +57,15 @@ std::vector<uint8_t> apply_magic_eraser(std::vector<uint8_t> & image, int width,
     cv::cvtColor(smoothedMask, mask3Channel, cv::COLOR_GRAY2BGR);
 
     cv::Mat outputImage;
-    cv::Point const center(width / 2, height / 2);
+    cv::Point const center(image_size.width / 2, image_size.height / 2);
 
     cv::seamlessClone(medianBlurredImage3Channel, inputImage3Channel, mask3Channel, center, outputImage, cv::NORMAL_CLONE);
 
     cv::Mat outputImageGray;
     cv::cvtColor(outputImage, outputImageGray, cv::COLOR_BGR2GRAY);
-    auto output = std::vector<uint8_t>(static_cast<size_t>(height * width));
+    auto output = std::vector<uint8_t>(static_cast<size_t>(image_size.height * image_size.width));
 
-    convert_mat_to_vector(output, outputImageGray, width, height);
+    convert_mat_to_vector(output, outputImageGray, image_size);
 
     return output;
 }

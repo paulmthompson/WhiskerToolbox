@@ -20,7 +20,9 @@ cv::Mat load_mask_from_image(std::string const & filename, bool const invert) {
     return mat;
 }
 
-cv::Mat convert_vector_to_mat(std::vector<uint8_t> & vec, int const width, int const height) {
+cv::Mat convert_vector_to_mat(std::vector<uint8_t> & vec, ImageSize const image_size) {
+
+    auto const height = image_size.height;
 
     cv::Mat m2{vec, false};
 
@@ -30,7 +32,10 @@ cv::Mat convert_vector_to_mat(std::vector<uint8_t> & vec, int const width, int c
     return m2;
 }
 
-cv::Mat convert_vector_to_mat(std::vector<Point2D<float>> & vec, int const width, int const height) {
+cv::Mat convert_vector_to_mat(std::vector<Point2D<float>> & vec, ImageSize const image_size) {
+
+    auto const height = image_size.height;
+    auto const width = image_size.width;
 
     // Mat is constructed with (# of rows, # columns)
     // The number of rows = height, number of columns = width
@@ -53,7 +58,10 @@ cv::Mat convert_vector_to_mat(std::vector<Point2D<float>> & vec, int const width
     return mat;
 }
 
-void convert_mat_to_vector(std::vector<uint8_t> & vec, cv::Mat & mat, int const width, int const height) {
+void convert_mat_to_vector(std::vector<uint8_t> & vec, cv::Mat & mat, ImageSize const image_size) {
+
+    auto const height = image_size.height;
+    auto const width = image_size.width;
 
     mat = mat.reshape(1, width * height);
 

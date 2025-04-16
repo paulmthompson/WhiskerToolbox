@@ -1,6 +1,7 @@
 
 #include "Media/Media_Data.hpp"
 
+#include "ImageSize/ImageSize.hpp"
 #include "utils/opencv_utility.hpp"
 
 #include <opencv2/core/mat.hpp>
@@ -93,7 +94,9 @@ void MediaData::removeProcess(std::string const & key) {
 void MediaData::_processData() {
     _processedData = _rawData;
 
-    auto m2 = convert_vector_to_mat(_processedData, getWidth(), getHeight());
+    auto const image_size = ImageSize{.width = getWidth(), .height = getHeight()};
+
+    auto m2 = convert_vector_to_mat(_processedData, image_size);
 
     for (auto const & [key, process]: _process_chain) {
         process(m2);

@@ -1,6 +1,7 @@
 #ifndef OPENCV_UTILITY_HPP
 #define OPENCV_UTILITY_HPP
 
+#include "ImageSize/ImageSize.hpp"
 #include "Points/Point_Data.hpp"
 
 #include "opencv2/core/mat.hpp"
@@ -8,11 +9,11 @@
 #include <vector>
 #include <string>
 
-cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, int width, int height);
+cv::Mat convert_vector_to_mat(std::vector<uint8_t>& vec, ImageSize image_size);
 
-cv::Mat convert_vector_to_mat(std::vector<Point2D<float>>& vec, int width, int height);
+cv::Mat convert_vector_to_mat(std::vector<Point2D<float>>& vec, ImageSize image_size);
 
-void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat & mat, int width, int height);
+void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat & mat, ImageSize image_size);
 
 std::vector<Point2D<float>> create_mask(cv::Mat const & mat);
 

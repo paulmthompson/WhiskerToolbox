@@ -455,24 +455,23 @@ void Whisker_Widget::_saveFaceMask() {
 
     auto const media_data = _data_manager->getData<MediaData>("media");
 
-    auto const width = media_data->getWidth();
-    auto const height = media_data->getHeight();
+    auto const image_size = ImageSize{.width = media_data->getWidth(), .height = media_data->getHeight()};
 
     auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
     auto mask = media_data->getRawData(frame_id);
 
-    auto m2 = convert_vector_to_mat(mask, width, height);
+    auto m2 = convert_vector_to_mat(mask, image_size);
 
     median_blur(m2, 35);
 
     //TODO I can use OpenCV to save image here instead of converting back to vector
 
-    convert_mat_to_vector(mask, m2, width, height);
+    convert_mat_to_vector(mask, m2, image_size);
 
     auto mask_image = QImage(&mask[0],
-                                 width,
-                                 height,
+                                 image_size.width,
+                                 image_size.height,
                                   QImage::Format_Grayscale8
                                  );
 
@@ -1007,7 +1006,7 @@ void Whisker_Widget::_maskDilation(int dilation_size)
     auto mask_pixels = original_mask->getMasksAtTime(time)[0];
 
     //convert mask to opencv
-    auto mat = convert_vector_to_mat(mask_pixels, original_mask->getImageSize().width, original_mask->getImageSize().height);
+    auto mat = convert_vector_to_mat(mask_pixels, original_mask->getImageSize());
 
     grow_mask(mat, dilation_size);
 
@@ -1050,12 +1049,11 @@ void Whisker_Widget::_drawingFinished()
             auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
             auto image = media->getRawData(frame_id);
-            auto height = media->getHeight();
-            auto width = media->getWidth();
+            auto const image_size = ImageSize{.width = media->getWidth(), .height = media->getHeight()};
 
-            auto erased = apply_magic_eraser(image,width,height,mask);
+            auto erased = apply_magic_eraser(image, image_size, mask);
 
-            _traceWhiskers(erased, height, width);
+            _traceWhiskers(erased,image_size.height, image_size.width);
 
             _selection_mode = Whisker_Select;
             _scene->setDrawingMode(false);
