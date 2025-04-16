@@ -1,6 +1,7 @@
 #ifndef UTILS_ORDER_LINE_HPP
 #define UTILS_ORDER_LINE_HPP
 
+#include "DataManager/ImageSize/ImageSize.hpp"
 #include "DataManager/Points/points.hpp"
 
 #include <cstdint>
@@ -8,8 +9,7 @@
 
 std::vector<Point2D<float>> order_line(
         std::vector<uint8_t> const & binary_img,
-        int height,
-        int width,
+        ImageSize image_size,
         Point2D<float> const & origin,
         int subsample = 1,
         float tolerance = 5.0f);

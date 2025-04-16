@@ -4,7 +4,11 @@
 #include <algorithm>
 #include <queue>
 
-std::vector<uint8_t> remove_small_clusters(std::vector<uint8_t> const & image, int height, int width, int threshold) {
+std::vector<uint8_t> remove_small_clusters(std::vector<uint8_t> const & image, ImageSize const image_size, int threshold) {
+
+    auto const height = image_size.height;
+    auto const width = image_size.width;
+
     std::vector<uint8_t> labeled_image(static_cast<size_t>(height * width), 0);
     std::vector<int> cluster_sizes;
     int current_label = 1;

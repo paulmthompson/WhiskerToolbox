@@ -6,11 +6,13 @@
 
 std::vector<Point2D<float>> order_line(
         std::vector<uint8_t> const & binary_img,
-        int height,
-        int width,
+        ImageSize const image_size,
         Point2D<float> const & origin,
         int subsample,
         float tolerance) {
+
+    auto const height = image_size.height;
+    auto const width = image_size.width;
     // Extract coordinates of the line pixels
     std::vector<Point2D<float>> line_pixels;
     for (int row = 0; row < height; ++row) {
@@ -43,7 +45,7 @@ std::vector<Point2D<float>> order_line(
 
     // Find the base point (closest to the origin)
     auto base_point_iter = std::min_element(distances_to_origin.begin(), distances_to_origin.end());
-    size_t base_point_index = std::distance(distances_to_origin.begin(), base_point_iter);
+    size_t const base_point_index = std::distance(distances_to_origin.begin(), base_point_iter);
     Point2D const base_point = line_pixels[base_point_index];
 
     // Initialize the ordered list with the base point

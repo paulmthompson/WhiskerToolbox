@@ -11,7 +11,7 @@ public:
     explicit Radian(float value)
         : value_(value) {}
 
-    float getValue() const {
+    [[nodiscard]] float getValue() const {
         return value_;
     }
 
@@ -32,7 +32,7 @@ public:
     explicit Degree(float value)
         : value_(value) {}
 
-    float getValue() const {
+    [[nodiscard]] float getValue() const {
         return value_;
     }
 
