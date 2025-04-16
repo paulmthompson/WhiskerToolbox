@@ -16,6 +16,8 @@ add_library(DataManager SHARED
         Lines/Line_Data.hpp
         Lines/Line_Data.cpp
         Lines/lines.hpp
+        Lines/Line_Data_Loader.hpp
+        Lines/Line_Data_Loader.cpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp

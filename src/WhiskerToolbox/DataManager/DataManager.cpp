@@ -15,6 +15,7 @@
 #include "Masks/Mask_Data_Loader.hpp"
 #include "Media/Video_Data_Loader.hpp"
 #include "Points/Point_Data_Loader.hpp"
+#include "Lines/Line_Data_Loader.hpp"
 
 #include "loaders/binary_loaders.hpp"
 #include "transforms/data_transforms.hpp"
