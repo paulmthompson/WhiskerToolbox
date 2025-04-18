@@ -17,180 +17,100 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>20</y>
-     <width>341</width>
-     <height>131</height>
+     <y>10</y>
+     <width>381</width>
+     <height>141</height>
     </rect>
    </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>150</width>
+     <height>100</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>100000</width>
+     <height>16777215</height>
+    </size>
+   </property>
   </widget>
-  <widget class="QStackedWidget" name="stackedWidget">
+  <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>450</y>
+     <x>10</x>
+     <y>160</y>
      <width>461</width>
-     <height>181</height>
+     <height>411</height>
     </rect>
    </property>
-   <widget class="QWidget" name="blank"/>
-  </widget>
-  <widget class="QFrame" name="frame">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>340</y>
-     <width>371</width>
-     <height>80</height>
-    </rect>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::Shape::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Shadow::Raised</enum>
-   </property>
-   <widget class="QPushButton" name="new_data_button">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>30</y>
-      <width>111</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Create New Data</string>
-    </property>
-   </widget>
-   <widget class="QPlainTextEdit" name="new_data_name">
-    <property name="geometry">
-     <rect>
-      <x>130</x>
-      <y>30</y>
-      <width>104</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="plainText">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>160</x>
-      <y>10</y>
-      <width>49</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Name:</string>
-    </property>
-   </widget>
-   <widget class="QComboBox" name="new_data_type_combo">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>30</y>
-      <width>69</width>
-      <height>22</height>
-     </rect>
-    </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <property name="text">
-      <string>Event</string>
-     </property>
+     <widget class="Section" name="output_dir_section" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <widget class="OutputDirectoryWidget" name="output_dir_widget" native="true">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>20</y>
+         <width>441</width>
+         <height>64</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout"/>
+      </widget>
+     </widget>
     </item>
     <item>
-     <property name="text">
-      <string>Interval</string>
-     </property>
+     <widget class="Section" name="new_data_section" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <widget class="NewDataWidget" name="new_data_widget" native="true">
+       <property name="geometry">
+        <rect>
+         <x>9</x>
+         <y>30</y>
+         <width>431</width>
+         <height>131</height>
+        </rect>
+       </property>
+      </widget>
+     </widget>
     </item>
     <item>
-     <property name="text">
-      <string>Analog Time Series</string>
-     </property>
+     <widget class="QStackedWidget" name="stackedWidget">
+      <widget class="QWidget" name="blank"/>
+     </widget>
     </item>
     <item>
-     <property name="text">
-      <string>Point</string>
-     </property>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Orientation::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
     </item>
-    <item>
-     <property name="text">
-      <string>Mask</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Line</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Tensor</string>
-     </property>
-    </item>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>10</y>
-      <width>49</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Type:</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QFrame" name="frame_2">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>240</y>
-     <width>371</width>
-     <height>80</height>
-    </rect>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::Shape::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Shadow::Raised</enum>
-   </property>
-   <widget class="QPushButton" name="output_dir_button">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>50</y>
-      <width>101</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Set Output Dir</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="output_dir_label">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>20</y>
-      <width>361</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-    </property>
-   </widget>
+   </layout>
   </widget>
  </widget>
  <customwidgets>
@@ -198,6 +118,24 @@
    <class>Feature_Table_Widget</class>
    <extends>QWidget</extends>
    <header>Feature_Table_Widget/Feature_Table_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>Section</class>
+   <extends>QWidget</extends>
+   <header>Collapsible_Widget/Section.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>OutputDirectoryWidget</class>
+   <extends>QWidget</extends>
+   <header>OutputDirectoryWidget/OutputDirectoryWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NewDataWidget</class>
+   <extends>QWidget</extends>
+   <header>NewDataWidget/NewDataWidget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

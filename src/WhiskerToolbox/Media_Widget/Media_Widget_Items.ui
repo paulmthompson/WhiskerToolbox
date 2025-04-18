@@ -66,7 +66,7 @@
     </rect>
    </property>
    <property name="orientation">
-    <enum>Qt::Horizontal</enum>
+    <enum>Qt::Orientation::Horizontal</enum>
    </property>
   </widget>
   <widget class="QLabel" name="label">
@@ -82,7 +82,7 @@
     <string>Transparency (All)</string>
    </property>
    <property name="alignment">
-    <set>Qt::AlignCenter</set>
+    <set>Qt::AlignmentFlag::AlignCenter</set>
    </property>
   </widget>
  </widget>

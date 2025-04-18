@@ -1,8 +1,8 @@
 #ifndef DATAMANAGER_WIDGET_HPP
 #define DATAMANAGER_WIDGET_HPP
 
+#include <QString>
 #include <QWidget>
-
 
 #include <memory>
 #include <string>
@@ -37,10 +37,10 @@ private:
 
 
 private slots:
-    void _changeOutputDir();
+    void _changeOutputDir(QString dir_name);
     void _handleFeatureSelected(QString const & feature);
     void _disablePreviousFeature(QString const & feature);
-    void _createNewData();
+    void _createNewData(std::string key, std::string type);
     void _changeScrollbar(int frame_id);
 };
 

@@ -219,6 +219,12 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
+        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.hpp
+        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.ui
+        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.cpp
+        DataManager_Widget/NewDataWidget/NewDataWidget.hpp
+        DataManager_Widget/NewDataWidget/NewDataWidget.cpp
+        DataManager_Widget/NewDataWidget/NewDataWidget.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)

@@ -22,6 +22,8 @@
 #include "DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp"
 #include "Line_Widget/Line_Widget.hpp"
 #include "Mask_Widget/Mask_Widget.hpp"
+#include "NewDataWidget/NewDataWidget.hpp"
+#include "OutputDirectoryWidget/OutputDirectoryWidget.hpp"
 #include "Point_Widget/Point_Widget.hpp"
 #include "Tensor_Widget/Tensor_Widget.hpp"
 
@@ -45,8 +47,6 @@ DataManager_Widget::DataManager_Widget(
     ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
     ui->feature_table_widget->setDataManager(_data_manager);
 
-    ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
-
     ui->stackedWidget->addWidget(new Point_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Mask_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Line_Widget(_data_manager));
@@ -55,9 +55,15 @@ DataManager_Widget::DataManager_Widget(
     ui->stackedWidget->addWidget(new DigitalEventSeries_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Tensor_Widget(_data_manager));
 
-    connect(ui->output_dir_button, &QPushButton::clicked, this, &DataManager_Widget::_changeOutputDir);
+    ui->output_dir_section->autoSetContentLayout();
+    ui->output_dir_section->setTitle("Output Directory");
+
+    ui->new_data_section->autoSetContentLayout();
+    ui->new_data_section->setTitle("Create New Data");
+
+    connect(ui->output_dir_widget, &OutputDirectoryWidget::dirChanged, this, &DataManager_Widget::_changeOutputDir);
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataManager_Widget::_handleFeatureSelected);
-    connect(ui->new_data_button, &QPushButton::clicked, this, &DataManager_Widget::_createNewData);
+    connect(ui->new_data_widget, &NewDataWidget::createNewData, this, &DataManager_Widget::_createNewData);
 }
 
 DataManager_Widget::~DataManager_Widget() {
@@ -185,29 +191,22 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
     }
 }
 
+void DataManager_Widget::_changeOutputDir(QString dir_name) {
 
-void DataManager_Widget::_changeOutputDir() {
-    QString const dir_name = QFileDialog::getExistingDirectory(
-            this,
-            "Select Directory",
-            QDir::currentPath());
 
     if (dir_name.isEmpty()) {
         return;
     }
 
     _data_manager->setOutputPath(dir_name.toStdString());
-    ui->output_dir_label->setText(dir_name);
+    ui->output_dir_widget->setDirLabel(dir_name);
 }
 
-void DataManager_Widget::_createNewData() {
-    auto key = ui->new_data_name->toPlainText().toStdString();
+void DataManager_Widget::_createNewData(std::string key, std::string type) {
 
     if (key.empty()) {
         return;
     }
-
-    auto type = ui->new_data_type_combo->currentText().toStdString();
 
     if (type == "Point") {
         _data_manager->setData<PointData>(key);
