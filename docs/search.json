@@ -76,43 +76,64 @@
     ]
   },
   {
+    "objectID": "developer/Features/Collapsible_Widget.html",
+    "href": "developer/Features/Collapsible_Widget.html",
+    "title": "Collapsible Widget",
+    "section": "",
+    "text": "We have a Collapsible Widget called a “Section” available. This kind of widget can expand to display the contents of the widget. This is useful for making an interface appear less cluttered.\n\nGeneral process for to add collapsible Widget:\nQT Designer:\n\nEnsure the parent widget is in a vertical layout\nCreate QWidget inside and promote it to a “Section”\nCreate another QWidget within that QWidget. The inner QWidget will hold all the contents of the section.\nPopulate this inner QWidget with widgets as normal.\n\nCode part:\n\nCall autoSetContentLayout() on the Section QWidget after setupUi.\nOptionally, calling setTitle(\"title\") will give it a title.",
+    "crumbs": [
+      "Features",
+      "Collapsible Widget"
+    ]
+  },
+  {
     "objectID": "developer/contributing_code.html",
     "href": "developer/contributing_code.html",
-    "title": "contributing_code",
+    "title": "Contributing Code",
     "section": "",
     "text": "Header files should use the hpp suffix, and source files should use the cpp suffix\nIncludes should follow the “Lakos” include order, that is\n\nThe prototype/interface header for this implementation (ie, the .h/.hh file that corresponds to this .cpp/.cc file).\nOther headers from the same project, as needed.\nHeaders from other non-standard, non-system libraries (for example, Qt, Eigen, etc).\nHeaders from other “almost-standard” libraries (for example, Boost)\nStandard C++ headers (for example, iostream, functional, etc.)\nStandard C headers (for example, cstdint, dirent.h, etc.)\n\nPrefer returning std::optional as a mechanism of error handling\nThis is a scientific computing library. Performance is critical. Helping the user to understand where errors have occurred is helpful, but keeping the program alive after an error is not critical. Functions should fail gracefully and provide informative error messages when they do. Logging should use spdlog.\nPrefer free functions as much as possible. Ideally, class member functions will be simple and pass member variables to free functions.\nPrefer standard library algorithms where possible\nPublic member functions and free function declarations should include doxygen comments above them. Private member function definitions should include doxygen comments above them.\nPrefer forward declarations in header files\nThis is a C++20 project. Prefer standard library algorithms and std::ranges where possible.",
     "crumbs": [
-      "contributing_code"
+      "Contributing Code"
     ]
   },
   {
     "objectID": "developer/contributing_code.html#design-guidelines",
     "href": "developer/contributing_code.html#design-guidelines",
-    "title": "contributing_code",
+    "title": "Contributing Code",
     "section": "",
     "text": "Header files should use the hpp suffix, and source files should use the cpp suffix\nIncludes should follow the “Lakos” include order, that is\n\nThe prototype/interface header for this implementation (ie, the .h/.hh file that corresponds to this .cpp/.cc file).\nOther headers from the same project, as needed.\nHeaders from other non-standard, non-system libraries (for example, Qt, Eigen, etc).\nHeaders from other “almost-standard” libraries (for example, Boost)\nStandard C++ headers (for example, iostream, functional, etc.)\nStandard C headers (for example, cstdint, dirent.h, etc.)\n\nPrefer returning std::optional as a mechanism of error handling\nThis is a scientific computing library. Performance is critical. Helping the user to understand where errors have occurred is helpful, but keeping the program alive after an error is not critical. Functions should fail gracefully and provide informative error messages when they do. Logging should use spdlog.\nPrefer free functions as much as possible. Ideally, class member functions will be simple and pass member variables to free functions.\nPrefer standard library algorithms where possible\nPublic member functions and free function declarations should include doxygen comments above them. Private member function definitions should include doxygen comments above them.\nPrefer forward declarations in header files\nThis is a C++20 project. Prefer standard library algorithms and std::ranges where possible.",
     "crumbs": [
-      "contributing_code"
+      "Contributing Code"
+    ]
+  },
+  {
+    "objectID": "developer/contributing_code.html#before-you-submit-a-pull-request",
+    "href": "developer/contributing_code.html#before-you-submit-a-pull-request",
+    "title": "Contributing Code",
+    "section": "Before You Submit a Pull Request",
+    "text": "Before You Submit a Pull Request\n\nClang Format\nPlease make sure to run clang-format on all of your submitted files with the style guidelines in the base directory. A CI check will ensure that this happens upon pull request. You can read more about clang-format here:\nhttps://clang.llvm.org/docs/ClangFormat.html\n\n\nClang Tidy\nPlease make sure to run clang-tidy on all of your submitted files with the style guidelines in the base directory. A CI check will ensure that this happens upon pull request. You can read more about clang-tidy here:\nhttps://clang.llvm.org/extra/clang-tidy/",
+    "crumbs": [
+      "Contributing Code"
     ]
   },
   {
     "objectID": "developer/contributing_code.html#testing",
     "href": "developer/contributing_code.html#testing",
-    "title": "contributing_code",
+    "title": "Contributing Code",
     "section": "Testing",
     "text": "Testing",
     "crumbs": [
-      "contributing_code"
+      "Contributing Code"
     ]
   },
   {
     "objectID": "developer/contributing_code.html#further-reading-and-references",
     "href": "developer/contributing_code.html#further-reading-and-references",
-    "title": "contributing_code",
+    "title": "Contributing Code",
     "section": "Further Reading and References",
     "text": "Further Reading and References\n\nTesting",
     "crumbs": [
-      "contributing_code"
+      "Contributing Code"
     ]
   },
   {
@@ -140,6 +161,16 @@
     "text": "A Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The PointData structure can hold multiple points per unit time.\n\n\n\nExamples of Point Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nA Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is ordered, meaning that each point is positioned relative to its neighbors. The LineData structure can hold multiple lines per unit time.\n\n\n\nExamples of Line Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nA mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not ordered. These would correspond to something like a binary segmentation mask over an image. The MaskData structure can hold multiple masks per unit time.\n\n\n\nExamples of Mask Data\n\n\n\n\nBinary Semantic Segmentation Labels\n\n\n\n\n\n\n\n\n\n\n\n\nTensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.\n\n\n\nExamples of Tensor Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nAn analog time series has values that can vary continuously\n\n\n\nExamples of Analog Time Series Data\n\n\n\n\nVoltage traces from electrode recordings\n\n\nFluorescence intensity traces from Calcium imaging\n\n\n\n\n\n\n\n\n\nA digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology\n\n\n\nExamples of Event Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExamples of Interval Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMedia is a sequence of images.\n\n\n\n\n\nExamples of Image Data\n\n\n\n\nImage sequence from two photon calcium imaging experiment\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExamples of Video Data\n\n\n\n\nMP4 video from high speed scientific camera of behavior",
     "crumbs": [
       "Data Manager"
+    ]
+  },
+  {
+    "objectID": "developer/Features/overview.html",
+    "href": "developer/Features/overview.html",
+    "title": "Features",
+    "section": "",
+    "text": "Documentation of some of the general widget types in Neuralyzer.",
+    "crumbs": [
+      "Features"
     ]
   },
   {

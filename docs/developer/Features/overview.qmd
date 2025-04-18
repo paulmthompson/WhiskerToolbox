@@ -1,0 +1,6 @@
+---
+title: "Features"
+format: html
+---
+
+Documentation of some of the general widget types in Neuralyzer.

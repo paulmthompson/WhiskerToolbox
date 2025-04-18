@@ -1,5 +1,5 @@
 ---
-title: "contributing_code"
+title: "Contributing Code"
 format: html
 ---
 
@@ -20,6 +20,19 @@ format: html
 -   Public member functions and free function declarations should include doxygen comments above them. Private member function definitions should include doxygen comments above them.
 -   Prefer forward declarations in header files
 -   This is a C++20 project. Prefer standard library algorithms and std::ranges where possible.
+
+## Before You Submit a Pull Request
+
+### Clang Format
+
+Please make sure to run clang-format on all of your submitted files with the style guidelines in the base directory. A CI check will ensure that this happens upon pull request. You can read more about clang-format here:\
+<https://clang.llvm.org/docs/ClangFormat.html>
+
+### Clang Tidy
+
+Please make sure to run clang-tidy on all of your submitted files with the style guidelines in the base directory. A CI check will ensure that this happens upon pull request. You can read more about clang-tidy here:
+
+<https://clang.llvm.org/extra/clang-tidy/>
 
 ## Testing
 

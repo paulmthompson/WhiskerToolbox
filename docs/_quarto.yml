@@ -42,6 +42,10 @@ website:
         - developer/contributing_code.qmd
         - developer/data_manager.qmd 
         - developer/image_processing.qmd
+        - section: "Features"
+          href: developer/Features/overview.qmd
+          contents:
+            - developer/Features/Collapsible_Widget.qmd
 
     - title: "User Guide"
       style: "docked"

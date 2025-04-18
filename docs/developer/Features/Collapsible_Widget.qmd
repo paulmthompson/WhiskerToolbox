@@ -1,0 +1,26 @@
+---
+title: "Collapsible Widget"
+format: html
+---
+
+We have a Collapsible Widget called a "Section" available. This kind of widget can expand to display the contents of the widget. This is useful for making an interface appear less cluttered.
+
+![](images/412670686-d1398162-d002-4e87-9eab-e01983562d2b.png){width="619"}
+
+General process for to add collapsible Widget:
+
+QT Designer:
+
+1.  Ensure the parent widget is in a vertical layout
+
+2.  Create QWidget inside and promote it to a "Section"
+
+3.  Create another QWidget within that QWidget. The inner QWidget will hold all the contents of the section.
+
+4.  Populate this inner QWidget with widgets as normal.
+
+Code part:
+
+1.  Call `autoSetContentLayout()` on the Section QWidget after `setupUi`.
+
+2.  Optionally, calling `setTitle("title")` will give it a title.

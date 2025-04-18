@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>contributing_code – Neuralyzer</title>
+<title>Contributing Code – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -149,7 +149,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/contributing_code.html">contributing_code</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/contributing_code.html">Contributing Code</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -170,7 +170,7 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">contributing_code</span></a>
+ <span class="menu-text">Contributing Code</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -185,6 +185,23 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">Image Processing</span></a>
   </div>
 </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Features</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Collapsible Widget</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
     </ul>
     </div>
 </nav>
@@ -196,6 +213,11 @@ ul.task-list li input[type="checkbox"] {
    
   <ul>
   <li><a href="#design-guidelines" id="toc-design-guidelines" class="nav-link active" data-scroll-target="#design-guidelines">Design Guidelines</a></li>
+  <li><a href="#before-you-submit-a-pull-request" id="toc-before-you-submit-a-pull-request" class="nav-link" data-scroll-target="#before-you-submit-a-pull-request">Before You Submit a Pull Request</a>
+  <ul class="collapse">
+  <li><a href="#clang-format" id="toc-clang-format" class="nav-link" data-scroll-target="#clang-format">Clang Format</a></li>
+  <li><a href="#clang-tidy" id="toc-clang-tidy" class="nav-link" data-scroll-target="#clang-tidy">Clang Tidy</a></li>
+  </ul></li>
   <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a></li>
   <li><a href="#further-reading-and-references" id="toc-further-reading-and-references" class="nav-link" data-scroll-target="#further-reading-and-references">Further Reading and References</a>
   <ul class="collapse">
@@ -209,7 +231,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">contributing_code</h1>
+<h1 class="title">Contributing Code</h1>
 </div>
 
 
@@ -247,6 +269,19 @@ ul.task-list li input[type="checkbox"] {
 <li>Prefer forward declarations in header files</li>
 <li>This is a C++20 project. Prefer standard library algorithms and std::ranges where possible.</li>
 </ul>
+</section>
+<section id="before-you-submit-a-pull-request" class="level2">
+<h2 class="anchored" data-anchor-id="before-you-submit-a-pull-request">Before You Submit a Pull Request</h2>
+<section id="clang-format" class="level3">
+<h3 class="anchored" data-anchor-id="clang-format">Clang Format</h3>
+<p>Please make sure to run clang-format on all of your submitted files with the style guidelines in the base directory. A CI check will ensure that this happens upon pull request. You can read more about clang-format here:<br>
+<a href="https://clang.llvm.org/docs/ClangFormat.html" class="uri">https://clang.llvm.org/docs/ClangFormat.html</a></p>
+</section>
+<section id="clang-tidy" class="level3">
+<h3 class="anchored" data-anchor-id="clang-tidy">Clang Tidy</h3>
+<p>Please make sure to run clang-tidy on all of your submitted files with the style guidelines in the base directory. A CI check will ensure that this happens upon pull request. You can read more about clang-tidy here:</p>
+<p><a href="https://clang.llvm.org/extra/clang-tidy/" class="uri">https://clang.llvm.org/extra/clang-tidy/</a></p>
+</section>
 </section>
 <section id="testing" class="level2">
 <h2 class="anchored" data-anchor-id="testing">Testing</h2>
