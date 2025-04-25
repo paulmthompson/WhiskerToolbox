@@ -6,23 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>906</width>
+    <width>730</width>
     <height>744</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="OpenGLWidget" name="openGLWidget">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>20</y>
-     <width>701</width>
-     <height>331</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
    <property name="geometry">
     <rect>
@@ -31,58 +21,6 @@
      <width>351</width>
      <height>301</height>
     </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="pos_x_mid_label">
-   <property name="geometry">
-    <rect>
-     <x>460</x>
-     <y>360</y>
-     <width>49</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QLabel" name="neg_x_label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>360</y>
-     <width>49</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QLabel" name="pos_x_label">
-   <property name="geometry">
-    <rect>
-     <x>680</x>
-     <y>360</y>
-     <width>49</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QLabel" name="neg_x_mid_label">
-   <property name="geometry">
-    <rect>
-     <x>180</x>
-     <y>360</y>
-     <width>49</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
    </property>
   </widget>
   <widget class="QWidget" name="verticalLayoutWidget">
@@ -149,6 +87,59 @@
        </size>
       </property>
      </spacer>
+    </item>
+   </layout>
+  </widget>
+  <widget class="OpenGLWidget" name="openGLWidget">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>679</width>
+     <height>301</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QWidget" name="horizontalLayoutWidget_3">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>340</y>
+     <width>679</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <item>
+     <widget class="QLabel" name="neg_x_label">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="neg_x_mid_label">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="pos_x_mid_label">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="pos_x_label">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
