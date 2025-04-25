@@ -44,7 +44,7 @@ void Point_Widget::updateTable() {
 }
 
 void Point_Widget::_saveKeypointCSV() {
-    auto const filename = ui->save_filename->toPlainText().toStdString();
+    auto const filename = ui->save_filename->text().toStdString();
 
     std::fstream fout;
 

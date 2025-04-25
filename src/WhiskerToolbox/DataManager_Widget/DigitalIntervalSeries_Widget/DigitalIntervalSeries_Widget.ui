@@ -37,20 +37,8 @@
       </widget>
      </item>
      <item>
-      <widget class="QPlainTextEdit" name="filename_textbox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>100</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="plainText">
+      <widget class="QLineEdit" name="filename_textbox">
+       <property name="text">
         <string>interval.csv</string>
        </property>
       </widget>
@@ -122,6 +110,9 @@
       <widget class="QLabel" name="total_interval_label">
        <property name="text">
         <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
        </property>
       </widget>
      </item>
