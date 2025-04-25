@@ -4,6 +4,7 @@
 #include "Points/points.hpp"
 
 #include <cmath>
+#include <cstdint>
 #include <vector>
 
 using Line2D = std::vector<Point2D<float>>;
