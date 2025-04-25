@@ -27,7 +27,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
                      TimeScrollBar * time_scrollbar,
                      MainWindow * main_window,
                      QWidget * parent)
-    : QMainWindow(parent),
+    : QWidget(parent),
       _data_manager{std::move(data_manager)},
       _time_scrollbar{time_scrollbar},
       _main_window{main_window},

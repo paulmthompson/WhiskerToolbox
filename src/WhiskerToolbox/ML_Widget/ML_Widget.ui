@@ -1,185 +1,172 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>ML_Widget</class>
- <widget class="QMainWindow" name="ML_Widget">
+ <widget class="QWidget" name="ML_Widget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>632</width>
-    <height>686</height>
+    <width>640</width>
+    <height>666</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Form</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <widget class="QFrame" name="Feature_Frame">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>10</y>
-      <width>261</width>
-      <height>491</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::Shape::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Shadow::Raised</enum>
-    </property>
-    <widget class="QLabel" name="label">
-     <property name="geometry">
-      <rect>
-       <x>90</x>
-       <y>10</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Features</string>
-     </property>
-    </widget>
-    <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>40</y>
-       <width>211</width>
-       <height>131</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="Feature_Table_Widget" name="mask_table_widget" native="true">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>200</y>
-       <width>211</width>
-       <height>81</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_2">
-     <property name="geometry">
-      <rect>
-       <x>100</x>
-       <y>180</y>
-       <width>71</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Mask Variables</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_3">
-     <property name="geometry">
-      <rect>
-       <x>70</x>
-       <y>300</y>
-       <width>131</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Outcome Variables</string>
-     </property>
-    </widget>
-    <widget class="Feature_Table_Widget" name="outcome_table_widget" native="true">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>330</y>
-       <width>211</width>
-       <height>131</height>
-      </rect>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QStackedWidget" name="stackedWidget">
-    <property name="geometry">
-     <rect>
-      <x>300</x>
-      <y>40</y>
-      <width>311</width>
-      <height>211</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QComboBox" name="model_select_combo">
-    <property name="geometry">
-     <rect>
-      <x>468</x>
-      <y>10</y>
-      <width>131</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <item>
-     <property name="text">
-      <string>Naive Bayes</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Random Forest</string>
-     </property>
-    </item>
-   </widget>
-   <widget class="QLabel" name="label_4">
-    <property name="geometry">
-     <rect>
-      <x>320</x>
-      <y>10</y>
-      <width>141</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Model Select</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="fit_button">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>520</y>
-      <width>75</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Fit Model</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="predict_all_check">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>550</y>
-      <width>151</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Predict All Frames</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
+  <widget class="QStackedWidget" name="stackedWidget">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>632</width>
-     <height>22</height>
+     <x>320</x>
+     <y>60</y>
+     <width>311</width>
+     <height>211</height>
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QPushButton" name="fit_button">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>540</y>
+     <width>75</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Fit Model</string>
+   </property>
+  </widget>
+  <widget class="QFrame" name="Feature_Frame">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>30</y>
+     <width>261</width>
+     <height>491</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Shape::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Shadow::Raised</enum>
+   </property>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>10</y>
+      <width>71</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Features</string>
+    </property>
+   </widget>
+   <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>40</y>
+      <width>211</width>
+      <height>131</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="Feature_Table_Widget" name="mask_table_widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>200</y>
+      <width>211</width>
+      <height>81</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>180</y>
+      <width>71</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Mask Variables</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>300</y>
+      <width>131</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Outcome Variables</string>
+    </property>
+   </widget>
+   <widget class="Feature_Table_Widget" name="outcome_table_widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>330</y>
+      <width>211</width>
+      <height>131</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QComboBox" name="model_select_combo">
+   <property name="geometry">
+    <rect>
+     <x>488</x>
+     <y>30</y>
+     <width>131</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>Naive Bayes</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Random Forest</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QCheckBox" name="predict_all_check">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>570</y>
+     <width>151</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Predict All Frames</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>340</x>
+     <y>30</y>
+     <width>141</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Model Select</string>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>

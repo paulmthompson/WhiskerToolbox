@@ -3,7 +3,7 @@
 
 #include "DataManager/DigitalTimeSeries/interval_data.hpp"
 
-#include <QMainWindow>
+#include <QWidget>
 
 #include <mlpack/core.hpp>
 
@@ -23,7 +23,7 @@ namespace Ui {
 class ML_Widget;
 }
 
-class ML_Widget : public QMainWindow {
+class ML_Widget : public QWidget {
     Q_OBJECT
 
 public:

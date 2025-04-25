@@ -116,7 +116,7 @@ set(PROJECT_SOURCES
         DataViewer_Widget/shaders/dashed_line_shader.hpp
         DataViewer_Widget/shaders/colored_vertex_shader.hpp
 
-        ML_Widget/ML_Widget.ui
+
         ML_Widget/ML_Widget.hpp
         ML_Widget/ML_Widget.cpp
         ML_Widget/mlpack_conversion.hpp
@@ -226,6 +226,7 @@ qt_add_executable(WhiskerToolbox
         DataManager_Widget/NewDataWidget/NewDataWidget.cpp
         DataManager_Widget/NewDataWidget/NewDataWidget.ui
         DataViewer_Widget/DataViewer_Widget.ui
+        ML_Widget/ML_Widget.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)
