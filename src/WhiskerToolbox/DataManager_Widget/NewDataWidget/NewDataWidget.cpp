@@ -25,7 +25,7 @@ void OutputDirectoryWidget::setDirLabel(QString const label) {
 */
 void NewDataWidget::_createNewData() {
 
-    auto key = ui->new_data_name->toPlainText().toStdString();
+    auto key = ui->new_data_name->text().toStdString();
 
     auto type = ui->new_data_type_combo->currentText().toStdString();
 

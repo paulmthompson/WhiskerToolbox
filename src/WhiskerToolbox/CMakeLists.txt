@@ -107,7 +107,7 @@ set(PROJECT_SOURCES
         Image_Processing_Widget/Image_Processing_Widget.cpp
         Image_Processing_Widget/Image_Processing_Widget.ui
 
-        DataViewer_Widget/DataViewer_Widget.ui
+
         DataViewer_Widget/DataViewer_Widget.cpp
         DataViewer_Widget/DataViewer_Widget.hpp
         DataViewer_Widget/OpenGLWidget.cpp
@@ -225,6 +225,7 @@ qt_add_executable(WhiskerToolbox
         DataManager_Widget/NewDataWidget/NewDataWidget.hpp
         DataManager_Widget/NewDataWidget/NewDataWidget.cpp
         DataManager_Widget/NewDataWidget/NewDataWidget.ui
+        DataViewer_Widget/DataViewer_Widget.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)

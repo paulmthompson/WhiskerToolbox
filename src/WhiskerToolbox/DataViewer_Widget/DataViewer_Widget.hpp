@@ -2,7 +2,7 @@
 #ifndef DATAVIEWER_WIDGET_HPP
 #define DATAVIEWER_WIDGET_HPP
 
-#include <QMainWindow>
+#include <QWidget>
 
 #include <memory>
 #include <string>
@@ -21,7 +21,7 @@ namespace Ui {
 class DataViewer_Widget;
 }
 
-class DataViewer_Widget : public QMainWindow {
+class DataViewer_Widget : public QWidget {
     Q_OBJECT
 
 public:

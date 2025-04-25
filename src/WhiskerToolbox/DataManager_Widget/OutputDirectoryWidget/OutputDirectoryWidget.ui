@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>278</width>
     <height>64</height>
    </rect>
   </property>
@@ -26,6 +26,12 @@
    </item>
    <item>
     <widget class="QPushButton" name="output_dir_button">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="text">
       <string>Set Output Dir</string>
      </property>

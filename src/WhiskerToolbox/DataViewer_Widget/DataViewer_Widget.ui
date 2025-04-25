@@ -1,193 +1,148 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>DataViewer_Widget</class>
- <widget class="QMainWindow" name="DataViewer_Widget">
+ <widget class="QWidget" name="DataViewer_Widget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>781</width>
-    <height>750</height>
+    <width>906</width>
+    <height>744</height>
    </rect>
   </property>
-  <property name="minimumSize">
-   <size>
-    <width>750</width>
-    <height>750</height>
-   </size>
-  </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Form</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <widget class="QScrollArea" name="scrollArea">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>791</width>
-      <height>711</height>
-     </rect>
-    </property>
-    <property name="sizeAdjustPolicy">
-     <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
-    </property>
-    <property name="widgetResizable">
-     <bool>true</bool>
-    </property>
-    <widget class="QWidget" name="scrollAreaWidgetContents">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>789</width>
-       <height>709</height>
-      </rect>
-     </property>
-     <widget class="OpenGLWidget" name="openGLWidget">
-      <property name="geometry">
-       <rect>
-        <x>40</x>
-        <y>40</y>
-        <width>701</width>
-        <height>331</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
-      <property name="geometry">
-       <rect>
-        <x>40</x>
-        <y>400</y>
-        <width>351</width>
-        <height>301</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QSpinBox" name="x_axis_samples">
-      <property name="geometry">
-       <rect>
-        <x>410</x>
-        <y>400</y>
-        <width>121</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="minimum">
-       <number>1</number>
-      </property>
-      <property name="maximum">
-       <number>1000000</number>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label">
-      <property name="geometry">
-       <rect>
-        <x>540</x>
-        <y>400</y>
-        <width>111</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>X Axis Samples</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="neg_x_mid_label">
-      <property name="geometry">
-       <rect>
-        <x>210</x>
-        <y>380</y>
-        <width>49</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-     <widget class="QLabel" name="neg_x_label">
-      <property name="geometry">
-       <rect>
-        <x>60</x>
-        <y>380</y>
-        <width>49</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-     <widget class="QLabel" name="pos_x_mid_label">
-      <property name="geometry">
-       <rect>
-        <x>510</x>
-        <y>380</y>
-        <width>49</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-     <widget class="QLabel" name="pos_x_label">
-      <property name="geometry">
-       <rect>
-        <x>670</x>
-        <y>380</y>
-        <width>49</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-     <widget class="QDoubleSpinBox" name="global_zoom">
-      <property name="geometry">
-       <rect>
-        <x>410</x>
-        <y>440</y>
-        <width>121</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="maximum">
-       <double>1000.000000000000000</double>
-      </property>
-      <property name="value">
-       <double>1.000000000000000</double>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_2">
-      <property name="geometry">
-       <rect>
-        <x>540</x>
-        <y>440</y>
-        <width>111</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Global Y Scale</string>
-      </property>
-     </widget>
-    </widget>
-   </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
+  <widget class="OpenGLWidget" name="openGLWidget">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>781</width>
-     <height>22</height>
+     <x>10</x>
+     <y>20</y>
+     <width>701</width>
+     <height>331</height>
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>400</y>
+     <width>351</width>
+     <height>301</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>630</x>
+     <y>450</y>
+     <width>111</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Global Y Scale</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="pos_x_mid_label">
+   <property name="geometry">
+    <rect>
+     <x>460</x>
+     <y>360</y>
+     <width>49</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="neg_x_label">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>360</y>
+     <width>49</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QDoubleSpinBox" name="global_zoom">
+   <property name="geometry">
+    <rect>
+     <x>500</x>
+     <y>450</y>
+     <width>121</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <double>1000.000000000000000</double>
+   </property>
+   <property name="value">
+    <double>1.000000000000000</double>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="x_axis_samples">
+   <property name="geometry">
+    <rect>
+     <x>500</x>
+     <y>410</y>
+     <width>121</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>1000000</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="pos_x_label">
+   <property name="geometry">
+    <rect>
+     <x>680</x>
+     <y>360</y>
+     <width>49</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="neg_x_mid_label">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>360</y>
+     <width>49</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_3">
+   <property name="geometry">
+    <rect>
+     <x>630</x>
+     <y>410</y>
+     <width>111</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>X Axis Samples</string>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
