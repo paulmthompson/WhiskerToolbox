@@ -58,7 +58,7 @@ void Export_Video_Widget::_exportVideo() {
         std::cout << "Start frame must be less than end frame" << std::endl;
     }
 
-    auto filename = ui->output_filename->toPlainText().toStdString();
+    auto filename = ui->output_filename->text().toStdString();
 
     // If filename doens't have .mp4 as ending, add it
     if (!std::regex_match(filename, std::regex(".*\\.mp4"))) {
