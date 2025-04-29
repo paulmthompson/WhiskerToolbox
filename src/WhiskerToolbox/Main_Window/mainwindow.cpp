@@ -13,6 +13,7 @@
 #include "DataManager/Media/Video_Data.hpp"
 
 #include "DataManager_Widget/DataManager_Widget.hpp"
+#include "DataTransform_Widget/DataTransform_Widget.hpp"
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
@@ -119,6 +120,7 @@ void MainWindow::_createActions() {
     connect(ui->actionLoad_Tensor, &QAction::triggered, this, &MainWindow::openTensorLoaderWidget);
     connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
+    connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
 }
 
 /*
@@ -605,6 +607,25 @@ void MainWindow::openVideoExportWidget() {
 
     auto ptr = dynamic_cast<Export_Video_Widget *>(_widgets[key].get());
     //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openDataTransforms() {
+    std::string const key = "DataTransform_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto dt_widget = std::make_unique<DataTransform_Widget>(
+                _data_manager,
+                this);
+
+        dt_widget->setObjectName(key);
+        registerDockWidget(key, dt_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(dt_widget);
+    }
+
+    auto ptr = dynamic_cast<DataTransform_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);

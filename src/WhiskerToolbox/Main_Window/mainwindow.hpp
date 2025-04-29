@@ -86,5 +86,6 @@ private slots:
     void openTensorLoaderWidget();
     void openDataManager();
     void openVideoExportWidget();
+    void openDataTransforms();
 };
 #endif// MAINWINDOW_HPP

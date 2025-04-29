@@ -100,6 +100,7 @@
     <addaction name="actionTracking_Widget"/>
     <addaction name="actionMachine_Learning"/>
     <addaction name="actionData_Viewer"/>
+    <addaction name="actionData_Transforms"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -215,6 +216,11 @@
   <action name="actionExport_Video">
    <property name="text">
     <string>Export Video</string>
+   </property>
+  </action>
+  <action name="actionData_Transforms">
+   <property name="text">
+    <string>Data Transforms</string>
    </property>
   </action>
  </widget>

@@ -73,6 +73,18 @@ set(PROJECT_SOURCES
         DataManager_Widget/Tensor_Widget/Tensor_Widget.ui
         DataManager_Widget/Tensor_Widget/TensorTableModel.hpp
 
+        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.hpp
+        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.ui
+        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.cpp
+
+        DataManager_Widget/NewDataWidget/NewDataWidget.hpp
+        DataManager_Widget/NewDataWidget/NewDataWidget.cpp
+        DataManager_Widget/NewDataWidget/NewDataWidget.ui
+
+        DataTransform_Widget/DataTransform_Widget.ui
+        DataTransform_Widget/DataTransform_Widget.cpp
+        DataTransform_Widget/DataTransform_Widget.hpp
+
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
         Whisker_Widget/Whisker_Widget.cpp
@@ -110,6 +122,7 @@ set(PROJECT_SOURCES
 
         DataViewer_Widget/DataViewer_Widget.cpp
         DataViewer_Widget/DataViewer_Widget.hpp
+        DataViewer_Widget/DataViewer_Widget.ui
         DataViewer_Widget/OpenGLWidget.cpp
         DataViewer_Widget/OpenGLWidget.hpp
         DataViewer_Widget/XAxis.hpp
@@ -119,6 +132,7 @@ set(PROJECT_SOURCES
 
         ML_Widget/ML_Widget.hpp
         ML_Widget/ML_Widget.cpp
+        ML_Widget/ML_Widget.ui
         ML_Widget/mlpack_conversion.hpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.cpp
@@ -219,14 +233,6 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
-        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.hpp
-        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.ui
-        DataManager_Widget/OutputDirectoryWidget/OutputDirectoryWidget.cpp
-        DataManager_Widget/NewDataWidget/NewDataWidget.hpp
-        DataManager_Widget/NewDataWidget/NewDataWidget.cpp
-        DataManager_Widget/NewDataWidget/NewDataWidget.ui
-        DataViewer_Widget/DataViewer_Widget.ui
-        ML_Widget/ML_Widget.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)
