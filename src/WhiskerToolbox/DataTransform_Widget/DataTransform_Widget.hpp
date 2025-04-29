@@ -1,6 +1,7 @@
 #ifndef WHISKERTOOLBOX_DATATRANSFORM_WIDGET_HPP
 #define WHISKERTOOLBOX_DATATRANSFORM_WIDGET_HPP
 
+#include <QString>
 #include <QWidget>
 
 #include <memory>
@@ -25,9 +26,11 @@ public:
 private:
     Ui::DataTransform_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    QString _highlighted_available_feature;
 
 
 private slots:
+    void _handleFeatureSelected(QString const & feature);
 };
 
 

@@ -185,9 +185,9 @@ set(PROJECT_SOURCES
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.cpp
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.ui
 
-        Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.hpp
-        Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.cpp
-        Loading_Widgets/Analog_Loading_Widget/analog_loading_widget.ui
+        Loading_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.hpp
+        Loading_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.cpp
+        Loading_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.ui
 
         Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp
         Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.cpp

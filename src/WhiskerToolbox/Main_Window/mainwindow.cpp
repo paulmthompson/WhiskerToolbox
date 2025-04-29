@@ -98,7 +98,6 @@ void MainWindow::_createActions() {
 
     connect(ui->actionLoad_Images, &QAction::triggered, this, &MainWindow::Load_Images);
 
-    connect(ui->actionLoad_Analog_Time_Series_CSV, &QAction::triggered, this, &MainWindow::_loadAnalogTimeSeriesCSV);
     connect(ui->actionLoad_Digital_Time_Series_CSV, &QAction::triggered, this, &MainWindow::_loadDigitalTimeSeriesCSV);
 
     connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
@@ -178,33 +177,6 @@ void MainWindow::Load_Images() {
     _data_manager->setMedia(media);
 
     _LoadData();
-}
-
-void MainWindow::_loadAnalogTimeSeriesCSV() {
-    auto filename = QFileDialog::getOpenFileName(
-            this,
-            "Load Video File",
-            QDir::currentPath(),
-            "All files (*.*) ;; CSV (*.csv)");
-
-    if (filename.isNull()) {
-        return;
-    }
-
-    auto series = load_analog_series_from_csv(filename.toStdString());
-
-    auto path = std::filesystem::path(filename.toStdString());
-    auto key = path.filename().replace_extension("").string();
-
-    _data_manager->setData<AnalogTimeSeries>(key);
-
-    _data_manager->getData<AnalogTimeSeries>(key)->setData(series);
-
-    std::cout << "Loaded series " << key << " with " << _data_manager->getData<AnalogTimeSeries>(key)->getAnalogTimeSeries().size() << " points " << std::endl;
-
-    if (_widgets.find("analog_viewer") != _widgets.end()) {
-        dynamic_cast<Analog_Viewer *>(_widgets["analog_viewer"].get())->plotAnalog(key);
-    }
 }
 
 void MainWindow::_loadDigitalTimeSeriesCSV() {

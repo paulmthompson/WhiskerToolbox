@@ -66,7 +66,6 @@ private slots:
     void Load_Video();
     void Load_Images();
 
-    void _loadAnalogTimeSeriesCSV();
     void _loadDigitalTimeSeriesCSV();
 
     void _loadJSONConfig();
