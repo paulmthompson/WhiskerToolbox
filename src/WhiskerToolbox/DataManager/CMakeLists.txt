@@ -6,6 +6,8 @@ set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
+find_package(nlohmann_json CONFIG REQUIRED)
+
 add_library(DataManager SHARED
         DataManager.hpp
         DataManager.cpp
@@ -104,6 +106,8 @@ else()
 endif()
 
 target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
+
+target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 
 target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
 

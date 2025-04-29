@@ -3,8 +3,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
-#include <vector>
+#include <cmath>
 #include <map>
+#include <vector>
+
 
 TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]") {
     SECTION("Construction from vector") {
