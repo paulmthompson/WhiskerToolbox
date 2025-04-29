@@ -50,4 +50,4 @@ runs:
 
     - name: Install jinja2
       shell: bash
-      run: pip install jinja2
+      run: pip install jinja2 setuptools
