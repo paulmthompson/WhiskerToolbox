@@ -4,7 +4,6 @@
 #include "Observer/Observer_Data.hpp"
 
 #include <algorithm>
-#include <cmath>// std::nan
 #include <concepts>
 #include <cstdint>
 #include <iostream>
@@ -28,28 +27,11 @@ public:
     AnalogTimeSeries(std::vector<float> analog_vector, std::vector<size_t> time_vector);
     explicit AnalogTimeSeries(std::map<int, float> analog_map);
 
-    void setData(std::vector<float> analog_vector) {
-        _data.clear();
-        _data = std::move(analog_vector);
-        _time = std::vector<size_t>(_data.size());
-        std::iota(_time.begin(), _time.end(), 0);
-    };
-    void setData(std::vector<float> analog_vector, std::vector<size_t> time_vector) {
-        _data.clear();
-        _time.clear();
-        _data = std::move(analog_vector);
-        _time = std::move(time_vector);
-    };
-    void setData(std::map<int, float> analog_map) {
-        _data.clear();
-        _time.clear();
-        _data = std::vector<float>();
-        _time = std::vector<size_t>();
-        for (auto & [key, value]: analog_map) {
-            _time.push_back(key);
-            _data.push_back(value);
-        }
-    };
+    void setData(std::vector<float> analog_vector);
+
+    void setData(std::vector<float> analog_vector, std::vector<size_t> time_vector);
+
+    void setData(std::map<int, float> analog_map);
 
     template<typename T>
     void overwriteAtTimes(std::vector<float> & analog_data, std::vector<T> & time) {
@@ -70,43 +52,21 @@ public:
     std::vector<float> & getAnalogTimeSeries() { return _data; };
     std::vector<size_t> & getTimeSeries() { return _time; };
 
-    [[nodiscard]] float getMeanValue() const {
-        return std::accumulate(_data.begin(), _data.end(), 0.0f) / static_cast<float>(_data.size());
-    }
+    [[nodiscard]] float getMeanValue() const;
 
-    [[nodiscard]] float getMeanValue(int64_t start, int64_t end) const {
-        return std::accumulate(_data.begin() + start, _data.begin() + end, 0.0f) / static_cast<float>(end - start);
-    }
+    [[nodiscard]] float getMeanValue(int64_t start, int64_t end) const;
 
-    [[nodiscard]] float getStdDevValue() const {
-        float const mean = getMeanValue();
-        float const sum = std::accumulate(_data.begin(), _data.end(), 0.0f,
-                                          [mean](float acc, float val) { return acc + (val - mean) * (val - mean); });
-        return std::sqrt(sum / static_cast<float>(_data.size()));
-    }
+    [[nodiscard]] float getStdDevValue() const;
 
-    [[nodiscard]] float getStdDevValue(int64_t start, int64_t end) const {
-        float const mean = getMeanValue(start, end);
-        float const sum = std::accumulate(_data.begin() + start, _data.begin() + end, 0.0f,
-                                          [mean](float acc, float val) { return acc + (val - mean) * (val - mean); });
-        return std::sqrt(sum / static_cast<float>((end - start)));
-    }
+    [[nodiscard]] float getStdDevValue(int64_t start, int64_t end) const;
 
-    [[nodiscard]] float getMinValue() const {
-        return *std::min_element(_data.begin(), _data.end());
-    }
+    [[nodiscard]] float getMinValue() const;
 
-    [[nodiscard]] float getMinValue(int64_t start, int64_t end) const {
-        return *std::min_element(_data.begin() + start, _data.begin() + end);
-    }
+    [[nodiscard]] float getMinValue(int64_t start, int64_t end) const;
 
-    [[nodiscard]] float getMaxValue() const {
-        return *std::max_element(_data.begin(), _data.end());
-    }
+    [[nodiscard]] float getMaxValue() const;
 
-    [[nodiscard]] float getMaxValue(int64_t start, int64_t end) const {
-        return *std::max_element(_data.begin() + start, _data.begin() + end);
-    }
+    [[nodiscard]] float getMaxValue(int64_t start, int64_t end) const;
 
     template<typename TransformFunc = std::identity>
     auto getDataInRange(float start_time, float stop_time,
@@ -147,7 +107,6 @@ private:
     std::vector<float> _data;
     std::vector<size_t> _time;
 };
-
 
 
 void save_analog(
