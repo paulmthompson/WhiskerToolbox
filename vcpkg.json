@@ -66,7 +66,8 @@
         {
             "name": "glib",
             "version": "2.80.0",
-            "$comment": "glib below this version requires distutils in python, which is removed in >=3.12."
+            "$comment": "glib below this version requires distutils in python, which is removed in >=3.12.",
+            "$comment2": "This version was added 2024.10.09"
         },
         {
             "name": "glm",
