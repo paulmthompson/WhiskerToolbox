@@ -22,3 +22,52 @@ std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data) {
 
     return analog_time_series;
 }
+
+std::string MaskAreaOperation::getName() const {
+    return "Calculate Area";
+}
+
+bool MaskAreaOperation::canApply(DataTypeVariant const & dataVariant) const {
+    // 1. Check if the variant holds the correct alternative type (shared_ptr<MaskData>)
+    if (!std::holds_alternative<std::shared_ptr<MaskData>>(dataVariant)) {
+        return false;
+    }
+
+    // 2. Check if the shared_ptr it holds is actually non-null.
+    //    Use get_if for safe access (returns nullptr if type is wrong, though step 1 checked)
+    auto const * ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
+
+    // Return true only if get_if succeeded AND the contained shared_ptr is not null.
+    return ptr_ptr && *ptr_ptr;
+}
+
+std::any MaskAreaOperation::execute(DataTypeVariant const & dataVariant) {
+
+    // 1. Safely get pointer to the shared_ptr<MaskData> if variant holds it.
+    auto const * ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
+
+    // 2. Validate the pointer from get_if and the contained shared_ptr.
+    //    This check ensures we have the right type and it's not a null shared_ptr.
+    //    canApply should generally ensure this, but execute should be robust.
+    if (!ptr_ptr || !(*ptr_ptr)) {
+        // Logically this means canApply would be false. Return empty std::any for graceful failure.
+        std::cerr << "MaskAreaOperation::execute called with incompatible variant type or null data." << std::endl;
+        return {};// Return empty any (void context)
+    }
+
+    // 3. Get the non-owning raw pointer to pass to the calculation function.
+    MaskData const * mask_raw_ptr = (*ptr_ptr).get();
+
+    // 4. Call the core calculation logic.
+    std::shared_ptr<AnalogTimeSeries> result_ts = area(mask_raw_ptr);
+
+    // 5. Handle potential failure from the calculation function.
+    if (!result_ts) {
+        std::cerr << "MaskAreaOperation::execute: 'calculate_mask_area' failed to produce a result." << std::endl;
+        return {};// Return empty any
+    }
+
+    // 6. Success: Wrap the resulting shared_ptr in std::any and return.
+    std::cout << "MaskAreaOperation executed successfully using variant input." << std::endl;
+    return result_ts;
+}

@@ -1,8 +1,11 @@
 #ifndef WHISKERTOOLBOX_MASK_AREA_HPP
 #define WHISKERTOOLBOX_MASK_AREA_HPP
 
+#include "transforms/data_transforms.hpp"
 
-#include <memory>
+#include <any>   // For std::any
+#include <memory>// For std::shared_ptr
+#include <string>// For std::string
 
 class AnalogTimeSeries;
 class MaskData;
@@ -15,5 +18,31 @@ class MaskData;
  */
 std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data);
 
+
+// --- Concrete IOperation Implementation for Mask Area ---
+
+class MaskAreaOperation final : public TransformOperation {
+public:
+    /**
+     * @brief Gets the user-friendly name of this operation.
+     * @return The name as a string.
+     */
+    [[nodiscard]] std::string getName() const override;
+
+    /**
+     * @brief Checks if this operation can be applied to the given data variant.
+     * @param dataVariant The variant holding a shared_ptr to the data object.
+     * @return True if the variant holds a non-null MaskData shared_ptr, false otherwise.
+     */
+    [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
+
+    /**
+     * @brief Executes the mask area calculation using data from the variant.
+     * @param dataVariant The variant holding a non-null shared_ptr to the MaskData object.
+     * @return std::any containing a std::shared_ptr<AnalogTimeSeries> on success,
+     * or an empty std::any on failure (e.g., type mismatch, null pointer, calculation failure).
+     */
+    std::any execute(DataTypeVariant const & dataVariant) override;
+};
 
 #endif//WHISKERTOOLBOX_MASK_AREA_HPP
