@@ -11,7 +11,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
     auto mask_data = std::make_shared<MaskData>();
 
     SECTION("Calculating area from empty mask data") {
-        auto result = area(mask_data);
+        auto result = area(mask_data.get());
 
         REQUIRE(result->getAnalogTimeSeries().empty());
         REQUIRE(result->getTimeSeries().empty());
@@ -23,7 +23,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         std::vector<float> y_coords = {1.0f, 2.0f, 3.0f};
         mask_data->addMaskAtTime(10, x_coords, y_coords);
 
-        auto result = area(mask_data);
+        auto result = area(mask_data.get());
 
         auto& values = result->getAnalogTimeSeries();
         auto& times = result->getTimeSeries();
@@ -45,7 +45,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         std::vector<float> y2 = {4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
         mask_data->addMaskAtTime(20, x2, y2);
 
-        auto result = area(mask_data);
+        auto result = area(mask_data.get());
 
         auto& values = result->getAnalogTimeSeries();
         auto& times = result->getTimeSeries();
@@ -74,7 +74,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         // Timestamp 50: No masks (empty)
         mask_data->clearMasksAtTime(50);
 
-        auto result = area(mask_data);
+        auto result = area(mask_data.get());
 
         auto& values = result->getAnalogTimeSeries();
         auto& times = result->getTimeSeries();
@@ -101,7 +101,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         std::vector<float> y = {1.0f, 2.0f, 3.0f, 4.0f};
         mask_data->addMaskAtTime(100, x, y);
 
-        auto result = area(mask_data);
+        auto result = area(mask_data.get());
 
         // Verify it's a proper AnalogTimeSeries
         REQUIRE(result != nullptr);
@@ -125,7 +125,7 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
         std::vector<float> empty_y;
         mask_data->addMaskAtTime(10, empty_x, empty_y);
 
-        auto result = area(mask_data);
+        auto result = area(mask_data.get());
 
         REQUIRE(result->getAnalogTimeSeries().size() == 1);
         REQUIRE(result->getTimeSeries().size() == 1);
@@ -143,7 +143,7 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
         std::vector<float> y = {1.0f, 2.0f, 3.0f};
         mask_data->addMaskAtTime(20, x, y);
 
-        auto result = area(mask_data);
+        auto result = area(mask_data.get());
 
         REQUIRE(result->getAnalogTimeSeries().size() == 1);
         REQUIRE(result->getTimeSeries().size() == 1);
@@ -158,7 +158,7 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
             mask_data->addMaskAtTime(30, x, y);
         }
 
-        auto result = area(mask_data);
+        auto result = area(mask_data.get());
 
         // Sum of 1 + 2 + 3 + ... + 10 = 55
         REQUIRE(result->getAnalogTimeSeries()[0] == 55.0f);
