@@ -73,7 +73,7 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
         REQUIRE_THAT(series.getMeanValue(1, 4) , Catch::Matchers::WithinRel(3.0f, 1e-3f));
         REQUIRE_THAT(series.getStdDevValue(1, 4) , Catch::Matchers::WithinRel(0.8165f, 1e-3f)); // 0.8165 for N, 1.0 for N-1 denom
         REQUIRE(series.getMinValue(1, 4) == 2.0f);
-        REQUIRE(series.getMaxValue(1, 4) == 5.0f);
+        REQUIRE(series.getMaxValue(1, 4) == 4.0f);
     }
 
     SECTION("Data ranges") {

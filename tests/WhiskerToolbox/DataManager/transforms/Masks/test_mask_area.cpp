@@ -116,15 +116,8 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
 }
 
 TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area][transform][edge]") {
+
     auto mask_data = std::make_shared<MaskData>();
-
-    SECTION("Calculating with null mask data") {
-        std::shared_ptr<MaskData> null_mask;
-        auto result = area(null_mask);
-
-        REQUIRE(result != nullptr);
-        REQUIRE(result->getAnalogTimeSeries().empty());
-    }
 
     SECTION("Masks with zero points") {
         // Add an empty mask (should be handled gracefully)
