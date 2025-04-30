@@ -27,7 +27,7 @@ public:
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
     [[nodiscard]] std::vector<Mask2D> const & getMasksAtTime(int time) const;
-    std::map<int, std::vector<Mask2D>> getData() { return _data; };
+    std::map<int, std::vector<Mask2D>> getData() const { return _data; };
 
 protected:
 private:

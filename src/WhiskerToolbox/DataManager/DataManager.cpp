@@ -242,7 +242,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                         if (operation_type == "area") {
                             std::cout << "Calculating area for mask: " << name << std::endl;
-                            auto area_data = area(dm->getData<MaskData>(name));
+                            auto area_data = area(dm->getData<MaskData>(name).get());
                             std::string const output_name = name + "_area";
                             dm->setData<AnalogTimeSeries>(output_name, area_data);
                         }

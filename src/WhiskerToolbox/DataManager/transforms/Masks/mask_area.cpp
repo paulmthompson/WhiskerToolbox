@@ -6,7 +6,7 @@
 
 #include <map>
 
-std::shared_ptr<AnalogTimeSeries> area(std::shared_ptr<MaskData> const & mask_data) {
+std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data) {
     auto analog_time_series = std::make_shared<AnalogTimeSeries>();
     std::map<int, float> areas;
 

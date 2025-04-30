@@ -22,6 +22,16 @@ class MaskData;
 class PointData;
 class TensorData;
 
+using DataTypeVariant = std::variant<
+        std::shared_ptr<MediaData>,
+        std::shared_ptr<PointData>,
+        std::shared_ptr<LineData>,
+        std::shared_ptr<MaskData>,
+        std::shared_ptr<AnalogTimeSeries>,
+        std::shared_ptr<DigitalEventSeries>,
+        std::shared_ptr<DigitalIntervalSeries>,
+        std::shared_ptr<TensorData>>;
+
 struct DataInfo {
     std::string key;
     std::string data_class;
@@ -220,15 +230,7 @@ private:
 
     std::vector<ObserverCallback> _observers;
 
-    std::unordered_map<std::string, std::variant<
-                                            std::shared_ptr<MediaData>,
-                                            std::shared_ptr<PointData>,
-                                            std::shared_ptr<LineData>,
-                                            std::shared_ptr<MaskData>,
-                                            std::shared_ptr<AnalogTimeSeries>,
-                                            std::shared_ptr<DigitalEventSeries>,
-                                            std::shared_ptr<DigitalIntervalSeries>,
-                                            std::shared_ptr<TensorData>>>
+    std::unordered_map<std::string, DataTypeVariant>
             _data;
 
     std::unordered_map<std::string, std::string> _time_frames;
