@@ -3,6 +3,7 @@
 
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series_Loader.hpp"
 #include "IntervalTableModel.hpp"
 
 #include <QEvent>

@@ -62,7 +62,6 @@
      <addaction name="actionLoad_Lines"/>
      <addaction name="actionLoad_Masks"/>
      <addaction name="actionLoad_Tensor"/>
-     <addaction name="actionLoad_Digital_Time_Series_CSV"/>
      <addaction name="actionLoad_JSON_Config"/>
     </widget>
     <widget class="QMenu" name="menuExport">

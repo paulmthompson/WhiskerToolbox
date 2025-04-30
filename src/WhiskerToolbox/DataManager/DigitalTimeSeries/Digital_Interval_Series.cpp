@@ -13,6 +13,21 @@ DigitalIntervalSeries::DigitalIntervalSeries(std::vector<Interval> digital_vecto
     _sortData();
 }
 
+void DigitalIntervalSeries::setData(std::vector<Interval> digital_vector) {
+    _data = std::move(digital_vector);
+    _sortData();
+    notifyObservers();
+}
+
+void DigitalIntervalSeries::setData(std::vector<std::pair<float, float>> const & digital_vector) {
+    std::vector<Interval> intervals;
+    intervals.reserve(digital_vector.size());
+    for (auto & interval: digital_vector) {
+        intervals.emplace_back(Interval{static_cast<int64_t>(interval.first), static_cast<int64_t>(interval.second)});
+    }
+    setData(intervals);
+}
+
 std::vector<Interval> const & DigitalIntervalSeries::getDigitalIntervalSeries() const {
     return _data;
 }
@@ -123,34 +138,3 @@ int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int tim
     return closest_index;
 }
 
-void save_intervals(
-        std::vector<Interval> const & intervals,
-        std::string const & block_output) {
-    std::fstream fout;
-    fout.open(block_output, std::fstream::out);
-
-    for (auto & interval: intervals) {
-        fout << std::round(interval.start) << "," << std::round(interval.end) << "\n";
-    }
-
-    fout.close();
-}
-
-std::vector<Interval> load_digital_series_from_csv(
-        std::string const & filename,
-        char delimiter) {
-    std::string csv_line;
-
-    std::fstream myfile;
-    myfile.open(filename, std::fstream::in);
-
-    int64_t start, end;
-    auto output = std::vector<Interval>();
-    while (getline(myfile, csv_line)) {
-        std::stringstream ss(csv_line);
-        ss >> start >> delimiter >> end;
-        output.emplace_back(Interval{start, end});
-    }
-
-    return output;
-}

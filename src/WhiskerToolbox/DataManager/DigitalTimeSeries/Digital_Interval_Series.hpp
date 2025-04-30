@@ -4,11 +4,9 @@
 #include "Observer/Observer_Data.hpp"
 #include "interval_data.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <iostream>
 #include <ranges>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -38,20 +36,9 @@ public:
         CLIP        // Clip intervals at range boundaries
     };
 
-    void setData(std::vector<Interval> digital_vector) {
-        _data = std::move(digital_vector);
-        _sortData();
-        notifyObservers();
-    };
+    void setData(std::vector<Interval> digital_vector);
 
-    void setData(std::vector<std::pair<float, float>> const & digital_vector) {
-        std::vector<Interval> intervals;
-        intervals.reserve(digital_vector.size());
-        for (auto & interval: digital_vector) {
-            intervals.emplace_back(Interval{static_cast<int64_t>(interval.first), static_cast<int64_t>(interval.second)});
-        }
-        setData(intervals);
-    }
+    void setData(std::vector<std::pair<float, float>> const & digital_vector);
 
     void addEvent(Interval new_interval);
 
@@ -190,11 +177,6 @@ private:
         return result;
     }
 };
-
-std::vector<Interval> load_digital_series_from_csv(std::string const & filename, char delimiter = ' ');
-
-void save_intervals(std::vector<Interval> const & intervals,
-                    std::string const & block_output);
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time);
 

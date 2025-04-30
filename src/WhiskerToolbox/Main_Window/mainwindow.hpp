@@ -66,8 +66,6 @@ private slots:
     void Load_Video();
     void Load_Images();
 
-    void _loadDigitalTimeSeriesCSV();
-
     void _loadJSONConfig();
 
     void openWhiskerTracking();

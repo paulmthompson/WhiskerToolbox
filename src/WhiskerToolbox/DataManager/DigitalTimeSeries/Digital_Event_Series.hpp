@@ -3,10 +3,9 @@
 
 #include "Observer/Observer_Data.hpp"
 
-#include <algorithm>
+
 #include <concepts>
 #include <ranges>
-#include <string>
 #include <vector>
 
 /**
@@ -71,10 +70,5 @@ private:
     // Sort the events in ascending order
     void _sortEvents();
 };
-
-//namespace Loader {
-//DigitalEventSeries loadEventsFromCSV(CSVSingleColumnOptions const & opts);
-//}// namespace Loader
-
 
 #endif//BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
