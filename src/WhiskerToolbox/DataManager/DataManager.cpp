@@ -19,6 +19,7 @@
 
 #include "loaders/binary_loaders.hpp"
 #include "transforms/data_transforms.hpp"
+#include "transforms/Masks/mask_area.hpp"
 
 #include "TimeFrame.hpp"
 

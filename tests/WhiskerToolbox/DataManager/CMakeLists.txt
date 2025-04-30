@@ -21,6 +21,8 @@ add_executable(test_data_manager
 
         DigitalTimeSeries/test_digital_event_series.cpp
         DigitalTimeSeries/test_digital_interval_series.cpp
+
+        transforms/Masks/test_mask_area.cpp
 )
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)

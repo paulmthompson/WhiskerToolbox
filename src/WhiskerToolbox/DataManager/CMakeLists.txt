@@ -74,6 +74,8 @@ add_library(DataManager SHARED
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
+        transforms/Masks/mask_area.cpp
+        transforms/Masks/mask_area.hpp
 
         loaders/binary_loaders.hpp
         loaders/hdf5_loaders.hpp
