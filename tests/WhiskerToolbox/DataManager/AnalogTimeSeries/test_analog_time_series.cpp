@@ -2,6 +2,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <cmath>
 #include <map>
@@ -63,14 +64,14 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
         AnalogTimeSeries series(data);
 
-        REQUIRE(series.getMeanValue() == Catch::Approx(3.0f));
-        REQUIRE(series.getStdDevValue() == Catch::Approx(std::sqrt(2.0f)));
+        REQUIRE_THAT(series.getMeanValue() , Catch::Matchers::WithinRel(3.0f, 1e-3f));
+        REQUIRE_THAT(series.getStdDevValue() , Catch::Matchers::WithinRel(1.41421f, 1e-3f)); // 1.41421 for N, 1.5811 for N-1 denom
         REQUIRE(series.getMinValue() == 1.0f);
         REQUIRE(series.getMaxValue() == 5.0f);
 
-        // Test with range
-        REQUIRE(series.getMeanValue(1, 4) == Catch::Approx(3.0f));
-        REQUIRE(series.getStdDevValue(1, 4) == Catch::Approx(1.0f));
+        // Test with range. 1 to 4 will reduce the data to {2.0f, 3.0f, 4.0f}
+        REQUIRE_THAT(series.getMeanValue(1, 4) , Catch::Matchers::WithinRel(3.0f, 1e-3f));
+        REQUIRE_THAT(series.getStdDevValue(1, 4) , Catch::Matchers::WithinRel(0.8165f, 1e-3f)); // 0.8165 for N, 1.0 for N-1 denom
         REQUIRE(series.getMinValue(1, 4) == 2.0f);
         REQUIRE(series.getMaxValue(1, 4) == 4.0f);
     }
