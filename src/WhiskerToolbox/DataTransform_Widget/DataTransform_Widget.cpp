@@ -38,7 +38,7 @@ void DataTransform_Widget::openWidget() {
 void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Calculate Area"] = nullptr;// Or a factory for a default "No Params" widget
-
+    _parameterWidgetFactories["Threshold for Events"] = nullptr;
     /*
     parameterWidgetFactories_["Calculate Threshold"] = [](QWidget* parent) -> IParameterWidget* {
         return new ThresholdWidget(parent);

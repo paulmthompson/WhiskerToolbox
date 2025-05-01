@@ -10,6 +10,7 @@
 #include "TransformRegistry.hpp"
 
 #include "transforms/Masks/mask_area.hpp"
+#include "transforms/AnalogTimeSeries/analog_event_threshold.hpp"
 
 
 TransformRegistry::TransformRegistry() {
@@ -18,6 +19,7 @@ TransformRegistry::TransformRegistry() {
 
     // --- 1. Register Operations---
     _registerOperation(std::make_unique<MaskAreaOperation>());
+    _registerOperation(std::make_unique<EventThresholdOperation>());
 
     _computeApplicableOperations();
     std::cout << "Operation Registry Initialized." << std::endl;
