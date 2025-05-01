@@ -8,6 +8,7 @@
 #include <any>
 #include <memory>
 #include <string>
+#include <typeindex>
 
 class PointData;
 
@@ -17,6 +18,8 @@ class TransformOperation {
 public:
     virtual ~TransformOperation() = default;
     [[nodiscard]] virtual std::string getName() const = 0;
+
+    [[nodiscard]] virtual std::type_index getTargetInputTypeIndex() const = 0;
 
     [[nodiscard]] virtual bool canApply(DataTypeVariant const & dataVariant) const = 0;
 

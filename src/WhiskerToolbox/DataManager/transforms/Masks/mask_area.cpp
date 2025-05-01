@@ -27,6 +27,10 @@ std::string MaskAreaOperation::getName() const {
     return "Calculate Area";
 }
 
+std::type_index MaskAreaOperation::getTargetInputTypeIndex() const {
+    return typeid(std::shared_ptr<MaskData>);
+}
+
 bool MaskAreaOperation::canApply(DataTypeVariant const & dataVariant) const {
     // 1. Check if the variant holds the correct alternative type (shared_ptr<MaskData>)
     if (!std::holds_alternative<std::shared_ptr<MaskData>>(dataVariant)) {

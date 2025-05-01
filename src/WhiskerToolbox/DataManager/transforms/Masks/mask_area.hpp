@@ -3,9 +3,10 @@
 
 #include "transforms/data_transforms.hpp"
 
-#include <any>   // For std::any
-#include <memory>// For std::shared_ptr
-#include <string>// For std::string
+#include <any>          // std::any
+#include <memory>       // std::shared_ptr
+#include <string>       // std::string
+#include <typeindex>    // std::type_index
 
 class AnalogTimeSeries;
 class MaskData;
@@ -19,8 +20,6 @@ class MaskData;
 std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data);
 
 
-// --- Concrete IOperation Implementation for Mask Area ---
-
 class MaskAreaOperation final : public TransformOperation {
 public:
     /**
@@ -28,6 +27,9 @@ public:
      * @return The name as a string.
      */
     [[nodiscard]] std::string getName() const override;
+
+
+    [[nodiscard]] std::type_index getTargetInputTypeIndex() const override;
 
     /**
      * @brief Checks if this operation can be applied to the given data variant.
