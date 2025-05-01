@@ -7,6 +7,8 @@
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 #include "transforms/TransformRegistry.hpp"
 
+#include "DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp"
+
 
 DataTransform_Widget::DataTransform_Widget(
         std::shared_ptr<DataManager> data_manager,
@@ -37,8 +39,12 @@ void DataTransform_Widget::openWidget() {
 
 void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
-    _parameterWidgetFactories["Calculate Area"] = nullptr;// Or a factory for a default "No Params" widget
-    _parameterWidgetFactories["Threshold for Events"] = nullptr;
+    _parameterWidgetFactories["Calculate Area"] = nullptr;
+
+    _parameterWidgetFactories["Threshold Event Detection"] = [](QWidget* parent) -> TransformParameter_Widget* {
+        return new AnalogEventThreshold_Widget(parent);
+    };
+
     /*
     parameterWidgetFactories_["Calculate Threshold"] = [](QWidget* parent) -> IParameterWidget* {
         return new ThresholdWidget(parent);
