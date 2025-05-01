@@ -74,6 +74,8 @@ add_library(DataManager SHARED
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
+        transforms/TransformRegistry.hpp
+        transforms/TransformRegistry.cpp
         transforms/Masks/mask_area.cpp
         transforms/Masks/mask_area.hpp
 
@@ -85,6 +87,7 @@ add_library(DataManager SHARED
         Observer/Observer_Data.hpp
         Observer/Observer_Data.cpp
         ImageSize/ImageSize.hpp
+
 )
 
 message(STATUS "NPY source dir:")

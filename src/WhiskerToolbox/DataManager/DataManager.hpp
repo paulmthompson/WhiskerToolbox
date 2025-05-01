@@ -102,6 +102,13 @@ public:
         return keys;
     }
 
+    std::optional<DataTypeVariant> getDataVariant(std::string const & key) {
+        if (_data.find(key) != _data.end()) {
+            return _data[key];
+        }
+        return std::nullopt;
+    }
+
     template<typename T>
     std::shared_ptr<T> getData(std::string const & key) {
         if (_data.find(key) != _data.end()) {

@@ -12,6 +12,7 @@ class DataTransform_Widget;
 }
 
 class DataManager;
+class TransformRegistry;
 
 
 class DataTransform_Widget : public QWidget {
@@ -26,6 +27,7 @@ public:
 private:
     Ui::DataTransform_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    std::unique_ptr<TransformRegistry> _registry;
     QString _highlighted_available_feature;
 
 
