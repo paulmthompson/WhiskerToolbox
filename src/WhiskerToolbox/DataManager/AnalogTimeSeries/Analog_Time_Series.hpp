@@ -34,8 +34,8 @@ public:
 
     void overwriteAtTimes(std::vector<float> & analog_data, std::vector<size_t> & time);
 
-    std::vector<float> & getAnalogTimeSeries() { return _data; };
-    std::vector<size_t> & getTimeSeries() { return _time; };
+    [[nodiscard]] std::vector<float> getAnalogTimeSeries() const { return _data; };
+    [[nodiscard]] std::vector<size_t> getTimeSeries() const { return _time; };
 
     [[nodiscard]] float getMeanValue() const;
 

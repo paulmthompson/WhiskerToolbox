@@ -76,8 +76,11 @@ add_library(DataManager SHARED
         transforms/data_transforms.hpp
         transforms/TransformRegistry.hpp
         transforms/TransformRegistry.cpp
+
         transforms/Masks/mask_area.cpp
         transforms/Masks/mask_area.hpp
+        transforms/AnalogTimeSeries/analog_event_threshold.cpp
+        transforms/AnalogTimeSeries/analog_event_threshold.hpp
 
         loaders/binary_loaders.hpp
         loaders/hdf5_loaders.hpp
