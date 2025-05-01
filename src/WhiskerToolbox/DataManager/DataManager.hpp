@@ -5,9 +5,10 @@
 #include "TimeFrame.hpp"
 
 #include <filesystem>
-#include <functional>// std::function
+#include <functional>   // std::function
 #include <iostream>
 #include <memory>       // std::shared_ptr
+#include <optional>     // std::optional
 #include <string>       // std::string
 #include <unordered_map>// std::unordered_map
 #include <utility>      // std::move
