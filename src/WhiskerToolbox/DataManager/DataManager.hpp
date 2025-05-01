@@ -150,6 +150,12 @@ public:
         notifyObservers();
     }
 
+    void setData(std::string const & key, DataTypeVariant data) {
+        _data[key] = data;
+        setTimeFrame(key, "time");
+        notifyObservers();
+    }
+
     template<typename T>
     void setData(std::string const & key, std::shared_ptr<T> data, std::string const & time_key) {
         _data[key] = data;

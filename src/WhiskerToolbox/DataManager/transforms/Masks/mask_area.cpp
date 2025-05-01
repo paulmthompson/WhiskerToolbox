@@ -45,7 +45,7 @@ bool MaskAreaOperation::canApply(DataTypeVariant const & dataVariant) const {
     return ptr_ptr && *ptr_ptr;
 }
 
-std::any MaskAreaOperation::execute(DataTypeVariant const & dataVariant) {
+DataTypeVariant MaskAreaOperation::execute(DataTypeVariant const & dataVariant, TransformParametersBase const * transformParameters) {
 
     // 1. Safely get pointer to the shared_ptr<MaskData> if variant holds it.
     auto const * ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
@@ -56,7 +56,7 @@ std::any MaskAreaOperation::execute(DataTypeVariant const & dataVariant) {
     if (!ptr_ptr || !(*ptr_ptr)) {
         // Logically this means canApply would be false. Return empty std::any for graceful failure.
         std::cerr << "MaskAreaOperation::execute called with incompatible variant type or null data." << std::endl;
-        return {};// Return empty any (void context)
+        return {};// Return empty
     }
 
     // 3. Get the non-owning raw pointer to pass to the calculation function.
@@ -68,10 +68,9 @@ std::any MaskAreaOperation::execute(DataTypeVariant const & dataVariant) {
     // 5. Handle potential failure from the calculation function.
     if (!result_ts) {
         std::cerr << "MaskAreaOperation::execute: 'calculate_mask_area' failed to produce a result." << std::endl;
-        return {};// Return empty any
+        return {};// Return empty
     }
 
-    // 6. Success: Wrap the resulting shared_ptr in std::any and return.
     std::cout << "MaskAreaOperation executed successfully using variant input." << std::endl;
     return result_ts;
 }

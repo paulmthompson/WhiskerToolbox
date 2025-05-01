@@ -4,7 +4,6 @@
 
 #include "ui_DataTransform_Widget.h"
 
-#include "DataManager.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 #include "transforms/TransformRegistry.hpp"
 
@@ -23,6 +22,8 @@ DataTransform_Widget::DataTransform_Widget(
     ui->feature_table_widget->setDataManager(_data_manager);
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataTransform_Widget::_handleFeatureSelected);
+    connect(ui->do_transform_button, &QPushButton::clicked, this, &DataTransform_Widget::_doTransform);
+    connect(ui->operationComboBox, &QComboBox::currentIndexChanged, this, &DataTransform_Widget::_onOperationSelected);
 }
 
 DataTransform_Widget::~DataTransform_Widget() {
@@ -34,19 +35,123 @@ void DataTransform_Widget::openWidget() {
     this->show();
 }
 
+void DataTransform_Widget::_initializeParameterWidgetFactories() {
+
+    _parameterWidgetFactories["Calculate Area"] = nullptr;// Or a factory for a default "No Params" widget
+
+    /*
+    parameterWidgetFactories_["Calculate Threshold"] = [](QWidget* parent) -> IParameterWidget* {
+        return new ThresholdWidget(parent);
+    };
+
+    parameterWidgetFactories_["Smooth Data"] = [](QWidget* parent) -> IParameterWidget* {
+        // return new SmoothingWidget(parent); // Example
+        return nullptr; // Placeholder if not implemented
+    };
+    */
+}
+
+
 void DataTransform_Widget::_handleFeatureSelected(QString const & feature) {
     _highlighted_available_feature = feature;
 
     auto key = feature.toStdString();
-    auto feature_type = _data_manager->getType(feature.toStdString());
     auto data_variant = _data_manager->getDataVariant(key);
 
     if (data_variant == std::nullopt) return;
     std::vector<std::string> operation_names = _registry->getOperationNamesForVariant(data_variant.value());
 
-    std::cout << "Available Operations: \n";
-    for (auto const & name: operation_names) {
-        std::cout << name << "\n";
+    ui->operationComboBox->clear();
+
+    if (operation_names.empty()) {
+        ui->operationComboBox->addItem("No operations available");
+        ui->operationComboBox->setEnabled(false);
+        ui->do_transform_button->setEnabled(false);
+    } else {
+        for (std::string const & op_name: operation_names) {
+            ui->operationComboBox->addItem(QString::fromStdString(op_name));
+        }
+        ui->operationComboBox->setEnabled(true);
+        ui->do_transform_button->setEnabled(true);
+        ui->operationComboBox->setCurrentIndex(0);
     }
-    std::cout << std::endl;
+
+    _currentSelectedDataVariant = data_variant.value();
+}
+
+void DataTransform_Widget::_onOperationSelected(int index) {
+    _currentParameterWidget = nullptr;
+
+    if (index < 0) {
+        std::cout << "selected index is less than 0 and invalid: " << index << std::endl;
+        _currentSelectedOperation = nullptr;
+        ui->stackedWidget->setCurrentIndex(0);// Show default page
+        return;
+    }
+
+    std::string op_name = ui->operationComboBox->itemText(index).toStdString();
+
+    _currentSelectedOperation = _registry->findOperationByName(op_name);
+    std::cout << "Selecting operation " << op_name << std::endl;
+
+    if (!_currentSelectedOperation) {
+        // operation not found
+        ui->stackedWidget->setCurrentIndex(0);
+        return;
+    }
+
+    _displayParameterWidget(op_name);
+}
+
+// Helper function to show the correct widget
+void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) {
+    _currentParameterWidget = nullptr;
+    QWidget * targetWidget = nullptr;
+
+    // Find the factory function for this operation name
+    auto factoryIt = _parameterWidgetFactories.find(op_name);
+    if (factoryIt != _parameterWidgetFactories.end() && factoryIt->second) {
+        // Factory exists and is not null, call it to create the widget
+        std::function<TransformParameter_Widget *(QWidget *)> factory = factoryIt->second;
+        TransformParameter_Widget * newParamWidget = factory(ui->stackedWidget);// Create with parent
+
+        if (newParamWidget) {
+            int widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
+            targetWidget = newParamWidget;
+            _currentParameterWidget = newParamWidget;// Set as active
+        }
+    }
+
+    if (targetWidget) {
+        ui->stackedWidget->setCurrentWidget(targetWidget);
+    } else {
+        ui->stackedWidget->setCurrentIndex(0);
+    }
+}
+
+void DataTransform_Widget::_doTransform() {
+
+    if (!_currentSelectedOperation) {
+        std::cout << "Does not have operation" << std::endl;
+        return;
+    }
+
+    std::unique_ptr<TransformParametersBase> params_owner_ptr;
+    if (_currentParameterWidget) {// Check if a specific param widget is active
+        params_owner_ptr = _currentParameterWidget->getParameters();
+    } else {
+        // No specific widget active. Maybe get defaults from operation? (Optional)
+        // params_owner_ptr = currentSelectedOperation_->getDefaultParameters();
+    }
+
+
+    std::cout << "Executing '" << _currentSelectedOperation->getName() << "'..." << std::endl;
+    // Pass non-owning raw pointer to the Qt-agnostic execute method
+    auto result_any = _currentSelectedOperation->execute(
+            _currentSelectedDataVariant,
+            params_owner_ptr.get()// Pass raw pointer (nullptr if no params/widget)
+    );
+    // Process result_any...
+
+    _data_manager->setData("Test", result_any);
 }

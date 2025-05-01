@@ -1,0 +1,6 @@
+#ifndef MASKAREA_WIDGET_HPP
+#define MASKAREA_WIDGET_HPP
+
+
+
+#endif// MASKAREA_WIDGET_HPP

@@ -84,6 +84,8 @@ set(PROJECT_SOURCES
         DataTransform_Widget/DataTransform_Widget.ui
         DataTransform_Widget/DataTransform_Widget.cpp
         DataTransform_Widget/DataTransform_Widget.hpp
+        DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp
+        DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui

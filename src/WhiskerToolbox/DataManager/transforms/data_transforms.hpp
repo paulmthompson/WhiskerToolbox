@@ -5,7 +5,6 @@
 #include "DataManager.hpp"
 #include "ImageSize/ImageSize.hpp"
 
-#include <any>
 #include <memory>
 #include <string>
 #include <typeindex>
@@ -13,6 +12,11 @@
 class PointData;
 
 void scale(std::shared_ptr<PointData> & point_data, ImageSize const & image_size_media);
+
+class TransformParametersBase {
+public:
+    virtual ~TransformParametersBase() = default;
+};
 
 class TransformOperation {
 public:
@@ -23,7 +27,12 @@ public:
 
     [[nodiscard]] virtual bool canApply(DataTypeVariant const & dataVariant) const = 0;
 
-    virtual std::any execute(DataTypeVariant const & dataVariant) = 0;
+    [[nodiscard]] virtual std::unique_ptr<TransformParametersBase> getDefaultParameters() const {
+        return nullptr;
+    }
+
+    virtual DataTypeVariant execute(DataTypeVariant const & dataVariant,
+                                    TransformParametersBase const * transformParameters) = 0;
 };
 
 #endif//WHISKERTOOLBOX_DATA_TRANSFORMS_HPP

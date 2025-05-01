@@ -3,7 +3,6 @@
 
 #include "transforms/data_transforms.hpp"
 
-#include <any>          // std::any
 #include <memory>       // std::shared_ptr
 #include <string>       // std::string
 #include <typeindex>    // std::type_index
@@ -41,10 +40,11 @@ public:
     /**
      * @brief Executes the mask area calculation using data from the variant.
      * @param dataVariant The variant holding a non-null shared_ptr to the MaskData object.
-     * @return std::any containing a std::shared_ptr<AnalogTimeSeries> on success,
-     * or an empty std::any on failure (e.g., type mismatch, null pointer, calculation failure).
+     * @return DataTypeVariant containing a std::shared_ptr<AnalogTimeSeries> on success,
+     * or an empty on failure (e.g., type mismatch, null pointer, calculation failure).
      */
-    std::any execute(DataTypeVariant const & dataVariant) override;
+    DataTypeVariant execute(DataTypeVariant const & dataVariant,
+                            TransformParametersBase const * transformParameters) override;
 };
 
 #endif//WHISKERTOOLBOX_MASK_AREA_HPP
