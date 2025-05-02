@@ -35,6 +35,8 @@ std::unique_ptr<TransformParametersBase> AnalogIntervalThreshold_Widget::getPara
 
     params->lockoutTime = ui->lockout_spinbox->value();
 
+    params->minDuration = ui->min_duration_spinbox->value();
+
     return params;
 }
 

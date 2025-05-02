@@ -15,6 +15,7 @@ struct IntervalThresholdParams : public TransformParametersBase {
     double thresholdValue = 1.0;
     enum class ThresholdDirection { POSITIVE, NEGATIVE, ABSOLUTE } direction = ThresholdDirection::POSITIVE;
     double lockoutTime = 0.0;
+    double minDuration = 0.0;
 };
 
 /**

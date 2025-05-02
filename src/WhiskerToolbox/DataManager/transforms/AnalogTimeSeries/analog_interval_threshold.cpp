@@ -10,6 +10,7 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
     auto interval_series = std::make_shared<DigitalIntervalSeries>();
 
     float const threshold = thresholdParams.thresholdValue;
+    double const minDuration = thresholdParams.minDuration;
 
     std::vector<Interval> intervals;
 
@@ -25,6 +26,13 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
     int64_t interval_start = 0;
     double last_interval_end = -thresholdParams.lockoutTime - 1.0;// Initialize to allow first interval
 
+    auto addIntervalIfValid = [&intervals, minDuration](int64_t start, int64_t end) {
+        // Check if the interval meets the minimum duration requirement
+        if ((end - start + 1) >= minDuration) {
+            intervals.push_back({start, end});
+        }
+    };
+
     if (thresholdParams.direction == IntervalThresholdParams::ThresholdDirection::POSITIVE) {
         for (size_t i = 0; i < timestamps.size(); ++i) {
             if (values[i] > threshold && !in_interval) {
@@ -35,14 +43,14 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
                 }
             } else if (values[i] <= threshold && in_interval) {
                 // End of current interval
-                intervals.push_back({interval_start, static_cast<int64_t>(timestamps[i - 1])});
+                addIntervalIfValid(interval_start, static_cast<int64_t>(timestamps[i - 1]));
                 last_interval_end = timestamps[i - 1];
                 in_interval = false;
             }
         }
         // Handle case where signal is still above threshold at the end
         if (in_interval) {
-            intervals.push_back({interval_start, static_cast<int64_t>(timestamps.back())});
+            addIntervalIfValid(interval_start, static_cast<int64_t>(timestamps.back()));
         }
     } else if (thresholdParams.direction == IntervalThresholdParams::ThresholdDirection::NEGATIVE) {
         for (size_t i = 0; i < timestamps.size(); ++i) {
@@ -54,14 +62,14 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
                 }
             } else if (values[i] >= threshold && in_interval) {
                 // End of current interval
-                intervals.push_back({interval_start, static_cast<int64_t>(timestamps[i-1])});
+                addIntervalIfValid(interval_start, static_cast<int64_t>(timestamps[i-1]));
                 last_interval_end = timestamps[i-1];
                 in_interval = false;
             }
         }
         // Handle case where signal is still below threshold at the end
         if (in_interval) {
-            intervals.push_back({interval_start, static_cast<int64_t>(timestamps.back())});
+            addIntervalIfValid(interval_start, static_cast<int64_t>(timestamps.back()));
         }
     } else if (thresholdParams.direction == IntervalThresholdParams::ThresholdDirection::ABSOLUTE) {
         for (size_t i = 0; i < timestamps.size(); ++i) {
@@ -73,14 +81,14 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
                 }
             } else if (std::abs(values[i]) <= threshold && in_interval) {
                 // End of current interval
-                intervals.push_back({interval_start, static_cast<int64_t>(timestamps[i-1])});
+                addIntervalIfValid(interval_start, static_cast<int64_t>(timestamps[i-1]));
                 last_interval_end = timestamps[i-1];
                 in_interval = false;
             }
         }
         // Handle case where signal is still above threshold at the end
         if (in_interval) {
-            intervals.push_back({interval_start, static_cast<int64_t>(timestamps.back())});
+            addIntervalIfValid(interval_start, static_cast<int64_t>(timestamps.back()));
         }
     } else {
         std::cerr << "Unknown threshold direction!" << std::endl;
@@ -115,7 +123,7 @@ DataTypeVariant IntervalThresholdOperation::execute(DataTypeVariant const & data
     auto const * ptr_ptr = std::get_if<std::shared_ptr<AnalogTimeSeries>>(&dataVariant);
 
     if (!ptr_ptr || !(*ptr_ptr)) {
-        std::cerr << "EventThresholdOperation::execute called with incompatible variant type or null data." << std::endl;
+        std::cerr << "IntervalThresholdOperation::execute called with incompatible variant type or null data." << std::endl;
         return {};// Return empty
     }
 
@@ -143,10 +151,10 @@ DataTypeVariant IntervalThresholdOperation::execute(DataTypeVariant const & data
                                                                           currentParams);
 
     if (!result_ts) {
-        std::cerr << "EventThresholdOperation::execute: 'calculate_events' failed to produce a result." << std::endl;
+        std::cerr << "IntervalThresholdOperation::execute: 'calculate_intervals' failed to produce a result." << std::endl;
         return {};// Return empty
     }
 
-    std::cout << "EventThresholdOperation executed successfully using variant input." << std::endl;
+    std::cout << "IntervalThresholdOperation executed successfully using variant input." << std::endl;
     return result_ts;
 }
