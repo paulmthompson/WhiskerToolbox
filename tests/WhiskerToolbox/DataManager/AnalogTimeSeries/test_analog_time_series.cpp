@@ -14,8 +14,8 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
         AnalogTimeSeries series(data);
 
-        auto& stored_data = series.getAnalogTimeSeries();
-        auto& time_data = series.getTimeSeries();
+        auto const & stored_data = series.getAnalogTimeSeries();
+        auto const & time_data = series.getTimeSeries();
 
         REQUIRE(stored_data.size() == 5);
         REQUIRE(time_data.size() == 5);
@@ -29,8 +29,8 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
         std::vector<size_t> times{10, 20, 30, 40, 50};
         AnalogTimeSeries series(data, times);
 
-        auto& stored_data = series.getAnalogTimeSeries();
-        auto& time_data = series.getTimeSeries();
+        auto const & stored_data = series.getAnalogTimeSeries();
+        auto const & time_data = series.getTimeSeries();
 
         REQUIRE(stored_data.size() == 5);
         REQUIRE(time_data.size() == 5);
@@ -50,8 +50,8 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
 
         AnalogTimeSeries series(data_map);
 
-        auto& stored_data = series.getAnalogTimeSeries();
-        auto& time_data = series.getTimeSeries();
+        auto const & stored_data = series.getAnalogTimeSeries();
+        auto const & time_data = series.getTimeSeries();
 
         REQUIRE(stored_data.size() == 5);
         REQUIRE(time_data.size() == 5);
@@ -108,7 +108,7 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
 
         series.overwriteAtTimes(new_data, new_times);
 
-        auto& stored_data = series.getAnalogTimeSeries();
+        auto const & stored_data = series.getAnalogTimeSeries();
 
         REQUIRE(stored_data == std::vector<float>{1.0f, 9.0f, 3.0f, 8.0f, 5.0f});
     }
@@ -163,7 +163,7 @@ TEST_CASE("AnalogTimeSeries - Edge cases and error handling", "[analog][timeseri
         // This should not change the original data
         series.overwriteAtTimes(new_data, new_times);
 
-        auto& stored_data = series.getAnalogTimeSeries();
+        auto const & stored_data = series.getAnalogTimeSeries();
         REQUIRE(stored_data == std::vector<float>{1.0f, 2.0f, 3.0f});
     }
 
@@ -179,7 +179,7 @@ TEST_CASE("AnalogTimeSeries - Edge cases and error handling", "[analog][timeseri
         // This should not change the original data
         series.overwriteAtTimes(new_data, new_times);
 
-        auto& stored_data = series.getAnalogTimeSeries();
+        auto const & stored_data = series.getAnalogTimeSeries();
         REQUIRE(stored_data == std::vector<float>{1.0f, 2.0f, 3.0f});
     }
 }
