@@ -25,8 +25,8 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
 
         auto result = area(mask_data.get());
 
-        auto& values = result->getAnalogTimeSeries();
-        auto& times = result->getTimeSeries();
+        auto const & values = result->getAnalogTimeSeries();
+        auto const & times = result->getTimeSeries();
 
         REQUIRE(times.size() == 1);
         REQUIRE(values.size() == 1);
@@ -47,8 +47,8 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
 
         auto result = area(mask_data.get());
 
-        auto& values = result->getAnalogTimeSeries();
-        auto& times = result->getTimeSeries();
+        auto const & values = result->getAnalogTimeSeries();
+        auto const & times = result->getTimeSeries();
 
         REQUIRE(times.size() == 1);
         REQUIRE(values.size() == 1);
@@ -76,8 +76,8 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
 
         auto result = area(mask_data.get());
 
-        auto& values = result->getAnalogTimeSeries();
-        auto& times = result->getTimeSeries();
+        auto const & values = result->getAnalogTimeSeries();
+        auto const & times = result->getTimeSeries();
 
         REQUIRE(times.size() == 3);
         REQUIRE(values.size() == 3);
