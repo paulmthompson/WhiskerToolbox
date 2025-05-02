@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>390</width>
+    <height>652</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,6 +23,95 @@
       <set>Qt::AlignmentFlag::AlignCenter</set>
      </property>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Threshold</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Lockout</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="spinBox"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Threshold Direction</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBox">
+       <item>
+        <property name="text">
+         <string>Positive (Rising)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Negative (Falling)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Absolute (Magnitude)</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Threshold Value:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Description:&lt;/span&gt; Enter the numerical level the signal must cross to be considered an event. The signal will be compared directly against this value based on the selected direction.&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Threshold Direction:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Description:&lt;/span&gt; Select how the signal must cross the &lt;span style=&quot; font-weight:700;&quot;&gt;Threshold Value&lt;/span&gt; to trigger an event: 
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 2;&quot;&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Positive (Rising):&lt;/span&gt; Detects an event only when the signal value increases and crosses &lt;span style=&quot; font-style:italic;&quot;&gt;above&lt;/span&gt; the &lt;span style=&quot; font-weight:700;&quot;&gt;Threshold Value&lt;/span&gt;.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Negative (Falling):&lt;/span&gt; Detects an event only when the signal value decreases and crosses &lt;span style=&quot; font-style:italic;&quot;&gt;below&lt;/span&gt; the &lt;span style=&quot; font-weight:700;&quot;&gt;Threshold Value&lt;/span&gt;.&lt;/li&gt;&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Absolute (Magnitude):&lt;/span&gt; Detects an event when the &lt;span style=&quot; font-style:italic;&quot;&gt;absolute value&lt;/span&gt; of the signal (&lt;span style=&quot; font-family:'Courier New';&quot;&gt;abs(signal)&lt;/span&gt;) rises &lt;span style=&quot; font-style:italic;&quot;&gt;above&lt;/span&gt; the &lt;span style=&quot; font-weight:700;&quot;&gt;Threshold Value&lt;/span&gt;. This detects crossings away from zero on either the positive or negative side.&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Lockout Time (Samples):&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Description:&lt;/span&gt; Specify the minimum number of samples that must pass &lt;span style=&quot; font-style:italic;&quot;&gt;after&lt;/span&gt; an event is detected before another threshold crossing can trigger a new event. Enter &lt;span style=&quot; font-family:'Courier New';&quot;&gt;0&lt;/span&gt; (or less) to disable the lockout, allowing consecutive samples to trigger events if they cross the threshold. This helps prevent multiple detections from a single noisy crossing.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item>
     <spacer name="verticalSpacer">
