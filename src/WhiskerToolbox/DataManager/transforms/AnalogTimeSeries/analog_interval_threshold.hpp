@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_ANALOG_EVENT_THRESHOLD_HPP
-#define WHISKERTOOLBOX_ANALOG_EVENT_THRESHOLD_HPP
+#ifndef WHISKERTOOLBOX_ANALOG_INTERVAL_THRESHOLD_HPP
+#define WHISKERTOOLBOX_ANALOG_INTERVAL_THRESHOLD_HPP
 
 #include "transforms/data_transforms.hpp"
 
@@ -9,27 +9,27 @@
 #include <vector>   // std::vector
 
 class AnalogTimeSeries;
-class DigitalEventSeries;
+class DigitalIntervalSeries;
 
-struct ThresholdParams : public TransformParametersBase {
+struct IntervalThresholdParams : public TransformParametersBase {
     double thresholdValue = 1.0;
     enum class ThresholdDirection { POSITIVE, NEGATIVE, ABSOLUTE } direction = ThresholdDirection::POSITIVE;
     double lockoutTime = 0.0;
 };
 
 /**
- * @brief Detects events in an AnalogTimeSeries based on a threshold.
+ * @brief Detects intervals in an AnalogTimeSeries based on a threshold.
  *
  * @param analog_time_series The AnalogTimeSeries to process.
  * @param threshold The threshold value for event detection.
- * @return A new DigitalEventSeries containing detected events.
+ * @return A new DigitalIntervalSeries containing detected events.
  */
-std::shared_ptr<DigitalEventSeries> event_threshold(
+std::shared_ptr<DigitalIntervalSeries> interval_threshold(
         AnalogTimeSeries const * analog_time_series,
         float threshold);
 
 
-class EventThresholdOperation final : public TransformOperation {
+class IntervalThresholdOperation final : public TransformOperation {
 
     [[nodiscard]] std::string getName() const override;
 
@@ -45,7 +45,7 @@ class EventThresholdOperation final : public TransformOperation {
     /**
      * @brief Executes the mask area calculation using data from the variant.
      * @param dataVariant The variant holding a non-null shared_ptr to the AnalogTimeSeries object.
-     * @return DataTypeVariant containing a std::shared_ptr<DigitalEventSeries> on success,
+     * @return DataTypeVariant containing a std::shared_ptr<DigitalIntervalSeries> on success,
      * or an empty on failure (e.g., type mismatch, null pointer, calculation failure).
      */
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
@@ -53,4 +53,6 @@ class EventThresholdOperation final : public TransformOperation {
 };
 
 
-#endif//WHISKERTOOLBOX_ANALOG_EVENT_THRESHOLD_HPP
+
+
+#endif//WHISKERTOOLBOX_ANALOG_INTERVAL_THRESHOLD_HPP

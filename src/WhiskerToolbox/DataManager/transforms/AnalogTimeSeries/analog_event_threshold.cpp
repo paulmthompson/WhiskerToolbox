@@ -16,6 +16,10 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
     auto const & timestamps = analog_time_series->getTimeSeries();
     auto const & values = analog_time_series->getAnalogTimeSeries();
 
+    if (timestamps.empty()) {
+        return event_series;
+    }
+
     double last_ts = 0.0;
     if (thresholdParams.direction == ThresholdParams::ThresholdDirection::POSITIVE) {
         for (size_t i = 0; i < timestamps.size(); ++i) {

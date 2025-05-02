@@ -10,8 +10,6 @@ AnalogEventThreshold_Widget::AnalogEventThreshold_Widget(QWidget *parent) :
       ui(new Ui::AnalogEventThreshold_Widget)
 {
     ui->setupUi(this);
-
-
 }
 
 AnalogEventThreshold_Widget::~AnalogEventThreshold_Widget() {
