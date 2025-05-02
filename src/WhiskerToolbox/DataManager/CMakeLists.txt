@@ -92,6 +92,8 @@ add_library(DataManager SHARED
         Observer/Observer_Data.hpp
         Observer/Observer_Data.cpp
         ImageSize/ImageSize.hpp
+        transforms/AnalogTimeSeries/analog_hilbert_phase.hpp
+        transforms/AnalogTimeSeries/analog_hilbert_phase.cpp
 
 )
 

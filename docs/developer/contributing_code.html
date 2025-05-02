@@ -219,8 +219,9 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#clang-tidy" id="toc-clang-tidy" class="nav-link" data-scroll-target="#clang-tidy">Clang Tidy</a></li>
   </ul></li>
   <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a></li>
-  <li><a href="#further-reading-and-references" id="toc-further-reading-and-references" class="nav-link" data-scroll-target="#further-reading-and-references">Further Reading and References</a>
+  <li><a href="#further-resources-and-references" id="toc-further-resources-and-references" class="nav-link" data-scroll-target="#further-resources-and-references">Further Resources and References</a>
   <ul class="collapse">
+  <li><a href="#llm-support" id="toc-llm-support" class="nav-link" data-scroll-target="#llm-support">LLM Support</a></li>
   <li><a href="#testing-1" id="toc-testing-1" class="nav-link" data-scroll-target="#testing-1">Testing</a></li>
   </ul></li>
   </ul>
@@ -285,13 +286,36 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="testing" class="level2">
 <h2 class="anchored" data-anchor-id="testing">Testing</h2>
+<ul>
+<li><p>Testing is performed with Catch2.&nbsp;</p></li>
+<li><p>The component being tested generally has two TEST_CASE parts. The first will test the “happy path” to ensure that the computations work as expected. Different SECTIONs will be used for different computations. A second TEST_CASE will handle error handling and edge cases. Each SECTION will be for a different edge case / error.</p></li>
+<li><p>Use descriptive names for each test.</p></li>
+<li><p>TEST_CASEs should also use useful tags.</p></li>
+<li><p>Use REQUIRE instead of CHECK</p></li>
+<li><p>Simple setup can be performed in the beginning of a TEST_CASE. Fixtures are only necessary for complex setup/teardown.</p></li>
+<li><p>Prefer Catch::Matchers::WithinRel to Catch::Approx</p></li>
+</ul>
 </section>
-<section id="further-reading-and-references" class="level2">
-<h2 class="anchored" data-anchor-id="further-reading-and-references">Further Reading and References</h2>
+<section id="further-resources-and-references" class="level2">
+<h2 class="anchored" data-anchor-id="further-resources-and-references">Further Resources and References</h2>
+<section id="llm-support" class="level3">
+<h3 class="anchored" data-anchor-id="llm-support">LLM Support</h3>
+<p>A configuration file for a plain text generator, <a href="https://github.com/kirill-markin/repo-to-text">repo-to-text</a>, is included in the top level source directory. This can generate a single text file for the entire Neuralyzer repository which can be easily pasted into a LLM of choice.</p>
+</section>
 <section id="testing-1" class="level3">
 <h3 class="anchored" data-anchor-id="testing-1">Testing</h3>
+<section id="c-development" class="level4">
+<h4 class="anchored" data-anchor-id="c-development">C++ Development</h4>
+<p>Mike Shah has an excellent modern C++ design series on youtube. Episodes are a nice ~20 minute length:</p>
+<p><a href="https://www.youtube.com/watch?v=LGOgNqkRMs0&amp;list=PLvv0ScY6vfd8j-tlhYVPYgiIyXduu6m-L">Modern Cpp series by Mike Shah</a></p>
+</section>
+<section id="graphics-programming" class="level4">
+<h4 class="anchored" data-anchor-id="graphics-programming">Graphics Programming</h4>
+<p>Mike Shah also has a series on modern OpenGL on youtube:</p>
+<p><a href="https://www.youtube.com/watch?v=Q7vm264YNrM&amp;list=PLvv0ScY6vfd9zlZkIIqGDeG5TUWswkMox">Introduction to OpenGL</a></p>
 
 
+</section>
 </section>
 </section>
 

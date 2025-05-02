@@ -9,6 +9,7 @@
 
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp"
+#include "DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
 
 
@@ -54,6 +55,11 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
     _parameterWidgetFactories["Threshold Interval Detection"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new AnalogIntervalThreshold_Widget(parent);
     };
+
+    _parameterWidgetFactories["Hilbert Phase"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new AnalogHilbertPhase_Widget(parent);
+    };
+
 }
 
 

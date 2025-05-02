@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Video Export – Neuralyzer</title>
+<title>Data Transformations – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -149,7 +149,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/export/video_export.html">Export</a></li><li class="breadcrumb-item"><a href="../../user_guide/export/video_export.html">Video Export</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -308,16 +308,16 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
  <span class="menu-text">Data Transformations</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">  
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/data_transformations/overview.html" class="sidebar-item-text sidebar-link">
+  <a href="../../user_guide/data_transformations/overview.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Data Transformations</span></a>
   </div>
 </li>
@@ -354,16 +354,16 @@ ul.task-list li input[type="checkbox"] {
   </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false">
  <span class="menu-text">Export</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../user_guide/export/video_export.html" class="sidebar-item-text sidebar-link active">
+  <a href="../../user_guide/export/video_export.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Video Export</span></a>
   </div>
 </li>
@@ -397,15 +397,25 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#transformations" id="toc-transformations" class="nav-link active" data-scroll-target="#transformations">Transformations</a>
+  <ul class="collapse">
+  <li><a href="#analog-time-series" id="toc-analog-time-series" class="nav-link" data-scroll-target="#analog-time-series">Analog Time Series</a></li>
+  <li><a href="#masks" id="toc-masks" class="nav-link" data-scroll-target="#masks">Masks</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/export/video_export.html">Export</a></li><li class="breadcrumb-item"><a href="../../user_guide/export/video_export.html">Video Export</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li><li class="breadcrumb-item"><a href="../../user_guide/data_transformations/overview.html">Data Transformations</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Video Export</h1>
+<h1 class="title">Data Transformations</h1>
 </div>
 
 
@@ -422,8 +432,73 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<p>Data transformations are operations we perform on one kind of data that result in another kind of data.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/clipboard-2963664009.png" class="img-fluid figure-img"></p>
+<figcaption>Figure: 1) Feature select from available loaded data 2) Tranformation select Dialog box; 3) Output name of new data created by transformation; 4) Execution Button; 5) Parameter window for selected transformation</figcaption>
+</figure>
+</div>
+<p>Transformations supported by Neuralyzer are listed below:</p>
+<section id="transformations" class="level2">
+<h2 class="anchored" data-anchor-id="transformations">Transformations</h2>
+<section id="analog-time-series" class="level3">
+<h3 class="anchored" data-anchor-id="analog-time-series">Analog Time Series</h3>
+<section id="event-detection-by-threshold-crossing" class="level4">
+<h4 class="anchored" data-anchor-id="event-detection-by-threshold-crossing">Event Detection by Threshold Crossing</h4>
+<p>Generate events from a time series by comparing signal to some threshold value.</p>
+<p><strong>Threshold Value:</strong></p>
+<p>The numerical level the signal must cross to be considered an event. The signal will be compared directly against this value based on the selected direction.</p>
+<p><strong>Threshold Direction:</strong></p>
+<p>How the signal must cross the <strong>Threshold Value</strong> to trigger an event:</p>
+<ul>
+<li><p><strong>Positive (Rising):</strong> Detects an event only when the signal value increases and crosses above the <strong>Threshold Value</strong>.</p></li>
+<li><p><strong>Negative (Falling):</strong> Detects an event only when the signal value decreases and crosses below the <strong>Threshold Value</strong>.</p></li>
+<li><p><strong>Absolute (Magnitude):</strong> Detects an event when the absolute value of the signal (abs(signal)) rises above the <strong>Threshold Value</strong>. This detects crossings away from zero on either the positive or negative side.</p></li>
+</ul>
+<p><strong>Lockout Time (Samples):</strong></p>
+<p>The minimum number of samples that must pass after an event is detected before another threshold crossing can trigger a new event. Enter 0 (or less) to disable the lockout, allowing consecutive samples to trigger events if they cross the threshold. This helps prevent multiple detections from a single noisy crossing.</p>
+</section>
+<section id="find-peaks" class="level4">
+<h4 class="anchored" data-anchor-id="find-peaks">Find Peaks</h4>
+<p>Attempts to find peaks in analog time series (local maxima or minima).</p>
+</section>
+<section id="instantaneous-amplitude-calculation" class="level4">
+<h4 class="anchored" data-anchor-id="instantaneous-amplitude-calculation">Instantaneous Amplitude Calculation</h4>
+<p>Determine the instantaneous amplitude of an oscillatory time series. uses Hilbert Transform.</p>
+</section>
+<section id="instantaneous-phase-calculation" class="level4">
+<h4 class="anchored" data-anchor-id="instantaneous-phase-calculation">Instantaneous Phase Calculation</h4>
+<p>Determine the instantaneous phase of an oscillatory time series. Uses Hilbert Transform.</p>
+</section>
+<section id="interval-detection" class="level4">
+<h4 class="anchored" data-anchor-id="interval-detection">Interval Detection</h4>
+<p>Determine an interval range where an angle signal is above (or below) a threshold value. Returns the beginning and end of the above/below threshold time period.</p>
+<p><strong>Threshold Value:</strong></p>
+<p>Description: Enter the numerical level the signal must cross to be considered an event. The signal will be compared directly against this value based on the selected direction. The interval will be defined from the first to last sample that are above or below the <strong>Threshold Value</strong>.</p>
+<p><strong>Threshold Direction:</strong></p>
+<p>Description: Select how the signal must cross the <strong>Threshold Value</strong> to trigger an interval:</p>
+<ul>
+<li><p><strong>Positive (Rising):</strong> Detects an interval only when the signal value increases and remains above the <strong>Threshold Value</strong>.</p></li>
+<li><p><strong>Negative (Falling):</strong> Detects an event only when the signal value decreases and remains below the <strong>Threshold Value</strong>.</p></li>
+<li><p><strong>Absolute (Magnitude):</strong> Detects an event when the absolute value of the signal (abs(signal)) rises above the <strong>Threshold Value</strong>. This detects crossings away from zero on either the positive or negative side. Once the absolute value is smaller than the abs(signal), the interval has ended.</p></li>
+</ul>
+<p><strong>Lockout Time (Samples):</strong></p>
+<p>Description: Specify the minimum number of samples that must pass after an interval has ended before another threshold crossing can trigger a new event. Enter 0 (or less) to disable the lockout.</p>
+<p><strong>Minimum Duration (Samples):</strong></p>
+<p>Description: Specify the minimum number of samples that must be in an interval to be included. Threshold crossings with durations shorter than <strong>Minimum Duration</strong> will not be included in result.</p>
+</section>
+</section>
+<section id="masks" class="level3">
+<h3 class="anchored" data-anchor-id="masks">Masks</h3>
+<section id="area" class="level4">
+<h4 class="anchored" data-anchor-id="area">Area</h4>
+<p>Total area of the mask in a frame is calculated.</p>
 
 
+</section>
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

@@ -26,7 +26,7 @@ struct ThresholdParams : public TransformParametersBase {
  */
 std::shared_ptr<DigitalEventSeries> event_threshold(
         AnalogTimeSeries const * analog_time_series,
-        float threshold);
+        ThresholdParams const & thresholdParams);
 
 
 class EventThresholdOperation final : public TransformOperation {

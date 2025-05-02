@@ -1,5 +1,6 @@
 ---
-title: "Introduction"
+title: "Overview"
 format: html
 ---
 
+The Machine Learning Widget allows us to fit models of relationships between multiple features of our data and then make predictions. This can be useful for semi-automated annotation of datasets, where the user labels some training data, and then predicts the remaining unlabeled frames. Then annotations can then be easily compared with the video data.

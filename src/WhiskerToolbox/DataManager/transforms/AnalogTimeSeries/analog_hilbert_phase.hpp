@@ -1,5 +1,6 @@
-#ifndef WHISKERTOOLBOX_ANALOG_INTERVAL_THRESHOLD_HPP
-#define WHISKERTOOLBOX_ANALOG_INTERVAL_THRESHOLD_HPP
+#ifndef ANALOG_HILBERT_PHASE_HPP
+#define ANALOG_HILBERT_PHASE_HPP
+
 
 #include "transforms/data_transforms.hpp"
 
@@ -9,28 +10,23 @@
 #include <vector>   // std::vector
 
 class AnalogTimeSeries;
-class DigitalIntervalSeries;
 
-struct IntervalThresholdParams : public TransformParametersBase {
-    double thresholdValue = 1.0;
-    enum class ThresholdDirection { POSITIVE, NEGATIVE, ABSOLUTE } direction = ThresholdDirection::POSITIVE;
-    double lockoutTime = 0.0;
-    double minDuration = 0.0;
+struct HilbertPhaseParams : public TransformParametersBase {
 };
 
 /**
- * @brief Detects intervals in an AnalogTimeSeries based on a threshold.
+ * @brief Calculates phase of analog time series by hilbert transform
  *
  * @param analog_time_series The AnalogTimeSeries to process.
  * @param threshold The threshold value for event detection.
- * @return A new DigitalIntervalSeries containing detected events.
+ * @return A new AnalogTimeSeries containing detected events.
  */
-std::shared_ptr<DigitalIntervalSeries> interval_threshold(
+std::shared_ptr<AnalogTimeSeries> hilbert_phase(
         AnalogTimeSeries const * analog_time_series,
-        IntervalThresholdParams const & thresholdParams);
+        HilbertPhaseParams const & phaseParams);
 
 
-class IntervalThresholdOperation final : public TransformOperation {
+class HilbertPhaseOperation final : public TransformOperation {
 
     [[nodiscard]] std::string getName() const override;
 
@@ -44,9 +40,9 @@ class IntervalThresholdOperation final : public TransformOperation {
     [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
 
     /**
-     * @brief Executes the interval calculation using data from the variant.
+     * @brief Executes the phase calculation using data from the variant.
      * @param dataVariant The variant holding a non-null shared_ptr to the AnalogTimeSeries object.
-     * @return DataTypeVariant containing a std::shared_ptr<DigitalIntervalSeries> on success,
+     * @return DataTypeVariant containing a std::shared_ptr<AnalogTimeSeries> on success,
      * or an empty on failure (e.g., type mismatch, null pointer, calculation failure).
      */
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
@@ -54,6 +50,4 @@ class IntervalThresholdOperation final : public TransformOperation {
 };
 
 
-
-
-#endif//WHISKERTOOLBOX_ANALOG_INTERVAL_THRESHOLD_HPP
+#endif// ANALOG_HILBERT_PHASE_HPP

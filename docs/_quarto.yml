@@ -79,6 +79,9 @@ website:
         - section: "Data Manager"
           contents:
             - user_guide/data_manager/overview.qmd
+        - section: "Data Transformations"
+          contents:
+            - user_guide/data_transformations/overview.qmd
         - section: "Machine Learning"
           contents:
             - user_guide/machine_learning/ML_intro.qmd

@@ -24,6 +24,8 @@ A Line represents a 2 dimensional (x,y) collection of points, which may vary wit
 |                       |
 |                       |
 
+Currently, lines are represented by a raw list of points. One could imagine lines being parameterized in different ways, such as the coefficients of a polynomial fit. For many calculations, the parameterized version of a line may be less memory intensive and more efficient.
+
 ### Mask
 
 A mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not **ordered**. These would correspond to something like a binary segmentation mask over an image. The `MaskData` structure can hold multiple masks per unit time.
@@ -33,6 +35,8 @@ A mask represents a 2 dimensional collection of points, which may vary with time
 | Binary Semantic Segmentation Labels |
 |                                     |
 |                                     |
+
+A mask may just be thought as a raw pixel, by pixel definition of a **shape**. Shapes could be defined as bounding boxes, circles, polygons, etc. It may one day be useful to describe shapes in other ways compared to the raw pixel-by-pixel definition.
 
 ### Tensors
 
