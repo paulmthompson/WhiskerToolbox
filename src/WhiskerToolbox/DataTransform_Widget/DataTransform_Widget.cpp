@@ -23,6 +23,8 @@ DataTransform_Widget::DataTransform_Widget(
     ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
     ui->feature_table_widget->setDataManager(_data_manager);
 
+    _initializeParameterWidgetFactories();
+
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataTransform_Widget::_handleFeatureSelected);
     connect(ui->do_transform_button, &QPushButton::clicked, this, &DataTransform_Widget::_doTransform);
     connect(ui->operationComboBox, &QComboBox::currentIndexChanged, this, &DataTransform_Widget::_onOperationSelected);
@@ -41,7 +43,7 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Calculate Area"] = nullptr;
 
-    _parameterWidgetFactories["Threshold Event Detection"] = [](QWidget* parent) -> TransformParameter_Widget* {
+    _parameterWidgetFactories["Threshold Event Detection"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new AnalogEventThreshold_Widget(parent);
     };
 
@@ -95,13 +97,13 @@ void DataTransform_Widget::_onOperationSelected(int index) {
         return;
     }
 
-    std::string op_name = ui->operationComboBox->itemText(index).toStdString();
+    std::string const op_name = ui->operationComboBox->itemText(index).toStdString();
 
     _currentSelectedOperation = _registry->findOperationByName(op_name);
     std::cout << "Selecting operation " << op_name << std::endl;
 
     if (!_currentSelectedOperation) {
-        // operation not found
+        std::cout << "Operation " << op_name << "not found in registry" << std::endl;
         ui->stackedWidget->setCurrentIndex(0);
         return;
     }
@@ -116,16 +118,27 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
 
     // Find the factory function for this operation name
     auto factoryIt = _parameterWidgetFactories.find(op_name);
-    if (factoryIt != _parameterWidgetFactories.end() && factoryIt->second) {
-        // Factory exists and is not null, call it to create the widget
-        std::function<TransformParameter_Widget *(QWidget *)> factory = factoryIt->second;
-        TransformParameter_Widget * newParamWidget = factory(ui->stackedWidget);// Create with parent
 
-        if (newParamWidget) {
-            int widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
-            targetWidget = newParamWidget;
-            _currentParameterWidget = newParamWidget;// Set as active
-        }
+    if (factoryIt == _parameterWidgetFactories.end()) {
+        std::cout << op_name << " does not appear in the factory registry" << std::endl;
+        return;
+    }
+
+    if (!factoryIt->second) {
+        std::cout << "Factory function not found for " << op_name << std::endl;
+        return;
+    }
+
+    std::cout << "Calling factory for widget " << op_name << std::endl;
+
+    std::function<TransformParameter_Widget *(QWidget *)> const factory = factoryIt->second;
+    TransformParameter_Widget * newParamWidget = factory(ui->stackedWidget);// Create with parent
+
+    if (newParamWidget) {
+        std::cout << "Adding Widget" << std::endl;
+        int const widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
+        targetWidget = newParamWidget;
+        _currentParameterWidget = newParamWidget;// Set as active
     }
 
     if (targetWidget) {
