@@ -9,29 +9,45 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
         ThresholdParams const & thresholdParams) {
     auto event_series = std::make_shared<DigitalEventSeries>();
 
-    float threshold = thresholdParams.thresholdValue;
+    float const threshold = thresholdParams.thresholdValue;
 
     std::vector<float> events;
 
     auto const & timestamps = analog_time_series->getTimeSeries();
     auto const & values = analog_time_series->getAnalogTimeSeries();
 
+    double last_ts = 0.0;
     if (thresholdParams.direction == ThresholdParams::ThresholdDirection::POSITIVE) {
         for (size_t i = 0; i < timestamps.size(); ++i) {
             if (values[i] > threshold) {
+                // Check if the event is not too close to the last one
+                if (timestamps[i] - last_ts < thresholdParams.lockoutTime) {
+                    continue;
+                }
                 events.push_back(timestamps[i]);
+                last_ts = timestamps[i];
             }
         }
     } else if (thresholdParams.direction == ThresholdParams::ThresholdDirection::NEGATIVE) {
         for (size_t i = 0; i < timestamps.size(); ++i) {
             if (values[i] < threshold) {
+                // Check if the event is not too close to the last one
+                if (timestamps[i] - last_ts < thresholdParams.lockoutTime) {
+                    continue;
+                }
                 events.push_back(timestamps[i]);
+                last_ts = timestamps[i];
             }
         }
     } else if (thresholdParams.direction == ThresholdParams::ThresholdDirection::ABSOLUTE) {
         for (size_t i = 0; i < timestamps.size(); ++i) {
             if (std::abs(values[i]) > threshold) {
+                // Check if the event is not too close to the last one
+                if (timestamps[i] - last_ts < thresholdParams.lockoutTime) {
+                    continue;
+                }
                 events.push_back(timestamps[i]);
+                last_ts = timestamps[i];
             }
         }
     } else {

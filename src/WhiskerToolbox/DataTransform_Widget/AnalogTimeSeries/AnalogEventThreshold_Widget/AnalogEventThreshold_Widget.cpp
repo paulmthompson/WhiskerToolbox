@@ -35,6 +35,8 @@ std::unique_ptr<TransformParametersBase> AnalogEventThreshold_Widget::getParamet
         std::cout << "Unknown threshold direction!" << std::endl;
     }
 
+    params->lockoutTime = ui->lockout_spinbox->value();
+
     return params;
 }
 
