@@ -29,6 +29,9 @@ void AnalogTimeSeries::setData(std::vector<float> analog_vector) {
 void AnalogTimeSeries::setData(std::vector<float> analog_vector, std::vector<size_t> time_vector) {
     _data.clear();
     _time.clear();
+    if (analog_vector.size() != time_vector.size()) {
+        std::cerr << "Error: size of analog vector and time vector are not the same!" << std::endl;
+    }
     _data = std::move(analog_vector);
     _time = std::move(time_vector);
 }

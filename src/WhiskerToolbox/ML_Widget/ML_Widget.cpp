@@ -1,5 +1,6 @@
 
 #include "ML_Widget.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "ui_ML_Widget.h"
 
 #include "DataManager.hpp"
@@ -9,6 +10,8 @@
 #include "mlpack_conversion.hpp"
 #define slots Q_SLOTS
 
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/utils/armadillo_wrap/analog_armadillo.hpp"
 #include "ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.hpp"
 #include "ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp"
 #include "TimeFrame.hpp"
@@ -278,7 +281,7 @@ arma::Mat<double> create_arrays(
 
         if (feature_type == "AnalogTimeSeries") {
             auto analog_series = data_manager->getData<AnalogTimeSeries>(feature);
-            arma::Row<double> const array = convertAnalogTimeSeriesToMlpackArray(analog_series, timestamps);
+            arma::Row<double> const array = convertAnalogTimeSeriesToMlpackArray(analog_series.get(), timestamps);
             feature_arrays.push_back(array);
         } else if (feature_type == "DigitalIntervalSeries") {
             auto digital_series = data_manager->getData<DigitalIntervalSeries>(feature);

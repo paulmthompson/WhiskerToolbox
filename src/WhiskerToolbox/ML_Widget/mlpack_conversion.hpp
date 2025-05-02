@@ -2,7 +2,6 @@
 #ifndef WHISKERTOOLBOX_MLPACK_CONVERSION_HPP
 #define WHISKERTOOLBOX_MLPACK_CONVERSION_HPP
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Tensors/Tensor_Data.hpp"
@@ -196,52 +195,6 @@ inline void updateTensorDataFromMlpackMatrix(
         torch::Tensor const tensor = torch::from_blob(col.data(), shape, torch::kDouble).clone();
         tensor_data.overwriteTensorAtTime(static_cast<int>(timestamps[i]), tensor);
     }
-}
-
-////////////////////////////////////////////////////////
-
-//AnalogTimeSeries
-
-/**
- * Convert an AnalogTimeSeries to an mlpack row vector
- * @param analogTimeSeries The AnalogTimeSeries to convert
- * @param timestamps The timestamps to convert
- * @return arma::Row<double> The mlpack row vector
- */
-inline arma::Row<double> convertAnalogTimeSeriesToMlpackArray(
-        std::shared_ptr<AnalogTimeSeries> const & analogTimeSeries,
-        std::vector<std::size_t> & timestamps) {
-    auto length = timestamps.size();
-    arma::Row<double> result(length, arma::fill::zeros);
-
-    auto const & data = analogTimeSeries->getAnalogTimeSeries();
-    auto const & time = analogTimeSeries->getTimeSeries();
-
-    for (std::size_t i = 0; i < length; ++i) {
-        auto it = std::find(time.begin(), time.end(), timestamps[i]);
-        if (it != time.end()) {
-            result[i] = data[std::distance(time.begin(), it)];
-        } else {
-            result[i] = arma::datum::nan;
-        }
-    }
-
-    return result;
-}
-
-/**
- * Update an AnalogTimeSeries from an mlpack row vector
- * @param array The mlpack row vector
- * @param timestamps The timestamps to update
- * @param analogTimeSeries The AnalogTimeSeries to update
- */
-inline void updateAnalogTimeSeriesFromMlpackArray(
-        arma::Row<double> const & array,
-        std::vector<std::size_t> & timestamps,
-        AnalogTimeSeries * analogTimeSeries) {
-    std::vector<float> data(array.n_elem);
-
-    analogTimeSeries->overwriteAtTimes(data, timestamps);
 }
 
 #endif//WHISKERTOOLBOX_MLPACK_CONVERSION_HPP

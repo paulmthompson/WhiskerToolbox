@@ -71,6 +71,7 @@ add_library(DataManager SHARED
         utils/opencv_utility.cpp
         utils/string_manip.hpp
         utils/json_helpers.hpp
+        utils/armadillo_wrap/analog_armadillo.hpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
@@ -83,6 +84,8 @@ add_library(DataManager SHARED
         transforms/AnalogTimeSeries/analog_event_threshold.hpp
         transforms/AnalogTimeSeries/analog_interval_threshold.cpp
         transforms/AnalogTimeSeries/analog_interval_threshold.hpp
+        transforms/AnalogTimeSeries/analog_hilbert_phase.hpp
+        transforms/AnalogTimeSeries/analog_hilbert_phase.cpp
 
         loaders/binary_loaders.hpp
         loaders/hdf5_loaders.hpp
@@ -92,9 +95,7 @@ add_library(DataManager SHARED
         Observer/Observer_Data.hpp
         Observer/Observer_Data.cpp
         ImageSize/ImageSize.hpp
-        transforms/AnalogTimeSeries/analog_hilbert_phase.hpp
-        transforms/AnalogTimeSeries/analog_hilbert_phase.cpp
-
+        utils/armadillo_wrap/analog_armadillo.cpp
 )
 
 message(STATUS "NPY source dir:")
