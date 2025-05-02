@@ -34,7 +34,14 @@
       </widget>
      </item>
      <item>
-      <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+      <widget class="QDoubleSpinBox" name="threshold_spinbox">
+       <property name="minimum">
+        <double>-1000000.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>1000000.000000000000000</double>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -48,7 +55,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QSpinBox" name="spinBox"/>
+      <widget class="QSpinBox" name="lockout_spinbox">
+       <property name="maximum">
+        <number>100000</number>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -62,7 +73,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox">
+      <widget class="QComboBox" name="direction_combobox">
        <item>
         <property name="text">
          <string>Positive (Rising)</string>

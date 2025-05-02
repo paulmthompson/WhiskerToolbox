@@ -8,6 +8,7 @@
 #include "transforms/TransformRegistry.hpp"
 
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp"
+#include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
 
 
 DataTransform_Widget::DataTransform_Widget(
@@ -41,22 +42,13 @@ void DataTransform_Widget::openWidget() {
 
 void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
-    _parameterWidgetFactories["Calculate Area"] = nullptr;
+    _parameterWidgetFactories["Calculate Area"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new MaskArea_Widget(parent);
+    };
 
     _parameterWidgetFactories["Threshold Event Detection"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new AnalogEventThreshold_Widget(parent);
     };
-
-    /*
-    parameterWidgetFactories_["Calculate Threshold"] = [](QWidget* parent) -> IParameterWidget* {
-        return new ThresholdWidget(parent);
-    };
-
-    parameterWidgetFactories_["Smooth Data"] = [](QWidget* parent) -> IParameterWidget* {
-        // return new SmoothingWidget(parent); // Example
-        return nullptr; // Placeholder if not implemented
-    };
-    */
 }
 
 
@@ -150,6 +142,8 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
 
 void DataTransform_Widget::_doTransform() {
 
+    auto const new_data_key = "Test";
+
     if (!_currentSelectedOperation) {
         std::cout << "Does not have operation" << std::endl;
         return;
@@ -170,7 +164,6 @@ void DataTransform_Widget::_doTransform() {
             _currentSelectedDataVariant,
             params_owner_ptr.get()// Pass raw pointer (nullptr if no params/widget)
     );
-    // Process result_any...
 
-    _data_manager->setData("Test", result_any);
+    _data_manager->setData(new_data_key, result_any);
 }

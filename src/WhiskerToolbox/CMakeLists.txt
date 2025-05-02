@@ -87,6 +87,8 @@ set(PROJECT_SOURCES
         DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp
 
         DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp
+        DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.cpp
+        DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.ui
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.ui
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.cpp

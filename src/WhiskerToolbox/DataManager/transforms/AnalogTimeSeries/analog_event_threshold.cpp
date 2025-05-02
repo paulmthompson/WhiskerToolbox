@@ -15,10 +15,27 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
 
     auto const & timestamps = analog_time_series->getTimeSeries();
     auto const & values = analog_time_series->getAnalogTimeSeries();
-    for (size_t i = 0; i < timestamps.size(); ++i) {
-        if (values[i] > threshold) {
-            events.push_back(timestamps[i]);
+
+    if (thresholdParams.direction == ThresholdParams::ThresholdDirection::POSITIVE) {
+        for (size_t i = 0; i < timestamps.size(); ++i) {
+            if (values[i] > threshold) {
+                events.push_back(timestamps[i]);
+            }
         }
+    } else if (thresholdParams.direction == ThresholdParams::ThresholdDirection::NEGATIVE) {
+        for (size_t i = 0; i < timestamps.size(); ++i) {
+            if (values[i] < threshold) {
+                events.push_back(timestamps[i]);
+            }
+        }
+    } else if (thresholdParams.direction == ThresholdParams::ThresholdDirection::ABSOLUTE) {
+        for (size_t i = 0; i < timestamps.size(); ++i) {
+            if (std::abs(values[i]) > threshold) {
+                events.push_back(timestamps[i]);
+            }
+        }
+    } else {
+        std::cerr << "Unknown threshold direction!" << std::endl;
     }
 
     event_series->setData(events);

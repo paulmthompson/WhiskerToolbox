@@ -11,6 +11,12 @@
 class AnalogTimeSeries;
 class DigitalEventSeries;
 
+
+struct ThresholdParams : public TransformParametersBase {
+    double thresholdValue = 1.0;
+    enum class ThresholdDirection { POSITIVE, NEGATIVE, ABSOLUTE } direction = ThresholdDirection::POSITIVE;
+};
+
 /**
  * @brief Detects events in an AnalogTimeSeries based on a threshold.
  *
@@ -20,13 +26,8 @@ class DigitalEventSeries;
  */
 std::shared_ptr<DigitalEventSeries> event_threshold(
         AnalogTimeSeries const * analog_time_series,
-        float const threshold);
+        float threshold);
 
-struct ThresholdParams : public TransformParametersBase {
-    double thresholdValue = 1.0;
-    enum class ThresholdDirection { ABOVE,
-                                    BELOW } direction = ThresholdDirection::ABOVE;
-};
 
 class EventThresholdOperation final : public TransformOperation {
 

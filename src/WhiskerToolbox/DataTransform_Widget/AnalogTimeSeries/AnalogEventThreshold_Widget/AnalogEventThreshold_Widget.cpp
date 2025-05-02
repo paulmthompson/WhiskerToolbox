@@ -21,10 +21,19 @@ AnalogEventThreshold_Widget::~AnalogEventThreshold_Widget() {
 std::unique_ptr<TransformParametersBase> AnalogEventThreshold_Widget::getParameters() const {
     auto params = std::make_unique<ThresholdParams>();
 
-    // Populate the members from UI elements
-    // params->thresholdValue = ui->thresholdSpinBox->value();
-    // params->direction = static_cast<ThresholdParams::ThresholdDirection>(ui->directionComboBox->currentData().toInt());
-    // ... (add validation if needed before returning) ...
+    params->thresholdValue = ui->threshold_spinbox->value();
+
+    auto const threshold_direction = ui->direction_combobox->currentText();
+
+    if (threshold_direction == "Positive (Rising)") {
+        params->direction = ThresholdParams::ThresholdDirection::POSITIVE;
+    } else if (threshold_direction == "Negative (Falling)") {
+        params->direction = ThresholdParams::ThresholdDirection::NEGATIVE;
+    } else if (threshold_direction == "Absolute (Magnitude)") {
+        params->direction = ThresholdParams::ThresholdDirection::ABSOLUTE;
+    } else {
+        std::cout << "Unknown threshold direction!" << std::endl;
+    }
 
     return params;
 }
