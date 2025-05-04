@@ -62,14 +62,6 @@ void AnalogTimeSeries::overwriteAtTimes(std::vector<float> & analog_data, std::v
     }
 }
 
-float AnalogTimeSeries::getMinValue() const {
-    return *std::min_element(_data.begin(), _data.end());
-}
-
-float AnalogTimeSeries::getMinValue(int64_t start, int64_t end) const {
-    return *std::min_element(_data.begin() + start, _data.begin() + end);
-}
-
 float calculate_mean(AnalogTimeSeries const & series) {
     auto const & data = series.getAnalogTimeSeries();
     if (data.empty()) {
@@ -109,6 +101,22 @@ float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t 
     float const sum = std::accumulate(data.begin() + start, data.begin() + end, 0.0f,
                                       [mean](float acc, float val) { return acc + (val - mean) * (val - mean); });
     return std::sqrt(sum / static_cast<float>((end - start)));
+}
+
+float calculate_min(AnalogTimeSeries const & series) {
+    auto const & data = series.getAnalogTimeSeries();
+    if (data.empty()) {
+        return 0.0f;
+    }
+    return *std::min_element(data.begin(), data.end());
+}
+
+float calculate_min(AnalogTimeSeries const & series, int64_t start, int64_t end) {
+    auto const & data = series.getAnalogTimeSeries();
+    if (data.empty() || start >= end || start < 0 || end > static_cast<int64_t>(data.size())) {
+        return 0.0f;
+    }
+    return *std::min_element(data.begin() + start, data.begin() + end);
 }
 
 float calculate_max(AnalogTimeSeries const & series) {

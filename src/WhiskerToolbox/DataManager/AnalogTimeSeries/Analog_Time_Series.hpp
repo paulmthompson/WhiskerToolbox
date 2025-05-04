@@ -37,10 +37,6 @@ public:
     [[nodiscard]] std::vector<float> getAnalogTimeSeries() const { return _data; };
     [[nodiscard]] std::vector<size_t> getTimeSeries() const { return _time; };
 
-    [[nodiscard]] float getMinValue() const;
-
-    [[nodiscard]] float getMinValue(int64_t start, int64_t end) const;
-
     template<typename TransformFunc = std::identity>
     auto getDataInRange(float start_time, float stop_time,
                         TransformFunc && time_transform = {}) const {
@@ -117,6 +113,23 @@ float calculate_std_dev(AnalogTimeSeries const & series);
  */
 float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
+/**
+ * @brief Calculate the minimum value in an AnalogTimeSeries
+ *
+ * @param series The time series to find the minimum value in
+ * @return float The minimum value
+ */
+float calculate_min(AnalogTimeSeries const & series);
+
+/**
+ * @brief Calculate the minimum value in an AnalogTimeSeries in a specific range
+ *
+ * @param series The time series to find the minimum value in
+ * @param start Start index of the range (inclusive)
+ * @param end End index of the range (exclusive)
+ * @return float The minimum value in the specified range
+ */
+float calculate_min(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
 /**
  * @brief Calculate the maximum value in an AnalogTimeSeries
