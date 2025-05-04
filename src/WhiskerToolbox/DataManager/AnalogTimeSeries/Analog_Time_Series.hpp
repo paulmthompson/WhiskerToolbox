@@ -37,10 +37,6 @@ public:
     [[nodiscard]] std::vector<float> getAnalogTimeSeries() const { return _data; };
     [[nodiscard]] std::vector<size_t> getTimeSeries() const { return _time; };
 
-    [[nodiscard]] float getStdDevValue() const;
-
-    [[nodiscard]] float getStdDevValue(int64_t start, int64_t end) const;
-
     [[nodiscard]] float getMinValue() const;
 
     [[nodiscard]] float getMinValue(int64_t start, int64_t end) const;
@@ -106,6 +102,24 @@ float calculate_mean(AnalogTimeSeries const & series);
  * @return float The mean value in the specified range
  */
 float calculate_mean(AnalogTimeSeries const & series, int64_t start, int64_t end);
+
+/**
+ * @brief Calculate the standard deviation of an AnalogTimeSeries
+ *
+ * @param series The time series to calculate the standard deviation from
+ * @return float The standard deviation
+ */
+float calculate_std_dev(AnalogTimeSeries const & series);
+
+/**
+ * @brief Calculate the standard deviation of an AnalogTimeSeries in a specific range
+ *
+ * @param series The time series to calculate the standard deviation from
+ * @param start Start index of the range (inclusive)
+ * @param end End index of the range (exclusive)
+ * @return float The standard deviation in the specified range
+ */
+float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
 
 void save_analog(

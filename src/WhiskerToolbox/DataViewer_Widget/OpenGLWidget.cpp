@@ -498,7 +498,7 @@ void OpenGLWidget::addAnalogTimeSeries(
 
     std::string const seriesColor = color.empty() ? "#FFFFFF" : color;
 
-    float const stdDev = series->getStdDevValue();
+    float const stdDev = calculate_std_dev(*series.get());
 
     _analog_series[key] =
             AnalogSeriesData{std::move(series),
