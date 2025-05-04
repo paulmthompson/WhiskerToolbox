@@ -62,23 +62,15 @@ void AnalogTimeSeries::overwriteAtTimes(std::vector<float> & analog_data, std::v
     }
 }
 
-float AnalogTimeSeries::getMeanValue() const {
-    return std::accumulate(_data.begin(), _data.end(), 0.0f) / static_cast<float>(_data.size());
-}
-
-float AnalogTimeSeries::getMeanValue(int64_t start, int64_t end) const {
-    return std::accumulate(_data.begin() + start, _data.begin() + end, 0.0f) / static_cast<float>(end - start);
-}
-
 float AnalogTimeSeries::getStdDevValue() const {
-    float const mean = getMeanValue();
+    float const mean = calculate_mean(*this);
     float const sum = std::accumulate(_data.begin(), _data.end(), 0.0f,
                                       [mean](float acc, float val) { return acc + (val - mean) * (val - mean); });
     return std::sqrt(sum / static_cast<float>(_data.size()));
 }
 
 float AnalogTimeSeries::getStdDevValue(int64_t start, int64_t end) const {
-    float const mean = getMeanValue(start, end);
+    float const mean = calculate_mean(*this, start, end);
     float const sum = std::accumulate(_data.begin() + start, _data.begin() + end, 0.0f,
                                       [mean](float acc, float val) { return acc + (val - mean) * (val - mean); });
     return std::sqrt(sum / static_cast<float>((end - start)));
@@ -98,6 +90,24 @@ float AnalogTimeSeries::getMaxValue() const {
 
 float AnalogTimeSeries::getMaxValue(int64_t start, int64_t end) const {
     return *std::max_element(_data.begin() + start, _data.begin() + end);
+}
+
+
+float calculate_mean(AnalogTimeSeries const & series) {
+    auto const & data = series.getAnalogTimeSeries();
+    if (data.empty()) {
+        return 0.0f;
+    }
+    return std::accumulate(data.begin(), data.end(), 0.0f) / static_cast<float>(data.size());
+}
+
+float calculate_mean(AnalogTimeSeries const & series, int64_t start, int64_t end) {
+    auto const & data = series.getAnalogTimeSeries();
+    if (data.empty() || start >= end || start < 0 || end > static_cast<int64_t>(data.size())) {
+        return 0.0f;
+    }
+    return std::accumulate(data.begin() + start, data.begin() + end, 0.0f) /
+           static_cast<float>(end - start);
 }
 
 void save_analog(
