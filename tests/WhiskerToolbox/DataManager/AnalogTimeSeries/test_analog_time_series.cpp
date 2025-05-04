@@ -67,13 +67,13 @@ TEST_CASE("AnalogTimeSeries - Core functionality", "[analog][timeseries][core]")
         REQUIRE_THAT(calculate_mean(series) , Catch::Matchers::WithinRel(3.0f, 1e-3f));
         REQUIRE_THAT(calculate_std_dev(series) , Catch::Matchers::WithinRel(1.41421f, 1e-3f)); // 1.41421 for N, 1.5811 for N-1 denom
         REQUIRE(series.getMinValue() == 1.0f);
-        REQUIRE(series.getMaxValue() == 5.0f);
+        REQUIRE(calculate_max(series) == 5.0f);
 
         // Test with range. 1 to 4 will reduce the data to {2.0f, 3.0f, 4.0f}
         REQUIRE_THAT(calculate_mean(series, 1, 4) , Catch::Matchers::WithinRel(3.0f, 1e-3f));
         REQUIRE_THAT(calculate_std_dev(series, 1, 4) , Catch::Matchers::WithinRel(0.8165f, 1e-3f)); // 0.8165 for N, 1.0 for N-1 denom
         REQUIRE(series.getMinValue(1, 4) == 2.0f);
-        REQUIRE(series.getMaxValue(1, 4) == 4.0f);
+        REQUIRE(calculate_max(series, 1, 4) == 4.0f);
     }
 
     SECTION("Data ranges") {
@@ -129,7 +129,7 @@ TEST_CASE("AnalogTimeSeries - Edge cases and error handling", "[analog][timeseri
 
         REQUIRE(calculate_mean(series) == 42.0f);
         REQUIRE(series.getMinValue() == 42.0f);
-        REQUIRE(series.getMaxValue() == 42.0f);
+        REQUIRE(calculate_max(series) == 42.0f);
         REQUIRE(calculate_std_dev(series) == 0.0f);
     }
 

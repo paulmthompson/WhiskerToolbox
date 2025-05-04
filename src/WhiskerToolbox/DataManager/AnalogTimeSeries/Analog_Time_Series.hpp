@@ -41,10 +41,6 @@ public:
 
     [[nodiscard]] float getMinValue(int64_t start, int64_t end) const;
 
-    [[nodiscard]] float getMaxValue() const;
-
-    [[nodiscard]] float getMaxValue(int64_t start, int64_t end) const;
-
     template<typename TransformFunc = std::identity>
     auto getDataInRange(float start_time, float stop_time,
                         TransformFunc && time_transform = {}) const {
@@ -121,6 +117,24 @@ float calculate_std_dev(AnalogTimeSeries const & series);
  */
 float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
+
+/**
+ * @brief Calculate the maximum value in an AnalogTimeSeries
+ *
+ * @param series The time series to find the maximum value in
+ * @return float The maximum value
+ */
+float calculate_max(AnalogTimeSeries const & series);
+
+/**
+ * @brief Calculate the maximum value in an AnalogTimeSeries in a specific range
+ *
+ * @param series The time series to find the maximum value in
+ * @param start Start index of the range (inclusive)
+ * @param end End index of the range (exclusive)
+ * @return float The maximum value in the specified range
+ */
+float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
 void save_analog(
         std::vector<float> const & analog_series,

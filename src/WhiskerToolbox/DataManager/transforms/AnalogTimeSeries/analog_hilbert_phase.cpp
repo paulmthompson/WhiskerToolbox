@@ -75,7 +75,7 @@ std::shared_ptr<AnalogTimeSeries> hilbert_phase(
     phase_series->setData(phase_vec, output_timestamps);
 
     std::cout << "Total size of phase is " << phase_vec.size() << std::endl;
-    std::cout << "Max value is " << phase_series->getMaxValue() << std::endl;
+    std::cout << "Max value is " << calculate_max(*phase_series.get()) << std::endl;
     std::cout << "Min value is " << phase_series->getMinValue() << std::endl;
 
     return phase_series;
