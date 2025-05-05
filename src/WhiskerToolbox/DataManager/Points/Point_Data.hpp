@@ -56,14 +56,17 @@ public:
             std::vector<Point2D<float>> const & points;
         };
 
-        return _data | std::views::transform([](auto const & pair) {
-                   return TimePointsPair{pair.first, pair.second};
+        return std::views::iota(size_t{0}, _time.size()) |
+               std::views::transform([this](size_t i) {
+                   return TimePointsPair{static_cast<int>(_time[i]), _data[i]};
                });
     }
 
 protected:
 private:
-    std::map<int, std::vector<Point2D<float>>> _data;
+    //std::map<int, std::vector<Point2D<float>>> _data;
+    std::vector<std::vector<Point2D<float>>> _data;
+    std::vector<size_t> _time;
     std::vector<Point2D<float>> _empty;
 
     ImageSize _image_size;

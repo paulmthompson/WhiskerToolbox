@@ -6,13 +6,23 @@
 #include <iostream>
 
 PointData::PointData(std::map<int, Point2D<float>> const & data) {
-    for (auto [key, value]: data) {
-        _data[key].push_back(value);
+    for (auto const & [key, value]: data) {
+        auto it = std::find(_time.begin(), _time.end(), key);
+        if (it != _time.end()) {
+            size_t index = std::distance(_time.begin(), it);
+            _data[index].push_back(value);
+        } else {
+            _time.push_back(key);
+            _data.push_back({value});
+        }
     }
 }
 
 PointData::PointData(std::map<int, std::vector<Point2D<float>>> data) {
-    _data = std::move(data);
+    for (auto const & [key, value]: data) {
+        _time.push_back(key);
+        _data.push_back(value);
+    }
 }
 
 void PointData::clearPointsAtTime(int const time) {
@@ -21,11 +31,15 @@ void PointData::clearPointsAtTime(int const time) {
 }
 
 void PointData::_clearPointsAtTime(int const time) {
-    if (_data.find(time) == _data.end()) {
-        return;
+    auto it = std::find(_time.begin(), _time.end(), time);
+    if (it != _time.end()) {
+        size_t index = std::distance(_time.begin(), it);
+        _data[index].clear();
+    } else {
+        // If time doesn't exist, add it with empty vector
+        _time.push_back(time);
+        _data.emplace_back();
     }
-
-    _data[time].clear();
 }
 
 void PointData::overwritePointAtTime(int const time, float const x, float const y) {
@@ -70,10 +84,14 @@ void PointData::addPointAtTime(int const time, float const x, float const y) {
 }
 
 void PointData::_addPointAtTime(int const time, float const x, float const y) {
-    if (_data.find(time) == _data.end()) {
-        _data[time] = std::vector<Point2D<float>>{Point2D<float>{x, y}};
+    auto it = std::find(_time.begin(), _time.end(), time);
+    if (it != _time.end()) {
+        size_t index = std::distance(_time.begin(), it);
+        _data[index].push_back(Point2D<float>{x, y});
+    } else {
+        _time.push_back(time);
+        _data.push_back({Point2D<float>{x, y}});
     }
-    _data[time].push_back(Point2D<float>{x, y});
 }
 
 void PointData::addPointsAtTime(int const time, std::vector<Point2D<float>> const & points) {
@@ -82,26 +100,30 @@ void PointData::addPointsAtTime(int const time, std::vector<Point2D<float>> cons
 }
 
 void PointData::_addPointsAtTime(int const time, std::vector<Point2D<float>> const & points) {
-    if (_data.find(time) == _data.end()) {
-        _data[time] = points;
+    auto it = std::find(_time.begin(), _time.end(), time);
+    if (it != _time.end()) {
+        size_t index = std::distance(_time.begin(), it);
+        _data[index].insert(_data[index].end(), points.begin(), points.end());
     } else {
-        _data[time].insert(_data[time].end(), points.begin(), points.end());
+        _time.push_back(time);
+        _data.push_back(points);
     }
 }
 
 std::vector<int> PointData::getTimesWithPoints() const {
-    std::vector<int> keys;
-    keys.reserve(_data.size());
-    for (auto const & kv: _data) {
-        keys.push_back(kv.first);
+    std::vector<int> times;
+    times.reserve(_time.size());
+    for (auto t: _time) {
+        times.push_back(static_cast<int>(t));
     }
-    return keys;
+    return times;
 }
 
 std::vector<Point2D<float>> const & PointData::getPointsAtTime(int const time) const {
-    // [] operator is not const because it inserts if mask is not present
-    if (_data.find(time) != _data.end()) {
-        return _data.at(time);
+    auto it = std::find(_time.begin(), _time.end(), time);
+    if (it != _time.end()) {
+        size_t index = std::distance(_time.begin(), it);
+        return _data[index];
     } else {
         return _empty;
     }
@@ -109,7 +131,7 @@ std::vector<Point2D<float>> const & PointData::getPointsAtTime(int const time) c
 
 std::size_t PointData::getMaxPoints() const {
     std::size_t max_points = 1;
-    for (auto const & [time, points]: _data) {
+    for (auto const & points: _data) {
         if (points.size() > max_points) {
             max_points = points.size();
         }
