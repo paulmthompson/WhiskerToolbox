@@ -8,6 +8,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 find_package(nlohmann_json CONFIG REQUIRED)
 
+find_package(unofficial-lmdb CONFIG REQUIRED)
+find_package(CapnProto CONFIG REQUIRED)
+
 add_library(DataManager SHARED
         DataManager.hpp
         DataManager.cpp
@@ -20,6 +23,8 @@ add_library(DataManager SHARED
         Lines/lines.hpp
         Lines/IO/CSV/Line_Data_CSV.hpp
         Lines/IO/CSV/Line_Data_CSV.cpp
+      #  Lines/IO/LMDB/Line_Data_LMDB.hpp
+       # Lines/IO/LMDB/Line_Data_LMDB.cpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp
@@ -123,6 +128,10 @@ endif()
 target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
+target_link_libraries(DataManager PRIVATE unofficial::lmdb::lmdb)
+target_link_libraries(DataManager PRIVATE CapnProto::capnp)
+
+capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS Lines/IO/LMDB/line_data.capnp)
 
 target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
 

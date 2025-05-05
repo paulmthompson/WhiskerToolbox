@@ -9,6 +9,9 @@
             "name": "boost-circular-buffer"
         },
         {
+            "name": "capnproto"
+        },
+        {
             "name": "ffmpeg",
             "default-features": true,
             "features": [
@@ -33,6 +36,9 @@
         },
         {
             "name": "lapack"
+        },
+        {
+            "name": "lmdb"
         },
         {
             "name": "mlpack",
