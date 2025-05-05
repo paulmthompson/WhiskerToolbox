@@ -3,7 +3,7 @@
 
 
 #include <algorithm>
-
+#include <iostream>
 
 PointData::PointData(std::map<int, Point2D<float>> const & data) {
     for (auto [key, value]: data) {
@@ -50,6 +50,20 @@ void PointData::_overwritePointsAtTime(int const time, std::vector<Point2D<float
     notifyObservers();
 }
 
+void PointData::overwritePointsAtTimes(
+        std::vector<size_t> const & times,
+        std::vector<std::vector<Point2D<float>>> const & points) {
+    if (times.size() != points.size()) {
+        std::cout << "overwritePointsAtTimes: times and points must be the same size" << std::endl;
+        return;
+    }
+
+    for (std::size_t i = 0; i < times.size(); i++) {
+        _overwritePointsAtTime(times[i], points[i]);
+    }
+    notifyObservers();
+}
+
 void PointData::addPointAtTime(int const time, float const x, float const y) {
     _addPointAtTime(time, x, y);
     notifyObservers();
@@ -91,4 +105,14 @@ std::vector<Point2D<float>> const & PointData::getPointsAtTime(int const time) c
     } else {
         return _empty;
     }
+}
+
+std::size_t PointData::getMaxPoints() const {
+    std::size_t max_points = 1;
+    for (auto const & [time, points]: _data) {
+        if (points.size() > max_points) {
+            max_points = points.size();
+        }
+    }
+    return max_points;
 }

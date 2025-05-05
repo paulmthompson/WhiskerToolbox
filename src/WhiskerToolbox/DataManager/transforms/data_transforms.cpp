@@ -1,7 +1,6 @@
 
 #include "data_transforms.hpp"
 
-#include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 
 #include <map>
@@ -28,14 +27,14 @@ void scale(std::shared_ptr<PointData> & point_data, ImageSize const & image_size
     float const width_ratio = static_cast<float>(media_width) / static_cast<float>(point_width);
 
 
-    for (auto & [timestamp, points]: point_data->getData()) {
+    for (auto const & point_and_time: point_data->GetAllPointsAsRange()) {
         auto scaled_points = std::vector<Point2D<float>>();
-        for (auto & point: points) {
+        for (auto & point: point_and_time.points) {
             scaled_points.push_back(
                     {point.x * height_ratio,
                      point.y * width_ratio});
         }
-        point_data->overwritePointsAtTime(timestamp, scaled_points);
+        point_data->overwritePointsAtTime(point_and_time.time, scaled_points);
     }
 
     point_data->setImageSize(ImageSize());

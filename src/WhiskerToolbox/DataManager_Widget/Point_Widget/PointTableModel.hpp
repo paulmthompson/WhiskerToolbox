@@ -2,7 +2,7 @@
 #ifndef WHISKERTOOLBOX_POINTTABLEMODEL_HPP
 #define WHISKERTOOLBOX_POINTTABLEMODEL_HPP
 
-#include "DataManager/Points/points.hpp"
+#include "DataManager/Points/Point_Data.hpp"
 
 #include <QAbstractTableModel>
 
@@ -17,9 +17,11 @@ public:
     explicit PointTableModel(QObject * parent = nullptr)
         : QAbstractTableModel(parent) {}
 
-    void setPoints(std::map<int, std::vector<Point2D<float>>> const & points) {
+    void setPoints(PointData const * pointData) {
         beginResetModel();
-        _points = points;
+        for (auto const & timePointsPair: pointData->GetAllPointsAsRange()) {
+            _points[timePointsPair.time] = timePointsPair.points;
+        }
         endResetModel();
     }
 

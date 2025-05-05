@@ -5,9 +5,8 @@
 #include "Observer/Observer_Data.hpp"
 #include "points.hpp"
 
-#include <iostream>
 #include <map>
-#include <string>
+#include <ranges>
 #include <vector>
 
 /*
@@ -33,20 +32,9 @@ public:
     void overwritePointAtTime(int time, float x, float y);
     void overwritePointsAtTime(int time, std::vector<Point2D<float>> const & points);
 
-    template<typename T>
     void overwritePointsAtTimes(
-            std::vector<T> const & times,
-            std::vector<std::vector<Point2D<float>>> const & points) {
-        if (times.size() != points.size()) {
-            std::cout << "overwritePointsAtTimes: times and points must be the same size" << std::endl;
-            return;
-        }
-
-        for (std::size_t i = 0; i < times.size(); i++) {
-            _overwritePointsAtTime(times[i], points[i]);
-        }
-        notifyObservers();
-    }
+            std::vector<size_t> const & times,
+            std::vector<std::vector<Point2D<float>>> const & points);
 
     [[nodiscard]] std::vector<int> getTimesWithPoints() const;
 
@@ -55,17 +43,23 @@ public:
 
     [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(int time) const;
 
-    [[nodiscard]] std::size_t getMaxPoints() const {
-        std::size_t max_points = 1;
-        for (auto const & [time, points]: _data) {
-            if (points.size() > max_points) {
-                max_points = points.size();
-            }
-        }
-        return max_points;
-    }
+    [[nodiscard]] std::size_t getMaxPoints() const;
 
-    [[nodiscard]] std::map<int, std::vector<Point2D<float>>> const & getData() const { return _data; };
+    /**
+    * @brief Get all points with their associated times as a range
+    *
+    * @return A view of time-points pairs for all times
+    */
+    [[nodiscard]] auto GetAllPointsAsRange() const {
+        struct TimePointsPair {
+            int time;
+            std::vector<Point2D<float>> const & points;
+        };
+
+        return _data | std::views::transform([](auto const & pair) {
+                   return TimePointsPair{pair.first, pair.second};
+               });
+    }
 
 protected:
 private:

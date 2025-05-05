@@ -39,8 +39,8 @@ void Point_Widget::setActiveKey(std::string const & key) {
 }
 
 void Point_Widget::updateTable() {
-    auto points = _data_manager->getData<PointData>(_active_key)->getData();
-    _point_table_model->setPoints(points);
+    auto point_data = _data_manager->getData<PointData>(_active_key);
+    _point_table_model->setPoints(point_data.get());
 }
 
 void Point_Widget::_saveKeypointCSV() {
@@ -52,10 +52,13 @@ void Point_Widget::_saveKeypointCSV() {
 
     fout.open(frame_by_frame_output.append(filename).string(), std::fstream::out);
 
-    auto point_data = _data_manager->getData<PointData>(_active_key)->getData();
+    auto point_data = _data_manager->getData<PointData>(_active_key);
 
-    for (auto & [key, val]: point_data) {
-        fout << key << "," << std::to_string(val[0].x) << "," << std::to_string(val[0].y) << "\n";
+    for (auto const& timePointsPair : point_data->GetAllPointsAsRange()) {
+        fout << timePointsPair.time << ","
+             << std::to_string(timePointsPair.points[0].x)
+             << ","
+             << std::to_string(timePointsPair.points[0].y) << "\n";
     }
 
     fout.close();
