@@ -109,9 +109,9 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         REQUIRE(result->getTimeSeries().size() == 1);
 
         // Statistics should work on the result
-        REQUIRE(result->getMeanValue() == 4.0f);
-        REQUIRE(result->getMinValue() == 4.0f);
-        REQUIRE(result->getMaxValue() == 4.0f);
+        REQUIRE(calculate_mean(*result.get()) == 4.0f);
+        REQUIRE(calculate_min(*result.get()) == 4.0f);
+        REQUIRE(calculate_max(*result.get()) == 4.0f);
     }
 }
 
