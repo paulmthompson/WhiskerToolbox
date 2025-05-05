@@ -28,22 +28,22 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         auto masks_at_0 = mask_data.getMasksAtTime(0);
         REQUIRE(masks_at_0.size() == 1);
         REQUIRE(masks_at_0[0].size() == 4);
-        REQUIRE(masks_at_0[0][0].x == Catch::Approx(1.0f));
-        REQUIRE(masks_at_0[0][0].y == Catch::Approx(1.0f));
+        REQUIRE(masks_at_0[0][0].x == 1.0f);
+        REQUIRE(masks_at_0[0][0].y == 1.0f);
 
         // Add second mask at time 0
         mask_data.addMaskAtTime(0, x2, y2);
         masks_at_0 = mask_data.getMasksAtTime(0);
         REQUIRE(masks_at_0.size() == 2);
         REQUIRE(masks_at_0[1].size() == 4);
-        REQUIRE(masks_at_0[1][0].x == Catch::Approx(4.0f));
+        REQUIRE(masks_at_0[1][0].x == 4.0f);
 
         // Add mask at new time 10
         mask_data.addMaskAtTime(10, points);
         auto masks_at_10 = mask_data.getMasksAtTime(10);
         REQUIRE(masks_at_10.size() == 1);
         REQUIRE(masks_at_10[0].size() == 4);
-        REQUIRE(masks_at_10[0][0].x == Catch::Approx(10.0f));
+        REQUIRE(masks_at_10[0][0].x == 10.0f);
     }
 
     SECTION("Clearing masks at time") {
