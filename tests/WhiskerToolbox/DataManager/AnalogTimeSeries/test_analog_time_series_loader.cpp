@@ -1,7 +1,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include "AnalogTimeSeries/Analog_Time_Series_Loader.hpp"
+#include "AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
 
 TEST_CASE("Analog - Load CSV", "[DataManager]") {
 

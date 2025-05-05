@@ -1,7 +1,7 @@
 
 #include "Line_Data_LMDB.hpp"
 
-#include "Lines/IO/LMDB/LineData.capnp.h"
+#include "Lines/IO/LMDB/line_data.capnp.h"
 
 #include <capnp/message.h>
 #include <capnp/serialize.h>
@@ -39,14 +39,12 @@ MDB_env* initLMDBEnv(const std::string& dbPath, bool readOnly = false) {
 }
 
 // Convert LineData to Cap'n Proto message
-capnp::MallocMessageBuilder serializeLineData(const LineData* lineData) {
+kj::ArrayPtr<kj::byte> serializeLineData(const LineData* lineData) {
     capnp::MallocMessageBuilder message;
     LineDataProto::Builder lineDataProto = message.initRoot<LineDataProto>();
 
-    // Get all times with lines
     std::vector<int> times = lineData->getTimesWithLines();
 
-    // Initialize the timeLines list with the correct size
     auto timeLinesList = lineDataProto.initTimeLines(times.size());
 
     // Fill in the data
@@ -58,7 +56,7 @@ capnp::MallocMessageBuilder serializeLineData(const LineData* lineData) {
         timeLine.setTime(time);
 
         // Get the lines for this time
-        std::vector<Line2D>& lines = lineData->getLinesAtTime(time);
+        std::vector<Line2D> const & lines = lineData->getLinesAtTime(time);
 
         // Initialize the lines list with the correct size
         auto linesList = timeLine.initLines(lines.size());
@@ -87,7 +85,10 @@ capnp::MallocMessageBuilder serializeLineData(const LineData* lineData) {
         lineDataProto.setImageHeight(imgSize.height);
     }
 
-    return message;
+    // 2. Serialize the message to a flat byte array
+    kj::Array<capnp::word> words = capnp::messageToFlatArray(message);
+    kj::ArrayPtr<kj::byte> buffer = words.asBytes();
+    return buffer;
 }
 
 // Convert Cap'n Proto message to LineData
@@ -151,19 +152,14 @@ bool saveLineDataToLMDB(const LineData* lineData, const std::string& dbPath, con
     }
 
     // Serialize data
-    auto message = serializeLineData(lineData);
-
-    // Allocate memory for serialized message
-    size_t messageSize = capnp::computeSerializedSizeInWords(message) * sizeof(capnp::word);
-    kj::Array<capnp::word> serializedMessage = kj::heapArray<capnp::word>(messageSize);
-    capnp::copyToUnchecked(message, serializedMessage.begin());
+    auto buffer = serializeLineData(lineData);
 
     // Set up LMDB values
     MDB_val dbKey, dbValue;
     dbKey.mv_size = key.size();
     dbKey.mv_data = const_cast<char*>(key.c_str());
-    dbValue.mv_size = messageSize;
-    dbValue.mv_data = serializedMessage.begin();
+    dbValue.mv_size = buffer.size();
+    dbValue.mv_data = reinterpret_cast<void*>(buffer.begin());
 
     // Put data into LMDB
     rc = mdb_put(txn, dbi, &dbKey, &dbValue, 0);

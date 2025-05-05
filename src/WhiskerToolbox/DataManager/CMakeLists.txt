@@ -23,8 +23,8 @@ add_library(DataManager SHARED
         Lines/lines.hpp
         Lines/IO/CSV/Line_Data_CSV.hpp
         Lines/IO/CSV/Line_Data_CSV.cpp
-      #  Lines/IO/LMDB/Line_Data_LMDB.hpp
-       # Lines/IO/LMDB/Line_Data_LMDB.cpp
+        Lines/IO/LMDB/Line_Data_LMDB.hpp
+        Lines/IO/LMDB/Line_Data_LMDB.cpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp
@@ -130,8 +130,6 @@ target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc opencv_imgc
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(DataManager PRIVATE unofficial::lmdb::lmdb)
 target_link_libraries(DataManager PRIVATE CapnProto::capnp)
-
-capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS Lines/IO/LMDB/line_data.capnp)
 
 target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
 

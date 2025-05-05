@@ -66,6 +66,10 @@
             "version": "1.85.0"
         },
         {
+            "name": "capnproto",
+            "version": "1.0.1"
+        },
+        {
             "name": "ffmpeg",
             "version": "6.1.1#9"
         },
