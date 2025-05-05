@@ -111,7 +111,7 @@ void Label_Widget::_ClickedInVideo(qreal x_canvas, qreal y_canvas) {
   auto point = _data_manager->getData<PointData>("labels");
   // point->addPointAtTime(_data_manager->getMediaData()->getRawData(_data_manager->getTime()->getLastLoadedFrame()), x_media, y_media);
   point->clearPointsAtTime(frame_number);
-  point->addPointAtTime(frame_number, y_media, x_media);
+  point->addPointAtTime(frame_number, {y_media, x_media});
 
   scene->UpdateCanvas();
 

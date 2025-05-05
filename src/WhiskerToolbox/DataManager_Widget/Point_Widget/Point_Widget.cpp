@@ -73,7 +73,9 @@ void Point_Widget::assignPoint(qreal x_media, qreal y_media) {
         case Point_Select: {
 
             auto point = _data_manager->getData<PointData>(_active_key);
-            point->overwritePointAtTime(frame_id, static_cast<float>(y_media), static_cast<float>(x_media));
+            point->overwritePointAtTime(frame_id,
+                                        {.x=static_cast<float>(y_media),
+                                         .y=static_cast<float>(x_media)});
 
             break;
         }

@@ -24,24 +24,24 @@ public:
     PointData() = default;
     explicit PointData(std::map<int, Point2D<float>> const & data);
     explicit PointData(std::map<int, std::vector<Point2D<float>>> data);
-    void clearPointsAtTime(int time);
+    void clearPointsAtTime(size_t time);
 
-    void addPointAtTime(int time, float x, float y);
-    void addPointsAtTime(int time, std::vector<Point2D<float>> const & points);
+    void addPointAtTime(size_t time, Point2D<float> point);
+    void addPointsAtTime(size_t time, std::vector<Point2D<float>> const & points);
 
-    void overwritePointAtTime(int time, float x, float y);
-    void overwritePointsAtTime(int time, std::vector<Point2D<float>> const & points);
+    void overwritePointAtTime(size_t time, Point2D<float> point);
+    void overwritePointsAtTime(size_t time, std::vector<Point2D<float>> const & points);
 
     void overwritePointsAtTimes(
             std::vector<size_t> const & times,
             std::vector<std::vector<Point2D<float>>> const & points);
 
-    [[nodiscard]] std::vector<int> getTimesWithPoints() const;
+    [[nodiscard]] std::vector<size_t> getTimesWithPoints() const;
 
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
-    [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(int time) const;
+    [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(size_t time) const;
 
     [[nodiscard]] std::size_t getMaxPoints() const;
 
@@ -52,31 +52,30 @@ public:
     */
     [[nodiscard]] auto GetAllPointsAsRange() const {
         struct TimePointsPair {
-            int time;
+            size_t time;
             std::vector<Point2D<float>> const & points;
         };
 
         return std::views::iota(size_t{0}, _time.size()) |
                std::views::transform([this](size_t i) {
-                   return TimePointsPair{static_cast<int>(_time[i]), _data[i]};
+                   return TimePointsPair{_time[i], _data[i]};
                });
     }
 
 protected:
 private:
-    //std::map<int, std::vector<Point2D<float>>> _data;
     std::vector<std::vector<Point2D<float>>> _data;
     std::vector<size_t> _time;
     std::vector<Point2D<float>> _empty;
 
     ImageSize _image_size;
 
-    void _clearPointsAtTime(int time);
-    void _addPointAtTime(int time, float x, float y);
-    void _addPointsAtTime(int time, std::vector<Point2D<float>> const & points);
+    void _clearPointsAtTime(size_t time);
+    void _addPointAtTime(size_t time, Point2D<float>);
+    void _addPointsAtTime(size_t time, std::vector<Point2D<float>> const & points);
 
-    void _overwritePointAtTime(int time, float x, float y);
-    void _overwritePointsAtTime(int time, std::vector<Point2D<float>> const & points);
+    void _overwritePointAtTime(size_t time, Point2D<float>);
+    void _overwritePointsAtTime(size_t time, std::vector<Point2D<float>> const & points);
 };
 
 

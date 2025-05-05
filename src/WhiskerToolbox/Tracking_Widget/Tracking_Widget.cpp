@@ -54,6 +54,6 @@ void Tracking_Widget::_propagateLabel(int frame_id)
     for (int i = _previous_frame + 1; i <= frame_id; i ++)
     {
         _data_manager->getData<PointData>(_current_tracking_key)->clearPointsAtTime(i);
-        _data_manager->getData<PointData>(_current_tracking_key)->addPointAtTime(i, prev_points[0].x, prev_points[0].y);
+        _data_manager->getData<PointData>(_current_tracking_key)->addPointAtTime(i, prev_points[0]);
     }
 }

@@ -65,6 +65,6 @@ void Point_Loader_Widget::_loadSingleKeypoint() {
     point->setImageSize({ui->width_scaling->value(), ui->height_scaling->value()});
 
     for (auto & [key, val]: keypoints) {
-        point->addPointAtTime(key, val.x, val.y);
+        point->addPointAtTime(key, val);
     }
 }
