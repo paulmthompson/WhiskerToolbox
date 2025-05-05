@@ -7,7 +7,7 @@
 void MaskData::clearMasksAtTime(size_t const time) {
     auto it = std::find(_time.begin(), _time.end(), time);
     if (it != _time.end()) {
-        size_t index = std::distance(_time.begin(), it);
+        size_t const index = std::distance(_time.begin(), it);
         _data[index].clear();
     } else {
         // If time doesn't exist, add it with empty vector
@@ -22,7 +22,7 @@ void MaskData::addMaskAtTime(size_t const time, std::vector<float> const & x, st
 
     auto it = std::find(_time.begin(), _time.end(), time);
     if (it != _time.end()) {
-        size_t index = std::distance(_time.begin(), it);
+        size_t const index = std::distance(_time.begin(), it);
         _data[index].push_back(new_mask);
     } else {
         _time.push_back(time);
@@ -34,7 +34,7 @@ void MaskData::addMaskAtTime(size_t const time, std::vector<float> const & x, st
 void MaskData::addMaskAtTime(size_t const time, std::vector<Point2D<float>> mask) {
     auto it = std::find(_time.begin(), _time.end(), time);
     if (it != _time.end()) {
-        size_t index = std::distance(_time.begin(), it);
+        size_t const index = std::distance(_time.begin(), it);
         _data[index].push_back(std::move(mask));
     } else {
         _time.push_back(time);
@@ -46,7 +46,7 @@ void MaskData::addMaskAtTime(size_t const time, std::vector<Point2D<float>> mask
 std::vector<Mask2D> const & MaskData::getMasksAtTime(size_t const time) const {
     auto it = std::find(_time.begin(), _time.end(), time);
     if (it != _time.end()) {
-        size_t index = std::distance(_time.begin(), it);
+        size_t const index = std::distance(_time.begin(), it);
         return _data[index];
     } else {
         return _empty;
