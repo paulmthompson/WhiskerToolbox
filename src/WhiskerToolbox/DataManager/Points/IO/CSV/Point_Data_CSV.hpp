@@ -1,5 +1,5 @@
-#ifndef POINT_DATA_LOADER_HPP
-#define POINT_DATA_LOADER_HPP
+#ifndef POINT_DATA_CSV_HPP
+#define POINT_DATA_CSV_HPP
 
 #include "Points/points.hpp"
 
@@ -24,4 +24,4 @@ std::map<int, Point2D<float>> load_points_from_csv(CSVPointLoaderOptions const &
 
 std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
 
-#endif// POINT_DATA_LOADER_HPP
+#endif// POINT_DATA_CSV_HPP

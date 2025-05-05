@@ -33,8 +33,8 @@ add_library(DataManager SHARED
 
         Points/Point_Data.hpp
         Points/Point_Data.cpp
-        Points/Point_Data_Loader.hpp
-        Points/Point_Data_Loader.cpp
+        Points/IO/CSV/Point_Data_CSV.hpp
+        Points/IO/CSV/Point_Data_CSV.cpp
         Points/points.hpp
 
         Masks/Mask_Data.hpp

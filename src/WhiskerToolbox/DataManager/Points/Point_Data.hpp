@@ -65,7 +65,7 @@ public:
 protected:
 private:
     std::vector<std::vector<Point2D<float>>> _data;
-    std::vector<size_t> _time;
+    std::vector<size_t> _time; // represents index in clock signal
     std::vector<Point2D<float>> _empty;
 
     ImageSize _image_size;
