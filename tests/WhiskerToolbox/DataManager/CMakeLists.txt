@@ -24,6 +24,8 @@ add_executable(test_data_manager
 
         Masks/test_mask_data.cpp
 
+        Points/test_point_data.cpp
+
         transforms/Masks/test_mask_area.cpp
 )
 
