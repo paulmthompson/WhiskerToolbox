@@ -34,6 +34,11 @@ public:
 
     void overwriteAtTimes(std::vector<float> & analog_data, std::vector<size_t> & time);
 
+    [[nodiscard]] float getDataAtIndex(size_t i) const { return _data[i]; };
+    [[nodiscard]] size_t getTimeAtIndex(size_t i) const { return _time[i]; };
+
+    [[nodiscard]] size_t getNumSamples() const { return _data.size(); };
+
     [[nodiscard]] std::vector<float> getAnalogTimeSeries() const { return _data; };
     [[nodiscard]] std::vector<size_t> getTimeSeries() const { return _time; };
 
@@ -45,13 +50,13 @@ public:
             float value;
         };
 
-        return std::views::iota(size_t{0}, _data.size()) |
+        return std::views::iota(size_t{0}, getNumSamples()) |
                std::views::filter([this, start_time, stop_time, time_transform](size_t i) {
-                   auto transformed_time = time_transform(_time[i]);
+                   auto transformed_time = time_transform(getTimeAtIndex(i));
                    return transformed_time >= start_time && transformed_time <= stop_time;
                }) |
                std::views::transform([this](size_t i) {
-                   return DataPoint{_time[i], _data[i]};
+                   return DataPoint{getTimeAtIndex(i), getDataAtIndex(i)};
                });
     }
 

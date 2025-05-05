@@ -10,12 +10,12 @@ std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data) {
     auto analog_time_series = std::make_shared<AnalogTimeSeries>();
     std::map<int, float> areas;
 
-    for (auto const & [timestamp, masks]: mask_data->getData()) {
+    for (auto const & mask_and_time: mask_data->getAllMasksAsRange()) {
         float area = 0.0f;
-        for (auto const & mask: masks) {
+        for (auto const & mask: mask_and_time.masks) {
             area += static_cast<float>(mask.size());
         }
-        areas[timestamp] = area;
+        areas[mask_and_time.time] = area;
     }
 
     analog_time_series->setData(areas);

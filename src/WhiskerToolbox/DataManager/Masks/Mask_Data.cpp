@@ -4,27 +4,50 @@
 #include <string>
 
 
-void MaskData::clearMasksAtTime(int const time) {
-    _data[time].clear();
+void MaskData::clearMasksAtTime(size_t const time) {
+    auto it = std::find(_time.begin(), _time.end(), time);
+    if (it != _time.end()) {
+        size_t index = std::distance(_time.begin(), it);
+        _data[index].clear();
+    } else {
+        // If time doesn't exist, add it with empty vector
+        _time.push_back(time);
+        _data.emplace_back();
+    }
     notifyObservers();
 }
 
-void MaskData::addMaskAtTime(int const time, std::vector<float> const & x, std::vector<float> const & y) {
+void MaskData::addMaskAtTime(size_t const time, std::vector<float> const & x, std::vector<float> const & y) {
     auto new_mask = create_mask(x, y);
 
-    _data[time].push_back(new_mask);
+    auto it = std::find(_time.begin(), _time.end(), time);
+    if (it != _time.end()) {
+        size_t index = std::distance(_time.begin(), it);
+        _data[index].push_back(new_mask);
+    } else {
+        _time.push_back(time);
+        _data.push_back({new_mask});
+    }
     notifyObservers();
 }
 
-void MaskData::addMaskAtTime(int const time, std::vector<Point2D<float>> mask) {
-    _data[time].push_back(std::move(mask));
+void MaskData::addMaskAtTime(size_t const time, std::vector<Point2D<float>> mask) {
+    auto it = std::find(_time.begin(), _time.end(), time);
+    if (it != _time.end()) {
+        size_t index = std::distance(_time.begin(), it);
+        _data[index].push_back(std::move(mask));
+    } else {
+        _time.push_back(time);
+        _data.push_back({std::move(mask)});
+    }
     notifyObservers();
 }
 
-std::vector<Mask2D> const & MaskData::getMasksAtTime(int const time) const {
-    // [] operator is not const because it inserts if mask is not present
-    if (_data.find(time) != _data.end()) {
-        return _data.at(time);
+std::vector<Mask2D> const & MaskData::getMasksAtTime(size_t const time) const {
+    auto it = std::find(_time.begin(), _time.end(), time);
+    if (it != _time.end()) {
+        size_t index = std::distance(_time.begin(), it);
+        return _data[index];
     } else {
         return _empty;
     }

@@ -26,22 +26,17 @@ public:
     void setData(std::vector<float> event_vector);
     [[nodiscard]] std::vector<float> const & getEventSeries() const;
 
-    // Add a single event to the series
     void addEvent(float event_time);
 
-    // Remove an event at a specific time (exact match)
     bool removeEvent(float event_time);
 
-    // Get the number of events in the series
     [[nodiscard]] size_t size() const { return _data.size(); }
 
-    // Clear all events
     void clear() {
         _data.clear();
         notifyObservers();
     }
 
-    // Add to DigitalEventSeries class in Digital_Event_Series.hpp
     template<typename TransformFunc = std::identity>
     auto getEventsInRange(float start_time, float stop_time,
                           TransformFunc && time_transform = {}) const {
@@ -51,12 +46,10 @@ public:
                });
     }
 
-    // Update the existing method to use the new one for consistency
     [[nodiscard]] auto getEventsInRange(float start_time, float stop_time) const {
         return getEventsInRange(start_time, stop_time, std::identity{});
     }
 
-    // Update vector-returning helper method
     template<typename TransformFunc = std::identity>
     std::vector<float> getEventsAsVector(float start_time, float stop_time,
                                          TransformFunc && time_transform = {}) const {
