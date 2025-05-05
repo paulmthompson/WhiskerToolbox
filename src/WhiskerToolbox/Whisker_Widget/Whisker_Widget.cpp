@@ -530,9 +530,9 @@ void Whisker_Widget::_saveWhiskersAsCSV() {
     std::string const whisker_group_name = "whisker";
     std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
 
-    auto data = _data_manager->getData<LineData>(whisker_name)->getData();
+    auto line_data = _data_manager->getData<LineData>(whisker_name);
 
-    save_lines_csv(data, whisker_name + ".csv");
+    save_lines_csv(line_data.get(), whisker_name + ".csv");
 }
 
 int get_whisker_id(std::string const & whisker_name) {
@@ -600,7 +600,7 @@ void Whisker_Widget::_exportAllTracked() {
     std::string const whisker_folder = _output_path.string() + "/" + std::to_string(whisker_id) + "/";
     std::filesystem::create_directory(whisker_folder);
 
-    auto whiskers = _data_manager->getData<LineData>(whisker_name)->getData();
+    auto whiskers = _data_manager->getData<LineData>(whisker_name)->GetAllLinesAsRange();
     auto media = _data_manager->getData<MediaData>("media");
     auto const width = media->getWidth();
     auto const height = media->getHeight();
@@ -608,8 +608,8 @@ void Whisker_Widget::_exportAllTracked() {
     auto start_frame = ui->export_all_start_spinbox->value();
     auto last_frame = ui->export_all_end_spinbox->value();
 
-    for (auto & whisker_pair: whiskers) {
-        int const frame_id = whisker_pair.first;
+    for (auto const & whisker_pair: whiskers) {
+        int const frame_id = whisker_pair.time;
 
         if ((frame_id < start_frame) | (frame_id > last_frame)) {
             continue;
@@ -627,7 +627,7 @@ void Whisker_Widget::_exportAllTracked() {
 
         saveName = _getWhiskerSaveName(frame_id);
 
-        save_line_as_csv(whisker_pair.second[0], whisker_folder + saveName);
+        save_line_as_csv(whisker_pair.lines[0], whisker_folder + saveName);
     }
 }
 

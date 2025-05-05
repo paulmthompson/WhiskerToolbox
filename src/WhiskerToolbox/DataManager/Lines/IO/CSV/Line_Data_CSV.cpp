@@ -1,6 +1,8 @@
 
 #include "Line_Data_CSV.hpp"
 
+#include "Lines/Line_Data.hpp"
+
 #include <chrono>
 #include <fstream>
 #include <iomanip>
@@ -21,7 +23,7 @@ void save_line_as_csv(Line2D const & line, std::string const & filename, int con
 }
 
 void save_lines_csv(
-        std::map<int, std::vector<Line2D>> const & data,
+        LineData const * line_data,
         std::string const & filename,
         std::string const & header) {
 
@@ -34,8 +36,8 @@ void save_lines_csv(
     file << header << "\n";
 
     // Write the data
-    for (auto const & [frame, lines]: data) {
-        for (auto const & line: lines) {
+    for (auto const & frame_and_line: line_data->GetAllLinesAsRange()) {
+        for (auto const & line: frame_and_line.lines) {
             std::ostringstream x_values;
             std::ostringstream y_values;
 
@@ -50,7 +52,7 @@ void save_lines_csv(
             if (!x_str.empty()) x_str.pop_back();
             if (!y_str.empty()) y_str.pop_back();
 
-            file << frame << ",\"" << x_str << "\",\"" << y_str << "\"\n";
+            file << frame_and_line.time << ",\"" << x_str << "\",\"" << y_str << "\"\n";
         }
     }
 

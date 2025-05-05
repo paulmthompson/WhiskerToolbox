@@ -8,6 +8,7 @@
 #include "lines.hpp"
 
 #include <map>
+#include <ranges>
 #include <vector>
 
 /*
@@ -35,8 +36,6 @@ public:
 
     [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(int time) const;
 
-    [[nodiscard]] std::map<int, std::vector<Line2D>> const & getData() const { return _data; };
-
     void lockTime(int time) { _lock_state.lock(time); }
     void unlockTime(int time) { _lock_state.unlock(time); }
     [[nodiscard]] bool isTimeLocked(int time) const { return _lock_state.isLocked(time); }
@@ -50,6 +49,22 @@ public:
 
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
+
+    /**
+    * @brief Get all lines with their associated times as a range
+    *
+    * @return A view of time-lines pairs for all times
+    */
+    [[nodiscard]] auto GetAllLinesAsRange() const {
+        struct TimeLinesPair {
+            int time;
+            std::vector<Line2D> const & lines;
+        };
+
+        return _data | std::views::transform([](auto const & pair) {
+                   return TimeLinesPair{pair.first, pair.second};
+               });
+    }
 
 protected:
 private:

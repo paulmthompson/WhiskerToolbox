@@ -39,8 +39,8 @@ add_library(DataManager SHARED
 
         Masks/Mask_Data.hpp
         Masks/Mask_Data.cpp
-        Masks/Mask_Data_Loader.hpp
-        Masks/Mask_Data_Loader.cpp
+        Masks/IO/HDF5/Mask_Data_HDF5.hpp
+        Masks/IO/HDF5/Mask_Data_HDF5.cpp
         Masks/masks.hpp
 
         AnalogTimeSeries/Analog_Time_Series.hpp
