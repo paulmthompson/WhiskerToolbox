@@ -18,8 +18,8 @@ add_library(DataManager SHARED
         Lines/Line_Data.hpp
         Lines/Line_Data.cpp
         Lines/lines.hpp
-        Lines/Line_Data_Loader.hpp
-        Lines/Line_Data_Loader.cpp
+        Lines/IO/CSV/Line_Data_CSV.hpp
+        Lines/IO/CSV/Line_Data_CSV.cpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp
@@ -47,6 +47,8 @@ add_library(DataManager SHARED
         AnalogTimeSeries/Analog_Time_Series.cpp
         AnalogTimeSeries/Analog_Time_Series_Loader.hpp
         AnalogTimeSeries/Analog_Time_Series_Loader.cpp
+        AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp
+        AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.cpp
 
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp

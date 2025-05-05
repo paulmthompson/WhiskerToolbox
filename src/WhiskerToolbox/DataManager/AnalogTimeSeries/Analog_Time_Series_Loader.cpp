@@ -2,6 +2,7 @@
 #include "Analog_Time_Series_Loader.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+//#include "AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
 #include "loaders/binary_loaders.hpp"
 #include "utils/json_helpers.hpp"
 
@@ -79,28 +80,3 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::s
     return analog_time_series;
 }
 
-std::vector<float> load_analog_series_from_csv(std::string const & filename) {
-
-    std::string csv_line;
-    std::fstream myfile;
-    myfile.open(filename, std::fstream::in);
-
-    if (!myfile.is_open()) {
-        std::cout << "Error: File " << filename << " not found." << std::endl;
-        return {};
-    }
-
-    std::string y_str;
-    auto output = std::vector<float>{};
-
-    while (getline(myfile, csv_line)) {
-
-        std::stringstream ss(csv_line);
-
-        getline(ss, y_str);
-
-        output.push_back(std::stof(y_str));
-    }
-
-    return output;
-}

@@ -12,7 +12,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series_Loader.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series_Loader.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series_Loader.hpp"
-#include "Lines/Line_Data_Loader.hpp"
+#include "Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "Masks/Mask_Data_Loader.hpp"
 #include "Media/Video_Data_Loader.hpp"
 #include "Points/IO/CSV/Point_Data_CSV.hpp"

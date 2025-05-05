@@ -6,31 +6,31 @@
 #include "contact_widget.hpp"
 
 #include "DataManager.hpp"
+#include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/Lines/Line_Data_Loader.hpp"
 
-#include "janelia_config.hpp"
 #include "Magic_Eraser_Widget/magic_eraser.hpp"
-#include "mainwindow.hpp"
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
+#include "janelia_config.hpp"
+#include "mainwindow.hpp"
 #include "utils/opencv_utility.hpp"
 #include "utils/string_manip.hpp"
 #include "whiskertracker.hpp"
 
 
-#include <QFileDialog>
-#include <QElapsedTimer>
-#include "qevent.h"
 #include "opencv2/core/mat.hpp"
+#include "qevent.h"
+#include <QElapsedTimer>
+#include <QFileDialog>
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
 
-#include <torch/torch.h>
 #include <torch/script.h>
+#include <torch/torch.h>
 
 #define slots Q_SLOTS
 
@@ -44,24 +44,23 @@
 #include <string>
 
 
-
 std::vector<std::string> whisker_colors = {"#ff0000", // Red
-                                            "#008000", // Green
-                                            "#00ffff", // Cyan
-                                            "#ff00ff", // Magenta
-                                            "#ffff00"}; // Yellow
+                                           "#008000", // Green
+                                           "#00ffff", // Cyan
+                                           "#ff00ff", // Magenta
+                                           "#ffff00"};// Yellow
 
-Line2D& convert_to_Line2D(whisker::Line2D& whisker_line) {
-    return reinterpret_cast<Line2D&>(whisker_line);
+Line2D & convert_to_Line2D(whisker::Line2D & whisker_line) {
+    return reinterpret_cast<Line2D &>(whisker_line);
 }
 
 // Function to convert Line2D to whisker::Line2D without copying
-whisker::Line2D& convert_to_whisker_Line2D(Line2D& line) {
-    return reinterpret_cast<whisker::Line2D&>(line);
+whisker::Line2D & convert_to_whisker_Line2D(Line2D & line) {
+    return reinterpret_cast<whisker::Line2D &>(line);
 }
 
-std::vector<whisker::Line2D>& convert_to_whisker_Line2D(std::vector<Line2D>& lines) {
-    return reinterpret_cast<std::vector<whisker::Line2D>&>(lines);
+std::vector<whisker::Line2D> & convert_to_whisker_Line2D(std::vector<Line2D> & lines) {
+    return reinterpret_cast<std::vector<whisker::Line2D> &>(lines);
 }
 
 /**
@@ -75,20 +74,19 @@ std::vector<whisker::Line2D>& convert_to_whisker_Line2D(std::vector<Line2D>& lin
  * @param mainwindow
  * @param parent
  */
-Whisker_Widget::Whisker_Widget(Media_Window *scene,
+Whisker_Widget::Whisker_Widget(Media_Window * scene,
                                std::shared_ptr<DataManager> data_manager,
-                               TimeScrollBar* time_scrollbar,
-                               MainWindow* main_window,
-                               QWidget *parent) :
-        QMainWindow(parent),
-        _wt{std::make_shared<whisker::WhiskerTracker>()},
-        _scene{scene},
-        _data_manager{std::move(data_manager)},
-        _time_scrollbar{time_scrollbar},
-        _main_window{main_window},
-        _output_path{std::filesystem::current_path()},
-        ui(new Ui::Whisker_Widget)
-{
+                               TimeScrollBar * time_scrollbar,
+                               MainWindow * main_window,
+                               QWidget * parent)
+    : QMainWindow(parent),
+      _wt{std::make_shared<whisker::WhiskerTracker>()},
+      _scene{scene},
+      _data_manager{std::move(data_manager)},
+      _time_scrollbar{time_scrollbar},
+      _main_window{main_window},
+      _output_path{std::filesystem::current_path()},
+      ui(new Ui::Whisker_Widget) {
     ui->setupUi(this);
 
     ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
@@ -142,7 +140,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
 
     connect(ui->export_all_tracked, &QPushButton::clicked, this, &Whisker_Widget::_exportAllTracked);
 
-    connect(ui->auto_dl_checkbox, &QCheckBox::stateChanged, this, [this](){
+    connect(ui->auto_dl_checkbox, &QCheckBox::stateChanged, this, [this]() {
         if (ui->auto_dl_checkbox->isChecked()) {
             _auto_dl = true;
         } else {
@@ -150,7 +148,7 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
         }
     });
 
-    connect(ui->linking_tol_spinbox, &QSpinBox::valueChanged, this, [this](int val){
+    connect(ui->linking_tol_spinbox, &QSpinBox::valueChanged, this, [this](int val) {
         _linking_tolerance = static_cast<float>(val);
     });
 
@@ -159,7 +157,6 @@ Whisker_Widget::Whisker_Widget(Media_Window *scene,
     });
 
     connect(ui->manual_whisker_lock_frame, &QSpinBox::valueChanged, this, &Whisker_Widget::_setLockFrame);
-
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -177,13 +174,13 @@ void Whisker_Widget::openWidget() {
     this->show();
 }
 
-void Whisker_Widget::closeEvent(QCloseEvent *event) {
+void Whisker_Widget::closeEvent(QCloseEvent * event) {
     std::cout << "Close event detected" << std::endl;
 
     disconnect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
 }
 
-void Whisker_Widget::keyPressEvent(QKeyEvent *event) {
+void Whisker_Widget::keyPressEvent(QKeyEvent * event) {
 
     //Data manager should be responsible for loading new value of data object
     //Main window can update displays with new data object position
@@ -191,11 +188,10 @@ void Whisker_Widget::keyPressEvent(QKeyEvent *event) {
 
     if (event->key() == Qt::Key_T) {
         _traceButton();
-    } else if (event->key() == Qt::Key_E){
+    } else if (event->key() == Qt::Key_E) {
         _exportImageCSV();
     } else {
         //QMainWindow::keyPressEvent(event);
-
     }
 }
 
@@ -226,19 +222,19 @@ void Whisker_Widget::_traceButton() {
             std::vector<Line2D> whisker_lines(whiskers.size());
             std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);
 
-            std::for_each(whisker_lines.begin(), whisker_lines.end(), [this](Line2D& line) {
+            std::for_each(whisker_lines.begin(), whisker_lines.end(), [this](Line2D & line) {
                 clip_whisker(line, _clip_length);
             });
 
             std::string const whisker_group_name = "whisker";
 
             add_whiskers_to_data_manager(
-                _data_manager.get(),
-                whisker_lines,
-                whisker_group_name,
-                _num_whisker_to_track,
-                start_time + num_to_trace,
-                _linking_tolerance);
+                    _data_manager.get(),
+                    whisker_lines,
+                    whisker_group_name,
+                    _num_whisker_to_track,
+                    start_time + num_to_trace,
+                    _linking_tolerance);
 
             num_to_trace += 1;
             std::cout << num_to_trace << std::endl;
@@ -246,18 +242,15 @@ void Whisker_Widget::_traceButton() {
     }
 }
 
-void Whisker_Widget::_dlTraceButton()
-{
+void Whisker_Widget::_dlTraceButton() {
 
     auto media = _data_manager->getData<MediaData>("media");
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     _traceWhiskersDL(media->getProcessedData(current_time), media->getImageSize());
-
 }
 
-void Whisker_Widget::_dlAddMemoryButton()
-{
+void Whisker_Widget::_dlAddMemoryButton() {
     auto media = _data_manager->getData<MediaData>("media");
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
@@ -267,8 +260,7 @@ void Whisker_Widget::_dlAddMemoryButton()
 
     std::string const whisker_name = "whisker_" + std::to_string(_current_whisker);
 
-    if (!_data_manager->getData<LineData>(whisker_name))
-    {
+    if (!_data_manager->getData<LineData>(whisker_name)) {
         std::cout << "Whisker named " << whisker_name << " does not exist" << std::endl;
         return;
     }
@@ -288,12 +280,10 @@ void Whisker_Widget::_dlAddMemoryButton()
     //auto const height = media->getHeight();
     //QImage labeled_image(&memory_mask[0], width, height, QImage::Format_Grayscale8);
     //labeled_image.save(QString::fromStdString("memory_frame.png"));
-
 }
 
 
-void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize const image_size)
-{
+void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize const image_size) {
 
     QElapsedTimer timer3;
     timer3.start();
@@ -322,8 +312,7 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize cons
     //labeled_image.save(QString::fromStdString("memory_frame.png"));
 }
 
-void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const image_size)
-{
+void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const image_size) {
     QElapsedTimer timer2;
     timer2.start();
 
@@ -332,19 +321,19 @@ void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const 
     std::vector<Line2D> whisker_lines(whiskers.size());
     std::transform(whiskers.begin(), whiskers.end(), whisker_lines.begin(), convert_to_Line2D);
 
-    std::for_each(whisker_lines.begin(), whisker_lines.end(), [this](Line2D& line) {
+    std::for_each(whisker_lines.begin(), whisker_lines.end(), [this](Line2D & line) {
         clip_whisker(line, _clip_length);
     });
 
     std::string const whisker_group_name = "whisker";
 
     add_whiskers_to_data_manager(
-        _data_manager.get(),
-        whisker_lines,
-        whisker_group_name,
-        _num_whisker_to_track,
-        _data_manager->getTime()->getLastLoadedFrame(),
-        _linking_tolerance);
+            _data_manager.get(),
+            whisker_lines,
+            whisker_group_name,
+            _num_whisker_to_track,
+            _data_manager->getTime()->getLastLoadedFrame(),
+            _linking_tolerance);
 
     auto t1 = timer2.elapsed();
 
@@ -386,16 +375,14 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
 
     ui->manual_whisker_select_spinbox->setMaximum(n_whiskers - 1);
 
-    _createNewWhisker(whisker_group_name, n_whiskers-1);
+    _createNewWhisker(whisker_group_name, n_whiskers - 1);
 }
 
 void Whisker_Widget::_selectWhisker(int whisker_num) {
     _current_whisker = whisker_num;
-
 }
 
-void Whisker_Widget::_setLockFrame(int lock_frame)
-{
+void Whisker_Widget::_setLockFrame(int lock_frame) {
     std::string const whisker_group_name = "whisker";
 
     std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
@@ -404,8 +391,7 @@ void Whisker_Widget::_setLockFrame(int lock_frame)
     whisker->lockUntil(lock_frame);
 }
 
-void Whisker_Widget::_deleteWhisker()
-{
+void Whisker_Widget::_deleteWhisker() {
     std::string const whisker_group_name = "whisker";
 
     std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
@@ -417,8 +403,7 @@ void Whisker_Widget::_deleteWhisker()
     }
 }
 
-void Whisker_Widget::_manualWhiskerToggle()
-{
+void Whisker_Widget::_manualWhiskerToggle() {
     //check toggle state
     if (_selection_mode == Selection_Type::Manual_Trace) {
         _selection_mode = Selection_Type::Whisker_Select;
@@ -433,8 +418,7 @@ void Whisker_Widget::_saveImageButton() {
     _saveImage(_output_path.string() + "/");
 }
 
-void Whisker_Widget::_saveImage(std::string const& folder)
-{
+void Whisker_Widget::_saveImage(std::string const & folder) {
     auto media = _data_manager->getData<MediaData>("media");
     auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
@@ -471,10 +455,9 @@ void Whisker_Widget::_saveFaceMask() {
     convert_mat_to_vector(mask, m2, image_size);
 
     auto mask_image = QImage(&mask[0],
-                                 image_size.width,
-                                 image_size.height,
-                                  QImage::Format_Grayscale8
-                                 );
+                             image_size.width,
+                             image_size.height,
+                             QImage::Format_Grayscale8);
 
     std::string const saveName = "mask" + pad_frame_id(frame_id, 7) + ".png";
     std::cout << "Saving file " << saveName << std::endl;
@@ -482,13 +465,12 @@ void Whisker_Widget::_saveFaceMask() {
     mask_image.save(QString::fromStdString(saveName));
 }
 
-void Whisker_Widget::_loadFaceMask()
-{
+void Whisker_Widget::_loadFaceMask() {
     auto face_mask_name = QFileDialog::getOpenFileName(
-        this,
-        "Load Face Mask",
-        QDir::currentPath(),
-        "All files (*.*)");
+            this,
+            "Load Face Mask",
+            QDir::currentPath(),
+            "All files (*.*)");
 
     if (face_mask_name.isNull()) {
         return;
@@ -497,18 +479,18 @@ void Whisker_Widget::_loadFaceMask()
     auto mat = load_mask_from_image(face_mask_name.toStdString());
 
     auto mask_original = std::make_shared<MaskData>();
-    mask_original->setImageSize({mat.cols,mat.rows});
+    mask_original->setImageSize({mat.cols, mat.rows});
     _data_manager->setData<MaskData>("Face_Mask_Original", mask_original);
 
     auto mask_points_original = create_mask(mat);
-    _data_manager->getData<MaskData>("Face_Mask_Original")->addMaskAtTime(-1,mask_points_original);
+    _data_manager->getData<MaskData>("Face_Mask_Original")->addMaskAtTime(-1, mask_points_original);
 
 
     auto mask = std::make_shared<MaskData>();
     mask->setImageSize({mat.cols, mat.rows});
     _data_manager->setData<MaskData>("Face_Mask", mask);
 
-    const int dilation_size = 5;
+    int const dilation_size = 5;
     grow_mask(mat, dilation_size);
 
     auto mask_points = create_mask(mat);
@@ -517,7 +499,7 @@ void Whisker_Widget::_loadFaceMask()
 
     //std::cout << "Mask has " << mask_points.size() << " pixels " <<  std::endl;
 
-    face_mask->addMaskAtTime(-1,mask_points);
+    face_mask->addMaskAtTime(-1, mask_points);
 
     ui->mask_file_label->setText(face_mask_name);
 
@@ -530,8 +512,7 @@ void Whisker_Widget::_loadFaceMask()
 Single frame whisker saving
 
 */
-void Whisker_Widget::_saveWhiskerAsCSV(const std::string& folder, const std::vector<Point2D<float>>& whisker)
-{
+void Whisker_Widget::_saveWhiskerAsCSV(std::string const & folder, std::vector<Point2D<float>> const & whisker) {
     auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
     auto saveName = _getWhiskerSaveName(frame_id);
@@ -545,8 +526,7 @@ Save whisker in all frames
 
 */
 
-void Whisker_Widget::_saveWhiskersAsCSV()
-{
+void Whisker_Widget::_saveWhiskersAsCSV() {
     std::string const whisker_group_name = "whisker";
     std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
 
@@ -555,10 +535,9 @@ void Whisker_Widget::_saveWhiskersAsCSV()
     save_lines_csv(data, whisker_name + ".csv");
 }
 
-int get_whisker_id(std::string const & whisker_name)
-{
+int get_whisker_id(std::string const & whisker_name) {
     std::string number = "";
-    for (auto c : whisker_name) {
+    for (auto c: whisker_name) {
         if (isdigit(c)) {
             number += c;
         }
@@ -567,13 +546,12 @@ int get_whisker_id(std::string const & whisker_name)
     return std::stoi(number);
 }
 
-void Whisker_Widget::_loadMultiFrameCSV()
-{
+void Whisker_Widget::_loadMultiFrameCSV() {
     auto whisker_filepath = QFileDialog::getOpenFileName(
-        this,
-        "Load Whisker CSV",
-        QDir::currentPath(),
-        "All files (*.*)");
+            this,
+            "Load Whisker CSV",
+            QDir::currentPath(),
+            "All files (*.*)");
 
     auto line_map = load_line_csv(whisker_filepath.toStdString());
 
@@ -588,7 +566,6 @@ void Whisker_Widget::_loadMultiFrameCSV()
     _data_manager->setData<LineData>(whisker_name, std::make_shared<LineData>(line_map));
 
     _addDrawingCallback(whisker_name);
-
 }
 
 std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
@@ -610,8 +587,7 @@ std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
 }
 
 
-void Whisker_Widget::_exportAllTracked()
-{
+void Whisker_Widget::_exportAllTracked() {
     std::string const whisker_group_name = "whisker";
 
     std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
@@ -632,7 +608,7 @@ void Whisker_Widget::_exportAllTracked()
     auto start_frame = ui->export_all_start_spinbox->value();
     auto last_frame = ui->export_all_end_spinbox->value();
 
-    for (auto & whisker_pair : whiskers) {
+    for (auto & whisker_pair: whiskers) {
         int const frame_id = whisker_pair.first;
 
         if ((frame_id < start_frame) | (frame_id > last_frame)) {
@@ -651,9 +627,7 @@ void Whisker_Widget::_exportAllTracked()
 
         saveName = _getWhiskerSaveName(frame_id);
 
-        save_line_as_csv(whisker_pair.second[0], whisker_folder+ saveName);
-
-
+        save_line_as_csv(whisker_pair.second[0], whisker_folder + saveName);
     }
 }
 
@@ -662,8 +636,7 @@ void Whisker_Widget::_exportAllTracked()
  *
  *
  */
-void Whisker_Widget::_exportImageCSV()
-{
+void Whisker_Widget::_exportImageCSV() {
 
     std::string const whisker_group_name = "whisker";
 
@@ -681,8 +654,7 @@ void Whisker_Widget::_exportImageCSV()
     _addNewTrackedWhisker(current_time);
 
 
-    for (int i = 0; i<_num_whisker_to_track; i++)
-    {
+    for (int i = 0; i < _num_whisker_to_track; i++) {
         std::string const whisker_name = whisker_group_name + "_" + std::to_string(i);
 
         if (_data_manager->getData<LineData>(whisker_name)) {
@@ -697,10 +669,8 @@ void Whisker_Widget::_exportImageCSV()
     }
 }
 
-std::string Whisker_Widget::_getImageSaveName(int const frame_id)
-{
-    if (_save_by_frame_name)
-    {
+std::string Whisker_Widget::_getImageSaveName(int const frame_id) {
+    if (_save_by_frame_name) {
         auto media = _data_manager->getData<MediaData>("media");
         auto saveName = media->GetFrameID(frame_id);
         return saveName;
@@ -721,8 +691,7 @@ std::string Whisker_Widget::_getImageSaveName(int const frame_id)
  * @param whisker_group_name
  * @param whisker_id
  */
-void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, const int whisker_id)
-{
+void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, int const whisker_id) {
     std::string const whisker_name = whisker_group_name + "_" + std::to_string(whisker_id);
 
     if (!_data_manager->getData<LineData>(whisker_name)) {
@@ -735,7 +704,7 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, c
 
 void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
-    auto scene = dynamic_cast<Media_Window*>(sender());
+    auto scene = dynamic_cast<Media_Window *>(sender());
 
     float const x_media = static_cast<float>(x_canvas) / scene->getXAspect();
     float const y_media = static_cast<float>(y_canvas) / scene->getYAspect();
@@ -747,9 +716,9 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
             auto whiskers = _data_manager->getData<LineData>("unlabeled_whiskers")->getLinesAtTime(current_time);
             std::tuple<float, int> nearest_whisker = whisker::get_nearest_whisker(
-                convert_to_whisker_Line2D(whiskers),
-                x_media,
-                y_media);
+                    convert_to_whisker_Line2D(whiskers),
+                    x_media,
+                    y_media);
             if (std::get<0>(nearest_whisker) < 10.0f) {
                 _selected_whisker = std::get<1>(nearest_whisker);
 
@@ -761,11 +730,10 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
                 }
             }
             break;
-
         }
 
         case Whisker_Pad_Select: {
-            _wt->setWhiskerPad(x_media,y_media);
+            _wt->setWhiskerPad(x_media, y_media);
             dl_model->add_origin(x_media, y_media);
             std::string const whisker_pad_label =
                     "(" + std::to_string(static_cast<int>(x_media)) + "," + std::to_string(static_cast<int>(y_media)) +
@@ -781,10 +749,7 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
             std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
 
             if (_data_manager->getData<LineData>(whisker_name)) {
-                 _data_manager->getData<LineData>(whisker_name)->addPointToLineInterpolate(
-                         current_time,
-                         0,
-                         Point2D<float>{x_media, y_media});
+                _data_manager->getData<LineData>(whisker_name)->addPointToLineInterpolate(current_time, 0, Point2D<float>{x_media, y_media});
 
                 scene->UpdateCanvas();
             }
@@ -794,9 +759,9 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         default:
             break;
     }
-    auto* contact_widget = _main_window->getWidget("Contact_Widget");
+    auto * contact_widget = _main_window->getWidget("Contact_Widget");
     if (contact_widget) {
-        dynamic_cast<Contact_Widget*>(contact_widget)->setPolePos(x_media,y_media); // Pass forward to contact widget
+        dynamic_cast<Contact_Widget *>(contact_widget)->setPolePos(x_media, y_media);// Pass forward to contact widget
     }
 }
 
@@ -813,8 +778,8 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
 
     auto whiskers_from_janelia = whisker::load_janelia_whiskers(janelia_name.toStdString());
 
-    for (auto &[time, whiskers_in_frame]: whiskers_from_janelia) {
-        for (auto &w: whiskers_in_frame) {
+    for (auto & [time, whiskers_in_frame]: whiskers_from_janelia) {
+        for (auto & w: whiskers_in_frame) {
             _data_manager->getData<LineData>("unlabeled_whiskers")->addLineAtTime(time, convert_to_Line2D(w));
         }
     }
@@ -838,8 +803,7 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
  *
  * @return vector of frame numbers that were loaded
  */
-std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name, std::string const & whisker_group_name)
-{
+std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name, std::string const & whisker_group_name) {
     auto dir_path = std::filesystem::path(dir_name);
     auto const whisker_number = std::stoi(dir_path.filename().string());
 
@@ -865,12 +829,12 @@ std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_
  *
  * @brief Whisker_Widget::_loadSingleCSVWhisker
  */
-void Whisker_Widget::_loadSingleCSVWhisker()
-{
-    auto const dir_name =  QFileDialog::getExistingDirectory(
-        this,
-        "Load Whisker CSV Files",
-        QDir::currentPath()).toStdString();
+void Whisker_Widget::_loadSingleCSVWhisker() {
+    auto const dir_name = QFileDialog::getExistingDirectory(
+                                  this,
+                                  "Load Whisker CSV Files",
+                                  QDir::currentPath())
+                                  .toStdString();
 
     if (dir_name.empty()) {
         return;
@@ -883,12 +847,12 @@ void Whisker_Widget::_loadSingleCSVWhisker()
     _addNewTrackedWhisker(loaded_whisker_ids);
 }
 
-void Whisker_Widget::_loadMultiCSVWhiskers()
-{
-    auto const dir_name =  QFileDialog::getExistingDirectory(
-                              this,
-                              "Load Whisker CSV Files",
-                              QDir::currentPath()).toStdString();
+void Whisker_Widget::_loadMultiCSVWhiskers() {
+    auto const dir_name = QFileDialog::getExistingDirectory(
+                                  this,
+                                  "Load Whisker CSV Files",
+                                  QDir::currentPath())
+                                  .toStdString();
 
     if (dir_name.empty()) {
         return;
@@ -897,47 +861,41 @@ void Whisker_Widget::_loadMultiCSVWhiskers()
     std::string const whisker_group_name = "whisker";
 
     std::vector<int> loaded_whisker_ids;
-    for (const auto & entry : std::filesystem::directory_iterator(dir_name))
-    {
-        if (entry.is_directory())
-        {
+    for (auto const & entry: std::filesystem::directory_iterator(dir_name)) {
+        if (entry.is_directory()) {
             loaded_whisker_ids = _loadCSVWhiskerFromDir(entry.path().string(), whisker_group_name);
         }
     }
 
     _addNewTrackedWhisker(loaded_whisker_ids);
-
 }
 
-void Whisker_Widget::_openJaneliaConfig()
-{
+void Whisker_Widget::_openJaneliaConfig() {
     _janelia_config_widget->openWidget();
 }
 
-void Whisker_Widget::_openContactWidget()
-{
+void Whisker_Widget::_openContactWidget() {
     std::string const key = "Contact_Widget";
 
-    auto* contact_widget = _main_window->getWidget(key);
+    auto * contact_widget = _main_window->getWidget(key);
     if (!contact_widget) {
         auto contact_widget_ptr = std::make_unique<Contact_Widget>(_data_manager, _time_scrollbar);
         _main_window->addWidget(key, std::move(contact_widget_ptr));
 
         contact_widget = _main_window->getWidget(key);
         _main_window->registerDockWidget(key, contact_widget, ads::RightDockWidgetArea);
-        dynamic_cast<Contact_Widget*>(contact_widget)->openWidget();
+        dynamic_cast<Contact_Widget *>(contact_widget)->openWidget();
     } else {
-        dynamic_cast<Contact_Widget*>(contact_widget)->openWidget();
+        dynamic_cast<Contact_Widget *>(contact_widget)->openWidget();
     }
 
     _main_window->showDockWidget(key);
 }
 
-void Whisker_Widget::LoadFrame(int frame_id)
-{
-    auto* contact_widget = _main_window->getWidget("Contact_Widget");
+void Whisker_Widget::LoadFrame(int frame_id) {
+    auto * contact_widget = _main_window->getWidget("Contact_Widget");
     if (contact_widget) {
-        dynamic_cast<Contact_Widget*>(contact_widget)->updateFrame(frame_id);
+        dynamic_cast<Contact_Widget *>(contact_widget)->updateFrame(frame_id);
     }
     if (_auto_dl) {
         _dlTraceButton();
@@ -953,8 +911,7 @@ void Whisker_Widget::LoadFrame(int frame_id)
  *
  * @param index
  */
-void Whisker_Widget::_skipToTrackedFrame(int index)
-{
+void Whisker_Widget::_skipToTrackedFrame(int index) {
     if (index < 0 || index >= _tracked_frame_ids.size()) return;
 
     auto it = _tracked_frame_ids.begin();
@@ -971,8 +928,7 @@ void Whisker_Widget::_skipToTrackedFrame(int index)
  *
  * @param index
  */
-void Whisker_Widget::_addNewTrackedWhisker(int const index)
-{
+void Whisker_Widget::_addNewTrackedWhisker(int const index) {
     _tracked_frame_ids.insert(index);
 
     ui->tracked_whisker_number->setMaximum(static_cast<int>(_tracked_frame_ids.size()) - 1);
@@ -980,9 +936,8 @@ void Whisker_Widget::_addNewTrackedWhisker(int const index)
     ui->tracked_whisker_count->setText(QString::number(_tracked_frame_ids.size()));
 }
 
-void Whisker_Widget::_addNewTrackedWhisker(std::vector<int> const & indexes)
-{
-    for (auto i : indexes) {
+void Whisker_Widget::_addNewTrackedWhisker(std::vector<int> const & indexes) {
+    for (auto i: indexes) {
         _tracked_frame_ids.insert(i);
     }
 
@@ -992,11 +947,9 @@ void Whisker_Widget::_addNewTrackedWhisker(std::vector<int> const & indexes)
 }
 
 
-void Whisker_Widget::_maskDilation(int dilation_size)
-{
+void Whisker_Widget::_maskDilation(int dilation_size) {
 
-    if (!_data_manager->getData<MaskData>("Face_Mask_Original"))
-    {
+    if (!_data_manager->getData<MaskData>("Face_Mask_Original")) {
         return;
     }
 
@@ -1017,28 +970,24 @@ void Whisker_Widget::_maskDilation(int dilation_size)
 
     dilated_mask->clearMasksAtTime(time);
 
-    dilated_mask->addMaskAtTime(time, new_mask );
+    dilated_mask->addMaskAtTime(time, new_mask);
 
     auto mask_for_tracker = std::vector<whisker::Point2D<float>>();
-    for (auto const & p : new_mask) {
+    for (auto const & p: new_mask) {
         mask_for_tracker.push_back(whisker::Point2D<float>{p.x, p.y});
     }
     _wt->setFaceMask(mask_for_tracker);
 }
 
-void Whisker_Widget::_maskDilationExtended(int dilation_size)
-{
-
+void Whisker_Widget::_maskDilationExtended(int dilation_size) {
 }
 
-void Whisker_Widget::_magicEraserButton()
-{
+void Whisker_Widget::_magicEraserButton() {
     _selection_mode = Selection_Type::Magic_Eraser;
     _scene->setDrawingMode(true);
 }
 
-void Whisker_Widget::_drawingFinished()
-{
+void Whisker_Widget::_drawingFinished() {
     switch (_selection_mode) {
         case Magic_Eraser: {
             std::cout << "Drawing finished" << std::endl;
@@ -1065,12 +1014,11 @@ void Whisker_Widget::_drawingFinished()
     }
 }
 
-void Whisker_Widget::_changeOutputDir()
-{
+void Whisker_Widget::_changeOutputDir() {
     QString const dir_name = QFileDialog::getExistingDirectory(
-        this,
-        "Select Directory",
-        QDir::currentPath());
+            this,
+            "Select Directory",
+            QDir::currentPath());
 
     if (dir_name.isEmpty()) {
         return;
@@ -1080,15 +1028,13 @@ void Whisker_Widget::_changeOutputDir()
     ui->output_dir_label->setText(dir_name);
 }
 
-void Whisker_Widget::_changeWhiskerClip(int clip_dist)
-{
+void Whisker_Widget::_changeWhiskerClip(int clip_dist) {
     _clip_length = clip_dist;
 
     _traceButton();
 }
 
-void Whisker_Widget::_addDrawingCallback(std::string data_name)
-{
+void Whisker_Widget::_addDrawingCallback(std::string data_name) {
     _data_manager->addCallbackToData(data_name, [this]() {
         _scene->UpdateCanvas();
     });
@@ -1103,12 +1049,10 @@ void Whisker_Widget::_addDrawingCallback(std::string data_name)
  * @param line_key
  * @return vector of loaded frame IDs
  */
-std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string const & dir_name, std::string const & line_key)
-{
+std::vector<int> load_csv_lines_into_data_manager(DataManager * dm, std::string const & dir_name, std::string const & line_key) {
     auto loaded_frames = std::vector<int>{};
 
-    for (const auto & entry : std::filesystem::directory_iterator(dir_name))
-    {
+    for (auto const & entry: std::filesystem::directory_iterator(dir_name)) {
         auto const frame_num = remove_extension(entry.path().filename().string());
         auto whisker = load_line_from_csv(entry.path().string());
 
@@ -1137,16 +1081,15 @@ std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string c
  * @param num_whisker_to_track
  */
 void order_whiskers_by_position(
-        DataManager* dm,
+        DataManager * dm,
         std::string const & whisker_group_name,
         int const num_whisker_to_track,
         int current_time,
-        float similarity_threshold)
-{
+        float similarity_threshold) {
 
     std::vector<Line2D> whiskers = dm->getData<LineData>("unlabeled_whiskers")->getLinesAtTime(current_time);
 
-    std::map<int,Line2D> previous_whiskers;
+    std::map<int, Line2D> previous_whiskers;
     for (std::size_t i = 0; i < static_cast<std::size_t>(num_whisker_to_track); i++) {
 
         std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
@@ -1161,19 +1104,19 @@ void order_whiskers_by_position(
         }
     }
 
-    std::map<int,bool> matched_previous;
-    for (auto [key, prev_whisker] : previous_whiskers) {
+    std::map<int, bool> matched_previous;
+    for (auto [key, prev_whisker]: previous_whiskers) {
         matched_previous[key] = false;
     }
     std::vector<int> assigned_ids(whiskers.size(), -1);
 
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
-        for (auto [prev_key, prev_whisker] : previous_whiskers) {
+        for (auto [prev_key, prev_whisker]: previous_whiskers) {
             if (matched_previous[prev_key]) continue;
 
             float const similarity = whisker::fast_discrete_frechet_matrix(
-                convert_to_whisker_Line2D(whiskers[i]),
-                convert_to_whisker_Line2D(prev_whisker));
+                    convert_to_whisker_Line2D(whiskers[i]),
+                    convert_to_whisker_Line2D(prev_whisker));
             std::cout << "Similarity " << similarity << std::endl;
             if (similarity < similarity_threshold) {
                 assigned_ids[i] = prev_key;
@@ -1252,15 +1195,13 @@ void order_whiskers_by_position(
  *
  * @return
  */
-bool check_whisker_num_matches_export_num(DataManager* dm, int const num_whiskers_to_export, std::string const & whisker_group_name)
-{
+bool check_whisker_num_matches_export_num(DataManager * dm, int const num_whiskers_to_export, std::string const & whisker_group_name) {
 
     auto current_time = dm->getTime()->getLastLoadedFrame();
 
     int whiskers_in_frame = 0;
 
-    for (int i = 0; i< num_whiskers_to_export; i++)
-    {
+    for (int i = 0; i < num_whiskers_to_export; i++) {
         std::string const whisker_name = whisker_group_name + "_" + std::to_string(i);
 
         if (dm->getData<LineData>(whisker_name)) {
@@ -1293,13 +1234,12 @@ bool check_whisker_num_matches_export_num(DataManager* dm, int const num_whisker
  * @param num_whisker_to_track
  */
 void add_whiskers_to_data_manager(
-    DataManager* dm,
-    std::vector<Line2D> & whiskers,
-    std::string const & whisker_group_name,
-    int const num_whisker_to_track,
-    int current_time,
-    float similarity_threshold)
-{
+        DataManager * dm,
+        std::vector<Line2D> & whiskers,
+        std::string const & whisker_group_name,
+        int const num_whisker_to_track,
+        int current_time,
+        float similarity_threshold) {
     dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
     for (auto & w: whiskers) {
@@ -1307,14 +1247,13 @@ void add_whiskers_to_data_manager(
     }
 
     if (num_whisker_to_track > 0) {
-        order_whiskers_by_position(dm, whisker_group_name,num_whisker_to_track, current_time, similarity_threshold);
+        order_whiskers_by_position(dm, whisker_group_name, num_whisker_to_track, current_time, similarity_threshold);
     }
 }
 
-void clip_whisker(Line2D& line, int clip_length)
-{
+void clip_whisker(Line2D & line, int clip_length) {
     if (clip_length <= 0 || clip_length > line.size()) {
-        return; // Invalid clip length, do nothing
+        return;// Invalid clip length, do nothing
     }
     line.erase(line.end() - clip_length, line.end());
 }

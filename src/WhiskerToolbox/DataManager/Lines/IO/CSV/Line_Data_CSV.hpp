@@ -1,7 +1,7 @@
 #ifndef LINE_DATA_LOADER_HPP
 #define LINE_DATA_LOADER_HPP
 
-#include "lines.hpp"
+#include "../../lines.hpp"
 
 #include <map>
 #include <string>
