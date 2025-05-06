@@ -18,6 +18,12 @@
     <widget class="HDF5LineLoader_Widget" name="hdf5_line_loader" native="true"/>
    </item>
    <item>
+    <widget class="CSVLineLoader_Widget" name="csv_line_loader" native="true"/>
+   </item>
+   <item>
+    <widget class="LMDBLineLoader_Widget" name="lmdb_line_loader" native="true"/>
+   </item>
+   <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
@@ -88,16 +94,6 @@
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="label_6">
-     <property name="text">
-      <string>CSV Loading</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item>
     <layout class="QVBoxLayout" name="verticalLayout_4"/>
    </item>
    <item>
@@ -120,6 +116,18 @@
    <class>HDF5LineLoader_Widget</class>
    <extends>QWidget</extends>
    <header>Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CSVLineLoader_Widget</class>
+   <extends>QWidget</extends>
+   <header>Loading_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>LMDBLineLoader_Widget</class>
+   <extends>QWidget</extends>
+   <header>Loading_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

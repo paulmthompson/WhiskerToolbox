@@ -92,6 +92,12 @@ set(PROJECT_SOURCES
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.ui
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.cpp
+        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp
+        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.cpp
+        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.ui
+        DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp
+        DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.cpp
+        DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
@@ -208,6 +214,15 @@ set(PROJECT_SOURCES
         Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp
         Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.cpp
         Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.ui
+        Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.hpp
+        Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.cpp
+        Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.ui
+        Loading_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.hpp
+        Loading_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.cpp
+        Loading_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.ui
+        Loading_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.hpp
+        Loading_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.cpp
+        Loading_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.ui
 
         Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp
         Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.cpp
@@ -241,15 +256,6 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
-        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.cpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.ui
-        DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.cpp
-        DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.ui
-        Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.hpp
-        Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.cpp
-        Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)
