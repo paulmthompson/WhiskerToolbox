@@ -41,11 +41,13 @@ MDB_env * initLMDBEnv(std::string const & dbPath, bool readOnly = false) {
 }
 
 // Convert LineData to Cap'n Proto message
-kj::ArrayPtr<kj::byte> serializeLineData(LineData const * lineData) {
+kj::Array<capnp::word> serializeLineData(LineData const * lineData) {
     capnp::MallocMessageBuilder message;
     LineDataProto::Builder lineDataProto = message.initRoot<LineDataProto>();
 
     std::vector<int> times = lineData->getTimesWithLines();
+
+    std::cout << "There are " << times.size() << " time frames" << std::endl;
 
     auto timeLinesList = lineDataProto.initTimeLines(times.size());
 
@@ -87,10 +89,8 @@ kj::ArrayPtr<kj::byte> serializeLineData(LineData const * lineData) {
         lineDataProto.setImageHeight(static_cast<uint32_t>(imgSize.height));
     }
 
-    // 2. Serialize the message to a flat byte array
     kj::Array<capnp::word> words = capnp::messageToFlatArray(message);
-    kj::ArrayPtr<kj::byte> buffer = words.asBytes();
-    return buffer;
+    return words;
 }
 
 // Convert Cap'n Proto message to LineData
@@ -154,7 +154,8 @@ bool saveLineDataToLMDB(LineData const * lineData, std::string const & dbPath, s
     }
 
     // Serialize data
-    auto buffer = serializeLineData(lineData);
+    auto words = serializeLineData(lineData);
+    kj::ArrayPtr<kj::byte> buffer = words.asBytes();
 
     // Set up LMDB values
     MDB_val dbKey, dbValue;

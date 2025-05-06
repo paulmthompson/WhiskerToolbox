@@ -8,6 +8,7 @@
 #include "DataManager.hpp"
 #include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Lines/IO/LMDB/Line_Data_LMDB.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 
 #include "Magic_Eraser_Widget/magic_eraser.hpp"
@@ -124,6 +125,7 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
     connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
 
     connect(ui->actionSave_as_CSV, &QAction::triggered, this, &Whisker_Widget::_saveWhiskersAsCSV);
+    connect(ui->actionSave_as_LMDB, &QAction::triggered, this, &Whisker_Widget::_saveWhiskersAsLMDB);
     connect(ui->actionLoad_CSV_Whisker_Single_File_Multi_Frame, &QAction::triggered, this, &Whisker_Widget::_loadMultiFrameCSV);
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
@@ -198,8 +200,6 @@ void Whisker_Widget::keyPressEvent(QKeyEvent * event) {
 /////////////////////////////////////////////
 
 void Whisker_Widget::_traceButton() {
-    QElapsedTimer timer2;
-    timer2.start();
 
     auto media = _data_manager->getData<MediaData>("media");
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
@@ -533,6 +533,27 @@ void Whisker_Widget::_saveWhiskersAsCSV() {
     auto line_data = _data_manager->getData<LineData>(whisker_name);
 
     save_lines_csv(line_data.get(), whisker_name + ".csv");
+}
+
+void Whisker_Widget::_saveWhiskersAsLMDB() {
+    std::string const whisker_group_name = "whisker";
+    std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
+
+    auto line_data = _data_manager->getData<LineData>(whisker_name);
+
+    const char * db_path = "./whisker_database";
+
+    std::filesystem::create_directory(db_path);
+
+    QElapsedTimer timer2;
+    timer2.start();
+
+    saveLineDataToLMDB(line_data.get(), db_path, whisker_name);
+
+    auto t1 = timer2.elapsed();
+
+    qDebug() << "The saving took" << t1 << "ms";
+    std::cout << "Saved to LMDB at whisker.lmdb" << std::endl;
 }
 
 int get_whisker_id(std::string const & whisker_name) {

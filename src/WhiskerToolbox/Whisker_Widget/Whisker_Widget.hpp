@@ -166,6 +166,8 @@ private slots:
     void _saveWhiskersAsCSV();
     void _loadMultiFrameCSV();
 
+    void _saveWhiskersAsLMDB();
+
     void _setLockFrame(int lock_frame);
 
     void _exportAllTracked();
