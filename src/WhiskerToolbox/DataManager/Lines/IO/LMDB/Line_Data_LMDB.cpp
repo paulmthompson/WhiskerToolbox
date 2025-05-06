@@ -7,6 +7,8 @@
 #include <capnp/serialize.h>
 #include <lmdb.h>
 #include <kj/std/iostream.h>
+
+#include <algorithm> //find
 #include <iostream>
 #include <vector>
 
@@ -81,8 +83,8 @@ kj::ArrayPtr<kj::byte> serializeLineData(const LineData* lineData) {
     // Set image size if available
     ImageSize imgSize = lineData->getImageSize();
     if (imgSize.width > 0 && imgSize.height > 0) {
-        lineDataProto.setImageWidth(imgSize.width);
-        lineDataProto.setImageHeight(imgSize.height);
+        lineDataProto.setImageWidth(static_cast<uint32_t>(imgSize.width));
+        lineDataProto.setImageHeight(static_cast<uint32_t>(imgSize.height));
     }
 
     // 2. Serialize the message to a flat byte array
@@ -103,7 +105,7 @@ std::shared_ptr<LineData> deserializeLineData(kj::ArrayPtr<const capnp::word> me
     uint32_t width = lineDataProto.getImageWidth();
     uint32_t height = lineDataProto.getImageHeight();
     if (width > 0 && height > 0) {
-        lineData->setImageSize(ImageSize{width, height});
+        lineData->setImageSize(ImageSize{static_cast<int>(width), static_cast<int>(height)});
     }
 
     // Process all time lines
