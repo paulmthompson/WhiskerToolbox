@@ -727,6 +727,7 @@
       <string>Save Whiskers</string>
      </property>
      <addaction name="actionSave_as_CSV"/>
+     <addaction name="actionSave_as_LMDB"/>
     </widget>
     <addaction name="menuLoad_Whiskers"/>
     <addaction name="actionJanelia_Settings"/>
@@ -834,6 +835,11 @@
   <action name="actionLoad_CSV_Whisker_Single_File_Multi_Frame">
    <property name="text">
     <string>Load CSV Whisker (Single File, Multi Frame)</string>
+   </property>
+  </action>
+  <action name="actionSave_as_LMDB">
+   <property name="text">
+    <string>Save as LMDB</string>
    </property>
   </action>
  </widget>

@@ -26,8 +26,8 @@ private:
     void _loadSingleHDF5Line(std::string const & filename, std::string const & line_suffix = "");
 
 private slots:
-    void _loadSingleHdf5Line();
-    void _loadMultiHdf5Line();
+    void _loadSingleHdf5Line(QString filename);
+    void _loadMultiHdf5Line(QString dirname, QString pattern);
 };
 
 
