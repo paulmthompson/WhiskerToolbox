@@ -5,17 +5,17 @@
 
 #include <capnp/message.h>
 #include <capnp/serialize.h>
-#include <lmdb.h>
 #include <kj/std/iostream.h>
+#include <lmdb.h>
 
-#include <algorithm> //find
+#include <algorithm>//find
 #include <iostream>
 #include <vector>
 
 namespace {
 // Helper function to initialize LMDB environment
-MDB_env* initLMDBEnv(const std::string& dbPath, bool readOnly = false) {
-    MDB_env* env;
+MDB_env * initLMDBEnv(std::string const & dbPath, bool readOnly = false) {
+    MDB_env * env;
     int rc = mdb_env_create(&env);
     if (rc != 0) {
         std::cerr << "Failed to create LMDB environment: " << mdb_strerror(rc) << std::endl;
@@ -41,7 +41,7 @@ MDB_env* initLMDBEnv(const std::string& dbPath, bool readOnly = false) {
 }
 
 // Convert LineData to Cap'n Proto message
-kj::ArrayPtr<kj::byte> serializeLineData(const LineData* lineData) {
+kj::ArrayPtr<kj::byte> serializeLineData(LineData const * lineData) {
     capnp::MallocMessageBuilder message;
     LineDataProto::Builder lineDataProto = message.initRoot<LineDataProto>();
 
@@ -51,7 +51,7 @@ kj::ArrayPtr<kj::byte> serializeLineData(const LineData* lineData) {
 
     // Fill in the data
     for (size_t i = 0; i < times.size(); i++) {
-        int time = times[i];
+        int const time = times[i];
         auto timeLine = timeLinesList[i];
 
         // Set the time
@@ -81,7 +81,7 @@ kj::ArrayPtr<kj::byte> serializeLineData(const LineData* lineData) {
     }
 
     // Set image size if available
-    ImageSize imgSize = lineData->getImageSize();
+    ImageSize const imgSize = lineData->getImageSize();
     if (imgSize.width > 0 && imgSize.height > 0) {
         lineDataProto.setImageWidth(static_cast<uint32_t>(imgSize.width));
         lineDataProto.setImageHeight(static_cast<uint32_t>(imgSize.height));
@@ -94,7 +94,7 @@ kj::ArrayPtr<kj::byte> serializeLineData(const LineData* lineData) {
 }
 
 // Convert Cap'n Proto message to LineData
-std::shared_ptr<LineData> deserializeLineData(kj::ArrayPtr<const capnp::word> messageData) {
+std::shared_ptr<LineData> deserializeLineData(kj::ArrayPtr<capnp::word const> messageData) {
     capnp::FlatArrayMessageReader message(messageData);
     LineDataProto::Reader lineDataProto = message.getRoot<LineDataProto>();
 
@@ -102,22 +102,22 @@ std::shared_ptr<LineData> deserializeLineData(kj::ArrayPtr<const capnp::word> me
     auto lineData = std::make_shared<LineData>();
 
     // Read image size if available
-    uint32_t width = lineDataProto.getImageWidth();
-    uint32_t height = lineDataProto.getImageHeight();
+    uint32_t const width = lineDataProto.getImageWidth();
+    uint32_t const height = lineDataProto.getImageHeight();
     if (width > 0 && height > 0) {
         lineData->setImageSize(ImageSize{static_cast<int>(width), static_cast<int>(height)});
     }
 
     // Process all time lines
     std::map<int, std::vector<Line2D>> dataMap;
-    for (auto timeLine : lineDataProto.getTimeLines()) {
-        int time = timeLine.getTime();
+    for (auto timeLine: lineDataProto.getTimeLines()) {
+        int const time = timeLine.getTime();
         std::vector<Line2D> lines;
 
-        for (auto line : timeLine.getLines()) {
+        for (auto line: timeLine.getLines()) {
             Line2D currentLine;
 
-            for (auto point : line.getPoints()) {
+            for (auto point: line.getPoints()) {
                 currentLine.push_back(Point2D<float>{point.getX(), point.getY()});
             }
 
@@ -130,13 +130,13 @@ std::shared_ptr<LineData> deserializeLineData(kj::ArrayPtr<const capnp::word> me
     // Create a new LineData with the deserialized data
     return std::make_shared<LineData>(dataMap);
 }
-}
+}// namespace
 
-bool saveLineDataToLMDB(const LineData* lineData, const std::string& dbPath, const std::string& key) {
-    MDB_env* env = initLMDBEnv(dbPath);
+bool saveLineDataToLMDB(LineData const * lineData, std::string const & dbPath, std::string const & key) {
+    MDB_env * env = initLMDBEnv(dbPath);
     if (!env) return false;
 
-    MDB_txn* txn;
+    MDB_txn * txn;
     MDB_dbi dbi;
     int rc = mdb_txn_begin(env, nullptr, 0, &txn);
     if (rc != 0) {
@@ -159,9 +159,9 @@ bool saveLineDataToLMDB(const LineData* lineData, const std::string& dbPath, con
     // Set up LMDB values
     MDB_val dbKey, dbValue;
     dbKey.mv_size = key.size();
-    dbKey.mv_data = const_cast<char*>(key.c_str());
+    dbKey.mv_data = const_cast<char *>(key.c_str());
     dbValue.mv_size = buffer.size();
-    dbValue.mv_data = reinterpret_cast<void*>(buffer.begin());
+    dbValue.mv_data = reinterpret_cast<void *>(buffer.begin());
 
     // Put data into LMDB
     rc = mdb_put(txn, dbi, &dbKey, &dbValue, 0);
@@ -184,11 +184,11 @@ bool saveLineDataToLMDB(const LineData* lineData, const std::string& dbPath, con
     return true;
 }
 
-std::shared_ptr<LineData> loadLineDataFromLMDB(const std::string& dbPath, const std::string& key) {
-    MDB_env* env = initLMDBEnv(dbPath, true); // Open in read-only mode
+std::shared_ptr<LineData> loadLineDataFromLMDB(std::string const & dbPath, std::string const & key) {
+    MDB_env * env = initLMDBEnv(dbPath, true);// Open in read-only mode
     if (!env) return nullptr;
 
-    MDB_txn* txn;
+    MDB_txn * txn;
     MDB_dbi dbi;
     int rc = mdb_txn_begin(env, nullptr, MDB_RDONLY, &txn);
     if (rc != 0) {
@@ -208,7 +208,7 @@ std::shared_ptr<LineData> loadLineDataFromLMDB(const std::string& dbPath, const 
     // Set up key for lookup
     MDB_val dbKey, dbValue;
     dbKey.mv_size = key.size();
-    dbKey.mv_data = const_cast<char*>(key.c_str());
+    dbKey.mv_data = const_cast<char *>(key.c_str());
 
     // Get data from LMDB
     rc = mdb_get(txn, dbi, &dbKey, &dbValue);
@@ -220,10 +220,9 @@ std::shared_ptr<LineData> loadLineDataFromLMDB(const std::string& dbPath, const 
     }
 
     // Create array pointer for Cap'n Proto deserialization
-    kj::ArrayPtr<const capnp::word> messageData(
-            reinterpret_cast<const capnp::word*>(dbValue.mv_data),
-            dbValue.mv_size / sizeof(capnp::word)
-            );
+    kj::ArrayPtr<capnp::word const> messageData(
+            reinterpret_cast<capnp::word const *>(dbValue.mv_data),
+            dbValue.mv_size / sizeof(capnp::word));
 
     // Deserialize
     auto lineData = deserializeLineData(messageData);
@@ -235,9 +234,9 @@ std::shared_ptr<LineData> loadLineDataFromLMDB(const std::string& dbPath, const 
     return lineData;
 }
 
-bool updateLineDataTimeFrames(const std::string& dbPath,
-                              std::string& key,
-                              std::map<int, std::vector<Line2D>>& timeFrames) {
+bool updateLineDataTimeFrames(std::string const & dbPath,
+                              std::string & key,
+                              std::map<int, std::vector<Line2D>> & timeFrames) {
     // First, load the existing data
     auto lineData = loadLineDataFromLMDB(dbPath, key);
     if (!lineData) {
@@ -246,12 +245,12 @@ bool updateLineDataTimeFrames(const std::string& dbPath,
     }
 
     // Update the time frames
-    for (const auto& [time, lines] : timeFrames) {
+    for (auto const & [time, lines]: timeFrames) {
         // Clear existing lines at this time
         lineData->clearLinesAtTime(time);
 
         // Add the updated lines
-        for (const auto& line : lines) {
+        for (auto const & line: lines) {
             lineData->addLineAtTime(time, line);
         }
     }
@@ -260,9 +259,9 @@ bool updateLineDataTimeFrames(const std::string& dbPath,
     return saveLineDataToLMDB(lineData.get(), dbPath, key);
 }
 
-std::map<int, std::vector<Line2D>> getLineDataTimeFrames(const std::string& dbPath,
-                                                         std::string& key,
-                                                         std::vector<int>& times) {
+std::map<int, std::vector<Line2D>> getLineDataTimeFrames(std::string const & dbPath,
+                                                         std::string & key,
+                                                         std::vector<int> & times) {
     std::map<int, std::vector<Line2D>> result;
 
     // Load the entire data (unfortunately LMDB doesn't support partial reads easily)
@@ -273,10 +272,9 @@ std::map<int, std::vector<Line2D>> getLineDataTimeFrames(const std::string& dbPa
     }
 
     // Extract only the requested time frames
-    for (int time : times) {
+    for (int const time: times) {
         if (std::find(lineData->getTimesWithLines().begin(),
-                      lineData->getTimesWithLines().end(), time)
-            != lineData->getTimesWithLines().end()) {
+                      lineData->getTimesWithLines().end(), time) != lineData->getTimesWithLines().end()) {
             result[time] = lineData->getLinesAtTime(time);
         }
     }
