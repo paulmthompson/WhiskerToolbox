@@ -25,6 +25,8 @@ add_library(DataManager SHARED
         Lines/IO/CSV/Line_Data_CSV.cpp
         Lines/IO/LMDB/Line_Data_LMDB.hpp
         Lines/IO/LMDB/Line_Data_LMDB.cpp
+        Lines/IO/HDF5/Line_Data_HDF5.hpp
+        Lines/IO/HDF5/Line_Data_HDF5.cpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp
