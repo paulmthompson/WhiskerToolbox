@@ -1,5 +1,6 @@
 #include "Mask_Data.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 
