@@ -8,7 +8,7 @@
 #include "DataManager.hpp"
 #include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Lines/IO/LMDB/Line_Data_LMDB.hpp"
+//#include "DataManager/Lines/IO/LMDB/Line_Data_LMDB.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 
 #include "Magic_Eraser_Widget/magic_eraser.hpp"
@@ -548,7 +548,7 @@ void Whisker_Widget::_saveWhiskersAsLMDB() {
     QElapsedTimer timer2;
     timer2.start();
 
-    saveLineDataToLMDB(line_data.get(), db_path, whisker_name);
+    //saveLineDataToLMDB(line_data.get(), db_path, whisker_name);
 
     auto t1 = timer2.elapsed();
 

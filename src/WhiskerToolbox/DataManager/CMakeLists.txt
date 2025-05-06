@@ -8,8 +8,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 find_package(nlohmann_json CONFIG REQUIRED)
 
-find_package(unofficial-lmdb CONFIG REQUIRED)
+#find_package(unofficial-lmdb CONFIG REQUIRED)
 find_package(CapnProto CONFIG REQUIRED)
+#find_package(RocksDB CONFIG REQUIRED)
 
 add_library(DataManager SHARED
         DataManager.hpp
@@ -23,12 +24,16 @@ add_library(DataManager SHARED
         Lines/lines.hpp
         Lines/IO/CSV/Line_Data_CSV.hpp
         Lines/IO/CSV/Line_Data_CSV.cpp
-        Lines/IO/LMDB/Line_Data_LMDB.hpp
-        Lines/IO/LMDB/Line_Data_LMDB.cpp
+        #Lines/IO/LMDB/Line_Data_LMDB.hpp
+        #Lines/IO/LMDB/Line_Data_LMDB.cpp
         Lines/IO/HDF5/Line_Data_HDF5.hpp
         Lines/IO/HDF5/Line_Data_HDF5.cpp
         Lines/IO/CAPNP/Line_Data_CAPNP.hpp
         Lines/IO/CAPNP/Line_Data_CAPNP.cpp
+        Lines/IO/CAPNP/line_data.capnp.h
+        Lines/IO/CAPNP/line_data.capnp.c++
+        #Lines/IO/RocksDB/Line_Data_RocksDB.hpp
+        #Lines/IO/RocksDB/Line_Data_RocksDB.cpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp
@@ -132,8 +137,9 @@ endif()
 target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
-target_link_libraries(DataManager PRIVATE unofficial::lmdb::lmdb)
+#target_link_libraries(DataManager PRIVATE unofficial::lmdb::lmdb)
 target_link_libraries(DataManager PRIVATE CapnProto::capnp)
+#target_link_libraries(DataManager PRIVATE RocksDB::rocksdb RocksDB::rocksdb-shared)
 
 target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
 
