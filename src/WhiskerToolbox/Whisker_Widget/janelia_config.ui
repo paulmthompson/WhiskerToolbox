@@ -6,798 +6,493 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>896</width>
+    <width>756</width>
     <height>588</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QSpinBox" name="seed_on_grid_lattice_spacing">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>20</y>
-     <width>61</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="value">
-    <number>30</number>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>20</y>
-     <width>181</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Seed on Grid Lattice Spacing</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>50</y>
-     <width>161</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Seed Size Pixels</string>
-   </property>
-  </widget>
-  <widget class="QSpinBox" name="seed_size_px">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>50</y>
-     <width>61</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="value">
-    <number>4</number>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_3">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>80</y>
-     <width>161</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Seed Iterations</string>
-   </property>
-  </widget>
-  <widget class="QSpinBox" name="seed_iterations">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>80</y>
-     <width>61</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="value">
-    <number>1</number>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_4">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>20</y>
-     <width>181</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(pixels)</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_5">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>50</y>
-     <width>261</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(pixels) Width of the seed detector</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_6">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>80</y>
-     <width>331</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(iterations) Maximum number of iterations to re-estimate a seed</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_7">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>110</y>
-     <width>161</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Seed Iteration Threshold</string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="seed_iteration_thres">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>110</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>1.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_8">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>110</y>
-     <width>401</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(0 - 1) Threshold score determing when a seed should be re-estimated</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_9">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>140</y>
-     <width>161</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Seed Accumulation Threshold</string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="seed_accum_thresh">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>140</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>1.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>0.900000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_10">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>140</y>
-     <width>401</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(0 - 1) Threshold score determing when to accumulate statistics</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_11">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>170</y>
-     <width>161</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Seed Threshold</string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="seed_thres">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>170</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>1.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>0.800000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_12">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>170</y>
-     <width>401</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(0 - 1) Threshold score determing when to generate a seed</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_13">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>200</y>
-     <width>49</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>T Length</string>
-   </property>
-  </widget>
-  <widget class="QSpinBox" name="tlen">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>200</y>
-     <width>61</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="value">
-    <number>8</number>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_14">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>200</y>
-     <width>401</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(pixels) Half the size of the detector support</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_15">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>230</y>
-     <width>81</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Offset Step</string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="offset_step">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>230</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>1.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>0.100000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_16">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>260</y>
-     <width>81</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Angle Step</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_17">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>230</y>
-     <width>401</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(pixels)</string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="angle_step">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>260</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>30.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>18.000000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_18">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>290</y>
-     <width>81</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Width Step</string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="width_step">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>290</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>1.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>0.200000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_19">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>320</y>
-     <width>81</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Width Min</string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="width_min">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>320</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>1.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>0.400000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_20">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>350</y>
-     <width>81</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Width Max</string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="width_max">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>350</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>10.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>6.500000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_21">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>380</y>
-     <width>161</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Minimum Signal</string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="min_signal">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>380</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="decimals">
-    <number>0</number>
-   </property>
-   <property name="maximum">
-    <double>10.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>1.000000000000000</double>
-   </property>
-   <property name="value">
-    <double>5.000000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_22">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>410</y>
-     <width>161</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Max Delta Angle</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_23">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>440</y>
-     <width>161</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Max Delta Width</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_24">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>470</y>
-     <width>161</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Max Delta Offset</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_25">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>500</y>
-     <width>201</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Half Space Asymmetry Threshold</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_26">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>530</y>
-     <width>201</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Half Space Tunneling Max Moves</string>
-   </property>
-  </widget>
-  <widget class="QSpinBox" name="half_space_tunneling_max_moves">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>530</y>
-     <width>61</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="value">
-    <number>50</number>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_27">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>260</y>
-     <width>401</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(angle) Divisions of pi/4</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_28">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>290</y>
-     <width>401</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(pixels)</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_29">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>320</y>
-     <width>401</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(pixels) must be multiple of Width Step</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_30">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>350</y>
-     <width>401</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(pixels) must be multiple of Width Step</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_31">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>370</y>
-     <width>491</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>minimum detector response per detector column.  
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="11" column="1">
+      <widget class="QDoubleSpinBox" name="width_max">
+       <property name="maximum">
+        <double>10.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>6.500000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="2">
+      <widget class="QLabel" name="label_34">
+       <property name="text">
+        <string>(pixels)   The detector offset is constrained to change less than this value at each step.
+</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="2">
+      <widget class="QLabel" name="label_31">
+       <property name="text">
+        <string>minimum detector response per detector column.  
  Typically: (2*TLEN+1)*MIN_SIGNAL is the threshold determining when tracing stops.</string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="max_delta_angle">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>410</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>100.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>10.100000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_32">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>410</y>
-     <width>491</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(degrees)  The detector is constrained to turns less than this value at each step.
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="0">
+      <widget class="QLabel" name="label_24">
+       <property name="text">
+        <string>Max Delta Offset</string>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="0">
+      <widget class="QLabel" name="label_25">
+       <property name="text">
+        <string>Half Space Asymmetry Threshold</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QSpinBox" name="seed_iterations">
+       <property name="value">
+        <number>1</number>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QDoubleSpinBox" name="seed_thres">
+       <property name="maximum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.800000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QSpinBox" name="tlen">
+       <property name="value">
+        <number>8</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDoubleSpinBox" name="seed_iteration_thres">
+       <property name="maximum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>(0 - 1) Threshold score determing when to accumulate statistics</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QDoubleSpinBox" name="angle_step">
+       <property name="maximum">
+        <double>30.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>18.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="14" column="1">
+      <widget class="QDoubleSpinBox" name="max_delta_width">
+       <property name="maximum">
+        <double>20.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>6.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QSpinBox" name="seed_on_grid_lattice_spacing">
+       <property name="value">
+        <number>30</number>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="2">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>(0 - 1) Threshold score determing when to generate a seed</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="2">
+      <widget class="QLabel" name="label_14">
+       <property name="text">
+        <string>(pixels) Half the size of the detector support</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="1">
+      <widget class="QDoubleSpinBox" name="min_signal">
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <double>10.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="value">
+        <double>5.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Seed Iteration Threshold</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QDoubleSpinBox" name="seed_accum_thresh">
+       <property name="maximum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.900000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="QDoubleSpinBox" name="width_min">
+       <property name="maximum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.400000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="14" column="2">
+      <widget class="QLabel" name="label_33">
+       <property name="text">
+        <string>(pixels)   The detector width is constrained to change less than this value at each step.</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="label_19">
+       <property name="text">
+        <string>Width Min</string>
+       </property>
+      </widget>
+     </item>
+     <item row="14" column="0">
+      <widget class="QLabel" name="label_23">
+       <property name="text">
+        <string>Max Delta Width</string>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="1">
+      <widget class="QDoubleSpinBox" name="max_delta_angle">
+       <property name="maximum">
+        <double>100.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>10.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QSpinBox" name="seed_size_px">
+       <property name="value">
+        <number>4</number>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="label_16">
+       <property name="text">
+        <string>Angle Step</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="2">
+      <widget class="QLabel" name="label_30">
+       <property name="text">
+        <string>(pixels) must be multiple of Width Step</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="2">
+      <widget class="QLabel" name="label_29">
+       <property name="text">
+        <string>(pixels) must be multiple of Width Step</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Seed Iterations</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="2">
+      <widget class="QLabel" name="label_17">
+       <property name="text">
+        <string>(pixels)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>(pixels) Width of the seed detector</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Seed on Grid Lattice Spacing</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="label_20">
+       <property name="text">
+        <string>Width Max</string>
+       </property>
+      </widget>
+     </item>
+     <item row="15" column="1">
+      <widget class="QDoubleSpinBox" name="max_delta_offset">
+       <property name="maximum">
+        <double>20.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>6.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="1">
+      <widget class="QDoubleSpinBox" name="half_space_asymmetry_threshold">
+       <property name="maximum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.250000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="0">
+      <widget class="QLabel" name="label_22">
+       <property name="text">
+        <string>Max Delta Angle</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Seed Size Pixels</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>(iterations) Maximum number of iterations to re-estimate a seed</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>(pixels)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Seed Accumulation Threshold</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="2">
+      <widget class="QLabel" name="label_27">
+       <property name="text">
+        <string>(angle) Divisions of pi/4</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="label_18">
+       <property name="text">
+        <string>Width Step</string>
+       </property>
+      </widget>
+     </item>
+     <item row="12" column="0">
+      <widget class="QLabel" name="label_21">
+       <property name="text">
+        <string>Minimum Signal</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_13">
+       <property name="text">
+        <string>T Length</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="2">
+      <widget class="QLabel" name="label_28">
+       <property name="text">
+        <string>(pixels)</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>(0 - 1) Threshold score determing when a seed should be re-estimated</string>
+       </property>
+      </widget>
+     </item>
+     <item row="13" column="2">
+      <widget class="QLabel" name="label_32">
+       <property name="text">
+        <string>(degrees)  The detector is constrained to turns less than this value at each step.
 </string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="max_delta_width">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>440</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>20.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>6.000000000000000</double>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="max_delta_offset">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>470</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>20.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>6.000000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_33">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>440</y>
-     <width>491</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(pixels)   The detector width is constrained to change less than this value at each step.</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_34">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>470</y>
-     <width>491</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(pixels)   The detector offset is constrained to change less than this value at each step.
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="2">
+      <widget class="QLabel" name="label_35">
+       <property name="text">
+        <string>(0 - 1)  1 is completely insensitive to asymmetry
 </string>
-   </property>
-  </widget>
-  <widget class="QDoubleSpinBox" name="half_space_asymmetry_threshold">
-   <property name="geometry">
-    <rect>
-     <x>270</x>
-     <y>500</y>
-     <width>62</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <double>1.000000000000000</double>
-   </property>
-   <property name="singleStep">
-    <double>0.010000000000000</double>
-   </property>
-   <property name="value">
-    <double>0.250000000000000</double>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_35">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>500</y>
-     <width>491</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(0 - 1)  1 is completely insensitive to asymmetry
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QDoubleSpinBox" name="width_step">
+       <property name="maximum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.200000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1">
+      <widget class="QDoubleSpinBox" name="offset_step">
+       <property name="maximum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.010000000000000</double>
+       </property>
+       <property name="value">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_15">
+       <property name="text">
+        <string>Offset Step</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_11">
+       <property name="text">
+        <string>Seed Threshold</string>
+       </property>
+      </widget>
+     </item>
+     <item row="17" column="0">
+      <widget class="QLabel" name="label_26">
+       <property name="text">
+        <string>Half Space Tunneling Max Moves</string>
+       </property>
+      </widget>
+     </item>
+     <item row="17" column="1">
+      <widget class="QSpinBox" name="half_space_tunneling_max_moves">
+       <property name="value">
+        <number>50</number>
+       </property>
+      </widget>
+     </item>
+     <item row="17" column="2">
+      <widget class="QLabel" name="label_36">
+       <property name="text">
+        <string>(pixels)   The detector offset is constrained to change less than this value at each step.
 </string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_36">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>530</y>
-     <width>491</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(pixels)   The detector offset is constrained to change less than this value at each step.
-</string>
-   </property>
-  </widget>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
