@@ -612,6 +612,11 @@ std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
 
 
 void Whisker_Widget::_exportAllTracked() {
+
+    if (_num_whisker_to_track == 0) {
+        std::cout << "No whiskers selected to track" << std::endl;
+        return;
+    }
     std::string const whisker_group_name = "whisker";
 
     std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
@@ -624,13 +629,20 @@ void Whisker_Widget::_exportAllTracked() {
     std::string const whisker_folder = _output_path.string() + "/" + std::to_string(whisker_id) + "/";
     std::filesystem::create_directory(whisker_folder);
 
-    auto whiskers = _data_manager->getData<LineData>(whisker_name)->GetAllLinesAsRange();
+    auto whiskers = _data_manager->getData<LineData>(whisker_name);
     auto media = _data_manager->getData<MediaData>("media");
     auto const width = media->getWidth();
     auto const height = media->getHeight();
 
-    for (auto const & whisker_pair: whiskers) {
-        int const frame_id = whisker_pair.time;
+    auto tracked_frames = _data_manager->getData<DigitalEventSeries>("tracked_frames")->getEventSeries();
+
+    for (auto const & event_frame : tracked_frames)
+    {
+        int const frame_id = static_cast<int>(event_frame);
+
+        if (whiskers->getLinesAtTime(frame_id).empty()) {
+            continue;
+        }
 
         auto media_data = media->getRawData(frame_id);
 
@@ -644,7 +656,9 @@ void Whisker_Widget::_exportAllTracked() {
 
         saveName = _getWhiskerSaveName(frame_id);
 
-        save_line_as_csv(whisker_pair.lines[0], whisker_folder + saveName);
+        auto frame_whiskers = whiskers->getLinesAtTime(frame_id);
+
+        save_line_as_csv(frame_whiskers[0], whisker_folder + saveName);
     }
 }
 
