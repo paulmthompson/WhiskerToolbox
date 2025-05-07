@@ -125,14 +125,23 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
 
     } else if (feature_type == "DigitalIntervalSeries") {
 
-        ui->stackedWidget->setCurrentIndex(5);
-        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(5));
+        int const stacked_widget_index = 5;
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         interval_widget->setActiveKey(key);
 
         connect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
 
     } else if (feature_type == "DigitalEventSeries") {
-        ui->stackedWidget->setCurrentIndex(6);
+
+
+        int const stacked_widget_index = 6;
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto event_widget = dynamic_cast<DigitalEventSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        event_widget->setActiveKey(key);
+
+        connect(event_widget, &DigitalEventSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+
     } else if (feature_type == "TensorData") {
 
         ui->stackedWidget->setCurrentIndex(7);
@@ -176,14 +185,19 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
     } else if (feature_type == "AnalogTimeSeries") {
         int const stacked_widget_index = 4;
     } else if (feature_type == "DigitalIntervalSeries") {
+
         int const stacked_widget_index = 5;
         auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-
         disconnect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
         interval_widget->removeCallbacks();
 
     } else if (feature_type == "DigitalEventSeries") {
+
         int const stacked_widget_index = 6;
+        auto event_widget = dynamic_cast<DigitalEventSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        disconnect(event_widget, &DigitalEventSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+        event_widget->removeCallbacks();
+
     } else if (feature_type == "TensorData") {
         int const stacked_widget_index = 7;
     } else {

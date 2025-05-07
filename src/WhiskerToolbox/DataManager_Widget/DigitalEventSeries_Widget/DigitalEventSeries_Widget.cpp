@@ -128,6 +128,8 @@ void DigitalEventSeries_Widget::_addEventButton() {
 
     events->addEvent(static_cast<float>(frame_num));
 
+    std::cout << "Number of events is " << events->size() << std::endl;
+
     _calculateEvents();
 }
 
