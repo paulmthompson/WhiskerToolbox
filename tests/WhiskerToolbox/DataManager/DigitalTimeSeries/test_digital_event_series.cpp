@@ -132,14 +132,12 @@ TEST_CASE("Digital Event Series - Duplicate Events", "[DataManager]") {
     des.addEvent(3.0f);
     des.addEvent(1.0f);
 
-    // Verify that duplicates are preserved and sorted
+    // Verify that duplicates are not added and sorted
     auto data = des.getEventSeries();
-    REQUIRE(data.size() == 5);
+    REQUIRE(data.size() == 3);
     REQUIRE(data[0] == 1.0f);
-    REQUIRE(data[1] == 1.0f);
-    REQUIRE(data[2] == 2.0f);
-    REQUIRE(data[3] == 2.0f);
-    REQUIRE(data[4] == 3.0f);
+    REQUIRE(data[1] == 2.0f);
+    REQUIRE(data[2] == 3.0f);
 }
 
 TEST_CASE("Digital Event Series - Empty Series", "[DataManager]") {
