@@ -135,8 +135,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
-    connect(ui->tracked_whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_skipToTrackedFrame);
-
     connect(ui->mask_dilation, &QSpinBox::valueChanged, this, &Whisker_Widget::_maskDilation);
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Whisker_Widget::_changeOutputDir);
@@ -631,15 +629,8 @@ void Whisker_Widget::_exportAllTracked() {
     auto const width = media->getWidth();
     auto const height = media->getHeight();
 
-    auto start_frame = ui->export_all_start_spinbox->value();
-    auto last_frame = ui->export_all_end_spinbox->value();
-
     for (auto const & whisker_pair: whiskers) {
         int const frame_id = whisker_pair.time;
-
-        if ((frame_id < start_frame) | (frame_id > last_frame)) {
-            continue;
-        }
 
         auto media_data = media->getRawData(frame_id);
 
@@ -929,25 +920,6 @@ void Whisker_Widget::LoadFrame(int frame_id) {
 }
 
 /**
- * @brief Whisker_Widget::_skipToTrackedFrame
- *
- * A tracked frame is one where we have generated labels.
- * IDs of tracked frames are stored in _tracked_frame_ids
- *
- *
- * @param index
- */
-void Whisker_Widget::_skipToTrackedFrame(int index) {
-    auto tracked_frames = _data_manager->getData<DigitalEventSeries>("tracked_frames");
-    auto const & events = tracked_frames->getEventSeries();
-
-    if (index < 0 || index >= events.size()) return;
-
-    int const frame_id = static_cast<int>(events[index]);
-    _time_scrollbar->changeScrollBarValue(frame_id);
-}
-
-/**
  * @brief Whisker_Widget::_addNewTrackedWhisker
  *
  * Adds a new whisker to the list of tracked whiskers
@@ -957,9 +929,6 @@ void Whisker_Widget::_skipToTrackedFrame(int index) {
 void Whisker_Widget::_addNewTrackedWhisker(int const index) {
     auto tracked_frames = _data_manager->getData<DigitalEventSeries>("tracked_frames");
     tracked_frames->addEvent(static_cast<float>(index));
-
-    ui->tracked_whisker_number->setMaximum(static_cast<int>(tracked_frames->size()) - 1);
-    ui->tracked_whisker_count->setText(QString::number(tracked_frames->size()));
 }
 
 void Whisker_Widget::_addNewTrackedWhisker(std::vector<int> const & indexes) {
@@ -968,9 +937,6 @@ void Whisker_Widget::_addNewTrackedWhisker(std::vector<int> const & indexes) {
     for (auto const index: indexes) {
         tracked_frames->addEvent(static_cast<float>(index));
     }
-
-    ui->tracked_whisker_number->setMaximum(static_cast<int>(tracked_frames->size()) - 1);
-    ui->tracked_whisker_count->setText(QString::number(tracked_frames->size()));
 }
 
 

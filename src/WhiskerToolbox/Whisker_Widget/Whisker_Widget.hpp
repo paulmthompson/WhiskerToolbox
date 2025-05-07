@@ -10,7 +10,6 @@
 
 #include <filesystem>
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -147,8 +146,6 @@ private slots:
 
     void _openJaneliaConfig();
     void _openContactWidget();
-
-    void _skipToTrackedFrame(int index);
 
     void _maskDilation(int dilation_size);
     void _maskDilationExtended(int dilation_size);
