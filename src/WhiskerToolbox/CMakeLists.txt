@@ -67,6 +67,7 @@ set(PROJECT_SOURCES
         DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp
         DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.cpp
         DataManager_Widget/DigitalEventSeries_Widget/DigitalEventSeries_Widget.ui
+        DataManager_Widget/DigitalEventSeries_Widget/EventTableModel.hpp
 
         DataManager_Widget/Tensor_Widget/Tensor_Widget.hpp
         DataManager_Widget/Tensor_Widget/Tensor_Widget.cpp
