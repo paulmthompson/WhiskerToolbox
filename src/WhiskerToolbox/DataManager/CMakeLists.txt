@@ -24,16 +24,18 @@ add_library(DataManager SHARED
         Lines/lines.hpp
         Lines/IO/CSV/Line_Data_CSV.hpp
         Lines/IO/CSV/Line_Data_CSV.cpp
-        #Lines/IO/LMDB/Line_Data_LMDB.hpp
-        #Lines/IO/LMDB/Line_Data_LMDB.cpp
         Lines/IO/HDF5/Line_Data_HDF5.hpp
         Lines/IO/HDF5/Line_Data_HDF5.cpp
         Lines/IO/CAPNP/Line_Data_CAPNP.hpp
         Lines/IO/CAPNP/Line_Data_CAPNP.cpp
         Lines/IO/CAPNP/line_data.capnp.h
         Lines/IO/CAPNP/line_data.capnp.c++
+        Lines/IO/Binary/Line_Data_Binary.hpp
+        Lines/IO/Binary/Line_Data_Binary.cpp
         #Lines/IO/RocksDB/Line_Data_RocksDB.hpp
         #Lines/IO/RocksDB/Line_Data_RocksDB.cpp
+        #Lines/IO/LMDB/Line_Data_LMDB.hpp
+        #Lines/IO/LMDB/Line_Data_LMDB.cpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp
@@ -112,6 +114,7 @@ add_library(DataManager SHARED
         Observer/Observer_Data.cpp
         ImageSize/ImageSize.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
+
 )
 
 message(STATUS "NPY source dir:")
