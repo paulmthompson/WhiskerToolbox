@@ -1,9 +1,9 @@
 #ifndef WHISKER_WIDGET_HPP
 #define WHISKER_WIDGET_HPP
 
-#include "ImageSize/ImageSize.hpp" // for ImageSize
+#include "ImageSize/ImageSize.hpp"// for ImageSize
 #include "Lines/Line_Data.hpp"
-#include "Points/Point_Data.hpp"  // for Point2D
+#include "Points/Point_Data.hpp"// for Point2D
 
 #include <QMainWindow>
 #include <QPointer>
@@ -20,10 +20,17 @@ class MainWindow;
 class Media_Window;
 class TimeScrollBar;
 
-namespace Ui {class Whisker_Widget;}
-namespace whisker {class WhiskerTracker; struct Line2D;}
+namespace Ui {
+class Whisker_Widget;
+}
+namespace whisker {
+class WhiskerTracker;
+struct Line2D;
+}// namespace whisker
 
-namespace dl {class SCM;}
+namespace dl {
+class SCM;
+}
 
 /*
 
@@ -32,43 +39,42 @@ This is our interface to using the Janelia whisker tracker.
 
 */
 
-class Whisker_Widget : public QMainWindow
-{
+class Whisker_Widget : public QMainWindow {
     Q_OBJECT
 public:
-
-    Whisker_Widget(Media_Window* scene,
+    Whisker_Widget(Media_Window * scene,
                    std::shared_ptr<DataManager> data_manager,
-                   TimeScrollBar* time_scrollbar,
-                   MainWindow* main_window,
-                   QWidget *parent = nullptr);
+                   TimeScrollBar * time_scrollbar,
+                   MainWindow * main_window,
+                   QWidget * parent = nullptr);
 
     ~Whisker_Widget() override;
 
-    void openWidget(); // Call
+    void openWidget();// Call
 public slots:
     void LoadFrame(int frame_id);
+
 protected:
-    void closeEvent(QCloseEvent *event) override;
-    void keyPressEvent(QKeyEvent *event) override;
+    void closeEvent(QCloseEvent * event) override;
+    void keyPressEvent(QKeyEvent * event) override;
 
 private:
     std::shared_ptr<whisker::WhiskerTracker> _wt;
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
-    TimeScrollBar* _time_scrollbar;
-    MainWindow* _main_window;
+    TimeScrollBar * _time_scrollbar;
+    MainWindow * _main_window;
 
-    int _selected_whisker {0};
+    int _selected_whisker{0};
 
-    float _linking_tolerance {20.0f};
+    float _linking_tolerance{20.0f};
 
-    enum Selection_Type {Whisker_Select,
+    enum Selection_Type { Whisker_Select,
                           Whisker_Pad_Select,
                           Magic_Eraser,
-                          Manual_Trace};
+                          Manual_Trace };
 
-    Whisker_Widget::Selection_Type _selection_mode {Whisker_Select};
+    Whisker_Widget::Selection_Type _selection_mode{Whisker_Select};
 
     QPointer<Janelia_Config> _janelia_config_widget;
 
@@ -79,29 +85,27 @@ private:
         Facing_Right
     };
 
-    Face_Orientation _face_orientation {Facing_Top};
+    Face_Orientation _face_orientation{Facing_Top};
 
-    int _num_whisker_to_track {0};
+    int _num_whisker_to_track{0};
 
-    bool _save_by_frame_name {false};
-
-    std::set<int> _tracked_frame_ids {};
+    bool _save_by_frame_name{false};
 
     std::filesystem::path _output_path;
 
-    int _clip_length {0};
+    int _clip_length{0};
 
-    int _current_whisker {0};
+    int _current_whisker{0};
 
-    bool _auto_dl {false};
+    bool _auto_dl{false};
 
-    Ui::Whisker_Widget *ui;
+    Ui::Whisker_Widget * ui;
 
-    std::unique_ptr<dl::SCM> dl_model {nullptr};
+    std::unique_ptr<dl::SCM> dl_model{nullptr};
 
     void _createNewWhisker(std::string const & whisker_group_name, int whisker_id);
 
-    void _saveImage(std::string const& folder);
+    void _saveImage(std::string const & folder);
     std::string _getImageSaveName(int frame_id);
     std::string _getWhiskerSaveName(int frame_id);
 
@@ -136,10 +140,10 @@ private slots:
 
     void _selectNumWhiskersToTrack(int n_whiskers);
 
-    void _clickedInVideo(qreal x,qreal y);
+    void _clickedInVideo(qreal x, qreal y);
 
     void _exportImageCSV();
-    void _saveWhiskerAsCSV(std::string const& folder, std::vector<Point2D<float>> const& whisker);
+    void _saveWhiskerAsCSV(std::string const & folder, std::vector<Point2D<float>> const & whisker);
 
     void _openJaneliaConfig();
     void _openContactWidget();
@@ -171,27 +175,26 @@ private slots:
     void _setLockFrame(int lock_frame);
 
     void _exportAllTracked();
-
 };
 
-void order_whiskers_by_position(DataManager* dm, std::string const & whisker_group_name, int num_whiskers_to_track, int current_time, float similarity_threshold);
+void order_whiskers_by_position(DataManager * dm, std::string const & whisker_group_name, int num_whiskers_to_track, int current_time, float similarity_threshold);
 
-std::vector<int> load_csv_lines_into_data_manager(DataManager* dm, std::string const & dir_name, std::string const & line_key);
+std::vector<int> load_csv_lines_into_data_manager(DataManager * dm, std::string const & dir_name, std::string const & line_key);
 
-bool check_whisker_num_matches_export_num(DataManager* dm, int num_whiskers_to_export, std::string const & whisker_group_name);
+bool check_whisker_num_matches_export_num(DataManager * dm, int num_whiskers_to_export, std::string const & whisker_group_name);
 
 void add_whiskers_to_data_manager(
-    DataManager* dm,
-    std::vector<Line2D> & whiskers,
-    std::string const & whisker_group_name,
-    int num_whisker_to_track,
-    int current_time,
-    float similarity_threshold);
+        DataManager * dm,
+        std::vector<Line2D> & whiskers,
+        std::string const & whisker_group_name,
+        int num_whisker_to_track,
+        int current_time,
+        float similarity_threshold);
 
-void clip_whisker(Line2D& line, int clip_length);
+void clip_whisker(Line2D & line, int clip_length);
 
 std::string generate_color();
 
 std::string get_whisker_color(int whisker_index);
 
-#endif // WHISKER_WIDGET_HPP
+#endif// WHISKER_WIDGET_HPP

@@ -6,9 +6,10 @@
 #include "contact_widget.hpp"
 
 #include "DataManager.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/Lines/IO/Binary/Line_Data_Binary.hpp"
 #include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
-#include "DataManager/Lines/IO/Binary/Line_Data_Binary.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 
 #include "Magic_Eraser_Widget/magic_eraser.hpp"
@@ -98,6 +99,10 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
     _janelia_config_widget = new Janelia_Config(_wt);
 
     dl_model = std::make_unique<dl::SCM>();
+
+    if (!_data_manager->getData<DigitalEventSeries>("tracked_frames")) {
+        _data_manager->setData<DigitalEventSeries>("tracked_frames");
+    }
 
     connect(ui->trace_button, &QPushButton::clicked, this, &Whisker_Widget::_traceButton);
     connect(ui->dl_trace_button, &QPushButton::clicked, this, &Whisker_Widget::_dlTraceButton);
@@ -933,12 +938,12 @@ void Whisker_Widget::LoadFrame(int frame_id) {
  * @param index
  */
 void Whisker_Widget::_skipToTrackedFrame(int index) {
-    if (index < 0 || index >= _tracked_frame_ids.size()) return;
+    auto tracked_frames = _data_manager->getData<DigitalEventSeries>("tracked_frames");
+    auto const & events = tracked_frames->getEventSeries();
 
-    auto it = _tracked_frame_ids.begin();
-    std::advance(it, index);
+    if (index < 0 || index >= events.size()) return;
 
-    int const frame_id = *it;
+    int const frame_id = static_cast<int>(events[index]);
     _time_scrollbar->changeScrollBarValue(frame_id);
 }
 
@@ -950,21 +955,22 @@ void Whisker_Widget::_skipToTrackedFrame(int index) {
  * @param index
  */
 void Whisker_Widget::_addNewTrackedWhisker(int const index) {
-    _tracked_frame_ids.insert(index);
+    auto tracked_frames = _data_manager->getData<DigitalEventSeries>("tracked_frames");
+    tracked_frames->addEvent(static_cast<float>(index));
 
-    ui->tracked_whisker_number->setMaximum(static_cast<int>(_tracked_frame_ids.size()) - 1);
-
-    ui->tracked_whisker_count->setText(QString::number(_tracked_frame_ids.size()));
+    ui->tracked_whisker_number->setMaximum(static_cast<int>(tracked_frames->size()) - 1);
+    ui->tracked_whisker_count->setText(QString::number(tracked_frames->size()));
 }
 
 void Whisker_Widget::_addNewTrackedWhisker(std::vector<int> const & indexes) {
-    for (auto i: indexes) {
-        _tracked_frame_ids.insert(i);
+    auto tracked_frames = _data_manager->getData<DigitalEventSeries>("tracked_frames");
+
+    for (auto const index: indexes) {
+        tracked_frames->addEvent(static_cast<float>(index));
     }
 
-    ui->tracked_whisker_number->setMaximum(static_cast<int>(_tracked_frame_ids.size()) - 1);
-
-    ui->tracked_whisker_count->setText(QString::number(_tracked_frame_ids.size()));
+    ui->tracked_whisker_number->setMaximum(static_cast<int>(tracked_frames->size()) - 1);
+    ui->tracked_whisker_count->setText(QString::number(tracked_frames->size()));
 }
 
 
