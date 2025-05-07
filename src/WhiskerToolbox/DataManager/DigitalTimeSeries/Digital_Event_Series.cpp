@@ -17,8 +17,15 @@ std::vector<float> const & DigitalEventSeries::getEventSeries() const {
 }
 
 void DigitalEventSeries::addEvent(float const event_time) {
+
+    if (std::find(_data.begin(), _data.end(), event_time) != _data.end()) {
+        return;
+    }
+
     _data.push_back(event_time);
+
     _sortEvents();
+
     notifyObservers();
 }
 

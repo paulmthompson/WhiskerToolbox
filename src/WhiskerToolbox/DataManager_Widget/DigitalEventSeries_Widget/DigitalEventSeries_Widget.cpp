@@ -94,7 +94,6 @@ void DigitalEventSeries_Widget::_changeDataTable(QModelIndex const & topLeft, QM
     for (int row = topLeft.row(); row <= bottomRight.row(); ++row) {
         float newTime = _event_table_model->getEvent(row);
         if (row < event_series.size()) {
-            // Remove old event and add new one
             events->removeEvent(event_series[row]);
             events->addEvent(newTime);
         }
@@ -138,6 +137,8 @@ void DigitalEventSeries_Widget::_removeEventButton() {
 
     if (!events) return;
 
+    bool removed = events->removeEvent(static_cast<float>(frame_num));
+
     _calculateEvents();
 }
 
@@ -146,9 +147,7 @@ void DigitalEventSeries_Widget::_handleCellClicked(QModelIndex const & index) {
         return;
     }
 
-    // Get the frame number from the clicked cell
     float frameNumber = _event_table_model->getEvent(index.row());
 
-    // Emit the signal with the frame number
     emit frameSelected(static_cast<int>(frameNumber));
 }
