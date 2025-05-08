@@ -18,7 +18,6 @@ public:
     explicit MediaPoint_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
     ~MediaPoint_Widget() override;
 
-    void openWidget();// Call
     void setActiveKey(std::string const & key);
 
 private:

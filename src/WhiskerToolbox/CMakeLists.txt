@@ -131,6 +131,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp
         Media_Widget/MediaTensor_Widget/MediaTensor_Widget.cpp
         Media_Widget/MediaTensor_Widget/MediaTensor_Widget.ui
+        Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp
+        Media_Widget/MediaLine_Widget/MediaLine_Widget.cpp
+        Media_Widget/MediaLine_Widget/MediaLine_Widget.ui
 
         TimeScrollBar/TimeScrollBar.hpp
         TimeScrollBar/TimeScrollBar.cpp

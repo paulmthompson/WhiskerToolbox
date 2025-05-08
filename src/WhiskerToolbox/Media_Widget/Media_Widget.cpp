@@ -5,6 +5,7 @@
 
 #include "DataManager/ImageSize/ImageSize.hpp"
 #include "Main_Window/mainwindow.hpp"
+#include "Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp"
 #include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
 #include "Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp"
 #include "Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp"
@@ -49,6 +50,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->feature_table_widget->populateTable();
 
     ui->stackedWidget->addWidget(new MediaPoint_Widget(_data_manager, _scene));
+    ui->stackedWidget->addWidget(new MediaLine_Widget(_data_manager, _scene));
     ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene));
     ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene));
 }
@@ -59,9 +61,25 @@ void Media_Widget::_featureSelected(QString const & feature) {
     auto const type = _data_manager->getType(feature.toStdString());
     auto key = feature.toStdString();
 
-    if (type == DM_DataType::Mask) {
+    if (type == DM_DataType::Points) {
+
+        int const stacked_widget_index = 1;
+
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto point_widget = dynamic_cast<MediaPoint_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        point_widget->setActiveKey(key);
+
+    } else if (type == DM_DataType::Line) {
 
         int const stacked_widget_index = 2;
+
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto line_widget = dynamic_cast<MediaLine_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        line_widget->setActiveKey(key);
+
+    } else if (type == DM_DataType::Mask) {
+
+        int const stacked_widget_index = 3;
 
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto mask_widget = dynamic_cast<MediaMask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
@@ -69,7 +87,8 @@ void Media_Widget::_featureSelected(QString const & feature) {
 
 
     } else if (type == DM_DataType::Tensor) {
-        int const stacked_widget_index = 3;
+
+        int const stacked_widget_index = 4;
 
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto tensor_widget = dynamic_cast<MediaTensor_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
