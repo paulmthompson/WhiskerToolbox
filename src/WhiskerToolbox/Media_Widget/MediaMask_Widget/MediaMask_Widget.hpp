@@ -10,11 +10,12 @@ class MediaMask_Widget;
 }
 
 class DataManager;
+class Media_Window;
 
 class MediaMask_Widget : public QWidget {
     Q_OBJECT
 public:
-    explicit MediaMask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
+    explicit MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
     ~MediaMask_Widget() override;
 
     void openWidget();// Call
@@ -23,6 +24,7 @@ public:
 private:
     Ui::MediaMask_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    Media_Window * _scene;
     std::string _active_key;
 
 private slots:

@@ -3,15 +3,16 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
+#include "Media_Window/Media_Window.hpp"
 
 #include <iostream>
 
-MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
+MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent)
     : QWidget(parent),
       ui(new Ui::MediaMask_Widget),
-      _data_manager{std::move(data_manager)} {
+      _data_manager{std::move(data_manager)},
+      _scene{std::move(scene)} {
     ui->setupUi(this);
-
 }
 
 MediaMask_Widget::~MediaMask_Widget() {

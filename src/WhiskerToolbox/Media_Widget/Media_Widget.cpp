@@ -5,8 +5,9 @@
 
 #include "DataManager/ImageSize/ImageSize.hpp"
 #include "Main_Window/mainwindow.hpp"
-#include "Media_Window/Media_Window.hpp"
 #include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
+#include "Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp"
+#include "Media_Window/Media_Window.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -54,7 +55,8 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
 
-    ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager));
+    ui->stackedWidget->addWidget(new MediaPoint_Widget(_data_manager, _scene));
+    ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene));
 }
 
 void Media_Widget::_featureSelected(QString const & feature) {
@@ -65,7 +67,7 @@ void Media_Widget::_featureSelected(QString const & feature) {
 
     if (type == "MaskData") {
 
-        int const stacked_widget_index = 1;
+        int const stacked_widget_index = 2;
 
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto mask_widget = dynamic_cast<MediaMask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
@@ -91,7 +93,7 @@ void Media_Widget::_updateCanvasSize() {
     if (_scene) {
         _scene->setCanvasSize(
                 ImageSize{ui->graphicsView->width(),
-                ui->graphicsView->height()});
+                          ui->graphicsView->height()});
         _scene->UpdateCanvas();
     }
 }
