@@ -90,7 +90,6 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             ui->stackedWidget->setCurrentIndex(stacked_widget_index);
             auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             point_widget->setActiveKey(key);
-            connect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
 
             _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
                 _scene->UpdateCanvas();
@@ -109,8 +108,6 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             ui->stackedWidget->setCurrentIndex(stacked_widget_index);
             auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             mask_widget->setActiveKey(key);
-
-            connect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
 
             _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
                 _scene->UpdateCanvas();
@@ -189,7 +186,6 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
             int const stacked_widget_index = 1;
 
             auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-            disconnect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
             disconnect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
             break;
 

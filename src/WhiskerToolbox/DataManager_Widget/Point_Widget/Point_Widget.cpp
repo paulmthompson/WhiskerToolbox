@@ -64,26 +64,6 @@ void Point_Widget::_saveKeypointCSV() {
     fout.close();
 }
 
-void Point_Widget::assignPoint(qreal x_media, qreal y_media) {
-
-    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
-
-    switch (_selection_mode) {
-
-        case Point_Select: {
-
-            auto point = _data_manager->getData<PointData>(_active_key);
-            point->overwritePointAtTime(frame_id,
-                                        {.x=static_cast<float>(y_media),
-                                         .y=static_cast<float>(x_media)});
-
-            break;
-        }
-        default:
-            break;
-    }
-}
-
 void Point_Widget::loadFrame(int frame_id) {
     if (ui->propagate_checkbox->isChecked()) {
         _propagateLabel(frame_id);

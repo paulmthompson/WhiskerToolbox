@@ -21,7 +21,6 @@ public:
     void openWidget();// Call to open the widget
 
     void setActiveKey(std::string const & key);
-    void assignPoint(qreal x, qreal y);
 
     void updateTable();
 
@@ -33,10 +32,6 @@ private:
     PointTableModel * _point_table_model;
     std::string _active_key;
     int _previous_frame{0};
-
-    enum Selection_Type { Point_Select };
-
-    Point_Widget::Selection_Type _selection_mode{Point_Select};
 
     //void refreshTable();
     void _propagateLabel(int frame_id);

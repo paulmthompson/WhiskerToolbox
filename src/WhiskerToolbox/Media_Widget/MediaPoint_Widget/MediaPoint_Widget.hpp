@@ -17,6 +17,8 @@ class MediaPoint_Widget : public QWidget {
 public:
     explicit MediaPoint_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
     ~MediaPoint_Widget() override;
+    void showEvent(QShowEvent * event) override;
+    void hideEvent(QHideEvent * event) override;
 
     void setActiveKey(std::string const & key);
 
@@ -25,8 +27,11 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene;
     std::string _active_key;
+    bool _selection_enabled = false;
 
 private slots:
+    void _assignPoint(qreal xmedia, qreal y_media);
+
 };
 
 #endif// MEDIAPOINT_WIDGET_HPP
