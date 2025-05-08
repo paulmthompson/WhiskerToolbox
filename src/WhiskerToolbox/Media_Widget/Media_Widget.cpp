@@ -5,7 +5,6 @@
 
 #include "DataManager/ImageSize/ImageSize.hpp"
 #include "Main_Window/mainwindow.hpp"
-#include "Media_Widget/Media_Widget_Items.hpp"
 #include "Media_Window/Media_Window.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
@@ -22,7 +21,6 @@ Media_Widget::Media_Widget(QWidget * parent)
       ui(new Ui::Media_Widget) {
     ui->setupUi(this);
 
-    connect(ui->data_viewer_button, &QPushButton::clicked, this, &Media_Widget::_openDataViewer);
     connect(ui->mask_slider, &QSlider::valueChanged, this, &Media_Widget::_setMaskAlpha);
     connect(ui->tensor_slider, &QSlider::valueChanged, this, &Media_Widget::_setTensorChannel);
 
@@ -54,21 +52,6 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->feature_table_widget->setTypeFilter({"LineData", "MaskData", "PointData", "DigitalIntervalSeries", "TensorData"});
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
-}
-
-void Media_Widget::_openDataViewer() {
-    std::string const key = "media_widget_item_list";
-
-    auto * media_widget_item_list = _main_window->getWidget(key);
-    if (!media_widget_item_list) {
-        auto media_widget_item_list_ptr = std::make_unique<Media_Widget_Items>(_data_manager, _scene);
-        _main_window->addWidget(key, std::move(media_widget_item_list_ptr));
-
-        media_widget_item_list = _main_window->getWidget(key);
-        _main_window->registerDockWidget(key, media_widget_item_list, ads::RightDockWidgetArea);
-    }
-
-    _main_window->showDockWidget(key);
 }
 
 void Media_Widget::_featureSelected(QString const & feature) {

@@ -21,7 +21,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0,0,0,0,0,0">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0,0,0,0,0,0,0">
      <property name="spacing">
       <number>1</number>
      </property>
@@ -77,19 +77,6 @@
        </property>
        <property name="text">
         <string>Select</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="data_viewer_button">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Data Viewer</string>
        </property>
       </widget>
      </item>

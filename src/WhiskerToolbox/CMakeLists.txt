@@ -122,9 +122,6 @@ set(PROJECT_SOURCES
         Media_Widget/Media_Widget.hpp
         Media_Widget/Media_Widget.cpp
         Media_Widget/Media_Widget.ui
-        Media_Widget/Media_Widget_Items.hpp
-        Media_Widget/Media_Widget_Items.cpp
-        Media_Widget/Media_Widget_Items.ui
 
         TimeScrollBar/TimeScrollBar.hpp
         TimeScrollBar/TimeScrollBar.cpp
