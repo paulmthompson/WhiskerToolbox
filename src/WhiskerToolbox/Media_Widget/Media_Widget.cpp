@@ -62,10 +62,10 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 void Media_Widget::_featureSelected(QString const & feature) {
 
 
-    std::string const type = _data_manager->getType(feature.toStdString());
+    auto const type = _data_manager->getType(feature.toStdString());
     auto key = feature.toStdString();
 
-    if (type == "MaskData") {
+    if (type == DataManager::DataType::Mask) {
 
         int const stacked_widget_index = 2;
 
@@ -74,7 +74,7 @@ void Media_Widget::_featureSelected(QString const & feature) {
         mask_widget->setActiveKey(key);
 
 
-    } else if (type == "TensorData") {
+    } else if (type == DataManager::DataType::Tensor) {
         auto tensor_data = _data_manager->getData<TensorData>(feature.toStdString());
         auto shape = tensor_data->getFeatureShape();
         ui->tensor_slider->setMaximum(static_cast<int>(shape.back()));
@@ -106,9 +106,9 @@ void Media_Widget::_setMaskAlpha(int alpha) {
 void Media_Widget::_setTensorChannel(int channel) {
     auto feature = ui->feature_table_widget->getHighlightedFeature().toStdString();
 
-    std::string const type = _data_manager->getType(feature);
+    auto const type = _data_manager->getType(feature);
 
-    if (type == "TensorData") {
+    if (type == DataManager::DataType::Tensor) {
         _scene->setTensorChannel(feature, channel);
     }
 }
@@ -116,13 +116,13 @@ void Media_Widget::_setTensorChannel(int channel) {
 void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     std::cout << "Feature: " << feature.toStdString() << std::endl;
 
-    std::string const type = _data_manager->getType(feature.toStdString());
+    auto const type = _data_manager->getType(feature.toStdString());
 
     std::string const color = ui->feature_table_widget->getFeatureColor(feature.toStdString());
 
     std::cout << "Color: " << color << std::endl;
 
-    if (type == "LineData") {
+    if (type == DataManager::DataType::Line) {
         if (enabled) {
             std::cout << "Adding line data to scene" << std::endl;
             _scene->addLineDataToScene(feature.toStdString(), color);
@@ -130,7 +130,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             std::cout << "Removing line data from scene" << std::endl;
             _scene->removeLineDataFromScene(feature.toStdString());
         }
-    } else if (type == "MaskData") {
+    } else if (type == DataManager::DataType::Mask) {
         if (enabled) {
             std::cout << "Adding mask data to scene" << std::endl;
             _scene->addMaskDataToScene(feature.toStdString(), color);
@@ -138,7 +138,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             std::cout << "Removing mask data from scene" << std::endl;
             _scene->removeMaskDataFromScene(feature.toStdString());
         }
-    } else if (type == "PointData") {
+    } else if (type == DataManager::DataType::Points) {
         if (enabled) {
             std::cout << "Adding point data to scene" << std::endl;
             _scene->addPointDataToScene(feature.toStdString(), color);
@@ -146,7 +146,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             std::cout << "Removing point data from scene" << std::endl;
             _scene->removePointDataFromScene(feature.toStdString());
         }
-    } else if (type == "DigitalIntervalSeries") {
+    } else if (type == DataManager::DataType::DigitalInterval) {
         if (enabled) {
             std::cout << "Adding digital interval series to scene" << std::endl;
             _scene->addDigitalIntervalSeries(feature.toStdString(), color);
@@ -154,7 +154,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             std::cout << "Removing digital interval series from scene" << std::endl;
             _scene->removeDigitalIntervalSeries(feature.toStdString());
         }
-    } else if (type == "TensorData") {
+    } else if (type == DataManager::DataType::Tensor) {
         if (enabled) {
             std::cout << "Adding Tensor data to scene" << std::endl;
             _scene->addTensorDataToScene(feature.toStdString());
@@ -163,7 +163,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             _scene->removeTensorDataFromScene(feature.toStdString());
         }
     } else {
-        std::cout << "Feature type " << type << " not supported" << std::endl;
+        std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
     }
 }
 

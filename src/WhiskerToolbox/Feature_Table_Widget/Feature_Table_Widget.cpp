@@ -52,7 +52,7 @@ void Feature_Table_Widget::_addFeatureType(std::string const & key, int row, int
     if (group) {
         ui->available_features_table->setItem(row, col, new QTableWidgetItem("Group"));
     } else {
-        std::string const type = _data_manager->getType(key);
+        std::string const type = convert_data_type_to_string(_data_manager->getType(key));
         ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(type)));
     }
 }
@@ -171,7 +171,7 @@ void Feature_Table_Widget::populateTable() {
     for (auto const & groupName: groupNames) {
 
         if (!_type_filters.empty()) {
-            std::string const type = _data_manager->getType(groupName);
+            std::string const type = convert_data_type_to_string(_data_manager->getType(groupName));
             if (std::find(_type_filters.begin(), _type_filters.end(), type) == _type_filters.end()) {
                 continue;
             }
@@ -210,7 +210,7 @@ void Feature_Table_Widget::populateTable() {
 
 
         if (!_type_filters.empty()) {
-            std::string const type = _data_manager->getType(key);
+            std::string const type = convert_data_type_to_string(_data_manager->getType(key));
             if (std::find(_type_filters.begin(), _type_filters.end(), type) == _type_filters.end()) {
                 continue;
             }

@@ -223,7 +223,7 @@ void Feature_Tree_Widget::_populateTree() {
 
     for (auto const & key: allKeys) {
         // Skip if type doesn't match filter
-        std::string const type = _data_manager->getType(key);
+        std::string const type = convert_data_type_to_string(_data_manager->getType(key));
         if (!_type_filters.empty() && !_hasTypeFilter(type)) {
             continue;
         }
@@ -257,7 +257,7 @@ void Feature_Tree_Widget::_populateTree() {
                 // Create feature
                 TreeFeature childFeature;
                 childFeature.key = member;
-                childFeature.type = _data_manager->getType(member);
+                childFeature.type = convert_data_type_to_string(_data_manager->getType(member));
                 childFeature.timeFrame = _data_manager->getTimeFrame(member);
                 childFeature.isGroup = false;
                 childFeature.color = _features[groupName].color;// Inherit parent color
@@ -281,7 +281,7 @@ void Feature_Tree_Widget::_populateTree() {
     // Add standalone items (not in any group)
     for (auto const & key: allKeys) {
         // Skip if type doesn't match filter
-        std::string const type = _data_manager->getType(key);
+        std::string const type = convert_data_type_to_string(_data_manager->getType(key));
         if (!_type_filters.empty() && !_hasTypeFilter(type)) {
             continue;
         }

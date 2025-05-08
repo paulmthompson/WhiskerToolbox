@@ -82,74 +82,92 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
 
     auto feature_type = _data_manager->getType(feature.toStdString());
 
-    if (feature_type == "PointData") {
+    switch (feature_type) {
+        case DataManager::DataType::Points: {
 
-        int const stacked_widget_index = 1;
+            int const stacked_widget_index = 1;
 
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        point_widget->setActiveKey(key);
-        connect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
+            ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+            auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            point_widget->setActiveKey(key);
+            connect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
 
-        _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
-            _scene->UpdateCanvas();
-        }));
+            _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
+                _scene->UpdateCanvas();
+            }));
 
-        _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [point_widget]() {
-            point_widget->updateTable();
-        }));
+            _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [point_widget]() {
+                point_widget->updateTable();
+            }));
 
-        connect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
+            connect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
+            break;
+        }
+        case DataManager::DataType::Mask: {
 
-    } else if (feature_type == "MaskData") {
+            int const stacked_widget_index = 2;
+            ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+            auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            mask_widget->setActiveKey(key);
 
-        int const stacked_widget_index = 2;
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        mask_widget->setActiveKey(key);
+            connect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
 
-        connect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
+            _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
+                _scene->UpdateCanvas();
+            }));
+            break;
 
-        _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
-            _scene->UpdateCanvas();
-        }));
+        }
+        case DataManager::DataType::Line: {
+            ui->stackedWidget->setCurrentIndex(3);
+            break;
+        }
+        case DataManager::DataType::Analog: {
 
-    } else if (feature_type == "LineData") {
-        ui->stackedWidget->setCurrentIndex(3);
-    } else if (feature_type == "AnalogTimeSeries") {
+            int const stacked_widget_index = 4;
+            ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+            auto analog_widget = dynamic_cast<AnalogTimeSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            analog_widget->setActiveKey(key);
+            break;
 
-        int const stacked_widget_index = 4;
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto analog_widget = dynamic_cast<AnalogTimeSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        analog_widget->setActiveKey(key);
+        }
+        case DataManager::DataType::DigitalInterval: {
 
-    } else if (feature_type == "DigitalIntervalSeries") {
+            int const stacked_widget_index = 5;
+            ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+            auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            interval_widget->setActiveKey(key);
 
-        int const stacked_widget_index = 5;
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        interval_widget->setActiveKey(key);
+            connect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
 
-        connect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
-
-    } else if (feature_type == "DigitalEventSeries") {
-
-
-        int const stacked_widget_index = 6;
-        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        auto event_widget = dynamic_cast<DigitalEventSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        event_widget->setActiveKey(key);
-
-        connect(event_widget, &DigitalEventSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
-
-    } else if (feature_type == "TensorData") {
-
-        ui->stackedWidget->setCurrentIndex(7);
-        dynamic_cast<Tensor_Widget *>(ui->stackedWidget->widget(7))->setActiveKey(key);
+            break;
+        }
+        case DataManager::DataType::DigitalEvent: {
 
 
-    } else {
-        std::cout << "Unsupported feature type" << std::endl;
+            int const stacked_widget_index = 6;
+            ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+            auto event_widget = dynamic_cast<DigitalEventSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            event_widget->setActiveKey(key);
+
+            connect(event_widget, &DigitalEventSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+            break;
+
+        }
+        case DataManager::DataType::Tensor: {
+
+            ui->stackedWidget->setCurrentIndex(7);
+            dynamic_cast<Tensor_Widget *>(ui->stackedWidget->widget(7))->setActiveKey(key);
+            break;
+        }
+        case DataManager::DataType::Unknown: {
+            std::cout << "Unsupported feature type" << std::endl;
+            break;
+        }
+        default:
+        {
+            std::cout << "You shouldn't be here" << std::endl;
+        }
     }
 }
 
@@ -165,43 +183,55 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
 
     auto feature_type = _data_manager->getType(feature.toStdString());
 
-    if (feature_type == "PointData") {
+    switch(feature_type) {
+        case DataManager::DataType::Points: {
 
-        int const stacked_widget_index = 1;
+            int const stacked_widget_index = 1;
 
-        auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        disconnect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
-        disconnect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
+            auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            disconnect(_scene, &Media_Window::leftClickMedia, point_widget, &Point_Widget::assignPoint);
+            disconnect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
+            break;
 
-    } else if (feature_type == "MaskData") {
+        }
+        case DataManager::DataType::Mask: {
 
-        int const stacked_widget_index = 2;
-        auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        disconnect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
+            int const stacked_widget_index = 2;
+            auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            disconnect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
+            break;
+        }
+        case DataManager::DataType::Line: {
+            int const stacked_widget_index = 3;
+            break;
+        }
+        case DataManager::DataType::Analog: {
+            int const stacked_widget_index = 4;
+            break;
+        }
+        case DataManager::DataType::DigitalInterval: {
 
+            int const stacked_widget_index = 5;
+            auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            disconnect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+            interval_widget->removeCallbacks();
+            break;
+        }
+        case DataManager::DataType::DigitalEvent: {
 
-    } else if (feature_type == "LineData") {
-        int const stacked_widget_index = 3;
-    } else if (feature_type == "AnalogTimeSeries") {
-        int const stacked_widget_index = 4;
-    } else if (feature_type == "DigitalIntervalSeries") {
+            int const stacked_widget_index = 6;
+            auto event_widget = dynamic_cast<DigitalEventSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            disconnect(event_widget, &DigitalEventSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+            event_widget->removeCallbacks();
+            break;
 
-        int const stacked_widget_index = 5;
-        auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        disconnect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
-        interval_widget->removeCallbacks();
-
-    } else if (feature_type == "DigitalEventSeries") {
-
-        int const stacked_widget_index = 6;
-        auto event_widget = dynamic_cast<DigitalEventSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        disconnect(event_widget, &DigitalEventSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
-        event_widget->removeCallbacks();
-
-    } else if (feature_type == "TensorData") {
-        int const stacked_widget_index = 7;
-    } else {
-        std::cout << "Unsupported feature type" << std::endl;
+        } case DataManager::DataType::Tensor: {
+            int const stacked_widget_index = 7;
+            break;
+        } case DataManager::DataType::Unknown: {
+            std::cout << "Unsupported feature type" << std::endl;
+            break;
+        }
     }
 }
 

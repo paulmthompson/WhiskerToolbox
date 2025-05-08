@@ -58,30 +58,17 @@ void DataManager::setTimeFrame(std::string const & data_key, std::string const &
     _time_frames[data_key] = time_key;
 }
 
-enum class DataType {
-    Video,
-    Points,
-    Mask,
-    Line,
-    Analog,
-    DigitalEvent,
-    DigitalInterval,
-    Tensor,
-    Time,
-    Unknown
-};
-
-DataType stringToDataType(std::string const & data_type_str) {
-    if (data_type_str == "video") return DataType::Video;
-    if (data_type_str == "points") return DataType::Points;
-    if (data_type_str == "mask") return DataType::Mask;
-    if (data_type_str == "line") return DataType::Line;
-    if (data_type_str == "analog") return DataType::Analog;
-    if (data_type_str == "digital_event") return DataType::DigitalEvent;
-    if (data_type_str == "digital_interval") return DataType::DigitalInterval;
-    if (data_type_str == "tensor") return DataType::Tensor;
-    if (data_type_str == "time") return DataType::Time;
-    return DataType::Unknown;
+DataManager::DataType stringToDataType(std::string const & data_type_str) {
+    if (data_type_str == "video") return DataManager::DataType::Video;
+    if (data_type_str == "points") return DataManager::DataType::Points;
+    if (data_type_str == "mask") return DataManager::DataType::Mask;
+    if (data_type_str == "line") return DataManager::DataType::Line;
+    if (data_type_str == "analog") return DataManager::DataType::Analog;
+    if (data_type_str == "digital_event") return DataManager::DataType::DigitalEvent;
+    if (data_type_str == "digital_interval") return DataManager::DataType::DigitalInterval;
+    if (data_type_str == "tensor") return DataManager::DataType::Tensor;
+    if (data_type_str == "time") return DataManager::DataType::Time;
+    return DataManager::DataType::Unknown;
 }
 
 std::optional<std::string> processFilePath(
@@ -188,8 +175,8 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
         }
 
         std::string const data_type_str = item["data_type"];
-        DataType const data_type = stringToDataType(data_type_str);
-        if (data_type == DataType::Unknown) {
+        auto const data_type = stringToDataType(data_type_str);
+        if (data_type == DataManager::DataType::Unknown) {
             std::cout << "Unknown data type: " << data_type_str << std::endl;
             continue;
         }
@@ -205,7 +192,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
         std::string const file_path = file_exists.value();
 
         switch (data_type) {
-            case DataType::Video: {
+            case DataManager::DataType::Video: {
                 // Create VideoData object
                 auto video_data = load_video_into_VideoData(file_path);
 
@@ -215,7 +202,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 data_info_list.push_back({name, "VideoData", ""});
                 break;
             }
-            case DataType::Points: {
+            case DataManager::DataType::Points: {
 
                 auto point_data = load_into_PointData(file_path, item);
 
@@ -225,7 +212,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 data_info_list.push_back({name, "PointData", color});
                 break;
             }
-            case DataType::Mask: {
+            case DataManager::DataType::Mask: {
 
                 auto mask_data = load_into_MaskData(file_path, item);
 
@@ -250,7 +237,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 }
                 break;
             }
-            case DataType::Line: {
+            case DataManager::DataType::Line: {
 
                 auto line_map = load_line_csv(file_path);
 
@@ -268,7 +255,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 break;
             }
-            case DataType::Analog: {
+            case DataManager::DataType::Analog: {
 
                 auto analog_time_series = load_into_AnalogTimeSeries(file_path, item);
 
@@ -284,7 +271,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 }
                 break;
             }
-            case DataType::DigitalEvent: {
+            case DataManager::DataType::DigitalEvent: {
 
                 auto digital_event_series = load_into_DigitalEventSeries(file_path, item);
 
@@ -300,14 +287,14 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 }
                 break;
             }
-            case DataType::DigitalInterval: {
+            case DataManager::DataType::DigitalInterval: {
 
                 auto digital_interval_series = load_into_DigitalIntervalSeries(file_path, item);
                 dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
 
                 break;
             }
-            case DataType::Tensor: {
+            case DataManager::DataType::Tensor: {
 
                 if (item["format"] == "numpy") {
 
@@ -321,7 +308,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 }
                 break;
             }
-            case DataType::Time: {
+            case DataManager::DataType::Time: {
 
                 if (item["format"] == "uint16") {
 
@@ -381,26 +368,52 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
     return data_info_list;
 }
 
-std::string DataManager::getType(std::string const & key) const {
+DataManager::DataType DataManager::getType(std::string const & key) const {
     auto it = _data.find(key);
     if (it != _data.end()) {
         if (std::holds_alternative<std::shared_ptr<MediaData>>(it->second)) {
-            return "MediaData";
+            return DataType::Video;
         } else if (std::holds_alternative<std::shared_ptr<PointData>>(it->second)) {
-            return "PointData";
+            return DataType::Points;
         } else if (std::holds_alternative<std::shared_ptr<LineData>>(it->second)) {
-            return "LineData";
+            return DataType::Line;
         } else if (std::holds_alternative<std::shared_ptr<MaskData>>(it->second)) {
-            return "MaskData";
+            return DataType::Mask;
         } else if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(it->second)) {
-            return "AnalogTimeSeries";
+            return DataType::Analog;
         } else if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(it->second)) {
-            return "DigitalEventSeries";
+            return DataType::DigitalEvent;
         } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(it->second)) {
-            return "DigitalIntervalSeries";
+            return DataType::DigitalInterval;
         } else if (std::holds_alternative<std::shared_ptr<TensorData>>(it->second)) {
-            return "TensorData";
+            return DataType::Tensor;
         }
-        return "Unknown";
+        return DataType::Unknown;
+    }
+    return DataType::Unknown;
+}
+
+std::string convert_data_type_to_string(DataManager::DataType type) {
+    switch (type) {
+        case DataManager::DataType::Video:
+            return "video";
+        case DataManager::DataType::Points:
+            return "points";
+        case DataManager::DataType::Mask:
+            return "mask";
+        case DataManager::DataType::Line:
+            return "line";
+        case DataManager::DataType::Analog:
+            return "analog";
+        case DataManager::DataType::DigitalEvent:
+            return "digital_event";
+        case DataManager::DataType::DigitalInterval:
+            return "digital_interval";
+        case DataManager::DataType::Tensor:
+            return "tensor";
+        case DataManager::DataType::Time:
+            return "time";
+        default:
+            return "unknown";
     }
 }

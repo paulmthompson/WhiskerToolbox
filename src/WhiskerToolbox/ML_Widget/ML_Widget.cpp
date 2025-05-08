@@ -137,7 +137,7 @@ void ML_Widget::_addMaskToModel(QString const & feature, bool enabled) {
 }
 
 void ML_Widget::_removeSelectedMask(std::string const & key) {
-    if (_data_manager->getType(key) == "DigitalIntervalSeries") {
+    if (_data_manager->getType(key) == DataManager::DataType::DigitalInterval) {
         //ui->openGLWidget->removeDigitalIntervalSeries(key);
     } else {
         std::cout << "Feature type not supported" << std::endl;
@@ -160,11 +160,11 @@ void ML_Widget::_addOutcomeToModel(QString const & feature, bool enabled) {
 }
 
 void ML_Widget::_removeSelectedOutcome(std::string const & key) {
-    if (_data_manager->getType(key) == "AnalogTimeSeries") {
+    if (_data_manager->getType(key) == DataManager::DataType::Analog) {
         //ui->openGLWidget->removeAnalogTimeSeries(key);
-    } else if (_data_manager->getType(key) == "PointData") {
+    } else if (_data_manager->getType(key) == DataManager::DataType::DigitalEvent) {
         //ui->openGLWidget->removeDigitalEventSeries(key);
-    } else if (_data_manager->getType(key) == "DigitalIntervalSeries") {
+    } else if (_data_manager->getType(key) == DataManager::DataType::DigitalInterval) {
         //ui->openGLWidget->removeDigitalIntervalSeries(key);
     } else {
         std::cout << "Feature type not supported" << std::endl;
@@ -277,26 +277,26 @@ arma::Mat<double> create_arrays(
     std::vector<arma::Mat<double>> feature_arrays;
 
     for (auto const & feature: features) {
-        std::string const feature_type = data_manager->getType(feature);
+        auto const feature_type = data_manager->getType(feature);
 
-        if (feature_type == "AnalogTimeSeries") {
+        if (feature_type == DataManager::DataType::Analog) {
             auto analog_series = data_manager->getData<AnalogTimeSeries>(feature);
             arma::Row<double> const array = convertAnalogTimeSeriesToMlpackArray(analog_series.get(), timestamps);
             feature_arrays.push_back(array);
-        } else if (feature_type == "DigitalIntervalSeries") {
+        } else if (feature_type == DataManager::DataType::DigitalInterval) {
             auto digital_series = data_manager->getData<DigitalIntervalSeries>(feature);
             arma::Row<double> const array = convertToMlpackArray(digital_series, timestamps);
             feature_arrays.push_back(array);
-        } else if (feature_type == "PointData") {
+        } else if (feature_type == DataManager::DataType::Points) {
             auto point_data = data_manager->getData<PointData>(feature);
             arma::Mat<double> const array = convertToMlpackMatrix(point_data, timestamps);
             feature_arrays.push_back(array);
-        } else if (feature_type == "TensorData") {
+        } else if (feature_type == DataManager::DataType::Tensor) {
             auto tensor_data = data_manager->getData<TensorData>(feature);
             arma::Mat<double> const array = convertTensorDataToMlpackMatrix(*tensor_data, timestamps);
             feature_arrays.push_back(array);
         } else {
-            std::cerr << "Unsupported feature type: " << feature_type << std::endl;
+            std::cerr << "Unsupported feature type: " << convert_data_type_to_string(feature_type) << std::endl;
         }
     }
 

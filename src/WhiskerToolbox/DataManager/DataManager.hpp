@@ -164,7 +164,20 @@ public:
         notifyObservers();
     }
 
-    [[nodiscard]] std::string getType(std::string const & key) const;
+    enum class DataType {
+        Video,
+        Points,
+        Mask,
+        Line,
+        Analog,
+        DigitalEvent,
+        DigitalInterval,
+        Tensor,
+        Time,
+        Unknown
+    };
+
+    [[nodiscard]] DataType getType(std::string const & key) const;
 
     void setTimeFrame(std::string const & data_key, std::string const & time_key);
     std::string getTimeFrame(std::string const & data_key) {
@@ -256,5 +269,6 @@ private:
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
 
+std::string convert_data_type_to_string(DataManager::DataType type);
 
 #endif// DATAMANAGER_HPP
