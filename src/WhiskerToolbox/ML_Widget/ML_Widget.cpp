@@ -42,7 +42,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 
     //Feature Table Widget
     ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->feature_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries", "PointData", "TensorData"});
+    ui->feature_table_widget->setTypeFilter({DM_DataType::Analog, DM_DataType::DigitalInterval, DM_DataType::Points, DM_DataType::Tensor});
 
     ui->feature_table_widget->setDataManager(_data_manager);
 
@@ -56,7 +56,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 
     //Mask Table Widget
     ui->mask_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->mask_table_widget->setTypeFilter({"DigitalIntervalSeries"});
+    ui->mask_table_widget->setTypeFilter({DM_DataType::DigitalInterval});
 
     ui->mask_table_widget->setDataManager(_data_manager);
 
@@ -70,7 +70,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 
     //Outcome Table Widget
     ui->outcome_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->outcome_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalIntervalSeries", "PointData", "TensorData"});
+    ui->outcome_table_widget->setTypeFilter({DM_DataType::Analog, DM_DataType::DigitalInterval, DM_DataType::Points, DM_DataType::Tensor});
 
     ui->outcome_table_widget->setDataManager(_data_manager);
 
@@ -137,7 +137,7 @@ void ML_Widget::_addMaskToModel(QString const & feature, bool enabled) {
 }
 
 void ML_Widget::_removeSelectedMask(std::string const & key) {
-    if (_data_manager->getType(key) == DataManager::DataType::DigitalInterval) {
+    if (_data_manager->getType(key) == DM_DataType::DigitalInterval) {
         //ui->openGLWidget->removeDigitalIntervalSeries(key);
     } else {
         std::cout << "Feature type not supported" << std::endl;
@@ -160,11 +160,11 @@ void ML_Widget::_addOutcomeToModel(QString const & feature, bool enabled) {
 }
 
 void ML_Widget::_removeSelectedOutcome(std::string const & key) {
-    if (_data_manager->getType(key) == DataManager::DataType::Analog) {
+    if (_data_manager->getType(key) == DM_DataType::Analog) {
         //ui->openGLWidget->removeAnalogTimeSeries(key);
-    } else if (_data_manager->getType(key) == DataManager::DataType::DigitalEvent) {
+    } else if (_data_manager->getType(key) == DM_DataType::DigitalEvent) {
         //ui->openGLWidget->removeDigitalEventSeries(key);
-    } else if (_data_manager->getType(key) == DataManager::DataType::DigitalInterval) {
+    } else if (_data_manager->getType(key) == DM_DataType::DigitalInterval) {
         //ui->openGLWidget->removeDigitalIntervalSeries(key);
     } else {
         std::cout << "Feature type not supported" << std::endl;
@@ -279,19 +279,19 @@ arma::Mat<double> create_arrays(
     for (auto const & feature: features) {
         auto const feature_type = data_manager->getType(feature);
 
-        if (feature_type == DataManager::DataType::Analog) {
+        if (feature_type == DM_DataType::Analog) {
             auto analog_series = data_manager->getData<AnalogTimeSeries>(feature);
             arma::Row<double> const array = convertAnalogTimeSeriesToMlpackArray(analog_series.get(), timestamps);
             feature_arrays.push_back(array);
-        } else if (feature_type == DataManager::DataType::DigitalInterval) {
+        } else if (feature_type == DM_DataType::DigitalInterval) {
             auto digital_series = data_manager->getData<DigitalIntervalSeries>(feature);
             arma::Row<double> const array = convertToMlpackArray(digital_series, timestamps);
             feature_arrays.push_back(array);
-        } else if (feature_type == DataManager::DataType::Points) {
+        } else if (feature_type == DM_DataType::Points) {
             auto point_data = data_manager->getData<PointData>(feature);
             arma::Mat<double> const array = convertToMlpackMatrix(point_data, timestamps);
             feature_arrays.push_back(array);
-        } else if (feature_type == DataManager::DataType::Tensor) {
+        } else if (feature_type == DM_DataType::Tensor) {
             auto tensor_data = data_manager->getData<TensorData>(feature);
             arma::Mat<double> const array = convertTensorDataToMlpackMatrix(*tensor_data, timestamps);
             feature_arrays.push_back(array);

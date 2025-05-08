@@ -114,6 +114,7 @@ add_library(DataManager SHARED
         Observer/Observer_Data.cpp
         ImageSize/ImageSize.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
+        DataManagerTypes.hpp
 
 )
 

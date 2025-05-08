@@ -58,17 +58,17 @@ void DataManager::setTimeFrame(std::string const & data_key, std::string const &
     _time_frames[data_key] = time_key;
 }
 
-DataManager::DataType stringToDataType(std::string const & data_type_str) {
-    if (data_type_str == "video") return DataManager::DataType::Video;
-    if (data_type_str == "points") return DataManager::DataType::Points;
-    if (data_type_str == "mask") return DataManager::DataType::Mask;
-    if (data_type_str == "line") return DataManager::DataType::Line;
-    if (data_type_str == "analog") return DataManager::DataType::Analog;
-    if (data_type_str == "digital_event") return DataManager::DataType::DigitalEvent;
-    if (data_type_str == "digital_interval") return DataManager::DataType::DigitalInterval;
-    if (data_type_str == "tensor") return DataManager::DataType::Tensor;
-    if (data_type_str == "time") return DataManager::DataType::Time;
-    return DataManager::DataType::Unknown;
+DM_DataType stringToDataType(std::string const & data_type_str) {
+    if (data_type_str == "video") return DM_DataType::Video;
+    if (data_type_str == "points") return DM_DataType::Points;
+    if (data_type_str == "mask") return DM_DataType::Mask;
+    if (data_type_str == "line") return DM_DataType::Line;
+    if (data_type_str == "analog") return DM_DataType::Analog;
+    if (data_type_str == "digital_event") return DM_DataType::DigitalEvent;
+    if (data_type_str == "digital_interval") return DM_DataType::DigitalInterval;
+    if (data_type_str == "tensor") return DM_DataType::Tensor;
+    if (data_type_str == "time") return DM_DataType::Time;
+    return DM_DataType::Unknown;
 }
 
 std::optional<std::string> processFilePath(
@@ -176,7 +176,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
         std::string const data_type_str = item["data_type"];
         auto const data_type = stringToDataType(data_type_str);
-        if (data_type == DataManager::DataType::Unknown) {
+        if (data_type == DM_DataType::Unknown) {
             std::cout << "Unknown data type: " << data_type_str << std::endl;
             continue;
         }
@@ -192,7 +192,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
         std::string const file_path = file_exists.value();
 
         switch (data_type) {
-            case DataManager::DataType::Video: {
+            case DM_DataType::Video: {
                 // Create VideoData object
                 auto video_data = load_video_into_VideoData(file_path);
 
@@ -202,7 +202,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 data_info_list.push_back({name, "VideoData", ""});
                 break;
             }
-            case DataManager::DataType::Points: {
+            case DM_DataType::Points: {
 
                 auto point_data = load_into_PointData(file_path, item);
 
@@ -212,7 +212,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 data_info_list.push_back({name, "PointData", color});
                 break;
             }
-            case DataManager::DataType::Mask: {
+            case DM_DataType::Mask: {
 
                 auto mask_data = load_into_MaskData(file_path, item);
 
@@ -237,7 +237,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 }
                 break;
             }
-            case DataManager::DataType::Line: {
+            case DM_DataType::Line: {
 
                 auto line_map = load_line_csv(file_path);
 
@@ -255,7 +255,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                 break;
             }
-            case DataManager::DataType::Analog: {
+            case DM_DataType::Analog: {
 
                 auto analog_time_series = load_into_AnalogTimeSeries(file_path, item);
 
@@ -271,7 +271,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 }
                 break;
             }
-            case DataManager::DataType::DigitalEvent: {
+            case DM_DataType::DigitalEvent: {
 
                 auto digital_event_series = load_into_DigitalEventSeries(file_path, item);
 
@@ -287,14 +287,14 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 }
                 break;
             }
-            case DataManager::DataType::DigitalInterval: {
+            case DM_DataType::DigitalInterval: {
 
                 auto digital_interval_series = load_into_DigitalIntervalSeries(file_path, item);
                 dm->setData<DigitalIntervalSeries>(name, digital_interval_series);
 
                 break;
             }
-            case DataManager::DataType::Tensor: {
+            case DM_DataType::Tensor: {
 
                 if (item["format"] == "numpy") {
 
@@ -308,7 +308,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 }
                 break;
             }
-            case DataManager::DataType::Time: {
+            case DM_DataType::Time: {
 
                 if (item["format"] == "uint16") {
 
@@ -368,50 +368,50 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
     return data_info_list;
 }
 
-DataManager::DataType DataManager::getType(std::string const & key) const {
+DM_DataType DataManager::getType(std::string const & key) const {
     auto it = _data.find(key);
     if (it != _data.end()) {
         if (std::holds_alternative<std::shared_ptr<MediaData>>(it->second)) {
-            return DataType::Video;
+            return DM_DataType::Video;
         } else if (std::holds_alternative<std::shared_ptr<PointData>>(it->second)) {
-            return DataType::Points;
+            return DM_DataType::Points;
         } else if (std::holds_alternative<std::shared_ptr<LineData>>(it->second)) {
-            return DataType::Line;
+            return DM_DataType::Line;
         } else if (std::holds_alternative<std::shared_ptr<MaskData>>(it->second)) {
-            return DataType::Mask;
+            return DM_DataType::Mask;
         } else if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(it->second)) {
-            return DataType::Analog;
+            return DM_DataType::Analog;
         } else if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(it->second)) {
-            return DataType::DigitalEvent;
+            return DM_DataType::DigitalEvent;
         } else if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(it->second)) {
-            return DataType::DigitalInterval;
+            return DM_DataType::DigitalInterval;
         } else if (std::holds_alternative<std::shared_ptr<TensorData>>(it->second)) {
-            return DataType::Tensor;
+            return DM_DataType::Tensor;
         }
-        return DataType::Unknown;
+        return DM_DataType::Unknown;
     }
-    return DataType::Unknown;
+    return DM_DataType::Unknown;
 }
 
-std::string convert_data_type_to_string(DataManager::DataType type) {
+std::string convert_data_type_to_string(DM_DataType type) {
     switch (type) {
-        case DataManager::DataType::Video:
+        case DM_DataType::Video:
             return "video";
-        case DataManager::DataType::Points:
+        case DM_DataType::Points:
             return "points";
-        case DataManager::DataType::Mask:
+        case DM_DataType::Mask:
             return "mask";
-        case DataManager::DataType::Line:
+        case DM_DataType::Line:
             return "line";
-        case DataManager::DataType::Analog:
+        case DM_DataType::Analog:
             return "analog";
-        case DataManager::DataType::DigitalEvent:
+        case DM_DataType::DigitalEvent:
             return "digital_event";
-        case DataManager::DataType::DigitalInterval:
+        case DM_DataType::DigitalInterval:
             return "digital_interval";
-        case DataManager::DataType::Tensor:
+        case DM_DataType::Tensor:
             return "tensor";
-        case DataManager::DataType::Time:
+        case DM_DataType::Time:
             return "time";
         default:
             return "unknown";

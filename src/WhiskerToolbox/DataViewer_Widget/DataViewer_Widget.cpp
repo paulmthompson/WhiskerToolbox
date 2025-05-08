@@ -27,7 +27,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     ui->setupUi(this);
 
     ui->feature_table_widget->setColumns({"Feature", "Color", "Enabled", "Type", "Clock", "Elements"});
-    ui->feature_table_widget->setTypeFilter({"AnalogTimeSeries", "DigitalEventSeries", "DigitalIntervalSeries"});
+    ui->feature_table_widget->setTypeFilter({DM_DataType::Analog, DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
 
     ui->feature_table_widget->setDataManager(_data_manager);
 
@@ -100,7 +100,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
 
     auto color = ui->feature_table_widget->getFeatureColor(key);
 
-    if (_data_manager->getType(key) == DataManager::DataType::Analog) {
+    if (_data_manager->getType(key) == DM_DataType::Analog) {
 
         std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
         auto series = _data_manager->getData<AnalogTimeSeries>(key);
@@ -108,14 +108,14 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         auto time_frame = _data_manager->getTime(time_key);
         ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame, color);
 
-    } else if (_data_manager->getType(key) == DataManager::DataType::DigitalEvent) {
+    } else if (_data_manager->getType(key) == DM_DataType::DigitalEvent) {
 
         std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
         auto series = _data_manager->getData<DigitalEventSeries>(key);
         auto time_key = _data_manager->getTimeFrame(key);
         auto time_frame = _data_manager->getTime(time_key);
         ui->openGLWidget->addDigitalEventSeries(key, series, time_frame, color);
-    } else if (_data_manager->getType(key) == DataManager::DataType::DigitalInterval) {
+    } else if (_data_manager->getType(key) == DM_DataType::DigitalInterval) {
 
         std::cout << "Adding << " << key << " to OpenGLWidget" << std::endl;
         auto series = _data_manager->getData<DigitalIntervalSeries>(key);
@@ -128,11 +128,11 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
 }
 
 void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
-    if (_data_manager->getType(key) == DataManager::DataType::Analog) {
+    if (_data_manager->getType(key) == DM_DataType::Analog) {
         ui->openGLWidget->removeAnalogTimeSeries(key);
-    } else if (_data_manager->getType(key) == DataManager::DataType::DigitalEvent) {
+    } else if (_data_manager->getType(key) == DM_DataType::DigitalEvent) {
         ui->openGLWidget->removeDigitalEventSeries(key);
-    } else if (_data_manager->getType(key) == DataManager::DataType::DigitalInterval) {
+    } else if (_data_manager->getType(key) == DM_DataType::DigitalInterval) {
         ui->openGLWidget->removeDigitalIntervalSeries(key);
     } else {
         std::cout << "Feature type not supported" << std::endl;

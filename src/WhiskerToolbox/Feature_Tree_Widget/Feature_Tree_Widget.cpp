@@ -51,7 +51,7 @@ void Feature_Tree_Widget::setGroupingPattern(std::string pattern) {
     _refreshFeatures();
 }
 
-void Feature_Tree_Widget::setTypeFilters(std::vector<std::string> types) {
+void Feature_Tree_Widget::setTypeFilters(std::vector<DM_DataType> types) {
     _type_filters = std::move(types);
     _refreshFeatures();
 }
@@ -223,7 +223,7 @@ void Feature_Tree_Widget::_populateTree() {
 
     for (auto const & key: allKeys) {
         // Skip if type doesn't match filter
-        std::string const type = convert_data_type_to_string(_data_manager->getType(key));
+        auto const type = _data_manager->getType(key);
         if (!_type_filters.empty() && !_hasTypeFilter(type)) {
             continue;
         }
@@ -281,7 +281,7 @@ void Feature_Tree_Widget::_populateTree() {
     // Add standalone items (not in any group)
     for (auto const & key: allKeys) {
         // Skip if type doesn't match filter
-        std::string const type = convert_data_type_to_string(_data_manager->getType(key));
+        auto const type = _data_manager->getType(key);
         if (!_type_filters.empty() && !_hasTypeFilter(type)) {
             continue;
         }
@@ -299,7 +299,7 @@ void Feature_Tree_Widget::_populateTree() {
             // Create feature
             TreeFeature feature;
             feature.key = key;
-            feature.type = type;
+            feature.type = convert_data_type_to_string(type);
             feature.timeFrame = _data_manager->getTimeFrame(key);
             feature.isGroup = false;
             feature.color = generateRandomColor();
@@ -380,7 +380,7 @@ void setup_checkbox_column(QTreeWidgetItem * item, int column, bool checked) {
     item->setCheckState(column, checked ? Qt::Checked : Qt::Unchecked);
 }
 
-bool Feature_Tree_Widget::_hasTypeFilter(std::string const & type) {
+bool Feature_Tree_Widget::_hasTypeFilter(DM_DataType const & type) {
     return std::find(_type_filters.begin(), _type_filters.end(), type) != _type_filters.end();
 }
 

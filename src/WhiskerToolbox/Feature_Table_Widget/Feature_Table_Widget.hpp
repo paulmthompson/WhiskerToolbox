@@ -1,6 +1,8 @@
 #ifndef FEATURE_TABLE_WIDGET_HPP
 #define FEATURE_TABLE_WIDGET_HPP
 
+#include "DataManagerTypes.hpp"
+
 #include <QString>
 #include <QStringList>
 #include <QWidget>
@@ -27,7 +29,7 @@ public:
 
     void populateTable();
     void setColumns(QStringList columns) { _columns = std::move(columns); }
-    void setTypeFilter(std::vector<std::string> type) { _type_filters = std::move(type); }
+    void setTypeFilter(std::vector<DM_DataType> type) { _type_filters = std::move(type); }
     std::string getFeatureColor(std::string const & key);
     void setFeatureColor(std::string const & key, std::string const & hex_color);
     [[nodiscard]] QString getHighlightedFeature() const { return _highlighted_feature; }
@@ -48,7 +50,7 @@ private:
 
     QString _highlighted_feature;
     QStringList _columns;
-    std::vector<std::string> _type_filters;
+    std::vector<DM_DataType> _type_filters;
 
     void _addFeatureName(std::string const & key, int row, int col, bool group);
     void _addFeatureType(std::string const & key, int row, int col, bool group);

@@ -1,6 +1,7 @@
 #ifndef DATAMANAGER_HPP
 #define DATAMANAGER_HPP
 
+#include "DataManagerTypes.hpp"
 #include "Media/Media_Data.hpp"
 #include "TimeFrame.hpp"
 
@@ -14,35 +15,6 @@
 #include <utility>      // std::move
 #include <variant>      // std::variant
 #include <vector>       // std::vector
-
-class AnalogTimeSeries;
-class DigitalEventSeries;
-class DigitalIntervalSeries;
-class LineData;
-class MaskData;
-class PointData;
-class TensorData;
-
-using DataTypeVariant = std::variant<
-        std::shared_ptr<MediaData>,
-        std::shared_ptr<PointData>,
-        std::shared_ptr<LineData>,
-        std::shared_ptr<MaskData>,
-        std::shared_ptr<AnalogTimeSeries>,
-        std::shared_ptr<DigitalEventSeries>,
-        std::shared_ptr<DigitalIntervalSeries>,
-        std::shared_ptr<TensorData>>;
-
-struct DataInfo {
-    std::string key;
-    std::string data_class;
-    std::string color;
-};
-
-struct DataGroup {
-    std::string groupName;
-    std::vector<std::string> dataKeys;
-};
 
 class DataManager {
 
@@ -164,20 +136,7 @@ public:
         notifyObservers();
     }
 
-    enum class DataType {
-        Video,
-        Points,
-        Mask,
-        Line,
-        Analog,
-        DigitalEvent,
-        DigitalInterval,
-        Tensor,
-        Time,
-        Unknown
-    };
-
-    [[nodiscard]] DataType getType(std::string const & key) const;
+    [[nodiscard]] DM_DataType getType(std::string const & key) const;
 
     void setTimeFrame(std::string const & data_key, std::string const & time_key);
     std::string getTimeFrame(std::string const & data_key) {
@@ -269,6 +228,6 @@ private:
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
 
-std::string convert_data_type_to_string(DataManager::DataType type);
+std::string convert_data_type_to_string(DM_DataType type);
 
 #endif// DATAMANAGER_HPP

@@ -2,6 +2,8 @@
 #ifndef FEATURE_TREE_WIDGET_HPP
 #define FEATURE_TREE_WIDGET_HPP
 
+#include "DataManagerTypes.hpp"
+
 #include <QTreeWidget>
 #include <QWidget>
 
@@ -33,7 +35,7 @@ public:
     void setGroupingPattern(std::string pattern);
 
     // Set types to filter
-    void setTypeFilters(std::vector<std::string> types);
+    void setTypeFilters(std::vector<DM_DataType> types);
 
     // Get selected features (single item or group)
     [[nodiscard]] std::vector<std::string> getSelectedFeatures() const;
@@ -75,7 +77,7 @@ private:
     Ui::Feature_Tree_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     std::string _grouping_pattern = "(.+)_\\d+$";// Default pattern: name_number
-    std::vector<std::string> _type_filters;
+    std::vector<DM_DataType> _type_filters;
 
     // Maps feature keys to their tree items
     std::unordered_map<std::string, QTreeWidgetItem *> _feature_items;
@@ -92,7 +94,7 @@ private:
     void _addFeatureToTree(std::string const & key, bool isGroup = false);
     void _setupTreeItem(QTreeWidgetItem * item, TreeFeature const & feature);
     void _setupColorColumn(QTreeWidgetItem * item, int column, std::string const & color);
-    bool _hasTypeFilter(std::string const & type);
+    bool _hasTypeFilter(DM_DataType const & type);
     void _updateChildrenState(QTreeWidgetItem * parent, int column);
     void _updateParentState(QTreeWidgetItem * child, int column);
 };
