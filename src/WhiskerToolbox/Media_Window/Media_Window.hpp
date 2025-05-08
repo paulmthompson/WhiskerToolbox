@@ -158,7 +158,7 @@ private:
     void _convertNewMediaToQImage();
     void _plotLineData();
     void _plotMaskData();
-    void _plotSingleMaskData(std::vector<Mask2D> const & maskData, int mask_width, int mask_height, QRgb plot_color);
+    void _plotSingleMaskData(std::vector<Mask2D> const & maskData, ImageSize mask_size, QRgb plot_color);
     void _plotPointData();
     void _plotDigitalIntervalSeries();
     void _plotTensorData();

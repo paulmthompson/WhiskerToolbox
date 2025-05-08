@@ -13,6 +13,9 @@ MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Me
       _data_manager{std::move(data_manager)},
       _scene{std::move(scene)} {
     ui->setupUi(this);
+
+    connect(ui->alpha_slider, &QSlider::valueChanged, this, &MediaMask_Widget::_setMaskAlpha);
+
 }
 
 MediaMask_Widget::~MediaMask_Widget() {
@@ -22,4 +25,19 @@ MediaMask_Widget::~MediaMask_Widget() {
 void MediaMask_Widget::setActiveKey(std::string const & key) {
     _active_key = key;
     ui->name_label->setText(QString::fromStdString(key));
+
+    if (_scene && !_active_key.empty()) {
+        ui->alpha_slider->setValue(100);
+    }
+}
+
+
+void MediaMask_Widget::_setMaskAlpha(int alpha) {
+    float const alpha_float = static_cast<float>(alpha) / 100;
+
+    if (!_active_key.empty()) {
+        _scene->changeMaskAlpha(_active_key, alpha_float);
+    } else {
+        _scene->changeMaskAlpha(alpha_float);
+    }
 }

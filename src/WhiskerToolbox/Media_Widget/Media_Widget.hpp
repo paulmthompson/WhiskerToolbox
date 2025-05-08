@@ -39,7 +39,6 @@ private:
 
 private slots:
     void _updateCanvasSize();
-    void _setMaskAlpha(int alpha);
     void _setTensorChannel(int channel);
     void _addFeatureToDisplay(QString const & feature, bool enabled);
     void _featureSelected(QString const & feature);

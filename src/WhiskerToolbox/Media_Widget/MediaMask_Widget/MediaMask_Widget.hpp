@@ -18,7 +18,6 @@ public:
     explicit MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
     ~MediaMask_Widget() override;
 
-    void openWidget();// Call
     void setActiveKey(std::string const & key);
 
 private:
@@ -28,6 +27,7 @@ private:
     std::string _active_key;
 
 private slots:
+    void _setMaskAlpha(int alpha);
 };
 
 

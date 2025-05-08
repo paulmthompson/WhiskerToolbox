@@ -23,7 +23,6 @@ Media_Widget::Media_Widget(QWidget * parent)
       ui(new Ui::Media_Widget) {
     ui->setupUi(this);
 
-    connect(ui->mask_slider, &QSlider::valueChanged, this, &Media_Widget::_setMaskAlpha);
     connect(ui->tensor_slider, &QSlider::valueChanged, this, &Media_Widget::_setTensorChannel);
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &Media_Widget::_featureSelected);
@@ -96,11 +95,6 @@ void Media_Widget::_updateCanvasSize() {
                           ui->graphicsView->height()});
         _scene->UpdateCanvas();
     }
-}
-
-void Media_Widget::_setMaskAlpha(int alpha) {
-    float const alpha_float = static_cast<float>(alpha) / 100;
-    _scene->changeMaskAlpha(alpha_float);
 }
 
 void Media_Widget::_setTensorChannel(int channel) {

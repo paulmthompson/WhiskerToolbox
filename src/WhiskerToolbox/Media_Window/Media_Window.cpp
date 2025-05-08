@@ -63,10 +63,27 @@ void Media_Window::addLineDataToScene(std::string const & line_key, std::string 
 }
 
 void Media_Window::changeLineColor(std::string const & line_key, std::string const & hex_color) {
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+    if (_line_configs.find(line_key) == _line_configs.end()) {
+        std::cerr << "Line key not found: " << line_key << std::endl;
+        return;
+    }
     _line_configs[line_key].hex_color = hex_color;
 }
 
 void Media_Window::changeLineAlpha(std::string const & line_key, float const alpha) {
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+
+    if (_line_configs.find(line_key) == _line_configs.end()) {
+        std::cerr << "Line key not found: " << line_key << std::endl;
+        return;
+    }
     _line_configs[line_key].alpha = alpha;
 }
 
@@ -105,10 +122,28 @@ void Media_Window::addMaskDataToScene(std::string const & mask_key, std::string 
 }
 
 void Media_Window::changeMaskColor(std::string const & mask_key, std::string const & hex_color) {
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+    if (_mask_configs.find(mask_key) == _mask_configs.end()) {
+        std::cerr << "Mask key not found: " << mask_key << std::endl;
+        return;
+    }
+
     _mask_configs[mask_key].hex_color = hex_color;
 }
 
 void Media_Window::changeMaskAlpha(std::string const & line_key, float const alpha) {
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+    if (_mask_configs.find(line_key) == _mask_configs.end()) {
+        std::cerr << "Mask key not found: " << line_key << std::endl;
+        return;
+    }
+
     _mask_configs[line_key].alpha = alpha;
     UpdateCanvas();
 }
@@ -157,6 +192,16 @@ void Media_Window::addPointDataToScene(std::string const & point_key, std::strin
 }
 
 void Media_Window::changePointColor(std::string const & point_key, std::string const & hex_color) {
+    if (!isValidHexColor(hex_color)) {
+        std::cerr << "Invalid hex color: " << hex_color << std::endl;
+        return;
+    }
+
+    if (_point_configs.find(point_key) == _point_configs.end()) {
+        std::cerr << "Point key not found: " << point_key << std::endl;
+        return;
+    }
+
     _point_configs[point_key].hex_color = hex_color;
 }
 
@@ -180,6 +225,15 @@ void Media_Window::removePointDataFromScene(std::string const & point_key) {
 }
 
 void Media_Window::setPointAlpha(std::string const & point_key, float const alpha) {
+    if (!isValidAlpha(alpha)) {
+        std::cerr << "Invalid alpha value: " << alpha << std::endl;
+        return;
+    }
+    if (_point_configs.find(point_key) == _point_configs.end()) {
+        std::cerr << "Point key not found: " << point_key << std::endl;
+        return;
+    }
+
     _point_configs[point_key].alpha = alpha;
 }
 
@@ -219,8 +273,11 @@ void Media_Window::clearIntervals() {
     _intervals.clear();
 }
 
-void Media_Window::addTensorDataToScene(
-        std::string const & tensor_key) {
+void Media_Window::addTensorDataToScene(std::string const & tensor_key) {
+    if (_tensor_configs.find(tensor_key) != _tensor_configs.end()) {
+        std::cerr << "Tensor key already exists: " << tensor_key << std::endl;
+        return;
+    }
     _tensor_configs[tensor_key] = tensor_config{0};
 }
 
@@ -232,6 +289,11 @@ void Media_Window::removeTensorDataFromScene(std::string const & tensor_key) {
 }
 
 void Media_Window::setTensorChannel(std::string const & tensor_key, int channel) {
+    if (_tensor_configs.find(tensor_key) == _tensor_configs.end()) {
+        std::cerr << "Tensor key not found: " << tensor_key << std::endl;
+        return;
+    }
+
     _tensor_configs[tensor_key].channel = channel;
 }
 
@@ -474,23 +536,21 @@ void Media_Window::_plotMaskData() {
 
         auto mask = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask->getImageSize();
-        auto const mask_height = image_size.height;
-        auto const mask_width = image_size.width;
 
         auto const & maskData = mask->getMasksAtTime(current_time);
 
-        _plotSingleMaskData(maskData, mask_width, mask_height, plot_color);
+        _plotSingleMaskData(maskData, image_size, plot_color);
 
         auto const & maskData2 = mask->getMasksAtTime(-1);
 
-        _plotSingleMaskData(maskData2, mask_width, mask_height, plot_color);
+        _plotSingleMaskData(maskData2, image_size, plot_color);
     }
 }
 
-void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, int const mask_width, int const mask_height, QRgb plot_color) {
+void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, ImageSize mask_size, QRgb plot_color) {
     for (auto const & single_mask: maskData) {
 
-        QImage unscaled_mask_image(mask_width, mask_height, QImage::Format::Format_ARGB32);
+        QImage unscaled_mask_image(mask_size.width, mask_size.height, QImage::Format::Format_ARGB32);
 
         unscaled_mask_image.fill(0);
 
