@@ -6,6 +6,7 @@
 #include "DataManager/ImageSize/ImageSize.hpp"
 #include "Main_Window/mainwindow.hpp"
 #include "Media_Window/Media_Window.hpp"
+#include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -52,16 +53,31 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->feature_table_widget->setTypeFilter({"LineData", "MaskData", "PointData", "DigitalIntervalSeries", "TensorData"});
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
+
+    ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager));
 }
 
 void Media_Widget::_featureSelected(QString const & feature) {
-    std::string const type = _data_manager->getType(feature.toStdString());
 
-    if (type == "TensorData") {
+
+    std::string const type = _data_manager->getType(feature.toStdString());
+    auto key = feature.toStdString();
+
+    if (type == "MaskData") {
+
+        int const stacked_widget_index = 1;
+
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto mask_widget = dynamic_cast<MediaMask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        mask_widget->setActiveKey(key);
+
+
+    } else if (type == "TensorData") {
         auto tensor_data = _data_manager->getData<TensorData>(feature.toStdString());
         auto shape = tensor_data->getFeatureShape();
         ui->tensor_slider->setMaximum(static_cast<int>(shape.back()));
     } else {
+        ui->stackedWidget->setCurrentIndex(0);
         std::cout << "Unsupported feature type" << std::endl;
     }
 }
