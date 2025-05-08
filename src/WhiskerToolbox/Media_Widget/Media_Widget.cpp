@@ -7,12 +7,8 @@
 #include "Main_Window/mainwindow.hpp"
 #include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
 #include "Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp"
+#include "Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp"
 #include "Media_Window/Media_Window.hpp"
-
-//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
-#undef slots
-#include "DataManager/Tensors/Tensor_Data.hpp"
-#define slots Q_SLOTS
 
 
 #include <QSlider>
@@ -22,8 +18,6 @@ Media_Widget::Media_Widget(QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Media_Widget) {
     ui->setupUi(this);
-
-    connect(ui->tensor_slider, &QSlider::valueChanged, this, &Media_Widget::_setTensorChannel);
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &Media_Widget::_featureSelected);
 
@@ -56,6 +50,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 
     ui->stackedWidget->addWidget(new MediaPoint_Widget(_data_manager, _scene));
     ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene));
+    ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene));
 }
 
 void Media_Widget::_featureSelected(QString const & feature) {
@@ -74,9 +69,11 @@ void Media_Widget::_featureSelected(QString const & feature) {
 
 
     } else if (type == DM_DataType::Tensor) {
-        auto tensor_data = _data_manager->getData<TensorData>(feature.toStdString());
-        auto shape = tensor_data->getFeatureShape();
-        ui->tensor_slider->setMaximum(static_cast<int>(shape.back()));
+        int const stacked_widget_index = 3;
+
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto tensor_widget = dynamic_cast<MediaTensor_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        tensor_widget->setActiveKey(key);
     } else {
         ui->stackedWidget->setCurrentIndex(0);
         std::cout << "Unsupported feature type" << std::endl;
@@ -94,16 +91,6 @@ void Media_Widget::_updateCanvasSize() {
                 ImageSize{ui->graphicsView->width(),
                           ui->graphicsView->height()});
         _scene->UpdateCanvas();
-    }
-}
-
-void Media_Widget::_setTensorChannel(int channel) {
-    auto feature = ui->feature_table_widget->getHighlightedFeature().toStdString();
-
-    auto const type = _data_manager->getType(feature);
-
-    if (type == DM_DataType::Tensor) {
-        _scene->setTensorChannel(feature, channel);
     }
 }
 
