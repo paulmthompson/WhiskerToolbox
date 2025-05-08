@@ -12,7 +12,7 @@ MediaPoint_Widget::MediaPoint_Widget(std::shared_ptr<DataManager> data_manager, 
     : QWidget(parent),
       ui(new Ui::MediaPoint_Widget),
       _data_manager{std::move(data_manager)},
-      _scene{std::move(scene)}
+      _scene{scene}
 {
     ui->setupUi(this);
 
@@ -25,6 +25,7 @@ MediaPoint_Widget::~MediaPoint_Widget() {
 void MediaPoint_Widget::showEvent(QShowEvent * event) {
     std::cout << "Show Event" << std::endl;
     connect(_scene, &Media_Window::leftClickMedia, this, &MediaPoint_Widget::_assignPoint);
+
 }
 
 void MediaPoint_Widget::hideEvent(QHideEvent * event) {
