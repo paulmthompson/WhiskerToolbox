@@ -116,8 +116,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
 
     connect(ui->manual_whisker_select_spinbox, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectWhisker);
     connect(ui->delete_whisker_button, &QPushButton::clicked, this, &Whisker_Widget::_deleteWhisker);
-    connect(ui->manual_whisker_button, &QPushButton::clicked, this, &Whisker_Widget::_manualWhiskerToggle);
-
 
     connect(ui->actionSave_Snapshot, &QAction::triggered, this, &Whisker_Widget::_saveImageButton);
     connect(ui->actionSave_Face_Mask_2, &QAction::triggered, this, &Whisker_Widget::_saveFaceMask);
@@ -403,15 +401,6 @@ void Whisker_Widget::_deleteWhisker() {
 
     if (_data_manager->getData<LineData>(whisker_name)) {
         _data_manager->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
-    }
-}
-
-void Whisker_Widget::_manualWhiskerToggle() {
-    //check toggle state
-    if (_selection_mode == Selection_Type::Manual_Trace) {
-        _selection_mode = Selection_Type::Whisker_Select;
-    } else {
-        _selection_mode = Selection_Type::Manual_Trace;
     }
 }
 
@@ -771,20 +760,6 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
                     ")";
             ui->whisker_pad_pos_label->setText(QString::fromStdString(whisker_pad_label));
             _selection_mode = Whisker_Select;
-            break;
-        }
-
-        case Manual_Trace: {
-
-            std::string const whisker_group_name = "whisker";
-            std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
-
-            if (_data_manager->getData<LineData>(whisker_name)) {
-                _data_manager->getData<LineData>(whisker_name)->addPointToLineInterpolate(current_time, 0, Point2D<float>{x_media, y_media});
-
-                scene->UpdateCanvas();
-            }
-
             break;
         }
         default:

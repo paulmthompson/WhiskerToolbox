@@ -120,6 +120,9 @@ public:
 
     std::vector<uint8_t> getDrawingMask();
 
+    void setShowHoverCircle(bool show);
+    void setHoverCircleRadius(int radius);
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) override;
@@ -144,6 +147,9 @@ private:
     bool _is_verbose{false};
     bool _drawing_mode{false};
     bool _is_drawing{false};
+    bool _show_hover_circle {false};
+    int _hover_circle_radius {10};
+    QPointF _hover_position;
 
     std::vector<QPointF> _drawing_points;
 
@@ -162,6 +168,7 @@ private:
     void _plotPointData();
     void _plotDigitalIntervalSeries();
     void _plotTensorData();
+    void _plotHoverCircle();
 
 public slots:
     void LoadFrame(int frame_id);
@@ -170,6 +177,7 @@ signals:
     void leftClickMedia(qreal, qreal);
     void leftRelease();
     void canvasUpdated(QImage const & canvasImage);
+    void mouseMove(qreal x, qreal y);
 };
 
 QRgb plot_color_with_alpha(element_config const & elem);

@@ -354,6 +354,10 @@ void Media_Window::UpdateCanvas() {
 
     _plotTensorData();
 
+    if (_show_hover_circle) {
+        _plotHoverCircle();
+    }
+
     // Save the entire QGraphicsScene as an image
     QImage scene_image(_canvasWidth, _canvasHeight, QImage::Format_ARGB32);
     scene_image.fill(Qt::transparent);// Optional: fill with transparent background
@@ -427,11 +431,20 @@ void Media_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent * event) {
     QGraphicsScene::mouseReleaseEvent(event);
 }
 void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
+
+    auto pos = event->scenePos();
+
+    _hover_position = pos;
+
     if (_is_drawing) {
-        auto pos = event->scenePos();
+
         _drawing_points.push_back(pos);
     }
+
+    emit mouseMove(event->scenePos().x(), event->scenePos().y());
+
     QGraphicsScene::mouseMoveEvent(event);
+
 }
 
 float Media_Window::getXAspect() const {
@@ -693,3 +706,31 @@ std::vector<uint8_t> Media_Window::getDrawingMask() {
 
     return mask;
 }
+
+void Media_Window::setShowHoverCircle(bool show) {
+    _show_hover_circle = show;
+    if (_show_hover_circle) {
+        std::cout << "Hover circle enabled" << std::endl;
+
+        connect(this, &Media_Window::mouseMove, this, &Media_Window::UpdateCanvas);
+    } else {
+        std::cout << "Hover circle disabled" << std::endl;
+        disconnect(this, &Media_Window::mouseMove, this, &Media_Window::UpdateCanvas);
+    }
+
+}
+
+void Media_Window::setHoverCircleRadius(int radius) {
+    _hover_circle_radius = radius;
+}
+
+void Media_Window::_plotHoverCircle()
+{
+    QPen circlePen(Qt::red);
+    circlePen.setWidth(2);
+
+    auto ellipse = addEllipse(_hover_position.x(), _hover_position.y(), _hover_circle_radius*2, _hover_circle_radius*2, circlePen);
+    _points.append(ellipse);
+
+}
+
