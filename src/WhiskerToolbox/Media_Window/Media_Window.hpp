@@ -9,6 +9,7 @@
 #include <QtCore/QtGlobal>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -122,6 +123,41 @@ public:
 
     void setShowHoverCircle(bool show);
     void setHoverCircleRadius(int radius);
+
+    std::optional<element_config> getLineConfig(std::string const & line_key) const {
+        if (_line_configs.find(line_key) == _line_configs.end()) {
+            return std::nullopt;
+        }
+        return _line_configs.at(line_key);
+    }
+
+    std::optional<element_config> getMaskConfig(std::string const & mask_key) const {
+        if (_mask_configs.find(mask_key) == _mask_configs.end()) {
+            return std::nullopt;
+        }
+        return _mask_configs.at(mask_key);
+    }
+
+    std::optional<element_config> getPointConfig(std::string const & point_key) const {
+        if (_point_configs.find(point_key) == _point_configs.end()) {
+            return std::nullopt;
+        }
+        return _point_configs.at(point_key);
+    }
+
+    std::optional<element_config> getIntervalConfig(std::string const & interval_key) const {
+        if (_interval_configs.find(interval_key) == _interval_configs.end()) {
+            return std::nullopt;
+        }
+        return _interval_configs.at(interval_key);
+    }
+
+    std::optional<tensor_config> getTensorConfig(std::string const & tensor_key) const {
+        if (_tensor_configs.find(tensor_key) == _tensor_configs.end()) {
+            return std::nullopt;
+        }
+        return _tensor_configs.at(tensor_key);
+    }
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent * event) override;

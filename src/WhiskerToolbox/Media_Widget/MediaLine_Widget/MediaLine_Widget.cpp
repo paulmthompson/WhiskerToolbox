@@ -22,8 +22,11 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     ui->selection_mode_combo->addItems(QStringList(_selection_modes.keys()));
     
     connect(ui->selection_mode_combo, &QComboBox::currentTextChanged, this, &MediaLine_Widget::_toggleSelectionMode);
-    connect(ui->alpha_slider, &QSlider::valueChanged, this, &MediaLine_Widget::_setLineAlpha);
 
+    connect(ui->color_picker, &ColorPicker_Widget::colorChanged,
+            this, &MediaLine_Widget::_setLineColor);
+    connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
+            this, &MediaLine_Widget::_setLineAlpha);
 
 }
 
@@ -46,13 +49,30 @@ void MediaLine_Widget::hideEvent(QHideEvent * event) {
 void MediaLine_Widget::setActiveKey(std::string const& key) {
     _active_key = key;
     ui->name_label->setText(QString::fromStdString(key));
-}
 
+    // Set the color picker to the current line color if available
+    if (!key.empty()) {
+        auto config = _scene->getLineConfig(key);
+
+        if (config) {
+            ui->color_picker->setColor(QString::fromStdString(config.value().hex_color));
+            ui->color_picker->setAlpha(static_cast<int>(config.value().alpha * 100));
+        }
+    }
+}
 void MediaLine_Widget::_setLineAlpha(int alpha) {
     float const alpha_float = static_cast<float>(alpha) / 100;
 
     if (!_active_key.empty()) {
         _scene->changeLineAlpha(_active_key, alpha_float);
+        _scene->UpdateCanvas();
+    }
+}
+
+void MediaLine_Widget::_setLineColor(const QString& hex_color) {
+    if (!_active_key.empty()) {
+        _scene->changeLineColor(_active_key, hex_color.toStdString());
+        _scene->UpdateCanvas();
     }
 }
 

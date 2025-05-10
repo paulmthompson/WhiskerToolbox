@@ -516,7 +516,6 @@ void Media_Window::_plotLineData() {
                     QBrush(plot_color));
             _points.append(ellipse);
 
-
             /*
             // Add dots for each point on the line
             for (const auto & point : single_line) {

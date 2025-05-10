@@ -41,6 +41,7 @@ private slots:
     void _clickedInVideo(qreal x, qreal y);
     void _toggleSelectionMode(QString text);
     void _setLineAlpha(int alpha);
+    void _setLineColor(const QString& hex_color);
     //void _clearCurrentLine();
 };
 

@@ -34,6 +34,10 @@ set(PROJECT_SOURCES
         AnalogViewer/DigitalTimeSeriesGraph.cpp
         AnalogViewer/DigitalTimeSeriesGraph.hpp
 
+        ColorPicker_Widget/ColorPicker_Widget.hpp
+        ColorPicker_Widget/ColorPicker_Widget.cpp
+        ColorPicker_Widget/ColorPicker_Widget.ui
+
         Main_Window/mainwindow.cpp
         Main_Window/mainwindow.hpp
         Main_Window/mainwindow.ui
@@ -134,6 +138,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp
         Media_Widget/MediaLine_Widget/MediaLine_Widget.cpp
         Media_Widget/MediaLine_Widget/MediaLine_Widget.ui
+        Media_Widget/MouseBrush_Widget/MouseBrush_Widget.hpp
+        Media_Widget/MouseBrush_Widget/MouseBrush_Widget.cpp
+        Media_Widget/MouseBrush_Widget/MouseBrush_Widget.ui
 
         TimeScrollBar/TimeScrollBar.hpp
         TimeScrollBar/TimeScrollBar.cpp
