@@ -10,6 +10,7 @@
 #include "DataManager/Lines/IO/Binary/Line_Data_Binary.hpp"
 #include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 
 #include "Magic_Eraser_Widget/magic_eraser.hpp"

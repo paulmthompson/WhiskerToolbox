@@ -2,7 +2,7 @@
 #define DATAMANAGER_HPP
 
 #include "DataManagerTypes.hpp"
-#include "Media/Media_Data.hpp"
+
 #include "TimeFrame.hpp"
 
 #include <filesystem>
@@ -21,15 +21,17 @@ class DataManager {
 public:
     DataManager();
 
-    void setMedia(std::shared_ptr<MediaData> media) {
-        _data["media"] = media;
-    };
+    /**
+     * @brief Set the time for a specific key
+     *
+     * The timeframe specifies the temporal coordinate system.
+     *
+     * @param key The key to set the time for
+     * @param timeframe The TimeFrame object to set
+     */
+    void setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe);
 
-    void setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe) {
-        _times[key] = std::move(timeframe);
-    };
-
-    std::shared_ptr<TimeFrame> getTime() {
+    [[nodiscard]] std::shared_ptr<TimeFrame> getTime() {
         return _times["time"];
     };
 
@@ -39,7 +41,6 @@ public:
         }
         return nullptr;
     };
-    //std::shared_ptr<TimeFrame> getTime() {return _time;};
 
     using ObserverCallback = std::function<void()>;
 
@@ -47,10 +48,9 @@ public:
         _observers.push_back(std::move(callback));
     }
 
-    // Method to notify all observers of a change
     void notifyObservers() {
         for (auto & observer: _observers) {
-            observer();// Call the observer callback
+            observer();
         }
     }
 
@@ -139,11 +139,12 @@ public:
     [[nodiscard]] DM_DataType getType(std::string const & key) const;
 
     void setTimeFrame(std::string const & data_key, std::string const & time_key);
-    std::string getTimeFrame(std::string const & data_key) {
+
+    [[nodiscard]] std::string getTimeFrame(std::string const & data_key) {
         return _time_frames[data_key];
     }
 
-    std::vector<std::string> getTimeFrameKeys() {
+    [[nodiscard]] std::vector<std::string> getTimeFrameKeys() {
         std::vector<std::string> keys;
         keys.reserve(_times.size());
         for (auto const & [key, value]: _times) {

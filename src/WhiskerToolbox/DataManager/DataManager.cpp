@@ -5,6 +5,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "Tensors/Tensor_Data.hpp"
@@ -41,6 +42,10 @@ DataManager::DataManager() {
     setTimeFrame("media", "time");
     _output_path = std::filesystem::current_path();
 }
+
+void DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe) {
+    _times[key] = std::move(timeframe);
+};
 
 void DataManager::setTimeFrame(std::string const & data_key, std::string const & time_key) {
     //Check that data_key is in _data
@@ -193,11 +198,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
         switch (data_type) {
             case DM_DataType::Video: {
-                // Create VideoData object
-                auto video_data = load_video_into_VideoData(file_path);
 
-                // Add VideoData to DataManager
-                dm->setMedia(video_data);
+                auto video_data = load_video_into_VideoData(file_path);
+                dm->setData<VideoData>("media", video_data);
 
                 data_info_list.push_back({name, "VideoData", ""});
                 break;

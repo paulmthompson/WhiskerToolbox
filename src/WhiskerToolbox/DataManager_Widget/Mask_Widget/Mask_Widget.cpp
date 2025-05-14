@@ -4,6 +4,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/points.hpp"
 
 #include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"

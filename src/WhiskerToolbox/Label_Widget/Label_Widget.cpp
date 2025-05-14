@@ -3,6 +3,7 @@
 #include "ui_Label_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 
 #include "label_maker.hpp"

@@ -25,6 +25,7 @@ class Feature_Table_Widget : public QWidget {
 public:
     explicit Feature_Table_Widget(QWidget * parent = nullptr);
     ~Feature_Table_Widget() override;
+
     void setDataManager(std::shared_ptr<DataManager> data_manager);
 
     void populateTable();

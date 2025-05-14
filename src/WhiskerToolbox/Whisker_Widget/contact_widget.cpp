@@ -6,6 +6,7 @@
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series_Loader.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
