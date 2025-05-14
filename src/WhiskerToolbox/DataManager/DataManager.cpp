@@ -70,32 +70,31 @@ std::shared_ptr<TimeFrame> DataManager::getTime(std::string const & key) {
     return nullptr;
 };
 
-void DataManager::setTimeFrame(std::string const & data_key, std::string const & time_key) {
-
+bool DataManager::setTimeFrame(std::string const & data_key, std::string const & time_key) {
     if (_data.find(data_key) == _data.end()) {
-        std::cerr << "Data key not found in DataManager: " << data_key << std::endl;
-        return;
+        std::cerr << "Error: Data key not found in DataManager: " << data_key << std::endl;
+        return false;
     }
 
     if (_times.find(time_key) == _times.end()) {
-        std::cerr << "Time key not found in DataManager: " << time_key << std::endl;
-        return;
+        std::cerr << "Error: Time key not found in DataManager: " << time_key << std::endl;
+        return false;
     }
 
     _time_frames[data_key] = time_key;
+    return true;
 }
 
 std::string DataManager::getTimeFrame(std::string const & data_key) {
-
     // check if data_key exists
     if (_data.find(data_key) == _data.end()) {
-        std::cerr << "Data key not found in DataManager: " << data_key << std::endl;
+        std::cerr << "Error: Data key not found in DataManager: " << data_key << std::endl;
         return "";
     }
 
     // check if data key has time frame
     if (_time_frames.find(data_key) == _time_frames.end()) {
-        std::cerr << "Data key "
+        std::cerr << "Error: Data key "
                   << data_key
                   << " exists, but not assigned to a TimeFrame" <<  std::endl;
         return "";

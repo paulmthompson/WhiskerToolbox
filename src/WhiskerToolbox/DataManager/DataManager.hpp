@@ -37,43 +37,49 @@ public:
     bool setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe);
 
     /**
-     * @brief Get the default time frame object
-     *
-     * @param key The key to get the time for
-     * @return A shared pointer to the default TimeFrame object
-     */
+    * @brief Get the default time frame object
+    *
+    * Returns the TimeFrame associated with the default "time" key.
+    *
+    * @return A shared pointer to the default TimeFrame object
+    * @note This function always returns a valid pointer since the default TimeFrame
+    *       is created in the constructor
+    */
     [[nodiscard]] std::shared_ptr<TimeFrame> getTime();
 
     /**
-     * @brief Get the time frame object for a specific key
-     *
-     * returns nullptr if the key does not exist
-     *
-     * @param key The key to get the time for
-     * @return A shared pointer to the TimeFrame object
+    * @brief Get the time frame object for a specific key
+    *
+    * @param key The key to retrieve the TimeFrame for
+    * @return A shared pointer to the TimeFrame if the key exists, nullptr otherwise
      */
     [[nodiscard]] std::shared_ptr<TimeFrame> getTime(std::string const & key);
 
     /**
-     * @brief Set the time frame for a specific data key
-     *
-     * The time frame specifies the temporal coordinate system.
-     * Error if either data_key or time_key do not exist.
-     *
-     * @param data_key The data key to set the time for
-     * @param time_key The time key to set
-     */
-    void setTimeFrame(std::string const & data_key, std::string const & time_key);
+    * @brief Set the time frame for a specific data key
+    *
+    * Associates a data object with a specific temporal coordinate system.
+    *
+    * @param data_key The data key to set the time frame for
+    * @param time_key The time key to associate with the data
+    * @return bool True if the time frame was successfully set, false otherwise
+    *
+    * @note If data_key or time_key doesn't exist, an error message will be printed
+    *       to std::cerr and the function will return false
+    */
+    bool setTimeFrame(std::string const & data_key, std::string const & time_key);
 
     /**
-     * @brief Get the time frame for a specific data key
-     *
-     * returns empty string if the data_key does not exist
-     * returns empty string if the data_key does not have a time frame
-     *
-     * @param data_key The data key to get the time for
-     * @return A string representing the time frame
-     */
+    * @brief Get the time frame for a specific data key
+    *
+    * Retrieves the TimeFrame key associated with a particular data object.
+    *
+    * @param data_key The data key to get the time frame for
+    * @return The TimeFrame key as a string, or empty string if an error occurred
+    *
+    * @note If data_key doesn't exist or doesn't have an associated TimeFrame,
+    *       an error message will be printed to std::cerr and an empty string will be returned
+    */
     [[nodiscard]] std::string getTimeFrame(std::string const & data_key);
 
     /**
