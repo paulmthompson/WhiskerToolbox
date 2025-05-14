@@ -70,6 +70,18 @@ std::shared_ptr<TimeFrame> DataManager::getTime(std::string const & key) {
     return nullptr;
 };
 
+bool DataManager::removeTime(std::string const & key)
+{
+    if (_times.find(key) == _times.end()) {
+        std::cerr << "Error: could not find time key in DataManager: " << key << std::endl;
+        return false;
+    }
+
+    auto it = _times.find(key);
+    _times.erase(it);
+    return true;
+}
+
 bool DataManager::setTimeFrame(std::string const & data_key, std::string const & time_key) {
     if (_data.find(data_key) == _data.end()) {
         std::cerr << "Error: Data key not found in DataManager: " << data_key << std::endl;

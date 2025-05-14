@@ -57,7 +57,11 @@ void Media_Window::addLineDataToScene(std::string const & line_key, std::string 
         return;
     }
 
-    _line_configs[line_key] = element_config{hex_color, alpha};
+    auto line_config = std::make_unique<LineDisplayOptions>();
+    line_config->hex_color = hex_color;
+    line_config->alpha = alpha;
+
+    _line_configs[line_key] = std::move(line_config);
 
     UpdateCanvas();
 }
@@ -71,7 +75,7 @@ void Media_Window::changeLineColor(std::string const & line_key, std::string con
         std::cerr << "Line key not found: " << line_key << std::endl;
         return;
     }
-    _line_configs[line_key].hex_color = hex_color;
+    _line_configs[line_key]->hex_color = hex_color;
 }
 
 void Media_Window::changeLineAlpha(std::string const & line_key, float const alpha) {
@@ -84,10 +88,10 @@ void Media_Window::changeLineAlpha(std::string const & line_key, float const alp
         std::cerr << "Line key not found: " << line_key << std::endl;
         return;
     }
-    _line_configs[line_key].alpha = alpha;
+    _line_configs[line_key]->alpha = alpha;
 }
 
-void Media_Window::clearLines() {
+void Media_Window::_clearLines() {
     for (auto pathItem: _line_paths) {
         removeItem(pathItem);
     }
@@ -155,7 +159,7 @@ void Media_Window::changeMaskAlpha(float const alpha) {
     UpdateCanvas();
 }
 
-void Media_Window::clearMasks() {
+void Media_Window::_clearMasks() {
     for (auto maskItem: _masks) {
         removeItem(maskItem);
     }
@@ -205,7 +209,7 @@ void Media_Window::changePointColor(std::string const & point_key, std::string c
     _point_configs[point_key].hex_color = hex_color;
 }
 
-void Media_Window::clearPoints() {
+void Media_Window::_clearPoints() {
     for (auto pathItem: _points) {
         removeItem(pathItem);
     }
@@ -262,7 +266,7 @@ void Media_Window::removeDigitalIntervalSeries(std::string const & key) {
     }
 }
 
-void Media_Window::clearIntervals() {
+void Media_Window::_clearIntervals() {
     for (auto item: _intervals) {
         removeItem(item);
     }
@@ -297,7 +301,7 @@ void Media_Window::setTensorChannel(std::string const & tensor_key, int channel)
     _tensor_configs[tensor_key].channel = channel;
 }
 
-void Media_Window::clearTensors() {
+void Media_Window::_clearTensors() {
     for (auto item: _tensors) {
         removeItem(item);
     }
@@ -317,11 +321,11 @@ void Media_Window::LoadFrame(int frame_id) {
 }
 
 void Media_Window::UpdateCanvas() {
-    clearLines();
-    clearPoints();
-    clearMasks();
-    clearIntervals();
-    clearTensors();
+    _clearLines();
+    _clearPoints();
+    _clearMasks();
+    _clearIntervals();
+    _clearTensors();
 
     //_convertNewMediaToQImage();
     auto _media = _data_manager->getData<MediaData>("media");
@@ -471,7 +475,7 @@ void Media_Window::_plotLineData() {
     auto yAspect = getYAspect();
 
     for (auto const & [line_key, _line_config]: _line_configs) {
-        auto plot_color = plot_color_with_alpha(_line_config);
+        auto plot_color = plot_color_with_alpha(_line_config.get());
 
         auto lineData = _data_manager->getData<LineData>(line_key)->getLinesAtTime(current_time);
 
@@ -531,13 +535,6 @@ void Media_Window::_plotLineData() {
              */
         }
     }
-}
-
-QRgb plot_color_with_alpha(element_config const & elem) {
-    auto color = QColor(QString::fromStdString(elem.hex_color));
-    auto output_color = qRgba(color.red(), color.green(), color.blue(), std::lround(elem.alpha * 255.0f));
-
-    return output_color;
 }
 
 void Media_Window::_plotMaskData() {
@@ -733,3 +730,19 @@ void Media_Window::_plotHoverCircle()
 
 }
 
+
+QRgb plot_color_with_alpha(element_config const & elem) {
+    auto color = QColor(QString::fromStdString(elem.hex_color));
+    auto output_color = qRgba(color.red(), color.green(), color.blue(), std::lround(elem.alpha * 255.0f));
+
+    return output_color;
+}
+
+
+QRgb plot_color_with_alpha(BaseDisplayOptions const * opts)
+{
+    auto color = QColor(QString::fromStdString(opts->hex_color));
+    auto output_color = qRgba(color.red(), color.green(), color.blue(), std::lround(opts->alpha * 255.0f));
+
+    return output_color;
+}

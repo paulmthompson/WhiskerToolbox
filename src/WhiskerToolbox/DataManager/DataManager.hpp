@@ -53,6 +53,8 @@ public:
      */
     [[nodiscard]] std::shared_ptr<TimeFrame> getTime(std::string const & key);
 
+    bool removeTime(std::string const & key);
+
     /**
     * @brief Set the time frame for a specific data key
     *

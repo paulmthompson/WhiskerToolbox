@@ -224,6 +224,7 @@ void MainWindow::_updateFrameCount() {
 
         auto new_timeframe = std::make_shared<TimeFrame>(t);
 
+        _data_manager->removeTime("time");
         _data_manager->setTime("time", new_timeframe);
     }
 

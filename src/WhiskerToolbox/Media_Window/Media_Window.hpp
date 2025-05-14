@@ -5,6 +5,8 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/ImageSize/ImageSize.hpp"
 
+#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
+
 #include <QGraphicsScene>
 #include <QtCore/QtGlobal>
 
@@ -57,7 +59,6 @@ public:
     void changeLineColor(std::string const & line_key, std::string const & hex_color);
     void changeLineAlpha(std::string const & line_key, float alpha);
     void removeLineDataFromScene(std::string const & line_key);
-    void clearLines();
 
     void addMaskDataToScene(
             std::string const & mask_key,
@@ -68,7 +69,6 @@ public:
     void changeMaskAlpha(float alpha);
     void changeMaskAlpha(std::string const & line_key, float alpha);
     void removeMaskDataFromScene(std::string const & mask_key);
-    void clearMasks();
 
     void addPointDataToScene(
             std::string const & point_key,
@@ -78,7 +78,6 @@ public:
     void changePointColor(std::string const & point_key, std::string const & hex_color);
     void setPointAlpha(std::string const & point_key, float alpha);
     void removePointDataFromScene(std::string const & point_key);
-    void clearPoints();
 
     void addDigitalIntervalSeries(
             std::string const & key,
@@ -86,13 +85,11 @@ public:
             float alpha = 1.0);
 
     void removeDigitalIntervalSeries(std::string const & key);
-    void clearIntervals();
 
     void addTensorDataToScene(
             std::string const & tensor_key);
     void removeTensorDataFromScene(std::string const & tensor_key);
     void setTensorChannel(std::string const & tensor_key, int channel);
-    void clearTensors();
 
     /**
      *
@@ -124,11 +121,11 @@ public:
     void setShowHoverCircle(bool show);
     void setHoverCircleRadius(int radius);
 
-    std::optional<element_config> getLineConfig(std::string const & line_key) const {
+    std::optional<LineDisplayOptions *> getLineConfig(std::string const & line_key) const {
         if (_line_configs.find(line_key) == _line_configs.end()) {
             return std::nullopt;
         }
-        return _line_configs.at(line_key);
+        return _line_configs.at(line_key).get();
     }
 
     std::optional<element_config> getMaskConfig(std::string const & mask_key) const {
@@ -189,7 +186,7 @@ private:
 
     std::vector<QPointF> _drawing_points;
 
-    std::unordered_map<std::string, element_config> _line_configs;
+    std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
     std::unordered_map<std::string, element_config> _mask_configs;
     std::unordered_map<std::string, element_config> _point_configs;
     std::unordered_map<std::string, element_config> _interval_configs;
@@ -198,12 +195,23 @@ private:
     QImage::Format _getQImageFormat();
     void _createCanvasForData();
     void _convertNewMediaToQImage();
+
     void _plotLineData();
+    void _clearLines();
+
     void _plotMaskData();
+    void _clearMasks();
     void _plotSingleMaskData(std::vector<Mask2D> const & maskData, ImageSize mask_size, QRgb plot_color);
+
     void _plotPointData();
+    void _clearPoints();
+
     void _plotDigitalIntervalSeries();
+    void _clearIntervals();
+
     void _plotTensorData();
+    void _clearTensors();
+
     void _plotHoverCircle();
 
 public slots:
@@ -217,5 +225,6 @@ signals:
 };
 
 QRgb plot_color_with_alpha(element_config const & elem);
+QRgb plot_color_with_alpha(BaseDisplayOptions const * opts);
 
 #endif// MEDIA_WINDOW_HPP

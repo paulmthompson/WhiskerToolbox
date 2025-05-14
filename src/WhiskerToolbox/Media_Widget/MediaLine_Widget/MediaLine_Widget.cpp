@@ -55,8 +55,8 @@ void MediaLine_Widget::setActiveKey(std::string const& key) {
         auto config = _scene->getLineConfig(key);
 
         if (config) {
-            ui->color_picker->setColor(QString::fromStdString(config.value().hex_color));
-            ui->color_picker->setAlpha(static_cast<int>(config.value().alpha * 100));
+            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
+            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
         }
     }
 }

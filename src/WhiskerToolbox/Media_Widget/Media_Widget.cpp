@@ -12,9 +12,6 @@
 #include "Media_Window/Media_Window.hpp"
 
 
-#include <QSlider>
-
-
 Media_Widget::Media_Widget(QWidget * parent)
     : QWidget(parent),
       ui(new Ui::Media_Widget) {
