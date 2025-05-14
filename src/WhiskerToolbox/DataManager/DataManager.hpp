@@ -83,23 +83,56 @@ public:
     [[nodiscard]] std::string getTimeFrame(std::string const & data_key);
 
     /**
-     * @brief Get all time frame keys
-     *
-     * @return A vector of strings representing the time frame keys
-     */
+    * @brief Get all registered TimeFrame keys
+    *
+    * Retrieves a vector of all keys used for TimeFrame objects in the DataManager.
+    *
+    * @return A vector of strings containing all TimeFrame keys
+    * @note The default "time" key will always be included in the returned vector
+    */
     [[nodiscard]] std::vector<std::string> getTimeFrameKeys();
 
     using ObserverCallback = std::function<void()>;
 
-    void addObserver(ObserverCallback callback) {
-        _observers.push_back(std::move(callback));
-    }
+    /**
+    * @brief Add a callback function to a specific data object
+    *
+    * Registers a callback function that will be invoked when the specified data object changes.
+    *
+    * @param key The data key to attach the callback to
+    * @param callback The function to call when the data changes
+    * @return int A unique identifier for the callback (>= 0) or -1 if registration failed
+    *
+    * @note If the data key doesn't exist, the function returns -1
+    */
+    [[nodiscard]] int addCallbackToData(std::string const & key, ObserverCallback callback);
 
-    void notifyObservers() {
-        for (auto & observer: _observers) {
-            observer();
-        }
-    }
+    /**
+    * @brief Remove a callback from a specific data object
+    *
+    * Removes a previously registered callback using its unique identifier.
+    *
+    * @param key The data key from which to remove the callback
+    * @param callback_id The unique identifier of the callback to remove
+    * @return bool True if the callback was successfully removed, false if the key doesn't exist
+    *
+    * @note If the data key doesn't exist, the function returns false.
+    *       The underlying removeObserver implementation determines what happens if the callback_id is invalid.
+    */
+    bool removeCallbackFromData(std::string const & key, int callback_id);
+
+    /**
+    * @brief Register a callback function for DataManager state changes
+    *
+    * Adds a callback function that will be invoked when the DataManager's state changes,
+    * such as when data is added or modified.
+    *
+    * @param callback The function to call when the DataManager state changes
+    *
+    * @note Unlike addCallbackToData, this function doesn't return an ID,
+    *       so callbacks cannot be selectively removed later
+    */
+    void addObserver(ObserverCallback callback);
 
     std::vector<std::string> getAllKeys() {
         std::vector<std::string> keys;
@@ -160,27 +193,27 @@ public:
     void setData(std::string const & key) {
         _data[key] = std::make_shared<T>();
         setTimeFrame(key, "time");
-        notifyObservers();
+        _notifyObservers();
     }
 
     template<typename T>
     void setData(std::string const & key, std::shared_ptr<T> data) {
         _data[key] = data;
         setTimeFrame(key, "time");
-        notifyObservers();
+        _notifyObservers();
     }
 
     void setData(std::string const & key, DataTypeVariant data) {
         _data[key] = data;
         setTimeFrame(key, "time");
-        notifyObservers();
+        _notifyObservers();
     }
 
     template<typename T>
     void setData(std::string const & key, std::shared_ptr<T> data, std::string const & time_key) {
         _data[key] = data;
         setTimeFrame(key, time_key);
-        notifyObservers();
+        _notifyObservers();
     }
 
     [[nodiscard]] DM_DataType getType(std::string const & key) const;
@@ -233,9 +266,6 @@ public:
         }
     }
 
-    int addCallbackToData(std::string const & key, ObserverCallback callback);
-    void removeCallbackFromData(std::string const & key, int callback_id);
-
     void setOutputPath(std::filesystem::path const & output_path) { _output_path = output_path; };
 
     [[nodiscard]] std::filesystem::path getOutputPath() const {
@@ -243,7 +273,7 @@ public:
     }
 
 private:
-    //std::shared_ptr<TimeFrame> _time;
+
     std::unordered_map<std::string, std::shared_ptr<TimeFrame>> _times;
 
     std::vector<ObserverCallback> _observers;
@@ -256,6 +286,8 @@ private:
     std::unordered_map<std::string, std::vector<std::string>> _dataGroups;
 
     std::filesystem::path _output_path;
+
+    void _notifyObservers();
 };
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);

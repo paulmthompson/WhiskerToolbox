@@ -113,17 +113,43 @@ std::vector<std::string> DataManager::getTimeFrameKeys() {
     return keys;
 }
 
-DM_DataType stringToDataType(std::string const & data_type_str) {
-    if (data_type_str == "video") return DM_DataType::Video;
-    if (data_type_str == "points") return DM_DataType::Points;
-    if (data_type_str == "mask") return DM_DataType::Mask;
-    if (data_type_str == "line") return DM_DataType::Line;
-    if (data_type_str == "analog") return DM_DataType::Analog;
-    if (data_type_str == "digital_event") return DM_DataType::DigitalEvent;
-    if (data_type_str == "digital_interval") return DM_DataType::DigitalInterval;
-    if (data_type_str == "tensor") return DM_DataType::Tensor;
-    if (data_type_str == "time") return DM_DataType::Time;
-    return DM_DataType::Unknown;
+int DataManager::addCallbackToData(std::string const & key, ObserverCallback callback) {
+
+    int id = -1;
+
+    if (_data.find(key) != _data.end()) {
+        auto data = _data[key];
+
+        id = std::visit([callback](auto & x) {
+            return x.get()->addObserver(callback);
+        }, data);
+    }
+
+    return id;
+}
+
+bool DataManager::removeCallbackFromData(std::string const & key, int callback_id) {
+    if (_data.find(key) != _data.end()) {
+        auto data = _data[key];
+
+        std::visit([callback_id](auto & x) {
+            x.get()->removeObserver(callback_id);
+        }, data);
+
+        return true;
+    }
+
+    return false;
+}
+
+void DataManager::addObserver(ObserverCallback callback) {
+    _observers.push_back(std::move(callback));
+}
+
+void DataManager::_notifyObservers() {
+    for (auto & observer: _observers) {
+        observer();
+    }
 }
 
 std::optional<std::string> processFilePath(
@@ -171,39 +197,25 @@ bool checkRequiredFields(json const & item, std::vector<std::string> const & req
     return true;
 }
 
-int DataManager::addCallbackToData(std::string const & key, ObserverCallback callback) {
-
-    int id = -1;
-
-    if (_data.find(key) != _data.end()) {
-        auto data = _data[key];
-
-        id = std::visit([callback](auto & x) {
-            return x.get()->addObserver(callback);
-        },
-                        data);
-    }
-
-    return id;
-}
-
-void DataManager::removeCallbackFromData(std::string const & key, int callback_id) {
-    if (_data.find(key) != _data.end()) {
-        auto data = _data[key];
-
-        std::visit([callback_id](auto & x) {
-            x.get()->removeObserver(callback_id);
-        },
-                   data);
-    }
-}
-
 void checkOptionalFields(json const & item, std::vector<std::string> const & optionalFields) {
     for (auto const & field: optionalFields) {
         if (!item.contains(field)) {
             std::cout << "Warning: Optional field \"" << field << "\" is missing in JSON item." << std::endl;
         }
     }
+}
+
+DM_DataType stringToDataType(std::string const & data_type_str) {
+    if (data_type_str == "video") return DM_DataType::Video;
+    if (data_type_str == "points") return DM_DataType::Points;
+    if (data_type_str == "mask") return DM_DataType::Mask;
+    if (data_type_str == "line") return DM_DataType::Line;
+    if (data_type_str == "analog") return DM_DataType::Analog;
+    if (data_type_str == "digital_event") return DM_DataType::DigitalEvent;
+    if (data_type_str == "digital_interval") return DM_DataType::DigitalInterval;
+    if (data_type_str == "tensor") return DM_DataType::Tensor;
+    if (data_type_str == "time") return DM_DataType::Time;
+    return DM_DataType::Unknown;
 }
 
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string const & json_filepath) {

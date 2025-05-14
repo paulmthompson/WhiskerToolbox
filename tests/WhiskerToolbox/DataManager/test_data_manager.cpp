@@ -236,6 +236,222 @@ TEST_CASE("DataManager::getTimeFrameKeys returns all TimeFrame keys", "[DataMana
     }
 }
 
+TEST_CASE("DataManager::addCallbackToData registers callbacks with data objects", "[DataManager][Observer]") {
+    DataManager dm;
+
+    // Setup - create some test data
+    dm.setData<PointData>("test_points");
+
+    SECTION("Successfully register callback to valid data") {
+        bool callback_executed = false;
+        auto callback = [&callback_executed]() { callback_executed = true; };
+
+        int id = dm.addCallbackToData("test_points", callback);
+
+        REQUIRE(id >= 0); // Valid ID is returned
+
+        // Trigger the callback by modifying the data
+        auto points = dm.getData<PointData>("test_points");
+        points->notify();
+
+        REQUIRE(callback_executed == true);
+    }
+
+    SECTION("Multiple callbacks can be registered") {
+        int callback1_count = 0;
+        int callback2_count = 0;
+
+        auto callback1 = [&callback1_count]() { callback1_count++; };
+        auto callback2 = [&callback2_count]() { callback2_count++; };
+
+        int id1 = dm.addCallbackToData("test_points", callback1);
+        int id2 = dm.addCallbackToData("test_points", callback2);
+
+        REQUIRE(id1 >= 0);
+        REQUIRE(id2 >= 0);
+        REQUIRE(id1 != id2); // IDs should be unique
+
+        // Trigger the callbacks
+        auto points = dm.getData<PointData>("test_points");
+        points->notify();
+
+        REQUIRE(callback1_count == 1);
+        REQUIRE(callback2_count == 1);
+    }
+}
+
+TEST_CASE("DataManager::addCallbackToData handles error conditions", "[DataManager][Observer][Error]") {
+    DataManager dm;
+
+    SECTION("Returns -1 for non-existent data key") {
+        bool callback_executed = false;
+        auto callback = [&callback_executed]() { callback_executed = true; };
+
+        int id = dm.addCallbackToData("nonexistent_data", callback);
+
+        REQUIRE(id == -1); // Invalid ID indicates failure
+        REQUIRE(callback_executed == false); // Callback should not have executed
+    }
+}
+
+TEST_CASE("DataManager::removeCallbackFromData removes registered callbacks", "[DataManager][Observer]") {
+    DataManager dm;
+
+    // Setup - create some test data
+    dm.setData<PointData>("test_points");
+
+    SECTION("Successfully remove registered callback") {
+        // Setup - register a callback
+        int callback_count = 0;
+        auto callback = [&callback_count]() { callback_count++; };
+
+        int id = dm.addCallbackToData("test_points", callback);
+        REQUIRE(id >= 0);
+
+        // Verify callback works before removal
+        auto points = dm.getData<PointData>("test_points");
+        points->notify();
+        REQUIRE(callback_count == 1);
+
+        // Remove the callback
+        bool result = dm.removeCallbackFromData("test_points", id);
+        REQUIRE(result == true);
+
+        // Verify callback no longer works
+        points->notify();
+        REQUIRE(callback_count == 1); // Count should remain unchanged
+    }
+
+    SECTION("Removing one callback doesn't affect others") {
+        // Setup - register two callbacks
+        int callback1_count = 0;
+        int callback2_count = 0;
+        auto callback1 = [&callback1_count]() { callback1_count++; };
+        auto callback2 = [&callback2_count]() { callback2_count++; };
+
+        int id1 = dm.addCallbackToData("test_points", callback1);
+        int id2 = dm.addCallbackToData("test_points", callback2);
+
+        // Remove the first callback
+        bool result = dm.removeCallbackFromData("test_points", id1);
+        REQUIRE(result == true);
+
+        // Verify only the second callback works
+        auto points = dm.getData<PointData>("test_points");
+        points->notify();
+
+        REQUIRE(callback1_count == 0); // First callback removed
+        REQUIRE(callback2_count == 1); // Second callback still active
+    }
+}
+
+TEST_CASE("DataManager::removeCallbackFromData handles error conditions", "[DataManager][Observer][Error]") {
+    DataManager dm;
+
+    SECTION("Returns false for non-existent data key") {
+        bool result = dm.removeCallbackFromData("nonexistent_data", 1);
+        REQUIRE(result == false);
+    }
+
+    SECTION("Handles invalid callback ID gracefully") {
+        // Setup - create test data
+        dm.setData<PointData>("test_points");
+
+        // Try to remove a callback that doesn't exist
+        bool result = dm.removeCallbackFromData("test_points", 9999);
+
+        // The operation should still "succeed" in the sense that we found the data
+        // even though the specific callback ID might not exist
+        REQUIRE(result == true);
+
+        // The exact behavior with invalid callback IDs depends on the removeObserver implementation
+        // but at minimum we should verify it doesn't crash
+    }
+}
+
+TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[DataManager][Observer]") {
+    DataManager dm;
+
+    SECTION("Observer is called when data is added") {
+        int callback_count = 0;
+        auto callback = [&callback_count]() { callback_count++; };
+
+        // Register the callback
+        dm.addObserver(callback);
+
+        // Add data which should trigger the callback
+        dm.setData<PointData>("test_points");
+
+        REQUIRE(callback_count == 1);
+
+        // Add another data object, should trigger again
+        dm.setData<PointData>("more_points");
+
+        REQUIRE(callback_count == 2);
+    }
+
+    SECTION("Multiple observers are all called") {
+        int callback1_count = 0;
+        int callback2_count = 0;
+
+        auto callback1 = [&callback1_count]() { callback1_count++; };
+        auto callback2 = [&callback2_count]() { callback2_count++; };
+
+        // Register both callbacks
+        dm.addObserver(callback1);
+        dm.addObserver(callback2);
+
+        // Trigger notification
+        dm.setData<PointData>("test_points");
+
+        // Both callbacks should be called
+        REQUIRE(callback1_count == 1);
+        REQUIRE(callback2_count == 1);
+    }
+
+    SECTION("Callbacks are called for various state changes") {
+        int notification_count = 0;
+        auto callback = [&notification_count]() { notification_count++; };
+
+        dm.addObserver(callback);
+
+        // Different operations that should trigger notifications
+        dm.setData<PointData>("points");
+        REQUIRE(notification_count == 1);
+
+        // Adding with custom TimeFrame
+        auto custom_time = std::make_shared<TimeFrame>();
+        dm.setTime("custom_time", custom_time);
+        dm.setData<PointData>("points2", std::make_shared<PointData>(), "custom_time");
+        REQUIRE(notification_count == 2);
+
+        // Using variant form
+        DataTypeVariant variant = std::make_shared<PointData>();
+        dm.setData("variant_points", variant);
+        REQUIRE(notification_count == 3);
+    }
+
+    SECTION("Observer captures state correctly") {
+        std::vector<std::string> observed_keys;
+
+        auto callback = [&dm, &observed_keys]() {
+            // Capture the current set of keys when notified
+            auto keys = dm.getAllKeys();
+            observed_keys = keys;
+        };
+
+        dm.addObserver(callback);
+
+        // Add data to trigger the callback
+        dm.setData<PointData>("test_points");
+
+        // The observer should have captured the keys including our new one
+        // (plus "media" which exists by default)
+        REQUIRE(observed_keys.size() == 2);
+        REQUIRE(std::find(observed_keys.begin(), observed_keys.end(), "test_points") != observed_keys.end());
+    }
+}
+
 TEST_CASE("DataManager - Load Media", "[DataManager]") {
 
 auto dm = DataManager();
