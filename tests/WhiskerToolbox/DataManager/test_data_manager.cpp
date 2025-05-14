@@ -452,6 +452,134 @@ TEST_CASE("DataManager::addObserver registers callbacks for state changes", "[Da
     }
 }
 
+TEST_CASE("DataManager::getAllKeys returns all data keys", "[DataManager]") {
+    DataManager dm;
+
+    SECTION("Default state contains only 'media' key") {
+        auto keys = dm.getAllKeys();
+        REQUIRE(keys.size() == 1);
+        REQUIRE(keys[0] == "media");
+    }
+
+    SECTION("Adding data objects updates the key list") {
+        // Add various data objects
+        dm.setData<PointData>("points1");
+        dm.setData<PointData>("points2");
+        dm.setData<LineData>("line1");
+
+        // Get the keys
+        auto keys = dm.getAllKeys();
+
+        // Check the size and contents
+        REQUIRE(keys.size() == 4); // 3 new keys + "media"
+
+        // Check that all expected keys are present (order not guaranteed)
+        auto has_key = [&keys](const std::string& key) {
+            return std::find(keys.begin(), keys.end(), key) != keys.end();
+        };
+
+        REQUIRE(has_key("media"));
+        REQUIRE(has_key("points1"));
+        REQUIRE(has_key("points2"));
+        REQUIRE(has_key("line1"));
+    }
+
+    SECTION("Keys reflect changes to data collection") {
+        // Add and then remove a data object
+        dm.setData<PointData>("temporary");
+
+        // First check that the key exists
+        {
+            auto keys = dm.getAllKeys();
+            REQUIRE(keys.size() == 2); // "media" + "temporary"
+            REQUIRE(std::find(keys.begin(), keys.end(), "temporary") != keys.end());
+        }
+
+        // Then remove it (assuming there's a removeData method, if not, this section would need to be adjusted)
+        // dm.removeData("temporary");
+
+        // For now, we'll just test addition of data
+        dm.setData<LineData>("permanent");
+
+        // Check the updated keys
+        auto keys = dm.getAllKeys();
+        REQUIRE(std::find(keys.begin(), keys.end(), "permanent") != keys.end());
+    }
+}
+
+TEST_CASE("DataManager::getKeys returns keys of the specified data type", "[DataManager]") {
+    DataManager dm;
+
+    SECTION("Empty DataManager returns empty vector for any type") {
+        REQUIRE(dm.getKeys<PointData>().size() == 0);
+        REQUIRE(dm.getKeys<LineData>().size() == 0);
+    }
+
+    SECTION("Returns only keys matching the requested type") {
+        // Add various data objects
+        dm.setData<PointData>("points1");
+        dm.setData<PointData>("points2");
+        dm.setData<LineData>("line1");
+        dm.setData<MaskData>("mask1");
+
+        // Get point keys
+        auto point_keys = dm.getKeys<PointData>();
+        REQUIRE(point_keys.size() == 2);
+        REQUIRE(std::find(point_keys.begin(), point_keys.end(), "points1") != point_keys.end());
+        REQUIRE(std::find(point_keys.begin(), point_keys.end(), "points2") != point_keys.end());
+        REQUIRE(std::find(point_keys.begin(), point_keys.end(), "line1") == point_keys.end());
+
+        // Get line keys
+        auto line_keys = dm.getKeys<LineData>();
+        REQUIRE(line_keys.size() == 1);
+        REQUIRE(std::find(line_keys.begin(), line_keys.end(), "line1") != line_keys.end());
+
+        // Get mask keys
+        auto mask_keys = dm.getKeys<MaskData>();
+        REQUIRE(mask_keys.size() == 1);
+        REQUIRE(std::find(mask_keys.begin(), mask_keys.end(), "mask1") != mask_keys.end());
+    }
+
+    SECTION("Returns correct default keys") {
+        // By default, the DataManager has a MediaData object with key "media"
+        auto media_keys = dm.getKeys<MediaData>();
+        REQUIRE(media_keys.size() == 1);
+        REQUIRE(media_keys[0] == "media");
+
+        // But no default PointData
+        auto point_keys = dm.getKeys<PointData>();
+        REQUIRE(point_keys.size() == 0);
+    }
+
+    SECTION("Updates after adding new data") {
+        // Start with no point data
+        REQUIRE(dm.getKeys<PointData>().size() == 0);
+
+        // Add a point data object
+        dm.setData<PointData>("dynamic_points");
+
+        // Check that it appears in the keys
+        auto point_keys = dm.getKeys<PointData>();
+        REQUIRE(point_keys.size() == 1);
+        REQUIRE(point_keys[0] == "dynamic_points");
+    }
+
+    SECTION("Handles different template types") {
+        // Add data of various types
+        dm.setData<PointData>("test_points");
+        dm.setData<LineData>("test_line");
+
+        // Test with non-standard data types (that may be added later)
+        // For now, we'll use the existing types
+        REQUIRE(dm.getKeys<PointData>().size() == 1);
+        REQUIRE(dm.getKeys<LineData>().size() == 1);
+
+        // No data of these types should exist yet
+        REQUIRE(dm.getKeys<DigitalEventSeries>().size() == 0);
+        REQUIRE(dm.getKeys<TensorData>().size() == 0);
+    }
+}
+
 TEST_CASE("DataManager - Load Media", "[DataManager]") {
 
 auto dm = DataManager();

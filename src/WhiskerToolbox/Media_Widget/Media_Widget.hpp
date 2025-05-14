@@ -20,7 +20,6 @@ public:
 
     void setDataManager(std::shared_ptr<DataManager> data_manager);
     void setScene(Media_Window * scene) { _scene = scene; };
-    void setMainWindow(MainWindow * mainwindow) { _main_window = mainwindow; };
 
     void updateMedia();
 
@@ -33,9 +32,6 @@ private:
     Ui::Media_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene = nullptr;
-
-    MainWindow * _main_window = nullptr;
-
 
 private slots:
     void _updateCanvasSize();

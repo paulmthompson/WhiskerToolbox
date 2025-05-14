@@ -152,6 +152,29 @@ void DataManager::_notifyObservers() {
     }
 }
 
+std::vector<std::string> DataManager::getAllKeys() {
+    std::vector<std::string> keys;
+    keys.reserve(_data.size());
+    for (auto const & [key, value]: _data) {
+
+        keys.push_back(key);
+    }
+    return keys;
+}
+
+std::optional<DataTypeVariant> DataManager::getDataVariant(std::string const & key) {
+    if (_data.find(key) != _data.end()) {
+        return _data[key];
+    }
+    return std::nullopt;
+}
+
+void DataManager::setData(std::string const & key, DataTypeVariant data) {
+    _data[key] = data;
+    setTimeFrame(key, "time");
+    _notifyObservers();
+}
+
 std::optional<std::string> processFilePath(
         std::string const & file_path,
         std::filesystem::path const & base_path) {

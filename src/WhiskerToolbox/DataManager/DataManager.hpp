@@ -7,12 +7,10 @@
 
 #include <filesystem>
 #include <functional>   // std::function
-#include <iostream>
 #include <memory>       // std::shared_ptr
 #include <optional>     // std::optional
 #include <string>       // std::string
 #include <unordered_map>// std::unordered_map
-#include <utility>      // std::move
 #include <variant>      // std::variant
 #include <vector>       // std::vector
 
@@ -134,18 +132,47 @@ public:
     */
     void addObserver(ObserverCallback callback);
 
-    std::vector<std::string> getAllKeys() {
-        std::vector<std::string> keys;
-        keys.reserve(_data.size());
-        for (auto const & [key, value]: _data) {
+    /**
+    * @brief Get all registered data keys
+    *
+    * Retrieves a vector of all data object keys in the DataManager.
+    *
+    * @return A vector of strings containing all data keys
+    *
+    * @example
+    * @code
+    * DataManager dm;
+    * dm.setData<PointData>("points1");
+    * dm.setData<LineData>("line1");
+    *
+    * // Get all keys
+    * auto keys = dm.getAllKeys(); // Returns ["media", "points1", "line1"]
+    * @endcode
+    */
+    [[nodiscard]] std::vector<std::string> getAllKeys();
 
-            keys.push_back(key);
-        }
-        return keys;
-    }
-
+    /**
+    * @brief Get all keys associated with a specific data type
+    *
+    * Retrieves a vector of all keys that correspond to data objects
+    * of the specified template type T.
+    *
+    * @tparam T The data type to filter by (e.g., PointData, LineData)
+    * @return A vector of strings containing all keys with data of type T
+    *
+    * @example
+    * @code
+    * DataManager dm;
+    * dm.setData<PointData>("points1");
+    * dm.setData<PointData>("points2");
+    * dm.setData<LineData>("line1");
+    *
+    * // Get only keys for PointData objects
+    * auto pointKeys = dm.getKeys<PointData>(); // Returns ["points1", "points2"]
+    * @endcode
+    */
     template<typename T>
-    std::vector<std::string> getKeys() {
+    [[nodiscard]] std::vector<std::string> getKeys() {
         std::vector<std::string> keys;
         for (auto const & [key, value]: _data) {
             if (std::holds_alternative<std::shared_ptr<T>>(value)) {
@@ -155,12 +182,17 @@ public:
         return keys;
     }
 
-    std::optional<DataTypeVariant> getDataVariant(std::string const & key) {
-        if (_data.find(key) != _data.end()) {
-            return _data[key];
-        }
-        return std::nullopt;
-    }
+    /**
+    * @brief Get data as a variant type
+    *
+    * Retrieves data associated with the specified key as a variant wrapper,
+    * allowing access without knowing the concrete type at compile time.
+    *
+    * @param key The key associated with the data to retrieve
+    * @return An optional containing the data variant if the key exists, empty optional otherwise
+    *
+    */
+    std::optional<DataTypeVariant> getDataVariant(std::string const & key);
 
     template<typename T>
     std::shared_ptr<T> getData(std::string const & key) {
@@ -184,11 +216,7 @@ public:
         _notifyObservers();
     }
 
-    void setData(std::string const & key, DataTypeVariant data) {
-        _data[key] = data;
-        setTimeFrame(key, "time");
-        _notifyObservers();
-    }
+    void setData(std::string const & key, DataTypeVariant data);
 
     template<typename T>
     void setData(std::string const & key, std::shared_ptr<T> data, std::string const & time_key) {
