@@ -44,37 +44,29 @@ void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_mana
     });
 }
 
-void Feature_Table_Widget::_addFeatureName(std::string const & key, int row, int col, bool group) {
+void Feature_Table_Widget::_addFeatureName(std::string const & key, int row, int col) {
     ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(key)));
 }
 
-void Feature_Table_Widget::_addFeatureType(std::string const & key, int row, int col, bool group) {
-    if (group) {
-        ui->available_features_table->setItem(row, col, new QTableWidgetItem("Group"));
-    } else {
-        std::string const type = convert_data_type_to_string(_data_manager->getType(key));
-        ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(type)));
-    }
+void Feature_Table_Widget::_addFeatureType(std::string const & key, int row, int col) {
+
+    std::string const type = convert_data_type_to_string(_data_manager->getType(key));
+    ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(type)));
 }
 
-void Feature_Table_Widget::_addFeatureClock(std::string const & key, int row, int col, bool group) {
-    if (group) {
-        ui->available_features_table->setItem(row, col, new QTableWidgetItem(""));
-    } else {
-        std::string const clock = _data_manager->getTimeFrame(key);
-        ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(clock)));
-    }
+void Feature_Table_Widget::_addFeatureClock(std::string const & key, int row, int col) {
+
+    std::string const clock = _data_manager->getTimeFrame(key);
+    ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(clock)));
+
 }
 
-void Feature_Table_Widget::_addFeatureElements(std::string const & key, int row, int col, bool group) {
-    if (group) {
-        ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::number(_data_manager->getDataGroup(key).size())));
-    } else {
-        ui->available_features_table->setItem(row, col, new QTableWidgetItem("1"));
-    }
+void Feature_Table_Widget::_addFeatureElements(std::string const & key, int row, int col) {
+
+    ui->available_features_table->setItem(row, col, new QTableWidgetItem("1"));
 }
 
-void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, int col, bool group) {
+void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, int col) {
     auto checkboxItem = new QCheckBox();
     checkboxItem->setCheckState(Qt::Unchecked);
     ui->available_features_table->setCellWidget(row, col, checkboxItem);
@@ -88,7 +80,7 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
     });
 }
 
-void Feature_Table_Widget::_addFeatureColor(std::string const & key, int row, int col, bool group) {
+void Feature_Table_Widget::_addFeatureColor(std::string const & key, int row, int col) {
 
     auto colorWidget = new ColorWidget();
     if (row < default_colors.size()) {
@@ -163,51 +155,10 @@ void Feature_Table_Widget::populateTable() {
     ui->available_features_table->setColumnCount(static_cast<int>(_columns.size()));
     ui->available_features_table->setHorizontalHeaderLabels(_columns);
 
-    // Get all keys and group names
-    auto allKeys = _data_manager->getAllKeys();
-    auto groupNames = _data_manager->getDataGroupNames();
+    // Get all keys
+    auto const allKeys = _data_manager->getAllKeys();
 
-    // Add group names to the table
-    for (auto const & groupName: groupNames) {
-
-        if (!_type_filters.empty()) {
-            auto const type = _data_manager->getType(groupName);
-            if (std::find(_type_filters.begin(), _type_filters.end(), type) == _type_filters.end()) {
-                continue;
-            }
-        }
-
-        int const row = ui->available_features_table->rowCount();
-        ui->available_features_table->insertRow(row);
-
-        for (int i = 0; i < _columns.size(); i++) {
-            if (_columns[i] == "Feature") {
-                _addFeatureName(groupName, row, i, true);
-            } else if (_columns[i] == "Type") {
-                _addFeatureType(groupName, row, i, true);
-            } else if (_columns[i] == "Clock") {
-                _addFeatureClock(groupName, row, i, true);
-            } else if (_columns[i] == "Elements") {
-                _addFeatureElements(groupName, row, i, true);
-            } else if (_columns[i] == "Enabled") {
-                _addFeatureEnabled(groupName, row, i, true);
-            } else if (_columns[i] == "Color") {
-                _addFeatureColor(groupName, row, i, true);
-            }
-        }
-    }
-
-    // Add keys not in groups to the table
     for (auto const & key: allKeys) {
-        bool isInGroup = false;
-        for (auto const & groupName: groupNames) {
-            auto groupKeys = _data_manager->getDataGroup(groupName);
-            if (std::find(groupKeys.begin(), groupKeys.end(), key) != groupKeys.end()) {
-                isInGroup = true;
-                break;
-            }
-        }
-
 
         if (!_type_filters.empty()) {
             auto const type = _data_manager->getType(key);
@@ -216,23 +167,21 @@ void Feature_Table_Widget::populateTable() {
             }
         }
 
-        if (!isInGroup) {
-            int const row = ui->available_features_table->rowCount();
-            ui->available_features_table->insertRow(row);
-            for (int i = 0; i < _columns.size(); i++) {
-                if (_columns[i] == "Feature") {
-                    _addFeatureName(key, row, i, false);
-                } else if (_columns[i] == "Type") {
-                    _addFeatureType(key, row, i, false);
-                } else if (_columns[i] == "Clock") {
-                    _addFeatureClock(key, row, i, false);
-                } else if (_columns[i] == "Elements") {
-                    _addFeatureElements(key, row, i, false);
-                } else if (_columns[i] == "Enabled") {
-                    _addFeatureEnabled(key, row, i, false);
-                } else if (_columns[i] == "Color") {
-                    _addFeatureColor(key, row, i, false);
-                }
+        int const row = ui->available_features_table->rowCount();
+        ui->available_features_table->insertRow(row);
+        for (int i = 0; i < _columns.size(); i++) {
+            if (_columns[i] == "Feature") {
+                _addFeatureName(key, row, i);
+            } else if (_columns[i] == "Type") {
+                _addFeatureType(key, row, i);
+            } else if (_columns[i] == "Clock") {
+                _addFeatureClock(key, row, i);
+            } else if (_columns[i] == "Elements") {
+                _addFeatureElements(key, row, i);
+            } else if (_columns[i] == "Enabled") {
+                _addFeatureEnabled(key, row, i);
+            } else if (_columns[i] == "Color") {
+                _addFeatureColor(key, row, i);
             }
         }
     }

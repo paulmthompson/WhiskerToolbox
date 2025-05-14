@@ -53,12 +53,12 @@ private:
     QStringList _columns;
     std::vector<DM_DataType> _type_filters;
 
-    void _addFeatureName(std::string const & key, int row, int col, bool group);
-    void _addFeatureType(std::string const & key, int row, int col, bool group);
-    void _addFeatureClock(std::string const & key, int row, int col, bool group);
-    void _addFeatureElements(std::string const & key, int row, int col, bool group);
-    void _addFeatureEnabled(std::string const & key, int row, int col, bool group);
-    void _addFeatureColor(std::string const & key, int row, int col, bool group);
+    void _addFeatureName(std::string const & key, int row, int col);
+    void _addFeatureType(std::string const & key, int row, int col);
+    void _addFeatureClock(std::string const & key, int row, int col);
+    void _addFeatureElements(std::string const & key, int row, int col);
+    void _addFeatureEnabled(std::string const & key, int row, int col);
+    void _addFeatureColor(std::string const & key, int row, int col);
 };
 
 #endif// FEATURE_TABLE_WIDGET_HPP

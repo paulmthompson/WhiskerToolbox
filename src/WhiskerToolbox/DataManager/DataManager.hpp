@@ -171,25 +171,6 @@ public:
     }
 
     template<typename T>
-    std::shared_ptr<T> getDataFromGroup(std::string const & group_key, int index) {
-        if (_dataGroups.find(group_key) != _dataGroups.end()) {
-
-            if (index >= _dataGroups.at(group_key).size()) {
-                return nullptr;
-            }
-            if (index < 0) {
-                return nullptr;
-            }
-
-            auto keys = _dataGroups.at(group_key);
-            if (std::holds_alternative<std::shared_ptr<T>>(_data[keys[index]])) {
-                return std::get<std::shared_ptr<T>>(_data[keys[index]]);
-            }
-        }
-        return nullptr;
-    }
-
-    template<typename T>
     void setData(std::string const & key) {
         _data[key] = std::make_shared<T>();
         setTimeFrame(key, "time");
@@ -218,54 +199,6 @@ public:
 
     [[nodiscard]] DM_DataType getType(std::string const & key) const;
 
-    void createDataGroup(std::string const & groupName) {
-        _dataGroups[groupName] = {};
-    }
-
-    void createDataGroup(std::string const & groupName, std::vector<std::string> const & dataKeys) {
-        _dataGroups[groupName] = dataKeys;
-    }
-
-    [[nodiscard]] std::vector<std::string> getDataGroup(std::string const & groupName) const {
-        if (_dataGroups.find(groupName) != _dataGroups.end()) {
-            return _dataGroups.at(groupName);
-        }
-        return {};
-    }
-
-    [[nodiscard]] bool isDataGroup(std::string const & groupName) const {
-        return _dataGroups.find(groupName) != _dataGroups.end();
-    }
-
-    [[nodiscard]] std::vector<std::string> getKeysInDataGroup(std::string const & groupName) const {
-        if (_dataGroups.find(groupName) != _dataGroups.end()) {
-            return _dataGroups.at(groupName);
-        }
-        return {};
-    }
-
-    std::vector<std::string> getDataGroupNames() {
-        std::vector<std::string> groupNames;
-        groupNames.reserve(_dataGroups.size());
-        for (auto const & [key, value]: _dataGroups) {
-            groupNames.push_back(key);
-        }
-        return groupNames;
-    }
-
-    void addDataToGroup(std::string const & groupName, std::string const & dataKey) {
-
-        //Check if key is in _data
-        if (_data.find(dataKey) == _data.end()) {
-            std::cerr << "Data key not found in DataManager: " << dataKey << std::endl;
-            return;
-        }
-
-        if (_dataGroups.find(groupName) != _dataGroups.end()) {
-            _dataGroups[groupName].push_back(dataKey);
-        }
-    }
-
     void setOutputPath(std::filesystem::path const & output_path) { _output_path = output_path; };
 
     [[nodiscard]] std::filesystem::path getOutputPath() const {
@@ -282,8 +215,6 @@ private:
             _data;
 
     std::unordered_map<std::string, std::string> _time_frames;
-
-    std::unordered_map<std::string, std::vector<std::string>> _dataGroups;
 
     std::filesystem::path _output_path;
 
