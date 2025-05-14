@@ -43,24 +43,75 @@ DataManager::DataManager() {
     _output_path = std::filesystem::current_path();
 }
 
-void DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe) {
+bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe) {
+
+    if (!timeframe) {
+        std::cerr << "Error: Cannot register a nullptr TimeFrame for key: " << key << std::endl;
+        return false;
+    }
+
+    if (_times.find(key) != _times.end()) {
+        std::cerr << "Error: Time key already exists in DataManager: " << key << std::endl;
+        return false;
+    }
+
     _times[key] = std::move(timeframe);
+    return true;
+}
+
+std::shared_ptr<TimeFrame>  DataManager::getTime() {
+    return _times["time"];
+};
+
+std::shared_ptr<TimeFrame> DataManager::getTime(std::string const & key) {
+    if (_times.find(key) != _times.end()) {
+        return _times[key];
+    }
+    return nullptr;
 };
 
 void DataManager::setTimeFrame(std::string const & data_key, std::string const & time_key) {
-    //Check that data_key is in _data
+
     if (_data.find(data_key) == _data.end()) {
         std::cerr << "Data key not found in DataManager: " << data_key << std::endl;
         return;
     }
 
-    //Check that time_key is in _times
     if (_times.find(time_key) == _times.end()) {
         std::cerr << "Time key not found in DataManager: " << time_key << std::endl;
         return;
     }
 
     _time_frames[data_key] = time_key;
+}
+
+std::string DataManager::getTimeFrame(std::string const & data_key) {
+
+    // check if data_key exists
+    if (_data.find(data_key) == _data.end()) {
+        std::cerr << "Data key not found in DataManager: " << data_key << std::endl;
+        return "";
+    }
+
+    // check if data key has time frame
+    if (_time_frames.find(data_key) == _time_frames.end()) {
+        std::cerr << "Data key "
+                  << data_key
+                  << " exists, but not assigned to a TimeFrame" <<  std::endl;
+        return "";
+    }
+
+    return _time_frames[data_key];
+}
+
+std::vector<std::string> DataManager::getTimeFrameKeys() {
+    std::vector<std::string> keys;
+    keys.reserve(_times.size());
+    for (auto const & [key, value]: _times) {
+
+        keys.push_back(key);
+    }
+    return keys;
 }
 
 DM_DataType stringToDataType(std::string const & data_type_str) {

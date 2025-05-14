@@ -22,25 +22,66 @@ public:
     DataManager();
 
     /**
-     * @brief Set the time for a specific key
+    * @brief Register a new temporal coordinate system with a unique key
+    *
+    * This function stores a TimeFrame object in the DataManager under the provided key.
+    * The TimeFrame specifies the temporal coordinate system that can be assigned to data objects.
+    *
+    * @param key The unique identifier for this TimeFrame
+    * @param timeframe The TimeFrame object to register
+    * @return bool True if the TimeFrame was successfully registered, false otherwise
+    *
+    * @note If the key already exists or timeframe is nullptr, a warning message will be printed
+    *       to std::cerr and the function will return false
+    */
+    bool setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe);
+
+    /**
+     * @brief Get the default time frame object
      *
-     * The timeframe specifies the temporal coordinate system.
-     *
-     * @param key The key to set the time for
-     * @param timeframe The TimeFrame object to set
+     * @param key The key to get the time for
+     * @return A shared pointer to the default TimeFrame object
      */
-    void setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe);
+    [[nodiscard]] std::shared_ptr<TimeFrame> getTime();
 
-    [[nodiscard]] std::shared_ptr<TimeFrame> getTime() {
-        return _times["time"];
-    };
+    /**
+     * @brief Get the time frame object for a specific key
+     *
+     * returns nullptr if the key does not exist
+     *
+     * @param key The key to get the time for
+     * @return A shared pointer to the TimeFrame object
+     */
+    [[nodiscard]] std::shared_ptr<TimeFrame> getTime(std::string const & key);
 
-    std::shared_ptr<TimeFrame> getTime(std::string const & key) {
-        if (_times.find(key) != _times.end()) {
-            return _times[key];
-        }
-        return nullptr;
-    };
+    /**
+     * @brief Set the time frame for a specific data key
+     *
+     * The time frame specifies the temporal coordinate system.
+     * Error if either data_key or time_key do not exist.
+     *
+     * @param data_key The data key to set the time for
+     * @param time_key The time key to set
+     */
+    void setTimeFrame(std::string const & data_key, std::string const & time_key);
+
+    /**
+     * @brief Get the time frame for a specific data key
+     *
+     * returns empty string if the data_key does not exist
+     * returns empty string if the data_key does not have a time frame
+     *
+     * @param data_key The data key to get the time for
+     * @return A string representing the time frame
+     */
+    [[nodiscard]] std::string getTimeFrame(std::string const & data_key);
+
+    /**
+     * @brief Get all time frame keys
+     *
+     * @return A vector of strings representing the time frame keys
+     */
+    [[nodiscard]] std::vector<std::string> getTimeFrameKeys();
 
     using ObserverCallback = std::function<void()>;
 
@@ -137,22 +178,6 @@ public:
     }
 
     [[nodiscard]] DM_DataType getType(std::string const & key) const;
-
-    void setTimeFrame(std::string const & data_key, std::string const & time_key);
-
-    [[nodiscard]] std::string getTimeFrame(std::string const & data_key) {
-        return _time_frames[data_key];
-    }
-
-    [[nodiscard]] std::vector<std::string> getTimeFrameKeys() {
-        std::vector<std::string> keys;
-        keys.reserve(_times.size());
-        for (auto const & [key, value]: _times) {
-
-            keys.push_back(key);
-        }
-        return keys;
-    }
 
     void createDataGroup(std::string const & groupName) {
         _dataGroups[groupName] = {};
