@@ -252,7 +252,7 @@ TEST_CASE("DataManager::addCallbackToData registers callbacks with data objects"
 
         // Trigger the callback by modifying the data
         auto points = dm.getData<PointData>("test_points");
-        points->notify();
+        points->notifyObservers();
 
         REQUIRE(callback_executed == true);
     }
@@ -273,7 +273,7 @@ TEST_CASE("DataManager::addCallbackToData registers callbacks with data objects"
 
         // Trigger the callbacks
         auto points = dm.getData<PointData>("test_points");
-        points->notify();
+        points->notifyObservers();
 
         REQUIRE(callback1_count == 1);
         REQUIRE(callback2_count == 1);
@@ -310,7 +310,7 @@ TEST_CASE("DataManager::removeCallbackFromData removes registered callbacks", "[
 
         // Verify callback works before removal
         auto points = dm.getData<PointData>("test_points");
-        points->notify();
+        points->notifyObservers();
         REQUIRE(callback_count == 1);
 
         // Remove the callback
@@ -318,7 +318,7 @@ TEST_CASE("DataManager::removeCallbackFromData removes registered callbacks", "[
         REQUIRE(result == true);
 
         // Verify callback no longer works
-        points->notify();
+        points->notifyObservers();
         REQUIRE(callback_count == 1); // Count should remain unchanged
     }
 
@@ -338,7 +338,7 @@ TEST_CASE("DataManager::removeCallbackFromData removes registered callbacks", "[
 
         // Verify only the second callback works
         auto points = dm.getData<PointData>("test_points");
-        points->notify();
+        points->notifyObservers();
 
         REQUIRE(callback1_count == 0); // First callback removed
         REQUIRE(callback2_count == 1); // Second callback still active
@@ -460,7 +460,7 @@ auto filename = "data/Media/test_each_frame_number.mp4";
 
 auto media = std::make_shared<VideoData>();
 media->LoadMedia(filename);
-dm.setMedia(media);
+dm.setData<VideoData>("media", media);
 
 auto dm_media = dm.getData<MediaData>("media");
 
