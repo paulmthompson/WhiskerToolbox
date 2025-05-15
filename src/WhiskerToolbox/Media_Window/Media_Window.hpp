@@ -14,18 +14,12 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
-
 class QGraphicsPixmapItem;
 class QImage;
 
 int const default_width = 640;
 int const default_height = 480;
 
-struct element_config {
-    std::string hex_color;
-    float alpha;
-};
 
 /**
  * The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
@@ -194,7 +188,6 @@ signals:
     void mouseMove(qreal x, qreal y);
 };
 
-QRgb plot_color_with_alpha(element_config const & elem);
 QRgb plot_color_with_alpha(BaseDisplayOptions const * opts);
 
 #endif// MEDIA_WINDOW_HPP

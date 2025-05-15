@@ -590,14 +590,6 @@ void Media_Window::_plotHoverCircle()
 }
 
 
-QRgb plot_color_with_alpha(element_config const & elem) {
-    auto color = QColor(QString::fromStdString(elem.hex_color));
-    auto output_color = qRgba(color.red(), color.green(), color.blue(), std::lround(elem.alpha * 255.0f));
-
-    return output_color;
-}
-
-
 QRgb plot_color_with_alpha(BaseDisplayOptions const * opts)
 {
     auto color = QColor(QString::fromStdString(opts->hex_color));

@@ -1,6 +1,8 @@
 #ifndef MEDIA_WIDGET_HPP
 #define MEDIA_WIDGET_HPP
 
+#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
+
 #include <QWidget>
 
 class DataManager;
@@ -32,6 +34,9 @@ private:
     Ui::Media_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene = nullptr;
+    std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
+
+    void _createOptions();
 
 private slots:
     void _updateCanvasSize();

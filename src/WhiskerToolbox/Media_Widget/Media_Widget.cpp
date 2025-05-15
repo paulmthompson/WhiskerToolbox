@@ -49,6 +49,21 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->stackedWidget->addWidget(new MediaLine_Widget(_data_manager, _scene));
     ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene));
     ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene));
+
+    _data_manager->addObserver([this]() {
+        _createOptions();
+    });
+}
+
+void Media_Widget::_createOptions() {
+    auto line_keys = _data_manager->getKeys<LineData>();
+
+    for (auto line_key : line_keys) {
+        if (_line_configs.count(line_key) == 0) {
+            _line_configs[line_key] = std::make_unique<LineDisplayOptions>();
+            std::cout << "Created Line Options for " << line_key << std::endl;
+        }
+    }
 }
 
 void Media_Widget::_featureSelected(QString const & feature) {
