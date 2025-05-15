@@ -10,6 +10,7 @@
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
 
 
 DataTransform_Widget::DataTransform_Widget(
@@ -63,6 +64,11 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         return new LineAngle_Widget(parent);
     };
 
+    _parameterWidgetFactories["Calculate Line to Point Distance"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new LineMinDist_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
+    };
 }
 
 

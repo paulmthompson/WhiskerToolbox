@@ -13,6 +13,7 @@
 #include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
 #include "transforms/Lines/line_angle.hpp"
+#include "transforms/Lines/line_min_point_dist.hpp"
 
 
 TransformRegistry::TransformRegistry() {
@@ -24,6 +25,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<IntervalThresholdOperation>());
     _registerOperation(std::make_unique<HilbertPhaseOperation>());
     _registerOperation(std::make_unique<LineAngleOperation>());
+    _registerOperation(std::make_unique<LineMinPointDistOperation>());
 
     _computeApplicableOperations();
     std::cout << "Operation Registry Initialized." << std::endl;

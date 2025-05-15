@@ -106,6 +106,8 @@ add_library(DataManager SHARED
         transforms/AnalogTimeSeries/analog_hilbert_phase.cpp
         transforms/Lines/line_angle.hpp
         transforms/Lines/line_angle.cpp
+        transforms/Lines/line_min_point_dist.hpp
+        transforms/Lines/line_min_point_dist.cpp
         transforms/Masks/mask_area.cpp
         transforms/Masks/mask_area.hpp
 
@@ -119,8 +121,6 @@ add_library(DataManager SHARED
         ImageSize/ImageSize.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
         DataManagerTypes.hpp
-
-
 )
 
 message(STATUS "NPY source dir:")

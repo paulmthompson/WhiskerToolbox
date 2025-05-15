@@ -499,12 +499,15 @@ void OpenGLWidget::addAnalogTimeSeries(
     std::string const seriesColor = color.empty() ? "#FFFFFF" : color;
 
     float const stdDev = calculate_std_dev(*series.get());
-
-    _analog_series[key] =
-            AnalogSeriesData{std::move(series),
-                             seriesColor,
-                             std::move(time_frame),
-                             stdDev * 5.0f};
+    std::cout << "Standard deviation for "
+              << key
+              << " calculated as "
+              << stdDev
+              << std::endl;
+    _analog_series[key] = AnalogSeriesData{std::move(series),
+                                           seriesColor,
+                                           std::move(time_frame),
+                                           stdDev * 5.0f};
     updateCanvas(_time);
 }
 

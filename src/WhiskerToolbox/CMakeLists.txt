@@ -106,6 +106,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp
         DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.cpp
         DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.ui
+        DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp
+        DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.cpp
+        DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
