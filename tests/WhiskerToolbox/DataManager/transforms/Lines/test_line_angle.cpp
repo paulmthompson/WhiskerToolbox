@@ -209,7 +209,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         REQUIRE(angle5 <= 180.0f);
         
         // The angles should be different because of the different polynomial orders
-        REQUIRE(std::abs(angle1 - angle3) > 1.0f || std::abs(angle1 - angle5) > 1.0f);
+        REQUIRE((std::abs(angle1 - angle3) > 1.0f || std::abs(angle1 - angle5) > 1.0f));
     }
 
     SECTION("Verify returned AnalogTimeSeries structure") {
@@ -428,7 +428,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         
         float angle = result->getAnalogTimeSeries()[0];
         // Should be close to 90 degrees (vertical line)
-        REQUIRE((angle > 80.0f && angle < 100.0f) || (angle < -80.0f && angle > -100.0f));
+        REQUIRE(((angle > 80.0f && angle < 100.0f) || (angle < -80.0f && angle > -100.0f)));
     }
 
     SECTION("Null parameters") {
