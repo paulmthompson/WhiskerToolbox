@@ -73,7 +73,6 @@ private slots:
     void openAnalogViewer();
     void openImageProcessing();
     void openTongueTracking();
-    void openTrackingWidget();
     void openMLWidget();
     void openDataViewer();
     void openPointLoaderWidget();

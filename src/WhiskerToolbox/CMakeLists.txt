@@ -176,10 +176,6 @@ set(PROJECT_SOURCES
         ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.cpp
         ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.ui
 
-        Tracking_Widget/Tracking_Widget.ui
-        Tracking_Widget/Tracking_Widget.hpp
-        Tracking_Widget/Tracking_Widget.cpp
-
         Tongue_Widget/Tongue_Widget.hpp
         Tongue_Widget/Tongue_Widget.cpp
         Tongue_Widget/Tongue_Widget.ui
