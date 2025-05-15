@@ -7,6 +7,14 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+
+
+//https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
+#undef slots
+#include "DataManager/Tensors/Tensor_Data.hpp"
+#define slots Q_SLOTS
+
+
 #include "Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp"
 #include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
 #include "Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp"
@@ -108,6 +116,18 @@ void Media_Widget::_createOptions() {
         opts = _scene->getIntervalConfig(interval_key);
         opts.value()->hex_color = color;
     }
+    
+    // Setup tensor data
+    auto tensor_keys = _data_manager->getKeys<TensorData>();
+    for (auto tensor_key : tensor_keys) {
+        auto opts = _scene->getTensorConfig(tensor_key);
+        if (opts.has_value()) continue;
+
+        _scene->addTensorDataToScene(tensor_key);
+        std::string const color = ui->feature_table_widget->getFeatureColor(tensor_key);
+        opts = _scene->getTensorConfig(tensor_key);
+        opts.value()->hex_color = color;
+    }
 }
 
 void Media_Widget::_featureSelected(QString const & feature) {
@@ -203,10 +223,11 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     } else if (type == DM_DataType::Mask) {
         auto opts = _scene->getMaskConfig(feature_key);
         if (!opts.has_value()) {
-            std::cout << "Adding mask data to scene" << std::endl;
-            _scene->addMaskDataToScene(feature_key);
-            opts = _scene->getMaskConfig(feature_key);
-            opts.value()->hex_color = color;
+            std::cerr << "Table feature key "
+                      << feature_key
+                      << " not found in Media_Window Display Options"
+                      << std::endl;
+            return;
         }
         if (enabled) {
             std::cout << "Enabling mask data in scene" << std::endl;
@@ -218,10 +239,11 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     } else if (type == DM_DataType::Points) {
         auto opts = _scene->getPointConfig(feature_key);
         if (!opts.has_value()) {
-            std::cout << "Adding point data to scene" << std::endl;
-            _scene->addPointDataToScene(feature_key);
-            opts = _scene->getPointConfig(feature_key);
-            opts.value()->hex_color = color;
+            std::cerr << "Table feature key "
+                      << feature_key
+                      << " not found in Media_Window Display Options"
+                      << std::endl;
+            return;
         }
         if (enabled) {
             std::cout << "Enabling point data in scene" << std::endl;
@@ -233,10 +255,11 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     } else if (type == DM_DataType::DigitalInterval) {
         auto opts = _scene->getIntervalConfig(feature_key);
         if (!opts.has_value()) {
-            std::cout << "Adding digital interval series to scene" << std::endl;
-            _scene->addDigitalIntervalSeries(feature_key);
-            opts = _scene->getIntervalConfig(feature_key);
-            opts.value()->hex_color = color;
+            std::cerr << "Table feature key "
+                      << feature_key
+                      << " not found in Media_Window Display Options"
+                      << std::endl;
+            return;
         }
         if (enabled) {
             std::cout << "Enabling digital interval series in scene" << std::endl;
@@ -246,16 +269,20 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::Tensor) {
+        auto opts = _scene->getTensorConfig(feature_key);
+        if (!opts.has_value()) {
+            std::cerr << "Table feature key "
+                      << feature_key
+                      << " not found in Media_Window Display Options"
+                      << std::endl;
+            return;
+        }
         if (enabled) {
-            std::cout << "Adding Tensor data to scene" << std::endl;
-            _scene->addTensorDataToScene(feature_key);
-            auto tensor_opts = _scene->getTensorConfig(feature_key);
-            if (tensor_opts.has_value()) {
-                tensor_opts.value()->hex_color = color;
-            }
+            std::cout << "Enabling tensor data in scene" << std::endl;
+            opts.value()->is_visible = true;
         } else {
-            std::cout << "Removing tensor data from scene" << std::endl;
-            _scene->removeTensorDataFromScene(feature_key);
+            std::cout << "Disabling tensor data from scene" << std::endl;
+            opts.value()->is_visible = false;
         }
     } else {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;

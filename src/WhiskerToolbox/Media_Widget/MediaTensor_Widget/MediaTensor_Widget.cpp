@@ -19,6 +19,8 @@ MediaTensor_Widget::MediaTensor_Widget(std::shared_ptr<DataManager> data_manager
     ui->setupUi(this);
 
     connect(ui->horizontalSlider, &QSlider::valueChanged, this, &MediaTensor_Widget::_setTensorChannel);
+    connect(ui->color_picker, &ColorPicker_Widget::colorChanged, this, &MediaTensor_Widget::_setTensorColor);
+    connect(ui->color_picker, &ColorPicker_Widget::alphaChanged, this, &MediaTensor_Widget::_setTensorAlpha);
 }
 
 MediaTensor_Widget::~MediaTensor_Widget() {
@@ -36,6 +38,13 @@ void MediaTensor_Widget::setActiveKey(std::string const & key) {
             ui->horizontalSlider->setMaximum(static_cast<int>(shape.back()) - 1);
 
             ui->horizontalSlider->setValue(0);
+            
+            // Set the color picker to the current tensor color if available
+            auto config = _scene->getTensorConfig(key);
+            if (config) {
+                ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
+                ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+            }
         }
     }
 }
@@ -45,6 +54,28 @@ void MediaTensor_Widget::_setTensorChannel(int channel) {
         auto opts = _scene->getTensorConfig(_active_key);
         if (opts.has_value()) {
             opts.value()->display_channel = channel;
+        }
+        _scene->UpdateCanvas();
+    }
+}
+
+void MediaTensor_Widget::_setTensorColor(const QString& hex_color) {
+    if (!_active_key.empty()) {
+        auto tensor_opts = _scene->getTensorConfig(_active_key);
+        if (tensor_opts.has_value()) {
+            tensor_opts.value()->hex_color = hex_color.toStdString();
+        }
+        _scene->UpdateCanvas();
+    }
+}
+
+void MediaTensor_Widget::_setTensorAlpha(int alpha) {
+    float const alpha_float = static_cast<float>(alpha) / 100;
+
+    if (!_active_key.empty()) {
+        auto tensor_opts = _scene->getTensorConfig(_active_key);
+        if (tensor_opts.has_value()) {
+            tensor_opts.value()->alpha = alpha_float;
         }
         _scene->UpdateCanvas();
     }

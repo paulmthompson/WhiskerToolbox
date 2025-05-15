@@ -520,6 +520,8 @@ void Media_Window::_plotTensorData() {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     for (auto const & [key, config]: _tensor_configs) {
+        if (!config.get()->is_visible) continue;
+        
         auto tensor_data = _data_manager->getData<TensorData>(key);
 
         auto tensor_shape = tensor_data->getFeatureShape();
@@ -532,7 +534,13 @@ void Media_Window::_plotTensorData() {
             for (int x = 0; x < tensor_shape[1]; ++x) {
                 float const value = tensor_slice[y * tensor_shape[1] + x];
                 int const pixel_value = static_cast<int>(value * 255);// Assuming the tensor values are normalized between 0 and 1
-                tensor_image.setPixel(x, y, qRgba(pixel_value, 0, 0, pixel_value));
+                
+                // Use the config color with alpha
+                QColor color(QString::fromStdString(config->hex_color));
+                int alpha = std::lround(config->alpha * 255.0f * (value > 0 ? 1.0f : 0.0f));
+                QRgb rgb = qRgba(color.red(), color.green(), color.blue(), alpha);
+                
+                tensor_image.setPixel(x, y, rgb);
             }
         }
 

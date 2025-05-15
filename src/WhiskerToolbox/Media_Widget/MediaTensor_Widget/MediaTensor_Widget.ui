@@ -51,6 +51,9 @@
     </layout>
    </item>
    <item>
+    <widget class="ColorPicker_Widget" name="color_picker" native="true"/>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QLabel" name="label_4">
@@ -83,6 +86,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ColorPicker_Widget</class>
+   <extends>QWidget</extends>
+   <header>ColorPicker_Widget/ColorPicker_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
