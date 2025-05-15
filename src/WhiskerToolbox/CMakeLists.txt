@@ -139,6 +139,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp
         Media_Widget/MediaLine_Widget/MediaLine_Widget.cpp
         Media_Widget/MediaLine_Widget/MediaLine_Widget.ui
+        Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp
+        Media_Widget/MediaInterval_Widget/MediaInterval_Widget.cpp
+        Media_Widget/MediaInterval_Widget/MediaInterval_Widget.ui
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.hpp
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.cpp
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.ui

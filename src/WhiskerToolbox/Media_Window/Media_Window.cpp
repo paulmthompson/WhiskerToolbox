@@ -485,6 +485,8 @@ void Media_Window::_plotDigitalIntervalSeries() {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     for (auto const & [key, _interval_config]: _interval_configs) {
+        if (!_interval_config.get()->is_visible) continue;
+        
         auto plot_color = plot_color_with_alpha(_interval_config.get());
 
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);

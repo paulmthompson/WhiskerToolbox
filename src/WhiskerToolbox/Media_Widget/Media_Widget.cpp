@@ -3,11 +3,15 @@
 #include "ui_Media_Widget.h"
 
 #include "DataManager/ImageSize/ImageSize.hpp"
-#include "Main_Window/mainwindow.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp"
 #include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
 #include "Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp"
 #include "Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp"
+#include "Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp"
 #include "Media_Window/Media_Window.hpp"
 
 
@@ -48,6 +52,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->stackedWidget->addWidget(new MediaPoint_Widget(_data_manager, _scene));
     ui->stackedWidget->addWidget(new MediaLine_Widget(_data_manager, _scene));
     ui->stackedWidget->addWidget(new MediaMask_Widget(_data_manager, _scene));
+    ui->stackedWidget->addWidget(new MediaInterval_Widget(_data_manager, _scene));
     ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene));
 
     _data_manager->addObserver([this]() {
@@ -91,6 +96,18 @@ void Media_Widget::_createOptions() {
         opts = _scene->getPointConfig(point_key);
         opts.value()->hex_color = color;
     }
+    
+    // Setup digital interval data
+    auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
+    for (auto interval_key : interval_keys) {
+        auto opts = _scene->getIntervalConfig(interval_key);
+        if (opts.has_value()) continue;
+
+        _scene->addDigitalIntervalSeries(interval_key);
+        std::string const color = ui->feature_table_widget->getFeatureColor(interval_key);
+        opts = _scene->getIntervalConfig(interval_key);
+        opts.value()->hex_color = color;
+    }
 }
 
 void Media_Widget::_featureSelected(QString const & feature) {
@@ -124,9 +141,15 @@ void Media_Widget::_featureSelected(QString const & feature) {
         mask_widget->setActiveKey(key);
 
 
-    } else if (type == DM_DataType::Tensor) {
-
+    } else if (type == DM_DataType::DigitalInterval) {
         int const stacked_widget_index = 4;
+
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto interval_widget = dynamic_cast<MediaInterval_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        interval_widget->setActiveKey(key);
+
+    } else if (type == DM_DataType::Tensor) {
+        int const stacked_widget_index = 5;
 
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto tensor_widget = dynamic_cast<MediaTensor_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
@@ -208,16 +231,19 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::DigitalInterval) {
-        if (enabled) {
+        auto opts = _scene->getIntervalConfig(feature_key);
+        if (!opts.has_value()) {
             std::cout << "Adding digital interval series to scene" << std::endl;
             _scene->addDigitalIntervalSeries(feature_key);
-            auto interval_opts = _scene->getIntervalConfig(feature_key);
-            if (interval_opts.has_value()) {
-                interval_opts.value()->hex_color = color;
-            }
+            opts = _scene->getIntervalConfig(feature_key);
+            opts.value()->hex_color = color;
+        }
+        if (enabled) {
+            std::cout << "Enabling digital interval series in scene" << std::endl;
+            opts.value()->is_visible = true;
         } else {
-            std::cout << "Removing digital interval series from scene" << std::endl;
-            _scene->removeDigitalIntervalSeries(feature_key);
+            std::cout << "Disabling digital interval series from scene" << std::endl;
+            opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::Tensor) {
         if (enabled) {
