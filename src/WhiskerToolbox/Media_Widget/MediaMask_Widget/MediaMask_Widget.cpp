@@ -36,8 +36,10 @@ void MediaMask_Widget::_setMaskAlpha(int alpha) {
     float const alpha_float = static_cast<float>(alpha) / 100;
 
     if (!_active_key.empty()) {
-        _scene->changeMaskAlpha(_active_key, alpha_float);
-    } else {
-        _scene->changeMaskAlpha(alpha_float);
+        auto mask_opts = _scene->getLineConfig(_active_key);
+        if (mask_opts.has_value()) {
+            mask_opts.value()->alpha = alpha_float;
+        }
+        _scene->UpdateCanvas();
     }
 }

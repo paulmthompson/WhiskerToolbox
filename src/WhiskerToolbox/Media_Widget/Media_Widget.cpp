@@ -1,4 +1,3 @@
-
 #include "Media_Widget.hpp"
 
 #include "ui_Media_Widget.h"
@@ -135,7 +134,11 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     } else if (type == DM_DataType::Mask) {
         if (enabled) {
             std::cout << "Adding mask data to scene" << std::endl;
-            _scene->addMaskDataToScene(feature_key, color);
+            _scene->addMaskDataToScene(feature_key);
+            auto mask_opts = _scene->getMaskConfig(feature_key);
+            if (mask_opts.has_value()) {
+                mask_opts.value()->hex_color = color;
+            }
         } else {
             std::cout << "Removing mask data from scene" << std::endl;
             _scene->removeMaskDataFromScene(feature_key);

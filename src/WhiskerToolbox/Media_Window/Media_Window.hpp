@@ -54,14 +54,8 @@ public:
     void addLineDataToScene(std::string const & line_key);
     void removeLineDataFromScene(std::string const & line_key);
 
-    void addMaskDataToScene(
-            std::string const & mask_key,
-            std::string const & hex_color = "#0000FF",
-            float alpha = 1.0);
+    void addMaskDataToScene(std::string const & mask_key);
 
-    void changeMaskColor(std::string const & mask_key, std::string const & hex_color);
-    void changeMaskAlpha(float alpha);
-    void changeMaskAlpha(std::string const & line_key, float alpha);
     void removeMaskDataFromScene(std::string const & mask_key);
 
     void addPointDataToScene(
@@ -122,11 +116,11 @@ public:
         return _line_configs.at(line_key).get();
     }
 
-    std::optional<element_config> getMaskConfig(std::string const & mask_key) const {
+    [[nodiscard]] std::optional<MaskDisplayOptions *> getMaskConfig(std::string const & mask_key) const {
         if (_mask_configs.find(mask_key) == _mask_configs.end()) {
             return std::nullopt;
         }
-        return _mask_configs.at(mask_key);
+        return _mask_configs.at(mask_key).get();
     }
 
     std::optional<element_config> getPointConfig(std::string const & point_key) const {
@@ -181,7 +175,7 @@ private:
     std::vector<QPointF> _drawing_points;
 
     std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
-    std::unordered_map<std::string, element_config> _mask_configs;
+    std::unordered_map<std::string, std::unique_ptr<MaskDisplayOptions>> _mask_configs;
     std::unordered_map<std::string, element_config> _point_configs;
     std::unordered_map<std::string, element_config> _interval_configs;
     std::unordered_map<std::string, tensor_config> _tensor_configs;

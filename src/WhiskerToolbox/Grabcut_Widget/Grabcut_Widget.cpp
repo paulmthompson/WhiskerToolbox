@@ -209,7 +209,10 @@ void Grabcut_Widget::_saveMask(){
         std::cout << "Creating " << mask_name << " in data manager " << std::endl;
         _data_manager->setData<MaskData>(mask_name);
         _scene->addMaskDataToScene(mask_name);
-        _scene->changeMaskColor(mask_name, "#fca923");
+        auto mask_opts = _scene->getLineConfig(mask_name);
+        if (mask_opts.has_value()) {
+            mask_opts.value()->hex_color = "#fca923";
+        }
     }
 
     cv::Mat mask = _tool.getMask();

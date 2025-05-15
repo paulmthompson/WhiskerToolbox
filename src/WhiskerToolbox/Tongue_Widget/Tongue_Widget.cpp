@@ -111,7 +111,10 @@ void Tongue_Widget::_loadImgTongueMasks(){
     }
 
     _scene->addMaskDataToScene(mask_key);
-    _scene->changeMaskColor(mask_key, tongue_colors[mask_num]);
+    auto mask_opts = _scene->getLineConfig(mask_key);
+    if (mask_opts.has_value()) {
+        mask_opts.value()->hex_color = tongue_colors[mask_num];
+    }
 }
 
 void Tongue_Widget::_startGrabCut(){

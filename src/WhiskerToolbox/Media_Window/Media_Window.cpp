@@ -1,4 +1,3 @@
-
 #include "Media_Window.hpp"
 
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -69,52 +68,9 @@ void Media_Window::removeLineDataFromScene(std::string const & line_key) {
     UpdateCanvas();
 }
 
-void Media_Window::addMaskDataToScene(std::string const & mask_key, std::string const & hex_color, float alpha) {
-    if (!isValidHexColor(hex_color)) {
-        std::cerr << "Invalid hex color: " << hex_color << std::endl;
-        return;
-    }
-    if (!isValidAlpha(alpha)) {
-        std::cerr << "Invalid alpha value: " << alpha << std::endl;
-        return;
-    }
-
-    _mask_configs[mask_key] = element_config{hex_color, alpha};
-
-    UpdateCanvas();
-}
-
-void Media_Window::changeMaskColor(std::string const & mask_key, std::string const & hex_color) {
-    if (!isValidHexColor(hex_color)) {
-        std::cerr << "Invalid hex color: " << hex_color << std::endl;
-        return;
-    }
-    if (_mask_configs.find(mask_key) == _mask_configs.end()) {
-        std::cerr << "Mask key not found: " << mask_key << std::endl;
-        return;
-    }
-
-    _mask_configs[mask_key].hex_color = hex_color;
-}
-
-void Media_Window::changeMaskAlpha(std::string const & line_key, float const alpha) {
-    if (!isValidAlpha(alpha)) {
-        std::cerr << "Invalid alpha value: " << alpha << std::endl;
-        return;
-    }
-    if (_mask_configs.find(line_key) == _mask_configs.end()) {
-        std::cerr << "Mask key not found: " << line_key << std::endl;
-        return;
-    }
-
-    _mask_configs[line_key].alpha = alpha;
-    UpdateCanvas();
-}
-
-void Media_Window::changeMaskAlpha(float const alpha) {
-    for (auto & [mask_key, mask_config]: _mask_configs) {
-        mask_config.alpha = alpha;
-    }
+void Media_Window::addMaskDataToScene(std::string const & mask_key) {
+    auto mask_config = std::make_unique<MaskDisplayOptions>();
+    _mask_configs[mask_key] = std::move(mask_config);
     UpdateCanvas();
 }
 
@@ -500,7 +456,7 @@ void Media_Window::_plotMaskData() {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     for (auto const & [mask_key, _mask_config]: _mask_configs) {
-        auto plot_color = plot_color_with_alpha(_mask_config);
+        auto plot_color = plot_color_with_alpha(_mask_config.get());
 
         auto mask = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask->getImageSize();
