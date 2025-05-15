@@ -12,6 +12,8 @@ LineAngle_Widget::LineAngle_Widget(QWidget *parent) :
     ui->positionSpinBox->setValue(20.0);
     ui->methodComboBox->setCurrentIndex(0); // Direct points by default
     ui->orderSpinBox->setValue(3);          // Default polynomial order
+    ui->referenceXSpinBox->setValue(1.0);   // Default reference is positive x-axis (1,0)
+    ui->referenceYSpinBox->setValue(0.0);
     
     // Initial stacked widget state
     ui->methodStackedWidget->setCurrentIndex(0);
@@ -30,6 +32,10 @@ std::unique_ptr<TransformParametersBase> LineAngle_Widget::getParameters() const
     
     // Get position value (convert from percentage to 0.0-1.0)
     params->position = static_cast<float>(ui->positionSpinBox->value()) / 100.0f;
+    
+    // Get reference vector
+    params->reference_x = static_cast<float>(ui->referenceXSpinBox->value());
+    params->reference_y = static_cast<float>(ui->referenceYSpinBox->value());
     
     // Get calculation method
     int methodIndex = ui->methodComboBox->currentIndex();

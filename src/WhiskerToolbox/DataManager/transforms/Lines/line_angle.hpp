@@ -19,6 +19,11 @@ struct LineAngleParameters : public TransformParametersBase {
     float position = 0.2f;                              // Default 20% along the line
     AngleCalculationMethod method = AngleCalculationMethod::DirectPoints; // Default method
     int polynomial_order = 3;                           // Default polynomial order
+    
+    // Reference vector parameters (what direction is 0 degrees)
+    // Default is (1,0) which corresponds to the positive x-axis
+    float reference_x = 1.0f;
+    float reference_y = 0.0f;
 };
 
 /**

@@ -27,6 +27,7 @@ add_executable(test_data_manager
         Points/test_point_data.cpp
 
         transforms/Masks/test_mask_area.cpp
+        transforms/Lines/test_line_angle.cpp
 )
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
