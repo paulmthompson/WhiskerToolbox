@@ -59,10 +59,13 @@ void Media_Widget::_createOptions() {
     auto line_keys = _data_manager->getKeys<LineData>();
 
     for (auto line_key : line_keys) {
-        if (_line_configs.count(line_key) == 0) {
-            _line_configs[line_key] = std::make_unique<LineDisplayOptions>();
-            std::cout << "Created Line Options for " << line_key << std::endl;
-        }
+        auto opts = _scene->getLineConfig(line_key);
+        if (opts.has_value()) continue;
+
+        _scene->addLineDataToScene(line_key);
+        std::string const color = ui->feature_table_widget->getFeatureColor(line_key);
+        opts = _scene->getLineConfig(line_key);
+        opts.value()->hex_color = color;
     }
 }
 
@@ -135,16 +138,20 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     std::cout << "Color: " << color << std::endl;
 
     if (type == DM_DataType::Line) {
+        auto opts = _scene->getLineConfig(feature_key);
+        if (!opts.has_value()) {
+            std::cerr << "Table feature key "
+                      << feature_key
+                      << " not found in Media_Window Display Options"
+                      << std::endl;
+            return;
+        }
         if (enabled) {
-            std::cout << "Adding line data to scene" << std::endl;
-            _scene->addLineDataToScene(feature_key);
-            auto line_opts = _scene->getLineConfig(feature_key);
-            if (line_opts.has_value()) {
-                line_opts.value()->hex_color = color;
-            }
+            std::cout << "Enabling line data in scene" << std::endl;
+            opts.value()->is_visible = true;
         } else {
-            std::cout << "Removing line data from scene" << std::endl;
-            _scene->removeLineDataFromScene(feature_key);
+            std::cout << "Disabling line data from scene" << std::endl;
+            opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::Mask) {
         if (enabled) {
@@ -197,6 +204,7 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     } else {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
     }
+    _scene->UpdateCanvas();
 }
 
 void Media_Widget::setFeatureColor(std::string const & feature, std::string const & hex_color) {

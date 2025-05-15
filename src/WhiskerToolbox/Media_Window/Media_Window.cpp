@@ -335,6 +335,9 @@ void Media_Window::_plotLineData() {
     auto yAspect = getYAspect();
 
     for (auto const & [line_key, _line_config]: _line_configs) {
+
+        if (!_line_config.get()->is_visible) continue;
+
         auto plot_color = plot_color_with_alpha(_line_config.get());
 
         auto lineData = _data_manager->getData<LineData>(line_key)->getLinesAtTime(current_time);

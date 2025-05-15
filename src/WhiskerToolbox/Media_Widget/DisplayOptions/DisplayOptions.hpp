@@ -7,7 +7,7 @@
 namespace DefaultDisplayValues {
     const std::string COLOR = "#007bff";
     const float ALPHA = 1.0f;
-    const bool VISIBLE = true;
+    const bool VISIBLE = false;
     const int POINT_SIZE = 5;
     const int LINE_THICKNESS = 2;
     const int TENSOR_DISPLAY_CHANNEL = 0;
