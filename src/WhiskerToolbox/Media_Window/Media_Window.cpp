@@ -41,54 +41,13 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * 
     });
 }
 
-/**
- * @brief Media_Window::addLineDataToScene
- *
- *
- * @param line_key
- */
-void Media_Window::addLineDataToScene(std::string const & line_key, std::string const & hex_color, float alpha) {
-    if (!isValidHexColor(hex_color)) {
-        std::cerr << "Invalid hex color: " << hex_color << std::endl;
-        return;
-    }
-    if (!isValidAlpha(alpha)) {
-        std::cerr << "Invalid alpha value: " << alpha << std::endl;
-        return;
-    }
+void Media_Window::addLineDataToScene(std::string const & line_key) {
 
     auto line_config = std::make_unique<LineDisplayOptions>();
-    line_config->hex_color = hex_color;
-    line_config->alpha = alpha;
 
     _line_configs[line_key] = std::move(line_config);
 
     UpdateCanvas();
-}
-
-void Media_Window::changeLineColor(std::string const & line_key, std::string const & hex_color) {
-    if (!isValidHexColor(hex_color)) {
-        std::cerr << "Invalid hex color: " << hex_color << std::endl;
-        return;
-    }
-    if (_line_configs.find(line_key) == _line_configs.end()) {
-        std::cerr << "Line key not found: " << line_key << std::endl;
-        return;
-    }
-    _line_configs[line_key]->hex_color = hex_color;
-}
-
-void Media_Window::changeLineAlpha(std::string const & line_key, float const alpha) {
-    if (!isValidAlpha(alpha)) {
-        std::cerr << "Invalid alpha value: " << alpha << std::endl;
-        return;
-    }
-
-    if (_line_configs.find(line_key) == _line_configs.end()) {
-        std::cerr << "Line key not found: " << line_key << std::endl;
-        return;
-    }
-    _line_configs[line_key]->alpha = alpha;
 }
 
 void Media_Window::_clearLines() {

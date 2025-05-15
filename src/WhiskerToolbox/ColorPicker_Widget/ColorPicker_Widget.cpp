@@ -135,6 +135,8 @@ void ColorPicker_Widget::_onHexChanged() {
         // Emit signal
         emit colorChanged(hexColor);
         emit colorAndAlphaChanged(hexColor, getAlphaFloat());
+    } else {
+        std::cerr << "Invalid hex color" << std::endl;
     }
 
     _updating = false;

@@ -113,51 +113,56 @@ void Media_Widget::_updateCanvasSize() {
 void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     std::cout << "Feature: " << feature.toStdString() << std::endl;
 
-    auto const type = _data_manager->getType(feature.toStdString());
+    auto const feature_key = feature.toStdString();
+    auto const type = _data_manager->getType(feature_key);
 
-    std::string const color = ui->feature_table_widget->getFeatureColor(feature.toStdString());
+    std::string color = ui->feature_table_widget->getFeatureColor(feature_key);
 
     std::cout << "Color: " << color << std::endl;
 
     if (type == DM_DataType::Line) {
         if (enabled) {
             std::cout << "Adding line data to scene" << std::endl;
-            _scene->addLineDataToScene(feature.toStdString(), color);
+            _scene->addLineDataToScene(feature_key);
+            auto line_opts = _scene->getLineConfig(feature_key);
+            if (line_opts.has_value()) {
+                line_opts.value()->hex_color = color;
+            }
         } else {
             std::cout << "Removing line data from scene" << std::endl;
-            _scene->removeLineDataFromScene(feature.toStdString());
+            _scene->removeLineDataFromScene(feature_key);
         }
     } else if (type == DM_DataType::Mask) {
         if (enabled) {
             std::cout << "Adding mask data to scene" << std::endl;
-            _scene->addMaskDataToScene(feature.toStdString(), color);
+            _scene->addMaskDataToScene(feature_key, color);
         } else {
             std::cout << "Removing mask data from scene" << std::endl;
-            _scene->removeMaskDataFromScene(feature.toStdString());
+            _scene->removeMaskDataFromScene(feature_key);
         }
     } else if (type == DM_DataType::Points) {
         if (enabled) {
             std::cout << "Adding point data to scene" << std::endl;
-            _scene->addPointDataToScene(feature.toStdString(), color);
+            _scene->addPointDataToScene(feature_key, color);
         } else {
             std::cout << "Removing point data from scene" << std::endl;
-            _scene->removePointDataFromScene(feature.toStdString());
+            _scene->removePointDataFromScene(feature_key);
         }
     } else if (type == DM_DataType::DigitalInterval) {
         if (enabled) {
             std::cout << "Adding digital interval series to scene" << std::endl;
-            _scene->addDigitalIntervalSeries(feature.toStdString(), color);
+            _scene->addDigitalIntervalSeries(feature_key, color);
         } else {
             std::cout << "Removing digital interval series from scene" << std::endl;
-            _scene->removeDigitalIntervalSeries(feature.toStdString());
+            _scene->removeDigitalIntervalSeries(feature_key);
         }
     } else if (type == DM_DataType::Tensor) {
         if (enabled) {
             std::cout << "Adding Tensor data to scene" << std::endl;
-            _scene->addTensorDataToScene(feature.toStdString());
+            _scene->addTensorDataToScene(feature_key);
         } else {
             std::cout << "Removing tensor data from scene" << std::endl;
-            _scene->removeTensorDataFromScene(feature.toStdString());
+            _scene->removeTensorDataFromScene(feature_key);
         }
     } else {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;

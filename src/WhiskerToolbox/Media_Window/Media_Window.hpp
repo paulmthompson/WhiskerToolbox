@@ -51,13 +51,7 @@ public:
     explicit Media_Window(std::shared_ptr<DataManager> data_manager, QObject * parent = nullptr);
 
 
-    void addLineDataToScene(
-            std::string const & line_key,
-            std::string const & hex_color = "#0000FF",
-            float alpha = 1.0);
-
-    void changeLineColor(std::string const & line_key, std::string const & hex_color);
-    void changeLineAlpha(std::string const & line_key, float alpha);
+    void addLineDataToScene(std::string const & line_key);
     void removeLineDataFromScene(std::string const & line_key);
 
     void addMaskDataToScene(
@@ -121,7 +115,7 @@ public:
     void setShowHoverCircle(bool show);
     void setHoverCircleRadius(int radius);
 
-    std::optional<LineDisplayOptions *> getLineConfig(std::string const & line_key) const {
+    [[nodiscard]] std::optional<LineDisplayOptions *> getLineConfig(std::string const & line_key) const {
         if (_line_configs.find(line_key) == _line_configs.end()) {
             return std::nullopt;
         }

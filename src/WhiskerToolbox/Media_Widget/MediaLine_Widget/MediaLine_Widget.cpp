@@ -64,14 +64,20 @@ void MediaLine_Widget::_setLineAlpha(int alpha) {
     float const alpha_float = static_cast<float>(alpha) / 100;
 
     if (!_active_key.empty()) {
-        _scene->changeLineAlpha(_active_key, alpha_float);
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            line_opts.value()->alpha = alpha_float;
+        }
         _scene->UpdateCanvas();
     }
 }
 
 void MediaLine_Widget::_setLineColor(const QString& hex_color) {
     if (!_active_key.empty()) {
-        _scene->changeLineColor(_active_key, hex_color.toStdString());
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            line_opts.value()->hex_color = hex_color.toStdString();
+        }
         _scene->UpdateCanvas();
     }
 }
