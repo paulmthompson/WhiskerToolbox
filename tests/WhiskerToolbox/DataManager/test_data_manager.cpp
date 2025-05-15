@@ -4,6 +4,8 @@
 #include "DataManager.hpp"
 #include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 
 TEST_CASE("DataManager - Create", "[DataManager]") {
