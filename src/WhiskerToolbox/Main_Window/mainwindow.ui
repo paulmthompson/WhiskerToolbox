@@ -95,7 +95,6 @@
     <addaction name="actionLabel_Maker"/>
     <addaction name="actionAnalog_Viewer"/>
     <addaction name="actionTongue_Tracking"/>
-    <addaction name="actionTracking_Widget"/>
     <addaction name="actionMachine_Learning"/>
     <addaction name="actionData_Viewer"/>
     <addaction name="actionData_Transforms"/>

@@ -96,14 +96,16 @@ add_library(DataManager SHARED
         transforms/TransformRegistry.hpp
         transforms/TransformRegistry.cpp
 
-        transforms/Masks/mask_area.cpp
-        transforms/Masks/mask_area.hpp
         transforms/AnalogTimeSeries/analog_event_threshold.cpp
         transforms/AnalogTimeSeries/analog_event_threshold.hpp
         transforms/AnalogTimeSeries/analog_interval_threshold.cpp
         transforms/AnalogTimeSeries/analog_interval_threshold.hpp
         transforms/AnalogTimeSeries/analog_hilbert_phase.hpp
         transforms/AnalogTimeSeries/analog_hilbert_phase.cpp
+        transforms/Lines/line_angle.hpp
+        transforms/Lines/line_angle.cpp
+        transforms/Masks/mask_area.cpp
+        transforms/Masks/mask_area.hpp
 
         loaders/binary_loaders.hpp
         loaders/hdf5_loaders.hpp
@@ -115,6 +117,7 @@ add_library(DataManager SHARED
         ImageSize/ImageSize.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
         DataManagerTypes.hpp
+
 
 )
 

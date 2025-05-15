@@ -1,0 +1,4 @@
+#ifndef LINE_ANGLE_HPP
+#define LINE_ANGLE_HPP
+
+#endif// LINE_ANGLE_HPP

@@ -34,7 +34,6 @@ private:
     Ui::Media_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene = nullptr;
-    std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
 
     void _createOptions();
 
