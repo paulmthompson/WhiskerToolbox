@@ -119,21 +119,9 @@ void Media_Window::removePointDataFromScene(std::string const & point_key) {
     UpdateCanvas();
 }
 
-void Media_Window::addDigitalIntervalSeries(
-        std::string const & key,
-        std::string const & hex_color,
-        float alpha) {
-    if (!isValidHexColor(hex_color)) {
-        std::cerr << "Invalid hex color: " << hex_color << std::endl;
-        return;
-    }
-    if (!isValidAlpha(alpha)) {
-        std::cerr << "Invalid alpha value: " << alpha << std::endl;
-        return;
-    }
-
-    _interval_configs[key] = element_config{hex_color, alpha};
-
+void Media_Window::addDigitalIntervalSeries(std::string const & key) {
+    auto interval_config = std::make_unique<DigitalIntervalDisplayOptions>();
+    _interval_configs[key] = std::move(interval_config);
     UpdateCanvas();
 }
 
@@ -142,6 +130,8 @@ void Media_Window::removeDigitalIntervalSeries(std::string const & key) {
     if (item != _interval_configs.end()) {
         _interval_configs.erase(item);
     }
+    
+    UpdateCanvas();
 }
 
 void Media_Window::_clearIntervals() {
@@ -497,7 +487,7 @@ void Media_Window::_plotDigitalIntervalSeries() {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     for (auto const & [key, _interval_config]: _interval_configs) {
-        auto plot_color = plot_color_with_alpha(_interval_config);
+        auto plot_color = plot_color_with_alpha(_interval_config.get());
 
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
 

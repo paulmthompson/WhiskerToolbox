@@ -60,11 +60,7 @@ public:
     void addPointDataToScene(std::string const & point_key);
     void removePointDataFromScene(std::string const & point_key);
 
-    void addDigitalIntervalSeries(
-            std::string const & key,
-            std::string const & hex_color = "#0000FF",
-            float alpha = 1.0);
-
+    void addDigitalIntervalSeries(std::string const & key);
     void removeDigitalIntervalSeries(std::string const & key);
 
     void addTensorDataToScene(
@@ -123,11 +119,11 @@ public:
         return _point_configs.at(point_key).get();
     }
 
-    std::optional<element_config> getIntervalConfig(std::string const & interval_key) const {
+    [[nodiscard]] std::optional<DigitalIntervalDisplayOptions *> getIntervalConfig(std::string const & interval_key) const {
         if (_interval_configs.find(interval_key) == _interval_configs.end()) {
             return std::nullopt;
         }
-        return _interval_configs.at(interval_key);
+        return _interval_configs.at(interval_key).get();
     }
 
     std::optional<tensor_config> getTensorConfig(std::string const & tensor_key) const {
@@ -170,7 +166,7 @@ private:
     std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
     std::unordered_map<std::string, std::unique_ptr<MaskDisplayOptions>> _mask_configs;
     std::unordered_map<std::string, std::unique_ptr<PointDisplayOptions>> _point_configs;
-    std::unordered_map<std::string, element_config> _interval_configs;
+    std::unordered_map<std::string, std::unique_ptr<DigitalIntervalDisplayOptions>> _interval_configs;
     std::unordered_map<std::string, tensor_config> _tensor_configs;
 
     QImage::Format _getQImageFormat();

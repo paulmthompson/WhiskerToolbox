@@ -158,7 +158,11 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     } else if (type == DM_DataType::DigitalInterval) {
         if (enabled) {
             std::cout << "Adding digital interval series to scene" << std::endl;
-            _scene->addDigitalIntervalSeries(feature_key, color);
+            _scene->addDigitalIntervalSeries(feature_key);
+            auto interval_opts = _scene->getIntervalConfig(feature_key);
+            if (interval_opts.has_value()) {
+                interval_opts.value()->hex_color = color;
+            }
         } else {
             std::cout << "Removing digital interval series from scene" << std::endl;
             _scene->removeDigitalIntervalSeries(feature_key);
