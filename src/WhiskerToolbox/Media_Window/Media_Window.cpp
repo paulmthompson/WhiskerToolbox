@@ -41,9 +41,11 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * 
 }
 
 void Media_Window::addLineDataToScene(std::string const & line_key) {
-
     auto line_config = std::make_unique<LineDisplayOptions>();
-
+    
+    // Assign color based on the current number of line configs
+    line_config->hex_color = DefaultDisplayValues::getColorForIndex(_line_configs.size());
+    
     _line_configs[line_key] = std::move(line_config);
 
     UpdateCanvas();
@@ -70,6 +72,10 @@ void Media_Window::removeLineDataFromScene(std::string const & line_key) {
 
 void Media_Window::addMaskDataToScene(std::string const & mask_key) {
     auto mask_config = std::make_unique<MaskDisplayOptions>();
+    
+    // Assign color based on the current number of mask configs
+    mask_config->hex_color = DefaultDisplayValues::getColorForIndex(_mask_configs.size());
+    
     _mask_configs[mask_key] = std::move(mask_config);
     UpdateCanvas();
 }
@@ -96,6 +102,10 @@ void Media_Window::removeMaskDataFromScene(std::string const & mask_key) {
 
 void Media_Window::addPointDataToScene(std::string const & point_key) {
     auto point_config = std::make_unique<PointDisplayOptions>();
+    
+    // Assign color based on the current number of point configs
+    point_config->hex_color = DefaultDisplayValues::getColorForIndex(_point_configs.size());
+    
     _point_configs[point_key] = std::move(point_config);
     UpdateCanvas();
 }
@@ -121,6 +131,10 @@ void Media_Window::removePointDataFromScene(std::string const & point_key) {
 
 void Media_Window::addDigitalIntervalSeries(std::string const & key) {
     auto interval_config = std::make_unique<DigitalIntervalDisplayOptions>();
+    
+    // Assign color based on the current number of interval configs
+    interval_config->hex_color = DefaultDisplayValues::getColorForIndex(_interval_configs.size());
+    
     _interval_configs[key] = std::move(interval_config);
     UpdateCanvas();
 }
@@ -147,6 +161,10 @@ void Media_Window::_clearIntervals() {
 
 void Media_Window::addTensorDataToScene(std::string const & tensor_key) {
     auto tensor_config = std::make_unique<TensorDisplayOptions>();
+    
+    // Assign color based on the current number of tensor configs
+    tensor_config->hex_color = DefaultDisplayValues::getColorForIndex(_tensor_configs.size());
+    
     _tensor_configs[tensor_key] = std::move(tensor_config);
     
     UpdateCanvas();

@@ -52,7 +52,7 @@ void Media_Widget::updateMedia() {
 void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = std::move(data_manager);
 
-    ui->feature_table_widget->setColumns({"Feature", "Color", "Enabled", "Type"});
+    ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
     ui->feature_table_widget->setTypeFilter({DM_DataType::Line, DM_DataType::Mask, DM_DataType::Points, DM_DataType::DigitalInterval, DM_DataType::Tensor});
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
@@ -76,9 +76,6 @@ void Media_Widget::_createOptions() {
         if (opts.has_value()) continue;
 
         _scene->addLineDataToScene(line_key);
-        std::string const color = ui->feature_table_widget->getFeatureColor(line_key);
-        opts = _scene->getLineConfig(line_key);
-        opts.value()->hex_color = color;
     }
 
     // Setup mask data
@@ -88,9 +85,6 @@ void Media_Widget::_createOptions() {
         if (opts.has_value()) continue;
 
         _scene->addMaskDataToScene(mask_key);
-        std::string const color = ui->feature_table_widget->getFeatureColor(mask_key);
-        opts = _scene->getMaskConfig(mask_key);
-        opts.value()->hex_color = color;
     }
 
     // Setup point data
@@ -100,9 +94,6 @@ void Media_Widget::_createOptions() {
         if (opts.has_value()) continue;
 
         _scene->addPointDataToScene(point_key);
-        std::string const color = ui->feature_table_widget->getFeatureColor(point_key);
-        opts = _scene->getPointConfig(point_key);
-        opts.value()->hex_color = color;
     }
     
     // Setup digital interval data
@@ -112,9 +103,6 @@ void Media_Widget::_createOptions() {
         if (opts.has_value()) continue;
 
         _scene->addDigitalIntervalSeries(interval_key);
-        std::string const color = ui->feature_table_widget->getFeatureColor(interval_key);
-        opts = _scene->getIntervalConfig(interval_key);
-        opts.value()->hex_color = color;
     }
     
     // Setup tensor data
@@ -124,9 +112,6 @@ void Media_Widget::_createOptions() {
         if (opts.has_value()) continue;
 
         _scene->addTensorDataToScene(tensor_key);
-        std::string const color = ui->feature_table_widget->getFeatureColor(tensor_key);
-        opts = _scene->getTensorConfig(tensor_key);
-        opts.value()->hex_color = color;
     }
 }
 
@@ -199,10 +184,6 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
 
     auto const feature_key = feature.toStdString();
     auto const type = _data_manager->getType(feature_key);
-
-    std::string color = ui->feature_table_widget->getFeatureColor(feature_key);
-
-    std::cout << "Color: " << color << std::endl;
 
     if (type == DM_DataType::Line) {
         auto opts = _scene->getLineConfig(feature_key);
@@ -291,5 +272,35 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
 }
 
 void Media_Widget::setFeatureColor(std::string const & feature, std::string const & hex_color) {
-    ui->feature_table_widget->setFeatureColor(feature, hex_color);
+    auto const type = _data_manager->getType(feature);
+    
+    if (type == DM_DataType::Line) {
+        auto opts = _scene->getLineConfig(feature);
+        if (opts.has_value()) {
+            opts.value()->hex_color = hex_color;
+        }
+    } else if (type == DM_DataType::Mask) {
+        auto opts = _scene->getMaskConfig(feature);
+        if (opts.has_value()) {
+            opts.value()->hex_color = hex_color;
+        }
+    } else if (type == DM_DataType::Points) {
+        auto opts = _scene->getPointConfig(feature);
+        if (opts.has_value()) {
+            opts.value()->hex_color = hex_color;
+        }
+    } else if (type == DM_DataType::DigitalInterval) {
+        auto opts = _scene->getIntervalConfig(feature);
+        if (opts.has_value()) {
+            opts.value()->hex_color = hex_color;
+        }
+    } else if (type == DM_DataType::Tensor) {
+        auto opts = _scene->getTensorConfig(feature);
+        if (opts.has_value()) {
+            opts.value()->hex_color = hex_color;
+        }
+    }
+    
+    // Update the canvas with the new color
+    _scene->UpdateCanvas();
 }

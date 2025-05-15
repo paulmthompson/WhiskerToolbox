@@ -1,6 +1,8 @@
 #ifndef DISPLAY_OPTIONS_HPP
 #define DISPLAY_OPTIONS_HPP
 
+#include "utils/color.hpp"
+
 #include <string>
 #include <vector> 
 
@@ -11,6 +13,23 @@ namespace DefaultDisplayValues {
     const int POINT_SIZE = 5;
     const int LINE_THICKNESS = 2;
     const int TENSOR_DISPLAY_CHANNEL = 0;
+    
+    const std::vector<std::string> DEFAULT_COLORS = {
+        "#ff0000", // Red
+        "#008000", // Green
+        "#00ffff", // Cyan
+        "#ff00ff", // Magenta
+        "#ffff00"  // Yellow
+    };
+    
+    // Get color from index, returns random color if index exceeds DEFAULT_COLORS size
+    inline std::string getColorForIndex(size_t index) {
+        if (index < DEFAULT_COLORS.size()) {
+            return DEFAULT_COLORS[index];
+        } else {
+            return generateRandomColor();
+        }
+    }
 }
 
 struct BaseDisplayOptions {
