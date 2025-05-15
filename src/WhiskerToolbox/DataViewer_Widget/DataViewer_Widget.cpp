@@ -158,12 +158,12 @@ void DataViewer_Widget::_updateGlobalScale(double scale) {
 }
 
 void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
-    int const numDegrees = event->angleDelta().y() / 8;
-    int const numSteps = numDegrees / 15;
-    int const zoomFactor = _time_frame->getTotalFrameCount() / 10000;
+    auto const numDegrees = static_cast<float>(event->angleDelta().y()) / 8.0f;
+    auto const numSteps = numDegrees / 15.0f;
+    auto const zoomFactor = static_cast<float>(_time_frame->getTotalFrameCount()) / 10000.0f;
 
     auto curent_zoom = ui->x_axis_samples->value();
-    ui->openGLWidget->changeZoom(static_cast<int64_t>(numSteps) * zoomFactor);
+    ui->openGLWidget->changeZoom(static_cast<int64_t>(numSteps * zoomFactor));
 
     auto new_zoom = -1 * zoomFactor * numSteps + curent_zoom;
 
