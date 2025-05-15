@@ -1,4 +1,3 @@
-
 #include <iostream>// For init messages
 #include <map>
 #include <memory>// unique_ptr
@@ -13,6 +12,7 @@
 #include "transforms/AnalogTimeSeries/analog_event_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
+#include "transforms/Lines/line_angle.hpp"
 
 
 TransformRegistry::TransformRegistry() {
@@ -23,6 +23,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<EventThresholdOperation>());
     _registerOperation(std::make_unique<IntervalThresholdOperation>());
     _registerOperation(std::make_unique<HilbertPhaseOperation>());
+    _registerOperation(std::make_unique<LineAngleOperation>());
 
     _computeApplicableOperations();
     std::cout << "Operation Registry Initialized." << std::endl;
