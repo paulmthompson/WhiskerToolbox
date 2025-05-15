@@ -31,7 +31,10 @@ Label_Widget::Label_Widget(Media_Window* scene, std::shared_ptr<DataManager> dat
 
         _data_manager->setData<PointData>("labels");
         _scene->addPointDataToScene("labels");
-        _scene->changePointColor("labels", "#ffe600");
+        auto point_opts = _scene->getLineConfig("labels");
+        if (point_opts.has_value()) {
+            point_opts.value()->hex_color = "#ffe600";
+        }
         auto point = _data_manager->getData<PointData>("labels");
         auto media = _data_manager->getData<MediaData>("media");
         point->setImageSize(media->getImageSize());

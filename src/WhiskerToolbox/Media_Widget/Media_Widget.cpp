@@ -146,7 +146,11 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
     } else if (type == DM_DataType::Points) {
         if (enabled) {
             std::cout << "Adding point data to scene" << std::endl;
-            _scene->addPointDataToScene(feature_key, color);
+            _scene->addPointDataToScene(feature_key);
+            auto point_opts = _scene->getPointConfig(feature_key);
+            if (point_opts.has_value()) {
+                point_opts.value()->hex_color = color;
+            }
         } else {
             std::cout << "Removing point data from scene" << std::endl;
             _scene->removePointDataFromScene(feature_key);

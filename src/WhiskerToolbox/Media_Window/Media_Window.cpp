@@ -94,34 +94,10 @@ void Media_Window::removeMaskDataFromScene(std::string const & mask_key) {
     UpdateCanvas();
 }
 
-void Media_Window::addPointDataToScene(std::string const & point_key, std::string const & hex_color, float alpha) {
-
-    if (!isValidHexColor(hex_color)) {
-        std::cerr << "Invalid hex color: " << hex_color << std::endl;
-        return;
-    }
-    if (!isValidAlpha(alpha)) {
-        std::cerr << "Invalid alpha value: " << alpha << std::endl;
-        return;
-    }
-
-    _point_configs[point_key] = element_config{hex_color, alpha};
-
+void Media_Window::addPointDataToScene(std::string const & point_key) {
+    auto point_config = std::make_unique<PointDisplayOptions>();
+    _point_configs[point_key] = std::move(point_config);
     UpdateCanvas();
-}
-
-void Media_Window::changePointColor(std::string const & point_key, std::string const & hex_color) {
-    if (!isValidHexColor(hex_color)) {
-        std::cerr << "Invalid hex color: " << hex_color << std::endl;
-        return;
-    }
-
-    if (_point_configs.find(point_key) == _point_configs.end()) {
-        std::cerr << "Point key not found: " << point_key << std::endl;
-        return;
-    }
-
-    _point_configs[point_key].hex_color = hex_color;
 }
 
 void Media_Window::_clearPoints() {
@@ -141,19 +117,6 @@ void Media_Window::removePointDataFromScene(std::string const & point_key) {
     }
 
     UpdateCanvas();
-}
-
-void Media_Window::setPointAlpha(std::string const & point_key, float const alpha) {
-    if (!isValidAlpha(alpha)) {
-        std::cerr << "Invalid alpha value: " << alpha << std::endl;
-        return;
-    }
-    if (_point_configs.find(point_key) == _point_configs.end()) {
-        std::cerr << "Point key not found: " << point_key << std::endl;
-        return;
-    }
-
-    _point_configs[point_key].alpha = alpha;
 }
 
 void Media_Window::addDigitalIntervalSeries(
@@ -499,7 +462,7 @@ void Media_Window::_plotPointData() {
 
     for (auto const & [point_key, _point_config]: _point_configs) {
 
-        auto plot_color = plot_color_with_alpha(_point_config);
+        auto plot_color = plot_color_with_alpha(_point_config.get());
 
         auto point = _data_manager->getData<PointData>(point_key);
 
@@ -519,7 +482,6 @@ void Media_Window::_plotPointData() {
         }
 
         auto pointData = point->getPointsAtTime(current_time);
-
 
         auto pen = QPen(plot_color);
         pen.setWidth(3);

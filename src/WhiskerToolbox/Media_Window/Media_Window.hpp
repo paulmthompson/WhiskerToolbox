@@ -55,16 +55,9 @@ public:
     void removeLineDataFromScene(std::string const & line_key);
 
     void addMaskDataToScene(std::string const & mask_key);
-
     void removeMaskDataFromScene(std::string const & mask_key);
 
-    void addPointDataToScene(
-            std::string const & point_key,
-            std::string const & hex_color = "#0000FF",
-            float alpha = 1.0);
-
-    void changePointColor(std::string const & point_key, std::string const & hex_color);
-    void setPointAlpha(std::string const & point_key, float alpha);
+    void addPointDataToScene(std::string const & point_key);
     void removePointDataFromScene(std::string const & point_key);
 
     void addDigitalIntervalSeries(
@@ -123,11 +116,11 @@ public:
         return _mask_configs.at(mask_key).get();
     }
 
-    std::optional<element_config> getPointConfig(std::string const & point_key) const {
+    [[nodiscard]] std::optional<PointDisplayOptions *> getPointConfig(std::string const & point_key) const {
         if (_point_configs.find(point_key) == _point_configs.end()) {
             return std::nullopt;
         }
-        return _point_configs.at(point_key);
+        return _point_configs.at(point_key).get();
     }
 
     std::optional<element_config> getIntervalConfig(std::string const & interval_key) const {
@@ -176,7 +169,7 @@ private:
 
     std::unordered_map<std::string, std::unique_ptr<LineDisplayOptions>> _line_configs;
     std::unordered_map<std::string, std::unique_ptr<MaskDisplayOptions>> _mask_configs;
-    std::unordered_map<std::string, element_config> _point_configs;
+    std::unordered_map<std::string, std::unique_ptr<PointDisplayOptions>> _point_configs;
     std::unordered_map<std::string, element_config> _interval_configs;
     std::unordered_map<std::string, tensor_config> _tensor_configs;
 
