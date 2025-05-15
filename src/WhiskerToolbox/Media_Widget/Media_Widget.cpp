@@ -56,8 +56,8 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 }
 
 void Media_Widget::_createOptions() {
+    // Setup line data
     auto line_keys = _data_manager->getKeys<LineData>();
-
     for (auto line_key : line_keys) {
         auto opts = _scene->getLineConfig(line_key);
         if (opts.has_value()) continue;
@@ -65,6 +65,30 @@ void Media_Widget::_createOptions() {
         _scene->addLineDataToScene(line_key);
         std::string const color = ui->feature_table_widget->getFeatureColor(line_key);
         opts = _scene->getLineConfig(line_key);
+        opts.value()->hex_color = color;
+    }
+
+    // Setup mask data
+    auto mask_keys = _data_manager->getKeys<MaskData>();
+    for (auto mask_key : mask_keys) {
+        auto opts = _scene->getMaskConfig(mask_key);
+        if (opts.has_value()) continue;
+
+        _scene->addMaskDataToScene(mask_key);
+        std::string const color = ui->feature_table_widget->getFeatureColor(mask_key);
+        opts = _scene->getMaskConfig(mask_key);
+        opts.value()->hex_color = color;
+    }
+
+    // Setup point data
+    auto point_keys = _data_manager->getKeys<PointData>();
+    for (auto point_key : point_keys) {
+        auto opts = _scene->getPointConfig(point_key);
+        if (opts.has_value()) continue;
+
+        _scene->addPointDataToScene(point_key);
+        std::string const color = ui->feature_table_widget->getFeatureColor(point_key);
+        opts = _scene->getPointConfig(point_key);
         opts.value()->hex_color = color;
     }
 }
@@ -154,28 +178,34 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::Mask) {
-        if (enabled) {
+        auto opts = _scene->getMaskConfig(feature_key);
+        if (!opts.has_value()) {
             std::cout << "Adding mask data to scene" << std::endl;
             _scene->addMaskDataToScene(feature_key);
-            auto mask_opts = _scene->getMaskConfig(feature_key);
-            if (mask_opts.has_value()) {
-                mask_opts.value()->hex_color = color;
-            }
+            opts = _scene->getMaskConfig(feature_key);
+            opts.value()->hex_color = color;
+        }
+        if (enabled) {
+            std::cout << "Enabling mask data in scene" << std::endl;
+            opts.value()->is_visible = true;
         } else {
-            std::cout << "Removing mask data from scene" << std::endl;
-            _scene->removeMaskDataFromScene(feature_key);
+            std::cout << "Disabling mask data from scene" << std::endl;
+            opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::Points) {
-        if (enabled) {
+        auto opts = _scene->getPointConfig(feature_key);
+        if (!opts.has_value()) {
             std::cout << "Adding point data to scene" << std::endl;
             _scene->addPointDataToScene(feature_key);
-            auto point_opts = _scene->getPointConfig(feature_key);
-            if (point_opts.has_value()) {
-                point_opts.value()->hex_color = color;
-            }
+            opts = _scene->getPointConfig(feature_key);
+            opts.value()->hex_color = color;
+        }
+        if (enabled) {
+            std::cout << "Enabling point data in scene" << std::endl;
+            opts.value()->is_visible = true;
         } else {
-            std::cout << "Removing point data from scene" << std::endl;
-            _scene->removePointDataFromScene(feature_key);
+            std::cout << "Disabling point data from scene" << std::endl;
+            opts.value()->is_visible = false;
         }
     } else if (type == DM_DataType::DigitalInterval) {
         if (enabled) {

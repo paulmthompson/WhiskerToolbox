@@ -28,6 +28,7 @@ private:
 
 private slots:
     void _setMaskAlpha(int alpha);
+    void _setMaskColor(const QString& hex_color);
 };
 
 

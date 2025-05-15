@@ -31,6 +31,8 @@ private:
 
 private slots:
     void _assignPoint(qreal xmedia, qreal y_media);
+    void _setPointColor(const QString& hex_color);
+    void _setPointAlpha(int alpha);
 
 };
 

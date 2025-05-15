@@ -404,6 +404,8 @@ void Media_Window::_plotMaskData() {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     for (auto const & [mask_key, _mask_config]: _mask_configs) {
+        if (!_mask_config.get()->is_visible) continue;
+        
         auto plot_color = plot_color_with_alpha(_mask_config.get());
 
         auto mask = _data_manager->getData<MaskData>(mask_key);
@@ -446,6 +448,7 @@ void Media_Window::_plotPointData() {
     int i = 0;
 
     for (auto const & [point_key, _point_config]: _point_configs) {
+        if (!_point_config.get()->is_visible) continue;
 
         auto plot_color = plot_color_with_alpha(_point_config.get());
 

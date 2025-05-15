@@ -16,6 +16,10 @@ MediaPoint_Widget::MediaPoint_Widget(std::shared_ptr<DataManager> data_manager, 
 {
     ui->setupUi(this);
 
+    connect(ui->color_picker, &ColorPicker_Widget::colorChanged,
+            this, &MediaPoint_Widget::_setPointColor);
+    connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
+            this, &MediaPoint_Widget::_setPointAlpha);
 }
 
 MediaPoint_Widget::~MediaPoint_Widget() {
@@ -38,6 +42,15 @@ void MediaPoint_Widget::setActiveKey(std::string const & key) {
     ui->name_label->setText(QString::fromStdString(key));
     _selection_enabled = !key.empty();
 
+    // Set the color picker to the current point color if available
+    if (!key.empty()) {
+        auto config = _scene->getPointConfig(key);
+
+        if (config) {
+            ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
+            ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+        }
+    }
 }
 
 
@@ -54,6 +67,28 @@ void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
                                                .y = static_cast<float>(x_media)
                                               });
 
+        _scene->UpdateCanvas();
+    }
+}
+
+void MediaPoint_Widget::_setPointColor(const QString& hex_color) {
+    if (!_active_key.empty()) {
+        auto point_opts = _scene->getPointConfig(_active_key);
+        if (point_opts.has_value()) {
+            point_opts.value()->hex_color = hex_color.toStdString();
+        }
+        _scene->UpdateCanvas();
+    }
+}
+
+void MediaPoint_Widget::_setPointAlpha(int alpha) {
+    float const alpha_float = static_cast<float>(alpha) / 100;
+
+    if (!_active_key.empty()) {
+        auto point_opts = _scene->getPointConfig(_active_key);
+        if (point_opts.has_value()) {
+            point_opts.value()->alpha = alpha_float;
+        }
         _scene->UpdateCanvas();
     }
 }
