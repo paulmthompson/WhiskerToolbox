@@ -49,6 +49,77 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="methodLabel">
+       <property name="text">
+        <string>Calculation method:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="methodComboBox">
+       <item>
+        <property name="text">
+         <string>Direct points</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Polynomial parameterization</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="methodStackedWidget">
+     <!-- Page 0: Empty (for direct points) -->
+     <widget class="QWidget" name="directPointsPage"/>
+     
+     <!-- Page 1: Polynomial parameterization options -->
+     <widget class="QWidget" name="polynomialPage">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="orderLabel">
+           <property name="text">
+            <string>Polynomial order:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="orderSpinBox">
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>10</number>
+           </property>
+           <property name="value">
+            <number>3</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="polynomialDescription">
+         <property name="text">
+          <string>Fits polynomials to x and y coordinates and calculates angle using derivatives.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="descriptionLabel">
      <property name="text">
       <string>Calculates the angle from base point (0%) to the specified position along the line</string>

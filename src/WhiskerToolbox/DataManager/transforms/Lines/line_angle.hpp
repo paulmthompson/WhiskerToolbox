@@ -10,8 +10,15 @@
 class AnalogTimeSeries;
 class LineData;
 
+enum class AngleCalculationMethod {
+    DirectPoints,        // Original method - directly calculate angle between two points
+    PolynomialFit        // Fit polynomials to the line and calculate angle from derivatives
+};
+
 struct LineAngleParameters : public TransformParametersBase {
-    float position = 0.2f; // Default 20% along the line
+    float position = 0.2f;                              // Default 20% along the line
+    AngleCalculationMethod method = AngleCalculationMethod::DirectPoints; // Default method
+    int polynomial_order = 3;                           // Default polynomial order
 };
 
 /**

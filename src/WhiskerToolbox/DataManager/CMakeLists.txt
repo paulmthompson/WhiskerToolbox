@@ -12,6 +12,8 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_package(CapnProto CONFIG REQUIRED)
 #find_package(RocksDB CONFIG REQUIRED)
 
+find_package(LAPACK REQUIRED)
+
 add_library(DataManager SHARED
         DataManager.hpp
         DataManager.cpp
@@ -142,6 +144,9 @@ else()
 endif()
 
 target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
+
+target_link_libraries(DataManager PRIVATE armadillo)
+target_link_libraries(DataManager PRIVATE LAPACK::LAPACK)
 
 target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 #target_link_libraries(DataManager PRIVATE unofficial::lmdb::lmdb)
