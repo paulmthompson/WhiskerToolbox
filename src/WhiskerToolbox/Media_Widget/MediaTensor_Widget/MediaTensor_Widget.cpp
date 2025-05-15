@@ -42,6 +42,10 @@ void MediaTensor_Widget::setActiveKey(std::string const & key) {
 
 void MediaTensor_Widget::_setTensorChannel(int channel) {
     if (!_active_key.empty() && _scene) {
-        _scene->setTensorChannel(_active_key, channel);
+        auto opts = _scene->getTensorConfig(_active_key);
+        if (opts.has_value()) {
+            opts.value()->display_channel = channel;
+        }
+        _scene->UpdateCanvas();
     }
 }

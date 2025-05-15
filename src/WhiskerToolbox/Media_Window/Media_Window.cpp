@@ -146,11 +146,10 @@ void Media_Window::_clearIntervals() {
 }
 
 void Media_Window::addTensorDataToScene(std::string const & tensor_key) {
-    if (_tensor_configs.find(tensor_key) != _tensor_configs.end()) {
-        std::cerr << "Tensor key already exists: " << tensor_key << std::endl;
-        return;
-    }
-    _tensor_configs[tensor_key] = tensor_config{0};
+    auto tensor_config = std::make_unique<TensorDisplayOptions>();
+    _tensor_configs[tensor_key] = std::move(tensor_config);
+    
+    UpdateCanvas();
 }
 
 void Media_Window::removeTensorDataFromScene(std::string const & tensor_key) {
@@ -158,15 +157,8 @@ void Media_Window::removeTensorDataFromScene(std::string const & tensor_key) {
     if (item != _tensor_configs.end()) {
         _tensor_configs.erase(item);
     }
-}
-
-void Media_Window::setTensorChannel(std::string const & tensor_key, int channel) {
-    if (_tensor_configs.find(tensor_key) == _tensor_configs.end()) {
-        std::cerr << "Tensor key not found: " << tensor_key << std::endl;
-        return;
-    }
-
-    _tensor_configs[tensor_key].channel = channel;
+    
+    UpdateCanvas();
 }
 
 void Media_Window::_clearTensors() {
@@ -524,7 +516,7 @@ void Media_Window::_plotTensorData() {
 
         auto tensor_shape = tensor_data->getFeatureShape();
 
-        auto tensor_slice = tensor_data->getChannelSlice(current_time, config.channel);
+        auto tensor_slice = tensor_data->getChannelSlice(current_time, config->display_channel);
 
         // Create a QImage from the tensor data
         QImage tensor_image(static_cast<int>(tensor_shape[1]), static_cast<int>(tensor_shape[0]), QImage::Format::Format_ARGB32);

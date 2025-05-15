@@ -171,6 +171,10 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         if (enabled) {
             std::cout << "Adding Tensor data to scene" << std::endl;
             _scene->addTensorDataToScene(feature_key);
+            auto tensor_opts = _scene->getTensorConfig(feature_key);
+            if (tensor_opts.has_value()) {
+                tensor_opts.value()->hex_color = color;
+            }
         } else {
             std::cout << "Removing tensor data from scene" << std::endl;
             _scene->removeTensorDataFromScene(feature_key);

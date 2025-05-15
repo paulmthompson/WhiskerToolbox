@@ -27,11 +27,6 @@ struct element_config {
     float alpha;
 };
 
-struct tensor_config {
-    int channel;
-};
-
-
 /**
  * The Media_Window class is responsible for plotting images, movies, and shapes on top of them.
  * Shapes may take the form of lines, points, or arbitrary 2d masks.
@@ -63,10 +58,8 @@ public:
     void addDigitalIntervalSeries(std::string const & key);
     void removeDigitalIntervalSeries(std::string const & key);
 
-    void addTensorDataToScene(
-            std::string const & tensor_key);
+    void addTensorDataToScene(std::string const & tensor_key);
     void removeTensorDataFromScene(std::string const & tensor_key);
-    void setTensorChannel(std::string const & tensor_key, int channel);
 
     /**
      *
@@ -126,11 +119,11 @@ public:
         return _interval_configs.at(interval_key).get();
     }
 
-    std::optional<tensor_config> getTensorConfig(std::string const & tensor_key) const {
+    [[nodiscard]] std::optional<TensorDisplayOptions *> getTensorConfig(std::string const & tensor_key) const {
         if (_tensor_configs.find(tensor_key) == _tensor_configs.end()) {
             return std::nullopt;
         }
-        return _tensor_configs.at(tensor_key);
+        return _tensor_configs.at(tensor_key).get();
     }
 
 protected:
@@ -167,7 +160,7 @@ private:
     std::unordered_map<std::string, std::unique_ptr<MaskDisplayOptions>> _mask_configs;
     std::unordered_map<std::string, std::unique_ptr<PointDisplayOptions>> _point_configs;
     std::unordered_map<std::string, std::unique_ptr<DigitalIntervalDisplayOptions>> _interval_configs;
-    std::unordered_map<std::string, tensor_config> _tensor_configs;
+    std::unordered_map<std::string, std::unique_ptr<TensorDisplayOptions>> _tensor_configs;
 
     QImage::Format _getQImageFormat();
     void _createCanvasForData();
