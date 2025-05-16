@@ -20,7 +20,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         
         // Create a point at (5, 5) - should be 5 units away from the line
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
-        point_data->setPointsAtTime(timestamp, points);
+        point_data->overwritePointsAtTime(timestamp, points);
         
         // Calculate the minimum distance
         auto result = line_min_point_dist(line_data.get(), point_data.get());
@@ -45,7 +45,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
             Point2D<float>{5.0f, 15.0f},   // 5 units away
             Point2D<float>{6.0f, 8.0f}     // 1 unit away
         };
-        point_data->setPointsAtTime(timestamp, points);
+        point_data->overwritePointsAtTime(timestamp, points);
         
         // Calculate the minimum distance
         auto result = line_min_point_dist(line_data.get(), point_data.get());
@@ -71,15 +71,15 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         // Create points at different timestamps
         // Timestamp 30: Point at (5,2) - should be 2 units away
         std::vector<Point2D<float>> points1 = {Point2D<float>{5.0f, 2.0f}};
-        point_data->setPointsAtTime(30, points1);
+        point_data->overwritePointsAtTime(30, points1);
         
         // Timestamp 40: Point at (3,5) - should be 3 units away
         std::vector<Point2D<float>> points2 = {Point2D<float>{3.0f, 5.0f}};
-        point_data->setPointsAtTime(40, points2);
+        point_data->overwritePointsAtTime(40, points2);
         
         // Timestamp 50: No line data - should be skipped
         std::vector<Point2D<float>> points3 = {Point2D<float>{1.0f, 1.0f}};
-        point_data->setPointsAtTime(50, points3);
+        point_data->overwritePointsAtTime(50, points3);
         
         // Calculate the minimum distances
         auto result = line_min_point_dist(line_data.get(), point_data.get());
@@ -117,7 +117,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         // After scaling to line coordinates, this should be at (50, 20)
         // Distance to the line should be 20 units
         std::vector<Point2D<float>> points = {Point2D<float>{25.0f, 10.0f}};
-        point_data->setPointsAtTime(timestamp, points);
+        point_data->overwritePointsAtTime(timestamp, points);
         
         // Calculate the minimum distance with scaling
         auto result = line_min_point_dist(line_data.get(), point_data.get());
@@ -136,7 +136,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         
         // Create a point at (5, 5) - exactly on the line
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
-        point_data->setPointsAtTime(timestamp, points);
+        point_data->overwritePointsAtTime(timestamp, points);
         
         // Calculate the minimum distance
         auto result = line_min_point_dist(line_data.get(), point_data.get());
@@ -154,7 +154,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
     SECTION("Empty line data results in empty output") {
         // Create only point data
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
-        point_data->setPointsAtTime(10, points);
+        point_data->overwritePointsAtTime(10, points);
         
         // Calculate the minimum distance with no line data
         auto result = line_min_point_dist(line_data.get(), point_data.get());
@@ -184,7 +184,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         
         // Point at timestamp 30 (different from line)
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
-        point_data->setPointsAtTime(30, points);
+        point_data->overwritePointsAtTime(30, points);
         
         // Calculate the minimum distance
         auto result = line_min_point_dist(line_data.get(), point_data.get());
@@ -202,7 +202,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         
         // Create a point
         std::vector<Point2D<float>> points = {Point2D<float>{10.0f, 10.0f}};
-        point_data->setPointsAtTime(timestamp, points);
+        point_data->overwritePointsAtTime(timestamp, points);
         
         // Calculate the minimum distance
         auto result = line_min_point_dist(line_data.get(), point_data.get());
@@ -224,7 +224,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         
         // Create a point
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
-        point_data->setPointsAtTime(timestamp, points);
+        point_data->overwritePointsAtTime(timestamp, points);
         
         // Calculate the minimum distance - should use original point coordinates
         auto result = line_min_point_dist(line_data.get(), point_data.get());
