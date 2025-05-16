@@ -492,7 +492,7 @@ void Media_Window::_plotPointData() {
         auto pen = QPen(plot_color);
         pen.setWidth(3);
         for (auto const & single_point: pointData) {
-            auto ellipse = addEllipse(single_point.y * xAspect, single_point.x * yAspect, 10.0, 10.0, pen);
+            auto ellipse = addEllipse(single_point.x * xAspect, single_point.y * yAspect, 10.0, 10.0, pen);
             _points.append(ellipse);
         }
         i++;
