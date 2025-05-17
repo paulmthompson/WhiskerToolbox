@@ -1,4 +1,3 @@
-
 #include "MediaLine_Widget.hpp"
 #include "ui_MediaLine_Widget.h"
 
@@ -6,6 +5,8 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "Media_Window/Media_Window.hpp"
 
+#include <QLabel>
+#include <QVBoxLayout>
 #include <iostream>
 
 MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Media_Window* scene, QWidget* parent)
@@ -15,9 +16,9 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
       _scene{scene} {
     ui->setupUi(this);
 
-    _selection_modes["(None)"] = std::make_pair(Selection_Mode::None, "Description:");
-    _selection_modes["Add Points"] = std::make_pair(Selection_Mode::Add, "Description: Add points to end of selected line");
-    _selection_modes["Erase Points"] = std::make_pair(Selection_Mode::Erase, "Description: Remove points around mouse click");
+    _selection_modes["(None)"] = Selection_Mode::None;
+    _selection_modes["Add Points"] = Selection_Mode::Add;
+    _selection_modes["Erase Points"] = Selection_Mode::Erase;
 
     ui->selection_mode_combo->addItems(QStringList(_selection_modes.keys()));
     
@@ -27,7 +28,38 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
             this, &MediaLine_Widget::_setLineColor);
     connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
             this, &MediaLine_Widget::_setLineAlpha);
+            
+    // Create the UI pages for each selection mode
+    _setupSelectionModePages();
+}
 
+void MediaLine_Widget::_setupSelectionModePages() {
+    // Create the "None" mode page
+    QWidget* nonePage = new QWidget();
+    QVBoxLayout* noneLayout = new QVBoxLayout(nonePage);
+    QLabel* noneLabel = new QLabel("No selection mode active. Click in the video to navigate.");
+    noneLabel->setWordWrap(true);
+    noneLayout->addWidget(noneLabel);
+    ui->mode_stacked_widget->addWidget(nonePage);
+    
+    // Create the "Add Points" mode page
+    QWidget* addPage = new QWidget();
+    QVBoxLayout* addLayout = new QVBoxLayout(addPage);
+    QLabel* addLabel = new QLabel("Add points mode: Click in the video to add points to the end of the selected line.");
+    addLabel->setWordWrap(true);
+    addLayout->addWidget(addLabel);
+    ui->mode_stacked_widget->addWidget(addPage);
+    
+    // Create the "Erase Points" mode page
+    QWidget* erasePage = new QWidget();
+    QVBoxLayout* eraseLayout = new QVBoxLayout(erasePage);
+    QLabel* eraseLabel = new QLabel("Erase points mode: Click in the video to remove points around the mouse click location.");
+    eraseLabel->setWordWrap(true);
+    eraseLayout->addWidget(eraseLabel);
+    ui->mode_stacked_widget->addWidget(erasePage);
+    
+    // Set initial page
+    ui->mode_stacked_widget->setCurrentIndex(0);
 }
 
 MediaLine_Widget::~MediaLine_Widget() {
@@ -132,12 +164,11 @@ void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 }
 
 void MediaLine_Widget::_toggleSelectionMode(QString text) {
-
-    auto selected_pair = _selection_modes[text];
-
-    ui->selection_mode_description->setText(selected_pair.second);
-
-    _selection_mode = selected_pair.first;
+    _selection_mode = _selection_modes[text];
+    
+    // Switch to the appropriate page in the stacked widget
+    int pageIndex = static_cast<int>(_selection_mode);
+    ui->mode_stacked_widget->setCurrentIndex(pageIndex);
 
     if (_selection_mode == Selection_Mode::Erase) {
         _scene->setShowHoverCircle(true);

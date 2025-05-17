@@ -35,8 +35,11 @@ private:
         Add,
         Erase
     };
-    QMap<QString, std::pair<Selection_Mode, QString>> _selection_modes;
+    QMap<QString, Selection_Mode> _selection_modes;
     Selection_Mode _selection_mode {Selection_Mode::None};
+    
+    void _setupSelectionModePages();
+    
 private slots:
     void _clickedInVideo(qreal x, qreal y);
     void _toggleSelectionMode(QString text);
