@@ -26,6 +26,9 @@ public:
     void updateMedia();
 
     void setFeatureColor(std::string const & feature, std::string const & hex_color);
+    
+    // Method to handle time changes and propagate them
+    void LoadFrame(int frame_id);
 
 protected:
     void resizeEvent(QResizeEvent * event) override;

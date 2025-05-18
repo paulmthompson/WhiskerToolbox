@@ -26,6 +26,9 @@ public:
     void hideEvent(QHideEvent * event) override;
 
     void setActiveKey(std::string const& key);
+    
+    // Method to handle time changes
+    void LoadFrame(int frame_id);
 
 private:
     Ui::MediaLine_Widget* ui;
@@ -48,6 +51,7 @@ private:
     Selection_Mode _selection_mode {Selection_Mode::None};
     Smoothing_Mode _smoothing_mode {Smoothing_Mode::SimpleSmooth};
     int _polynomial_order {3}; // Default polynomial order
+    int _current_line_index {0}; // Track which line is currently selected
     
     void _setupSelectionModePages();
     void _addPointToLine(float x_media, float y_media, int current_time);
@@ -61,6 +65,7 @@ private slots:
     void _setLineAlpha(int alpha);
     void _setLineColor(const QString& hex_color);
     void _toggleShowPoints(bool checked);
+    void _lineSelectionChanged(int index);
     //void _clearCurrentLine();
 };
 

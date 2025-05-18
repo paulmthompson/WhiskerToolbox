@@ -38,6 +38,9 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     
     // Connect the show points checkbox from UI file
     connect(ui->show_points_checkbox, &QCheckBox::toggled, this, &MediaLine_Widget::_toggleShowPoints);
+    
+    // Connect line selection slider
+    connect(ui->line_select_slider, &QSlider::valueChanged, this, &MediaLine_Widget::_lineSelectionChanged);
             
     // Create the UI pages for each selection mode
     _setupSelectionModePages();
@@ -144,6 +147,24 @@ void MediaLine_Widget::setActiveKey(std::string const& key) {
             ui->show_points_checkbox->blockSignals(true);
             ui->show_points_checkbox->setChecked(config.value()->show_points);
             ui->show_points_checkbox->blockSignals(false);
+            
+            // Reset line selection and update slider
+            _current_line_index = 0;
+            
+            auto line_data = _data_manager->getData<LineData>(_active_key);
+            if (line_data) {
+                auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+                auto lines = line_data->getLinesAtTime(current_time);
+                
+                // Update the slider with the number of lines
+                int num_lines = static_cast<int>(lines.size());
+                
+                ui->line_select_slider->blockSignals(true);
+                ui->line_select_slider->setMaximum(num_lines > 0 ? num_lines - 1 : 0);
+                ui->line_select_slider->setValue(0); // Reset to first line
+                ui->line_select_slider->setEnabled(num_lines > 1);
+                ui->line_select_slider->blockSignals(false);
+            }
         }
     }
 }
@@ -212,15 +233,26 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, int current
     auto lines = line_data->getLinesAtTime(current_time);
     
     if (lines.empty()) {
-        // If no line exists, create a new one with the single point
+        // If no lines exist, create a new one with the single point
         _data_manager->getData<LineData>(_active_key)->addLineAtTime(current_time, {{x_media, y_media}});
+        // After adding a new line, it's line index 0
+        _current_line_index = 0;
+        ui->line_select_slider->setValue(0);
     } else {
         if (_smoothing_mode == Smoothing_Mode::SimpleSmooth) {
-            // Use the original smoothing approach
-            _data_manager->getData<LineData>(_active_key)->addPointToLineInterpolate(current_time, 0, Point2D<float>{x_media, y_media});
+            // Use the original smoothing approach with the selected line index
+            _data_manager->getData<LineData>(_active_key)->addPointToLineInterpolate(
+                current_time, _current_line_index, Point2D<float>{x_media, y_media});
         } else if (_smoothing_mode == Smoothing_Mode::PolynomialFit) {
-            // Get a copy of the current line
-            auto line = lines[0];
+            // Make sure current_line_index is valid
+            if (_current_line_index >= static_cast<int>(lines.size())) {
+                std::cout << "Warning: line index out of bounds, using first line" << std::endl;
+                _current_line_index = 0;
+                ui->line_select_slider->setValue(0);
+            }
+            
+            // Get a copy of the current line using the selected index
+            auto line = lines[_current_line_index];
             
             // If the line already exists, add interpolated points between the last point and the new point
             if (!line.empty()) {
@@ -252,13 +284,19 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, int current
             }
             
             // Update the line in the data manager
+            std::vector<Line2D> updated_lines = lines;
+            updated_lines[_current_line_index] = line;
+            
             _data_manager->getData<LineData>(_active_key)->clearLinesAtTime(current_time);
-            _data_manager->getData<LineData>(_active_key)->addLineAtTime(current_time, line);
+            for(const auto& updated_line : updated_lines) {
+                _data_manager->getData<LineData>(_active_key)->addLineAtTime(current_time, updated_line);
+            }
         }
     }
 
     _scene->UpdateCanvas();
-    std::cout << "Added point (" << x_media << ", " << y_media << ") to line " << _active_key << std::endl;
+    std::cout << "Added point (" << x_media << ", " << y_media << ") to line " 
+              << _active_key << " (index: " << _current_line_index << ")" << std::endl;
 }
 
 void MediaLine_Widget::_applyPolynomialFit(Line2D& line, int order) {
@@ -358,3 +396,68 @@ void MediaLine_Widget::_clearCurrentLine() {
     }
 }
 */
+
+void MediaLine_Widget::LoadFrame(int frame_id) {
+    // Update the widget with the new frame
+    // This could involve refreshing displays or updating UI elements
+    // specific to the current frame
+    
+    // If we have an active line, we might want to update some UI
+    // based on line data at this frame
+    if (!_active_key.empty()) {
+        auto line_data = _data_manager->getData<LineData>(_active_key);
+        if (line_data) {
+            auto lines = line_data->getLinesAtTime(frame_id);
+            
+            // Update the line_select_slider's maximum value based on the number of lines
+            int num_lines = static_cast<int>(lines.size());
+            
+            // Disconnect and reconnect to avoid triggering slider value changed signals
+            // during this programmatic update
+            ui->line_select_slider->blockSignals(true);
+            
+            // Set the maximum value to the number of lines - 1 (or 0 if there are no lines)
+            // Slider indices are 0-based, so max should be (num_lines - 1) when there are lines
+            ui->line_select_slider->setMaximum(num_lines > 0 ? num_lines - 1 : 0);
+            
+            // If the current slider value exceeds the new maximum, adjust it
+            if (ui->line_select_slider->value() > ui->line_select_slider->maximum()) {
+                ui->line_select_slider->setValue(ui->line_select_slider->maximum());
+            }
+            
+            ui->line_select_slider->blockSignals(false);
+            
+            // Update slider enabled state
+            ui->line_select_slider->setEnabled(num_lines > 1);
+            
+            std::cout << "Frame " << frame_id << ": Updated line selector for " 
+                      << num_lines << " lines in " << _active_key << std::endl;
+        }
+    }
+}
+
+void MediaLine_Widget::_lineSelectionChanged(int index) {
+    if (_current_line_index == index) {
+        return; // No change
+    }
+    
+    _current_line_index = index;
+    std::cout << "Selected line index: " << _current_line_index << std::endl;
+    
+    // Update any UI or visualization based on the selected line
+    if (!_active_key.empty()) {
+        auto line_data = _data_manager->getData<LineData>(_active_key);
+        if (line_data) {
+            auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+            auto lines = line_data->getLinesAtTime(current_time);
+            
+            if (!lines.empty() && _current_line_index < static_cast<int>(lines.size())) {
+                // Here you can perform any specific actions needed when a different line is selected
+                // For example, updating a visualization to highlight the selected line
+                
+                // Request canvas update to reflect any visualization changes
+                _scene->UpdateCanvas();
+            }
+        }
+    }
+}

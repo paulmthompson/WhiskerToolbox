@@ -99,7 +99,7 @@ void MainWindow::_createActions() {
 
     connect(ui->actionLoad_JSON_Config, &QAction::triggered, this, &MainWindow::_loadJSONConfig);
 
-    connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, _scene, &Media_Window::LoadFrame);
+    connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ui->media_widget, &Media_Widget::LoadFrame);
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionLabel_Maker, &QAction::triggered, this, &MainWindow::openLabelMaker);
