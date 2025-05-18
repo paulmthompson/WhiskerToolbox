@@ -60,6 +60,7 @@ private slots:
     void _setPolynomialOrder(int order);
     void _setLineAlpha(int alpha);
     void _setLineColor(const QString& hex_color);
+    void _toggleShowPoints(bool checked);
     //void _clearCurrentLine();
 };
 

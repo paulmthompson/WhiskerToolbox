@@ -4,6 +4,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "Media_Window/Media_Window.hpp"
+#include "DataManager/transforms/Lines/line_angle.hpp"
 
 #include <QLabel>
 #include <QRadioButton>
@@ -11,48 +12,9 @@
 #include <QVBoxLayout>
 #include <QGroupBox>
 #include <QButtonGroup>
+#include <QCheckBox>
 #include <iostream>
 #include <armadillo>
-
-// Helper function to fit a polynomial of the specified order to the given data
-// Copied from line_angle.cpp to reuse the armadillo implementation
-std::vector<double> fit_polynomial(std::vector<double> const &x, std::vector<double> const &y, int order) {
-    if (x.size() != y.size() || x.size() <= order) {
-        return {};  // Not enough data points or size mismatch
-    }
-
-    // Create Armadillo matrix for Vandermonde matrix
-    arma::mat X(x.size(), order + 1);
-    arma::vec Y(y.data(), y.size());
-
-    // Build Vandermonde matrix
-    for (size_t i = 0; i < x.size(); ++i) {
-        for (int j = 0; j <= order; ++j) {
-            X(i, j) = std::pow(x[i], j);
-        }
-    }
-
-    // Solve least squares problem: X * coeffs = Y
-    arma::vec coeffs;
-    bool success = arma::solve(coeffs, X, Y);
-    
-    if (!success) {
-        return {}; // Failed to solve
-    }
-
-    // Convert Armadillo vector to std::vector
-    std::vector<double> result(coeffs.begin(), coeffs.end());
-    return result;
-}
-
-// Helper function to evaluate polynomial at a given point
-double evaluate_polynomial(std::vector<double> const &coeffs, double x) {
-    double result = 0.0;
-    for (size_t i = 0; i < coeffs.size(); ++i) {
-        result += coeffs[i] * std::pow(x, i);
-    }
-    return result;
-}
 
 MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Media_Window* scene, QWidget* parent)
     : QWidget(parent),
@@ -73,6 +35,9 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
             this, &MediaLine_Widget::_setLineColor);
     connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
             this, &MediaLine_Widget::_setLineAlpha);
+    
+    // Connect the show points checkbox from UI file
+    connect(ui->show_points_checkbox, &QCheckBox::toggled, this, &MediaLine_Widget::_toggleShowPoints);
             
     // Create the UI pages for each selection mode
     _setupSelectionModePages();
@@ -174,6 +139,11 @@ void MediaLine_Widget::setActiveKey(std::string const& key) {
         if (config) {
             ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
             ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+            
+            // Update the show points checkbox directly from the UI file
+            ui->show_points_checkbox->blockSignals(true);
+            ui->show_points_checkbox->setChecked(config.value()->show_points);
+            ui->show_points_checkbox->blockSignals(false);
         }
     }
 }
@@ -309,7 +279,7 @@ void MediaLine_Widget::_applyPolynomialFit(Line2D& line, int order) {
         y_coords[i] = line[i].y;
     }
     
-    // Fit polynomials to x(t) and y(t) using the existing function
+    // Fit polynomials to x(t) and y(t) using the function from line_angle.hpp
     std::vector<double> x_coeffs = fit_polynomial(t, x_coords, order);
     std::vector<double> y_coeffs = fit_polynomial(t, y_coords, order);
     
@@ -327,7 +297,7 @@ void MediaLine_Widget::_applyPolynomialFit(Line2D& line, int order) {
     for (int i = 0; i < num_points; ++i) {
         double t_param = static_cast<double>(i) / (num_points - 1);
         
-        // Evaluate polynomials at t_param using our helper function
+        // Evaluate polynomials at t_param using the function from line_angle.hpp
         double x_val = evaluate_polynomial(x_coeffs, t_param);
         double y_val = evaluate_polynomial(y_coeffs, t_param);
         
@@ -360,6 +330,16 @@ void MediaLine_Widget::_toggleSelectionMode(QString text) {
         _scene->setHoverCircleRadius(10.0);
     } else {
         _scene->setShowHoverCircle(false);
+    }
+}
+
+void MediaLine_Widget::_toggleShowPoints(bool checked) {
+    if (!_active_key.empty()) {
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            line_opts.value()->show_points = checked;
+        }
+        _scene->UpdateCanvas();
     }
 }
 
