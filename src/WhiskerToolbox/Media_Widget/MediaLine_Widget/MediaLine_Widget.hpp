@@ -2,6 +2,8 @@
 #define MEDIALINE_WIDGET_HPP
 
 
+#include "DataManager/Lines/lines.hpp"
+
 #include <QMap>
 #include <QWidget>
 
@@ -35,14 +37,27 @@ private:
         Add,
         Erase
     };
+    
+    // Smoothing modes for the Add selection mode
+    enum class Smoothing_Mode {
+        SimpleSmooth,
+        PolynomialFit
+    };
+    
     QMap<QString, Selection_Mode> _selection_modes;
     Selection_Mode _selection_mode {Selection_Mode::None};
+    Smoothing_Mode _smoothing_mode {Smoothing_Mode::SimpleSmooth};
+    int _polynomial_order {3}; // Default polynomial order
     
     void _setupSelectionModePages();
+    void _addPointToLine(float x_media, float y_media, int current_time);
+    void _applyPolynomialFit(Line2D& line, int order);
     
 private slots:
     void _clickedInVideo(qreal x, qreal y);
     void _toggleSelectionMode(QString text);
+    void _setSmoothingMode(int index);
+    void _setPolynomialOrder(int order);
     void _setLineAlpha(int alpha);
     void _setLineColor(const QString& hex_color);
     //void _clearCurrentLine();
