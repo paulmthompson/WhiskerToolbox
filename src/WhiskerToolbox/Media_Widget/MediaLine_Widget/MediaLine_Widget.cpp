@@ -3,6 +3,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 #include "Media_Window/Media_Window.hpp"
 #include "DataManager/transforms/Lines/line_angle.hpp"
 
@@ -15,6 +16,7 @@
 #include <QCheckBox>
 #include <iostream>
 #include <armadillo>
+#include <opencv2/opencv.hpp>
 
 MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Media_Window* scene, QWidget* parent)
     : QWidget(parent),
@@ -64,6 +66,14 @@ void MediaLine_Widget::_setupSelectionModePages() {
     addLabel->setWordWrap(true);
     addLayout->addWidget(addLabel);
     
+    // Edge Snapping checkbox
+    QCheckBox* edgeSnappingCheckbox = new QCheckBox("Snap to edges");
+    edgeSnappingCheckbox->setToolTip("Automatically snap points to nearby edges in the image");
+    addLayout->addWidget(edgeSnappingCheckbox);
+    
+    // Connect edge snapping checkbox
+    connect(edgeSnappingCheckbox, &QCheckBox::toggled, this, &MediaLine_Widget::_toggleEdgeSnapping);
+    
     // Smoothing options group
     QGroupBox* smoothingGroupBox = new QGroupBox("Smoothing Method");
     QVBoxLayout* smoothingLayout = new QVBoxLayout(smoothingGroupBox);
@@ -92,8 +102,47 @@ void MediaLine_Widget::_setupSelectionModePages() {
     polyOrderLayout->addWidget(polyOrderSpinBox);
     smoothingLayout->addLayout(polyOrderLayout);
     
+    // Edge detection parameters group
+    QGroupBox* edgeGroupBox = new QGroupBox("Edge Detection Parameters");
+    QVBoxLayout* edgeLayout = new QVBoxLayout(edgeGroupBox);
+    
+    // Threshold slider
+    QHBoxLayout* thresholdLayout = new QHBoxLayout();
+    QLabel* thresholdLabel = new QLabel("Threshold:");
+    QSlider* thresholdSlider = new QSlider(Qt::Horizontal);
+    thresholdSlider->setRange(10, 300);
+    thresholdSlider->setValue(_edge_threshold);
+    thresholdSlider->setEnabled(false); // Disabled initially
+    
+    thresholdLayout->addWidget(thresholdLabel);
+    thresholdLayout->addWidget(thresholdSlider);
+    edgeLayout->addLayout(thresholdLayout);
+    
+    // Search radius spinner
+    QHBoxLayout* radiusLayout = new QHBoxLayout();
+    QLabel* radiusLabel = new QLabel("Search Radius (px):");
+    QSpinBox* radiusSpinBox = new QSpinBox();
+    radiusSpinBox->setRange(5, 100);
+    radiusSpinBox->setValue(_edge_search_radius);
+    radiusSpinBox->setEnabled(false); // Disabled initially
+    
+    radiusLayout->addWidget(radiusLabel);
+    radiusLayout->addWidget(radiusSpinBox);
+    edgeLayout->addLayout(radiusLayout);
+    
+    // Add to layout
     addLayout->addWidget(smoothingGroupBox);
+    addLayout->addWidget(edgeGroupBox);
     ui->mode_stacked_widget->addWidget(addPage);
+    
+    // Store these widgets as members for later access
+    _edge_params_group = edgeGroupBox;
+    _threshold_slider = thresholdSlider;
+    _radius_spinbox = radiusSpinBox;
+    
+    // Connect signals for the edge detection parameters
+    connect(thresholdSlider, &QSlider::valueChanged, this, &MediaLine_Widget::_setEdgeThreshold);
+    connect(radiusSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MediaLine_Widget::_setEdgeSearchRadius);
     
     // Connect signals for the smoothing options
     connect(smoothingGroup, QOverload<int>::of(&QButtonGroup::idClicked),
@@ -103,6 +152,11 @@ void MediaLine_Widget::_setupSelectionModePages() {
             
     // Enable/disable polynomial order based on selected smoothing mode
     connect(polyFit, &QRadioButton::toggled, polyOrderSpinBox, &QSpinBox::setEnabled);
+    
+    // Enable/disable edge parameters based on edge snapping checkbox
+    connect(edgeSnappingCheckbox, &QCheckBox::toggled, edgeGroupBox, &QGroupBox::setEnabled);
+    connect(edgeSnappingCheckbox, &QCheckBox::toggled, thresholdSlider, &QSlider::setEnabled);
+    connect(edgeSnappingCheckbox, &QCheckBox::toggled, radiusSpinBox, &QSpinBox::setEnabled);
     
     // Create the "Erase Points" mode page
     QWidget* erasePage = new QWidget();
@@ -231,6 +285,26 @@ void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 void MediaLine_Widget::_addPointToLine(float x_media, float y_media, int current_time) {
     auto line_data = _data_manager->getData<LineData>(_active_key);
     auto lines = line_data->getLinesAtTime(current_time);
+    
+    // Check if edge snapping is enabled
+    bool use_edge_snapping = false;
+    auto line_opts = _scene->getLineConfig(_active_key);
+    if (line_opts.has_value()) {
+        use_edge_snapping = line_opts.value()->edge_snapping;
+    }
+    
+    // Apply edge snapping if enabled
+    if (use_edge_snapping && _edge_snapping_enabled) {
+        // Ensure we have current edge detection data
+        if (_current_edges.empty()) {
+            _detectEdges();
+        }
+        
+        // Find nearest edge point
+        auto edge_point = _findNearestEdge(x_media, y_media);
+        x_media = edge_point.first;
+        y_media = edge_point.second;
+    }
     
     if (lines.empty()) {
         // If no lines exist, create a new one with the single point
@@ -381,21 +455,28 @@ void MediaLine_Widget::_toggleShowPoints(bool checked) {
     }
 }
 
-/*
-void MediaLine_Widget::_clearCurrentLine() {
-    if (_active_key.empty()) {
-        return;
-    }
-
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-
-    if (_data_manager->getData<LineData>(_active_key)) {
-        _data_manager->getData<LineData>(_active_key)->clearLinesAtTime(current_time);
+void MediaLine_Widget::_toggleEdgeSnapping(bool checked) {
+    _edge_snapping_enabled = checked;
+    
+    if (!_active_key.empty()) {
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            line_opts.value()->edge_snapping = checked;
+        }
+        
+        // If enabling edge snapping, perform edge detection immediately
+        if (checked) {
+            _detectEdges();
+        } else {
+            // Clear cached edges when disabling
+            _current_edges.release();
+        }
+        
         _scene->UpdateCanvas();
-        std::cout << "Cleared line " << _active_key << " at time " << current_time << std::endl;
     }
+    
+    std::cout << "Edge snapping " << (checked ? "enabled" : "disabled") << std::endl;
 }
-*/
 
 void MediaLine_Widget::LoadFrame(int frame_id) {
     // Update the widget with the new frame
@@ -460,4 +541,115 @@ void MediaLine_Widget::_lineSelectionChanged(int index) {
             }
         }
     }
+}
+
+void MediaLine_Widget::_setEdgeThreshold(int threshold) {
+    _edge_threshold = threshold;
+    std::cout << "Edge threshold set to: " << threshold << std::endl;
+}
+
+void MediaLine_Widget::_setEdgeSearchRadius(int radius) {
+    _edge_search_radius = radius;
+    std::cout << "Edge search radius set to: " << radius << std::endl;
+}
+
+void MediaLine_Widget::_detectEdges() {
+    // Get the current frame from the media data
+    auto media = _data_manager->getData<MediaData>("media");
+    if (!media) {
+        std::cout << "No media data available for edge detection" << std::endl;
+        return;
+    }
+    
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto frame_data = media->getProcessedData(current_time);
+    
+    // Convert raw frame data to cv::Mat
+    int width = media->getWidth();
+    int height = media->getHeight();
+    
+    // Create a grayscale image for edge detection
+    cv::Mat gray_image;
+    
+    // Check the format of media data and create appropriate cv::Mat
+    if (media->getFormat() == MediaData::DisplayFormat::Gray) {
+        // Grayscale image
+        gray_image = cv::Mat(height, width, CV_8UC1, frame_data.data());
+    } else {
+        // Color image (RGBA)
+        _current_frame = cv::Mat(height, width, CV_8UC4, frame_data.data());
+        
+        // Convert to grayscale
+        cv::cvtColor(_current_frame, gray_image, cv::COLOR_RGBA2GRAY);
+    }
+    
+    // Apply Gaussian blur to reduce noise
+    cv::Mat blurred;
+    cv::GaussianBlur(gray_image, blurred, cv::Size(5, 5), 1.5);
+    
+    // Detect edges using Canny algorithm
+    cv::Canny(blurred, _current_edges, _edge_threshold / 2, _edge_threshold);
+    
+    std::cout << "Edge detection completed for frame " << current_time << std::endl;
+}
+
+std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
+    if (_current_edges.empty()) {
+        // No edge detection results, return the original point
+        return {x, y};
+    }
+    
+    // Round x and y to integers (image coordinates)
+    int x_int = static_cast<int>(std::round(x));
+    int y_int = static_cast<int>(std::round(y));
+    
+    // Define search radius and initialize variables
+    int radius = _edge_search_radius;
+    float min_distance = radius * radius + 1; // Initialize to something larger than possible
+    std::pair<float, float> nearest_edge = {x, y}; // Default to original point
+    
+    // Get image dimensions
+    int width = _current_edges.cols;
+    int height = _current_edges.rows;
+    
+    // Check if the point is within image bounds
+    if (x_int < 0 || x_int >= width || y_int < 0 || y_int >= height) {
+        std::cout << "Click point outside image bounds" << std::endl;
+        return {x, y};
+    }
+    
+    // Search in a square region around the clicked point
+    for (int dy = -radius; dy <= radius; dy++) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            // Calculate current point to check
+            int nx = x_int + dx;
+            int ny = y_int + dy;
+            
+            // Skip points outside image bounds
+            if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+                continue;
+            }
+            
+            // Check if this is an edge pixel
+            if (_current_edges.at<uchar>(ny, nx) > 0) {
+                // Calculate distance squared (avoid square root for performance)
+                float d_squared = dx*dx + dy*dy;
+                
+                // Update nearest edge if this is closer
+                if (d_squared < min_distance) {
+                    min_distance = d_squared;
+                    nearest_edge = {static_cast<float>(nx), static_cast<float>(ny)};
+                }
+            }
+        }
+    }
+    
+    if (min_distance < radius * radius + 1) {
+        std::cout << "Found edge point at (" << nearest_edge.first << ", " 
+                  << nearest_edge.second << "), distance: " << std::sqrt(min_distance) << std::endl;
+    } else {
+        std::cout << "No edge found within radius " << radius << std::endl;
+    }
+    
+    return nearest_edge;
 }

@@ -6,9 +6,13 @@
 
 #include <QMap>
 #include <QWidget>
+#include <QGroupBox>
+#include <QSlider>
+#include <QSpinBox>
 
 #include <memory>
 #include <string>
+#include <opencv2/opencv.hpp>
 
 namespace Ui {
 class MediaLine_Widget;
@@ -53,9 +57,25 @@ private:
     int _polynomial_order {3}; // Default polynomial order
     int _current_line_index {0}; // Track which line is currently selected
     
+    // Edge detection parameters
+    bool _edge_snapping_enabled {false};
+    int _edge_threshold {100}; // Default Canny edge detection threshold
+    int _edge_search_radius {20}; // Default search radius in pixels
+    cv::Mat _current_edges; // Cached edge detection results
+    cv::Mat _current_frame; // Cached current frame
+    
+    // UI elements
+    QGroupBox* _edge_params_group {nullptr};
+    QSlider* _threshold_slider {nullptr};
+    QSpinBox* _radius_spinbox {nullptr};
+    
     void _setupSelectionModePages();
     void _addPointToLine(float x_media, float y_media, int current_time);
     void _applyPolynomialFit(Line2D& line, int order);
+    
+    // Edge detection methods
+    void _detectEdges();
+    std::pair<float, float> _findNearestEdge(float x, float y);
     
 private slots:
     void _clickedInVideo(qreal x, qreal y);
@@ -66,7 +86,9 @@ private slots:
     void _setLineColor(const QString& hex_color);
     void _toggleShowPoints(bool checked);
     void _lineSelectionChanged(int index);
-    //void _clearCurrentLine();
+    void _toggleEdgeSnapping(bool checked);
+    void _setEdgeThreshold(int threshold);
+    void _setEdgeSearchRadius(int radius);
 };
 
 #endif// MEDIALINE_WIDGET_HPP

@@ -52,6 +52,7 @@ struct PointDisplayOptions : public BaseDisplayOptions {
 struct LineDisplayOptions : public BaseDisplayOptions {
     int line_thickness{DefaultDisplayValues::LINE_THICKNESS};
     bool show_points{DefaultDisplayValues::SHOW_POINTS}; // Show points as open circles along the line
+    bool edge_snapping{false}; // Enable edge snapping for new points
     // Future: line_style (e.g., solid, dashed, dotted enum)
 
     // OptionType getType() const override { return OptionType::Line; }
