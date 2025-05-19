@@ -63,8 +63,8 @@ void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
     auto point = _data_manager->getData<PointData>(_active_key);
     if (point) {
 
-        point->overwritePointAtTime(frame_id, {.x = static_cast<float>(y_media),
-                                               .y = static_cast<float>(x_media)
+        point->overwritePointAtTime(frame_id, {.x = static_cast<float>(x_media),
+                                               .y = static_cast<float>(y_media)
                                               });
 
         _scene->UpdateCanvas();
