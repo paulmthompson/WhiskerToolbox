@@ -140,6 +140,15 @@ float calculate_polynomial_angle(Line2D const &line, float position, int polynom
     return normalize_angle(angle_degrees, reference_x, reference_y);
 }
 
+// Add the evaluate_polynomial function definition
+double evaluate_polynomial(std::vector<double> const &coeffs, double x) {
+    double result = 0.0;
+    for (size_t i = 0; i < coeffs.size(); ++i) {
+        result += coeffs[i] * std::pow(x, i);
+    }
+    return result;
+}
+
 std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data, LineAngleParameters const * params) {
     auto analog_time_series = std::make_shared<AnalogTimeSeries>();
     std::map<int, float> angles;

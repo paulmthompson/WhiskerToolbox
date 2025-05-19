@@ -81,6 +81,16 @@
     </layout>
    </item>
    <item>
+    <widget class="QCheckBox" name="show_points_checkbox">
+     <property name="text">
+      <string>Show points as circles</string>
+     </property>
+     <property name="toolTip">
+      <string>Display open circles at each actual data point on the line</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -96,17 +106,10 @@
        </item>
       </layout>
      </item>
-     <item>
-      <widget class="QLabel" name="selection_mode_description">
-       <property name="text">
-        <string>Description: </string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="mode_stacked_widget"/>
    </item>
    <item>
     <spacer name="verticalSpacer">

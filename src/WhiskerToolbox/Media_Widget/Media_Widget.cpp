@@ -304,3 +304,32 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
     // Update the canvas with the new color
     _scene->UpdateCanvas();
 }
+
+void Media_Widget::LoadFrame(int frame_id) {
+    // First, update the Media_Window with the new frame
+    if (_scene) {
+        _scene->LoadFrame(frame_id);
+    }
+    
+    // Then propagate the frame change to any active subwidgets
+    // that need to respond to time changes
+    
+    // Check if we have a MediaLine_Widget active in the stackedWidget
+    int currentIndex = ui->stackedWidget->currentIndex();
+    if (currentIndex > 0) { // Index 0 is typically the empty widget
+        auto currentWidget = ui->stackedWidget->currentWidget();
+        
+        // Check for each type of widget and propagate the frame change
+        auto lineWidget = dynamic_cast<MediaLine_Widget*>(currentWidget);
+        if (lineWidget) {
+            lineWidget->LoadFrame(frame_id);
+        }
+        
+        // Add similar handling for other types of media subwidgets as needed
+        // For example:
+        // auto pointWidget = dynamic_cast<MediaPoint_Widget*>(currentWidget);
+        // if (pointWidget) {
+        //     pointWidget->LoadFrame(frame_id);
+        // }
+    }
+}
