@@ -10,11 +10,13 @@
 #include "utils/polynomial/polynomial_fit.hpp"
 
 #include <armadillo>
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <limits>
 #include <optional>
 #include <vector>
+#include <numeric> // for std::accumulate
 
 // Helper function to fit a polynomial to the given data
 std::vector<double> fit_polynomial_to_points(const std::vector<Point2D<float>>& points, int order) {
@@ -174,7 +176,8 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data, MaskToLinePara
 std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data, 
                                        MaskToLineParameters const* params,
                                        ProgressCallback progressCallback) {
-    auto line_data = std::make_shared<LineData>();
+
+    auto line_map = std::map<int, std::vector<Line2D>>();
     
     // Use default parameters if none provided
     float reference_x = params ? params->reference_x : 0.0f;
@@ -184,14 +187,19 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     float error_threshold = params ? params->error_threshold : 5.0f;
     bool should_remove_outliers = params ? params->remove_outliers : true;
     int subsample = params ? params->subsample : 1;
+
+    std::cout << "reference_x: " << reference_x << std::endl;
+    std::cout << "reference_y: " << reference_y << std::endl;   
+    std::cout << "method: " << static_cast<int>(method) << std::endl;
+    std::cout << "polynomial_order: " << polynomial_order << std::endl;
+    std::cout << "error_threshold: " << error_threshold << std::endl;
+    std::cout << "should_remove_outliers: " << should_remove_outliers << std::endl;
+    std::cout << "subsample: " << subsample << std::endl;
     
     Point2D<float> reference_point{reference_x, reference_y};
     
     // Initial progress
     progressCallback(0);
-    
-    // Copy the image size from mask data to line data
-    line_data->setImageSize(mask_data->getImageSize());
     
     // Count total masks to process for progress calculation
     size_t total_masks = 0;
@@ -203,7 +211,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     
     if (total_masks == 0) {
         progressCallback(100);
-        return line_data;  // Nothing to process
+        return std::make_shared<LineData>();  // Nothing to process
     }
 
     // Create a binary image from the mask points
@@ -215,6 +223,12 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     }
 
     std::vector<uint8_t> binary_image(image_size.width * image_size.height, 0);
+    
+    // Timing variables
+    std::vector<long long> skeletonize_times;
+    std::vector<long long> order_line_times;
+    std::vector<long long> outlier_removal_times;
+    std::vector<long long> map_insertion_times;
     
     size_t processed_masks = 0;
     for (auto const& mask_time_pair : mask_data->getAllMasksAsRange()) {
@@ -231,48 +245,126 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
         if (mask.empty()) {
             continue;
         }
-
-        // Zero out the binary image
-        std::fill(binary_image.begin(), binary_image.end(), 0);
-        
-        for (auto const& point : mask) {
-            int x = static_cast<int>(point.x);
-            int y = static_cast<int>(point.y);
-            
-            if (x >= 0 && x < image_size.width && 
-                y >= 0 && y < image_size.height) {
-                binary_image[y * image_size.width + x] = 1;
-            }
-        }
         
         std::vector<Point2D<float>> line_points;
         
         if (method == LinePointSelectionMethod::Skeletonize) {
-
-            auto skeleton = fast_skeletonize(binary_image, image_size.height, image_size.width);
+            // Zero out the binary image
+            std::fill(binary_image.begin(), binary_image.end(), 0);
+        
+            for (auto const& point : mask) {
+                int x = static_cast<int>(point.x);
+                int y = static_cast<int>(point.y);
             
-            // Order the points of the skeleton
+                if (x >= 0 && x < image_size.width && 
+                    y >= 0 && y < image_size.height) {
+                    binary_image[y * image_size.width + x] = 1;
+                }
+            }
+
+            // Time skeletonization
+            auto skeletonize_start = std::chrono::high_resolution_clock::now();
+            auto skeleton = fast_skeletonize(binary_image, image_size.height, image_size.width);
+            auto skeletonize_end = std::chrono::high_resolution_clock::now();
+            skeletonize_times.push_back(
+                std::chrono::duration_cast<std::chrono::microseconds>(
+                    skeletonize_end - skeletonize_start
+                ).count()
+            );
+            
+            // Time ordering step
+            auto order_start = std::chrono::high_resolution_clock::now();
             line_points = order_line(skeleton, image_size, reference_point, subsample);
+            auto order_end = std::chrono::high_resolution_clock::now();
+            order_line_times.push_back(
+                std::chrono::duration_cast<std::chrono::microseconds>(
+                    order_end - order_start
+                ).count()
+            );
         } else {
             // Use nearest neighbor ordering starting from reference
-            line_points = order_line(binary_image, image_size, reference_point, subsample);
+            line_points = mask;
+            
+            // Time ordering step for this method
+            auto order_start = std::chrono::high_resolution_clock::now();
+            line_points = order_line(line_points, reference_point, subsample);
+            auto order_end = std::chrono::high_resolution_clock::now();
+            order_line_times.push_back(
+                std::chrono::duration_cast<std::chrono::microseconds>(
+                    order_end - order_start
+                ).count()
+            );
         }
         
         if (should_remove_outliers && line_points.size() > polynomial_order + 2) {
+            // Time outlier removal
+            auto outlier_start = std::chrono::high_resolution_clock::now();
             line_points = remove_outliers(line_points, error_threshold, polynomial_order);
+            auto outlier_end = std::chrono::high_resolution_clock::now();
+            outlier_removal_times.push_back(
+                std::chrono::duration_cast<std::chrono::microseconds>(
+                    outlier_end - outlier_start
+                ).count()
+            );
         }
         
         if (!line_points.empty()) {
-            line_data->addLineAtTime(time, line_points);
+            // Time map insertion
+            auto insertion_start = std::chrono::high_resolution_clock::now();
+            line_map[time].push_back(std::move(line_points));
+            auto insertion_end = std::chrono::high_resolution_clock::now();
+            map_insertion_times.push_back(
+                std::chrono::duration_cast<std::chrono::microseconds>(
+                    insertion_end - insertion_start
+                ).count()
+            );
         }
         
         processed_masks++;
 
-        //std::cout << "Processed " << processed_masks << " masks of " << total_masks << std::endl;
+        // Print timing statistics every 1000 iterations or on the last iteration
+        if (processed_masks % 1000 == 0 || processed_masks == total_masks) {
+            if (!skeletonize_times.empty()) {
+                double skeletonize_avg = std::accumulate(skeletonize_times.begin(), skeletonize_times.end(), 0.0) / 
+                                        skeletonize_times.size();
+                std::cout << "Average skeletonization time: " << skeletonize_avg << " μs" << std::endl;
+            }
+            
+            if (!order_line_times.empty()) {
+                double order_avg = std::accumulate(order_line_times.begin(), order_line_times.end(), 0.0) / 
+                                  order_line_times.size();
+                std::cout << "Average order_line time: " << order_avg << " μs" << std::endl;
+            }
+            
+            if (!outlier_removal_times.empty()) {
+                double outlier_avg = std::accumulate(outlier_removal_times.begin(), outlier_removal_times.end(), 0.0) / 
+                                    outlier_removal_times.size();
+                std::cout << "Average outlier removal time: " << outlier_avg << " μs" << std::endl;
+            }
+            
+            if (!map_insertion_times.empty()) {
+                double insertion_avg = std::accumulate(map_insertion_times.begin(), map_insertion_times.end(), 0.0) / 
+                                      map_insertion_times.size();
+                std::cout << "Average map insertion time: " << insertion_avg << " μs" << std::endl;
+            }
+            
+            // Clear the vectors to only keep the last 1000 measurements
+            if (processed_masks % 1000 == 0 && processed_masks < total_masks) {
+                skeletonize_times.clear();
+                order_line_times.clear();
+                outlier_removal_times.clear();
+                map_insertion_times.clear();
+            }
+        }
         
         int progress = static_cast<int>(std::round((static_cast<double>(processed_masks) / total_masks) * 100.0));
         progressCallback(progress);
     }
+
+    auto line_data = std::make_shared<LineData>(line_map);
+
+    // Copy the image size from mask data to line data
+    line_data->setImageSize(mask_data->getImageSize());
     
     progressCallback(100);
     

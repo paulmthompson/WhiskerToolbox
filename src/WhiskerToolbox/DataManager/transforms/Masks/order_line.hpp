@@ -7,6 +7,16 @@
 #include <cstdint>
 #include <vector>
 
+std::vector<Point2D<float>> extract_line_pixels(
+        std::vector<uint8_t> const & binary_img,
+        ImageSize const image_size);
+
+std::vector<Point2D<float>> order_line(
+        std::vector<Point2D<float>> & line_pixels,
+        Point2D<float> const & origin,
+        int subsample = 1,
+        float tolerance = 5.0f);
+
 std::vector<Point2D<float>> order_line(
         std::vector<uint8_t> const & binary_img,
         ImageSize image_size,

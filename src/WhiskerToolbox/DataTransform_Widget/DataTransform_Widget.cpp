@@ -170,10 +170,14 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
 }
 
 void DataTransform_Widget::_updateProgress(int progress) {
-    ui->transform_progress_bar->setValue(progress);
-    ui->transform_progress_bar->setFormat("%p%");  // Show percentage text
-    ui->transform_progress_bar->repaint();  // Force immediate repaint
-    QApplication::processEvents();  // Process all pending events to ensure UI updates
+
+    if (progress > _current_progress) {
+        ui->transform_progress_bar->setValue(progress);
+        ui->transform_progress_bar->setFormat("%p%");  // Show percentage text
+        ui->transform_progress_bar->repaint();  // Force immediate repaint
+        QApplication::processEvents();  // Process all pending events to ensure UI updates
+        _current_progress = progress;
+    }
 }
 
 void DataTransform_Widget::_doTransform() {
@@ -191,6 +195,7 @@ void DataTransform_Widget::_doTransform() {
 
     // Reset and show the progress bar
     ui->transform_progress_bar->setValue(0);
+    _current_progress = 0;
     ui->transform_progress_bar->setFormat("%p%");
     ui->transform_progress_bar->setTextVisible(true);
     ui->transform_progress_bar->repaint();

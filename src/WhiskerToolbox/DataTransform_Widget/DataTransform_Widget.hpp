@@ -39,6 +39,7 @@ private:
     TransformParameter_Widget * _currentParameterWidget = nullptr;
     TransformOperation * _currentSelectedOperation = nullptr;
     DataTypeVariant _currentSelectedDataVariant;
+    int _current_progress = 0;
 
     void _initializeParameterWidgetFactories();
     void _displayParameterWidget(std::string const & op_name);
