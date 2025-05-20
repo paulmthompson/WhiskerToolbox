@@ -47,6 +47,7 @@ private slots:
     void _handleFeatureSelected(QString const & feature);
     void _doTransform();
     void _onOperationSelected(int index);
+    void _updateProgress(int progress);
 };
 
 

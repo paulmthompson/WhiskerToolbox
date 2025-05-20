@@ -1,7 +1,7 @@
 #ifndef MASK_OPERATIONS_HPP
 #define MASK_OPERATIONS_HPP
 
-#include "DataManager/Points/points.hpp"
+#include "Points/points.hpp"
 
 #include <cstdint>
 #include <vector>

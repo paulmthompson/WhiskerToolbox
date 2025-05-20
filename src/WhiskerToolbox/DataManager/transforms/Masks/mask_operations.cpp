@@ -1,7 +1,7 @@
 
 #include "mask_operations.hpp"
 
-#include "DataManager/ImageSize/ImageSize.hpp"
+#include "ImageSize/ImageSize.hpp"
 
 #include "connected_component.hpp"
 #include "order_line.hpp"

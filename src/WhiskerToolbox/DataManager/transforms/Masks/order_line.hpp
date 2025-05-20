@@ -1,8 +1,8 @@
 #ifndef UTILS_ORDER_LINE_HPP
 #define UTILS_ORDER_LINE_HPP
 
-#include "DataManager/ImageSize/ImageSize.hpp"
-#include "DataManager/Points/points.hpp"
+#include "ImageSize/ImageSize.hpp"
+#include "Points/points.hpp"
 
 #include <cstdint>
 #include <vector>

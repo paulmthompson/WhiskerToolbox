@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_CONNECTED_COMPONENT_HPP
 #define WHISKERTOOLBOX_CONNECTED_COMPONENT_HPP
 
-#include "DataManager/ImageSize/ImageSize.hpp"
+#include "ImageSize/ImageSize.hpp"
 
 #include <cstdint>
 #include <vector>

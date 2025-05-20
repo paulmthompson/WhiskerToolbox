@@ -2,7 +2,7 @@
 #ifndef WHISKERTOOLBOX_SIMPLIFY_LINE_HPP
 #define WHISKERTOOLBOX_SIMPLIFY_LINE_HPP
 
-#include "DataManager/Points/points.hpp"
+#include "Points/points.hpp"
 
 #include <vector>
 

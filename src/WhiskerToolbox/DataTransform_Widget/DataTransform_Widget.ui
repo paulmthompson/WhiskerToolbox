@@ -53,6 +53,16 @@
     </widget>
    </item>
    <item>
+    <widget class="QProgressBar" name="transform_progress_bar">
+     <property name="value">
+      <number>0</number>
+     </property>
+     <property name="textVisible">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
       <number>0</number>

@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MaskToLine_Widget</class>
+ <widget class="QWidget" name="MaskToLine_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>450</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Convert Mask to Line</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>Convert Mask to Line</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="margin">
+      <number>5</number>
+     </property>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="referenceGroupBox">
+     <property name="title">
+      <string>Reference Point</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="referenceDescriptionLabel">
+        <property name="text">
+         <string>Specify a reference point to use as base of the line:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <layout class="QHBoxLayout" name="referenceLayout">
+        <item>
+         <widget class="QLabel" name="xLabel">
+          <property name="text">
+           <string>X:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="referenceXSpinBox">
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="yLabel">
+          <property name="text">
+           <string>Y:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="referenceYSpinBox">
+          <property name="minimum">
+           <double>0.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10000.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="methodGroupBox">
+     <property name="title">
+      <string>Line Processing Method</string>
+     </property>
+     <layout class="QVBoxLayout" name="methodLayout">
+      <item>
+       <layout class="QHBoxLayout" name="methodSelectionLayout">
+        <item>
+         <widget class="QLabel" name="methodLabel">
+          <property name="text">
+           <string>Method:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="methodComboBox">
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="skeletonizeDescriptionLabel">
+        <property name="text">
+         <string>Skeletonization will thin the mask to a single-pixel width line before converting to line data.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="qualityGroupBox">
+     <property name="title">
+      <string>Quality Control</string>
+     </property>
+     <layout class="QGridLayout" name="qualityGridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="polynomialOrderLabel">
+        <property name="text">
+         <string>Polynomial Order:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="polynomialOrderSpinBox">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10</number>
+        </property>
+        <property name="value">
+         <number>3</number>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="1" column="0">
+       <widget class="QLabel" name="errorThresholdLabel">
+        <property name="text">
+         <string>Error Threshold:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="errorThresholdSpinBox">
+        <property name="minimum">
+         <double>0.500000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>5.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="2" column="0">
+       <widget class="QLabel" name="removeOutliersLabel">
+        <property name="text">
+         <string>Remove Outliers:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="removeOutliersCheckBox">
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="3" column="0">
+       <widget class="QLabel" name="subsampleLabel">
+        <property name="text">
+         <string>Subsample Points:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="subsampleSpinBox">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>20</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="4" column="0" colspan="2">
+       <widget class="QLabel" name="qualityDescriptionLabel">
+        <property name="text">
+         <string>Points with error higher than the threshold will be removed if "Remove Outliers" is checked. Subsample value > 1 will use only every Nth point.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 

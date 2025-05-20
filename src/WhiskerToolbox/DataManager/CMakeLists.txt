@@ -92,6 +92,8 @@ add_library(DataManager SHARED
         utils/string_manip.hpp
         utils/json_helpers.hpp
         utils/armadillo_wrap/analog_armadillo.hpp
+        utils/polynomial/polynomial_fit.hpp
+        utils/polynomial/polynomial_fit.cpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
@@ -110,6 +112,18 @@ add_library(DataManager SHARED
         transforms/Lines/line_min_point_dist.cpp
         transforms/Masks/mask_area.cpp
         transforms/Masks/mask_area.hpp
+        transforms/Masks/mask_to_line.cpp
+        transforms/Masks/mask_to_line.hpp
+        transforms/Masks/connected_component.hpp
+        transforms/Masks/connected_component.cpp
+        transforms/Masks/mask_operations.cpp
+        transforms/Masks/mask_operations.hpp
+        transforms/Masks/order_line.cpp
+        transforms/Masks/order_line.hpp
+        transforms/Masks/simplify_line.cpp
+        transforms/Masks/simplify_line.hpp
+        transforms/Masks/skeletonize.cpp
+        transforms/Masks/skeletonize.hpp
 
         loaders/binary_loaders.hpp
         loaders/hdf5_loaders.hpp
@@ -121,6 +135,7 @@ add_library(DataManager SHARED
         ImageSize/ImageSize.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
         DataManagerTypes.hpp
+
 )
 
 message(STATUS "NPY source dir:")

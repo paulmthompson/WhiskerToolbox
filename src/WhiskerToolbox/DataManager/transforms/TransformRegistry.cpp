@@ -9,6 +9,7 @@
 #include "TransformRegistry.hpp"
 
 #include "transforms/Masks/mask_area.hpp"
+#include "transforms/Masks/mask_to_line.hpp"
 #include "transforms/AnalogTimeSeries/analog_event_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
@@ -21,6 +22,7 @@ TransformRegistry::TransformRegistry() {
     std::cout << "Initializing Operation Registry..." << std::endl;
 
     _registerOperation(std::make_unique<MaskAreaOperation>());
+    _registerOperation(std::make_unique<MaskToLineOperation>());
     _registerOperation(std::make_unique<EventThresholdOperation>());
     _registerOperation(std::make_unique<IntervalThresholdOperation>());
     _registerOperation(std::make_unique<HilbertPhaseOperation>());

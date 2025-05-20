@@ -7,6 +7,7 @@
 #include "Media_Window/Media_Window.hpp"
 #include "DataManager/transforms/Lines/line_angle.hpp"
 #include "DataManager/utils/opencv_utility.hpp"
+#include "DataManager/utils/polynomial/polynomial_fit.hpp"
 #include "SelectionWidgets/LineNoneSelectionWidget.hpp"
 #include "SelectionWidgets/LineAddSelectionWidget.hpp"
 #include "SelectionWidgets/LineEraseSelectionWidget.hpp"

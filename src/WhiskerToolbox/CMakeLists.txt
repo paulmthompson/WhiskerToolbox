@@ -94,6 +94,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp
         DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.cpp
         DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.ui
+        DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.cpp
+        DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp
+        DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.ui
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.ui
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.cpp
@@ -214,16 +217,16 @@ set(PROJECT_SOURCES
         Feature_Tree_Widget/Feature_Tree_Widget.hpp
         Feature_Tree_Widget/Feature_Tree_Widget.ui
 
-        utils/Image_Processing/skeletonize.hpp
-        utils/Image_Processing/skeletonize.cpp
-        utils/Image_Processing/order_line.hpp
-        utils/Image_Processing/order_line.cpp
-        utils/Image_Processing/mask_operations.hpp
-        utils/Image_Processing/mask_operations.cpp
-        utils/Image_Processing/connected_component.hpp
-        utils/Image_Processing/connected_component.cpp
-        utils/Image_Processing/simplify_line.cpp
-        utils/Image_Processing/simplify_line.hpp
+        DataManager/transforms/Masks/skeletonize.hpp
+        DataManager/transforms/Masks/skeletonize.cpp
+        DataManager/transforms/Masks/order_line.hpp
+        DataManager/transforms/Masks/order_line.cpp
+        DataManager/transforms/Masks/mask_operations.hpp
+        DataManager/transforms/Masks/mask_operations.cpp
+        DataManager/transforms/Masks/connected_component.hpp
+        DataManager/transforms/Masks/connected_component.cpp
+        DataManager/transforms/Masks/simplify_line.cpp
+        DataManager/transforms/Masks/simplify_line.hpp
 
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp

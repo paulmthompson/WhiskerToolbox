@@ -9,8 +9,11 @@
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
+#include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
+
+#include <QApplication>
 
 
 DataTransform_Widget::DataTransform_Widget(
@@ -66,6 +69,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Calculate Line to Point Distance"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new LineMinDist_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
+    };
+    
+    _parameterWidgetFactories["Convert Mask to Line"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new MaskToLine_Widget(parent);
         widget->setDataManager(_data_manager);
         return widget;
     };
@@ -160,14 +169,28 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
     }
 }
 
-void DataTransform_Widget::_doTransform() {
+void DataTransform_Widget::_updateProgress(int progress) {
+    ui->transform_progress_bar->setValue(progress);
+    QApplication::processEvents();  // Ensure UI updates
+}
 
-    auto const new_data_key = "Test";
+void DataTransform_Widget::_doTransform() {
+    auto const new_data_key = ui->output_name_edit->text().toStdString();
+    
+    if (new_data_key.empty()) {
+        std::cout << "Output name is empty" << std::endl;
+        return;
+    }
 
     if (!_currentSelectedOperation) {
         std::cout << "Does not have operation" << std::endl;
         return;
     }
+
+    // Reset and show the progress bar
+    ui->transform_progress_bar->setValue(0);
+    ui->do_transform_button->setEnabled(false);
+    ui->transform_progress_bar->setTextVisible(true);
 
     std::unique_ptr<TransformParametersBase> params_owner_ptr;
     if (_currentParameterWidget) {// Check if a specific param widget is active
@@ -177,13 +200,25 @@ void DataTransform_Widget::_doTransform() {
         // params_owner_ptr = currentSelectedOperation_->getDefaultParameters();
     }
 
-
     std::cout << "Executing '" << _currentSelectedOperation->getName() << "'..." << std::endl;
-    // Pass non-owning raw pointer to the Qt-agnostic execute method
+    
+    // Create a progress callback
+    auto progressCallback = [this](int progress) {
+        // Use Qt's signal-slot to update the UI from any thread
+        QMetaObject::invokeMethod(this, "_updateProgress", Qt::QueuedConnection, 
+                                 Q_ARG(int, progress));
+    };
+    
+    // Pass non-owning raw pointer to the Qt-agnostic execute method with progress callback
     auto result_any = _currentSelectedOperation->execute(
             _currentSelectedDataVariant,
-            params_owner_ptr.get()// Pass raw pointer (nullptr if no params/widget)
+            params_owner_ptr.get(),
+            progressCallback
     );
 
     _data_manager->setData(new_data_key, result_any);
+    
+    // Ensure progress bar shows completion
+    ui->transform_progress_bar->setValue(100);
+    ui->do_transform_button->setEnabled(true);
 }
