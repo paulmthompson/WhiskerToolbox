@@ -27,6 +27,7 @@ add_executable(test_data_manager
         Points/test_point_data.cpp
 
         transforms/Masks/test_mask_area.cpp
+        transforms/Masks/test_order_line.cpp
         transforms/Lines/test_line_angle.cpp
         transforms/Lines/test_line_min_point_dist.cpp
 )

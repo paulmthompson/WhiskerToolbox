@@ -13,6 +13,7 @@ std::vector<Point2D<float>> order_line(
 
     auto const height = image_size.height;
     auto const width = image_size.width;
+    
     // Extract coordinates of the line pixels
     std::vector<Point2D<float>> line_pixels;
     for (int row = 0; row < height; ++row) {
