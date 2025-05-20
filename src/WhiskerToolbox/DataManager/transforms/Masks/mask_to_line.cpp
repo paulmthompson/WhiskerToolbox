@@ -18,25 +18,67 @@
 #include <vector>
 #include <numeric> // for std::accumulate
 
+
+// Helper function to compute t-values based on cumulative distance
+std::vector<double> compute_t_values(const std::vector<Point2D<float>>& points) {
+    if (points.empty()) {
+        return {};
+    }
+    
+    // Calculate cumulative distances
+    std::vector<double> distances;
+    distances.reserve(points.size());
+    distances.push_back(0.0);  // First point has distance 0
+    
+    double total_distance = 0.0;
+    for (size_t i = 1; i < points.size(); ++i) {
+        double dx = points[i].x - points[i-1].x;
+        double dy = points[i].y - points[i-1].y;
+        // We still need the actual distance for parameterization
+        double segment_distance = std::sqrt(dx*dx + dy*dy);
+        total_distance += segment_distance;
+        distances.push_back(total_distance);
+    }
+    
+    // Normalize distances to [0,1]
+    std::vector<double> t_values;
+    t_values.reserve(points.size());
+    if (total_distance > 0.0) {
+        for (double d : distances) {
+            t_values.push_back(d / total_distance);
+        }
+    } else {
+        // Fallback to index-based if all points are coincident
+        for (size_t i = 0; i < points.size(); ++i) {
+            t_values.push_back(static_cast<double>(i) / static_cast<double>(points.size() - 1));
+        }
+    }
+    
+    return t_values;
+}
+
 // Helper function to fit a polynomial to the given data
 std::vector<double> fit_polynomial_to_points(const std::vector<Point2D<float>>& points, int order) {
     if (points.size() <= order) {
         return {};  // Not enough data points
     }
 
+    // Calculate t values using the helper function
+    std::vector<double> t_values = compute_t_values(points);
+    if (t_values.empty()) {
+        return {};
+    }
+
     // Extract x and y coordinates
     std::vector<double> x_coords;
     std::vector<double> y_coords;
-    std::vector<double> t_values;  // Parameter values (0 to 1)
     
     x_coords.reserve(points.size());
     y_coords.reserve(points.size());
-    t_values.reserve(points.size());
     
-    for (size_t i = 0; i < points.size(); ++i) {
-        x_coords.push_back(static_cast<double>(points[i].x));
-        y_coords.push_back(static_cast<double>(points[i].y));
-        t_values.push_back(static_cast<double>(i) / static_cast<double>(points.size() - 1));
+    for (const auto& point : points) {
+        x_coords.push_back(static_cast<double>(point.x));
+        y_coords.push_back(static_cast<double>(point.y));
     }
 
     // Create Armadillo matrix for Vandermonde matrix
@@ -67,23 +109,122 @@ std::vector<double> fit_polynomial_to_points(const std::vector<Point2D<float>>& 
 std::vector<float> calculate_fitting_errors(const std::vector<Point2D<float>>& points, 
                                           const std::vector<double>& x_coeffs, 
                                           const std::vector<double>& y_coeffs) {
+    if (points.empty()) {
+        return {};
+    }
+    
+    // Calculate t values using the helper function
+    std::vector<double> t_values = compute_t_values(points);
+    if (t_values.empty()) {
+        return {};
+    }
+    
     std::vector<float> errors;
     errors.reserve(points.size());
     
     for (size_t i = 0; i < points.size(); ++i) {
-        double t = static_cast<double>(i) / static_cast<double>(points.size() - 1);
-        double fitted_x = evaluate_polynomial(x_coeffs, t);
-        double fitted_y = evaluate_polynomial(y_coeffs, t);
+        double fitted_x = evaluate_polynomial(x_coeffs, t_values[i]);
+        double fitted_y = evaluate_polynomial(y_coeffs, t_values[i]);
         
-        float error = std::sqrt(std::pow(points[i].x - fitted_x, 2) + 
-                              std::pow(points[i].y - fitted_y, 2));
-        errors.push_back(error);
+        // Use squared error directly (no square root)
+        float error_squared = std::pow(points[i].x - fitted_x, 2) + 
+                            std::pow(points[i].y - fitted_y, 2);
+        errors.push_back(error_squared);
     }
     
     return errors;
 }
 
-// Remove outliers from points based on error threshold
+
+// Recursive helper function for removing outliers
+std::vector<Point2D<float>> remove_outliers_recursive(const std::vector<Point2D<float>>& points, 
+                                                    float error_threshold_squared, 
+                                                    int polynomial_order,
+                                                    int max_iterations = 10) {
+    if (points.size() < polynomial_order + 2 || max_iterations <= 0) {
+        return points;  // Base case: not enough points or max iterations reached
+    }
+    
+    // Calculate t values for parameterization
+    std::vector<double> t_values = compute_t_values(points);
+    if (t_values.empty()) {
+        return points;
+    }
+    
+    // Extract x and y coordinates
+    std::vector<double> x_coords;
+    std::vector<double> y_coords;
+    
+    x_coords.reserve(points.size());
+    y_coords.reserve(points.size());
+    
+    for (const auto& point : points) {
+        x_coords.push_back(static_cast<double>(point.x));
+        y_coords.push_back(static_cast<double>(point.y));
+    }
+    
+    // Create Armadillo matrices
+    arma::mat X(t_values.size(), polynomial_order + 1);
+    arma::vec X_vec(x_coords.data(), x_coords.size());
+    arma::vec Y_vec(y_coords.data(), y_coords.size());
+    
+    // Build Vandermonde matrix
+    for (size_t i = 0; i < t_values.size(); ++i) {
+        for (int j = 0; j <= polynomial_order; ++j) {
+            X(i, j) = std::pow(t_values[i], j);
+        }
+    }
+    
+    // Solve least squares problems
+    arma::vec x_coeffs;
+    arma::vec y_coeffs;
+    bool success_x = arma::solve(x_coeffs, X, X_vec);
+    bool success_y = arma::solve(y_coeffs, X, Y_vec);
+    
+    if (!success_x || !success_y) {
+        return points;  // Failed to fit, return original points
+    }
+    
+    // Calculate errors and filter points
+    std::vector<Point2D<float>> filtered_points;
+    filtered_points.reserve(points.size());
+    bool any_points_removed = false;
+    
+    for (size_t i = 0; i < points.size(); ++i) {
+        double fitted_x = 0.0;
+        double fitted_y = 0.0;
+        
+        for (int j = 0; j <= polynomial_order; ++j) {
+            fitted_x += x_coeffs(j) * std::pow(t_values[i], j);
+            fitted_y += y_coeffs(j) * std::pow(t_values[i], j);
+        }
+        
+        // Use squared error directly (no square root)
+        float error_squared = std::pow(points[i].x - fitted_x, 2) + 
+                            std::pow(points[i].y - fitted_y, 2);
+        
+        // Keep point if error is below threshold
+        if (error_squared <= error_threshold_squared) {
+            filtered_points.push_back(points[i]);
+        } else {
+            any_points_removed = true;
+        }
+    }
+    
+    // If we filtered too many points, return original set
+    if (filtered_points.size() < polynomial_order + 2) {
+        return points;
+    }
+    
+    // If we removed points, recursively call with filtered points
+    if (any_points_removed) {
+        return remove_outliers_recursive(filtered_points, error_threshold_squared, polynomial_order, max_iterations - 1);
+    } else {
+        return filtered_points;  // No more points to remove
+    }
+}
+
+// Main outlier removal function using recursion
 std::vector<Point2D<float>> remove_outliers(const std::vector<Point2D<float>>& points, 
                                           float error_threshold, 
                                           int polynomial_order) {
@@ -91,81 +232,11 @@ std::vector<Point2D<float>> remove_outliers(const std::vector<Point2D<float>>& p
         return points;  // Not enough points to fit and filter
     }
     
-    std::vector<Point2D<float>> filtered_points = points;
-    bool points_removed = false;
+    // Convert threshold to squared threshold to avoid square roots in comparisons
+    float error_threshold_squared = error_threshold * error_threshold;
     
-    do {
-        points_removed = false;
-        
-        // Fit polynomials to current points
-        auto x_coords = std::vector<double>();
-        auto y_coords = std::vector<double>();
-        auto t_values = std::vector<double>();
-        
-        x_coords.reserve(filtered_points.size());
-        y_coords.reserve(filtered_points.size());
-        t_values.reserve(filtered_points.size());
-        
-        for (size_t i = 0; i < filtered_points.size(); ++i) {
-            x_coords.push_back(static_cast<double>(filtered_points[i].x));
-            y_coords.push_back(static_cast<double>(filtered_points[i].y));
-            t_values.push_back(static_cast<double>(i) / static_cast<double>(filtered_points.size() - 1));
-        }
-        
-        // Create Armadillo matrices
-        arma::mat X(t_values.size(), polynomial_order + 1);
-        arma::vec X_vec(x_coords.data(), x_coords.size());
-        arma::vec Y_vec(y_coords.data(), y_coords.size());
-        
-        // Build Vandermonde matrix
-        for (size_t i = 0; i < t_values.size(); ++i) {
-            for (int j = 0; j <= polynomial_order; ++j) {
-                X(i, j) = std::pow(t_values[i], j);
-            }
-        }
-        
-        // Solve least squares problems
-        arma::vec x_coeffs;
-        arma::vec y_coeffs;
-        bool success_x = arma::solve(x_coeffs, X, X_vec);
-        bool success_y = arma::solve(y_coeffs, X, Y_vec);
-        
-        if (!success_x || !success_y) {
-            break;  // Failed to fit
-        }
-        
-        // Calculate errors and find worst offender
-        float max_error = 0.0f;
-        size_t worst_idx = 0;
-        
-        for (size_t i = 0; i < filtered_points.size(); ++i) {
-            double t = static_cast<double>(i) / static_cast<double>(filtered_points.size() - 1);
-            double fitted_x = 0.0;
-            double fitted_y = 0.0;
-            
-            for (int j = 0; j <= polynomial_order; ++j) {
-                fitted_x += x_coeffs(j) * std::pow(t, j);
-                fitted_y += y_coeffs(j) * std::pow(t, j);
-            }
-            
-            float error = std::sqrt(std::pow(filtered_points[i].x - fitted_x, 2) + 
-                                  std::pow(filtered_points[i].y - fitted_y, 2));
-            
-            if (error > max_error) {
-                max_error = error;
-                worst_idx = i;
-            }
-        }
-        
-        // Remove point if error exceeds threshold
-        if (max_error > error_threshold && filtered_points.size() > polynomial_order + 2) {
-            filtered_points.erase(filtered_points.begin() + worst_idx);
-            points_removed = true;
-        }
-        
-    } while (points_removed);
-    
-    return filtered_points;
+    // Call recursive helper with a reasonable iteration limit
+    return remove_outliers_recursive(points, error_threshold_squared, polynomial_order, 10);
 }
 
 std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data, MaskToLineParameters const* params) {
