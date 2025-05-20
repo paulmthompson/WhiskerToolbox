@@ -133,15 +133,21 @@ set(PROJECT_SOURCES
         Media_Widget/Media_Widget.cpp
         Media_Widget/Media_Widget.ui
         Media_Widget/DisplayOptions/DisplayOptions.hpp
+
         Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp
         Media_Widget/MediaMask_Widget/MediaMask_Widget.cpp
         Media_Widget/MediaMask_Widget/MediaMask_Widget.ui
+        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.cpp
+        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.hpp
+        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.ui
+
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.cpp
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.ui
         Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp
         Media_Widget/MediaTensor_Widget/MediaTensor_Widget.cpp
         Media_Widget/MediaTensor_Widget/MediaTensor_Widget.ui
+
         Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp
         Media_Widget/MediaLine_Widget/MediaLine_Widget.cpp
         Media_Widget/MediaLine_Widget/MediaLine_Widget.ui
