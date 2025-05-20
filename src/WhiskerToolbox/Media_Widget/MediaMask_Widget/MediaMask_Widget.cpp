@@ -5,7 +5,7 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "Media_Window/Media_Window.hpp"
 #include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
-#include "SelectionWidgets/MaskDrawSelectionWidget.hpp"
+#include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
 
 #include <QVBoxLayout>
 #include <QLabel>
@@ -20,8 +20,7 @@ MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Me
 
     // Setup selection modes
     _selection_modes["(None)"] = Selection_Mode::None;
-    _selection_modes["Draw"] = Selection_Mode::Draw;
-    _selection_modes["Erase"] = Selection_Mode::Erase;
+    _selection_modes["Brush"] = Selection_Mode::Brush;
 
     ui->selection_mode_combo->addItems(QStringList(_selection_modes.keys()));
     
@@ -43,11 +42,13 @@ MediaMask_Widget::~MediaMask_Widget() {
 void MediaMask_Widget::showEvent(QShowEvent * event) {
     std::cout << "MediaMask_Widget Show Event" << std::endl;
     connect(_scene, &Media_Window::leftClickMedia, this, &MediaMask_Widget::_clickedInVideo);
+    connect(_scene, &Media_Window::rightClickMedia, this, &MediaMask_Widget::_rightClickedInVideo);
 }
 
 void MediaMask_Widget::hideEvent(QHideEvent * event) {
     std::cout << "MediaMask_Widget Hide Event" << std::endl;
     disconnect(_scene, &Media_Window::leftClickMedia, this, &MediaMask_Widget::_clickedInVideo);
+    disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaMask_Widget::_rightClickedInVideo);
 }
 
 void MediaMask_Widget::_setupSelectionModePages() {
@@ -55,24 +56,15 @@ void MediaMask_Widget::_setupSelectionModePages() {
     _noneSelectionWidget = new mask_widget::MaskNoneSelectionWidget();
     ui->mode_stacked_widget->addWidget(_noneSelectionWidget);
     
-    // Create the "Draw" mode page using our new widget
-    _drawSelectionWidget = new mask_widget::MaskDrawSelectionWidget();
-    ui->mode_stacked_widget->addWidget(_drawSelectionWidget);
+    // Create the "Brush" mode page using our new widget
+    _brushSelectionWidget = new mask_widget::MaskBrushSelectionWidget();
+    ui->mode_stacked_widget->addWidget(_brushSelectionWidget);
     
-    // Connect signals from the draw selection widget
-    connect(_drawSelectionWidget, &mask_widget::MaskDrawSelectionWidget::brushSizeChanged,
+    // Connect signals from the brush selection widget
+    connect(_brushSelectionWidget, &mask_widget::MaskBrushSelectionWidget::brushSizeChanged,
             this, &MediaMask_Widget::_setBrushSize);
-    connect(_drawSelectionWidget, &mask_widget::MaskDrawSelectionWidget::hoverCircleVisibilityChanged,
+    connect(_brushSelectionWidget, &mask_widget::MaskBrushSelectionWidget::hoverCircleVisibilityChanged,
             this, &MediaMask_Widget::_toggleShowHoverCircle);
-    
-    // Create placeholder widget for Erase mode
-    // This will be replaced with a proper widget in future implementations
-    QWidget* erasePage = new QWidget();
-    QVBoxLayout* eraseLayout = new QVBoxLayout(erasePage);
-    QLabel* eraseLabel = new QLabel("Erase mode: Click and drag in the video to erase parts of the mask.");
-    eraseLabel->setWordWrap(true);
-    eraseLayout->addWidget(eraseLabel);
-    ui->mode_stacked_widget->addWidget(erasePage);
     
     // Set initial page
     ui->mode_stacked_widget->setCurrentIndex(0);
@@ -123,9 +115,9 @@ void MediaMask_Widget::_toggleSelectionMode(QString text) {
     ui->mode_stacked_widget->setCurrentIndex(pageIndex);
     
     // Update hover circle visibility based on the mode
-    if (_selection_mode == Selection_Mode::Draw) {
-        _scene->setShowHoverCircle(_drawSelectionWidget->isHoverCircleVisible());
-        _scene->setHoverCircleRadius(static_cast<double>(_drawSelectionWidget->getBrushSize()));
+    if (_selection_mode == Selection_Mode::Brush) {
+        _scene->setShowHoverCircle(_brushSelectionWidget->isHoverCircleVisible());
+        _scene->setHoverCircleRadius(static_cast<double>(_brushSelectionWidget->getBrushSize()));
     } else {
         _scene->setShowHoverCircle(false);
     }
@@ -139,7 +131,7 @@ void MediaMask_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         return;
     }
 
-    std::cout << "Clicked in video at (" << x_canvas << ", " << y_canvas 
+    std::cout << "Left clicked in video at (" << x_canvas << ", " << y_canvas 
               << ") with selection mode: " << static_cast<int>(_selection_mode) << std::endl;
               
     // Process the click based on selection mode
@@ -147,26 +139,35 @@ void MediaMask_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         case Selection_Mode::None:
             // Do nothing in None mode
             break;
-        case Selection_Mode::Draw:
-            // In future implementation: handle drawing
-            std::cout << "Draw mode clicked (not yet implemented)" << std::endl;
-            break;
-        case Selection_Mode::Erase:
-            // In future implementation: handle erasing
-            std::cout << "Erase mode clicked (not yet implemented)" << std::endl;
+        case Selection_Mode::Brush:
+            // Add to mask (would be implemented in the future)
+            std::cout << "Brush mode: Add to mask at (" << x_canvas << ", " << y_canvas 
+                      << ") with radius " << _brushSelectionWidget->getBrushSize() << std::endl;
             break;
     }
 }
 
+void MediaMask_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
+    if (_active_key.empty() || _selection_mode != Selection_Mode::Brush) {
+        return;
+    }
+    
+    std::cout << "Right clicked in video at (" << x_canvas << ", " << y_canvas << ")" << std::endl;
+    
+    // Erase from mask (would be implemented in the future)
+    std::cout << "Brush mode: Erase from mask at (" << x_canvas << ", " << y_canvas 
+              << ") with radius " << _brushSelectionWidget->getBrushSize() << std::endl;
+}
+
 void MediaMask_Widget::_setBrushSize(int size) {
-    if (_selection_mode == Selection_Mode::Draw) {
+    if (_selection_mode == Selection_Mode::Brush) {
         _scene->setHoverCircleRadius(static_cast<double>(size));
     }
     std::cout << "Brush size set to: " << size << std::endl;
 }
 
 void MediaMask_Widget::_toggleShowHoverCircle(bool checked) {
-    if (_selection_mode == Selection_Mode::Draw) {
+    if (_selection_mode == Selection_Mode::Brush) {
         _scene->setShowHoverCircle(checked);
     }
     std::cout << "Show hover circle " << (checked ? "enabled" : "disabled") << std::endl;

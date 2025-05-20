@@ -1,22 +1,24 @@
-#ifndef WHISKER_TOOLBOX_MASK_DRAW_SELECTION_WIDGET_HPP
-#define WHISKER_TOOLBOX_MASK_DRAW_SELECTION_WIDGET_HPP
+#ifndef WHISKER_TOOLBOX_MASK_BRUSH_SELECTION_WIDGET_HPP
+#define WHISKER_TOOLBOX_MASK_BRUSH_SELECTION_WIDGET_HPP
 
 #include <QWidget>
 
 namespace Ui {
-class MaskDrawSelectionWidget;
+class MaskBrushSelectionWidget;
 }
 
 namespace mask_widget {
 
 /**
- * @brief Widget for the "Draw" selection mode
+ * @brief Widget for the "Brush" selection mode
  * 
- * This widget provides UI for drawing mask areas, including:
- * - Brush size adjustment
- * - Hover circle visibility
+ * This widget provides UI for both adding to and erasing from mask areas:
+ * - Left click adds to the mask
+ * - Right click erases from the mask
+ * - Brush size adjustment affects both operations
+ * - Hover circle visibility can be toggled
  */
-class MaskDrawSelectionWidget : public QWidget {
+class MaskBrushSelectionWidget : public QWidget {
     Q_OBJECT
 
 public:
@@ -24,12 +26,12 @@ public:
      * @brief Constructor
      * @param parent The parent widget
      */
-    explicit MaskDrawSelectionWidget(QWidget* parent = nullptr);
+    explicit MaskBrushSelectionWidget(QWidget* parent = nullptr);
     
     /**
      * @brief Destructor
      */
-    ~MaskDrawSelectionWidget();
+    ~MaskBrushSelectionWidget();
 
     /**
      * @brief Get the current brush size
@@ -69,11 +71,11 @@ signals:
     void hoverCircleVisibilityChanged(bool visible);
 
 private:
-    Ui::MaskDrawSelectionWidget* ui;
+    Ui::MaskBrushSelectionWidget* ui;
     int _brushSize = 15; // Default brush size
     bool _hoverCircleVisible = true; // Default visibility
 };
 
 } // namespace mask_widget
 
-#endif // WHISKER_TOOLBOX_MASK_DRAW_SELECTION_WIDGET_HPP 
+#endif // WHISKER_TOOLBOX_MASK_BRUSH_SELECTION_WIDGET_HPP 

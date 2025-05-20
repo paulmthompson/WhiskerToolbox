@@ -300,6 +300,16 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
                 event->scenePos().x() / getXAspect(),
                 event->scenePos().y() / getYAspect());
     } else if (event->button() == Qt::RightButton) {
+        if (_drawing_mode) {
+            auto pos = event->scenePos();
+            _drawing_points.clear();
+            _drawing_points.push_back(pos);
+            _is_drawing = true;
+        }
+        emit rightClick(event->scenePos().x(), event->scenePos().y());
+        emit rightClickMedia(
+                event->scenePos().x() / getXAspect(),
+                event->scenePos().y() / getYAspect());
 
     } else {
         QGraphicsScene::mousePressEvent(event);
@@ -309,6 +319,9 @@ void Media_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent * event) {
     if (event->button() == Qt::LeftButton && _is_drawing) {
         _is_drawing = false;
         emit leftRelease();
+    } else if (event->button() == Qt::RightButton && _is_drawing) {
+        _is_drawing = false;
+        emit rightRelease();
     }
     QGraphicsScene::mouseReleaseEvent(event);
 }

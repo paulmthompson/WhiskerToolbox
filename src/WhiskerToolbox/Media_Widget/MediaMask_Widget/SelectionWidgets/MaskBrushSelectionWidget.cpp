@@ -1,11 +1,11 @@
-#include "MaskDrawSelectionWidget.hpp"
-#include "ui_MaskDrawSelectionWidget.h"
+#include "MaskBrushSelectionWidget.hpp"
+#include "ui_MaskBrushSelectionWidget.h"
 
 namespace mask_widget {
 
-MaskDrawSelectionWidget::MaskDrawSelectionWidget(QWidget* parent)
+MaskBrushSelectionWidget::MaskBrushSelectionWidget(QWidget* parent)
     : QWidget(parent)
-    , ui(new Ui::MaskDrawSelectionWidget) {
+    , ui(new Ui::MaskBrushSelectionWidget) {
     ui->setupUi(this);
     
     // Connect slider and spinbox to each other for two-way updates
@@ -25,15 +25,15 @@ MaskDrawSelectionWidget::MaskDrawSelectionWidget(QWidget* parent)
     });
 }
 
-MaskDrawSelectionWidget::~MaskDrawSelectionWidget() {
+MaskBrushSelectionWidget::~MaskBrushSelectionWidget() {
     delete ui;
 }
 
-int MaskDrawSelectionWidget::getBrushSize() const {
+int MaskBrushSelectionWidget::getBrushSize() const {
     return _brushSize;
 }
 
-void MaskDrawSelectionWidget::setBrushSize(int size) {
+void MaskBrushSelectionWidget::setBrushSize(int size) {
     if (_brushSize != size) {
         _brushSize = size;
         ui->brushSizeSlider->setValue(size);
@@ -41,11 +41,11 @@ void MaskDrawSelectionWidget::setBrushSize(int size) {
     }
 }
 
-bool MaskDrawSelectionWidget::isHoverCircleVisible() const {
+bool MaskBrushSelectionWidget::isHoverCircleVisible() const {
     return _hoverCircleVisible;
 }
 
-void MaskDrawSelectionWidget::setHoverCircleVisible(bool visible) {
+void MaskBrushSelectionWidget::setHoverCircleVisible(bool visible) {
     if (_hoverCircleVisible != visible) {
         _hoverCircleVisible = visible;
         ui->showCircleCheckbox->setChecked(visible);

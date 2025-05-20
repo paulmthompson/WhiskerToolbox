@@ -13,7 +13,7 @@ class MediaMask_Widget;
 
 namespace mask_widget {
 class MaskNoneSelectionWidget;
-class MaskDrawSelectionWidget;
+class MaskBrushSelectionWidget;
 }
 
 class DataManager;
@@ -38,13 +38,12 @@ private:
     // Selection mode enum
     enum class Selection_Mode {
         None,
-        Draw,
-        Erase
+        Brush
     };
     
     // Selection widget pointers
     mask_widget::MaskNoneSelectionWidget* _noneSelectionWidget {nullptr};
-    mask_widget::MaskDrawSelectionWidget* _drawSelectionWidget {nullptr};
+    mask_widget::MaskBrushSelectionWidget* _brushSelectionWidget {nullptr};
     
     QMap<QString, Selection_Mode> _selection_modes;
     Selection_Mode _selection_mode {Selection_Mode::None};
@@ -56,6 +55,7 @@ private slots:
     void _setMaskColor(const QString& hex_color);
     void _toggleSelectionMode(QString text);
     void _clickedInVideo(qreal x, qreal y);
+    void _rightClickedInVideo(qreal x, qreal y);
     void _setBrushSize(int size);
     void _toggleShowHoverCircle(bool checked);
 };

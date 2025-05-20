@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MaskDrawSelectionWidget</class>
- <widget class="QWidget" name="MaskDrawSelectionWidget">
+ <class>MaskBrushSelectionWidget</class>
+ <widget class="QWidget" name="MaskBrushSelectionWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>150</height>
+    <height>180</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,8 @@
    <item>
     <widget class="QLabel" name="descriptionLabel">
      <property name="text">
-      <string>Draw mode: Click and drag in the video to add areas to the mask.</string>
+      <string>Brush mode: Use the mouse to modify the mask.
+Left click to add to the mask, right click to erase from it.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -77,6 +78,22 @@
      </property>
      <property name="checked">
       <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="infoLabel">
+     <property name="text">
+      <string>Note: The same brush size applies to both adding and erasing operations.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="styleSheet">
+      <string>font-style: italic; color: #666;</string>
      </property>
     </widget>
    </item>

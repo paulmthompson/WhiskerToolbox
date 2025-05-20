@@ -182,8 +182,11 @@ public slots:
     void LoadFrame(int frame_id);
 signals:
     void leftClick(qreal, qreal);
+    void rightClick(qreal, qreal);
     void leftClickMedia(qreal, qreal);
+    void rightClickMedia(qreal, qreal);
     void leftRelease();
+    void rightRelease();
     void canvasUpdated(QImage const & canvasImage);
     void mouseMove(qreal x, qreal y);
 };
