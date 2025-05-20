@@ -213,18 +213,15 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
         auto const& masks = mask_time_pair.masks;
         
         if (masks.empty()) {
-            continue;  // Skip if no masks at this time
+            continue;
         }
         
         // For now, just process the first mask at each time
         auto const& mask = masks[0];
         
         if (mask.empty()) {
-            continue;  // Skip empty masks
+            continue;
         }
-        
-        // Report progress - Phase 1: Creating binary image (10%)
-        progressCallback(static_cast<int>(10 + (processed_masks * 90) / total_masks));
         
         // Create a binary image from the mask points
         ImageSize image_size = mask_data->getImageSize();
@@ -247,17 +244,11 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
             }
         }
         
-        // Report progress - Phase 2: Processing image (40%)
-        progressCallback(static_cast<int>(20 + (processed_masks * 90) / total_masks));
-        
         std::vector<Point2D<float>> line_points;
         
         if (method == LinePointSelectionMethod::Skeletonize) {
             // Skeletonize the binary image
             auto skeleton = fast_skeletonize(binary_image, image_size.height, image_size.width);
-            
-            // Report progress - Phase 3: Skeletonization complete (60%)
-            progressCallback(static_cast<int>(40 + (processed_masks * 90) / total_masks));
             
             // Order the points of the skeleton
             line_points = order_line(skeleton, image_size, reference_point, subsample);
@@ -266,26 +257,25 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
             line_points = order_line(binary_image, image_size, reference_point, subsample);
         }
         
-        // Report progress - Phase 4: Ordering complete (80%)
-        progressCallback(static_cast<int>(60 + (processed_masks * 90) / total_masks));
-        
         // Remove outliers if requested
         if (should_remove_outliers && line_points.size() > polynomial_order + 2) {
             line_points = remove_outliers(line_points, error_threshold, polynomial_order);
         }
-        
-        // Report progress - Phase 5: Quality control complete (90%)
-        progressCallback(static_cast<int>(80 + (processed_masks * 90) / total_masks));
         
         // Add the line to the LineData object
         if (!line_points.empty()) {
             line_data->addLineAtTime(time, line_points);
         }
         
+        // Increment the processed mask count
         processed_masks++;
+        
+        // Report progress after completing each mask, rounded to the nearest percent
+        int progress = static_cast<int>(std::round((static_cast<double>(processed_masks) / total_masks) * 100.0));
+        progressCallback(progress);
     }
     
-    // Final progress
+    // Ensure final progress is at 100% (in case of rounding errors or empty masks)
     progressCallback(100);
     
     return line_data;
