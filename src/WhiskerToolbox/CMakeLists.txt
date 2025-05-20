@@ -140,6 +140,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.cpp
         Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.hpp
         Media_Widget/MediaMask_Widget/SelectionWidgets/MaskNoneSelectionWidget.ui
+        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskDrawSelectionWidget.cpp
+        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskDrawSelectionWidget.hpp
+        Media_Widget/MediaMask_Widget/SelectionWidgets/MaskDrawSelectionWidget.ui
 
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.cpp

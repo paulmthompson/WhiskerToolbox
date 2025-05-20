@@ -5,6 +5,7 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "Media_Window/Media_Window.hpp"
 #include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
+#include "SelectionWidgets/MaskDrawSelectionWidget.hpp"
 
 #include <QVBoxLayout>
 #include <QLabel>
@@ -54,15 +55,18 @@ void MediaMask_Widget::_setupSelectionModePages() {
     _noneSelectionWidget = new mask_widget::MaskNoneSelectionWidget();
     ui->mode_stacked_widget->addWidget(_noneSelectionWidget);
     
-    // Create placeholder widgets for Draw and Erase modes
-    // These will be replaced with proper widgets in future implementations
-    QWidget* drawPage = new QWidget();
-    QVBoxLayout* drawLayout = new QVBoxLayout(drawPage);
-    QLabel* drawLabel = new QLabel("Draw mode: Click and drag in the video to draw mask areas.");
-    drawLabel->setWordWrap(true);
-    drawLayout->addWidget(drawLabel);
-    ui->mode_stacked_widget->addWidget(drawPage);
+    // Create the "Draw" mode page using our new widget
+    _drawSelectionWidget = new mask_widget::MaskDrawSelectionWidget();
+    ui->mode_stacked_widget->addWidget(_drawSelectionWidget);
     
+    // Connect signals from the draw selection widget
+    connect(_drawSelectionWidget, &mask_widget::MaskDrawSelectionWidget::brushSizeChanged,
+            this, &MediaMask_Widget::_setBrushSize);
+    connect(_drawSelectionWidget, &mask_widget::MaskDrawSelectionWidget::hoverCircleVisibilityChanged,
+            this, &MediaMask_Widget::_toggleShowHoverCircle);
+    
+    // Create placeholder widget for Erase mode
+    // This will be replaced with a proper widget in future implementations
     QWidget* erasePage = new QWidget();
     QVBoxLayout* eraseLayout = new QVBoxLayout(erasePage);
     QLabel* eraseLabel = new QLabel("Erase mode: Click and drag in the video to erase parts of the mask.");
@@ -118,6 +122,14 @@ void MediaMask_Widget::_toggleSelectionMode(QString text) {
     int pageIndex = static_cast<int>(_selection_mode);
     ui->mode_stacked_widget->setCurrentIndex(pageIndex);
     
+    // Update hover circle visibility based on the mode
+    if (_selection_mode == Selection_Mode::Draw) {
+        _scene->setShowHoverCircle(_drawSelectionWidget->isHoverCircleVisible());
+        _scene->setHoverCircleRadius(static_cast<double>(_drawSelectionWidget->getBrushSize()));
+    } else {
+        _scene->setShowHoverCircle(false);
+    }
+    
     std::cout << "MediaMask_Widget selection mode changed to: " << text.toStdString() << std::endl;
 }
 
@@ -144,4 +156,18 @@ void MediaMask_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
             std::cout << "Erase mode clicked (not yet implemented)" << std::endl;
             break;
     }
+}
+
+void MediaMask_Widget::_setBrushSize(int size) {
+    if (_selection_mode == Selection_Mode::Draw) {
+        _scene->setHoverCircleRadius(static_cast<double>(size));
+    }
+    std::cout << "Brush size set to: " << size << std::endl;
+}
+
+void MediaMask_Widget::_toggleShowHoverCircle(bool checked) {
+    if (_selection_mode == Selection_Mode::Draw) {
+        _scene->setShowHoverCircle(checked);
+    }
+    std::cout << "Show hover circle " << (checked ? "enabled" : "disabled") << std::endl;
 }
