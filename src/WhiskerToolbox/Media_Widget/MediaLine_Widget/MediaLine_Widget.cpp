@@ -6,6 +6,8 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "Media_Window/Media_Window.hpp"
 #include "DataManager/transforms/Lines/line_angle.hpp"
+#include "DataManager/utils/opencv_utility.hpp"
+#include "SelectionWidgets/LineNoneSelectionWidget.hpp"
 
 #include <QLabel>
 #include <QRadioButton>
@@ -49,13 +51,9 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
 }
 
 void MediaLine_Widget::_setupSelectionModePages() {
-    // Create the "None" mode page
-    QWidget* nonePage = new QWidget();
-    QVBoxLayout* noneLayout = new QVBoxLayout(nonePage);
-    QLabel* noneLabel = new QLabel("No selection mode active. Click in the video to navigate.");
-    noneLabel->setWordWrap(true);
-    noneLayout->addWidget(noneLabel);
-    ui->mode_stacked_widget->addWidget(nonePage);
+    // Create the "None" mode page using our new widget
+    _noneSelectionWidget = new line_widget::LineNoneSelectionWidget();
+    ui->mode_stacked_widget->addWidget(_noneSelectionWidget);
     
     // Create the "Add Points" mode page with enhanced options
     QWidget* addPage = new QWidget();
@@ -293,14 +291,12 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, int current
         use_edge_snapping = line_opts.value()->edge_snapping;
     }
     
-    // Apply edge snapping if enabled
     if (use_edge_snapping && _edge_snapping_enabled) {
-        // Ensure we have current edge detection data
+
         if (_current_edges.empty()) {
             _detectEdges();
         }
         
-        // Find nearest edge point
         auto edge_point = _findNearestEdge(x_media, y_media);
         x_media = edge_point.first;
         y_media = edge_point.second;
@@ -554,7 +550,7 @@ void MediaLine_Widget::_setEdgeSearchRadius(int radius) {
 }
 
 void MediaLine_Widget::_detectEdges() {
-    // Get the current frame from the media data
+
     auto media = _data_manager->getData<MediaData>("media");
     if (!media) {
         std::cout << "No media data available for edge detection" << std::endl;
@@ -565,6 +561,7 @@ void MediaLine_Widget::_detectEdges() {
     auto frame_data = media->getProcessedData(current_time);
     
     // Convert raw frame data to cv::Mat
+    /*
     int width = media->getWidth();
     int height = media->getHeight();
     
@@ -582,20 +579,21 @@ void MediaLine_Widget::_detectEdges() {
         // Convert to grayscale
         cv::cvtColor(_current_frame, gray_image, cv::COLOR_RGBA2GRAY);
     }
+    */
+    auto gray_image = convert_vector_to_mat(frame_data, media->getImageSize());
     
-    // Apply Gaussian blur to reduce noise
-    cv::Mat blurred;
-    cv::GaussianBlur(gray_image, blurred, cv::Size(5, 5), 1.5);
-    
-    // Detect edges using Canny algorithm
-    cv::Canny(blurred, _current_edges, _edge_threshold / 2, _edge_threshold);
+    //cv::Mat blurred;
+    //cv::GaussianBlur(gray_image, blurred, cv::Size(5, 5), 1.5);
+    //cv::Canny(blurred, _current_edges, _edge_threshold / 2, _edge_threshold);
+
+    cv::Canny(gray_image, _current_edges, _edge_threshold / 2, _edge_threshold);
     
     std::cout << "Edge detection completed for frame " << current_time << std::endl;
+    std::cout << "Edges detected: " << _current_edges.size() << std::endl;
 }
 
 std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
     if (_current_edges.empty()) {
-        // No edge detection results, return the original point
         return {x, y};
     }
     
@@ -625,7 +623,6 @@ std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
             int nx = x_int + dx;
             int ny = y_int + dy;
             
-            // Skip points outside image bounds
             if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
                 continue;
             }
@@ -649,6 +646,7 @@ std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
                   << nearest_edge.second << "), distance: " << std::sqrt(min_distance) << std::endl;
     } else {
         std::cout << "No edge found within radius " << radius << std::endl;
+        cv::imwrite("edges.png", _current_edges);
     }
     
     return nearest_edge;

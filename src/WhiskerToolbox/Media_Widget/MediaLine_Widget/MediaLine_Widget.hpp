@@ -18,6 +18,10 @@ namespace Ui {
 class MediaLine_Widget;
 }
 
+namespace line_widget {
+class LineNoneSelectionWidget;
+}
+
 class DataManager;
 class Media_Window;
 
@@ -50,6 +54,9 @@ private:
         SimpleSmooth,
         PolynomialFit
     };
+    
+    // Selection widget pointers
+    line_widget::LineNoneSelectionWidget* _noneSelectionWidget {nullptr};
     
     QMap<QString, Selection_Mode> _selection_modes;
     Selection_Mode _selection_mode {Selection_Mode::None};

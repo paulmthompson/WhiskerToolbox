@@ -145,6 +145,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp
         Media_Widget/MediaLine_Widget/MediaLine_Widget.cpp
         Media_Widget/MediaLine_Widget/MediaLine_Widget.ui
+        Media_Widget/MediaLine_Widget/SelectionWidgets/LineNoneSelectionWidget.cpp
+        Media_Widget/MediaLine_Widget/SelectionWidgets/LineNoneSelectionWidget.hpp
+        Media_Widget/MediaLine_Widget/SelectionWidgets/LineNoneSelectionWidget.ui
         Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp
         Media_Widget/MediaInterval_Widget/MediaInterval_Widget.cpp
         Media_Widget/MediaInterval_Widget/MediaInterval_Widget.ui
