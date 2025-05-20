@@ -8,6 +8,7 @@
 #include "DataManager/transforms/Lines/line_angle.hpp"
 #include "DataManager/utils/opencv_utility.hpp"
 #include "SelectionWidgets/LineNoneSelectionWidget.hpp"
+#include "SelectionWidgets/LineAddSelectionWidget.hpp"
 
 #include <QLabel>
 #include <QRadioButton>
@@ -40,121 +41,31 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
             this, &MediaLine_Widget::_setLineAlpha);
     
-    // Connect the show points checkbox from UI file
     connect(ui->show_points_checkbox, &QCheckBox::toggled, this, &MediaLine_Widget::_toggleShowPoints);
     
-    // Connect line selection slider
     connect(ui->line_select_slider, &QSlider::valueChanged, this, &MediaLine_Widget::_lineSelectionChanged);
-            
-    // Create the UI pages for each selection mode
+
     _setupSelectionModePages();
 }
 
 void MediaLine_Widget::_setupSelectionModePages() {
-    // Create the "None" mode page using our new widget
+
     _noneSelectionWidget = new line_widget::LineNoneSelectionWidget();
     ui->mode_stacked_widget->addWidget(_noneSelectionWidget);
     
-    // Create the "Add Points" mode page with enhanced options
-    QWidget* addPage = new QWidget();
-    QVBoxLayout* addLayout = new QVBoxLayout(addPage);
+    _addSelectionWidget = new line_widget::LineAddSelectionWidget();
+    ui->mode_stacked_widget->addWidget(_addSelectionWidget);
     
-    // Description
-    QLabel* addLabel = new QLabel("Add points mode: Click in the video to add points to the end of the selected line.");
-    addLabel->setWordWrap(true);
-    addLayout->addWidget(addLabel);
-    
-    // Edge Snapping checkbox
-    QCheckBox* edgeSnappingCheckbox = new QCheckBox("Snap to edges");
-    edgeSnappingCheckbox->setToolTip("Automatically snap points to nearby edges in the image");
-    addLayout->addWidget(edgeSnappingCheckbox);
-    
-    // Connect edge snapping checkbox
-    connect(edgeSnappingCheckbox, &QCheckBox::toggled, this, &MediaLine_Widget::_toggleEdgeSnapping);
-    
-    // Smoothing options group
-    QGroupBox* smoothingGroupBox = new QGroupBox("Smoothing Method");
-    QVBoxLayout* smoothingLayout = new QVBoxLayout(smoothingGroupBox);
-    
-    // Radio buttons for smoothing options
-    QButtonGroup* smoothingGroup = new QButtonGroup(addPage);
-    QRadioButton* simpleSmooth = new QRadioButton("Simple Smoothing");
-    QRadioButton* polyFit = new QRadioButton("Polynomial Fit");
-    simpleSmooth->setChecked(true); // Default
-    
-    smoothingGroup->addButton(simpleSmooth, static_cast<int>(Smoothing_Mode::SimpleSmooth));
-    smoothingGroup->addButton(polyFit, static_cast<int>(Smoothing_Mode::PolynomialFit));
-    
-    smoothingLayout->addWidget(simpleSmooth);
-    smoothingLayout->addWidget(polyFit);
-    
-    // Polynomial order spinner
-    QHBoxLayout* polyOrderLayout = new QHBoxLayout();
-    QLabel* polyOrderLabel = new QLabel("Polynomial Order:");
-    QSpinBox* polyOrderSpinBox = new QSpinBox();
-    polyOrderSpinBox->setRange(1, 10);
-    polyOrderSpinBox->setValue(_polynomial_order);
-    polyOrderSpinBox->setEnabled(false); // Disabled initially since simple smoothing is selected
-    
-    polyOrderLayout->addWidget(polyOrderLabel);
-    polyOrderLayout->addWidget(polyOrderSpinBox);
-    smoothingLayout->addLayout(polyOrderLayout);
-    
-    // Edge detection parameters group
-    QGroupBox* edgeGroupBox = new QGroupBox("Edge Detection Parameters");
-    QVBoxLayout* edgeLayout = new QVBoxLayout(edgeGroupBox);
-    
-    // Threshold slider
-    QHBoxLayout* thresholdLayout = new QHBoxLayout();
-    QLabel* thresholdLabel = new QLabel("Threshold:");
-    QSlider* thresholdSlider = new QSlider(Qt::Horizontal);
-    thresholdSlider->setRange(10, 300);
-    thresholdSlider->setValue(_edge_threshold);
-    thresholdSlider->setEnabled(false); // Disabled initially
-    
-    thresholdLayout->addWidget(thresholdLabel);
-    thresholdLayout->addWidget(thresholdSlider);
-    edgeLayout->addLayout(thresholdLayout);
-    
-    // Search radius spinner
-    QHBoxLayout* radiusLayout = new QHBoxLayout();
-    QLabel* radiusLabel = new QLabel("Search Radius (px):");
-    QSpinBox* radiusSpinBox = new QSpinBox();
-    radiusSpinBox->setRange(5, 100);
-    radiusSpinBox->setValue(_edge_search_radius);
-    radiusSpinBox->setEnabled(false); // Disabled initially
-    
-    radiusLayout->addWidget(radiusLabel);
-    radiusLayout->addWidget(radiusSpinBox);
-    edgeLayout->addLayout(radiusLayout);
-    
-    // Add to layout
-    addLayout->addWidget(smoothingGroupBox);
-    addLayout->addWidget(edgeGroupBox);
-    ui->mode_stacked_widget->addWidget(addPage);
-    
-    // Store these widgets as members for later access
-    _edge_params_group = edgeGroupBox;
-    _threshold_slider = thresholdSlider;
-    _radius_spinbox = radiusSpinBox;
-    
-    // Connect signals for the edge detection parameters
-    connect(thresholdSlider, &QSlider::valueChanged, this, &MediaLine_Widget::_setEdgeThreshold);
-    connect(radiusSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MediaLine_Widget::_setEdgeSearchRadius);
-    
-    // Connect signals for the smoothing options
-    connect(smoothingGroup, QOverload<int>::of(&QButtonGroup::idClicked),
+    connect(_addSelectionWidget, &line_widget::LineAddSelectionWidget::edgeSnappingToggled,
+            this, &MediaLine_Widget::_toggleEdgeSnapping);
+    connect(_addSelectionWidget, &line_widget::LineAddSelectionWidget::smoothingModeChanged,
             this, &MediaLine_Widget::_setSmoothingMode);
-    connect(polyOrderSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+    connect(_addSelectionWidget, &line_widget::LineAddSelectionWidget::polynomialOrderChanged,
             this, &MediaLine_Widget::_setPolynomialOrder);
-            
-    // Enable/disable polynomial order based on selected smoothing mode
-    connect(polyFit, &QRadioButton::toggled, polyOrderSpinBox, &QSpinBox::setEnabled);
-    
-    // Enable/disable edge parameters based on edge snapping checkbox
-    connect(edgeSnappingCheckbox, &QCheckBox::toggled, edgeGroupBox, &QGroupBox::setEnabled);
-    connect(edgeSnappingCheckbox, &QCheckBox::toggled, thresholdSlider, &QSlider::setEnabled);
-    connect(edgeSnappingCheckbox, &QCheckBox::toggled, radiusSpinBox, &QSpinBox::setEnabled);
+    connect(_addSelectionWidget, &line_widget::LineAddSelectionWidget::edgeThresholdChanged,
+            this, &MediaLine_Widget::_setEdgeThreshold);
+    connect(_addSelectionWidget, &line_widget::LineAddSelectionWidget::edgeSearchRadiusChanged,
+            this, &MediaLine_Widget::_setEdgeSearchRadius);
     
     // Create the "Erase Points" mode page
     QWidget* erasePage = new QWidget();
@@ -164,7 +75,6 @@ void MediaLine_Widget::_setupSelectionModePages() {
     eraseLayout->addWidget(eraseLabel);
     ui->mode_stacked_widget->addWidget(erasePage);
     
-    // Set initial page
     ui->mode_stacked_widget->setCurrentIndex(0);
 }
 

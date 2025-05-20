@@ -20,6 +20,7 @@ class MediaLine_Widget;
 
 namespace line_widget {
 class LineNoneSelectionWidget;
+class LineAddSelectionWidget;
 }
 
 class DataManager;
@@ -57,6 +58,7 @@ private:
     
     // Selection widget pointers
     line_widget::LineNoneSelectionWidget* _noneSelectionWidget {nullptr};
+    line_widget::LineAddSelectionWidget* _addSelectionWidget {nullptr};
     
     QMap<QString, Selection_Mode> _selection_modes;
     Selection_Mode _selection_mode {Selection_Mode::None};
