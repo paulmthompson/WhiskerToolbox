@@ -21,6 +21,7 @@ class MediaLine_Widget;
 namespace line_widget {
 class LineNoneSelectionWidget;
 class LineAddSelectionWidget;
+class LineEraseSelectionWidget;
 }
 
 class DataManager;
@@ -50,15 +51,14 @@ private:
         Erase
     };
     
-    // Smoothing modes for the Add selection mode
     enum class Smoothing_Mode {
         SimpleSmooth,
         PolynomialFit
     };
     
-    // Selection widget pointers
     line_widget::LineNoneSelectionWidget* _noneSelectionWidget {nullptr};
     line_widget::LineAddSelectionWidget* _addSelectionWidget {nullptr};
+    line_widget::LineEraseSelectionWidget* _eraseSelectionWidget {nullptr};
     
     QMap<QString, Selection_Mode> _selection_modes;
     Selection_Mode _selection_mode {Selection_Mode::None};
@@ -73,16 +73,10 @@ private:
     cv::Mat _current_edges; // Cached edge detection results
     cv::Mat _current_frame; // Cached current frame
     
-    // UI elements
-    QGroupBox* _edge_params_group {nullptr};
-    QSlider* _threshold_slider {nullptr};
-    QSpinBox* _radius_spinbox {nullptr};
-    
     void _setupSelectionModePages();
     void _addPointToLine(float x_media, float y_media, int current_time);
     void _applyPolynomialFit(Line2D& line, int order);
     
-    // Edge detection methods
     void _detectEdges();
     std::pair<float, float> _findNearestEdge(float x, float y);
     
@@ -98,6 +92,8 @@ private slots:
     void _toggleEdgeSnapping(bool checked);
     void _setEdgeThreshold(int threshold);
     void _setEdgeSearchRadius(int radius);
+    void _setEraserRadius(int radius);
+    void _toggleShowHoverCircle(bool checked);
 };
 
 #endif// MEDIALINE_WIDGET_HPP

@@ -9,6 +9,7 @@
 #include "DataManager/utils/opencv_utility.hpp"
 #include "SelectionWidgets/LineNoneSelectionWidget.hpp"
 #include "SelectionWidgets/LineAddSelectionWidget.hpp"
+#include "SelectionWidgets/LineEraseSelectionWidget.hpp"
 
 #include <QLabel>
 #include <QRadioButton>
@@ -49,7 +50,6 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
 }
 
 void MediaLine_Widget::_setupSelectionModePages() {
-
     _noneSelectionWidget = new line_widget::LineNoneSelectionWidget();
     ui->mode_stacked_widget->addWidget(_noneSelectionWidget);
     
@@ -67,13 +67,13 @@ void MediaLine_Widget::_setupSelectionModePages() {
     connect(_addSelectionWidget, &line_widget::LineAddSelectionWidget::edgeSearchRadiusChanged,
             this, &MediaLine_Widget::_setEdgeSearchRadius);
     
-    // Create the "Erase Points" mode page
-    QWidget* erasePage = new QWidget();
-    QVBoxLayout* eraseLayout = new QVBoxLayout(erasePage);
-    QLabel* eraseLabel = new QLabel("Erase points mode: Click in the video to remove points around the mouse click location.");
-    eraseLabel->setWordWrap(true);
-    eraseLayout->addWidget(eraseLabel);
-    ui->mode_stacked_widget->addWidget(erasePage);
+    _eraseSelectionWidget = new line_widget::LineEraseSelectionWidget();
+    ui->mode_stacked_widget->addWidget(_eraseSelectionWidget);
+    
+    connect(_eraseSelectionWidget, &line_widget::LineEraseSelectionWidget::eraserRadiusChanged,
+            this, &MediaLine_Widget::_setEraserRadius);
+    connect(_eraseSelectionWidget, &line_widget::LineEraseSelectionWidget::showCircleToggled,
+            this, &MediaLine_Widget::_toggleShowHoverCircle);
     
     ui->mode_stacked_widget->setCurrentIndex(0);
 }
@@ -345,7 +345,7 @@ void MediaLine_Widget::_toggleSelectionMode(QString text) {
 
     if (_selection_mode == Selection_Mode::Erase) {
         _scene->setShowHoverCircle(true);
-        _scene->setHoverCircleRadius(10.0);
+        _scene->setHoverCircleRadius(_eraseSelectionWidget->getEraserRadius());
     } else {
         _scene->setShowHoverCircle(false);
     }
@@ -560,4 +560,16 @@ std::pair<float, float> MediaLine_Widget::_findNearestEdge(float x, float y) {
     }
     
     return nearest_edge;
+}
+
+void MediaLine_Widget::_setEraserRadius(int radius) {
+    if (_selection_mode == Selection_Mode::Erase) {
+        _scene->setHoverCircleRadius(static_cast<double>(radius));
+    }
+    std::cout << "Eraser radius set to: " << radius << std::endl;
+}
+
+void MediaLine_Widget::_toggleShowHoverCircle(bool checked) {
+    _scene->setShowHoverCircle(checked);
+    std::cout << "Show hover circle " << (checked ? "enabled" : "disabled") << std::endl;
 }
