@@ -171,7 +171,9 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
 
 void DataTransform_Widget::_updateProgress(int progress) {
     ui->transform_progress_bar->setValue(progress);
-    QApplication::processEvents();  // Ensure UI updates
+    ui->transform_progress_bar->setFormat("%p%");  // Show percentage text
+    ui->transform_progress_bar->repaint();  // Force immediate repaint
+    QApplication::processEvents();  // Process all pending events to ensure UI updates
 }
 
 void DataTransform_Widget::_doTransform() {
@@ -189,8 +191,11 @@ void DataTransform_Widget::_doTransform() {
 
     // Reset and show the progress bar
     ui->transform_progress_bar->setValue(0);
-    ui->do_transform_button->setEnabled(false);
+    ui->transform_progress_bar->setFormat("%p%");
     ui->transform_progress_bar->setTextVisible(true);
+    ui->transform_progress_bar->repaint();
+    ui->do_transform_button->setEnabled(false);
+    QApplication::processEvents();
 
     std::unique_ptr<TransformParametersBase> params_owner_ptr;
     if (_currentParameterWidget) {// Check if a specific param widget is active
@@ -202,11 +207,10 @@ void DataTransform_Widget::_doTransform() {
 
     std::cout << "Executing '" << _currentSelectedOperation->getName() << "'..." << std::endl;
     
-    // Create a progress callback
+    // Create a progress callback - use direct connection for immediate updates
     auto progressCallback = [this](int progress) {
-        // Use Qt's signal-slot to update the UI from any thread
-        QMetaObject::invokeMethod(this, "_updateProgress", Qt::QueuedConnection, 
-                                 Q_ARG(int, progress));
+        // Update directly from the UI thread to ensure immediate updates
+        _updateProgress(progress);
     };
     
     // Pass non-owning raw pointer to the Qt-agnostic execute method with progress callback

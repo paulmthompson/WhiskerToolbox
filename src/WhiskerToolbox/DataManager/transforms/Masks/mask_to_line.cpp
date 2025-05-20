@@ -205,8 +205,17 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
         progressCallback(100);
         return line_data;  // Nothing to process
     }
+
+    // Create a binary image from the mask points
+    ImageSize image_size = mask_data->getImageSize();
+    if (image_size.width <= 0 || image_size.height <= 0) {
+        // Use default size if mask data doesn't specify
+        image_size.width = 256;
+        image_size.height = 256;
+    }
+
+    std::vector<uint8_t> binary_image(image_size.width * image_size.height, 0);
     
-    // Process each mask time point
     size_t processed_masks = 0;
     for (auto const& mask_time_pair : mask_data->getAllMasksAsRange()) {
         int time = mask_time_pair.time;
@@ -222,18 +231,10 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
         if (mask.empty()) {
             continue;
         }
+
+        // Zero out the binary image
+        std::fill(binary_image.begin(), binary_image.end(), 0);
         
-        // Create a binary image from the mask points
-        ImageSize image_size = mask_data->getImageSize();
-        if (image_size.width <= 0 || image_size.height <= 0) {
-            // Use default size if mask data doesn't specify
-            image_size.width = 256;
-            image_size.height = 256;
-        }
-        
-        std::vector<uint8_t> binary_image(image_size.width * image_size.height, 0);
-        
-        // Fill the binary image with mask points
         for (auto const& point : mask) {
             int x = static_cast<int>(point.x);
             int y = static_cast<int>(point.y);
@@ -247,7 +248,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
         std::vector<Point2D<float>> line_points;
         
         if (method == LinePointSelectionMethod::Skeletonize) {
-            // Skeletonize the binary image
+
             auto skeleton = fast_skeletonize(binary_image, image_size.height, image_size.width);
             
             // Order the points of the skeleton
@@ -257,25 +258,22 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
             line_points = order_line(binary_image, image_size, reference_point, subsample);
         }
         
-        // Remove outliers if requested
         if (should_remove_outliers && line_points.size() > polynomial_order + 2) {
             line_points = remove_outliers(line_points, error_threshold, polynomial_order);
         }
         
-        // Add the line to the LineData object
         if (!line_points.empty()) {
             line_data->addLineAtTime(time, line_points);
         }
         
-        // Increment the processed mask count
         processed_masks++;
+
+        //std::cout << "Processed " << processed_masks << " masks of " << total_masks << std::endl;
         
-        // Report progress after completing each mask, rounded to the nearest percent
         int progress = static_cast<int>(std::round((static_cast<double>(processed_masks) / total_masks) * 100.0));
         progressCallback(progress);
     }
     
-    // Ensure final progress is at 100% (in case of rounding errors or empty masks)
     progressCallback(100);
     
     return line_data;
