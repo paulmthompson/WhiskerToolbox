@@ -89,6 +89,4 @@ public:
                            ProgressCallback progressCallback) override;
 };
 
-double evaluate_polynomial(const std::vector<double>& coeffs, double t);
-
 #endif // MASK_TO_LINE_HPP 
