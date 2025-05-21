@@ -19,7 +19,7 @@ std::vector<Point2D<float>> extract_line_pixels(
     
     for (int row = 0; row < height; ++row) {
         for (int col = 0; col < width; ++col) {
-            if (binary_img[row * width + col] == 1) {
+            if (binary_img[row * width + col] > 0) {
                 line_pixels.push_back({static_cast<float>(col), static_cast<float>(row)});
             }
         }

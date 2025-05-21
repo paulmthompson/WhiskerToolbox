@@ -1,7 +1,8 @@
 
 #include "scm.hpp"
-#include "../../DataManager/utils/mask_operations.hpp"
+#include "DataManager/utils/mask_operations.hpp"
 #include "DataManager/Lines/lines.hpp"
+#include "DataManager/transforms/Masks/order_line.hpp"
 
 #include "torch_helpers.hpp"
 #include <torch/torch.h>
@@ -100,7 +101,7 @@ void SCM::_create_memory_tensors()
 
 }
 
-std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, ImageSize const image_size) {
+Mask2D SCM::process_frame(std::vector<uint8_t>& image, ImageSize const image_size) {
 
     device = dl::get_device();
 
@@ -132,9 +133,10 @@ std::vector<Point2D<float>> SCM::process_frame(std::vector<uint8_t>& image, Imag
     output = output.mul(255).clamp(0,255).to(torch::kU8).detach().to(torch::kCPU);
     std::vector<uint8_t> const vec(output.data_ptr<uint8_t>(), output.data_ptr<uint8_t>() + output.numel());
 
-    auto output_line = convert_mask_to_line(vec, {_x, _y});
+    auto mask = extract_line_pixels(vec, {.width=256, .height=256});
+    //auto output_line = convert_mask_to_line(vec, {_x, _y});
 
-    return output_line;
+    return mask;
 
 }
 

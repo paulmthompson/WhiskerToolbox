@@ -252,6 +252,13 @@ void Whisker_Widget::_dlTraceButton() {
 }
 
 void Whisker_Widget::_dlAddMemoryButton() {
+
+    if (!_data_manager->getData<MaskData>("SAM_output")) {
+        _data_manager->setData<MaskData>("SAM_output");
+        _data_manager->getData<MaskData>("SAM_output")->setImageSize({.width=256, .height=256});
+        _addDrawingCallback("SAM_output");
+    }
+
     auto media = _data_manager->getData<MediaData>("media");
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
@@ -286,16 +293,17 @@ void Whisker_Widget::_dlAddMemoryButton() {
 
 void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize const image_size) {
 
-    QElapsedTimer timer3;
-    timer3.start();
+    //QElapsedTimer timer3;
+    //timer3.start();
 
-    auto output = dl_model->process_frame(image, image_size);
+    auto mask_output = dl_model->process_frame(image, image_size);
 
-    std::transform(output.begin(), output.end(), output.begin(), [image_size](Point2D<float> p) {
-        return Point2D<float>{p.x / 256.0f * static_cast<float>(image_size.width),
-                              p.y / 256.0f * static_cast<float>(image_size.height)};
-    });
+    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
+    _data_manager->getData<MaskData>("SAM_output")->addAtTime(current_time, mask_output);
+
+
+    /*
     auto t2 = timer3.elapsed();
 
     qDebug() << "DL took" << t2;
@@ -304,9 +312,9 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize cons
 
     std::string const whisker_name = "whisker_" + std::to_string(_current_whisker);
 
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
     _data_manager->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
     _data_manager->getData<LineData>(whisker_name)->addLineAtTime(current_time, output);
+    */
 
     //Debugging
     //QImage labeled_image(&output[0], 256, 256, QImage::Format_Grayscale8);

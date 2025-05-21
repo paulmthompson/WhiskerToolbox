@@ -2,8 +2,8 @@
 #define SCM_HPP
 
 #include "DataManager/Points/points.hpp"
+#include "DataManager/Masks/masks.hpp"
 #include "DataManager/ImageSize/ImageSize.hpp"
-//#include "DataManager/Tensors/Tensor_Data.hpp"
 
 #include <map>
 #include <memory>
@@ -26,7 +26,7 @@ public:
     SCM();
     ~SCM();
     void load_model();
-    std::vector<Point2D<float>> process_frame(std::vector<uint8_t>& image, ImageSize image_size);
+    Mask2D process_frame(std::vector<uint8_t>& image, ImageSize image_size);
     void add_memory_frame(std::vector<uint8_t> memory_frame, std::vector<uint8_t> memory_label);
     void add_origin(float x, float y) {
         _x = x / static_cast<float>(_width) * 256;
