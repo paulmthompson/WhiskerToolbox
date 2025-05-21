@@ -392,6 +392,9 @@ void Whisker_Widget::_deleteWhisker() {
 
     if (_data_manager->getData<LineData>(whisker_name)) {
         _data_manager->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
+        if (_data_manager->getData<DigitalEventSeries>("tracked_frames")) {
+            _data_manager->getData<DigitalEventSeries>("tracked_frames")->removeEvent(current_time);
+        }
     }
 }
 
@@ -738,6 +741,10 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
                     _data_manager->getData<LineData>(whisker_group_name)->addLineAtTime(current_time, whiskers[_selected_whisker]);
 
                     _data_manager->getData<LineData>("unlabeled_whiskers")->clearLineAtTime(current_time, _selected_whisker);
+
+                    if (_data_manager->getData<DigitalEventSeries>("tracked_frames")) {
+                        _data_manager->getData<DigitalEventSeries>("tracked_frames")->addEvent(current_time);
+                    }
                 }
             }
             break;

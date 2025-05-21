@@ -114,16 +114,16 @@ add_library(DataManager SHARED
         transforms/Masks/mask_area.hpp
         transforms/Masks/mask_to_line.cpp
         transforms/Masks/mask_to_line.hpp
-        transforms/Masks/connected_component.hpp
-        transforms/Masks/connected_component.cpp
-        transforms/Masks/mask_operations.cpp
-        transforms/Masks/mask_operations.hpp
+        utils/connected_component.hpp
+        utils/connected_component.cpp
+        utils/mask_operations.cpp
+        utils/mask_operations.hpp
         transforms/Masks/order_line.cpp
         transforms/Masks/order_line.hpp
-        transforms/Masks/simplify_line.cpp
-        transforms/Masks/simplify_line.hpp
-        transforms/Masks/skeletonize.cpp
-        transforms/Masks/skeletonize.hpp
+        utils/simplify_line.cpp
+        utils/simplify_line.hpp
+        utils/skeletonize.cpp
+        utils/skeletonize.hpp
 
         loaders/binary_loaders.hpp
         loaders/hdf5_loaders.hpp

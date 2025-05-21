@@ -3,20 +3,18 @@
 #include "Masks/Mask_Data.hpp"
 #include "Lines/Line_Data.hpp"
 
-#include "mask_operations.hpp"
+#include "utils/skeletonize.hpp"
 #include "order_line.hpp"
-#include "simplify_line.hpp"
-#include "skeletonize.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
 
 #include <armadillo>
+
 #include <chrono>
 #include <cmath>
 #include <iostream>
-#include <limits>
-#include <optional>
-#include <vector>
 #include <numeric> // for std::accumulate
+#include <vector>
+
 
 
 // Helper function to compute t-values based on cumulative distance

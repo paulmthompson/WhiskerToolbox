@@ -1,6 +1,6 @@
 
 #include "scm.hpp"
-#include "../../DataManager/transforms/Masks/mask_operations.hpp"
+#include "../../DataManager/utils/mask_operations.hpp"
 #include "DataManager/Lines/lines.hpp"
 
 #include "torch_helpers.hpp"

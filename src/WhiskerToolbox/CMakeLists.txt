@@ -217,16 +217,16 @@ set(PROJECT_SOURCES
         Feature_Tree_Widget/Feature_Tree_Widget.hpp
         Feature_Tree_Widget/Feature_Tree_Widget.ui
 
-        DataManager/transforms/Masks/skeletonize.hpp
-        DataManager/transforms/Masks/skeletonize.cpp
+        DataManager/utils/skeletonize.hpp
+        DataManager/utils/skeletonize.cpp
         DataManager/transforms/Masks/order_line.hpp
         DataManager/transforms/Masks/order_line.cpp
-        DataManager/transforms/Masks/mask_operations.hpp
-        DataManager/transforms/Masks/mask_operations.cpp
-        DataManager/transforms/Masks/connected_component.hpp
-        DataManager/transforms/Masks/connected_component.cpp
-        DataManager/transforms/Masks/simplify_line.cpp
-        DataManager/transforms/Masks/simplify_line.hpp
+        DataManager/utils/mask_operations.hpp
+        DataManager/utils/mask_operations.cpp
+        DataManager/utils/connected_component.hpp
+        DataManager/utils/connected_component.cpp
+        DataManager/utils/simplify_line.cpp
+        DataManager/utils/simplify_line.hpp
 
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp

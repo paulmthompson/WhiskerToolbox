@@ -3,8 +3,8 @@
 
 #include "ImageSize/ImageSize.hpp"
 
+#include "transforms/Masks/order_line.hpp"
 #include "connected_component.hpp"
-#include "order_line.hpp"
 #include "skeletonize.hpp"
 //#include "simplify_line.hpp" //remove_extreme_angles
 
