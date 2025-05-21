@@ -58,6 +58,8 @@ set(PROJECT_SOURCES
         DataManager_Widget/Line_Widget/Line_Widget.hpp
         DataManager_Widget/Line_Widget/Line_Widget.cpp
         DataManager_Widget/Line_Widget/Line_Widget.ui
+        DataManager_Widget/Line_Widget/LineTableModel.cpp
+        DataManager_Widget/Line_Widget/LineTableModel.hpp
 
         DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp
         DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.cpp

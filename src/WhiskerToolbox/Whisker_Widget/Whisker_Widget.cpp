@@ -239,6 +239,7 @@ void Whisker_Widget::_traceButton() {
 
             num_to_trace += 1;
             std::cout << num_to_trace << std::endl;
+
         }
     }
 }

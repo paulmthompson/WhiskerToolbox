@@ -1,4 +1,3 @@
-
 #include "DataManager_Widget.hpp"
 #include "ui_DataManager_Widget.h"
 
@@ -117,7 +116,16 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
 
         }
         case DM_DataType::Line: {
-            ui->stackedWidget->setCurrentIndex(3);
+            int const stacked_widget_index = 3;
+            ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+            auto line_widget = dynamic_cast<Line_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            if (line_widget) {
+                line_widget->setActiveKey(key);
+                connect(line_widget, &Line_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+                _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
+                    _scene->UpdateCanvas();
+                }));
+            }
             break;
         }
         case DM_DataType::Analog: {
@@ -200,6 +208,11 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
         }
         case DM_DataType::Line: {
             int const stacked_widget_index = 3;
+            auto line_widget = dynamic_cast<Line_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            if (line_widget) {
+                disconnect(line_widget, &Line_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+                line_widget->removeCallbacks();
+            }
             break;
         }
         case DM_DataType::Analog: {

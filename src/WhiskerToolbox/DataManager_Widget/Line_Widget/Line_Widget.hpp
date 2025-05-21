@@ -5,11 +5,14 @@
 #include <memory>
 #include <string>
 
+#include <QModelIndex> // Required for signal/slot
+
+// Forward declarations
 namespace Ui {
 class Line_Widget;
 }
-
 class DataManager;
+class LineTableModel;
 
 class Line_Widget : public QWidget {
     Q_OBJECT
@@ -18,13 +21,24 @@ public:
     ~Line_Widget() override;
 
     void openWidget();// Call to open the widget
+    void setActiveKey(std::string const & key);
+    void removeCallbacks(); // Added to manage callbacks
+    void updateTable(); // Added to refresh table data
+
+signals:
+    void frameSelected(int frame_id);
 
 private:
     Ui::Line_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    LineTableModel * _line_table_model; // Added table model
+    std::string _active_key;            // Added to store active key
+    int _callback_id{-1};             // Added for data manager callback
 
 private slots:
     // Add any slots needed for handling user interactions
+    void _handleCellDoubleClicked(QModelIndex const & index); // Slot for table interaction
+    void _onDataChanged(); // Slot for DataManager callback
 };
 
 #endif// LINE_WIDGET_HPP
