@@ -39,6 +39,10 @@ private slots:
     // Add any slots needed for handling user interactions
     void _handleCellDoubleClicked(QModelIndex const & index); // Slot for table interaction
     void _onDataChanged(); // Slot for DataManager callback
+    void _moveLineButton_clicked(); // Slot for move line button
+
+private:
+    void _populateMoveToComboBox(); // Method to populate the combo box
 };
 
 #endif// LINE_WIDGET_HPP

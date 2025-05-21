@@ -28,6 +28,27 @@
     <widget class="QTableView" name="tableView"/>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="moveActionLayout">
+     <item>
+      <widget class="QLabel" name="moveToLabel">
+       <property name="text">
+        <string>Move Selected Line To:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="moveToComboBox"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="moveLineButton">
+       <property name="text">
+        <string>Move Line</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Orientation::Vertical</enum>
