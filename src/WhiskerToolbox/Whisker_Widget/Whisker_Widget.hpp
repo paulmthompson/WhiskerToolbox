@@ -166,8 +166,6 @@ private slots:
 
     void _saveWhiskersAsBinary();
 
-    void _setLockFrame(int lock_frame);
-
     void _exportAllTracked();
 };
 

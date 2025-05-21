@@ -61,45 +61,44 @@ public:
     */
     void addMaskAtTime(size_t time,
                        std::vector<Point2D<float>> mask,
-                       bool notify = true) {
-        ;
+                       bool notify = true);
 
-        [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
-        void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
+    [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
+    void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
-        /**
+    /**
     * @brief Retrieves all masks stored at the specified time
     *
     * @param time The timestamp for which to retrieve masks
     * @return A const reference to a vector of masks at the given time, or an empty vector if no masks exist
     */
-        [[nodiscard]] std::vector<Mask2D> const & getMasksAtTime(size_t time) const;
+    [[nodiscard]] std::vector<Mask2D> const & getMasksAtTime(size_t time) const;
 
-        /**
+    /**
      * @brief Get all masks with their associated times as a range
      *
      * @return A view of time-mask pairs for all times
      */
-        [[nodiscard]] auto getAllMasksAsRange() const {
-            struct TimeMaskPair {
-                int time;
-                std::vector<Mask2D> const & masks;
-            };
+    [[nodiscard]] auto getAllMasksAsRange() const {
+        struct TimeMaskPair {
+            int time;
+            std::vector<Mask2D> const & masks;
+        };
 
-            return std::views::iota(size_t{0}, _time.size()) |
-                   std::views::transform([this](size_t i) {
-                       return TimeMaskPair{static_cast<int>(_time[i]), _data[i]};
-                   });
-        }
+        return std::views::iota(size_t{0}, _time.size()) |
+               std::views::transform([this](size_t i) {
+                   return TimeMaskPair{static_cast<int>(_time[i]), _data[i]};
+               });
+    }
 
-    protected:
-    private:
-        std::vector<size_t> _time;
-        std::vector<std::vector<Mask2D>> _data;
-        //std::map<int, std::vector<Mask2D>> _data;
-        std::vector<Mask2D> _empty;
-        ImageSize _image_size;
-    };
+protected:
+private:
+    std::vector<size_t> _time;
+    std::vector<std::vector<Mask2D>> _data;
+    //std::map<int, std::vector<Mask2D>> _data;
+    std::vector<Mask2D> _empty;
+    ImageSize _image_size;
+};
 
 
 #endif// MASK_DATA_HPP

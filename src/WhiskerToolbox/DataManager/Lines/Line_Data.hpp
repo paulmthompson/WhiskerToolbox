@@ -36,17 +36,6 @@ public:
 
     [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(int time) const;
 
-    void lockTime(int time) { _lock_state.lock(time); }
-    void unlockTime(int time) { _lock_state.unlock(time); }
-    [[nodiscard]] bool isTimeLocked(int time) const { return _lock_state.isLocked(time); }
-
-    void lockUntil(int time) {
-        _lock_state.clear();
-        for (int i = 0; i <= time; i++) {
-            _lock_state.lock(i);
-        }
-    }
-
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
@@ -70,7 +59,6 @@ protected:
 private:
     std::map<int, std::vector<Line2D>> _data;
     std::vector<Line2D> _empty{};
-    LockState _lock_state;
     ImageSize _image_size;
 };
 
