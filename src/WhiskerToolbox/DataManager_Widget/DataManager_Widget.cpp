@@ -100,6 +100,7 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             }));
 
             connect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
+            connect(point_widget, &Point_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             break;
         }
         case DM_DataType::Mask: {
@@ -196,6 +197,10 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
 
             auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             disconnect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
+            disconnect(point_widget, &Point_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+            if (point_widget) {
+                point_widget->removeCallbacks();
+            }
             break;
 
         }

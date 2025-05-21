@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 
+#include <QModelIndex>
+
 namespace Ui {
 class Point_Widget;
 }
@@ -26,18 +28,29 @@ public:
 
     void loadFrame(int frame_id);
 
+    void removeCallbacks();
+
+signals:
+    void frameSelected(int frame_id);
+
 private:
     Ui::Point_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     PointTableModel * _point_table_model;
     std::string _active_key;
     int _previous_frame{0};
+    int _callback_id{-1};
 
     //void refreshTable();
     void _propagateLabel(int frame_id);
+    void _populateMoveToPointDataComboBox();
 
 private slots:
     void _saveKeypointCSV();
+    void _handleTableViewDoubleClicked(QModelIndex const & index);
+    void _movePointsButton_clicked();
+    void _deletePointsButton_clicked();
+    void _onDataChanged();
 };
 
 #endif// POINT_WIDGET_HPP

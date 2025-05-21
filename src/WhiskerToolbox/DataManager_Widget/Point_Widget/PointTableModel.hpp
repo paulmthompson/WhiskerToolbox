@@ -1,4 +1,3 @@
-
 #ifndef WHISKERTOOLBOX_POINTTABLEMODEL_HPP
 #define WHISKERTOOLBOX_POINTTABLEMODEL_HPP
 
@@ -71,6 +70,14 @@ public:
         }
 
         return QVariant{};
+    }
+
+    [[nodiscard]] int getFrameForRow(int row) const {
+        if (row < 0 || static_cast<size_t>(row) >= _points.size()) {
+            return -1; // Invalid row
+        }
+        auto it = std::next(_points.begin(), row);
+        return it->first; // Return the frame number (the key in the map)
     }
 
 private:
