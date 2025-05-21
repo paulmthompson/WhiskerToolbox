@@ -21,6 +21,7 @@ Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * pa
 
     connect(ui->tableView, &QTableView::doubleClicked, this, &Line_Widget::_handleCellDoubleClicked);
     connect(ui->moveLineButton, &QPushButton::clicked, this, &Line_Widget::_moveLineButton_clicked);
+    connect(ui->deleteLineButton, &QPushButton::clicked, this, &Line_Widget::_deleteLineButton_clicked);
 }
 
 Line_Widget::~Line_Widget() {
@@ -147,4 +148,40 @@ void Line_Widget::_moveLineButton_clicked() {
 
     std::cout << "Line moved from " << _active_key << " frame " << row_data.frame << " index " << row_data.lineIndex
               << " to " << target_key << std::endl;
+}
+
+void Line_Widget::_deleteLineButton_clicked() {
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedIndexes();
+    if (selectedIndexes.isEmpty()) {
+        std::cout << "Line_Widget: No line selected to delete." << std::endl;
+        return;
+    }
+    int selected_row = selectedIndexes.first().row();
+    LineTableRow row_data = _line_table_model->getRowData(selected_row);
+
+    if (row_data.frame == -1) {
+        std::cout << "Line_Widget: Selected row data for deletion is invalid." << std::endl;
+        return;
+    }
+
+    auto source_line_data = _data_manager->getData<LineData>(_active_key);
+    if (!source_line_data) {
+        std::cerr << "Line_Widget: Source LineData object ('" << _active_key << "') not found for deletion." << std::endl;
+        return;
+    }
+
+    std::vector<Line2D> const & lines_at_frame = source_line_data->getLinesAtTime(row_data.frame);
+    if (row_data.lineIndex < 0 || static_cast<size_t>(row_data.lineIndex) >= lines_at_frame.size()) {
+        std::cerr << "Line_Widget: Line index out of bounds for deletion. Frame: " << row_data.frame 
+                  << ", Index: " << row_data.lineIndex << std::endl;
+        updateTable();
+        return;
+    }
+
+    source_line_data->clearLineAtTime(row_data.frame, row_data.lineIndex);
+
+    updateTable();
+    _populateMoveToComboBox();
+
+    std::cout << "Line deleted from " << _active_key << " frame " << row_data.frame << " index " << row_data.lineIndex << std::endl;
 }

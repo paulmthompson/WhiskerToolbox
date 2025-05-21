@@ -40,6 +40,7 @@ private slots:
     void _handleCellDoubleClicked(QModelIndex const & index); // Slot for table interaction
     void _onDataChanged(); // Slot for DataManager callback
     void _moveLineButton_clicked(); // Slot for move line button
+    void _deleteLineButton_clicked(); // Slot for delete line button
 
 private:
     void _populateMoveToComboBox(); // Method to populate the combo box
