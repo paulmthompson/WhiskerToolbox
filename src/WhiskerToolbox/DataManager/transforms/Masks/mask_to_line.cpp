@@ -103,6 +103,123 @@ std::vector<double> fit_polynomial_to_points(const std::vector<Point2D<float>>& 
     return result;
 }
 
+// Helper function to fit a single dimension (x or y) of a parametric polynomial.
+// This internal helper avoids redundant t-value computation if called for both x and y.
+static std::vector<double> fit_single_dimension_polynomial_internal(
+    const std::vector<double>& dimension_coords,
+    const std::vector<double>& t_values,
+    int order) {
+    
+    if (dimension_coords.size() <= order || t_values.size() != dimension_coords.size()) {
+        return {}; // Not enough data or mismatched sizes
+    }
+
+    arma::mat X_vandermonde(t_values.size(), order + 1);
+    arma::vec Y_coords(dimension_coords.data(), dimension_coords.size());
+
+    for (size_t i = 0; i < t_values.size(); ++i) {
+        for (int j = 0; j <= order; ++j) {
+            X_vandermonde(i, j) = std::pow(t_values[i], j);
+        }
+    }
+
+    arma::vec coeffs_arma;
+    bool success = arma::solve(coeffs_arma, X_vandermonde, Y_coords);
+
+    if (!success) {
+        return {};
+    }
+    return arma::conv_to<std::vector<double>>::from(coeffs_arma);
+}
+
+// Helper function to fit parametric polynomials to X(t) and Y(t)
+struct ParametricCoefficients {
+    std::vector<double> x_coeffs;
+    std::vector<double> y_coeffs;
+    bool success = false;
+};
+
+ParametricCoefficients fit_parametric_polynomials(const std::vector<Point2D<float>>& points, int order) {
+    if (points.size() <= order) {
+        return {{}, {}, false}; // Not enough points
+    }
+
+    std::vector<double> t_values = compute_t_values(points);
+    if (t_values.empty()) {
+        return {{}, {}, false};
+    }
+
+    std::vector<double> x_coords;
+    std::vector<double> y_coords;
+    x_coords.reserve(points.size());
+    y_coords.reserve(points.size());
+
+    for (const auto& point : points) {
+        x_coords.push_back(static_cast<double>(point.x));
+        y_coords.push_back(static_cast<double>(point.y));
+    }
+
+    std::vector<double> x_coeffs = fit_single_dimension_polynomial_internal(x_coords, t_values, order);
+    std::vector<double> y_coeffs = fit_single_dimension_polynomial_internal(y_coords, t_values, order);
+
+    if (x_coeffs.empty() || y_coeffs.empty()) {
+        return {{}, {}, false};
+    }
+
+    return {x_coeffs, y_coeffs, true};
+}
+
+// Helper function to generate a smoothed line from parametric polynomial coefficients
+std::vector<Point2D<float>> generate_smoothed_line(
+    const std::vector<Point2D<float>>& original_points, // Used to estimate total length
+    const std::vector<double>& x_coeffs,
+    const std::vector<double>& y_coeffs,
+    int order) {
+    if (original_points.empty() || x_coeffs.empty() || y_coeffs.empty()) {
+        return {};
+    }
+
+    // Estimate total arc length from original points for determining number of samples
+    double total_length = 0.0;
+    if (original_points.size() > 1) {
+        for (size_t i = 1; i < original_points.size(); ++i) {
+            double dx = original_points[i].x - original_points[i - 1].x;
+            double dy = original_points[i].y - original_points[i - 1].y;
+            total_length += std::sqrt(dx * dx + dy * dy);
+        }
+    }
+    
+    // If total length is very small or zero, or only one point, just return the (fitted) first point
+    if (total_length < 1e-6 || original_points.size() <=1) {
+        if (!original_points.empty()) {
+             // Evaluate polynomial at t=0 (or use the first point if no coeffs)
+            if (!x_coeffs.empty() && !y_coeffs.empty()) {
+                float x = static_cast<float>(evaluate_polynomial(x_coeffs, 0.0));
+                float y = static_cast<float>(evaluate_polynomial(y_coeffs, 0.0));
+                return {{x, y}};
+            } else {
+                 return {original_points[0]}; // Fallback
+            }
+        } else {
+            return {};
+        }
+    }
+
+    // Determine number of samples: aim for approx. 1 pixel spacing
+    int num_samples = std::max(2, static_cast<int>(std::round(total_length))); 
+
+    std::vector<Point2D<float>> smoothed_line;
+    smoothed_line.reserve(num_samples);
+
+    for (int i = 0; i < num_samples; ++i) {
+        double t = static_cast<double>(i) / static_cast<double>(num_samples - 1); // t in [0,1]
+        float x = static_cast<float>(evaluate_polynomial(x_coeffs, t));
+        float y = static_cast<float>(evaluate_polynomial(y_coeffs, t));
+        smoothed_line.push_back({x, y});
+    }
+    return smoothed_line;
+}
+
 // Calculate the error between fitted polynomial and original points
 std::vector<float> calculate_fitting_errors(const std::vector<Point2D<float>>& points, 
                                           const std::vector<double>& x_coeffs, 
@@ -256,6 +373,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     float error_threshold = params ? params->error_threshold : 5.0f;
     bool should_remove_outliers = params ? params->remove_outliers : true;
     int subsample = params ? params->subsample : 1;
+    bool should_smooth_line = params ? params->should_smooth_line : false;
 
     std::cout << "reference_x: " << reference_x << std::endl;
     std::cout << "reference_y: " << reference_y << std::endl;   
@@ -264,6 +382,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     std::cout << "error_threshold: " << error_threshold << std::endl;
     std::cout << "should_remove_outliers: " << should_remove_outliers << std::endl;
     std::cout << "subsample: " << subsample << std::endl;
+    std::cout << "should_smooth_line: " << should_smooth_line << std::endl;
     
     Point2D<float> reference_point{reference_x, reference_y};
     
@@ -298,6 +417,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     std::vector<long long> order_line_times;
     std::vector<long long> outlier_removal_times;
     std::vector<long long> map_insertion_times;
+    std::vector<long long> smoothing_times;
     
     size_t processed_masks = 0;
     for (auto const& mask_time_pair : mask_data->getAllAsRange()) {
@@ -376,6 +496,22 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
                 ).count()
             );
         }
+
+        // Apply smoothing if requested and enough points exist
+        if (should_smooth_line && line_points.size() > polynomial_order) { // Need at least order+1 points
+            auto smoothing_start = std::chrono::high_resolution_clock::now();
+            ParametricCoefficients coeffs = fit_parametric_polynomials(line_points, polynomial_order);
+            if (coeffs.success) {
+                line_points = generate_smoothed_line(line_points, coeffs.x_coeffs, coeffs.y_coeffs, polynomial_order);
+            }
+            // If fitting fails, line_points remains as it was (e.g., after outlier removal or just ordered)
+            auto smoothing_end = std::chrono::high_resolution_clock::now();
+            smoothing_times.push_back(
+                 std::chrono::duration_cast<std::chrono::microseconds>(
+                    smoothing_end - smoothing_start
+                ).count()
+            );
+        }
         
         if (!line_points.empty()) {
             // Time map insertion
@@ -416,6 +552,12 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
                                       map_insertion_times.size();
                 std::cout << "Average map insertion time: " << insertion_avg << " μs" << std::endl;
             }
+
+            if (!smoothing_times.empty()) {
+                double smoothing_avg = std::accumulate(smoothing_times.begin(), smoothing_times.end(), 0.0) /
+                                     smoothing_times.size();
+                std::cout << "Average smoothing time: " << smoothing_avg << " μs" << std::endl;
+            }
             
             // Clear the vectors to only keep the last 1000 measurements
             if (processed_masks % 1000 == 0 && processed_masks < total_masks) {
@@ -423,6 +565,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
                 order_line_times.clear();
                 outlier_removal_times.clear();
                 map_insertion_times.clear();
+                smoothing_times.clear();
             }
         }
         

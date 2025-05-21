@@ -204,8 +204,23 @@
         </property>
        </widget>
       </item>
+
+      <item row="4" column="0">
+       <widget class="QLabel" name="smoothLineLabel">
+        <property name="text">
+         <string>Smooth Output Line:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QCheckBox" name="smoothLineCheckBox">
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
       
-      <item row="4" column="0" colspan="2">
+      <item row="5" column="0" colspan="2">
        <widget class="QLabel" name="qualityDescriptionLabel">
         <property name="text">
          <string>Points with error higher than the threshold will be removed if "Remove Outliers" is checked. Subsample value > 1 will use only every Nth point.</string>

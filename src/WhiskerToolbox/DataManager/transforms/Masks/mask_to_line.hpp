@@ -27,6 +27,7 @@ struct MaskToLineParameters : public TransformParametersBase {
     float error_threshold = 5.0f;  // Maximum allowable error for points to be included
     bool remove_outliers = true;
     int subsample = 1;  // For point subsampling (1 = use all points)
+    bool should_smooth_line = false; // Smooth the final line using polynomial fit
 };
 
 /**
