@@ -113,6 +113,7 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
                 _scene->UpdateCanvas();
             }));
+            connect(mask_widget, &Mask_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             break;
 
         }
@@ -208,7 +209,10 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
 
             int const stacked_widget_index = 2;
             auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-            disconnect(_scene, &Media_Window::leftClickMedia, mask_widget, &Mask_Widget::selectPoint);
+            if (mask_widget) {
+                disconnect(mask_widget, &Mask_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+                mask_widget->removeCallbacks();
+            }
             break;
         }
         case DM_DataType::Line: {
