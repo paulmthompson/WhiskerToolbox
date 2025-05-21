@@ -449,11 +449,11 @@ void Media_Window::_plotMaskData() {
         auto mask = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask->getImageSize();
 
-        auto const & maskData = mask->getMasksAtTime(current_time);
+        auto const & maskData = mask->getAtTime(current_time);
 
         _plotSingleMaskData(maskData, image_size, plot_color);
 
-        auto const & maskData2 = mask->getMasksAtTime(-1);
+        auto const & maskData2 = mask->getAtTime(-1);
 
         _plotSingleMaskData(maskData2, image_size, plot_color);
     }

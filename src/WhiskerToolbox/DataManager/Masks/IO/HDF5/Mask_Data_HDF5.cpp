@@ -30,7 +30,7 @@ std::shared_ptr<MaskData> load_into_MaskData(std::string const & file_path, nloh
         auto prob = probs[i];
         auto x = x_coords[i];
         auto y = y_coords[i];
-        mask_data->addMaskAtTime(frame, x, y);
+        mask_data->addAtTime(frame, x, y);
     }
 
     return mask_data;

@@ -106,7 +106,7 @@ void Tongue_Widget::_loadImgTongueMasks(){
         auto const frame_num = remove_extension(extract_numbers_from_string(img_it.path().filename().string()));
         auto const frame_index = media->getFrameIndexFromNumber(std::stoi(frame_num));
 
-        mask->addMaskAtTime(frame_index, img_mask);
+        mask->addAtTime(frame_index, img_mask);
         //std::cout << "Added " << x_coords.size() << " pts at frame " << frame_index << '\n';
     }
 
@@ -156,7 +156,7 @@ void Tongue_Widget::_exportMasks() {
     auto media = _data_manager->getData<MediaData>("media");
 
     for (int const i : drawn){
-        auto mask = mask_data->getMasksAtTime(i)[0];
+        auto mask = mask_data->getAtTime(i)[0];
         QImage mask_img(mask_data->getImageSize().width, mask_data->getImageSize().height, QImage::Format_Grayscale8);
         mask_img.fill(0);
         for (auto [x, y] : mask){

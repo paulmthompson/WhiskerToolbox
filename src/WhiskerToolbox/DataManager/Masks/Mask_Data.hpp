@@ -24,12 +24,10 @@ public:
     * @brief Removes all masks at the specified time
     *
     * @param time The timestamp at which to clear masks
-    * @param notify If true, observers will be notified of the change (default: true)
-    *
-    * @note This function only modifies the internal data structure if masks
-    *       existed at the specified time
+    * @param notify If true, observers will be notified of the change
+    * @return True if masks existed at the specified time and were cleared, false otherwise
     */
-    void clearMasksAtTime(size_t time, bool notify = true);
+    bool clearAtTime(size_t time, bool notify = true);
 
     /**
      * @brief Adds a new mask at the specified time using separate x and y coordinate arrays
@@ -44,7 +42,7 @@ public:
     *
     * @note x and y vectors must be the same length, representing coordinate pairs
     */
-    void addMaskAtTime(size_t time,
+    void addAtTime(size_t time,
                        std::vector<float> const & x,
                        std::vector<float> const & y,
                        bool notify = true);
@@ -59,7 +57,7 @@ public:
     * @param mask Vector of 2D points defining the mask
     * @param notify If true, observers will be notified of the change (default: true)
     */
-    void addMaskAtTime(size_t time,
+    void addAtTime(size_t time,
                        std::vector<Point2D<float>> mask,
                        bool notify = true);
 
@@ -72,14 +70,14 @@ public:
     * @param time The timestamp for which to retrieve masks
     * @return A const reference to a vector of masks at the given time, or an empty vector if no masks exist
     */
-    [[nodiscard]] std::vector<Mask2D> const & getMasksAtTime(size_t time) const;
+    [[nodiscard]] std::vector<Mask2D> const & getAtTime(size_t time) const;
 
     /**
      * @brief Get all masks with their associated times as a range
      *
      * @return A view of time-mask pairs for all times
      */
-    [[nodiscard]] auto getAllMasksAsRange() const {
+    [[nodiscard]] auto getAllAsRange() const {
         struct TimeMaskPair {
             int time;
             std::vector<Mask2D> const & masks;

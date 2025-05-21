@@ -105,7 +105,7 @@ void Mask_Loader_Widget::_loadSingleHDF5Mask(std::string const & filename, std::
     auto mask = _data_manager->getData<MaskData>(mask_key);
 
     for (std::size_t i = 0; i < frames.size(); i++) {
-        mask->addMaskAtTime(frames[i], x_coords[i], y_coords[i]);
+        mask->addAtTime(frames[i], x_coords[i], y_coords[i]);
     }
 
     mask->setImageSize({ui->width_scaling->value(), ui->height_scaling->value()});

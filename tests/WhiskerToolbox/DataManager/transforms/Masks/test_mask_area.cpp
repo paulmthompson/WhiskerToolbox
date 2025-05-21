@@ -21,7 +21,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         // Create a simple mask (3 points)
         std::vector<float> x_coords = {1.0f, 2.0f, 3.0f};
         std::vector<float> y_coords = {1.0f, 2.0f, 3.0f};
-        mask_data->addMaskAtTime(10, x_coords, y_coords);
+        mask_data->addAtTime(10, x_coords, y_coords);
 
         auto result = area(mask_data.get());
 
@@ -38,12 +38,12 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         // First mask (3 points)
         std::vector<float> x1 = {1.0f, 2.0f, 3.0f};
         std::vector<float> y1 = {1.0f, 2.0f, 3.0f};
-        mask_data->addMaskAtTime(20, x1, y1);
+        mask_data->addAtTime(20, x1, y1);
 
         // Second mask (5 points)
         std::vector<float> x2 = {4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
         std::vector<float> y2 = {4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
-        mask_data->addMaskAtTime(20, x2, y2);
+        mask_data->addAtTime(20, x2, y2);
 
         auto result = area(mask_data.get());
 
@@ -60,19 +60,19 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         // Timestamp 30: One mask with 2 points
         std::vector<float> x1 = {1.0f, 2.0f};
         std::vector<float> y1 = {1.0f, 2.0f};
-        mask_data->addMaskAtTime(30, x1, y1);
+        mask_data->addAtTime(30, x1, y1);
 
         // Timestamp 40: Two masks with 3 and 4 points
         std::vector<float> x2 = {1.0f, 2.0f, 3.0f};
         std::vector<float> y2 = {1.0f, 2.0f, 3.0f};
-        mask_data->addMaskAtTime(40, x2, y2);
+        mask_data->addAtTime(40, x2, y2);
 
         std::vector<float> x3 = {4.0f, 5.0f, 6.0f, 7.0f};
         std::vector<float> y3 = {4.0f, 5.0f, 6.0f, 7.0f};
-        mask_data->addMaskAtTime(40, x3, y3);
+        mask_data->addAtTime(40, x3, y3);
 
         // Timestamp 50: No masks (empty)
-        mask_data->clearMasksAtTime(50);
+        mask_data->clearAtTime(50);
 
         auto result = area(mask_data.get());
 
@@ -99,7 +99,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         // Add some mask data
         std::vector<float> x = {1.0f, 2.0f, 3.0f, 4.0f};
         std::vector<float> y = {1.0f, 2.0f, 3.0f, 4.0f};
-        mask_data->addMaskAtTime(100, x, y);
+        mask_data->addAtTime(100, x, y);
 
         auto result = area(mask_data.get());
 
@@ -123,7 +123,7 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
         // Add an empty mask (should be handled gracefully)
         std::vector<float> empty_x;
         std::vector<float> empty_y;
-        mask_data->addMaskAtTime(10, empty_x, empty_y);
+        mask_data->addAtTime(10, empty_x, empty_y);
 
         auto result = area(mask_data.get());
 
@@ -136,12 +136,12 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
         // Add an empty mask
         std::vector<float> empty_x;
         std::vector<float> empty_y;
-        mask_data->addMaskAtTime(20, empty_x, empty_y);
+        mask_data->addAtTime(20, empty_x, empty_y);
 
         // Add a non-empty mask at the same timestamp
         std::vector<float> x = {1.0f, 2.0f, 3.0f};
         std::vector<float> y = {1.0f, 2.0f, 3.0f};
-        mask_data->addMaskAtTime(20, x, y);
+        mask_data->addAtTime(20, x, y);
 
         auto result = area(mask_data.get());
 
@@ -155,7 +155,7 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
         for (int i = 0; i < 10; i++) {
             std::vector<float> x(i+1, 1.0f);
             std::vector<float> y(i+1, 1.0f);
-            mask_data->addMaskAtTime(30, x, y);
+            mask_data->addAtTime(30, x, y);
         }
 
         auto result = area(mask_data.get());

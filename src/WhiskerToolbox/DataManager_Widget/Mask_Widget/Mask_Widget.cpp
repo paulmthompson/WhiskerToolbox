@@ -48,7 +48,7 @@ void Mask_Widget::selectPoint(float const x, float const y) {
         }
     }
 
-    _data_manager->getData<MaskData>(_active_key)->addMaskAtTime(current_time, mask);
+    _data_manager->getData<MaskData>(_active_key)->addAtTime(current_time, mask);
 }
 
 void Mask_Widget::_loadSamModel() {

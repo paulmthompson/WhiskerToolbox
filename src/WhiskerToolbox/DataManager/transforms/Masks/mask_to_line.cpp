@@ -274,7 +274,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     
     // Count total masks to process for progress calculation
     size_t total_masks = 0;
-    for (auto const& mask_time_pair : mask_data->getAllMasksAsRange()) {
+    for (auto const& mask_time_pair : mask_data->getAllAsRange()) {
         if (!mask_time_pair.masks.empty() && !mask_time_pair.masks[0].empty()) {
             total_masks++;
         }
@@ -302,7 +302,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     std::vector<long long> map_insertion_times;
     
     size_t processed_masks = 0;
-    for (auto const& mask_time_pair : mask_data->getAllMasksAsRange()) {
+    for (auto const& mask_time_pair : mask_data->getAllAsRange()) {
         int time = mask_time_pair.time;
         auto const& masks = mask_time_pair.masks;
         

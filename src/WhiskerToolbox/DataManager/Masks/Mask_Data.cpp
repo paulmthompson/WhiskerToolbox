@@ -5,7 +5,7 @@
 #include <string>
 
 
-void MaskData::clearMasksAtTime(size_t const time, bool notify) {
+bool MaskData::clearAtTime(size_t const time, bool notify) {
     auto it = std::find(_time.begin(), _time.end(), time);
     if (it != _time.end()) {
         size_t const index = std::distance(_time.begin(), it);
@@ -14,11 +14,14 @@ void MaskData::clearMasksAtTime(size_t const time, bool notify) {
         if (notify) {
             notifyObservers();
         }
+        return true;
     }
-    // If time doesn't exist, do nothing (don't add an empty vector)
+
+    // No masks exist at this time, nothing to clear
+    return false;
 }
 
-void MaskData::addMaskAtTime(size_t const time,
+void MaskData::addAtTime(size_t const time,
                              std::vector<float> const & x,
                              std::vector<float> const & y,
                              bool notify) {
@@ -37,7 +40,7 @@ void MaskData::addMaskAtTime(size_t const time,
     }
 }
 
-void MaskData::addMaskAtTime(size_t const time,
+void MaskData::addAtTime(size_t const time,
                              std::vector<Point2D<float>> mask,
                              bool notify) {
     auto it = std::find(_time.begin(), _time.end(), time);
@@ -53,7 +56,7 @@ void MaskData::addMaskAtTime(size_t const time,
     }
 }
 
-std::vector<Mask2D> const & MaskData::getMasksAtTime(size_t const time) const {
+std::vector<Mask2D> const & MaskData::getAtTime(size_t const time) const {
     auto it = std::find(_time.begin(), _time.end(), time);
     if (it != _time.end()) {
         size_t const index = std::distance(_time.begin(), it);
