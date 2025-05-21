@@ -29,6 +29,7 @@ private:
 private slots:
     void _loadSingleHdf5Mask();
     void _loadMultiHdf5Mask();
+    void _enableImageScaling(bool enable);
 };
 
 #endif// MASK_LOADER_WIDGET_HPP

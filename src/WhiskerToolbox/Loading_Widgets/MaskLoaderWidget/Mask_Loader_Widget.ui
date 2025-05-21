@@ -1,177 +1,233 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-    <class>Mask_Loader_Widget</class>
-    <widget class="QWidget" name="Mask_Loader_Widget">
-        <property name="geometry">
-            <rect>
-                <x>0</x>
-                <y>0</y>
-                <width>544</width>
-                <height>300</height>
-            </rect>
+ <class>Mask_Loader_Widget</class>
+ <widget class="QWidget" name="Mask_Loader_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>514</width>
+    <height>399</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QFrame" name="frame">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>411</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Shape::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Shadow::Raised</enum>
+   </property>
+   <widget class="QPushButton" name="load_single_hdf5_mask">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>161</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Load Single HDF5 Mask</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="load_multi_hdf5_mask">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>161</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Load Multiple HDF5 Mask</string>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="multi_hdf5_name_pattern">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>40</y>
+      <width>104</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="plainText">
+     <string>*.h5</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>40</y>
+      <width>101</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Filename Pattern</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QWidget" name="verticalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>100</y>
+     <width>401</width>
+     <height>255</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLineEdit" name="data_name_text">
+        <property name="text">
+         <string>mask_1</string>
         </property>
-        <property name="windowTitle">
-            <string>Form</string>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Mask Name</string>
         </property>
-        <widget class="QFrame" name="frame">
-            <property name="geometry">
-                <rect>
-                    <x>20</x>
-                    <y>20</y>
-                    <width>411</width>
-                    <height>111</height>
-                </rect>
-            </property>
-            <property name="frameShape">
-                <enum>QFrame::Shape::StyledPanel</enum>
-            </property>
-            <property name="frameShadow">
-                <enum>QFrame::Shadow::Raised</enum>
-            </property>
-            <widget class="QPushButton" name="load_single_hdf5_mask">
-                <property name="geometry">
-                    <rect>
-                        <x>10</x>
-                        <y>10</y>
-                        <width>161</width>
-                        <height>24</height>
-                    </rect>
-                </property>
-                <property name="text">
-                    <string>Load Single HDF5 Mask</string>
-                </property>
-            </widget>
-            <widget class="QPushButton" name="load_multi_hdf5_mask">
-                <property name="geometry">
-                    <rect>
-                        <x>10</x>
-                        <y>40</y>
-                        <width>161</width>
-                        <height>24</height>
-                    </rect>
-                </property>
-                <property name="text">
-                    <string>Load Multiple HDF5 Mask</string>
-                </property>
-            </widget>
-            <widget class="QPlainTextEdit" name="multi_hdf5_name_pattern">
-                <property name="geometry">
-                    <rect>
-                        <x>190</x>
-                        <y>40</y>
-                        <width>104</width>
-                        <height>21</height>
-                    </rect>
-                </property>
-                <property name="plainText">
-                    <string>*.h5</string>
-                </property>
-            </widget>
-            <widget class="QLabel" name="label_2">
-                <property name="geometry">
-                    <rect>
-                        <x>300</x>
-                        <y>40</y>
-                        <width>101</width>
-                        <height>16</height>
-                    </rect>
-                </property>
-                <property name="text">
-                    <string>Filename Pattern</string>
-                </property>
-            </widget>
-        </widget>
-        <widget class="QPlainTextEdit" name="data_name_text">
-            <property name="geometry">
-                <rect>
-                    <x>20</x>
-                    <y>170</y>
-                    <width>104</width>
-                    <height>21</height>
-                </rect>
-            </property>
-            <property name="plainText">
-                <string>mask_1</string>
-            </property>
-        </widget>
-        <widget class="QLabel" name="label">
-            <property name="geometry">
-                <rect>
-                    <x>130</x>
-                    <y>170</y>
-                    <width>131</width>
-                    <height>16</height>
-                </rect>
-            </property>
-            <property name="text">
-                <string>Mask Name</string>
-            </property>
-        </widget>
-        <widget class="QSpinBox" name="width_scaling">
-            <property name="geometry">
-                <rect>
-                    <x>20</x>
-                    <y>230</y>
-                    <width>42</width>
-                    <height>22</height>
-                </rect>
-            </property>
-            <property name="minimum">
-                <number>-1</number>
-            </property>
-            <property name="maximum">
-                <number>1000</number>
-            </property>
-            <property name="value">
-                <number>-1</number>
-            </property>
-        </widget>
-        <widget class="QSpinBox" name="height_scaling">
-            <property name="geometry">
-                <rect>
-                    <x>20</x>
-                    <y>200</y>
-                    <width>42</width>
-                    <height>22</height>
-                </rect>
-            </property>
-            <property name="minimum">
-                <number>-1</number>
-            </property>
-            <property name="maximum">
-                <number>1000</number>
-            </property>
-            <property name="value">
-                <number>-1</number>
-            </property>
-        </widget>
-        <widget class="QLabel" name="label_3">
-            <property name="geometry">
-                <rect>
-                    <x>70</x>
-                    <y>200</y>
-                    <width>211</width>
-                    <height>16</height>
-                </rect>
-            </property>
-            <property name="text">
-                <string>Height Scaling (-1 for none)</string>
-            </property>
-        </widget>
-        <widget class="QLabel" name="label_4">
-            <property name="geometry">
-                <rect>
-                    <x>70</x>
-                    <y>230</y>
-                    <width>211</width>
-                    <height>16</height>
-                </rect>
-            </property>
-            <property name="text">
-                <string>Width Scaling (-1 for none)</string>
-            </property>
-        </widget>
-    </widget>
-    <resources/>
-    <connections/>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Original Canvas Resolution:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Height:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QSpinBox" name="original_height_spin">
+          <property name="minimum">
+           <number>-1</number>
+          </property>
+          <property name="maximum">
+           <number>10000</number>
+          </property>
+          <property name="value">
+           <number>-1</number>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Width:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QSpinBox" name="original_width_spin">
+          <property name="minimum">
+           <number>-1</number>
+          </property>
+          <property name="maximum">
+           <number>10000</number>
+          </property>
+          <property name="value">
+           <number>-1</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="enable_image_scaling">
+        <property name="text">
+         <string>Scale to New Resolution:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>New Width:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>New Height:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="scaled_height_spin">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSpinBox" name="scaled_width_spin">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="gridLayout"/>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Orientation::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
 </ui>

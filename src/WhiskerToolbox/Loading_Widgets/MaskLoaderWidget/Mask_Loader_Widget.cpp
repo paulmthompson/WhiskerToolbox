@@ -21,10 +21,24 @@ Mask_Loader_Widget::Mask_Loader_Widget(std::shared_ptr<DataManager> data_manager
 
     connect(ui->load_single_hdf5_mask, &QPushButton::clicked, this, &Mask_Loader_Widget::_loadSingleHdf5Mask);
     connect(ui->load_multi_hdf5_mask, &QPushButton::clicked, this, &Mask_Loader_Widget::_loadMultiHdf5Mask);
+    connect(ui->enable_image_scaling, &QCheckBox::clicked, this, &Mask_Loader_Widget::_enableImageScaling);
+
+    ui->scaled_width_spin->setEnabled(false);
+    ui->scaled_height_spin->setEnabled(false);
 }
 
 Mask_Loader_Widget::~Mask_Loader_Widget() {
     delete ui;
+}
+
+void Mask_Loader_Widget::_enableImageScaling(bool enable) {
+    if (enable) {
+        ui->scaled_height_spin->setEnabled(true);
+        ui->scaled_width_spin->setEnabled(true);
+    } else {
+        ui->scaled_height_spin->setEnabled(false);
+        ui->scaled_width_spin->setEnabled(false);
+    }
 }
 
 void Mask_Loader_Widget::_loadSingleHdf5Mask() {
@@ -86,7 +100,7 @@ void Mask_Loader_Widget::_loadMultiHdf5Mask() {
 
 void Mask_Loader_Widget::_loadSingleHDF5Mask(std::string const & filename, std::string const & mask_suffix) {
 
-    auto mask_key = ui->data_name_text->toPlainText().toStdString();
+    auto mask_key = ui->data_name_text->text().toStdString();
 
     if (mask_key.empty()) {
         mask_key = "mask";
@@ -108,5 +122,17 @@ void Mask_Loader_Widget::_loadSingleHDF5Mask(std::string const & filename, std::
         mask->addAtTime(frames[i], x_coords[i], y_coords[i]);
     }
 
-    mask->setImageSize({ui->width_scaling->value(), ui->height_scaling->value()});
+    auto const height = ui->original_height_spin->value();
+    auto const width = ui->original_width_spin->value();
+
+    mask->setImageSize({.width=width, .height=height});
+
+    if (ui->enable_image_scaling->isChecked()) {
+        auto const scaled_height = ui->scaled_height_spin->value();
+        auto const scaled_width = ui->scaled_width_spin->value();
+
+        mask->changeImageSize({scaled_width, scaled_height});
+    } else {
+        mask->changeImageSize({width, height});
+    }
 }

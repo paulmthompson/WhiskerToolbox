@@ -28,6 +28,7 @@ private:
 private slots:
     void _loadSingleHdf5Line(QString filename);
     void _loadMultiHdf5Line(QString dirname, QString pattern);
+    void _enableImageScaling(bool enable);
 };
 
 

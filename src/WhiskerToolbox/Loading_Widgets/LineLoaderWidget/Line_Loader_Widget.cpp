@@ -22,10 +22,23 @@ Line_Loader_Widget::Line_Loader_Widget(std::shared_ptr<DataManager> data_manager
 
     connect(ui->hdf5_line_loader, &HDF5LineLoader_Widget::newHDF5Filename, this, &Line_Loader_Widget::_loadSingleHdf5Line);
     connect(ui->hdf5_line_loader, &HDF5LineLoader_Widget::newHDF5MultiFilename, this, &Line_Loader_Widget::_loadMultiHdf5Line);
+    connect(ui->enable_image_scaling, &QCheckBox::clicked, this, &Line_Loader_Widget::_enableImageScaling);
+    ui->scaled_width_spin->setEnabled(false);
+    ui->scaled_height_spin->setEnabled(false);
 }
 
 Line_Loader_Widget::~Line_Loader_Widget() {
     delete ui;
+}
+
+void Line_Loader_Widget::_enableImageScaling(bool enable) {
+    if (enable) {
+        ui->scaled_height_spin->setEnabled(true);
+        ui->scaled_width_spin->setEnabled(true);
+    } else {
+        ui->scaled_height_spin->setEnabled(false);
+        ui->scaled_width_spin->setEnabled(false);
+    }
 }
 
 void Line_Loader_Widget::_loadSingleHdf5Line(QString filename) {
@@ -98,4 +111,19 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
     for (std::size_t i = 0; i < frames.size(); i++) {
         line->addLineAtTime(frames[i], x_coords[i], y_coords[i]);
     }
+
+    auto const height = ui->original_height_spin->value();
+    auto const width = ui->original_width_spin->value();
+
+    line->setImageSize({.width=width, .height=height});
+
+    if (ui->enable_image_scaling->isChecked()) {
+        auto const scaled_height = ui->scaled_height_spin->value();
+        auto const scaled_width = ui->scaled_width_spin->value();
+
+        line->changeImageSize({scaled_width, scaled_height});
+    } else {
+        line->changeImageSize({width, height});
+    }
+
 }

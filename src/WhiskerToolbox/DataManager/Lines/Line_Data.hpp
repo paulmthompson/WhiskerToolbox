@@ -35,8 +35,21 @@ public:
 
     [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(int time) const;
 
+    /**
+     * @brief Change the size of the canvas the line belongs to
+     *
+     * This will scale all lines in the data structure by the ratio of the
+     * new size to the old size.
+     *
+     * @param image_size
+     */
+    void changeImageSize(ImageSize const & image_size);
+
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
+
+
+
 
     /**
     * @brief Get all lines with their associated times as a range

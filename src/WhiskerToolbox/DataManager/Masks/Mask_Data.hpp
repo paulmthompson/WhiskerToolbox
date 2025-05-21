@@ -61,6 +61,16 @@ public:
                        std::vector<Point2D<float>> mask,
                        bool notify = true);
 
+    /**
+     * @brief Change the size of the canvas the mask belongs to
+     *
+     * This will scale all mask in the data structure by the ratio of the
+     * new size to the old size.
+     *
+     * @param image_size
+     */
+    void changeImageSize(ImageSize const & image_size);
+
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
