@@ -1,43 +1,50 @@
 
 #include "Line_Data.hpp"
 #include "Points/points.hpp"
-#include "utils/container.hpp"
 
 #include <cmath>
 #include <iostream>
 
 
-void LineData::clearLinesAtTime(int const time) {
+void LineData::clearLinesAtTime(int const time, bool notify) {
 
     _data[time].clear();
 
-    notifyObservers();
+    if (notify) {
+        notifyObservers();
+    }
 }
 
-void LineData::clearLineAtTime(int const time, int const line_id) {
+void LineData::clearLineAtTime(int const time, int const line_id, bool notify) {
 
     if (line_id < _data[time].size()) {
         _data[time].erase(_data[time].begin() + line_id);
     }
 
-    notifyObservers();
+    if (notify) {
+        notifyObservers();
+    }
 }
 
-void LineData::addLineAtTime(int const time, std::vector<float> const & x, std::vector<float> const & y) {
+void LineData::addLineAtTime(int const time, std::vector<float> const & x, std::vector<float> const & y, bool notify) {
 
     auto new_line = create_line(x, y);
     _data[time].push_back(new_line);
 
-    notifyObservers();
+    if (notify) {
+        notifyObservers();
+    }
 }
 
-void LineData::addLineAtTime(int const time, std::vector<Point2D<float>> const & line) {
+void LineData::addLineAtTime(int const time, std::vector<Point2D<float>> const & line, bool notify) {
     _data[time].push_back(line);
 
-    notifyObservers();
+    if (notify) {
+        notifyObservers();
+    }
 }
 
-void LineData::addPointToLine(int const time, int const line_id, Point2D<float> point) {
+void LineData::addPointToLine(int const time, int const line_id, Point2D<float> point, bool notify) {
 
     if (line_id < _data[time].size()) {
         _data[time][line_id].push_back(point);
@@ -47,10 +54,12 @@ void LineData::addPointToLine(int const time, int const line_id, Point2D<float> 
         _data[time].back().push_back(point);
     }
 
-    notifyObservers();
+    if (notify) {
+        notifyObservers();
+    }
 }
 
-void LineData::addPointToLineInterpolate(int const time, int const line_id, Point2D<float> point) {
+void LineData::addPointToLineInterpolate(int const time, int const line_id, Point2D<float> point, bool notify) {
 
     if (line_id >= _data[time].size()) {
         std::cerr << "LineData::addPointToLineInterpolate: line_id out of range" << std::endl;
@@ -72,7 +81,9 @@ void LineData::addPointToLineInterpolate(int const time, int const line_id, Poin
     line.push_back(point);
     smooth_line(line);
 
-    notifyObservers();
+    if (notify) {
+        notifyObservers();
+    }
 }
 
 std::vector<Line2D> const & LineData::getLinesAtTime(int const time) const {

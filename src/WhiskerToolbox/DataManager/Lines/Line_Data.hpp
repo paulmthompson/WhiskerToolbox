@@ -2,7 +2,6 @@
 #define LINE_DATA_HPP
 
 #include "ImageSize/ImageSize.hpp"
-#include "LockState/LockState.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "Points/points.hpp"
 #include "lines.hpp"
@@ -23,14 +22,14 @@ public:
     LineData() = default;
     explicit LineData(std::map<int, std::vector<Line2D>> const & data)
         : _data(data){};
-    void clearLineAtTime(int time, int line_id);
-    void clearLinesAtTime(int time);
-    void addLineAtTime(int time, std::vector<float> const & x, std::vector<float> const & y);
-    void addLineAtTime(int time, std::vector<Point2D<float>> const & line);
+    void clearLineAtTime(int time, int line_id, bool notify = true);
+    void clearLinesAtTime(int time, bool notify = true);
+    void addLineAtTime(int time, std::vector<float> const & x, std::vector<float> const & y, bool notify = true);
+    void addLineAtTime(int time, std::vector<Point2D<float>> const & line, bool notify = true);
 
-    void addPointToLine(int time, int line_id, Point2D<float> point);
+    void addPointToLine(int time, int line_id, Point2D<float> point, bool notify = true);
 
-    void addPointToLineInterpolate(int time, int line_id, Point2D<float> point);
+    void addPointToLineInterpolate(int time, int line_id, Point2D<float> point, bool notify = true);
 
     [[nodiscard]] std::vector<int> getTimesWithLines() const;
 

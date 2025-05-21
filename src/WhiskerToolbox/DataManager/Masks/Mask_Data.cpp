@@ -48,7 +48,9 @@ void MaskData::addMaskAtTime(size_t const time,
         _time.push_back(time);
         _data.push_back({std::move(mask)});
     }
-    notifyObservers();
+    if (notify) {
+        notifyObservers();
+    }
 }
 
 std::vector<Mask2D> const & MaskData::getMasksAtTime(size_t const time) const {
