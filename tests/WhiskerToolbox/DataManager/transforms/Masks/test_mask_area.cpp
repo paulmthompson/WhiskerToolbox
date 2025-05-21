@@ -71,16 +71,13 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         std::vector<float> y3 = {4.0f, 5.0f, 6.0f, 7.0f};
         mask_data->addAtTime(40, x3, y3);
 
-        // Timestamp 50: No masks (empty)
-        mask_data->clearAtTime(50);
-
         auto result = area(mask_data.get());
 
         auto const & values = result->getAnalogTimeSeries();
         auto const & times = result->getTimeSeries();
 
-        REQUIRE(times.size() == 3);
-        REQUIRE(values.size() == 3);
+        REQUIRE(times.size() == 2);
+        REQUIRE(values.size() == 2);
 
         // Check timestamp 30
         auto time30_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), 30));
@@ -89,10 +86,6 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         // Check timestamp 40
         auto time40_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), 40));
         REQUIRE(values[time40_idx] == 7.0f); // 3 + 4 = 7 points
-
-        // Check timestamp 50
-        auto time50_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), 50));
-        REQUIRE(values[time50_idx] == 0.0f); // Empty mask
     }
 
     SECTION("Verify returned AnalogTimeSeries structure") {

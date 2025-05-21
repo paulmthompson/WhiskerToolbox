@@ -61,27 +61,6 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         REQUIRE(masks_at_10.size() == 1);
     }
 
-    SECTION("Clearing masks at non-existent time") {
-        // Should not create an entry with empty vector
-        mask_data.clearAtTime(42);
-
-        auto masks = mask_data.getAtTime(42);
-        REQUIRE(masks.empty());
-
-        // Check that the time was NOT created
-        auto range = mask_data.getAllAsRange();
-        bool found = false;
-
-        for (auto const& pair : range) {
-            if (pair.time == 42) {
-                found = true;
-                break;
-            }
-        }
-
-        REQUIRE_FALSE(found);
-    }
-
     SECTION("Getting masks as range") {
         // Add multiple masks at different times
         mask_data.addAtTime(0, x1, y1);
@@ -201,13 +180,13 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
     }
 
     SECTION("Clearing masks at non-existent time") {
-        // Should create an entry with empty vector
+        // Should not create an entry with empty vector
         mask_data.clearAtTime(42);
 
         auto masks = mask_data.getAtTime(42);
         REQUIRE(masks.empty());
 
-        // Check that the time was actually created
+        // Check that the time was NOT created
         auto range = mask_data.getAllAsRange();
         bool found = false;
 
@@ -218,7 +197,7 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
             }
         }
 
-        REQUIRE(found);
+        REQUIRE_FALSE(found);
     }
 
     SECTION("Empty range with no data") {
