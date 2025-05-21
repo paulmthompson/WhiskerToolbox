@@ -61,6 +61,28 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         REQUIRE(masks_at_10.size() == 1);
     }
 
+    SECTION("Clearing masks at non-existent time") {
+        // Clear masks at a time that doesn't exist
+        mask_data.clearMasksAtTime(42);
+
+        // No entry should be created
+        auto masks = mask_data.getMasksAtTime(42);
+        REQUIRE(masks.empty());
+
+        // Verify time 42 wasn't added to internal structures
+        auto range = mask_data.getAllMasksAsRange();
+        bool found = false;
+
+        for (auto const& pair : range) {
+            if (pair.time == 42) {
+                found = true;
+                break;
+            }
+        }
+
+        REQUIRE_FALSE(found);
+    }
+
     SECTION("Getting masks as range") {
         // Add multiple masks at different times
         mask_data.addMaskAtTime(0, x1, y1);
@@ -94,6 +116,68 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         auto retrieved_size = mask_data.getImageSize();
         REQUIRE(retrieved_size.width == 640);
         REQUIRE(retrieved_size.height == 480);
+    }
+}
+
+TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
+    MaskData mask_data;
+
+    // Setup some test data
+    std::vector<float> x1 = {1.0f, 2.0f, 3.0f, 1.0f};
+    std::vector<float> y1 = {1.0f, 1.0f, 2.0f, 2.0f};
+
+    int notification_count = 0;
+    int observer_id = mask_data.addObserver([&notification_count]() {
+        notification_count++;
+    });
+
+    SECTION("Notification on clearMasksAtTime") {
+        // First add a mask
+        mask_data.addMaskAtTime(0, x1, y1, false);  // Don't notify
+        REQUIRE(notification_count == 0);
+
+        // Clear with notification
+        mask_data.clearMasksAtTime(0);
+        REQUIRE(notification_count == 1);
+
+        // Clear with notification disabled
+        mask_data.clearMasksAtTime(0, false);
+        REQUIRE(notification_count == 1);  // Still 1, not incremented
+
+        // Clear non-existent time (shouldn't notify)
+        mask_data.clearMasksAtTime(42);
+        REQUIRE(notification_count == 1);  // Still 1, not incremented
+    }
+
+    SECTION("Notification on addMaskAtTime") {
+        // Add with notification
+        mask_data.addMaskAtTime(0, x1, y1);
+        REQUIRE(notification_count == 1);
+
+        // Add with notification disabled
+        mask_data.addMaskAtTime(0, x1, y1, false);
+        REQUIRE(notification_count == 1);  // Still 1, not incremented
+
+        // Add using point vector with notification
+        std::vector<Point2D<float>> points = {{1.0f, 1.0f}, {2.0f, 2.0f}};
+        mask_data.addMaskAtTime(1, points);
+        REQUIRE(notification_count == 2);
+
+        // Add using point vector with notification disabled
+        mask_data.addMaskAtTime(1, points, false);
+        REQUIRE(notification_count == 2);  // Still 2, not incremented
+    }
+
+    SECTION("Multiple operations with single notification") {
+        // Perform multiple operations without notifying
+        mask_data.addMaskAtTime(0, x1, y1, false);
+        mask_data.addMaskAtTime(1, x1, y1, false);
+
+        REQUIRE(notification_count == 0);
+
+        // Now manually notify once
+        mask_data.notifyObservers();
+        REQUIRE(notification_count == 1);
     }
 }
 
