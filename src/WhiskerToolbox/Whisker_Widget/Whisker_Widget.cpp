@@ -118,7 +118,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
     connect(ui->manual_whisker_select_spinbox, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectWhisker);
     connect(ui->delete_whisker_button, &QPushButton::clicked, this, &Whisker_Widget::_deleteWhisker);
 
-    connect(ui->actionSave_Snapshot, &QAction::triggered, this, &Whisker_Widget::_saveImageButton);
     connect(ui->actionSave_Face_Mask_2, &QAction::triggered, this, &Whisker_Widget::_saveFaceMask);
     connect(ui->actionLoad_Face_Mask, &QAction::triggered, this, &Whisker_Widget::_loadFaceMask);
     connect(ui->export_image_csv, &QPushButton::clicked, this, &Whisker_Widget::_exportImageCSV);
@@ -409,10 +408,6 @@ void Whisker_Widget::_deleteWhisker() {
 
 /////////////////////////////////////////////
 
-void Whisker_Widget::_saveImageButton() {
-    _saveImage(_output_path.string() + "/");
-}
-
 void Whisker_Widget::_saveImage(std::string const & folder) {
 
     MediaExportOptions opts;
@@ -611,9 +606,6 @@ void Whisker_Widget::_exportAllTracked() {
 
     auto whisker_id = get_whisker_id(whisker_name);
 
-    std::string const image_folder = _output_path.string() + "/images/";
-    std::filesystem::create_directory(image_folder);
-
     std::string const whisker_folder = _output_path.string() + "/" + std::to_string(whisker_id) + "/";
     std::filesystem::create_directory(whisker_folder);
 
@@ -628,7 +620,7 @@ void Whisker_Widget::_exportAllTracked() {
     opts.save_by_frame_name = _save_by_frame_name;
     opts.frame_id_padding = 7;
     opts.image_name_prefix = "img";
-    opts.image_save_dir = image_folder;
+    opts.image_save_dir = _output_path.string();
 
     for (auto const & event_frame : tracked_frames)
     {
@@ -661,10 +653,7 @@ void Whisker_Widget::_exportImageCSV() {
         return;
     }
 
-    std::string const folder = _output_path.string() + "/images/";
-
-    std::filesystem::create_directory(folder);
-    _saveImage(folder);
+    _saveImage(_output_path.string());
 
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
