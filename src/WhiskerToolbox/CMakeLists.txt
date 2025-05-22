@@ -299,6 +299,9 @@ set(PROJECT_SOURCES
 
         IO_Widgets/Media/media_export.hpp
         IO_Widgets/Media/media_export.cpp
+        IO_Widgets/Media/MediaExport_Widget.cpp
+        IO_Widgets/Media/MediaExport_Widget.hpp
+        IO_Widgets/Media/MediaExport_Widget.ui
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
