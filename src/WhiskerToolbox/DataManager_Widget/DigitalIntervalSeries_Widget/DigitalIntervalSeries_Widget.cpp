@@ -1,7 +1,7 @@
 #include "DigitalIntervalSeries_Widget.hpp"
 #include "ui_DigitalIntervalSeries_Widget.h"
 
-#include "../../DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_Loader.hpp"
+#include "../../DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "IntervalTableModel.hpp"

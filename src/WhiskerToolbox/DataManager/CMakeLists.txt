@@ -70,8 +70,10 @@ add_library(DataManager SHARED
 
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
-        DigitalTimeSeries/IO/CSV/Digital_Interval_Series_Loader.hpp
-        DigitalTimeSeries/IO/CSV/Digital_Interval_Series_Loader.cpp
+        DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp
+        DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.cpp
+        DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp
+        DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.cpp
         DigitalTimeSeries/interval_data.hpp
 
         DigitalTimeSeries/Digital_Event_Series.hpp
@@ -135,6 +137,7 @@ add_library(DataManager SHARED
         ImageSize/ImageSize.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
         DataManagerTypes.hpp
+
 
 )
 

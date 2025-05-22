@@ -3,7 +3,7 @@
 
 #include "ui_contact_widget.h"
 
-#include "../DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_Loader.hpp"
+#include "../DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Media/Media_Data.hpp"
