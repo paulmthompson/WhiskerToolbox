@@ -3,6 +3,7 @@
 
 
 #include <QWidget>
+#include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <memory>
 #include <string>
@@ -29,7 +30,6 @@ private:
 private slots:
     void _loadSingleHdf5Mask();
     void _loadMultiHdf5Mask();
-    void _enableImageScaling(bool enable);
 };
 
 #endif// MASK_LOADER_WIDGET_HPP

@@ -1,4 +1,3 @@
-
 #include "Mask_Loader_Widget.hpp"
 
 #include "ui_Mask_Loader_Widget.h"
@@ -6,7 +5,9 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/loaders/hdf5_loaders.hpp"
+#include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
+#include <QCheckBox>
 #include <QFileDialog>
 
 #include <filesystem>
@@ -21,24 +22,10 @@ Mask_Loader_Widget::Mask_Loader_Widget(std::shared_ptr<DataManager> data_manager
 
     connect(ui->load_single_hdf5_mask, &QPushButton::clicked, this, &Mask_Loader_Widget::_loadSingleHdf5Mask);
     connect(ui->load_multi_hdf5_mask, &QPushButton::clicked, this, &Mask_Loader_Widget::_loadMultiHdf5Mask);
-    connect(ui->enable_image_scaling, &QCheckBox::clicked, this, &Mask_Loader_Widget::_enableImageScaling);
-
-    ui->scaled_width_spin->setEnabled(false);
-    ui->scaled_height_spin->setEnabled(false);
 }
 
 Mask_Loader_Widget::~Mask_Loader_Widget() {
     delete ui;
-}
-
-void Mask_Loader_Widget::_enableImageScaling(bool enable) {
-    if (enable) {
-        ui->scaled_height_spin->setEnabled(true);
-        ui->scaled_width_spin->setEnabled(true);
-    } else {
-        ui->scaled_height_spin->setEnabled(false);
-        ui->scaled_width_spin->setEnabled(false);
-    }
 }
 
 void Mask_Loader_Widget::_loadSingleHdf5Mask() {
@@ -122,17 +109,13 @@ void Mask_Loader_Widget::_loadSingleHDF5Mask(std::string const & filename, std::
         mask->addAtTime(frames[i], x_coords[i], y_coords[i]);
     }
 
-    auto const height = ui->original_height_spin->value();
-    auto const width = ui->original_width_spin->value();
+    ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
+    mask->setImageSize(original_size);
 
-    mask->setImageSize({.width=width, .height=height});
-
-    if (ui->enable_image_scaling->isChecked()) {
-        auto const scaled_height = ui->scaled_height_spin->value();
-        auto const scaled_width = ui->scaled_width_spin->value();
-
-        mask->changeImageSize({scaled_width, scaled_height});
+    if (ui->scaling_widget->isScalingEnabled()) {
+        ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
+        mask->changeImageSize(scaled_size);
     } else {
-        mask->changeImageSize({width, height});
+        mask->changeImageSize(original_size);
     }
 }
