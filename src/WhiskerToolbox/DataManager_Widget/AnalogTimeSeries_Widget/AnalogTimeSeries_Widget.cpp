@@ -27,16 +27,14 @@ void AnalogTimeSeries_Widget::openWidget() {
 
 void AnalogTimeSeries_Widget::_saveCSV() {
     auto output_path = _data_manager->getOutputPath();
-    std::cout << output_path.string() << std::endl;
-    std::cout << _active_key << std::endl;
 
-    auto filename = ui->filename_textbox->text().toStdString();
-    output_path.append(filename);
+    auto analog_data = _data_manager->getData<AnalogTimeSeries>(_active_key);
 
-    auto analog_data = _data_manager->getData<AnalogTimeSeries>(_active_key)->getAnalogTimeSeries();
-    auto time_stamps = _data_manager->getData<AnalogTimeSeries>(_active_key)->getTimeSeries();
+    auto opts = CSVAnalogSaverOptions();
+    opts.filename = ui->filename_textbox->text().toStdString();
+    opts.parent_dir = output_path.string();
 
-    save_analog(analog_data, time_stamps, output_path.string());
+    save_analog_series_to_csv(analog_data.get(), opts);
 }
 
 
