@@ -5,6 +5,8 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "LineTableModel.hpp"
 
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
+
 #include <QTableView>
 #include <iostream>
 
@@ -54,15 +56,7 @@ void Line_Widget::setActiveKey(std::string const & key) {
 }
 
 void Line_Widget::removeCallbacks() {
-    if (!_active_key.empty() && _callback_id != -1) {
-        bool success = _data_manager->removeCallbackFromData(_active_key, _callback_id);
-        if (success) {
-            _callback_id = -1;
-        } else {
-            // Optionally log an error if callback removal failed, though it might not be critical
-            // std::cerr << "Line_Widget: Failed to remove callback for key: " << _active_key << std::endl;
-        }
-    }
+    remove_callback(_data_manager.get(), _active_key, _callback_id);
 }
 
 void Line_Widget::updateTable() {
@@ -89,13 +83,8 @@ void Line_Widget::_onDataChanged() {
 }
 
 void Line_Widget::_populateMoveToComboBox() {
-    ui->moveToComboBox->clear();
-    std::vector<std::string> line_keys = _data_manager->getKeys<LineData>();
-    for (std::string const & key : line_keys) {
-        if (key != _active_key) {
-            ui->moveToComboBox->addItem(QString::fromStdString(key));
-        }
-    }
+
+    populate_move_combo_box<LineData>(ui->moveToComboBox, _data_manager.get(), _active_key);
 }
 
 void Line_Widget::_moveLineButton_clicked() {

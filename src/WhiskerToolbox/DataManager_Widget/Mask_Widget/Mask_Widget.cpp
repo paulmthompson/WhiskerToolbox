@@ -6,6 +6,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/points.hpp"
 #include "MaskTableModel.hpp"
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 
 #include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"
 
@@ -70,14 +71,7 @@ void Mask_Widget::updateTable() {
 }
 
 void Mask_Widget::removeCallbacks() {
-    if (!_active_key.empty() && _callback_id != -1) {
-        bool success = _data_manager->removeCallbackFromData(_active_key, _callback_id);
-        if (success) {
-            _callback_id = -1;
-        } else {
-            // std::cerr << "Mask_Widget: Failed to remove callback for key: " << _active_key << std::endl;
-        }
-    }
+    remove_callback(_data_manager.get(), _active_key, _callback_id);
 }
 
 void Mask_Widget::_onDataChanged() {
@@ -93,14 +87,8 @@ void Mask_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
 }
 
 void Mask_Widget::_populateMoveToMaskDataComboBox() {
-    ui->moveToMaskDataComboBox->clear();
-    if (!_data_manager) return;
-    std::vector<std::string> mask_keys = _data_manager->getKeys<MaskData>();
-    for (std::string const & key : mask_keys) {
-        if (key != _active_key) {
-            ui->moveToMaskDataComboBox->addItem(QString::fromStdString(key));
-        }
-    }
+
+    populate_move_combo_box<MaskData>(ui->moveToMaskDataComboBox, _data_manager.get(), _active_key);
 }
 
 void Mask_Widget::_moveMasksButton_clicked() {

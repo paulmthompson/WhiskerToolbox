@@ -59,7 +59,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         point_data.addPointsAtTime(10, points);
         point_data.addPointsAtTime(20, more_points);
 
-        point_data.clearPointsAtTime(10);
+        point_data.clearAtTime(10);
 
         auto points_at_10 = point_data.getPointsAtTime(10);
         auto points_at_20 = point_data.getPointsAtTime(20);
@@ -118,7 +118,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         point_data.addPointsAtTime(10, points);
         point_data.addPointsAtTime(20, more_points);
 
-        auto times = point_data.getTimesWithPoints();
+        auto times = point_data.getTimesWithData();
 
         REQUIRE(times.size() == 2);
         REQUIRE(times[0] == 10);
@@ -143,7 +143,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
     }
 
     SECTION("Clearing points at non-existent time") {
-        point_data.clearPointsAtTime(42);
+        point_data.clearAtTime(42);
         auto points = point_data.getPointsAtTime(42);
         REQUIRE(points.empty());
 
@@ -212,7 +212,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
 
         // Add, clear, add again to test internal state consistency
         point_data.addPointAtTime(5, p1);
-        point_data.clearPointsAtTime(5);
+        point_data.clearAtTime(5);
         point_data.addPointAtTime(5, p1);
 
         auto points = point_data.getPointsAtTime(5);

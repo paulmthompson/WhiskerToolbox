@@ -2,12 +2,11 @@
 #include "ui_Point_Widget.h"
 
 #include "DataManager.hpp"
-#include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "PointTableModel.hpp"
 #include "IO_Widgets/PointLoaderWidget/CSV/CSVPointSaver_Widget.hpp"
 #include "IO_Widgets/Media/MediaExport_Widget.hpp"
-#include "IO_Widgets/Media/media_export.hpp"
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 
 #include <QFileDialog>
 #include <QPushButton>
@@ -106,15 +105,7 @@ void Point_Widget::loadFrame(int frame_id) {
 }
 
 void Point_Widget::removeCallbacks() {
-    if (!_active_key.empty() && _data_manager && _data_manager->getData<PointData>(_active_key)) {
-        if (_callback_id != -1) {
-            auto data = _data_manager->getData<PointData>(_active_key);
-            if (data) {
-                data->removeObserver(_callback_id);
-            }
-            _callback_id = -1;
-        }
-    }
+    remove_callback(_data_manager.get(), _active_key, _callback_id);
 }
 
 void Point_Widget::_propagateLabel(int frame_id) {
@@ -130,14 +121,7 @@ void Point_Widget::_propagateLabel(int frame_id) {
 }
 
 void Point_Widget::_populateMoveToPointDataComboBox() {
-    ui->moveToPointDataComboBox->clear();
-    if (_data_manager) {
-        for (auto const & key : _data_manager->getAllKeys()) {
-            if (_data_manager->getType(_active_key) == DM_DataType::Points && key != _active_key) {
-                ui->moveToPointDataComboBox->addItem(QString::fromStdString(key));
-            }
-        }
-    }
+    populate_move_combo_box<PointData>(ui->moveToPointDataComboBox, _data_manager.get(), _active_key);
 }
 
 void Point_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
@@ -163,7 +147,7 @@ void Point_Widget::_movePointsButton_clicked() {
             auto points_to_move = current_pd->getPointsAtTime(current_frame);
             if (!points_to_move.empty()) {
                 target_pd->addPointsAtTime(current_frame, points_to_move);
-                current_pd->clearPointsAtTime(current_frame);
+                current_pd->clearAtTime(current_frame);
             }
         }
     }
@@ -174,7 +158,7 @@ void Point_Widget::_deletePointsButton_clicked() {
         auto point_data_ptr = _data_manager->getData<PointData>(_active_key);
         if (point_data_ptr) {
             // point_data_ptr->clearPointsAtTime(_point_table_model->getActiveFrame()); // Replaced
-            point_data_ptr->clearPointsAtTime(_previous_frame); // Use Point_Widget's tracked active frame
+            point_data_ptr->clearAtTime(_previous_frame); // Use Point_Widget's tracked active frame
         }
     }
 }
@@ -207,6 +191,8 @@ void Point_Widget::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsV
         return;
     }
 
+    /*
+
     QString current_filename_qstr;
     std::visit([&current_filename_qstr](auto& opts) {
         current_filename_qstr = QString::fromStdString(opts.filename);
@@ -235,6 +221,7 @@ void Point_Widget::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsV
     std::visit([&chosen_filename_qstr](auto& opts) {
         opts.filename = chosen_filename_qstr.toStdString();
     }, options_variant);
+    */
 
     bool save_successful = false;
     switch (saver_type) {
@@ -252,45 +239,13 @@ void Point_Widget::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsV
     }
 
     if (ui->export_media_frames_checkbox->isChecked()) {
-        auto media_data = _data_manager->getData<MediaData>("media");
-        if (!media_data) {
-            QMessageBox::warning(this, "Media Not Found", "Could not find media data to export frames.");
-            return;
-        }
+        std::vector<size_t> frame_ids_to_export = point_data_ptr->getTimesWithData();
+        export_media_frames(_data_manager.get(),
+                            ui->media_export_options_widget,
+                            options_variant,
+                            this,
+                            frame_ids_to_export);
 
-        std::vector<size_t> frame_ids_to_export = point_data_ptr->getTimesWithPoints();
-        if (frame_ids_to_export.empty()){
-            QMessageBox::information(this, "No Frames", "No points found in data, so no frames to export.");
-            return;
-        }
-
-        if (frame_ids_to_export.size() > 10000) {
-            QMessageBox::StandardButton reply;
-            reply = QMessageBox::warning(this, "Large Export", 
-                                         QString("You are about to export %1 media frames. This might take a while. Are you sure?").arg(frame_ids_to_export.size()),
-                                         QMessageBox::Yes|QMessageBox::No);
-            if (reply == QMessageBox::No) {
-                return;
-            }
-        }
-
-        MediaExportOptions media_export_opts = ui->media_export_options_widget->getOptions();
-        
-        std::string primary_saved_filename;
-        std::visit([&primary_saved_filename](auto& opts) {
-            primary_saved_filename = opts.filename;
-        }, options_variant);
-        
-        std::filesystem::path primary_file_path(primary_saved_filename);
-        media_export_opts.image_save_dir = primary_file_path.parent_path().string();
-
-        int success_count = 0;
-        for (size_t frame_id_sz : frame_ids_to_export) {
-            int frame_id = static_cast<int>(frame_id_sz); 
-            save_image(media_data.get(), frame_id, media_export_opts);
-            success_count++;
-        }
-        QMessageBox::information(this, "Media Export Complete", QString("Successfully exported %1 of %2 frames.").arg(success_count).arg(frame_ids_to_export.size()));
     }
 }
 

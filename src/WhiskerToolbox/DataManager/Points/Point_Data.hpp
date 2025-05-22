@@ -24,7 +24,7 @@ public:
     PointData() = default;
     explicit PointData(std::map<int, Point2D<float>> const & data);
     explicit PointData(std::map<int, std::vector<Point2D<float>>> data);
-    void clearPointsAtTime(size_t time, bool notify = true);
+    void clearAtTime(size_t time, bool notify = true);
 
     void addPointAtTime(size_t time, Point2D<float> point, bool notify = true);
     void addPointsAtTime(size_t time, std::vector<Point2D<float>> const & points, bool notify = true);
@@ -37,7 +37,7 @@ public:
             std::vector<std::vector<Point2D<float>>> const & points,
             bool notify = true);
 
-    [[nodiscard]] std::vector<size_t> getTimesWithPoints() const;
+    [[nodiscard]] std::vector<size_t> getTimesWithData() const;
 
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }

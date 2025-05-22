@@ -28,7 +28,9 @@ std::string get_image_save_name(MediaData const * media, int const frame_id, Med
 
 void save_image(MediaData * media, int const frame_id, MediaExportOptions const & opts)
 {
-    std::filesystem::path save_dir = opts.image_save_dir + opts.image_folder;
+    std::filesystem::path save_dir = opts.image_save_dir;
+    save_dir.append(opts.image_folder);
+    //std::filesystem::path save_dir = opts.image_save_dir + opts.image_folder;
     if (!std::filesystem::exists(save_dir)) {
         std::filesystem::create_directory(save_dir);
         std::cout << "Created directory " << save_dir << std::endl;

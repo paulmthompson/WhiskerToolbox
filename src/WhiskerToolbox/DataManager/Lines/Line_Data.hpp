@@ -31,7 +31,7 @@ public:
 
     void addPointToLineInterpolate(int time, int line_id, Point2D<float> point, bool notify = true);
 
-    [[nodiscard]] std::vector<int> getTimesWithLines() const;
+    [[nodiscard]] std::vector<int> getTimesWithData() const;
 
     [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(int time) const;
 

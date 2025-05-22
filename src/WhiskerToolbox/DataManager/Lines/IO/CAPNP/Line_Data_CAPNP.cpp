@@ -11,7 +11,7 @@ kj::Array<capnp::word> serializeLineData(LineData const * lineData) {
     capnp::MallocMessageBuilder message;
     LineDataProto::Builder lineDataProto = message.initRoot<LineDataProto>();
 
-    std::vector<int> times = lineData->getTimesWithLines();
+    std::vector<int> times = lineData->getTimesWithData();
 
     std::cout << "There are " << times.size() << " time frames" << std::endl;
 

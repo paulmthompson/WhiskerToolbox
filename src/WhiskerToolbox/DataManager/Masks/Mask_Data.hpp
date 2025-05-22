@@ -61,6 +61,8 @@ public:
                        std::vector<Point2D<float>> mask,
                        bool notify = true);
 
+    std::vector<size_t> getTimesWithData();
+
     /**
      * @brief Change the size of the canvas the mask belongs to
      *

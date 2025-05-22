@@ -24,7 +24,7 @@ PointData::PointData(std::map<int, std::vector<Point2D<float>>> data) {
     }
 }
 
-void PointData::clearPointsAtTime(size_t const time, bool notify) {
+void PointData::clearAtTime(size_t const time, bool notify) {
 
     auto it = std::find(_time.begin(), _time.end(), time);
     if (it != _time.end()) {
@@ -42,7 +42,7 @@ void PointData::clearPointsAtTime(size_t const time, bool notify) {
 }
 
 void PointData::overwritePointAtTime(size_t const time, Point2D<float> const point, bool notify) {
-    clearPointsAtTime(time, false);
+    clearAtTime(time, false);
     addPointAtTime(time, point, false);
     if (notify) {
         notifyObservers();
@@ -50,7 +50,7 @@ void PointData::overwritePointAtTime(size_t const time, Point2D<float> const poi
 }
 
 void PointData::overwritePointsAtTime(size_t const time, std::vector<Point2D<float>> const & points, bool notify) {
-    clearPointsAtTime(time, false);
+    clearAtTime(time, false);
     addPointsAtTime(time, points, false);
     if (notify) {
         notifyObservers();
@@ -103,7 +103,7 @@ void PointData::addPointsAtTime(size_t const time, std::vector<Point2D<float>> c
     }
 }
 
-std::vector<size_t> PointData::getTimesWithPoints() const {
+std::vector<size_t> PointData::getTimesWithData() const {
     std::vector<size_t> times;
     times.reserve(_time.size());
     for (auto t: _time) {

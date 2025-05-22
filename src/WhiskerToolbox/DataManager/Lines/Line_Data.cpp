@@ -95,7 +95,7 @@ std::vector<Line2D> const & LineData::getLinesAtTime(int const time) const {
     }
 }
 
-std::vector<int> LineData::getTimesWithLines() const {
+std::vector<int> LineData::getTimesWithData() const {
     std::vector<int> keys;
     keys.reserve(_data.size());
     for (auto const & kv: _data) {

@@ -21,14 +21,36 @@ class MediaData;
 
 using PointSaverOptionsVariant = std::variant<CSVPointSaverOptions>;
 
+/**
+ * @brief Point_Widget is used for viewing and editing point data.
+ * 
+ * Core functionality:
+ * 
+ * Viewing all points in the time series in table form. Clicking on the table
+ * results in jumping to that frame in the main video display.
+ * 
+ * Saving:
+ * 
+ * Data can be exported in selected formats. Currently supported formats are:
+ * 
+ * - CSV
+ * 
+ * Because points can be useful for deep learning labels, the user can also
+ * export frames from currently loaded media simultaneously with the points.
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
 class Point_Widget : public QWidget {
     Q_OBJECT
 public:
     explicit Point_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
     ~Point_Widget() override;
 
-    void openWidget();// Call to open the widget
-
+    void openWidget();
     void setActiveKey(std::string const & key);
 
     void updateTable();

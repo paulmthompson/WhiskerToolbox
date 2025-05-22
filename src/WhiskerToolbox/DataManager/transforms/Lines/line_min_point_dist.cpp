@@ -105,7 +105,7 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(
     }
     
     // Get all times that have line data
-    auto line_times = line_data->getTimesWithLines();
+    auto line_times = line_data->getTimesWithData();
     
     // Process each time that has line data
     for (int time : line_times) {
