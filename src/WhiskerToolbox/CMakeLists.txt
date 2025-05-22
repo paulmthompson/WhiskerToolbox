@@ -289,6 +289,9 @@ set(PROJECT_SOURCES
         IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp
         IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.cpp
         IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.ui
+        IO_Widgets/DigitalIntervalLoaderWidget/CSV/CSVDigitalIntervalLoader_Widget.cpp
+        IO_Widgets/DigitalIntervalLoaderWidget/CSV/CSVDigitalIntervalLoader_Widget.hpp
+        IO_Widgets/DigitalIntervalLoaderWidget/CSV/CSVDigitalIntervalLoader_Widget.ui
 
         IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.hpp
         IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.cpp

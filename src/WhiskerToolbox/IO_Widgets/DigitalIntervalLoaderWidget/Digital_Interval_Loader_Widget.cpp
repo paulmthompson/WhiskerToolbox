@@ -1,5 +1,3 @@
-
-
 #include "Digital_Interval_Loader_Widget.hpp"
 
 #include "ui_Digital_Interval_Loader_Widget.h"
@@ -9,7 +7,8 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series_Loader.hpp"
 
 #include <QFileDialog>
-
+#include <QComboBox>
+#include <QStackedWidget>
 #include <iostream>
 
 Digital_Interval_Loader_Widget::Digital_Interval_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
@@ -18,41 +17,63 @@ Digital_Interval_Loader_Widget::Digital_Interval_Loader_Widget(std::shared_ptr<D
       _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
-    connect(ui->load_from_csv, &QPushButton::clicked, this, &Digital_Interval_Loader_Widget::_loadSingleInterval);
+    connect(ui->loader_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &Digital_Interval_Loader_Widget::_onLoaderTypeChanged);
+
+    connect(ui->csv_digital_interval_loader_widget, &CSVDigitalIntervalLoader_Widget::loadFileRequested,
+            this, &Digital_Interval_Loader_Widget::_handleCSVLoadRequested);
+
+    _onLoaderTypeChanged(0);
 }
 
 Digital_Interval_Loader_Widget::~Digital_Interval_Loader_Widget() {
     delete ui;
 }
 
-void Digital_Interval_Loader_Widget::_loadSingleInterval() {
+void Digital_Interval_Loader_Widget::_onLoaderTypeChanged(int index) {
+    if (ui->loader_type_combo->currentText() == "CSV") {
+        ui->stacked_loader_options->setCurrentWidget(ui->csv_digital_interval_loader_widget);
+    }
+}
+
+void Digital_Interval_Loader_Widget::_handleCSVLoadRequested(QString delimiterText) {
     auto interval_filename = QFileDialog::getOpenFileName(
             this,
-            "Load Intervals",
+            "Load Intervals from CSV",
             QDir::currentPath(),
-            "All files (*.*)");
+            "CSV files (*.csv);;All files (*.*)");
 
-    if (interval_filename.isNull()) {
+    if (interval_filename.isNull() || interval_filename.isEmpty()) {
         return;
     }
 
+    _loadCSVFile(interval_filename, delimiterText);
+}
+
+void Digital_Interval_Loader_Widget::_loadCSVFile(QString const& filename, QString const& delimiterText) {
     auto const interval_key = ui->data_name_text->text().toStdString();
+    if (interval_key.empty()) {
+        std::cout << "Data name cannot be empty." << std::endl;
+        return;
+    }
 
     char delimiter;
-    if (ui->delimiter_combo->currentText() == "Space") {
+    if (delimiterText == "Space") {
         delimiter = ' ';
-    } else if (ui->delimiter_combo->currentText() == "Comma") {
+    } else if (delimiterText == "Comma") {
         delimiter = ',';
     } else {
-        std::cout << "Unsupported delimiter" << std::endl;
+        std::cout << "Unsupported delimiter: " << delimiterText.toStdString() << std::endl;
         return;
     }
 
-    auto intervals = load_digital_series_from_csv(interval_filename.toStdString(), delimiter);
+    try {
+        auto intervals = load_digital_series_from_csv(filename.toStdString(), delimiter);
+        std::cout << "Loaded " << intervals.size() << " intervals from " << filename.toStdString() << std::endl;
 
-    std::cout << "Loaded " << intervals.size() << " intervals" << std::endl;
-
-    _data_manager->setData<DigitalIntervalSeries>(interval_key);
-
-    _data_manager->getData<DigitalIntervalSeries>(interval_key)->setData(intervals);
+        _data_manager->setData<DigitalIntervalSeries>(interval_key);
+        _data_manager->getData<DigitalIntervalSeries>(interval_key)->setData(intervals);
+    } catch (std::exception const& e) {
+        std::cerr << "Error loading CSV file " << filename.toStdString() << ": " << e.what() << std::endl;
+    }
 }
