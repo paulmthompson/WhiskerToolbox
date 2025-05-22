@@ -7,59 +7,15 @@
     <x>0</x>
     <y>0</y>
     <width>446</width>
-    <height>300</height>
+    <height>350</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="mainVerticalLayout">
    <item>
-    <widget class="QFrame" name="frame">
-     <property name="frameShape">
-      <enum>QFrame::Shape::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Shadow::Raised</enum>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QPushButton" name="load_single_button">
-        <property name="text">
-         <string>Load Single Point CSV</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QComboBox" name="delimiter_combo">
-          <item>
-           <property name="text">
-            <string>Space</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Comma</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Delimiter</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="dataNameLayout">
      <item>
       <widget class="QLineEdit" name="data_name_text">
        <property name="text">
@@ -68,13 +24,54 @@
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label">
+      <widget class="QLabel" name="label_data_name">
        <property name="text">
         <string>Keypoint Name</string>
        </property>
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="loaderTypeLayout">
+     <item>
+      <widget class="QLabel" name="label_loader_type">
+       <property name="text">
+        <string>Loader Type:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="loader_type_combo">
+       <item>
+        <property name="text">
+         <string>CSV</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="loaderTypeSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stacked_loader_options">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="CSVPointLoader_Widget" name="csv_point_loader_widget"/>
+    </widget>
    </item>
    <item>
     <widget class="Scaling_Widget" name="scaling_widget" native="true"/>
@@ -99,6 +96,12 @@
    <class>Scaling_Widget</class>
    <extends>QWidget</extends>
    <header>IO_Widgets/Scaling_Widget/Scaling_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CSVPointLoader_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/PointLoaderWidget/CSV/CSVPointLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

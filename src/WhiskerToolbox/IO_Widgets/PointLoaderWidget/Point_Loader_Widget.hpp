@@ -1,8 +1,11 @@
 #ifndef POINT_LOADER_WIDGET_HPP
 #define POINT_LOADER_WIDGET_HPP
 
-#include <QWidget>
+#include "IO_Widgets/PointLoaderWidget/CSV/CSVPointLoader_Widget.hpp"
+
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
+
+#include <QWidget>
 
 #include <memory>
 
@@ -23,8 +26,11 @@ private:
     Ui::Point_Loader_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
 
+    void _loadSingleCSVFile(std::string const& filename, QString delimiterText);
+
 private slots:
-    void _loadSingleKeypoint();
+    void _onLoaderTypeChanged(int index);
+    void _handleSingleCSVLoadRequested(QString delimiterText);
 };
 
 #endif// POINT_LOADER_WIDGET_HPP

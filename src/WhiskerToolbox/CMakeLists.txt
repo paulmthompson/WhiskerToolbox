@@ -259,6 +259,9 @@ set(PROJECT_SOURCES
         IO_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp
         IO_Widgets/PointLoaderWidget/Point_Loader_Widget.cpp
         IO_Widgets/PointLoaderWidget/Point_Loader_Widget.ui
+        IO_Widgets/PointLoaderWidget/CSV/CSVPointLoader_Widget.cpp
+        IO_Widgets/PointLoaderWidget/CSV/CSVPointLoader_Widget.hpp
+        IO_Widgets/PointLoaderWidget/CSV/CSVPointLoader_Widget.ui
 
         IO_Widgets/MaskIOWidgets/Mask_Loader_Widget.hpp
         IO_Widgets/MaskIOWidgets/Mask_Loader_Widget.cpp

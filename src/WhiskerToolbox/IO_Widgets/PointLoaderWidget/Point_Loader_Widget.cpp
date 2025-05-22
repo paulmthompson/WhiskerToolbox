@@ -8,6 +8,8 @@
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QFileDialog>
+#include <QComboBox>
+#include <QStackedWidget>
 
 #include <iostream>
 
@@ -17,37 +19,52 @@ Point_Loader_Widget::Point_Loader_Widget(std::shared_ptr<DataManager> data_manag
       _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
-    connect(ui->load_single_button, &QPushButton::clicked, this, &Point_Loader_Widget::_loadSingleKeypoint);
+    connect(ui->loader_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &Point_Loader_Widget::_onLoaderTypeChanged);
+
+    connect(ui->csv_point_loader_widget, &CSVPointLoader_Widget::loadSingleCSVFileRequested,
+            this, &Point_Loader_Widget::_handleSingleCSVLoadRequested);
+
+    ui->stacked_loader_options->setCurrentWidget(ui->csv_point_loader_widget);
 }
 
 Point_Loader_Widget::~Point_Loader_Widget() {
     delete ui;
 }
 
-void Point_Loader_Widget::_loadSingleKeypoint() {
+void Point_Loader_Widget::_onLoaderTypeChanged(int index) {
+    if (ui->loader_type_combo->itemText(index) == "CSV") {
+        ui->stacked_loader_options->setCurrentWidget(ui->csv_point_loader_widget);
+    }
+}
+
+void Point_Loader_Widget::_handleSingleCSVLoadRequested(QString delimiterText) {
     auto keypoint_filename = QFileDialog::getOpenFileName(
             this,
-            "Load Keypoints",
+            tr("Load Keypoints CSV File"),
             QDir::currentPath(),
-            "All files (*.*)");
+            tr("CSV files (*.csv);;All files (*.*)"));
 
     if (keypoint_filename.isNull()) {
         return;
     }
+    _loadSingleCSVFile(keypoint_filename.toStdString(), delimiterText);
+}
 
+void Point_Loader_Widget::_loadSingleCSVFile(std::string const& filename, QString delimiterText) {
     auto const keypoint_key = ui->data_name_text->text().toStdString();
 
     char delimiter;
-    if (ui->delimiter_combo->currentText() == "Space") {
+    if (delimiterText == "Space") {
         delimiter = ' ';
-    } else if (ui->delimiter_combo->currentText() == "Comma") {
+    } else if (delimiterText == "Comma") {
         delimiter = ',';
     } else {
-        std::cout << "Unsupported delimiter" << std::endl;
+        std::cout << "Unsupported delimiter: " << delimiterText.toStdString() << std::endl;
         return;
     }
 
-    auto opts = CSVPointLoaderOptions{.filename = keypoint_filename.toStdString(),
+    auto opts = CSVPointLoaderOptions{.filename = filename,
                                       .frame_column = 0,
                                       .x_column = 1,
                                       .y_column = 2,
@@ -55,24 +72,15 @@ void Point_Loader_Widget::_loadSingleKeypoint() {
 
     auto keypoints = load_points_from_csv(opts);
 
-    std::cout << "Loaded " << keypoints.size() << " keypoints" << std::endl;
-    auto point_num = _data_manager->getKeys<PointData>().size();
-
     _data_manager->setData<PointData>(keypoint_key);
-
-    auto point = _data_manager->getData<PointData>(keypoint_key);
+    auto point_data_ptr = _data_manager->getData<PointData>(keypoint_key);
 
     ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
-    point->setImageSize(original_size);
+    point_data_ptr->setImageSize(original_size);
 
     if (ui->scaling_widget->isScalingEnabled()) {
         ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
-        point->changeImageSize(scaled_size);
-    } else {
-        point->changeImageSize(original_size);
+        point_data_ptr->changeImageSize(scaled_size);
     }
 
-    for (auto & [key, val]: keypoints) {
-        point->addPointAtTime(key, val);
-    }
 }
