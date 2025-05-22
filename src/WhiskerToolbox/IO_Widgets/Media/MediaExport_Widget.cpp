@@ -12,7 +12,6 @@ MediaExport_Widget::MediaExport_Widget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->get_options_button, &QPushButton::clicked, this, &MediaExport_Widget::_onGetOptionsButtonClicked);
     connect(ui->save_by_frame_name_checkbox, &QCheckBox::toggled, this, &MediaExport_Widget::_updatePrefixAndPaddingState);
 
     // Set initial state of dependent widgets
@@ -40,11 +39,6 @@ MediaExportOptions MediaExport_Widget::getOptions() const
     options.image_folder = ui->image_folder_edit->text().toStdString();
     // options.image_save_dir is intentionally not set here
     return options;
-}
-
-void MediaExport_Widget::_onGetOptionsButtonClicked()
-{
-    emit optionsRequested(getOptions());
 }
 
 void MediaExport_Widget::_updatePrefixAndPaddingState(bool checked)

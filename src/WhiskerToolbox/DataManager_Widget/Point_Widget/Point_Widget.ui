@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>468</width>
-    <height>380</height>
+    <height>550</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -23,10 +23,7 @@
    <item>
     <layout class="QHBoxLayout" name="topControlsLayout">
      <item>
-      <layout class="QVBoxLayout" name="leftVerticalLayout" stretch="0,0,0,0,1">
-       <property name="sizeConstraint">
-        <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
-       </property>
+      <layout class="QVBoxLayout" name="leftVerticalLayout">
        <item>
         <layout class="QHBoxLayout" name="exportTypeLayout">
          <item>
@@ -54,6 +51,19 @@
          </property>
          <widget class="CSVPointSaver_Widget" name="csv_point_saver_widget"/>
         </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="export_media_frames_checkbox">
+         <property name="text">
+          <string>Export matching media frames</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="MediaExport_Widget" name="media_export_options_widget" native="true"/>
        </item>
        <item>
         <widget class="QCheckBox" name="propagate_checkbox">
@@ -130,6 +140,12 @@
    <class>CSVPointSaver_Widget</class>
    <extends>QWidget</extends>
    <header>IO_Widgets/PointLoaderWidget/CSV/CSVPointSaver_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MediaExport_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/Media/MediaExport_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

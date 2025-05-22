@@ -2,9 +2,11 @@
 #include "ui_Point_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "PointTableModel.hpp"
 #include "IO_Widgets/PointLoaderWidget/CSV/CSVPointSaver_Widget.hpp"
+#include "IO_Widgets/Media/MediaExport_Widget.hpp"
 
 #include <QFileDialog>
 #include <QPushButton>
@@ -12,7 +14,10 @@
 #include <QComboBox>
 #include <QStackedWidget>
 #include <QMessageBox>
+#include <QCheckBox>
+#include <QDir>
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
@@ -37,9 +42,13 @@ Point_Widget::Point_Widget(std::shared_ptr<DataManager> data_manager, QWidget * 
     connect(ui->movePointsButton, &QPushButton::clicked, this, &Point_Widget::_movePointsButton_clicked);
     connect(ui->deletePointsButton, &QPushButton::clicked, this, &Point_Widget::_deletePointsButton_clicked);
 
+    connect(ui->export_media_frames_checkbox, &QCheckBox::toggled, 
+            this, &Point_Widget::_onExportMediaFramesCheckboxToggled);
+
     _populateMoveToPointDataComboBox();
 
     _onExportTypeChanged(0);
+    ui->media_export_options_widget->setVisible(ui->export_media_frames_checkbox->isChecked());
 }
 
 Point_Widget::~Point_Widget() {
@@ -109,27 +118,11 @@ void Point_Widget::_handleSaveCSVRequested(CSVPointSaverOptions options) {
     _saveToCSVFile(options);
 }
 
-void Point_Widget::_saveToCSVFile(CSVPointSaverOptions const& options) {
-    if (_active_key.empty()) {
-        std::cerr << "Point_Widget: No active key selected, cannot save CSV." << std::endl;
-        return;
-    }
-
-    auto point_data = _data_manager->getData<PointData>(_active_key);
-    if (!point_data) {
-        std::cerr << "Point_Widget: Cannot save CSV, PointData for key '" << _active_key << "' not found." << std::endl;
-        return;
-    }
-
-    save_points_to_csv(point_data.get(), options);
-    std::cout << "Point_Widget: Successfully saved points to " << options.filename << std::endl;
-}
-
 void Point_Widget::loadFrame(int frame_id) {
-    if (ui->propagate_checkbox->isChecked()) {
-        _propagateLabel(frame_id);
-    }
-    _previous_frame = frame_id;
+        if (ui->propagate_checkbox->isChecked()) {
+            _propagateLabel(frame_id);
+        }
+        _previous_frame = frame_id;
 }
 
 void Point_Widget::_propagateLabel(int frame_id) {
@@ -170,7 +163,7 @@ void Point_Widget::_populateMoveToPointDataComboBox() {
     std::vector<std::string> point_keys = _data_manager->getKeys<PointData>();
     for (std::string const & key : point_keys) {
         if (key != _active_key) {
-            ui->moveToPointDataComboBox->addItem(QString::fromStdString(key));
+                ui->moveToPointDataComboBox->addItem(QString::fromStdString(key));
         }
     }
 }
@@ -193,7 +186,7 @@ void Point_Widget::_movePointsButton_clicked() {
     if (target_key_qstr.isEmpty()) {
         std::cout << "Point_Widget: No target PointData selected in ComboBox." << std::endl;
         return;
-    }
+            }
     std::string target_key = target_key_qstr.toStdString();
 
     auto source_point_data = _data_manager->getData<PointData>(_active_key);
@@ -252,4 +245,62 @@ void Point_Widget::_deletePointsButton_clicked() {
 
 void Point_Widget::_onDataChanged() {
     updateTable();
+}
+
+void Point_Widget::_saveToCSVFile(CSVPointSaverOptions const& csv_options) {
+    auto point_data_ptr = _data_manager->getData<PointData>(_active_key);
+    if (!point_data_ptr) {
+        std::cerr << "_saveToCSVFile: Could not get PointData for key: " << _active_key << std::endl;
+        QMessageBox::critical(this, "Error", "Could not retrieve data for saving.");
+        return;
+    }
+
+    save_points_to_csv(point_data_ptr.get(), csv_options);
+    QMessageBox::information(this, "Save Successful", QString::fromStdString("Points saved to " + csv_options.filename));
+    std::cout << "Point data saved to: " << csv_options.filename << std::endl;
+
+    if (ui->export_media_frames_checkbox->isChecked()) {
+        auto media_data = _data_manager->getData<MediaData>("media");
+        if (!media_data) {
+            QMessageBox::warning(this, "Media Not Found", "Could not find media data to export frames.");
+            return;
+        }
+
+        std::vector<size_t> frame_ids_to_export = point_data_ptr->getTimesWithPoints();
+
+        if (frame_ids_to_export.empty()){
+            QMessageBox::information(this, "No Frames", "No points found, so no frames to export.");
+            return;
+        }
+
+        if (frame_ids_to_export.size() > 10000) {
+            QMessageBox::StandardButton reply;
+            reply = QMessageBox::warning(this, "Large Export", 
+                                         QString("You are about to export %1 media frames. This might take a while. Are you sure?").arg(frame_ids_to_export.size()),
+                                         QMessageBox::Yes|QMessageBox::No);
+            if (reply == QMessageBox::No) {
+                return;
+            }
+        }
+
+        MediaExportOptions media_export_opts = ui->media_export_options_widget->getOptions();
+        
+        std::filesystem::path csv_file_path(csv_options.filename);
+        media_export_opts.image_save_dir = csv_file_path.parent_path().string();
+        if (!media_export_opts.image_save_dir.empty()){
+             media_export_opts.image_save_dir += "/";
+        }
+
+        int success_count = 0;
+        for (size_t frame_id_sz : frame_ids_to_export) {
+            int frame_id = static_cast<int>(frame_id_sz);
+            save_image(media_data.get(), frame_id, media_export_opts);
+            success_count++;
+        }
+        QMessageBox::information(this, "Media Export Complete", QString("Successfully exported %1 of %2 frames.").arg(success_count).arg(frame_ids_to_export.size()));
+    }
+}
+
+void Point_Widget::_onExportMediaFramesCheckboxToggled(bool checked) {
+    ui->media_export_options_widget->setVisible(checked);
 }

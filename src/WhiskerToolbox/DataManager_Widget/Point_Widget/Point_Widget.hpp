@@ -15,6 +15,7 @@ class Point_Widget;
 class DataManager;
 class PointTableModel;
 class CSVPointSaver_Widget;
+class MediaData;
 
 class Point_Widget : public QWidget {
     Q_OBJECT
@@ -55,6 +56,7 @@ private slots:
     void _onDataChanged();
     void _onExportTypeChanged(int index);
     void _handleSaveCSVRequested(CSVPointSaverOptions options);
+    void _onExportMediaFramesCheckboxToggled(bool checked);
 };
 
 #endif// POINT_WIDGET_HPP

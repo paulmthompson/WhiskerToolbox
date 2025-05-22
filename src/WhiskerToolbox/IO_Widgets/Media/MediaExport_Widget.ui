@@ -42,14 +42,14 @@
        <property name="toolTip">
         <string>Number of digits for frame number in filename (e.g., 7 for 0000001.png).</string>
        </property>
-       <property name="value">
-        <number>7</number>
-       </property>
        <property name="minimum">
         <number>1</number>
        </property>
        <property name="maximum">
         <number>10</number>
+       </property>
+       <property name="value">
+        <number>7</number>
        </property>
       </widget>
      </item>
@@ -63,7 +63,7 @@
      <item row="2" column="1">
       <widget class="QLineEdit" name="image_name_prefix_edit">
        <property name="toolTip">
-        <string>Prefix for image filenames when not saving by original frame name (e.g., "img_").</string>
+        <string>Prefix for image filenames when not saving by original frame name (e.g., &quot;img_&quot;).</string>
        </property>
        <property name="text">
         <string>img</string>
@@ -80,7 +80,7 @@
      <item row="3" column="1">
       <widget class="QLineEdit" name="image_folder_edit">
        <property name="toolTip">
-        <string>Name of the subfolder where images will be saved (e.g., "frames", "images").</string>
+        <string>Name of the subfolder where images will be saved (e.g., &quot;frames&quot;, &quot;images&quot;).</string>
        </property>
        <property name="text">
         <string>images</string>
@@ -88,16 +88,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item>
-    <widget class="QPushButton" name="get_options_button">
-     <property name="text">
-      <string>Request Export Options</string>
-     </property>
-     <property name="toolTip">
-      <string>Click to have the widget emit its current configuration.</string>
-     </property>
-    </widget>
    </item>
    <item>
     <spacer name="verticalSpacer">
@@ -116,4 +106,4 @@
  </widget>
  <resources/>
  <connections/>
-</ui> 
+</ui>

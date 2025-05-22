@@ -17,15 +17,11 @@ public:
 
     MediaExportOptions getOptions() const; // Public method to get current options
 
-signals:
-    void optionsRequested(MediaExportOptions options);
-
 private slots:
-    void _onGetOptionsButtonClicked();
     void _updatePrefixAndPaddingState(bool checked); // To enable/disable prefix and padding based on save_by_frame_name
 
 private:
     Ui::MediaExport_Widget *ui;
 };
 
-#endif // MEDIA_EXPORT_WIDGET_HPP 
+#endif // MEDIA_EXPORT_WIDGET_HPP
