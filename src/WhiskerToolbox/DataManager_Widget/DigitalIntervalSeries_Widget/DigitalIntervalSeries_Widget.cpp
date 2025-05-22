@@ -48,12 +48,14 @@ void DigitalIntervalSeries_Widget::_saveCSV() {
     std::cout << output_path.string() << std::endl;
     std::cout << _active_key << std::endl;
 
-    auto filename = ui->filename_textbox->text().toStdString();
-    output_path.append(filename);
+    auto opts = CSVIntervalSaverOptions();
 
-    auto contactEvents = _data_manager->getData<DigitalIntervalSeries>(_active_key)->getDigitalIntervalSeries();
+    opts.filename = ui->filename_textbox->text().toStdString();
+    opts.parent_dir = output_path.string();
 
-    save_intervals(contactEvents, output_path.string());
+    auto interval_data = _data_manager->getData<DigitalIntervalSeries>(_active_key);
+
+    save_digital_interval_series_to_csv(interval_data.get(), opts);
 }
 
 void DigitalIntervalSeries_Widget::setActiveKey(std::string key) {

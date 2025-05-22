@@ -327,15 +327,15 @@ void Contact_Widget::_saveContactFrameByFrame() {
 
 void Contact_Widget::_saveContactBlocks() {
 
-    auto filename = "contact_BLOCKS.csv";
+    auto opts = CSVIntervalSaverOptions();
+    opts.filename = "contact_BLOCKS.csv";
+    opts.parent_dir = _output_path.string();
+
     auto key = "Contact_Events";
 
-    auto block_output = _output_path;
-    block_output.append(filename);
+    auto interval_data = _data_manager->getData<DigitalIntervalSeries>(key);
 
-    auto contactEvents = _data_manager->getData<DigitalIntervalSeries>(key)->getDigitalIntervalSeries();
-
-    save_intervals(contactEvents, block_output.string());
+    save_digital_interval_series_to_csv(interval_data.get(), opts);
 
 }
 
