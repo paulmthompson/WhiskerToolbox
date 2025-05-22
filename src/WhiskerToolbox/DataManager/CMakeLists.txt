@@ -63,8 +63,8 @@ add_library(DataManager SHARED
 
         AnalogTimeSeries/Analog_Time_Series.hpp
         AnalogTimeSeries/Analog_Time_Series.cpp
-        AnalogTimeSeries/Analog_Time_Series_Loader.hpp
-        AnalogTimeSeries/Analog_Time_Series_Loader.cpp
+        AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp
+        AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.cpp
         AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp
         AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.cpp
 
