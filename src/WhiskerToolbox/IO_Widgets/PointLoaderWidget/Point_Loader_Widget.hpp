@@ -2,6 +2,7 @@
 #define POINT_LOADER_WIDGET_HPP
 
 #include <QWidget>
+#include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <memory>
 

@@ -10,8 +10,6 @@
 
 class PointData;
 
-std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nlohmann::basic_json<> const & item);
-
 struct CSVPointLoaderOptions {
     std::string filename;
     int frame_column = 0;
@@ -19,6 +17,8 @@ struct CSVPointLoaderOptions {
     int y_column = 2;
     char column_delim = ' ';
 };
+
+std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nlohmann::basic_json<> const & item);
 
 std::map<int, Point2D<float>> load_points_from_csv(CSVPointLoaderOptions const & opts);
 

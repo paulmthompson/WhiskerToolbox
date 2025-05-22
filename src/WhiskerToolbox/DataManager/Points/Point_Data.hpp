@@ -42,6 +42,16 @@ public:
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
+    /**
+     * @brief Change the size of the canvas the points belong to
+     *
+     * This will scale all points in the data structure by the ratio of the
+     * new size to the old size.
+     *
+     * @param image_size
+     */
+    void changeImageSize(ImageSize const & image_size);
+
     [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(size_t time) const;
 
     [[nodiscard]] std::size_t getMaxPoints() const;

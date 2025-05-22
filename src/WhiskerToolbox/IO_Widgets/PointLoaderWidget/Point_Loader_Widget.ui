@@ -7,165 +7,107 @@
                 <x>0</x>
                 <y>0</y>
                 <width>446</width>
-                <height>257</height>
+                <height>300</height>
             </rect>
         </property>
         <property name="windowTitle">
             <string>Form</string>
         </property>
-        <widget class="QPlainTextEdit" name="data_name_text">
-            <property name="geometry">
-                <rect>
-                    <x>20</x>
-                    <y>130</y>
-                    <width>104</width>
-                    <height>21</height>
-                </rect>
-            </property>
-            <property name="plainText">
-                <string>keypoint_1</string>
-            </property>
-        </widget>
-        <widget class="QLabel" name="label">
-            <property name="geometry">
-                <rect>
-                    <x>130</x>
-                    <y>130</y>
-                    <width>131</width>
-                    <height>16</height>
-                </rect>
-            </property>
-            <property name="text">
-                <string>Keypoint Name</string>
-            </property>
-        </widget>
-        <widget class="QFrame" name="frame">
-            <property name="geometry">
-                <rect>
-                    <x>10</x>
-                    <y>10</y>
-                    <width>331</width>
-                    <height>111</height>
-                </rect>
-            </property>
-            <property name="frameShape">
-                <enum>QFrame::Shape::StyledPanel</enum>
-            </property>
-            <property name="frameShadow">
-                <enum>QFrame::Shadow::Raised</enum>
-            </property>
-            <widget class="QPushButton" name="load_single_button">
-                <property name="geometry">
-                    <rect>
-                        <x>10</x>
-                        <y>10</y>
-                        <width>151</width>
-                        <height>31</height>
-                    </rect>
-                </property>
-                <property name="text">
-                    <string>Load Single Point CSV</string>
-                </property>
-            </widget>
-            <widget class="QLabel" name="label_2">
-                <property name="geometry">
-                    <rect>
-                        <x>100</x>
-                        <y>50</y>
-                        <width>51</width>
-                        <height>16</height>
-                    </rect>
-                </property>
-                <property name="text">
-                    <string>Delimiter</string>
-                </property>
-            </widget>
-            <widget class="QComboBox" name="delimiter_combo">
-                <property name="geometry">
-                    <rect>
-                        <x>20</x>
-                        <y>50</y>
-                        <width>69</width>
-                        <height>22</height>
-                    </rect>
-                </property>
-                <item>
-                    <property name="text">
-                        <string>Space</string>
+        <layout class="QVBoxLayout" name="verticalLayout">
+            <item>
+                <widget class="QFrame" name="frame">
+                    <property name="frameShape">
+                        <enum>QFrame::Shape::StyledPanel</enum>
                     </property>
-                </item>
-                <item>
-                    <property name="text">
-                        <string>Comma</string>
+                    <property name="frameShadow">
+                        <enum>QFrame::Shadow::Raised</enum>
                     </property>
-                </item>
-            </widget>
-        </widget>
-        <widget class="QSpinBox" name="height_scaling">
-            <property name="geometry">
-                <rect>
-                    <x>20</x>
-                    <y>160</y>
-                    <width>42</width>
-                    <height>22</height>
-                </rect>
-            </property>
-            <property name="minimum">
-                <number>-1</number>
-            </property>
-            <property name="maximum">
-                <number>1000</number>
-            </property>
-            <property name="value">
-                <number>-1</number>
-            </property>
-        </widget>
-        <widget class="QSpinBox" name="width_scaling">
-            <property name="geometry">
-                <rect>
-                    <x>20</x>
-                    <y>190</y>
-                    <width>42</width>
-                    <height>22</height>
-                </rect>
-            </property>
-            <property name="minimum">
-                <number>-1</number>
-            </property>
-            <property name="maximum">
-                <number>1000</number>
-            </property>
-            <property name="value">
-                <number>-1</number>
-            </property>
-        </widget>
-        <widget class="QLabel" name="label_3">
-            <property name="geometry">
-                <rect>
-                    <x>70</x>
-                    <y>160</y>
-                    <width>211</width>
-                    <height>16</height>
-                </rect>
-            </property>
-            <property name="text">
-                <string>Height Scaling (-1 for none)</string>
-            </property>
-        </widget>
-        <widget class="QLabel" name="label_4">
-            <property name="geometry">
-                <rect>
-                    <x>70</x>
-                    <y>190</y>
-                    <width>211</width>
-                    <height>16</height>
-                </rect>
-            </property>
-            <property name="text">
-                <string>Width Scaling (-1 for none)</string>
-            </property>
-        </widget>
+                    <layout class="QVBoxLayout" name="verticalLayout_2">
+                        <item>
+                            <widget class="QPushButton" name="load_single_button">
+                                <property name="text">
+                                    <string>Load Single Point CSV</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item>
+                            <layout class="QHBoxLayout" name="horizontalLayout">
+                                <item>
+                                    <widget class="QComboBox" name="delimiter_combo">
+                                        <item>
+                                            <property name="text">
+                                                <string>Space</string>
+                                            </property>
+                                        </item>
+                                        <item>
+                                            <property name="text">
+                                                <string>Comma</string>
+                                            </property>
+                                        </item>
+                                    </widget>
+                                </item>
+                                <item>
+                                    <widget class="QLabel" name="label_2">
+                                        <property name="text">
+                                            <string>Delimiter</string>
+                                        </property>
+                                    </widget>
+                                </item>
+                            </layout>
+                        </item>
+                    </layout>
+                </widget>
+            </item>
+            <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_2">
+                    <item>
+                        <widget class="QPlainTextEdit" name="data_name_text">
+                            <property name="maximumSize">
+                                <size>
+                                    <width>16777215</width>
+                                    <height>30</height>
+                                </size>
+                            </property>
+                            <property name="plainText">
+                                <string>keypoint_1</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QLabel" name="label">
+                            <property name="text">
+                                <string>Keypoint Name</string>
+                            </property>
+                        </widget>
+                    </item>
+                </layout>
+            </item>
+            <item>
+                <widget class="Scaling_Widget" name="scaling_widget" native="true"/>
+            </item>
+            <item>
+                <spacer name="verticalSpacer">
+                    <property name="orientation">
+                        <enum>Qt::Orientation::Vertical</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                        <size>
+                            <width>20</width>
+                            <height>40</height>
+                        </size>
+                    </property>
+                </spacer>
+            </item>
+        </layout>
     </widget>
+    <customwidgets>
+        <customwidget>
+            <class>Scaling_Widget</class>
+            <extends>QWidget</extends>
+            <header>IO_Widgets/Scaling_Widget/Scaling_Widget.hpp</header>
+            <container>1</container>
+        </customwidget>
+    </customwidgets>
     <resources/>
     <connections/>
 </ui>

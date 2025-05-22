@@ -248,42 +248,42 @@ set(PROJECT_SOURCES
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.cpp
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.ui
 
-        Loading_Widgets/Scaling_Widget/Scaling_Widget.cpp
-        Loading_Widgets/Scaling_Widget/Scaling_Widget.hpp
-        Loading_Widgets/Scaling_Widget/Scaling_Widget.ui
+        IO_Widgets/Scaling_Widget/Scaling_Widget.cpp
+        IO_Widgets/Scaling_Widget/Scaling_Widget.hpp
+        IO_Widgets/Scaling_Widget/Scaling_Widget.ui
 
-        Loading_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.hpp
-        Loading_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.cpp
-        Loading_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.ui
+        IO_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.hpp
+        IO_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.cpp
+        IO_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.ui
 
-        Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp
-        Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.cpp
-        Loading_Widgets/PointLoaderWidget/Point_Loader_Widget.ui
+        IO_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp
+        IO_Widgets/PointLoaderWidget/Point_Loader_Widget.cpp
+        IO_Widgets/PointLoaderWidget/Point_Loader_Widget.ui
 
-        Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp
-        Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.cpp
-        Loading_Widgets/MaskLoaderWidget/Mask_Loader_Widget.ui
+        IO_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp
+        IO_Widgets/MaskLoaderWidget/Mask_Loader_Widget.cpp
+        IO_Widgets/MaskLoaderWidget/Mask_Loader_Widget.ui
 
-        Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp
-        Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.cpp
-        Loading_Widgets/LineLoaderWidget/Line_Loader_Widget.ui
-        Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.hpp
-        Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.cpp
-        Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.ui
-        Loading_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.hpp
-        Loading_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.cpp
-        Loading_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.ui
-        Loading_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.hpp
-        Loading_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.cpp
-        Loading_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.ui
+        IO_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp
+        IO_Widgets/LineLoaderWidget/Line_Loader_Widget.cpp
+        IO_Widgets/LineLoaderWidget/Line_Loader_Widget.ui
+        IO_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.hpp
+        IO_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.cpp
+        IO_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.ui
+        IO_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.hpp
+        IO_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.cpp
+        IO_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.ui
+        IO_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.hpp
+        IO_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.cpp
+        IO_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.ui
 
-        Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp
-        Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.cpp
-        Loading_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.ui
+        IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp
+        IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.cpp
+        IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.ui
 
-        Loading_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.hpp
-        Loading_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.cpp
-        Loading_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.ui
+        IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.hpp
+        IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.cpp
+        IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.ui
 
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp

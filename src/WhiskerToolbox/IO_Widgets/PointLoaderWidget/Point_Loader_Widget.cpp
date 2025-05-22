@@ -1,4 +1,3 @@
-
 #include "Point_Loader_Widget.hpp"
 
 #include "ui_Point_Loader_Widget.h"
@@ -6,6 +5,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QFileDialog>
 
@@ -62,7 +62,15 @@ void Point_Loader_Widget::_loadSingleKeypoint() {
 
     auto point = _data_manager->getData<PointData>(keypoint_key);
 
-    point->setImageSize({ui->width_scaling->value(), ui->height_scaling->value()});
+    ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
+    point->setImageSize(original_size);
+
+    if (ui->scaling_widget->isScalingEnabled()) {
+        ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
+        point->changeImageSize(scaled_size);
+    } else {
+        point->changeImageSize(original_size);
+    }
 
     for (auto & [key, val]: keypoints) {
         point->addPointAtTime(key, val);
