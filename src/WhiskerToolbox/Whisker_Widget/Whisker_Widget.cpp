@@ -488,7 +488,10 @@ void Whisker_Widget::_saveWhiskersAsCSV() {
 
     auto line_data = _data_manager->getData<LineData>(whisker_name);
 
-    save_lines_csv(line_data.get(), whisker_name + ".csv");
+    auto opts = CSVSingleFileLineSaverOptions();
+    opts.filename = whisker_name + ".csv";
+
+    save_lines_csv(line_data.get(), opts);
 }
 
 void Whisker_Widget::_saveWhiskersAsBinary() {

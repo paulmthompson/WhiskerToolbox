@@ -282,6 +282,9 @@ set(PROJECT_SOURCES
         IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.hpp
         IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.cpp
         IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.ui
+        IO_Widgets/LineIOWidgets/CSV/CSVLineSaver_Widget.cpp
+        IO_Widgets/LineIOWidgets/CSV/CSVLineSaver_Widget.hpp
+        IO_Widgets/LineIOWidgets/CSV/CSVLineSaver_Widget.ui
         IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.hpp
         IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.cpp
         IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.ui

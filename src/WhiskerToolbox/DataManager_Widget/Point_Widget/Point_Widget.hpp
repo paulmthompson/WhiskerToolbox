@@ -24,7 +24,7 @@ using PointSaverOptionsVariant = std::variant<CSVPointSaverOptions>;
 /**
  * @brief Point_Widget is used for viewing and editing point data.
  * 
- * Core functionality:
+ * Visualization:
  * 
  * Viewing all points in the time series in table form. Clicking on the table
  * results in jumping to that frame in the main video display.
@@ -38,10 +38,11 @@ using PointSaverOptionsVariant = std::variant<CSVPointSaverOptions>;
  * Because points can be useful for deep learning labels, the user can also
  * export frames from currently loaded media simultaneously with the points.
  * 
+ * Interaction:
  * 
- * 
- * 
- * 
+ * The user can select points, delete them, or move them to another Point Data 
+ * Object. The user also has the ability to "propogate" forward in time. This
+ * can be useful when curating data with noisy labels for stationary objects.
  * 
  */
 class Point_Widget : public QWidget {

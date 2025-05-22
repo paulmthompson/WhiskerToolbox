@@ -24,16 +24,17 @@ void save_line_as_csv(Line2D const & line, std::string const & filename, int con
 
 void save_lines_csv(
         LineData const * line_data,
-        std::string const & filename,
-        std::string const & header) {
+        CSVSingleFileLineSaverOptions & opts) {
 
-    std::ofstream file(filename);
+    std::ofstream file(opts.filename);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file");
     }
 
     // Write the header
-    file << header << "\n";
+    if (opts.save_header) {
+        file << opts.header << "\n";
+    }
 
     // Write the data
     for (auto const & frame_and_line: line_data->GetAllLinesAsRange()) {
@@ -42,11 +43,11 @@ void save_lines_csv(
             std::ostringstream y_values;
 
             for (auto const & point: line) {
-                x_values << std::fixed << std::setprecision(1) << point.x << ",";
-                y_values << std::fixed << std::setprecision(1) << point.y << ",";
+                x_values << std::fixed << std::setprecision(opts.precision) << point.x << opts.delimiter;
+                y_values << std::fixed << std::setprecision(opts.precision) << point.y << opts.delimiter;
             }
 
-            // Remove the trailing comma
+            // Remove the trailing delimiter
             std::string x_str = x_values.str();
             std::string y_str = y_values.str();
             if (!x_str.empty()) x_str.pop_back();
