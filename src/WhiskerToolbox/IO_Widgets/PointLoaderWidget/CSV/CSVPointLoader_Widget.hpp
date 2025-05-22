@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QString>
+#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
 
 namespace Ui {
 class CSVPointLoader_Widget;
@@ -15,8 +16,8 @@ public:
     ~CSVPointLoader_Widget() override;
 
 signals:
-    // The delimiter char will be determined from the combobox text
-    void loadSingleCSVFileRequested(QString delimiterText);
+    // Changed signature to pass CSVPointLoaderOptions struct
+    void loadSingleCSVFileRequested(CSVPointLoaderOptions options);
 
 private:
     Ui::CSVPointLoader_Widget *ui;

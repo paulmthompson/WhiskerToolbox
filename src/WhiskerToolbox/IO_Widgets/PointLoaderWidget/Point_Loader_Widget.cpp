@@ -25,7 +25,11 @@ Point_Loader_Widget::Point_Loader_Widget(std::shared_ptr<DataManager> data_manag
     connect(ui->csv_point_loader_widget, &CSVPointLoader_Widget::loadSingleCSVFileRequested,
             this, &Point_Loader_Widget::_handleSingleCSVLoadRequested);
 
-    ui->stacked_loader_options->setCurrentWidget(ui->csv_point_loader_widget);
+    if (ui->loader_type_combo->currentText() == "CSV") {
+        ui->stacked_loader_options->setCurrentWidget(ui->csv_point_loader_widget);
+    } else {
+        _onLoaderTypeChanged(ui->loader_type_combo->currentIndex());
+    }
 }
 
 Point_Loader_Widget::~Point_Loader_Widget() {
@@ -38,49 +42,50 @@ void Point_Loader_Widget::_onLoaderTypeChanged(int index) {
     }
 }
 
-void Point_Loader_Widget::_handleSingleCSVLoadRequested(QString delimiterText) {
+void Point_Loader_Widget::_handleSingleCSVLoadRequested(CSVPointLoaderOptions options) {
     auto keypoint_filename = QFileDialog::getOpenFileName(
             this,
             tr("Load Keypoints CSV File"),
             QDir::currentPath(),
             tr("CSV files (*.csv);;All files (*.*)"));
 
-    if (keypoint_filename.isNull()) {
+    if (keypoint_filename.isNull() || keypoint_filename.isEmpty()) {
         return;
     }
-    _loadSingleCSVFile(keypoint_filename.toStdString(), delimiterText);
+    options.filename = keypoint_filename.toStdString();
+    _loadSingleCSVFile(options);
 }
 
-void Point_Loader_Widget::_loadSingleCSVFile(std::string const& filename, QString delimiterText) {
+void Point_Loader_Widget::_loadSingleCSVFile(CSVPointLoaderOptions options) {
     auto const keypoint_key = ui->data_name_text->text().toStdString();
-
-    char delimiter;
-    if (delimiterText == "Space") {
-        delimiter = ' ';
-    } else if (delimiterText == "Comma") {
-        delimiter = ',';
-    } else {
-        std::cout << "Unsupported delimiter: " << delimiterText.toStdString() << std::endl;
+    if (keypoint_key.empty()){
+        std::cerr << "Keypoint name cannot be empty!" << std::endl;
         return;
     }
 
-    auto opts = CSVPointLoaderOptions{.filename = filename,
-                                      .frame_column = 0,
-                                      .x_column = 1,
-                                      .y_column = 2,
-                                      .column_delim = delimiter};
+    try {
+        auto keypoints = load_points_from_csv(options);
 
-    auto keypoints = load_points_from_csv(opts);
+        if(keypoints.empty()){
+            std::cout << "No keypoints loaded from " << options.filename << ". The file might be empty or in an incorrect format." << std::endl;
+            return;
+        }
+        std::cout << "Loaded " << keypoints.size() << " time points from " << options.filename << std::endl;
 
-    _data_manager->setData<PointData>(keypoint_key);
-    auto point_data_ptr = _data_manager->getData<PointData>(keypoint_key);
+        auto point_data = std::make_shared<PointData>(keypoints);
+        _data_manager->setData<PointData>(keypoint_key, point_data);
 
-    ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
-    point_data_ptr->setImageSize(original_size);
+        ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
+        point_data->setImageSize(original_size);
 
-    if (ui->scaling_widget->isScalingEnabled()) {
-        ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
-        point_data_ptr->changeImageSize(scaled_size);
+        if (ui->scaling_widget->isScalingEnabled()) {
+            ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
+            if (scaled_size.width > 0 && scaled_size.height > 0) {
+                 point_data->changeImageSize(scaled_size);
+            }
+        }
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error loading CSV file " << options.filename << ": " << e.what() << std::endl;
     }
-
 }
