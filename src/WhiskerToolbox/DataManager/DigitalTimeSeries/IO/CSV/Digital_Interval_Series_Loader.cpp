@@ -1,10 +1,10 @@
 
 #include "Digital_Interval_Series_Loader.hpp"
 
-#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "loaders/CSV_Loaders.hpp"
 #include "loaders/binary_loaders.hpp"
 #include "utils/json_helpers.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 
 IntervalDataType stringToIntervalDataType(std::string const & data_type_str) {

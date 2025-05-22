@@ -1,10 +1,10 @@
 
 #include "Digital_Event_Series_Loader.hpp"
 
-#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "loaders/CSV_Loaders.hpp"
 #include "loaders/binary_loaders.hpp"
 #include "utils/json_helpers.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 
 EventDataType stringToEventDataType(std::string const & data_type_str) {
     if (data_type_str == "uint16") return EventDataType::uint16;

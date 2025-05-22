@@ -2,9 +2,9 @@
 
 #include "ui_Digital_Interval_Loader_Widget.h"
 
+#include "../../DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_Loader.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series_Loader.hpp"
 
 #include <QFileDialog>
 #include <QComboBox>

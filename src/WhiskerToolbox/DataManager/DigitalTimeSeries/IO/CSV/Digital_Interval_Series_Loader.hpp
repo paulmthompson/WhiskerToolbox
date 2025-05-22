@@ -1,7 +1,7 @@
 #ifndef DIGITAL_INTERVAL_SERIES_LOADER_HPP
 #define DIGITAL_INTERVAL_SERIES_LOADER_HPP
 
-#include "interval_data.hpp"
+#include "../../interval_data.hpp"
 
 #include "nlohmann/json.hpp"
 
