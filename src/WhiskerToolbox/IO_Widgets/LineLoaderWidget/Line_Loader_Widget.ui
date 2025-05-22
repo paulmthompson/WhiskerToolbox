@@ -70,25 +70,25 @@
   <customwidget>
    <class>HDF5LineLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.hpp</header>
+   <header>IO_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>CSVLineLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>Loading_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.hpp</header>
+   <header>IO_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>LMDBLineLoader_Widget</class>
    <extends>QWidget</extends>
-   <header>Loading_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.hpp</header>
+   <header>IO_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>Scaling_Widget</class>
    <extends>QWidget</extends>
-   <header>Loading_Widgets/Scaling_Widget/Scaling_Widget.hpp</header>
+   <header>IO_Widgets/Scaling_Widget/Scaling_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

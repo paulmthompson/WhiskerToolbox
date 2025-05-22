@@ -2,11 +2,11 @@
 
 #include "ui_Line_Loader_Widget.h"
 
-#include "../Scaling_Widget/Scaling_Widget.hpp"
+#include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/loaders/hdf5_loaders.hpp"
-#include "Loading_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.hpp"
+#include "IO_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.hpp"
 
 #include <QFileDialog>
 
