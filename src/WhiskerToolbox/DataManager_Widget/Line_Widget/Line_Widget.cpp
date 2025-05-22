@@ -8,6 +8,7 @@
 
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "IO_Widgets/LineIOWidgets/CSV/CSVLineSaver_Widget.hpp"
+#include "IO_Widgets/LineIOWidgets/Binary/BinaryLineSaver_Widget.hpp"
 #include "IO_Widgets/Media/MediaExport_Widget.hpp"
 
 #include <QTableView>
@@ -41,6 +42,8 @@ Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * pa
             this, &Line_Widget::_onExportTypeChanged);
     connect(ui->csv_line_saver_widget, &CSVLineSaver_Widget::saveCSVRequested,
             this, &Line_Widget::_handleSaveCSVRequested);
+    connect(ui->binary_line_saver_widget, &BinaryLineSaver_Widget::saveBinaryRequested,
+            this, &Line_Widget::_handleSaveBinaryRequested);
     connect(ui->export_media_frames_checkbox, &QCheckBox::toggled,
             this, &Line_Widget::_onExportMediaFramesCheckboxToggled);
 
@@ -203,15 +206,21 @@ void Line_Widget::_onExportTypeChanged(int index) {
     QString current_text = ui->export_type_combo->itemText(index);
     if (current_text == "CSV") {
         ui->stacked_saver_options->setCurrentWidget(ui->csv_line_saver_widget);
+    } else if (current_text == "Binary") {
+        ui->stacked_saver_options->setCurrentWidget(ui->binary_line_saver_widget);
     } else {
         // Potentially handle other types or clear/hide the stacked widget
-        // For now, only CSV is handled, so no other action needed.
     }
 }
 
 void Line_Widget::_handleSaveCSVRequested(CSVSingleFileLineSaverOptions csv_options) {
     LineSaverOptionsVariant options_variant = csv_options;
     _initiateSaveProcess(SaverType::CSV, options_variant);
+}
+
+void Line_Widget::_handleSaveBinaryRequested(BinaryLineSaverOptions binary_options) {
+    LineSaverOptionsVariant options_variant = binary_options;
+    _initiateSaveProcess(SaverType::BINARY, options_variant);
 }
 
 void Line_Widget::_onExportMediaFramesCheckboxToggled(bool checked) {
@@ -239,6 +248,13 @@ void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVar
             specific_csv_options.parent_dir = _data_manager->getOutputPath().string();
             saved_parent_dir = specific_csv_options.parent_dir; // Store for media export
             save_successful = _performActualCSVSave(specific_csv_options);
+            break;
+        }
+        case SaverType::BINARY: {
+            BinaryLineSaverOptions& specific_binary_options = std::get<BinaryLineSaverOptions>(options_variant);
+            specific_binary_options.parent_dir = _data_manager->getOutputPath().string();
+            saved_parent_dir = specific_binary_options.parent_dir; // Store for media export
+            save_successful = _performActualBinarySave(specific_binary_options);
             break;
         }
         // Future saver types can be added here
@@ -281,18 +297,40 @@ bool Line_Widget::_performActualCSVSave(CSVSingleFileLineSaverOptions & options)
     }
 
     try {
-        // Ensure the full path is constructed correctly for saving
-        std::filesystem::path full_save_path = std::filesystem::path(options.parent_dir) / options.filename;
-        CSVSingleFileLineSaverOptions final_options = options; // Make a copy to modify filename if needed
-        final_options.filename = full_save_path.string(); // Use the full path for saving
-
-        save_lines_csv(line_data_ptr.get(), final_options);
-        QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to " + final_options.filename));
-        std::cout << "Line data saved to: " << final_options.filename << std::endl;
+        save_lines_csv(line_data_ptr.get(), options); // options.parent_dir and options.filename are used by this function
+        std::string full_path = options.parent_dir + "/" + options.filename;
+        QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to " + full_path));
+        std::cout << "Line data saved to: " << full_path << std::endl;
         return true;
     } catch (std::exception const & e) {
         QMessageBox::critical(this, "Save Error", "Failed to save line data: " + QString::fromStdString(e.what()));
         std::cerr << "Failed to save line data: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool Line_Widget::_performActualBinarySave(BinaryLineSaverOptions & options) {
+    auto line_data_ptr = _data_manager->getData<LineData>(_active_key);
+    if (!line_data_ptr) {
+        QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve LineData for saving. Key: " + QString::fromStdString(_active_key));
+        return false;
+    }
+
+    try {
+        BinaryFileCapnpStorage binary_storage;
+        // The save method in BinaryFileCapnpStorage already handles parent_dir and filename
+        if (binary_storage.save(*line_data_ptr, options)) {
+            std::string full_path = options.parent_dir + "/" + options.filename;
+            QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to " + full_path));
+            std::cout << "Line data saved to: " << full_path << std::endl;
+            return true;
+        } else {
+            QMessageBox::critical(this, "Save Error", "Failed to save line data to binary format. Check console for details.");
+            return false;
+        }
+    } catch (std::exception const & e) {
+        QMessageBox::critical(this, "Save Error", "Failed to save line data: " + QString::fromStdString(e.what()));
+        std::cerr << "Failed to save line data (binary): " << e.what() << std::endl;
         return false;
     }
 }

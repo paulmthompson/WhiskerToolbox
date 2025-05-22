@@ -7,11 +7,16 @@
 
 class LineData;
 
+struct BinaryLineSaverOptions {
+    std::string filename;
+    std::string parent_dir = ".";
+};
+
 class BinaryFileCapnpStorage {
 public:
     BinaryFileCapnpStorage() = default;
 
-    bool save(LineData const & data, std::string const & file_path);
+    bool save(LineData const & data, BinaryLineSaverOptions & opts);
 
     std::shared_ptr<LineData> load(std::string const & file_path);
 

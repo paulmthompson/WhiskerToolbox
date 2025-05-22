@@ -51,6 +51,11 @@
              <string>CSV</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>Binary</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>
@@ -61,6 +66,7 @@
           <number>0</number>
          </property>
          <widget class="CSVLineSaver_Widget" name="csv_line_saver_widget"/>
+         <widget class="BinaryLineSaver_Widget" name="binary_line_saver_widget"/>
         </widget>
        </item>
        <item>
@@ -144,6 +150,12 @@
    <class>CSVLineSaver_Widget</class>
    <extends>QWidget</extends>
    <header>IO_Widgets/LineIOWidgets/CSV/CSVLineSaver_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BinaryLineSaver_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/LineIOWidgets/Binary/BinaryLineSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

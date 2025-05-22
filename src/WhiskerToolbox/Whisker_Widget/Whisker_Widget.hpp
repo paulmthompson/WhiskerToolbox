@@ -157,8 +157,6 @@ private slots:
     void _selectWhisker(int whisker_num);
     void _loadMultiFrameCSV();
 
-    void _saveWhiskersAsBinary();
-
     void _exportAllTracked();
 };
 

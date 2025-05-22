@@ -559,15 +559,8 @@
      <addaction name="actionLoad_CSV_Whisker_Single_File_Multi_Frame"/>
      <addaction name="separator"/>
     </widget>
-    <widget class="QMenu" name="menuSave_Whiskers">
-     <property name="title">
-      <string>Save Whiskers</string>
-     </property>
-     <addaction name="actionSave_as_Binary"/>
-    </widget>
     <addaction name="menuLoad_Whiskers"/>
     <addaction name="actionJanelia_Settings"/>
-    <addaction name="menuSave_Whiskers"/>
    </widget>
    <widget class="QMenu" name="menuContact">
     <property name="title">

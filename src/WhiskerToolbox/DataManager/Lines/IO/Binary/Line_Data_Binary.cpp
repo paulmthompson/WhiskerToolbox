@@ -8,12 +8,22 @@
 #include <capnp/serialize.h>
 #include <kj/array.h>
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <vector>
 
 
-bool BinaryFileCapnpStorage::save(LineData const & data, std::string const & file_path) {
+bool BinaryFileCapnpStorage::save(LineData const & data, BinaryLineSaverOptions & opts) {
+
+    //Check if directory exists
+    if (!std::filesystem::exists(opts.parent_dir)) {
+        std::filesystem::create_directories(opts.parent_dir);
+        std::cout << "Created directory: " << opts.parent_dir << std::endl;
+    }
+
+    std::string file_path = opts.parent_dir + "/" + opts.filename;
+
     try {
 
         kj::Array<capnp::word> message_words = serializeLineData(&data);

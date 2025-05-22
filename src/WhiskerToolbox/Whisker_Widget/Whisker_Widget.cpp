@@ -7,7 +7,6 @@
 
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/Lines/IO/Binary/Line_Data_Binary.hpp"
 #include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
@@ -126,7 +125,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
     connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
 
-    connect(ui->actionSave_as_Binary, &QAction::triggered, this, &Whisker_Widget::_saveWhiskersAsBinary);
     connect(ui->actionLoad_CSV_Whisker_Single_File_Multi_Frame, &QAction::triggered, this, &Whisker_Widget::_loadMultiFrameCSV);
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
@@ -473,33 +471,6 @@ void Whisker_Widget::_saveWhiskerAsCSV(std::string const & folder, std::vector<P
     auto saveName = _getWhiskerSaveName(frame_id);
 
     save_line_as_csv(whisker, folder + saveName);
-}
-
-/*
-
-Save whisker in all frames
-
-*/
-
-void Whisker_Widget::_saveWhiskersAsBinary() {
-    std::string const whisker_group_name = "whisker";
-    std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
-
-    auto line_data = _data_manager->getData<LineData>(whisker_name);
-
-    std::string filepath = whisker_name + ".bin";
-
-    auto binary_saver = BinaryFileCapnpStorage();
-
-    QElapsedTimer timer2;
-    timer2.start();
-
-    binary_saver.save(*line_data.get(), filepath);
-
-    auto t1 = timer2.elapsed();
-
-    qDebug() << "The saving took" << t1 << "ms";
-    std::cout << "Saved to LMDB at whisker.lmdb" << std::endl;
 }
 
 int get_whisker_id(std::string const & whisker_name) {

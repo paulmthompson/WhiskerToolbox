@@ -4,6 +4,7 @@
 #include "Lines/Line_Data.hpp"
 
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -26,7 +27,15 @@ void save_lines_csv(
         LineData const * line_data,
         CSVSingleFileLineSaverOptions & opts) {
 
-    std::ofstream file(opts.filename);
+    //Check if directory exists
+    if (!std::filesystem::exists(opts.parent_dir)) {
+        std::filesystem::create_directories(opts.parent_dir);
+        std::cout << "Created directory: " << opts.parent_dir << std::endl;
+    }
+
+    std::string filename = opts.parent_dir + "/" + opts.filename;
+
+    std::ofstream file(filename);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file");
     }
