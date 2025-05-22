@@ -155,8 +155,6 @@ private slots:
     void _drawingFinished();
 
     void _selectWhisker(int whisker_num);
-
-    void _saveWhiskersAsCSV();
     void _loadMultiFrameCSV();
 
     void _saveWhiskersAsBinary();

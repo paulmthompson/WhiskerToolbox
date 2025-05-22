@@ -563,7 +563,6 @@
      <property name="title">
       <string>Save Whiskers</string>
      </property>
-     <addaction name="actionSave_as_CSV"/>
      <addaction name="actionSave_as_Binary"/>
     </widget>
     <addaction name="menuLoad_Whiskers"/>

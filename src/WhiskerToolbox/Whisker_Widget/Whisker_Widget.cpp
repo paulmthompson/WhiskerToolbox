@@ -126,7 +126,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
     connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
 
-    connect(ui->actionSave_as_CSV, &QAction::triggered, this, &Whisker_Widget::_saveWhiskersAsCSV);
     connect(ui->actionSave_as_Binary, &QAction::triggered, this, &Whisker_Widget::_saveWhiskersAsBinary);
     connect(ui->actionLoad_CSV_Whisker_Single_File_Multi_Frame, &QAction::triggered, this, &Whisker_Widget::_loadMultiFrameCSV);
 
@@ -481,18 +480,6 @@ void Whisker_Widget::_saveWhiskerAsCSV(std::string const & folder, std::vector<P
 Save whisker in all frames
 
 */
-
-void Whisker_Widget::_saveWhiskersAsCSV() {
-    std::string const whisker_group_name = "whisker";
-    std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
-
-    auto line_data = _data_manager->getData<LineData>(whisker_name);
-
-    auto opts = CSVSingleFileLineSaverOptions();
-    opts.filename = whisker_name + ".csv";
-
-    save_lines_csv(line_data.get(), opts);
-}
 
 void Whisker_Widget::_saveWhiskersAsBinary() {
     std::string const whisker_group_name = "whisker";
