@@ -1,6 +1,7 @@
 #ifndef LINE_LOADER_WIDGET_HPP
 #define LINE_LOADER_WIDGET_HPP
 
+#include "../Scaling_Widget/Scaling_Widget.hpp"
 #include <QWidget>
 
 #include <memory>
@@ -28,7 +29,6 @@ private:
 private slots:
     void _loadSingleHdf5Line(QString filename);
     void _loadMultiHdf5Line(QString dirname, QString pattern);
-    void _enableImageScaling(bool enable);
 };
 
 

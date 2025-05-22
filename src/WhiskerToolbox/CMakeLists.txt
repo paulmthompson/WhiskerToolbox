@@ -248,6 +248,10 @@ set(PROJECT_SOURCES
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.cpp
         Export_Widgets/Export_Video_Widget/Export_Video_Widget.ui
 
+        Loading_Widgets/Scaling_Widget/Scaling_Widget.cpp
+        Loading_Widgets/Scaling_Widget/Scaling_Widget.hpp
+        Loading_Widgets/Scaling_Widget/Scaling_Widget.ui
+
         Loading_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.hpp
         Loading_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.cpp
         Loading_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.ui
