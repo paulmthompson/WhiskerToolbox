@@ -35,7 +35,7 @@ void Point_Loader_Widget::_loadSingleKeypoint() {
         return;
     }
 
-    auto const keypoint_key = ui->data_name_text->toPlainText().toStdString();
+    auto const keypoint_key = ui->data_name_text->text().toStdString();
 
     char delimiter;
     if (ui->delimiter_combo->currentText() == "Space") {
