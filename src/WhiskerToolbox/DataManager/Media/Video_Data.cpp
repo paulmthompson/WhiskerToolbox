@@ -49,7 +49,7 @@ void VideoData::doLoadFrame(int frame_id) {
     _last_decoded_frame = frame_id;
 }
 
-std::string VideoData::GetFrameID(int frame_id) {
+std::string VideoData::GetFrameID(int frame_id) const {
     return std::to_string(frame_id);
 }
 

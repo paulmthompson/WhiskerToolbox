@@ -297,6 +297,9 @@ set(PROJECT_SOURCES
         IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.cpp
         IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.ui
 
+        IO_Widgets/Media/media_export.hpp
+        IO_Widgets/Media/media_export.cpp
+
         utils/qt_utilities.hpp
         utils/qt_utilities.cpp
 

@@ -20,7 +20,7 @@ public:
 
     ~VideoData() override;
 
-    std::string GetFrameID(int frame_id) override;
+    std::string GetFrameID(int frame_id) const override;
 
     /**
      * When scrolling through large video files, it makes for much

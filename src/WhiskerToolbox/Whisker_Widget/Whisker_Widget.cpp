@@ -12,7 +12,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-
+#include "IO_Widgets/Media/media_export.hpp"
 #include "Magic_Eraser_Widget/magic_eraser.hpp"
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
@@ -424,7 +424,12 @@ void Whisker_Widget::_saveImage(std::string const & folder) {
 
     QImage const labeled_image(&media_data[0], width, height, QImage::Format_Grayscale8);
 
-    auto saveName = _getImageSaveName(frame_id);
+    MediaExportOptions opts;
+    opts.save_by_frame_name = _save_by_frame_name;
+    opts.frame_id_padding = 7;
+    opts.image_name_prefix = "img";
+
+    auto saveName = get_image_save_name(media.get(), frame_id, opts);
 
     std::cout << "Saving file " << saveName << std::endl;
 
@@ -640,7 +645,12 @@ void Whisker_Widget::_exportAllTracked() {
 
         QImage const labeled_image(&media_data[0], width, height, QImage::Format_Grayscale8);
 
-        auto saveName = _getImageSaveName(frame_id);
+        MediaExportOptions opts;
+        opts.save_by_frame_name = _save_by_frame_name;
+        opts.frame_id_padding = 7;
+        opts.image_name_prefix = "img";
+
+        auto saveName = get_image_save_name(media.get(), frame_id, opts);
 
         std::cout << "Saving file " << saveName << std::endl;
 
@@ -689,18 +699,6 @@ void Whisker_Widget::_exportImageCSV() {
 
             _saveWhiskerAsCSV(whisker_folder, whiskers[0]);
         }
-    }
-}
-
-std::string Whisker_Widget::_getImageSaveName(int const frame_id) {
-    if (_save_by_frame_name) {
-        auto media = _data_manager->getData<MediaData>("media");
-        auto saveName = media->GetFrameID(frame_id);
-        return saveName;
-    } else {
-
-        std::string saveName = "img" + pad_frame_id(frame_id, 7) + ".png";
-        return saveName;
     }
 }
 

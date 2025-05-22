@@ -66,7 +66,7 @@ void ImageData::doLoadFrame(int frame_id) {
     this->setRawData(std::vector<uint8_t>(static_cast<uint8_t *>(converted_image.data), static_cast<uint8_t *>(converted_image.data) + num_bytes));
 }
 
-std::string ImageData::GetFrameID(int frame_id) {
+std::string ImageData::GetFrameID(int frame_id) const {
     return _image_paths[frame_id].filename().string();
 }
 

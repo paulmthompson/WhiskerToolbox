@@ -64,7 +64,7 @@ public:
      */
     void LoadFrame(int frame_id);
 
-    virtual std::string GetFrameID(int frame_id) { return ""; };
+    virtual std::string GetFrameID(int frame_id) const { return ""; };
 
     virtual int getFrameIndexFromNumber(int frame_id) { return 0; };
 

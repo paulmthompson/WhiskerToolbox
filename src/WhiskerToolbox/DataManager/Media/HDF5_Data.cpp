@@ -63,6 +63,6 @@ void HDF5Data::doLoadFrame(int frame_id) {
     this->setRawData(frame_data);
 }
 
-std::string HDF5Data::GetFrameID(int frame_id) {
+std::string HDF5Data::GetFrameID(int frame_id) const {
     return std::to_string(frame_id);
 }
