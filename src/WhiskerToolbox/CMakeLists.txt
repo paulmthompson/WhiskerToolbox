@@ -260,9 +260,12 @@ set(PROJECT_SOURCES
         IO_Widgets/PointLoaderWidget/Point_Loader_Widget.cpp
         IO_Widgets/PointLoaderWidget/Point_Loader_Widget.ui
 
-        IO_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp
-        IO_Widgets/MaskLoaderWidget/Mask_Loader_Widget.cpp
-        IO_Widgets/MaskLoaderWidget/Mask_Loader_Widget.ui
+        IO_Widgets/MaskIOWidgets/Mask_Loader_Widget.hpp
+        IO_Widgets/MaskIOWidgets/Mask_Loader_Widget.cpp
+        IO_Widgets/MaskIOWidgets/Mask_Loader_Widget.ui
+        IO_Widgets/MaskIOWidgets/HDF5/HDF5MaskLoader_Widget.cpp
+        IO_Widgets/MaskIOWidgets/HDF5/HDF5MaskLoader_Widget.hpp
+        IO_Widgets/MaskIOWidgets/HDF5/HDF5MaskLoader_Widget.ui
 
         IO_Widgets/LineIOWidgets/Line_Loader_Widget.hpp
         IO_Widgets/LineIOWidgets/Line_Loader_Widget.cpp

@@ -23,7 +23,7 @@
 #include "Label_Widget.hpp"
 #include "IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp"
 #include "IO_Widgets/LineIOWidgets/Line_Loader_Widget.hpp"
-#include "IO_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp"
+#include "IO_Widgets/MaskIOWidgets/Mask_Loader_Widget.hpp"
 #include "IO_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp"
 #include "IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.hpp"
 #include "ML_Widget/ML_Widget.hpp"
