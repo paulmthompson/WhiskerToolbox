@@ -5,7 +5,7 @@
 #include "transforms/data_transforms.hpp"
 #include "utils/string_manip.hpp"
 
-
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -144,11 +144,18 @@ std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_c
 
 void save_points_to_csv(PointData const * point_data, CSVPointSaverOptions const & opts)
 {
+    //Check if directory exists
+    if (!std::filesystem::exists(opts.parent_dir)) {
+        std::filesystem::create_directories(opts.parent_dir);
+        std::cout << "Created directory: " << opts.parent_dir << std::endl;
+    }
+
+    std::string filename = opts.parent_dir + "/" + opts.filename;
     std::fstream fout;
 
-    fout.open(opts.filename, std::fstream::out);
+    fout.open(filename, std::fstream::out);
     if (!fout.is_open()) {
-        std::cerr << "Failed to open file for saving: " << opts.filename << std::endl;
+        std::cerr << "Failed to open file for saving: " << filename << std::endl;
         return;
     }
 
@@ -164,5 +171,5 @@ void save_points_to_csv(PointData const * point_data, CSVPointSaverOptions const
         fout << opts.line_delim;
     }
     fout.close();
-    std::cout << "Successfully saved points to " << opts.filename << std::endl;
+    std::cout << "Successfully saved points to " << filename << std::endl;
 }

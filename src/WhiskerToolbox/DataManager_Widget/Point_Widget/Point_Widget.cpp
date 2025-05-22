@@ -247,13 +247,15 @@ void Point_Widget::_onDataChanged() {
     updateTable();
 }
 
-void Point_Widget::_saveToCSVFile(CSVPointSaverOptions const& csv_options) {
+void Point_Widget::_saveToCSVFile(CSVPointSaverOptions & csv_options) {
     auto point_data_ptr = _data_manager->getData<PointData>(_active_key);
     if (!point_data_ptr) {
         std::cerr << "_saveToCSVFile: Could not get PointData for key: " << _active_key << std::endl;
         QMessageBox::critical(this, "Error", "Could not retrieve data for saving.");
         return;
     }
+
+    csv_options.parent_dir = _data_manager->getOutputPath().string();
 
     save_points_to_csv(point_data_ptr.get(), csv_options);
     QMessageBox::information(this, "Save Successful", QString::fromStdString("Points saved to " + csv_options.filename));

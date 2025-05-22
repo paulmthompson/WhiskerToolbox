@@ -18,8 +18,23 @@ struct CSVPointLoaderOptions {
     char column_delim = ' ';
 };
 
+/**
+ * @struct CSVPointSaverOptions
+ * 
+ * @brief Options for saving points to a CSV file.
+ *          
+ * @var CSVPointSaverOptions::filename
+ * The full filepath to save the points to.
+ * 
+ * @var CSVPointSaverOptions::delimiter
+ * The delimiter to use between columns.
+ * 
+ * @var CSVPointSaverOptions::line_delim
+ * The line delimiter to use.
+ */
 struct CSVPointSaverOptions {
-    std::string filename;
+    std::string filename; 
+    std::string parent_dir = ".";
     std::string delimiter = ",";
     std::string line_delim = "\n";
     bool save_header = true;

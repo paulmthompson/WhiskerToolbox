@@ -47,7 +47,7 @@ private:
     //void refreshTable();
     void _propagateLabel(int frame_id);
     void _populateMoveToPointDataComboBox();
-    void _saveToCSVFile(CSVPointSaverOptions const& options);
+    void _saveToCSVFile(CSVPointSaverOptions & options);
 
 private slots:
     void _handleTableViewDoubleClicked(QModelIndex const & index);
