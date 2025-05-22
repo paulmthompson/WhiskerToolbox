@@ -221,17 +221,6 @@ set(PROJECT_SOURCES
         Feature_Tree_Widget/Feature_Tree_Widget.hpp
         Feature_Tree_Widget/Feature_Tree_Widget.ui
 
-        DataManager/utils/skeletonize.hpp
-        DataManager/utils/skeletonize.cpp
-        DataManager/transforms/Masks/order_line.hpp
-        DataManager/transforms/Masks/order_line.cpp
-        DataManager/utils/mask_operations.hpp
-        DataManager/utils/mask_operations.cpp
-        DataManager/utils/connected_component.hpp
-        DataManager/utils/connected_component.cpp
-        DataManager/utils/simplify_line.cpp
-        DataManager/utils/simplify_line.hpp
-
         Grabcut_Widget/Grabcut_Widget.hpp
         Grabcut_Widget/Grabcut_Widget.cpp
         Grabcut_Widget/GrabCutTool.cpp
@@ -255,6 +244,9 @@ set(PROJECT_SOURCES
         IO_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.hpp
         IO_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.cpp
         IO_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.ui
+        IO_Widgets/AnalogLoaderWidget/CSV/CSVAnalogSaver_Widget.cpp
+        IO_Widgets/AnalogLoaderWidget/CSV/CSVAnalogSaver_Widget.hpp
+        IO_Widgets/AnalogLoaderWidget/CSV/CSVAnalogSaver_Widget.ui
 
         IO_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp
         IO_Widgets/PointLoaderWidget/Point_Loader_Widget.cpp
