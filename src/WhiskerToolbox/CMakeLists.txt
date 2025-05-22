@@ -264,18 +264,18 @@ set(PROJECT_SOURCES
         IO_Widgets/MaskLoaderWidget/Mask_Loader_Widget.cpp
         IO_Widgets/MaskLoaderWidget/Mask_Loader_Widget.ui
 
-        IO_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp
-        IO_Widgets/LineLoaderWidget/Line_Loader_Widget.cpp
-        IO_Widgets/LineLoaderWidget/Line_Loader_Widget.ui
-        IO_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.hpp
-        IO_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.cpp
-        IO_Widgets/LineLoaderWidget/HDF5LineLoader_Widget/HDF5LineLoader_Widget.ui
-        IO_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.hpp
-        IO_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.cpp
-        IO_Widgets/LineLoaderWidget/CSVLineLoader_Widget/CSVLineLoader_Widget.ui
-        IO_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.hpp
-        IO_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.cpp
-        IO_Widgets/LineLoaderWidget/LMDBLineLoader_Widget/LMDBLineLoader_Widget.ui
+        IO_Widgets/LineIOWidgets/Line_Loader_Widget.hpp
+        IO_Widgets/LineIOWidgets/Line_Loader_Widget.cpp
+        IO_Widgets/LineIOWidgets/Line_Loader_Widget.ui
+        IO_Widgets/LineIOWidgets/HDF5/HDF5LineLoader_Widget.hpp
+        IO_Widgets/LineIOWidgets/HDF5/HDF5LineLoader_Widget.cpp
+        IO_Widgets/LineIOWidgets/HDF5/HDF5LineLoader_Widget.ui
+        IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.hpp
+        IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.cpp
+        IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.ui
+        IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.hpp
+        IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.cpp
+        IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.ui
 
         IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp
         IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.cpp

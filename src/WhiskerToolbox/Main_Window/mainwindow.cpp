@@ -22,7 +22,7 @@
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
 #include "IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp"
-#include "IO_Widgets/LineLoaderWidget/Line_Loader_Widget.hpp"
+#include "IO_Widgets/LineIOWidgets/Line_Loader_Widget.hpp"
 #include "IO_Widgets/MaskLoaderWidget/Mask_Loader_Widget.hpp"
 #include "IO_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp"
 #include "IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.hpp"
