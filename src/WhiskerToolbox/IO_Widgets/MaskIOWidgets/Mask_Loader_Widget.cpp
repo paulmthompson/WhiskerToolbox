@@ -3,7 +3,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/loaders/hdf5_loaders.hpp"
+#include "DataManager/Masks/IO/HDF5/Mask_Data_HDF5.hpp"
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QFileDialog>
@@ -104,17 +104,12 @@ void Mask_Loader_Widget::_loadSingleHDF5MaskFile(std::string const & filename, s
         mask_key += "_" + mask_suffix;
     }
 
-    auto frames = Loader::read_array_hdf5({filename,  "frames"});
-    // auto probs = Loader::read_ragged_hdf5({filename, "probs"}); // Probs not used currently
-    auto y_coords = Loader::read_ragged_hdf5({filename, "heights"});
-    auto x_coords = Loader::read_ragged_hdf5({filename, "widths"});
+    auto opts = HDF5MaskLoaderOptions();
+    opts.filename = filename;
 
-    _data_manager->setData<MaskData>(mask_key);
-    auto mask_data_ptr = _data_manager->getData<MaskData>(mask_key);
+    auto mask_data_ptr = load_mask_from_hdf5(opts);
 
-    for (std::size_t i = 0; i < frames.size(); i++) {
-        mask_data_ptr->addAtTime(frames[i], x_coords[i], y_coords[i]);
-    }
+    _data_manager->setData<MaskData>(mask_key, mask_data_ptr);
 
     ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
     mask_data_ptr->setImageSize(original_size);
@@ -122,7 +117,5 @@ void Mask_Loader_Widget::_loadSingleHDF5MaskFile(std::string const & filename, s
     if (ui->scaling_widget->isScalingEnabled()) {
         ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
         mask_data_ptr->changeImageSize(scaled_size);
-    } else {
-        mask_data_ptr->changeImageSize(original_size); 
     }
 } 
