@@ -4,8 +4,17 @@
 #include <QWidget>
 #include <memory>
 #include <string>
+#include <variant> // Required for std::variant
 
 #include <QModelIndex> // Required for signal/slot
+
+// Forward declarations of Qt classes if not fully included
+class QStackedWidget;
+class QComboBox;
+class QCheckBox;
+
+#include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp" // For CSVSingleFileLineSaverOptions
+#include "IO_Widgets/Media/MediaExport_Widget.hpp" // For MediaExport_Widget
 
 // Forward declarations
 namespace Ui {
@@ -13,6 +22,10 @@ class Line_Widget;
 }
 class DataManager;
 class LineTableModel;
+class CSVLineSaver_Widget; // Forward declare the new widget
+
+// Define the variant type for saver options
+using LineSaverOptionsVariant = std::variant<CSVSingleFileLineSaverOptions>;
 
 class Line_Widget : public QWidget {
     Q_OBJECT
@@ -35,6 +48,8 @@ private:
     std::string _active_key;            // Added to store active key
     int _callback_id{-1};             // Added for data manager callback
 
+    enum SaverType { CSV }; // Enum for different saver types
+
 private slots:
     // Add any slots needed for handling user interactions
     void _handleCellDoubleClicked(QModelIndex const & index); // Slot for table interaction
@@ -42,8 +57,17 @@ private slots:
     void _moveLineButton_clicked(); // Slot for move line button
     void _deleteLineButton_clicked(); // Slot for delete line button
 
+    // New slots for saving functionality
+    void _onExportTypeChanged(int index);
+    void _handleSaveCSVRequested(CSVSingleFileLineSaverOptions options);
+    void _onExportMediaFramesCheckboxToggled(bool checked);
+
 private:
     void _populateMoveToComboBox(); // Method to populate the combo box
+
+    // New private helper methods for saving
+    void _initiateSaveProcess(SaverType saver_type, LineSaverOptionsVariant& options_variant);
+    bool _performActualCSVSave(CSVSingleFileLineSaverOptions & options);
 };
 
 #endif// LINE_WIDGET_HPP
