@@ -6,6 +6,7 @@
 #include <string>
 
 #include <QModelIndex>
+#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
 
 namespace Ui {
 class Point_Widget;
@@ -45,7 +46,7 @@ private:
     //void refreshTable();
     void _propagateLabel(int frame_id);
     void _populateMoveToPointDataComboBox();
-    void _saveToCSVFile(QString const& filename);
+    void _saveToCSVFile(CSVPointSaverOptions const& options);
 
 private slots:
     void _handleTableViewDoubleClicked(QModelIndex const & index);
@@ -53,7 +54,7 @@ private slots:
     void _deletePointsButton_clicked();
     void _onDataChanged();
     void _onExportTypeChanged(int index);
-    void _handleSaveCSVRequested(QString filename);
+    void _handleSaveCSVRequested(CSVPointSaverOptions options);
 };
 
 #endif// POINT_WIDGET_HPP

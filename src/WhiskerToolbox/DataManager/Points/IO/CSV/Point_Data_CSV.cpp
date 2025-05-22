@@ -141,3 +141,28 @@ std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_c
 
     return data;
 }
+
+void save_points_to_csv(PointData const * point_data, CSVPointSaverOptions const & opts)
+{
+    std::fstream fout;
+
+    fout.open(opts.filename, std::fstream::out);
+    if (!fout.is_open()) {
+        std::cerr << "Failed to open file for saving: " << opts.filename << std::endl;
+        return;
+    }
+
+    if (opts.save_header) {
+        fout << opts.header << opts.line_delim;
+    }
+
+    for (auto const& timePointsPair : point_data->GetAllPointsAsRange()) {
+        fout << timePointsPair.time;
+        for (size_t i = 0; i < timePointsPair.points.size(); ++i) {
+            fout << opts.delimiter << timePointsPair.points[i].x << opts.delimiter << timePointsPair.points[i].y;
+        }
+        fout << opts.line_delim;
+    }
+    fout.close();
+    std::cout << "Successfully saved points to " << opts.filename << std::endl;
+}

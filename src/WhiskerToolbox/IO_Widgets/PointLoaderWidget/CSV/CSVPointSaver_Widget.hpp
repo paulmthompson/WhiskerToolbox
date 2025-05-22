@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QString>
+#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
 
 namespace Ui {
 class CSVPointSaver_Widget;
@@ -15,7 +16,10 @@ public:
     ~CSVPointSaver_Widget() override;
 
 signals:
-    void saveCSVRequested(QString filename);
+    void saveCSVRequested(CSVPointSaverOptions options);
+
+private slots:
+    void _onSaveHeaderCheckboxToggled(bool checked);
 
 private:
     Ui::CSVPointSaver_Widget *ui;
