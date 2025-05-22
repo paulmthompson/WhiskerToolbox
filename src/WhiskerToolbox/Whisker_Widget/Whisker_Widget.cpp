@@ -414,26 +414,17 @@ void Whisker_Widget::_saveImageButton() {
 }
 
 void Whisker_Widget::_saveImage(std::string const & folder) {
-    auto media = _data_manager->getData<MediaData>("media");
-    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
-
-    auto media_data = media->getRawData(frame_id);
-
-    auto const width = media->getWidth();
-    auto const height = media->getHeight();
-
-    QImage const labeled_image(&media_data[0], width, height, QImage::Format_Grayscale8);
 
     MediaExportOptions opts;
     opts.save_by_frame_name = _save_by_frame_name;
     opts.frame_id_padding = 7;
     opts.image_name_prefix = "img";
+    opts.image_save_dir = folder;
 
-    auto saveName = get_image_save_name(media.get(), frame_id, opts);
+    auto media = _data_manager->getData<MediaData>("media");
+    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
 
-    std::cout << "Saving file " << saveName << std::endl;
-
-    labeled_image.save(QString::fromStdString(folder + saveName));
+    save_image(media.get(), frame_id, opts);
 }
 
 void Whisker_Widget::_saveFaceMask() {
@@ -633,6 +624,12 @@ void Whisker_Widget::_exportAllTracked() {
 
     auto tracked_frames = _data_manager->getData<DigitalEventSeries>("tracked_frames")->getEventSeries();
 
+    MediaExportOptions opts;
+    opts.save_by_frame_name = _save_by_frame_name;
+    opts.frame_id_padding = 7;
+    opts.image_name_prefix = "img";
+    opts.image_save_dir = image_folder;
+
     for (auto const & event_frame : tracked_frames)
     {
         int const frame_id = static_cast<int>(event_frame);
@@ -641,22 +638,9 @@ void Whisker_Widget::_exportAllTracked() {
             continue;
         }
 
-        auto media_data = media->getRawData(frame_id);
+        save_image(media.get(), frame_id, opts);
 
-        QImage const labeled_image(&media_data[0], width, height, QImage::Format_Grayscale8);
-
-        MediaExportOptions opts;
-        opts.save_by_frame_name = _save_by_frame_name;
-        opts.frame_id_padding = 7;
-        opts.image_name_prefix = "img";
-
-        auto saveName = get_image_save_name(media.get(), frame_id, opts);
-
-        std::cout << "Saving file " << saveName << std::endl;
-
-        labeled_image.save(QString::fromStdString(image_folder + saveName));
-
-        saveName = _getWhiskerSaveName(frame_id);
+        auto saveName = _getWhiskerSaveName(frame_id);
 
         auto frame_whiskers = whiskers->getLinesAtTime(frame_id);
 
