@@ -154,9 +154,4 @@ float calculate_max(AnalogTimeSeries const & series);
  */
 float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
-void save_analog(
-        std::vector<float> const & analog_series,
-        std::vector<size_t> const & time_series,
-        std::string const & block_output);
-
 #endif// ANALOG_TIME_SERIES_HPP

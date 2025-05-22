@@ -2,6 +2,7 @@
 #include "ui_AnalogTimeSeries_Widget.h"
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include <iostream>
