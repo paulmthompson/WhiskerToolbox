@@ -2,8 +2,10 @@
 #define POINT_WIDGET_HPP
 
 #include <QWidget>
+
 #include <memory>
 #include <string>
+#include <variant>
 
 #include <QModelIndex>
 #include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
@@ -16,6 +18,8 @@ class DataManager;
 class PointTableModel;
 class CSVPointSaver_Widget;
 class MediaData;
+
+using PointSaverOptionsVariant = std::variant<CSVPointSaverOptions>;
 
 class Point_Widget : public QWidget {
     Q_OBJECT
@@ -43,11 +47,15 @@ private:
     std::string _active_key;
     int _previous_frame{0};
     int _callback_id{-1};
+    enum SaverType { CSV };
 
     //void refreshTable();
     void _propagateLabel(int frame_id);
     void _populateMoveToPointDataComboBox();
     void _saveToCSVFile(CSVPointSaverOptions & options);
+    bool _performActualCSVSave(CSVPointSaverOptions & options);
+    void _initiateSaveProcess(SaverType saver_type, PointSaverOptionsVariant& options_variant);
+
 
 private slots:
     void _handleTableViewDoubleClicked(QModelIndex const & index);

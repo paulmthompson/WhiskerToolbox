@@ -18,8 +18,11 @@ public:
 
     void setPoints(PointData const * pointData) {
         beginResetModel();
-        for (auto const & timePointsPair: pointData->GetAllPointsAsRange()) {
-            _points[timePointsPair.time] = timePointsPair.points;
+        _points.clear(); // Clear previous data
+        if (pointData) { // Check if pointData is not null
+            for (auto const & timePointsPair: pointData->GetAllPointsAsRange()) {
+                _points[timePointsPair.time] = timePointsPair.points;
+            }
         }
         endResetModel();
     }
