@@ -4,11 +4,13 @@
 #include "DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "PointTableModel.hpp"
+#include "IO_Widgets/PointLoaderWidget/CSV/CSVPointSaver_Widget.hpp"
 
 #include <QFileDialog>
 #include <QPushButton>
 #include <QTableView>
 #include <QComboBox>
+#include <QStackedWidget>
 
 #include <fstream>
 #include <iostream>
@@ -24,10 +26,17 @@ Point_Widget::Point_Widget(std::shared_ptr<DataManager> data_manager, QWidget * 
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    connect(ui->save_csv_button, &QPushButton::clicked, this, &Point_Widget::_saveKeypointCSV);
+    connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &Point_Widget::_onExportTypeChanged);
+
+    connect(ui->csv_point_saver_widget, &CSVPointSaver_Widget::saveCSVRequested,
+            this, &Point_Widget::_handleSaveCSVRequested);
+
     connect(ui->tableView, &QTableView::doubleClicked, this, &Point_Widget::_handleTableViewDoubleClicked);
     connect(ui->movePointsButton, &QPushButton::clicked, this, &Point_Widget::_movePointsButton_clicked);
     connect(ui->deletePointsButton, &QPushButton::clicked, this, &Point_Widget::_deletePointsButton_clicked);
+
+    ui->stacked_saver_options->setCurrentWidget(ui->csv_point_saver_widget);
 }
 
 Point_Widget::~Point_Widget() {
@@ -69,17 +78,36 @@ void Point_Widget::updateTable() {
     }
 }
 
-void Point_Widget::_saveKeypointCSV() {
-    auto const filename = ui->save_filename->text().toStdString();
+void Point_Widget::_onExportTypeChanged(int index) {
+    if (ui->export_type_combo->itemText(index) == "CSV") {
+        ui->stacked_saver_options->setCurrentWidget(ui->csv_point_saver_widget);
+    }
+}
+
+void Point_Widget::_handleSaveCSVRequested(QString filename) {
+    if (filename.isEmpty()) {
+        std::cout << "Point_Widget: Save filename is empty, using default or last provided." << std::endl;
+    }
+    _saveToCSVFile(filename);
+}
+
+void Point_Widget::_saveToCSVFile(QString const& filename) {
+    if (_active_key.empty()) {
+        std::cerr << "Point_Widget: No active key selected, cannot save CSV." << std::endl;
+        return;
+    }
 
     std::fstream fout;
+    std::filesystem::path output_path = _data_manager->getOutputPath();
+    output_path /= filename.toStdString();
 
-    auto frame_by_frame_output = _data_manager->getOutputPath();
-
-    fout.open(frame_by_frame_output.append(filename).string(), std::fstream::out);
+    fout.open(output_path, std::fstream::out);
+    if (!fout.is_open()) {
+        std::cerr << "Point_Widget: Failed to open file for saving: " << output_path.string() << std::endl;
+        return;
+    }
 
     auto point_data = _data_manager->getData<PointData>(_active_key);
-
     if (!point_data) {
         std::cerr << "Point_Widget: Cannot save CSV, PointData for key '" << _active_key << "' not found." << std::endl;
         fout.close();
@@ -87,24 +115,20 @@ void Point_Widget::_saveKeypointCSV() {
     }
 
     for (auto const& timePointsPair : point_data->GetAllPointsAsRange()) {
-        fout << timePointsPair.time << ",";
+        fout << timePointsPair.time;
         for (size_t i = 0; i < timePointsPair.points.size(); ++i) {
-            fout << timePointsPair.points[i].x << "," << timePointsPair.points[i].y;
-            if (i < timePointsPair.points.size() - 1) {
-                fout << ",";
-            }
+            fout << "," << timePointsPair.points[i].x << "," << timePointsPair.points[i].y;
         }
         fout << "\n";
     }
-
     fout.close();
+    std::cout << "Point_Widget: Successfully saved points to " << output_path.string() << std::endl;
 }
 
 void Point_Widget::loadFrame(int frame_id) {
     if (ui->propagate_checkbox->isChecked()) {
         _propagateLabel(frame_id);
     }
-
     _previous_frame = frame_id;
 }
 

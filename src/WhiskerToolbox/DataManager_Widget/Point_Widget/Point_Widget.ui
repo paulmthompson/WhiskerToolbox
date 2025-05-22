@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>468</width>
-    <height>350</height>
+    <height>380</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -23,34 +23,36 @@
    <item>
     <layout class="QHBoxLayout" name="topControlsLayout">
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,0">
+      <layout class="QVBoxLayout" name="leftVerticalLayout" stretch="0,0,0,0,1">
        <property name="sizeConstraint">
         <enum>QLayout::SizeConstraint::SetMaximumSize</enum>
        </property>
        <item>
-        <widget class="QPushButton" name="save_csv_button">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>100</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Save to CSV</string>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="exportTypeLayout">
+         <item>
+          <widget class="QLabel" name="label_export_type">
+           <property name="text">
+            <string>Export Type:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="export_type_combo">
+           <item>
+            <property name="text">
+             <string>CSV</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
-        <widget class="QLineEdit" name="save_filename">
-         <property name="text">
-          <string>filename.csv</string>
+        <widget class="QStackedWidget" name="stacked_saver_options">
+         <property name="currentIndex">
+          <number>0</number>
          </property>
+         <widget class="CSVPointSaver_Widget" name="csv_point_saver_widget"/>
         </widget>
        </item>
        <item>
@@ -68,7 +70,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -123,6 +125,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CSVPointSaver_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/PointLoaderWidget/CSV/CSVPointSaver_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

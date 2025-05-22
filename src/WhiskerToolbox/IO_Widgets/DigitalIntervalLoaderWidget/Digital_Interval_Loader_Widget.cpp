@@ -36,7 +36,7 @@ void Digital_Interval_Loader_Widget::_loadSingleInterval() {
         return;
     }
 
-    auto const interval_key = ui->data_name_text->toPlainText().toStdString();
+    auto const interval_key = ui->data_name_text->text().toStdString();
 
     char delimiter;
     if (ui->delimiter_combo->currentText() == "Space") {

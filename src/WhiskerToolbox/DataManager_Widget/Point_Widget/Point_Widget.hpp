@@ -13,6 +13,7 @@ class Point_Widget;
 
 class DataManager;
 class PointTableModel;
+class CSVPointSaver_Widget;
 
 class Point_Widget : public QWidget {
     Q_OBJECT
@@ -44,13 +45,15 @@ private:
     //void refreshTable();
     void _propagateLabel(int frame_id);
     void _populateMoveToPointDataComboBox();
+    void _saveToCSVFile(QString const& filename);
 
 private slots:
-    void _saveKeypointCSV();
     void _handleTableViewDoubleClicked(QModelIndex const & index);
     void _movePointsButton_clicked();
     void _deletePointsButton_clicked();
     void _onDataChanged();
+    void _onExportTypeChanged(int index);
+    void _handleSaveCSVRequested(QString filename);
 };
 
 #endif// POINT_WIDGET_HPP
