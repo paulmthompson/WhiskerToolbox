@@ -191,38 +191,6 @@ void Point_Widget::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsV
         return;
     }
 
-    /*
-
-    QString current_filename_qstr;
-    std::visit([&current_filename_qstr](auto& opts) {
-        current_filename_qstr = QString::fromStdString(opts.filename);
-    }, options_variant);
-
-    QString initial_path = QDir::currentPath() + "/" + current_filename_qstr;
-    QString dialog_title;
-    QString file_filter;
-
-    switch (saver_type) {
-        case SaverType::CSV:
-            dialog_title = tr("Save Points to CSV");
-            file_filter = tr("CSV Files (*.csv);;All Files (*.*)");
-            break;
-    }
-
-    QString chosen_filename_qstr = QFileDialog::getSaveFileName(this, 
-                                                            dialog_title, 
-                                                            initial_path, 
-                                                            file_filter);
-
-    if (chosen_filename_qstr.isEmpty()) {
-        return;
-    }
-
-    std::visit([&chosen_filename_qstr](auto& opts) {
-        opts.filename = chosen_filename_qstr.toStdString();
-    }, options_variant);
-    */
-
     bool save_successful = false;
     switch (saver_type) {
         case SaverType::CSV: {
