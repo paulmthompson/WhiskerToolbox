@@ -116,7 +116,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
     connect(ui->whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectNumWhiskersToTrack);
 
     connect(ui->manual_whisker_select_spinbox, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectWhisker);
-    connect(ui->delete_whisker_button, &QPushButton::clicked, this, &Whisker_Widget::_deleteWhisker);
 
     connect(ui->actionSave_Face_Mask_2, &QAction::triggered, this, &Whisker_Widget::_saveFaceMask);
     connect(ui->actionLoad_Face_Mask, &QAction::triggered, this, &Whisker_Widget::_loadFaceMask);
@@ -389,21 +388,6 @@ void Whisker_Widget::_selectNumWhiskersToTrack(int n_whiskers) {
 
 void Whisker_Widget::_selectWhisker(int whisker_num) {
     _current_whisker = whisker_num;
-}
-
-void Whisker_Widget::_deleteWhisker() {
-    std::string const whisker_group_name = "whisker";
-
-    std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
-
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-
-    if (_data_manager->getData<LineData>(whisker_name)) {
-        _data_manager->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
-        if (_data_manager->getData<DigitalEventSeries>("tracked_frames")) {
-            _data_manager->getData<DigitalEventSeries>("tracked_frames")->removeEvent(current_time);
-        }
-    }
 }
 
 /////////////////////////////////////////////

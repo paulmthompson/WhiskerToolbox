@@ -157,8 +157,6 @@ private slots:
 
     void _selectWhisker(int whisker_num);
 
-    void _deleteWhisker();
-
     void _saveWhiskersAsCSV();
     void _loadMultiFrameCSV();
 
