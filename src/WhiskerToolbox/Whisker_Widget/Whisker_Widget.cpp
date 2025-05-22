@@ -392,20 +392,6 @@ void Whisker_Widget::_selectWhisker(int whisker_num) {
 
 /////////////////////////////////////////////
 
-void Whisker_Widget::_saveImage(std::string const & folder) {
-
-    MediaExportOptions opts;
-    opts.save_by_frame_name = _save_by_frame_name;
-    opts.frame_id_padding = 7;
-    opts.image_name_prefix = "img";
-    opts.image_save_dir = folder;
-
-    auto media = _data_manager->getData<MediaData>("media");
-    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
-
-    save_image(media.get(), frame_id, opts);
-}
-
 void Whisker_Widget::_saveFaceMask() {
 
     auto const media_data = _data_manager->getData<MediaData>("media");
@@ -637,12 +623,19 @@ void Whisker_Widget::_exportImageCSV() {
         return;
     }
 
-    _saveImage(_output_path.string());
+    MediaExportOptions opts;
+    opts.save_by_frame_name = _save_by_frame_name;
+    opts.frame_id_padding = 7;
+    opts.image_name_prefix = "img";
+    opts.image_save_dir = _output_path.string();
+
+    auto media = _data_manager->getData<MediaData>("media");
 
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    _addNewTrackedWhisker(current_time);
+    save_image(media.get(), current_time, opts);
 
+    _addNewTrackedWhisker(current_time);
 
     for (int i = 0; i < _num_whisker_to_track; i++) {
         std::string const whisker_name = whisker_group_name + "_" + std::to_string(i);

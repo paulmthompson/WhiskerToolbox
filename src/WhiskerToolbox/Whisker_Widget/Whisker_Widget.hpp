@@ -103,7 +103,6 @@ private:
 
     void _createNewWhisker(std::string const & whisker_group_name, int whisker_id);
 
-    void _saveImage(std::string const & folder);
     std::string _getWhiskerSaveName(int frame_id);
 
     std::vector<int> _loadCSVWhiskerFromDir(std::string const & dir_name, std::string const & whisker_group_name);
