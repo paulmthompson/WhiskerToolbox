@@ -67,6 +67,8 @@ add_library(DataManager SHARED
         AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.cpp
         AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp
         AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.cpp
+        AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.hpp
+        AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.cpp
 
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
@@ -137,6 +139,9 @@ add_library(DataManager SHARED
         ImageSize/ImageSize.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
         DataManagerTypes.hpp
+        loaders/loading_utils.hpp
+        loaders/loading_utils.cpp
+
 
 
 )

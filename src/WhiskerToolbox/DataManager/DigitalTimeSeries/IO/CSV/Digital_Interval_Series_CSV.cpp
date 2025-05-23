@@ -1,8 +1,9 @@
 #include "Digital_Interval_Series_CSV.hpp"
 
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp" // Required for DigitalIntervalSeries
+#include "loaders/loading_utils.hpp"
 
-#include <cmath>   // For std::round, though intervals are int64_t, good to keep if format changes
+
 #include <fstream>
 #include <sstream>
 #include <filesystem> // Required for std::filesystem
@@ -41,17 +42,12 @@ void save_digital_interval_series_to_csv(
         return;
     }
 
-    if (!opts.parent_dir.empty() && !std::filesystem::exists(opts.parent_dir)) {
-        try {
-            std::filesystem::create_directories(opts.parent_dir);
-            std::cout << "Created directory: " << opts.parent_dir << std::endl;
-        } catch (std::filesystem::filesystem_error const& e) {
-            std::cerr << "Error creating directory " << opts.parent_dir << ": " << e.what() << std::endl;
-            return;
-        }
+    auto result = check_dir_and_get_full_path(opts);
+    if (!result.has_value()) {
+        return;
     }
 
-    std::string full_path = opts.parent_dir.empty() ? opts.filename : (std::filesystem::path(opts.parent_dir) / opts.filename).string();
+    std::string const full_path = result.value();
 
     std::ofstream fout;
     fout.open(full_path, std::ios_base::out | std::ios_base::trunc);

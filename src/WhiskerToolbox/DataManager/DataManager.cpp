@@ -10,7 +10,7 @@
 #include "Points/Point_Data.hpp"
 #include "Tensors/Tensor_Data.hpp"
 
-#include "AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp"
+#include "AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.hpp"
 #include "DigitalTimeSeries/IO/CSV/Digital_Event_Series_Loader.hpp"
 #include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp"

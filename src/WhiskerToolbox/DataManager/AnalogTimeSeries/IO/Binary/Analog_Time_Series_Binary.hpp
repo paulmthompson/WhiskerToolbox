@@ -1,22 +1,19 @@
 #ifndef ANALOG_TIME_SERIES_LOADER_HPP
 #define ANALOG_TIME_SERIES_LOADER_HPP
 
-#include "nlohmann/json.hpp"
-
 #include <memory>
 #include <string>
 #include <vector>
 
-enum class AnalogDataType {
-    int16,
-    Unknown
-};
-
 class AnalogTimeSeries;
 
-AnalogDataType stringToAnalogDataType(std::string const & data_type_str);
+struct BinaryAnalogLoaderOptions {
+    std::string filename;
+    std::string parent_dir = ".";
+    int header_size = 0;
+    int num_channels = 1;
+};
 
-std::vector<std::shared_ptr<AnalogTimeSeries>> load_into_AnalogTimeSeries(std::string const & file_path,
-                                                                          nlohmann::basic_json<> const & item);
+std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions & opts);
 
 #endif// ANALOG_TIME_SERIES_LOADER_HPP
