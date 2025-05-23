@@ -1,4 +1,3 @@
-
 #include "Line_Data_Binary.hpp"
 
 #include "Lines/IO/CAPNP/Line_Data_CAPNP.hpp"
@@ -77,11 +76,14 @@ std::shared_ptr<LineData> BinaryFileCapnpStorage::load(std::string const & file_
         kj::Array<capnp::word> words = kj::heapArray<capnp::word>(size / sizeof(capnp::word));
         if (!infile.read(reinterpret_cast<char *>(words.begin()), size)) {
             std::cerr << "Error: Failed to read all data from file: " << file_path << std::endl;
+            infile.close();
             return nullptr;
         }
         infile.close();
 
-        return deserializeLineData(words.asPtr());
+        capnp::ReaderOptions options;
+        options.traversalLimitInWords = 256ull * 1024 * 1024;
+        return deserializeLineData(words.asPtr(), options);
 
     } catch (kj::Exception const & e) {
         std::cerr << "Cap'n Proto Exception during load: " << e.getDescription().cStr() << std::endl;

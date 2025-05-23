@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>526</width>
-    <height>300</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,41 +15,84 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="HDF5LineLoader_Widget" name="hdf5_line_loader" native="true"/>
-   </item>
-   <item>
-    <widget class="CSVLineLoader_Widget" name="csv_line_loader" native="true"/>
-   </item>
-   <item>
-    <widget class="LMDBLineLoader_Widget" name="lmdb_line_loader" native="true"/>
-   </item>
-   <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QHBoxLayout" name="dataNameLayout">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLineEdit" name="data_name_text">
-         <property name="text">
-          <string>line_1</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Line Name</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QLineEdit" name="data_name_text">
+       <property name="text">
+        <string>line_1</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_data_name">
+       <property name="text">
+        <string>Line Name</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="Scaling_Widget" name="scaling_widget" native="true"/>
+    <layout class="QHBoxLayout" name="loaderTypeLayout">
+     <item>
+      <widget class="QLabel" name="label_loader_type">
+       <property name="text">
+        <string>Loader Type:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="loader_type_combo">
+       <item>
+        <property name="text">
+         <string>HDF5</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>CSV</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>LMDB</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Binary</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="loaderTypeSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_4"/>
+    <widget class="QStackedWidget" name="stacked_loader_options">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="HDF5LineLoader_Widget" name="hdf5_line_loader" native="true"/>
+     <widget class="CSVLineLoader_Widget" name="csv_line_loader" native="true"/>
+     <widget class="LMDBLineLoader_Widget" name="lmdb_line_loader" native="true"/>
+     <widget class="BinaryLineLoader_Widget" name="binary_line_loader" native="true"/>
+    </widget>
+   </item>
+   <item>
+    <widget class="Scaling_Widget" name="scaling_widget" native="true"/>
    </item>
    <item>
     <spacer name="verticalSpacer">
@@ -83,6 +126,12 @@
    <class>LMDBLineLoader_Widget</class>
    <extends>QWidget</extends>
    <header>IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BinaryLineLoader_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/LineIOWidgets/Binary/BinaryLineLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

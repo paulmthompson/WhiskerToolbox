@@ -11,6 +11,9 @@ class LineData;
 
 kj::Array<capnp::word> serializeLineData(LineData const * lineData);
 
-std::shared_ptr<LineData> deserializeLineData(kj::ArrayPtr<capnp::word const> messageData);
+std::shared_ptr<LineData> deserializeLineData(
+    kj::ArrayPtr<capnp::word const> messageData,
+    capnp::ReaderOptions const& options 
+);
 
 #endif//WHISKERTOOLBOX_LINE_DATA_CAPNP_HPP

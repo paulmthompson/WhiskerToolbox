@@ -1,4 +1,3 @@
-
 #include "Line_Data_CAPNP.hpp"
 
 #include "line_data.capnp.h"
@@ -6,6 +5,7 @@
 #include "Lines/Line_Data.hpp"
 
 #include <vector>
+#include <iostream>
 
 kj::Array<capnp::word> serializeLineData(LineData const * lineData) {
     capnp::MallocMessageBuilder message;
@@ -13,25 +13,19 @@ kj::Array<capnp::word> serializeLineData(LineData const * lineData) {
 
     std::vector<int> times = lineData->getTimesWithData();
 
-    std::cout << "There are " << times.size() << " time frames" << std::endl;
-
     auto timeLinesList = lineDataProto.initTimeLines(times.size());
 
-    // Fill in the data
     for (size_t i = 0; i < times.size(); i++) {
         int const time = times[i];
         auto timeLine = timeLinesList[i];
-
         timeLine.setTime(time);
 
         std::vector<Line2D> const & lines = lineData->getLinesAtTime(time);
-
         auto linesList = timeLine.initLines(lines.size());
 
         for (size_t j = 0; j < lines.size(); j++) {
             Line2D const & line = lines[j];
             auto lineBuilder = linesList[j];
-
             auto pointsList = lineBuilder.initPoints(line.size());
 
             for (size_t k = 0; k < line.size(); k++) {
@@ -52,8 +46,11 @@ kj::Array<capnp::word> serializeLineData(LineData const * lineData) {
     return words;
 }
 
-std::shared_ptr<LineData> deserializeLineData(kj::ArrayPtr<capnp::word const> messageData) {
-    capnp::FlatArrayMessageReader message(messageData);
+std::shared_ptr<LineData> deserializeLineData(
+    kj::ArrayPtr<capnp::word const> messageData,
+    capnp::ReaderOptions const& options)
+{
+    capnp::FlatArrayMessageReader message(messageData, options);
     LineDataProto::Reader lineDataProto = message.getRoot<LineDataProto>();
 
     auto lineData = std::make_shared<LineData>();

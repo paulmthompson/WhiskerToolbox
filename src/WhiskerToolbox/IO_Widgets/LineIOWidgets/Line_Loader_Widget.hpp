@@ -7,12 +7,14 @@
 #include <memory>
 #include <string>
 
-
-class DataManager;
-
+// Forward declarations
 namespace Ui {
 class Line_Loader_Widget;
 }
+class DataManager;
+class QComboBox;
+class QStackedWidget;
+class BinaryLineLoader_Widget;
 
 class Line_Loader_Widget : public QWidget {
     Q_OBJECT
@@ -25,10 +27,13 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
     void _loadSingleHDF5Line(std::string const & filename, std::string const & line_suffix = "");
+    void _loadSingleBinaryFile(QString const & filepath);
 
 private slots:
     void _loadSingleHdf5Line(QString filename);
-    void _loadMultiHdf5Line(QString dirname, QString pattern);
+    void _loadMultiHdf5Line(QString dir_name, QString pattern);
+    void _onLoaderTypeChanged(int index);
+    void _handleLoadBinaryFileRequested(QString filepath);
 };
 
 
