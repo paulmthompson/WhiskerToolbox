@@ -14,6 +14,7 @@ MaskToLine_Widget::MaskToLine_Widget(QWidget *parent) :
     ui->subsampleSpinBox->setValue(1);
     ui->removeOutliersCheckBox->setChecked(true);
     ui->smoothLineCheckBox->setChecked(false);
+    ui->outputResolutionSpinBox->setValue(5.0);
     
     // Set up method combo box
     ui->methodComboBox->addItem("Skeletonize", static_cast<int>(LinePointSelectionMethod::Skeletonize));
@@ -63,8 +64,9 @@ std::unique_ptr<TransformParametersBase> MaskToLine_Widget::getParameters() cons
     params->polynomial_order = ui->polynomialOrderSpinBox->value();
     params->error_threshold = static_cast<float>(ui->errorThresholdSpinBox->value());
     params->remove_outliers = ui->removeOutliersCheckBox->isChecked();
-    params->subsample = ui->subsampleSpinBox->value();
+    params->input_point_subsample_factor = ui->subsampleSpinBox->value();
     params->should_smooth_line = ui->smoothLineCheckBox->isChecked();
+    params->output_resolution = static_cast<float>(ui->outputResolutionSpinBox->value());
     
     return params;
 } 

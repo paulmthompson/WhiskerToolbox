@@ -1,11 +1,3 @@
-#include <iostream>// For init messages
-#include <map>
-#include <memory>// unique_ptr
-#include <string>
-#include <typeindex>
-#include <variant>// Needed for the public interface
-#include <vector>
-
 #include "TransformRegistry.hpp"
 
 #include "transforms/Masks/mask_area.hpp"
@@ -15,6 +7,15 @@
 #include "transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
 #include "transforms/Lines/line_angle.hpp"
 #include "transforms/Lines/line_min_point_dist.hpp"
+#include "transforms/Lines/line_resample.hpp"
+
+#include <iostream>// For init messages
+#include <map>
+#include <memory>// unique_ptr
+#include <string>
+#include <typeindex>
+#include <variant>// Needed for the public interface
+#include <vector>
 
 
 TransformRegistry::TransformRegistry() {
@@ -28,6 +29,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<HilbertPhaseOperation>());
     _registerOperation(std::make_unique<LineAngleOperation>());
     _registerOperation(std::make_unique<LineMinPointDistOperation>());
+    _registerOperation(std::make_unique<LineResampleOperation>());
 
     _computeApplicableOperations();
     std::cout << "Operation Registry Initialized." << std::endl;

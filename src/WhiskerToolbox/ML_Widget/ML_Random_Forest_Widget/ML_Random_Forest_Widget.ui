@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>272</width>
+    <width>568</width>
     <height>243</height>
    </rect>
   </property>
@@ -25,67 +25,68 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Num Trees</string>
-       </property>
-      </widget>
-     </item>
-     <item>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="0" column="1">
       <widget class="QSpinBox" name="spinBox"/>
      </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QLabel" name="label_3">
+     <item row="4" column="0">
+      <widget class="QCheckBox" name="checkBox">
        <property name="text">
-        <string>Min Leaf Size</string>
+        <string>Warm Start</string>
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QSpinBox" name="spinBox_2"/>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <item>
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Min Gain Split</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
-     <item>
+     <item row="3" column="0">
       <widget class="QLabel" name="label_5">
        <property name="text">
         <string>Max Depth</string>
        </property>
       </widget>
      </item>
-     <item>
+     <item row="1" column="1">
+      <widget class="QSpinBox" name="spinBox_2"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Min Gain Split</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
       <widget class="QSpinBox" name="spinBox_3"/>
      </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Min Leaf Size</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Num Trees</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+     </item>
+     <item row="0" column="2">
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
     </layout>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="checkBox">
-     <property name="text">
-      <string>Warm Start</string>
-     </property>
-    </widget>
    </item>
    <item>
     <spacer name="verticalSpacer">

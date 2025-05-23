@@ -116,6 +116,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp
         DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.cpp
         DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.ui
+        DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.cpp
+        DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp
+        DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui

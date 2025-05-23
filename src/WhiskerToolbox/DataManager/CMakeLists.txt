@@ -98,6 +98,16 @@ add_library(DataManager SHARED
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/polynomial/polynomial_fit.hpp
         utils/polynomial/polynomial_fit.cpp
+        utils/line_resampling.cpp
+        utils/line_resampling.hpp
+        utils/connected_component.hpp
+        utils/connected_component.cpp
+        utils/mask_operations.cpp
+        utils/mask_operations.hpp
+        utils/simplify_line.cpp
+        utils/simplify_line.hpp
+        utils/skeletonize.cpp
+        utils/skeletonize.hpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
@@ -114,20 +124,14 @@ add_library(DataManager SHARED
         transforms/Lines/line_angle.cpp
         transforms/Lines/line_min_point_dist.hpp
         transforms/Lines/line_min_point_dist.cpp
+        transforms/Lines/line_resample.cpp
+        transforms/Lines/line_resample.hpp
         transforms/Masks/mask_area.cpp
         transforms/Masks/mask_area.hpp
         transforms/Masks/mask_to_line.cpp
         transforms/Masks/mask_to_line.hpp
-        utils/connected_component.hpp
-        utils/connected_component.cpp
-        utils/mask_operations.cpp
-        utils/mask_operations.hpp
         transforms/Masks/order_line.cpp
         transforms/Masks/order_line.hpp
-        utils/simplify_line.cpp
-        utils/simplify_line.hpp
-        utils/skeletonize.cpp
-        utils/skeletonize.hpp
 
         loaders/binary_loaders.hpp
         loaders/hdf5_loaders.hpp

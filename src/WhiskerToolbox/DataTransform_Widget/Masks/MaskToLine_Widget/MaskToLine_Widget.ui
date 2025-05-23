@@ -187,7 +187,7 @@
       <item row="3" column="0">
        <widget class="QLabel" name="subsampleLabel">
         <property name="text">
-         <string>Subsample Points:</string>
+         <string>Input Point Subsample Factor:</string>
         </property>
        </widget>
       </item>
@@ -220,10 +220,34 @@
        </widget>
       </item>
       
-      <item row="5" column="0" colspan="2">
+      <item row="5" column="0">
+        <widget class="QLabel" name="outputResolutionLabel">
+         <property name="text">
+          <string>Output Point Spacing (px):</string>
+         </property>
+        </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QDoubleSpinBox" name="outputResolutionSpinBox">
+        <property name="minimum">
+         <double>1.0</double>
+        </property>
+        <property name="maximum">
+         <double>30.0</double>
+        </property>
+        <property name="singleStep">
+         <double>0.5</double>
+        </property>
+        <property name="value">
+         <double>5.0</double>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="6" column="0" colspan="2">
        <widget class="QLabel" name="qualityDescriptionLabel">
         <property name="text">
-         <string>Points with error higher than the threshold will be removed if "Remove Outliers" is checked. Subsample value > 1 will use only every Nth point.</string>
+         <string>Points with error higher than the threshold will be removed if "Remove Outliers" is checked. Input subsample > 1 uses every Nth mask point. Output spacing controls final line point density.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>

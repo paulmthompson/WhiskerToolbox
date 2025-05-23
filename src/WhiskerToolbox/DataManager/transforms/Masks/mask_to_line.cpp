@@ -6,6 +6,7 @@
 #include "utils/skeletonize.hpp"
 #include "order_line.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
+#include "utils/line_resampling.hpp"
 
 #include <armadillo>
 
@@ -174,7 +175,8 @@ std::vector<Point2D<float>> generate_smoothed_line(
     const std::vector<Point2D<float>>& original_points, // Used to estimate total length
     const std::vector<double>& x_coeffs,
     const std::vector<double>& y_coeffs,
-    int order) {
+    int order,
+    float target_spacing) {
     if (original_points.empty() || x_coeffs.empty() || y_coeffs.empty()) {
         return {};
     }
@@ -190,7 +192,7 @@ std::vector<Point2D<float>> generate_smoothed_line(
     }
     
     // If total length is very small or zero, or only one point, just return the (fitted) first point
-    if (total_length < 1e-6 || original_points.size() <=1) {
+    if (total_length < 1e-6 || original_points.size() <=1 || target_spacing <= 1e-6) {
         if (!original_points.empty()) {
              // Evaluate polynomial at t=0 (or use the first point if no coeffs)
             if (!x_coeffs.empty() && !y_coeffs.empty()) {
@@ -205,8 +207,8 @@ std::vector<Point2D<float>> generate_smoothed_line(
         }
     }
 
-    // Determine number of samples: aim for approx. 1 pixel spacing
-    int num_samples = std::max(2, static_cast<int>(std::round(total_length))); 
+    // Determine number of samples based on target_spacing
+    int num_samples = std::max(2, static_cast<int>(std::round(total_length / target_spacing))); 
 
     std::vector<Point2D<float>> smoothed_line;
     smoothed_line.reserve(num_samples);
@@ -249,7 +251,6 @@ std::vector<float> calculate_fitting_errors(const std::vector<Point2D<float>>& p
     
     return errors;
 }
-
 
 // Recursive helper function for removing outliers
 std::vector<Point2D<float>> remove_outliers_recursive(const std::vector<Point2D<float>>& points, 
@@ -372,8 +373,9 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     int polynomial_order = params ? params->polynomial_order : 3;
     float error_threshold = params ? params->error_threshold : 5.0f;
     bool should_remove_outliers = params ? params->remove_outliers : true;
-    int subsample = params ? params->subsample : 1;
+    int input_point_subsample_factor = params ? params->input_point_subsample_factor : 1;
     bool should_smooth_line = params ? params->should_smooth_line : false;
+    float output_resolution = params ? params->output_resolution : 5.0f;
 
     std::cout << "reference_x: " << reference_x << std::endl;
     std::cout << "reference_y: " << reference_y << std::endl;   
@@ -381,8 +383,9 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     std::cout << "polynomial_order: " << polynomial_order << std::endl;
     std::cout << "error_threshold: " << error_threshold << std::endl;
     std::cout << "should_remove_outliers: " << should_remove_outliers << std::endl;
-    std::cout << "subsample: " << subsample << std::endl;
+    std::cout << "input_point_subsample_factor: " << input_point_subsample_factor << std::endl;
     std::cout << "should_smooth_line: " << should_smooth_line << std::endl;
+    std::cout << "output_resolution: " << output_resolution << std::endl;
     
     Point2D<float> reference_point{reference_x, reference_y};
     
@@ -463,7 +466,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
             
             // Time ordering step
             auto order_start = std::chrono::high_resolution_clock::now();
-            line_points = order_line(skeleton, image_size, reference_point, subsample);
+            line_points = order_line(skeleton, image_size, reference_point, input_point_subsample_factor);
             auto order_end = std::chrono::high_resolution_clock::now();
             order_line_times.push_back(
                 std::chrono::duration_cast<std::chrono::microseconds>(
@@ -476,7 +479,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
             
             // Time ordering step for this method
             auto order_start = std::chrono::high_resolution_clock::now();
-            line_points = order_line(line_points, reference_point, subsample);
+            line_points = order_line(line_points, reference_point, input_point_subsample_factor);
             auto order_end = std::chrono::high_resolution_clock::now();
             order_line_times.push_back(
                 std::chrono::duration_cast<std::chrono::microseconds>(
@@ -502,15 +505,22 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
             auto smoothing_start = std::chrono::high_resolution_clock::now();
             ParametricCoefficients coeffs = fit_parametric_polynomials(line_points, polynomial_order);
             if (coeffs.success) {
-                line_points = generate_smoothed_line(line_points, coeffs.x_coeffs, coeffs.y_coeffs, polynomial_order);
+                line_points = generate_smoothed_line(line_points, coeffs.x_coeffs, coeffs.y_coeffs, polynomial_order, output_resolution);
+            } else {
+                // Smoothing failed, fall back to resampling the existing (ordered, possibly outlier-removed) points
+                if (!line_points.empty()) {
+                    line_points = resample_line_points(line_points, output_resolution);
+                }
             }
-            // If fitting fails, line_points remains as it was (e.g., after outlier removal or just ordered)
             auto smoothing_end = std::chrono::high_resolution_clock::now();
             smoothing_times.push_back(
                  std::chrono::duration_cast<std::chrono::microseconds>(
                     smoothing_end - smoothing_start
                 ).count()
             );
+        } else if (!line_points.empty()) {
+            // If not smoothing (or not enough points for smoothing), apply resampling directly
+            line_points = resample_line_points(line_points, output_resolution);
         }
         
         if (!line_points.empty()) {

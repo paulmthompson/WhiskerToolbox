@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LineResample_Widget</class>
+ <widget class="QWidget" name="LineResample_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>300</width>
+    <height>200</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Resample Line</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>Resample Line Points</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="margin">
+      <number>5</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="paramsGroupBox">
+     <property name="title">
+      <string>Resampling Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="spacingLabel">
+        <property name="text">
+         <string>Target Spacing (pixels):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="targetSpacingSpinBox">
+        <property name="minimum">
+         <double>0.1</double> <!-- Allow very small spacing if desired -->
+        </property>
+        <property name="maximum">
+         <double>100.0</double>
+        </property>
+        <property name="singleStep">
+         <double>0.5</double>
+        </property>
+        <property name="value">
+         <double>5.0</double> <!-- Default from parameters -->
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QLabel" name="descriptionLabel">
+        <property name="text">
+         <string>Resamples the line by creating new points along the line segments to achieve the desired approximate spacing. First and last points are preserved.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 

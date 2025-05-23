@@ -12,6 +12,7 @@
 #include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp"
 
 #include <QApplication>
 
@@ -77,6 +78,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         auto widget = new MaskToLine_Widget(parent);
         widget->setDataManager(_data_manager);
         return widget;
+    };
+
+    _parameterWidgetFactories["Resample Line"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new LineResample_Widget(parent);
     };
 }
 
