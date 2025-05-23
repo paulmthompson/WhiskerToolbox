@@ -52,3 +52,14 @@ double evaluate_polynomial(std::vector<double> const &coeffs, double x) {
     }
     return result;
 }
+
+// Helper function to compute 2nd derivative of a polynomial
+double evaluate_polynomial_second_derivative(const std::vector<double>& coeffs, double t) {
+    double result = 0.0;
+    if (coeffs.size() >= 3) { // Need at least a quadratic for a non-zero 2nd derivative
+        for (size_t i = 2; i < coeffs.size(); ++i) {
+            result += static_cast<double>(i) * static_cast<double>(i - 1) * coeffs[i] * std::pow(t, static_cast<double>(i) - 2.0);
+        }
+    }
+    return result;
+}

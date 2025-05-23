@@ -8,6 +8,7 @@
 #include "transforms/Lines/line_angle.hpp"
 #include "transforms/Lines/line_min_point_dist.hpp"
 #include "transforms/Lines/line_resample.hpp"
+#include "transforms/Lines/line_curvature.hpp"
 
 #include <iostream>// For init messages
 #include <map>
@@ -30,6 +31,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<LineAngleOperation>());
     _registerOperation(std::make_unique<LineMinPointDistOperation>());
     _registerOperation(std::make_unique<LineResampleOperation>());
+    _registerOperation(std::make_unique<LineCurvatureOperation>());
 
     _computeApplicableOperations();
     std::cout << "Operation Registry Initialized." << std::endl;

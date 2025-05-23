@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <memory>
 
-class TransformParametersBase; // Forward declare core type
+class TransformParametersBase;
 
 class TransformParameter_Widget : public QWidget {
     Q_OBJECT

@@ -6,6 +6,7 @@
 #include "utils/skeletonize.hpp"
 #include "order_line.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
+#include "utils/polynomial/parametric_polynomial_utils.hpp"
 #include "utils/line_resampling.hpp"
 
 #include <armadillo>
@@ -17,44 +18,6 @@
 #include <vector>
 
 
-
-// Helper function to compute t-values based on cumulative distance
-std::vector<double> compute_t_values(const std::vector<Point2D<float>>& points) {
-    if (points.empty()) {
-        return {};
-    }
-    
-    // Calculate cumulative distances
-    std::vector<double> distances;
-    distances.reserve(points.size());
-    distances.push_back(0.0);  // First point has distance 0
-    
-    double total_distance = 0.0;
-    for (size_t i = 1; i < points.size(); ++i) {
-        double dx = points[i].x - points[i-1].x;
-        double dy = points[i].y - points[i-1].y;
-        // We still need the actual distance for parameterization
-        double segment_distance = std::sqrt(dx*dx + dy*dy);
-        total_distance += segment_distance;
-        distances.push_back(total_distance);
-    }
-    
-    // Normalize distances to [0,1]
-    std::vector<double> t_values;
-    t_values.reserve(points.size());
-    if (total_distance > 0.0) {
-        for (double d : distances) {
-            t_values.push_back(d / total_distance);
-        }
-    } else {
-        // Fallback to index-based if all points are coincident
-        for (size_t i = 0; i < points.size(); ++i) {
-            t_values.push_back(static_cast<double>(i) / static_cast<double>(points.size() - 1));
-        }
-    }
-    
-    return t_values;
-}
 
 // Helper function to fit a polynomial to the given data
 std::vector<double> fit_polynomial_to_points(const std::vector<Point2D<float>>& points, int order) {
@@ -102,35 +65,6 @@ std::vector<double> fit_polynomial_to_points(const std::vector<Point2D<float>>& 
     // Convert Armadillo vector to std::vector
     std::vector<double> result(coeffs.begin(), coeffs.end());
     return result;
-}
-
-// Helper function to fit a single dimension (x or y) of a parametric polynomial.
-// This internal helper avoids redundant t-value computation if called for both x and y.
-static std::vector<double> fit_single_dimension_polynomial_internal(
-    const std::vector<double>& dimension_coords,
-    const std::vector<double>& t_values,
-    int order) {
-    
-    if (dimension_coords.size() <= order || t_values.size() != dimension_coords.size()) {
-        return {}; // Not enough data or mismatched sizes
-    }
-
-    arma::mat X_vandermonde(t_values.size(), order + 1);
-    arma::vec Y_coords(dimension_coords.data(), dimension_coords.size());
-
-    for (size_t i = 0; i < t_values.size(); ++i) {
-        for (int j = 0; j <= order; ++j) {
-            X_vandermonde(i, j) = std::pow(t_values[i], j);
-        }
-    }
-
-    arma::vec coeffs_arma;
-    bool success = arma::solve(coeffs_arma, X_vandermonde, Y_coords);
-
-    if (!success) {
-        return {};
-    }
-    return arma::conv_to<std::vector<double>>::from(coeffs_arma);
 }
 
 // Helper function to fit parametric polynomials to X(t) and Y(t)

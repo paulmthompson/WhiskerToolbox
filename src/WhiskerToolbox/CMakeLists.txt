@@ -28,11 +28,11 @@ set(PROJECT_SOURCES
         my_stylesheet.qss
         color_scheme.hpp
 
-        AnalogViewer/analog_viewer.hpp
-        AnalogViewer/analog_viewer.cpp
-        AnalogViewer/analog_viewer.ui
-        AnalogViewer/DigitalTimeSeriesGraph.cpp
-        AnalogViewer/DigitalTimeSeriesGraph.hpp
+        #AnalogViewer/analog_viewer.hpp
+        #AnalogViewer/analog_viewer.cpp
+        #AnalogViewer/analog_viewer.ui
+        #AnalogViewer/DigitalTimeSeriesGraph.cpp
+        #AnalogViewer/DigitalTimeSeriesGraph.hpp
 
         ColorPicker_Widget/ColorPicker_Widget.hpp
         ColorPicker_Widget/ColorPicker_Widget.cpp
@@ -119,6 +119,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.cpp
         DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp
         DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.ui
+        DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.cpp
+        DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp
+        DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
@@ -353,7 +356,7 @@ message(STATUS ${MLPACK_INCLUDE_DIRS})
 
 target_include_directories(WhiskerToolbox PRIVATE
 
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
+  #      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Covariate_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
@@ -376,7 +379,7 @@ target_link_libraries(WhiskerToolbox PRIVATE armadillo)
 target_link_libraries(WhiskerToolbox PRIVATE LAPACK::LAPACK)
 target_link_libraries(WhiskerToolbox PRIVATE OpenBLAS::OpenBLAS)
 
-target_link_libraries(WhiskerToolbox PRIVATE JKQTPlotter6::JKQTPlotter6)
+#target_link_libraries(WhiskerToolbox PRIVATE JKQTPlotter6::JKQTPlotter6)
 
 target_link_libraries(WhiskerToolbox PRIVATE qt6advanceddocking)
 

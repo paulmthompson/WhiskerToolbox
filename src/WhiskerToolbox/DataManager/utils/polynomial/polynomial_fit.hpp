@@ -31,5 +31,6 @@ double evaluate_polynomial(std::vector<double> const &coeffs, double x);
  */
 double evaluate_polynomial_derivative(std::vector<double> const &coeffs, double x);
 
+double evaluate_polynomial_second_derivative(const std::vector<double>& coeffs, double t);
 
 #endif// POLYNOMIAL_FIT_HPP

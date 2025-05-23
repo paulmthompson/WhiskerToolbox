@@ -84,10 +84,17 @@ Point2D<float> scale_point(Point2D<float> const & point, ImageSize const & from_
 
 std::shared_ptr<AnalogTimeSeries> line_min_point_dist(
     LineData const * line_data, 
-    PointData const * point_data) {
+    PointData const * point_data,
+    ProgressCallback progressCallback) {
     
     auto analog_time_series = std::make_shared<AnalogTimeSeries>();
     std::map<int, float> distances;
+    
+    if (!line_data || !point_data) {
+        std::cerr << "LineMinPointDist: Null LineData or PointData provided." << std::endl;
+        if(progressCallback) progressCallback(100); // Complete progress
+        return analog_time_series;
+    }
     
     // Get the image sizes to check if scaling is needed
     ImageSize line_image_size = line_data->getImageSize();
@@ -106,6 +113,15 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(
     
     // Get all times that have line data
     auto line_times = line_data->getTimesWithData();
+
+    if (line_times.empty()) {
+        if(progressCallback) progressCallback(100);
+        return analog_time_series;
+    }
+
+    size_t total_time_points = line_times.size();
+    size_t processed_time_points = 0;
+    if(progressCallback) progressCallback(0); // Initial progress
     
     // Process each time that has line data
     for (int time : line_times) {
@@ -149,10 +165,17 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(
         // Convert squared distance back to actual distance by taking square root
         float min_distance = std::sqrt(min_distance_squared);
         distances[time] = min_distance;
+
+        processed_time_points++;
+        if (progressCallback) {
+            int current_progress = static_cast<int>(std::round(static_cast<double>(processed_time_points) / total_time_points * 100.0));
+            progressCallback(current_progress);
+        }
     }
     
     // Create the analog time series from the distances map
     analog_time_series->setData(distances);
+    if(progressCallback) progressCallback(100); // Final progress update
     return analog_time_series;
 }
 
@@ -178,39 +201,45 @@ std::unique_ptr<TransformParametersBase> LineMinPointDistOperation::getDefaultPa
     return std::make_unique<LineMinPointDistParameters>();
 }
 
+DataTypeVariant LineMinPointDistOperation::execute(DataTypeVariant const& dataVariant,
+                                             TransformParametersBase const* transformParameters) {
+    return execute(dataVariant, transformParameters, [](int) {});
+}
+
 DataTypeVariant LineMinPointDistOperation::execute(DataTypeVariant const & dataVariant, 
-                                                 TransformParametersBase const * transformParameters) {
-    // Check if we have a valid LineData shared_ptr in the variant
+                                                 TransformParametersBase const * transformParameters,
+                                                 ProgressCallback progressCallback) {
     auto const * ptr_ptr = std::get_if<std::shared_ptr<LineData>>(&dataVariant);
     if (!ptr_ptr || !(*ptr_ptr)) {
-        std::cerr << "LineMinPointDistOperation::execute called with incompatible variant type or null data." << std::endl;
-        return {};  // Return empty variant
+        std::cerr << "LineMinPointDistOperation::execute (with progress): Incompatible variant type or null data." << std::endl;
+        if(progressCallback) progressCallback(100);
+        return {};
     }
     
-    // Get the LineData shared_ptr
     auto line_data = *ptr_ptr;
     
-    // Cast to the specific parameter type if provided
     auto const * typed_params = 
         transformParameters ? dynamic_cast<LineMinPointDistParameters const *>(transformParameters) : nullptr;
     
     if (!typed_params || !typed_params->point_data) {
-        std::cerr << "LineMinPointDistOperation::execute: Missing point data in parameters." << std::endl;
-        return {};  // Return empty variant if no point data is provided
-    }
-    
-    // We now have direct access to both LineData and PointData
-    // Call the core calculation function with both pointers
-    std::shared_ptr<AnalogTimeSeries> result = line_min_point_dist(
-        line_data.get(), 
-        typed_params->point_data.get()
-    );
-    
-    if (!result) {
-        std::cerr << "LineMinPointDistOperation::execute: Calculation failed." << std::endl;
+        std::cerr << "LineMinPointDistOperation::execute (with progress): Missing point data in parameters." << std::endl;
+        if(progressCallback) progressCallback(100);
         return {};
     }
     
-    std::cout << "LineMinPointDistOperation executed successfully using variant input." << std::endl;
+    if(progressCallback) progressCallback(0); // Initial call before the main work
+    std::shared_ptr<AnalogTimeSeries> result = line_min_point_dist(
+        line_data.get(), 
+        typed_params->point_data.get(),
+        progressCallback // Pass the callback
+    );
+    
+    if (!result) {
+        std::cerr << "LineMinPointDistOperation::execute (with progress): Calculation failed." << std::endl;
+        // progressCallback(100) is handled by line_min_point_dist on failure too
+        return {};
+    }
+    
+    std::cout << "LineMinPointDistOperation executed successfully (with progress)." << std::endl;
     return result;
 }

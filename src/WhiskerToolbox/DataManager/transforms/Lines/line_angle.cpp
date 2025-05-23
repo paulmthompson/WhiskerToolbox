@@ -12,7 +12,6 @@
 #include <vector>
 
 
-// Helper function to normalize an angle relative to a reference vector
 float normalize_angle(float raw_angle, float reference_x, float reference_y) {
     // Calculate the angle of the reference vector (if not the default x-axis)
     float reference_angle = 0.0f;

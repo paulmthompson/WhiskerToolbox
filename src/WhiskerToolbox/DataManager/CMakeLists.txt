@@ -98,6 +98,8 @@ add_library(DataManager SHARED
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/polynomial/polynomial_fit.hpp
         utils/polynomial/polynomial_fit.cpp
+        utils/polynomial/parametric_polynomial_utils.cpp
+        utils/polynomial/parametric_polynomial_utils.hpp
         utils/line_resampling.cpp
         utils/line_resampling.hpp
         utils/connected_component.hpp
@@ -126,6 +128,8 @@ add_library(DataManager SHARED
         transforms/Lines/line_min_point_dist.cpp
         transforms/Lines/line_resample.cpp
         transforms/Lines/line_resample.hpp
+        transforms/Lines/line_curvature.cpp
+        transforms/Lines/line_curvature.hpp
         transforms/Masks/mask_area.cpp
         transforms/Masks/mask_area.hpp
         transforms/Masks/mask_to_line.cpp

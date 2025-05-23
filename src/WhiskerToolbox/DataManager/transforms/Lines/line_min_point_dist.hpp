@@ -24,7 +24,8 @@ struct LineMinPointDistParameters : public TransformParametersBase {
  */
 std::shared_ptr<AnalogTimeSeries> line_min_point_dist(
     LineData const * line_data, 
-    PointData const * point_data);
+    PointData const * point_data,
+    ProgressCallback progressCallback);
 
 class LineMinPointDistOperation final : public TransformOperation {
 public:
@@ -58,6 +59,11 @@ public:
      */
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
                            TransformParametersBase const * transformParameters) override;
+
+    // Overload with progress
+    DataTypeVariant execute(DataTypeVariant const & dataVariant,
+                           TransformParametersBase const * transformParameters,
+                           ProgressCallback progressCallback) override;
 };
 
 #endif//LINE_MIN_POINT_DIST_HPP

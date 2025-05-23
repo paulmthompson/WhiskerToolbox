@@ -13,6 +13,7 @@
 #include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
 
 #include <QApplication>
 
@@ -82,6 +83,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Resample Line"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new LineResample_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Calculate Line Curvature"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new LineCurvature_Widget(parent);
     };
 }
 
