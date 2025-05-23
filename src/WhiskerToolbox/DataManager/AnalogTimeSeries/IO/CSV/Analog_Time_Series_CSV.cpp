@@ -4,8 +4,8 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <filesystem> // Required for std::filesystem
-#include <iomanip>    // Required for std::fixed and std::setprecision
+#include <filesystem> // std::filesystem
+#include <iomanip>    // std::fixed, std::setprecision
 
 std::vector<float> load_analog_series_from_csv(std::string const & filename) {
 
@@ -35,9 +35,8 @@ std::vector<float> load_analog_series_from_csv(std::string const & filename) {
     return output;
 }
 
-void save_analog_series_to_csv(
-        AnalogTimeSeries * analog_data,
-        CSVAnalogSaverOptions & opts) {
+void save(AnalogTimeSeries * analog_data,
+          CSVAnalogSaverOptions & opts) {
 
     //Check if directory exists
     if (!std::filesystem::exists(opts.parent_dir)) {

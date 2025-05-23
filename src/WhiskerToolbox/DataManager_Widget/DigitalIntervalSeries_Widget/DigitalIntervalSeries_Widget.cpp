@@ -239,7 +239,7 @@ bool DigitalIntervalSeries_Widget::_performActualCSVSave(CSVIntervalSaverOptions
     }
 
     try {
-        save_digital_interval_series_to_csv(interval_data_ptr.get(), options);
+        save(interval_data_ptr.get(), options);
         return true;
     } catch (std::exception const & e) {
         QMessageBox::critical(this, "Save Error", "Failed to save interval data (CSV): " + QString::fromStdString(e.what()));

@@ -335,7 +335,7 @@ void Contact_Widget::_saveContactBlocks() {
 
     auto interval_data = _data_manager->getData<DigitalIntervalSeries>(key);
 
-    save_digital_interval_series_to_csv(interval_data.get(), opts);
+    save(interval_data.get(), opts);
 
 }
 

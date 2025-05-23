@@ -18,6 +18,8 @@ struct CSVPointLoaderOptions {
     char column_delim = ' ';
 };
 
+std::map<int, Point2D<float>> load(CSVPointLoaderOptions const & opts);
+
 /**
  * @struct CSVPointSaverOptions
  * 
@@ -41,12 +43,11 @@ struct CSVPointSaverOptions {
     std::string header = "frame,x,y";
 };
 
-std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nlohmann::basic_json<> const & item);
+void save(PointData const * point_data, CSVPointSaverOptions const & opts);
 
-std::map<int, Point2D<float>> load_points_from_csv(CSVPointLoaderOptions const & opts);
+std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nlohmann::basic_json<> const & item);
 
 std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
 
-void save_points_to_csv(PointData const * point_data, CSVPointSaverOptions const & opts);
 
 #endif// POINT_DATA_CSV_HPP

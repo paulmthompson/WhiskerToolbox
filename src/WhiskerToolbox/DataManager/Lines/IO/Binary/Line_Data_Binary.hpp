@@ -7,20 +7,18 @@
 
 class LineData;
 
+struct BinaryLineLoaderOptions {
+    std::string file_path;
+};
+
+std::shared_ptr<LineData> load(BinaryLineLoaderOptions & opts);
+
 struct BinaryLineSaverOptions {
     std::string filename;
     std::string parent_dir = ".";
 };
 
-class BinaryFileCapnpStorage {
-public:
-    BinaryFileCapnpStorage() = default;
+bool save(LineData const & data, BinaryLineSaverOptions & opts);
 
-    bool save(LineData const & data, BinaryLineSaverOptions & opts);
-
-    std::shared_ptr<LineData> load(std::string const & file_path);
-
-    //std::shared_ptr<LineData> loadMemoryMapped(const void* mapped_data, size_t mapped_size);
-};
 
 #endif// LINE_DATA_BINARY_HPP

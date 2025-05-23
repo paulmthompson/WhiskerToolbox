@@ -98,7 +98,7 @@ bool AnalogTimeSeries_Widget::_performActualCSVSave(CSVAnalogSaverOptions & opti
     }
 
     try {
-        save_analog_series_to_csv(analog_data_ptr.get(), options);
+        save(analog_data_ptr.get(), options);
         return true;
     } catch (std::exception const & e) {
         QMessageBox::critical(this, "Save Error", "Failed to save analog data: " + QString::fromStdString(e.what()));

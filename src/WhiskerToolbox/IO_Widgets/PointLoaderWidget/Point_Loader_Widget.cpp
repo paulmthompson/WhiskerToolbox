@@ -64,7 +64,7 @@ void Point_Loader_Widget::_loadSingleCSVFile(CSVPointLoaderOptions options) {
     }
 
     try {
-        auto keypoints = load_points_from_csv(options);
+        auto keypoints = load(options);
 
         if(keypoints.empty()){
             std::cout << "No keypoints loaded from " << options.filename << ". The file might be empty or in an incorrect format." << std::endl;

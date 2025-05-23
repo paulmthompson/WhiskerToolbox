@@ -224,7 +224,7 @@ bool Point_Widget::_performActualCSVSave(CSVPointSaverOptions & options) {
         return false;
     }
 
-    save_points_to_csv(point_data_ptr.get(), options); 
+    save(point_data_ptr.get(), options); 
     QMessageBox::information(this, "Save Successful", QString::fromStdString("Points data saved to " + options.parent_dir + "/" + options.filename));
     std::cout << "Point data saved to: " << options.parent_dir << "/" << options.filename << std::endl;
     return true; 

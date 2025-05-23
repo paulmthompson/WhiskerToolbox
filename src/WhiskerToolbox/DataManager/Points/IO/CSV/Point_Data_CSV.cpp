@@ -31,7 +31,7 @@ std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nl
                                       .y_column = y_column,
                                       .column_delim = delim.c_str()[0]};
 
-    auto keypoints = load_points_from_csv(opts);
+    auto keypoints = load(opts);
 
     std::cout << "There are " << keypoints.size() << " keypoints " << std::endl;
 
@@ -51,7 +51,7 @@ bool is_number(std::string const & s) {
                                       s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
 }
 
-std::map<int, Point2D<float>> load_points_from_csv(CSVPointLoaderOptions const & opts) {
+std::map<int, Point2D<float>> load(CSVPointLoaderOptions const & opts) {
     std::string csv_line;
 
     auto line_output = std::map<int, Point2D<float>>{};
@@ -142,7 +142,7 @@ std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_c
     return data;
 }
 
-void save_points_to_csv(PointData const * point_data, CSVPointSaverOptions const & opts)
+void save(PointData const * point_data, CSVPointSaverOptions const & opts)
 {
     //Check if directory exists
     if (!std::filesystem::exists(opts.parent_dir)) {

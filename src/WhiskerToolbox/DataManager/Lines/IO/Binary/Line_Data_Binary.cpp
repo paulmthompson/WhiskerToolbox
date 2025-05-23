@@ -13,7 +13,7 @@
 #include <vector>
 
 
-bool BinaryFileCapnpStorage::save(LineData const & data, BinaryLineSaverOptions & opts) {
+bool save(LineData const & data, BinaryLineSaverOptions & opts) {
 
     //Check if directory exists
     if (!std::filesystem::exists(opts.parent_dir)) {
@@ -53,11 +53,11 @@ bool BinaryFileCapnpStorage::save(LineData const & data, BinaryLineSaverOptions 
     }
 }
 
-std::shared_ptr<LineData> BinaryFileCapnpStorage::load(std::string const & file_path) {
+std::shared_ptr<LineData> load(BinaryLineLoaderOptions & opts) {
     try {
-        std::ifstream infile(file_path, std::ios::binary | std::ios::ate);
+        std::ifstream infile(opts.file_path, std::ios::binary | std::ios::ate);
         if (!infile.is_open()) {
-            std::cerr << "Error: Could not open file for reading: " << file_path << std::endl;
+            std::cerr << "Error: Could not open file for reading: " << opts.file_path << std::endl;
             return nullptr;
         }
 
@@ -65,17 +65,22 @@ std::shared_ptr<LineData> BinaryFileCapnpStorage::load(std::string const & file_
         infile.seekg(0, std::ios::beg);
 
         if (size == 0) {
-            std::cerr << "Error: File is empty: " << file_path << std::endl;
+            std::cerr << "Error: File is empty: " << opts.file_path << std::endl;
             return nullptr;
         }
         if (size % sizeof(capnp::word) != 0) {
-            std::cerr << "Error: File size " << size << " is not a multiple of Cap'n Proto word size (" << sizeof(capnp::word) << ") for file: " << file_path << std::endl;
+            std::cerr << "Error: File size "
+                      << size
+                      << " is not a multiple of Cap'n Proto word size ("
+                      << sizeof(capnp::word)
+                      << ") for file: "
+                      << opts.file_path << std::endl;
             return nullptr;
         }
 
         kj::Array<capnp::word> words = kj::heapArray<capnp::word>(size / sizeof(capnp::word));
         if (!infile.read(reinterpret_cast<char *>(words.begin()), size)) {
-            std::cerr << "Error: Failed to read all data from file: " << file_path << std::endl;
+            std::cerr << "Error: Failed to read all data from file: " << opts.file_path << std::endl;
             infile.close();
             return nullptr;
         }

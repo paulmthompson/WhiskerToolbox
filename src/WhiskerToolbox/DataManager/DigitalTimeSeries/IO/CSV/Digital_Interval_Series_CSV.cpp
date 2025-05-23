@@ -33,7 +33,7 @@ std::vector<Interval> load_digital_series_from_csv(
     return output;
 }
 
-void save_digital_interval_series_to_csv(
+void save(
         DigitalIntervalSeries const * interval_data,
         CSVIntervalSaverOptions const & opts) {
     

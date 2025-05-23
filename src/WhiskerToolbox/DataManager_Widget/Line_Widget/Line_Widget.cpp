@@ -297,7 +297,7 @@ bool Line_Widget::_performActualCSVSave(CSVSingleFileLineSaverOptions & options)
     }
 
     try {
-        save_lines_csv(line_data_ptr.get(), options); // options.parent_dir and options.filename are used by this function
+        save(line_data_ptr.get(), options); // options.parent_dir and options.filename are used by this function
         std::string full_path = options.parent_dir + "/" + options.filename;
         QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to " + full_path));
         std::cout << "Line data saved to: " << full_path << std::endl;
@@ -317,9 +317,8 @@ bool Line_Widget::_performActualBinarySave(BinaryLineSaverOptions & options) {
     }
 
     try {
-        BinaryFileCapnpStorage binary_storage;
-        // The save method in BinaryFileCapnpStorage already handles parent_dir and filename
-        if (binary_storage.save(*line_data_ptr, options)) {
+        // The save method already handles parent_dir and filename
+        if (save(*line_data_ptr, options)) {
             std::string full_path = options.parent_dir + "/" + options.filename;
             QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to " + full_path));
             std::cout << "Line data saved to: " << full_path << std::endl;

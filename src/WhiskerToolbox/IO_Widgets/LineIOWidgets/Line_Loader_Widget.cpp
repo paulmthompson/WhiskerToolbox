@@ -76,8 +76,9 @@ void Line_Loader_Widget::_loadSingleBinaryFile(QString const & filepath) {
         }
     }
 
-    BinaryFileCapnpStorage binary_loader;
-    std::shared_ptr<LineData> line_data = binary_loader.load(file_path_std);
+    auto opts = BinaryLineLoaderOptions();
+    opts.file_path = file_path_std;
+    std::shared_ptr<LineData> line_data = load(opts);
 
     if (line_data) {
         _data_manager->setData<LineData>(line_key, line_data);

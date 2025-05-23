@@ -23,7 +23,7 @@ void save_line_as_csv(Line2D const & line, std::string const & filename, int con
     myfile.close();
 }
 
-void save_lines_csv(
+void save(
         LineData const * line_data,
         CSVSingleFileLineSaverOptions & opts) {
 

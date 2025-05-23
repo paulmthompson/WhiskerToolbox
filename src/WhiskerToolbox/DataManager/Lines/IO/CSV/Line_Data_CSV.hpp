@@ -40,9 +40,8 @@ struct CSVSingleFileLineSaverOptions {
 
 void save_line_as_csv(Line2D const & line, std::string const & filename, int point_precision = 2);
 
-void save_lines_csv(
-        LineData const * line_data,
-        CSVSingleFileLineSaverOptions & opts);
+void save(LineData const * line_data,
+          CSVSingleFileLineSaverOptions & opts);
 
 
 std::vector<float> parse_string_to_float_vector(std::string const & str);
