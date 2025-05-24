@@ -16,6 +16,7 @@
 
 #include "MLModelRegistry.hpp"
 #include "MLModelOperation.hpp"
+#include "ClassBalancingWidget/ClassBalancingWidget.hpp"
 
 class DataManager;
 class DigitalIntervalSeries;
@@ -56,9 +57,7 @@ private slots:
     void _addOutcomeToModel(QString const & feature, bool enabled);
     void _removeSelectedOutcome(std::string const & key);
 
-    void _selectModelType(QString const & model_type);
-
-    void _fitModel();
+        void _selectModelType(QString const & model_type);    void _fitModel();        void _updateClassDistribution();
 
 private:
     std::shared_ptr<DataManager> _data_manager;
@@ -74,6 +73,7 @@ private:
     std::unordered_set<std::string> _selected_features;
     std::unordered_set<std::string> _selected_masks;
     std::unordered_set<std::string> _selected_outcomes;
+    ClassBalancingWidget* _class_balancing_widget;
 
     arma::Mat<double> _features;
     arma::Mat<double> _outcomes;

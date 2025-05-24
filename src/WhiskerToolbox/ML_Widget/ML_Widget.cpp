@@ -15,8 +15,8 @@
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
-#include "MLModelRegistry.hpp"
 #include "MLModelOperation.hpp"
+#include "MLModelRegistry.hpp"
 #include "MLParameterWidgetBase.hpp"
 
 #include "mlpack.hpp"
@@ -50,7 +50,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
 
     ui->model_select_combo->clear();
     std::vector<std::string> model_names = _ml_model_registry->getAvailableModelNames();
-    for (const auto& name : model_names) {
+    for (auto const & name: model_names) {
         ui->model_select_combo->addItem(QString::fromStdString(name));
     }
     if (!model_names.empty()) {
@@ -102,7 +102,9 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
     });
 
     connect(ui->model_select_combo, &QComboBox::currentTextChanged, this, &ML_Widget::_selectModelType);
-    connect(ui->fit_button, &QPushButton::clicked, this, &ML_Widget::_fitModel);
+    connect(ui->fit_button, &QPushButton::clicked, this, &ML_Widget::_fitModel);// Initialize class balancing widget
+    _class_balancing_widget = ui->class_balancing_widget;
+    connect(_class_balancing_widget, &ClassBalancingWidget::balancingSettingsChanged, this, &ML_Widget::_updateClassDistribution);
 }
 
 ML_Widget::~ML_Widget() {
@@ -214,17 +216,14 @@ void ML_Widget::_selectModelType(QString const & model_type_qstr) {
 }
 
 void ML_Widget::_fitModel() {
-
     if (!_current_selected_model_operation) {
         std::cerr << "No model operation selected." << std::endl;
         return;
     }
-
     if (_selected_features.empty() || _selected_masks.empty() || _selected_outcomes.empty()) {
         std::cerr << "Please select features, masks, and outcomes" << std::endl;
         return;
     }
-
     if (_selected_masks.size() > 1) {
         std::cerr << "Only one mask is supported" << std::endl;
         return;
@@ -236,28 +235,39 @@ void ML_Widget::_fitModel() {
     std::cout << "Feature array size: " << feature_array.n_rows << " x " << feature_array.n_cols << std::endl;
 
     auto outcome_array = create_arrays(_selected_outcomes, timestamps, _data_manager.get());
+
     std::cout << "Outcome array size: " << outcome_array.n_rows << " x " << outcome_array.n_cols << std::endl;
+    arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array);// Assuming outcome is single row
 
-    arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array.row(0)); // Assuming outcome is single row
+    //_updateClassDistribution(); // Update display before balancing
 
-    // Balance the training data
     arma::Mat<double> balanced_feature_array;
     arma::Row<size_t> balanced_labels_vec;
-    if (!balance_training_data_by_subsampling(feature_array, labels, balanced_feature_array, balanced_labels_vec)) {
-        std::cerr << "Data balancing failed. Proceeding with original data, but results may be skewed." << std::endl;
-        // Optionally, could decide to return or throw an error here if balancing is critical
-        balanced_feature_array = feature_array; // Use original if balancing fails
+
+    auto const balancing_flag = _class_balancing_widget->isBalancingEnabled();
+
+    std::cout << "Balancing is set to " << balancing_flag << std::endl;
+
+    if (balancing_flag) {
+        double ratio = _class_balancing_widget->getBalancingRatio(); // Get ratio
+        if (!balance_training_data_by_subsampling(feature_array, labels, balanced_feature_array, balanced_labels_vec, ratio)) {
+            std::cerr << "Data balancing failed. Proceeding with original data, but results may be skewed." << std::endl;
+            balanced_feature_array = feature_array;
+            balanced_labels_vec = labels;
+        }
+    } else {
+        balanced_feature_array = feature_array;
         balanced_labels_vec = labels;
+        std::cout << "Class balancing disabled - using original data distribution." << std::endl;
     }
-    
-    // If no samples remain after balancing (e.g. all classes had 0 instances or some other error)
+
     if (balanced_feature_array.n_cols == 0 || balanced_labels_vec.n_elem == 0) {
         std::cerr << "No data remains after attempting to balance. Cannot train model." << std::endl;
         return;
     }
 
     std::unique_ptr<MLModelParametersBase> model_params_ptr;
-    MLParameterWidgetBase* current_param_widget = dynamic_cast<MLParameterWidgetBase*>(ui->stackedWidget->currentWidget());
+    MLParameterWidgetBase * current_param_widget = dynamic_cast<MLParameterWidgetBase *>(ui->stackedWidget->currentWidget());
     if (current_param_widget) {
         model_params_ptr = current_param_widget->getParameters();
     } else {
@@ -269,15 +279,6 @@ void ML_Widget::_fitModel() {
         std::cerr << "Failed to retrieve model parameters from UI." << std::endl;
         return;
     }
-
-    /*
-    mlpack::NaiveBayesClassifier model;
-    model.Train(feature_array, labels, 2);
-
-    arma::Row<size_t> predictions;
-    model.Classify(feature_array, predictions);
-    */
-
     // Use balanced data for training
     bool trained = _current_selected_model_operation->train(balanced_feature_array, balanced_labels_vec, model_params_ptr.get());
     if (!trained) {
@@ -297,8 +298,8 @@ void ML_Widget::_fitModel() {
     std::cout << "predictions have max" << arma::max(predictions) << std::endl;
 
     double const accuracy = 100.0 * (static_cast<double>(arma::accu(predictions == balanced_labels_vec))) /
-                      static_cast<double>(balanced_labels_vec.n_elem);
-    std::cout << "After training " << _current_selected_model_operation->getName() 
+                            static_cast<double>(balanced_labels_vec.n_elem);
+    std::cout << "After training " << _current_selected_model_operation->getName()
               << ", training set accuracy (on balanced data) is " << accuracy << "%." << std::endl;
 
     int current_time_end_frame;
@@ -310,16 +311,16 @@ void ML_Widget::_fitModel() {
 
     int prediction_start_frame = 0;
     if (masks && !masks->getDigitalIntervalSeries().empty()) {
-        const auto& training_intervals = masks->getDigitalIntervalSeries();
+        auto const & training_intervals = masks->getDigitalIntervalSeries();
         if (!training_intervals.empty()) {
             prediction_start_frame = training_intervals.back().end;
         }
     } else if (!timestamps.empty()) {
         prediction_start_frame = timestamps.back() + 1;
     }
-    
+
     if (prediction_start_frame >= current_time_end_frame) {
-        std::cout << "No new frames to predict after training data. Start frame: " << prediction_start_frame 
+        std::cout << "No new frames to predict after training data. Start frame: " << prediction_start_frame
                   << ", End frame: " << current_time_end_frame << std::endl;
     } else {
         std::vector<Interval> prediction_interval_vec = {Interval{
@@ -331,7 +332,7 @@ void ML_Widget::_fitModel() {
         std::cout << "The length of prediction timestamps is " << prediction_timestamps.size() << std::endl;
         std::cout << "They range from " << prediction_timestamps[0] << " to " << prediction_timestamps.back() << std::endl;
 
-        if (!prediction_timestamps.empty()){
+        if (!prediction_timestamps.empty()) {
             arma::Mat<double> const prediction_feature_array = create_arrays(
                     _selected_features,
                     prediction_timestamps,
@@ -350,7 +351,7 @@ void ML_Widget::_fitModel() {
                         auto outcome_series = _data_manager->getData<DigitalIntervalSeries>(key);
                         if (outcome_series) {
                             outcome_series->setEventsAtTimes(prediction_timestamps, prediction_vec);
-                             std::cout << "Predictions applied to: " << key << std::endl;
+                            std::cout << "Predictions applied to: " << key << std::endl;
                         } else {
                             std::cerr << "Could not get outcome series for key: " << key << std::endl;
                         }
@@ -359,7 +360,7 @@ void ML_Widget::_fitModel() {
                     std::cerr << "Prediction on new data failed." << std::endl;
                 }
             } else {
-                 std::cout << "No features to predict for the selected time range." << std::endl;
+                std::cout << "No features to predict for the selected time range." << std::endl;
             }
         } else {
             std::cout << "No timestamps generated for prediction interval." << std::endl;
@@ -428,4 +429,78 @@ arma::Mat<double> create_arrays(
     }
 
     return concatenated_array;
+}
+
+void ML_Widget::_updateClassDistribution() {
+    /*
+    if (_selected_features.empty() || _selected_masks.empty() || _selected_outcomes.empty()) {
+        _class_balancing_widget->clearClassDistribution();
+        return;
+    }
+
+    if (_selected_masks.size() > 1) {
+        _class_balancing_widget->clearClassDistribution();
+        return;
+    }
+
+    try {
+        auto masks = _data_manager->getData<DigitalIntervalSeries>(*_selected_masks.begin());
+        auto timestamps = create_timestamps(masks);
+        auto outcome_array = create_arrays(_selected_outcomes, timestamps, _data_manager.get());
+        if (outcome_array.empty()){
+             _class_balancing_widget->clearClassDistribution();
+            return;
+        }
+        arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array.row(0));
+
+        std::map<size_t, size_t> class_counts;
+        for (size_t i = 0; i < labels.n_elem; ++i) {
+            class_counts[labels[i]]++;
+        }
+
+        if (class_counts.empty()) {
+            _class_balancing_widget->clearClassDistribution();
+            return;
+        }
+
+        QString distributionText = "Original: ";
+        bool first = true;
+        for (auto const& [label_val, count] : class_counts) {
+            if (!first) distributionText += ", ";
+            distributionText += QString("Class %1: %L2").arg(label_val).arg(count);
+            first = false;
+        }
+
+        if (_class_balancing_widget->isBalancingEnabled()) {
+            size_t min_class_count = std::numeric_limits<size_t>::max();
+            for (auto const& [label_val, count] : class_counts) {
+                if (count > 0 && count < min_class_count) { // Ensure min_class_count is not 0
+                    min_class_count = count;
+                }
+            }
+             if (min_class_count == std::numeric_limits<size_t>::max()) { // All classes were 0 or empty
+                min_class_count = 0; 
+            }
+
+            double ratio = _class_balancing_widget->getBalancingRatio();
+            size_t target_max_samples = (min_class_count > 0) ? static_cast<size_t>(min_class_count * ratio) : 0;
+            if (target_max_samples == 0 && min_class_count > 0 && ratio >= 1.0) target_max_samples = 1; // Ensure at least 1 if min_count was >0
+
+            distributionText += "\nBalanced: ";
+            first = true;
+            for (auto const& [label_val, count] : class_counts) {
+                if (!first) distributionText += ", ";
+                size_t balanced_count = (count > 0) ? std::min(count, target_max_samples) : 0;
+                 if (count > 0 && balanced_count == 0 && target_max_samples > 0) balanced_count = 1; // If class had samples, ensure it keeps at least 1 if target allows
+                distributionText += QString("Class %1: %L2").arg(label_val).arg(balanced_count);
+                first = false;
+            }
+        }
+        _class_balancing_widget->updateClassDistribution(distributionText);
+
+    } catch (const std::exception& e) {
+        _class_balancing_widget->clearClassDistribution();
+        std::cerr << "Error updating class distribution: " << e.what() << std::endl;
+    }
+    */
 }

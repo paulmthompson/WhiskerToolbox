@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ClassBalancingWidget</class>
+ <widget class="QWidget" name="ClassBalancingWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>150</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Class Balancing</string>
+     </property>
+     <layout class="QVBoxLayout" name="groupLayout">
+      <item>
+       <widget class="QCheckBox" name="enableBalancingCheckBox">
+        <property name="text">
+         <string>Enable Class Balancing</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="ratioLayout">
+        <item>
+         <widget class="QLabel" name="ratioLabel">
+          <property name="text">
+           <string>Max Majority/Minority Ratio:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="ratioSpinBox">
+          <property name="toolTip">
+           <string>Maximum ratio of majority class samples to minority class samples (e.g., 1.0 means 1:1)</string>
+          </property>
+          <property name="minimum">
+           <double>1.0</double>
+          </property>
+          <property name="maximum">
+           <double>10.0</double>
+          </property>
+          <property name="singleStep">
+           <double>0.1</double>
+          </property>
+          <property name="value">
+           <double>1.0</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="classDistributionLabel">
+        <property name="text">
+         <string>Class distribution will be shown here after data selection</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: gray; font-style: italic; }</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 

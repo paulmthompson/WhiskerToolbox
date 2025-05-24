@@ -134,6 +134,16 @@
       </layout>
      </item>
      <item>
+      <widget class="ClassBalancingWidget" name="class_balancing_widget" native="true">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>120</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="fit_button">
        <property name="text">
         <string>Fit Model</string>
@@ -188,6 +198,12 @@
    <class>Feature_Table_Widget</class>
    <extends>QWidget</extends>
    <header>Feature_Table_Widget/Feature_Table_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ClassBalancingWidget</class>
+   <extends>QWidget</extends>
+   <header>ML_Widget/ClassBalancingWidget/ClassBalancingWidget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
