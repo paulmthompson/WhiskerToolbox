@@ -12,6 +12,10 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <map>
+
+#include "MLModelRegistry.hpp"
+#include "MLModelOperation.hpp"
 
 class DataManager;
 class DigitalIntervalSeries;
@@ -62,6 +66,10 @@ private:
     MainWindow * _main_window;
     Ui::ML_Widget * ui;
     QString _highlighted_available_feature;
+
+    std::unique_ptr<MLModelRegistry> _ml_model_registry;
+    MLModelOperation* _current_selected_model_operation = nullptr;
+    std::map<std::string, int> _model_name_to_widget_index;
 
     std::unordered_set<std::string> _selected_features;
     std::unordered_set<std::string> _selected_masks;

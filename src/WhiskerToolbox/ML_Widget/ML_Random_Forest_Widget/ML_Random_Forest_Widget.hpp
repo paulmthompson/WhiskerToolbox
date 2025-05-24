@@ -1,7 +1,8 @@
 #ifndef ML_RANDOM_FOREST_WIDGET_HPP
 #define ML_RANDOM_FOREST_WIDGET_HPP
 
-#include <QWidget>
+#include "ML_Widget/MLParameterWidgetBase.hpp"
+#include "ML_Widget/MLModelParameters.hpp"
 
 #include <memory>
 
@@ -11,7 +12,7 @@ namespace Ui {
 class ML_Random_Forest_Widget;
 }
 
-class ML_Random_Forest_Widget : public QWidget {
+class ML_Random_Forest_Widget : public MLParameterWidgetBase {
     Q_OBJECT
 
 public:
@@ -19,6 +20,8 @@ public:
                                      QWidget * parent = nullptr);
 
     ~ML_Random_Forest_Widget() override;
+
+    [[nodiscard]] std::unique_ptr<MLModelParametersBase> getParameters() const override;
 
 protected:
 private slots:

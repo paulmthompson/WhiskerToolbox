@@ -1,4 +1,3 @@
-
 #ifndef WHISKERTOOLBOX_MLPACK_CONVERSION_HPP
 #define WHISKERTOOLBOX_MLPACK_CONVERSION_HPP
 
@@ -195,6 +194,118 @@ inline void updateTensorDataFromMlpackMatrix(
         torch::Tensor const tensor = torch::from_blob(col.data(), shape, torch::kDouble).clone();
         tensor_data.overwriteTensorAtTime(static_cast<int>(timestamps[i]), tensor);
     }
+}
+
+/**
+ * @brief Balances training data by subsampling features and labels.
+ *
+ * Calculates class counts from the input labels. If the data is imbalanced
+ * (max_class_count > 2 * min_class_count), it prints a warning.
+ * Subsamples the features and labels so that each class has a number of samples
+ * equal to the count of the smallest represented class (min_class_count).
+ *
+ * @param features Input feature matrix (arma::Mat<double>).
+ * @param labels Input label row vector (arma::Row<size_t>).
+ * @param balanced_features Output balanced feature matrix.
+ * @param balanced_labels Output balanced label row vector.
+ * @return True if balancing was performed (even if no subsampling was needed), false if an error occurred (e.g., empty inputs).
+ */
+inline bool balance_training_data_by_subsampling(
+    arma::Mat<double> const& features,
+    arma::Row<size_t> const& labels,
+    arma::Mat<double>& balanced_features,
+    arma::Row<size_t>& balanced_labels) {
+
+    if (features.n_cols != labels.n_elem || features.n_cols == 0) {
+        std::cerr << "Error: Feature and label dimensions do not match or are empty." << std::endl;
+        balanced_features = features; // Pass through original data on error
+        balanced_labels = labels;
+        return false;
+    }
+
+    std::map<size_t, size_t> class_counts;
+    for (size_t i = 0; i < labels.n_elem; ++i) {
+        class_counts[labels[i]]++;
+    }
+
+    if (class_counts.empty()) {
+        std::cerr << "Error: No classes found in labels." << std::endl;
+        balanced_features = features;
+        balanced_labels = labels;
+        return false;
+    }
+
+    size_t min_class_count = std::numeric_limits<size_t>::max();
+    size_t max_class_count = 0;
+    for (auto const& [label_val, count] : class_counts) {
+        if (count < min_class_count) min_class_count = count;
+        if (count > max_class_count) max_class_count = count;
+    }
+
+    if (min_class_count == 0 && !class_counts.empty()) { // Should not happen if labels.n_elem > 0
+        std::cerr << "Warning: At least one class has zero samples after counting. Check labels." << std::endl;
+        // Decide how to handle this: either error out or try to proceed with available classes.
+        // For now, let's try to find a non-zero min_class_count if possible or error.
+        min_class_count = std::numeric_limits<size_t>::max();
+        for (auto const& [label_val, count] : class_counts) {
+            if (count > 0 && count < min_class_count) min_class_count = count;
+        }
+        if (min_class_count == std::numeric_limits<size_t>::max()) {
+             std::cerr << "Error: All classes have zero samples or an issue with label counting." << std::endl;
+             balanced_features = features;
+             balanced_labels = labels;
+             return false;
+        }
+    }
+
+    if (max_class_count > 2 * min_class_count && min_class_count > 0) {
+        std::cout << "Warning: Training data is imbalanced. Max class count (" << max_class_count
+                  << ") is more than double the min class count (" << min_class_count << ")." << std::endl;
+    }
+    
+    if (min_class_count == 0) { // If after all checks min_class_count is still 0, cannot balance.
+        std::cerr << "Error: Cannot balance data as minimum class count is zero." << std::endl;
+        balanced_features = features;
+        balanced_labels = labels;
+        return false;
+    }
+
+    // Find indices of each class in the labels vector
+    std::vector<std::vector<size_t>> class_indices(class_counts.size());
+    for (size_t i = 0; i < labels.n_elem; ++i) {
+        class_indices[labels[i]].push_back(i);
+    }
+
+    //Shuffle each entry in class indices
+    for (auto& indices : class_indices) {
+        std::shuffle(indices.begin(), indices.end(), std::random_device());
+    }
+
+    // Subsample each class to have equal number of samples as the smallest class
+    for (auto& indices : class_indices) {
+        indices.resize(min_class_count);
+    }
+
+    //Combine the indices
+    std::vector<size_t> combined_indices;
+    for (auto& indices : class_indices) {
+        combined_indices.insert(combined_indices.end(), indices.begin(), indices.end());
+    }
+
+    std::cout << "Combined indices size: " << combined_indices.size() << std::endl;
+
+    // Create balanced features and labels
+    balanced_features.set_size(features.n_rows, combined_indices.size());
+    balanced_labels.set_size(combined_indices.size());
+
+    for (size_t i = 0; i < combined_indices.size(); ++i) {
+        for (size_t j = 0; j < features.n_rows; ++j) {
+            balanced_features(j, i) = features(j, combined_indices[i]);
+        }
+        balanced_labels[i] = labels[combined_indices[i]];
+    }
+
+    return true;
 }
 
 #endif//WHISKERTOOLBOX_MLPACK_CONVERSION_HPP

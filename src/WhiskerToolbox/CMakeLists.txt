@@ -207,12 +207,21 @@ set(PROJECT_SOURCES
         ML_Widget/ML_Widget.cpp
         ML_Widget/ML_Widget.ui
         ML_Widget/mlpack_conversion.hpp
+        ML_Widget/MLModelOperation.hpp
+        ML_Widget/MLModelRegistry.cpp
+        ML_Widget/MLModelRegistry.hpp
+        ML_Widget/MLModelParameters.hpp
+        ML_Widget/MLParameterWidgetBase.hpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.cpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.ui
+        ML_Widget/ML_Random_Forest_Widget/RandomForestModelOperation.hpp
+        ML_Widget/ML_Random_Forest_Widget/RandomForestModelOperation.cpp
         ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.hpp
         ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.cpp
         ML_Widget/ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.ui
+        ML_Widget/ML_Naive_Bayes_Widget/NaiveBayesModelOperation.hpp
+        ML_Widget/ML_Naive_Bayes_Widget/NaiveBayesModelOperation.cpp
 
         Tongue_Widget/Tongue_Widget.hpp
         Tongue_Widget/Tongue_Widget.cpp

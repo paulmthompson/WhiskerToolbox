@@ -1,7 +1,8 @@
 #ifndef ML_NAIVE_BAYES_WIDGET_HPP
 #define ML_NAIVE_BAYES_WIDGET_HPP
 
-#include <QWidget>
+#include "ML_Widget/MLParameterWidgetBase.hpp"
+#include "ML_Widget/MLModelParameters.hpp"
 
 #include <memory>
 
@@ -11,7 +12,7 @@ namespace Ui {
 class ML_Naive_Bayes_Widget;
 }
 
-class ML_Naive_Bayes_Widget : public QWidget {
+class ML_Naive_Bayes_Widget : public MLParameterWidgetBase {
     Q_OBJECT
 
 public:
@@ -19,6 +20,8 @@ public:
                                    QWidget * parent = nullptr);
 
     ~ML_Naive_Bayes_Widget() override;
+
+    [[nodiscard]] std::unique_ptr<MLModelParametersBase> getParameters() const override;
 
 protected:
 private slots:
