@@ -28,6 +28,10 @@
 #include <fstream>
 #include <iostream>
 
+// Transformation Strategy includes
+#include "Transformations/IdentityTransform.hpp"
+#include "Transformations/SquaredTransform.hpp"
+
 ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
                      TimeScrollBar * time_scrollbar,
                      MainWindow * main_window,
@@ -39,6 +43,10 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
       _ml_model_registry(std::make_unique<MLModelRegistry>()),
       ui(new Ui::ML_Widget) {
     ui->setupUi(this);
+
+    // Initialize Transformation Registry
+    _transformation_registry[FeatureProcessingWidget::TransformationType::Identity] = std::make_unique<IdentityTransform>();
+    _transformation_registry[FeatureProcessingWidget::TransformationType::Squared] = std::make_unique<SquaredTransform>();
 
     auto naive_bayes_widget = new ML_Naive_Bayes_Widget(_data_manager);
     int nb_idx = ui->stackedWidget->addWidget(naive_bayes_widget);
@@ -597,53 +605,41 @@ arma::Mat<double> ML_Widget::_createFeatureMatrix(
     std::vector<arma::Mat<double>> feature_component_matrices;
 
     for (const auto& p_feature : processed_features) {
-        arma::Mat<double> current_feature_data_matrix; // Can be multiple rows for Point/Tensor
+        // arma::Mat<double> current_feature_data_matrix; // Will be set by the transformation strategy
         auto base_key = p_feature.base_feature_key;
         auto transform_type = p_feature.transformation.type;
 
         DM_DataType data_type = _data_manager->getType(base_key);
 
-        // For Identity transformation, behavior is similar to old create_arrays for a single feature
-        if (transform_type == FeatureProcessingWidget::TransformationType::Identity) {
-            if (data_type == DM_DataType::Analog) {
-                auto analog_series = _data_manager->getData<AnalogTimeSeries>(base_key);
-                if (analog_series) {
-                    current_feature_data_matrix = convertAnalogTimeSeriesToMlpackArray(analog_series.get(), timestamps).t(); // Transpose to make it a column per sample
-                }
-            } else if (data_type == DM_DataType::DigitalInterval) {
-                auto digital_series = _data_manager->getData<DigitalIntervalSeries>(base_key);
-                if (digital_series) {
-                    current_feature_data_matrix = convertToMlpackArray(digital_series, timestamps).t(); // Transpose
-                }
-            } else if (data_type == DM_DataType::Points) {
-                auto point_data = _data_manager->getData<PointData>(base_key);
-                if (point_data) {
-                    current_feature_data_matrix = convertToMlpackMatrix(point_data, timestamps); // Already samples as columns
-                }
-            } else if (data_type == DM_DataType::Tensor) {
-                auto tensor_data = _data_manager->getData<TensorData>(base_key);
-                if (tensor_data) {
-                     current_feature_data_matrix = convertTensorDataToMlpackMatrix(*tensor_data, timestamps); // Already samples as columns
-                }
-            } else {
-                 error_message += "Unsupported data type for feature '" + base_key + "'.\n";
-                 continue; // Skip this feature
-            }
-            
-            if (current_feature_data_matrix.empty()) {
-                error_message += "Warning: Data for feature '" + base_key + "' (Identity) resulted in an empty matrix. Skipping.\n";
-                continue;
-            }
-            if (current_feature_data_matrix.n_cols != timestamps.size()){
-                 error_message += "Warning: Data for feature '" + base_key + "' (Identity) has mismatched column count. Expected " + std::to_string(timestamps.size()) + " got " + std::to_string(current_feature_data_matrix.n_cols) + ". Skipping.\n";
-                 continue;
-            }
-
-        } else {
-            // Handle future transformations here
-            error_message += "Unsupported transformation type for feature '" + base_key + "'.\n";
-            continue; // Skip this feature
+        auto it = _transformation_registry.find(transform_type);
+        if (it == _transformation_registry.end()) {
+            error_message += "Unsupported transformation type '" + 
+                             QString::number(static_cast<int>(transform_type)).toStdString() + // Basic way to show type
+                             "' for feature '" + base_key + "'. No registered strategy found.\n";
+            continue;
         }
+
+        const auto& transform_strategy = it->second;
+        arma::Mat<double> current_feature_data_matrix = transform_strategy->apply(
+            _data_manager.get(), base_key, data_type, timestamps, error_message
+        );
+
+        if (!error_message.empty() && current_feature_data_matrix.empty()) {
+             // Error message already populated by the apply method or internal checks
+             // No need to add "Warning: Data for feature..." again if apply itself reported it.
+             // Just ensure error_message is cumulative if needed.
+             // std::cout << "Error from transform apply: " << error_message << std::endl; // For debugging
+             continue; // Skip this feature if apply failed and returned empty matrix with error
+        }
+        if (current_feature_data_matrix.empty() && error_message.empty()) {
+            // This case means apply returned empty but didn't set an error, which might be an issue
+            // in the transform's implementation or a valid case of no data for this specific transform.
+            error_message += "Warning: Transformation for feature '" + base_key + "' resulted in an empty matrix without explicit error. Skipping.\n";
+            continue;
+        }
+
+        // The old data fetching and transformation specific if/else block is now replaced by the strategy call.
+
         feature_component_matrices.push_back(current_feature_data_matrix);
     }
 

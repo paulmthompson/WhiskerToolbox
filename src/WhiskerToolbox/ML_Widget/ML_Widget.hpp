@@ -3,6 +3,8 @@
 
 #include "DataManager/DigitalTimeSeries/interval_data.hpp"
 #include "FeatureProcessingWidget/FeatureProcessingWidget.hpp"
+#include "ClassBalancingWidget/ClassBalancingWidget.hpp"
+#include "Transformations/ITransformation.hpp"
 
 #include <QWidget>
 
@@ -17,7 +19,6 @@
 
 #include "MLModelRegistry.hpp"
 #include "MLModelOperation.hpp"
-#include "ClassBalancingWidget/ClassBalancingWidget.hpp"
 
 class DataManager;
 class DigitalIntervalSeries;
@@ -76,6 +77,8 @@ private:
     
     FeatureProcessingWidget* _feature_processing_widget;
     ClassBalancingWidget* _class_balancing_widget;
+
+    std::map<FeatureProcessingWidget::TransformationType, std::unique_ptr<ITransformation>> _transformation_registry;
 };
 
 arma::Mat<double> create_arrays(std::unordered_set<std::string> const & features,

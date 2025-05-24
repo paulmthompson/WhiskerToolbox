@@ -1,0 +1,39 @@
+#ifndef ITRANSFORMATION_HPP
+#define ITRANSFORMATION_HPP
+
+#include "mlpack/core.hpp"
+#include "DataManager/DataManager.hpp" // For DataManager and DM_DataType
+#include <vector>
+#include <string>
+#include <memory> // For std::unique_ptr
+
+class ITransformation {
+public:
+    virtual ~ITransformation() = default;
+
+    /**
+     * @brief Applies the transformation.
+     * Fetches data based on base_key and data_type, applies transformation logic.
+     * @param dm Pointer to DataManager.
+     * @param base_key The key for the base data series.
+     * @param data_type The DM_DataType of the base_key.
+     * @param timestamps The timestamps for which to fetch and process data.
+     * @param error_message Output string for any errors encountered.
+     * @return arma::Mat<double> The transformed data matrix (features as rows, samples as columns). Empty if error.
+     */
+    virtual arma::Mat<double> apply(
+        DataManager* dm,
+        const std::string& base_key,
+        DM_DataType data_type,
+        const std::vector<std::size_t>& timestamps,
+        std::string& error_message) const = 0;
+
+    /**
+     * @brief Checks if this transformation can be applied to the given data type.
+     * @param type The DM_DataType to check.
+     * @return True if the transformation supports this data type, false otherwise.
+     */
+    virtual bool isSupported(DM_DataType type) const = 0;
+};
+
+#endif //ITRANSFORMATION_HPP 

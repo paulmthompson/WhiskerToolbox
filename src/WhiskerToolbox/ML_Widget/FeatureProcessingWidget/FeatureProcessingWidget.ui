@@ -73,6 +73,13 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QCheckBox" name="squaredTransformCheckBox">
+        <property name="text">
+         <string>Use Squared Value (Squared Transformation)</string>
+        </property>
+       </widget>
+      </item>
       <!-- Future transformations will be added here -->
       <item>
        <spacer name="transformationsVerticalSpacer">

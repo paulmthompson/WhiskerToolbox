@@ -33,6 +33,7 @@ FeatureProcessingWidget::FeatureProcessingWidget(QWidget *parent)
 
     connect(ui->baseFeatureTableWidget, &QTableWidget::currentItemChanged, this, &FeatureProcessingWidget::_onBaseFeatureSelectionChanged);
     connect(ui->identityTransformCheckBox, &QCheckBox::toggled, this, &FeatureProcessingWidget::_onIdentityCheckBoxToggled);
+    connect(ui->squaredTransformCheckBox, &QCheckBox::toggled, this, &FeatureProcessingWidget::_onSquaredCheckBoxToggled);
 
     _clearTransformationUI(); // Initial state for transformation UI
     ui->transformationsGroupBox->setEnabled(false); // Disabled until a feature is selected
@@ -138,6 +139,20 @@ void FeatureProcessingWidget::_updateUIForSelectedFeature() {
     ui->identityTransformCheckBox->setChecked(identity_active);
     ui->identityTransformCheckBox->blockSignals(false);
     
+    bool squared_active = false;
+    if (it != _feature_configs.end()) {
+        const auto& transforms = it->second;
+        for (const auto& transform : transforms) {
+            if (transform.type == TransformationType::Squared) {
+                squared_active = true;
+                break;
+            }
+        }
+    }
+    ui->squaredTransformCheckBox->blockSignals(true);
+    ui->squaredTransformCheckBox->setChecked(squared_active);
+    ui->squaredTransformCheckBox->blockSignals(false);
+    
     // Update other transformation checkboxes here in the future
 }
 
@@ -145,11 +160,17 @@ void FeatureProcessingWidget::_clearTransformationUI(bool clearSelectedLabel) {
     ui->identityTransformCheckBox->blockSignals(true);
     ui->identityTransformCheckBox->setChecked(false);
     ui->identityTransformCheckBox->blockSignals(false);
+
+    ui->squaredTransformCheckBox->blockSignals(true);
+    ui->squaredTransformCheckBox->setChecked(false);
+    ui->squaredTransformCheckBox->blockSignals(false);
     
     if (clearSelectedLabel) {
         ui->selectedFeatureNameLabel->setText("Selected: None");
     }
     // Clear other transformation controls here
+    emit configurationChanged();
+    _updateActiveFeaturesDisplay(); // Update display after config change
 }
 
 void FeatureProcessingWidget::_onIdentityCheckBoxToggled(bool checked) {
@@ -157,6 +178,13 @@ void FeatureProcessingWidget::_onIdentityCheckBoxToggled(bool checked) {
     _addOrUpdateTransformation(TransformationType::Identity, checked);
     emit configurationChanged();
     _updateActiveFeaturesDisplay(); // Update display after config change
+}
+
+void FeatureProcessingWidget::_onSquaredCheckBoxToggled(bool checked) {
+    if (_currently_selected_base_feature_key.isEmpty()) return;
+    _addOrUpdateTransformation(TransformationType::Squared, checked);
+    emit configurationChanged();
+    _updateActiveFeaturesDisplay();
 }
 
 void FeatureProcessingWidget::_addOrUpdateTransformation(TransformationType type, bool active) {
@@ -204,10 +232,11 @@ std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> FeatureProcessingWidg
                 case TransformationType::Identity:
                     info.output_feature_name = base_key; // Same as original for Identity
                     break;
+                case TransformationType::Squared:
+                    info.output_feature_name = base_key + "_sq";
+                    break;
                 // Future cases: 
                 // case TransformationType::Absolute:
-                //     info.output_feature_name = base_key + "_abs";
-                //     break;
                 default:
                     info.output_feature_name = base_key + "_processed"; // Fallback
                     break;
@@ -254,6 +283,9 @@ void FeatureProcessingWidget::_updateActiveFeaturesDisplay() {
         switch (info.transformation.type) {
             case TransformationType::Identity:
                 transform_str = "Identity";
+                break;
+            case TransformationType::Squared:
+                transform_str = "Squared";
                 break;
             // Add cases for other transformations here
             default:

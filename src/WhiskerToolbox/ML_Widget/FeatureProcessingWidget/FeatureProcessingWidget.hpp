@@ -22,7 +22,8 @@ class FeatureProcessingWidget : public QWidget {
 
 public:
     enum class TransformationType {
-        Identity // Future: Absolute, Lag, etc.
+        Identity, // Future: Absolute, Lag, etc.
+        Squared
     };
 
     struct AppliedTransformation {
@@ -54,6 +55,7 @@ signals:
 private slots:
     void _onBaseFeatureSelectionChanged(QTableWidgetItem* current, QTableWidgetItem* previous);
     void _onIdentityCheckBoxToggled(bool checked);
+    void _onSquaredCheckBoxToggled(bool checked);
     void _updateActiveFeaturesDisplay();
     // Add slots for future transformation controls here
 

@@ -212,6 +212,13 @@ set(PROJECT_SOURCES
         ML_Widget/MLModelRegistry.hpp
         ML_Widget/MLModelParameters.hpp
         ML_Widget/MLParameterWidgetBase.hpp
+        ML_Widget/Transformations/ITransformation.hpp
+        ML_Widget/Transformations/TransformationBase.cpp
+        ML_Widget/Transformations/TransformationBase.hpp
+        ML_Widget/Transformations/IdentityTransform.cpp
+        ML_Widget/Transformations/IdentityTransform.hpp
+        ML_Widget/Transformations/SquaredTransform.cpp
+        ML_Widget/Transformations/SquaredTransform.hpp
         ML_Widget/ClassBalancingWidget/ClassBalancingWidget.cpp
         ML_Widget/ClassBalancingWidget/ClassBalancingWidget.hpp
         ML_Widget/ClassBalancingWidget/ClassBalancingWidget.ui
