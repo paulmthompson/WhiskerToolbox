@@ -62,9 +62,9 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QLabel" name="label_2">
+        <widget class="QLabel" name="label_training_interval">
          <property name="text">
-          <string>Mask Variables</string>
+          <string>Training Data Interval</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -72,11 +72,11 @@
         </widget>
        </item>
        <item>
-        <widget class="Feature_Table_Widget" name="mask_table_widget" native="true">
+        <widget class="QComboBox" name="trainingIntervalComboBox">
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>100</height>
+           <height>25</height> 
           </size>
          </property>
         </widget>

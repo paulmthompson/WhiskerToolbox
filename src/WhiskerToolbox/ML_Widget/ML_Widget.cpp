@@ -73,19 +73,8 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
         ML_Widget::_addFeatureToModel(feature, false);
     });
 
-    //Mask Table Widget
-    ui->mask_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->mask_table_widget->setTypeFilter({DM_DataType::DigitalInterval});
-
-    ui->mask_table_widget->setDataManager(_data_manager);
-
-    connect(ui->mask_table_widget, &Feature_Table_Widget::featureSelected, this, &ML_Widget::_handleMaskSelected);
-    connect(ui->mask_table_widget, &Feature_Table_Widget::addFeature, this, [this](QString const & feature) {
-        ML_Widget::_addMaskToModel(feature, true);
-    });
-    connect(ui->mask_table_widget, &Feature_Table_Widget::removeFeature, this, [this](QString const & feature) {
-        ML_Widget::_addMaskToModel(feature, false);
-    });
+    // Connect new trainingIntervalComboBox
+    connect(ui->trainingIntervalComboBox, &QComboBox::currentTextChanged, this, &ML_Widget::_onTrainingIntervalChanged);
 
     //Outcome Table Widget
     ui->outcome_table_widget->setColumns({"Feature", "Enabled", "Type"});
@@ -105,6 +94,12 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->fit_button, &QPushButton::clicked, this, &ML_Widget::_fitModel);// Initialize class balancing widget
     _class_balancing_widget = ui->class_balancing_widget;
     connect(_class_balancing_widget, &ClassBalancingWidget::balancingSettingsChanged, this, &ML_Widget::_updateClassDistribution);
+
+    // DataManager Observer for training interval ComboBox
+    _data_manager->addObserver([this]() {
+        _populateTrainingIntervalComboBox();
+    });
+    _populateTrainingIntervalComboBox(); // Initial population
 }
 
 ML_Widget::~ML_Widget() {
@@ -115,7 +110,6 @@ void ML_Widget::openWidget() {
     std::cout << "ML Widget Opened" << std::endl;
 
     ui->feature_table_widget->populateTable();
-    ui->mask_table_widget->populateTable();
     ui->outcome_table_widget->populateTable();
 
     this->show();
@@ -142,29 +136,6 @@ void ML_Widget::_removeSelectedFeature(std::string const & key) {
 
     if (auto iter = _selected_features.find(key); iter != _selected_features.end())
         _selected_features.erase(iter);
-}
-
-void ML_Widget::_handleMaskSelected(QString const & feature) {
-    return;
-}
-
-void ML_Widget::_addMaskToModel(QString const & feature, bool enabled) {
-    if (enabled) {
-        //_plotSelectedFeature(feature.toStdString());
-        _selected_masks.insert(feature.toStdString());
-    } else {
-        _removeSelectedMask(feature.toStdString());
-    }
-}
-
-void ML_Widget::_removeSelectedMask(std::string const & key) {
-    if (_data_manager->getType(key) == DM_DataType::DigitalInterval) {
-        //ui->openGLWidget->removeDigitalIntervalSeries(key);
-    } else {
-        std::cout << "Feature type not supported" << std::endl;
-    }
-    if (auto iter = _selected_masks.find(key); iter != _selected_masks.end())
-        _selected_masks.erase(iter);
 }
 
 void ML_Widget::_handleOutcomeSelected(QString const & feature) {
@@ -220,15 +191,16 @@ void ML_Widget::_fitModel() {
         std::cerr << "No model operation selected." << std::endl;
         return;
     }
-    if (_selected_features.empty() || _selected_masks.empty() || _selected_outcomes.empty()) {
-        std::cerr << "Please select features, masks, and outcomes" << std::endl;
+    if (_selected_features.empty() || _training_interval_key.isEmpty() || _selected_outcomes.empty()) {
+        std::cerr << "Please select features, a training data interval, and outcomes" << std::endl;
         return;
     }
-    if (_selected_masks.size() > 1) {
-        std::cerr << "Only one mask is supported" << std::endl;
+
+    auto masks = _data_manager->getData<DigitalIntervalSeries>(_training_interval_key.toStdString());
+    if (!masks) {
+        std::cerr << "Could not retrieve training interval data: " << _training_interval_key.toStdString() << std::endl;
         return;
     }
-    auto masks = _data_manager->getData<DigitalIntervalSeries>(*_selected_masks.begin());
     auto timestamps = create_timestamps(masks);
 
     auto feature_array = create_arrays(_selected_features, timestamps, _data_manager.get());
@@ -237,7 +209,7 @@ void ML_Widget::_fitModel() {
     auto outcome_array = create_arrays(_selected_outcomes, timestamps, _data_manager.get());
 
     std::cout << "Outcome array size: " << outcome_array.n_rows << " x " << outcome_array.n_cols << std::endl;
-    arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array);// Assuming outcome is single row
+    arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array.row(0));// Assuming outcome is single row
 
     //_updateClassDistribution(); // Update display before balancing
 
@@ -431,21 +403,79 @@ arma::Mat<double> create_arrays(
     return concatenated_array;
 }
 
-void ML_Widget::_updateClassDistribution() {
-    /*
-    if (_selected_features.empty() || _selected_masks.empty() || _selected_outcomes.empty()) {
-        _class_balancing_widget->clearClassDistribution();
-        return;
+void ML_Widget::_onTrainingIntervalChanged(const QString& intervalKey) {
+    _training_interval_key = intervalKey;
+    _updateClassDistribution(); // Update distribution when interval changes
+    // Potentially trigger other updates if needed
+}
+
+void ML_Widget::_populateTrainingIntervalComboBox() {
+    QString currentSelection = ui->trainingIntervalComboBox->currentText();
+    ui->trainingIntervalComboBox->blockSignals(true);
+    ui->trainingIntervalComboBox->clear();
+
+    std::vector<std::string> intervalKeys = _data_manager->getKeys<DigitalIntervalSeries>();
+    ui->trainingIntervalComboBox->addItem(""); // Add an empty item for no selection
+    for (const auto& key : intervalKeys) {
+        ui->trainingIntervalComboBox->addItem(QString::fromStdString(key));
     }
 
-    if (_selected_masks.size() > 1) {
+    if (intervalKeys.empty()){
+        _training_interval_key.clear();
+    }
+
+    // Try to restore previous selection
+    int index = ui->trainingIntervalComboBox->findText(currentSelection);
+    if (index != -1) {
+        ui->trainingIntervalComboBox->setCurrentIndex(index);
+        _training_interval_key = currentSelection; // Ensure this is set if restored
+    } else if (!intervalKeys.empty()) {
+        // If previous selection not found, and list is not empty, select first valid item
+        // but only if current _training_interval_key is no longer valid or empty.
+        bool currentKeyIsValid = false;
+        for(const auto& key : intervalKeys) {
+            if (QString::fromStdString(key) == _training_interval_key) {
+                currentKeyIsValid = true;
+                break;
+            }
+        }
+        if (!currentKeyIsValid && ui->trainingIntervalComboBox->count() > 1) { // Count > 1 because of empty item
+             ui->trainingIntervalComboBox->setCurrentIndex(1); // Select first actual item
+             _training_interval_key = ui->trainingIntervalComboBox->currentText();
+        } else if (!currentKeyIsValid) {
+            _training_interval_key.clear(); // No valid selection possible
+        }
+        // If currentKeyIsValid, _training_interval_key remains as is, and ComboBox reflects it if found, or shows empty.
+
+    } else {
+         _training_interval_key.clear(); // List is empty, no selection possible
+    }
+
+    ui->trainingIntervalComboBox->blockSignals(false);
+    _updateClassDistribution(); // Update distribution after populating
+
+}
+
+void ML_Widget::_updateClassDistribution() {
+    if (_selected_features.empty() || _training_interval_key.isEmpty() || _selected_outcomes.empty()) {
         _class_balancing_widget->clearClassDistribution();
         return;
     }
 
     try {
-        auto masks = _data_manager->getData<DigitalIntervalSeries>(*_selected_masks.begin());
-        auto timestamps = create_timestamps(masks);
+        auto current_mask_series = _data_manager->getData<DigitalIntervalSeries>(_training_interval_key.toStdString());
+        if (!current_mask_series) {
+            _class_balancing_widget->clearClassDistribution();
+            std::cerr << "Could not retrieve training interval data for distribution: " << _training_interval_key.toStdString() << std::endl;
+            return;
+        }
+        auto timestamps = create_timestamps(current_mask_series);
+        if (timestamps.empty()) {
+            _class_balancing_widget->clearClassDistribution();
+             std::cout << "No timestamps generated from training interval for distribution update." << std::endl;
+            return;
+        }
+
         auto outcome_array = create_arrays(_selected_outcomes, timestamps, _data_manager.get());
         if (outcome_array.empty()){
              _class_balancing_widget->clearClassDistribution();
@@ -473,25 +503,30 @@ void ML_Widget::_updateClassDistribution() {
 
         if (_class_balancing_widget->isBalancingEnabled()) {
             size_t min_class_count = std::numeric_limits<size_t>::max();
+            bool found_any_class_with_samples = false;
             for (auto const& [label_val, count] : class_counts) {
-                if (count > 0 && count < min_class_count) { // Ensure min_class_count is not 0
-                    min_class_count = count;
+                if (count > 0) {
+                    found_any_class_with_samples = true;
+                    if (count < min_class_count) {
+                        min_class_count = count;
+                    }
                 }
             }
-             if (min_class_count == std::numeric_limits<size_t>::max()) { // All classes were 0 or empty
-                min_class_count = 0; 
-            }
+            if (!found_any_class_with_samples) min_class_count = 0; 
 
             double ratio = _class_balancing_widget->getBalancingRatio();
             size_t target_max_samples = (min_class_count > 0) ? static_cast<size_t>(min_class_count * ratio) : 0;
-            if (target_max_samples == 0 && min_class_count > 0 && ratio >= 1.0) target_max_samples = 1; // Ensure at least 1 if min_count was >0
+            if (target_max_samples == 0 && min_class_count > 0 && ratio >= 1.0) target_max_samples = 1; 
 
             distributionText += "\nBalanced: ";
             first = true;
             for (auto const& [label_val, count] : class_counts) {
                 if (!first) distributionText += ", ";
-                size_t balanced_count = (count > 0) ? std::min(count, target_max_samples) : 0;
-                 if (count > 0 && balanced_count == 0 && target_max_samples > 0) balanced_count = 1; // If class had samples, ensure it keeps at least 1 if target allows
+                size_t balanced_count = 0;
+                if (count > 0) { // Only consider classes that originally had samples
+                    balanced_count = std::min(count, target_max_samples);
+                     if (balanced_count == 0 && target_max_samples > 0) balanced_count = 1; 
+                }
                 distributionText += QString("Class %1: %L2").arg(label_val).arg(balanced_count);
                 first = false;
             }
@@ -502,5 +537,4 @@ void ML_Widget::_updateClassDistribution() {
         _class_balancing_widget->clearClassDistribution();
         std::cerr << "Error updating class distribution: " << e.what() << std::endl;
     }
-    */
 }

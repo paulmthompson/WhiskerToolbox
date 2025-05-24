@@ -49,15 +49,15 @@ private slots:
     void _addFeatureToModel(QString const & feature, bool enabled);
     void _removeSelectedFeature(std::string const & key);
 
-    void _handleMaskSelected(QString const & feature);
-    void _addMaskToModel(QString const & feature, bool enabled);
-    void _removeSelectedMask(std::string const & key);
-
     void _handleOutcomeSelected(QString const & feature);
     void _addOutcomeToModel(QString const & feature, bool enabled);
     void _removeSelectedOutcome(std::string const & key);
 
-        void _selectModelType(QString const & model_type);    void _fitModel();        void _updateClassDistribution();
+    void _selectModelType(QString const & model_type);
+    void _fitModel();
+    void _updateClassDistribution();
+    void _populateTrainingIntervalComboBox();
+    void _onTrainingIntervalChanged(const QString& intervalKey);
 
 private:
     std::shared_ptr<DataManager> _data_manager;
@@ -71,7 +71,7 @@ private:
     std::map<std::string, int> _model_name_to_widget_index;
 
     std::unordered_set<std::string> _selected_features;
-    std::unordered_set<std::string> _selected_masks;
+    QString _training_interval_key;
     std::unordered_set<std::string> _selected_outcomes;
     ClassBalancingWidget* _class_balancing_widget;
 
