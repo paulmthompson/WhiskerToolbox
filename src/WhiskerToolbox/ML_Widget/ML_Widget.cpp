@@ -196,32 +196,55 @@ void ML_Widget::_fitModel() {
         return;
     }
 
-    auto masks = _data_manager->getData<DigitalIntervalSeries>(_training_interval_key.toStdString());
-    if (!masks) {
+    auto training_interval_series = _data_manager->getData<DigitalIntervalSeries>(_training_interval_key.toStdString());
+    if (!training_interval_series) {
         std::cerr << "Could not retrieve training interval data: " << _training_interval_key.toStdString() << std::endl;
         return;
     }
-    auto timestamps = create_timestamps(masks);
 
-    auto feature_array = create_arrays(_selected_features, timestamps, _data_manager.get());
-    std::cout << "Feature array size: " << feature_array.n_rows << " x " << feature_array.n_cols << std::endl;
+    std::vector<std::size_t> training_timestamps = create_timestamps(training_interval_series);
+    if (training_timestamps.empty()) {
+        std::cerr << "No training timestamps generated from the selected interval: " << _training_interval_key.toStdString() << std::endl;
+        return;
+    }
+    // Sort and unique training_timestamps to ensure no duplicates and easy set operations later
+    std::sort(training_timestamps.begin(), training_timestamps.end());
+    training_timestamps.erase(std::unique(training_timestamps.begin(), training_timestamps.end()), training_timestamps.end());
 
-    auto outcome_array = create_arrays(_selected_outcomes, timestamps, _data_manager.get());
+    std::cout << "Number of unique training timestamps: " << training_timestamps.size() << std::endl;
 
-    std::cout << "Outcome array size: " << outcome_array.n_rows << " x " << outcome_array.n_cols << std::endl;
-    arma::Row<size_t> labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array.row(0));// Assuming outcome is single row
 
-    //_updateClassDistribution(); // Update display before balancing
+    arma::Mat<double> feature_array = create_arrays(_selected_features, training_timestamps, _data_manager.get());
+    if (feature_array.n_cols == 0) {
+        std::cerr << "Feature array for training is empty (0 columns). Check data for selected timestamps." << std::endl;
+        return;
+    }
+    std::cout << "Training feature array size: " << feature_array.n_rows << " x " << feature_array.n_cols << std::endl;
+
+    arma::Mat<double> outcome_array = create_arrays(_selected_outcomes, training_timestamps, _data_manager.get());
+    if (outcome_array.n_cols == 0) {
+        std::cerr << "Outcome array for training is empty (0 columns). Check data for selected timestamps." << std::endl;
+        return;
+    }
+    std::cout << "Training outcome array size: " << outcome_array.n_rows << " x " << outcome_array.n_cols << std::endl;
+    
+    arma::Row<size_t> labels;
+    if (outcome_array.n_rows > 0) {
+        labels = arma::conv_to<arma::Row<size_t>>::from(outcome_array.row(0)); // Assuming outcome is single row
+    } else {
+        std::cerr << "Outcome array has 0 rows. Cannot create labels." << std::endl;
+        return;
+    }
+
 
     arma::Mat<double> balanced_feature_array;
     arma::Row<size_t> balanced_labels_vec;
 
     auto const balancing_flag = _class_balancing_widget->isBalancingEnabled();
-
     std::cout << "Balancing is set to " << balancing_flag << std::endl;
 
     if (balancing_flag) {
-        double ratio = _class_balancing_widget->getBalancingRatio(); // Get ratio
+        double ratio = _class_balancing_widget->getBalancingRatio();
         if (!balance_training_data_by_subsampling(feature_array, labels, balanced_feature_array, balanced_labels_vec, ratio)) {
             std::cerr << "Data balancing failed. Proceeding with original data, but results may be skewed." << std::endl;
             balanced_feature_array = feature_array;
@@ -234,7 +257,7 @@ void ML_Widget::_fitModel() {
     }
 
     if (balanced_feature_array.n_cols == 0 || balanced_labels_vec.n_elem == 0) {
-        std::cerr << "No data remains after attempting to balance. Cannot train model." << std::endl;
+        std::cerr << "No data remains after potential balancing. Cannot train model." << std::endl;
         return;
     }
 
@@ -251,7 +274,7 @@ void ML_Widget::_fitModel() {
         std::cerr << "Failed to retrieve model parameters from UI." << std::endl;
         return;
     }
-    // Use balanced data for training
+
     bool trained = _current_selected_model_operation->train(balanced_feature_array, balanced_labels_vec, model_params_ptr.get());
     if (!trained) {
         std::cerr << "Model training failed for " << _current_selected_model_operation->getName() << std::endl;
@@ -259,85 +282,89 @@ void ML_Widget::_fitModel() {
     }
     std::cout << "Model trained: " << _current_selected_model_operation->getName() << std::endl;
 
-    arma::Row<size_t> predictions;
-    bool predicted = _current_selected_model_operation->predict(balanced_feature_array, predictions);
-
-    if (!predicted) {
-        std::cerr << "Model prediction (on training data) failed." << std::endl;
-        return;
+    // Optional: Predict on training data for accuracy assessment (using balanced data)
+    arma::Row<size_t> training_predictions;
+    bool training_predicted = _current_selected_model_operation->predict(balanced_feature_array, training_predictions);
+    if (training_predicted && balanced_labels_vec.n_elem > 0) {
+        double const accuracy = 100.0 * (static_cast<double>(arma::accu(training_predictions == balanced_labels_vec))) /
+                                static_cast<double>(balanced_labels_vec.n_elem);
+        std::cout << "Training set accuracy (on potentially balanced data) is " << accuracy << "%." << std::endl;
+    } else {
+        std::cerr << "Model prediction on training data failed or no elements to compare." << std::endl;
     }
 
-    std::cout << "predictions have max" << arma::max(predictions) << std::endl;
-
-    double const accuracy = 100.0 * (static_cast<double>(arma::accu(predictions == balanced_labels_vec))) /
-                            static_cast<double>(balanced_labels_vec.n_elem);
-    std::cout << "After training " << _current_selected_model_operation->getName()
-              << ", training set accuracy (on balanced data) is " << accuracy << "%." << std::endl;
-
-    int current_time_end_frame;
+    // --- Determine Prediction Timestamps ---
+    int current_time_end_frame; // This is exclusive: [0, current_time_end_frame - 1]
     if (ui->predict_all_check->isChecked()) {
         current_time_end_frame = _data_manager->getTime()->getTotalFrameCount();
     } else {
-        current_time_end_frame = _data_manager->getTime()->getLastLoadedFrame();
+        current_time_end_frame = _data_manager->getTime()->getLastLoadedFrame() + 1; // +1 because getLastLoadedFrame is inclusive index
+    }
+    
+    if (_data_manager->getTime()->getTotalFrameCount() == 0){
+         std::cout << "Total frame count is 0, cannot determine prediction range." << std::endl;
+         current_time_end_frame = 0;
     }
 
-    int prediction_start_frame = 0;
-    if (masks && !masks->getDigitalIntervalSeries().empty()) {
-        auto const & training_intervals = masks->getDigitalIntervalSeries();
-        if (!training_intervals.empty()) {
-            prediction_start_frame = training_intervals.back().end;
+
+    std::vector<std::size_t> prediction_timestamps;
+    if (current_time_end_frame > 0) {
+        std::unordered_set<std::size_t> training_timestamps_set(training_timestamps.begin(), training_timestamps.end());
+        for (std::size_t i = 0; i < static_cast<std::size_t>(current_time_end_frame); ++i) {
+            if (training_timestamps_set.find(i) == training_timestamps_set.end()) {
+                prediction_timestamps.push_back(i);
+            }
         }
-    } else if (!timestamps.empty()) {
-        prediction_start_frame = timestamps.back() + 1;
     }
 
-    if (prediction_start_frame >= current_time_end_frame) {
-        std::cout << "No new frames to predict after training data. Start frame: " << prediction_start_frame
-                  << ", End frame: " << current_time_end_frame << std::endl;
+
+    if (prediction_timestamps.empty()) {
+        std::cout << "No frames identified for prediction (all frames used for training or no frames in range)." << std::endl;
     } else {
-        std::vector<Interval> prediction_interval_vec = {Interval{
-                static_cast<std::size_t>(prediction_start_frame),
-                static_cast<std::size_t>(current_time_end_frame)}};
+        std::cout << "Number of prediction timestamps: " << prediction_timestamps.size() << std::endl;
+        if (!prediction_timestamps.empty()){
+             std::cout << "Prediction timestamps range from " << prediction_timestamps.front() << " to " << prediction_timestamps.back() << std::endl;
+        }
 
-        auto prediction_timestamps = create_timestamps(prediction_interval_vec);
 
-        std::cout << "The length of prediction timestamps is " << prediction_timestamps.size() << std::endl;
-        std::cout << "They range from " << prediction_timestamps[0] << " to " << prediction_timestamps.back() << std::endl;
+        arma::Mat<double> const prediction_feature_array = create_arrays(
+                _selected_features,
+                prediction_timestamps,
+                _data_manager.get());
 
-        if (!prediction_timestamps.empty()) {
-            arma::Mat<double> const prediction_feature_array = create_arrays(
-                    _selected_features,
-                    prediction_timestamps,
-                    _data_manager.get());
+        if (prediction_feature_array.n_cols > 0) {
+            arma::Row<size_t> future_predictions;
+            bool future_predicted = _current_selected_model_operation->predict(prediction_feature_array, future_predictions);
 
-            if (prediction_feature_array.n_cols > 0) {
-                arma::Row<size_t> future_predictions;
-                bool future_predicted = _current_selected_model_operation->predict(prediction_feature_array, future_predictions);
-
-                if (future_predicted) {
-                    auto prediction_vec = copyMatrixRowToVector<size_t>(future_predictions);
-
-                    std::cout << "Range of predictions. Max: " << *std::max(prediction_vec.begin(), prediction_vec.end()) << std::endl;
-                    std::cout << "Min: " << *std::min_element(prediction_vec.begin(), prediction_vec.end()) << std::endl;
-                    for (auto const & key: _selected_outcomes) {
-                        auto outcome_series = _data_manager->getData<DigitalIntervalSeries>(key);
-                        if (outcome_series) {
-                            outcome_series->setEventsAtTimes(prediction_timestamps, prediction_vec);
-                            std::cout << "Predictions applied to: " << key << std::endl;
-                        } else {
-                            std::cerr << "Could not get outcome series for key: " << key << std::endl;
-                        }
-                    }
+            if (future_predicted) {
+                auto prediction_vec = copyMatrixRowToVector<size_t>(future_predictions);
+                if (!prediction_vec.empty()){
+                    std::cout << "Range of predictions on new data. Max: " << *std::max_element(prediction_vec.begin(), prediction_vec.end()) 
+                              << ", Min: " << *std::min_element(prediction_vec.begin(), prediction_vec.end()) << std::endl;
                 } else {
-                    std::cerr << "Prediction on new data failed." << std::endl;
+                    std::cout << "Prediction vector on new data is empty." << std::endl;
+                }
+                
+
+                for (auto const & key: _selected_outcomes) { // Apply predictions to all selected outcome series
+                    auto outcome_series = _data_manager->getData<DigitalIntervalSeries>(key);
+                    if (outcome_series) {
+                        // It's assumed outcome_series is of a type that can accept discrete labels at specific timestamps.
+                        // DigitalIntervalSeries::setEventsAtTimes is one way. Adapt if outcome can be other types.
+                        outcome_series->setEventsAtTimes(prediction_timestamps, prediction_vec);
+                        std::cout << "Predictions applied to outcome series: " << key << std::endl;
+                    } else {
+                        std::cerr << "Could not get outcome series '" << key << "' to apply predictions." << std::endl;
+                    }
                 }
             } else {
-                std::cout << "No features to predict for the selected time range." << std::endl;
+                std::cerr << "Prediction on new data failed." << std::endl;
             }
         } else {
-            std::cout << "No timestamps generated for prediction interval." << std::endl;
+            std::cout << "No features to predict for the selected prediction timestamps (prediction_feature_array is empty)." << std::endl;
         }
     }
+    std::cout << "Exiting _fitModel" << std::endl;
 }
 
 std::vector<std::size_t> create_timestamps(std::vector<Interval> & intervals) {
