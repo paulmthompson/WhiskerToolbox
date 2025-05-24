@@ -71,7 +71,7 @@ inline void updateDigitalIntervalSeriesFromMlpackArray(
  */
 inline arma::Mat<double> convertToMlpackMatrix(
         std::shared_ptr<PointData> const & pointData,
-        std::vector<std::size_t> & timestamps) {
+        std::vector<std::size_t> const & timestamps) {
 
     size_t const numCols = timestamps.size();
     size_t const numRows = pointData->getMaxPoints() * 2;

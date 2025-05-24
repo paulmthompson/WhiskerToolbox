@@ -2,6 +2,7 @@
 #define BEHAVIORTOOLBOX_ML_WIDGET_HPP
 
 #include "DataManager/DigitalTimeSeries/interval_data.hpp"
+#include "FeatureProcessingWidget/FeatureProcessingWidget.hpp"
 
 #include <QWidget>
 
@@ -21,7 +22,6 @@
 class DataManager;
 class DigitalIntervalSeries;
 class MainWindow;
-class QTableWidget;
 class TimeScrollBar;
 
 namespace Ui {
@@ -45,9 +45,7 @@ protected:
     void closeEvent(QCloseEvent * event) override;
 
 private slots:
-    void _handleFeatureSelected(QString const & feature);
-    void _addFeatureToModel(QString const & feature, bool enabled);
-    void _removeSelectedFeature(std::string const & key);
+    void _onTrainingIntervalChanged(const QString& intervalKey);
 
     void _handleOutcomeSelected(QString const & feature);
     void _addOutcomeToModel(QString const & feature, bool enabled);
@@ -57,26 +55,27 @@ private slots:
     void _fitModel();
     void _updateClassDistribution();
     void _populateTrainingIntervalComboBox();
-    void _onTrainingIntervalChanged(const QString& intervalKey);
 
 private:
+    arma::Mat<double> _createFeatureMatrix(
+        const std::vector<FeatureProcessingWidget::ProcessedFeatureInfo>& processed_features,
+        const std::vector<std::size_t>& timestamps,
+        std::string& error_message) const;
+
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar * _time_scrollbar;
     MainWindow * _main_window;
     Ui::ML_Widget * ui;
-    QString _highlighted_available_feature;
 
     std::unique_ptr<MLModelRegistry> _ml_model_registry;
     MLModelOperation* _current_selected_model_operation = nullptr;
     std::map<std::string, int> _model_name_to_widget_index;
 
-    std::unordered_set<std::string> _selected_features;
     QString _training_interval_key;
     std::unordered_set<std::string> _selected_outcomes;
+    
+    FeatureProcessingWidget* _feature_processing_widget;
     ClassBalancingWidget* _class_balancing_widget;
-
-    arma::Mat<double> _features;
-    arma::Mat<double> _outcomes;
 };
 
 arma::Mat<double> create_arrays(std::unordered_set<std::string> const & features,

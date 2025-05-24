@@ -29,7 +29,7 @@
         </widget>
        </item>
        <item>
-        <widget class="Feature_Table_Widget" name="feature_table_widget" native="true">
+        <widget class="FeatureProcessingWidget" name="feature_processing_widget" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>0</horstretch>
@@ -39,7 +39,7 @@
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>100</height>
+           <height>200</height>
           </size>
          </property>
         </widget>
@@ -204,6 +204,12 @@
    <class>ClassBalancingWidget</class>
    <extends>QWidget</extends>
    <header>ML_Widget/ClassBalancingWidget/ClassBalancingWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>FeatureProcessingWidget</class>
+   <extends>QWidget</extends>
+   <header>ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

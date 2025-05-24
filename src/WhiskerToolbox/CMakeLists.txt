@@ -215,6 +215,9 @@ set(PROJECT_SOURCES
         ML_Widget/ClassBalancingWidget/ClassBalancingWidget.cpp
         ML_Widget/ClassBalancingWidget/ClassBalancingWidget.hpp
         ML_Widget/ClassBalancingWidget/ClassBalancingWidget.ui
+        ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.cpp
+        ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.hpp
+        ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.ui
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.cpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.ui
