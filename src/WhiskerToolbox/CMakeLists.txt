@@ -207,6 +207,7 @@ set(PROJECT_SOURCES
         ML_Widget/ML_Widget.cpp
         ML_Widget/ML_Widget.ui
         ML_Widget/mlpack_conversion.hpp
+        ML_Widget/mlpack_conversion.cpp
         ML_Widget/MLModelOperation.hpp
         ML_Widget/MLModelRegistry.cpp
         ML_Widget/MLModelRegistry.hpp
@@ -362,6 +363,7 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
+        ML_Widget/mlpack_conversion.cpp
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)
