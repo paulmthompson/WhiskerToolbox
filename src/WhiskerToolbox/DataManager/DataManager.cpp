@@ -15,7 +15,7 @@
 #include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp"
 #include "Lines/IO/CSV/Line_Data_CSV.hpp"
-#include "Masks/IO/HDF5/Mask_Data_HDF5.hpp"
+#include "Masks/IO/JSON/Mask_Data_JSON.hpp"
 #include "Media/Video_Data_Loader.hpp"
 #include "Points/IO/CSV/Point_Data_CSV.hpp"
 

@@ -149,6 +149,8 @@ add_library(DataManager SHARED
         DataManagerTypes.hpp
         loaders/loading_utils.hpp
         loaders/loading_utils.cpp
+        Masks/IO/JSON/Mask_Data_JSON.hpp
+        Masks/IO/JSON/Mask_Data_JSON.cpp
 
 
 

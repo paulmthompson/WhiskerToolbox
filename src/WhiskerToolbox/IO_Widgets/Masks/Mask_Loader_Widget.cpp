@@ -107,7 +107,7 @@ void Mask_Loader_Widget::_loadSingleHDF5MaskFile(std::string const & filename, s
     auto opts = HDF5MaskLoaderOptions();
     opts.filename = filename;
 
-    auto mask_data_ptr = load_mask_from_hdf5(opts);
+    auto mask_data_ptr = load(opts);
 
     _data_manager->setData<MaskData>(mask_key, mask_data_ptr);
 
