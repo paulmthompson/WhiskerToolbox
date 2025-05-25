@@ -2,6 +2,7 @@
 
 #include "transforms/Masks/mask_area.hpp"
 #include "transforms/Masks/mask_to_line.hpp"
+#include "transforms/Masks/mask_skeletonize.hpp"
 #include "transforms/AnalogTimeSeries/analog_event_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
@@ -12,6 +13,7 @@
 #include "transforms/Lines/line_curvature.hpp"
 #include "transforms/Lines/line_subsegment.hpp"
 #include "transforms/Lines/line_point_extraction.hpp"
+#include "transforms/Lines/line_clip.hpp"
 
 #include <iostream>// For init messages
 #include <map>
@@ -28,6 +30,7 @@ TransformRegistry::TransformRegistry() {
 
     _registerOperation(std::make_unique<MaskAreaOperation>());
     _registerOperation(std::make_unique<MaskToLineOperation>());
+    _registerOperation(std::make_unique<MaskSkeletonizeOperation>());
     _registerOperation(std::make_unique<EventThresholdOperation>());
     _registerOperation(std::make_unique<IntervalThresholdOperation>());
     _registerOperation(std::make_unique<HilbertPhaseOperation>());
@@ -38,6 +41,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<LineCurvatureOperation>());
     _registerOperation(std::make_unique<LineSubsegmentOperation>());
     _registerOperation(std::make_unique<LinePointExtractionOperation>());
+    _registerOperation(std::make_unique<LineClipOperation>());
 
     _computeApplicableOperations();
     std::cout << "Operation Registry Initialized." << std::endl;

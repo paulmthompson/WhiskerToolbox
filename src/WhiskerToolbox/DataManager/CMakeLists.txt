@@ -142,12 +142,16 @@ add_library(DataManager SHARED
         transforms/Lines/line_subsegment.hpp
         transforms/Lines/line_point_extraction.cpp
         transforms/Lines/line_point_extraction.hpp
+        transforms/Lines/line_clip.cpp
+        transforms/Lines/line_clip.hpp
         transforms/Masks/mask_area.cpp
         transforms/Masks/mask_area.hpp
         transforms/Masks/mask_to_line.cpp
         transforms/Masks/mask_to_line.hpp
         transforms/Masks/order_line.cpp
         transforms/Masks/order_line.hpp
+        transforms/Masks/mask_skeletonize.cpp
+        transforms/Masks/mask_skeletonize.hpp
 
         loaders/binary_loaders.hpp
         loaders/hdf5_loaders.hpp

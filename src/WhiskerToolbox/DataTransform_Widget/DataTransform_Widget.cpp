@@ -11,12 +11,14 @@
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
+#include "DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.hpp"
 #include "DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp"
 
 #include <QApplication>
 
@@ -54,6 +56,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Calculate Area"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new MaskArea_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Skeletonize Mask"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new MaskSkeletonize_Widget(parent);
     };
 
     _parameterWidgetFactories["Threshold Event Detection"] = [](QWidget * parent) -> TransformParameter_Widget * {
@@ -104,6 +110,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Extract Point from Line"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new LinePointExtraction_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Clip Line by Reference Line"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new LineClip_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
     };
 }
 

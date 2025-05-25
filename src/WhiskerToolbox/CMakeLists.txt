@@ -101,6 +101,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.cpp
         DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp
         DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.ui
+        DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.cpp
+        DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp
+        DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.ui
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.ui
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp
         DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.cpp
@@ -131,6 +134,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.cpp
         DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.hpp
         DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.ui
+        DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.cpp
+        DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp
+        DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui
@@ -372,7 +378,6 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
-        ML_Widget/mlpack_conversion.cpp
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)

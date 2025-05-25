@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LineClip_Widget</class>
+ <widget class="QWidget" name="LineClip_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Clip Line by Reference Line</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>Clip Line by Reference Line</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="margin">
+      <number>5</number>
+     </property>
+     <property name="styleSheet">
+      <string>font-weight: bold; font-size: 14px;</string>
+     </property>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QLabel" name="descriptionLabel">
+     <property name="text">
+      <string>Clips the input line at its intersection with a reference line. You can choose to keep either the base portion (from start to intersection) or the distal portion (from intersection to end).</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="margin">
+      <number>5</number>
+     </property>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="referenceLineGroupBox">
+     <property name="title">
+      <string>Reference Line Selection</string>
+     </property>
+     <layout class="QVBoxLayout" name="referenceLineLayout">
+      <item>
+       <widget class="QLabel" name="referenceLineLabel">
+        <property name="text">
+         <string>Select Reference Line Data:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="Feature_Table_Widget" name="line_feature_table_widget" native="true">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>150</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="selectedLineLayout">
+        <item>
+         <widget class="QLabel" name="selectedLineLabel">
+          <property name="text">
+           <string>Selected Reference Line:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="selectedLineLineEdit">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+          <property name="placeholderText">
+           <string>No reference line selected</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="parametersGroupBox">
+     <property name="title">
+      <string>Clipping Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="parametersFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="referenceFrameLabel">
+        <property name="text">
+         <string>Reference Frame:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="referenceFrameSpinBox">
+        <property name="minimum">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <number>999999</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="1" column="0">
+       <widget class="QLabel" name="clipSideLabel">
+        <property name="text">
+         <string>Keep Side:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="clipSideComboBox">
+        <item>
+         <property name="text">
+          <string>Base (Start to Intersection)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Distal (Intersection to End)</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      
+      <item row="2" column="0" colspan="2">
+       <widget class="QLabel" name="frameDescriptionLabel">
+        <property name="text">
+         <string>The reference frame specifies which time point from the reference line data to use for clipping. All frames of the input line will be clipped against this single reference frame.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>color: #666; font-style: italic;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="previewGroupBox">
+     <property name="title">
+      <string>Clipping Preview</string>
+     </property>
+     <layout class="QVBoxLayout" name="previewLayout">
+      <item>
+       <widget class="QLabel" name="previewLabel">
+        <property name="text">
+         <string>• Base side: Keeps the portion of the line from its starting point up to the intersection
+• Distal side: Keeps the portion of the line from the intersection to its ending point
+• If no intersection is found, the original line is preserved unchanged</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>margin: 5px;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Feature_Table_Widget</class>
+   <extends>QWidget</extends>
+   <header>Feature_Table_Widget/Feature_Table_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui> 
