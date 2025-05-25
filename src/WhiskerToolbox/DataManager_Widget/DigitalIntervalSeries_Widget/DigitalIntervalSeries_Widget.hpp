@@ -2,6 +2,7 @@
 #define DIGITALINTERVALSERIES_WIDGET_HPP
 
 #include <QWidget>
+#include <QMenu>
 #include <memory>
 #include <string>
 #include <variant> // Required for std::variant
@@ -51,6 +52,11 @@ private:
     void _initiateSaveProcess(SaverType saver_type, IntervalSaverOptionsVariant& options_variant);
     bool _performActualCSVSave(CSVIntervalSaverOptions & options);
 
+    // Helper methods for interval operations
+    void _populateMoveToComboBox();
+    std::vector<Interval> _getSelectedIntervals();
+    void _showContextMenu(QPoint const & position);
+
 private slots:
     // Removed old _saveCSV slot
     void _createIntervalButton();
@@ -63,6 +69,11 @@ private slots:
     // New slots for saving
     void _onExportTypeChanged(int index);
     void _handleSaveIntervalCSVRequested(CSVIntervalSaverOptions options);
+
+    // New slots for interval operations
+    void _moveIntervalsButton();
+    void _copyIntervalsButton();
+    void _mergeIntervalsButton();
 
 };
 

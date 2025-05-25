@@ -6,6 +6,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "IntervalTableModel.hpp"
 #include "IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp"
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 
 #include <QEvent>
 #include <QItemDelegate>
@@ -15,6 +16,8 @@
 #include <QComboBox>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QMenu>
+#include <QAction>
 
 #include <filesystem>
 #include <iostream>
@@ -30,12 +33,21 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     ui->tableView->setModel(_interval_table_model);
 
     ui->tableView->setEditTriggers(QAbstractItemView::SelectedClicked);
+    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(ui->create_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_createIntervalButton);
     connect(ui->remove_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_removeIntervalButton);
     connect(ui->flip_single_frame, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_flipIntervalButton);
     connect(ui->tableView, &QTableView::doubleClicked, this, &DigitalIntervalSeries_Widget::_handleCellClicked);
     connect(ui->extend_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_extendInterval);
+    
+    // New interval operation connections
+    connect(ui->move_intervals_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_moveIntervalsButton);
+    connect(ui->copy_intervals_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_copyIntervalsButton);
+    connect(ui->merge_intervals_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_mergeIntervalsButton);
+    connect(ui->tableView, &QTableView::customContextMenuRequested, this, &DigitalIntervalSeries_Widget::_showContextMenu);
 
     connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &DigitalIntervalSeries_Widget::_onExportTypeChanged);
@@ -43,6 +55,7 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
             this, &DigitalIntervalSeries_Widget::_handleSaveIntervalCSVRequested);
 
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
+    _populateMoveToComboBox();
 }
 
 DigitalIntervalSeries_Widget::~DigitalIntervalSeries_Widget() {
@@ -61,6 +74,7 @@ void DigitalIntervalSeries_Widget::setActiveKey(std::string key) {
     _assignCallbacks();
 
     _calculateIntervals();
+    _populateMoveToComboBox();
 }
 
 void DigitalIntervalSeries_Widget::_changeDataTable(QModelIndex const & topLeft, QModelIndex const & bottomRight, QVector<int> const & roles) {
@@ -96,6 +110,7 @@ void DigitalIntervalSeries_Widget::_calculateIntervals() {
         ui->total_interval_label->setText("0");
         _interval_table_model->setIntervals({});
     }
+    _populateMoveToComboBox();
 }
 
 
@@ -246,4 +261,147 @@ bool DigitalIntervalSeries_Widget::_performActualCSVSave(CSVIntervalSaverOptions
         std::cerr << "Failed to save interval data (CSV): " << e.what() << std::endl;
         return false;
     }
+}
+
+void DigitalIntervalSeries_Widget::_populateMoveToComboBox() {
+    populate_move_combo_box<DigitalIntervalSeries>(ui->moveToComboBox, _data_manager.get(), _active_key);
+}
+
+std::vector<Interval> DigitalIntervalSeries_Widget::_getSelectedIntervals() {
+    std::vector<Interval> selected_intervals;
+    QModelIndexList selected_indexes = ui->tableView->selectionModel()->selectedRows();
+    
+    for (QModelIndex const & index : selected_indexes) {
+        if (index.isValid()) {
+            Interval interval = _interval_table_model->getInterval(index.row());
+            selected_intervals.push_back(interval);
+        }
+    }
+    
+    return selected_intervals;
+}
+
+void DigitalIntervalSeries_Widget::_showContextMenu(QPoint const & position) {
+    QModelIndex index = ui->tableView->indexAt(position);
+    if (!index.isValid()) {
+        return;
+    }
+    
+    QMenu context_menu(this);
+    
+    QAction* move_action = context_menu.addAction("Move Selected Intervals");
+    QAction* copy_action = context_menu.addAction("Copy Selected Intervals");
+    context_menu.addSeparator();
+    QAction* merge_action = context_menu.addAction("Merge Selected Intervals");
+    
+    connect(move_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_moveIntervalsButton);
+    connect(copy_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_copyIntervalsButton);
+    connect(merge_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_mergeIntervalsButton);
+    
+    context_menu.exec(ui->tableView->mapToGlobal(position));
+}
+
+void DigitalIntervalSeries_Widget::_moveIntervalsButton() {
+    std::vector<Interval> selected_intervals = _getSelectedIntervals();
+    if (selected_intervals.empty()) {
+        std::cout << "No intervals selected to move." << std::endl;
+        return;
+    }
+    
+    QString target_key_qstr = ui->moveToComboBox->currentText();
+    if (target_key_qstr.isEmpty()) {
+        std::cout << "No target selected in ComboBox." << std::endl;
+        return;
+    }
+    std::string target_key = target_key_qstr.toStdString();
+    
+    auto source_interval_data = _data_manager->getData<DigitalIntervalSeries>(_active_key);
+    auto target_interval_data = _data_manager->getData<DigitalIntervalSeries>(target_key);
+    
+    if (!source_interval_data || !target_interval_data) {
+        std::cerr << "Could not retrieve source or target DigitalIntervalSeries data." << std::endl;
+        return;
+    }
+    
+    // Add intervals to target
+    for (Interval const & interval : selected_intervals) {
+        target_interval_data->addEvent(interval);
+    }
+    
+    // Remove intervals from source
+    for (Interval const & interval : selected_intervals) {
+        // Remove each time point in the interval from source
+        for (int64_t time = interval.start; time <= interval.end; ++time) {
+            source_interval_data->setEventAtTime(static_cast<int>(time), false);
+        }
+    }
+    
+    std::cout << "Moved " << selected_intervals.size() << " intervals from " << _active_key 
+              << " to " << target_key << std::endl;
+}
+
+void DigitalIntervalSeries_Widget::_copyIntervalsButton() {
+    std::vector<Interval> selected_intervals = _getSelectedIntervals();
+    if (selected_intervals.empty()) {
+        std::cout << "No intervals selected to copy." << std::endl;
+        return;
+    }
+    
+    QString target_key_qstr = ui->moveToComboBox->currentText();
+    if (target_key_qstr.isEmpty()) {
+        std::cout << "No target selected in ComboBox." << std::endl;
+        return;
+    }
+    std::string target_key = target_key_qstr.toStdString();
+    
+    auto target_interval_data = _data_manager->getData<DigitalIntervalSeries>(target_key);
+    
+    if (!target_interval_data) {
+        std::cerr << "Could not retrieve target DigitalIntervalSeries data." << std::endl;
+        return;
+    }
+    
+    // Add intervals to target (source remains unchanged)
+    for (Interval const & interval : selected_intervals) {
+        target_interval_data->addEvent(interval);
+    }
+    
+    std::cout << "Copied " << selected_intervals.size() << " intervals from " << _active_key 
+              << " to " << target_key << std::endl;
+}
+
+void DigitalIntervalSeries_Widget::_mergeIntervalsButton() {
+    std::vector<Interval> selected_intervals = _getSelectedIntervals();
+    if (selected_intervals.size() < 2) {
+        std::cout << "Need at least 2 intervals selected to merge." << std::endl;
+        return;
+    }
+    
+    auto interval_data = _data_manager->getData<DigitalIntervalSeries>(_active_key);
+    if (!interval_data) {
+        std::cerr << "Could not retrieve DigitalIntervalSeries data." << std::endl;
+        return;
+    }
+    
+    // Find the overall range
+    int64_t min_start = selected_intervals[0].start;
+    int64_t max_end = selected_intervals[0].end;
+    
+    for (Interval const & interval : selected_intervals) {
+        min_start = std::min(min_start, interval.start);
+        max_end = std::max(max_end, interval.end);
+    }
+    
+    // Remove all selected intervals first
+    for (Interval const & interval : selected_intervals) {
+        for (int64_t time = interval.start; time <= interval.end; ++time) {
+            interval_data->setEventAtTime(static_cast<int>(time), false);
+        }
+    }
+    
+    // Add the merged interval
+    interval_data->addEvent(Interval{min_start, max_end});
+    
+    std::cout << "Merged " << selected_intervals.size() << " intervals into range [" 
+              << min_start << ", " << max_end << "]" << std::endl;
 }

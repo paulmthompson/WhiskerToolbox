@@ -6,10 +6,13 @@
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
 #include "mlpack_conversion.hpp"
+#include "DataManager/Tensors/Tensor_Data.hpp"
 #define slots Q_SLOTS
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager/Points/Point_Data.hpp"
+
 #include "DataManager/utils/armadillo_wrap/analog_armadillo.hpp"
 #include "MLModelOperation.hpp"
 #include "MLModelRegistry.hpp"
@@ -29,6 +32,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <numeric>
 
 
 ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
@@ -255,6 +259,20 @@ void ML_Widget::_fitModel() {
     }
     std::cout << "Training feature array size: " << feature_array.n_rows << " x " << feature_array.n_cols << std::endl;
 
+    // Remove NaN columns from training data
+    feature_array = _removeNaNColumns(feature_array, training_timestamps);
+    if (feature_array.n_cols == 0) {
+        std::cerr << "No valid training data remains after NaN removal. Aborting fit." << std::endl;
+        return;
+    }
+    std::cout << "Training feature array size after NaN removal: " << feature_array.n_rows << " x " << feature_array.n_cols << std::endl;
+
+    // Apply z-score normalization if enabled
+    if (_feature_processing_widget->isZScoreNormalizationEnabled()) {
+        feature_array = _zScoreNormalizeFeatures(feature_array, active_proc_features);
+        std::cout << "Applied z-score normalization to training features" << std::endl;
+    }
+
     // Use existing create_arrays for outcomes for now, assuming it works with a set of outcome keys
     arma::Mat<double> outcome_array = create_arrays(_selected_outcomes, training_timestamps, _data_manager.get());
     if (outcome_array.n_cols == 0 && !training_timestamps.empty()) {// only error if timestamps were available
@@ -371,12 +389,20 @@ void ML_Widget::_fitModel() {
                   << " (Range: " << prediction_timestamps.front() << " to " << prediction_timestamps.back() << ")" << std::endl;
 
         std::string pred_feature_matrix_error;
-        arma::Mat<double> const prediction_feature_array = _createFeatureMatrix(
+        arma::Mat<double> prediction_feature_array = _createFeatureMatrix(
                 active_proc_features, prediction_timestamps, pred_feature_matrix_error);
 
         if (!pred_feature_matrix_error.empty()) {
             std::cerr << "Error(s) creating prediction feature matrix:\n"
                       << pred_feature_matrix_error << std::endl;
+        }
+
+        std::cout << "The prediction mask nan values: " << prediction_feature_array.has_nan() << std::endl;
+        prediction_feature_array.replace(arma::datum::nan, 0.0); // Prediction fails if there is a NaN value
+        std::cout << "After nan replacement: " << prediction_feature_array.has_nan() << std::endl;
+
+        if (_feature_processing_widget->isZScoreNormalizationEnabled()) {
+            prediction_feature_array = _zScoreNormalizeFeatures(prediction_feature_array, active_proc_features);
         }
 
         if (prediction_feature_array.n_cols > 0) {
@@ -674,6 +700,121 @@ arma::Mat<double> ML_Widget::_createFeatureMatrix(
         }
     }
     return final_feature_matrix;
+}
+
+arma::Mat<double> ML_Widget::_removeNaNColumns(arma::Mat<double> const & matrix, std::vector<std::size_t> & timestamps) const {
+    if (matrix.empty() || timestamps.empty()) {
+        return matrix;
+    }
+    
+    std::vector<arma::uword> valid_columns;
+    
+    // Check each column for NaN values
+    for (arma::uword col = 0; col < matrix.n_cols; ++col) {
+        bool has_nan = false;
+        for (arma::uword row = 0; row < matrix.n_rows; ++row) {
+            if (!std::isfinite(matrix(row, col))) {
+                has_nan = true;
+                break;
+            }
+        }
+        if (!has_nan) {
+            valid_columns.push_back(col);
+        }
+    }
+    
+    size_t original_cols = matrix.n_cols;
+    size_t removed_cols = original_cols - valid_columns.size();
+    
+    if (removed_cols > 0) {
+        std::cout << "Removed " << removed_cols << " timestamp columns containing NaN values out of " 
+                  << original_cols << " total columns (" 
+                  << (100.0 * removed_cols / original_cols) << "% removed)" << std::endl;
+    }
+    
+    if (valid_columns.empty()) {
+        std::cout << "Warning: All columns contained NaN values. Returning empty matrix." << std::endl;
+        timestamps.clear();
+        return arma::Mat<double>();
+    }
+    
+    // Create new matrix with only valid columns
+    arma::Mat<double> cleaned_matrix(matrix.n_rows, valid_columns.size());
+    std::vector<std::size_t> cleaned_timestamps;
+    
+    for (size_t i = 0; i < valid_columns.size(); ++i) {
+        cleaned_matrix.col(i) = matrix.col(valid_columns[i]);
+        cleaned_timestamps.push_back(timestamps[valid_columns[i]]);
+    }
+    
+    timestamps = cleaned_timestamps;
+    return cleaned_matrix;
+}
+
+arma::Mat<double> ML_Widget::_zScoreNormalizeFeatures(arma::Mat<double> const & matrix, 
+        std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & processed_features) const {
+    if (matrix.empty()) {
+        return matrix;
+    }
+    
+    arma::Mat<double> normalized_matrix = matrix;
+    arma::uword current_row = 0;
+    
+    for (auto const & p_feature : processed_features) {
+        std::string base_key = p_feature.base_feature_key;
+        DM_DataType data_type = _data_manager->getType(base_key);
+        
+        // Skip normalization for DigitalInterval features (binary)
+        bool skip_normalization = (data_type == DM_DataType::DigitalInterval);
+        
+        // Determine how many rows this feature contributes
+        arma::uword feature_rows = 1; // Default for most features
+        
+        if (data_type == DM_DataType::Points) {
+            auto point_data = _data_manager->getData<PointData>(base_key);
+            if (point_data) {
+                feature_rows = point_data->getMaxPoints() * 2; // x,y coordinates
+            }
+        } else if (data_type == DM_DataType::Tensor) {
+            auto tensor_data = _data_manager->getData<TensorData>(base_key);
+            if (tensor_data) {
+                auto feature_shape = tensor_data->getFeatureShape();
+                feature_rows = std::accumulate(feature_shape.begin(), feature_shape.end(), 1, std::multiplies<>());
+            }
+        }
+        
+        // Apply lag/lead multiplier if applicable
+        if (p_feature.transformation.type == WhiskerTransformations::TransformationType::LagLead) {
+            if (auto* ll_params = std::get_if<WhiskerTransformations::LagLeadParams>(&p_feature.transformation.params)) {
+                int num_shifts = ll_params->max_lead_steps - ll_params->min_lag_steps + 1;
+                feature_rows *= num_shifts;
+            }
+        }
+        
+        if (!skip_normalization) {
+            // Normalize each row (feature) separately
+            for (arma::uword row = current_row; row < current_row + feature_rows; ++row) {
+                if (row < normalized_matrix.n_rows) {
+                    arma::rowvec feature_row = normalized_matrix.row(row);
+                    
+                    // Check if this row has any finite values
+                    arma::uvec finite_indices = arma::find_finite(feature_row);
+                    if (finite_indices.n_elem > 1) { // Need at least 2 values for std calculation
+                        double mean_val = arma::mean(feature_row(finite_indices));
+                        double std_val = arma::stddev(feature_row(finite_indices));
+                        
+                        if (std_val > 1e-10) { // Avoid division by zero
+                            normalized_matrix.row(row) = (feature_row - mean_val) / std_val;
+                        }
+                    }
+                }
+            }
+        }
+        
+        current_row += feature_rows;
+    }
+    
+    return normalized_matrix;
 }
 
 std::vector<std::size_t> create_timestamps(std::vector<Interval> & intervals) {

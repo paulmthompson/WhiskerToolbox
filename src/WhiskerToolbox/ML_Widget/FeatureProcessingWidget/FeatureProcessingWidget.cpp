@@ -38,6 +38,7 @@ FeatureProcessingWidget::FeatureProcessingWidget(QWidget * parent)
     connect(ui->lagLeadTransformCheckBox, &QCheckBox::toggled, this, &FeatureProcessingWidget::_onLagLeadCheckBoxToggled);
     connect(ui->minLagSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &FeatureProcessingWidget::_onMinLagChanged);
     connect(ui->maxLeadSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &FeatureProcessingWidget::_onMaxLeadChanged);
+    connect(ui->zScoreNormalizationCheckBox, &QCheckBox::toggled, this, &FeatureProcessingWidget::configurationChanged);
 
     _clearTransformationUI();                      // Initial state for transformation UI
     ui->transformationsGroupBox->setEnabled(false);// Disabled until a feature is selected
@@ -312,6 +313,10 @@ std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> FeatureProcessingWidg
         }
     }
     return active_features;
+}
+
+bool FeatureProcessingWidget::isZScoreNormalizationEnabled() const {
+    return ui->zScoreNormalizationCheckBox->isChecked();
 }
 
 // Note: _removeTransformation is not strictly needed with how _addOrUpdateTransformation is structured

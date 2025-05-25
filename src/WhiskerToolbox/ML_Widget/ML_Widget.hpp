@@ -62,6 +62,10 @@ private:
             std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & processed_features,
             std::vector<std::size_t> const & timestamps,
             std::string & error_message) const;
+    
+    arma::Mat<double> _removeNaNColumns(arma::Mat<double> const & matrix, std::vector<std::size_t> & timestamps) const;
+    arma::Mat<double> _zScoreNormalizeFeatures(arma::Mat<double> const & matrix, 
+            std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & processed_features) const;
 
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar * _time_scrollbar;

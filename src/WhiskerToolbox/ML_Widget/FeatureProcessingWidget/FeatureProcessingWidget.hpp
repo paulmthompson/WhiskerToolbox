@@ -32,6 +32,7 @@ public:
     void setDataManager(DataManager * dm);
     void populateBaseFeatures();
     std::vector<WhiskerTransformations::ProcessedFeatureInfo> getActiveProcessedFeatures() const;
+    bool isZScoreNormalizationEnabled() const;
 
 signals:
     void configurationChanged();// Emitted when a feature's transformation config changes

@@ -170,6 +170,16 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="zScoreNormalizationCheckBox">
+     <property name="text">
+      <string>Z-Score Normalize Features (excludes binary features)</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="activeFeaturesDisplayLabel">
      <property name="text">
       <string>Active Features for Model:</string>
