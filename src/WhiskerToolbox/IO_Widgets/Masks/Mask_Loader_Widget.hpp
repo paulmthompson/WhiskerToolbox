@@ -2,7 +2,7 @@
 #define MASK_LOADER_WIDGET_HPP
 
 
-#include "IO_Widgets/MaskIOWidgets/HDF5/HDF5MaskLoader_Widget.hpp"
+#include "IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.hpp"
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QWidget>

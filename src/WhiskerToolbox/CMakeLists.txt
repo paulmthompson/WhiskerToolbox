@@ -279,58 +279,58 @@ set(PROJECT_SOURCES
         IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp
         IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.ui
 
-        IO_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp
-        IO_Widgets/PointLoaderWidget/Point_Loader_Widget.cpp
-        IO_Widgets/PointLoaderWidget/Point_Loader_Widget.ui
-        IO_Widgets/PointLoaderWidget/CSV/CSVPointLoader_Widget.cpp
-        IO_Widgets/PointLoaderWidget/CSV/CSVPointLoader_Widget.hpp
-        IO_Widgets/PointLoaderWidget/CSV/CSVPointLoader_Widget.ui
-        IO_Widgets/PointLoaderWidget/CSV/CSVPointSaver_Widget.cpp
-        IO_Widgets/PointLoaderWidget/CSV/CSVPointSaver_Widget.hpp
-        IO_Widgets/PointLoaderWidget/CSV/CSVPointSaver_Widget.ui
+        IO_Widgets/Points/Point_Loader_Widget.hpp
+        IO_Widgets/Points/Point_Loader_Widget.cpp
+        IO_Widgets/Points/Point_Loader_Widget.ui
+        IO_Widgets/Points/CSV/CSVPointLoader_Widget.cpp
+        IO_Widgets/Points/CSV/CSVPointLoader_Widget.hpp
+        IO_Widgets/Points/CSV/CSVPointLoader_Widget.ui
+        IO_Widgets/Points/CSV/CSVPointSaver_Widget.cpp
+        IO_Widgets/Points/CSV/CSVPointSaver_Widget.hpp
+        IO_Widgets/Points/CSV/CSVPointSaver_Widget.ui
 
-        IO_Widgets/MaskIOWidgets/Mask_Loader_Widget.hpp
-        IO_Widgets/MaskIOWidgets/Mask_Loader_Widget.cpp
-        IO_Widgets/MaskIOWidgets/Mask_Loader_Widget.ui
-        IO_Widgets/MaskIOWidgets/HDF5/HDF5MaskLoader_Widget.cpp
-        IO_Widgets/MaskIOWidgets/HDF5/HDF5MaskLoader_Widget.hpp
-        IO_Widgets/MaskIOWidgets/HDF5/HDF5MaskLoader_Widget.ui
+        IO_Widgets/Masks/Mask_Loader_Widget.hpp
+        IO_Widgets/Masks/Mask_Loader_Widget.cpp
+        IO_Widgets/Masks/Mask_Loader_Widget.ui
+        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.cpp
+        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.hpp
+        IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.ui
 
-        IO_Widgets/LineIOWidgets/Line_Loader_Widget.hpp
-        IO_Widgets/LineIOWidgets/Line_Loader_Widget.cpp
-        IO_Widgets/LineIOWidgets/Line_Loader_Widget.ui
-        IO_Widgets/LineIOWidgets/HDF5/HDF5LineLoader_Widget.hpp
-        IO_Widgets/LineIOWidgets/HDF5/HDF5LineLoader_Widget.cpp
-        IO_Widgets/LineIOWidgets/HDF5/HDF5LineLoader_Widget.ui
-        IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.hpp
-        IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.cpp
-        IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.ui
-        IO_Widgets/LineIOWidgets/CSV/CSVLineSaver_Widget.cpp
-        IO_Widgets/LineIOWidgets/CSV/CSVLineSaver_Widget.hpp
-        IO_Widgets/LineIOWidgets/CSV/CSVLineSaver_Widget.ui
-        IO_Widgets/LineIOWidgets/Binary/BinaryLineSaver_Widget.cpp
-        IO_Widgets/LineIOWidgets/Binary/BinaryLineSaver_Widget.hpp
-        IO_Widgets/LineIOWidgets/Binary/BinaryLineSaver_Widget.ui
-        IO_Widgets/LineIOWidgets/Binary/BinaryLineLoader_Widget.cpp
-        IO_Widgets/LineIOWidgets/Binary/BinaryLineLoader_Widget.hpp
-        IO_Widgets/LineIOWidgets/Binary/BinaryLineLoader_Widget.ui
-        IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.hpp
-        IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.cpp
-        IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.ui
+        IO_Widgets/Lines/Line_Loader_Widget.hpp
+        IO_Widgets/Lines/Line_Loader_Widget.cpp
+        IO_Widgets/Lines/Line_Loader_Widget.ui
+        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.hpp
+        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.cpp
+        IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.ui
+        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.hpp
+        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.cpp
+        IO_Widgets/Lines/CSV/CSVLineLoader_Widget.ui
+        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.cpp
+        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp
+        IO_Widgets/Lines/CSV/CSVLineSaver_Widget.ui
+        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.cpp
+        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp
+        IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.ui
+        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.cpp
+        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.hpp
+        IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.ui
+        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.hpp
+        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.cpp
+        IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.ui
 
-        IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.hpp
-        IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.cpp
-        IO_Widgets/DigitalIntervalLoaderWidget/Digital_Interval_Loader_Widget.ui
-        IO_Widgets/DigitalIntervalLoaderWidget/CSV/CSVDigitalIntervalLoader_Widget.cpp
-        IO_Widgets/DigitalIntervalLoaderWidget/CSV/CSVDigitalIntervalLoader_Widget.hpp
-        IO_Widgets/DigitalIntervalLoaderWidget/CSV/CSVDigitalIntervalLoader_Widget.ui
-        IO_Widgets/DigitalIntervalLoaderWidget/CSV/CSVIntervalSaver_Widget.cpp
-        IO_Widgets/DigitalIntervalLoaderWidget/CSV/CSVIntervalSaver_Widget.hpp
-        IO_Widgets/DigitalIntervalLoaderWidget/CSV/CSVIntervalSaver_Widget.ui
+        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp
+        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.cpp
+        IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.ui
+        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.cpp
+        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp
+        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.ui
+        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.cpp
+        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp
+        IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.ui
 
-        IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.hpp
-        IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.cpp
-        IO_Widgets/TensorLoaderWidget/Tensor_Loader_Widget.ui
+        IO_Widgets/Tensors/Tensor_Loader_Widget.hpp
+        IO_Widgets/Tensors/Tensor_Loader_Widget.cpp
+        IO_Widgets/Tensors/Tensor_Loader_Widget.ui
 
         IO_Widgets/Media/media_export.hpp
         IO_Widgets/Media/media_export.cpp

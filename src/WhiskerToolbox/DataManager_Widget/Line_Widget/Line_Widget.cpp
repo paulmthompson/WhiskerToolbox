@@ -7,8 +7,8 @@
 #include "LineTableModel.hpp"
 
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
-#include "IO_Widgets/LineIOWidgets/CSV/CSVLineSaver_Widget.hpp"
-#include "IO_Widgets/LineIOWidgets/Binary/BinaryLineSaver_Widget.hpp"
+#include "IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp"
+#include "IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp"
 #include "IO_Widgets/Media/MediaExport_Widget.hpp"
 
 #include <QTableView>

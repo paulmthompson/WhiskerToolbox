@@ -1,7 +1,7 @@
 #ifndef POINT_LOADER_WIDGET_HPP
 #define POINT_LOADER_WIDGET_HPP
 
-#include "IO_Widgets/PointLoaderWidget/CSV/CSVPointLoader_Widget.hpp"
+#include "IO_Widgets/Points/CSV/CSVPointLoader_Widget.hpp"
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 #include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
 

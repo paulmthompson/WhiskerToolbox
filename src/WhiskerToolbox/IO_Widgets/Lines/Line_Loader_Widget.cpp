@@ -6,10 +6,10 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/loaders/hdf5_loaders.hpp"
 #include "DataManager/Lines/IO/Binary/Line_Data_Binary.hpp"
-#include "IO_Widgets/LineIOWidgets/HDF5/HDF5LineLoader_Widget.hpp"
-#include "IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.hpp"
-#include "IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.hpp"
-#include "IO_Widgets/LineIOWidgets/Binary/BinaryLineLoader_Widget.hpp"
+#include "IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.hpp"
+#include "IO_Widgets/Lines/CSV/CSVLineLoader_Widget.hpp"
+#include "IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.hpp"
+#include "IO_Widgets/Lines/Binary/BinaryLineLoader_Widget.hpp"
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QFileDialog>

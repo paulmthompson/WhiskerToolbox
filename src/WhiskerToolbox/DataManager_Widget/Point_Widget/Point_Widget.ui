@@ -137,15 +137,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CSVPointSaver_Widget</class>
-   <extends>QWidget</extends>
-   <header>IO_Widgets/PointLoaderWidget/CSV/CSVPointSaver_Widget.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>MediaExport_Widget</class>
    <extends>QWidget</extends>
    <header>IO_Widgets/Media/MediaExport_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CSVPointSaver_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/Points/CSV/CSVPointSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -16,15 +16,14 @@
   <layout class="QVBoxLayout" name="mainVerticalLayout">
    <item>
     <widget class="QLabel" name="label_main_title">
-     <property name="text">
-      <string>Line Data Management</string>
-     </property>
      <property name="font">
       <font>
        <pointsize>12</pointsize>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
+     </property>
+     <property name="text">
+      <string>Line Data Management</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -131,7 +130,7 @@
      <item>
       <spacer name="actionButtonSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -149,13 +148,13 @@
   <customwidget>
    <class>CSVLineSaver_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/LineIOWidgets/CSV/CSVLineSaver_Widget.hpp</header>
+   <header>IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>BinaryLineSaver_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/LineIOWidgets/Binary/BinaryLineSaver_Widget.hpp</header>
+   <header>IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Line_Loader_Widget</class>
- <widget class="QWidget" name="Line_Loader_Widget">
+ <class>Point_Loader_Widget</class>
+ <widget class="QWidget" name="Point_Loader_Widget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>526</width>
-    <height>400</height>
+    <width>446</width>
+    <height>350</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
+  <layout class="QVBoxLayout" name="mainVerticalLayout">
    <item>
     <layout class="QHBoxLayout" name="dataNameLayout">
      <item>
       <widget class="QLineEdit" name="data_name_text">
        <property name="text">
-        <string>line_1</string>
+        <string>keypoint_1</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QLabel" name="label_data_name">
        <property name="text">
-        <string>Line Name</string>
+        <string>Keypoint Name</string>
        </property>
       </widget>
      </item>
@@ -45,22 +45,7 @@
       <widget class="QComboBox" name="loader_type_combo">
        <item>
         <property name="text">
-         <string>HDF5</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>CSV</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>LMDB</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Binary</string>
         </property>
        </item>
       </widget>
@@ -85,10 +70,7 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="HDF5LineLoader_Widget" name="hdf5_line_loader" native="true"/>
-     <widget class="CSVLineLoader_Widget" name="csv_line_loader" native="true"/>
-     <widget class="LMDBLineLoader_Widget" name="lmdb_line_loader" native="true"/>
-     <widget class="BinaryLineLoader_Widget" name="binary_line_loader" native="true"/>
+     <widget class="CSVPointLoader_Widget" name="csv_point_loader_widget"/>
     </widget>
    </item>
    <item>
@@ -111,33 +93,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>HDF5LineLoader_Widget</class>
-   <extends>QWidget</extends>
-   <header>IO_Widgets/LineIOWidgets/HDF5/HDF5LineLoader_Widget.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>CSVLineLoader_Widget</class>
-   <extends>QWidget</extends>
-   <header>IO_Widgets/LineIOWidgets/CSV/CSVLineLoader_Widget.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>LMDBLineLoader_Widget</class>
-   <extends>QWidget</extends>
-   <header>IO_Widgets/LineIOWidgets/LMDB/LMDBLineLoader_Widget.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>BinaryLineLoader_Widget</class>
-   <extends>QWidget</extends>
-   <header>IO_Widgets/LineIOWidgets/Binary/BinaryLineLoader_Widget.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>Scaling_Widget</class>
    <extends>QWidget</extends>
    <header>IO_Widgets/Scaling_Widget/Scaling_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CSVPointLoader_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/Points/CSV/CSVPointLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

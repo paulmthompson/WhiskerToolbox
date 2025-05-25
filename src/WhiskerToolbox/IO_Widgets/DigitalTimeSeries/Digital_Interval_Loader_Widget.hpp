@@ -2,7 +2,7 @@
 #define DIGITAL_INTERVAL_LOADER_WIDGET_HPP
 
 #include <QWidget>
-#include "IO_Widgets/DigitalIntervalLoaderWidget/CSV/CSVDigitalIntervalLoader_Widget.hpp"
+#include "IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp"
 
 #include <memory>
 #include <string>
