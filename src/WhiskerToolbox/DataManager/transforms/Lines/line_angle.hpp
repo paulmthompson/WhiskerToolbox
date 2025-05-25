@@ -3,39 +3,29 @@
 
 #include "transforms/data_transforms.hpp"
 
-#include <memory>       // std::shared_ptr
-#include <string>       // std::string
-#include <typeindex>    // std::type_index
-#include <vector>       // std::vector
+#include <memory>   // std::shared_ptr
+#include <string>   // std::string
+#include <typeindex>// std::type_index
+#include <vector>   // std::vector
 
 class AnalogTimeSeries;
 class LineData;
 
 enum class AngleCalculationMethod {
-    DirectPoints,        // Original method - directly calculate angle between two points
-    PolynomialFit        // Fit polynomials to the line and calculate angle from derivatives
+    DirectPoints,// Original method - directly calculate angle between two points
+    PolynomialFit// Fit polynomials to the line and calculate angle from derivatives
 };
 
 struct LineAngleParameters : public TransformParametersBase {
-    float position = 0.2f;                              // Default 20% along the line
-    AngleCalculationMethod method = AngleCalculationMethod::DirectPoints; // Default method
-    int polynomial_order = 3;                           // Default polynomial order
-    
+    float position = 0.2f;                                               // Default 20% along the line
+    AngleCalculationMethod method = AngleCalculationMethod::DirectPoints;// Default method
+    int polynomial_order = 3;                                            // Default polynomial order
+
     // Reference vector parameters (what direction is 0 degrees)
     // Default is (1,0) which corresponds to the positive x-axis
     float reference_x = 1.0f;
     float reference_y = 0.0f;
 };
-
-
-/**
- * @brief Calculate the angle at a specified position along a line at each timestamp
- *
- * @param line_data The line data to calculate angles from
- * @param params Parameters including the position along the line (0.0-1.0)
- * @return A new AnalogTimeSeries containing angle values at each timestamp
- */
-std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data, LineAngleParameters const * params);
 
 class LineAngleOperation final : public TransformOperation {
 public:
@@ -68,7 +58,22 @@ public:
      * or an empty variant on failure.
      */
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
-                           TransformParametersBase const * transformParameters) override;
+                            TransformParametersBase const * transformParameters) override;
 };
+
+
+/**
+ * @brief Calculate the angle at a specified position along a line at each timestamp
+ *
+ * @param line_data The line data to calculate angles from
+ * @param params Parameters including the position along the line (0.0-1.0)
+ * @return A new AnalogTimeSeries containing angle values at each timestamp
+ */
+std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
+                                             LineAngleParameters const * params);
+
+std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
+                                             LineAngleParameters const * params,
+                                             ProgressCallback progressCallback);
 
 #endif//LINE_ANGLE_HPP

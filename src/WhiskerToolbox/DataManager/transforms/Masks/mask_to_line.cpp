@@ -1,28 +1,27 @@
 #include "mask_to_line.hpp"
 
-#include "Masks/Mask_Data.hpp"
 #include "Lines/Line_Data.hpp"
+#include "Masks/Mask_Data.hpp"
 
-#include "utils/skeletonize.hpp"
 #include "order_line.hpp"
-#include "utils/polynomial/polynomial_fit.hpp"
-#include "utils/polynomial/parametric_polynomial_utils.hpp"
 #include "utils/line_resampling.hpp"
+#include "utils/polynomial/parametric_polynomial_utils.hpp"
+#include "utils/polynomial/polynomial_fit.hpp"
+#include "utils/skeletonize.hpp"
 
 #include <armadillo>
 
 #include <chrono>
 #include <cmath>
 #include <iostream>
-#include <numeric> // for std::accumulate
+#include <numeric>// for std::accumulate
 #include <vector>
 
 
-
 // Helper function to fit a polynomial to the given data
-std::vector<double> fit_polynomial_to_points(const std::vector<Point2D<float>>& points, int order) {
+std::vector<double> fit_polynomial_to_points(std::vector<Point2D<float>> const & points, int order) {
     if (points.size() <= order) {
-        return {};  // Not enough data points
+        return {};// Not enough data points
     }
 
     // Calculate t values using the helper function
@@ -34,11 +33,11 @@ std::vector<double> fit_polynomial_to_points(const std::vector<Point2D<float>>& 
     // Extract x and y coordinates
     std::vector<double> x_coords;
     std::vector<double> y_coords;
-    
+
     x_coords.reserve(points.size());
     y_coords.reserve(points.size());
-    
-    for (const auto& point : points) {
+
+    for (auto const & point: points) {
         x_coords.push_back(static_cast<double>(point.x));
         y_coords.push_back(static_cast<double>(point.y));
     }
@@ -57,9 +56,9 @@ std::vector<double> fit_polynomial_to_points(const std::vector<Point2D<float>>& 
     // Solve least squares problem
     arma::vec coeffs;
     bool success = arma::solve(coeffs, X, Y);
-    
+
     if (!success) {
-        return {}; // Failed to solve
+        return {};// Failed to solve
     }
 
     // Convert Armadillo vector to std::vector
@@ -74,9 +73,9 @@ struct ParametricCoefficients {
     bool success = false;
 };
 
-ParametricCoefficients fit_parametric_polynomials(const std::vector<Point2D<float>>& points, int order) {
+ParametricCoefficients fit_parametric_polynomials(std::vector<Point2D<float>> const & points, int order) {
     if (points.size() <= order) {
-        return {{}, {}, false}; // Not enough points
+        return {{}, {}, false};// Not enough points
     }
 
     std::vector<double> t_values = compute_t_values(points);
@@ -89,7 +88,7 @@ ParametricCoefficients fit_parametric_polynomials(const std::vector<Point2D<floa
     x_coords.reserve(points.size());
     y_coords.reserve(points.size());
 
-    for (const auto& point : points) {
+    for (auto const & point: points) {
         x_coords.push_back(static_cast<double>(point.x));
         y_coords.push_back(static_cast<double>(point.y));
     }
@@ -106,11 +105,11 @@ ParametricCoefficients fit_parametric_polynomials(const std::vector<Point2D<floa
 
 // Helper function to generate a smoothed line from parametric polynomial coefficients
 std::vector<Point2D<float>> generate_smoothed_line(
-    const std::vector<Point2D<float>>& original_points, // Used to estimate total length
-    const std::vector<double>& x_coeffs,
-    const std::vector<double>& y_coeffs,
-    int order,
-    float target_spacing) {
+        std::vector<Point2D<float>> const & original_points,// Used to estimate total length
+        std::vector<double> const & x_coeffs,
+        std::vector<double> const & y_coeffs,
+        int order,
+        float target_spacing) {
     if (original_points.empty() || x_coeffs.empty() || y_coeffs.empty()) {
         return {};
     }
@@ -124,17 +123,17 @@ std::vector<Point2D<float>> generate_smoothed_line(
             total_length += std::sqrt(dx * dx + dy * dy);
         }
     }
-    
+
     // If total length is very small or zero, or only one point, just return the (fitted) first point
-    if (total_length < 1e-6 || original_points.size() <=1 || target_spacing <= 1e-6) {
+    if (total_length < 1e-6 || original_points.size() <= 1 || target_spacing <= 1e-6) {
         if (!original_points.empty()) {
-             // Evaluate polynomial at t=0 (or use the first point if no coeffs)
+            // Evaluate polynomial at t=0 (or use the first point if no coeffs)
             if (!x_coeffs.empty() && !y_coeffs.empty()) {
                 float x = static_cast<float>(evaluate_polynomial(x_coeffs, 0.0));
                 float y = static_cast<float>(evaluate_polynomial(y_coeffs, 0.0));
                 return {{x, y}};
             } else {
-                 return {original_points[0]}; // Fallback
+                return {original_points[0]};// Fallback
             }
         } else {
             return {};
@@ -142,13 +141,13 @@ std::vector<Point2D<float>> generate_smoothed_line(
     }
 
     // Determine number of samples based on target_spacing
-    int num_samples = std::max(2, static_cast<int>(std::round(total_length / target_spacing))); 
+    int num_samples = std::max(2, static_cast<int>(std::round(total_length / target_spacing)));
 
     std::vector<Point2D<float>> smoothed_line;
     smoothed_line.reserve(num_samples);
 
     for (int i = 0; i < num_samples; ++i) {
-        double t = static_cast<double>(i) / static_cast<double>(num_samples - 1); // t in [0,1]
+        double t = static_cast<double>(i) / static_cast<double>(num_samples - 1);// t in [0,1]
         float x = static_cast<float>(evaluate_polynomial(x_coeffs, t));
         float y = static_cast<float>(evaluate_polynomial(y_coeffs, t));
         smoothed_line.push_back({x, y});
@@ -157,102 +156,102 @@ std::vector<Point2D<float>> generate_smoothed_line(
 }
 
 // Calculate the error between fitted polynomial and original points
-std::vector<float> calculate_fitting_errors(const std::vector<Point2D<float>>& points, 
-                                          const std::vector<double>& x_coeffs, 
-                                          const std::vector<double>& y_coeffs) {
+std::vector<float> calculate_fitting_errors(std::vector<Point2D<float>> const & points,
+                                            std::vector<double> const & x_coeffs,
+                                            std::vector<double> const & y_coeffs) {
     if (points.empty()) {
         return {};
     }
-    
+
     // Calculate t values using the helper function
     std::vector<double> t_values = compute_t_values(points);
     if (t_values.empty()) {
         return {};
     }
-    
+
     std::vector<float> errors;
     errors.reserve(points.size());
-    
+
     for (size_t i = 0; i < points.size(); ++i) {
         double fitted_x = evaluate_polynomial(x_coeffs, t_values[i]);
         double fitted_y = evaluate_polynomial(y_coeffs, t_values[i]);
-        
+
         // Use squared error directly (no square root)
-        float error_squared = std::pow(points[i].x - fitted_x, 2) + 
-                            std::pow(points[i].y - fitted_y, 2);
+        float error_squared = std::pow(points[i].x - fitted_x, 2) +
+                              std::pow(points[i].y - fitted_y, 2);
         errors.push_back(error_squared);
     }
-    
+
     return errors;
 }
 
 // Recursive helper function for removing outliers
-std::vector<Point2D<float>> remove_outliers_recursive(const std::vector<Point2D<float>>& points, 
-                                                    float error_threshold_squared, 
-                                                    int polynomial_order,
-                                                    int max_iterations = 10) {
+std::vector<Point2D<float>> remove_outliers_recursive(std::vector<Point2D<float>> const & points,
+                                                      float error_threshold_squared,
+                                                      int polynomial_order,
+                                                      int max_iterations = 10) {
     if (points.size() < polynomial_order + 2 || max_iterations <= 0) {
-        return points;  // Base case: not enough points or max iterations reached
+        return points;// Base case: not enough points or max iterations reached
     }
-    
+
     // Calculate t values for parameterization
     std::vector<double> t_values = compute_t_values(points);
     if (t_values.empty()) {
         return points;
     }
-    
+
     // Extract x and y coordinates
     std::vector<double> x_coords;
     std::vector<double> y_coords;
-    
+
     x_coords.reserve(points.size());
     y_coords.reserve(points.size());
-    
-    for (const auto& point : points) {
+
+    for (auto const & point: points) {
         x_coords.push_back(static_cast<double>(point.x));
         y_coords.push_back(static_cast<double>(point.y));
     }
-    
+
     // Create Armadillo matrices
     arma::mat X(t_values.size(), polynomial_order + 1);
     arma::vec X_vec(x_coords.data(), x_coords.size());
     arma::vec Y_vec(y_coords.data(), y_coords.size());
-    
+
     // Build Vandermonde matrix
     for (size_t i = 0; i < t_values.size(); ++i) {
         for (int j = 0; j <= polynomial_order; ++j) {
             X(i, j) = std::pow(t_values[i], j);
         }
     }
-    
+
     // Solve least squares problems
     arma::vec x_coeffs;
     arma::vec y_coeffs;
     bool success_x = arma::solve(x_coeffs, X, X_vec);
     bool success_y = arma::solve(y_coeffs, X, Y_vec);
-    
+
     if (!success_x || !success_y) {
-        return points;  // Failed to fit, return original points
+        return points;// Failed to fit, return original points
     }
-    
+
     // Calculate errors and filter points
     std::vector<Point2D<float>> filtered_points;
     filtered_points.reserve(points.size());
     bool any_points_removed = false;
-    
+
     for (size_t i = 0; i < points.size(); ++i) {
         double fitted_x = 0.0;
         double fitted_y = 0.0;
-        
+
         for (int j = 0; j <= polynomial_order; ++j) {
             fitted_x += x_coeffs(j) * std::pow(t_values[i], j);
             fitted_y += y_coeffs(j) * std::pow(t_values[i], j);
         }
-        
+
         // Use squared error directly (no square root)
-        float error_squared = std::pow(points[i].x - fitted_x, 2) + 
-                            std::pow(points[i].y - fitted_y, 2);
-        
+        float error_squared = std::pow(points[i].x - fitted_x, 2) +
+                              std::pow(points[i].y - fitted_y, 2);
+
         // Keep point if error is below threshold
         if (error_squared <= error_threshold_squared) {
             filtered_points.push_back(points[i]);
@@ -260,46 +259,46 @@ std::vector<Point2D<float>> remove_outliers_recursive(const std::vector<Point2D<
             any_points_removed = true;
         }
     }
-    
+
     // If we filtered too many points, return original set
     if (filtered_points.size() < polynomial_order + 2) {
         return points;
     }
-    
+
     // If we removed points, recursively call with filtered points
     if (any_points_removed) {
         return remove_outliers_recursive(filtered_points, error_threshold_squared, polynomial_order, max_iterations - 1);
     } else {
-        return filtered_points;  // No more points to remove
+        return filtered_points;// No more points to remove
     }
 }
 
 // Main outlier removal function using recursion
-std::vector<Point2D<float>> remove_outliers(const std::vector<Point2D<float>>& points, 
-                                          float error_threshold, 
-                                          int polynomial_order) {
+std::vector<Point2D<float>> remove_outliers(std::vector<Point2D<float>> const & points,
+                                            float error_threshold,
+                                            int polynomial_order) {
     if (points.size() < polynomial_order + 2) {
-        return points;  // Not enough points to fit and filter
+        return points;// Not enough points to fit and filter
     }
-    
+
     // Convert threshold to squared threshold to avoid square roots in comparisons
     float error_threshold_squared = error_threshold * error_threshold;
-    
+
     // Call recursive helper with a reasonable iteration limit
     return remove_outliers_recursive(points, error_threshold_squared, polynomial_order, 10);
 }
 
-std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data, MaskToLineParameters const* params) {
+std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data, MaskToLineParameters const * params) {
     // Call the version with progress reporting but ignore progress
     return mask_to_line(mask_data, params, [](int) {});
 }
 
-std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data, 
-                                       MaskToLineParameters const* params,
+std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
+                                       MaskToLineParameters const * params,
                                        ProgressCallback progressCallback) {
 
     auto line_map = std::map<int, std::vector<Line2D>>();
-    
+
     // Use default parameters if none provided
     float reference_x = params ? params->reference_x : 0.0f;
     float reference_y = params ? params->reference_y : 0.0f;
@@ -312,7 +311,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     float output_resolution = params ? params->output_resolution : 5.0f;
 
     std::cout << "reference_x: " << reference_x << std::endl;
-    std::cout << "reference_y: " << reference_y << std::endl;   
+    std::cout << "reference_y: " << reference_y << std::endl;
     std::cout << "method: " << static_cast<int>(method) << std::endl;
     std::cout << "polynomial_order: " << polynomial_order << std::endl;
     std::cout << "error_threshold: " << error_threshold << std::endl;
@@ -320,23 +319,23 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     std::cout << "input_point_subsample_factor: " << input_point_subsample_factor << std::endl;
     std::cout << "should_smooth_line: " << should_smooth_line << std::endl;
     std::cout << "output_resolution: " << output_resolution << std::endl;
-    
+
     Point2D<float> reference_point{reference_x, reference_y};
-    
+
     // Initial progress
     progressCallback(0);
-    
+
     // Count total masks to process for progress calculation
     size_t total_masks = 0;
-    for (auto const& mask_time_pair : mask_data->getAllAsRange()) {
+    for (auto const & mask_time_pair: mask_data->getAllAsRange()) {
         if (!mask_time_pair.masks.empty() && !mask_time_pair.masks[0].empty()) {
             total_masks++;
         }
     }
-    
+
     if (total_masks == 0) {
         progressCallback(100);
-        return std::make_shared<LineData>();  // Nothing to process
+        return std::make_shared<LineData>();// Nothing to process
     }
 
     // Create a binary image from the mask points
@@ -348,41 +347,41 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
     }
 
     std::vector<uint8_t> binary_image(image_size.width * image_size.height, 0);
-    
+
     // Timing variables
     std::vector<long long> skeletonize_times;
     std::vector<long long> order_line_times;
     std::vector<long long> outlier_removal_times;
     std::vector<long long> map_insertion_times;
     std::vector<long long> smoothing_times;
-    
+
     size_t processed_masks = 0;
-    for (auto const& mask_time_pair : mask_data->getAllAsRange()) {
+    for (auto const & mask_time_pair: mask_data->getAllAsRange()) {
         int time = mask_time_pair.time;
-        auto const& masks = mask_time_pair.masks;
-        
+        auto const & masks = mask_time_pair.masks;
+
         if (masks.empty()) {
             continue;
         }
-        
+
         // For now, just process the first mask at each time
-        auto const& mask = masks[0];
-        
+        auto const & mask = masks[0];
+
         if (mask.empty()) {
             continue;
         }
-        
+
         std::vector<Point2D<float>> line_points;
-        
+
         if (method == LinePointSelectionMethod::Skeletonize) {
             // Zero out the binary image
             std::fill(binary_image.begin(), binary_image.end(), 0);
-        
-            for (auto const& point : mask) {
+
+            for (auto const & point: mask) {
                 int x = static_cast<int>(point.x);
                 int y = static_cast<int>(point.y);
-            
-                if (x >= 0 && x < image_size.width && 
+
+                if (x >= 0 && x < image_size.width &&
                     y >= 0 && y < image_size.height) {
                     binary_image[y * image_size.width + x] = 1;
                 }
@@ -393,49 +392,45 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
             auto skeleton = fast_skeletonize(binary_image, image_size.height, image_size.width);
             auto skeletonize_end = std::chrono::high_resolution_clock::now();
             skeletonize_times.push_back(
-                std::chrono::duration_cast<std::chrono::microseconds>(
-                    skeletonize_end - skeletonize_start
-                ).count()
-            );
-            
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                            skeletonize_end - skeletonize_start)
+                            .count());
+
             // Time ordering step
             auto order_start = std::chrono::high_resolution_clock::now();
             line_points = order_line(skeleton, image_size, reference_point, input_point_subsample_factor);
             auto order_end = std::chrono::high_resolution_clock::now();
             order_line_times.push_back(
-                std::chrono::duration_cast<std::chrono::microseconds>(
-                    order_end - order_start
-                ).count()
-            );
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                            order_end - order_start)
+                            .count());
         } else {
             // Use nearest neighbor ordering starting from reference
             line_points = mask;
-            
+
             // Time ordering step for this method
             auto order_start = std::chrono::high_resolution_clock::now();
             line_points = order_line(line_points, reference_point, input_point_subsample_factor);
             auto order_end = std::chrono::high_resolution_clock::now();
             order_line_times.push_back(
-                std::chrono::duration_cast<std::chrono::microseconds>(
-                    order_end - order_start
-                ).count()
-            );
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                            order_end - order_start)
+                            .count());
         }
-        
+
         if (should_remove_outliers && line_points.size() > polynomial_order + 2) {
             // Time outlier removal
             auto outlier_start = std::chrono::high_resolution_clock::now();
             line_points = remove_outliers(line_points, error_threshold, polynomial_order);
             auto outlier_end = std::chrono::high_resolution_clock::now();
             outlier_removal_times.push_back(
-                std::chrono::duration_cast<std::chrono::microseconds>(
-                    outlier_end - outlier_start
-                ).count()
-            );
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                            outlier_end - outlier_start)
+                            .count());
         }
 
         // Apply smoothing if requested and enough points exist
-        if (should_smooth_line && line_points.size() > polynomial_order) { // Need at least order+1 points
+        if (should_smooth_line && line_points.size() > polynomial_order) {// Need at least order+1 points
             auto smoothing_start = std::chrono::high_resolution_clock::now();
             ParametricCoefficients coeffs = fit_parametric_polynomials(line_points, polynomial_order);
             if (coeffs.success) {
@@ -448,61 +443,59 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
             }
             auto smoothing_end = std::chrono::high_resolution_clock::now();
             smoothing_times.push_back(
-                 std::chrono::duration_cast<std::chrono::microseconds>(
-                    smoothing_end - smoothing_start
-                ).count()
-            );
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                            smoothing_end - smoothing_start)
+                            .count());
         } else if (!line_points.empty()) {
             // If not smoothing (or not enough points for smoothing), apply resampling directly
             line_points = resample_line_points(line_points, output_resolution);
         }
-        
+
         if (!line_points.empty()) {
             // Time map insertion
             auto insertion_start = std::chrono::high_resolution_clock::now();
             line_map[time].push_back(std::move(line_points));
             auto insertion_end = std::chrono::high_resolution_clock::now();
             map_insertion_times.push_back(
-                std::chrono::duration_cast<std::chrono::microseconds>(
-                    insertion_end - insertion_start
-                ).count()
-            );
+                    std::chrono::duration_cast<std::chrono::microseconds>(
+                            insertion_end - insertion_start)
+                            .count());
         }
-        
+
         processed_masks++;
 
         // Print timing statistics every 1000 iterations or on the last iteration
         if (processed_masks % 1000 == 0 || processed_masks == total_masks) {
             if (!skeletonize_times.empty()) {
-                double skeletonize_avg = std::accumulate(skeletonize_times.begin(), skeletonize_times.end(), 0.0) / 
-                                        skeletonize_times.size();
+                double skeletonize_avg = std::accumulate(skeletonize_times.begin(), skeletonize_times.end(), 0.0) /
+                                         skeletonize_times.size();
                 std::cout << "Average skeletonization time: " << skeletonize_avg << " μs" << std::endl;
             }
-            
+
             if (!order_line_times.empty()) {
-                double order_avg = std::accumulate(order_line_times.begin(), order_line_times.end(), 0.0) / 
-                                  order_line_times.size();
+                double order_avg = std::accumulate(order_line_times.begin(), order_line_times.end(), 0.0) /
+                                   order_line_times.size();
                 std::cout << "Average order_line time: " << order_avg << " μs" << std::endl;
             }
-            
+
             if (!outlier_removal_times.empty()) {
-                double outlier_avg = std::accumulate(outlier_removal_times.begin(), outlier_removal_times.end(), 0.0) / 
-                                    outlier_removal_times.size();
+                double outlier_avg = std::accumulate(outlier_removal_times.begin(), outlier_removal_times.end(), 0.0) /
+                                     outlier_removal_times.size();
                 std::cout << "Average outlier removal time: " << outlier_avg << " μs" << std::endl;
             }
-            
+
             if (!map_insertion_times.empty()) {
-                double insertion_avg = std::accumulate(map_insertion_times.begin(), map_insertion_times.end(), 0.0) / 
-                                      map_insertion_times.size();
+                double insertion_avg = std::accumulate(map_insertion_times.begin(), map_insertion_times.end(), 0.0) /
+                                       map_insertion_times.size();
                 std::cout << "Average map insertion time: " << insertion_avg << " μs" << std::endl;
             }
 
             if (!smoothing_times.empty()) {
                 double smoothing_avg = std::accumulate(smoothing_times.begin(), smoothing_times.end(), 0.0) /
-                                     smoothing_times.size();
+                                       smoothing_times.size();
                 std::cout << "Average smoothing time: " << smoothing_avg << " μs" << std::endl;
             }
-            
+
             // Clear the vectors to only keep the last 1000 measurements
             if (processed_masks % 1000 == 0 && processed_masks < total_masks) {
                 skeletonize_times.clear();
@@ -512,7 +505,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
                 smoothing_times.clear();
             }
         }
-        
+
         int progress = static_cast<int>(std::round((static_cast<double>(processed_masks) / total_masks) * 100.0));
         progressCallback(progress);
     }
@@ -521,9 +514,9 @@ std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
 
     // Copy the image size from mask data to line data
     line_data->setImageSize(mask_data->getImageSize());
-    
+
     progressCallback(100);
-    
+
     return line_data;
 }
 
@@ -535,12 +528,12 @@ std::type_index MaskToLineOperation::getTargetInputTypeIndex() const {
     return typeid(std::shared_ptr<MaskData>);
 }
 
-bool MaskToLineOperation::canApply(DataTypeVariant const& dataVariant) const {
+bool MaskToLineOperation::canApply(DataTypeVariant const & dataVariant) const {
     if (!std::holds_alternative<std::shared_ptr<MaskData>>(dataVariant)) {
         return false;
     }
 
-    auto const* ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
+    auto const * ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
     return ptr_ptr && *ptr_ptr;
 }
 
@@ -548,40 +541,40 @@ std::unique_ptr<TransformParametersBase> MaskToLineOperation::getDefaultParamete
     return std::make_unique<MaskToLineParameters>();
 }
 
-DataTypeVariant MaskToLineOperation::execute(DataTypeVariant const& dataVariant, 
-                                           TransformParametersBase const* transformParameters) {
+DataTypeVariant MaskToLineOperation::execute(DataTypeVariant const & dataVariant,
+                                             TransformParametersBase const * transformParameters) {
     // Call the version with progress reporting but ignore progress
     return execute(dataVariant, transformParameters, [](int) {});
 }
 
-DataTypeVariant MaskToLineOperation::execute(DataTypeVariant const& dataVariant, 
-                                           TransformParametersBase const* transformParameters,
-                                           ProgressCallback progressCallback) {
-    auto const* ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
-    
+DataTypeVariant MaskToLineOperation::execute(DataTypeVariant const & dataVariant,
+                                             TransformParametersBase const * transformParameters,
+                                             ProgressCallback progressCallback) {
+    auto const * ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
+
     if (!ptr_ptr || !(*ptr_ptr)) {
         std::cerr << "MaskToLineOperation::execute called with incompatible variant type or null data." << std::endl;
-        return {};  // Return empty variant
+        return {};// Return empty variant
     }
-    
-    MaskData const* mask_raw_ptr = (*ptr_ptr).get();
-    
-    MaskToLineParameters const* typed_params = nullptr;
+
+    MaskData const * mask_raw_ptr = (*ptr_ptr).get();
+
+    MaskToLineParameters const * typed_params = nullptr;
     if (transformParameters) {
-        typed_params = dynamic_cast<MaskToLineParameters const*>(transformParameters);
+        typed_params = dynamic_cast<MaskToLineParameters const *>(transformParameters);
         if (!typed_params) {
             std::cerr << "MaskToLineOperation::execute: Invalid parameter type" << std::endl;
         }
     }
-    
+
     std::shared_ptr<LineData> result_line = mask_to_line(mask_raw_ptr, typed_params, progressCallback);
-    
+
     // Handle potential failure from the calculation function
     if (!result_line) {
         std::cerr << "MaskToLineOperation::execute: 'mask_to_line' failed to produce a result." << std::endl;
-        return {};  // Return empty variant
+        return {};// Return empty variant
     }
-    
+
     std::cout << "MaskToLineOperation executed successfully." << std::endl;
     return result_line;
-} 
+}

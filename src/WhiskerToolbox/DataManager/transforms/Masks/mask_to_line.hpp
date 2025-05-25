@@ -31,20 +31,6 @@ struct MaskToLineParameters : public TransformParametersBase {
     float output_resolution = 5.0f; // Approximate spacing in pixels between output points
 };
 
-/**
- * @brief Convert a mask to a line by ordering points
- * 
- * @param mask_data The mask data to convert
- * @param params Parameters controlling the conversion process
- * @return std::shared_ptr<LineData> The resulting line data
- */
-std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data, MaskToLineParameters const * params);
-
-
-std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
-                                       MaskToLineParameters const* params,
-                                       ProgressCallback progressCallback);
-
 class MaskToLineOperation final : public TransformOperation {
 public:
     /**
@@ -90,5 +76,19 @@ public:
                            TransformParametersBase const * transformParameters,
                            ProgressCallback progressCallback) override;
 };
+
+/**
+ * @brief Convert a mask to a line by ordering points
+ *
+ * @param mask_data The mask data to convert
+ * @param params Parameters controlling the conversion process
+ * @return std::shared_ptr<LineData> The resulting line data
+ */
+std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data, MaskToLineParameters const * params);
+
+
+std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
+                                       MaskToLineParameters const* params,
+                                       ProgressCallback progressCallback);
 
 #endif // MASK_TO_LINE_HPP 
