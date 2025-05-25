@@ -3,6 +3,8 @@
 
 #include "transforms/data_transforms.hpp"
 
+#include "Points/points.hpp"
+
 #include <memory>       // std::shared_ptr
 #include <string>       // std::string
 #include <typeindex>    // std::type_index
@@ -67,5 +69,10 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data
 std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data,
                                                       PointData const * point_data,
                                                       ProgressCallback progressCallback);
+
+float point_to_line_segment_distance2(
+        Point2D<float> const & point,
+        Point2D<float> const & line_start,
+        Point2D<float> const & line_end);
 
 #endif//LINE_MIN_POINT_DIST_HPP
