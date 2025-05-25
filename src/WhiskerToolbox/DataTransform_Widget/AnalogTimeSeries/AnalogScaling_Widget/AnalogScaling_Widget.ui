@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AnalogScaling_Widget</class>
+ <widget class="QWidget" name="AnalogScaling_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>450</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Scale and Normalize</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>Scale and Normalize Analog Time Series</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="margin">
+      <number>5</number>
+     </property>
+    </widget>
+   </item>
+   
+   <!-- Statistics Display Group -->
+   <item>
+    <widget class="QGroupBox" name="statisticsGroupBox">
+     <property name="title">
+      <string>Current Data Statistics</string>
+     </property>
+     <layout class="QGridLayout" name="statisticsGridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="meanLabel">
+        <property name="text">
+         <string>Mean:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="meanValueLabel">
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="styleSheet">
+         <string>font-weight: bold;</string>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="1" column="0">
+       <widget class="QLabel" name="stdDevLabel">
+        <property name="text">
+         <string>Std Dev:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="stdDevValueLabel">
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="styleSheet">
+         <string>font-weight: bold;</string>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="2" column="0">
+       <widget class="QLabel" name="minLabel">
+        <property name="text">
+         <string>Min:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="minValueLabel">
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="styleSheet">
+         <string>font-weight: bold;</string>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="3" column="0">
+       <widget class="QLabel" name="maxLabel">
+        <property name="text">
+         <string>Max:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="maxValueLabel">
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="styleSheet">
+         <string>font-weight: bold;</string>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="4" column="0">
+       <widget class="QLabel" name="medianLabel">
+        <property name="text">
+         <string>Median:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="medianValueLabel">
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="styleSheet">
+         <string>font-weight: bold;</string>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="5" column="0">
+       <widget class="QLabel" name="iqrLabel">
+        <property name="text">
+         <string>IQR:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLabel" name="iqrValueLabel">
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="styleSheet">
+         <string>font-weight: bold;</string>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="6" column="0">
+       <widget class="QLabel" name="sampleCountLabel">
+        <property name="text">
+         <string>Sample Count:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLabel" name="sampleCountValueLabel">
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="styleSheet">
+         <string>font-weight: bold;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <!-- Scaling Method Selection -->
+   <item>
+    <widget class="QGroupBox" name="methodGroupBox">
+     <property name="title">
+      <string>Scaling Method</string>
+     </property>
+     <layout class="QVBoxLayout" name="methodLayout">
+      <item>
+       <layout class="QHBoxLayout" name="methodSelectionLayout">
+        <item>
+         <widget class="QLabel" name="methodLabel">
+          <property name="text">
+           <string>Method:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="methodComboBox">
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="methodDescriptionLabel">
+        <property name="text">
+         <string>Select a scaling method from the dropdown above.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>color: #666;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <!-- Parameters Group -->
+   <item>
+    <widget class="QGroupBox" name="parametersGroupBox">
+     <property name="title">
+      <string>Parameters</string>
+     </property>
+     <layout class="QGridLayout" name="parametersGridLayout">
+      
+      <!-- Fixed Gain Parameters -->
+      <item row="0" column="0">
+       <widget class="QLabel" name="gainFactorLabel">
+        <property name="text">
+         <string>Gain Factor:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="gainFactorSpinBox">
+        <property name="minimum">
+         <double>-1000000.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      
+      <!-- Standard Deviation Parameters -->
+      <item row="1" column="0">
+       <widget class="QLabel" name="stdDevTargetLabel">
+        <property name="text">
+         <string>Std Dev Target:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="stdDevTargetSpinBox">
+        <property name="minimum">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.500000000000000</double>
+        </property>
+        <property name="value">
+         <double>3.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      
+      <!-- MinMax Parameters -->
+      <item row="2" column="0">
+       <widget class="QLabel" name="minTargetLabel">
+        <property name="text">
+         <string>Min Target:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="minTargetSpinBox">
+        <property name="minimum">
+         <double>-1000.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="3" column="0">
+       <widget class="QLabel" name="maxTargetLabel">
+        <property name="text">
+         <string>Max Target:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="maxTargetSpinBox">
+        <property name="minimum">
+         <double>-1000.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <!-- Warning Label -->
+   <item>
+    <widget class="QLabel" name="warningLabel">
+     <property name="text">
+      <string></string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string>color: #d32f2f; font-weight: bold;</string>
+     </property>
+    </widget>
+   </item>
+   
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 

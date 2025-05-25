@@ -8,6 +8,7 @@
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp"
+#include "DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
@@ -64,6 +65,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
     _parameterWidgetFactories["Hilbert Phase"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new AnalogHilbertPhase_Widget(parent);
     };
+
+    _parameterWidgetFactories["Scale and Normalize"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new AnalogScaling_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
+    };
     
     _parameterWidgetFactories["Calculate Line Angle"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new LineAngle_Widget(parent);
@@ -116,6 +123,14 @@ void DataTransform_Widget::_handleFeatureSelected(QString const & feature) {
     }
 
     _currentSelectedDataVariant = data_variant.value();
+    
+    // Update current parameter widget if it's a scaling widget
+    if (_currentParameterWidget) {
+        auto scalingWidget = dynamic_cast<AnalogScaling_Widget*>(_currentParameterWidget);
+        if (scalingWidget) {
+            scalingWidget->setCurrentDataKey(feature);
+        }
+    }
 }
 
 void DataTransform_Widget::_onOperationSelected(int index) {
@@ -170,6 +185,12 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
         int const widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
         targetWidget = newParamWidget;
         _currentParameterWidget = newParamWidget;// Set as active
+        
+        // If this is a scaling widget, set the current data key
+        auto scalingWidget = dynamic_cast<AnalogScaling_Widget*>(newParamWidget);
+        if (scalingWidget && !_highlighted_available_feature.isEmpty()) {
+            scalingWidget->setCurrentDataKey(_highlighted_available_feature);
+        }
     }
 
     if (targetWidget) {

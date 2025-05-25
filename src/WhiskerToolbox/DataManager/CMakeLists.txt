@@ -126,6 +126,8 @@ add_library(DataManager SHARED
         transforms/AnalogTimeSeries/analog_interval_threshold.hpp
         transforms/AnalogTimeSeries/analog_hilbert_phase.hpp
         transforms/AnalogTimeSeries/analog_hilbert_phase.cpp
+        transforms/AnalogTimeSeries/analog_scaling.cpp
+        transforms/AnalogTimeSeries/analog_scaling.hpp
         transforms/Lines/line_angle.hpp
         transforms/Lines/line_angle.cpp
         transforms/Lines/line_min_point_dist.hpp

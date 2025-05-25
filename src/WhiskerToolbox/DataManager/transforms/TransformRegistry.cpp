@@ -5,6 +5,7 @@
 #include "transforms/AnalogTimeSeries/analog_event_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
+#include "transforms/AnalogTimeSeries/analog_scaling.hpp"
 #include "transforms/Lines/line_angle.hpp"
 #include "transforms/Lines/line_min_point_dist.hpp"
 #include "transforms/Lines/line_resample.hpp"
@@ -28,6 +29,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<EventThresholdOperation>());
     _registerOperation(std::make_unique<IntervalThresholdOperation>());
     _registerOperation(std::make_unique<HilbertPhaseOperation>());
+    _registerOperation(std::make_unique<AnalogScalingOperation>());
     _registerOperation(std::make_unique<LineAngleOperation>());
     _registerOperation(std::make_unique<LineMinPointDistOperation>());
     _registerOperation(std::make_unique<LineResampleOperation>());

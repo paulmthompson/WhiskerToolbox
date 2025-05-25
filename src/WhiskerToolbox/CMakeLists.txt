@@ -110,6 +110,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp
         DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.cpp
         DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.ui
+        DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.cpp
+        DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.hpp
+        DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.ui
         DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp
         DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.cpp
         DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.ui
