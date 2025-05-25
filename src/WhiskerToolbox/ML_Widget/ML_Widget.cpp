@@ -31,6 +31,7 @@
 // Transformation Strategy includes
 #include "Transformations/IdentityTransform.hpp"
 #include "Transformations/SquaredTransform.hpp"
+#include "Transformations/LagLeadTransform.hpp"
 
 ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
                      TimeScrollBar * time_scrollbar,
@@ -47,6 +48,7 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
     // Initialize Transformation Registry
     _transformation_registry[WhiskerTransformations::TransformationType::Identity] = std::make_unique<IdentityTransform>();
     _transformation_registry[WhiskerTransformations::TransformationType::Squared] = std::make_unique<SquaredTransform>();
+    _transformation_registry[WhiskerTransformations::TransformationType::LagLead] = std::make_unique<LagLeadTransform>();
 
     auto naive_bayes_widget = new ML_Naive_Bayes_Widget(_data_manager);
     int nb_idx = ui->stackedWidget->addWidget(naive_bayes_widget);

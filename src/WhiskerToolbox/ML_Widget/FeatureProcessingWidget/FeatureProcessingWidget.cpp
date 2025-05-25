@@ -34,6 +34,9 @@ FeatureProcessingWidget::FeatureProcessingWidget(QWidget *parent)
     connect(ui->baseFeatureTableWidget, &QTableWidget::currentItemChanged, this, &FeatureProcessingWidget::_onBaseFeatureSelectionChanged);
     connect(ui->identityTransformCheckBox, &QCheckBox::toggled, this, &FeatureProcessingWidget::_onIdentityCheckBoxToggled);
     connect(ui->squaredTransformCheckBox, &QCheckBox::toggled, this, &FeatureProcessingWidget::_onSquaredCheckBoxToggled);
+    connect(ui->lagLeadTransformCheckBox, &QCheckBox::toggled, this, &FeatureProcessingWidget::_onLagLeadCheckBoxToggled);
+    connect(ui->minLagSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &FeatureProcessingWidget::_onMinLagChanged);
+    connect(ui->maxLeadSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &FeatureProcessingWidget::_onMaxLeadChanged);
 
     _clearTransformationUI(); // Initial state for transformation UI
     ui->transformationsGroupBox->setEnabled(false); // Disabled until a feature is selected
@@ -124,8 +127,8 @@ void FeatureProcessingWidget::_updateUIForSelectedFeature() {
     std::string key_std = _currently_selected_base_feature_key.toStdString();
     bool identity_active = false;
     bool squared_active = false;
-    // bool lag_lead_active = false; // For future
-    // WhiskerTransformations::LagLeadParams current_ll_params; // For future
+    bool lag_lead_active = false; 
+    WhiskerTransformations::LagLeadParams current_ll_params; // Default constructor will init to 0,0
 
     auto it = _feature_configs.find(key_std);
     if (it != _feature_configs.end()) {
@@ -138,14 +141,13 @@ void FeatureProcessingWidget::_updateUIForSelectedFeature() {
             }
             if (transform_config.type == WhiskerTransformations::TransformationType::Squared) {
                 squared_active = true;
-                // No params for Squared
             }
-            // if (transform_config.type == WhiskerTransformations::TransformationType::LagLead) { // For future
-            //     lag_lead_active = true;
-            //     if (auto* params = std::get_if<WhiskerTransformations::LagLeadParams>(&transform_config.params)) {
-            //         current_ll_params = *params;
-            //     }
-            // }
+            if (transform_config.type == WhiskerTransformations::TransformationType::LagLead) { 
+                lag_lead_active = true;
+                if (auto* params = std::get_if<WhiskerTransformations::LagLeadParams>(&transform_config.params)) {
+                    current_ll_params = *params;
+                }
+            }
         }
     }
 
@@ -157,11 +159,13 @@ void FeatureProcessingWidget::_updateUIForSelectedFeature() {
     ui->squaredTransformCheckBox->setChecked(squared_active);
     ui->squaredTransformCheckBox->blockSignals(false);
 
-    // ui->lagLeadTransformCheckBox->blockSignals(true); // For future
-    // ui->lagLeadTransformCheckBox->setChecked(lag_lead_active);
-    // ui->minLagSpinBox->setValue(current_ll_params.min_lag_steps);
-    // ui->maxLeadSpinBox->setValue(current_ll_params.max_lead_steps);
-    // ui->lagLeadTransformCheckBox->blockSignals(false);
+    ui->lagLeadTransformCheckBox->blockSignals(true);
+    ui->lagLeadParamsGroupBox->setEnabled(lag_lead_active);
+    ui->lagLeadTransformCheckBox->setChecked(lag_lead_active);
+    ui->minLagSpinBox->setValue(current_ll_params.min_lag_steps);
+    ui->maxLeadSpinBox->setValue(current_ll_params.max_lead_steps);
+    ui->lagLeadTransformCheckBox->blockSignals(false);
+    // Spinboxes remain connected, their direct change will trigger updates if checkbox is checked.
 }
 
 void FeatureProcessingWidget::_clearTransformationUI(bool clearSelectedLabel) {
@@ -173,18 +177,19 @@ void FeatureProcessingWidget::_clearTransformationUI(bool clearSelectedLabel) {
     ui->squaredTransformCheckBox->setChecked(false);
     ui->squaredTransformCheckBox->blockSignals(false);
 
-    // ui->lagLeadTransformCheckBox->blockSignals(true); // For future
-    // ui->lagLeadTransformCheckBox->setChecked(false);
-    // ui->minLagSpinBox->setValue(0); // Default
-    // ui->maxLeadSpinBox->setValue(0); // Default
-    // ui->lagLeadTransformCheckBox->blockSignals(false);
+    ui->lagLeadTransformCheckBox->blockSignals(true); 
+    ui->lagLeadTransformCheckBox->setChecked(false);
+    ui->minLagSpinBox->setValue(0); 
+    ui->maxLeadSpinBox->setValue(0); 
+    ui->lagLeadParamsGroupBox->setEnabled(false);
+    ui->lagLeadTransformCheckBox->blockSignals(false);
     
     if (clearSelectedLabel) {
         ui->selectedFeatureNameLabel->setText("Selected: None");
     }
     // Clear other transformation controls here
     emit configurationChanged();
-    _updateActiveFeaturesDisplay(); // Update display after config change
+    _updateActiveFeaturesDisplay();
 }
 
 void FeatureProcessingWidget::_onIdentityCheckBoxToggled(bool checked) {
@@ -205,27 +210,32 @@ void FeatureProcessingWidget::_onSquaredCheckBoxToggled(bool checked) {
     _updateActiveFeaturesDisplay();
 }
 
-//void FeatureProcessingWidget::_onLagLeadCheckBoxToggled(bool checked) { // For Future
-//    if (_currently_selected_base_feature_key.isEmpty()) return;
-//    WhiskerTransformations::LagLeadParams ll_params;
-//    ll_params.min_lag_steps = ui->minLagSpinBox->value();
-//    ll_params.max_lead_steps = ui->maxLeadSpinBox->value();
-//    _addOrUpdateTransformation(WhiskerTransformations::TransformationType::LagLead, checked, ll_params);
-//    emit configurationChanged();
-//    _updateActiveFeaturesDisplay();
-//}
+void FeatureProcessingWidget::_onLagLeadCheckBoxToggled(bool checked) {
+    if (_currently_selected_base_feature_key.isEmpty()) return;
+    ui->lagLeadParamsGroupBox->setEnabled(checked);
+    WhiskerTransformations::LagLeadParams ll_params;
+    if (checked) { // Only use spinbox values if checked, otherwise default/cleared params
+        ll_params.min_lag_steps = ui->minLagSpinBox->value();
+        ll_params.max_lead_steps = ui->maxLeadSpinBox->value();
+    }
+    _addOrUpdateTransformation(WhiskerTransformations::TransformationType::LagLead, checked, ll_params);
+    emit configurationChanged();
+    _updateActiveFeaturesDisplay();
+}
 
-//void FeatureProcessingWidget::_onMinLagChanged(int value) { // For Future
-//    if (ui->lagLeadTransformCheckBox->isChecked()) { // Only update if LagLead is active
-//        _onLagLeadCheckBoxToggled(true); // Re-trigger to update params
-//    }
-//}
+void FeatureProcessingWidget::_onMinLagChanged(int value) {
+    Q_UNUSED(value);
+    if (ui->lagLeadTransformCheckBox->isChecked()) { 
+        _onLagLeadCheckBoxToggled(true); // Re-trigger to update params with new spinbox value
+    }
+}
 
-//void FeatureProcessingWidget::_onMaxLeadChanged(int value) { // For Future
-//    if (ui->lagLeadTransformCheckBox->isChecked()) { // Only update if LagLead is active
-//        _onLagLeadCheckBoxToggled(true); // Re-trigger to update params
-//    }
-//}
+void FeatureProcessingWidget::_onMaxLeadChanged(int value) {
+    Q_UNUSED(value);
+    if (ui->lagLeadTransformCheckBox->isChecked()) { 
+        _onLagLeadCheckBoxToggled(true); // Re-trigger to update params with new spinbox value
+    }
+}
 
 void FeatureProcessingWidget::_addOrUpdateTransformation(
     WhiskerTransformations::TransformationType type, 
@@ -281,13 +291,13 @@ std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> FeatureProcessingWidg
                 case WhiskerTransformations::TransformationType::Squared:
                     info.output_feature_name = base_key + "_sq";
                     break;
-                // case WhiskerTransformations::TransformationType::LagLead: // For Future
-                //     if (auto* ll_params = std::get_if<WhiskerTransformations::LagLeadParams>(&transform.params)) {
-                //         info.output_feature_name = base_key + "_ll_m" + std::to_string(ll_params->min_lag_steps) + "_p" + std::to_string(ll_params->max_lead_steps);
-                //     } else {
-                //         info.output_feature_name = base_key + "_laglead_invalidparams";
-                //     }
-                //     break;
+                case WhiskerTransformations::TransformationType::LagLead:
+                    if (auto* ll_params = std::get_if<WhiskerTransformations::LagLeadParams>(&transform.params)) {
+                        info.output_feature_name = base_key + "_ll_m" + std::to_string(ll_params->min_lag_steps) + "_p" + std::to_string(ll_params->max_lead_steps);
+                    } else {
+                        info.output_feature_name = base_key + "_laglead_invalidparams";
+                    }
+                    break;
                 default:
                     info.output_feature_name = base_key + "_processed"; // Fallback
                     break;
@@ -338,13 +348,13 @@ void FeatureProcessingWidget::_updateActiveFeaturesDisplay() {
             case WhiskerTransformations::TransformationType::Squared:
                 transform_str = "Squared";
                 break;
-            // case WhiskerTransformations::TransformationType::LagLead: // For Future
-            //     if (auto* ll_params = std::get_if<WhiskerTransformations::LagLeadParams>(&info.transformation.params)) {
-            //         transform_str = QString("LagLead (MinLag: %1, MaxLead: %2)").arg(ll_params->min_lag_steps).arg(ll_params->max_lead_steps);
-            //     } else {
-            //         transform_str = "LagLead (Error)";
-            //     }
-            //     break;
+            case WhiskerTransformations::TransformationType::LagLead:
+                if (auto* ll_params = std::get_if<WhiskerTransformations::LagLeadParams>(&info.transformation.params)) {
+                    transform_str = QString("Lag/Lead (Lag: %1, Lead: %2)").arg(ll_params->min_lag_steps).arg(ll_params->max_lead_steps);
+                } else {
+                    transform_str = "Lag/Lead (Error)";
+                }
+                break;
             default:
                 transform_str = "Unknown";
                 break;

@@ -220,6 +220,8 @@ set(PROJECT_SOURCES
         ML_Widget/Transformations/IdentityTransform.hpp
         ML_Widget/Transformations/SquaredTransform.cpp
         ML_Widget/Transformations/SquaredTransform.hpp
+        ML_Widget/Transformations/LagLeadTransform.cpp
+        ML_Widget/Transformations/LagLeadTransform.hpp
         ML_Widget/ClassBalancingWidget/ClassBalancingWidget.cpp
         ML_Widget/ClassBalancingWidget/ClassBalancingWidget.hpp
         ML_Widget/ClassBalancingWidget/ClassBalancingWidget.ui

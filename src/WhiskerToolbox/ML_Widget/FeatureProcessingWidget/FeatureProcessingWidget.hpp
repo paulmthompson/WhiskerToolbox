@@ -41,6 +41,9 @@ private slots:
     void _onBaseFeatureSelectionChanged(QTableWidgetItem* current, QTableWidgetItem* previous);
     void _onIdentityCheckBoxToggled(bool checked);
     void _onSquaredCheckBoxToggled(bool checked);
+    void _onLagLeadCheckBoxToggled(bool checked);
+    void _onMinLagChanged(int value);
+    void _onMaxLeadChanged(int value);
     void _updateActiveFeaturesDisplay();
     // Add slots for future transformation controls here
 
