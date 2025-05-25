@@ -102,7 +102,7 @@ copy_dlls_during_install("${OPENCV_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${HDF5_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${WHISKER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${EXTRA_DLLS}" "${CMAKE_INSTALL_BINDIR}")
-copy_dlls_during_install("${JKQTPLOTTER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
+#copy_dlls_during_install("${JKQTPLOTTER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${TORCH_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 
 # Print support and xml are dependencies of JKQTPlotter6
