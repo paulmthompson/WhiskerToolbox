@@ -1,15 +1,16 @@
 #ifndef ITRANSFORMATION_HPP
 #define ITRANSFORMATION_HPP
 
-#include "mlpack/core.hpp"
-#include "DataManager/DataManager.hpp" // For DataManager and DM_DataType
-#include "TransformationsCommon.hpp"     // Added
-#include <vector>
-#include <string>
-#include <memory> // For std::unique_ptr
+#include "DataManager/DataManagerTypes.hpp"//DM_DataType
+#include "TransformationsCommon.hpp"
 
-// Forward declaration
-// class FeatureProcessingWidget; // For AppliedTransformation struct
+#include <armadillo>
+
+#include <memory>
+#include <string>
+#include <vector>
+
+class DataManager;
 
 class ITransformation {
 public:
@@ -27,12 +28,12 @@ public:
      * @return arma::Mat<double> The transformed data matrix (features as rows, samples as columns). Empty if error.
      */
     virtual arma::Mat<double> apply(
-        DataManager* dm,
-        const std::string& base_key,
-        DM_DataType data_type,
-        const std::vector<std::size_t>& timestamps,
-        const WhiskerTransformations::AppliedTransformation& transform_config,
-        std::string& error_message) const = 0;
+            DataManager * dm,
+            std::string const & base_key,
+            DM_DataType data_type,
+            std::vector<std::size_t> const & timestamps,
+            WhiskerTransformations::AppliedTransformation const & transform_config,
+            std::string & error_message) const = 0;
 
     /**
      * @brief Checks if this transformation can be applied to the given data type.
@@ -42,4 +43,4 @@ public:
     virtual bool isSupported(DM_DataType type) const = 0;
 };
 
-#endif //ITRANSFORMATION_HPP 
+#endif//ITRANSFORMATION_HPP

@@ -10,8 +10,14 @@ public:
         const WhiskerTransformations::AppliedTransformation& transform_config,
         std::string& error_message) const override;
 
-    // Optionally override isSupported if Lag/Lead has specific constraints
-    // bool isSupported(DM_DataType type) const override;
+    /**
+     * @brief Checks if this transformation can be applied to the given data type.
+     * @param type The DM_DataType to check.
+     * @return True if the transformation supports this data type, false otherwise.
+     *
+     * @note Supports Analog, Points, and Tensor data types.
+     */
+    bool isSupported(DM_DataType type) const override;
 };
 
 #endif //LAGLEADTRANSFORM_HPP 
