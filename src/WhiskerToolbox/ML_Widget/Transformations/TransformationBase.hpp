@@ -27,12 +27,14 @@ public:
             const std::string& base_key,
             DM_DataType data_type,
             const std::vector<std::size_t>& timestamps,
+            const WhiskerTransformations::AppliedTransformation& transform_config,
             std::string& error_message) const override;
 protected:
     // Helper to apply the core transformation logic on already fetched data
     // Derived classes will override this to perform their specific mathematical operation.
-    virtual arma::Mat<double>_applyTransformationLogic( 
+    virtual arma::Mat<double> _applyTransformationLogic( 
         const arma::Mat<double>& base_data,
+        const WhiskerTransformations::AppliedTransformation& transform_config,
         std::string& error_message) const = 0;
 };
 

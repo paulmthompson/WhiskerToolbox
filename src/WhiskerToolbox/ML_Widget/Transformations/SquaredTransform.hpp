@@ -7,6 +7,7 @@ class SquaredTransform : public TransformationBase {
 public:
     arma::Mat<double> _applyTransformationLogic(
         const arma::Mat<double>& base_data,
+        const WhiskerTransformations::AppliedTransformation& transform_config,
         std::string& error_message) const override;
 
     // isSupported can be inherited from TransformationBase.

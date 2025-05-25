@@ -212,6 +212,7 @@ set(PROJECT_SOURCES
         ML_Widget/MLModelRegistry.hpp
         ML_Widget/MLModelParameters.hpp
         ML_Widget/MLParameterWidgetBase.hpp
+        ML_Widget/Transformations/TransformationsCommon.hpp
         ML_Widget/Transformations/ITransformation.hpp
         ML_Widget/Transformations/TransformationBase.cpp
         ML_Widget/Transformations/TransformationBase.hpp
@@ -269,12 +270,12 @@ set(PROJECT_SOURCES
         IO_Widgets/Scaling_Widget/Scaling_Widget.hpp
         IO_Widgets/Scaling_Widget/Scaling_Widget.ui
 
-        IO_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.hpp
-        IO_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.cpp
-        IO_Widgets/AnalogLoaderWidget/Analog_Loader_Widget.ui
-        IO_Widgets/AnalogLoaderWidget/CSV/CSVAnalogSaver_Widget.cpp
-        IO_Widgets/AnalogLoaderWidget/CSV/CSVAnalogSaver_Widget.hpp
-        IO_Widgets/AnalogLoaderWidget/CSV/CSVAnalogSaver_Widget.ui
+        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.hpp
+        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.cpp
+        IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.ui
+        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.cpp
+        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp
+        IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.ui
 
         IO_Widgets/PointLoaderWidget/Point_Loader_Widget.hpp
         IO_Widgets/PointLoaderWidget/Point_Loader_Widget.cpp

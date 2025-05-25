@@ -70,6 +70,7 @@ arma::Mat<double> TransformationBase::apply(
         const std::string& base_key,
         DM_DataType data_type,
         const std::vector<std::size_t>& timestamps,
+        const WhiskerTransformations::AppliedTransformation& transform_config,
         std::string& error_message) const
 {
     if (!isSupported(data_type)) {
@@ -84,7 +85,7 @@ arma::Mat<double> TransformationBase::apply(
     }
 
     // Delegate to the specific transformation's logic
-    return _applyTransformationLogic(base_data, error_message);
+    return _applyTransformationLogic(base_data, transform_config, error_message);
 }
 
 bool TransformationBase::isSupported(DM_DataType type) const {

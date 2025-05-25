@@ -108,7 +108,7 @@
   <customwidget>
    <class>CSVAnalogSaver_Widget</class>
    <extends>QWidget</extends>
-   <header>IO_Widgets/AnalogLoaderWidget/CSV/CSVAnalogSaver_Widget.hpp</header>
+   <header>IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

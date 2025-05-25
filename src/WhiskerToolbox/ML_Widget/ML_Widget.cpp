@@ -45,8 +45,8 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
     ui->setupUi(this);
 
     // Initialize Transformation Registry
-    _transformation_registry[FeatureProcessingWidget::TransformationType::Identity] = std::make_unique<IdentityTransform>();
-    _transformation_registry[FeatureProcessingWidget::TransformationType::Squared] = std::make_unique<SquaredTransform>();
+    _transformation_registry[WhiskerTransformations::TransformationType::Identity] = std::make_unique<IdentityTransform>();
+    _transformation_registry[WhiskerTransformations::TransformationType::Squared] = std::make_unique<SquaredTransform>();
 
     auto naive_bayes_widget = new ML_Naive_Bayes_Widget(_data_manager);
     int nb_idx = ui->stackedWidget->addWidget(naive_bayes_widget);
@@ -607,21 +607,23 @@ arma::Mat<double> ML_Widget::_createFeatureMatrix(
     for (const auto& p_feature : processed_features) {
         // arma::Mat<double> current_feature_data_matrix; // Will be set by the transformation strategy
         auto base_key = p_feature.base_feature_key;
-        auto transform_type = p_feature.transformation.type;
+        // auto transform_type = p_feature.transformation.type; // Now directly use p_feature.transformation
 
         DM_DataType data_type = _data_manager->getType(base_key);
 
-        auto it = _transformation_registry.find(transform_type);
+        auto it = _transformation_registry.find(p_feature.transformation.type);
         if (it == _transformation_registry.end()) {
             error_message += "Unsupported transformation type '" + 
-                             QString::number(static_cast<int>(transform_type)).toStdString() + // Basic way to show type
+                             QString::number(static_cast<int>(p_feature.transformation.type)).toStdString() + // Basic way to show type
                              "' for feature '" + base_key + "'. No registered strategy found.\n";
             continue;
         }
 
         const auto& transform_strategy = it->second;
         arma::Mat<double> current_feature_data_matrix = transform_strategy->apply(
-            _data_manager.get(), base_key, data_type, timestamps, error_message
+            _data_manager.get(), base_key, data_type, timestamps, 
+            p_feature.transformation, // Pass the whole AppliedTransformation object
+            error_message
         );
 
         if (!error_message.empty() && current_feature_data_matrix.empty()) {
