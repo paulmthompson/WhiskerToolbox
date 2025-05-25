@@ -9,6 +9,7 @@
 #define slots Q_SLOTS
 
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/utils/armadillo_wrap/analog_armadillo.hpp"
 #include "ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.hpp"
 #include "ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp"
