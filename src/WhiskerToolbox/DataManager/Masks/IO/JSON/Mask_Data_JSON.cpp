@@ -5,6 +5,7 @@
 #include "Masks/IO/HDF5/Mask_Data_HDF5.hpp"
 
 #include "utils/json_helpers.hpp"
+#include "loaders/loading_utils.hpp"
 
 
 std::shared_ptr<MaskData> load_into_MaskData(std::string const & file_path, nlohmann::basic_json<> const & item) {
@@ -24,26 +25,9 @@ std::shared_ptr<MaskData> load_into_MaskData(std::string const & file_path, nloh
 
     //std::string const prob_key = item["probability_key"];
 
-    int const height = item.value("height", -1);
-    int const width = item.value("width", -1);
-
     auto mask_data = load(opts);
 
-    mask_data->setImageSize(ImageSize{.width = width, .height = height});
-
-    int const scale_height = item.value("height", -1);
-    int const scale_width = item.value("width", -1);
-
-    if ((scale_height == -1)&(scale_width == 1)) {
-        return mask_data;
-    }
-
-    if ((scale_height == height)&(scale_width == width))
-    {
-        return mask_data;
-    }
-
-    mask_data->changeImageSize({ .width=scale_width, .height=scale_height});
+    change_image_size_json(mask_data, item);
 
     return mask_data;
 }

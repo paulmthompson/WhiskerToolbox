@@ -34,6 +34,8 @@ add_library(DataManager SHARED
         Lines/IO/CAPNP/line_data.capnp.c++
         Lines/IO/Binary/Line_Data_Binary.hpp
         Lines/IO/Binary/Line_Data_Binary.cpp
+        Lines/IO/JSON/Line_Data_JSON.hpp
+        Lines/IO/JSON/Line_Data_JSON.cpp
         #Lines/IO/RocksDB/Line_Data_RocksDB.hpp
         #Lines/IO/RocksDB/Line_Data_RocksDB.cpp
         #Lines/IO/LMDB/Line_Data_LMDB.hpp
@@ -59,6 +61,8 @@ add_library(DataManager SHARED
         Masks/Mask_Data.cpp
         Masks/IO/HDF5/Mask_Data_HDF5.hpp
         Masks/IO/HDF5/Mask_Data_HDF5.cpp
+        Masks/IO/JSON/Mask_Data_JSON.hpp
+        Masks/IO/JSON/Mask_Data_JSON.cpp
         Masks/masks.hpp
 
         AnalogTimeSeries/Analog_Time_Series.hpp
@@ -149,8 +153,8 @@ add_library(DataManager SHARED
         DataManagerTypes.hpp
         loaders/loading_utils.hpp
         loaders/loading_utils.cpp
-        Masks/IO/JSON/Mask_Data_JSON.hpp
-        Masks/IO/JSON/Mask_Data_JSON.cpp
+
+
 
 
 

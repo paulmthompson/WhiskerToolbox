@@ -1,6 +1,10 @@
 #ifndef LOADING_UTILS_HPP
 #define LOADING_UTILS_HPP
 
+#include "ImageSize/ImageSize.hpp"
+
+#include "nlohmann/json.hpp"
+
 #include <filesystem>
 #include <iostream>
 #include <optional>
@@ -21,4 +25,30 @@ std::optional<std::string> check_dir_and_get_full_path(T opts) {
     std::string full_path = opts.parent_dir.empty() ? opts.filename : (std::filesystem::path(opts.parent_dir) / opts.filename).string();
     return full_path;
 }
+
+template<typename T>
+inline void change_image_size_json(T data, nlohmann::basic_json<> const & item) {
+
+    int const height = item.value("height", -1);
+    int const width = item.value("width", -1);
+
+    data->setImageSize(ImageSize{.width = width, .height = height});
+
+    int const scale_height = item.value("scaled_height", -1);
+    int const scale_width = item.value("scaled_width", -1);
+
+    if ((scale_height == -1)&(scale_width == 1)) {
+        return;
+    }
+
+    if ((scale_height == height)&(scale_width == width))
+    {
+        return;
+    }
+
+    data->changeImageSize({ .width=scale_width, .height=scale_height});
+
+    return;
+}
+
 #endif// LOADING_UTILS_HPP

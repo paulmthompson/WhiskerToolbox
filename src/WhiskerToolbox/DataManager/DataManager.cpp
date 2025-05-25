@@ -14,7 +14,7 @@
 #include "DigitalTimeSeries/IO/CSV/Digital_Event_Series_Loader.hpp"
 #include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp"
-#include "Lines/IO/CSV/Line_Data_CSV.hpp"
+#include "Lines/IO/JSON/Line_Data_JSON.hpp"
 #include "Masks/IO/JSON/Mask_Data_JSON.hpp"
 #include "Media/Video_Data_Loader.hpp"
 #include "Points/IO/CSV/Point_Data_CSV.hpp"
@@ -340,15 +340,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             }
             case DM_DataType::Line: {
 
-                auto line_map = load_line_csv(file_path);
+                auto line_data = load_into_LineData(file_path, item);
 
-                //Get the whisker name from the filename using filesystem
-                auto whisker_filename = std::filesystem::path(file_path).filename().string();
-
-                //Remove .csv suffix from filename
-                auto whisker_name = remove_extension(whisker_filename);
-
-                dm->setData<LineData>(whisker_name, std::make_shared<LineData>(line_map));
+                dm->setData<LineData>(name, line_data);
 
                 std::string const color = item.value("color", "0000FF");
 
