@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LinePointExtraction_Widget</class>
+ <widget class="QWidget" name="LinePointExtraction_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>350</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Extract Point from Line</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>Extract Point from Line</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="margin">
+      <number>5</number>
+     </property>
+    </widget>
+   </item>
+   
+   <!-- Position Selection Group -->
+   <item>
+    <widget class="QGroupBox" name="positionGroupBox">
+     <property name="title">
+      <string>Point Position</string>
+     </property>
+     <layout class="QGridLayout" name="positionGridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="positionLabel">
+        <property name="text">
+         <string>Position along line (%):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QDoubleSpinBox" name="positionSpinBox">
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>50.000000000000000</double>
+        </property>
+        <property name="suffix">
+         <string>%</string>
+        </property>
+       </widget>
+      </item>
+      
+      <item row="1" column="0" colspan="2">
+               <widget class="QLabel" name="positionDescriptionLabel">
+         <property name="text">
+          <string>Specify the position as a percentage of the total line length (measured by cumulative distance). 0% is the beginning of the line, 100% is the end.</string>
+         </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>color: #666;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <!-- Extraction Method Group -->
+   <item>
+    <widget class="QGroupBox" name="methodGroupBox">
+     <property name="title">
+      <string>Extraction Method</string>
+     </property>
+     <layout class="QVBoxLayout" name="methodLayout">
+      <item>
+       <layout class="QHBoxLayout" name="methodSelectionLayout">
+        <item>
+         <widget class="QLabel" name="methodLabel">
+          <property name="text">
+           <string>Method:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="methodComboBox">
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="methodDescriptionLabel">
+        <property name="text">
+         <string>Select an extraction method from the dropdown above.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>color: #666;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <!-- Method-specific Parameters -->
+   <item>
+    <widget class="QStackedWidget" name="methodStackedWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     
+     <!-- Direct Method Page -->
+     <widget class="QWidget" name="directPage">
+      <layout class="QVBoxLayout" name="directLayout">
+       <item>
+        <widget class="QGroupBox" name="directParametersGroupBox">
+         <property name="title">
+          <string>Direct Extraction Parameters</string>
+         </property>
+         <layout class="QGridLayout" name="directParametersLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="useInterpolationLabel">
+            <property name="text">
+             <string>Use Interpolation:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="useInterpolationCheckBox">
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+                       <widget class="QLabel" name="directDescriptionLabel">
+             <property name="text">
+              <string>Direct extraction selects a point from the original line based on cumulative distance. When "Use Interpolation" is checked, the point is interpolated between adjacent line points for more precise positioning. When unchecked, the nearest existing point is used.</string>
+             </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="styleSheet">
+             <string>color: #666;</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     
+     <!-- Parametric Method Page -->
+     <widget class="QWidget" name="parametricPage">
+      <layout class="QVBoxLayout" name="parametricLayout">
+       <item>
+        <widget class="QGroupBox" name="parametricParametersGroupBox">
+         <property name="title">
+          <string>Parametric Extraction Parameters</string>
+         </property>
+         <layout class="QGridLayout" name="parametricParametersLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="polynomialOrderLabel">
+            <property name="text">
+             <string>Polynomial Order:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="polynomialOrderSpinBox">
+            <property name="minimum">
+             <number>2</number>
+            </property>
+            <property name="maximum">
+             <number>10</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+           </widget>
+          </item>
+          
+          <item row="1" column="0" colspan="2">
+                       <widget class="QLabel" name="parametricDescriptionLabel">
+             <property name="text">
+              <string>Parametric extraction fits polynomials to the entire line using distance-based parameterization and calculates the point at the exact specified position. This provides smooth interpolation and is more accurate for positions between original line points. Higher polynomial orders provide better fitting but require more input points.</string>
+             </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="styleSheet">
+             <string>color: #666;</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   
+   <!-- Warning Label -->
+   <item>
+    <widget class="QLabel" name="warningLabel">
+     <property name="text">
+      <string></string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="styleSheet">
+      <string>color: #d32f2f; font-weight: bold;</string>
+     </property>
+    </widget>
+   </item>
+   
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 

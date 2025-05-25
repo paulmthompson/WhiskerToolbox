@@ -106,6 +106,8 @@ add_library(DataManager SHARED
         utils/polynomial/parametric_polynomial_utils.hpp
         utils/line_resampling.cpp
         utils/line_resampling.hpp
+        utils/line_geometry.cpp
+        utils/line_geometry.hpp
         utils/connected_component.hpp
         utils/connected_component.cpp
         utils/mask_operations.cpp
@@ -136,6 +138,10 @@ add_library(DataManager SHARED
         transforms/Lines/line_resample.hpp
         transforms/Lines/line_curvature.cpp
         transforms/Lines/line_curvature.hpp
+        transforms/Lines/line_subsegment.cpp
+        transforms/Lines/line_subsegment.hpp
+        transforms/Lines/line_point_extraction.cpp
+        transforms/Lines/line_point_extraction.hpp
         transforms/Masks/mask_area.cpp
         transforms/Masks/mask_area.hpp
         transforms/Masks/mask_to_line.cpp

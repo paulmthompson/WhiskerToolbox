@@ -125,6 +125,12 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.cpp
         DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp
         DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.ui
+        DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.cpp
+        DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.hpp
+        DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.ui
+        DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.cpp
+        DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.hpp
+        DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.ui
 
         Whisker_Widget/Whisker_Widget.hpp
         Whisker_Widget/Whisker_Widget.ui

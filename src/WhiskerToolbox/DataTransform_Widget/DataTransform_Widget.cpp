@@ -15,6 +15,8 @@
 #include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.hpp"
+#include "DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.hpp"
 
 #include <QApplication>
 
@@ -94,6 +96,14 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Calculate Line Curvature"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new LineCurvature_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Extract Line Subsegment"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new LineSubsegment_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Extract Point from Line"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new LinePointExtraction_Widget(parent);
     };
 }
 
