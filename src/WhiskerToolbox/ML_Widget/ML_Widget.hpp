@@ -1,25 +1,24 @@
 #ifndef BEHAVIORTOOLBOX_ML_WIDGET_HPP
 #define BEHAVIORTOOLBOX_ML_WIDGET_HPP
 
+#include "ClassBalancingWidget/ClassBalancingWidget.hpp"
 #include "DataManager/DigitalTimeSeries/interval_data.hpp"
 #include "FeatureProcessingWidget/FeatureProcessingWidget.hpp"
-#include "ClassBalancingWidget/ClassBalancingWidget.hpp"
+#include "MLModelOperation.hpp"
+#include "MLModelRegistry.hpp"
 #include "Transformations/ITransformation.hpp"
 #include "Transformations/TransformationsCommon.hpp"
 
+
 #include <QWidget>
+#include <armadillo>
 
-#include <mlpack/core.hpp>
-
-#include <filesystem>
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_set>
 #include <vector>
-#include <map>
 
-#include "MLModelRegistry.hpp"
-#include "MLModelOperation.hpp"
 
 class DataManager;
 class DigitalIntervalSeries;
@@ -47,7 +46,7 @@ protected:
     void closeEvent(QCloseEvent * event) override;
 
 private slots:
-    void _onTrainingIntervalChanged(const QString& intervalKey);
+    void _onTrainingIntervalChanged(QString const & intervalKey);
 
     void _handleOutcomeSelected(QString const & feature);
     void _addOutcomeToModel(QString const & feature, bool enabled);
@@ -60,9 +59,9 @@ private slots:
 
 private:
     arma::Mat<double> _createFeatureMatrix(
-        const std::vector<FeatureProcessingWidget::ProcessedFeatureInfo>& processed_features,
-        const std::vector<std::size_t>& timestamps,
-        std::string& error_message) const;
+            std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & processed_features,
+            std::vector<std::size_t> const & timestamps,
+            std::string & error_message) const;
 
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar * _time_scrollbar;
@@ -70,14 +69,14 @@ private:
     Ui::ML_Widget * ui;
 
     std::unique_ptr<MLModelRegistry> _ml_model_registry;
-    MLModelOperation* _current_selected_model_operation = nullptr;
+    MLModelOperation * _current_selected_model_operation = nullptr;
     std::map<std::string, int> _model_name_to_widget_index;
 
     QString _training_interval_key;
     std::unordered_set<std::string> _selected_outcomes;
-    
-    FeatureProcessingWidget* _feature_processing_widget;
-    ClassBalancingWidget* _class_balancing_widget;
+
+    FeatureProcessingWidget * _feature_processing_widget;
+    ClassBalancingWidget * _class_balancing_widget;
 
     std::map<WhiskerTransformations::TransformationType, std::unique_ptr<ITransformation>> _transformation_registry;
 };

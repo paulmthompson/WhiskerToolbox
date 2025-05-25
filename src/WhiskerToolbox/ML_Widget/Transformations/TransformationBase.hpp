@@ -32,7 +32,7 @@ public:
      * Derived classes can override this method to specify their own supported data types.
      * Default behavior is to support Analog, DigitalInterval, Points, and Tensor data types.
      */
-    bool isSupported(DM_DataType type) const override;
+    [[nodiscard]] bool isSupported(DM_DataType type) const override;
 
     /**
      * @brief Applies the transformation.

@@ -2,10 +2,11 @@
 #define WHISKERTOOLBOX_MLMODELREGISTRY_HPP
 
 #include "MLModelOperation.hpp"
+
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include <map>
 
 class MLModelRegistry {
 public:
@@ -18,13 +19,13 @@ public:
     MLModelRegistry & operator=(MLModelRegistry &&) = delete;
 
     [[nodiscard]] std::vector<std::string> getAvailableModelNames() const;
-    [[nodiscard]] MLModelOperation* findOperationByName(std::string const& operation_name) const;
+    [[nodiscard]] MLModelOperation * findOperationByName(std::string const & operation_name) const;
 
 private:
     void _registerModelOperation(std::unique_ptr<MLModelOperation> op);
 
     std::vector<std::unique_ptr<MLModelOperation>> _all_operations;
-    std::map<std::string, MLModelOperation*> _name_to_operation;
+    std::map<std::string, MLModelOperation *> _name_to_operation;
 };
 
-#endif // WHISKERTOOLBOX_MLMODELREGISTRY_HPP 
+#endif// WHISKERTOOLBOX_MLMODELREGISTRY_HPP

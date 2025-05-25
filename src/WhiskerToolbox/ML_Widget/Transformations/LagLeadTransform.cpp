@@ -15,13 +15,17 @@ arma::Mat<double> LagLeadTransform::_applyTransformationLogic(
     int min_lag = params->min_lag_steps;  // e.g., -2, -1, 0 (0 means current value, negative means lag)
     int max_lead = params->max_lead_steps;// e.g., 0, 1, 2 (0 means current value, positive means lead)
 
+    std::cout << "Applying lead and lag transform with lead equal to "
+              << params->min_lag_steps << " and lag "
+              << params->max_lead_steps << std::endl;
+
     if (min_lag > 0 || max_lead < 0) {
         error_message = "LagLeadTransform: min_lag_steps must be <= 0 and max_lead_steps must be >= 0.";
         return arma::Mat<double>();
     }
-    if (min_lag == 0 && max_lead == 0) {
-        return base_data;
-    }
+    //if (min_lag == 0 && max_lead == 0) {
+    //    return base_data;
+    //}
 
     arma::uword n_rows_base = base_data.n_rows;// Number of original features
     arma::uword n_cols_base = base_data.n_cols;// Number of timestamps
@@ -42,6 +46,7 @@ arma::Mat<double> LagLeadTransform::_applyTransformationLogic(
     arma::uword n_rows_output = n_rows_base * num_shifts;
     arma::Mat<double> result(n_rows_output, n_cols_base, arma::fill::zeros);
 
+
     for (int shift = min_lag; shift <= max_lead; ++shift) {
         // Determine the target row block in the result matrix
         // Example: min_lag = -2. Shifts: -2, -1, 0, 1, 2
@@ -60,10 +65,13 @@ arma::Mat<double> LagLeadTransform::_applyTransformationLogic(
                 result.submat(target_row_start, ts_idx, target_row_start + n_rows_base - 1, ts_idx) =
                         base_data.col(source_ts_idx);
             } else {
-                result.submat(target_row_start, ts_idx, target_row_start + n_rows_base - 1, ts_idx) = arma::datum::nan;
+                for (arma::uword rr = 0; rr < n_rows_base; rr++) {
+                    result.submat(target_row_start + rr, ts_idx, target_row_start + rr, ts_idx) = arma::datum::nan;
+                }
             }
         }
     }
+
     return result;
 }
 

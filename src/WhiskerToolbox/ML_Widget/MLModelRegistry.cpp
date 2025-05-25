@@ -27,7 +27,7 @@ void MLModelRegistry::_registerModelOperation(std::unique_ptr<MLModelOperation> 
 
 std::vector<std::string> MLModelRegistry::getAvailableModelNames() const {
     std::vector<std::string> names;
-    for (auto const& op : _all_operations) {
+    for (auto const & op: _all_operations) {
         if (op) {
             names.push_back(op->getName());
         }
@@ -36,10 +36,10 @@ std::vector<std::string> MLModelRegistry::getAvailableModelNames() const {
     return names;
 }
 
-MLModelOperation* MLModelRegistry::findOperationByName(std::string const& operation_name) const {
+MLModelOperation * MLModelRegistry::findOperationByName(std::string const & operation_name) const {
     auto it = _name_to_operation.find(operation_name);
     if (it != _name_to_operation.end()) {
         return it->second;
     }
     return nullptr;
-} 
+}
