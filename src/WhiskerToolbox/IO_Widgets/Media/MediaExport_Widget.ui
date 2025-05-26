@@ -87,6 +87,23 @@
        </property>
       </widget>
      </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_overwrite_existing">
+       <property name="text">
+        <string>Overwrite Existing Files:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QCheckBox" name="overwrite_existing_checkbox">
+       <property name="toolTip">
+        <string>If checked, overwrite existing files. If unchecked, skip existing files and continue with next file.</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

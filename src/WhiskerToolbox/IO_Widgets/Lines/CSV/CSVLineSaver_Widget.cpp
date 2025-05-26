@@ -93,6 +93,7 @@ CSVLineSaver_Widget::CSVLineSaver_Widget(QWidget *parent) :
             }
 
             options.frame_id_padding = ui->frame_padding_spinbox->value();
+            options.overwrite_existing = ui->overwrite_existing_checkbox->isChecked();
 
             emit saveMultiFileCSVRequested(options);
         }
@@ -154,7 +155,8 @@ void CSVLineSaver_Widget::_updateUIForSaveMode()
         ui->header_text_edit->setText("X,Y");
     }
     
-    // Frame padding is only relevant for multi-file mode
+    // Frame padding and overwrite option are only relevant for multi-file mode
     ui->label_frame_padding->setEnabled(!isSingleFile);
     ui->frame_padding_spinbox->setEnabled(!isSingleFile);
+    ui->overwrite_existing_checkbox->setEnabled(!isSingleFile);
 } 

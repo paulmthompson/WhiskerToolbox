@@ -11,6 +11,7 @@ struct MediaExportOptions {
     std::string image_name_prefix = "img";
     std::string image_save_dir;
     std::string image_folder = "images";
+    bool overwrite_existing = false;
 };
 
 std::string get_image_save_name(MediaData const * media, int frame_id, MediaExportOptions const & opts);

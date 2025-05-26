@@ -97,6 +97,19 @@ void save(
         std::string const padded_frame = pad_frame_id(frame_and_line.time, opts.frame_id_padding);
         std::string const filename = opts.parent_dir + "/" + padded_frame + ".csv";
 
+        // Check if file exists and handle according to overwrite setting
+        bool file_exists = std::filesystem::exists(filename);
+        if (file_exists && !opts.overwrite_existing) {
+            std::cout << "Skipping existing file: " << filename << std::endl;
+            files_skipped++;
+            continue;
+        }
+
+        // Log if we're overwriting an existing file
+        if (file_exists && opts.overwrite_existing) {
+            std::cout << "Overwriting existing file: " << filename << std::endl;
+        }
+
         std::ofstream file(filename);
         if (!file.is_open()) {
             std::cerr << "Warning: Could not open file " << filename << " for writing" << std::endl;

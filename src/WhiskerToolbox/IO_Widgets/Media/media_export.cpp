@@ -38,6 +38,18 @@ void save_image(MediaData * media, int const frame_id, MediaExportOptions const 
 
     auto saveName = get_image_save_name(media, frame_id, opts);
     auto full_save_path = save_dir / saveName;
+    
+    // Check if file exists and handle according to overwrite setting
+    if (std::filesystem::exists(full_save_path) && !opts.overwrite_existing) {
+        std::cout << "Skipping existing file: " << full_save_path.string() << std::endl;
+        return;
+    }
+    
+    // Log if we're overwriting an existing file
+    if (std::filesystem::exists(full_save_path) && opts.overwrite_existing) {
+        std::cout << "Overwriting existing file: " << full_save_path.string() << std::endl;
+    }
+    
     auto image = media->getRawData(frame_id);
     auto width = media->getWidth();
     auto height = media->getHeight();

@@ -204,6 +204,19 @@
        </property>
       </widget>
      </item>
+     <item row="7" column="0" colspan="2">
+      <widget class="QCheckBox" name="overwrite_existing_checkbox">
+       <property name="text">
+        <string>Overwrite existing files</string>
+       </property>
+       <property name="toolTip">
+        <string>If checked, existing files will be overwritten. If unchecked, existing files will be skipped. Only applies to multi-file mode.</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

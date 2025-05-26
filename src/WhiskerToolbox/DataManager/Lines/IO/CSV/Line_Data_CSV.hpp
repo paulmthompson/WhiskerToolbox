@@ -67,6 +67,9 @@ struct CSVSingleFileLineSaverOptions {
  *
  * @var CSVMultiFileLineSaverOptions::frame_id_padding
  * Number of digits for zero-padding frame numbers in filenames (e.g., 7 for 0000123.csv).
+ *
+ * @var CSVMultiFileLineSaverOptions::overwrite_existing
+ * If true, overwrite existing files. If false, skip existing files and continue with next file.
  */
 struct CSVMultiFileLineSaverOptions {
     std::string parent_dir = ".";
@@ -76,6 +79,7 @@ struct CSVMultiFileLineSaverOptions {
     std::string header = "X,Y";
     int precision = 1;
     int frame_id_padding = 7;
+    bool overwrite_existing = false;
 };
 
 /**

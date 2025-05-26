@@ -37,6 +37,7 @@ MediaExportOptions MediaExport_Widget::getOptions() const
         options.image_name_prefix = "img"; // Default from MediaExportOptions struct or UI
     }
     options.image_folder = ui->image_folder_edit->text().toStdString();
+    options.overwrite_existing = ui->overwrite_existing_checkbox->isChecked();
     // options.image_save_dir is intentionally not set here
     return options;
 }
