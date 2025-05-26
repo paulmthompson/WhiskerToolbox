@@ -20,18 +20,19 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Observer/Observer_Data.test.cpp
 
         AnalogTimeSeries/test_analog_time_series_loader.cpp
-        AnalogTimeSeries/test_analog_time_series.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/AnalogTimeSeries/Analog_Time_Series.test.cpp
 
-        DigitalTimeSeries/test_digital_event_series.cpp
-        DigitalTimeSeries/test_digital_interval_series.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
 
-        Masks/test_mask_data.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Masks/Mask_Data.test.cpp
 
-        Points/test_point_data.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Points/Point_Data.test.cpp
 
-        transforms/Masks/test_mask_area.cpp
-        transforms/Lines/test_line_angle.cpp
-        transforms/Lines/test_line_min_point_dist.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_area.test.cpp
+
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Lines/line_angle.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Lines/line_min_point_dist.test.cpp
 )
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)

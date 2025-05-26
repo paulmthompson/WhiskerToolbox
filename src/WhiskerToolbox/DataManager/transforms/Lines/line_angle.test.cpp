@@ -89,17 +89,17 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
 
     SECTION("Direct angle calculation - Multiple time points") {
         // Create lines at different time points with different angles
-        
+
         // Horizontal line at time 40
         std::vector<float> x1 = {0.0f, 1.0f, 2.0f};
         std::vector<float> y1 = {1.0f, 1.0f, 1.0f};
         line_data->addLineAtTime(40, x1, y1);
-        
+
         // Vertical line at time 50
         std::vector<float> x2 = {1.0f, 1.0f, 1.0f};
         std::vector<float> y2 = {0.0f, 1.0f, 2.0f};
         line_data->addLineAtTime(50, x2, y2);
-        
+
         // 45-degree line at time 60
         std::vector<float> x3 = {0.0f, 1.0f, 2.0f};
         std::vector<float> y3 = {0.0f, 1.0f, 2.0f};
@@ -151,7 +151,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         REQUIRE(times.size() == 1);
         REQUIRE(values.size() == 1);
         REQUIRE(times[0] == 70);
-        
+
         // For a parabola y = x², the derivative is 2x, and the angle at x=2 would be around 63.4 degrees
         // Given parameterization may vary, we'll use a wider tolerance
         REQUIRE(values[0] > 55.0f);
@@ -166,21 +166,21 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
 
         // Test with different polynomial orders
         auto position = 0.5f; // Middle of the line
-        
+
         // First order (linear fit)
         auto params1 = std::make_unique<LineAngleParameters>();
         params1->position = position;
         params1->method = AngleCalculationMethod::PolynomialFit;
         params1->polynomial_order = 1;
         auto result1 = line_angle(line_data.get(), params1.get());
-        
+
         // Third order
         auto params3 = std::make_unique<LineAngleParameters>();
         params3->position = position;
         params3->method = AngleCalculationMethod::PolynomialFit;
         params3->polynomial_order = 3;
         auto result3 = line_angle(line_data.get(), params3.get());
-        
+
         // Fifth order
         auto params5 = std::make_unique<LineAngleParameters>();
         params5->position = position;
@@ -192,14 +192,14 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         REQUIRE(result1->getTimeSeries().size() == 1);
         REQUIRE(result3->getTimeSeries().size() == 1);
         REQUIRE(result5->getTimeSeries().size() == 1);
-        
+
         // Higher order polynomials should better capture local curvature
         // For this curve, we expect higher orders to yield different angles
         // from lower orders (exact values will depend on the curve)
         auto angle1 = result1->getAnalogTimeSeries()[0];
         auto angle3 = result3->getAnalogTimeSeries()[0];
         auto angle5 = result5->getAnalogTimeSeries()[0];
-        
+
         // We don't check exact values, but ensure they're reasonable angles
         REQUIRE(angle1 >= -180.0f);
         REQUIRE(angle1 <= 180.0f);
@@ -207,7 +207,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         REQUIRE(angle3 <= 180.0f);
         REQUIRE(angle5 >= -180.0f);
         REQUIRE(angle5 <= 180.0f);
-        
+
         // The angles should be different because of the different polynomial orders
         REQUIRE((std::abs(angle1 - angle3) > 1.0f || std::abs(angle1 - angle5) > 1.0f));
     }
@@ -310,12 +310,12 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         // The difference between the two angles should be approximately 90 degrees
         float angle1 = result1->getAnalogTimeSeries()[0];
         float angle2 = result2->getAnalogTimeSeries()[0];
-        
+
         // Adjust for angle wrapping
         float angle_diff = angle1 - angle2;
         if (angle_diff > 180.0f) angle_diff -= 360.0f;
         if (angle_diff <= -180.0f) angle_diff += 360.0f;
-        
+
         REQUIRE_THAT(std::abs(angle_diff), Catch::Matchers::WithinAbs(90.0f, 5.0f));
     }
 }
@@ -425,7 +425,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // producing a reasonable angle through the polynomial fit)
         REQUIRE(result->getAnalogTimeSeries().size() == 1);
         REQUIRE(result->getTimeSeries().size() == 1);
-        
+
         float angle = result->getAnalogTimeSeries()[0];
         // Should be close to 90 degrees (vertical line)
         REQUIRE(((angle > 80.0f && angle < 100.0f) || (angle < -80.0f && angle > -100.0f)));
@@ -472,7 +472,7 @@ TEST_CASE("Line angle calculation - Edge cases and error handling", "[line][angl
         // Both should handle large number of points
         REQUIRE(result_direct->getAnalogTimeSeries().size() == 1);
         REQUIRE(result_poly->getAnalogTimeSeries().size() == 1);
-        
+
         // Both should produce close to 45 degrees
         REQUIRE_THAT(result_direct->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 0.001f));
         REQUIRE_THAT(result_poly->getAnalogTimeSeries()[0], Catch::Matchers::WithinAbs(45.0f, 1.0f));
