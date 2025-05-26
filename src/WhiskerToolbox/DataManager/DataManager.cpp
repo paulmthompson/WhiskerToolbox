@@ -17,7 +17,7 @@
 #include "Lines/IO/JSON/Line_Data_JSON.hpp"
 #include "Masks/IO/JSON/Mask_Data_JSON.hpp"
 #include "Media/Video_Data_Loader.hpp"
-#include "Points/IO/CSV/Point_Data_CSV.hpp"
+#include "Points/IO/JSON/Point_Data_JSON.hpp"
 
 #include "loaders/binary_loaders.hpp"
 #include "transforms/data_transforms.hpp"

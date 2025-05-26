@@ -55,6 +55,8 @@ add_library(DataManager SHARED
         Points/Point_Data.cpp
         Points/IO/CSV/Point_Data_CSV.hpp
         Points/IO/CSV/Point_Data_CSV.cpp
+        Points/IO/JSON/Point_Data_JSON.hpp
+        Points/IO/JSON/Point_Data_JSON.cpp
         Points/points.hpp
 
         Masks/Mask_Data.hpp
@@ -165,10 +167,6 @@ add_library(DataManager SHARED
         DataManagerTypes.hpp
         loaders/loading_utils.hpp
         loaders/loading_utils.cpp
-
-
-
-
 
 )
 

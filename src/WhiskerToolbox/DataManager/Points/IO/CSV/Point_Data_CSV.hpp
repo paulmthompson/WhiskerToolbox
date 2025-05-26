@@ -3,8 +3,7 @@
 
 #include "Points/points.hpp"
 
-#include "nlohmann/json.hpp"
-
+#include <map>
 #include <memory>
 #include <string>
 
@@ -44,8 +43,6 @@ struct CSVPointSaverOptions {
 };
 
 void save(PointData const * point_data, CSVPointSaverOptions const & opts);
-
-std::shared_ptr<PointData> load_into_PointData(std::string const & file_path, nlohmann::basic_json<> const & item);
 
 std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
 
