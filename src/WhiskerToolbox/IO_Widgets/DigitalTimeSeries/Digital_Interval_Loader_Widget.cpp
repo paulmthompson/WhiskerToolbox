@@ -22,6 +22,9 @@ Digital_Interval_Loader_Widget::Digital_Interval_Loader_Widget(std::shared_ptr<D
 
     connect(ui->csv_digital_interval_loader_widget, &CSVDigitalIntervalLoader_Widget::loadCSVIntervalRequested,
             this, &Digital_Interval_Loader_Widget::_handleCSVLoadRequested);
+    
+    connect(ui->binary_digital_interval_loader_widget, &BinaryDigitalIntervalLoader_Widget::loadBinaryIntervalRequested,
+            this, &Digital_Interval_Loader_Widget::_handleBinaryLoadRequested);
 
     _onLoaderTypeChanged(0);
 }
@@ -33,6 +36,8 @@ Digital_Interval_Loader_Widget::~Digital_Interval_Loader_Widget() {
 void Digital_Interval_Loader_Widget::_onLoaderTypeChanged(int index) {
     if (ui->loader_type_combo->currentText() == "CSV") {
         ui->stacked_loader_options->setCurrentWidget(ui->csv_digital_interval_loader_widget);
+    } else if (ui->loader_type_combo->currentText() == "Binary") {
+        ui->stacked_loader_options->setCurrentWidget(ui->binary_digital_interval_loader_widget);
     }
 }
 
@@ -51,6 +56,24 @@ void Digital_Interval_Loader_Widget::_handleCSVLoadRequested(CSVIntervalLoaderOp
         _data_manager->getData<DigitalIntervalSeries>(interval_key)->setData(intervals);
     } catch (std::exception const& e) {
         std::cerr << "Error loading CSV file " << options.filepath << ": " << e.what() << std::endl;
+    }
+}
+
+void Digital_Interval_Loader_Widget::_handleBinaryLoadRequested(BinaryIntervalLoaderOptions options) {
+    auto const interval_key = ui->data_name_text->text().toStdString();
+    if (interval_key.empty()) {
+        std::cout << "Data name cannot be empty." << std::endl;
+        return;
+    }
+
+    try {
+        auto intervals = load(options);
+        std::cout << "Loaded " << intervals.size() << " intervals from " << options.filepath << std::endl;
+
+        _data_manager->setData<DigitalIntervalSeries>(interval_key);
+        _data_manager->getData<DigitalIntervalSeries>(interval_key)->setData(intervals);
+    } catch (std::exception const& e) {
+        std::cerr << "Error loading binary file " << options.filepath << ": " << e.what() << std::endl;
     }
 }
 

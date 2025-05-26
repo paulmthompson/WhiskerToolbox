@@ -48,6 +48,11 @@
          <string>CSV</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>Binary</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>
@@ -71,6 +76,7 @@
       <number>0</number>
      </property>
      <widget class="CSVDigitalIntervalLoader_Widget" name="csv_digital_interval_loader_widget"/>
+     <widget class="BinaryDigitalIntervalLoader_Widget" name="binary_digital_interval_loader_widget"/>
     </widget>
    </item>
    <item>
@@ -93,6 +99,12 @@
    <class>CSVDigitalIntervalLoader_Widget</class>
    <extends>QWidget</extends>
    <header>IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BinaryDigitalIntervalLoader_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

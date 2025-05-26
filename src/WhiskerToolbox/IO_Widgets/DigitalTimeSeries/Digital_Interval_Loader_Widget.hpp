@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp"
+#include "IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp"
 
 #include <memory>
 #include <string>
@@ -30,6 +31,7 @@ private slots:
     // void _loadSingleInterval(); // Removed
     void _onLoaderTypeChanged(int index); // New slot
     void _handleCSVLoadRequested(CSVIntervalLoaderOptions options); // New slot
+    void _handleBinaryLoadRequested(BinaryIntervalLoaderOptions options); // New slot
     //void _loadSingleHdf5Line();
     //void _loadMultiHdf5Line();
 };

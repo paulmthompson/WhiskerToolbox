@@ -355,6 +355,9 @@ set(PROJECT_SOURCES
         IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.cpp
         IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.hpp
         IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalIntervalLoader_Widget.ui
+        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.cpp
+        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.hpp
+        IO_Widgets/DigitalTimeSeries/Binary/BinaryDigitalIntervalLoader_Widget.ui
         IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.cpp
         IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp
         IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.ui
