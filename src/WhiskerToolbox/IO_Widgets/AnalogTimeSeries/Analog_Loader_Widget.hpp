@@ -6,9 +6,11 @@
 #include <string>
 
 #include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
+#include "DataManager/AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp"
 
 class DataManager;
 class CSVAnalogLoader_Widget;
+class BinaryAnalogLoader_Widget;
 
 namespace Ui {
 class Analog_Loader_Widget;
@@ -27,6 +29,7 @@ private:
 private slots:
     void _onLoaderTypeChanged(int index);
     void _handleAnalogCSVLoadRequested(CSVAnalogLoaderOptions options);
+    void _handleBinaryAnalogLoadRequested(BinaryAnalogLoaderOptions options);
 };
 
 

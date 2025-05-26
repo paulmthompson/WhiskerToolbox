@@ -297,6 +297,9 @@ set(PROJECT_SOURCES
         IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.cpp
         IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp
         IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.ui
+        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.cpp
+        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp
+        IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.ui
 
         IO_Widgets/Points/Point_Loader_Widget.hpp
         IO_Widgets/Points/Point_Loader_Widget.cpp

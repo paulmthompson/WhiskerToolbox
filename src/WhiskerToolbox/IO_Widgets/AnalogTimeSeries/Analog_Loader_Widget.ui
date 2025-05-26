@@ -48,6 +48,11 @@
          <string>CSV</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>Binary</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>
@@ -71,6 +76,7 @@
       <number>0</number>
      </property>
      <widget class="CSVAnalogLoader_Widget" name="csv_analog_loader_widget"/>
+     <widget class="BinaryAnalogLoader_Widget" name="binary_analog_loader_widget"/>
     </widget>
    </item>
    <item>
@@ -93,6 +99,12 @@
    <class>CSVAnalogLoader_Widget</class>
    <extends>QWidget</extends>
    <header>IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogLoader_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BinaryAnalogLoader_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/AnalogTimeSeries/Binary/BinaryAnalogLoader_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
