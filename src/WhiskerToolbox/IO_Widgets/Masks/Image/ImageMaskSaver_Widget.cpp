@@ -60,6 +60,7 @@ void ImageMaskSaver_Widget::_onSaveButtonClicked()
     options.image_height = ui->image_height_spinbox->value();
     options.background_value = ui->background_value_spinbox->value();
     options.mask_value = ui->mask_value_spinbox->value();
+    options.overwrite_existing = ui->overwrite_existing_checkbox->isChecked();
     
     // Validate image dimensions
     if (options.image_width <= 0 || options.image_height <= 0) {

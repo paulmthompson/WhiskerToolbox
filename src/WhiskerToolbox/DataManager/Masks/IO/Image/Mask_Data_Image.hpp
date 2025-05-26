@@ -76,6 +76,9 @@ struct ImageMaskLoaderOptions {
  *
  * @var ImageMaskSaverOptions::mask_value
  * Pixel value for mask pixels (0-255).
+ *
+ * @var ImageMaskSaverOptions::overwrite_existing
+ * If true, overwrite existing files. If false, skip existing files and continue with next file.
  */
 struct ImageMaskSaverOptions {
     std::string parent_dir = ".";
@@ -86,6 +89,7 @@ struct ImageMaskSaverOptions {
     int image_height = 480;
     int background_value = 0;
     int mask_value = 255;
+    bool overwrite_existing = false;
 };
 
 /**

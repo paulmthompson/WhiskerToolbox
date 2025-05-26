@@ -197,9 +197,19 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
         // Full path
         std::filesystem::path full_path = std::filesystem::path(opts.parent_dir) / filename;
         
+        // Check if file exists and handle according to overwrite setting
+        if (std::filesystem::exists(full_path) && !opts.overwrite_existing) {
+            std::cout << "Skipping existing file: " << full_path.string() << std::endl;
+            files_skipped++;
+            continue;
+        }
+        
         // Save the image using OpenCV
         if (cv::imwrite(full_path.string(), image)) {
             files_saved++;
+            if (std::filesystem::exists(full_path) && opts.overwrite_existing) {
+                std::cout << "Overwritten existing file: " << full_path.string() << std::endl;
+            }
         } else {
             std::cerr << "Warning: Failed to save image: " << full_path.string() << std::endl;
             files_skipped++;
