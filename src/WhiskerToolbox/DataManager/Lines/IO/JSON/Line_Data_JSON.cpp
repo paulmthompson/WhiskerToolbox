@@ -1,4 +1,3 @@
-
 #include "Line_Data_JSON.hpp"
 
 #include "Lines/IO/Binary/Line_Data_Binary.hpp"
@@ -22,6 +21,32 @@ std::shared_ptr<LineData> load_into_LineData(std::string const & file_path, nloh
     auto const format = item["format"];
 
     if (format == "csv") {
+
+        if (item.contains("multi_file") && item["multi_file"] == true) {
+            // Multi-file CSV loading
+            CSVMultiFileLineLoaderOptions opts;
+            opts.parent_dir = file_path;
+            
+            if (item.contains("delimiter")) {
+                opts.delimiter = item["delimiter"];
+            }
+            if (item.contains("x_column")) {
+                opts.x_column = item["x_column"];
+            }
+            if (item.contains("y_column")) {
+                opts.y_column = item["y_column"];
+            }
+            if (item.contains("has_header")) {
+                opts.has_header = item["has_header"];
+            }
+            
+            auto line_map = load(opts);
+            line_data = std::make_shared<LineData>(line_map);
+        } else {
+            // Single-file CSV loading (existing functionality)
+            auto line_map = load_line_csv(file_path);
+            line_data = std::make_shared<LineData>(line_map);
+        }
 
         /*
 

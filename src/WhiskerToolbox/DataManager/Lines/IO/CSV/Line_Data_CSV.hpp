@@ -78,6 +78,42 @@ struct CSVMultiFileLineSaverOptions {
     int frame_id_padding = 7;
 };
 
+/**
+ * @struct CSVMultiFileLineLoaderOptions
+ *
+ * @brief Options for loading 2D LineData from multiple CSV files, one per timestamp.
+ *
+ * Each CSV file should contain X values in one column and Y values in another column.
+ * The filename (without extension) is parsed as the timestamp/frame number.
+ * Files are expected to be in the format: NNNNNN.csv (zero-padded frame numbers).
+ *
+ * @var CSVMultiFileLineLoaderOptions::parent_dir
+ * The directory containing the CSV files to load.
+ *
+ * @var CSVMultiFileLineLoaderOptions::delimiter
+ * The delimiter used between columns in the CSV files.
+ *
+ * @var CSVMultiFileLineLoaderOptions::x_column
+ * The column index (0-based) containing X coordinates.
+ *
+ * @var CSVMultiFileLineLoaderOptions::y_column
+ * The column index (0-based) containing Y coordinates.
+ *
+ * @var CSVMultiFileLineLoaderOptions::has_header
+ * Whether the CSV files contain a header row that should be skipped.
+ *
+ * @var CSVMultiFileLineLoaderOptions::file_pattern
+ * File pattern to match (e.g., "*.csv" for all CSV files).
+ */
+struct CSVMultiFileLineLoaderOptions {
+    std::string parent_dir = ".";
+    std::string delimiter = ",";
+    int x_column = 0;
+    int y_column = 1;
+    bool has_header = true;
+    std::string file_pattern = "*.csv";
+};
+
 void save_line_as_csv(Line2D const & line, std::string const & filename, int point_precision = 2);
 
 void save(LineData const * line_data,
@@ -95,6 +131,18 @@ void save(LineData const * line_data,
  */
 void save(LineData const * line_data,
           CSVMultiFileLineSaverOptions & opts);
+
+/**
+ * @brief Load LineData from multiple CSV files, one per timestamp
+ *
+ * Loads CSV files from a directory where each file represents one timestamp.
+ * The filename (without extension) is parsed as the frame number.
+ * Each file should contain X and Y coordinates in separate columns.
+ *
+ * @param opts Options controlling the load behavior
+ * @return A map of timestamps to vectors of Line2D objects
+ */
+std::map<int, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & opts);
 
 std::vector<float> parse_string_to_float_vector(std::string const & str);
 

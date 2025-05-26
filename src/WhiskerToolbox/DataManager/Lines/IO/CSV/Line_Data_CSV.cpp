@@ -218,3 +218,113 @@ Line2D load_line_from_csv(std::string const & filename) {
 
     return line_output;
 }
+
+std::map<int, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & opts) {
+    std::map<int, std::vector<Line2D>> data_map;
+    
+    // Check if directory exists
+    if (!std::filesystem::exists(opts.parent_dir)) {
+        std::cerr << "Error: Directory does not exist: " << opts.parent_dir << std::endl;
+        return data_map;
+    }
+
+    int files_loaded = 0;
+    int files_skipped = 0;
+
+    // Iterate through all files in the directory
+    for (auto const & entry : std::filesystem::directory_iterator(opts.parent_dir)) {
+        if (!entry.is_regular_file()) {
+            continue;
+        }
+
+        std::string const filename = entry.path().filename().string();
+        
+        // Check if file matches the pattern (simple check for .csv extension)
+        if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".csv") {
+            continue;
+        }
+
+        // Extract frame number from filename (remove .csv extension)
+        std::string const frame_str = filename.substr(0, filename.length() - 4);
+        
+        // Try to parse frame number
+        int frame_number;
+        try {
+            frame_number = std::stoi(frame_str);
+        } catch (std::exception const & e) {
+            std::cerr << "Warning: Could not parse frame number from filename: " << filename << std::endl;
+            files_skipped++;
+            continue;
+        }
+
+        // Load the CSV file
+        std::ifstream file(entry.path());
+        if (!file.is_open()) {
+            std::cerr << "Warning: Could not open file: " << entry.path() << std::endl;
+            files_skipped++;
+            continue;
+        }
+
+        std::vector<Point2D<float>> line_points;
+        std::string line;
+        bool first_line = true;
+
+        while (std::getline(file, line)) {
+            // Skip header if present
+            if (first_line && opts.has_header) {
+                first_line = false;
+                continue;
+            }
+            first_line = false;
+
+            // Parse the line
+            std::stringstream ss(line);
+            std::vector<std::string> columns;
+            std::string column;
+
+            // Split by delimiter
+            while (std::getline(ss, column, opts.delimiter[0])) {
+                columns.push_back(column);
+            }
+
+            // Check if we have enough columns
+            int max_column = std::max(opts.x_column, opts.y_column);
+            if (static_cast<int>(columns.size()) <= max_column) {
+                std::cerr << "Warning: Not enough columns in line: " << line << " (file: " << filename << ")" << std::endl;
+                continue;
+            }
+
+            // Parse X and Y coordinates
+            try {
+                float x = std::stof(columns[opts.x_column]);
+                float y = std::stof(columns[opts.y_column]);
+                line_points.push_back(Point2D<float>{x, y});
+            } catch (std::exception const & e) {
+                std::cerr << "Warning: Could not parse coordinates from line: " << line << " (file: " << filename << ")" << std::endl;
+                continue;
+            }
+        }
+
+        file.close();
+
+        // Add the line to the data map if we have points
+        if (!line_points.empty()) {
+            if (data_map.find(frame_number) == data_map.end()) {
+                data_map[frame_number] = std::vector<Line2D>();
+            }
+            data_map[frame_number].push_back(line_points);
+            files_loaded++;
+        } else {
+            std::cerr << "Warning: No valid points found in file: " << filename << std::endl;
+            files_skipped++;
+        }
+    }
+
+    std::cout << "Multi-file CSV load complete: " << files_loaded << " files loaded";
+    if (files_skipped > 0) {
+        std::cout << ", " << files_skipped << " files skipped";
+    }
+    std::cout << std::endl;
+
+    return data_map;
+}
