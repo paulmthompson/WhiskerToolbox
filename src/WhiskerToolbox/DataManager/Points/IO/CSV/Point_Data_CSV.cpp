@@ -116,7 +116,7 @@ void save(PointData const * point_data, CSVPointSaverOptions const & opts)
         std::cout << "Created directory: " << opts.parent_dir << std::endl;
     }
 
-    std::string filename = opts.parent_dir + "/" + opts.filename;
+    std::string const filename = opts.parent_dir + "/" + opts.filename;
     std::fstream fout;
 
     fout.open(filename, std::fstream::out);

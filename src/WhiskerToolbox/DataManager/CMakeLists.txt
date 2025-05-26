@@ -14,6 +14,9 @@ find_package(CapnProto CONFIG REQUIRED)
 
 find_package(LAPACK REQUIRED)
 
+# Add Observer subdirectory to build the ObserverData library
+add_subdirectory(Observer)
+
 add_library(DataManager SHARED
         DataManager.hpp
         DataManager.cpp
@@ -164,8 +167,6 @@ add_library(DataManager SHARED
         loaders/hdf5_loaders.cpp
 
         LockState/LockState.hpp
-        Observer/Observer_Data.hpp
-        Observer/Observer_Data.cpp
         ImageSize/ImageSize.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
         DataManagerTypes.hpp
@@ -205,6 +206,9 @@ target_link_libraries(DataManager PRIVATE CapnProto::capnp)
 #target_link_libraries(DataManager PRIVATE RocksDB::rocksdb RocksDB::rocksdb-shared)
 
 target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
+
+# Link to the ObserverData library
+target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManager PRIVATE ${CLANG_OPTIONS})

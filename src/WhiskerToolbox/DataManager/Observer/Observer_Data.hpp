@@ -3,7 +3,6 @@
 
 #include <functional>
 #include <unordered_map>
-#include <vector>
 
 class ObserverData {
 
@@ -13,25 +12,11 @@ public:
     using ObserverCallback = std::function<void()>;
     using CallbackID = int;
 
+    CallbackID addObserver(ObserverCallback callback);
 
-    CallbackID addObserver(ObserverCallback callback) {
+    void notifyObservers();
 
-        auto id = static_cast<int>(_observers.size() + 1);
-
-        _observers[id] = std::move(callback);
-
-        return id;
-    }
-
-    void notifyObservers() {
-        for (auto & [id, observer]: _observers) {
-            observer();// Call the observer callback
-        }
-    }
-
-    void removeObserver(CallbackID id) {
-        _observers.erase(id);
-    }
+    void removeObserver(CallbackID id);
 
 private:
     std::unordered_map<CallbackID, ObserverCallback> _observers;
