@@ -63,6 +63,8 @@ add_library(DataManager SHARED
         Masks/Mask_Data.cpp
         Masks/IO/HDF5/Mask_Data_HDF5.hpp
         Masks/IO/HDF5/Mask_Data_HDF5.cpp
+        Masks/IO/Image/Mask_Data_Image.hpp
+        Masks/IO/Image/Mask_Data_Image.cpp
         Masks/IO/JSON/Mask_Data_JSON.hpp
         Masks/IO/JSON/Mask_Data_JSON.cpp
         Masks/masks.hpp

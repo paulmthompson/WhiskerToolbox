@@ -71,7 +71,37 @@ void CSVLineLoader_Widget::_onLoadButtonClicked() {
     
     if (ui->single_file_radio->isChecked()) {
         // Single file mode
-        emit loadSingleFileCSVRequested(filePath);
+        CSVSingleFileLineLoaderOptions options;
+        options.filepath = filePath.toStdString();
+        
+        // Get delimiter
+        QString delimiterText = ui->delimiter_combo->currentText();
+        if (delimiterText == "Comma") {
+            options.delimiter = ",";
+        } else if (delimiterText == "Space") {
+            options.delimiter = " ";
+        } else if (delimiterText == "Tab") {
+            options.delimiter = "\t";
+        } else {
+            options.delimiter = ","; // Default
+        }
+        
+        // Get coordinate delimiter
+        QString coordDelimiterText = ui->coordinate_delimiter_combo->currentText();
+        if (coordDelimiterText == "Comma") {
+            options.coordinate_delimiter = ",";
+        } else if (coordDelimiterText == "Space") {
+            options.coordinate_delimiter = " ";
+        } else if (coordDelimiterText == "Tab") {
+            options.coordinate_delimiter = "\t";
+        } else {
+            options.coordinate_delimiter = ","; // Default
+        }
+        
+        options.has_header = ui->has_header_checkbox->isChecked();
+        options.header_identifier = ui->header_identifier_edit->text().toStdString();
+        
+        emit loadSingleFileCSVRequested(options);
     } else {
         // Multi file mode
         CSVMultiFileLineLoaderOptions options;
@@ -122,7 +152,13 @@ void CSVLineLoader_Widget::_updateUIForLoadMode() {
     ui->label_y_column->setEnabled(!isSingleFile);
     ui->y_column_spinbox->setEnabled(!isSingleFile);
     
-    // Header checkbox is relevant for both modes but more important for multi-file
+    // Coordinate delimiter and header identifier are only relevant for single-file mode
+    ui->label_coordinate_delimiter->setEnabled(isSingleFile);
+    ui->coordinate_delimiter_combo->setEnabled(isSingleFile);
+    ui->label_header_identifier->setEnabled(isSingleFile);
+    ui->header_identifier_edit->setEnabled(isSingleFile);
+    
+    // Header checkbox is relevant for both modes
     ui->has_header_checkbox->setEnabled(true);
     
     // Clear the path when switching modes

@@ -4,6 +4,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Masks/IO/HDF5/Mask_Data_HDF5.hpp"
+#include "DataManager/Masks/IO/Image/Mask_Data_Image.hpp"
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QFileDialog>
@@ -30,6 +31,10 @@ Mask_Loader_Widget::Mask_Loader_Widget(std::shared_ptr<DataManager> data_manager
     connect(ui->hdf5_mask_loader_widget, &HDF5MaskLoader_Widget::loadMultiHDF5MaskRequested,
             this, &Mask_Loader_Widget::_handleMultiHDF5LoadRequested);
 
+    // Connect signals from Image loader widget
+    connect(ui->image_mask_loader_widget, &ImageMaskLoader_Widget::loadImageMaskRequested,
+            this, &Mask_Loader_Widget::_handleImageMaskLoadRequested);
+
     // Set initial state of stacked widget
     ui->stacked_loader_options->setCurrentWidget(ui->hdf5_mask_loader_widget);
 }
@@ -41,7 +46,9 @@ Mask_Loader_Widget::~Mask_Loader_Widget() {
 void Mask_Loader_Widget::_onLoaderTypeChanged(int index) {
     if (ui->loader_type_combo->itemText(index) == "HDF5") {
         ui->stacked_loader_options->setCurrentWidget(ui->hdf5_mask_loader_widget);
-    } 
+    } else if (ui->loader_type_combo->itemText(index) == "Image") {
+        ui->stacked_loader_options->setCurrentWidget(ui->image_mask_loader_widget);
+    }
     // Add else-if for other types when implemented
 }
 
@@ -108,6 +115,25 @@ void Mask_Loader_Widget::_loadSingleHDF5MaskFile(std::string const & filename, s
     opts.filename = filename;
 
     auto mask_data_ptr = load(opts);
+
+    _data_manager->setData<MaskData>(mask_key, mask_data_ptr);
+
+    ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
+    mask_data_ptr->setImageSize(original_size);
+
+    if (ui->scaling_widget->isScalingEnabled()) {
+        ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
+        mask_data_ptr->changeImageSize(scaled_size);
+    }
+}
+
+void Mask_Loader_Widget::_handleImageMaskLoadRequested(ImageMaskLoaderOptions options) {
+    auto mask_key = ui->data_name_text->text().toStdString();
+    if (mask_key.empty()) {
+        mask_key = "mask";
+    }
+
+    auto mask_data_ptr = load(options);
 
     _data_manager->setData<MaskData>(mask_key, mask_data_ptr);
 

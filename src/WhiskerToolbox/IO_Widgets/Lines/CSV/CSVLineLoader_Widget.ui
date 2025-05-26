@@ -171,6 +171,52 @@
        </property>
       </widget>
      </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_coordinate_delimiter">
+       <property name="text">
+        <string>Coordinate Delimiter:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1" colspan="2">
+      <widget class="QComboBox" name="coordinate_delimiter_combo">
+       <property name="toolTip">
+        <string>Delimiter used within X and Y coordinate lists. Only used for single-file mode.</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Comma</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Space</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Tab</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_header_identifier">
+       <property name="text">
+        <string>Header Identifier:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1" colspan="2">
+      <widget class="QLineEdit" name="header_identifier_edit">
+       <property name="toolTip">
+        <string>Text in the first column that identifies the header row. Only used for single-file mode.</string>
+       </property>
+       <property name="text">
+        <string>Frame</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

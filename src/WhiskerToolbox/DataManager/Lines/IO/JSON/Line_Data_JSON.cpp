@@ -44,7 +44,23 @@ std::shared_ptr<LineData> load_into_LineData(std::string const & file_path, nloh
             line_data = std::make_shared<LineData>(line_map);
         } else {
             // Single-file CSV loading (existing functionality)
-            auto line_map = load_line_csv(file_path);
+            CSVSingleFileLineLoaderOptions opts;
+            opts.filepath = file_path;
+            
+            if (item.contains("delimiter")) {
+                opts.delimiter = item["delimiter"];
+            }
+            if (item.contains("coordinate_delimiter")) {
+                opts.coordinate_delimiter = item["coordinate_delimiter"];
+            }
+            if (item.contains("has_header")) {
+                opts.has_header = item["has_header"];
+            }
+            if (item.contains("header_identifier")) {
+                opts.header_identifier = item["header_identifier"];
+            }
+            
+            auto line_map = load(opts);
             line_data = std::make_shared<LineData>(line_map);
         }
 

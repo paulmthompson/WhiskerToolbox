@@ -16,7 +16,7 @@ public:
     ~CSVLineLoader_Widget() override;
 
 signals:
-    void loadSingleFileCSVRequested(QString filepath);
+    void loadSingleFileCSVRequested(CSVSingleFileLineLoaderOptions options);
     void loadMultiFileCSVRequested(CSVMultiFileLineLoaderOptions options);
 
 private slots:

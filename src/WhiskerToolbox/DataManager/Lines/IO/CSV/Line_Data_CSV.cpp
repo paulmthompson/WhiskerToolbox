@@ -126,51 +126,54 @@ void save(
     std::cout << std::endl;
 }
 
-std::vector<float> parse_string_to_float_vector(std::string const & str) {
+std::vector<float> parse_string_to_float_vector(std::string const & str, std::string const & delimiter) {
     std::vector<float> result;
 
     std::stringstream ss(str);
     std::string item;
 
-    while (std::getline(ss, item, ',')) {
+    char delim_char = delimiter.empty() ? ',' : delimiter[0];
+    while (std::getline(ss, item, delim_char)) {
         result.push_back(std::stof(item));
     }
     return result;
 }
 
-std::map<int, std::vector<Line2D>> load_line_csv(std::string const & filepath) {
-
+std::map<int, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & opts) {
     auto t1 = std::chrono::high_resolution_clock::now();
     std::map<int, std::vector<Line2D>> data_map;
-    std::ifstream file(filepath);
+    std::ifstream file(opts.filepath);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open file: " + filepath);
+        throw std::runtime_error("Could not open file: " + opts.filepath);
     }
 
     std::string line;
-
     int loaded_lines = 0;
+    
     while (std::getline(file, line)) {
         std::istringstream ss(line);
         std::string frame_num_str, x_str, y_str;
 
-        std::getline(ss, frame_num_str, ',');
+        // Get frame number (first column)
+        std::getline(ss, frame_num_str, opts.delimiter[0]);
 
-        if (frame_num_str == "Frame") {
+        // Skip header if present
+        if (opts.has_header && frame_num_str == opts.header_identifier) {
             continue;
-            // Skip the header line
         }
 
+        // Get X coordinates (second column, enclosed in quotes)
         std::getline(ss, x_str, '"');
         std::getline(ss, x_str, '"');
 
+        // Get Y coordinates (third column, enclosed in quotes)
         std::getline(ss, y_str, '"');
         std::getline(ss, y_str, '"');
 
         int const frame_num = std::stoi(frame_num_str);
 
-        std::vector<float> const x_values = parse_string_to_float_vector(x_str);
-        std::vector<float> const y_values = parse_string_to_float_vector(y_str);
+        std::vector<float> const x_values = parse_string_to_float_vector(x_str, opts.coordinate_delimiter);
+        std::vector<float> const y_values = parse_string_to_float_vector(y_str, opts.coordinate_delimiter);
 
         if (x_values.size() != y_values.size()) {
             std::cerr << "Mismatched x and y values at frame: " << frame_num << std::endl;
@@ -189,8 +192,17 @@ std::map<int, std::vector<Line2D>> load_line_csv(std::string const & filepath) {
     auto t2 = std::chrono::high_resolution_clock::now();
 
     auto duration = std::chrono::duration<double>(t2 - t1).count();
-    std::cout << "Loaded " << loaded_lines << " lines from " << filepath << " in " << duration << "s" << std::endl;
+    std::cout << "Loaded " << loaded_lines << " lines from " << opts.filepath << " in " << duration << "s" << std::endl;
     return data_map;
+}
+
+std::map<int, std::vector<Line2D>> load_line_csv(std::string const & filepath) {
+    // Wrapper function for backward compatibility
+    // Uses the new options-based load function with default settings
+    CSVSingleFileLineLoaderOptions opts;
+    opts.filepath = filepath;
+    // All other options use their default values which match the original hardcoded behavior
+    return load(opts);
 }
 
 Line2D load_line_from_csv(std::string const & filename) {

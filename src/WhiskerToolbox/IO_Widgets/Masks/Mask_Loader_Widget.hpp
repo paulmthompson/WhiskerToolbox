@@ -3,6 +3,7 @@
 
 
 #include "IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.hpp"
+#include "IO_Widgets/Masks/Image/ImageMaskLoader_Widget.hpp"
 #include "IO_Widgets/Scaling_Widget/Scaling_Widget.hpp"
 
 #include <QWidget>
@@ -35,6 +36,7 @@ private slots:
     void _onLoaderTypeChanged(int index);
     void _handleSingleHDF5LoadRequested();
     void _handleMultiHDF5LoadRequested(QString pattern);
+    void _handleImageMaskLoadRequested(ImageMaskLoaderOptions options);
 
 };
 
