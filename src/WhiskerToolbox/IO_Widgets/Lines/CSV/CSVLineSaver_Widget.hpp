@@ -18,14 +18,17 @@ public:
 
 signals:
     void saveCSVRequested(CSVSingleFileLineSaverOptions options);
+    void saveMultiFileCSVRequested(CSVMultiFileLineSaverOptions options);
 
 private slots:
     void _onSaveHeaderCheckboxToggled(bool checked);
     void _updatePrecisionExample(int precision);
+    void _onSaveModeChanged();
 
 private:
     Ui::CSVLineSaver_Widget *ui;
     void _updatePrecisionLabelText(int precision);
+    void _updateUIForSaveMode();
 };
 
 #endif // CSV_LINE_SAVER_WIDGET_HPP 

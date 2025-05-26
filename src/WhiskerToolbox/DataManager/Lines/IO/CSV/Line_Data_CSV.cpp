@@ -1,7 +1,7 @@
-
 #include "Line_Data_CSV.hpp"
 
 #include "Lines/Line_Data.hpp"
+#include "utils/string_manip.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -67,6 +67,63 @@ void save(
     }
 
     file.close();
+}
+
+void save(
+        LineData const * line_data,
+        CSVMultiFileLineSaverOptions & opts) {
+
+    // Check if directory exists
+    if (!std::filesystem::exists(opts.parent_dir)) {
+        std::filesystem::create_directories(opts.parent_dir);
+        std::cout << "Created directory: " << opts.parent_dir << std::endl;
+    }
+
+    int files_saved = 0;
+    int files_skipped = 0;
+
+    // Iterate through all timestamps with data
+    for (auto const & frame_and_line: line_data->GetAllLinesAsRange()) {
+        // Only save if there are lines at this timestamp
+        if (frame_and_line.lines.empty()) {
+            files_skipped++;
+            continue;
+        }
+
+        // Only save the first line (index 0) as documented
+        Line2D const & first_line = frame_and_line.lines[0];
+        
+        // Generate filename with zero-padded frame number
+        std::string const padded_frame = pad_frame_id(frame_and_line.time, opts.frame_id_padding);
+        std::string const filename = opts.parent_dir + "/" + padded_frame + ".csv";
+
+        std::ofstream file(filename);
+        if (!file.is_open()) {
+            std::cerr << "Warning: Could not open file " << filename << " for writing" << std::endl;
+            files_skipped++;
+            continue;
+        }
+
+        // Write the header if requested
+        if (opts.save_header) {
+            file << opts.header << opts.line_delim;
+        }
+
+        // Write X and Y coordinates in separate columns
+        file << std::fixed << std::setprecision(opts.precision);
+        for (auto const & point: first_line) {
+            file << point.x << opts.delimiter << point.y << opts.line_delim;
+        }
+
+        file.close();
+        files_saved++;
+    }
+
+    std::cout << "Multi-file CSV save complete: " << files_saved << " files saved";
+    if (files_skipped > 0) {
+        std::cout << ", " << files_skipped << " timestamps skipped (no lines or file errors)";
+    }
+    std::cout << std::endl;
 }
 
 std::vector<float> parse_string_to_float_vector(std::string const & str) {

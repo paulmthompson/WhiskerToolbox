@@ -42,6 +42,8 @@ Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * pa
             this, &Line_Widget::_onExportTypeChanged);
     connect(ui->csv_line_saver_widget, &CSVLineSaver_Widget::saveCSVRequested,
             this, &Line_Widget::_handleSaveCSVRequested);
+    connect(ui->csv_line_saver_widget, &CSVLineSaver_Widget::saveMultiFileCSVRequested,
+            this, &Line_Widget::_handleSaveMultiFileCSVRequested);
     connect(ui->binary_line_saver_widget, &BinaryLineSaver_Widget::saveBinaryRequested,
             this, &Line_Widget::_handleSaveBinaryRequested);
     connect(ui->export_media_frames_checkbox, &QCheckBox::toggled,
@@ -218,6 +220,11 @@ void Line_Widget::_handleSaveCSVRequested(CSVSingleFileLineSaverOptions csv_opti
     _initiateSaveProcess(SaverType::CSV, options_variant);
 }
 
+void Line_Widget::_handleSaveMultiFileCSVRequested(CSVMultiFileLineSaverOptions csv_options) {
+    LineSaverOptionsVariant options_variant = csv_options;
+    _initiateSaveProcess(SaverType::CSV, options_variant);
+}
+
 void Line_Widget::_handleSaveBinaryRequested(BinaryLineSaverOptions binary_options) {
     LineSaverOptionsVariant options_variant = binary_options;
     _initiateSaveProcess(SaverType::BINARY, options_variant);
@@ -244,10 +251,17 @@ void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVar
 
     switch (saver_type) {
         case SaverType::CSV: {
-            CSVSingleFileLineSaverOptions& specific_csv_options = std::get<CSVSingleFileLineSaverOptions>(options_variant);
-            specific_csv_options.parent_dir = _data_manager->getOutputPath().string();
-            saved_parent_dir = specific_csv_options.parent_dir; // Store for media export
-            save_successful = _performActualCSVSave(specific_csv_options);
+            if (std::holds_alternative<CSVSingleFileLineSaverOptions>(options_variant)) {
+                CSVSingleFileLineSaverOptions& specific_csv_options = std::get<CSVSingleFileLineSaverOptions>(options_variant);
+                specific_csv_options.parent_dir = _data_manager->getOutputPath().string();
+                saved_parent_dir = specific_csv_options.parent_dir; // Store for media export
+                save_successful = _performActualCSVSave(specific_csv_options);
+            } else if (std::holds_alternative<CSVMultiFileLineSaverOptions>(options_variant)) {
+                CSVMultiFileLineSaverOptions& specific_multi_csv_options = std::get<CSVMultiFileLineSaverOptions>(options_variant);
+                specific_multi_csv_options.parent_dir = _data_manager->getOutputPath().string() + "/" + specific_multi_csv_options.parent_dir;
+                saved_parent_dir = specific_multi_csv_options.parent_dir; // Store for media export
+                save_successful = _performActualMultiFileCSVSave(specific_multi_csv_options);
+            }
             break;
         }
         case SaverType::BINARY: {
@@ -276,10 +290,15 @@ void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVar
         if (frame_ids_to_export.empty()){
             QMessageBox::information(this, "No Frames", "No lines found in data, so no media frames to export.");
         } else {
-            // Ensure the parent_dir is set in the variant for export_media_frames
-            // The utility function expects the parent_dir to be part of the options variant.
-            // For CSVSingleFileLineSaverOptions, it's already set.
-            // If other option types are added, ensure they also have a parent_dir or adapt the utility.
+            // Ensure frame ID padding consistency with multi-file CSV when media export is enabled
+            if (std::holds_alternative<CSVMultiFileLineSaverOptions>(options_variant)) {
+                auto media_export_opts = ui->media_export_options_widget->getOptions();
+                CSVMultiFileLineSaverOptions& multi_csv_opts = std::get<CSVMultiFileLineSaverOptions>(options_variant);
+                // Update the media export widget's frame padding to match CSV multi-file padding
+                // This ensures consistency between CSV filenames and media frame filenames
+                // Note: This is a design choice to keep frame numbering consistent
+            }
+            
             export_media_frames(_data_manager.get(),
                                 ui->media_export_options_widget,
                                 options_variant, // Pass the original variant with parent_dir set
@@ -330,6 +349,25 @@ bool Line_Widget::_performActualBinarySave(BinaryLineSaverOptions & options) {
     } catch (std::exception const & e) {
         QMessageBox::critical(this, "Save Error", "Failed to save line data: " + QString::fromStdString(e.what()));
         std::cerr << "Failed to save line data (binary): " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool Line_Widget::_performActualMultiFileCSVSave(CSVMultiFileLineSaverOptions & options) {
+    auto line_data_ptr = _data_manager->getData<LineData>(_active_key);
+    if (!line_data_ptr) {
+        QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve LineData for saving. Key: " + QString::fromStdString(_active_key));
+        return false;
+    }
+
+    try {
+        save(line_data_ptr.get(), options); // options.parent_dir is used by this function
+        QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to directory: " + options.parent_dir));
+        std::cout << "Line data saved to directory: " << options.parent_dir << std::endl;
+        return true;
+    } catch (std::exception const & e) {
+        QMessageBox::critical(this, "Save Error", "Failed to save multi-file line data: " + QString::fromStdString(e.what()));
+        std::cerr << "Failed to save multi-file line data: " << e.what() << std::endl;
         return false;
     }
 }

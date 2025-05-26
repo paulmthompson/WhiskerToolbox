@@ -27,7 +27,7 @@ class CSVLineSaver_Widget; // Forward declare the new widget
 class BinaryLineSaver_Widget; // Forward declare the binary saver widget
 
 // Define the variant type for saver options
-using LineSaverOptionsVariant = std::variant<CSVSingleFileLineSaverOptions, BinaryLineSaverOptions>;
+using LineSaverOptionsVariant = std::variant<CSVSingleFileLineSaverOptions, CSVMultiFileLineSaverOptions, BinaryLineSaverOptions>;
 
 class Line_Widget : public QWidget {
     Q_OBJECT
@@ -62,6 +62,7 @@ private slots:
     // New slots for saving functionality
     void _onExportTypeChanged(int index);
     void _handleSaveCSVRequested(CSVSingleFileLineSaverOptions options);
+    void _handleSaveMultiFileCSVRequested(CSVMultiFileLineSaverOptions options);
     void _handleSaveBinaryRequested(BinaryLineSaverOptions options); // New slot for binary save
     void _onExportMediaFramesCheckboxToggled(bool checked);
 
@@ -71,6 +72,7 @@ private:
     // New private helper methods for saving
     void _initiateSaveProcess(SaverType saver_type, LineSaverOptionsVariant& options_variant);
     bool _performActualCSVSave(CSVSingleFileLineSaverOptions & options);
+    bool _performActualMultiFileCSVSave(CSVMultiFileLineSaverOptions & options);
     bool _performActualBinarySave(BinaryLineSaverOptions & options); // New helper for binary save
 };
 

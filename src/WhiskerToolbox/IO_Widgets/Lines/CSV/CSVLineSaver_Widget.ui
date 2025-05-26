@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>350</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="label_description">
      <property name="text">
-      <string>Description: CSV is a human readable spreadsheet format. For Line Data, each row typically contains the frame number, followed by comma-separated X coordinates and comma-separated Y coordinates for a line in that frame. This format allows multiple lines per frame if needed. X and Y coordinate lists are often enclosed in quotes.</string>
+      <string>Description: CSV is a human readable spreadsheet format. For Line Data, you can save as a single file with all timestamps, or as multiple files (one per timestamp).</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -25,11 +25,37 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="save_mode_groupbox">
+     <property name="title">
+      <string>Save Mode</string>
+     </property>
+     <layout class="QVBoxLayout" name="save_mode_layout">
+      <item>
+       <widget class="QRadioButton" name="single_file_radio">
+        <property name="text">
+         <string>Single File - All timestamps in one CSV file</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="multi_file_radio">
+        <property name="text">
+         <string>Multi File - One CSV file per timestamp (first line only)</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <layout class="QGridLayout" name="gridLayout">
      <item row="0" column="0">
       <widget class="QLabel" name="label_filename">
        <property name="text">
-        <string>Filename:</string>
+        <string>Filename/Directory:</string>
        </property>
       </widget>
      </item>
@@ -152,6 +178,29 @@
       <widget class="QLineEdit" name="header_text_edit">
        <property name="text">
         <string>Frame,X,Y</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="label_frame_padding">
+       <property name="text">
+        <string>Frame ID Padding:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QSpinBox" name="frame_padding_spinbox">
+       <property name="toolTip">
+        <string>Number of digits for frame number in filename (e.g., 7 for 0000001.csv). Only used for multi-file mode.</string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>10</number>
+       </property>
+       <property name="value">
+        <number>7</number>
        </property>
       </widget>
      </item>
