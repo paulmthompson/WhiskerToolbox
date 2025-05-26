@@ -33,6 +33,72 @@ std::vector<Interval> load_digital_series_from_csv(
     return output;
 }
 
+std::vector<Interval> load(CSVIntervalLoaderOptions const & options) {
+    std::fstream file;
+    file.open(options.filepath, std::fstream::in);
+
+    if (!file.is_open()) {
+        std::cerr << "Error loading digital interval series: File " << options.filepath << " not found." << std::endl;
+        return {};
+    }
+
+    std::vector<Interval> output;
+    std::string line;
+    bool first_line = true;
+
+    while (std::getline(file, line)) {
+        // Skip header if present
+        if (first_line && options.has_header) {
+            first_line = false;
+            continue;
+        }
+        first_line = false;
+
+        // Skip empty lines
+        if (line.empty()) {
+            continue;
+        }
+
+        // Parse the line
+        std::vector<std::string> tokens;
+        std::stringstream ss(line);
+        std::string token;
+
+        // Split by delimiter
+        while (std::getline(ss, token, options.delimiter[0])) {
+            tokens.push_back(token);
+        }
+
+        // Validate we have enough columns
+        int max_column = std::max(options.start_column, options.end_column);
+        if (static_cast<int>(tokens.size()) <= max_column) {
+            std::cerr << "Warning: Line has insufficient columns (expected at least " 
+                      << (max_column + 1) << ", got " << tokens.size() << "): " << line << std::endl;
+            continue;
+        }
+
+        try {
+            int64_t start = std::stoll(tokens[options.start_column]);
+            int64_t end = std::stoll(tokens[options.end_column]);
+            
+            if (start > end) {
+                std::cerr << "Warning: Start time (" << start << ") is greater than end time (" 
+                          << end << ") on line: " << line << std::endl;
+                continue;
+            }
+            
+            output.emplace_back(Interval{start, end});
+        } catch (std::exception const & e) {
+            std::cerr << "Warning: Failed to parse line: " << line << " - " << e.what() << std::endl;
+            continue;
+        }
+    }
+
+    file.close();
+    std::cout << "Successfully loaded " << output.size() << " intervals from " << options.filepath << std::endl;
+    return output;
+}
+
 void save(
         DigitalIntervalSeries const * interval_data,
         CSVIntervalSaverOptions const & opts) {

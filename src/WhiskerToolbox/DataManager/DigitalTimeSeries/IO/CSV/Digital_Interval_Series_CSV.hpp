@@ -10,6 +10,43 @@ class DigitalIntervalSeries;
 
 std::vector<Interval> load_digital_series_from_csv(std::string const & filename, char delimiter = ' ');
 
+/**
+ * @struct CSVIntervalLoaderOptions
+ *
+ * @brief Options for loading DigitalIntervalSeries data from a CSV file.
+ *          The CSV should have two columns: Start and End for each interval.
+ *
+ * @var CSVIntervalLoaderOptions::filepath
+ * The path to the CSV file to load.
+ *
+ * @var CSVIntervalLoaderOptions::delimiter
+ * The delimiter used between columns. Defaults to ",".
+ *
+ * @var CSVIntervalLoaderOptions::has_header
+ * Whether the file has a header row that should be skipped. Defaults to false.
+ *
+ * @var CSVIntervalLoaderOptions::start_column
+ * The column index (0-based) for the start time values. Defaults to 0.
+ *
+ * @var CSVIntervalLoaderOptions::end_column
+ * The column index (0-based) for the end time values. Defaults to 1.
+ */
+struct CSVIntervalLoaderOptions {
+    std::string filepath;
+    std::string delimiter = ",";
+    bool has_header = false;
+    int start_column = 0;
+    int end_column = 1;
+};
+
+/**
+ * @brief Load digital interval series data from CSV using specified options
+ *
+ * @param options Configuration options for loading
+ * @return Vector of Interval objects loaded from the CSV file
+ */
+std::vector<Interval> load(CSVIntervalLoaderOptions const & options);
+
 
 /**
  * @struct CSVIntervalSaverOptions

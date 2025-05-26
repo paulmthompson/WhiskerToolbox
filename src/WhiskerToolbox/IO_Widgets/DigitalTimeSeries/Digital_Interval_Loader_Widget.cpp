@@ -20,7 +20,7 @@ Digital_Interval_Loader_Widget::Digital_Interval_Loader_Widget(std::shared_ptr<D
     connect(ui->loader_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &Digital_Interval_Loader_Widget::_onLoaderTypeChanged);
 
-    connect(ui->csv_digital_interval_loader_widget, &CSVDigitalIntervalLoader_Widget::loadFileRequested,
+    connect(ui->csv_digital_interval_loader_widget, &CSVDigitalIntervalLoader_Widget::loadCSVIntervalRequested,
             this, &Digital_Interval_Loader_Widget::_handleCSVLoadRequested);
 
     _onLoaderTypeChanged(0);
@@ -36,44 +36,22 @@ void Digital_Interval_Loader_Widget::_onLoaderTypeChanged(int index) {
     }
 }
 
-void Digital_Interval_Loader_Widget::_handleCSVLoadRequested(QString delimiterText) {
-    auto interval_filename = QFileDialog::getOpenFileName(
-            this,
-            "Load Intervals from CSV",
-            QDir::currentPath(),
-            "CSV files (*.csv);;All files (*.*)");
-
-    if (interval_filename.isNull() || interval_filename.isEmpty()) {
-        return;
-    }
-
-    _loadCSVFile(interval_filename, delimiterText);
-}
-
-void Digital_Interval_Loader_Widget::_loadCSVFile(QString const& filename, QString const& delimiterText) {
+void Digital_Interval_Loader_Widget::_handleCSVLoadRequested(CSVIntervalLoaderOptions options) {
     auto const interval_key = ui->data_name_text->text().toStdString();
     if (interval_key.empty()) {
         std::cout << "Data name cannot be empty." << std::endl;
         return;
     }
 
-    char delimiter;
-    if (delimiterText == "Space") {
-        delimiter = ' ';
-    } else if (delimiterText == "Comma") {
-        delimiter = ',';
-    } else {
-        std::cout << "Unsupported delimiter: " << delimiterText.toStdString() << std::endl;
-        return;
-    }
-
     try {
-        auto intervals = load_digital_series_from_csv(filename.toStdString(), delimiter);
-        std::cout << "Loaded " << intervals.size() << " intervals from " << filename.toStdString() << std::endl;
+        auto intervals = load(options);
+        std::cout << "Loaded " << intervals.size() << " intervals from " << options.filepath << std::endl;
 
         _data_manager->setData<DigitalIntervalSeries>(interval_key);
         _data_manager->getData<DigitalIntervalSeries>(interval_key)->setData(intervals);
     } catch (std::exception const& e) {
-        std::cerr << "Error loading CSV file " << filename.toStdString() << ": " << e.what() << std::endl;
+        std::cerr << "Error loading CSV file " << options.filepath << ": " << e.what() << std::endl;
     }
 }
+
+

@@ -25,12 +25,11 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
     //void _loadSingleHDF5Line(std::string filename, std::string line_suffix = "");
-    void _loadCSVFile(QString const& filename, QString const& delimiterText);
 
 private slots:
     // void _loadSingleInterval(); // Removed
     void _onLoaderTypeChanged(int index); // New slot
-    void _handleCSVLoadRequested(QString delimiterText); // New slot
+    void _handleCSVLoadRequested(CSVIntervalLoaderOptions options); // New slot
     //void _loadSingleHdf5Line();
     //void _loadMultiHdf5Line();
 };

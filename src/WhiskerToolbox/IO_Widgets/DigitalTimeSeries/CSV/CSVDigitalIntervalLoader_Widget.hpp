@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QString>
+#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 
 namespace Ui {
 class CSVDigitalIntervalLoader_Widget;
@@ -15,7 +16,11 @@ public:
     ~CSVDigitalIntervalLoader_Widget() override;
 
 signals:
-    void loadFileRequested(QString delimiterText);
+    void loadCSVIntervalRequested(CSVIntervalLoaderOptions options);
+
+private slots:
+    void _onBrowseButtonClicked();
+    void _onLoadButtonClicked();
 
 private:
     Ui::CSVDigitalIntervalLoader_Widget *ui;
