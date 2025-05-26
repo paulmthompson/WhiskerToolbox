@@ -10,9 +10,20 @@
 
 #include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"
 
+#include "IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp"
+#include "IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp"
+#include "IO_Widgets/Media/MediaExport_Widget.hpp"
+
 #include <iostream>
 #include <QTableView>
 #include <QComboBox>
+#include <QStackedWidget>
+#include <QCheckBox>
+#include <QPushButton>
+#include <QMessageBox>
+#include <QFileDialog>
+#include <QDir>
+#include <filesystem>
 
 Mask_Widget::Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
@@ -29,6 +40,17 @@ Mask_Widget::Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * pa
     connect(ui->tableView, &QTableView::doubleClicked, this, &Mask_Widget::_handleTableViewDoubleClicked);
     connect(ui->moveMasksButton, &QPushButton::clicked, this, &Mask_Widget::_moveMasksButton_clicked);
     connect(ui->deleteMasksButton, &QPushButton::clicked, this, &Mask_Widget::_deleteMasksButton_clicked);
+
+    // Connect export functionality
+    connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &Mask_Widget::_onExportTypeChanged);
+    connect(ui->image_mask_saver_widget, &ImageMaskSaver_Widget::saveImageMaskRequested,
+            this, &Mask_Widget::_handleSaveImageMaskRequested);
+    connect(ui->export_media_frames_checkbox, &QCheckBox::toggled,
+            this, &Mask_Widget::_onExportMediaFramesCheckboxToggled);
+
+    _onExportTypeChanged(ui->export_type_combo->currentIndex());
+    ui->media_export_options_widget->setVisible(ui->export_media_frames_checkbox->isChecked());
 }
 
 Mask_Widget::~Mask_Widget() {
@@ -211,4 +233,91 @@ void Mask_Widget::_loadSamModel() {
         std::cout << "Mask_Widget: SAM model failed to load." << std::endl;
     }
     */
+}
+
+void Mask_Widget::_onExportTypeChanged(int index) {
+    QString current_text = ui->export_type_combo->itemText(index);
+    if (current_text == "HDF5") {
+        ui->stacked_saver_options->setCurrentWidget(ui->hdf5_mask_saver_widget);
+    } else if (current_text == "Image") {
+        ui->stacked_saver_options->setCurrentWidget(ui->image_mask_saver_widget);
+    }
+}
+
+void Mask_Widget::_handleSaveImageMaskRequested(ImageMaskSaverOptions options) {
+    MaskSaverOptionsVariant options_variant = options;
+    _initiateSaveProcess(SaverType::IMAGE, options_variant);
+}
+
+void Mask_Widget::_onExportMediaFramesCheckboxToggled(bool checked) {
+    ui->media_export_options_widget->setVisible(checked);
+}
+
+void Mask_Widget::_initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVariant& options_variant) {
+    if (_active_key.empty()) {
+        QMessageBox::warning(this, "No Data Selected", "Please select a MaskData item to save.");
+        return;
+    }
+
+    auto mask_data_ptr = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data_ptr) {
+        QMessageBox::critical(this, "Error", "Could not retrieve MaskData for saving. Key: " + QString::fromStdString(_active_key));
+        return;
+    }
+
+    bool save_successful = false;
+    std::string saved_parent_dir;
+
+    switch (saver_type) {
+        case SaverType::IMAGE: {
+            ImageMaskSaverOptions& specific_image_options = std::get<ImageMaskSaverOptions>(options_variant);
+            specific_image_options.parent_dir = _data_manager->getOutputPath().string() + "/" + specific_image_options.parent_dir;
+            saved_parent_dir = specific_image_options.parent_dir;
+            save_successful = _performActualImageSave(specific_image_options);
+            break;
+        }
+        case SaverType::HDF5: {
+            // TODO: Implement HDF5 saving when HDF5MaskSaver_Widget is complete
+            QMessageBox::information(this, "Not Implemented", "HDF5 mask saving is not yet implemented.");
+            return;
+        }
+    }
+
+    if (!save_successful) {
+        return;
+    }
+
+    if (ui->export_media_frames_checkbox->isChecked()) {
+        auto times_with_data = mask_data_ptr->getTimesWithData();
+        std::vector<size_t> frame_ids_to_export = times_with_data;
+
+        if (frame_ids_to_export.empty()) {
+            QMessageBox::information(this, "No Frames", "No masks found in data, so no media frames to export.");
+        } else {
+            export_media_frames(_data_manager.get(),
+                                ui->media_export_options_widget,
+                                options_variant,
+                                this,
+                                frame_ids_to_export);
+        }
+    }
+}
+
+bool Mask_Widget::_performActualImageSave(ImageMaskSaverOptions & options) {
+    auto mask_data_ptr = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data_ptr) {
+        QMessageBox::critical(this, "Save Error", "Critical: Could not retrieve MaskData for saving. Key: " + QString::fromStdString(_active_key));
+        return false;
+    }
+
+    try {
+        save(mask_data_ptr.get(), options);
+        QMessageBox::information(this, "Save Successful", QString::fromStdString("Mask data saved to directory: " + options.parent_dir));
+        std::cout << "Mask data saved to directory: " << options.parent_dir << std::endl;
+        return true;
+    } catch (std::exception const & e) {
+        QMessageBox::critical(this, "Save Error", "Failed to save mask data: " + QString::fromStdString(e.what()));
+        std::cerr << "Failed to save mask data: " << e.what() << std::endl;
+        return false;
+    }
 }

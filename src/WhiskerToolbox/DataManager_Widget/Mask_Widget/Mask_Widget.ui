@@ -13,9 +13,15 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="mainVerticalLayout">
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="label_main_title">
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+       <bold>true</bold>
+      </font>
+     </property>
      <property name="text">
       <string>Mask Data Management</string>
      </property>
@@ -25,7 +31,75 @@
     </widget>
    </item>
    <item>
-    <widget class="QTableView" name="tableView"/>
+    <layout class="QHBoxLayout" name="topControlsLayout">
+     <item>
+      <layout class="QVBoxLayout" name="leftVerticalLayout">
+       <item>
+        <layout class="QHBoxLayout" name="exportTypeLayout">
+         <item>
+          <widget class="QLabel" name="label_export_type">
+           <property name="text">
+            <string>Export Type:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="export_type_combo">
+           <item>
+            <property name="text">
+             <string>HDF5</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Image</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QStackedWidget" name="stacked_saver_options">
+         <property name="currentIndex">
+          <number>0</number>
+         </property>
+         <widget class="HDF5MaskSaver_Widget" name="hdf5_mask_saver_widget"/>
+         <widget class="ImageMaskSaver_Widget" name="image_mask_saver_widget"/>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="export_media_frames_checkbox">
+         <property name="text">
+          <string>Export matching media frames</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="MediaExport_Widget" name="media_export_options_widget" native="true"/>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_left">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QTableView" name="tableView"/>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="actionButtonsLayout">
@@ -93,6 +167,26 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>HDF5MaskSaver_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ImageMaskSaver_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MediaExport_Widget</class>
+   <extends>QWidget</extends>
+   <header>IO_Widgets/Media/MediaExport_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

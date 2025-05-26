@@ -141,17 +141,17 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
         std::cerr << "Error: MaskData pointer is null" << std::endl;
         return;
     }
-    
+
     // Create output directory if it doesn't exist
-    if (!std::filesystem::exists(opts.directory_path)) {
-        std::filesystem::create_directories(opts.directory_path);
-        std::cout << "Created directory: " << opts.directory_path << std::endl;
+    if (!std::filesystem::exists(opts.parent_dir)) {
+        std::filesystem::create_directories(opts.parent_dir);
+        std::cout << "Created directory: " << opts.parent_dir << std::endl;
     }
     
     int files_saved = 0;
     int files_skipped = 0;
     
-    std::cout << "Saving mask images to directory: " << opts.directory_path << std::endl;
+    std::cout << "Saving mask images to directory: " << opts.parent_dir << std::endl;
     
     // Iterate through all masks with their timestamps
     for (auto const & time_mask_pair : mask_data->getAllAsRange()) {
@@ -195,7 +195,7 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
         filename += extension;
         
         // Full path
-        std::filesystem::path full_path = std::filesystem::path(opts.directory_path) / filename;
+        std::filesystem::path full_path = std::filesystem::path(opts.parent_dir) / filename;
         
         // Save the image using OpenCV
         if (cv::imwrite(full_path.string(), image)) {

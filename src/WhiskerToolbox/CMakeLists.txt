@@ -311,9 +311,15 @@ set(PROJECT_SOURCES
         IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.cpp
         IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.hpp
         IO_Widgets/Masks/HDF5/HDF5MaskLoader_Widget.ui
+        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.cpp
+        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp
+        IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.ui
         IO_Widgets/Masks/Image/ImageMaskLoader_Widget.cpp
         IO_Widgets/Masks/Image/ImageMaskLoader_Widget.hpp
         IO_Widgets/Masks/Image/ImageMaskLoader_Widget.ui
+        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.cpp
+        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp
+        IO_Widgets/Masks/Image/ImageMaskSaver_Widget.ui
 
         IO_Widgets/Lines/Line_Loader_Widget.hpp
         IO_Widgets/Lines/Line_Loader_Widget.cpp

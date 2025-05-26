@@ -7,6 +7,9 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <variant>
+
+#include "DataManager/Masks/IO/Image/Mask_Data_Image.hpp"
 
 namespace dl {
 class EfficientSAM;
@@ -18,6 +21,12 @@ class Mask_Widget;
 
 class DataManager;
 class MaskTableModel;
+class ImageMaskSaver_Widget;
+class HDF5MaskSaver_Widget;
+class MediaExport_Widget;
+
+// Define the variant type for mask saver options
+using MaskSaverOptionsVariant = std::variant<ImageMaskSaverOptions>;
 
 class Mask_Widget : public QWidget {
     Q_OBJECT
@@ -44,12 +53,22 @@ private:
 
     void _populateMoveToMaskDataComboBox();
 
+    // Export functionality
+    enum SaverType { HDF5, IMAGE };
+    void _initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVariant& options_variant);
+    bool _performActualImageSave(ImageMaskSaverOptions & options);
+
 private slots:
     void _loadSamModel();
     void _handleTableViewDoubleClicked(QModelIndex const & index);
     void _moveMasksButton_clicked();
     void _deleteMasksButton_clicked();
     void _onDataChanged();
+    
+    // Export slots
+    void _onExportTypeChanged(int index);
+    void _handleSaveImageMaskRequested(ImageMaskSaverOptions options);
+    void _onExportMediaFramesCheckboxToggled(bool checked);
 };
 
 

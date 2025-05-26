@@ -53,7 +53,7 @@ struct ImageMaskLoaderOptions {
  * where each file represents a mask for a specific frame. The filename will
  * contain the frame number, optionally with a prefix.
  *
- * @var ImageMaskSaverOptions::directory_path
+ * @var ImageMaskSaverOptions::parent_dir
  * The directory where binary image files will be saved.
  *
  * @var ImageMaskSaverOptions::image_format
@@ -78,7 +78,7 @@ struct ImageMaskLoaderOptions {
  * Pixel value for mask pixels (0-255).
  */
 struct ImageMaskSaverOptions {
-    std::string directory_path = ".";
+    std::string parent_dir = ".";
     std::string image_format = "PNG";
     std::string filename_prefix = "";
     int frame_number_padding = 4;
