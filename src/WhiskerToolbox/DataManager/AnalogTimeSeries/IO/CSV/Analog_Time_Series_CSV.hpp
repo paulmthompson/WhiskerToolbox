@@ -1,15 +1,19 @@
 #ifndef ANALOG_TIME_SERIES_CSV_HPP
 #define ANALOG_TIME_SERIES_CSV_HPP
 
+#include <memory>
 #include <string>
 #include <vector>
 
 class AnalogTimeSeries;
 
 struct CSVAnalogLoaderOptions {
+    std::string filepath;
     std::string delimiter = ",";
-    std::string line_delim = "\n";
-    bool header_present = false;
+    bool has_header = false;
+    bool single_column_format = true;  // If true, only data column, time is inferred as index
+    int time_column = 0;               // Column index for time data (when single_column_format is false)
+    int data_column = 1;               // Column index for data values (when single_column_format is false)
 };
 
 /**
@@ -22,6 +26,14 @@ struct CSVAnalogLoaderOptions {
  * @return a vector of floats representing the analog time series
  */
 std::vector<float> load_analog_series_from_csv(std::string const & filename);
+
+/**
+ * @brief Load analog time series data from CSV using specified options
+ *
+ * @param options Configuration options for loading
+ * @return Shared pointer to AnalogTimeSeries object
+ */
+std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options);
 
 
 /**

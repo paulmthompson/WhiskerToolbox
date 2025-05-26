@@ -6,6 +6,8 @@
 #include <sstream>
 #include <filesystem> // std::filesystem
 #include <iomanip>    // std::fixed, std::setprecision
+#include <memory>
+#include <stdexcept>
 
 std::vector<float> load_analog_series_from_csv(std::string const & filename) {
 
@@ -33,6 +35,64 @@ std::vector<float> load_analog_series_from_csv(std::string const & filename) {
     myfile.close();
 
     return output;
+}
+
+std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options) {
+    std::ifstream file(options.filepath);
+    if (!file.is_open()) {
+        throw std::runtime_error("Error: Could not open file: " + options.filepath);
+    }
+
+    std::vector<float> data_values;
+    std::vector<size_t> time_values;
+    std::string line;
+    
+    // Skip header if present
+    if (options.has_header && std::getline(file, line)) {
+        // Header line consumed, continue with data
+    }
+
+    while (std::getline(file, line)) {
+        if (line.empty()) continue;
+        
+        std::stringstream ss(line);
+        std::string cell;
+        std::vector<std::string> row;
+        
+        // Parse the line based on delimiter
+        while (std::getline(ss, cell, options.delimiter[0])) {
+            row.push_back(cell);
+        }
+        
+        if (row.empty()) continue;
+        
+        try {
+            if (options.single_column_format) {
+                // Single column format: only data, time is inferred as index
+                if (!row.empty()) {
+                    data_values.push_back(std::stof(row[0]));
+                    time_values.push_back(time_values.size()); // Use index as time
+                }
+            } else {
+                // Two column format: time and data columns
+                if (row.size() > std::max(options.time_column, options.data_column)) {
+                    time_values.push_back(static_cast<size_t>(std::stof(row[options.time_column])));
+                    data_values.push_back(std::stof(row[options.data_column]));
+                }
+            }
+        } catch (std::exception const & e) {
+            std::cerr << "Warning: Could not parse line: " << line << " - " << e.what() << std::endl;
+            continue;
+        }
+    }
+    
+    file.close();
+    
+    if (data_values.empty()) {
+        throw std::runtime_error("Error: No valid data found in file: " + options.filepath);
+    }
+    
+    return std::make_shared<AnalogTimeSeries>(data_values, time_values);
 }
 
 void save(AnalogTimeSeries * analog_data,

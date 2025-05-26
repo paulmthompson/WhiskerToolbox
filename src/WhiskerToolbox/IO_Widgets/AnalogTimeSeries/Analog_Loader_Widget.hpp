@@ -2,10 +2,13 @@
 #define ANALOG_LOADER_WIDGET_HPP
 
 #include <QWidget>
-
 #include <memory>
+#include <string>
+
+#include "DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp"
 
 class DataManager;
+class CSVAnalogLoader_Widget;
 
 namespace Ui {
 class Analog_Loader_Widget;
@@ -22,7 +25,8 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
 private slots:
-    void _loadAnalogCSV();
+    void _onLoaderTypeChanged(int index);
+    void _handleAnalogCSVLoadRequested(CSVAnalogLoaderOptions options);
 };
 
 
