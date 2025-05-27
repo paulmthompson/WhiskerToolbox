@@ -3,8 +3,8 @@
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
 #include "DataManager/transforms/AnalogTimeSeries/analog_scaling.hpp"
-#include "DataManager/DataManager.hpp"
 
+class DataManager;
 namespace Ui { class AnalogScaling_Widget; }
 
 class AnalogScaling_Widget : public TransformParameter_Widget {

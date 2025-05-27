@@ -2,8 +2,7 @@
 #define WHISKERTOOLBOX_DATATRANSFORM_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-
-#include "DataManager.hpp"
+#include "DataManagerTypes.hpp"
 
 #include <QString>
 #include <QWidget>
@@ -16,6 +15,7 @@ namespace Ui {
 class DataTransform_Widget;
 }
 
+class DataManager;
 class TransformOperation;
 class TransformParameter_Widget;
 class TransformRegistry;

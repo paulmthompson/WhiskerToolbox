@@ -1,7 +1,9 @@
 #include "LineClip_Widget.hpp"
 #include "ui_LineClip_Widget.h"
 
-#include "Lines/Line_Data.hpp"
+#include "DataManager/DataManager.hpp"
+#include "DataManager/transforms/Lines/line_clip.hpp"
+#include "DataManager/Lines/Line_Data.hpp"
 
 LineClip_Widget::LineClip_Widget(QWidget *parent) :
     TransformParameter_Widget(parent),

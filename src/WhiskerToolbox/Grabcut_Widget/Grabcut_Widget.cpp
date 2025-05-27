@@ -1,5 +1,7 @@
 #include "Grabcut_Widget.hpp"
 #include "ui_Grabcut_Widget.h"
+
+#include "DataManager/DataManager.hpp"
 #include "utils/opencv_utility.hpp"
 
 #include <opencv2/imgcodecs.hpp>

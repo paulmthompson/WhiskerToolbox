@@ -1,7 +1,6 @@
 #ifndef MEDIA_WINDOW_HPP
 #define MEDIA_WINDOW_HPP
 
-#include "DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/ImageSize/ImageSize.hpp"
 
@@ -14,6 +13,8 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+
+class DataManager;
 class QGraphicsPixmapItem;
 class QImage;
 

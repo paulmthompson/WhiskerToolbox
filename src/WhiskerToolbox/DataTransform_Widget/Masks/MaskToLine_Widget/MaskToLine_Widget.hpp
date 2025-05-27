@@ -2,9 +2,9 @@
 #define MASKTOLINE_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Masks/mask_to_line.hpp"
-#include "DataManager/DataManager.hpp"
 
+
+class DataManager;
 namespace Ui { class MaskToLine_Widget; }
 
 class MaskToLine_Widget : public TransformParameter_Widget {

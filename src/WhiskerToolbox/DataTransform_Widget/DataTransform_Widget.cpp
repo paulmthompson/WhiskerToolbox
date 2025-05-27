@@ -2,8 +2,9 @@
 
 #include "ui_DataTransform_Widget.h"
 
+#include "DataManager/DataManager.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
-#include "transforms/TransformRegistry.hpp"
+#include "DataManager/transforms/TransformRegistry.hpp"
 
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp"

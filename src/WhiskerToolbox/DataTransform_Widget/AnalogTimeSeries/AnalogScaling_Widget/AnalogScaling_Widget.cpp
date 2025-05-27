@@ -2,6 +2,7 @@
 #include "ui_AnalogScaling_Widget.h"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DataManager.hpp"
 
 #include <QLocale>
 

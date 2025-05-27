@@ -2,9 +2,8 @@
 #define LINECLIP_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
-#include "DataManager/transforms/Lines/line_clip.hpp"
-#include "DataManager/DataManager.hpp"
 
+class DataManager;
 namespace Ui { class LineClip_Widget; }
 
 class LineClip_Widget : public TransformParameter_Widget {

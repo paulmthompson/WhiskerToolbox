@@ -1,7 +1,6 @@
 #ifndef GRABCUT_WIDGET_HPP
 #define GRABCUT_WIDGET_HPP
 
-#include "DataManager.hpp"
 #include "GrabCutTool.hpp"
 #include "Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
@@ -12,6 +11,7 @@
 
 #include <memory>
 
+class DataManager;
 namespace Ui {
 class Grabcut_Widget;
 };

@@ -2,6 +2,7 @@
 
 #include "ui_Media_Widget.h"
 
+#include "DataManager/DataManager.hpp"
 #include "DataManager/ImageSize/ImageSize.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
