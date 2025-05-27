@@ -288,6 +288,10 @@ set(PROJECT_SOURCES
         IO_Widgets/Scaling_Widget/Scaling_Widget.hpp
         IO_Widgets/Scaling_Widget/Scaling_Widget.ui
 
+        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.cpp
+        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.hpp
+        IO_Widgets/DataAggregation/DataAggregationExporter_Widget.ui
+
         IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.hpp
         IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.cpp
         IO_Widgets/AnalogTimeSeries/Analog_Loader_Widget.ui
