@@ -4,7 +4,8 @@
 #include "utils/skeletonize.hpp"
 
 #include <algorithm>
-#include <iostream>
+#include <cmath>        // std::round
+#include <iostream>     // std::cout
 #include <vector>
 
 std::shared_ptr<MaskData> skeletonize_mask(

@@ -20,6 +20,8 @@ FetchContent_Declare(
 
 )
 
+#add_subdirectory(Whisker-Analysis)
+
 FetchContent_Declare(
   qt6advanceddocking
   GIT_REPOSITORY https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System
@@ -32,19 +34,6 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/llohse/libnpy.git
   GIT_TAG v1.0.1
 )
-
-Set(FETCHCONTENT_QUIET FALSE)
-FetchContent_Declare(JKQTPlotter6
-                     GIT_REPOSITORY https://github.com/jkriege2/JKQtPlotter.git
-                     GIT_TAG aa4ac4c58a099594e88e3c63110dff69136d54b8
-                     )
-# ... finally make JKQTPlotter5/6 available
-
-set(JKQtPlotter_BUILD_EXAMPLES OFF)
-set(JKQtPlotter_BUILD_TESTS OFF)
-set(JKQtPlotter_BUILD_TOOLS OFF)
-set(JKQtPlotter_BUILD_LIB_JKQTFASTPLOTTER OFF)
-#add_subdirectory(Whisker-Analysis)
 
 set(CUDA OFF)
 
@@ -81,7 +70,7 @@ elseif (WIN32)
 endif()
 
 #We should use make avaiable
-FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking JKQTPlotter6 Torch npy)
+FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking Torch npy)
 
 set_target_properties(ffmpeg_wrapper PROPERTIES EXCLUDE_FROM_ALL TRUE)
 set_target_properties(Whisker-Analysis PROPERTIES EXCLUDE_FROM_ALL TRUE)
@@ -92,13 +81,5 @@ set_target_properties(qt6advanceddocking PROPERTIES
 )
 
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${torch_SOURCE_DIR}/share/cmake/Torch" PARENT_SCOPE)
-
-if (WIN32)
-    set_target_properties(JKQTPlotter6 JKQTCommon6 JKQTMath6 JKQTMathText6 PROPERTIES
-        EXCLUDE_FROM_ALL TRUE
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-endif()
 
 set(npy_SOURCE_DIR ${npy_SOURCE_DIR} PARENT_SCOPE)
