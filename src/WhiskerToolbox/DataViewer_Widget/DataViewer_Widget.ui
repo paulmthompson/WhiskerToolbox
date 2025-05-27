@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>60</x>
-     <y>400</y>
+     <y>420</y>
      <width>351</width>
      <height>301</height>
     </rect>
@@ -27,7 +27,7 @@
    <property name="geometry">
     <rect>
      <x>450</x>
-     <y>400</y>
+     <y>420</y>
      <width>211</width>
      <height>81</height>
     </rect>
@@ -94,7 +94,7 @@
    <property name="geometry">
     <rect>
      <x>450</x>
-     <y>500</y>
+     <y>520</y>
      <width>211</width>
      <height>200</height>
     </rect>
@@ -111,11 +111,30 @@
     </rect>
    </property>
   </widget>
+  <widget class="QLabel" name="coordinate_label">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>335</y>
+     <width>679</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Coordinates: Time: --, Value: --</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgba(0, 0, 0, 50); color: white; padding: 2px;</string>
+   </property>
+  </widget>
   <widget class="QWidget" name="horizontalLayoutWidget_3">
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>340</y>
+     <y>360</y>
      <width>679</width>
      <height>41</height>
     </rect>

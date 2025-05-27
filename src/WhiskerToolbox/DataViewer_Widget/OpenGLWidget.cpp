@@ -48,6 +48,7 @@ I will also only select the data that is present
 
 OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent) {
+    setMouseTracking(true); // Enable mouse tracking for hover events
 }
 
 OpenGLWidget::~OpenGLWidget() {
@@ -84,6 +85,29 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         _lastMousePos = event->pos();
         update();// Request redraw
     }
+    
+    // Emit hover coordinates for coordinate display
+    float const canvas_x = static_cast<float>(event->pos().x());
+    float const canvas_y = static_cast<float>(event->pos().y());
+    
+    // Convert canvas X to time coordinate
+    float const time_coord = canvasXToTime(canvas_x);
+    
+    // Find the closest analog series for Y coordinate conversion
+    QString series_info = "";
+    if (!_analog_series.empty()) {
+        // For now, use the first visible analog series for Y coordinate conversion
+        for (auto const & [key, data] : _analog_series) {
+            if (data.display_options->is_visible) {
+                float const analog_value = canvasYToAnalogValue(canvas_y, key);
+                series_info = QString("Series: %1, Value: %2").arg(QString::fromStdString(key)).arg(analog_value, 0, 'f', 3);
+                break;
+            }
+        }
+    }
+    
+    emit mouseHover(time_coord, canvas_y, series_info);
+    
     QOpenGLWidget::mouseMoveEvent(event);
 }
 
@@ -684,4 +708,56 @@ void OpenGLWidget::_updateYViewBoundaries() {
     _yMin = centerY - (viewHeight / 2.0f);
     _yMax = centerY + (viewHeight / 2.0f);
      */
+}
+
+float OpenGLWidget::canvasXToTime(float canvas_x) const {
+    // Convert canvas pixel coordinate to time coordinate
+    float const canvas_width = static_cast<float>(width());
+    float const normalized_x = canvas_x / canvas_width; // 0.0 to 1.0
+    
+    auto const start_time = static_cast<float>(_xAxis.getStart());
+    auto const end_time = static_cast<float>(_xAxis.getEnd());
+    
+    return start_time + normalized_x * (end_time - start_time);
+}
+
+float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & series_key) const {
+    auto it = _analog_series.find(series_key);
+    if (it == _analog_series.end()) {
+        return 0.0f;
+    }
+    
+    auto const & analog_data = it->second;
+    auto const & display_options = analog_data.display_options;
+    
+    // Convert canvas Y coordinate to normalized device coordinate
+    float const canvas_height = static_cast<float>(height());
+    float const normalized_y = 1.0f - (canvas_y / canvas_height); // Flip Y axis (0.0 at bottom, 1.0 at top)
+    
+    // Convert from normalized device coordinates to view coordinates
+    float const view_y = _yMin + normalized_y * (_yMax - _yMin);
+    
+    // Account for vertical panning
+    float const adjusted_y = view_y - _verticalPanOffset;
+    
+    // Account for series-specific transformations
+    // Find the series index for Y offset calculation
+    int series_index = 0;
+    for (auto const & [key, data] : _analog_series) {
+        if (key == series_key) break;
+        if (data.display_options->is_visible) series_index++;
+    }
+    
+    // Calculate the center coordinate for all series
+    float const center_coord = -0.5f * _ySpacing * (static_cast<float>(_analog_series.size() - 1));
+    float const series_y_offset = static_cast<float>(series_index) * _ySpacing + center_coord;
+    
+    // Remove the series offset
+    float const series_relative_y = adjusted_y - series_y_offset;
+    
+    // Convert from scaled coordinates back to original analog values
+    auto const scale_factor = display_options->scale_factor * display_options->user_scale_factor / _global_zoom;
+    float const analog_value = series_relative_y * scale_factor;
+    
+    return analog_value;
 }

@@ -106,6 +106,10 @@ public:
         update();
     };
 
+    // Coordinate conversion methods
+    [[nodiscard]] float canvasXToTime(float canvas_x) const;
+    [[nodiscard]] float canvasYToAnalogValue(float canvas_y, std::string const & series_key) const;
+
     // Display options getters (similar to Media_Window pattern)
     [[nodiscard]] std::optional<AnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const {
         auto it = _analog_series.find(key);
@@ -133,6 +137,9 @@ public:
 
 public slots:
     void updateCanvas(int time);
+
+signals:
+    void mouseHover(float time_coordinate, float canvas_y, QString const & series_info);
 
 protected:
     void initializeGL() override;

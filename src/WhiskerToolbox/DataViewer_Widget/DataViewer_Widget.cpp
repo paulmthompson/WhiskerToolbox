@@ -16,6 +16,7 @@
 #include <QTableWidget>
 #include <QWheelEvent>
 
+#include <cmath>
 #include <iostream>
 
 DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
@@ -80,6 +81,10 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
             this, &DataViewer_Widget::_handleColorChanged);
     connect(event_widget, &EventViewer_Widget::colorChanged,
             this, &DataViewer_Widget::_handleColorChanged);
+    
+    // Connect mouse hover signal from OpenGL widget
+    connect(ui->openGLWidget, &OpenGLWidget::mouseHover,
+            this, &DataViewer_Widget::_updateCoordinateDisplay);
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -263,6 +268,27 @@ void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std
     ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
     
     std::cout << "Color changed for " << feature_key << " to " << hex_color << std::endl;
+}
+
+void DataViewer_Widget::_updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info) {
+    // Convert time coordinate to actual time using the time frame
+    int const time_index = static_cast<int>(std::round(time_coordinate));
+    int const actual_time = _time_frame->getTimeAtIndex(time_index);
+    
+    QString coordinate_text;
+    if (series_info.isEmpty()) {
+        coordinate_text = QString("Coordinates: Time: %1 (index: %2), Canvas Y: %3")
+                         .arg(actual_time)
+                         .arg(time_index)
+                         .arg(canvas_y, 0, 'f', 1);
+    } else {
+        coordinate_text = QString("Coordinates: Time: %1 (index: %2), %3")
+                         .arg(actual_time)
+                         .arg(time_index)
+                         .arg(series_info);
+    }
+    
+    ui->coordinate_label->setText(coordinate_text);
 }
 
 std::optional<AnalogTimeSeriesDisplayOptions *> DataViewer_Widget::getAnalogConfig(std::string const & key) const {

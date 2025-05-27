@@ -62,6 +62,7 @@ private slots:
     void _handleXAxisSamplesChanged(int value);
     void _updateGlobalScale(double scale);
     void _handleColorChanged(std::string const & feature_key, std::string const & hex_color);
+    void _updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info);
 
 private:
     std::shared_ptr<DataManager> _data_manager;
