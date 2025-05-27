@@ -106,7 +106,8 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
                 }
                 
                 if (is_mask_pixel) {
-                    mask_points.emplace_back(static_cast<float>(x), static_cast<float>(y));
+                    //mask_points.emplace_back(static_cast<float>(x), static_cast<float>(y)); // This fails on mac
+                    mask_points.push_back(Point2D<float>{static_cast<float>(x), static_cast<float>(y)});
                 }
             }
         }
