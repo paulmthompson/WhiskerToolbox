@@ -4,6 +4,7 @@
 #include "DataViewer_Widget.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "TimeFrame.hpp"
 #include "shaders/colored_vertex_shader.hpp"
 #include "shaders/dashed_line_shader.hpp"
@@ -215,11 +216,15 @@ void OpenGLWidget::drawDigitalEventSeries() {
     for (auto const & [key, event_data]: _digital_event_series) {
         auto const & series = event_data.series;
         auto const & time_frame = event_data.time_frame;
-        hexToRGB(event_data.color, r, g, b);
+        auto const & display_options = event_data.display_options;
+        
+        if (!display_options->is_visible) continue;
+        
+        hexToRGB(display_options->hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
         float const gNorm = static_cast<float>(g) / 255.0f;
         float const bNorm = static_cast<float>(b) / 255.0f;
-        float const alpha = 1.0f;
+        float const alpha = display_options->alpha;
 
         // Get events in the visible range using the time transform
         auto visible_events = series->getEventsInRange(
@@ -281,6 +286,9 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
     for (auto const & [key, interval_data]: _digital_interval_series) {
         auto const & series = interval_data.series;
         auto const & time_frame = interval_data.time_frame;
+        auto const & display_options = interval_data.display_options;
+        
+        if (!display_options->is_visible) continue;
 
         // Get only the intervals that overlap with the visible range
         auto visible_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
@@ -290,11 +298,11 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
                     return static_cast<float>(time_frame->getTimeAtIndex(idx));
                 });
 
-        hexToRGB(interval_data.color, r, g, b);
+        hexToRGB(display_options->hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
         float const gNorm = static_cast<float>(g) / 255.0f;
         float const bNorm = static_cast<float>(b) / 255.0f;
-        float const alpha = 0.2f;// Set alpha for shading
+        float const alpha = display_options->alpha;
 
         // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
         auto Model = glm::mat4(1.0f);
@@ -368,10 +376,14 @@ void OpenGLWidget::drawAnalogSeries() {
         auto const & data = series->getAnalogTimeSeries();
         auto const & data_time = series->getTimeSeries();
         auto const & time_frame = analog_data.time_frame;
-        auto const stdDev = analog_data.scaleFactor * 5.0f / _global_zoom;
+        auto const & display_options = analog_data.display_options;
+        
+        if (!display_options->is_visible) continue;
+        
+        auto const stdDev = display_options->scale_factor / _global_zoom;
 
         // Set the color for the current series
-        hexToRGB(analog_data.color, r, g, b);
+        hexToRGB(display_options->hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
         float const gNorm = static_cast<float>(g) / 255.0f;
         float const bNorm = static_cast<float>(b) / 255.0f;
@@ -496,18 +508,28 @@ void OpenGLWidget::addAnalogTimeSeries(
         std::shared_ptr<TimeFrame> time_frame,
         std::string const & color) {
 
-    std::string const seriesColor = color.empty() ? "#FFFFFF" : color;
-
+    auto display_options = std::make_unique<AnalogTimeSeriesDisplayOptions>();
+    
+    // Set color
+    display_options->hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_analog_series.size()) : color;
+    display_options->is_visible = true;
+    
+    // Calculate scale factor based on standard deviation
     float const stdDev = calculate_std_dev(*series.get());
+    display_options->scale_factor = stdDev * 5.0f;
+    
     std::cout << "Standard deviation for "
               << key
               << " calculated as "
               << stdDev
               << std::endl;
-    _analog_series[key] = AnalogSeriesData{std::move(series),
-                                           seriesColor,
-                                           std::move(time_frame),
-                                           stdDev * 5.0f};
+              
+    _analog_series[key] = AnalogSeriesData{
+        std::move(series),
+        std::move(time_frame),
+        std::move(display_options)
+    };
+    
     updateCanvas(_time);
 }
 
@@ -525,11 +547,18 @@ void OpenGLWidget::addDigitalEventSeries(
         std::shared_ptr<TimeFrame> time_frame,
         std::string const & color) {
 
-    std::string const seriesColor = color.empty() ? generateRandomColor() : color;
+    auto display_options = std::make_unique<DigitalEventSeriesDisplayOptions>();
+    
+    // Set color
+    display_options->hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_digital_event_series.size()) : color;
+    display_options->is_visible = true;
+    
     _digital_event_series[key] = DigitalEventSeriesData{
-            std::move(series),
-            seriesColor,
-            std::move(time_frame)};
+        std::move(series),
+        std::move(time_frame),
+        std::move(display_options)
+    };
+    
     updateCanvas(_time);
 }
 
@@ -547,11 +576,18 @@ void OpenGLWidget::addDigitalIntervalSeries(
         std::shared_ptr<TimeFrame> time_frame,
         std::string const & color) {
 
-    std::string const seriesColor = color.empty() ? generateRandomColor() : color;
+    auto display_options = std::make_unique<DigitalIntervalSeriesDisplayOptions>();
+    
+    // Set color
+    display_options->hex_color = color.empty() ? TimeSeriesDefaultValues::getColorForIndex(_digital_interval_series.size()) : color;
+    display_options->is_visible = true;
+    
     _digital_interval_series[key] = DigitalIntervalSeriesData{
-            std::move(series),
-            seriesColor,
-            std::move(time_frame)};
+        std::move(series),
+        std::move(time_frame),
+        std::move(display_options)
+    };
+    
     updateCanvas(_time);
 }
 

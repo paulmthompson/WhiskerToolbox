@@ -19,6 +19,9 @@ class QWheelEvent;
 class AnalogViewer_Widget;
 class IntervalViewer_Widget;
 class EventViewer_Widget;
+struct AnalogTimeSeriesDisplayOptions;
+struct DigitalEventSeriesDisplayOptions;
+struct DigitalIntervalSeriesDisplayOptions;
 
 namespace Ui {
 class DataViewer_Widget;
@@ -39,6 +42,12 @@ public:
 
     void updateXAxisSamples(int value);
 
+    [[nodiscard]] std::optional<AnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const;
+
+    [[nodiscard]] std::optional<DigitalEventSeriesDisplayOptions *> getDigitalEventConfig(std::string const & key) const;
+
+    [[nodiscard]] std::optional<DigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) const;
+
 protected:
     void closeEvent(QCloseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
@@ -52,6 +61,7 @@ private slots:
     void _handleFeatureSelected(QString const & feature);
     void _handleXAxisSamplesChanged(int value);
     void _updateGlobalScale(double scale);
+    void _handleColorChanged(std::string const & feature_key, std::string const & hex_color);
 
 private:
     std::shared_ptr<DataManager> _data_manager;

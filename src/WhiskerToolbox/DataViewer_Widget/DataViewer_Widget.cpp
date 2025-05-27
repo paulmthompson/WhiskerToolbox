@@ -30,7 +30,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
     ui->setupUi(this);
 
-    ui->feature_table_widget->setColumns({"Feature", "Color", "Enabled", "Type", "Clock", "Elements"});
+    ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type", "Clock"});
     ui->feature_table_widget->setTypeFilter({DM_DataType::Analog, DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
 
     ui->feature_table_widget->setDataManager(_data_manager);
@@ -65,9 +65,21 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     ui->openGLWidget->setXLimit(_time_frame->getTotalFrameCount());
 
     // Setup stacked widget with data-type specific viewers
-    // ui->stackedWidget->addWidget(new AnalogViewer_Widget(_data_manager, ui->openGLWidget));
-    // ui->stackedWidget->addWidget(new IntervalViewer_Widget(_data_manager, ui->openGLWidget));
-    // ui->stackedWidget->addWidget(new EventViewer_Widget(_data_manager, ui->openGLWidget));
+    auto analog_widget = new AnalogViewer_Widget(_data_manager, ui->openGLWidget);
+    auto interval_widget = new IntervalViewer_Widget(_data_manager, ui->openGLWidget);
+    auto event_widget = new EventViewer_Widget(_data_manager, ui->openGLWidget);
+    
+    ui->stackedWidget->addWidget(analog_widget);
+    ui->stackedWidget->addWidget(interval_widget);
+    ui->stackedWidget->addWidget(event_widget);
+    
+    // Connect color change signals from sub-widgets
+    connect(analog_widget, &AnalogViewer_Widget::colorChanged,
+            this, &DataViewer_Widget::_handleColorChanged);
+    connect(interval_widget, &IntervalViewer_Widget::colorChanged,
+            this, &DataViewer_Widget::_handleColorChanged);
+    connect(event_widget, &EventViewer_Widget::colorChanged,
+            this, &DataViewer_Widget::_handleColorChanged);
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -158,22 +170,22 @@ void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
     if (type == DM_DataType::Analog) {
         int const stacked_widget_index = 1;
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        // auto analog_widget = dynamic_cast<AnalogViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        // analog_widget->setActiveKey(key);
+        auto analog_widget = dynamic_cast<AnalogViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        analog_widget->setActiveKey(key);
         std::cout << "Selected Analog Time Series: " << key << std::endl;
 
     } else if (type == DM_DataType::DigitalInterval) {
         int const stacked_widget_index = 2;
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        // auto interval_widget = dynamic_cast<IntervalViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        // interval_widget->setActiveKey(key);
+        auto interval_widget = dynamic_cast<IntervalViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        interval_widget->setActiveKey(key);
         std::cout << "Selected Digital Interval Series: " << key << std::endl;
 
     } else if (type == DM_DataType::DigitalEvent) {
         int const stacked_widget_index = 3;
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
-        // auto event_widget = dynamic_cast<EventViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-        // event_widget->setActiveKey(key);
+        auto event_widget = dynamic_cast<EventViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        event_widget->setActiveKey(key);
         std::cout << "Selected Digital Event Series: " << key << std::endl;
 
     } else {
@@ -219,4 +231,48 @@ void DataViewer_Widget::_updateLabels() {
     auto x_axis = ui->openGLWidget->getXAxis();
     ui->neg_x_label->setText(QString::number(x_axis.getStart()));
     ui->pos_x_label->setText(QString::number(x_axis.getEnd()));
+}
+
+void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std::string const & hex_color) {
+    // Update the color in the feature table
+    ui->feature_table_widget->setFeatureColor(feature_key, hex_color);
+    
+    // Update the color in the OpenGL widget display options
+    auto const type = _data_manager->getType(feature_key);
+    
+    if (type == DM_DataType::Analog) {
+        auto config = ui->openGLWidget->getAnalogConfig(feature_key);
+        if (config.has_value()) {
+            config.value()->hex_color = hex_color;
+        }
+        
+    } else if (type == DM_DataType::DigitalEvent) {
+        auto config = ui->openGLWidget->getDigitalEventConfig(feature_key);
+        if (config.has_value()) {
+            config.value()->hex_color = hex_color;
+        }
+        
+    } else if (type == DM_DataType::DigitalInterval) {
+        auto config = ui->openGLWidget->getDigitalIntervalConfig(feature_key);
+        if (config.has_value()) {
+            config.value()->hex_color = hex_color;
+        }
+    }
+    
+    // Trigger a redraw
+    ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+    
+    std::cout << "Color changed for " << feature_key << " to " << hex_color << std::endl;
+}
+
+std::optional<AnalogTimeSeriesDisplayOptions *> DataViewer_Widget::getAnalogConfig(std::string const & key) const {
+    return ui->openGLWidget->getAnalogConfig(key);
+}
+
+std::optional<DigitalEventSeriesDisplayOptions *> DataViewer_Widget::getDigitalEventConfig(std::string const & key) const {
+    return ui->openGLWidget->getDigitalEventConfig(key);
+}
+
+std::optional<DigitalIntervalSeriesDisplayOptions *> DataViewer_Widget::getDigitalIntervalConfig(std::string const & key) const {
+    return ui->openGLWidget->getDigitalIntervalConfig(key);
 }

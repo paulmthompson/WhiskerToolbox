@@ -20,6 +20,14 @@ public:
 
     void setActiveKey(std::string const & key);
 
+signals:
+    void colorChanged(std::string const & feature_key, std::string const & hex_color);
+    void alphaChanged(std::string const & feature_key, float alpha);
+
+private slots:
+    void _setAnalogColor(const QString& hex_color);
+    void _setAnalogAlpha(int alpha);
+
 private:
     Ui::AnalogViewer_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;

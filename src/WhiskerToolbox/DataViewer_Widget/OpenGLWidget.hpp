@@ -2,6 +2,7 @@
 #define OPENGLWIDGET_HPP
 
 #include "XAxis.hpp"
+#include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -15,7 +16,9 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 
@@ -27,21 +30,20 @@ class QMouseEvent;
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
-    std::string color;
     std::shared_ptr<TimeFrame> time_frame;
-    float scaleFactor = 1.0f;
+    std::unique_ptr<AnalogTimeSeriesDisplayOptions> display_options;
 };
 
 struct DigitalEventSeriesData {
     std::shared_ptr<DigitalEventSeries> series;
-    std::string color;
     std::shared_ptr<TimeFrame> time_frame;
+    std::unique_ptr<DigitalEventSeriesDisplayOptions> display_options;
 };
 
 struct DigitalIntervalSeriesData {
     std::shared_ptr<DigitalIntervalSeries> series;
-    std::string color;
     std::shared_ptr<TimeFrame> time_frame;
+    std::unique_ptr<DigitalIntervalSeriesDisplayOptions> display_options;
 };
 
 struct LineParameters {
@@ -104,6 +106,31 @@ public:
         update();
     };
 
+    // Display options getters (similar to Media_Window pattern)
+    [[nodiscard]] std::optional<AnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const {
+        auto it = _analog_series.find(key);
+        if (it != _analog_series.end()) {
+            return it->second.display_options.get();
+        }
+        return std::nullopt;
+    }
+
+    [[nodiscard]] std::optional<DigitalEventSeriesDisplayOptions *> getDigitalEventConfig(std::string const & key) const {
+        auto it = _digital_event_series.find(key);
+        if (it != _digital_event_series.end()) {
+            return it->second.display_options.get();
+        }
+        return std::nullopt;
+    }
+
+    [[nodiscard]] std::optional<DigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) const {
+        auto it = _digital_interval_series.find(key);
+        if (it != _digital_interval_series.end()) {
+            return it->second.display_options.get();
+        }
+        return std::nullopt;
+    }
+
 public slots:
     void updateCanvas(int time);
 
@@ -134,10 +161,10 @@ private:
     void _removeSeries(std::string const & key);
     void _updateYViewBoundaries();
 
-    std::map<std::string, AnalogSeriesData> _analog_series;
-    std::map<std::string, DigitalEventSeriesData> _digital_event_series;
-    std::map<std::string, DigitalIntervalSeriesData> _digital_interval_series;
-    std::map<std::string, int> _series_y_position;
+    std::unordered_map<std::string, AnalogSeriesData> _analog_series;
+    std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;
+    std::unordered_map<std::string, DigitalIntervalSeriesData> _digital_interval_series;
+    std::unordered_map<std::string, int> _series_y_position;
 
     XAxis _xAxis;
     int _time{0};
