@@ -1,14 +1,14 @@
 #ifndef POINT_WIDGET_HPP
 #define POINT_WIDGET_HPP
 
+#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
+
+#include <QModelIndex>
 #include <QWidget>
 
 #include <memory>
 #include <string>
 #include <variant>
-
-#include <QModelIndex>
-#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"
 
 namespace Ui {
 class Point_Widget;

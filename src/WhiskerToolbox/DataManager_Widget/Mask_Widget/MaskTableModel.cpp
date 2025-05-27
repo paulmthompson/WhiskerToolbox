@@ -1,4 +1,5 @@
 #include "MaskTableModel.hpp"
+
 #include "DataManager/Masks/Mask_Data.hpp"
 
 #include <iostream> // For debugging

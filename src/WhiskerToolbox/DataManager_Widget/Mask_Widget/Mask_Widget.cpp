@@ -5,25 +5,25 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/points.hpp"
-#include "MaskTableModel.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
+#include "MaskTableModel.hpp"
 
 #include "utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp"
 
-#include "IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp"
 #include "IO_Widgets/Masks/HDF5/HDF5MaskSaver_Widget.hpp"
+#include "IO_Widgets/Masks/Image/ImageMaskSaver_Widget.hpp"
 #include "IO_Widgets/Media/MediaExport_Widget.hpp"
 
-#include <iostream>
-#include <QTableView>
-#include <QComboBox>
-#include <QStackedWidget>
 #include <QCheckBox>
-#include <QPushButton>
-#include <QMessageBox>
-#include <QFileDialog>
+#include <QComboBox>
 #include <QDir>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QStackedWidget>
+#include <QTableView>
 #include <filesystem>
+#include <iostream>
 
 Mask_Widget::Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
@@ -148,12 +148,12 @@ void Mask_Widget::_moveMasksButton_clicked() {
 
     std::vector<Mask2D> const & masks_to_move = source_mask_data->getAtTime(frame_to_move);
     if (!masks_to_move.empty()) {
-        for(Mask2D const& individual_mask : masks_to_move) {
-            target_mask_data->addAtTime(frame_to_move, individual_mask); // Add one by one
+        for (Mask2D const & individual_mask: masks_to_move) {
+            target_mask_data->addAtTime(frame_to_move, individual_mask);// Add one by one
         }
     }
 
-    source_mask_data->clearAtTime(frame_to_move); // Clear all masks from source at this frame
+    source_mask_data->clearAtTime(frame_to_move);// Clear all masks from source at this frame
 
     updateTable();
     _populateMoveToMaskDataComboBox();
@@ -191,15 +191,27 @@ void Mask_Widget::_deleteMasksButton_clicked() {
 
 void Mask_Widget::selectPoint(float const x, float const y) {
     auto media = _data_manager->getData<MediaData>("media");
-    if (!media) { std::cerr << "Mask_Widget: Media data not found." << std::endl; return; }
-    if (!_sam_model) { std::cerr << "Mask_Widget: SAM model not loaded." << std::endl; return; }
+    if (!media) {
+        std::cerr << "Mask_Widget: Media data not found." << std::endl;
+        return;
+    }
+    if (!_sam_model) {
+        std::cerr << "Mask_Widget: SAM model not loaded." << std::endl;
+        return;
+    }
 
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
     auto const image_size = media->getImageSize();
-    if(image_size.width <= 0 || image_size.height <= 0) { std::cerr << "Mask_Widget: Invalid image size from media." << std::endl; return;}
+    if (image_size.width <= 0 || image_size.height <= 0) {
+        std::cerr << "Mask_Widget: Invalid image size from media." << std::endl;
+        return;
+    }
 
     auto processed_frame_data = media->getProcessedData(current_time);
-    if(processed_frame_data.empty()) { std::cerr << "Mask_Widget: Processed frame data is empty." << std::endl; return; }
+    if (processed_frame_data.empty()) {
+        std::cerr << "Mask_Widget: Processed frame data is empty." << std::endl;
+        return;
+    }
 
     auto mask_image = _sam_model->process_frame(
             processed_frame_data,
@@ -214,9 +226,15 @@ void Mask_Widget::selectPoint(float const x, float const y) {
                                           static_cast<float>(i / image_size.width)});
         }
     }
-    if (_active_key.empty()) { std::cerr << "Mask_Widget: No active key set for MaskData." << std::endl; return; }
+    if (_active_key.empty()) {
+        std::cerr << "Mask_Widget: No active key set for MaskData." << std::endl;
+        return;
+    }
     auto active_mask_data = _data_manager->getData<MaskData>(_active_key);
-    if(!active_mask_data) { std::cerr << "Mask_Widget: Active MaskData object not found for key: " << _active_key << std::endl; return; }
+    if (!active_mask_data) {
+        std::cerr << "Mask_Widget: Active MaskData object not found for key: " << _active_key << std::endl;
+        return;
+    }
 
     active_mask_data->addAtTime(current_time, mask);
 }
@@ -224,7 +242,7 @@ void Mask_Widget::selectPoint(float const x, float const y) {
 void Mask_Widget::_loadSamModel() {
     _sam_model = std::make_unique<dl::EfficientSAM>();
     // Assuming load_model handles its own error reporting or exceptions
-    _sam_model->load_model(); 
+    _sam_model->load_model();
     // Potentially update UI to indicate model is loaded, e.g., enable/disable buttons
     /*
     if(_sam_model->is_loaded()){
@@ -253,7 +271,7 @@ void Mask_Widget::_onExportMediaFramesCheckboxToggled(bool checked) {
     ui->media_export_options_widget->setVisible(checked);
 }
 
-void Mask_Widget::_initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVariant& options_variant) {
+void Mask_Widget::_initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVariant & options_variant) {
     if (_active_key.empty()) {
         QMessageBox::warning(this, "No Data Selected", "Please select a MaskData item to save.");
         return;
@@ -270,7 +288,7 @@ void Mask_Widget::_initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVar
 
     switch (saver_type) {
         case SaverType::IMAGE: {
-            ImageMaskSaverOptions& specific_image_options = std::get<ImageMaskSaverOptions>(options_variant);
+            ImageMaskSaverOptions & specific_image_options = std::get<ImageMaskSaverOptions>(options_variant);
             specific_image_options.parent_dir = _data_manager->getOutputPath().string() + "/" + specific_image_options.parent_dir;
             saved_parent_dir = specific_image_options.parent_dir;
             save_successful = _performActualImageSave(specific_image_options);

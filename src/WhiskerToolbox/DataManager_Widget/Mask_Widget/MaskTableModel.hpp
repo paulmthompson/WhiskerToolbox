@@ -1,15 +1,10 @@
 #ifndef WHISKERTOOLBOX_MASKTABLEMODEL_HPP
 #define WHISKERTOOLBOX_MASKTABLEMODEL_HPP
 
-#include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Points/points.hpp" // For Mask2D definition if not fully in Mask_Data.hpp
-
 #include <QAbstractTableModel>
-#include <vector>
-#include <string>
-#include <numeric> // For std::accumulate
 
-// Forward declaration
+#include <vector>
+
 class MaskData;
 
 struct MaskTableRow {

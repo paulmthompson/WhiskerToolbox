@@ -6,13 +6,13 @@
 #include "DataManager/DataManager.hpp"
 #include "IO_Widgets/AnalogTimeSeries/CSV/CSVAnalogSaver_Widget.hpp"
 
-#include <iostream>
-#include <QStackedWidget>
 #include <QComboBox>
-#include <QPushButton>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QPushButton>
+#include <QStackedWidget>
 #include <filesystem>
+#include <iostream>
 
 AnalogTimeSeries_Widget::AnalogTimeSeries_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
@@ -25,8 +25,8 @@ AnalogTimeSeries_Widget::AnalogTimeSeries_Widget(std::shared_ptr<DataManager> da
 
     connect(ui->csv_analog_saver_widget, &CSVAnalogSaver_Widget::saveAnalogCSVRequested,
             this, &AnalogTimeSeries_Widget::_handleSaveAnalogCSVRequested);
-    
-    _onExportTypeChanged(ui->export_type_combo->currentIndex()); 
+
+    _onExportTypeChanged(ui->export_type_combo->currentIndex());
 }
 
 AnalogTimeSeries_Widget::~AnalogTimeSeries_Widget() {
@@ -52,7 +52,7 @@ void AnalogTimeSeries_Widget::_onExportTypeChanged(int index) {
 
 void AnalogTimeSeries_Widget::_handleSaveAnalogCSVRequested(CSVAnalogSaverOptions options) {
     options.filename = ui->filename_edit->text().toStdString();
-    if (options.filename.empty()){
+    if (options.filename.empty()) {
         QMessageBox::warning(this, "Filename Missing", "Please enter a filename.");
         return;
     }
@@ -60,7 +60,7 @@ void AnalogTimeSeries_Widget::_handleSaveAnalogCSVRequested(CSVAnalogSaverOption
     _initiateSaveProcess(SaverType::CSV, options_variant);
 }
 
-void AnalogTimeSeries_Widget::_initiateSaveProcess(SaverType saver_type, AnalogSaverOptionsVariant& options_variant) {
+void AnalogTimeSeries_Widget::_initiateSaveProcess(SaverType saver_type, AnalogSaverOptionsVariant & options_variant) {
     if (_active_key.empty()) {
         QMessageBox::warning(this, "No Data Selected", "Please select an AnalogTimeSeries item to save.");
         return;
@@ -76,16 +76,16 @@ void AnalogTimeSeries_Widget::_initiateSaveProcess(SaverType saver_type, AnalogS
 
     switch (saver_type) {
         case SaverType::CSV: {
-            CSVAnalogSaverOptions& specific_csv_options = std::get<CSVAnalogSaverOptions>(options_variant);
+            CSVAnalogSaverOptions & specific_csv_options = std::get<CSVAnalogSaverOptions>(options_variant);
             specific_csv_options.parent_dir = _data_manager->getOutputPath().string();
             save_successful = _performActualCSVSave(specific_csv_options);
             break;
         }
-        // Future saver types can be added here
+            // Future saver types can be added here
     }
 
     if (!save_successful) {
-        return; 
+        return;
     }
     // No media export for analog data as per requirements
 }
