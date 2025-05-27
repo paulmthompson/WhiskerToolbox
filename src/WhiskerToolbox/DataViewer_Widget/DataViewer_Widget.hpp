@@ -16,6 +16,9 @@ class TimeScrollBar;
 class TimeFrame;
 class Feature_Table_Widget;
 class QWheelEvent;
+class AnalogViewer_Widget;
+class IntervalViewer_Widget;
+class EventViewer_Widget;
 
 namespace Ui {
 class DataViewer_Widget;

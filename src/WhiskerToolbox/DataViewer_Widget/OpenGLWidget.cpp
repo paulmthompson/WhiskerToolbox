@@ -579,36 +579,6 @@ void OpenGLWidget::clearSeries() {
     updateCanvas(_time);
 }
 
-/*
-void OpenGLWidget::generateRandomValues(int count) {
-    m_vertices.clear();
-    for (int i = 0; i < count; ++i) {
-        m_vertices.push_back(static_cast<GLfloat>(i) / (count - 1) * 2.0f - 1.0f);       // X coordinate
-        m_vertices.push_back(static_cast<GLfloat>(std::rand()) / RAND_MAX * 2.0f - 1.0f);// Y coordinate
-    }
-
-    m_vbo.bind();
-    m_vbo.allocate(m_vertices.data(), m_vertices.size() * sizeof(GLfloat));
-    m_vbo.release();
-}
-
-void OpenGLWidget::generateAndAddFakeData(int count) {
-    std::vector<float> data(count);
-    for (int i = 0; i < count; ++i) {
-        data[i] = static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f;
-    }
-    auto series = std::make_shared<AnalogTimeSeries>(data);
-    //addAnalogTimeSeries(series);
-}
-
-void OpenGLWidget::adjustFakeData() {
-    std::vector<float> new_series;
-    for (size_t i = 0; i < _analog_series[0].series->getAnalogTimeSeries().size(); i++) {
-        new_series.push_back(static_cast<float>(std::rand()) / RAND_MAX * 2.0f - 1.0f);
-    }
-    _analog_series[0].series->setData(new_series);
-}
-*/
 void OpenGLWidget::drawDashedLine(LineParameters const & params) {
 
     auto const m_dashedProgram_ID = m_dashedProgram->programId();

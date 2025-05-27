@@ -9,6 +9,10 @@
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
+#include "AnalogTimeSeries/AnalogViewer_Widget.hpp"
+#include "DigitalInterval/IntervalViewer_Widget.hpp"
+#include "DigitalEvent/EventViewer_Widget.hpp"
+
 #include <QTableWidget>
 #include <QWheelEvent>
 
@@ -59,6 +63,11 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
     std::cout << "Setting GL limit to " << _time_frame->getTotalFrameCount() << std::endl;
     ui->openGLWidget->setXLimit(_time_frame->getTotalFrameCount());
+
+    // Setup stacked widget with data-type specific viewers
+    // ui->stackedWidget->addWidget(new AnalogViewer_Widget(_data_manager, ui->openGLWidget));
+    // ui->stackedWidget->addWidget(new IntervalViewer_Widget(_data_manager, ui->openGLWidget));
+    // ui->stackedWidget->addWidget(new EventViewer_Widget(_data_manager, ui->openGLWidget));
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -141,6 +150,36 @@ void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
 
 void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
     _highlighted_available_feature = feature;
+    
+    // Switch stacked widget based on data type
+    auto const type = _data_manager->getType(feature.toStdString());
+    auto key = feature.toStdString();
+
+    if (type == DM_DataType::Analog) {
+        int const stacked_widget_index = 1;
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        // auto analog_widget = dynamic_cast<AnalogViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        // analog_widget->setActiveKey(key);
+        std::cout << "Selected Analog Time Series: " << key << std::endl;
+
+    } else if (type == DM_DataType::DigitalInterval) {
+        int const stacked_widget_index = 2;
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        // auto interval_widget = dynamic_cast<IntervalViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        // interval_widget->setActiveKey(key);
+        std::cout << "Selected Digital Interval Series: " << key << std::endl;
+
+    } else if (type == DM_DataType::DigitalEvent) {
+        int const stacked_widget_index = 3;
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        // auto event_widget = dynamic_cast<EventViewer_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        // event_widget->setActiveKey(key);
+        std::cout << "Selected Digital Event Series: " << key << std::endl;
+
+    } else {
+        ui->stackedWidget->setCurrentIndex(0);
+        std::cout << "Unsupported feature type for detailed view" << std::endl;
+    }
 }
 
 void DataViewer_Widget::_handleXAxisSamplesChanged(int value) {

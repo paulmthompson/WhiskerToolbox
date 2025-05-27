@@ -90,6 +90,17 @@
     </item>
    </layout>
   </widget>
+  <widget class="QStackedWidget" name="stackedWidget">
+   <property name="geometry">
+    <rect>
+     <x>450</x>
+     <y>500</y>
+     <width>211</width>
+     <height>200</height>
+    </rect>
+   </property>
+   <widget class="QWidget" name="page"/>
+  </widget>
   <widget class="OpenGLWidget" name="openGLWidget">
    <property name="geometry">
     <rect>

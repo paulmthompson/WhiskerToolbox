@@ -210,6 +210,15 @@ set(PROJECT_SOURCES
         DataViewer_Widget/XAxis.hpp
         DataViewer_Widget/shaders/dashed_line_shader.hpp
         DataViewer_Widget/shaders/colored_vertex_shader.hpp
+        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.cpp
+        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.hpp
+        DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.ui
+        DataViewer_Widget/DigitalEvent/EventViewer_Widget.cpp
+        DataViewer_Widget/DigitalEvent/EventViewer_Widget.hpp
+        DataViewer_Widget/DigitalEvent/EventViewer_Widget.ui
+        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.cpp
+        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.hpp
+        DataViewer_Widget/DigitalInterval/IntervalViewer_Widget.ui
 
 
         ML_Widget/ML_Widget.hpp
