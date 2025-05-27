@@ -5,6 +5,8 @@
 
 #include "DataManager/transforms/AnalogTimeSeries/analog_event_threshold.hpp"
 
+#include <iostream>
+
 AnalogEventThreshold_Widget::AnalogEventThreshold_Widget(QWidget *parent) :
       TransformParameter_Widget(parent),
       ui(new Ui::AnalogEventThreshold_Widget)

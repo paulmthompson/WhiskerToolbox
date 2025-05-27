@@ -4,6 +4,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Masks/Mask_Data.hpp"
 
+#include <iostream>
 #include <map>
 
 std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data) {

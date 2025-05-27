@@ -7,12 +7,11 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgcodecs.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <regex>
-#include <algorithm>
-#include <iomanip>
-#include <sstream>
+#include <vector>
 
 std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
     auto mask_data = std::make_shared<MaskData>();

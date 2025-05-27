@@ -5,6 +5,8 @@
 
 #include "DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 
+#include <iostream>
+
 AnalogIntervalThreshold_Widget::AnalogIntervalThreshold_Widget(QWidget *parent) :
       TransformParameter_Widget(parent),
       ui(new Ui::AnalogIntervalThreshold_Widget)

@@ -1,17 +1,12 @@
 #ifndef WHISKERTOOLBOX_DATA_TRANSFORMS_HPP
 #define WHISKERTOOLBOX_DATA_TRANSFORMS_HPP
 
-#include "DataManager.hpp"
-#include "ImageSize/ImageSize.hpp"
+#include "DataManagerTypes.hpp"
 
 #include <memory>
 #include <string>
 #include <typeindex>
 #include <functional>
-
-class PointData;
-
-void scale(std::shared_ptr<PointData> & point_data, ImageSize const & image_size_media);
 
 class TransformParametersBase {
 public:
