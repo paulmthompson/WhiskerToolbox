@@ -2,7 +2,6 @@
 
 #include "Lines/Line_Data.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <vector>

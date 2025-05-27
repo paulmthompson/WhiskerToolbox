@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <iostream>
-#include <string>
 
 
 bool MaskData::clearAtTime(size_t const time, bool notify) {

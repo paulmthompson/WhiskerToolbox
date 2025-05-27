@@ -3,13 +3,9 @@
 
 #include "Observer/Observer_Data.hpp"
 
-
-#include <concepts>
 #include <cstdint>
 #include <map>
-#include <numeric>
 #include <ranges>
-#include <string>
 #include <vector>
 
 /**

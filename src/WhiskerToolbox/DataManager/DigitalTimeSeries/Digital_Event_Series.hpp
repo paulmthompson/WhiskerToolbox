@@ -3,8 +3,6 @@
 
 #include "Observer/Observer_Data.hpp"
 
-
-#include <concepts>
 #include <ranges>
 #include <vector>
 

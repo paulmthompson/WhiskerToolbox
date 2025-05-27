@@ -6,7 +6,6 @@
 #include <memory>   // std::shared_ptr
 #include <string>   // std::string
 #include <typeindex>// std::type_index
-#include <vector>   // std::vector
 
 class AnalogTimeSeries;
 class DigitalIntervalSeries;

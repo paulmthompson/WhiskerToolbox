@@ -4,6 +4,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 
 #include <iostream>
+#include <vector>   // std::vector
 
 
 std::shared_ptr<DigitalEventSeries> event_threshold(

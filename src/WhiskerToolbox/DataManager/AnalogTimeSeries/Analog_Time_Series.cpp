@@ -2,9 +2,8 @@
 
 #include <algorithm>
 #include <cmath>// std::nan, std::sqrt
-#include <fstream>
 #include <iostream>
-#include <sstream>
+#include <numeric> // std::iota
 #include <vector>
 
 AnalogTimeSeries::AnalogTimeSeries(std::map<int, float> analog_map) {

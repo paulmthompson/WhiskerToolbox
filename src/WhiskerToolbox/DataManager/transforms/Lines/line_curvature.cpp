@@ -6,7 +6,6 @@
 #include <cmath>   // std::sqrt, std::pow, std::abs, NAN
 #include <iostream>// For std::cerr
 #include <map>     // For std::map
-#include <numbers> // std::numbers::pi
 #include <vector>  // For std::vector
 
 

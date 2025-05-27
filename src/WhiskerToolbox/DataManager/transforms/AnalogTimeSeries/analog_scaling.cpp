@@ -3,9 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <iostream>
-#include <numeric>
 #include <vector>
 
 AnalogStatistics calculate_analog_statistics(AnalogTimeSeries const * analog_time_series) {

@@ -4,6 +4,8 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 
+#include <vector>   // std::vector
+
 std::shared_ptr<DigitalIntervalSeries> interval_threshold(
         AnalogTimeSeries const * analog_time_series,
         IntervalThresholdParams const & thresholdParams) {

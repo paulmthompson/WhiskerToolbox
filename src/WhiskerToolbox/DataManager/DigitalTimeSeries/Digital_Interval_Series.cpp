@@ -1,10 +1,6 @@
 #include "Digital_Interval_Series.hpp"
 
 #include <algorithm>
-#include <cmath>// std::round
-#include <fstream>
-#include <ranges>
-#include <sstream>
 #include <utility>
 #include <vector>
 

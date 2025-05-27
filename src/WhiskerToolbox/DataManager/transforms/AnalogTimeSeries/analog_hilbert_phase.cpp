@@ -7,6 +7,8 @@
 #include <armadillo>
 
 #include <complex>
+#include <numeric> //std::iota
+#include <vector>
 
 std::shared_ptr<AnalogTimeSeries> hilbert_phase(
         AnalogTimeSeries const * analog_time_series,
