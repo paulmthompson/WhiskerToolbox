@@ -9,6 +9,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "IO_Widgets/Media/media_export.hpp"

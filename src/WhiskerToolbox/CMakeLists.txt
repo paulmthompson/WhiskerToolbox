@@ -28,12 +28,6 @@ set(PROJECT_SOURCES
         my_stylesheet.qss
         color_scheme.hpp
 
-        #AnalogViewer/analog_viewer.hpp
-        #AnalogViewer/analog_viewer.cpp
-        #AnalogViewer/analog_viewer.ui
-        #AnalogViewer/DigitalTimeSeriesGraph.cpp
-        #AnalogViewer/DigitalTimeSeriesGraph.hpp
-
         ColorPicker_Widget/ColorPicker_Widget.hpp
         ColorPicker_Widget/ColorPicker_Widget.cpp
         ColorPicker_Widget/ColorPicker_Widget.ui
@@ -391,6 +385,7 @@ set(PROJECT_SOURCES
         utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.cpp
 
         utils/color.hpp
+        utils/color.cpp
 )
 
 if (WIN32)
@@ -400,6 +395,7 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
+
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)

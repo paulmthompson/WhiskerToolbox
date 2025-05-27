@@ -2,6 +2,7 @@
 #include "ui_Grabcut_Widget.h"
 
 #include "DataManager/DataManager.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
 #include "utils/opencv_utility.hpp"
 
 #include <opencv2/imgcodecs.hpp>

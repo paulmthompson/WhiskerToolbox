@@ -4,6 +4,7 @@
 #include "ui_Tongue_Widget.h"
 
 #include "DataManager.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 

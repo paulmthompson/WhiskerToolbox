@@ -1,9 +1,8 @@
 #ifndef MEDIA_WINDOW_HPP
 #define MEDIA_WINDOW_HPP
 
-#include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Masks/masks.hpp"
 #include "DataManager/ImageSize/ImageSize.hpp"
-
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 
 #include <QGraphicsScene>

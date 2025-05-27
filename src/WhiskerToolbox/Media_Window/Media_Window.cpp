@@ -2,6 +2,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
@@ -13,7 +14,6 @@
 
 #include "TimeFrame.hpp"
 
-#include "utils/color.hpp"
 
 #include <QElapsedTimer>
 #include <QGraphicsPixmapItem>

@@ -20,6 +20,7 @@ add_subdirectory(Observer)
 add_library(DataManager SHARED
         DataManager.hpp
         DataManager.cpp
+        DataManagerTypes.hpp
 
         TimeFrame.hpp
         TimeFrame.cpp
@@ -101,30 +102,35 @@ add_library(DataManager SHARED
 
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp
+        loaders/binary_loaders.hpp
+        loaders/hdf5_loaders.hpp
+        loaders/hdf5_loaders.cpp
 
-        utils/container.hpp
-        utils/hdf5_mask_load.hpp
-        utils/opencv_utility.hpp
-        utils/opencv_utility.cpp
-        utils/string_manip.hpp
-        utils/json_helpers.hpp
         utils/armadillo_wrap/analog_armadillo.hpp
-        utils/polynomial/polynomial_fit.hpp
-        utils/polynomial/polynomial_fit.cpp
-        utils/polynomial/parametric_polynomial_utils.cpp
-        utils/polynomial/parametric_polynomial_utils.hpp
+        utils/armadillo_wrap/analog_armadillo.cpp
+        utils/connected_component.hpp
+        utils/connected_component.cpp
+        utils/hdf5_mask_load.hpp
+        utils/json_helpers.hpp
         utils/line_resampling.cpp
         utils/line_resampling.hpp
         utils/line_geometry.cpp
         utils/line_geometry.hpp
-        utils/connected_component.hpp
-        utils/connected_component.cpp
+        loaders/loading_utils.hpp
+        loaders/loading_utils.cpp
         utils/mask_operations.cpp
         utils/mask_operations.hpp
+        utils/opencv_utility.hpp
+        utils/opencv_utility.cpp
+        utils/polynomial/polynomial_fit.hpp
+        utils/polynomial/polynomial_fit.cpp
+        utils/polynomial/parametric_polynomial_utils.cpp
+        utils/polynomial/parametric_polynomial_utils.hpp
         utils/simplify_line.cpp
         utils/simplify_line.hpp
         utils/skeletonize.cpp
         utils/skeletonize.hpp
+        utils/string_manip.hpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
@@ -162,17 +168,8 @@ add_library(DataManager SHARED
         transforms/Masks/mask_skeletonize.cpp
         transforms/Masks/mask_skeletonize.hpp
 
-        loaders/binary_loaders.hpp
-        loaders/hdf5_loaders.hpp
-        loaders/hdf5_loaders.cpp
-
         LockState/LockState.hpp
         ImageSize/ImageSize.hpp
-        utils/armadillo_wrap/analog_armadillo.cpp
-        DataManagerTypes.hpp
-        loaders/loading_utils.hpp
-        loaders/loading_utils.cpp
-
 )
 
 message(STATUS "NPY source dir:")
