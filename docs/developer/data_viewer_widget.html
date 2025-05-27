@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Collapsible Widget – Neuralyzer</title>
+<title>Data Viewer Widget – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,21 +23,21 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../">
-<script src="../../site_libs/quarto-html/quarto.js"></script>
-<script src="../../site_libs/quarto-html/popper.min.js"></script>
-<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-8ea241a1766a3129914e7a59ac5729ec.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-8ea241a1766a3129914e7a59ac5729ec.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -68,7 +68,7 @@ ul.task-list li input[type="checkbox"] {
 <style>html{ scroll-behavior: smooth; }</style>
 
 
-<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../styles.css">
 </head>
 
 <body class="nav-sidebar docked nav-fixed">
@@ -78,7 +78,7 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="../../index.html">
+    <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
@@ -89,7 +89,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../index.html"> 
+    <a class="nav-link" href="../index.html"> 
 <span class="menu-text">Introduction</span></a>
   </li>  
   <li class="nav-item dropdown ">
@@ -98,7 +98,7 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-tutorials">    
         <li>
-    <a class="dropdown-item" href="../../examples/keypoint_labeling.html">
+    <a class="dropdown-item" href="../examples/keypoint_labeling.html">
  <span class="dropdown-text">Keypoint Labeling</span></a>
   </li>  
     </ul>
@@ -109,11 +109,11 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-how-to-guides">    
         <li>
-    <a class="dropdown-item" href="../../labeling/keypoint.html">
+    <a class="dropdown-item" href="../labeling/keypoint.html">
  <span class="dropdown-text">Label Creation</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../labeling/mask.html">
+    <a class="dropdown-item" href="../labeling/mask.html">
  <span class="dropdown-text">Mask Creation</span></a>
   </li>  
     </ul>
@@ -124,11 +124,11 @@ ul.task-list li input[type="checkbox"] {
     </a>
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
         <li>
-    <a class="dropdown-item" href="../../user_guide/index.html">
+    <a class="dropdown-item" href="../user_guide/index.html">
  <span class="dropdown-text">User Guide</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="../../developer/index.html">
+    <a class="dropdown-item" href="../developer/index.html">
  <span class="dropdown-text">Developer Guide</span></a>
   </li>  
     </ul>
@@ -149,7 +149,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/Features/overview.html">Features</a></li><li class="breadcrumb-item"><a href="../../developer/Features/Collapsible_Widget.html">Collapsible Widget</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/data_viewer_widget.html">Data Viewer Widget</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -163,55 +163,55 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/index.html" class="sidebar-item-text sidebar-link">
+  <a href="../developer/index.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Developer Documentation</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
+  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Contributing Code</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/data_manager.html" class="sidebar-item-text sidebar-link">
+  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Data Manager</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/file_io.html" class="sidebar-item-text sidebar-link">
+  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">File IO</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/image_processing.html" class="sidebar-item-text sidebar-link">
+  <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Image Processing</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/media_widget.html" class="sidebar-item-text sidebar-link">
+  <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Media Widget</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
+  <a href="../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Data Manager Widget</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
+  <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Data Viewer Widget</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a href="../../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
+            <a href="../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Features</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
@@ -220,7 +220,7 @@ ul.task-list li input[type="checkbox"] {
       <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link active">
+  <a href="../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Collapsible Widget</span></a>
   </div>
 </li>
@@ -231,15 +231,24 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#data-viewer-widget-overview" id="toc-data-viewer-widget-overview" class="nav-link active" data-scroll-target="#data-viewer-widget-overview">Data Viewer Widget Overview</a></li>
+  <li><a href="#visualization-capabilities" id="toc-visualization-capabilities" class="nav-link" data-scroll-target="#visualization-capabilities">Visualization Capabilities</a></li>
+  <li><a href="#handling-grouped-data-and-custom-arrangement" id="toc-handling-grouped-data-and-custom-arrangement" class="nav-link" data-scroll-target="#handling-grouped-data-and-custom-arrangement">Handling Grouped Data and Custom Arrangement</a></li>
+  <li><a href="#interactive-analysis-and-pre-processing" id="toc-interactive-analysis-and-pre-processing" class="nav-link" data-scroll-target="#interactive-analysis-and-pre-processing">Interactive Analysis and Pre-processing</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../developer/Features/overview.html">Features</a></li><li class="breadcrumb-item"><a href="../../developer/Features/Collapsible_Widget.html">Collapsible Widget</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Collapsible Widget</h1>
+<h1 class="title">Data Viewer Widget</h1>
 </div>
 
 
@@ -256,23 +265,27 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>We have a Collapsible Widget called a “Section” available. This kind of widget can expand to display the contents of the widget. This is useful for making an interface appear less cluttered.</p>
-<p><img src="images/412670686-d1398162-d002-4e87-9eab-e01983562d2b.png" class="img-fluid" width="619"></p>
-<p>General process for to add collapsible Widget:</p>
-<p>QT Designer:</p>
-<ol type="1">
-<li><p>Ensure the parent widget is in a vertical layout</p></li>
-<li><p>Create QWidget inside and promote it to a “Section”</p></li>
-<li><p>Create another QWidget within that QWidget. The inner QWidget will hold all the contents of the section.</p></li>
-<li><p>Populate this inner QWidget with widgets as normal.</p></li>
-</ol>
-<p>Code part:</p>
-<ol type="1">
-<li><p>Call <code>autoSetContentLayout()</code> on the Section QWidget after <code>setupUi</code>.</p></li>
-<li><p>Optionally, calling <code>setTitle("title")</code> will give it a title.</p></li>
-</ol>
+<section id="data-viewer-widget-overview" class="level1">
+<h1>Data Viewer Widget Overview</h1>
+<p>The <strong>data viewer widget</strong> is designed for visualizing plots of <strong>time series data</strong>. It can operate on multiple distinct data types, such as <strong>analog time series</strong>, <strong>interval series</strong>, and <strong>event series</strong>. The widget contains a table of compatible data types and their corresponding keys, which can be selected for display in the viewer. It houses options to enable the visualization of different types and also includes an <strong>OpenGL canvas</strong> responsible for rendering the data according to user specifications.</p>
+</section>
+<section id="visualization-capabilities" class="level1">
+<h1>Visualization Capabilities</h1>
+<p>Multiple pieces of data can be drawn on the same canvas. Some data can be drawn in an overlapping manner, or they may be drawn with different axis offsets. Both the Y and X axes are <strong>zoomable</strong>, and data-specific scaling can be applied to the Y-axis to allow data with different magnitudes to be easily visualized simultaneously. Drawing is <strong>synced to the time scroll bar</strong> in the main program, enabling the user to scroll through the plot while concurrently visualizing data in other widgets, such as movies collected at the same time.</p>
+<p>Critically, the data viewer has a concept of <strong>different sampling rates</strong> for different data types and accounts for this during drawing. For instance, event data from camera frames sampled at 500 frames per second can be plotted appropriately with electrophysiological data sampled at 30,000 Hertz. A “Time frame concept” within the data manager is responsible for handling these conversions between coordinate systems, and the data viewer is responsible for plotting this data appropriately.</p>
+</section>
+<section id="handling-grouped-data-and-custom-arrangement" class="level1">
+<h1>Handling Grouped Data and Custom Arrangement</h1>
+<p>Some temporal data in neuroscience involves the concept of a <strong>group of signals that are collected simultaneously</strong> and would be visualized simultaneously. For instance, 32 channels recorded simultaneously from a silicon probe would be expected to have the same scaling properties and spacing. Consequently, groups of data like this should, by default, have mostly matching configuration options but maintain the ability to be <strong>adjusted individually</strong> as needed. For example, if there are dead channels on a probe, it should be easy for the user to turn these off from the display.</p>
+<p>The <strong>arrangement of data</strong> in the viewer is also important. Again, considering a silicon probe, the numerical channel arrangement is often not the same as the spatial channel arrangement, though the user may wish to view this data spatially arranged. The user should be able to <strong>customize this arrangement</strong>.</p>
+</section>
+<section id="interactive-analysis-and-pre-processing" class="level1">
+<h1>Interactive Analysis and Pre-processing</h1>
+<p>This representation may provide the user with information useful for certain data pre-processing tasks. For instance, the user may be able to determine a numerical threshold for event detection in a particular channel. Alternatively, in this view, the user may wish to determine the temporal range where it appears some behavior is taking place based on an analog signal change. For example, viewing the whisker angle versus time when zoomed out may be useful to identify times when the animal is whisking versus when it is stationary.</p>
+<p>The user may even wish to <strong>interactively define events or intervals</strong> within this viewer window based on the temporal representation of data that would not be so easy to see in other widgets. Consequently, the data viewer is not just passive in its relationship with the data it is displaying but rather facilitates <strong>active engagement</strong>.</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -697,5 +710,5 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 
 
 
-<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
 </body></html>

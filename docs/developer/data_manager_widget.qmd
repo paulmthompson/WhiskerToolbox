@@ -1,0 +1,14 @@
+---
+title: "Data Manager Widget"
+format: html
+---
+
+# Data Manager Widget Overview
+
+The data manager widget serves as the main user interface for interacting with all data currently loaded into the program. At its top, the widget displays all keys currently in the data manager along with their corresponding data types. It enables the user to specify the folder for saving data. Additionally, users can create new, initially blank data sets, which can subsequently be populated through further manipulations and other widgets.
+
+When a user selects an entry in the top table, a data type-specific soft widget is populated. This widget presents the user with various features of the selected data. For example, when dealing with point data, it shows a table listing every available point within that data set and its associated frame. The user has the ability to scroll through this table; clicking an entry causes the time displayed by the rest of the program to jump to that point's frame. Users can perform several data manipulations via these specific widgets. For instance, using the point widget, a user can delete any specific point. They can also opt to move a specific point to another point data set available in the manager.
+
+# Data Saving Functionality
+
+The data manager widget also functions as the primary interface for saving data to disk. It features a sub-widget interface where the user can select the desired file output type, and specific options for that output type are then displayed. For instance, if a user is viewing point data, they can choose to output CSV files and will be presented with various CSV saving options, such as selecting the delimiter and deciding whether a header should be included, etc.

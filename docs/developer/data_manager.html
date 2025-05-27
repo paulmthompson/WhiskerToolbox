@@ -181,8 +181,32 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">File IO</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Image Processing</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Media Widget</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Manager Widget</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Data Viewer Widget</span></a>
   </div>
 </li>
         <li class="sidebar-item sidebar-item-section">
@@ -212,7 +236,9 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#data-types" id="toc-data-types" class="nav-link active" data-scroll-target="#data-types">Data Types</a>
+  <li><a href="#time-frames" id="toc-time-frames" class="nav-link active" data-scroll-target="#time-frames">Time Frames</a></li>
+  <li><a href="#observer-framework" id="toc-observer-framework" class="nav-link" data-scroll-target="#observer-framework">Observer Framework</a></li>
+  <li><a href="#data-types" id="toc-data-types" class="nav-link" data-scroll-target="#data-types">Data Types</a>
   <ul class="collapse">
   <li><a href="#point" id="toc-point" class="nav-link" data-scroll-target="#point">Point</a></li>
   <li><a href="#line" id="toc-line" class="nav-link" data-scroll-target="#line">Line</a></li>
@@ -249,6 +275,18 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<p>The DataManager has 3 core functionalities</p>
+<ul>
+<li><p>Assigns TimeFrames, or temporal coordinate systems to different datatypes. It keeps track of these relationships</p></li>
+<li><p>Operates a callback system that allows observers to know when data has been added to or removed from the datamanager.</p></li>
+<li><p>Checks in and serves data of different types to the user</p></li>
+</ul>
+<section id="time-frames" class="level2">
+<h2 class="anchored" data-anchor-id="time-frames">Time Frames</h2>
+</section>
+<section id="observer-framework" class="level2">
+<h2 class="anchored" data-anchor-id="observer-framework">Observer Framework</h2>
+</section>
 <section id="data-types" class="level2">
 <h2 class="anchored" data-anchor-id="data-types">Data Types</h2>
 <section id="point" class="level3">

@@ -2,6 +2,18 @@
 title: "Data Manager"
 ---
 
+The DataManager has 3 core functionalities
+
+-   Assigns TimeFrames, or temporal coordinate systems to different datatypes. It keeps track of these relationships
+
+-   Operates a callback system that allows observers to know when data has been added to or removed from the datamanager.
+
+-   Checks in and serves data of different types to the user
+
+## Time Frames
+
+## Observer Framework
+
 ## Data Types
 
 ### Point

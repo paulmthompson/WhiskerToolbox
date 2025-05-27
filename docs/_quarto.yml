@@ -41,7 +41,11 @@ website:
         - developer/index.qmd
         - developer/contributing_code.qmd
         - developer/data_manager.qmd 
+        - developer/file_io.qmd
         - developer/image_processing.qmd
+        - developer/media_widget.qmd
+        - developer/data_manager_widget.qmd
+        - developer/data_viewer_widget.qmd
         - section: "Features"
           href: developer/Features/overview.qmd
           contents:

@@ -107,6 +107,46 @@
     "text": "How Documentation is Organized\nThis documentation will follow the quadrants of the Diátaxis documentation authoring framework\n\nTutorials\nHow-to Guides\nConcepts\nReference Guides"
   },
   {
+    "objectID": "developer/media_widget.html",
+    "href": "developer/media_widget.html",
+    "title": "Media Widget",
+    "section": "",
+    "text": "The media widget is responsible for displaying data that can be visualized on a canvas. The types of data that can be displayed by the data manager include point data, line data, mask data, tensor data, interval data, and media data. Data currently in the data manager matching these types is displayed on the top left side. In this table, the user can click to enable the visibility of particular data in the accompanying media window canvas.",
+    "crumbs": [
+      "Media Widget"
+    ]
+  },
+  {
+    "objectID": "developer/media_widget.html#overview-and-data-display",
+    "href": "developer/media_widget.html#overview-and-data-display",
+    "title": "Media Widget",
+    "section": "",
+    "text": "The media widget is responsible for displaying data that can be visualized on a canvas. The types of data that can be displayed by the data manager include point data, line data, mask data, tensor data, interval data, and media data. Data currently in the data manager matching these types is displayed on the top left side. In this table, the user can click to enable the visibility of particular data in the accompanying media window canvas.",
+    "crumbs": [
+      "Media Widget"
+    ]
+  },
+  {
+    "objectID": "developer/media_widget.html#data-specific-interactions-and-manipulations",
+    "href": "developer/media_widget.html#data-specific-interactions-and-manipulations",
+    "title": "Media Widget",
+    "section": "Data-Specific Interactions and Manipulations",
+    "text": "Data-Specific Interactions and Manipulations\nClicking on a data item also brings up a sub-widget below the table, offering data type-specific manipulations. For example, this sub-widget would be responsible for changing attributes such as color, alpha value, marker type, etc., for point data within the media window. This sub-widget may also handle data-specific manipulations directly within the media window. For instance, the user might wish to click on a position in the media window to set it as the location for the currently displayed point. Alternatively, the user might click and hold to utilize a paintbrush-type function for extending or erasing mask data.",
+    "crumbs": [
+      "Media Widget"
+    ]
+  },
+  {
+    "objectID": "developer/media_widget.html#shared-components-and-common-interactions",
+    "href": "developer/media_widget.html#shared-components-and-common-interactions",
+    "title": "Media Widget",
+    "section": "Shared Components and Common Interactions",
+    "text": "Shared Components and Common Interactions\nThese data-specific sub-widgets may house common sub-widgets that are shared among others. For instance, color selection is a common feature for multiple data types. An interface for click, hover, and release interactions is common to multiple data types but may perform different actions, such as painting a mask or erasing the media foreground.\nNote that there is some overlap here with the data manager widget. For many data types the data manager widget includes the ability to view all data present in the data manager and select particular instances such as a point at a certain time and the user can delete that point. Consequently we will try to keep media window based manipulation to the media widget. \nThe media window is the widget that houses the actual canvas for display. It is also the owner of the specific drawing options and drawing routines onto the canvas. For instance if the user changes the marker size and color of point data the options that are updated are held by the media window. The media window uses qt-based drawing. It is also responsible for receiving mouse events inside its space and emits signals that other widgets can receive.",
+    "crumbs": [
+      "Media Widget"
+    ]
+  },
+  {
     "objectID": "developer/Features/overview.html",
     "href": "developer/Features/overview.html",
     "title": "Features",
@@ -117,11 +157,41 @@
     ]
   },
   {
+    "objectID": "developer/data_viewer_widget.html",
+    "href": "developer/data_viewer_widget.html",
+    "title": "Data Viewer Widget",
+    "section": "",
+    "text": "Data Viewer Widget Overview\nThe data viewer widget is designed for visualizing plots of time series data. It can operate on multiple distinct data types, such as analog time series, interval series, and event series. The widget contains a table of compatible data types and their corresponding keys, which can be selected for display in the viewer. It houses options to enable the visualization of different types and also includes an OpenGL canvas responsible for rendering the data according to user specifications.\n\n\nVisualization Capabilities\nMultiple pieces of data can be drawn on the same canvas. Some data can be drawn in an overlapping manner, or they may be drawn with different axis offsets. Both the Y and X axes are zoomable, and data-specific scaling can be applied to the Y-axis to allow data with different magnitudes to be easily visualized simultaneously. Drawing is synced to the time scroll bar in the main program, enabling the user to scroll through the plot while concurrently visualizing data in other widgets, such as movies collected at the same time.\nCritically, the data viewer has a concept of different sampling rates for different data types and accounts for this during drawing. For instance, event data from camera frames sampled at 500 frames per second can be plotted appropriately with electrophysiological data sampled at 30,000 Hertz. A “Time frame concept” within the data manager is responsible for handling these conversions between coordinate systems, and the data viewer is responsible for plotting this data appropriately.\n\n\nHandling Grouped Data and Custom Arrangement\nSome temporal data in neuroscience involves the concept of a group of signals that are collected simultaneously and would be visualized simultaneously. For instance, 32 channels recorded simultaneously from a silicon probe would be expected to have the same scaling properties and spacing. Consequently, groups of data like this should, by default, have mostly matching configuration options but maintain the ability to be adjusted individually as needed. For example, if there are dead channels on a probe, it should be easy for the user to turn these off from the display.\nThe arrangement of data in the viewer is also important. Again, considering a silicon probe, the numerical channel arrangement is often not the same as the spatial channel arrangement, though the user may wish to view this data spatially arranged. The user should be able to customize this arrangement.\n\n\nInteractive Analysis and Pre-processing\nThis representation may provide the user with information useful for certain data pre-processing tasks. For instance, the user may be able to determine a numerical threshold for event detection in a particular channel. Alternatively, in this view, the user may wish to determine the temporal range where it appears some behavior is taking place based on an analog signal change. For example, viewing the whisker angle versus time when zoomed out may be useful to identify times when the animal is whisking versus when it is stationary.\nThe user may even wish to interactively define events or intervals within this viewer window based on the temporal representation of data that would not be so easy to see in other widgets. Consequently, the data viewer is not just passive in its relationship with the data it is displaying but rather facilitates active engagement.",
+    "crumbs": [
+      "Data Viewer Widget"
+    ]
+  },
+  {
     "objectID": "developer/data_manager.html",
     "href": "developer/data_manager.html",
     "title": "Data Manager",
     "section": "",
-    "text": "A Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The PointData structure can hold multiple points per unit time.\n\n\n\nExamples of Point Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nA Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is ordered, meaning that each point is positioned relative to its neighbors. The LineData structure can hold multiple lines per unit time.\n\n\n\nExamples of Line Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCurrently, lines are represented by a raw list of points. One could imagine lines being parameterized in different ways, such as the coefficients of a polynomial fit. For many calculations, the parameterized version of a line may be less memory intensive and more efficient.\n\n\n\nA mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not ordered. These would correspond to something like a binary segmentation mask over an image. The MaskData structure can hold multiple masks per unit time.\n\n\n\nExamples of Mask Data\n\n\n\n\nBinary Semantic Segmentation Labels\n\n\n\n\n\n\n\n\n\nA mask may just be thought as a raw pixel, by pixel definition of a shape. Shapes could be defined as bounding boxes, circles, polygons, etc. It may one day be useful to describe shapes in other ways compared to the raw pixel-by-pixel definition.\n\n\n\nTensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.\n\n\n\nExamples of Tensor Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nAn analog time series has values that can vary continuously\n\n\n\nExamples of Analog Time Series Data\n\n\n\n\nVoltage traces from electrode recordings\n\n\nFluorescence intensity traces from Calcium imaging\n\n\n\n\n\n\n\n\n\nA digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology\n\n\n\nExamples of Event Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExamples of Interval Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMedia is a sequence of images.\n\n\n\n\n\nExamples of Image Data\n\n\n\n\nImage sequence from two photon calcium imaging experiment\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExamples of Video Data\n\n\n\n\nMP4 video from high speed scientific camera of behavior",
+    "text": "The DataManager has 3 core functionalities",
+    "crumbs": [
+      "Data Manager"
+    ]
+  },
+  {
+    "objectID": "developer/data_manager.html#time-frames",
+    "href": "developer/data_manager.html#time-frames",
+    "title": "Data Manager",
+    "section": "Time Frames",
+    "text": "Time Frames",
+    "crumbs": [
+      "Data Manager"
+    ]
+  },
+  {
+    "objectID": "developer/data_manager.html#observer-framework",
+    "href": "developer/data_manager.html#observer-framework",
+    "title": "Data Manager",
+    "section": "Observer Framework",
+    "text": "Observer Framework",
     "crumbs": [
       "Data Manager"
     ]
@@ -130,8 +200,8 @@
     "objectID": "developer/data_manager.html#data-types",
     "href": "developer/data_manager.html#data-types",
     "title": "Data Manager",
-    "section": "",
-    "text": "A Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The PointData structure can hold multiple points per unit time.\n\n\n\nExamples of Point Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nA Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is ordered, meaning that each point is positioned relative to its neighbors. The LineData structure can hold multiple lines per unit time.\n\n\n\nExamples of Line Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCurrently, lines are represented by a raw list of points. One could imagine lines being parameterized in different ways, such as the coefficients of a polynomial fit. For many calculations, the parameterized version of a line may be less memory intensive and more efficient.\n\n\n\nA mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not ordered. These would correspond to something like a binary segmentation mask over an image. The MaskData structure can hold multiple masks per unit time.\n\n\n\nExamples of Mask Data\n\n\n\n\nBinary Semantic Segmentation Labels\n\n\n\n\n\n\n\n\n\nA mask may just be thought as a raw pixel, by pixel definition of a shape. Shapes could be defined as bounding boxes, circles, polygons, etc. It may one day be useful to describe shapes in other ways compared to the raw pixel-by-pixel definition.\n\n\n\nTensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.\n\n\n\nExamples of Tensor Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nAn analog time series has values that can vary continuously\n\n\n\nExamples of Analog Time Series Data\n\n\n\n\nVoltage traces from electrode recordings\n\n\nFluorescence intensity traces from Calcium imaging\n\n\n\n\n\n\n\n\n\nA digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology\n\n\n\nExamples of Event Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExamples of Interval Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMedia is a sequence of images.\n\n\n\n\n\nExamples of Image Data\n\n\n\n\nImage sequence from two photon calcium imaging experiment\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nExamples of Video Data\n\n\n\n\nMP4 video from high speed scientific camera of behavior",
+    "section": "Data Types",
+    "text": "Data Types\n\nPoint\nA Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The PointData structure can hold multiple points per unit time.\n\n\n\nExamples of Point Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nLine\nA Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is ordered, meaning that each point is positioned relative to its neighbors. The LineData structure can hold multiple lines per unit time.\n\n\n\nExamples of Line Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCurrently, lines are represented by a raw list of points. One could imagine lines being parameterized in different ways, such as the coefficients of a polynomial fit. For many calculations, the parameterized version of a line may be less memory intensive and more efficient.\n\n\nMask\nA mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not ordered. These would correspond to something like a binary segmentation mask over an image. The MaskData structure can hold multiple masks per unit time.\n\n\n\nExamples of Mask Data\n\n\n\n\nBinary Semantic Segmentation Labels\n\n\n\n\n\n\n\n\n\nA mask may just be thought as a raw pixel, by pixel definition of a shape. Shapes could be defined as bounding boxes, circles, polygons, etc. It may one day be useful to describe shapes in other ways compared to the raw pixel-by-pixel definition.\n\n\nTensors\nTensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.\n\n\n\nExamples of Tensor Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nAnalog Time Series\nAn analog time series has values that can vary continuously\n\n\n\nExamples of Analog Time Series Data\n\n\n\n\nVoltage traces from electrode recordings\n\n\nFluorescence intensity traces from Calcium imaging\n\n\n\n\n\n\n\n\nDigital Event Series\nA digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology\n\n\n\nExamples of Event Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nDigital Interval Series\n\n\n\nExamples of Interval Data\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nMedia\nMedia is a sequence of images.\n\nImage\n\n\n\nExamples of Image Data\n\n\n\n\nImage sequence from two photon calcium imaging experiment\n\n\n\n\n\n\n\n\n\n\n\nVideo\n\n\n\nExamples of Video Data\n\n\n\n\nMP4 video from high speed scientific camera of behavior\n\n\n\n\n\n\n\n\n\n\n\n\nTime Frame",
     "crumbs": [
       "Data Manager"
     ]
@@ -178,7 +248,7 @@
     "href": "developer/contributing_code.html#testing",
     "title": "Contributing Code",
     "section": "Testing",
-    "text": "Testing\n\nTesting is performed with Catch2. \nThe component being tested generally has two TEST_CASE parts. The first will test the “happy path” to ensure that the computations work as expected. Different SECTIONs will be used for different computations. A second TEST_CASE will handle error handling and edge cases. Each SECTION will be for a different edge case / error.\nUse descriptive names for each test.\nTEST_CASEs should also use useful tags.\nUse REQUIRE instead of CHECK\nSimple setup can be performed in the beginning of a TEST_CASE. Fixtures are only necessary for complex setup/teardown.\nPrefer Catch::Matchers::WithinRel to Catch::Approx",
+    "text": "Testing\n\nTesting is performed with Catch2. \nThe component being tested generally has two TEST_CASE parts. The first will test the “happy path” to ensure that the computations work as expected. Different SECTIONs will be used for different computations. A second TEST_CASE will handle error handling and edge cases. Each SECTION will be for a different edge case / error.\nUse descriptive names for each test.\nTEST_CASEs should also use useful tags.\nUse REQUIRE instead of CHECK\nSimple setup can be performed in the beginning of a TEST_CASE. Fixtures are only necessary for complex setup/teardown.\nPrefer Catch::Matchers::WithinRel to Catch::Approx\nTest files are included in the same folder as a given translation unit. They should have the same name as the header file with the extension “.test.cpp”. For example mask_to_line.hpp and mask_to_line.cpp will have the test file mask_to_line.test.cpp.",
     "crumbs": [
       "Contributing Code"
     ]
@@ -194,6 +264,16 @@
     ]
   },
   {
+    "objectID": "developer/data_manager_widget.html",
+    "href": "developer/data_manager_widget.html",
+    "title": "Data Manager Widget",
+    "section": "",
+    "text": "Data Manager Widget Overview\nThe data manager widget serves as the main user interface for interacting with all data currently loaded into the program. At its top, the widget displays all keys currently in the data manager along with their corresponding data types. It enables the user to specify the folder for saving data. Additionally, users can create new, initially blank data sets, which can subsequently be populated through further manipulations and other widgets.\nWhen a user selects an entry in the top table, a data type-specific soft widget is populated. This widget presents the user with various features of the selected data. For example, when dealing with point data, it shows a table listing every available point within that data set and its associated frame. The user has the ability to scroll through this table; clicking an entry causes the time displayed by the rest of the program to jump to that point’s frame. Users can perform several data manipulations via these specific widgets. For instance, using the point widget, a user can delete any specific point. They can also opt to move a specific point to another point data set available in the manager.\n\n\nData Saving Functionality\nThe data manager widget also functions as the primary interface for saving data to disk. It features a sub-widget interface where the user can select the desired file output type, and specific options for that output type are then displayed. For instance, if a user is viewing point data, they can choose to output CSV files and will be presented with various CSV saving options, such as selecting the delimiter and deciding whether a header should be included, etc.",
+    "crumbs": [
+      "Data Manager Widget"
+    ]
+  },
+  {
     "objectID": "developer/Features/Collapsible_Widget.html",
     "href": "developer/Features/Collapsible_Widget.html",
     "title": "Collapsible Widget",
@@ -202,6 +282,76 @@
     "crumbs": [
       "Features",
       "Collapsible Widget"
+    ]
+  },
+  {
+    "objectID": "developer/file_io.html",
+    "href": "developer/file_io.html",
+    "title": "File IO",
+    "section": "",
+    "text": "Because Neuralizer is compatible with a wide range of data, its file IO needs to support a wide range of file formats. Some of these file formats will be pre-subscribed, such as data acquisition-specific formats for electrophysiology. Others are more specific to this package, such as for line data that varies over time. We must also be aware from the start that some electrophysiology file sizes can be expected to be larger than easy to work with on a regular desktop machine. For instance, Neuropixel probes record almost 400 channels at 20 kHz and are becoming more routine for use. Consequently, multiple file formats should have the ability to be easily memory-mapped and loaded from disk rather than loading the entire file into RAM.\n\n\n\nAnother important consideration from the start is that many of these data types will be incrementally adjusted. For instance, processing a video sequence frame by frame or manually adjusting the output of an automated algorithm requires changing some subset of data in a much larger scheme. For some of these file types that are greater than hundreds of megabytes, resaving an entire file for point manipulations could be onerous and time-consuming. Consequently, for some file types, it would be advantageous to use a key-value database type structure that allows us to easily make incremental adjustments and only save those changes, consequently saving data much more quickly. To my knowledge, this process is quite common in the wild but uncommon in neuroscience.\n\n\n\nThe process of data serialization and deserialization will be accomplished with the Captain Proto library. This is able to easily create binary files from more complex data structures, such as those that hold multiple lines of varying size per unit time. This library can define output file structures that are purely binary and would be saved and loaded as entire objects. Alternatively, different definitions can be used to save objects as key-value pairs; for instance, each time point can be the key and the data at that time can be the value.\n\n\n\nCaptain Proto does not perform memory mapping itself. Memory mapping is different across different types of file systems, so to maintain cross-platform use, we will need to either specify different interfaces for interacting with Captain Proto or we could use another third-party library that does this for us. Boost.Interprocess is commonly cited for this purpose, but there are others.\n\n\n\nFor key-value database structures, there are multiple libraries available. Many of these are mature and designed to work with servers of extremely large datasets, and some have been developed by very large companies. One of the most popular is called LMDB, but in my test cases, this appears to be not as great with Windows. Using this library requires specifying some maximum file size; on Linux, the resulting file size is only the size of the data, but with my testing on Windows, this large maximum file size seems to persist. An alternative database is RocksDB. This software is developed by Facebook, seems to be quite mature, and should also be able to save as a key-value pair across platforms.\n\n\n\nCurrently, the data that would benefit from key-value updates is only theoretical. Having a line for whiskers for each frame in a high-speed video of up to 200,000 frames results in a file size that is almost 300 MB. However, saving a binary file in its entirety when making whisker-specific updates through manual curation still takes less than a second to save and is not noticeable to the user. Consequently, I think prioritizing having binary outputs to save entire files and memory mapping of those binary file types that are read-only, such as for Neuropixel analog traces, may be the most desirable next feature. Key-value pairs with something like RocksDB should be remembered for the future, but I am going to make that less of a priority until I see a clear use case that would benefit.",
+    "crumbs": [
+      "File IO"
+    ]
+  },
+  {
+    "objectID": "developer/file_io.html#overview-of-file-io-requirements",
+    "href": "developer/file_io.html#overview-of-file-io-requirements",
+    "title": "File IO",
+    "section": "",
+    "text": "Because Neuralizer is compatible with a wide range of data, its file IO needs to support a wide range of file formats. Some of these file formats will be pre-subscribed, such as data acquisition-specific formats for electrophysiology. Others are more specific to this package, such as for line data that varies over time. We must also be aware from the start that some electrophysiology file sizes can be expected to be larger than easy to work with on a regular desktop machine. For instance, Neuropixel probes record almost 400 channels at 20 kHz and are becoming more routine for use. Consequently, multiple file formats should have the ability to be easily memory-mapped and loaded from disk rather than loading the entire file into RAM.",
+    "crumbs": [
+      "File IO"
+    ]
+  },
+  {
+    "objectID": "developer/file_io.html#incremental-data-adjustments-and-key-value-stores",
+    "href": "developer/file_io.html#incremental-data-adjustments-and-key-value-stores",
+    "title": "File IO",
+    "section": "",
+    "text": "Another important consideration from the start is that many of these data types will be incrementally adjusted. For instance, processing a video sequence frame by frame or manually adjusting the output of an automated algorithm requires changing some subset of data in a much larger scheme. For some of these file types that are greater than hundreds of megabytes, resaving an entire file for point manipulations could be onerous and time-consuming. Consequently, for some file types, it would be advantageous to use a key-value database type structure that allows us to easily make incremental adjustments and only save those changes, consequently saving data much more quickly. To my knowledge, this process is quite common in the wild but uncommon in neuroscience.",
+    "crumbs": [
+      "File IO"
+    ]
+  },
+  {
+    "objectID": "developer/file_io.html#serialization-with-captain-proto",
+    "href": "developer/file_io.html#serialization-with-captain-proto",
+    "title": "File IO",
+    "section": "",
+    "text": "The process of data serialization and deserialization will be accomplished with the Captain Proto library. This is able to easily create binary files from more complex data structures, such as those that hold multiple lines of varying size per unit time. This library can define output file structures that are purely binary and would be saved and loaded as entire objects. Alternatively, different definitions can be used to save objects as key-value pairs; for instance, each time point can be the key and the data at that time can be the value.",
+    "crumbs": [
+      "File IO"
+    ]
+  },
+  {
+    "objectID": "developer/file_io.html#memory-mapping-implementation",
+    "href": "developer/file_io.html#memory-mapping-implementation",
+    "title": "File IO",
+    "section": "",
+    "text": "Captain Proto does not perform memory mapping itself. Memory mapping is different across different types of file systems, so to maintain cross-platform use, we will need to either specify different interfaces for interacting with Captain Proto or we could use another third-party library that does this for us. Boost.Interprocess is commonly cited for this purpose, but there are others.",
+    "crumbs": [
+      "File IO"
+    ]
+  },
+  {
+    "objectID": "developer/file_io.html#key-value-database-libraries",
+    "href": "developer/file_io.html#key-value-database-libraries",
+    "title": "File IO",
+    "section": "",
+    "text": "For key-value database structures, there are multiple libraries available. Many of these are mature and designed to work with servers of extremely large datasets, and some have been developed by very large companies. One of the most popular is called LMDB, but in my test cases, this appears to be not as great with Windows. Using this library requires specifying some maximum file size; on Linux, the resulting file size is only the size of the data, but with my testing on Windows, this large maximum file size seems to persist. An alternative database is RocksDB. This software is developed by Facebook, seems to be quite mature, and should also be able to save as a key-value pair across platforms.",
+    "crumbs": [
+      "File IO"
+    ]
+  },
+  {
+    "objectID": "developer/file_io.html#prioritization-and-future-considerations",
+    "href": "developer/file_io.html#prioritization-and-future-considerations",
+    "title": "File IO",
+    "section": "",
+    "text": "Currently, the data that would benefit from key-value updates is only theoretical. Having a line for whiskers for each frame in a high-speed video of up to 200,000 frames results in a file size that is almost 300 MB. However, saving a binary file in its entirety when making whisker-specific updates through manual curation still takes less than a second to save and is not noticeable to the user. Consequently, I think prioritizing having binary outputs to save entire files and memory mapping of those binary file types that are read-only, such as for Neuropixel analog traces, may be the most desirable next feature. Key-value pairs with something like RocksDB should be remembered for the future, but I am going to make that less of a priority until I see a clear use case that would benefit.",
+    "crumbs": [
+      "File IO"
     ]
   },
   {

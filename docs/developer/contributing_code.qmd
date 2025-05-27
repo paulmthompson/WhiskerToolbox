@@ -50,6 +50,8 @@ Please make sure to run clang-tidy on all of your submitted files with the style
 
 -   Prefer Catch::Matchers::WithinRel to Catch::Approx
 
+-   Test files are included in the same folder as a given translation unit. They should have the same name as the header file with the extension ".test.cpp". For example mask_to_line.hpp and mask_to_line.cpp will have the test file mask_to_line.test.cpp.
+
 ## Further Resources and References
 
 ### LLM Support

@@ -1,0 +1,26 @@
+---
+title: "Data Viewer Widget"
+format: html
+---
+
+# Data Viewer Widget Overview
+
+The **data viewer widget** is designed for visualizing plots of **time series data**. It can operate on multiple distinct data types, such as **analog time series**, **interval series**, and **event series**. The widget contains a table of compatible data types and their corresponding keys, which can be selected for display in the viewer. It houses options to enable the visualization of different types and also includes an **OpenGL canvas** responsible for rendering the data according to user specifications.
+
+# Visualization Capabilities
+
+Multiple pieces of data can be drawn on the same canvas. Some data can be drawn in an overlapping manner, or they may be drawn with different axis offsets. Both the Y and X axes are **zoomable**, and data-specific scaling can be applied to the Y-axis to allow data with different magnitudes to be easily visualized simultaneously. Drawing is **synced to the time scroll bar** in the main program, enabling the user to scroll through the plot while concurrently visualizing data in other widgets, such as movies collected at the same time.
+
+Critically, the data viewer has a concept of **different sampling rates** for different data types and accounts for this during drawing. For instance, event data from camera frames sampled at 500 frames per second can be plotted appropriately with electrophysiological data sampled at 30,000 Hertz. A "Time frame concept" within the data manager is responsible for handling these conversions between coordinate systems, and the data viewer is responsible for plotting this data appropriately.
+
+# Handling Grouped Data and Custom Arrangement
+
+Some temporal data in neuroscience involves the concept of a **group of signals that are collected simultaneously** and would be visualized simultaneously. For instance, 32 channels recorded simultaneously from a silicon probe would be expected to have the same scaling properties and spacing. Consequently, groups of data like this should, by default, have mostly matching configuration options but maintain the ability to be **adjusted individually** as needed. For example, if there are dead channels on a probe, it should be easy for the user to turn these off from the display.
+
+The **arrangement of data** in the viewer is also important. Again, considering a silicon probe, the numerical channel arrangement is often not the same as the spatial channel arrangement, though the user may wish to view this data spatially arranged. The user should be able to **customize this arrangement**.
+
+# Interactive Analysis and Pre-processing
+
+This representation may provide the user with information useful for certain data pre-processing tasks. For instance, the user may be able to determine a numerical threshold for event detection in a particular channel. Alternatively, in this view, the user may wish to determine the temporal range where it appears some behavior is taking place based on an analog signal change. For example, viewing the whisker angle versus time when zoomed out may be useful to identify times when the animal is whisking versus when it is stationary.
+
+The user may even wish to **interactively define events or intervals** within this viewer window based on the temporal representation of data that would not be so easy to see in other widgets. Consequently, the data viewer is not just passive in its relationship with the data it is displaying but rather facilitates **active engagement**.
