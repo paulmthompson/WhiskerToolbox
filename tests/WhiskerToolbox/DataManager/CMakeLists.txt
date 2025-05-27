@@ -28,10 +28,12 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Points/Point_Data.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_area.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Lines/line_angle.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Lines/line_min_point_dist.test.cpp
+
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_area.test.cpp
 )
 
 target_link_libraries(test_data_manager PRIVATE Catch2::Catch2WithMain DataManager)
