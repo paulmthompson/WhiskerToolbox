@@ -27,6 +27,7 @@ signals:
 private slots:
     void _setAnalogColor(const QString& hex_color);
     void _setAnalogAlpha(int alpha);
+    void _setAnalogScaleFactor(double scale_factor);
 
 private:
     Ui::AnalogViewer_Widget * ui;

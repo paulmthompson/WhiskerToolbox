@@ -49,7 +49,8 @@ struct BaseTimeSeriesDisplayOptions {
 };
 
 struct AnalogTimeSeriesDisplayOptions : public BaseTimeSeriesDisplayOptions {
-    float scale_factor{TimeSeriesDefaultValues::SCALE_FACTOR};
+    float scale_factor{TimeSeriesDefaultValues::SCALE_FACTOR}; // Internal scale factor (stdDev * 5.0f * user_scale)
+    float user_scale_factor{1.0f}; // User-friendly scale factor (1.0 = normal, 2.0 = double size, etc.)
     int line_thickness{TimeSeriesDefaultValues::LINE_THICKNESS};
     // Future: line_style (e.g., solid, dashed, dotted enum)
     // Future: show_markers_at_samples

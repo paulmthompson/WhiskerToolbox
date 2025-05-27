@@ -380,7 +380,7 @@ void OpenGLWidget::drawAnalogSeries() {
         
         if (!display_options->is_visible) continue;
         
-        auto const stdDev = display_options->scale_factor / _global_zoom;
+        auto const stdDev = display_options->scale_factor * display_options->user_scale_factor / _global_zoom;
 
         // Set the color for the current series
         hexToRGB(display_options->hex_color, r, g, b);
@@ -517,6 +517,7 @@ void OpenGLWidget::addAnalogTimeSeries(
     // Calculate scale factor based on standard deviation
     float const stdDev = calculate_std_dev(*series.get());
     display_options->scale_factor = stdDev * 5.0f;
+    display_options->user_scale_factor = 1.0f; // Default user scale
     
     std::cout << "Standard deviation for "
               << key
