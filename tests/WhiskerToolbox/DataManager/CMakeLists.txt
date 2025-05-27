@@ -16,10 +16,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_data_manager
         test_data_manager.cpp
 
-        # Observer tests (co-located with implementation)
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Observer/Observer_Data.test.cpp
 
-        AnalogTimeSeries/test_analog_time_series_loader.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/AnalogTimeSeries/Analog_Time_Series.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
