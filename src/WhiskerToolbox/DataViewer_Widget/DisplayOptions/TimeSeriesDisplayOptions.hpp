@@ -18,6 +18,10 @@ namespace TimeSeriesDefaultValues {
     const bool SHOW_INTERVALS_AS_FILLED = true;
     const float INTERVAL_HEIGHT = 1.0f;
     
+    // Analog series gap handling defaults
+    const float GAP_THRESHOLD = 5.0f; // Default gap threshold (in time units)
+    const bool ENABLE_GAP_DETECTION = false; // Default: always connect points
+    
     const std::vector<std::string> DEFAULT_COLORS = {
         "#ff0000", // Red
         "#008000", // Green
@@ -48,10 +52,22 @@ struct BaseTimeSeriesDisplayOptions {
     virtual ~BaseTimeSeriesDisplayOptions() = default;
 };
 
+enum class AnalogGapHandling {
+    AlwaysConnect,    // Always connect points (current behavior)
+    DetectGaps,       // Break lines when gaps exceed threshold
+    ShowMarkers       // Show individual markers instead of lines
+};
+
 struct AnalogTimeSeriesDisplayOptions : public BaseTimeSeriesDisplayOptions {
     float scale_factor{TimeSeriesDefaultValues::SCALE_FACTOR}; // Internal scale factor (stdDev * 5.0f * user_scale)
     float user_scale_factor{1.0f}; // User-friendly scale factor (1.0 = normal, 2.0 = double size, etc.)
     int line_thickness{TimeSeriesDefaultValues::LINE_THICKNESS};
+    
+    // Gap handling options
+    AnalogGapHandling gap_handling{AnalogGapHandling::AlwaysConnect};
+    float gap_threshold{TimeSeriesDefaultValues::GAP_THRESHOLD}; // Time units above which to break lines
+    bool enable_gap_detection{TimeSeriesDefaultValues::ENABLE_GAP_DETECTION};
+    
     // Future: line_style (e.g., solid, dashed, dotted enum)
     // Future: show_markers_at_samples
 };

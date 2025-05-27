@@ -1,4 +1,3 @@
-
 #include "DataViewer_Widget.hpp"
 #include "ui_DataViewer_Widget.h"
 
@@ -102,6 +101,16 @@ void DataViewer_Widget::openWidget() {
 
 void DataViewer_Widget::closeEvent(QCloseEvent * event) {
     std::cout << "Close event detected" << std::endl;
+}
+
+void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
+    QWidget::resizeEvent(event);
+    
+    // The OpenGL widget will automatically get its resizeGL called by Qt
+    // but we can trigger an additional update if needed
+    if (ui->openGLWidget) {
+        ui->openGLWidget->update();
+    }
 }
 
 void DataViewer_Widget::_updatePlot(int time) {
@@ -300,17 +309,24 @@ void DataViewer_Widget::_updateCoordinateDisplay(float time_coordinate, float ca
     int const time_index = static_cast<int>(std::round(time_coordinate));
     int const actual_time = _time_frame->getTimeAtIndex(time_index);
     
+    // Get canvas size for debugging
+    auto [canvas_width, canvas_height] = ui->openGLWidget->getCanvasSize();
+    
     QString coordinate_text;
     if (series_info.isEmpty()) {
-        coordinate_text = QString("Coordinates: Time: %1 (index: %2), Canvas Y: %3")
+        coordinate_text = QString("Coordinates: Time: %1 (index: %2), Canvas Y: %3 | Canvas: %4x%5")
                          .arg(actual_time)
                          .arg(time_index)
-                         .arg(canvas_y, 0, 'f', 1);
+                         .arg(canvas_y, 0, 'f', 1)
+                         .arg(canvas_width)
+                         .arg(canvas_height);
     } else {
-        coordinate_text = QString("Coordinates: Time: %1 (index: %2), %3")
+        coordinate_text = QString("Coordinates: Time: %1 (index: %2), %3 | Canvas: %4x%5")
                          .arg(actual_time)
                          .arg(time_index)
-                         .arg(series_info);
+                         .arg(series_info)
+                         .arg(canvas_width)
+                         .arg(canvas_height);
     }
     
     ui->coordinate_label->setText(coordinate_text);

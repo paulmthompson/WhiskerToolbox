@@ -4,6 +4,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataViewer_Widget/OpenGLWidget.hpp"
+#include "DataViewer_Widget/DisplayOptions/TimeSeriesDisplayOptions.hpp"
 
 #include <iostream>
 
@@ -21,6 +22,12 @@ AnalogViewer_Widget::AnalogViewer_Widget(std::shared_ptr<DataManager> data_manag
             this, &AnalogViewer_Widget::_setAnalogAlpha);
     connect(ui->scale_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AnalogViewer_Widget::_setAnalogScaleFactor);
+    
+    // Connect gap handling controls
+    connect(ui->gap_mode_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &AnalogViewer_Widget::_setGapHandlingMode);
+    connect(ui->gap_threshold_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &AnalogViewer_Widget::_setGapThreshold);
 }
 
 AnalogViewer_Widget::~AnalogViewer_Widget() {
@@ -40,10 +47,16 @@ void AnalogViewer_Widget::setActiveKey(std::string const & key) {
             
             // Set scale factor from user-friendly scale
             ui->scale_spinbox->setValue(static_cast<double>(config.value()->user_scale_factor));
+            
+            // Set gap handling controls
+            ui->gap_mode_combo->setCurrentIndex(static_cast<int>(config.value()->gap_handling));
+            ui->gap_threshold_spinbox->setValue(static_cast<double>(config.value()->gap_threshold));
         } else {
             ui->color_picker->setColor("#0000FF"); // Default blue
             ui->color_picker->setAlpha(100); // Default to full opacity
             ui->scale_spinbox->setValue(1.0); // Default scale
+            ui->gap_mode_combo->setCurrentIndex(0); // Default to AlwaysConnect
+            ui->gap_threshold_spinbox->setValue(5.0); // Default threshold
         }
     }
     
@@ -79,6 +92,26 @@ void AnalogViewer_Widget::_setAnalogScaleFactor(double scale_factor) {
         if (config.has_value()) {
             // Set the user-friendly scale factor directly
             config.value()->user_scale_factor = static_cast<float>(scale_factor);
+            _opengl_widget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+        }
+    }
+}
+
+void AnalogViewer_Widget::_setGapHandlingMode(int mode_index) {
+    if (!_active_key.empty()) {
+        auto config = _opengl_widget->getAnalogConfig(_active_key);
+        if (config.has_value()) {
+            config.value()->gap_handling = static_cast<AnalogGapHandling>(mode_index);
+            _opengl_widget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+        }
+    }
+}
+
+void AnalogViewer_Widget::_setGapThreshold(double threshold) {
+    if (!_active_key.empty()) {
+        auto config = _opengl_widget->getAnalogConfig(_active_key);
+        if (config.has_value()) {
+            config.value()->gap_threshold = static_cast<float>(threshold);
             _opengl_widget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
         }
     }

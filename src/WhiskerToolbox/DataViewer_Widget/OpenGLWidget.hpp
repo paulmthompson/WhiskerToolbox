@@ -109,9 +109,12 @@ public:
 
     void setGlobalScale(float scale) {
         _global_zoom = scale;
+        updateCanvas(_time);
+    }
 
-        update();
-    };
+    [[nodiscard]] std::pair<int, int> getCanvasSize() const {
+        return std::make_pair(width(), height());
+    }
 
     // Coordinate conversion methods
     [[nodiscard]] float canvasXToTime(float canvas_x) const;
@@ -174,6 +177,22 @@ private:
     void _addSeries(std::string const & key);
     void _removeSeries(std::string const & key);
     void _updateYViewBoundaries();
+    
+    // Gap detection helper methods for analog series
+    template<typename Iterator>
+    void _drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator end_it,
+                                          std::vector<float> const & data,
+                                          std::vector<size_t> const & data_time,
+                                          std::shared_ptr<TimeFrame> const & time_frame,
+                                          float gap_threshold,
+                                          float rNorm, float gNorm, float bNorm);
+    
+    template<typename Iterator>
+    void _drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it,
+                                   std::vector<float> const & data,
+                                   std::vector<size_t> const & data_time,
+                                   std::shared_ptr<TimeFrame> const & time_frame,
+                                   float rNorm, float gNorm, float bNorm);
 
     std::unordered_map<std::string, AnalogSeriesData> _analog_series;
     std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;

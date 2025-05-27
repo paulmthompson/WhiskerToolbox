@@ -440,29 +440,141 @@ void OpenGLWidget::drawAnalogSeries() {
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
         glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
 
-        for (auto it = start_it; it != end_it; ++it) {
-            size_t const index = std::distance(data_time.begin(), it);
-            auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
-            float const xCanvasPos = time;
-            float const yCanvasPos = data[index];
-            m_vertices.push_back(xCanvasPos);
-            m_vertices.push_back(yCanvasPos);
-            m_vertices.push_back(rNorm);
-            m_vertices.push_back(gNorm);
-            m_vertices.push_back(bNorm);
-            m_vertices.push_back(1.0f);// alpha
+        // Handle different gap handling modes
+        if (display_options->gap_handling == AnalogGapHandling::AlwaysConnect) {
+            // Original behavior: connect all points
+            for (auto it = start_it; it != end_it; ++it) {
+                size_t const index = std::distance(data_time.begin(), it);
+                auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
+                float const xCanvasPos = time;
+                float const yCanvasPos = data[index];
+                m_vertices.push_back(xCanvasPos);
+                m_vertices.push_back(yCanvasPos);
+                m_vertices.push_back(rNorm);
+                m_vertices.push_back(gNorm);
+                m_vertices.push_back(bNorm);
+                m_vertices.push_back(1.0f);// alpha
+            }
+
+            m_vbo.bind();
+            m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
+            m_vbo.release();
+
+            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 6));
+            
+        } else if (display_options->gap_handling == AnalogGapHandling::DetectGaps) {
+            // Draw multiple line segments, breaking at gaps
+            _drawAnalogSeriesWithGapDetection(start_it, end_it, data, data_time, time_frame, 
+                                            display_options->gap_threshold, rNorm, gNorm, bNorm);
+            
+        } else if (display_options->gap_handling == AnalogGapHandling::ShowMarkers) {
+            // Draw individual markers instead of lines
+            _drawAnalogSeriesAsMarkers(start_it, end_it, data, data_time, time_frame, 
+                                     rNorm, gNorm, bNorm);
         }
-
-        m_vbo.bind();
-        m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
-        m_vbo.release();
-
-        glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 6));
 
         i++;
     }
 
     glUseProgram(0);
+}
+
+template<typename Iterator>
+void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator end_it,
+                                                     std::vector<float> const & data,
+                                                     std::vector<size_t> const & data_time,
+                                                     std::shared_ptr<TimeFrame> const & time_frame,
+                                                     float gap_threshold,
+                                                     float rNorm, float gNorm, float bNorm) {
+    if (start_it == end_it) return;
+    
+    std::vector<GLfloat> segment_vertices;
+    auto prev_it = start_it;
+    
+    for (auto it = start_it; it != end_it; ++it) {
+        size_t const index = std::distance(data_time.begin(), it);
+        auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
+        float const xCanvasPos = time;
+        float const yCanvasPos = data[index];
+        
+        // Check for gap if this isn't the first point
+        if (it != start_it) {
+            size_t const prev_index = std::distance(data_time.begin(), prev_it);
+            auto const prev_time = static_cast<float>(time_frame->getTimeAtIndex(data_time[prev_index]));
+            float const time_gap = time - prev_time;
+            
+            if (time_gap > gap_threshold) {
+                // Draw current segment if it has points
+                if (segment_vertices.size() >= 12) { // At least 2 points (6 floats each)
+                    m_vbo.bind();
+                    m_vbo.allocate(segment_vertices.data(), static_cast<int>(segment_vertices.size() * sizeof(GLfloat)));
+                    m_vbo.release();
+                    glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 6));
+                }
+                
+                // Start new segment
+                segment_vertices.clear();
+            }
+        }
+        
+        // Add current point to segment
+        segment_vertices.push_back(xCanvasPos);
+        segment_vertices.push_back(yCanvasPos);
+        segment_vertices.push_back(rNorm);
+        segment_vertices.push_back(gNorm);
+        segment_vertices.push_back(bNorm);
+        segment_vertices.push_back(1.0f);// alpha
+        
+        prev_it = it;
+    }
+    
+    // Draw final segment
+    if (segment_vertices.size() >= 6) { // At least 1 point
+        m_vbo.bind();
+        m_vbo.allocate(segment_vertices.data(), static_cast<int>(segment_vertices.size() * sizeof(GLfloat)));
+        m_vbo.release();
+        
+        if (segment_vertices.size() >= 12) {
+            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 6));
+        } else {
+            // Single point - draw as a small marker
+            glDrawArrays(GL_POINTS, 0, static_cast<int>(segment_vertices.size() / 6));
+        }
+    }
+}
+
+template<typename Iterator>
+void OpenGLWidget::_drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it,
+                                              std::vector<float> const & data,
+                                              std::vector<size_t> const & data_time,
+                                              std::shared_ptr<TimeFrame> const & time_frame,
+                                              float rNorm, float gNorm, float bNorm) {
+    m_vertices.clear();
+    
+    for (auto it = start_it; it != end_it; ++it) {
+        size_t const index = std::distance(data_time.begin(), it);
+        auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
+        float const xCanvasPos = time;
+        float const yCanvasPos = data[index];
+        
+        m_vertices.push_back(xCanvasPos);
+        m_vertices.push_back(yCanvasPos);
+        m_vertices.push_back(rNorm);
+        m_vertices.push_back(gNorm);
+        m_vertices.push_back(bNorm);
+        m_vertices.push_back(1.0f);// alpha
+    }
+    
+    if (!m_vertices.empty()) {
+        m_vbo.bind();
+        m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
+        m_vbo.release();
+        
+        // Enable point size for better visibility
+        glEnable(GL_PROGRAM_POINT_SIZE);
+        glDrawArrays(GL_POINTS, 0, static_cast<int>(m_vertices.size() / 6));
+        glDisable(GL_PROGRAM_POINT_SIZE);
+    }
 }
 
 void OpenGLWidget::paintGL() {
@@ -494,11 +606,18 @@ void OpenGLWidget::paintGL() {
 }
 
 void OpenGLWidget::resizeGL(int w, int h) {
+    // Store the new dimensions
+    // Note: width() and height() will return the new values after this call
+    
+    // For 2D plotting, we should use orthographic projection
     m_proj.setToIdentity();
-    m_proj.perspective(45.0f, GLfloat(w) / GLfloat(h), 0.01f, 100.0f);
-    //m_proj.ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f); // Use orthographic projection for 2D plotting
+    m_proj.ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f); // Use orthographic projection for 2D plotting
+    
     m_view.setToIdentity();
-    m_view.translate(0, 0, -2);
+    m_view.translate(0, 0, -1); // Move slightly back for orthographic view
+    
+    // Trigger a repaint with the new dimensions
+    update();
 }
 
 void OpenGLWidget::drawAxis() {

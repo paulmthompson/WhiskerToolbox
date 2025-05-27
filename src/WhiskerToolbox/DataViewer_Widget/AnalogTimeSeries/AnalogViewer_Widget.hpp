@@ -28,6 +28,8 @@ private slots:
     void _setAnalogColor(const QString& hex_color);
     void _setAnalogAlpha(int alpha);
     void _setAnalogScaleFactor(double scale_factor);
+    void _setGapHandlingMode(int mode_index);
+    void _setGapThreshold(double threshold);
 
 private:
     Ui::AnalogViewer_Widget * ui;

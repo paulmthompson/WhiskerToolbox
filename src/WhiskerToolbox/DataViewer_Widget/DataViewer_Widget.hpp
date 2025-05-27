@@ -15,6 +15,7 @@ class TimeScrollBar;
 class TimeFrame;
 class Feature_Table_Widget;
 class QWheelEvent;
+class QResizeEvent;
 class AnalogViewer_Widget;
 class IntervalViewer_Widget;
 class EventViewer_Widget;
@@ -58,6 +59,7 @@ public:
 protected:
     void closeEvent(QCloseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
+    void resizeEvent(QResizeEvent * event) override;
 private slots:
     //void _insertRows(const std::vector<std::string>& keys);
     void _addFeatureToModel(QString const & feature, bool enabled);
