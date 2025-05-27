@@ -90,12 +90,19 @@ public:
         _xAxis.setMax(xmax);
     };
 
-    void changeZoom(int64_t zoom) {
+    void changeRangeWidth(int64_t range_delta) {
         int64_t const center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
-
-        zoom = (_xAxis.getEnd() - _xAxis.getStart()) - zoom;
-        _xAxis.setCenterAndZoom(center, zoom);
+        int64_t const current_range = _xAxis.getEnd() - _xAxis.getStart();
+        int64_t const new_range = current_range + range_delta; // Add delta to current range
+        _xAxis.setCenterAndZoom(center, new_range);
         updateCanvas(_time);
+    }
+
+    int64_t setRangeWidth(int64_t range_width) {
+        int64_t const center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
+        int64_t const actual_range = _xAxis.setCenterAndZoomWithFeedback(center, range_width);
+        updateCanvas(_time);
+        return actual_range; // Return the actual range width achieved
     }
 
     [[nodiscard]] XAxis getXAxis() const { return _xAxis; }

@@ -16,6 +16,7 @@
 #include <QTableWidget>
 #include <QWheelEvent>
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 
@@ -200,7 +201,16 @@ void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
 }
 
 void DataViewer_Widget::_handleXAxisSamplesChanged(int value) {
-    ui->openGLWidget->changeZoom(value);
+    // Use setRangeWidth for spinbox changes (absolute value)
+    std::cout << "Spinbox requested range width: " << value << std::endl;
+    int64_t const actual_range = ui->openGLWidget->setRangeWidth(static_cast<int64_t>(value));
+    std::cout << "Actual range width achieved: " << actual_range << std::endl;
+    
+    // Update the spinbox with the actual range width achieved (in case it was clamped)
+    if (actual_range != value) {
+        std::cout << "Range was clamped, updating spinbox to: " << actual_range << std::endl;
+        updateXAxisSamples(static_cast<int>(actual_range));
+    }
 }
 
 void DataViewer_Widget::updateXAxisSamples(int value) {
@@ -216,19 +226,34 @@ void DataViewer_Widget::_updateGlobalScale(double scale) {
 void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     auto const numDegrees = static_cast<float>(event->angleDelta().y()) / 8.0f;
     auto const numSteps = numDegrees / 15.0f;
-    auto const zoomFactor = static_cast<float>(_time_frame->getTotalFrameCount()) / 10000.0f;
-
-    auto curent_zoom = ui->x_axis_samples->value();
-    ui->openGLWidget->changeZoom(static_cast<int64_t>(numSteps * zoomFactor));
-
-    auto new_zoom = -1 * zoomFactor * numSteps + curent_zoom;
-
-    if (new_zoom < 1) {
-        new_zoom = 1;
+    
+    auto const current_range = ui->x_axis_samples->value();
+    
+    float rangeFactor;
+    if (_zoom_scaling_mode == ZoomScalingMode::Adaptive) {
+        // Adaptive scaling: range factor is proportional to current range width
+        // This makes adjustments more sensitive when zoomed in (small range), less sensitive when zoomed out (large range)
+        rangeFactor = static_cast<float>(current_range) * 0.1f; // 10% of current range width
+        
+        // Clamp range factor to reasonable bounds
+        rangeFactor = std::max(1.0f, std::min(rangeFactor, static_cast<float>(_time_frame->getTotalFrameCount()) / 100.0f));
+    } else {
+        // Fixed scaling (original behavior)
+        rangeFactor = static_cast<float>(_time_frame->getTotalFrameCount()) / 10000.0f;
     }
 
-    updateXAxisSamples(new_zoom);
+    // Calculate range delta 
+    // Wheel up (positive numSteps) should zoom IN (decrease range width)
+    // Wheel down (negative numSteps) should zoom OUT (increase range width)
+    auto const range_delta = static_cast<int64_t>(-numSteps * rangeFactor);
+    
+    // Apply range delta
+    ui->openGLWidget->changeRangeWidth(range_delta);
 
+    // Calculate new range width for spinbox update
+    auto const new_range = std::max(1, current_range + static_cast<int>(range_delta));
+
+    updateXAxisSamples(new_range);
     _updateLabels();
 }
 

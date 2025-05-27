@@ -1,4 +1,3 @@
-
 #ifndef DATAVIEWER_WIDGET_HPP
 #define DATAVIEWER_WIDGET_HPP
 
@@ -23,6 +22,11 @@ struct AnalogTimeSeriesDisplayOptions;
 struct DigitalEventSeriesDisplayOptions;
 struct DigitalIntervalSeriesDisplayOptions;
 
+enum class ZoomScalingMode {
+    Fixed,      // Original fixed zoom factor
+    Adaptive    // Zoom factor scales with current zoom level
+};
+
 namespace Ui {
 class DataViewer_Widget;
 }
@@ -41,6 +45,9 @@ public:
     void openWidget();
 
     void updateXAxisSamples(int value);
+
+    void setZoomScalingMode(ZoomScalingMode mode) { _zoom_scaling_mode = mode; }
+    [[nodiscard]] ZoomScalingMode getZoomScalingMode() const { return _zoom_scaling_mode; }
 
     [[nodiscard]] std::optional<AnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const;
 
@@ -73,6 +80,7 @@ private:
     std::shared_ptr<TimeFrame> _time_frame;
 
     QString _highlighted_available_feature;
+    ZoomScalingMode _zoom_scaling_mode{ZoomScalingMode::Adaptive}; // Use adaptive scaling by default
 
     void _updateLabels();
 };
