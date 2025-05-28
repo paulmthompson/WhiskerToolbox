@@ -4,7 +4,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 
 #include <iostream>
-#include <vector>   // std::vector
+#include <vector>// std::vector
 
 
 std::shared_ptr<DigitalEventSeries> event_threshold(
@@ -40,7 +40,7 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
         return event_series;
     }
 
-    float const threshold = thresholdParams.thresholdValue;
+    float const threshold = static_cast<float>(thresholdParams.thresholdValue);
     std::vector<float> events;
 
     auto const & timestamps = analog_time_series->getTimeSeries();
@@ -48,12 +48,12 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
 
     if (timestamps.empty()) {
         if (progressCallback) {
-            progressCallback(100); // No data to process, so 100% complete.
+            progressCallback(100);// No data to process, so 100% complete.
         }
         return event_series;
     }
 
-    double last_ts = -thresholdParams.lockoutTime - 1.0; // Initialize to allow first event
+    double last_ts = -thresholdParams.lockoutTime - 1.0;// Initialize to allow first event
     size_t const total_samples = timestamps.size();
 
     for (size_t i = 0; i < total_samples; ++i) {
@@ -73,9 +73,9 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
         } else {
             std::cerr << "Unknown threshold direction!" << std::endl;
             if (progressCallback) {
-                progressCallback(100); // Error case, consider it done.
+                progressCallback(100);// Error case, consider it done.
             }
-            return event_series; // Return empty series on error
+            return event_series;// Return empty series on error
         }
 
         if (event_detected) {
@@ -87,14 +87,14 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
         }
 
         if (progressCallback && total_samples > 0) {
-            int const current_progress = static_cast<int>((static_cast<double>(i + 1) / total_samples) * 100.0);
+            int const current_progress = static_cast<int>((static_cast<double>(i + 1) / static_cast<double>(total_samples)) * 100.0);
             progressCallback(current_progress);
         }
     }
 
     event_series->setData(events);
     if (progressCallback) {
-        progressCallback(100); // Ensure 100% is reported at the end.
+        progressCallback(100);// Ensure 100% is reported at the end.
     }
     return event_series;
 }
@@ -145,23 +145,23 @@ DataTypeVariant EventThresholdOperation::execute(DataTypeVariant const & dataVar
  *         event_threshold function fails).
  */
 DataTypeVariant EventThresholdOperation::execute(DataTypeVariant const & dataVariant,
-                                               TransformParametersBase const * transformParameters,
-                                               ProgressCallback progressCallback) {
+                                                 TransformParametersBase const * transformParameters,
+                                                 ProgressCallback progressCallback) {
 
     auto const * ptr_ptr = std::get_if<std::shared_ptr<AnalogTimeSeries>>(&dataVariant);
 
     if (!ptr_ptr || !(*ptr_ptr)) {
         std::cerr << "EventThresholdOperation::execute called with incompatible variant type or null data." << std::endl;
-        if (progressCallback) progressCallback(100); // Indicate completion even on error
-        return {};// Return empty
+        if (progressCallback) progressCallback(100);// Indicate completion even on error
+        return {};                                  // Return empty
     }
 
     AnalogTimeSeries const * analog_raw_ptr = (*ptr_ptr).get();
 
-    ThresholdParams currentParams; // Default parameters
+    ThresholdParams currentParams;// Default parameters
 
     if (transformParameters != nullptr) {
-        ThresholdParams const * specificParams = dynamic_cast<ThresholdParams const *>(transformParameters);
+        auto const * specificParams = dynamic_cast<ThresholdParams const *>(transformParameters);
 
         if (specificParams) {
             currentParams = *specificParams;
@@ -181,11 +181,11 @@ DataTypeVariant EventThresholdOperation::execute(DataTypeVariant const & dataVar
 
     if (!result_ts) {
         std::cerr << "EventThresholdOperation::execute: 'event_threshold' failed to produce a result." << std::endl;
-        if (progressCallback) progressCallback(100); // Indicate completion even on error
-        return {};// Return empty
+        if (progressCallback) progressCallback(100);// Indicate completion even on error
+        return {};                                  // Return empty
     }
 
     // std::cout << "EventThresholdOperation executed successfully using variant input." << std::endl; // Debug, consider removing
-    if (progressCallback) progressCallback(100); // Ensure 100% is reported at the end.
+    if (progressCallback) progressCallback(100);// Ensure 100% is reported at the end.
     return result_ts;
 }

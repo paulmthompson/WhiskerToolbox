@@ -12,25 +12,51 @@ class DigitalIntervalSeries;
 
 struct IntervalThresholdParams : public TransformParametersBase {
     double thresholdValue = 1.0;
-    enum class ThresholdDirection { POSITIVE, NEGATIVE, ABSOLUTE } direction = ThresholdDirection::POSITIVE;
+    enum class ThresholdDirection { POSITIVE,
+                                    NEGATIVE,
+                                    ABSOLUTE } direction = ThresholdDirection::POSITIVE;
     double lockoutTime = 0.0;
     double minDuration = 0.0;
 };
 
 /**
  * @brief Detects intervals in an AnalogTimeSeries based on a threshold.
+ * 
+ * This function analyzes an analog time series and identifies continuous intervals
+ * where the signal meets specified threshold criteria. It supports positive, negative,
+ * and absolute value thresholding with configurable lockout time and minimum duration
+ * requirements.
  *
- * @param analog_time_series The AnalogTimeSeries to process.
- * @param threshold The threshold value for event detection.
- * @return A new DigitalIntervalSeries containing detected events.
+ * @param analog_time_series The AnalogTimeSeries to process. Must not be null.
+ * @param thresholdParams Parameters containing threshold value, direction, lockout time, and minimum duration.
+ * @return A new DigitalIntervalSeries containing detected intervals.
+ *         Returns an empty series if input is null or empty.
  */
 std::shared_ptr<DigitalIntervalSeries> interval_threshold(
         AnalogTimeSeries const * analog_time_series,
         IntervalThresholdParams const & thresholdParams);
 
+/**
+ * @brief Detects intervals in an AnalogTimeSeries based on a threshold with progress reporting.
+ * 
+ * This function analyzes an analog time series and identifies continuous intervals
+ * where the signal meets specified threshold criteria. It supports positive, negative,
+ * and absolute value thresholding with configurable lockout time and minimum duration
+ * requirements. Progress is reported through the provided callback.
+ *
+ * @param analog_time_series The AnalogTimeSeries to process. Must not be null.
+ * @param thresholdParams Parameters containing threshold value, direction, lockout time, and minimum duration.
+ * @param progressCallback Function called with progress percentage (0-100) during computation.
+ * @return A new DigitalIntervalSeries containing detected intervals.
+ *         Returns an empty series if input is null or empty.
+ */
+std::shared_ptr<DigitalIntervalSeries> interval_threshold(
+        AnalogTimeSeries const * analog_time_series,
+        IntervalThresholdParams const & thresholdParams,
+        ProgressCallback progressCallback);
 
 class IntervalThresholdOperation final : public TransformOperation {
-
+public:
     [[nodiscard]] std::string getName() const override;
 
     [[nodiscard]] std::type_index getTargetInputTypeIndex() const override;
@@ -43,16 +69,26 @@ class IntervalThresholdOperation final : public TransformOperation {
     [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
 
     /**
-     * @brief Executes the interval calculation using data from the variant.
+     * @brief Executes the interval detection using data from the variant.
      * @param dataVariant The variant holding a non-null shared_ptr to the AnalogTimeSeries object.
+     * @param transformParameters Parameters for the interval detection (IntervalThresholdParams).
      * @return DataTypeVariant containing a std::shared_ptr<DigitalIntervalSeries> on success,
-     * or an empty on failure (e.g., type mismatch, null pointer, calculation failure).
+     *         or an empty variant on failure (e.g., type mismatch, null pointer, calculation failure).
      */
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
                             TransformParametersBase const * transformParameters) override;
+
+    /**
+     * @brief Executes the interval detection with progress reporting.
+     * @param dataVariant The variant holding a non-null shared_ptr to the AnalogTimeSeries object.
+     * @param transformParameters Parameters for the interval detection (IntervalThresholdParams).
+     * @param progressCallback Function called with progress percentage (0-100) during computation.
+     * @return DataTypeVariant containing a std::shared_ptr<DigitalIntervalSeries> on success,
+     *         or an empty variant on failure (e.g., type mismatch, null pointer, calculation failure).
+     */
+    DataTypeVariant execute(DataTypeVariant const & dataVariant,
+                            TransformParametersBase const * transformParameters,
+                            ProgressCallback progressCallback) override;
 };
-
-
-
 
 #endif//WHISKERTOOLBOX_ANALOG_INTERVAL_THRESHOLD_HPP

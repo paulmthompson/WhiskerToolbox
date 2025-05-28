@@ -7,80 +7,256 @@
 #include <armadillo>
 
 #include <complex>
-#include <numeric> //std::iota
+#include <numeric>//std::iota
 #include <vector>
+#include <iostream>
+#include <algorithm>
+
+namespace {
+    /**
+     * @brief Represents a continuous chunk of data in the time series
+     */
+    struct DataChunk {
+        size_t start_idx;           // Start index in original timestamps
+        size_t end_idx;             // End index in original timestamps (exclusive)
+        size_t output_start;        // Start position in output array
+        size_t output_end;          // End position in output array (exclusive)
+        std::vector<float> values;  // Values for this chunk
+        std::vector<size_t> times;  // Timestamps for this chunk
+    };
+
+    /**
+     * @brief Detects discontinuities in the time series and splits into continuous chunks
+     * @param analog_time_series Input time series
+     * @param threshold Maximum gap size before considering it a discontinuity
+     * @return Vector of continuous data chunks
+     */
+    std::vector<DataChunk> detectChunks(AnalogTimeSeries const * analog_time_series, size_t threshold) {
+        std::vector<DataChunk> chunks;
+        
+        auto const & timestamps = analog_time_series->getTimeSeries();
+        auto const & values = analog_time_series->getAnalogTimeSeries();
+        
+        if (timestamps.empty()) {
+            return chunks;
+        }
+
+        size_t chunk_start = 0;
+        size_t last_time = timestamps[0];
+        
+        for (size_t i = 1; i < timestamps.size(); ++i) {
+            size_t current_time = timestamps[i];
+            size_t gap = current_time - last_time;
+            
+            // If gap is larger than threshold, end current chunk and start new one
+            if (gap > threshold) {
+                // Create chunk for previous segment
+                DataChunk chunk;
+                chunk.start_idx = chunk_start;
+                chunk.end_idx = i;
+                chunk.output_start = timestamps[chunk_start];
+                chunk.output_end = last_time + 1;
+                
+                // Extract values and times for this chunk
+                chunk.values.reserve(i - chunk_start);
+                chunk.times.reserve(i - chunk_start);
+                for (size_t j = chunk_start; j < i; ++j) {
+                    chunk.values.push_back(values[j]);
+                    chunk.times.push_back(timestamps[j]);
+                }
+                
+                chunks.push_back(std::move(chunk));
+                chunk_start = i;
+            }
+            last_time = current_time;
+        }
+        
+        // Add final chunk
+        DataChunk final_chunk;
+        final_chunk.start_idx = chunk_start;
+        final_chunk.end_idx = timestamps.size();
+        final_chunk.output_start = timestamps[chunk_start];
+        final_chunk.output_end = timestamps.back() + 1;
+        
+        final_chunk.values.reserve(timestamps.size() - chunk_start);
+        final_chunk.times.reserve(timestamps.size() - chunk_start);
+        for (size_t j = chunk_start; j < timestamps.size(); ++j) {
+            final_chunk.values.push_back(values[j]);
+            final_chunk.times.push_back(timestamps[j]);
+        }
+        
+        chunks.push_back(std::move(final_chunk));
+        
+        return chunks;
+    }
+
+    /**
+     * @brief Processes a single continuous chunk using Hilbert transform
+     * @param chunk The data chunk to process
+     * @param phaseParams Parameters for the calculation
+     * @return Vector of phase values for this chunk
+     */
+    std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams const & phaseParams) {
+        if (chunk.values.empty()) {
+            return {};
+        }
+
+        std::cout << "Processing chunk with " << chunk.values.size() << " values" << std::endl;
+        
+        // Create continuous output timestamps for this chunk
+        std::vector<size_t> output_timestamps(chunk.output_end - chunk.output_start);
+        std::iota(output_timestamps.begin(), output_timestamps.end(), chunk.output_start);
+
+        // Convert to arma::vec for processing
+        arma::vec signal(chunk.values.size());
+        std::copy(chunk.values.begin(), chunk.values.end(), signal.begin());
+
+        // Calculate sampling rate from timestamps
+        double dt = 1.0; // Default to 1 if we can't calculate
+        if (chunk.times.size() > 1) {
+            dt = static_cast<double>(chunk.times.back() - chunk.times[0]) / 
+                 static_cast<double>(chunk.times.size() - 1);
+            if (dt <= 0) {
+                dt = 1.0; // Fallback to default
+            }
+        }
+        double const Fs = 1.0 / dt;
+
+        // Validate frequency parameters (but continue processing regardless)
+        double const nyquist = Fs / 2.0;
+        if (phaseParams.lowFrequency <= 0 || phaseParams.highFrequency <= 0 ||
+            phaseParams.lowFrequency >= nyquist || phaseParams.highFrequency >= nyquist ||
+            phaseParams.lowFrequency >= phaseParams.highFrequency) {
+            // Log warning but continue processing
+            std::cerr << "hilbert_phase: Invalid frequency parameters for chunk. "
+                      << "Low: " << phaseParams.lowFrequency 
+                      << ", High: " << phaseParams.highFrequency 
+                      << ", Nyquist: " << nyquist << std::endl;
+        }
+
+        // Perform FFT
+        arma::cx_vec X = arma::fft(signal).eval();
+
+        // Create analytic signal by zeroing negative frequencies
+        arma::uword const n = X.n_elem;
+        arma::uword const halfway = (n + 1) / 2;
+        
+        // Zero out negative frequencies
+        for (arma::uword i = halfway; i < n; ++i) {
+            X(i) = std::complex<double>(0.0, 0.0);
+        }
+
+        // Double the positive frequencies (except DC and Nyquist if present)
+        for (arma::uword i = 1; i < halfway; ++i) {
+            X(i) *= 2.0;
+        }
+
+        // Compute inverse FFT to get the analytic signal
+        arma::cx_vec const analytic_signal = arma::ifft(X).eval();
+
+        // Extract phase using vectorized operation
+        arma::vec const phase = arma::arg(analytic_signal);
+
+        // Convert back to standard vector
+        return arma::conv_to<std::vector<float>>::from(phase);
+    }
+
+    /**
+     * @brief Internal implementation of Hilbert phase calculation with optional progress reporting and chunked processing.
+     * @param analog_time_series Input time series data
+     * @param phaseParams Parameters for the calculation
+     * @param progressCallback Optional progress callback (can be nullptr)
+     * @return Shared pointer to the resulting phase time series
+     */
+    std::shared_ptr<AnalogTimeSeries> hilbert_phase_impl(
+            AnalogTimeSeries const * analog_time_series,
+            HilbertPhaseParams const & phaseParams,
+            ProgressCallback progressCallback = nullptr) {
+        
+        auto phase_series = std::make_shared<AnalogTimeSeries>();
+
+        // Input validation
+        if (!analog_time_series) {
+            std::cerr << "hilbert_phase: Input AnalogTimeSeries is null" << std::endl;
+            return phase_series;
+        }
+
+        auto const & timestamps = analog_time_series->getTimeSeries();
+        if (timestamps.empty()) {
+            std::cerr << "hilbert_phase: Input time series is empty" << std::endl;
+            return phase_series;
+        }
+
+        if (progressCallback) {
+            progressCallback(5);
+        }
+
+        // Detect discontinuous chunks
+        auto chunks = detectChunks(analog_time_series, phaseParams.discontinuityThreshold);
+        
+        if (progressCallback) {
+            progressCallback(10);
+        }
+
+        // Create output timestamps (continuous from 0 to last timestamp)
+        auto output_timestamps = std::vector<size_t>(timestamps.back() + 1);
+        std::iota(output_timestamps.begin(), output_timestamps.end(), 0);
+
+        // Initialize output phase vector with zeros
+        std::vector<float> phase_output(output_timestamps.size(), 0.0f);
+
+        if (progressCallback) {
+            progressCallback(15);
+        }
+
+        // Process each chunk separately
+        size_t chunks_processed = 0;
+        for (auto const & chunk : chunks) {
+            if (progressCallback) {
+                int progress = 15 + static_cast<int>((chunks_processed * 70) / chunks.size());
+                progressCallback(progress);
+            }
+
+            auto chunk_phase = processChunk(chunk, phaseParams);
+            
+            // Copy chunk results to appropriate positions in output
+            if (!chunk_phase.empty() && chunk.output_start < phase_output.size()) {
+                size_t copy_size = std::min(chunk_phase.size(), 
+                                          phase_output.size() - chunk.output_start);
+                std::copy(chunk_phase.begin(), 
+                         chunk_phase.begin() + copy_size,
+                         phase_output.begin() + chunk.output_start);
+            }
+            
+            ++chunks_processed;
+        }
+
+        if (progressCallback) {
+            progressCallback(90);
+        }
+
+        // Set the data in the output time series
+        phase_series->setData(phase_output, output_timestamps);
+
+        if (progressCallback) {
+            progressCallback(100);
+        }
+
+        return phase_series;
+    }
+}
 
 std::shared_ptr<AnalogTimeSeries> hilbert_phase(
         AnalogTimeSeries const * analog_time_series,
         HilbertPhaseParams const & phaseParams) {
-    auto phase_series = std::make_shared<AnalogTimeSeries>();
+    return hilbert_phase_impl(analog_time_series, phaseParams);
+}
 
-    // Get input data
-    auto const & timestamps = analog_time_series->getTimeSeries(); // Copy because we will use these to construct output
-    auto const & values = analog_time_series->getAnalogTimeSeries();
-    auto output_timestamps = std::vector<size_t>(timestamps.back());
-    std::iota(output_timestamps.begin(), output_timestamps.end(), 0);
-
-    if (timestamps.empty()) {
-        return phase_series;
-    }
-
-    // Convert to arma::vec for processing
-    auto signal = convertAnalogTimeSeriesToMlpackArray(analog_time_series, output_timestamps);
-    signal.replace(arma::datum::nan, 0.0);
-
-    // Calculate sampling rate from timestamps
-    double dt = 0;
-    if (timestamps.size() > 1) {
-        dt = (timestamps[timestamps.size()-1] - timestamps[0]) / (timestamps.size() - 1);
-    }
-    double Fs = 1.0 / dt;
-
-    // Bandpass filter design
-    // Convert Hz to normalized frequency (0 to 1, where 1 is Nyquist frequency)
-    double low_norm = phaseParams.lowFrequency / (Fs/2.0);
-    double high_norm = phaseParams.highFrequency / (Fs/2.0);
-
-    // Check if frequencies are valid
-    if (low_norm >= 1.0 || high_norm >= 1.0 || low_norm <= 0 || high_norm <= 0) {
-        std::cerr << "Invalid cutoff frequencies for bandpass filter" << std::endl;
-        //return phase_series;
-    }
-
-    // Use Armadillo's built-in filter functions
-    // For simplicity, using a basic butterworth filter design
-    arma::vec b, a;
-
-    // Design bandpass filter (4th order Butterworth)
-    arma::vec filtered_signal = signal.as_col(); // Placeholder for filtered signal
-
-    // Perform FFT
-    auto X = arma::fft(signal).eval();
-
-    // Set negative frequencies to zero
-    int const halfway = 1 + X.n_elem / 2;
-    for (int i = halfway; i < X.n_elem; i++) {
-        X(i) = std::complex<double>(0, 0);
-    }
-
-    // Compute inverse FFT to get the analytic signal
-    auto analytic_signal = arma::ifft(X).eval();
-
-    // Extract phase
-    arma::vec phase(analytic_signal.n_elem);
-    for (int i = 0; i < analytic_signal.n_elem; i++) {
-        phase(i) = std::arg(analytic_signal(i));
-    }
-
-    // Convert back to standard vector and set in the output time series
-    auto phase_vec = arma::conv_to<std::vector<float>>::from(phase);
-    phase_series->setData(phase_vec, output_timestamps);
-
-    std::cout << "Total size of phase is " << phase_vec.size() << std::endl;
-    std::cout << "Max value is " << calculate_max(*phase_series.get()) << std::endl;
-    std::cout << "Min value is " << calculate_min(*phase_series.get()) << std::endl;
-
-    return phase_series;
+std::shared_ptr<AnalogTimeSeries> hilbert_phase(
+        AnalogTimeSeries const * analog_time_series,
+        HilbertPhaseParams const & phaseParams,
+        ProgressCallback progressCallback) {
+    return hilbert_phase_impl(analog_time_series, phaseParams, progressCallback);
 }
 
 std::string HilbertPhaseOperation::getName() const {
@@ -97,18 +273,25 @@ bool HilbertPhaseOperation::canApply(DataTypeVariant const & dataVariant) const 
     }
 
     auto const * ptr_ptr = std::get_if<std::shared_ptr<AnalogTimeSeries>>(&dataVariant);
-
-    // Return true only if get_if succeeded AND the contained shared_ptr is not null.
     return ptr_ptr && *ptr_ptr;
 }
 
-DataTypeVariant HilbertPhaseOperation::execute(DataTypeVariant const & dataVariant, TransformParametersBase const * transformParameters) {
+DataTypeVariant HilbertPhaseOperation::execute(
+        DataTypeVariant const & dataVariant, 
+        TransformParametersBase const * transformParameters) {
+    return execute(dataVariant, transformParameters, nullptr);
+}
 
+DataTypeVariant HilbertPhaseOperation::execute(
+        DataTypeVariant const & dataVariant,
+        TransformParametersBase const * transformParameters,
+        ProgressCallback progressCallback) {
+    
     auto const * ptr_ptr = std::get_if<std::shared_ptr<AnalogTimeSeries>>(&dataVariant);
 
     if (!ptr_ptr || !(*ptr_ptr)) {
-        std::cerr << "HilbertPhaseOperation::execute called with incompatible variant type or null data." << std::endl;
-        return {};// Return empty
+        std::cerr << "HilbertPhaseOperation::execute: Invalid input data variant" << std::endl;
+        return {};
     }
 
     AnalogTimeSeries const * analog_raw_ptr = (*ptr_ptr).get();
@@ -116,28 +299,23 @@ DataTypeVariant HilbertPhaseOperation::execute(DataTypeVariant const & dataVaria
     HilbertPhaseParams currentParams;
 
     if (transformParameters != nullptr) {
-        HilbertPhaseParams const * specificParams = dynamic_cast<HilbertPhaseParams const *>(transformParameters);
+        auto const * specificParams =
+            dynamic_cast<HilbertPhaseParams const *>(transformParameters);
 
         if (specificParams) {
             currentParams = *specificParams;
-            std::cout << "Using parameters provided by UI." << std::endl;
         } else {
-            std::cerr << "Warning: HilbertPhaseOperation received incompatible parameter type (dynamic_cast failed)! Using default parameters." << std::endl;
+            std::cerr << "HilbertPhaseOperation::execute: Incompatible parameter type, using defaults" << std::endl;
         }
-    } else {
-        // No parameter object was provided (nullptr). This might be expected if the
-        // operation can run with defaults or was called programmatically.
-        std::cout << "HilbertPhaseOperation received null parameters. Using default parameters." << std::endl;
     }
 
-    std::shared_ptr<AnalogTimeSeries> result = hilbert_phase(analog_raw_ptr,
-                                                             currentParams);
+    std::shared_ptr<AnalogTimeSeries> result = hilbert_phase(
+        analog_raw_ptr, currentParams, progressCallback);
 
     if (!result) {
-        std::cerr << "HilbertPhaseOperation::execute: 'calculate_intervals' failed to produce a result." << std::endl;
-        return {};// Return empty
+        std::cerr << "HilbertPhaseOperation::execute: Phase calculation failed" << std::endl;
+        return {};
     }
 
-    std::cout << "HilbertPhaseOperation executed successfully using variant input." << std::endl;
     return result;
 }

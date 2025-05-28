@@ -12,8 +12,10 @@ class DigitalEventSeries;
 
 struct ThresholdParams : public TransformParametersBase {
     double thresholdValue = 1.0;
-    enum class ThresholdDirection { POSITIVE, NEGATIVE, ABSOLUTE } direction = ThresholdDirection::POSITIVE;
-    double lockoutTime = 0.0; // Time in the same units as the AnalogTimeSeries timestamps
+    enum class ThresholdDirection { POSITIVE,
+                                    NEGATIVE,
+                                    ABSOLUTE } direction = ThresholdDirection::POSITIVE;
+    double lockoutTime = 0.0;// Time in the same units as the AnalogTimeSeries timestamps
 };
 
 /**
@@ -42,7 +44,7 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
 
 
 class EventThresholdOperation final : public TransformOperation {
-public: // Added public keyword here for clarity, assuming it was intended.
+public:// Added public keyword here for clarity, assuming it was intended.
     [[nodiscard]] std::string getName() const override;
 
     [[nodiscard]] std::type_index getTargetInputTypeIndex() const override;
