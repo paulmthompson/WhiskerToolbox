@@ -1,10 +1,9 @@
+#include "Digital_Event_Series_JSON.hpp"
 
-#include "Digital_Event_Series_Loader.hpp"
-
-#include "loaders/CSV_Loaders.hpp"
 #include "loaders/binary_loaders.hpp"
 #include "utils/json_helpers.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp"
 
 EventDataType stringToEventDataType(std::string const & data_type_str) {
     if (data_type_str == "uint16") return EventDataType::uint16;
@@ -69,40 +68,46 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load_into_DigitalEventSeries(st
         }
         case EventDataType::csv: {
 
-            int const num_channels = item.value("channel_count", 1);
+            // Create CSV options from JSON configuration
+            CSVEventLoaderOptions opts;
+            opts.filepath = file_path;
+            opts.delimiter = item.value("delimiter", ",");
+            opts.has_header = item.value("has_header", false);
+            opts.event_column = item.value("event_column", 0);
+            
+            // Check for multi-column configuration
+            if (item.contains("identifier_column") || item.contains("label_column")) {
+                // Multi-column case: use identifier_column (preferred) or label_column (legacy)
+                opts.identifier_column = item.value("identifier_column", item.value("label_column", 1));
+            } else {
+                // Single column case
+                opts.identifier_column = -1;
+            }
+            
+            // Set base name for series naming
+            opts.base_name = item.value("name", "events");
+            
+            // Load using new CSV system
+            auto loaded_series = load(opts);
+            
+            // Apply scaling if specified
             float const scale = item.value("scale", 1.0f);
             bool const scale_divide = item.value("scale_divide", false);
-
-            if (num_channels == 1) {
-
-                auto opts = Loader::CSVSingleColumnOptions{.filename = file_path};
-
-                auto events = Loader::loadSingleColumnCSV(opts);
-                std::cout << "Loaded " << events.size() << " events " << std::endl;
-
-                scale_events(events, scale, scale_divide);
-
-                digital_event_series.push_back(std::make_shared<DigitalEventSeries>());
-                digital_event_series.back()->setData(events);
-            } else {
-
-                int const event_column = item["event_column"];
-                int const label_column = item["label_column"];
-
-                auto opts = Loader::CSVMultiColumnOptions {.filename = file_path,
-                                                          .key_column = static_cast<size_t>(label_column),
-                                                          .value_column = static_cast<size_t>(event_column)};
-
-                auto events = Loader::loadMultiColumnCSV(opts);
-
-                for (auto & [event_id, event] : events){
-
-                    scale_events(event, scale, scale_divide);
-
-                    digital_event_series.push_back(std::make_shared<DigitalEventSeries>());
-                    digital_event_series.back()->setData(event);
+            
+            if (scale != 1.0f) {
+                for (auto & series : loaded_series) {
+                    auto events = series->getEventSeries();  // This returns const&, so we need to copy
+                    std::vector<float> scaled_events = events;  // Make a copy
+                    scale_events(scaled_events, scale, scale_divide);
+                    series->setData(scaled_events);  // Set the scaled data back
                 }
             }
+            
+            // Add to result
+            digital_event_series.insert(digital_event_series.end(), loaded_series.begin(), loaded_series.end());
+            
+            std::cout << "Loaded " << loaded_series.size() << " digital event series from CSV" << std::endl;
+            
             break;
         }
         default: {

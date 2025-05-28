@@ -11,7 +11,7 @@
 #include "Tensors/Tensor_Data.hpp"
 
 #include "AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.hpp"
-#include "DigitalTimeSeries/IO/CSV/Digital_Event_Series_Loader.hpp"
+#include "DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.hpp"
 #include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp"
 #include "Lines/IO/JSON/Line_Data_JSON.hpp"
@@ -20,7 +20,6 @@
 #include "Points/IO/JSON/Point_Data_JSON.hpp"
 
 #include "loaders/binary_loaders.hpp"
-#include "transforms/data_transforms.hpp"
 #include "transforms/Masks/mask_area.hpp"
 
 #include "TimeFrame.hpp"

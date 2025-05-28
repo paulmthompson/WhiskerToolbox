@@ -94,10 +94,10 @@ add_library(DataManager SHARED
 
         DigitalTimeSeries/Digital_Event_Series.hpp
         DigitalTimeSeries/Digital_Event_Series.cpp
-        DigitalTimeSeries/IO/CSV/Digital_Event_Series_Loader.cpp
-        DigitalTimeSeries/IO/CSV/Digital_Event_Series_Loader.hpp
         DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.cpp
         DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp
+        DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.hpp
+        DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.cpp
 
         Tensors/Tensor_Data.hpp
         Tensors/Tensor_Data.cpp
@@ -172,6 +172,7 @@ add_library(DataManager SHARED
 
         LockState/LockState.hpp
         ImageSize/ImageSize.hpp
+
 )
 
 message(STATUS "NPY source dir:")
