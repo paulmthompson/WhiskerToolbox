@@ -288,6 +288,10 @@ void OpenGLWidget::setupVertexAttribs() {
  * Each event is specified by a single time point.
  * We can find which of the time points are within the visible time frame
  * After those are found, we will draw a vertical line at that time point
+ * 
+ * Now supports two display modes:
+ * - Stacked: Events are positioned in separate horizontal lanes with configurable spacing
+ * - Full Canvas: Events stretch from top to bottom of the canvas (original behavior)
  */
 void OpenGLWidget::drawDigitalEventSeries() {
     int r, g, b;
@@ -304,6 +308,24 @@ void OpenGLWidget::drawDigitalEventSeries() {
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);// glBindVertexArray
     setupVertexAttribs();
 
+    // Count visible event series for stacked positioning
+    int visible_event_count = 0;
+    for (auto const & [key, event_data]: _digital_event_series) {
+        if (event_data.display_options->is_visible) {
+            visible_event_count++;
+        }
+    }
+    
+    if (visible_event_count == 0) {
+        glUseProgram(0);
+        return;
+    }
+
+    // Calculate center coordinate for stacked mode (similar to analog series)
+    float const center_coord = -0.5f * 0.1f * (static_cast<float>(visible_event_count - 1)); // Use default spacing for center calculation
+    
+    int visible_series_index = 0;
+    
     for (auto const & [key, event_data]: _digital_event_series) {
         auto const & series = event_data.series;
         auto const & time_frame = event_data.time_frame;
@@ -324,6 +346,23 @@ void OpenGLWidget::drawDigitalEventSeries() {
                     return static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(idx)));
                 });
 
+        // Determine Y coordinates based on display mode
+        float event_y_min, event_y_max;
+        
+        if (display_options->display_mode == EventDisplayMode::Stacked) {
+            // Calculate Y position for this specific event series in stacked mode
+            float const y_offset = static_cast<float>(visible_series_index) * display_options->vertical_spacing;
+            float const series_center = y_offset + center_coord;
+            float const half_height = display_options->event_height * 0.5f;
+            
+            event_y_min = series_center - half_height;
+            event_y_max = series_center + half_height;
+        } else {
+            // Full canvas mode - events stretch from top to bottom
+            event_y_min = min_y;
+            event_y_max = max_y;
+        }
+
         // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
         auto Model = glm::mat4(1.0f);
 
@@ -339,12 +378,15 @@ void OpenGLWidget::drawDigitalEventSeries() {
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
         glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
 
+        // Set line thickness from display options
+        glLineWidth(static_cast<float>(display_options->line_thickness));
+
         for (auto const & event: visible_events) {
             auto const xCanvasPos = static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(event)));
 
             std::array<GLfloat, 12> vertices = {
-                    xCanvasPos, min_y, rNorm, gNorm, bNorm, alpha,
-                    xCanvasPos, max_y, rNorm, gNorm, bNorm, alpha};
+                    xCanvasPos, event_y_min, rNorm, gNorm, bNorm, alpha,
+                    xCanvasPos, event_y_max, rNorm, gNorm, bNorm, alpha};
 
             glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
@@ -353,8 +395,12 @@ void OpenGLWidget::drawDigitalEventSeries() {
             GLsizei const count = 2;// number of indexes to render
             glDrawArrays(GL_LINES, first, count);
         }
+        
+        visible_series_index++;
     }
-
+    
+    // Reset line width to default
+    glLineWidth(1.0f);
     glUseProgram(0);
 }
 

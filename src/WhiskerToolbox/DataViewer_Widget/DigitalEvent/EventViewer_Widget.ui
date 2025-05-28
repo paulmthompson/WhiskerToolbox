@@ -60,6 +60,94 @@
     <widget class="ColorPicker_Widget" name="color_picker" native="true"/>
    </item>
    <item>
+    <widget class="QGroupBox" name="display_groupbox">
+     <property name="title">
+      <string>Display Options</string>
+     </property>
+     <layout class="QVBoxLayout" name="display_layout">
+      <item>
+       <layout class="QHBoxLayout" name="mode_layout">
+        <item>
+         <widget class="QLabel" name="mode_label">
+          <property name="text">
+           <string>Display Mode:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="mode_combo">
+          <item>
+           <property name="text">
+            <string>Stacked</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Full Canvas</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="spacing_layout">
+        <item>
+         <widget class="QLabel" name="spacing_label">
+          <property name="text">
+           <string>Vertical Spacing:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="spacing_spinbox">
+          <property name="minimum">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.100000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="height_layout">
+        <item>
+         <widget class="QLabel" name="height_label">
+          <property name="text">
+           <string>Event Height:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="height_spinbox">
+          <property name="minimum">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>0.500000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.050000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Orientation::Vertical</enum>

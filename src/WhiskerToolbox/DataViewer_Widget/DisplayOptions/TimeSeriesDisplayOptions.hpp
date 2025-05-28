@@ -73,10 +73,28 @@ struct AnalogTimeSeriesDisplayOptions : public BaseTimeSeriesDisplayOptions {
     // Future: show_markers_at_samples
 };
 
+/**
+ * @brief Event display modes for digital event series
+ * 
+ * Controls how digital events are visually presented on the canvas:
+ * - Stacked: Events are positioned in separate horizontal lanes with configurable spacing
+ * - FullCanvas: Events stretch from top to bottom of the entire canvas
+ */
+enum class EventDisplayMode {
+    Stacked,      ///< Stack events with configurable spacing (default)
+    FullCanvas    ///< Events stretch from top to bottom of canvas
+};
+
 struct DigitalEventSeriesDisplayOptions : public BaseTimeSeriesDisplayOptions {
     bool show_as_lines{TimeSeriesDefaultValues::SHOW_EVENTS_AS_LINES};
     float event_line_height{TimeSeriesDefaultValues::EVENT_LINE_HEIGHT};
     int line_thickness{TimeSeriesDefaultValues::LINE_THICKNESS};
+    
+    // Event stacking options
+    EventDisplayMode display_mode{EventDisplayMode::Stacked}; ///< Display mode (stacked vs full-canvas)
+    float vertical_spacing{0.1f}; ///< Spacing between stacked event series in normalized coordinates
+    float event_height{0.05f}; ///< Height of each event line in stacked mode (normalized coordinates)
+    
     // Future: event_marker_style (e.g., line, arrow, dot enum)
 };
 

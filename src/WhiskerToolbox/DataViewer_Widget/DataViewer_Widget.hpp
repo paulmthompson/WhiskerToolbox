@@ -93,6 +93,17 @@ private:
 
     void _updateLabels();
     void _calculateOptimalScaling(std::vector<std::string> const & group_keys);
+    
+    /**
+     * @brief Calculate optimal spacing and height for digital event series when loading groups
+     * 
+     * Automatically calculates and applies optimal vertical spacing and event height
+     * for a group of digital event series to ensure all events fit well on the canvas.
+     * Similar to _calculateOptimalScaling but specifically for event stacking parameters.
+     * 
+     * @param group_keys Vector of series keys in the group to auto-configure
+     */
+    void _calculateOptimalEventSpacing(std::vector<std::string> const & group_keys);
 };
 
 

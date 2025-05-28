@@ -27,6 +27,24 @@ signals:
 private slots:
     void _setEventColor(const QString& hex_color);
     void _setEventAlpha(int alpha);
+    
+    /**
+     * @brief Set the display mode for the active event series
+     * @param mode_index Index from combo box (0=Stacked, 1=FullCanvas)
+     */
+    void _setDisplayMode(int mode_index);
+    
+    /**
+     * @brief Set the vertical spacing between stacked event series
+     * @param spacing Spacing value in normalized coordinates
+     */
+    void _setVerticalSpacing(double spacing);
+    
+    /**
+     * @brief Set the height of individual event lines in stacked mode
+     * @param height Height value in normalized coordinates
+     */
+    void _setEventHeight(double height);
 
 private:
     Ui::EventViewer_Widget * ui;

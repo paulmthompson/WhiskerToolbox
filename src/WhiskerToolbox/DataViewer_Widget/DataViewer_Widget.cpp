@@ -74,6 +74,11 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
             _calculateOptimalScaling(group_keys);
         }
         
+        // Auto-spacing when enabling a group of digital event series
+        if (enabled && data_type == DM_DataType::DigitalEvent && !group_keys.empty()) {
+            _calculateOptimalEventSpacing(group_keys);
+        }
+        
         // Trigger a single canvas update at the end
         if (!group_keys.empty()) {
             std::cout << "Triggering single canvas update for group toggle" << std::endl;
@@ -748,4 +753,78 @@ void DataViewer_Widget::_calculateOptimalScaling(std::vector<std::string> const 
         ui->vertical_spacing->setValue(static_cast<double>(final_spacing));
         std::cout << "Applied auto-spacing only: vertical spacing = " << final_spacing << std::endl;
     }
+}
+
+void DataViewer_Widget::_calculateOptimalEventSpacing(std::vector<std::string> const & group_keys) {
+    if (group_keys.empty()) {
+        return;
+    }
+    
+    std::cout << "Calculating optimal event spacing for " << group_keys.size() << " digital event series..." << std::endl;
+    
+    // Get current canvas dimensions
+    auto [canvas_width, canvas_height] = ui->openGLWidget->getCanvasSize();
+    std::cout << "Canvas size: " << canvas_width << "x" << canvas_height << " pixels" << std::endl;
+    
+    // Count total number of currently visible digital event series (including the new group)
+    int total_visible_event_series = static_cast<int>(group_keys.size());
+    
+    // Add any other already visible digital event series
+    auto all_keys = _data_manager->getAllKeys();
+    for (auto const & key : all_keys) {
+        if (_data_manager->getType(key) == DM_DataType::DigitalEvent) {
+            // Check if this key is already in our group (avoid double counting)
+            bool in_group = std::find(group_keys.begin(), group_keys.end(), key) != group_keys.end();
+            if (!in_group) {
+                // Check if this series is currently visible
+                auto config = ui->openGLWidget->getDigitalEventConfig(key);
+                if (config.has_value() && config.value()->is_visible) {
+                    total_visible_event_series++;
+                }
+            }
+        }
+    }
+    
+    std::cout << "Total visible digital event series (including new group): " << total_visible_event_series << std::endl;
+    
+    if (total_visible_event_series <= 0) {
+        return; // No series to scale
+    }
+    
+    // Calculate optimal vertical spacing
+    // Leave some margin at top and bottom (10% each = 20% total)
+    float const effective_height = static_cast<float>(canvas_height) * 0.8f;
+    float const optimal_spacing = effective_height / static_cast<float>(total_visible_event_series);
+    
+    // Convert to normalized coordinates (OpenGL widget uses normalized spacing)
+    // Assuming the widget's view height is typically around 2.0 units in normalized coordinates
+    float const normalized_spacing = (optimal_spacing / static_cast<float>(canvas_height)) * 2.0f;
+    
+    // Clamp to reasonable bounds
+    float const min_spacing = 0.01f;
+    float const max_spacing = 1.0f;
+    float const final_spacing = std::clamp(normalized_spacing, min_spacing, max_spacing);
+    
+    // Calculate optimal event height (should be smaller than spacing to avoid overlap)
+    float const optimal_event_height = final_spacing * 0.6f; // 60% of spacing for visible separation
+    float const min_height = 0.01f;
+    float const max_height = 0.5f;
+    float const final_height = std::clamp(optimal_event_height, min_height, max_height);
+    
+    std::cout << "Calculated spacing: " << optimal_spacing << " pixels -> " 
+              << final_spacing << " normalized units" << std::endl;
+    std::cout << "Calculated event height: " << final_height << " normalized units" << std::endl;
+    
+    // Apply the calculated settings to all event series in the group
+    for (auto const & key : group_keys) {
+        auto config = ui->openGLWidget->getDigitalEventConfig(key);
+        if (config.has_value()) {
+            config.value()->vertical_spacing = final_spacing;
+            config.value()->event_height = final_height;
+            config.value()->display_mode = EventDisplayMode::Stacked; // Ensure stacked mode
+        }
+    }
+    
+    std::cout << "Applied auto-calculated event spacing: spacing = " << final_spacing 
+              << ", height = " << final_height << std::endl;
 }
