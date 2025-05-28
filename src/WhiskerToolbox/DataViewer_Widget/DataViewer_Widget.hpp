@@ -74,6 +74,8 @@ private slots:
     void _handleColorChanged(std::string const & feature_key, std::string const & hex_color);
     void _updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info);
     void _handleThemeChanged(int theme_index);
+    void _handleGridLinesToggled(bool enabled);
+    void _handleGridSpacingChanged(int spacing);
 
 private:
     std::shared_ptr<DataManager> _data_manager;

@@ -93,6 +93,12 @@ public:
     void setPlotTheme(PlotTheme theme);
     [[nodiscard]] PlotTheme getPlotTheme() const { return _plot_theme; }
 
+    // Grid line controls
+    void setGridLinesEnabled(bool enabled) { _grid_lines_enabled = enabled; updateCanvas(_time); }
+    [[nodiscard]] bool getGridLinesEnabled() const { return _grid_lines_enabled; }
+    void setGridSpacing(int spacing) { _grid_spacing = spacing; updateCanvas(_time); }
+    [[nodiscard]] int getGridSpacing() const { return _grid_spacing; }
+
     void setXLimit(int xmax) {
         _xAxis.setMax(xmax);
     };
@@ -241,6 +247,10 @@ private:
     std::vector<GLfloat> m_vertices;// for testing
 
     PlotTheme _plot_theme{PlotTheme::Dark};
+
+    // Grid line settings
+    bool _grid_lines_enabled{false}; // Default to disabled
+    int _grid_spacing{100}; // Default spacing of 100 time units
 };
 
 

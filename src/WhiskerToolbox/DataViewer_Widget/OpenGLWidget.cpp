@@ -816,29 +816,48 @@ void OpenGLWidget::drawDashedLine(LineParameters const & params) {
 }
 
 void OpenGLWidget::drawGridLines() {
-    // Draw dashed vertical lines at edge of canvas
+    if (!_grid_lines_enabled) {
+        return; // Grid lines are disabled
+    }
+
     auto const start_time = _xAxis.getStart();
     auto const end_time = _xAxis.getEnd();
-
-    auto const xCanvasWidth = static_cast<float>(end_time - start_time);
-    auto const xCanvasStart = static_cast<float>(start_time - start_time);
-
-    float const xStartCanvasPos = xCanvasStart / xCanvasWidth * 2.0f - 1.0f;
-    float const xEndCanvasPos = xCanvasWidth / xCanvasWidth * 2.0f - 1.0f;
-
-    LineParameters startLine;
-    startLine.xStart = xStartCanvasPos;
-    startLine.xEnd = xStartCanvasPos;
-    startLine.yStart = _yMin;
-    startLine.yEnd = _yMax;
-    drawDashedLine(startLine);
-
-    LineParameters endLine;
-    endLine.xStart = xEndCanvasPos;
-    endLine.xEnd = xEndCanvasPos;
-    endLine.yStart = _yMin;
-    endLine.yEnd = _yMax;
-    drawDashedLine(endLine);
+    
+    // Calculate the range of time values
+    auto const time_range = end_time - start_time;
+    
+    // Avoid drawing grid lines if the range is too small or invalid
+    if (time_range <= 0 || _grid_spacing <= 0) {
+        return;
+    }
+    
+    // Find the first grid line position that's >= start_time
+    // Use integer division to ensure proper alignment
+    int64_t first_grid_time = ((start_time / _grid_spacing) * _grid_spacing);
+    if (first_grid_time < start_time) {
+        first_grid_time += _grid_spacing;
+    }
+    
+    // Draw vertical grid lines at regular intervals
+    for (int64_t grid_time = first_grid_time; grid_time <= end_time; grid_time += _grid_spacing) {
+        // Convert time coordinate to normalized device coordinate (-1 to 1)
+        float const normalized_x = 2.0f * static_cast<float>(grid_time - start_time) / static_cast<float>(time_range) - 1.0f;
+        
+        // Skip grid lines that are outside the visible range due to floating point precision
+        if (normalized_x < -1.0f || normalized_x > 1.0f) {
+            continue;
+        }
+        
+        LineParameters gridLine;
+        gridLine.xStart = normalized_x;
+        gridLine.xEnd = normalized_x;
+        gridLine.yStart = _yMin;
+        gridLine.yEnd = _yMax;
+        gridLine.dashLength = 3.0f; // Shorter dashes for grid lines
+        gridLine.gapLength = 3.0f;  // Shorter gaps for grid lines
+        
+        drawDashedLine(gridLine);
+    }
 }
 
 void OpenGLWidget::_updateYViewBoundaries() {

@@ -104,6 +104,14 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Connect mouse hover signal from OpenGL widget
     connect(ui->openGLWidget, &OpenGLWidget::mouseHover,
             this, &DataViewer_Widget::_updateCoordinateDisplay);
+
+    // Grid line connections
+    connect(ui->grid_lines_enabled, &QCheckBox::toggled, this, &DataViewer_Widget::_handleGridLinesToggled);
+    connect(ui->grid_spacing, QOverload<int>::of(&QSpinBox::valueChanged), this, &DataViewer_Widget::_handleGridSpacingChanged);
+
+    // Initialize grid line UI to match OpenGLWidget defaults
+    ui->grid_lines_enabled->setChecked(ui->openGLWidget->getGridLinesEnabled());
+    ui->grid_spacing->setValue(ui->openGLWidget->getGridSpacing());
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -485,4 +493,12 @@ void DataViewer_Widget::_handleThemeChanged(int theme_index) {
     }
     
     std::cout << "Theme changed to: " << (theme_index == 0 ? "Dark" : "Light") << std::endl;
+}
+
+void DataViewer_Widget::_handleGridLinesToggled(bool enabled) {
+    ui->openGLWidget->setGridLinesEnabled(enabled);
+}
+
+void DataViewer_Widget::_handleGridSpacingChanged(int spacing) {
+    ui->openGLWidget->setGridSpacing(spacing);
 }
