@@ -58,6 +58,7 @@
      <addaction name="actionLoad_Video"/>
      <addaction name="actionLoad_Images"/>
      <addaction name="actionLoad_Intervals"/>
+     <addaction name="actionLoad_Events"/>
      <addaction name="actionLoad_Points"/>
      <addaction name="actionLoad_Lines"/>
      <addaction name="actionLoad_Masks"/>
@@ -218,6 +219,11 @@
   <action name="actionData_Transforms">
    <property name="text">
     <string>Data Transforms</string>
+   </property>
+  </action>
+  <action name="actionLoad_Events">
+   <property name="text">
+    <string>Load Events</string>
    </property>
   </action>
  </widget>

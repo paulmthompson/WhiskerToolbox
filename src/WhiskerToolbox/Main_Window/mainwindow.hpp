@@ -78,6 +78,7 @@ private slots:
     void openMaskLoaderWidget();
     void openLineLoaderWidget();
     void openIntervalLoaderWidget();
+    void openEventLoaderWidget();
     void openTensorLoaderWidget();
     void openDataManager();
     void openVideoExportWidget();

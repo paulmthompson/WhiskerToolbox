@@ -4,8 +4,6 @@
 
 
 #include "DataManager.hpp"
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Media/HDF5_Data.hpp"
 #include "DataManager/Media/Image_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
@@ -20,6 +18,7 @@
 #include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
 #include "IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp"
+#include "IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.hpp"
 #include "IO_Widgets/Lines/Line_Loader_Widget.hpp"
 #include "IO_Widgets/Masks/Mask_Loader_Widget.hpp"
 #include "IO_Widgets/Points/Point_Loader_Widget.hpp"
@@ -30,8 +29,6 @@
 #include "TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
-
-#include "Points/Point_Data.hpp"
 
 #include <QFileDialog>
 #include <QImage>
@@ -109,6 +106,7 @@ void MainWindow::_createActions() {
     connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
     connect(ui->actionLoad_Lines, &QAction::triggered, this, &MainWindow::openLineLoaderWidget);
     connect(ui->actionLoad_Intervals, &QAction::triggered, this, &MainWindow::openIntervalLoaderWidget);
+    connect(ui->actionLoad_Events, &QAction::triggered, this, &MainWindow::openEventLoaderWidget);
     connect(ui->actionLoad_Tensor, &QAction::triggered, this, &MainWindow::openTensorLoaderWidget);
     connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
@@ -448,6 +446,24 @@ void MainWindow::openIntervalLoaderWidget() {
     }
 
     auto ptr = dynamic_cast<Digital_Interval_Loader_Widget *>(_widgets[key].get());
+
+    showDockWidget(key);
+}
+
+void MainWindow::openEventLoaderWidget() {
+    std::string const key = "EventLoader_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto DigitalEventLoaderWidget = std::make_unique<Digital_Event_Loader_Widget>(
+                _data_manager,
+                this);
+
+        DigitalEventLoaderWidget->setObjectName(key);
+        registerDockWidget(key, DigitalEventLoaderWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(DigitalEventLoaderWidget);
+    }
+
+    auto ptr = dynamic_cast<Digital_Event_Loader_Widget *>(_widgets[key].get());
 
     showDockWidget(key);
 }
