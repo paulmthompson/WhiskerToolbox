@@ -35,8 +35,39 @@ public:
 
     [[nodiscard]] size_t getNumSamples() const { return _data.size(); };
 
-    [[nodiscard]] std::vector<float> getAnalogTimeSeries() const { return _data; };
-    [[nodiscard]] std::vector<size_t> getTimeSeries() const { return _time; };
+    /**
+     * @brief Get a const reference to the analog data vector
+     * 
+     * Returns a const reference to the internal vector containing the analog time series data values.
+     * This method provides efficient read-only access to the data without copying.
+     * 
+     * @return const reference to std::vector<float> containing the analog data values
+     * 
+     * @note This method returns by const reference for performance - no data copying occurs.
+     *       Use this when you need to iterate over or access the raw data values efficiently.
+     * 
+     * @see getTimeSeries() for accessing the corresponding time indices
+     * @see getDataInRange() for accessing data within a specific time range
+     */
+    [[nodiscard]] std::vector<float> const & getAnalogTimeSeries() const { return _data; };
+    
+    /**
+     * @brief Get a const reference to the time indices vector
+     * 
+     * Returns a const reference to the internal vector containing the time indices corresponding
+     * to each analog data sample. Each element represents the time index for the corresponding
+     * data value in the analog time series.
+     * 
+     * @return const reference to std::vector<size_t> containing the time indices
+     * 
+     * @note This method returns by const reference for performance - no data copying occurs.
+     *       The time indices correspond one-to-one with the analog data values.
+     *       Use this when you need efficient access to the timing information.
+     * 
+     * @see getAnalogTimeSeries() for accessing the corresponding data values
+     * @see getDataInRange() for accessing time-value pairs within a specific range
+     */
+    [[nodiscard]] std::vector<size_t> const & getTimeSeries() const { return _time; };
 
     template<typename TransformFunc = std::identity>
     auto getDataInRange(float start_time, float stop_time,
