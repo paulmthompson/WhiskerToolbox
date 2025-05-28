@@ -83,31 +83,49 @@ void DataViewer_Tree_Widget::_createGroups() {
     
     // Create tree items for each group
     for (auto const & [group_key, group] : _groups) {
-        auto* group_item = new QTreeWidgetItem(this);
-        group_item->setText(0, QString::fromStdString(group->prefix));
-        group_item->setText(1, _getDataTypeString(group->data_type));
-        group_item->setFlags(group_item->flags() | Qt::ItemIsUserCheckable);
-        group_item->setCheckState(0, Qt::Unchecked);
-        
-        // Make group item bold
-        QFont font = group_item->font(0);
-        font.setBold(true);
-        group_item->setFont(0, font);
-        group_item->setFont(1, font);
-        
-        // Store reference
-        group->tree_item = group_item;
-        
-        // Add child items for each series
-        for (auto const & series_key : group->series_keys) {
-            auto* series_item = new QTreeWidgetItem(group_item);
+        if (group->series_keys.size() == 1) {
+            // Single item group - display as flat entry without hierarchy
+            auto* series_item = new QTreeWidgetItem(this);
+            std::string const & series_key = group->series_keys[0];
             series_item->setText(0, QString::fromStdString(series_key));
             series_item->setText(1, _getDataTypeString(group->data_type));
             series_item->setFlags(series_item->flags() | Qt::ItemIsUserCheckable);
             series_item->setCheckState(0, Qt::Unchecked);
             
-            // Store series key as data
+            // Store series key as data for flat entries
             series_item->setData(0, Qt::UserRole, QString::fromStdString(series_key));
+            
+            // Store reference to this item as the group's tree item for consistency
+            group->tree_item = series_item;
+            
+        } else {
+            // Multiple items - create hierarchical group
+            auto* group_item = new QTreeWidgetItem(this);
+            group_item->setText(0, QString::fromStdString(group->prefix));
+            group_item->setText(1, _getDataTypeString(group->data_type));
+            group_item->setFlags(group_item->flags() | Qt::ItemIsUserCheckable);
+            group_item->setCheckState(0, Qt::Unchecked);
+            
+            // Make group item bold
+            QFont font = group_item->font(0);
+            font.setBold(true);
+            group_item->setFont(0, font);
+            group_item->setFont(1, font);
+            
+            // Store reference
+            group->tree_item = group_item;
+            
+            // Add child items for each series
+            for (auto const & series_key : group->series_keys) {
+                auto* series_item = new QTreeWidgetItem(group_item);
+                series_item->setText(0, QString::fromStdString(series_key));
+                series_item->setText(1, _getDataTypeString(group->data_type));
+                series_item->setFlags(series_item->flags() | Qt::ItemIsUserCheckable);
+                series_item->setCheckState(0, Qt::Unchecked);
+                
+                // Store series key as data
+                series_item->setData(0, Qt::UserRole, QString::fromStdString(series_key));
+            }
         }
     }
 }
@@ -157,22 +175,39 @@ void DataViewer_Tree_Widget::_onItemChanged(QTreeWidgetItem* item, int column) {
     }
     
     if (item->parent() == nullptr) {
-        // This is a group item
-        bool enabled = (item->checkState(0) == Qt::Checked);
+        // This is a top-level item - could be a group or a flat single-item entry
+        QVariant userData = item->data(0, Qt::UserRole);
         
-        // Find the group
-        std::string group_prefix = item->text(0).toStdString();
-        std::cout << "Group item changed: " << group_prefix << " enabled: " << enabled << std::endl;
-        
-        for (auto const & [group_key, group] : _groups) {
-            if (group && group->tree_item == item) {
-                _setGroupEnabled(group.get(), enabled);
-                emit groupToggled(QString::fromStdString(group->prefix), group->data_type, enabled);
-                break;
+        if (userData.isValid()) {
+            // This is a flat single-item entry (has user data)
+            std::string series_key = userData.toString().toStdString();
+            bool enabled = (item->checkState(0) == Qt::Checked);
+            
+            std::cout << "Flat series item changed: " << series_key << " enabled: " << enabled << std::endl;
+            std::cout << "About to emit seriesToggled signal..." << std::endl;
+            
+            emit seriesToggled(QString::fromStdString(series_key), enabled);
+            
+            std::cout << "seriesToggled signal emitted successfully" << std::endl;
+            
+        } else {
+            // This is a group item (no user data)
+            bool enabled = (item->checkState(0) == Qt::Checked);
+            
+            // Find the group
+            std::string group_prefix = item->text(0).toStdString();
+            std::cout << "Group item changed: " << group_prefix << " enabled: " << enabled << std::endl;
+            
+            for (auto const & [group_key, group] : _groups) {
+                if (group && group->tree_item == item) {
+                    _setGroupEnabled(group.get(), enabled);
+                    emit groupToggled(QString::fromStdString(group->prefix), group->data_type, enabled);
+                    break;
+                }
             }
         }
     } else {
-        // This is a series item
+        // This is a series item within a multi-item group
         QVariant userData = item->data(0, Qt::UserRole);
         if (!userData.isValid()) {
             std::cerr << "Error: series item has no user data" << std::endl;
@@ -210,18 +245,15 @@ void DataViewer_Tree_Widget::_onItemClicked(QTreeWidgetItem* item, int column) {
         return;
     }
     
-    if (item->parent() != nullptr) {
-        // This is a series item - emit selection signal
-        QVariant userData = item->data(0, Qt::UserRole);
-        if (!userData.isValid()) {
-            std::cerr << "Error: series item has no user data for selection" << std::endl;
-            return;
-        }
-        
+    // Check if this item has user data (meaning it's a series item)
+    QVariant userData = item->data(0, Qt::UserRole);
+    if (userData.isValid()) {
+        // This is a series item (either flat or within a group) - emit selection signal
         std::string series_key = userData.toString().toStdString();
         std::cout << "Series selected: " << series_key << std::endl;
         emit seriesSelected(QString::fromStdString(series_key));
     }
+    // If no user data, it's a group header - no selection signal needed
 }
 
 void DataViewer_Tree_Widget::_updateGroupCheckState(SeriesGroup* group) {
@@ -257,15 +289,23 @@ void DataViewer_Tree_Widget::_setGroupEnabled(SeriesGroup* group, bool enabled) 
     // Set flag to prevent recursion when we change child states
     _updating_items = true;
     
-    // Set all children to the same state
-    for (int i = 0; i < group->tree_item->childCount(); ++i) {
-        auto* child = group->tree_item->child(i);
-        child->setCheckState(0, enabled ? Qt::Checked : Qt::Unchecked);
-        
-        // Emit signal for each series (this won't trigger _onItemChanged due to flag)
-        std::string series_key = child->data(0, Qt::UserRole).toString().toStdString();
-        std::cout << "Emitting seriesToggled for group child: " << series_key << " enabled: " << enabled << std::endl;
+    if (group->series_keys.size() == 1) {
+        // Single item group - the tree_item IS the series item
+        // Just emit the signal, the checkbox state is already set by the user click
+        std::string const & series_key = group->series_keys[0];
+        std::cout << "Emitting seriesToggled for single-item group: " << series_key << " enabled: " << enabled << std::endl;
         emit seriesToggled(QString::fromStdString(series_key), enabled);
+    } else {
+        // Multiple items - set all children to the same state
+        for (int i = 0; i < group->tree_item->childCount(); ++i) {
+            auto* child = group->tree_item->child(i);
+            child->setCheckState(0, enabled ? Qt::Checked : Qt::Unchecked);
+            
+            // Emit signal for each series (this won't trigger _onItemChanged due to flag)
+            std::string series_key = child->data(0, Qt::UserRole).toString().toStdString();
+            std::cout << "Emitting seriesToggled for group child: " << series_key << " enabled: " << enabled << std::endl;
+            emit seriesToggled(QString::fromStdString(series_key), enabled);
+        }
     }
     
     _updating_items = false;
