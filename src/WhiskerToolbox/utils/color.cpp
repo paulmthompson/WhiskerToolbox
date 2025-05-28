@@ -1,4 +1,3 @@
-
 #include "color.hpp"
 
 #include <iomanip>
@@ -27,6 +26,17 @@ std::string generateRandomColor() {
     return color_string;
 }
 
+void hexToRGB(const std::string & hexColor, float & r, float & g, float & b)
+{
+    int r_int, g_int, b_int;
+    
+    hexToRGB(hexColor, r_int, g_int, b_int);
+
+    // Convert from 0-255 range to 0-1 range for OpenGL
+    r = static_cast<float>(r_int) / 255.0f;
+    g = static_cast<float>(g_int) / 255.0f;
+    b = static_cast<float>(b_int) / 255.0f;
+}
 
 void hexToRGB(const std::string &hexColor, int &r, int &g, int &b) {
     if (!isValidHexColor(hexColor))

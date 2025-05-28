@@ -55,6 +55,10 @@ struct LineParameters {
     float gapLength = 5.0f;
 };
 
+enum class PlotTheme {
+    Dark,   // Black background, white axes (default)
+    Light   // White background, dark axes
+};
 
 //class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
@@ -85,6 +89,9 @@ public:
     void removeDigitalIntervalSeries(std::string const & key);
     void clearSeries();
     void setBackgroundColor(std::string const & hexColor);
+
+    void setPlotTheme(PlotTheme theme);
+    [[nodiscard]] PlotTheme getPlotTheme() const { return _plot_theme; }
 
     void setXLimit(int xmax) {
         _xAxis.setMax(xmax);
@@ -229,8 +236,11 @@ private:
     float _ySpacing{0.1f};
 
     std::string m_background_color{"#000000"};// black
+    std::string m_axis_color{"#FFFFFF"};// white (for dark theme)
 
     std::vector<GLfloat> m_vertices;// for testing
+
+    PlotTheme _plot_theme{PlotTheme::Dark};
 };
 
 

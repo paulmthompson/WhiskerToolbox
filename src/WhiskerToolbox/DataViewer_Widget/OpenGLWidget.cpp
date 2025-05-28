@@ -120,9 +120,24 @@ void OpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 
 void OpenGLWidget::setBackgroundColor(std::string const & hexColor) {
     m_background_color = hexColor;
-    update();
+    updateCanvas(_time);
 }
 
+void OpenGLWidget::setPlotTheme(PlotTheme theme) {
+    _plot_theme = theme;
+    
+    if (theme == PlotTheme::Dark) {
+        // Dark theme: black background, white axes
+        m_background_color = "#000000";
+        m_axis_color = "#FFFFFF";
+    } else {
+        // Light theme: white background, dark axes
+        m_background_color = "#FFFFFF";
+        m_axis_color = "#333333";
+    }
+    
+    updateCanvas(_time);
+}
 
 void OpenGLWidget::cleanup() {
     if (m_program == nullptr)
@@ -639,10 +654,14 @@ void OpenGLWidget::drawAxis() {
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
 
+    // Get axis color from theme
+    float r, g, b;
+    hexToRGB(m_axis_color, r, g, b);
+
     // Draw horizontal line at x=0
     std::array<GLfloat, 12> lineVertices = {
-            0.0f, _yMin, 1.0f, 1.0f, 1.0f, 1.0f,
-            0.0f, _yMax, 1.0f, 1.0f, 1.0f, 1.0f};
+            0.0f, _yMin, r, g, b, 1.0f,
+            0.0f, _yMax, r, g, b, 1.0f};
 
     m_vbo.bind();
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));

@@ -19,6 +19,7 @@ class QResizeEvent;
 class AnalogViewer_Widget;
 class IntervalViewer_Widget;
 class EventViewer_Widget;
+enum class PlotTheme;
 struct AnalogTimeSeriesDisplayOptions;
 struct DigitalEventSeriesDisplayOptions;
 struct DigitalIntervalSeriesDisplayOptions;
@@ -72,6 +73,7 @@ private slots:
     void _updateGlobalScale(double scale);
     void _handleColorChanged(std::string const & feature_key, std::string const & hex_color);
     void _updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info);
+    void _handleThemeChanged(int theme_index);
 
 private:
     std::shared_ptr<DataManager> _data_manager;

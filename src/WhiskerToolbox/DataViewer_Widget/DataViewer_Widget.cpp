@@ -66,6 +66,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
     connect(ui->global_zoom, &QDoubleSpinBox::valueChanged, this, &DataViewer_Widget::_updateGlobalScale);
 
+    connect(ui->theme_combo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &DataViewer_Widget::_handleThemeChanged);
 
     connect(time_scrollbar, &TimeScrollBar::timeChanged, this, &DataViewer_Widget::_updatePlot);
 
@@ -470,4 +471,18 @@ std::optional<DigitalEventSeriesDisplayOptions *> DataViewer_Widget::getDigitalE
 
 std::optional<DigitalIntervalSeriesDisplayOptions *> DataViewer_Widget::getDigitalIntervalConfig(std::string const & key) const {
     return ui->openGLWidget->getDigitalIntervalConfig(key);
+}
+
+void DataViewer_Widget::_handleThemeChanged(int theme_index) {
+    PlotTheme theme = (theme_index == 0) ? PlotTheme::Dark : PlotTheme::Light;
+    ui->openGLWidget->setPlotTheme(theme);
+    
+    // Update coordinate label styling based on theme
+    if (theme == PlotTheme::Dark) {
+        ui->coordinate_label->setStyleSheet("background-color: rgba(0, 0, 0, 50); color: white; padding: 2px;");
+    } else {
+        ui->coordinate_label->setStyleSheet("background-color: rgba(255, 255, 255, 50); color: black; padding: 2px;");
+    }
+    
+    std::cout << "Theme changed to: " << (theme_index == 0 ? "Dark" : "Light") << std::endl;
 }

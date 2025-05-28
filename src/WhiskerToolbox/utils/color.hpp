@@ -11,5 +11,7 @@ std::string generateRandomColor();
 
 void hexToRGB(const std::string &hexColor, int &r, int &g, int &b);
 
+void hexToRGB(const std::string & hexColor, float & r, float & g, float & b);
+
 
 #endif // COLOR_HPP
