@@ -226,6 +226,10 @@ void OpenGLWidget::initializeGL() {
             static_cast<float>(b) / 255.0f,
             1.0f);
 
+    // Enable blending for transparency support
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     m_program = create_shader_program(vertexShaderSource, fragmentShaderSource);
 
     auto const m_program_ID = m_program->programId();
