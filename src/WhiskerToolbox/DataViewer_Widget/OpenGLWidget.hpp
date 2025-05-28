@@ -99,6 +99,12 @@ public:
     void setGridSpacing(int spacing) { _grid_spacing = spacing; updateCanvas(_time); }
     [[nodiscard]] int getGridSpacing() const { return _grid_spacing; }
 
+    // Interval selection controls
+    void setSelectedInterval(std::string const & series_key, int64_t start_time, int64_t end_time);
+    void clearSelectedInterval(std::string const & series_key);
+    std::optional<std::pair<int64_t, int64_t>> getSelectedInterval(std::string const & series_key) const;
+    std::optional<std::pair<int64_t, int64_t>> findIntervalAtTime(std::string const & series_key, float time_coord) const;
+
     void setXLimit(int xmax) {
         _xAxis.setMax(xmax);
     };
@@ -163,6 +169,7 @@ public slots:
 
 signals:
     void mouseHover(float time_coordinate, float canvas_y, QString const & series_info);
+    void mouseClick(float time_coordinate, float canvas_y, QString const & series_info);
 
 protected:
     void initializeGL() override;
@@ -251,6 +258,9 @@ private:
     // Grid line settings
     bool _grid_lines_enabled{false}; // Default to disabled
     int _grid_spacing{100}; // Default spacing of 100 time units
+
+    // Interval selection tracking
+    std::unordered_map<std::string, std::pair<int64_t, int64_t>> _selected_intervals;
 };
 
 

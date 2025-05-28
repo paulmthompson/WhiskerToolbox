@@ -5,6 +5,9 @@
 
 #include <string>
 
+class QShowEvent;
+class QHideEvent;
+
 namespace Ui {
 class IntervalViewer_Widget;
 }
@@ -20,6 +23,10 @@ public:
 
     void setActiveKey(std::string const & key);
 
+protected:
+    void showEvent(QShowEvent * event) override;
+    void hideEvent(QHideEvent * event) override;
+
 signals:
     void colorChanged(std::string const & feature_key, std::string const & hex_color);
     void alphaChanged(std::string const & feature_key, float alpha);
@@ -27,12 +34,14 @@ signals:
 private slots:
     void _setIntervalColor(const QString& hex_color);
     void _setIntervalAlpha(int alpha);
+    void _selectInterval(float time_coordinate, float canvas_y, QString const & series_info);
 
 private:
     Ui::IntervalViewer_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
     OpenGLWidget * _opengl_widget;
     std::string _active_key;
+    bool _selection_enabled = false;
 };
 
 #endif// INTERVALVIEWER_WIDGET_HPP 

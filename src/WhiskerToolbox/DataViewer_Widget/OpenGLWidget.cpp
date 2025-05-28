@@ -66,6 +66,27 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         _isPanning = true;
         _lastMousePos = event->pos();
+        
+        // Emit click coordinates for interval selection
+        float const canvas_x = static_cast<float>(event->pos().x());
+        float const canvas_y = static_cast<float>(event->pos().y());
+        
+        // Convert canvas X to time coordinate
+        float const time_coord = canvasXToTime(canvas_x);
+        
+        // Find the closest analog series for Y coordinate conversion (similar to mouseMoveEvent)
+        QString series_info = "";
+        if (!_analog_series.empty()) {
+            for (auto const & [key, data] : _analog_series) {
+                if (data.display_options->is_visible) {
+                    float const analog_value = canvasYToAnalogValue(canvas_y, key);
+                    series_info = QString("Series: %1, Value: %2").arg(QString::fromStdString(key)).arg(analog_value, 0, 'f', 3);
+                    break;
+                }
+            }
+        }
+        
+        emit mouseClick(time_coord, canvas_y, series_info);
     }
     QOpenGLWidget::mousePressEvent(event);
 }
@@ -384,6 +405,72 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
             GLint const first = 0;  // Starting index of enabled array
             GLsizei const count = 4;// number of indexes to render
             glDrawArrays(GL_QUADS, first, count);
+        }
+        
+        // Draw highlighting for selected intervals
+        auto selected_interval = getSelectedInterval(key);
+        if (selected_interval.has_value()) {
+            auto const [sel_start_time, sel_end_time] = selected_interval.value();
+            
+            // Check if the selected interval overlaps with visible range
+            if (sel_end_time >= static_cast<int64_t>(start_time) && sel_start_time <= static_cast<int64_t>(end_time)) {
+                // Clip the selected interval to the visible range
+                float const highlighted_start = std::max(static_cast<float>(sel_start_time), start_time);
+                float const highlighted_end = std::min(static_cast<float>(sel_end_time), end_time);
+                
+                // Draw a thick border around the selected interval
+                // Use a brighter version of the same color for highlighting
+                float const highlight_rNorm = std::min(1.0f, rNorm + 0.3f);
+                float const highlight_gNorm = std::min(1.0f, gNorm + 0.3f);
+                float const highlight_bNorm = std::min(1.0f, bNorm + 0.3f);
+                
+                // Set line width for highlighting
+                glLineWidth(4.0f);
+                
+                // Draw the four border lines of the rectangle
+                // Bottom edge
+                std::array<GLfloat, 12> bottom_edge = {
+                    highlighted_start, min_y, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f,
+                    highlighted_end, min_y, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f
+                };
+                m_vbo.bind();
+                m_vbo.allocate(bottom_edge.data(), bottom_edge.size() * sizeof(GLfloat));
+                m_vbo.release();
+                glDrawArrays(GL_LINES, 0, 2);
+                
+                // Top edge
+                std::array<GLfloat, 12> top_edge = {
+                    highlighted_start, max_y, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f,
+                    highlighted_end, max_y, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f
+                };
+                m_vbo.bind();
+                m_vbo.allocate(top_edge.data(), top_edge.size() * sizeof(GLfloat));
+                m_vbo.release();
+                glDrawArrays(GL_LINES, 0, 2);
+                
+                // Left edge
+                std::array<GLfloat, 12> left_edge = {
+                    highlighted_start, min_y, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f,
+                    highlighted_start, max_y, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f
+                };
+                m_vbo.bind();
+                m_vbo.allocate(left_edge.data(), left_edge.size() * sizeof(GLfloat));
+                m_vbo.release();
+                glDrawArrays(GL_LINES, 0, 2);
+                
+                // Right edge
+                std::array<GLfloat, 12> right_edge = {
+                    highlighted_end, min_y, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f,
+                    highlighted_end, max_y, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f
+                };
+                m_vbo.bind();
+                m_vbo.allocate(right_edge.data(), right_edge.size() * sizeof(GLfloat));
+                m_vbo.release();
+                glDrawArrays(GL_LINES, 0, 2);
+                
+                // Reset line width
+                glLineWidth(1.0f);
+            }
         }
     }
 
@@ -923,4 +1010,54 @@ float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & ser
     float const analog_value = series_relative_y * scale_factor;
     
     return analog_value;
+}
+
+// Interval selection methods
+void OpenGLWidget::setSelectedInterval(std::string const & series_key, int64_t start_time, int64_t end_time) {
+    _selected_intervals[series_key] = std::make_pair(start_time, end_time);
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::clearSelectedInterval(std::string const & series_key) {
+    auto it = _selected_intervals.find(series_key);
+    if (it != _selected_intervals.end()) {
+        _selected_intervals.erase(it);
+        updateCanvas(_time);
+    }
+}
+
+std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::getSelectedInterval(std::string const & series_key) const {
+    auto it = _selected_intervals.find(series_key);
+    if (it != _selected_intervals.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std::string const & series_key, float time_coord) const {
+    auto it = _digital_interval_series.find(series_key);
+    if (it == _digital_interval_series.end()) {
+        return std::nullopt;
+    }
+    
+    auto const & interval_data = it->second;
+    auto const & series = interval_data.series;
+    auto const & time_frame = interval_data.time_frame;
+    
+    // Convert time coordinate to time frame index
+    int64_t const time_index = static_cast<int64_t>(std::round(time_coord));
+    
+    // Find all intervals that contain this time point
+    auto intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(time_index, time_index);
+    
+    if (!intervals.empty()) {
+        // Return the first interval found (could be modified to select closest or largest)
+        auto const & interval = intervals[0];
+        return std::make_pair(
+            static_cast<int64_t>(time_frame->getTimeAtIndex(interval.start)),
+            static_cast<int64_t>(time_frame->getTimeAtIndex(interval.end))
+        );
+    }
+    
+    return std::nullopt;
 }
