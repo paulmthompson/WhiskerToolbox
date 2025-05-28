@@ -460,10 +460,14 @@ void OpenGLWidget::drawAnalogSeries() {
             m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
             m_vbo.release();
 
+            // Set line thickness from display options
+            glLineWidth(static_cast<float>(display_options->line_thickness));
             glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 6));
             
         } else if (display_options->gap_handling == AnalogGapHandling::DetectGaps) {
             // Draw multiple line segments, breaking at gaps
+            // Set line thickness before drawing segments
+            glLineWidth(static_cast<float>(display_options->line_thickness));
             _drawAnalogSeriesWithGapDetection(start_it, end_it, data, data_time, time_frame, 
                                             display_options->gap_threshold, rNorm, gNorm, bNorm);
             
@@ -476,6 +480,8 @@ void OpenGLWidget::drawAnalogSeries() {
         i++;
     }
 
+    // Reset line width to default
+    glLineWidth(1.0f);
     glUseProgram(0);
 }
 
