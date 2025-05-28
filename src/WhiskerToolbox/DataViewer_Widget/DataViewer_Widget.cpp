@@ -372,6 +372,11 @@ void DataViewer_Widget::_updateGlobalScale(double scale) {
 }
 
 void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
+    // Disable zooming while dragging intervals
+    if (ui->openGLWidget->isDraggingInterval()) {
+        return;
+    }
+    
     auto const numDegrees = static_cast<float>(event->angleDelta().y()) / 8.0f;
     auto const numSteps = numDegrees / 15.0f;
     

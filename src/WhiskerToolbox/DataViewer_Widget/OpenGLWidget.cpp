@@ -64,6 +64,14 @@ void OpenGLWidget::updateCanvas(int time) {
 // Add these implementations:
 void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
+        // Check if we're clicking near an interval edge for dragging
+        auto edge_info = findIntervalEdgeAtPosition(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
+        if (edge_info.has_value()) {
+            auto const [series_key, is_left_edge] = edge_info.value();
+            startIntervalDrag(series_key, is_left_edge, event->pos());
+            return; // Don't start panning when dragging intervals
+        }
+        
         _isPanning = true;
         _lastMousePos = event->pos();
         
@@ -92,6 +100,12 @@ void OpenGLWidget::mousePressEvent(QMouseEvent * event) {
 }
 
 void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
+    if (_is_dragging_interval) {
+        // Update interval drag
+        updateIntervalDrag(event->pos());
+        return; // Don't do other mouse move processing while dragging
+    }
+    
     if (_isPanning) {
         // Calculate vertical movement in pixels
         int const deltaY = event->pos().y() - _lastMousePos.y();
@@ -105,6 +119,14 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
         _lastMousePos = event->pos();
         update();// Request redraw
+    } else {
+        // Check for cursor changes when hovering near interval edges
+        auto edge_info = findIntervalEdgeAtPosition(static_cast<float>(event->pos().x()), static_cast<float>(event->pos().y()));
+        if (edge_info.has_value()) {
+            setCursor(Qt::SizeHorCursor);
+        } else {
+            setCursor(Qt::ArrowCursor);
+        }
     }
     
     // Emit hover coordinates for coordinate display
@@ -134,7 +156,11 @@ void OpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
-        _isPanning = false;
+        if (_is_dragging_interval) {
+            finishIntervalDrag();
+        } else {
+            _isPanning = false;
+        }
     }
     QOpenGLWidget::mouseReleaseEvent(event);
 }
@@ -409,7 +435,7 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         
         // Draw highlighting for selected intervals
         auto selected_interval = getSelectedInterval(key);
-        if (selected_interval.has_value()) {
+        if (selected_interval.has_value() && !(_is_dragging_interval && _dragging_series_key == key)) {
             auto const [sel_start_time, sel_end_time] = selected_interval.value();
             
             // Check if the selected interval overlaps with visible range
@@ -711,6 +737,8 @@ void OpenGLWidget::paintGL() {
     drawAxis();
 
     drawGridLines();
+
+    drawDraggedInterval();
 }
 
 void OpenGLWidget::resizeGL(int w, int h) {
@@ -1060,4 +1088,271 @@ std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std:
     }
     
     return std::nullopt;
+}
+
+// Interval edge dragging methods
+std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const {
+    float const time_coord = canvasXToTime(canvas_x);
+    constexpr float EDGE_TOLERANCE_PX = 10.0f;
+    
+    // Only check selected intervals
+    for (auto const & [series_key, interval_bounds] : _selected_intervals) {
+        auto const [start_time, end_time] = interval_bounds;
+        
+        // Convert interval bounds to canvas coordinates
+        auto const start_time_f = static_cast<float>(start_time);
+        auto const end_time_f = static_cast<float>(end_time);
+        
+        // Check if we're within the interval's time range (with some tolerance)
+        if (time_coord >= start_time_f - EDGE_TOLERANCE_PX && time_coord <= end_time_f + EDGE_TOLERANCE_PX) {
+            // Convert time coordinates to canvas X positions for pixel-based tolerance
+            float const canvas_width = static_cast<float>(width());
+            auto const start_time_canvas = static_cast<float>(_xAxis.getStart());
+            auto const end_time_canvas = static_cast<float>(_xAxis.getEnd());
+            
+            float const start_canvas_x = (start_time_f - start_time_canvas) / (end_time_canvas - start_time_canvas) * canvas_width;
+            float const end_canvas_x = (end_time_f - start_time_canvas) / (end_time_canvas - start_time_canvas) * canvas_width;
+            
+            // Check if we're close to the left edge
+            if (std::abs(canvas_x - start_canvas_x) <= EDGE_TOLERANCE_PX) {
+                return std::make_pair(series_key, true); // true = left edge
+            }
+            
+            // Check if we're close to the right edge
+            if (std::abs(canvas_x - end_canvas_x) <= EDGE_TOLERANCE_PX) {
+                return std::make_pair(series_key, false); // false = right edge
+            }
+        }
+    }
+    
+    return std::nullopt;
+}
+
+void OpenGLWidget::startIntervalDrag(std::string const & series_key, bool is_left_edge, QPoint const & start_pos) {
+    auto selected_interval = getSelectedInterval(series_key);
+    if (!selected_interval.has_value()) {
+        return;
+    }
+    
+    auto const [start_time, end_time] = selected_interval.value();
+    
+    _is_dragging_interval = true;
+    _dragging_series_key = series_key;
+    _dragging_left_edge = is_left_edge;
+    _original_start_time = start_time;
+    _original_end_time = end_time;
+    _dragged_start_time = start_time;
+    _dragged_end_time = end_time;
+    _drag_start_pos = start_pos;
+    
+    // Disable normal mouse interactions during drag
+    setCursor(Qt::SizeHorCursor);
+    
+    std::cout << "Started dragging " << (is_left_edge ? "left" : "right") 
+              << " edge of interval [" << start_time << ", " << end_time << "]" << std::endl;
+}
+
+void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
+    if (!_is_dragging_interval) {
+        return;
+    }
+    
+    // Convert mouse position to time coordinate
+    float const current_time = canvasXToTime(static_cast<float>(current_pos.x()));
+    auto const current_time_int = static_cast<int64_t>(std::round(current_time));
+    
+    // Get the series data to check for constraints
+    auto it = _digital_interval_series.find(_dragging_series_key);
+    if (it == _digital_interval_series.end()) {
+        return;
+    }
+    
+    auto const & series = it->second.series;
+    
+    if (_dragging_left_edge) {
+        // Dragging left edge - constrain to not pass right edge
+        int64_t new_start = std::min(current_time_int, _original_end_time - 1);
+        
+        // Check for collision with other intervals
+        auto overlapping_intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
+            new_start, new_start);
+        
+        for (auto const & interval : overlapping_intervals) {
+            auto const interval_start = static_cast<int64_t>(it->second.time_frame->getTimeAtIndex(interval.start));
+            auto const interval_end = static_cast<int64_t>(it->second.time_frame->getTimeAtIndex(interval.end));
+            
+            // Skip the interval we're currently editing
+            if (interval_start == _original_start_time && interval_end == _original_end_time) {
+                continue;
+            }
+            
+            // If we would overlap with another interval, stop 1 index before it
+            if (new_start <= interval_end) {
+                new_start = interval_end + 1;
+                break;
+            }
+        }
+        
+        _dragged_start_time = new_start;
+    } else {
+        // Dragging right edge - constrain to not pass left edge
+        int64_t new_end = std::max(current_time_int, _original_start_time + 1);
+        
+        // Check for collision with other intervals
+        auto overlapping_intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
+            new_end, new_end);
+        
+        for (auto const & interval : overlapping_intervals) {
+            auto const interval_start = static_cast<int64_t>(it->second.time_frame->getTimeAtIndex(interval.start));
+            auto const interval_end = static_cast<int64_t>(it->second.time_frame->getTimeAtIndex(interval.end));
+            
+            // Skip the interval we're currently editing
+            if (interval_start == _original_start_time && interval_end == _original_end_time) {
+                continue;
+            }
+            
+            // If we would overlap with another interval, stop 1 index before it
+            if (new_end >= interval_start) {
+                new_end = interval_start - 1;
+                break;
+            }
+        }
+        
+        _dragged_end_time = new_end;
+    }
+    
+    // Trigger redraw to show the dragged interval
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::finishIntervalDrag() {
+    if (!_is_dragging_interval) {
+        return;
+    }
+    
+    // Update the actual interval data
+    auto it = _digital_interval_series.find(_dragging_series_key);
+    if (it != _digital_interval_series.end()) {
+        auto const & series = it->second.series;
+        auto const & time_frame = it->second.time_frame;
+        
+        // Remove the original interval
+        series->removeEventAtTime(static_cast<int>(_original_start_time));
+        
+        // Add the new interval (DigitalIntervalSeries will handle overlaps)
+        // Convert back to indices for the series
+        // Note: This is a simplified approach - you may need to adjust based on your TimeFrame implementation
+        series->addEvent(static_cast<int>(_dragged_start_time), static_cast<int>(_dragged_end_time));
+        
+        // Update the selection to the new interval
+        setSelectedInterval(_dragging_series_key, _dragged_start_time, _dragged_end_time);
+        
+        std::cout << "Finished dragging interval. New bounds: [" 
+                  << _dragged_start_time << ", " << _dragged_end_time << "]" << std::endl;
+    }
+    
+    // Reset drag state
+    _is_dragging_interval = false;
+    _dragging_series_key.clear();
+    setCursor(Qt::ArrowCursor);
+    
+    // Trigger final redraw
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::cancelIntervalDrag() {
+    if (!_is_dragging_interval) {
+        return;
+    }
+    
+    std::cout << "Cancelled interval drag" << std::endl;
+    
+    // Reset drag state without applying changes
+    _is_dragging_interval = false;
+    _dragging_series_key.clear();
+    setCursor(Qt::ArrowCursor);
+    
+    // Trigger redraw to remove the dragged interval visualization
+    updateCanvas(_time);
+}
+
+void OpenGLWidget::drawDraggedInterval() {
+    if (!_is_dragging_interval) {
+        return;
+    }
+    
+    // Get the series data for rendering
+    auto it = _digital_interval_series.find(_dragging_series_key);
+    if (it == _digital_interval_series.end()) {
+        return;
+    }
+    
+    auto const & display_options = it->second.display_options;
+    
+    auto const start_time = static_cast<float>(_xAxis.getStart());
+    auto const end_time = static_cast<float>(_xAxis.getEnd());
+    auto const min_y = _yMin;
+    auto const max_y = _yMax;
+    
+    // Check if the dragged interval is visible
+    if (_dragged_end_time < static_cast<int64_t>(start_time) || _dragged_start_time > static_cast<int64_t>(end_time)) {
+        return;
+    }
+    
+    auto const m_program_ID = m_program->programId();
+    glUseProgram(m_program_ID);
+    
+    QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
+    setupVertexAttribs();
+    
+    // Set up matrices (same as normal interval rendering)
+    auto Model = glm::mat4(1.0f);
+    auto View = glm::mat4(1.0f);
+    auto Projection = glm::ortho(start_time, end_time, min_y, max_y);
+    
+    glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
+    glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
+    glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
+    
+    // Get colors
+    int r, g, b;
+    hexToRGB(display_options->hex_color, r, g, b);
+    float const rNorm = static_cast<float>(r) / 255.0f;
+    float const gNorm = static_cast<float>(g) / 255.0f;
+    float const bNorm = static_cast<float>(b) / 255.0f;
+    
+    // Clip the dragged interval to visible range
+    float const dragged_start = std::max(static_cast<float>(_dragged_start_time), start_time);
+    float const dragged_end = std::min(static_cast<float>(_dragged_end_time), end_time);
+    
+    // Draw the original interval dimmed (alpha = 0.2)
+    float const original_start = std::max(static_cast<float>(_original_start_time), start_time);
+    float const original_end = std::min(static_cast<float>(_original_end_time), end_time);
+    
+    std::array<GLfloat, 24> original_vertices = {
+        original_start, min_y, rNorm, gNorm, bNorm, 0.2f,
+        original_end, min_y, rNorm, gNorm, bNorm, 0.2f,
+        original_end, max_y, rNorm, gNorm, bNorm, 0.2f,
+        original_start, max_y, rNorm, gNorm, bNorm, 0.2f
+    };
+    
+    m_vbo.bind();
+    m_vbo.allocate(original_vertices.data(), original_vertices.size() * sizeof(GLfloat));
+    m_vbo.release();
+    glDrawArrays(GL_QUADS, 0, 4);
+    
+    // Draw the dragged interval semi-transparent (alpha = 0.4)
+    std::array<GLfloat, 24> dragged_vertices = {
+        dragged_start, min_y, rNorm, gNorm, bNorm, 0.4f,
+        dragged_end, min_y, rNorm, gNorm, bNorm, 0.4f,
+        dragged_end, max_y, rNorm, gNorm, bNorm, 0.4f,
+        dragged_start, max_y, rNorm, gNorm, bNorm, 0.4f
+    };
+    
+    m_vbo.bind();
+    m_vbo.allocate(dragged_vertices.data(), dragged_vertices.size() * sizeof(GLfloat));
+    m_vbo.release();
+    glDrawArrays(GL_QUADS, 0, 4);
+    
+    glUseProgram(0);
 }

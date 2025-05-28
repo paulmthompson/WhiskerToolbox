@@ -105,6 +105,15 @@ public:
     std::optional<std::pair<int64_t, int64_t>> getSelectedInterval(std::string const & series_key) const;
     std::optional<std::pair<int64_t, int64_t>> findIntervalAtTime(std::string const & series_key, float time_coord) const;
 
+    // Interval edge dragging controls
+    std::optional<std::pair<std::string, bool>> findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const;
+    void startIntervalDrag(std::string const & series_key, bool is_left_edge, QPoint const & start_pos);
+    void updateIntervalDrag(QPoint const & current_pos);
+    void finishIntervalDrag();
+    void cancelIntervalDrag();
+
+    [[nodiscard]] bool isDraggingInterval() const { return _is_dragging_interval; }
+
     void setXLimit(int xmax) {
         _xAxis.setMax(xmax);
     };
@@ -194,6 +203,7 @@ private:
     void drawAxis();
     void drawGridLines();
     void drawDashedLine(LineParameters const & params);
+    void drawDraggedInterval();
     void _addSeries(std::string const & key);
     void _removeSeries(std::string const & key);
     void _updateYViewBoundaries();
@@ -261,6 +271,16 @@ private:
 
     // Interval selection tracking
     std::unordered_map<std::string, std::pair<int64_t, int64_t>> _selected_intervals;
+
+    // Interval dragging state
+    bool _is_dragging_interval{false};
+    std::string _dragging_series_key;
+    bool _dragging_left_edge{false}; // true for left edge, false for right edge
+    int64_t _original_start_time{0};
+    int64_t _original_end_time{0};
+    int64_t _dragged_start_time{0};
+    int64_t _dragged_end_time{0};
+    QPoint _drag_start_pos;
 };
 
 
