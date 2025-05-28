@@ -9,6 +9,7 @@
 namespace TimeSeriesDefaultValues {
     const std::string COLOR = "#007bff";
     const float ALPHA = 1.0f;
+    const float INTERVAL_ALPHA = 0.3f; // 30% transparency for intervals
     const bool VISIBLE = false;
     const float SCALE_FACTOR = 1.0f;
     const float Y_OFFSET = 0.0f;
@@ -83,6 +84,11 @@ struct DigitalIntervalSeriesDisplayOptions : public BaseTimeSeriesDisplayOptions
     bool show_as_filled{TimeSeriesDefaultValues::SHOW_INTERVALS_AS_FILLED};
     float interval_height{TimeSeriesDefaultValues::INTERVAL_HEIGHT};
     // Future: border_thickness, fill_pattern
+    
+    // Override the default alpha for intervals
+    DigitalIntervalSeriesDisplayOptions() {
+        alpha = TimeSeriesDefaultValues::INTERVAL_ALPHA;
+    }
 };
 
 #endif // TIMESERIES_DISPLAY_OPTIONS_HPP 

@@ -1170,8 +1170,8 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
     auto const & series = it->second.series;
     
     if (_dragging_left_edge) {
-        // Dragging left edge - constrain to not pass right edge
-        int64_t new_start = std::min(current_time_int, _original_end_time - 1);
+        // Dragging left edge - constrain to not pass right edge (allow shrinking and expanding)
+        int64_t new_start = std::min(current_time_int, _dragged_end_time - 1);
         
         // Check for collision with other intervals
         auto overlapping_intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
@@ -1186,7 +1186,7 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
                 continue;
             }
             
-            // If we would overlap with another interval, stop 1 index before it
+            // If we would overlap with another interval, stop 1 index after it
             if (new_start <= interval_end) {
                 new_start = interval_end + 1;
                 break;
@@ -1195,8 +1195,8 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
         
         _dragged_start_time = new_start;
     } else {
-        // Dragging right edge - constrain to not pass left edge
-        int64_t new_end = std::max(current_time_int, _original_start_time + 1);
+        // Dragging right edge - constrain to not pass left edge (allow shrinking and expanding)
+        int64_t new_end = std::max(current_time_int, _dragged_start_time + 1);
         
         // Check for collision with other intervals
         auto overlapping_intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
@@ -1236,19 +1236,20 @@ void OpenGLWidget::finishIntervalDrag() {
         auto const & series = it->second.series;
         auto const & time_frame = it->second.time_frame;
         
-        // Remove the original interval
-        series->removeEventAtTime(static_cast<int>(_original_start_time));
+        // First, remove the original interval completely by setting all times to false
+        for (int64_t time = _original_start_time; time <= _original_end_time; ++time) {
+            series->setEventAtTime(static_cast<int>(time), false);
+        }
         
-        // Add the new interval (DigitalIntervalSeries will handle overlaps)
-        // Convert back to indices for the series
-        // Note: This is a simplified approach - you may need to adjust based on your TimeFrame implementation
+        // Now add the new interval
         series->addEvent(static_cast<int>(_dragged_start_time), static_cast<int>(_dragged_end_time));
         
         // Update the selection to the new interval
         setSelectedInterval(_dragging_series_key, _dragged_start_time, _dragged_end_time);
         
-        std::cout << "Finished dragging interval. New bounds: [" 
-                  << _dragged_start_time << ", " << _dragged_end_time << "]" << std::endl;
+        std::cout << "Finished dragging interval. Original: [" 
+                  << _original_start_time << ", " << _original_end_time 
+                  << "] -> New: [" << _dragged_start_time << ", " << _dragged_end_time << "]" << std::endl;
     }
     
     // Reset drag state
@@ -1341,12 +1342,12 @@ void OpenGLWidget::drawDraggedInterval() {
     m_vbo.release();
     glDrawArrays(GL_QUADS, 0, 4);
     
-    // Draw the dragged interval semi-transparent (alpha = 0.4)
+    // Draw the dragged interval semi-transparent (alpha = 0.8)
     std::array<GLfloat, 24> dragged_vertices = {
-        dragged_start, min_y, rNorm, gNorm, bNorm, 0.4f,
-        dragged_end, min_y, rNorm, gNorm, bNorm, 0.4f,
-        dragged_end, max_y, rNorm, gNorm, bNorm, 0.4f,
-        dragged_start, max_y, rNorm, gNorm, bNorm, 0.4f
+        dragged_start, min_y, rNorm, gNorm, bNorm, 0.8f,
+        dragged_end, min_y, rNorm, gNorm, bNorm, 0.8f,
+        dragged_end, max_y, rNorm, gNorm, bNorm, 0.8f,
+        dragged_start, max_y, rNorm, gNorm, bNorm, 0.8f
     };
     
     m_vbo.bind();
