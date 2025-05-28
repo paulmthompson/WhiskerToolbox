@@ -2,10 +2,13 @@
 #define LINE_LOADER_WIDGET_HPP
 
 #include "../Scaling_Widget/Scaling_Widget.hpp"
+#include "Lines/lines.hpp"
 #include <QWidget>
 
 #include <memory>
 #include <string>
+#include <map>
+#include <vector>
 
 // Forward declarations
 namespace Ui {
@@ -15,6 +18,10 @@ class DataManager;
 class QComboBox;
 class QStackedWidget;
 class BinaryLineLoader_Widget;
+
+// Forward declare the CSV options structs
+struct CSVSingleFileLineLoaderOptions;
+struct CSVMultiFileLineLoaderOptions;
 
 class Line_Loader_Widget : public QWidget {
     Q_OBJECT
@@ -28,12 +35,15 @@ private:
 
     void _loadSingleHDF5Line(std::string const & filename, std::string const & line_suffix = "");
     void _loadSingleBinaryFile(QString const & filepath);
+    void _loadCSVData(std::map<int, std::vector<Line2D>> const & data_map, std::string const & base_key);
 
 private slots:
     void _loadSingleHdf5Line(QString filename);
     void _loadMultiHdf5Line(QString dir_name, QString pattern);
     void _onLoaderTypeChanged(int index);
     void _handleLoadBinaryFileRequested(QString filepath);
+    void _handleLoadSingleFileCSVRequested(CSVSingleFileLineLoaderOptions options);
+    void _handleLoadMultiFileCSVRequested(CSVMultiFileLineLoaderOptions options);
 };
 
 

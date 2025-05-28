@@ -6,6 +6,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/loaders/hdf5_loaders.hpp"
 #include "DataManager/Lines/IO/Binary/Line_Data_Binary.hpp"
+#include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "IO_Widgets/Lines/HDF5/HDF5LineLoader_Widget.hpp"
 #include "IO_Widgets/Lines/CSV/CSVLineLoader_Widget.hpp"
 #include "IO_Widgets/Lines/LMDB/LMDBLineLoader_Widget.hpp"
@@ -35,6 +36,12 @@ Line_Loader_Widget::Line_Loader_Widget(std::shared_ptr<DataManager> data_manager
 
     connect(ui->binary_line_loader, &BinaryLineLoader_Widget::loadBinaryFileRequested,
             this, &Line_Loader_Widget::_handleLoadBinaryFileRequested);
+
+    // Connect CSV loader signals
+    connect(ui->csv_line_loader, &CSVLineLoader_Widget::loadSingleFileCSVRequested,
+            this, &Line_Loader_Widget::_handleLoadSingleFileCSVRequested);
+    connect(ui->csv_line_loader, &CSVLineLoader_Widget::loadMultiFileCSVRequested,
+            this, &Line_Loader_Widget::_handleLoadMultiFileCSVRequested);
 
     _onLoaderTypeChanged(ui->loader_type_combo->currentIndex());
 }
@@ -194,4 +201,93 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
         std::cerr << "Error loading HDF5 file " << filename << ": " << e.what() << std::endl;
         QMessageBox::critical(this, "Load Error", QString::fromStdString("Error loading HDF5: " + std::string(e.what())));
     }
+}
+
+void Line_Loader_Widget::_handleLoadSingleFileCSVRequested(CSVSingleFileLineLoaderOptions options) {
+    try {
+        std::map<int, std::vector<Line2D>> data_map = load(options);
+        
+        if (data_map.empty()) {
+            QMessageBox::warning(this, "Load Warning", "No data found in CSV file.");
+            return;
+        }
+        
+        // Use the filepath to determine a base key
+        std::filesystem::path filepath(options.filepath);
+        std::string base_key = filepath.stem().string();
+        if (base_key.empty()) {
+            base_key = "csv_single_file_line";
+        }
+        
+        _loadCSVData(data_map, base_key);
+        
+    } catch (std::exception const& e) {
+        std::cerr << "Error loading single CSV file " << options.filepath << ": " << e.what() << std::endl;
+        QMessageBox::critical(this, "Load Error", QString::fromStdString("Error loading CSV: " + std::string(e.what())));
+    }
+}
+
+void Line_Loader_Widget::_handleLoadMultiFileCSVRequested(CSVMultiFileLineLoaderOptions options) {
+    try {
+        std::map<int, std::vector<Line2D>> data_map = load(options);
+        
+        if (data_map.empty()) {
+            QMessageBox::warning(this, "Load Warning", "No data found in CSV files.");
+            return;
+        }
+        
+        // Use the parent directory to determine a base key
+        std::filesystem::path parent_dir(options.parent_dir);
+        std::string base_key = parent_dir.filename().string();
+        if (base_key.empty() || base_key == "." || base_key == "..") {
+            base_key = "csv_multi_file_line";
+        }
+        
+        _loadCSVData(data_map, base_key);
+        
+    } catch (std::exception const& e) {
+        std::cerr << "Error loading multi CSV files from " << options.parent_dir << ": " << e.what() << std::endl;
+        QMessageBox::critical(this, "Load Error", QString::fromStdString("Error loading CSV: " + std::string(e.what())));
+    }
+}
+
+void Line_Loader_Widget::_loadCSVData(std::map<int, std::vector<Line2D>> const & data_map, std::string const & base_key) {
+    // Get the line key from the UI, or use the base key
+    auto line_key = ui->data_name_text->text().toStdString();
+    if (line_key.empty()) {
+        line_key = base_key;
+    }
+    
+    // Create a new LineData object in the data manager
+    _data_manager->setData<LineData>(line_key);
+    auto line_data_ptr = _data_manager->getData<LineData>(line_key);
+    
+    // Add all the loaded data to the LineData object
+    int total_lines = 0;
+    for (auto const & [time, lines] : data_map) {
+        for (auto const & line : lines) {
+            line_data_ptr->addLineAtTime(time, line, false); // Don't notify for each line
+            total_lines++;
+        }
+    }
+    
+    // Set up scaling
+    ImageSize original_size = ui->scaling_widget->getOriginalImageSize();
+    line_data_ptr->setImageSize(original_size);
+    
+    if (ui->scaling_widget->isScalingEnabled()) {
+        ImageSize scaled_size = ui->scaling_widget->getScaledImageSize();
+        if (scaled_size.width > 0 && scaled_size.height > 0) {
+            line_data_ptr->changeImageSize(scaled_size);
+        }
+    }
+    
+    // Notify observers once at the end
+    line_data_ptr->notifyObservers();
+    
+    std::cout << "Successfully loaded " << total_lines << " lines from CSV data into key: " << line_key << std::endl;
+    QMessageBox::information(this, "Load Successful", 
+                            QString::fromStdString("CSV Line data loaded into " + line_key + 
+                                                  " (" + std::to_string(total_lines) + " lines, " + 
+                                                  std::to_string(data_map.size()) + " timestamps)"));
 }

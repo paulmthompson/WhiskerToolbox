@@ -55,6 +55,31 @@ void MaskData::addAtTime(size_t const time,
     }
 }
 
+void MaskData::addAtTime(size_t const time,
+                             std::vector<float> && x,
+                             std::vector<float> && y,
+                             bool notify) {
+    // Create mask efficiently using move semantics
+    auto new_mask = Mask2D{};
+    new_mask.reserve(x.size());
+    
+    for (std::size_t i = 0; i < x.size(); i++) {
+        new_mask.emplace_back(x[i], y[i]);
+    }
+
+    auto it = std::find(_time.begin(), _time.end(), time);
+    if (it != _time.end()) {
+        size_t const index = std::distance(_time.begin(), it);
+        _data[index].push_back(std::move(new_mask));
+    } else {
+        _time.push_back(time);
+        _data.push_back({std::move(new_mask)});
+    }
+    if (notify) {
+        notifyObservers();
+    }
+}
+
 std::vector<Mask2D> const & MaskData::getAtTime(size_t const time) const {
     auto it = std::find(_time.begin(), _time.end(), time);
     if (it != _time.end()) {
@@ -99,4 +124,9 @@ void MaskData::changeImageSize(ImageSize const & image_size)
     }
     _image_size = image_size;
 
+}
+
+void MaskData::reserveCapacity(size_t capacity) {
+    _time.reserve(capacity);
+    _data.reserve(capacity);
 }
