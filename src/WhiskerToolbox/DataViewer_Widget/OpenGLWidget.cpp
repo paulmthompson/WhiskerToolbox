@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <ranges>
+#include <algorithm>
+#include <chrono>
 
 // This was a helpful resource for making a dashed line:
 //https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
@@ -227,8 +229,8 @@ void OpenGLWidget::initializeGL() {
             1.0f);
 
     // Enable blending for transparency support
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glEnable(GL_BLEND);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     m_program = create_shader_program(vertexShaderSource, fragmentShaderSource);
 
@@ -508,6 +510,9 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 }
 
 void OpenGLWidget::drawAnalogSeries() {
+    // Start timing for overall analog series rendering
+    auto overall_start = std::chrono::high_resolution_clock::now();
+    
     int r, g, b;
 
     auto const start_time = static_cast<float>(_xAxis.getStart());
@@ -526,6 +531,8 @@ void OpenGLWidget::drawAnalogSeries() {
     setupVertexAttribs();
 
     int i = 0;
+    int visible_series_count = 0;
+    double total_individual_time = 0.0;
 
     for (auto const & [key, analog_data]: _analog_series) {
         auto const & series = analog_data.series;
@@ -535,6 +542,10 @@ void OpenGLWidget::drawAnalogSeries() {
         auto const & display_options = analog_data.display_options;
         
         if (!display_options->is_visible) continue;
+        
+        // Start timing for individual series
+        auto series_start = std::chrono::high_resolution_clock::now();
+        visible_series_count++;
         
         auto const stdDev = display_options->scale_factor * display_options->user_scale_factor / _global_zoom;
 
@@ -550,6 +561,9 @@ void OpenGLWidget::drawAnalogSeries() {
                                          [&time_frame](auto const & time, auto const & value) { return time_frame->getTimeAtIndex(time) < value; });
         auto end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
                                        [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(time); });
+
+        // Count data points being rendered
+        size_t data_points = std::distance(start_it, end_it);
 
         // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
         float const y_offset = static_cast<float>(i) * _ySpacing;
@@ -609,12 +623,37 @@ void OpenGLWidget::drawAnalogSeries() {
                                      rNorm, gNorm, bNorm);
         }
 
+        // End timing for individual series
+        auto series_end = std::chrono::high_resolution_clock::now();
+        auto series_duration = std::chrono::duration<double, std::milli>(series_end - series_start).count();
+        total_individual_time += series_duration;
+        
+        std::cout << "Series '" << key << "': " << series_duration << " ms (" 
+                  << data_points << " points, " 
+                  << (display_options->gap_handling == AnalogGapHandling::AlwaysConnect ? "continuous" :
+                      display_options->gap_handling == AnalogGapHandling::DetectGaps ? "gap-aware" : "markers")
+                  << ")" << std::endl;
+
         i++;
     }
 
     // Reset line width to default
     glLineWidth(1.0f);
     glUseProgram(0);
+    
+    // End timing for overall analog series rendering
+    auto overall_end = std::chrono::high_resolution_clock::now();
+    auto overall_duration = std::chrono::duration<double, std::milli>(overall_end - overall_start).count();
+    
+    if (visible_series_count > 0) {
+        std::cout << "=== Analog Plotting Performance ===" << std::endl;
+        std::cout << "Total analog rendering: " << overall_duration << " ms" << std::endl;
+        std::cout << "Individual series time: " << total_individual_time << " ms" << std::endl;
+        std::cout << "OpenGL/overhead time: " << (overall_duration - total_individual_time) << " ms" << std::endl;
+        std::cout << "Average per series: " << (total_individual_time / visible_series_count) << " ms" << std::endl;
+        std::cout << "Visible series count: " << visible_series_count << std::endl;
+        std::cout << "===================================" << std::endl;
+    }
 }
 
 template<typename Iterator>
@@ -624,16 +663,21 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator
                                                      std::shared_ptr<TimeFrame> const & time_frame,
                                                      float gap_threshold,
                                                      float rNorm, float gNorm, float bNorm) {
+    auto gap_start = std::chrono::high_resolution_clock::now();
+    
     if (start_it == end_it) return;
     
     std::vector<GLfloat> segment_vertices;
     auto prev_it = start_it;
+    int segment_count = 0;
+    int total_points = 0;
     
     for (auto it = start_it; it != end_it; ++it) {
         size_t const index = std::distance(data_time.begin(), it);
         auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
         float const xCanvasPos = time;
         float const yCanvasPos = data[index];
+        total_points++;
         
         // Check for gap if this isn't the first point
         if (it != start_it) {
@@ -648,6 +692,7 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator
                     m_vbo.allocate(segment_vertices.data(), static_cast<int>(segment_vertices.size() * sizeof(GLfloat)));
                     m_vbo.release();
                     glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 6));
+                    segment_count++;
                 }
                 
                 // Start new segment
@@ -674,11 +719,18 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator
         
         if (segment_vertices.size() >= 12) {
             glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 6));
+            segment_count++;
         } else {
             // Single point - draw as a small marker
             glDrawArrays(GL_POINTS, 0, static_cast<int>(segment_vertices.size() / 6));
+            segment_count++;
         }
     }
+    
+    auto gap_end = std::chrono::high_resolution_clock::now();
+    auto gap_duration = std::chrono::duration<double, std::milli>(gap_end - gap_start).count();
+    std::cout << "  Gap detection: " << gap_duration << " ms (" << segment_count << " segments, " 
+              << total_points << " points)" << std::endl;
 }
 
 template<typename Iterator>
@@ -687,7 +739,10 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it
                                               std::vector<size_t> const & data_time,
                                               std::shared_ptr<TimeFrame> const & time_frame,
                                               float rNorm, float gNorm, float bNorm) {
+    auto marker_start = std::chrono::high_resolution_clock::now();
+    
     m_vertices.clear();
+    int marker_count = 0;
     
     for (auto it = start_it; it != end_it; ++it) {
         size_t const index = std::distance(data_time.begin(), it);
@@ -701,6 +756,7 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it
         m_vertices.push_back(gNorm);
         m_vertices.push_back(bNorm);
         m_vertices.push_back(1.0f);// alpha
+        marker_count++;
     }
     
     if (!m_vertices.empty()) {
@@ -708,11 +764,15 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it
         m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
         m_vbo.release();
         
-        // Enable point size for better visibility
-        glEnable(GL_PROGRAM_POINT_SIZE);
+        // Set point size for better visibility
+        //glPointSize(3.0f);
         glDrawArrays(GL_POINTS, 0, static_cast<int>(m_vertices.size() / 6));
-        glDisable(GL_PROGRAM_POINT_SIZE);
+        //glPointSize(1.0f); // Reset to default
     }
+    
+    auto marker_end = std::chrono::high_resolution_clock::now();
+    auto marker_duration = std::chrono::duration<double, std::milli>(marker_end - marker_start).count();
+    std::cout << "  Marker rendering: " << marker_duration << " ms (" << marker_count << " markers)" << std::endl;
 }
 
 void OpenGLWidget::paintGL() {
@@ -811,6 +871,24 @@ void OpenGLWidget::addAnalogTimeSeries(
               << " calculated as "
               << stdDev
               << std::endl;
+    
+    // Automatic gap detection and display mode selection
+    auto gap_analysis = _analyzeDataGaps(*series, *time_frame);
+    if (gap_analysis.has_gaps) {
+        std::cout << "Gaps detected in " << key << ": " << gap_analysis.gap_count 
+                  << " gaps, max gap: " << gap_analysis.max_gap_size 
+                  << " time units. Using gap-aware display." << std::endl;
+        
+        display_options->gap_handling = AnalogGapHandling::DetectGaps;
+        display_options->enable_gap_detection = true;
+        display_options->gap_threshold = gap_analysis.recommended_threshold;
+    } else {
+        std::cout << "No significant gaps detected in " << key 
+                  << ". Using continuous display." << std::endl;
+        
+        display_options->gap_handling = AnalogGapHandling::AlwaysConnect;
+        display_options->enable_gap_detection = false;
+    }
               
     _analog_series[key] = AnalogSeriesData{
         std::move(series),
@@ -1360,4 +1438,69 @@ void OpenGLWidget::drawDraggedInterval() {
     glDrawArrays(GL_QUADS, 0, 4);
     
     glUseProgram(0);
+}
+
+OpenGLWidget::GapAnalysis OpenGLWidget::_analyzeDataGaps(AnalogTimeSeries const & series, TimeFrame const & time_frame) {
+    GapAnalysis analysis;
+    
+    auto const & time_indices = series.getTimeSeries();
+    if (time_indices.size() < 2) {
+        // Not enough data points to analyze gaps
+        return analysis;
+    }
+    
+    std::vector<float> gap_sizes;
+    float max_gap = 0.0f;
+    int gap_count = 0;
+    
+    // Analyze gaps between consecutive time points
+    for (size_t i = 1; i < time_indices.size(); ++i) {
+        // Convert time indices to actual time values using the time frame
+        float const prev_time = static_cast<float>(time_frame.getTimeAtIndex(time_indices[i-1]));
+        float const curr_time = static_cast<float>(time_frame.getTimeAtIndex(time_indices[i]));
+        
+        float const gap_size = curr_time - prev_time;
+        gap_sizes.push_back(gap_size);
+        
+        if (gap_size > max_gap) {
+            max_gap = gap_size;
+        }
+    }
+    
+    // Calculate statistics to determine if gaps are significant
+    if (!gap_sizes.empty()) {
+        // Calculate median gap size (typical sampling interval)
+        std::vector<float> sorted_gaps = gap_sizes;
+        std::sort(sorted_gaps.begin(), sorted_gaps.end());
+        float median_gap = sorted_gaps[sorted_gaps.size() / 2];
+        
+        // Define a gap as "significant" if it's more than 3x the median interval
+        float const gap_threshold = median_gap * 3.0f;
+        
+        // Count significant gaps
+        for (float gap : gap_sizes) {
+            if (gap > gap_threshold) {
+                gap_count++;
+            }
+        }
+        
+        // Determine if we have significant gaps
+        analysis.has_gaps = (gap_count > 0) && (max_gap > gap_threshold);
+        analysis.gap_count = gap_count;
+        analysis.max_gap_size = max_gap;
+        
+        // Set recommended threshold slightly below the smallest significant gap
+        if (analysis.has_gaps) {
+            analysis.recommended_threshold = gap_threshold * 0.8f; // 80% of threshold
+        } else {
+            analysis.recommended_threshold = median_gap * 2.0f; // Conservative default
+        }
+        
+        std::cout << "Gap analysis for series: median_gap=" << median_gap 
+                  << ", gap_threshold=" << gap_threshold 
+                  << ", significant_gaps=" << gap_count 
+                  << ", max_gap=" << max_gap << std::endl;
+    }
+    
+    return analysis;
 }

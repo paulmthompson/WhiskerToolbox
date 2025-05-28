@@ -45,20 +45,33 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         // Handle group toggle - enable/disable all series in the group
         std::cout << "Group " << group_prefix.toStdString() << " toggled: " << enabled << std::endl;
         
-        // Get all keys of the specified data type
+        // Collect all keys that belong to this group
+        std::vector<std::string> group_keys;
         auto all_keys = _data_manager->getAllKeys();
         for (auto const & key : all_keys) {
             if (_data_manager->getType(key) == data_type) {
                 // Check if this key belongs to the group by checking if it starts with the prefix
                 if (key.find(group_prefix.toStdString()) == 0) {
-                    // This series belongs to the group, toggle it
-                    if (enabled) {
-                        _plotSelectedFeature(key);
-                    } else {
-                        _removeSelectedFeature(key);
-                    }
+                    group_keys.push_back(key);
                 }
             }
+        }
+        
+        std::cout << "Found " << group_keys.size() << " series in group " << group_prefix.toStdString() << std::endl;
+        
+        // Process all series in the group without triggering individual canvas updates
+        for (auto const & key : group_keys) {
+            if (enabled) {
+                _plotSelectedFeatureWithoutUpdate(key);
+            } else {
+                _removeSelectedFeatureWithoutUpdate(key);
+            }
+        }
+        
+        // Trigger a single canvas update at the end
+        if (!group_keys.empty()) {
+            std::cout << "Triggering single canvas update for group toggle" << std::endl;
+            ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
         }
     });
 
@@ -109,9 +122,15 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     connect(ui->grid_lines_enabled, &QCheckBox::toggled, this, &DataViewer_Widget::_handleGridLinesToggled);
     connect(ui->grid_spacing, QOverload<int>::of(&QSpinBox::valueChanged), this, &DataViewer_Widget::_handleGridSpacingChanged);
 
+    // Vertical spacing connection
+    connect(ui->vertical_spacing, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &DataViewer_Widget::_handleVerticalSpacingChanged);
+
     // Initialize grid line UI to match OpenGLWidget defaults
     ui->grid_lines_enabled->setChecked(ui->openGLWidget->getGridLinesEnabled());
     ui->grid_spacing->setValue(ui->openGLWidget->getGridSpacing());
+    
+    // Initialize vertical spacing UI to match OpenGLWidget defaults
+    ui->vertical_spacing->setValue(static_cast<double>(ui->openGLWidget->getVerticalSpacing()));
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
@@ -506,4 +525,115 @@ void DataViewer_Widget::_handleGridLinesToggled(bool enabled) {
 
 void DataViewer_Widget::_handleGridSpacingChanged(int spacing) {
     ui->openGLWidget->setGridSpacing(spacing);
+}
+
+void DataViewer_Widget::_handleVerticalSpacingChanged(double spacing) {
+    ui->openGLWidget->setVerticalSpacing(static_cast<float>(spacing));
+}
+
+void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & key) {
+    std::cout << "Attempting to plot feature (batch): " << key << std::endl;
+    
+    if (key.empty()) {
+        std::cerr << "Error: empty key in _plotSelectedFeatureWithoutUpdate" << std::endl;
+        return;
+    }
+    
+    if (!_data_manager) {
+        std::cerr << "Error: null data manager in _plotSelectedFeatureWithoutUpdate" << std::endl;
+        return;
+    }
+
+    // Get color from tree widget
+    std::string color = ui->feature_tree_widget->getSeriesColor(key);
+    std::cout << "Using color: " << color << " for series: " << key << std::endl;
+
+    auto data_type = _data_manager->getType(key);
+    std::cout << "Feature type: " << convert_data_type_to_string(data_type) << std::endl;
+
+    if (data_type == DM_DataType::Analog) {
+        auto series = _data_manager->getData<AnalogTimeSeries>(key);
+        if (!series) {
+            std::cerr << "Error: failed to get AnalogTimeSeries for key: " << key << std::endl;
+            return;
+        }
+
+        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_frame = _data_manager->getTime(time_key);
+        if (!time_frame) {
+            std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
+            return;
+        }
+        
+        ui->openGLWidget->addAnalogTimeSeries(key, series, time_frame, color);
+
+    } else if (data_type == DM_DataType::DigitalEvent) {
+        auto series = _data_manager->getData<DigitalEventSeries>(key);
+        if (!series) {
+            std::cerr << "Error: failed to get DigitalEventSeries for key: " << key << std::endl;
+            return;
+        }
+                
+        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_frame = _data_manager->getTime(time_key);
+        if (!time_frame) {
+            std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
+            return;
+        }
+        
+        ui->openGLWidget->addDigitalEventSeries(key, series, time_frame, color);
+        
+    } else if (data_type == DM_DataType::DigitalInterval) {
+        auto series = _data_manager->getData<DigitalIntervalSeries>(key);
+        if (!series) {
+            std::cerr << "Error: failed to get DigitalIntervalSeries for key: " << key << std::endl;
+            return;
+        }
+                
+        auto time_key = _data_manager->getTimeFrame(key);
+        auto time_frame = _data_manager->getTime(time_key);
+        if (!time_frame) {
+            std::cerr << "Error: failed to get TimeFrame for key: " << key << std::endl;
+            return;
+        }
+        
+        ui->openGLWidget->addDigitalIntervalSeries(key, series, time_frame, color);
+        
+    } else {
+        std::cout << "Feature type not supported: " << convert_data_type_to_string(data_type) << std::endl;
+        return;
+    }
+    
+    // Note: No canvas update triggered - this is for batch operations
+    std::cout << "Successfully added series to OpenGL widget (batch mode)" << std::endl;
+}
+
+void DataViewer_Widget::_removeSelectedFeatureWithoutUpdate(std::string const & key) {
+    std::cout << "Attempting to remove feature (batch): " << key << std::endl;
+    
+    if (key.empty()) {
+        std::cerr << "Error: empty key in _removeSelectedFeatureWithoutUpdate" << std::endl;
+        return;
+    }
+    
+    if (!_data_manager) {
+        std::cerr << "Error: null data manager in _removeSelectedFeatureWithoutUpdate" << std::endl;
+        return;
+    }
+    
+    auto data_type = _data_manager->getType(key);
+    
+    if (data_type == DM_DataType::Analog) {
+        ui->openGLWidget->removeAnalogTimeSeries(key);
+    } else if (data_type == DM_DataType::DigitalEvent) {
+        ui->openGLWidget->removeDigitalEventSeries(key);
+    } else if (data_type == DM_DataType::DigitalInterval) {
+        ui->openGLWidget->removeDigitalIntervalSeries(key);
+    } else {
+        std::cout << "Feature type not supported for removal: " << convert_data_type_to_string(data_type) << std::endl;
+        return;
+    }
+    
+    // Note: No canvas update triggered - this is for batch operations
+    std::cout << "Successfully removed series from OpenGL widget (batch mode)" << std::endl;
 }

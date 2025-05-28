@@ -67,6 +67,8 @@ private slots:
     //void _highlightAvailableFeature(int row, int column);
     void _plotSelectedFeature(std::string const & key);
     void _removeSelectedFeature(std::string const & key);
+    void _plotSelectedFeatureWithoutUpdate(std::string const & key);
+    void _removeSelectedFeatureWithoutUpdate(std::string const & key);
     void _updatePlot(int time);
     void _handleFeatureSelected(QString const & feature);
     void _handleXAxisSamplesChanged(int value);
@@ -76,6 +78,7 @@ private slots:
     void _handleThemeChanged(int theme_index);
     void _handleGridLinesToggled(bool enabled);
     void _handleGridSpacingChanged(int spacing);
+    void _handleVerticalSpacingChanged(double spacing);
 
 private:
     std::shared_ptr<DataManager> _data_manager;

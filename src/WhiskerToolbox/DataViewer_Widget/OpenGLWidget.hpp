@@ -99,6 +99,10 @@ public:
     void setGridSpacing(int spacing) { _grid_spacing = spacing; updateCanvas(_time); }
     [[nodiscard]] int getGridSpacing() const { return _grid_spacing; }
 
+    // Vertical spacing controls for analog series
+    void setVerticalSpacing(float spacing) { _ySpacing = spacing; updateCanvas(_time); }
+    [[nodiscard]] float getVerticalSpacing() const { return _ySpacing; }
+
     // Interval selection controls
     void setSelectedInterval(std::string const & series_key, int64_t start_time, int64_t end_time);
     void clearSelectedInterval(std::string const & series_key);
@@ -223,6 +227,16 @@ private:
                                    std::vector<size_t> const & data_time,
                                    std::shared_ptr<TimeFrame> const & time_frame,
                                    float rNorm, float gNorm, float bNorm);
+
+    // Gap analysis for automatic display mode selection
+    struct GapAnalysis {
+        bool has_gaps{false};
+        int gap_count{0};
+        float max_gap_size{0.0f};
+        float recommended_threshold{5.0f};
+    };
+    
+    GapAnalysis _analyzeDataGaps(AnalogTimeSeries const & series, TimeFrame const & time_frame);
 
     std::unordered_map<std::string, AnalogSeriesData> _analog_series;
     std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;
