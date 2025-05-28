@@ -233,10 +233,11 @@ private:
         bool has_gaps{false};
         int gap_count{0};
         float max_gap_size{0.0f};
+        float mean_gap_size{0.0f};
         float recommended_threshold{5.0f};
     };
     
-    GapAnalysis _analyzeDataGaps(AnalogTimeSeries const & series, TimeFrame const & time_frame);
+    GapAnalysis _analyzeDataGaps(AnalogTimeSeries const & series);
 
     std::unordered_map<std::string, AnalogSeriesData> _analog_series;
     std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;

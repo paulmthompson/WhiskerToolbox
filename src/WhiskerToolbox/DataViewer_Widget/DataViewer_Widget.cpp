@@ -2,6 +2,7 @@
 #include "ui_DataViewer_Widget.h"
 
 #include "DataManager.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 
 #include "DataViewer_Tree_Widget/DataViewer_Tree_Widget.hpp"
 #include "OpenGLWidget.hpp"
@@ -66,6 +67,11 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
             } else {
                 _removeSelectedFeatureWithoutUpdate(key);
             }
+        }
+        
+        // Auto-scaling when enabling a group of analog series
+        if (enabled && data_type == DM_DataType::Analog && !group_keys.empty()) {
+            _calculateOptimalScaling(group_keys);
         }
         
         // Trigger a single canvas update at the end
@@ -636,4 +642,110 @@ void DataViewer_Widget::_removeSelectedFeatureWithoutUpdate(std::string const & 
     
     // Note: No canvas update triggered - this is for batch operations
     std::cout << "Successfully removed series from OpenGL widget (batch mode)" << std::endl;
+}
+
+void DataViewer_Widget::_calculateOptimalScaling(std::vector<std::string> const & group_keys) {
+    if (group_keys.empty()) {
+        return;
+    }
+    
+    std::cout << "Calculating optimal scaling for " << group_keys.size() << " analog channels..." << std::endl;
+    
+    // Get current canvas dimensions
+    auto [canvas_width, canvas_height] = ui->openGLWidget->getCanvasSize();
+    std::cout << "Canvas size: " << canvas_width << "x" << canvas_height << " pixels" << std::endl;
+    
+    // Count total number of currently visible analog series (including the new group)
+    int total_visible_analog_series = static_cast<int>(group_keys.size());
+    
+    // Add any other already visible analog series
+    auto all_keys = _data_manager->getAllKeys();
+    for (auto const & key : all_keys) {
+        if (_data_manager->getType(key) == DM_DataType::Analog) {
+            // Check if this key is already in our group (avoid double counting)
+            bool in_group = std::find(group_keys.begin(), group_keys.end(), key) != group_keys.end();
+            if (!in_group) {
+                // Check if this series is currently visible
+                auto config = ui->openGLWidget->getAnalogConfig(key);
+                if (config.has_value() && config.value()->is_visible) {
+                    total_visible_analog_series++;
+                }
+            }
+        }
+    }
+    
+    std::cout << "Total visible analog series (including new group): " << total_visible_analog_series << std::endl;
+    
+    if (total_visible_analog_series <= 0) {
+        return; // No series to scale
+    }
+    
+    // Calculate optimal vertical spacing
+    // Leave some margin at top and bottom (10% each = 20% total)
+    float const effective_height = static_cast<float>(canvas_height) * 0.8f;
+    float const optimal_spacing = effective_height / static_cast<float>(total_visible_analog_series);
+    
+    // Convert to normalized coordinates (OpenGL widget uses normalized spacing)
+    // Assuming the widget's view height is typically around 2.0 units in normalized coordinates
+    float const normalized_spacing = (optimal_spacing / static_cast<float>(canvas_height)) * 2.0f;
+    
+    // Clamp to reasonable bounds
+    float const min_spacing = 0.01f;
+    float const max_spacing = 1.0f;
+    float const final_spacing = std::clamp(normalized_spacing, min_spacing, max_spacing);
+    
+    std::cout << "Calculated spacing: " << optimal_spacing << " pixels -> " 
+              << final_spacing << " normalized units" << std::endl;
+    
+    // Calculate optimal global gain based on standard deviations
+    std::vector<float> std_devs;
+    std_devs.reserve(group_keys.size());
+    
+    for (auto const & key : group_keys) {
+        auto series = _data_manager->getData<AnalogTimeSeries>(key);
+        if (series) {
+            float const std_dev = calculate_std_dev(*series);
+            std_devs.push_back(std_dev);
+            std::cout << "Series " << key << " std dev: " << std_dev << std::endl;
+        }
+    }
+    
+    if (!std_devs.empty()) {
+        // Use the median standard deviation as reference for scaling
+        std::sort(std_devs.begin(), std_devs.end());
+        float const median_std_dev = std_devs[std_devs.size() / 2];
+        
+        // Calculate optimal global scale
+        // Target: each series should use about 60% of its allocated vertical space
+        float const target_amplitude_fraction = 0.6f;
+        float const target_amplitude_in_pixels = optimal_spacing * target_amplitude_fraction;
+        
+        // Convert to normalized coordinates (3 standard deviations should fit in target amplitude)
+        float const target_amplitude_normalized = (target_amplitude_in_pixels / static_cast<float>(canvas_height)) * 2.0f;
+        float const three_sigma_target = target_amplitude_normalized;
+        
+        // Calculate scale factor needed
+        float const optimal_global_scale = three_sigma_target / (3.0f * median_std_dev);
+        
+        // Clamp to reasonable bounds
+        float const min_scale = 0.1f;
+        float const max_scale = 100.0f;
+        float const final_scale = std::clamp(optimal_global_scale, min_scale, max_scale);
+        
+        std::cout << "Median std dev: " << median_std_dev 
+                  << ", target amplitude: " << target_amplitude_in_pixels << " pixels"
+                  << ", optimal global scale: " << final_scale << std::endl;
+        
+        // Apply the calculated settings
+        ui->vertical_spacing->setValue(static_cast<double>(final_spacing));
+        ui->global_zoom->setValue(static_cast<double>(final_scale));
+        
+        std::cout << "Applied auto-scaling: vertical spacing = " << final_spacing 
+                  << ", global scale = " << final_scale << std::endl;
+        
+    } else {
+        // If we can't calculate standard deviations, just apply spacing
+        ui->vertical_spacing->setValue(static_cast<double>(final_spacing));
+        std::cout << "Applied auto-spacing only: vertical spacing = " << final_spacing << std::endl;
+    }
 }

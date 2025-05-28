@@ -92,6 +92,7 @@ private:
     ZoomScalingMode _zoom_scaling_mode{ZoomScalingMode::Adaptive}; // Use adaptive scaling by default
 
     void _updateLabels();
+    void _calculateOptimalScaling(std::vector<std::string> const & group_keys);
 };
 
 
