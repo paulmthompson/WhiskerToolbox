@@ -96,6 +96,8 @@ add_library(DataManager SHARED
         DigitalTimeSeries/Digital_Event_Series.cpp
         DigitalTimeSeries/IO/CSV/Digital_Event_Series_Loader.cpp
         DigitalTimeSeries/IO/CSV/Digital_Event_Series_Loader.hpp
+        DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.cpp
+        DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.hpp
 
         Tensors/Tensor_Data.hpp
         Tensors/Tensor_Data.cpp
