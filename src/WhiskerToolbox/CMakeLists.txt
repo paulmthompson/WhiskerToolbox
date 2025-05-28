@@ -372,6 +372,13 @@ set(PROJECT_SOURCES
         IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.hpp
         IO_Widgets/DigitalTimeSeries/CSV/CSVIntervalSaver_Widget.ui
 
+        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.cpp
+        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.hpp
+        IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.ui
+        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.cpp
+        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.hpp
+        IO_Widgets/DigitalTimeSeries/CSV/CSVDigitalEventLoader_Widget.ui
+
         IO_Widgets/Tensors/Tensor_Loader_Widget.hpp
         IO_Widgets/Tensors/Tensor_Loader_Widget.cpp
         IO_Widgets/Tensors/Tensor_Loader_Widget.ui
