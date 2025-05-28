@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 class DataManager;
@@ -55,11 +56,20 @@ private:
     std::unordered_map<std::string, std::unique_ptr<SeriesGroup>> _groups;
     bool _updating_items = false; // Flag to prevent recursion
     
+    // State preservation for auto-population
+    std::unordered_set<std::string> _enabled_series; // Track which series are enabled
+    std::unordered_map<std::string, bool> _group_enabled_state; // Track which groups are enabled
+    
     void _createGroups();
     void _addSeriesToGroup(std::string const & series_key, DM_DataType data_type);
     std::string _extractPrefix(std::string const & series_key);
     void _updateGroupCheckState(SeriesGroup* group);
     void _setGroupEnabled(SeriesGroup* group, bool enabled);
+    
+    // Auto-population with state preservation
+    void _autoPopulateTree();
+    void _saveCurrentState();
+    void _restoreState();
     
     // Helper to get data type string for display
     QString _getDataTypeString(DM_DataType type) const;

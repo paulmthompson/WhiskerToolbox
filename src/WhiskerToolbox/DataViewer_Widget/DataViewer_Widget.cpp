@@ -111,7 +111,14 @@ DataViewer_Widget::~DataViewer_Widget() {
 
 void DataViewer_Widget::openWidget() {
     std::cout << "DataViewer Widget Opened" << std::endl;
-    ui->feature_tree_widget->populateTree();
+    
+    // Tree is already populated by observer pattern in setDataManager()
+    // Only populate if tree is somehow empty (fallback safety check)
+    if (ui->feature_tree_widget->topLevelItemCount() == 0) {
+        std::cout << "Tree is empty, triggering manual population as fallback" << std::endl;
+        ui->feature_tree_widget->populateTree();
+    }
+    
     this->show();
 
     _updateLabels();
