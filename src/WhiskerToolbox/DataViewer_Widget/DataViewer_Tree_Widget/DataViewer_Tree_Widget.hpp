@@ -6,6 +6,8 @@
 #include <QCheckBox>
 #include <QLabel>
 
+#include "TreeWidgetStateManager.hpp"
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -20,7 +22,6 @@ struct SeriesGroup {
     DM_DataType data_type;
     std::vector<std::string> series_keys;
     QTreeWidgetItem* tree_item = nullptr;
-    bool all_enabled = false;
 };
 
 class DataViewer_Tree_Widget : public QTreeWidget {
@@ -41,10 +42,14 @@ public:
         return "#0000FF";
     }
 
+    // For testing - expose state manager
+    TreeWidgetStateManager& getStateManager() { return _state_manager; }
+
 signals:
     void seriesToggled(QString const & series_key, bool enabled);
     void groupToggled(QString const & group_prefix, DM_DataType data_type, bool enabled);
     void seriesSelected(QString const & series_key);
+    void featureToggled(QString const & feature, bool enabled);
 
 private slots:
     void _onItemChanged(QTreeWidgetItem* item, int column);
@@ -53,13 +58,12 @@ private slots:
 private:
     std::shared_ptr<DataManager> _data_manager;
     std::vector<DM_DataType> _type_filter;
-    std::unordered_map<std::string, std::unique_ptr<SeriesGroup>> _groups;
-    bool _updating_items = false; // Flag to prevent recursion
+    std::unordered_map<std::string, SeriesGroup> _groups;
+    bool _updating_items = false;
     
-    // State preservation for auto-population
-    std::unordered_set<std::string> _enabled_series; // Track which series are enabled
-    std::unordered_map<std::string, bool> _group_enabled_state; // Track which groups are enabled
-    
+    // Use our new state manager instead of separate members
+    TreeWidgetStateManager _state_manager;
+
     void _createGroups();
     void _addSeriesToGroup(std::string const & series_key, DM_DataType data_type);
     std::string _extractPrefix(std::string const & series_key);

@@ -89,13 +89,13 @@ void DataViewer_Tree_Widget::_createGroups() {
     }
     
     // Create tree items for each group
-    for (auto const & [group_key, group] : _groups) {
-        if (group->series_keys.size() == 1) {
+    for (auto & [group_key, group] : _groups) {
+        if (group.series_keys.size() == 1) {
             // Single item group - display as flat entry without hierarchy
             auto* series_item = new QTreeWidgetItem(this);
-            std::string const & series_key = group->series_keys[0];
+            std::string const & series_key = group.series_keys[0];
             series_item->setText(0, QString::fromStdString(series_key));
-            series_item->setText(1, _getDataTypeString(group->data_type));
+            series_item->setText(1, _getDataTypeString(group.data_type));
             series_item->setFlags(series_item->flags() | Qt::ItemIsUserCheckable);
             series_item->setCheckState(0, Qt::Unchecked);
             
@@ -103,13 +103,13 @@ void DataViewer_Tree_Widget::_createGroups() {
             series_item->setData(0, Qt::UserRole, QString::fromStdString(series_key));
             
             // Store reference to this item as the group's tree item for consistency
-            group->tree_item = series_item;
+            group.tree_item = series_item;
             
         } else {
             // Multiple items - create hierarchical group
             auto* group_item = new QTreeWidgetItem(this);
-            group_item->setText(0, QString::fromStdString(group->prefix));
-            group_item->setText(1, _getDataTypeString(group->data_type));
+            group_item->setText(0, QString::fromStdString(group.prefix));
+            group_item->setText(1, _getDataTypeString(group.data_type));
             group_item->setFlags(group_item->flags() | Qt::ItemIsUserCheckable);
             group_item->setCheckState(0, Qt::Unchecked);
             
@@ -120,13 +120,13 @@ void DataViewer_Tree_Widget::_createGroups() {
             group_item->setFont(1, font);
             
             // Store reference
-            group->tree_item = group_item;
+            group.tree_item = group_item;
             
             // Add child items for each series
-            for (auto const & series_key : group->series_keys) {
+            for (auto const & series_key : group.series_keys) {
                 auto* series_item = new QTreeWidgetItem(group_item);
                 series_item->setText(0, QString::fromStdString(series_key));
-                series_item->setText(1, _getDataTypeString(group->data_type));
+                series_item->setText(1, _getDataTypeString(group.data_type));
                 series_item->setFlags(series_item->flags() | Qt::ItemIsUserCheckable);
                 series_item->setCheckState(0, Qt::Unchecked);
                 
@@ -144,13 +144,13 @@ void DataViewer_Tree_Widget::_addSeriesToGroup(std::string const & series_key, D
     // Find or create group
     auto it = _groups.find(group_key);
     if (it == _groups.end()) {
-        auto group = std::make_unique<SeriesGroup>();
-        group->prefix = prefix;
-        group->data_type = data_type;
-        group->series_keys.push_back(series_key);
+        SeriesGroup group;
+        group.prefix = prefix;
+        group.data_type = data_type;
+        group.series_keys.push_back(series_key);
         _groups[group_key] = std::move(group);
     } else {
-        it->second->series_keys.push_back(series_key);
+        it->second.series_keys.push_back(series_key);
     }
 }
 
@@ -182,23 +182,13 @@ void DataViewer_Tree_Widget::_onItemChanged(QTreeWidgetItem* item, int column) {
     if (!userData.isValid()) {
         // This is a group item (no UserRole data)
         std::string group_name = item->text(0).toStdString();
-        _group_enabled_state[group_name] = is_checked;
         
         // Find the corresponding group and set all series in it
-        for (auto const & [group_key, group] : _groups) {
-            if (group->tree_item == item) {
-                _setGroupEnabled(group.get(), is_checked);
+        for (auto & [group_key, group] : _groups) {
+            if (group.tree_item == item) {
+                _setGroupEnabled(&group, is_checked);
                 
-                // Update our tracking for all series in this group
-                for (auto const & series_key : group->series_keys) {
-                    if (is_checked) {
-                        _enabled_series.insert(series_key);
-                    } else {
-                        _enabled_series.erase(series_key);
-                    }
-                }
-                
-                emit groupToggled(QString::fromStdString(group->prefix), group->data_type, is_checked);
+                emit groupToggled(QString::fromStdString(group.prefix), group.data_type, is_checked);
                 break;
             }
         }
@@ -206,19 +196,13 @@ void DataViewer_Tree_Widget::_onItemChanged(QTreeWidgetItem* item, int column) {
         // This is a series item (has UserRole data)
         std::string series_key = userData.toString().toStdString();
         
-        if (is_checked) {
-            _enabled_series.insert(series_key);
-        } else {
-            _enabled_series.erase(series_key);
-        }
-        
         // Update parent group state if this is within a group
         QTreeWidgetItem* parent_item = item->parent();
         if (parent_item) {
             // Find the corresponding group
-            for (auto const & [group_key, group] : _groups) {
-                if (group->tree_item == parent_item) {
-                    _updateGroupCheckState(group.get());
+            for (auto & [group_key, group] : _groups) {
+                if (group.tree_item == parent_item) {
+                    _updateGroupCheckState(&group);
                     break;
                 }
             }
@@ -250,32 +234,28 @@ void DataViewer_Tree_Widget::_onItemClicked(QTreeWidgetItem* item, int column) {
 void DataViewer_Tree_Widget::_updateGroupCheckState(SeriesGroup* group) {
     if (!group->tree_item) return;
     
+    // Check how many children are checked
     int checked_count = 0;
     int total_count = group->tree_item->childCount();
     
     for (int i = 0; i < total_count; ++i) {
-        auto* child = group->tree_item->child(i);
-        if (child->checkState(0) == Qt::Checked) {
+        if (group->tree_item->child(i)->checkState(0) == Qt::Checked) {
             checked_count++;
         }
     }
     
+    // Update group checkbox state based on children
     if (checked_count == 0) {
         group->tree_item->setCheckState(0, Qt::Unchecked);
-        group->all_enabled = false;
     } else if (checked_count == total_count) {
         group->tree_item->setCheckState(0, Qt::Checked);
-        group->all_enabled = true;
     } else {
         group->tree_item->setCheckState(0, Qt::PartiallyChecked);
-        group->all_enabled = false;
     }
 }
 
 void DataViewer_Tree_Widget::_setGroupEnabled(SeriesGroup* group, bool enabled) {
     if (!group->tree_item) return;
-    
-    group->all_enabled = enabled;
     
     // Set flag to prevent recursion when we change child states
     _updating_items = true;
@@ -363,10 +343,11 @@ void DataViewer_Tree_Widget::_autoPopulateTree() {
 }
 
 void DataViewer_Tree_Widget::_saveCurrentState() {
-    _enabled_series.clear();
-    _group_enabled_state.clear();
-    
     std::cout << "DataViewer_Tree_Widget: Saving current state..." << std::endl;
+    
+    // Collect enabled series and group states from current tree
+    std::unordered_set<std::string> enabled_series;
+    std::unordered_map<std::string, bool> group_states;
     
     // Iterate through all top-level items
     for (int i = 0; i < topLevelItemCount(); ++i) {
@@ -378,40 +359,45 @@ void DataViewer_Tree_Widget::_saveCurrentState() {
             // This is a flat series item
             std::string series_key = userData.toString().toStdString();
             if (item->checkState(0) == Qt::Checked) {
-                _enabled_series.insert(series_key);
+                enabled_series.insert(series_key);
                 std::cout << "  Saved enabled flat series: " << series_key << std::endl;
             }
         } else {
             // This is a group item
             std::string group_name = item->text(0).toStdString();
-            _group_enabled_state[group_name] = (item->checkState(0) == Qt::Checked);
-            std::cout << "  Saved group state: " << group_name << " = " << (item->checkState(0) == Qt::Checked) << std::endl;
+            bool is_checked = (item->checkState(0) == Qt::Checked);
+            group_states[group_name] = is_checked;
+            std::cout << "  Saved group state: " << group_name << " = " << (is_checked ? "enabled" : "disabled") << std::endl;
             
-            // Save states of child series items
+            // Also save individual series within the group
             for (int j = 0; j < item->childCount(); ++j) {
                 QTreeWidgetItem* child = item->child(j);
                 QVariant childUserData = child->data(0, Qt::UserRole);
                 if (childUserData.isValid()) {
                     std::string series_key = childUserData.toString().toStdString();
                     if (child->checkState(0) == Qt::Checked) {
-                        _enabled_series.insert(series_key);
-                        std::cout << "  Saved enabled group series: " << series_key << std::endl;
+                        enabled_series.insert(series_key);
+                        std::cout << "  Saved enabled grouped series: " << series_key << std::endl;
                     }
                 }
             }
         }
     }
     
-    std::cout << "DataViewer_Tree_Widget: Saved " << _enabled_series.size() << " enabled series and " 
-              << _group_enabled_state.size() << " group states" << std::endl;
+    // Save to state manager
+    _state_manager.saveEnabledSeries(enabled_series);
+    _state_manager.saveGroupStates(group_states);
+    
+    std::cout << "DataViewer_Tree_Widget: Saved " << enabled_series.size() << " enabled series and " 
+              << group_states.size() << " group states" << std::endl;
 }
 
 void DataViewer_Tree_Widget::_restoreState() {
-    _updating_items = true; // Prevent signal emission during restoration
-    
     std::cout << "DataViewer_Tree_Widget: Restoring state..." << std::endl;
     
-    // Restore states for all top-level items
+    _updating_items = true; // Prevent signal emission during restoration
+    
+    // Restore states for all items using TreeWidgetStateManager
     for (int i = 0; i < topLevelItemCount(); ++i) {
         QTreeWidgetItem* item = topLevelItem(i);
         
@@ -420,57 +406,35 @@ void DataViewer_Tree_Widget::_restoreState() {
         if (userData.isValid()) {
             // This is a flat series item
             std::string series_key = userData.toString().toStdString();
-            bool should_be_enabled = _enabled_series.count(series_key) > 0;
-            item->setCheckState(0, should_be_enabled ? Qt::Checked : Qt::Unchecked);
-            if (should_be_enabled) {
-                std::cout << "  Restored enabled flat series: " << series_key << std::endl;
+            bool should_enable = _state_manager.shouldSeriesBeEnabled(series_key);
+            item->setCheckState(0, should_enable ? Qt::Checked : Qt::Unchecked);
+            
+            if (should_enable) {
+                std::cout << "  Restored flat series: " << series_key << " (enabled)" << std::endl;
             }
         } else {
-            // This is a group item - restore children first, then group
-            bool any_enabled = false;
-            bool all_enabled = true;
-            int child_count = item->childCount();
+            // This is a group item
+            std::string group_name = item->text(0).toStdString();
+            auto group_state = _state_manager.shouldGroupBeEnabled(group_name);
             
-            for (int j = 0; j < child_count; ++j) {
+            if (group_state.has_value()) {
+                item->setCheckState(0, group_state.value() ? Qt::Checked : Qt::Unchecked);
+                std::cout << "  Restored group: " << group_name << " (" 
+                          << (group_state.value() ? "enabled" : "disabled") << ")" << std::endl;
+            }
+            
+            // Restore states for child series items
+            for (int j = 0; j < item->childCount(); ++j) {
                 QTreeWidgetItem* child = item->child(j);
                 QVariant childUserData = child->data(0, Qt::UserRole);
                 if (childUserData.isValid()) {
                     std::string series_key = childUserData.toString().toStdString();
-                    bool should_be_enabled = _enabled_series.count(series_key) > 0;
-                    child->setCheckState(0, should_be_enabled ? Qt::Checked : Qt::Unchecked);
+                    bool should_enable = _state_manager.shouldSeriesBeEnabled(series_key);
+                    child->setCheckState(0, should_enable ? Qt::Checked : Qt::Unchecked);
                     
-                    if (should_be_enabled) {
-                        any_enabled = true;
-                        std::cout << "  Restored enabled group series: " << series_key << std::endl;
-                    } else {
-                        all_enabled = false;
+                    if (should_enable) {
+                        std::cout << "  Restored grouped series: " << series_key << " (enabled)" << std::endl;
                     }
-                }
-            }
-            
-            // Update group state based on children or saved state
-            std::string group_name = item->text(0).toStdString();
-            auto saved_group_state = _group_enabled_state.find(group_name);
-            
-            if (saved_group_state != _group_enabled_state.end()) {
-                // Use saved group state if available
-                if (saved_group_state->second && any_enabled) {
-                    item->setCheckState(0, Qt::Checked);
-                } else if (!saved_group_state->second) {
-                    item->setCheckState(0, Qt::Unchecked);
-                } else {
-                    // Group was enabled but no children are enabled - use partial
-                    item->setCheckState(0, Qt::PartiallyChecked);
-                }
-                std::cout << "  Restored group state: " << group_name << " = " << saved_group_state->second << std::endl;
-            } else {
-                // No saved state, determine from children
-                if (all_enabled && child_count > 0) {
-                    item->setCheckState(0, Qt::Checked);
-                } else if (any_enabled) {
-                    item->setCheckState(0, Qt::PartiallyChecked);
-                } else {
-                    item->setCheckState(0, Qt::Unchecked);
                 }
             }
         }
