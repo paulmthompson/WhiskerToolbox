@@ -43,6 +43,18 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
             this, &MediaLine_Widget::_setLineAlpha);
     
+    // Connect line thickness controls
+    connect(ui->line_thickness_slider, &QSlider::valueChanged,
+            this, &MediaLine_Widget::_setLineThickness);
+    connect(ui->line_thickness_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &MediaLine_Widget::_setLineThickness);
+    
+    // Synchronize line thickness slider and spinbox
+    connect(ui->line_thickness_slider, &QSlider::valueChanged,
+            ui->line_thickness_spinbox, &QSpinBox::setValue);
+    connect(ui->line_thickness_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            ui->line_thickness_slider, &QSlider::setValue);
+    
     connect(ui->show_points_checkbox, &QCheckBox::toggled, this, &MediaLine_Widget::_toggleShowPoints);
     
     connect(ui->line_select_slider, &QSlider::valueChanged, this, &MediaLine_Widget::_lineSelectionChanged);
@@ -105,6 +117,14 @@ void MediaLine_Widget::setActiveKey(std::string const& key) {
         if (config) {
             ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
             ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+            
+            // Set line thickness controls
+            ui->line_thickness_slider->blockSignals(true);
+            ui->line_thickness_spinbox->blockSignals(true);
+            ui->line_thickness_slider->setValue(config.value()->line_thickness);
+            ui->line_thickness_spinbox->setValue(config.value()->line_thickness);
+            ui->line_thickness_slider->blockSignals(false);
+            ui->line_thickness_spinbox->blockSignals(false);
             
             // Update the show points checkbox directly from the UI file
             ui->show_points_checkbox->blockSignals(true);
@@ -573,4 +593,28 @@ void MediaLine_Widget::_setEraserRadius(int radius) {
 void MediaLine_Widget::_toggleShowHoverCircle(bool checked) {
     _scene->setShowHoverCircle(checked);
     std::cout << "Show hover circle " << (checked ? "enabled" : "disabled") << std::endl;
+}
+
+void MediaLine_Widget::_setLineThickness(int thickness) {
+    if (!_active_key.empty()) {
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            line_opts.value()->line_thickness = thickness;
+        }
+        _scene->UpdateCanvas();
+    }
+    
+    // Synchronize slider and spinbox if the signal came from one of them
+    QObject* sender_obj = sender();
+    if (sender_obj == ui->line_thickness_slider) {
+        ui->line_thickness_spinbox->blockSignals(true);
+        ui->line_thickness_spinbox->setValue(thickness);
+        ui->line_thickness_spinbox->blockSignals(false);
+    } else if (sender_obj == ui->line_thickness_spinbox) {
+        ui->line_thickness_slider->blockSignals(true);
+        ui->line_thickness_slider->setValue(thickness);
+        ui->line_thickness_slider->blockSignals(false);
+    }
+    
+    std::cout << "Line thickness set to: " << thickness << std::endl;
 }

@@ -87,6 +87,7 @@ private slots:
     void _setPolynomialOrder(int order);
     void _setLineAlpha(int alpha);
     void _setLineColor(const QString& hex_color);
+    void _setLineThickness(int thickness);
     void _toggleShowPoints(bool checked);
     void _lineSelectionChanged(int index);
     void _toggleEdgeSnapping(bool checked);

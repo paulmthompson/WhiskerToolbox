@@ -402,7 +402,11 @@ void Media_Window::_plotLineData() {
                 }
             }
 
-            auto linePath = addPath(path, QPen(plot_color));
+            // Create pen with configurable thickness
+            QPen linePen(plot_color);
+            linePen.setWidth(_line_config.get()->line_thickness);
+            
+            auto linePath = addPath(path, linePen);
             _line_paths.append(linePath);
 
 

@@ -57,4 +57,48 @@ TEST_CASE("PointMarkerShape Enum Values", "[PointMarkerShape]") {
     REQUIRE(static_cast<int>(PointMarkerShape::Cross) == 3);
     REQUIRE(static_cast<int>(PointMarkerShape::X) == 4);
     REQUIRE(static_cast<int>(PointMarkerShape::Diamond) == 5);
+}
+
+TEST_CASE("LineDisplayOptions - Default Values", "[LineDisplayOptions]") {
+    LineDisplayOptions options;
+    
+    REQUIRE(options.line_thickness == DefaultDisplayValues::LINE_THICKNESS);
+    REQUIRE(options.line_thickness == 2);
+    REQUIRE(options.show_points == DefaultDisplayValues::SHOW_POINTS);
+    REQUIRE(options.show_points == false);
+    REQUIRE(options.edge_snapping == false);
+    REQUIRE(options.hex_color == DefaultDisplayValues::COLOR);
+    REQUIRE(options.alpha == DefaultDisplayValues::ALPHA);
+    REQUIRE(options.is_visible == DefaultDisplayValues::VISIBLE);
+}
+
+TEST_CASE("LineDisplayOptions - Configurable Values", "[LineDisplayOptions]") {
+    LineDisplayOptions options;
+    
+    SECTION("Line thickness configuration") {
+        options.line_thickness = 1;
+        REQUIRE(options.line_thickness == 1);
+        
+        options.line_thickness = 10;
+        REQUIRE(options.line_thickness == 10);
+        
+        options.line_thickness = 20;
+        REQUIRE(options.line_thickness == 20);
+    }
+    
+    SECTION("Show points configuration") {
+        options.show_points = true;
+        REQUIRE(options.show_points == true);
+        
+        options.show_points = false;
+        REQUIRE(options.show_points == false);
+    }
+    
+    SECTION("Edge snapping configuration") {
+        options.edge_snapping = true;
+        REQUIRE(options.edge_snapping == true);
+        
+        options.edge_snapping = false;
+        REQUIRE(options.edge_snapping == false);
+    }
 } 
