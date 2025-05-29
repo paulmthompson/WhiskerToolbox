@@ -154,6 +154,9 @@ void DataTransform_Widget::_handleFeatureSelected(QString const & feature) {
             scalingWidget->setCurrentDataKey(feature);
         }
     }
+    
+    // Update the output name based on the selected feature and current operation
+    _updateOutputName();
 }
 
 void DataTransform_Widget::_onOperationSelected(int index) {
@@ -178,6 +181,9 @@ void DataTransform_Widget::_onOperationSelected(int index) {
     }
 
     _displayParameterWidget(op_name);
+    
+    // Update the output name based on the selected operation and current feature
+    _updateOutputName();
 }
 
 // Helper function to show the correct widget
@@ -284,4 +290,40 @@ void DataTransform_Widget::_doTransform() {
     // Ensure progress bar shows completion
     ui->transform_progress_bar->setValue(100);
     ui->do_transform_button->setEnabled(true);
+}
+
+QString DataTransform_Widget::_generateOutputName() const {
+    // Return empty string if either feature or operation is not selected
+    if (_highlighted_available_feature.isEmpty() || !_currentSelectedOperation) {
+        return QString();
+    }
+
+    QString inputKey = _highlighted_available_feature;
+    QString transformName = QString::fromStdString(_currentSelectedOperation->getName());
+    
+    // Clean up the transform name for use in the output name:
+    // - Convert to lowercase
+    // - Replace spaces with underscores
+    // - Remove common prefixes like "Calculate", "Extract", etc.
+    transformName = transformName.toLower();
+    transformName.replace(' ', '_');
+    
+    // Remove common operation prefixes to make names more concise
+    QStringList prefixesToRemove = {"calculate_", "extract_", "convert_", "threshold_"};
+    for (const QString& prefix : prefixesToRemove) {
+        if (transformName.startsWith(prefix)) {
+            transformName = transformName.mid(prefix.length());
+            break;
+        }
+    }
+    
+    // Combine input key and cleaned transform name
+    return inputKey + "_" + transformName;
+}
+
+void DataTransform_Widget::_updateOutputName() {
+    QString outputName = _generateOutputName();
+    if (!outputName.isEmpty()) {
+        ui->output_name_edit->setText(outputName);
+    }
 }
