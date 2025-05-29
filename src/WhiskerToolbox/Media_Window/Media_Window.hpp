@@ -7,6 +7,7 @@
 
 #include <QGraphicsScene>
 #include <QtCore/QtGlobal>
+#include <QGraphicsItem>
 
 #include <memory>
 #include <optional>
@@ -136,7 +137,7 @@ private:
     int _canvasWidth{default_width};
 
     QVector<QGraphicsPathItem *> _line_paths;
-    QVector<QGraphicsEllipseItem *> _points;
+    QVector<QGraphicsItem *> _points;
     QVector<QGraphicsPixmapItem *> _masks;
     QVector<QGraphicsRectItem *> _intervals;
     QVector<QGraphicsPixmapItem *> _tensors;

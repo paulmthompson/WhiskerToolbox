@@ -6,6 +6,18 @@
 #include <string>
 #include <vector> 
 
+/**
+ * @brief Enumeration for different point marker shapes
+ */
+enum class PointMarkerShape {
+    Circle,      ///< Circular marker (filled ellipse)
+    Square,      ///< Square marker (filled rectangle)  
+    Triangle,    ///< Triangular marker (filled triangle)
+    Cross,       ///< Cross/plus marker (+ shape)
+    X,           ///< X marker (× shape)
+    Diamond      ///< Diamond marker (rotated square)
+};
+
 namespace DefaultDisplayValues {
     const std::string COLOR = "#007bff";
     const float ALPHA = 1.0f;
@@ -14,6 +26,7 @@ namespace DefaultDisplayValues {
     const int LINE_THICKNESS = 2;
     const int TENSOR_DISPLAY_CHANNEL = 0;
     const bool SHOW_POINTS = false;
+    const PointMarkerShape POINT_MARKER_SHAPE = PointMarkerShape::Circle;
     
     const std::vector<std::string> DEFAULT_COLORS = {
         "#ff0000", // Red
@@ -44,7 +57,7 @@ struct BaseDisplayOptions {
 
 struct PointDisplayOptions : public BaseDisplayOptions {
     int point_size{DefaultDisplayValues::POINT_SIZE};
-    // Future: point_shape (e.g., circle, square, triangle enum)
+    PointMarkerShape marker_shape{DefaultDisplayValues::POINT_MARKER_SHAPE};
 
     // OptionType getType() const override { return OptionType::Point; }
 };

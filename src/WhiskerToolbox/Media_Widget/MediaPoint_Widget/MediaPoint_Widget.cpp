@@ -4,7 +4,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Media_Window/Media_Window.hpp"
-
+#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 
 #include <iostream>
 
@@ -20,6 +20,22 @@ MediaPoint_Widget::MediaPoint_Widget(std::shared_ptr<DataManager> data_manager, 
             this, &MediaPoint_Widget::_setPointColor);
     connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
             this, &MediaPoint_Widget::_setPointAlpha);
+    
+    // Connect point size controls
+    connect(ui->point_size_slider, &QSlider::valueChanged,
+            this, &MediaPoint_Widget::_setPointSize);
+    connect(ui->point_size_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &MediaPoint_Widget::_setPointSize);
+    
+    // Connect marker shape control
+    connect(ui->marker_shape_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &MediaPoint_Widget::_setMarkerShape);
+    
+    // Synchronize slider and spinbox
+    connect(ui->point_size_slider, &QSlider::valueChanged,
+            ui->point_size_spinbox, &QSpinBox::setValue);
+    connect(ui->point_size_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            ui->point_size_slider, &QSlider::setValue);
 }
 
 MediaPoint_Widget::~MediaPoint_Widget() {
@@ -49,6 +65,19 @@ void MediaPoint_Widget::setActiveKey(std::string const & key) {
         if (config) {
             ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
             ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
+            
+            // Set point size controls
+            ui->point_size_slider->blockSignals(true);
+            ui->point_size_spinbox->blockSignals(true);
+            ui->point_size_slider->setValue(config.value()->point_size);
+            ui->point_size_spinbox->setValue(config.value()->point_size);
+            ui->point_size_slider->blockSignals(false);
+            ui->point_size_spinbox->blockSignals(false);
+            
+            // Set marker shape control
+            ui->marker_shape_combo->blockSignals(true);
+            ui->marker_shape_combo->setCurrentIndex(static_cast<int>(config.value()->marker_shape));
+            ui->marker_shape_combo->blockSignals(false);
         }
     }
 }
@@ -88,6 +117,38 @@ void MediaPoint_Widget::_setPointAlpha(int alpha) {
         auto point_opts = _scene->getPointConfig(_active_key);
         if (point_opts.has_value()) {
             point_opts.value()->alpha = alpha_float;
+        }
+        _scene->UpdateCanvas();
+    }
+}
+
+void MediaPoint_Widget::_setPointSize(int size) {
+    if (!_active_key.empty()) {
+        auto point_opts = _scene->getPointConfig(_active_key);
+        if (point_opts.has_value()) {
+            point_opts.value()->point_size = size;
+        }
+        _scene->UpdateCanvas();
+    }
+    
+    // Synchronize slider and spinbox if the signal came from one of them
+    QObject* sender_obj = sender();
+    if (sender_obj == ui->point_size_slider) {
+        ui->point_size_spinbox->blockSignals(true);
+        ui->point_size_spinbox->setValue(size);
+        ui->point_size_spinbox->blockSignals(false);
+    } else if (sender_obj == ui->point_size_spinbox) {
+        ui->point_size_slider->blockSignals(true);
+        ui->point_size_slider->setValue(size);
+        ui->point_size_slider->blockSignals(false);
+    }
+}
+
+void MediaPoint_Widget::_setMarkerShape(int shapeIndex) {
+    if (!_active_key.empty() && shapeIndex >= 0) {
+        auto point_opts = _scene->getPointConfig(_active_key);
+        if (point_opts.has_value()) {
+            point_opts.value()->marker_shape = static_cast<PointMarkerShape>(shapeIndex);
         }
         _scene->UpdateCanvas();
     }

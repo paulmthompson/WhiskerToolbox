@@ -6,6 +6,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -484,8 +485,6 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, Ima
 void Media_Window::_plotPointData() {
     auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
 
-    int i = 0;
-
     for (auto const & [point_key, _point_config]: _point_configs) {
         if (!_point_config.get()->is_visible) continue;
 
@@ -510,13 +509,98 @@ void Media_Window::_plotPointData() {
 
         auto pointData = point->getPointsAtTime(current_time);
 
-        auto pen = QPen(plot_color);
-        pen.setWidth(3);
+        // Get configurable point size
+        float const point_size = static_cast<float>(_point_config.get()->point_size);
+        
         for (auto const & single_point: pointData) {
-            auto ellipse = addEllipse(single_point.x * xAspect, single_point.y * yAspect, 10.0, 10.0, pen);
-            _points.append(ellipse);
+            float const x_pos = single_point.x * xAspect;
+            float const y_pos = single_point.y * yAspect;
+            
+            // Create the appropriate marker shape based on configuration
+            switch (_point_config.get()->marker_shape) {
+                case PointMarkerShape::Circle: {
+                    QPen pen(plot_color);
+                    pen.setWidth(2);
+                    QBrush brush(plot_color);
+                    auto ellipse = addEllipse(x_pos - point_size/2, y_pos - point_size/2, 
+                                      point_size, point_size, pen, brush);
+                    _points.append(ellipse);
+                    break;
+                }
+                case PointMarkerShape::Square: {
+                    QPen pen(plot_color);
+                    pen.setWidth(2);
+                    QBrush brush(plot_color);
+                    auto rect = addRect(x_pos - point_size/2, y_pos - point_size/2,
+                                   point_size, point_size, pen, brush);
+                    _points.append(rect);
+                    break;
+                }
+                case PointMarkerShape::Triangle: {
+                    QPen pen(plot_color);
+                    pen.setWidth(2);
+                    QBrush brush(plot_color);
+                    
+                    // Create triangle polygon
+                    QPolygonF triangle;
+                    float const half_size = point_size / 2;
+                    triangle << QPointF(x_pos, y_pos - half_size)           // Top point
+                             << QPointF(x_pos - half_size, y_pos + half_size) // Bottom left
+                             << QPointF(x_pos + half_size, y_pos + half_size); // Bottom right
+                    
+                    auto polygon = addPolygon(triangle, pen, brush);
+                    _points.append(polygon);
+                    break;
+                }
+                case PointMarkerShape::Cross: {
+                    QPen pen(plot_color);
+                    pen.setWidth(3);
+                    
+                    float const half_size = point_size / 2;
+                    // Draw horizontal line
+                    auto hLine = addLine(x_pos - half_size, y_pos, x_pos + half_size, y_pos, pen);
+                    _points.append(hLine);
+                    
+                    // Draw vertical line
+                    auto vLine = addLine(x_pos, y_pos - half_size, x_pos, y_pos + half_size, pen);
+                    _points.append(vLine);
+                    break;
+                }
+                case PointMarkerShape::X: {
+                    QPen pen(plot_color);
+                    pen.setWidth(3);
+                    
+                    float const half_size = point_size / 2;
+                    // Draw diagonal line (\)
+                    auto dLine1 = addLine(x_pos - half_size, y_pos - half_size, 
+                                        x_pos + half_size, y_pos + half_size, pen);
+                    _points.append(dLine1);
+                    
+                    // Draw diagonal line (/)
+                    auto dLine2 = addLine(x_pos - half_size, y_pos + half_size,
+                                   x_pos + half_size, y_pos - half_size, pen);
+                    _points.append(dLine2);
+                    break;
+                }
+                case PointMarkerShape::Diamond: {
+                    QPen pen(plot_color);
+                    pen.setWidth(2);
+                    QBrush brush(plot_color);
+                    
+                    // Create diamond polygon (rotated square)
+                    QPolygonF diamond;
+                    float const half_size = point_size / 2;
+                    diamond << QPointF(x_pos, y_pos - half_size)        // Top
+                            << QPointF(x_pos + half_size, y_pos)        // Right  
+                            << QPointF(x_pos, y_pos + half_size)        // Bottom
+                            << QPointF(x_pos - half_size, y_pos);       // Left
+                    
+                    auto polygon = addPolygon(diamond, pen, brush);
+                    _points.append(polygon);
+                    break;
+                }
+            }
         }
-        i++;
     }
 }
 
