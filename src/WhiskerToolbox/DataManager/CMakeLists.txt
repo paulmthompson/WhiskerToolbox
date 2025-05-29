@@ -72,6 +72,7 @@ add_library(DataManager SHARED
         Masks/IO/JSON/Mask_Data_JSON.hpp
         Masks/IO/JSON/Mask_Data_JSON.cpp
         Masks/masks.hpp
+        Masks/masks.cpp
 
         AnalogTimeSeries/Analog_Time_Series.hpp
         AnalogTimeSeries/Analog_Time_Series.cpp
@@ -172,7 +173,7 @@ add_library(DataManager SHARED
 
         LockState/LockState.hpp
         ImageSize/ImageSize.hpp
-
+        Lines/lines.cpp
 )
 
 message(STATUS "NPY source dir:")

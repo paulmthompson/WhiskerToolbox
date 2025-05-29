@@ -34,6 +34,10 @@ MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Me
     // Connect bounding box control
     connect(ui->show_bounding_box_checkbox, &QCheckBox::toggled,
             this, &MediaMask_Widget::_toggleShowBoundingBox);
+    
+    // Connect outline control
+    connect(ui->show_outline_checkbox, &QCheckBox::toggled,
+            this, &MediaMask_Widget::_toggleShowOutline);
             
     // Setup the selection mode widgets
     _setupSelectionModePages();
@@ -90,6 +94,11 @@ void MediaMask_Widget::setActiveKey(std::string const & key) {
             ui->show_bounding_box_checkbox->blockSignals(true);
             ui->show_bounding_box_checkbox->setChecked(config.value()->show_bounding_box);
             ui->show_bounding_box_checkbox->blockSignals(false);
+            
+            // Set outline checkbox
+            ui->show_outline_checkbox->blockSignals(true);
+            ui->show_outline_checkbox->setChecked(config.value()->show_outline);
+            ui->show_outline_checkbox->blockSignals(false);
         }
     }
 }
@@ -191,4 +200,15 @@ void MediaMask_Widget::_toggleShowBoundingBox(bool checked) {
         _scene->UpdateCanvas();
     }
     std::cout << "Show bounding box " << (checked ? "enabled" : "disabled") << std::endl;
+}
+
+void MediaMask_Widget::_toggleShowOutline(bool checked) {
+    if (!_active_key.empty()) {
+        auto mask_opts = _scene->getMaskConfig(_active_key);
+        if (mask_opts.has_value()) {
+            mask_opts.value()->show_outline = checked;
+        }
+        _scene->UpdateCanvas();
+    }
+    std::cout << "Show outline " << (checked ? "enabled" : "disabled") << std::endl;
 }

@@ -73,6 +73,19 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="show_outline_checkbox">
+     <property name="text">
+      <string>Show outline</string>
+     </property>
+     <property name="toolTip">
+      <string>Display the mask boundary as a thick line</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="label_2">

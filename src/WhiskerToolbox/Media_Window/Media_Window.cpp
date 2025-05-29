@@ -106,6 +106,17 @@ void Media_Window::_clearMaskBoundingBoxes() {
     _mask_bounding_boxes.clear();
 }
 
+void Media_Window::_clearMaskOutlines() {
+    for (auto outlineItem: _mask_outlines) {
+        removeItem(outlineItem);
+    }
+
+    for (auto outlineItem: _mask_outlines) {
+        delete outlineItem;
+    }
+    _mask_outlines.clear();
+}
+
 void Media_Window::removeMaskDataFromScene(std::string const & mask_key) {
     auto maskItem = _mask_configs.find(mask_key);
     if (maskItem != _mask_configs.end()) {
@@ -218,6 +229,7 @@ void Media_Window::UpdateCanvas() {
     _clearPoints();
     _clearMasks();
     _clearMaskBoundingBoxes();
+    _clearMaskOutlines();
     _clearIntervals();
     _clearTensors();
 
@@ -566,6 +578,79 @@ void Media_Window::_plotMaskData() {
                     auto boundingBoxRect = addRect(min_x, min_y, max_x - min_x, max_y - min_y,
                                                   boundingBoxPen, emptyBrush);
                     _mask_bounding_boxes.append(boundingBoxRect);
+                }
+            }
+        }
+        
+        // Plot outlines if enabled
+        if (_mask_config.get()->show_outline) {
+            // Calculate aspect ratios for scaling coordinates
+            auto xAspect = getXAspect();
+            auto yAspect = getYAspect();
+            
+            // For current time masks
+            for (auto const & single_mask: maskData) {
+                if (!single_mask.empty()) {
+                    auto outline_points = get_mask_outline(single_mask);
+                    
+                    if (outline_points.size() >= 2) {
+                        QPainterPath outlinePath;
+                        
+                        // Move to the first point
+                        float first_x = outline_points[0].x * xAspect;
+                        float first_y = outline_points[0].y * yAspect;
+                        outlinePath.moveTo(first_x, first_y);
+                        
+                        // Connect to all other points
+                        for (size_t i = 1; i < outline_points.size(); ++i) {
+                            float x = outline_points[i].x * xAspect;
+                            float y = outline_points[i].y * yAspect;
+                            outlinePath.lineTo(x, y);
+                        }
+                        
+                        // Close the outline by connecting back to start
+                        outlinePath.lineTo(first_x, first_y);
+                        
+                        // Draw thick outline
+                        QPen outlinePen(plot_color);
+                        outlinePen.setWidth(4);  // Thick line
+                        
+                        auto outlinePathItem = addPath(outlinePath, outlinePen);
+                        _mask_outlines.append(outlinePathItem);
+                    }
+                }
+            }
+            
+            // For time -1 masks
+            for (auto const & single_mask: maskData2) {
+                if (!single_mask.empty()) {
+                    auto outline_points = get_mask_outline(single_mask);
+                    
+                    if (outline_points.size() >= 2) {
+                        QPainterPath outlinePath;
+                        
+                        // Move to the first point
+                        float first_x = outline_points[0].x * xAspect;
+                        float first_y = outline_points[0].y * yAspect;
+                        outlinePath.moveTo(first_x, first_y);
+                        
+                        // Connect to all other points
+                        for (size_t i = 1; i < outline_points.size(); ++i) {
+                            float x = outline_points[i].x * xAspect;
+                            float y = outline_points[i].y * yAspect;
+                            outlinePath.lineTo(x, y);
+                        }
+                        
+                        // Close the outline by connecting back to start
+                        outlinePath.lineTo(first_x, first_y);
+                        
+                        // Draw thick outline
+                        QPen outlinePen(plot_color);
+                        outlinePen.setWidth(4);  // Thick line
+                        
+                        auto outlinePathItem = addPath(outlinePath, outlinePen);
+                        _mask_outlines.append(outlinePathItem);
+                    }
                 }
             }
         }

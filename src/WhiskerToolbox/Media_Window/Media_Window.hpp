@@ -140,6 +140,7 @@ private:
     QVector<QGraphicsItem *> _points;
     QVector<QGraphicsPixmapItem *> _masks;
     QVector<QGraphicsRectItem *> _mask_bounding_boxes;
+    QVector<QGraphicsPathItem *> _mask_outlines;
     QVector<QGraphicsRectItem *> _intervals;
     QVector<QGraphicsPixmapItem *> _tensors;
 
@@ -168,6 +169,7 @@ private:
     void _plotMaskData();
     void _clearMasks();
     void _clearMaskBoundingBoxes();
+    void _clearMaskOutlines();
     void _plotSingleMaskData(std::vector<Mask2D> const & maskData, ImageSize mask_size, QRgb plot_color);
 
     void _plotPointData();
