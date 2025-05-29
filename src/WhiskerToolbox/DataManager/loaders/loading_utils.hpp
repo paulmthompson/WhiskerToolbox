@@ -37,7 +37,7 @@ inline void change_image_size_json(T data, nlohmann::basic_json<> const & item) 
     int const scale_height = item.value("scaled_height", -1);
     int const scale_width = item.value("scaled_width", -1);
 
-    if ((scale_height == -1)&(scale_width == 1)) {
+    if ((scale_height == -1)&(scale_width == -1)) {
         return;
     }
 

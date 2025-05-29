@@ -399,7 +399,21 @@ void Media_Window::_plotLineData() {
 
         auto plot_color = plot_color_with_alpha(_line_config.get());
 
-        auto lineData = _data_manager->getData<LineData>(line_key)->getLinesAtTime(current_time);
+        auto line_data = _data_manager->getData<LineData>(line_key);
+        auto lineData = line_data->getLinesAtTime(current_time);
+
+        // Check for line-specific image size scaling
+        auto image_size = line_data->getImageSize();
+
+        if (image_size.height != -1) {
+            auto const line_height = static_cast<float>(image_size.height);
+            yAspect = static_cast<float>(_canvasHeight) / line_height;
+        }
+
+        if (image_size.width != -1) {
+            auto const line_width = static_cast<float>(image_size.width);
+            xAspect = static_cast<float>(_canvasWidth) / line_width;
+        }
 
         if (lineData.empty()) {
             continue;
