@@ -77,6 +77,7 @@ struct LineDisplayOptions : public BaseDisplayOptions {
 };
 
 struct MaskDisplayOptions : public BaseDisplayOptions {
+    bool show_bounding_box{false}; // Show bounding box around the mask
 
     // OptionType getType() const override { return OptionType::Mask; }
 };

@@ -60,6 +60,19 @@
     <widget class="ColorPicker_Widget" name="color_picker" native="true"/>
    </item>
    <item>
+    <widget class="QCheckBox" name="show_bounding_box_checkbox">
+     <property name="text">
+      <string>Show bounding box</string>
+     </property>
+     <property name="toolTip">
+      <string>Display a rectangular bounding box around the mask</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="label_2">

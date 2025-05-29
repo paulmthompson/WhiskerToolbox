@@ -137,4 +137,29 @@ TEST_CASE("LineDisplayOptions - Configurable Values", "[LineDisplayOptions]") {
         REQUIRE(line_opts.segment_start_percentage == 25);
         REQUIRE(line_opts.segment_end_percentage == 75);
     }
+}
+
+TEST_CASE("MaskDisplayOptions - Default Values", "[MaskDisplayOptions]") {
+    MaskDisplayOptions options;
+    
+    REQUIRE(options.hex_color == DefaultDisplayValues::COLOR);
+    REQUIRE(options.alpha == DefaultDisplayValues::ALPHA);
+    REQUIRE(options.is_visible == DefaultDisplayValues::VISIBLE);
+    REQUIRE(options.show_bounding_box == false);
+}
+
+TEST_CASE("MaskDisplayOptions - Configurable Values", "[MaskDisplayOptions]") {
+    MaskDisplayOptions options;
+    
+    SECTION("MaskDisplayOptions configurable values") {
+        options.show_bounding_box = true;
+        options.hex_color = "#ff0000";
+        options.alpha = 0.8f;
+        options.is_visible = true;
+        
+        REQUIRE(options.show_bounding_box == true);
+        REQUIRE(options.hex_color == "#ff0000");
+        REQUIRE(options.alpha == 0.8f);
+        REQUIRE(options.is_visible == true);
+    }
 } 

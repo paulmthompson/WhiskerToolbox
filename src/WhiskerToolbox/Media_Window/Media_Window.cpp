@@ -8,6 +8,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
+#include "DataManager/Masks/masks.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -92,6 +93,17 @@ void Media_Window::_clearMasks() {
         delete maskItem;
     }
     _masks.clear();
+}
+
+void Media_Window::_clearMaskBoundingBoxes() {
+    for (auto boundingBoxItem: _mask_bounding_boxes) {
+        removeItem(boundingBoxItem);
+    }
+
+    for (auto boundingBoxItem: _mask_bounding_boxes) {
+        delete boundingBoxItem;
+    }
+    _mask_bounding_boxes.clear();
 }
 
 void Media_Window::removeMaskDataFromScene(std::string const & mask_key) {
@@ -205,6 +217,7 @@ void Media_Window::UpdateCanvas() {
     _clearLines();
     _clearPoints();
     _clearMasks();
+    _clearMaskBoundingBoxes();
     _clearIntervals();
     _clearTensors();
 
@@ -501,6 +514,61 @@ void Media_Window::_plotMaskData() {
         auto const & maskData2 = mask->getAtTime(-1);
 
         _plotSingleMaskData(maskData2, image_size, plot_color);
+        
+        // Plot bounding boxes if enabled
+        if (_mask_config.get()->show_bounding_box) {
+            // Calculate aspect ratios for scaling coordinates
+            auto xAspect = getXAspect();
+            auto yAspect = getYAspect();
+            
+            // For current time masks
+            for (auto const & single_mask: maskData) {
+                if (!single_mask.empty()) {
+                    auto bounding_box = get_bounding_box(single_mask);
+                    Point2D<float> min_point = bounding_box.first;
+                    Point2D<float> max_point = bounding_box.second;
+                    
+                    // Scale coordinates to canvas
+                    float min_x = min_point.x * xAspect;
+                    float min_y = min_point.y * yAspect;
+                    float max_x = max_point.x * xAspect;
+                    float max_y = max_point.y * yAspect;
+                    
+                    // Draw bounding box rectangle (no fill, just outline)
+                    QPen boundingBoxPen(plot_color);
+                    boundingBoxPen.setWidth(2);
+                    QBrush emptyBrush(Qt::NoBrush);
+                    
+                    auto boundingBoxRect = addRect(min_x, min_y, max_x - min_x, max_y - min_y,
+                                                  boundingBoxPen, emptyBrush);
+                    _mask_bounding_boxes.append(boundingBoxRect);
+                }
+            }
+            
+            // For time -1 masks  
+            for (auto const & single_mask: maskData2) {
+                if (!single_mask.empty()) {
+                    auto bounding_box = get_bounding_box(single_mask);
+                    Point2D<float> min_point = bounding_box.first;
+                    Point2D<float> max_point = bounding_box.second;
+                    
+                    // Scale coordinates to canvas
+                    float min_x = min_point.x * xAspect;
+                    float min_y = min_point.y * yAspect;
+                    float max_x = max_point.x * xAspect;
+                    float max_y = max_point.y * yAspect;
+                    
+                    // Draw bounding box rectangle (no fill, just outline)
+                    QPen boundingBoxPen(plot_color);
+                    boundingBoxPen.setWidth(2);
+                    QBrush emptyBrush(Qt::NoBrush);
+                    
+                    auto boundingBoxRect = addRect(min_x, min_y, max_x - min_x, max_y - min_y,
+                                                  boundingBoxPen, emptyBrush);
+                    _mask_bounding_boxes.append(boundingBoxRect);
+                }
+            }
+        }
     }
 }
 

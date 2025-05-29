@@ -53,6 +53,7 @@ private:
 private slots:
     void _setMaskAlpha(int alpha);
     void _setMaskColor(const QString& hex_color);
+    void _toggleShowBoundingBox(bool checked);
     void _toggleSelectionMode(QString text);
     void _clickedInVideo(qreal x, qreal y);
     void _rightClickedInVideo(qreal x, qreal y);
