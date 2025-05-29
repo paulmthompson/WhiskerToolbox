@@ -2,9 +2,9 @@
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/matchers/catch_matchers_vector.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/transforms/AnalogTimeSeries/analog_event_threshold.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "transforms/AnalogTimeSeries/analog_event_threshold.hpp"
 #include "transforms/data_transforms.hpp" // For ProgressCallback
 
 #include <vector>

@@ -37,6 +37,13 @@ float calculate_direct_angle(Line2D const & line, float position, float referenc
 
     // Calculate the index of the position point
     auto idx = static_cast<size_t>(position * static_cast<float>((line.size() - 1)));
+    if (idx == 0) {
+        // If position is at the start, use the first two points
+        idx = 1;
+    } else if (idx >= line.size() - 1) {
+        // If position is at the end, use the last two points
+        idx = line.size() - 2;
+    }
     if (idx >= line.size()) {
         idx = line.size() - 1;
     }
