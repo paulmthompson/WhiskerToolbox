@@ -17,6 +17,7 @@ class Media_Window;
 class ContrastWidget;
 class GammaWidget;
 class SharpenWidget;
+class ClaheWidget;
 class BilateralWidget;
 class Section;
 
@@ -41,6 +42,8 @@ private:
     Section* _gamma_section;
     SharpenWidget* _sharpen_widget;
     Section* _sharpen_section;
+    ClaheWidget* _clahe_widget;
+    Section* _clahe_section;
     BilateralWidget* _bilateral_widget;
     Section* _bilateral_section;
 
@@ -48,30 +51,22 @@ private:
     ContrastOptions _contrast_options;
     GammaOptions _gamma_options;
     SharpenOptions _sharpen_options;
+    ClaheOptions _clahe_options;
     BilateralOptions _bilateral_options;
-
-    // Legacy parameters for other filters (to be refactored later)
-    int _clahe_grid = 8;
-    double _clahe_clip = 2.0;
-    bool _clahe_active{false};
 
     void _setupProcessingWidgets();
     void _applyContrastFilter();
     void _applyGammaFilter();
     void _applySharpenFilter();
+    void _applyClaheFilter();
     void _applyBilateralFilter();
-    void _updateClaheFilter();
 
 private slots:
     void _onContrastOptionsChanged(ContrastOptions const& options);
     void _onGammaOptionsChanged(GammaOptions const& options);
     void _onSharpenOptionsChanged(SharpenOptions const& options);
+    void _onClaheOptionsChanged(ClaheOptions const& options);
     void _onBilateralOptionsChanged(BilateralOptions const& options);
-
-    // Legacy slots for other filters (to be refactored later)
-    void _updateClaheGrid();
-    void _updateClaheClip();
-    void _activateClahe();
 };
 
 #endif // MEDIAPROCESSING_WIDGET_HPP 

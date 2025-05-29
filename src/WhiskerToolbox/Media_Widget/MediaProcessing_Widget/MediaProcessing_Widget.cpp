@@ -3,6 +3,7 @@
 #include "ProcessingOptions/ContrastWidget.hpp"
 #include "ProcessingOptions/GammaWidget.hpp"
 #include "ProcessingOptions/SharpenWidget.hpp"
+#include "ProcessingOptions/ClaheWidget.hpp"
 #include "ProcessingOptions/BilateralWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
@@ -26,6 +27,8 @@ MediaProcessing_Widget::MediaProcessing_Widget(std::shared_ptr<DataManager> data
       _gamma_section(nullptr),
       _sharpen_widget(nullptr),
       _sharpen_section(nullptr),
+      _clahe_widget(nullptr),
+      _clahe_section(nullptr),
       _bilateral_widget(nullptr),
       _bilateral_section(nullptr) {
     
@@ -102,6 +105,23 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     // Set initial sharpen options
     _sharpen_widget->setOptions(_sharpen_options);
     
+    // Create clahe section
+    _clahe_widget = new ClaheWidget(this);
+    _clahe_section = new Section(this, "CLAHE (Contrast Limited Adaptive Histogram Equalization)");
+    _clahe_section->setContentLayout(*new QVBoxLayout());
+    _clahe_section->layout()->addWidget(_clahe_widget);
+    _clahe_section->autoSetContentLayout();
+    
+    // Connect clahe widget signals
+    connect(_clahe_widget, &ClaheWidget::optionsChanged,
+            this, &MediaProcessing_Widget::_onClaheOptionsChanged);
+    
+    // Add clahe section to the scroll layout (before the spacer)
+    scroll_layout->insertWidget(scroll_layout->count() - 1, _clahe_section);
+    
+    // Set initial clahe options
+    _clahe_widget->setOptions(_clahe_options);
+    
     // Create bilateral section
     _bilateral_widget = new BilateralWidget(this);
     _bilateral_section = new Section(this, "Bilateral Filter (Noise Reduction)");
@@ -142,6 +162,14 @@ void MediaProcessing_Widget::_onSharpenOptionsChanged(SharpenOptions const& opti
     
     std::cout << "Sharpen options changed - Active: " << options.active 
               << ", Sigma: " << options.sigma << std::endl;
+}
+
+void MediaProcessing_Widget::_onClaheOptionsChanged(ClaheOptions const& options) {
+    _clahe_options = options;
+    _applyClaheFilter();
+    
+    std::cout << "CLAHE options changed - Active: " << options.active 
+              << ", Clip Limit: " << options.clip_limit << ", Grid Size: " << options.grid_size << std::endl;
 }
 
 void MediaProcessing_Widget::_onBilateralOptionsChanged(BilateralOptions const& options) {
@@ -219,6 +247,28 @@ void MediaProcessing_Widget::_applySharpenFilter() {
     }
 }
 
+void MediaProcessing_Widget::_applyClaheFilter() {
+    if (_active_key.empty()) return;
+    
+    auto media_data = _data_manager->getData<MediaData>(_active_key);
+    if (!media_data) return;
+    
+    if (_clahe_options.active) {
+        // Add or update the CLAHE filter in the processing chain using the options structure
+        media_data->setProcess("4__clahe", [options = _clahe_options](cv::Mat& input) {
+            clahe(input, options);
+        });
+    } else {
+        // Remove the CLAHE filter from the processing chain
+        media_data->removeProcess("4__clahe");
+    }
+    
+    // Update the canvas
+    if (_scene) {
+        _scene->UpdateCanvas();
+    }
+}
+
 void MediaProcessing_Widget::_applyBilateralFilter() {
     if (_active_key.empty()) return;
     
@@ -241,36 +291,3 @@ void MediaProcessing_Widget::_applyBilateralFilter() {
     }
 }
 
-// Legacy implementations for other filters (to be refactored later)
-void MediaProcessing_Widget::_updateClaheFilter() {
-    if (_active_key.empty()) return;
-    
-    auto media_data = _data_manager->getData<MediaData>(_active_key);
-    if (!media_data) return;
-    
-    if (_clahe_active) {
-        // TODO: Create ClaheOptions and use options-based function
-        media_data->setProcess("4__clahe", [this](cv::Mat& input) {
-            clahe(input, _clahe_clip, _clahe_grid); // Legacy function call
-        });
-    } else {
-        media_data->removeProcess("4__clahe");
-    }
-    
-    if (_scene) {
-        _scene->UpdateCanvas();
-    }
-}
-
-// Legacy slot implementations (to be removed when other filters are refactored)
-void MediaProcessing_Widget::_updateClaheGrid() {
-    // Implementation for CLAHE grid update
-}
-
-void MediaProcessing_Widget::_updateClaheClip() {
-    // Implementation for CLAHE clip update
-}
-
-void MediaProcessing_Widget::_activateClahe() {
-    // Implementation for CLAHE activation
-} 

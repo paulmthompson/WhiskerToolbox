@@ -170,6 +170,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.cpp
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.hpp
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/BilateralWidget.ui
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.cpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.hpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.ui
 
         Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp
         Media_Widget/MediaMask_Widget/MediaMask_Widget.cpp
