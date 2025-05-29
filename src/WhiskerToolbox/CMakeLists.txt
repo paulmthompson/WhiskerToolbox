@@ -155,6 +155,10 @@ set(PROJECT_SOURCES
         Media_Widget/Media_Widget.ui
         Media_Widget/DisplayOptions/DisplayOptions.hpp
 
+        Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.cpp
+        Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp
+        Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.ui
+
         Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp
         Media_Widget/MediaMask_Widget/MediaMask_Widget.cpp
         Media_Widget/MediaMask_Widget/MediaMask_Widget.ui

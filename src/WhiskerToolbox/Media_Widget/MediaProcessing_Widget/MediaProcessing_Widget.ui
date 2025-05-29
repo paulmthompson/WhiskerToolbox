@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MediaProcessing_Widget</class>
+ <widget class="QWidget" name="MediaProcessing_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label_type">
+       <property name="text">
+        <string>Data Type:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_media">
+       <property name="text">
+        <string>Media Processing</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_name">
+       <property name="text">
+        <string>Data Name:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="name_label">
+       <property name="text">
+        <string>Name</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>380</width>
+        <height>600</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="scroll_layout" stretch="0,0,0,0,0,0">
+       <property name="spacing">
+        <number>1</number>
+       </property>
+       <item>
+        <widget class="QGroupBox" name="contrast_groupbox">
+         <property name="title">
+          <string>Linear Transform</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <property name="spacing">
+           <number>1</number>
+          </property>
+          <item row="1" column="0">
+           <widget class="QLabel" name="alpha_label">
+            <property name="text">
+             <string>Alpha (Contrast):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="contrast_checkbox">
+            <property name="text">
+             <string>Active</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="beta_label">
+            <property name="text">
+             <string>Beta (Brightness):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="beta_spinbox">
+            <property name="minimum">
+             <number>-100000</number>
+            </property>
+            <property name="maximum">
+             <number>100000</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="alpha_dspinbox">
+            <property name="decimals">
+             <number>3</number>
+            </property>
+            <property name="minimum">
+             <double>-255.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>255.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="gamma_groupbox">
+         <property name="title">
+          <string>Gamma</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <property name="spacing">
+           <number>1</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="gamma_checkbox">
+            <property name="text">
+             <string>Active</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="gamma_label">
+            <property name="text">
+             <string>Gamma:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="gamma_dspinbox">
+            <property name="decimals">
+             <number>1</number>
+            </property>
+            <property name="minimum">
+             <double>0.100000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>10.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="sharpen_groupbox">
+         <property name="title">
+          <string>Sharpen</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <property name="spacing">
+           <number>1</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="sharpen_checkbox">
+            <property name="text">
+             <string>Active</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Sigma:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="sharpen_spinbox">
+            <property name="minimum">
+             <double>1.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>50.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>3.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="clahe_groupbox">
+         <property name="title">
+          <string>CLAHE</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_3">
+          <property name="spacing">
+           <number>1</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="clahe_checkbox">
+            <property name="text">
+             <string>Active</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Grid Size:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="clahe_clip_spinbox">
+            <property name="decimals">
+             <number>1</number>
+            </property>
+            <property name="value">
+             <double>2.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="clahe_grid_spinbox">
+            <property name="value">
+             <number>8</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Clip Limit:</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="bilateral_groupbox">
+         <property name="title">
+          <string>Bilateral Filter</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <property name="spacing">
+           <number>1</number>
+          </property>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Color Sigma:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Spatial Sigma:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="bilateral_checkbox">
+            <property name="text">
+             <string>Active</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Diameter:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="bilateral_spatial_spinbox">
+            <property name="decimals">
+             <number>0</number>
+            </property>
+            <property name="value">
+             <double>10.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="bilateral_d_spinbox">
+            <property name="value">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="bilateral_color_spinbox">
+            <property name="decimals">
+             <number>0</number>
+            </property>
+            <property name="value">
+             <double>10.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 

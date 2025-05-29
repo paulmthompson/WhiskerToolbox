@@ -1,4 +1,3 @@
-
 #include "masks.hpp"
 
 #include <algorithm>
