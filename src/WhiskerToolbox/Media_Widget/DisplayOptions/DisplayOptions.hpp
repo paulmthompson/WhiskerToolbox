@@ -66,6 +66,8 @@ struct LineDisplayOptions : public BaseDisplayOptions {
     int line_thickness{DefaultDisplayValues::LINE_THICKNESS};
     bool show_points{DefaultDisplayValues::SHOW_POINTS}; // Show points as open circles along the line
     bool edge_snapping{false}; // Enable edge snapping for new points
+    bool show_position_marker{false}; // Show position marker at percentage distance
+    int position_percentage{20}; // Percentage distance along line (0-100%)
     // Future: line_style (e.g., solid, dashed, dotted enum)
 
     // OptionType getType() const override { return OptionType::Line; }

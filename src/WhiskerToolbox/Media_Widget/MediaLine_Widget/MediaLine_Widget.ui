@@ -131,6 +131,62 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="show_position_marker_checkbox">
+     <property name="text">
+      <string>Show position marker</string>
+     </property>
+     <property name="toolTip">
+      <string>Display a marker at a specified percentage distance along the line</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="position_marker_layout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="position_percentage_label">
+       <property name="text">
+        <string>Position (%):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QSlider" name="position_percentage_slider">
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="value">
+        <number>20</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QSpinBox" name="position_percentage_spinbox">
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="value">
+        <number>20</number>
+       </property>
+       <property name="suffix">
+        <string>%</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">

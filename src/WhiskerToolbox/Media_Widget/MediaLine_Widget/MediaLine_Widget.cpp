@@ -57,6 +57,20 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     
     connect(ui->show_points_checkbox, &QCheckBox::toggled, this, &MediaLine_Widget::_toggleShowPoints);
     
+    // Connect position marker controls
+    connect(ui->show_position_marker_checkbox, &QCheckBox::toggled, 
+            this, &MediaLine_Widget::_toggleShowPositionMarker);
+    connect(ui->position_percentage_slider, &QSlider::valueChanged,
+            this, &MediaLine_Widget::_setPositionPercentage);
+    connect(ui->position_percentage_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &MediaLine_Widget::_setPositionPercentage);
+    
+    // Synchronize position percentage slider and spinbox
+    connect(ui->position_percentage_slider, &QSlider::valueChanged,
+            ui->position_percentage_spinbox, &QSpinBox::setValue);
+    connect(ui->position_percentage_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            ui->position_percentage_slider, &QSlider::setValue);
+    
     connect(ui->line_select_slider, &QSlider::valueChanged, this, &MediaLine_Widget::_lineSelectionChanged);
 
     _setupSelectionModePages();
@@ -130,6 +144,18 @@ void MediaLine_Widget::setActiveKey(std::string const& key) {
             ui->show_points_checkbox->blockSignals(true);
             ui->show_points_checkbox->setChecked(config.value()->show_points);
             ui->show_points_checkbox->blockSignals(false);
+            
+            // Set position marker controls
+            ui->show_position_marker_checkbox->blockSignals(true);
+            ui->show_position_marker_checkbox->setChecked(config.value()->show_position_marker);
+            ui->show_position_marker_checkbox->blockSignals(false);
+            
+            ui->position_percentage_slider->blockSignals(true);
+            ui->position_percentage_spinbox->blockSignals(true);
+            ui->position_percentage_slider->setValue(config.value()->position_percentage);
+            ui->position_percentage_spinbox->setValue(config.value()->position_percentage);
+            ui->position_percentage_slider->blockSignals(false);
+            ui->position_percentage_spinbox->blockSignals(false);
             
             // Reset line selection and update slider
             _current_line_index = 0;
@@ -617,4 +643,39 @@ void MediaLine_Widget::_setLineThickness(int thickness) {
     }
     
     std::cout << "Line thickness set to: " << thickness << std::endl;
+}
+
+void MediaLine_Widget::_toggleShowPositionMarker(bool checked) {
+    if (!_active_key.empty()) {
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            line_opts.value()->show_position_marker = checked;
+        }
+        _scene->UpdateCanvas();
+    }
+    std::cout << "Show position marker " << (checked ? "enabled" : "disabled") << std::endl;
+}
+
+void MediaLine_Widget::_setPositionPercentage(int percentage) {
+    if (!_active_key.empty()) {
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            line_opts.value()->position_percentage = percentage;
+        }
+        _scene->UpdateCanvas();
+    }
+    
+    // Synchronize slider and spinbox if the signal came from one of them
+    QObject* sender_obj = sender();
+    if (sender_obj == ui->position_percentage_slider) {
+        ui->position_percentage_spinbox->blockSignals(true);
+        ui->position_percentage_spinbox->setValue(percentage);
+        ui->position_percentage_spinbox->blockSignals(false);
+    } else if (sender_obj == ui->position_percentage_spinbox) {
+        ui->position_percentage_slider->blockSignals(true);
+        ui->position_percentage_slider->setValue(percentage);
+        ui->position_percentage_slider->blockSignals(false);
+    }
+    
+    std::cout << "Position percentage set to: " << percentage << std::endl;
 }

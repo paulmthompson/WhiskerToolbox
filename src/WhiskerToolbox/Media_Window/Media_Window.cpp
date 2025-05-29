@@ -4,6 +4,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Lines/lines.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
@@ -439,6 +440,29 @@ void Media_Window::_plotLineData() {
                     );
                     _points.append(ellipse);
                 }
+            }
+            
+            // If position marker is enabled, add a marker at the specified percentage
+            if (_line_config.get()->show_position_marker) {
+                float percentage = static_cast<float>(_line_config.get()->position_percentage) / 100.0f;
+                Point2D<float> marker_pos = get_position_at_percentage(single_line, percentage);
+                
+                float const marker_x = marker_pos.x * xAspect;
+                float const marker_y = marker_pos.y * yAspect;
+                
+                // Create a distinctive marker (filled circle with border)
+                QPen markerPen(QColor(255, 255, 255)); // White border
+                markerPen.setWidth(2);
+                QBrush markerBrush(plot_color); // Same color as line but filled
+                
+                auto marker = addEllipse(
+                    marker_x - 4.0f,
+                    marker_y - 4.0f,
+                    8.0f, 8.0f,
+                    markerPen,
+                    markerBrush
+                );
+                _points.append(marker);
             }
         }
     }

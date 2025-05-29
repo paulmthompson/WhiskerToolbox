@@ -101,4 +101,21 @@ TEST_CASE("LineDisplayOptions - Configurable Values", "[LineDisplayOptions]") {
         options.edge_snapping = false;
         REQUIRE(options.edge_snapping == false);
     }
+    
+    SECTION("Position marker configuration") {
+        options.show_position_marker = true;
+        REQUIRE(options.show_position_marker == true);
+        
+        options.show_position_marker = false;
+        REQUIRE(options.show_position_marker == false);
+        
+        options.position_percentage = 0;
+        REQUIRE(options.position_percentage == 0);
+        
+        options.position_percentage = 50;
+        REQUIRE(options.position_percentage == 50);
+        
+        options.position_percentage = 100;
+        REQUIRE(options.position_percentage == 100);
+    }
 } 

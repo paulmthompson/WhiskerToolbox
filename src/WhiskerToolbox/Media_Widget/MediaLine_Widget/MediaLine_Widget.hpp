@@ -89,6 +89,8 @@ private slots:
     void _setLineColor(const QString& hex_color);
     void _setLineThickness(int thickness);
     void _toggleShowPoints(bool checked);
+    void _toggleShowPositionMarker(bool checked);
+    void _setPositionPercentage(int percentage);
     void _lineSelectionChanged(int index);
     void _toggleEdgeSnapping(bool checked);
     void _setEdgeThreshold(int threshold);
