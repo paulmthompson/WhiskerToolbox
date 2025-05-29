@@ -68,6 +68,9 @@ struct LineDisplayOptions : public BaseDisplayOptions {
     bool edge_snapping{false}; // Enable edge snapping for new points
     bool show_position_marker{false}; // Show position marker at percentage distance
     int position_percentage{20}; // Percentage distance along line (0-100%)
+    bool show_segment{false}; // Show only a segment of the line between two percentages
+    int segment_start_percentage{0}; // Start percentage for line segment (0-100%)
+    int segment_end_percentage{100}; // End percentage for line segment (0-100%)
     // Future: line_style (e.g., solid, dashed, dotted enum)
 
     // OptionType getType() const override { return OptionType::Line; }

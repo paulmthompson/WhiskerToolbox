@@ -386,20 +386,35 @@ void Media_Window::_plotLineData() {
                 continue;
             }
 
+            // Use segment if enabled, otherwise use full line
+            Line2D line_to_plot;
+            if (_line_config.get()->show_segment) {
+                float start_percentage = static_cast<float>(_line_config.get()->segment_start_percentage) / 100.0f;
+                float end_percentage = static_cast<float>(_line_config.get()->segment_end_percentage) / 100.0f;
+                line_to_plot = get_segment_between_percentages(single_line, start_percentage, end_percentage);
+                
+                // If segment is empty (invalid percentages), skip this line
+                if (line_to_plot.empty()) {
+                    continue;
+                }
+            } else {
+                line_to_plot = single_line;
+            }
+
             QPainterPath path = QPainterPath();
 
             auto single_line_thres = 1000.0;
 
-            path.moveTo(QPointF(static_cast<float>(single_line[0].x) * xAspect, static_cast<float>(single_line[0].y) * yAspect));
+            path.moveTo(QPointF(static_cast<float>(line_to_plot[0].x) * xAspect, static_cast<float>(line_to_plot[0].y) * yAspect));
 
-            for (int i = 1; i < single_line.size(); i++) {
-                auto dx = single_line[i].x - single_line[i - 1].x;
-                auto dy = single_line[i].y - single_line[i - 1].y;
+            for (int i = 1; i < line_to_plot.size(); i++) {
+                auto dx = line_to_plot[i].x - line_to_plot[i - 1].x;
+                auto dy = line_to_plot[i].y - line_to_plot[i - 1].y;
                 auto d = std::sqrt((dx * dx) + (dy * dy));
                 if (d > single_line_thres) {
-                    path.moveTo(QPointF(static_cast<float>(single_line[i].x) * xAspect, static_cast<float>(single_line[i].y) * yAspect));
+                    path.moveTo(QPointF(static_cast<float>(line_to_plot[i].x) * xAspect, static_cast<float>(line_to_plot[i].y) * yAspect));
                 } else {
-                    path.lineTo(QPointF(static_cast<float>(single_line[i].x) * xAspect, static_cast<float>(single_line[i].y) * yAspect));
+                    path.lineTo(QPointF(static_cast<float>(line_to_plot[i].x) * xAspect, static_cast<float>(line_to_plot[i].y) * yAspect));
                 }
             }
 
@@ -413,8 +428,8 @@ void Media_Window::_plotLineData() {
 
             // Add dot at line base (always filled)
             auto ellipse = addEllipse(
-                    static_cast<float>(single_line[0].x) * xAspect - 2.5,
-                    static_cast<float>(single_line[0].y) * yAspect - 2.5,
+                    static_cast<float>(line_to_plot[0].x) * xAspect - 2.5,
+                    static_cast<float>(line_to_plot[0].y) * yAspect - 2.5,
                     5.0, 5.0,
                     QPen(plot_color),
                     QBrush(plot_color));
@@ -430,10 +445,10 @@ void Media_Window::_plotLineData() {
                 QBrush emptyBrush(Qt::NoBrush);
                 
                 // Start from the second point (first one is already shown as filled)
-                for (int i = 1; i < single_line.size(); i++) {
+                for (int i = 1; i < line_to_plot.size(); i++) {
                     auto ellipse = addEllipse(
-                        static_cast<float>(single_line[i].x) * xAspect - 2.5,
-                        static_cast<float>(single_line[i].y) * yAspect - 2.5,
+                        static_cast<float>(line_to_plot[i].x) * xAspect - 2.5,
+                        static_cast<float>(line_to_plot[i].y) * yAspect - 2.5,
                         5.0, 5.0,
                         pointPen,
                         emptyBrush
@@ -445,7 +460,7 @@ void Media_Window::_plotLineData() {
             // If position marker is enabled, add a marker at the specified percentage
             if (_line_config.get()->show_position_marker) {
                 float percentage = static_cast<float>(_line_config.get()->position_percentage) / 100.0f;
-                Point2D<float> marker_pos = get_position_at_percentage(single_line, percentage);
+                Point2D<float> marker_pos = get_position_at_percentage(line_to_plot, percentage);
                 
                 float const marker_x = marker_pos.x * xAspect;
                 float const marker_y = marker_pos.y * yAspect;

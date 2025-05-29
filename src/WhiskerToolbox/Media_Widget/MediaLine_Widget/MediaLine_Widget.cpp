@@ -71,6 +71,28 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     connect(ui->position_percentage_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
             ui->position_percentage_slider, &QSlider::setValue);
     
+    // Connect segment controls
+    connect(ui->show_segment_checkbox, &QCheckBox::toggled, 
+            this, &MediaLine_Widget::_toggleShowSegment);
+    connect(ui->segment_start_slider, &QSlider::valueChanged,
+            this, &MediaLine_Widget::_setSegmentStartPercentage);
+    connect(ui->segment_start_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &MediaLine_Widget::_setSegmentStartPercentage);
+    connect(ui->segment_end_slider, &QSlider::valueChanged,
+            this, &MediaLine_Widget::_setSegmentEndPercentage);
+    connect(ui->segment_end_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &MediaLine_Widget::_setSegmentEndPercentage);
+    
+    // Synchronize segment slider and spinbox controls
+    connect(ui->segment_start_slider, &QSlider::valueChanged,
+            ui->segment_start_spinbox, &QSpinBox::setValue);
+    connect(ui->segment_start_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            ui->segment_start_slider, &QSlider::setValue);
+    connect(ui->segment_end_slider, &QSlider::valueChanged,
+            ui->segment_end_spinbox, &QSpinBox::setValue);
+    connect(ui->segment_end_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            ui->segment_end_slider, &QSlider::setValue);
+    
     connect(ui->line_select_slider, &QSlider::valueChanged, this, &MediaLine_Widget::_lineSelectionChanged);
 
     _setupSelectionModePages();
@@ -156,6 +178,25 @@ void MediaLine_Widget::setActiveKey(std::string const& key) {
             ui->position_percentage_spinbox->setValue(config.value()->position_percentage);
             ui->position_percentage_slider->blockSignals(false);
             ui->position_percentage_spinbox->blockSignals(false);
+            
+            // Set segment controls
+            ui->show_segment_checkbox->blockSignals(true);
+            ui->show_segment_checkbox->setChecked(config.value()->show_segment);
+            ui->show_segment_checkbox->blockSignals(false);
+            
+            ui->segment_start_slider->blockSignals(true);
+            ui->segment_start_spinbox->blockSignals(true);
+            ui->segment_start_slider->setValue(config.value()->segment_start_percentage);
+            ui->segment_start_spinbox->setValue(config.value()->segment_start_percentage);
+            ui->segment_start_slider->blockSignals(false);
+            ui->segment_start_spinbox->blockSignals(false);
+            
+            ui->segment_end_slider->blockSignals(true);
+            ui->segment_end_spinbox->blockSignals(true);
+            ui->segment_end_slider->setValue(config.value()->segment_end_percentage);
+            ui->segment_end_spinbox->setValue(config.value()->segment_end_percentage);
+            ui->segment_end_slider->blockSignals(false);
+            ui->segment_end_spinbox->blockSignals(false);
             
             // Reset line selection and update slider
             _current_line_index = 0;
@@ -678,4 +719,95 @@ void MediaLine_Widget::_setPositionPercentage(int percentage) {
     }
     
     std::cout << "Position percentage set to: " << percentage << std::endl;
+}
+
+void MediaLine_Widget::_toggleShowSegment(bool checked) {
+    if (!_active_key.empty()) {
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            line_opts.value()->show_segment = checked;
+        }
+        _scene->UpdateCanvas();
+    }
+    std::cout << "Show segment " << (checked ? "enabled" : "disabled") << std::endl;
+}
+
+void MediaLine_Widget::_setSegmentStartPercentage(int percentage) {
+    if (!_active_key.empty()) {
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            // Ensure start percentage doesn't exceed end percentage
+            if (percentage > line_opts.value()->segment_end_percentage) {
+                // Don't allow start to exceed end
+                QObject* sender_obj = sender();
+                if (sender_obj == ui->segment_start_slider) {
+                    ui->segment_start_slider->blockSignals(true);
+                    ui->segment_start_slider->setValue(line_opts.value()->segment_end_percentage);
+                    ui->segment_start_slider->blockSignals(false);
+                } else if (sender_obj == ui->segment_start_spinbox) {
+                    ui->segment_start_spinbox->blockSignals(true);
+                    ui->segment_start_spinbox->setValue(line_opts.value()->segment_end_percentage);
+                    ui->segment_start_spinbox->blockSignals(false);
+                }
+                percentage = line_opts.value()->segment_end_percentage;
+            }
+            
+            line_opts.value()->segment_start_percentage = percentage;
+        }
+        _scene->UpdateCanvas();
+    }
+    
+    // Synchronize slider and spinbox if the signal came from one of them
+    QObject* sender_obj = sender();
+    if (sender_obj == ui->segment_start_slider) {
+        ui->segment_start_spinbox->blockSignals(true);
+        ui->segment_start_spinbox->setValue(percentage);
+        ui->segment_start_spinbox->blockSignals(false);
+    } else if (sender_obj == ui->segment_start_spinbox) {
+        ui->segment_start_slider->blockSignals(true);
+        ui->segment_start_slider->setValue(percentage);
+        ui->segment_start_slider->blockSignals(false);
+    }
+    
+    std::cout << "Segment start percentage set to: " << percentage << std::endl;
+}
+
+void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
+    if (!_active_key.empty()) {
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            // Ensure end percentage doesn't go below start percentage
+            if (percentage < line_opts.value()->segment_start_percentage) {
+                // Don't allow end to go below start
+                QObject* sender_obj = sender();
+                if (sender_obj == ui->segment_end_slider) {
+                    ui->segment_end_slider->blockSignals(true);
+                    ui->segment_end_slider->setValue(line_opts.value()->segment_start_percentage);
+                    ui->segment_end_slider->blockSignals(false);
+                } else if (sender_obj == ui->segment_end_spinbox) {
+                    ui->segment_end_spinbox->blockSignals(true);
+                    ui->segment_end_spinbox->setValue(line_opts.value()->segment_start_percentage);
+                    ui->segment_end_spinbox->blockSignals(false);
+                }
+                percentage = line_opts.value()->segment_start_percentage;
+            }
+            
+            line_opts.value()->segment_end_percentage = percentage;
+        }
+        _scene->UpdateCanvas();
+    }
+    
+    // Synchronize slider and spinbox if the signal came from one of them
+    QObject* sender_obj = sender();
+    if (sender_obj == ui->segment_end_slider) {
+        ui->segment_end_spinbox->blockSignals(true);
+        ui->segment_end_spinbox->setValue(percentage);
+        ui->segment_end_spinbox->blockSignals(false);
+    } else if (sender_obj == ui->segment_end_spinbox) {
+        ui->segment_end_slider->blockSignals(true);
+        ui->segment_end_slider->setValue(percentage);
+        ui->segment_end_slider->blockSignals(false);
+    }
+    
+    std::cout << "Segment end percentage set to: " << percentage << std::endl;
 }

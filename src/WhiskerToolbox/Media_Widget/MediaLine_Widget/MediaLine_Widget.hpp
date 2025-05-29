@@ -91,6 +91,9 @@ private slots:
     void _toggleShowPoints(bool checked);
     void _toggleShowPositionMarker(bool checked);
     void _setPositionPercentage(int percentage);
+    void _toggleShowSegment(bool checked);
+    void _setSegmentStartPercentage(int percentage);
+    void _setSegmentEndPercentage(int percentage);
     void _lineSelectionChanged(int index);
     void _toggleEdgeSnapping(bool checked);
     void _setEdgeThreshold(int threshold);

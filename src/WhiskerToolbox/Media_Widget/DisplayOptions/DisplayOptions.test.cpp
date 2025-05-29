@@ -118,4 +118,23 @@ TEST_CASE("LineDisplayOptions - Configurable Values", "[LineDisplayOptions]") {
         options.position_percentage = 100;
         REQUIRE(options.position_percentage == 100);
     }
+
+    SECTION("LineDisplayOptions configurable values") {
+        LineDisplayOptions line_opts;
+        line_opts.line_thickness = 5;
+        line_opts.show_points = true;
+        line_opts.show_position_marker = true;
+        line_opts.position_percentage = 50;
+        line_opts.show_segment = true;
+        line_opts.segment_start_percentage = 25;
+        line_opts.segment_end_percentage = 75;
+        
+        REQUIRE(line_opts.line_thickness == 5);
+        REQUIRE(line_opts.show_points == true);
+        REQUIRE(line_opts.show_position_marker == true);
+        REQUIRE(line_opts.position_percentage == 50);
+        REQUIRE(line_opts.show_segment == true);
+        REQUIRE(line_opts.segment_start_percentage == 25);
+        REQUIRE(line_opts.segment_end_percentage == 75);
+    }
 } 

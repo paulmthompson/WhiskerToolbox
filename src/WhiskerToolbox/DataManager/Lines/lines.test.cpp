@@ -88,4 +88,115 @@ TEST_CASE("get_position_at_percentage - Edge cases", "[get_position_at_percentag
         REQUIRE(result.x == 10.0f);
         REQUIRE(result.y == 10.0f);
     }
+}
+
+TEST_CASE("Line segment extraction functionality", "[lines][segment]") {
+    
+    SECTION("Basic segment extraction") {
+        // Create a simple horizontal line
+        Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}, {20.0f, 0.0f}, {30.0f, 0.0f}};
+        
+        // Extract middle 50% (25% to 75%)
+        auto segment = get_segment_between_percentages(line, 0.25f, 0.75f);
+        
+        REQUIRE(!segment.empty());
+        REQUIRE(segment.size() >= 2);
+        
+        // First point should be at 25% position (7.5, 0)
+        REQUIRE(segment[0].x == Catch::Approx(7.5f).margin(0.1f));
+        REQUIRE(segment[0].y == Catch::Approx(0.0f).margin(0.1f));
+        
+        // Last point should be at 75% position (22.5, 0)
+        REQUIRE(segment.back().x == Catch::Approx(22.5f).margin(0.1f));
+        REQUIRE(segment.back().y == Catch::Approx(0.0f).margin(0.1f));
+    }
+    
+    SECTION("Full line segment (0% to 100%)") {
+        Line2D line = {{0.0f, 0.0f}, {10.0f, 10.0f}, {20.0f, 0.0f}};
+        
+        auto segment = get_segment_between_percentages(line, 0.0f, 1.0f);
+        
+        REQUIRE(segment.size() == line.size());
+        REQUIRE(segment[0].x == line[0].x);
+        REQUIRE(segment[0].y == line[0].y);
+        REQUIRE(segment.back().x == line.back().x);
+        REQUIRE(segment.back().y == line.back().y);
+    }
+    
+    SECTION("Complex multi-segment line") {
+        // Create an L-shaped line: horizontal then vertical
+        Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}, {10.0f, 10.0f}};
+        
+        // Extract from 25% to 75% (should span the corner)
+        auto segment = get_segment_between_percentages(line, 0.25f, 0.75f);
+        
+        REQUIRE(!segment.empty());
+        REQUIRE(segment.size() >= 2);
+        
+        // Should start at 25% along first segment
+        REQUIRE(segment[0].x == Catch::Approx(2.5f).margin(0.1f));
+        REQUIRE(segment[0].y == Catch::Approx(0.0f).margin(0.1f));
+        
+        // Should end at 25% along second segment  
+        REQUIRE(segment.back().x == Catch::Approx(10.0f).margin(0.1f));
+        REQUIRE(segment.back().y == Catch::Approx(2.5f).margin(0.1f));
+    }
+}
+
+TEST_CASE("Line segment extraction edge cases", "[lines][segment][edge-cases]") {
+    
+    SECTION("Empty line") {
+        Line2D empty_line;
+        auto segment = get_segment_between_percentages(empty_line, 0.25f, 0.75f);
+        REQUIRE(segment.empty());
+    }
+    
+    SECTION("Single point line") {
+        Line2D single_point = {{5.0f, 5.0f}};
+        auto segment = get_segment_between_percentages(single_point, 0.25f, 0.75f);
+        REQUIRE(segment.empty());
+    }
+    
+    SECTION("Two point line") {
+        Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}};
+        
+        auto segment = get_segment_between_percentages(line, 0.25f, 0.75f);
+        
+        REQUIRE(segment.size() == 2);
+        REQUIRE(segment[0].x == Catch::Approx(2.5f).margin(0.1f));
+        REQUIRE(segment.back().x == Catch::Approx(7.5f).margin(0.1f));
+    }
+    
+    SECTION("Invalid percentage ranges") {
+        Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}, {20.0f, 0.0f}};
+        
+        // Start >= End
+        auto segment1 = get_segment_between_percentages(line, 0.75f, 0.25f);
+        REQUIRE(segment1.empty());
+        
+        // Start == End
+        auto segment2 = get_segment_between_percentages(line, 0.5f, 0.5f);
+        REQUIRE(segment2.empty());
+    }
+    
+    SECTION("Out of range percentages are clamped") {
+        Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}};
+        
+        // Negative start percentage should be clamped to 0
+        auto segment1 = get_segment_between_percentages(line, -0.5f, 0.5f);
+        REQUIRE(!segment1.empty());
+        REQUIRE(segment1[0].x == Catch::Approx(0.0f).margin(0.1f));
+        
+        // End percentage > 1 should be clamped to 1
+        auto segment2 = get_segment_between_percentages(line, 0.5f, 1.5f);
+        REQUIRE(!segment2.empty());
+        REQUIRE(segment2.back().x == Catch::Approx(10.0f).margin(0.1f));
+    }
+    
+    SECTION("Zero-length segments") {
+        // Line where all points are the same (zero total distance)
+        Line2D line = {{5.0f, 5.0f}, {5.0f, 5.0f}, {5.0f, 5.0f}};
+        auto segment = get_segment_between_percentages(line, 0.25f, 0.75f);
+        REQUIRE(segment.empty());
+    }
 } 
