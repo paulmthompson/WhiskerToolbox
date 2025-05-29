@@ -122,6 +122,19 @@ public:
         _xAxis.setMax(xmax);
     };
 
+    /**
+     * @brief Set the master time frame used for X-axis coordinates
+     * 
+     * The master time frame defines the coordinate system for the X-axis display.
+     * Individual data series may have different time frames that need to be
+     * converted to/from the master time frame for proper synchronization.
+     * 
+     * @param master_time_frame Shared pointer to the master time frame
+     */
+    void setMasterTimeFrame(std::shared_ptr<TimeFrame> master_time_frame) {
+        _master_time_frame = master_time_frame;
+    }
+
     void changeRangeWidth(int64_t range_delta) {
         int64_t const center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
         int64_t const current_range = _xAxis.getEnd() - _xAxis.getStart();
@@ -296,6 +309,9 @@ private:
     int64_t _dragged_start_time{0};
     int64_t _dragged_end_time{0};
     QPoint _drag_start_pos;
+    
+    // Master time frame for X-axis coordinate system
+    std::shared_ptr<TimeFrame> _master_time_frame;
 };
 
 

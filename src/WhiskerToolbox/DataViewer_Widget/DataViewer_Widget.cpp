@@ -107,6 +107,9 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 
     std::cout << "Setting GL limit to " << _time_frame->getTotalFrameCount() << std::endl;
     ui->openGLWidget->setXLimit(_time_frame->getTotalFrameCount());
+    
+    // Set the master time frame for proper coordinate conversion
+    ui->openGLWidget->setMasterTimeFrame(_time_frame);
 
     // Setup stacked widget with data-type specific viewers
     auto analog_widget = new AnalogViewer_Widget(_data_manager, ui->openGLWidget);

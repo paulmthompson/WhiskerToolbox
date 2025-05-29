@@ -210,7 +210,12 @@ void MainWindow::_updateFrameCount() {
     auto media = _data_manager->getData<MediaData>("media");
 
     if (_data_manager->getTime()->getTotalFrameCount() != media->getTotalFrameCount()) {
+
         auto frame_count = media->getTotalFrameCount() - 1;
+
+        std::cout << "There is a mismatch between the time in the time vector and number of samples in the video"
+                  << "The video has " << frame_count
+                  << " the time vector has " << _data_manager->getTime()->getTotalFrameCount() << std::endl;
 
         std::vector<int> t(frame_count);
         std::iota(std::begin(t), std::end(t), 0);

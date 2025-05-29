@@ -43,7 +43,7 @@ DataManager::DataManager() {
     _output_path = std::filesystem::current_path();
 }
 
-bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe) {
+bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe, bool overwrite) {
 
     if (!timeframe) {
         std::cerr << "Error: Cannot register a nullptr TimeFrame for key: " << key << std::endl;
@@ -51,8 +51,13 @@ bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> ti
     }
 
     if (_times.find(key) != _times.end()) {
-        std::cerr << "Error: Time key already exists in DataManager: " << key << std::endl;
-        return false;
+        if (overwrite) {
+            _times[key] = std::move(timeframe);
+            return true;
+        } else {
+            std::cerr << "Error: Time key already exists in DataManager: " << key << std::endl;
+            return false;
+        }
     }
 
     _times[key] = std::move(timeframe);
@@ -427,7 +432,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     std::cout << "Loaded " << events_int.size() << " events for " << name << std::endl;
 
                     auto timeframe = std::make_shared<TimeFrame>(events_int);
-                    dm->setTime(name, timeframe);
+                    dm->setTime(name, timeframe, true);
                 }
 
                 if (item["format"] == "uint16_length") {
@@ -444,7 +449,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     std::cout << "Total of " << t.size() << " timestamps for " << name << std::endl;
 
                     auto timeframe = std::make_shared<TimeFrame>(t);
-                    dm->setTime(name, timeframe);
+                    dm->setTime(name, timeframe, true);
                 }
                 break;
             }

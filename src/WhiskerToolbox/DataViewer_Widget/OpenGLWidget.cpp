@@ -316,7 +316,7 @@ void OpenGLWidget::drawDigitalEventSeries() {
         }
     }
     
-    if (visible_event_count == 0) {
+    if (visible_event_count == 0 || !_master_time_frame) {
         glUseProgram(0);
         return;
     }
@@ -339,12 +339,19 @@ void OpenGLWidget::drawDigitalEventSeries() {
         float const bNorm = static_cast<float>(b) / 255.0f;
         float const alpha = display_options->alpha;
 
-        // Get events in the visible range using the time transform
-        auto visible_events = series->getEventsInRange(
-                start_time, end_time,
-                [&time_frame](float idx) {
-                    return static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(idx)));
-                });
+        // Get events in the visible range with proper time frame conversion
+        // start_time and end_time are in master time frame coordinates
+        auto visible_events = [&] {
+            if (time_frame.get() == _master_time_frame.get()) {
+                // Same time frame - use time coordinates directly 
+                return series->getEventsInRange(start_time, end_time);
+            } else {
+                // Different time frames - convert master time coordinates to data time frame indices
+                float data_start_idx = static_cast<float>(time_frame->getIndexAtTime(start_time));
+                float data_end_idx = static_cast<float>(time_frame->getIndexAtTime(end_time));
+                return series->getEventsInRange(data_start_idx, data_end_idx);
+            }
+        }();
 
         // Determine Y coordinates based on display mode
         float event_y_min, event_y_max;
@@ -382,7 +389,16 @@ void OpenGLWidget::drawDigitalEventSeries() {
         glLineWidth(static_cast<float>(display_options->line_thickness));
 
         for (auto const & event: visible_events) {
-            auto const xCanvasPos = static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(event)));
+            // Calculate X position in master time frame coordinates for consistent rendering
+            float xCanvasPos;
+            if (time_frame.get() == _master_time_frame.get()) {
+                // Same time frame - event is already in correct coordinates
+                xCanvasPos = event;
+            } else {
+                // Different time frames - convert event index to time, then to master time frame
+                float event_time = static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(event)));
+                xCanvasPos = event_time; // This should work if both time frames use the same time units
+            }
 
             std::array<GLfloat, 12> vertices = {
                     xCanvasPos, event_y_min, rNorm, gNorm, bNorm, alpha,
@@ -419,6 +435,11 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
     //QOpenGLFunctions_4_1_Core::glBindVertexArray(m_vao.objectId());
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);// glBindVertexArray
     setupVertexAttribs();
+
+    if (!_master_time_frame) {
+        glUseProgram(0);
+        return;
+    }
 
     for (auto const & [key, interval_data]: _digital_interval_series) {
         auto const & series = interval_data.series;
@@ -572,6 +593,11 @@ void OpenGLWidget::drawAnalogSeries() {
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
 
+    if (!_master_time_frame) {
+        glUseProgram(0);
+        return;
+    }
+
     int i = 0;
 
     for (auto const & [key, analog_data]: _analog_series) {
@@ -593,10 +619,29 @@ void OpenGLWidget::drawAnalogSeries() {
 
         m_vertices.clear();
 
-        auto start_it = std::lower_bound(data_time.begin(), data_time.end(), start_time,
+        // Define iterators for the data points in the visible range
+        auto start_it = data_time.begin();
+        auto end_it = data_time.end();
+
+        // If the time frame is the master time frame, use the time coordinates directly
+        // Otherwise, convert the master time coordinates to data time frame indices
+        if (time_frame.get() == _master_time_frame.get()) {
+            start_it = std::lower_bound(data_time.begin(), data_time.end(), start_time,
                                          [&time_frame](auto const & time, auto const & value) { return time_frame->getTimeAtIndex(time) < value; });
-        auto end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
+            end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
                                        [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(time); });
+        } else {
+           auto start_idx = time_frame->getIndexAtTime(start_time); // index in time vector
+           auto end_idx = time_frame->getIndexAtTime(end_time); // index in time vector
+           start_it = std::lower_bound(data_time.begin(), data_time.end(), start_idx); // index in data vector
+           end_it = std::upper_bound(data_time.begin(), data_time.end(), end_idx);   // index in data vector
+        
+            std::cout << "start_it: " << *start_it << std::endl;
+            std::cout << "end_it: " << *end_it << std::endl;
+
+            std::cout << "start_idx: " << start_idx << std::endl;
+            std::cout << "end_idx: " << end_idx << std::endl;
+        }
 
         // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
         float const y_offset = static_cast<float>(i) * _ySpacing;
@@ -620,6 +665,7 @@ void OpenGLWidget::drawAnalogSeries() {
         glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
 
         // Handle different gap handling modes
+        
         if (display_options->gap_handling == AnalogGapHandling::AlwaysConnect) {
             // Original behavior: connect all points
             for (auto it = start_it; it != end_it; ++it) {
@@ -686,7 +732,8 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator
         if (it != start_it) {
             size_t const prev_index = std::distance(data_time.begin(), prev_it);
             auto const prev_time = static_cast<float>(time_frame->getTimeAtIndex(data_time[prev_index]));
-            float const time_gap = time - prev_time;
+            //float const time_gap = time - prev_time;
+            float const time_gap = index - prev_index;
             
             if (time_gap > gap_threshold) {
                 // Draw current segment if it has points
@@ -738,8 +785,20 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it
     
     for (auto it = start_it; it != end_it; ++it) {
         size_t const index = std::distance(data_time.begin(), it);
-        auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
-        float const xCanvasPos = time;
+        
+        // Calculate X position with proper time frame handling
+        float xCanvasPos;
+        if (time_frame.get() == _master_time_frame.get()) {
+            // Same time frame - convert data index to time coordinate
+            auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
+            xCanvasPos = time;
+        } else {
+            // Different time frames - data_time[index] is already an index in the data's time frame
+            // Convert to actual time, which should be compatible with master time frame
+            auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
+            xCanvasPos = time;
+        }
+        
         float const yCanvasPos = data[index];
         
         m_vertices.push_back(xCanvasPos);

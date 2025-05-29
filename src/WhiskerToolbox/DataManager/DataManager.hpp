@@ -32,7 +32,7 @@ public:
     * @note If the key already exists or timeframe is nullptr, a warning message will be printed
     *       to std::cerr and the function will return false
     */
-    bool setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe);
+    bool setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe, bool overwrite = false);
 
     /**
     * @brief Get the default time frame object
