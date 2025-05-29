@@ -24,3 +24,38 @@ The **arrangement of data** in the viewer is also important. Again, considering 
 This representation may provide the user with information useful for certain data pre-processing tasks. For instance, the user may be able to determine a numerical threshold for event detection in a particular channel. Alternatively, in this view, the user may wish to determine the temporal range where it appears some behavior is taking place based on an analog signal change. For example, viewing the whisker angle versus time when zoomed out may be useful to identify times when the animal is whisking versus when it is stationary.
 
 The user may even wish to **interactively define events or intervals** within this viewer window based on the temporal representation of data that would not be so easy to see in other widgets. Consequently, the data viewer is not just passive in its relationship with the data it is displaying but rather facilitates **active engagement**.
+
+## Event Viewer Features
+
+The EventViewer_Widget provides controls for digital event series visualization with two main display modes:
+
+### Display Modes
+
+1.  **Stacked Mode (Default)**: Events are positioned in separate horizontal lanes with configurable spacing
+    -   Each event series gets its own horizontal "lane"
+    -   Configurable vertical spacing between lanes
+    -   Configurable event line height
+    -   Auto-calculation of optimal spacing when event groups are loaded
+2.  **Full Canvas Mode**: Events stretch from top to bottom of the entire canvas
+    -   Original behavior maintained for compatibility
+    -   All events span the full height of the display area
+
+### Auto-Spacing for Event Groups
+
+When a tree of digital event series is selected and enabled, the system automatically calculates optimal spacing to fit all events on the canvas:
+
+-   If 40 events are enabled on a 400-pixel tall canvas, each event gets approximately 10 pixels of space
+-   Spacing and height are calculated to ensure visual separation between different event series
+-   Uses 80% of available canvas height, leaving margins at top and bottom
+-   Event height is set to 60% of calculated spacing to prevent overlap
+
+### User Controls
+
+The EventViewer_Widget provides: - **Display Mode**: Combo box to switch between Stacked and Full Canvas modes - **Vertical Spacing**: Adjustable spacing between stacked event series (0.01-1.0 normalized units) - **Event Height**: Adjustable height of individual event lines (0.01-0.5 normalized units) - **Color Controls**: Standard color picker for event line colors and transparency
+
+### Implementation Details
+
+-   Event stacking uses normalized coordinates for consistent spacing across different canvas sizes
+-   State is preserved when switching between data series
+-   Integration with existing TreeWidgetStateManager for persistence
+-   Optimized rendering with proper OpenGL line thickness and positioning

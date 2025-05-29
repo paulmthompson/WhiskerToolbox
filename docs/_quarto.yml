@@ -46,6 +46,7 @@ website:
         - developer/media_widget.qmd
         - developer/data_manager_widget.qmd
         - developer/data_viewer_widget.qmd
+        - developer/data_range_widget.qmd
         - section: "Features"
           href: developer/Features/overview.qmd
           contents:

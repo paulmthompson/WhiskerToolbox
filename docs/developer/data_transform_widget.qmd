@@ -1,0 +1,36 @@
+---
+title: "Data Transform Widget"
+format: html
+---
+
+The data transform interface is used for processing different data types. The core idea is to define various data processing operations that can be dynamically discovered and applied to different types of data, with parameters configurable through the UI. The system employs several design patterns, most notably the **Strategy pattern** for individual transformations and a **Registry pattern** for managing them, along with **Factory Method** for creating UI components.
+
+## Core Components and Workflow
+
+The system revolves around a few key components:
+
+1.  **`TransformOperation` (Strategy Pattern)**: This is an abstract base class that defines the interface for all data transformation operations. Each concrete operation (e.g., `EventThresholdOperation`, `MaskAreaOperation`) inherits from `TransformOperation` and implements methods like `getName()`, `getTargetInputTypeIndex()`, `canApply()`, and `execute()`. This allows different algorithms (strategies) for data transformation to be used interchangeably.
+
+2.  **`TransformParametersBase` and derived structs (e.g., `ThresholdParams`)**: These structures hold the parameters for specific transformations. `TransformParametersBase` is a base class, and each operation can define its own derived struct (like `ThresholdParams` for thresholding operations) to store specific settings.
+
+3.  **`TransformRegistry` (Registry Pattern)**: This class acts as a central repository for all available `TransformOperation` instances. On initialization, it registers various concrete operation objects (e.g., `MaskAreaOperation`, `EventThresholdOperation`). It provides methods to find operations by name and to get a list of applicable operations for a given data type.
+
+4.  **`TransformParameter_Widget` (UI Abstraction)**: This is an abstract base class for UI widgets that allow users to set parameters for a `TransformOperation`. Concrete classes like `AnalogEventThreshold_Widget` inherit from it and provide the specific UI controls (e.g., spinboxes, comboboxes) for an operation.
+
+5.  **`DataTransform_Widget` (Main UI Controller)**: This Qt widget orchestrates the user interaction for data transformations.
+
+    -   It uses a `Feature_Table_Widget` to display available data items (features) from a `DataManager`.
+
+    -   When a feature is selected, it queries the `TransformRegistry` to find applicable operations for that feature's data type.
+
+    -   It populates a `QComboBox` with the names of these operations.
+
+    -   When an operation is selected, it uses a map of factory functions (`_parameterWidgetFactories`) to create and display the appropriate `TransformParameter_Widget` (e.g., `AnalogEventThreshold_Widget`) for that operation. This is an example of the **Factory Method pattern**.
+
+    -   It has a "Do Transform" button that, when clicked, retrieves the parameters from the current `TransformParameter_Widget`, gets the selected `TransformOperation` from the `TransformRegistry`, and executes the operation on the selected data.
+
+## Features
+
+1.  The `ProgressCallback` mechanism allows the `TransformOperation` to notify the `DataTransform_Widget` about its progress, which then updates the UI. This is a simple form of the Observer pattern.
+
+## 
