@@ -19,6 +19,7 @@ class GammaWidget;
 class SharpenWidget;
 class ClaheWidget;
 class BilateralWidget;
+class MedianWidget;
 class Section;
 
 class MediaProcessing_Widget : public QWidget {
@@ -46,6 +47,8 @@ private:
     Section* _clahe_section;
     BilateralWidget* _bilateral_widget;
     Section* _bilateral_section;
+    MedianWidget* _median_widget;
+    Section* _median_section;
 
     // Current processing options
     ContrastOptions _contrast_options;
@@ -53,6 +56,7 @@ private:
     SharpenOptions _sharpen_options;
     ClaheOptions _clahe_options;
     BilateralOptions _bilateral_options;
+    MedianOptions _median_options;
 
     void _setupProcessingWidgets();
     void _applyContrastFilter();
@@ -60,6 +64,7 @@ private:
     void _applySharpenFilter();
     void _applyClaheFilter();
     void _applyBilateralFilter();
+    void _applyMedianFilter();
 
 private slots:
     void _onContrastOptionsChanged(ContrastOptions const& options);
@@ -67,6 +72,7 @@ private slots:
     void _onSharpenOptionsChanged(SharpenOptions const& options);
     void _onClaheOptionsChanged(ClaheOptions const& options);
     void _onBilateralOptionsChanged(BilateralOptions const& options);
+    void _onMedianOptionsChanged(MedianOptions const& options);
 };
 
 #endif // MEDIAPROCESSING_WIDGET_HPP 

@@ -15,7 +15,6 @@
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
 #include "Export_Widgets/Export_Video_Widget/Export_Video_Widget.hpp"
-#include "Image_Processing_Widget/Image_Processing_Widget.hpp"
 #include "Label_Widget.hpp"
 #include "IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp"
 #include "IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.hpp"
@@ -98,7 +97,6 @@ void MainWindow::_createActions() {
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
     connect(ui->actionLabel_Maker, &QAction::triggered, this, &MainWindow::openLabelMaker);
-    connect(ui->actionImage_Processing, &QAction::triggered, this, &MainWindow::openImageProcessing);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
@@ -273,22 +271,6 @@ void MainWindow::openLabelMaker() {
     }
 
     auto ptr = dynamic_cast<Label_Widget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
-}
-
-void MainWindow::openImageProcessing() {
-    std::string const key = "image_processing";
-
-    if (_widgets.find(key) == _widgets.end()) {
-        auto imageProcessing = std::make_unique<Image_Processing_Widget>(_data_manager);
-        imageProcessing->setObjectName(key);
-        registerDockWidget(key, imageProcessing.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(imageProcessing);
-    }
-
-    auto ptr = dynamic_cast<Image_Processing_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);

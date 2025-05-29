@@ -173,6 +173,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.cpp
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.hpp
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/ClaheWidget.ui
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.cpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.hpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.ui
 
         Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp
         Media_Widget/MediaMask_Widget/MediaMask_Widget.cpp
@@ -214,11 +217,6 @@ set(PROJECT_SOURCES
         TimeScrollBar/TimeScrollBar.hpp
         TimeScrollBar/TimeScrollBar.cpp
         TimeScrollBar/TimeScrollBar.ui
-
-        Image_Processing_Widget/Image_Processing_Widget.hpp
-        Image_Processing_Widget/Image_Processing_Widget.cpp
-        Image_Processing_Widget/Image_Processing_Widget.ui
-
 
         DataViewer_Widget/DataViewer_Widget.cpp
         DataViewer_Widget/DataViewer_Widget.hpp

@@ -68,11 +68,12 @@ void sharpen_image(cv::Mat& mat, SharpenOptions const& options);
  */
 void bilateral_filter(cv::Mat& mat, BilateralOptions const& options);
 
-// Legacy functions (deprecated - use options-based versions above)
-void linear_transform(cv::Mat & mat, double alpha, int beta);
-void gamma_transform(cv::Mat & mat, double gamma);
-void clahe(cv::Mat & mat, double clip_limit, int grid_size);
-void sharpen_image(cv::Mat& img, double sigma = 3.0);
-void bilateral_filter(cv::Mat& img, int d = 5, double sigmaColor = 75.0, double sigmaSpace = 75.0);
+/**
+ * @brief Apply median filtering for noise reduction
+ * @param mat Image matrix to transform (modified in-place)
+ * @param options MedianOptions containing kernel size parameter
+ */
+void median_filter(cv::Mat& mat, MedianOptions const& options);
+
 
 #endif // OPENCV_UTILITY_HPP

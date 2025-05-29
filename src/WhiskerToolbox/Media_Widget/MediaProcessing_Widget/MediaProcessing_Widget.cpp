@@ -5,6 +5,7 @@
 #include "ProcessingOptions/SharpenWidget.hpp"
 #include "ProcessingOptions/ClaheWidget.hpp"
 #include "ProcessingOptions/BilateralWidget.hpp"
+#include "ProcessingOptions/MedianWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Media/Media_Data.hpp"
@@ -30,7 +31,9 @@ MediaProcessing_Widget::MediaProcessing_Widget(std::shared_ptr<DataManager> data
       _clahe_widget(nullptr),
       _clahe_section(nullptr),
       _bilateral_widget(nullptr),
-      _bilateral_section(nullptr) {
+      _bilateral_section(nullptr),
+      _median_widget(nullptr),
+      _median_section(nullptr) {
     
     ui->setupUi(this);
     _setupProcessingWidgets();
@@ -138,6 +141,23 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     
     // Set initial bilateral options
     _bilateral_widget->setOptions(_bilateral_options);
+    
+    // Create median section
+    _median_widget = new MedianWidget(this);
+    _median_section = new Section(this, "Median Filter (Noise Reduction)");
+    _median_section->setContentLayout(*new QVBoxLayout());
+    _median_section->layout()->addWidget(_median_widget);
+    _median_section->autoSetContentLayout();
+    
+    // Connect median widget signals
+    connect(_median_widget, &MedianWidget::optionsChanged,
+            this, &MediaProcessing_Widget::_onMedianOptionsChanged);
+    
+    // Add median section to the scroll layout (before the spacer)
+    scroll_layout->insertWidget(scroll_layout->count() - 1, _median_section);
+    
+    // Set initial median options
+    _median_widget->setOptions(_median_options);
 }
 
 void MediaProcessing_Widget::_onContrastOptionsChanged(ContrastOptions const& options) {
@@ -179,6 +199,14 @@ void MediaProcessing_Widget::_onBilateralOptionsChanged(BilateralOptions const& 
     std::cout << "Bilateral options changed - Active: " << options.active
               << ", D: " << options.diameter << ", Color Sigma: " << options.sigma_color
               << ", Space Sigma: " << options.sigma_spatial << std::endl;
+}
+
+void MediaProcessing_Widget::_onMedianOptionsChanged(MedianOptions const& options) {
+    _median_options = options;
+    _applyMedianFilter();
+    
+    std::cout << "Median options changed - Active: " << options.active
+              << ", Kernel Size: " << options.kernel_size << std::endl;
 }
 
 void MediaProcessing_Widget::_applyContrastFilter() {
@@ -283,6 +311,28 @@ void MediaProcessing_Widget::_applyBilateralFilter() {
     } else {
         // Remove the bilateral filter from the processing chain
         media_data->removeProcess("5__bilateral");
+    }
+    
+    // Update the canvas
+    if (_scene) {
+        _scene->UpdateCanvas();
+    }
+}
+
+void MediaProcessing_Widget::_applyMedianFilter() {
+    if (_active_key.empty()) return;
+    
+    auto media_data = _data_manager->getData<MediaData>(_active_key);
+    if (!media_data) return;
+    
+    if (_median_options.active) {
+        // Add or update the median filter in the processing chain using the options structure
+        media_data->setProcess("6__median", [options = _median_options](cv::Mat& input) {
+            median_filter(input, options);
+        });
+    } else {
+        // Remove the median filter from the processing chain
+        media_data->removeProcess("6__median");
     }
     
     // Update the canvas

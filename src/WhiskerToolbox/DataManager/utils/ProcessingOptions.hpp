@@ -45,4 +45,12 @@ struct BilateralOptions {
     double sigma_spatial{20.0};  ///< Spatial sigma for bilateral filter
 };
 
+/**
+ * @brief Options structure for median filtering
+ */
+struct MedianOptions {
+    bool active{false};          ///< Whether the median filter is active
+    int kernel_size{5};          ///< Kernel size for median filter (must be odd and >= 3)
+};
+
 #endif // PROCESSING_OPTIONS_HPP 

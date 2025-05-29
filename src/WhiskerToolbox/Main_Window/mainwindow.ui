@@ -85,7 +85,6 @@
      <string>Image</string>
     </property>
     <addaction name="actionTake_Snapshot"/>
-    <addaction name="actionImage_Processing"/>
    </widget>
    <widget class="QMenu" name="menuModules">
     <property name="title">

@@ -126,37 +126,15 @@ void bilateral_filter(cv::Mat & mat, BilateralOptions const& options) {
     mat = temp;
 }
 
-// Legacy implementations (for backward compatibility)
-void linear_transform(cv::Mat & mat, double alpha, int beta) {
-    ContrastOptions options;
-    options.alpha = alpha;
-    options.beta = beta;
-    linear_transform(mat, options);
-}
-
-void gamma_transform(cv::Mat & mat, double gamma) {
-    GammaOptions options;
-    options.gamma = gamma;
-    gamma_transform(mat, options);
-}
-
-void clahe(cv::Mat & mat, double const clip_limit, int const grid_size) {
-    ClaheOptions options;
-    options.clip_limit = clip_limit;
-    options.grid_size = grid_size;
-    clahe(mat, options);
-}
-
-void sharpen_image(cv::Mat& img, double const sigma) {
-    SharpenOptions options;
-    options.sigma = sigma;
-    sharpen_image(img, options);
-}
-
-void bilateral_filter(cv::Mat& img, int d, double sigmaColor, double sigmaSpace) {
-    BilateralOptions options;
-    options.diameter = d;
-    options.sigma_color = sigmaColor;
-    options.sigma_spatial = sigmaSpace;
-    bilateral_filter(img, options);
+void median_filter(cv::Mat & mat, MedianOptions const& options) {
+    // Ensure kernel size is odd and >= 3
+    int kernel_size = options.kernel_size;
+    if (kernel_size < 3) {
+        kernel_size = 3;
+    }
+    if (kernel_size % 2 == 0) {
+        kernel_size += 1; // Make it odd
+    }
+    
+    cv::medianBlur(mat, mat, kernel_size);
 }

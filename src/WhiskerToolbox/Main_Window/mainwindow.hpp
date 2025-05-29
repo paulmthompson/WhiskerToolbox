@@ -70,7 +70,6 @@ private slots:
 
     void openWhiskerTracking();
     void openLabelMaker();
-    void openImageProcessing();
     void openTongueTracking();
     void openMLWidget();
     void openDataViewer();
