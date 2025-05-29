@@ -1202,19 +1202,35 @@ std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std:
     auto const & series = interval_data.series;
     auto const & time_frame = interval_data.time_frame;
     
-    // Convert time coordinate to time frame index
-    int64_t const time_index = static_cast<int64_t>(std::round(time_coord));
+    // Convert time coordinate from master time frame to series time frame
+    int64_t query_time_index;
+    if (time_frame.get() == _master_time_frame.get()) {
+        // Same time frame - use time coordinate directly
+        query_time_index = static_cast<int64_t>(std::round(time_coord));
+    } else {
+        // Different time frame - convert master time to series time frame index
+        query_time_index = static_cast<int64_t>(time_frame->getIndexAtTime(time_coord));
+    }
     
-    // Find all intervals that contain this time point
-    auto intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(time_index, time_index);
+    // Find all intervals that contain this time point in the series' time frame
+    auto intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(query_time_index, query_time_index);
     
     if (!intervals.empty()) {
-        // Return the first interval found (could be modified to select closest or largest)
+        // Return the first interval found, converted to master time frame coordinates
         auto const & interval = intervals[0];
-        return std::make_pair(
-            static_cast<int64_t>(time_frame->getTimeAtIndex(interval.start)),
-            static_cast<int64_t>(time_frame->getTimeAtIndex(interval.end))
-        );
+        int64_t interval_start_master, interval_end_master;
+        
+        if (time_frame.get() == _master_time_frame.get()) {
+            // Same time frame - use indices directly as time coordinates
+            interval_start_master = interval.start;
+            interval_end_master = interval.end;
+        } else {
+            // Convert series indices to master time frame coordinates
+            interval_start_master = static_cast<int64_t>(time_frame->getTimeAtIndex(interval.start));
+            interval_end_master = static_cast<int64_t>(time_frame->getTimeAtIndex(interval.end));
+        }
+        
+        return std::make_pair(interval_start_master, interval_end_master);
     }
     
     return std::nullopt;
@@ -1287,68 +1303,110 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
         return;
     }
     
-    // Convert mouse position to time coordinate
-    float const current_time = canvasXToTime(static_cast<float>(current_pos.x()));
-    auto const current_time_int = static_cast<int64_t>(std::round(current_time));
+    // Convert mouse position to time coordinate (in master time frame)
+    float const current_time_master = canvasXToTime(static_cast<float>(current_pos.x()));
     
-    // Get the series data to check for constraints
+    // Get the series data
     auto it = _digital_interval_series.find(_dragging_series_key);
     if (it == _digital_interval_series.end()) {
+        // Series not found - abort drag
+        cancelIntervalDrag();
         return;
     }
     
     auto const & series = it->second.series;
+    auto const & time_frame = it->second.time_frame;
+    
+    // Convert master time coordinate to series time frame index
+    int64_t current_time_series_index;
+    if (time_frame.get() == _master_time_frame.get()) {
+        // Same time frame - use time coordinate directly
+        current_time_series_index = static_cast<int64_t>(std::round(current_time_master));
+    } else {
+        // Different time frame - convert master time to series time frame index
+        current_time_series_index = static_cast<int64_t>(time_frame->getIndexAtTime(current_time_master));
+    }
+    
+    // Convert original interval bounds to series time frame for constraints
+    int64_t original_start_series, original_end_series;
+    if (time_frame.get() == _master_time_frame.get()) {
+        // Same time frame
+        original_start_series = _original_start_time;
+        original_end_series = _original_end_time;
+    } else {
+        // Convert master time coordinates to series time frame indices
+        original_start_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_original_start_time)));
+        original_end_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_original_end_time)));
+    }
+    
+    // Perform dragging logic in series time frame
+    int64_t new_start_series, new_end_series;
     
     if (_dragging_left_edge) {
-        // Dragging left edge - constrain to not pass right edge (allow shrinking and expanding)
-        int64_t new_start = std::min(current_time_int, _dragged_end_time - 1);
+        // Dragging left edge - constrain to not pass right edge
+        new_start_series = std::min(current_time_series_index, original_end_series - 1);
+        new_end_series = original_end_series;
         
-        // Check for collision with other intervals
+        // Check for collision with other intervals in series time frame
         auto overlapping_intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-            new_start, new_start);
+            new_start_series, new_start_series);
         
         for (auto const & interval : overlapping_intervals) {
-            auto const interval_start = static_cast<int64_t>(it->second.time_frame->getTimeAtIndex(interval.start));
-            auto const interval_end = static_cast<int64_t>(it->second.time_frame->getTimeAtIndex(interval.end));
-            
             // Skip the interval we're currently editing
-            if (interval_start == _original_start_time && interval_end == _original_end_time) {
+            if (interval.start == original_start_series && interval.end == original_end_series) {
                 continue;
             }
             
             // If we would overlap with another interval, stop 1 index after it
-            if (new_start <= interval_end) {
-                new_start = interval_end + 1;
+            if (new_start_series <= interval.end) {
+                new_start_series = interval.end + 1;
                 break;
             }
         }
-        
-        _dragged_start_time = new_start;
     } else {
-        // Dragging right edge - constrain to not pass left edge (allow shrinking and expanding)
-        int64_t new_end = std::max(current_time_int, _dragged_start_time + 1);
+        // Dragging right edge - constrain to not pass left edge
+        new_start_series = original_start_series;
+        new_end_series = std::max(current_time_series_index, original_start_series + 1);
         
-        // Check for collision with other intervals
+        // Check for collision with other intervals in series time frame
         auto overlapping_intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-            new_end, new_end);
+            new_end_series, new_end_series);
         
         for (auto const & interval : overlapping_intervals) {
-            auto const interval_start = static_cast<int64_t>(it->second.time_frame->getTimeAtIndex(interval.start));
-            auto const interval_end = static_cast<int64_t>(it->second.time_frame->getTimeAtIndex(interval.end));
-            
             // Skip the interval we're currently editing
-            if (interval_start == _original_start_time && interval_end == _original_end_time) {
+            if (interval.start == original_start_series && interval.end == original_end_series) {
                 continue;
             }
             
             // If we would overlap with another interval, stop 1 index before it
-            if (new_end >= interval_start) {
-                new_end = interval_start - 1;
+            if (new_end_series >= interval.start) {
+                new_end_series = interval.start - 1;
                 break;
             }
         }
-        
-        _dragged_end_time = new_end;
+    }
+    
+    // Validate the new interval bounds
+    if (new_start_series >= new_end_series) {
+        // Invalid bounds - keep current drag state
+        return;
+    }
+    
+    // Convert back to master time frame for display
+    if (time_frame.get() == _master_time_frame.get()) {
+        // Same time frame
+        _dragged_start_time = new_start_series;
+        _dragged_end_time = new_end_series;
+    } else {
+        // Convert series indices back to master time coordinates
+        try {
+            _dragged_start_time = static_cast<int64_t>(time_frame->getTimeAtIndex(static_cast<int>(new_start_series)));
+            _dragged_end_time = static_cast<int64_t>(time_frame->getTimeAtIndex(static_cast<int>(new_end_series)));
+        } catch (...) {
+            // Conversion failed - abort drag
+            cancelIntervalDrag();
+            return;
+        }
     }
     
     // Trigger redraw to show the dragged interval
@@ -1360,26 +1418,62 @@ void OpenGLWidget::finishIntervalDrag() {
         return;
     }
     
-    // Update the actual interval data
+    // Get the series data
     auto it = _digital_interval_series.find(_dragging_series_key);
-    if (it != _digital_interval_series.end()) {
-        auto const & series = it->second.series;
-        auto const & time_frame = it->second.time_frame;
+    if (it == _digital_interval_series.end()) {
+        // Series not found - abort drag
+        cancelIntervalDrag();
+        return;
+    }
+    
+    auto const & series = it->second.series;
+    auto const & time_frame = it->second.time_frame;
+    
+    try {
+        // Convert all coordinates to series time frame for data operations
+        int64_t original_start_series, original_end_series, new_start_series, new_end_series;
         
-        // First, remove the original interval completely by setting all times to false
-        for (int64_t time = _original_start_time; time <= _original_end_time; ++time) {
+        if (time_frame.get() == _master_time_frame.get()) {
+            // Same time frame - use coordinates directly
+            original_start_series = _original_start_time;
+            original_end_series = _original_end_time;
+            new_start_series = _dragged_start_time;
+            new_end_series = _dragged_end_time;
+        } else {
+            // Convert master time coordinates to series time frame indices
+            original_start_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_original_start_time)));
+            original_end_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_original_end_time)));
+            new_start_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_dragged_start_time)));
+            new_end_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_dragged_end_time)));
+        }
+        
+        // Validate converted coordinates
+        if (new_start_series >= new_end_series || 
+            new_start_series < 0 || new_end_series < 0) {
+            throw std::runtime_error("Invalid interval bounds after conversion");
+        }
+        
+        // Update the interval data in the series' native time frame
+        // First, remove the original interval completely
+        for (int64_t time = original_start_series; time <= original_end_series; ++time) {
             series->setEventAtTime(static_cast<int>(time), false);
         }
         
-        // Now add the new interval
-        series->addEvent(static_cast<int>(_dragged_start_time), static_cast<int>(_dragged_end_time));
+        // Add the new interval
+        series->addEvent(static_cast<int>(new_start_series), static_cast<int>(new_end_series));
         
-        // Update the selection to the new interval
+        // Update the selection to the new interval (stored in master time frame coordinates)
         setSelectedInterval(_dragging_series_key, _dragged_start_time, _dragged_end_time);
         
         std::cout << "Finished dragging interval. Original: [" 
                   << _original_start_time << ", " << _original_end_time 
                   << "] -> New: [" << _dragged_start_time << ", " << _dragged_end_time << "]" << std::endl;
+        
+    } catch (...) {
+        // Error occurred during conversion or data update - abort drag
+        std::cout << "Error during interval drag completion - keeping original interval" << std::endl;
+        cancelIntervalDrag();
+        return;
     }
     
     // Reset drag state

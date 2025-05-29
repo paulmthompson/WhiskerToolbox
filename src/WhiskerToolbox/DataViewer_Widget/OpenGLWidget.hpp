@@ -103,17 +103,122 @@ public:
     void setVerticalSpacing(float spacing) { _ySpacing = spacing; updateCanvas(_time); }
     [[nodiscard]] float getVerticalSpacing() const { return _ySpacing; }
 
-    // Interval selection controls
+    // Interval selection and manipulation controls
+    
+    /**
+     * @brief Set the highlighted interval for a digital interval series
+     * 
+     * @param series_key The key identifying the digital interval series
+     * @param start_time Start time of the interval in master time frame coordinates
+     * @param end_time End time of the interval in master time frame coordinates
+     */
     void setSelectedInterval(std::string const & series_key, int64_t start_time, int64_t end_time);
+    
+    /**
+     * @brief Clear the highlighted interval for a digital interval series
+     * 
+     * @param series_key The key identifying the digital interval series
+     */
     void clearSelectedInterval(std::string const & series_key);
+    
+    /**
+     * @brief Get the currently highlighted interval for a digital interval series
+     * 
+     * @param series_key The key identifying the digital interval series
+     * @return Optional pair containing start and end times in master time frame coordinates,
+     *         or nullopt if no interval is selected
+     */
     std::optional<std::pair<int64_t, int64_t>> getSelectedInterval(std::string const & series_key) const;
+    
+    /**
+     * @brief Find an interval at the specified time coordinate
+     * 
+     * Searches for digital intervals that contain the given time coordinate.
+     * Automatically handles time frame conversion when the series uses a different
+     * time frame from the master time frame.
+     * 
+     * @param series_key The key identifying the digital interval series
+     * @param time_coord Time coordinate in master time frame coordinates
+     * @return Optional pair containing start and end times in master time frame coordinates,
+     *         or nullopt if no interval is found at the specified time
+     * 
+     * @note Time frame conversion is performed internally:
+     *       - Input time_coord is in master time frame coordinates
+     *       - Conversion to series time frame is done for data queries
+     *       - Returned interval bounds are converted back to master time frame coordinates
+     */
     std::optional<std::pair<int64_t, int64_t>> findIntervalAtTime(std::string const & series_key, float time_coord) const;
 
     // Interval edge dragging controls
+    
+    /**
+     * @brief Find interval edges near the specified canvas position
+     * 
+     * @param canvas_x Canvas X coordinate in pixels
+     * @param canvas_y Canvas Y coordinate in pixels  
+     * @return Optional pair containing series key and edge type (true=left, false=right),
+     *         or nullopt if no edge is found near the position
+     */
     std::optional<std::pair<std::string, bool>> findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const;
+    
+    /**
+     * @brief Start dragging an interval edge
+     * 
+     * Initiates interval edge dragging for the specified series. The dragging system
+     * automatically handles time frame conversion when the series uses a different
+     * time frame from the master time frame.
+     * 
+     * @param series_key The key identifying the digital interval series
+     * @param is_left_edge True for left edge, false for right edge
+     * @param start_pos Initial mouse position when drag started
+     * 
+     * @note Time frame handling:
+     *       - Mouse coordinates are converted from master time frame to series time frame
+     *       - Collision detection is performed in the series' native time frame
+     *       - Display coordinates remain in master time frame for consistent rendering
+     */
     void startIntervalDrag(std::string const & series_key, bool is_left_edge, QPoint const & start_pos);
+    
+    /**
+     * @brief Update the dragged interval position
+     * 
+     * Updates the position of the interval being dragged based on current mouse position.
+     * Handles collision detection and constraint enforcement in the series' native time frame.
+     * 
+     * @param current_pos Current mouse position
+     * 
+     * @note Error handling:
+     *       - If time frame conversion fails, the drag operation is aborted
+     *       - If series data becomes invalid, the drag operation is cancelled
+     *       - Invalid interval bounds are rejected and the drag state is preserved
+     */
     void updateIntervalDrag(QPoint const & current_pos);
+    
+    /**
+     * @brief Complete the interval dragging operation
+     * 
+     * Finalizes the interval drag by updating the actual data in the digital interval series.
+     * All coordinate conversions between master time frame and series time frame are
+     * handled automatically.
+     * 
+     * @note Error handling:
+     *       - If coordinate conversion fails, the operation is aborted
+     *       - If data update fails, the original interval is preserved
+     *       - The drag state is always cleared regardless of success/failure
+     * 
+     * @note Time frame conversion:
+     *       - Master time frame coordinates are converted to series time frame indices
+     *       - Data operations are performed in the series' native time frame
+     *       - Selection tracking remains in master time frame coordinates
+     */
     void finishIntervalDrag();
+    
+    /**
+     * @brief Cancel the interval dragging operation
+     * 
+     * Cancels the current drag operation without making any changes to the data.
+     * The original interval remains unchanged.
+     */
     void cancelIntervalDrag();
 
     [[nodiscard]] bool isDraggingInterval() const { return _is_dragging_interval; }
