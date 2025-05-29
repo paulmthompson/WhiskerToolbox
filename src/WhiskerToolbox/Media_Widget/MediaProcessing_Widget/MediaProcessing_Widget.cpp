@@ -2,6 +2,7 @@
 #include "ui_MediaProcessing_Widget.h"
 #include "ProcessingOptions/ContrastWidget.hpp"
 #include "ProcessingOptions/GammaWidget.hpp"
+#include "ProcessingOptions/SharpenWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Media/Media_Data.hpp"
@@ -21,13 +22,15 @@ MediaProcessing_Widget::MediaProcessing_Widget(std::shared_ptr<DataManager> data
       _contrast_widget(nullptr),
       _contrast_section(nullptr),
       _gamma_widget(nullptr),
-      _gamma_section(nullptr) {
+      _gamma_section(nullptr),
+      _sharpen_widget(nullptr),
+      _sharpen_section(nullptr) {
     
     ui->setupUi(this);
     _setupProcessingWidgets();
     
     // Connect legacy controls for other filters (these will be refactored later)
-    // ... (sharpen, CLAHE, bilateral controls would go here)
+    // ... (CLAHE, bilateral controls would go here)
 }
 
 MediaProcessing_Widget::~MediaProcessing_Widget() {
@@ -50,7 +53,6 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     _contrast_section = new Section(this, "Linear Transform (Contrast/Brightness)");
     _contrast_section->setContentLayout(*new QVBoxLayout());
     _contrast_section->layout()->addWidget(_contrast_widget);
-
     _contrast_section->autoSetContentLayout();
     
     // Connect contrast widget signals
@@ -68,7 +70,6 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     _gamma_section = new Section(this, "Gamma Correction");
     _gamma_section->setContentLayout(*new QVBoxLayout());
     _gamma_section->layout()->addWidget(_gamma_widget);
-
     _gamma_section->autoSetContentLayout();
     
     // Connect gamma widget signals
@@ -80,6 +81,23 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     
     // Set initial gamma options
     _gamma_widget->setOptions(_gamma_options);
+    
+    // Create sharpen section
+    _sharpen_widget = new SharpenWidget(this);
+    _sharpen_section = new Section(this, "Image Sharpening");
+    _sharpen_section->setContentLayout(*new QVBoxLayout());
+    _sharpen_section->layout()->addWidget(_sharpen_widget);
+    _sharpen_section->autoSetContentLayout();
+    
+    // Connect sharpen widget signals
+    connect(_sharpen_widget, &SharpenWidget::optionsChanged,
+            this, &MediaProcessing_Widget::_onSharpenOptionsChanged);
+    
+    // Add sharpen section to the scroll layout (before the spacer)
+    scroll_layout->insertWidget(scroll_layout->count() - 1, _sharpen_section);
+    
+    // Set initial sharpen options
+    _sharpen_widget->setOptions(_sharpen_options);
 }
 
 void MediaProcessing_Widget::_onContrastOptionsChanged(ContrastOptions const& options) {
@@ -96,6 +114,14 @@ void MediaProcessing_Widget::_onGammaOptionsChanged(GammaOptions const& options)
     
     std::cout << "Gamma options changed - Active: " << options.active 
               << ", Gamma: " << options.gamma << std::endl;
+}
+
+void MediaProcessing_Widget::_onSharpenOptionsChanged(SharpenOptions const& options) {
+    _sharpen_options = options;
+    _applySharpenFilter();
+    
+    std::cout << "Sharpen options changed - Active: " << options.active 
+              << ", Sigma: " << options.sigma << std::endl;
 }
 
 void MediaProcessing_Widget::_applyContrastFilter() {
@@ -142,27 +168,29 @@ void MediaProcessing_Widget::_applyGammaFilter() {
     }
 }
 
-// Legacy implementations for other filters (to be refactored later)
-void MediaProcessing_Widget::_updateSharpenFilter() {
+void MediaProcessing_Widget::_applySharpenFilter() {
     if (_active_key.empty()) return;
     
     auto media_data = _data_manager->getData<MediaData>(_active_key);
     if (!media_data) return;
     
-    if (_sharpen_active) {
-        // TODO: Create SharpenOptions and use options-based function
-        media_data->setProcess("3__sharpentransform", [this](cv::Mat& input) {
-            sharpen_image(input, _sharpen_sigma); // Legacy function call
+    if (_sharpen_options.active) {
+        // Add or update the sharpen filter in the processing chain using the options structure
+        media_data->setProcess("3__sharpen", [options = _sharpen_options](cv::Mat& input) {
+            sharpen_image(input, options);
         });
     } else {
-        media_data->removeProcess("3__sharpentransform");
+        // Remove the sharpen filter from the processing chain
+        media_data->removeProcess("3__sharpen");
     }
     
+    // Update the canvas
     if (_scene) {
         _scene->UpdateCanvas();
     }
 }
 
+// Legacy implementations for other filters (to be refactored later)
 void MediaProcessing_Widget::_updateClaheFilter() {
     if (_active_key.empty()) return;
     
@@ -204,14 +232,6 @@ void MediaProcessing_Widget::_updateBilateralFilter() {
 }
 
 // Legacy slot implementations (to be removed when other filters are refactored)
-void MediaProcessing_Widget::_updateSharpenSigma() {
-    // Implementation for sharpen sigma update
-}
-
-void MediaProcessing_Widget::_activateSharpen() {
-    // Implementation for sharpen activation
-}
-
 void MediaProcessing_Widget::_updateClaheGrid() {
     // Implementation for CLAHE grid update
 }

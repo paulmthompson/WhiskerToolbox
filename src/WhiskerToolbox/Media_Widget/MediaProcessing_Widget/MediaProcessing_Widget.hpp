@@ -16,6 +16,7 @@ class DataManager;
 class Media_Window;
 class ContrastWidget;
 class GammaWidget;
+class SharpenWidget;
 class Section;
 
 class MediaProcessing_Widget : public QWidget {
@@ -37,15 +38,15 @@ private:
     Section* _contrast_section;
     GammaWidget* _gamma_widget;
     Section* _gamma_section;
+    SharpenWidget* _sharpen_widget;
+    Section* _sharpen_section;
 
     // Current processing options
     ContrastOptions _contrast_options;
     GammaOptions _gamma_options;
+    SharpenOptions _sharpen_options;
 
     // Legacy parameters for other filters (to be refactored later)
-    double _sharpen_sigma = 3.0;
-    bool _sharpen_active{false};
-
     int _clahe_grid = 8;
     double _clahe_clip = 2.0;
     bool _clahe_active{false};
@@ -58,18 +59,16 @@ private:
     void _setupProcessingWidgets();
     void _applyContrastFilter();
     void _applyGammaFilter();
-    void _updateSharpenFilter();
+    void _applySharpenFilter();
     void _updateClaheFilter();
     void _updateBilateralFilter();
 
 private slots:
     void _onContrastOptionsChanged(ContrastOptions const& options);
     void _onGammaOptionsChanged(GammaOptions const& options);
+    void _onSharpenOptionsChanged(SharpenOptions const& options);
 
     // Legacy slots for other filters (to be refactored later)
-    void _updateSharpenSigma();
-    void _activateSharpen();
-
     void _updateClaheGrid();
     void _updateClaheClip();
     void _activateClahe();
