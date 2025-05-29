@@ -158,6 +158,12 @@ set(PROJECT_SOURCES
         Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.cpp
         Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp
         Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.ui
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.cpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.hpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/ContrastWidget.ui
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/GammaWidget.cpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/GammaWidget.hpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/GammaWidget.ui
 
         Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp
         Media_Widget/MediaMask_Widget/MediaMask_Widget.cpp

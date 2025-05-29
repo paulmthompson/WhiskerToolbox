@@ -1,6 +1,8 @@
 #ifndef MEDIAPROCESSING_WIDGET_HPP
 #define MEDIAPROCESSING_WIDGET_HPP
 
+#include "DataManager/utils/ProcessingOptions.hpp"
+
 #include <QWidget>
 
 #include <memory>
@@ -12,6 +14,9 @@ class MediaProcessing_Widget;
 
 class DataManager;
 class Media_Window;
+class ContrastWidget;
+class GammaWidget;
+class Section;
 
 class MediaProcessing_Widget : public QWidget {
     Q_OBJECT
@@ -27,14 +32,17 @@ private:
     Media_Window* _scene;
     std::string _active_key;
 
-    // Image processing parameters
-    double _contrast_alpha = 1.0;
-    int _contrast_beta = 0;
-    bool _contrast_active{false};
+    // Processing widgets
+    ContrastWidget* _contrast_widget;
+    Section* _contrast_section;
+    GammaWidget* _gamma_widget;
+    Section* _gamma_section;
 
-    double _gamma = 1.0;
-    bool _gamma_active{false};
+    // Current processing options
+    ContrastOptions _contrast_options;
+    GammaOptions _gamma_options;
 
+    // Legacy parameters for other filters (to be refactored later)
     double _sharpen_sigma = 3.0;
     bool _sharpen_active{false};
 
@@ -47,20 +55,18 @@ private:
     double _bilateral_color_sigma = 20.0;
     bool _bilateral_active{false};
 
-    void _updateContrastFilter();
-    void _updateGammaFilter();
+    void _setupProcessingWidgets();
+    void _applyContrastFilter();
+    void _applyGammaFilter();
     void _updateSharpenFilter();
     void _updateClaheFilter();
     void _updateBilateralFilter();
 
 private slots:
-    void _updateContrastAlpha();
-    void _updateContrastBeta();
-    void _activateContrast();
+    void _onContrastOptionsChanged(ContrastOptions const& options);
+    void _onGammaOptionsChanged(GammaOptions const& options);
 
-    void _updateGamma();
-    void _activateGamma();
-
+    // Legacy slots for other filters (to be refactored later)
     void _updateSharpenSigma();
     void _activateSharpen();
 

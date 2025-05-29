@@ -129,6 +129,7 @@ add_library(DataManager SHARED
         utils/polynomial/polynomial_fit.cpp
         utils/polynomial/parametric_polynomial_utils.cpp
         utils/polynomial/parametric_polynomial_utils.hpp
+        utils/ProcessingOptions.hpp
         utils/simplify_line.cpp
         utils/simplify_line.hpp
         utils/skeletonize.cpp

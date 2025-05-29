@@ -1,154 +1,162 @@
 #include "opencv_utility.hpp"
 
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/imgproc.hpp"
-
-#include <algorithm>
-
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+#include <iostream>
 
 cv::Mat load_mask_from_image(std::string const & filename, bool const invert) {
-    auto mat = cv::imread(filename, cv::IMREAD_GRAYSCALE);
+    cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
 
-    cv::threshold(mat, mat, 127, 255, cv::THRESH_BINARY);
-
-    mat.convertTo(mat, CV_8U);
-
-    if (invert) {
-        cv::bitwise_not(mat, mat);
+    if (image.empty()) {
+        std::cerr << "Could not open or find the image: " << filename << std::endl;
+        return cv::Mat(); // Return an empty matrix
     }
 
-    return mat;
+    if (invert) {
+        cv::bitwise_not(image, image);
+    }
+
+    return image;
 }
 
 cv::Mat convert_vector_to_mat(std::vector<uint8_t> & vec, ImageSize const image_size) {
+    // Determine the number of channels
+    int channels = static_cast<int>(vec.size()) / (image_size.width * image_size.height);
 
-    auto const height = image_size.height;
+    // Determine the OpenCV type based on the number of channels
+    int cv_type;
+    if (channels == 1) {
+        cv_type = CV_8UC1; // Grayscale
+    } else if (channels == 3) {
+        cv_type = CV_8UC3; // BGR
+    } else if (channels == 4) {
+        cv_type = CV_8UC4; // BGRA
+    } else {
+        std::cerr << "Unsupported number of channels: " << channels << std::endl;
+        return cv::Mat(); // Return an empty matrix
+    }
 
-    cv::Mat m2{vec, false};
-
-    // The number of rows = height, number of columns = width
-    m2 = m2.reshape(0, height);
-
-    return m2;
+    return cv::Mat(image_size.height, image_size.width, cv_type, vec.data());
 }
 
 cv::Mat convert_vector_to_mat(std::vector<Point2D<float>> & vec, ImageSize const image_size) {
+    cv::Mat mask_image(image_size.height, image_size.width, CV_8UC1, cv::Scalar(0));
 
-    auto const height = image_size.height;
-    auto const width = image_size.width;
+    for (auto const & point : vec) {
+        int x = static_cast<int>(std::round(point.x));
+        int y = static_cast<int>(std::round(point.y));
 
-    // Mat is constructed with (# of rows, # columns)
-    // The number of rows = height, number of columns = width
-    cv::Mat mat = cv::Mat::zeros(height, width, CV_8U);
-    mat = mat.setTo(255);
-
-    for (auto const & p: vec) {
-        auto x_pixel = static_cast<int>(std::lround(p.x));
-        auto y_pixel = static_cast<int>(std::lround(p.y));
-
-        x_pixel = std::clamp(x_pixel, 0, width - 1);
-        y_pixel = std::clamp(y_pixel, 0, height - 1);
-
-        //At (row # (max=height), column # (max=width))
-        auto & pixel = mat.at<uint8_t>(y_pixel, x_pixel);
-
-        pixel = 0;
+        // Check bounds
+        if (x >= 0 && x < image_size.width && y >= 0 && y < image_size.height) {
+            mask_image.at<uint8_t>(y, x) = 255; // Set pixel to white (255)
+        }
     }
 
-    return mat;
+    return mask_image;
 }
 
 void convert_mat_to_vector(std::vector<uint8_t> & vec, cv::Mat & mat, ImageSize const image_size) {
-
-    auto const height = image_size.height;
-    auto const width = image_size.width;
-
-    mat = mat.reshape(1, width * height);
-
-    //https://stackoverflow.com/questions/26681713/convert-mat-to-array-vector-in-opencv
-    if (mat.isContinuous()) {
-        vec.assign(mat.data, mat.data + mat.total() * mat.channels());
-    } else {
-        for (int i = 0; i < mat.rows; i++) {
-            vec.insert(vec.end(), mat.ptr<uchar>(i), mat.ptr<uchar>(i) + mat.cols * mat.channels());
-        }
+    // Check if the matrix has the expected size
+    if (mat.rows != image_size.height || mat.cols != image_size.width) {
+        std::cerr << "Matrix size does not match the expected image size." << std::endl;
+        return;
     }
+
+    // Resize the vector to hold all the pixel data
+    vec.resize(mat.rows * mat.cols * mat.channels());
+
+    // Copy data from the matrix to the vector
+    std::memcpy(vec.data(), mat.data, vec.size());
 }
 
 std::vector<Point2D<float>> create_mask(cv::Mat const & mat) {
-    std::vector<Point2D<float>> mask_points;
-    for (int x_pixel = 0; x_pixel < mat.cols; x_pixel++)//Number of cols = width
-    {
-        for (int y_pixel = 0; y_pixel < mat.rows; y_pixel++)// Number of rows = height
-        {
-            //At (row # (max=height), column # (max=width))
-            auto & pixel = mat.at<uint8_t>(y_pixel, x_pixel);
+    std::vector<Point2D<float>> mask;
 
-            if (pixel == 0) {
-                mask_points.push_back(Point2D<float>{static_cast<float>(x_pixel), static_cast<float>(y_pixel)});
+    for (int y = 0; y < mat.rows; ++y) {
+        for (int x = 0; x < mat.cols; ++x) {
+            if (mat.at<uint8_t>(y, x) > 0) { // Assuming a binary mask where 0 is background
+                mask.push_back({static_cast<float>(x), static_cast<float>(y)});
             }
         }
     }
 
-    return mask_points;
+    return mask;
 }
 
 void grow_mask(cv::Mat & mat, int const dilation_size) {
-    cv::Mat const element = cv::Mat::ones(dilation_size, dilation_size, CV_8U);
-
-    cv::bitwise_not(mat, mat);
-    cv::dilate(mat, mat, element, cv::Point(-1, -1), 1);
-    cv::bitwise_not(mat, mat);
+    cv::Mat element = cv::getStructuringElement(cv::MORPH_ELLIPSE,
+                                                cv::Size(2 * dilation_size + 1, 2 * dilation_size + 1),
+                                                cv::Point(dilation_size, dilation_size));
+    cv::dilate(mat, mat, element);
 }
 
 void median_blur(cv::Mat & mat, int const kernel_size) {
     cv::medianBlur(mat, mat, kernel_size);
 }
 
+// New options-based implementations
+void linear_transform(cv::Mat & mat, ContrastOptions const& options) {
+    mat.convertTo(mat, -1, options.alpha, options.beta);
+}
+
+void gamma_transform(cv::Mat & mat, GammaOptions const& options) {
+    cv::Mat lookupTable(1, 256, CV_8U);
+    uchar* p = lookupTable.ptr();
+    for (int i = 0; i < 256; ++i) {
+        p[i] = cv::saturate_cast<uchar>(pow(i / 255.0, options.gamma) * 255.0);
+    }
+    cv::LUT(mat, lookupTable, mat);
+}
+
+void clahe(cv::Mat & mat, ClaheOptions const& options) {
+    cv::Ptr<cv::CLAHE> clahe_ptr = cv::createCLAHE(options.clip_limit, cv::Size(options.grid_size, options.grid_size));
+    clahe_ptr->apply(mat, mat);
+}
+
+void sharpen_image(cv::Mat & mat, SharpenOptions const& options) {
+    cv::Mat blurred;
+    cv::GaussianBlur(mat, blurred, cv::Size(0, 0), options.sigma);
+    cv::addWeighted(mat, 1.0 + 1.0, blurred, -1.0, 0, mat);
+}
+
+void bilateral_filter(cv::Mat & mat, BilateralOptions const& options) {
+    cv::Mat temp;
+    cv::bilateralFilter(mat, temp, options.diameter, options.color_sigma, options.spatial_sigma);
+    mat = temp;
+}
+
+// Legacy implementations (for backward compatibility)
 void linear_transform(cv::Mat & mat, double alpha, int beta) {
-    mat.convertTo(mat, -1, alpha, beta);
+    ContrastOptions options;
+    options.alpha = alpha;
+    options.beta = beta;
+    linear_transform(mat, options);
 }
 
 void gamma_transform(cv::Mat & mat, double gamma) {
-    CV_Assert(gamma >= 0);
-
-    // Create a lookup table for gamma correction
-    cv::Mat lookup_table(1, 256, CV_8U);
-    uchar * p = lookup_table.ptr();
-    for (int i = 0; i < 256; ++i) {
-        p[i] = cv::saturate_cast<uchar>(pow(i / 255.0, gamma) * 255.0);
-    }
-
-    // Apply the gamma correction using the lookup table
-    cv::LUT(mat, lookup_table, mat);
+    GammaOptions options;
+    options.gamma = gamma;
+    gamma_transform(mat, options);
 }
 
 void clahe(cv::Mat & mat, double const clip_limit, int const grid_size) {
-    cv::Ptr<cv::CLAHE> const clahe = cv::createCLAHE();
-    clahe->setClipLimit(clip_limit);
-    clahe->setTilesGridSize(cv::Size(grid_size, grid_size));
-    clahe->apply(mat, mat);
+    ClaheOptions options;
+    options.clip_limit = clip_limit;
+    options.grid_size = grid_size;
+    clahe(mat, options);
 }
 
-void sharpen_image(cv::Mat & img, double const sigma) {
-    cv::Mat img_blur, img_sharp;
-
-    // Apply Gaussian blur to the image
-    cv::GaussianBlur(img, img_blur, cv::Size(0, 0), sigma);
-
-    // Subtract the blurred image from the original image (scaled)
-    cv::addWeighted(img, 1.5, img_blur, -0.5, 0, img_sharp);
-
-    // Copy the sharpened image back to the original cv::Mat
-    img_sharp.copyTo(img);
+void sharpen_image(cv::Mat& img, double const sigma) {
+    SharpenOptions options;
+    options.sigma = sigma;
+    sharpen_image(img, options);
 }
 
-void bilateral_filter(cv::Mat & img, int d, double sigmaColor, double sigmaSpace) {
-    cv::Mat img_filtered;
-
-    // Apply bilateral filter to the image
-    cv::bilateralFilter(img, img_filtered, d, sigmaColor, sigmaSpace);
-
-    // Copy the filtered image back to the original cv::Mat
-    img_filtered.copyTo(img);
+void bilateral_filter(cv::Mat& img, int d, double sigmaColor, double sigmaSpace) {
+    BilateralOptions options;
+    options.diameter = d;
+    options.color_sigma = sigmaColor;
+    options.spatial_sigma = sigmaSpace;
+    bilateral_filter(img, options);
 }
