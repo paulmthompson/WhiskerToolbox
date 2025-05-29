@@ -17,6 +17,7 @@ class Media_Window;
 class ContrastWidget;
 class GammaWidget;
 class SharpenWidget;
+class BilateralWidget;
 class Section;
 
 class MediaProcessing_Widget : public QWidget {
@@ -40,43 +41,37 @@ private:
     Section* _gamma_section;
     SharpenWidget* _sharpen_widget;
     Section* _sharpen_section;
+    BilateralWidget* _bilateral_widget;
+    Section* _bilateral_section;
 
     // Current processing options
     ContrastOptions _contrast_options;
     GammaOptions _gamma_options;
     SharpenOptions _sharpen_options;
+    BilateralOptions _bilateral_options;
 
     // Legacy parameters for other filters (to be refactored later)
     int _clahe_grid = 8;
     double _clahe_clip = 2.0;
     bool _clahe_active{false};
 
-    int _bilateral_d = 5;
-    double _bilateral_spatial_sigma = 20.0;
-    double _bilateral_color_sigma = 20.0;
-    bool _bilateral_active{false};
-
     void _setupProcessingWidgets();
     void _applyContrastFilter();
     void _applyGammaFilter();
     void _applySharpenFilter();
+    void _applyBilateralFilter();
     void _updateClaheFilter();
-    void _updateBilateralFilter();
 
 private slots:
     void _onContrastOptionsChanged(ContrastOptions const& options);
     void _onGammaOptionsChanged(GammaOptions const& options);
     void _onSharpenOptionsChanged(SharpenOptions const& options);
+    void _onBilateralOptionsChanged(BilateralOptions const& options);
 
     // Legacy slots for other filters (to be refactored later)
     void _updateClaheGrid();
     void _updateClaheClip();
     void _activateClahe();
-
-    void _updateBilateralD();
-    void _updateBilateralSpatialSigma();
-    void _updateBilateralColorSigma();
-    void _activateBilateral();
 };
 
 #endif // MEDIAPROCESSING_WIDGET_HPP 

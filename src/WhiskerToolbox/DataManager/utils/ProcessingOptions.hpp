@@ -41,8 +41,8 @@ struct ClaheOptions {
 struct BilateralOptions {
     bool active{false};          ///< Whether the bilateral filter is active
     int diameter{5};             ///< Diameter of bilateral filter
-    double color_sigma{20.0};    ///< Color sigma for bilateral filter
-    double spatial_sigma{20.0};  ///< Spatial sigma for bilateral filter
+    double sigma_color{20.0};    ///< Color sigma for bilateral filter
+    double sigma_spatial{20.0};  ///< Spatial sigma for bilateral filter
 };
 
 #endif // PROCESSING_OPTIONS_HPP 

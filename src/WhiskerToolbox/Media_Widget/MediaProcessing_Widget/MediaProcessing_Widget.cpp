@@ -3,6 +3,7 @@
 #include "ProcessingOptions/ContrastWidget.hpp"
 #include "ProcessingOptions/GammaWidget.hpp"
 #include "ProcessingOptions/SharpenWidget.hpp"
+#include "ProcessingOptions/BilateralWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Media/Media_Data.hpp"
@@ -24,13 +25,15 @@ MediaProcessing_Widget::MediaProcessing_Widget(std::shared_ptr<DataManager> data
       _gamma_widget(nullptr),
       _gamma_section(nullptr),
       _sharpen_widget(nullptr),
-      _sharpen_section(nullptr) {
+      _sharpen_section(nullptr),
+      _bilateral_widget(nullptr),
+      _bilateral_section(nullptr) {
     
     ui->setupUi(this);
     _setupProcessingWidgets();
     
     // Connect legacy controls for other filters (these will be refactored later)
-    // ... (CLAHE, bilateral controls would go here)
+    // ... (CLAHE controls would go here)
 }
 
 MediaProcessing_Widget::~MediaProcessing_Widget() {
@@ -98,6 +101,23 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     
     // Set initial sharpen options
     _sharpen_widget->setOptions(_sharpen_options);
+    
+    // Create bilateral section
+    _bilateral_widget = new BilateralWidget(this);
+    _bilateral_section = new Section(this, "Bilateral Filter (Noise Reduction)");
+    _bilateral_section->setContentLayout(*new QVBoxLayout());
+    _bilateral_section->layout()->addWidget(_bilateral_widget);
+    _bilateral_section->autoSetContentLayout();
+    
+    // Connect bilateral widget signals
+    connect(_bilateral_widget, &BilateralWidget::optionsChanged,
+            this, &MediaProcessing_Widget::_onBilateralOptionsChanged);
+    
+    // Add bilateral section to the scroll layout (before the spacer)
+    scroll_layout->insertWidget(scroll_layout->count() - 1, _bilateral_section);
+    
+    // Set initial bilateral options
+    _bilateral_widget->setOptions(_bilateral_options);
 }
 
 void MediaProcessing_Widget::_onContrastOptionsChanged(ContrastOptions const& options) {
@@ -122,6 +142,15 @@ void MediaProcessing_Widget::_onSharpenOptionsChanged(SharpenOptions const& opti
     
     std::cout << "Sharpen options changed - Active: " << options.active 
               << ", Sigma: " << options.sigma << std::endl;
+}
+
+void MediaProcessing_Widget::_onBilateralOptionsChanged(BilateralOptions const& options) {
+    _bilateral_options = options;
+    _applyBilateralFilter();
+    
+    std::cout << "Bilateral options changed - Active: " << options.active
+              << ", D: " << options.diameter << ", Color Sigma: " << options.sigma_color
+              << ", Space Sigma: " << options.sigma_spatial << std::endl;
 }
 
 void MediaProcessing_Widget::_applyContrastFilter() {
@@ -190,6 +219,28 @@ void MediaProcessing_Widget::_applySharpenFilter() {
     }
 }
 
+void MediaProcessing_Widget::_applyBilateralFilter() {
+    if (_active_key.empty()) return;
+    
+    auto media_data = _data_manager->getData<MediaData>(_active_key);
+    if (!media_data) return;
+    
+    if (_bilateral_options.active) {
+        // Add or update the bilateral filter in the processing chain using the options structure
+        media_data->setProcess("5__bilateral", [options = _bilateral_options](cv::Mat& input) {
+            bilateral_filter(input, options);
+        });
+    } else {
+        // Remove the bilateral filter from the processing chain
+        media_data->removeProcess("5__bilateral");
+    }
+    
+    // Update the canvas
+    if (_scene) {
+        _scene->UpdateCanvas();
+    }
+}
+
 // Legacy implementations for other filters (to be refactored later)
 void MediaProcessing_Widget::_updateClaheFilter() {
     if (_active_key.empty()) return;
@@ -211,26 +262,6 @@ void MediaProcessing_Widget::_updateClaheFilter() {
     }
 }
 
-void MediaProcessing_Widget::_updateBilateralFilter() {
-    if (_active_key.empty()) return;
-    
-    auto media_data = _data_manager->getData<MediaData>(_active_key);
-    if (!media_data) return;
-    
-    if (_bilateral_active) {
-        // TODO: Create BilateralOptions and use options-based function
-        media_data->setProcess("5__bilateral", [this](cv::Mat& input) {
-            bilateral_filter(input, _bilateral_d, _bilateral_color_sigma, _bilateral_spatial_sigma); // Legacy function call
-        });
-    } else {
-        media_data->removeProcess("5__bilateral");
-    }
-    
-    if (_scene) {
-        _scene->UpdateCanvas();
-    }
-}
-
 // Legacy slot implementations (to be removed when other filters are refactored)
 void MediaProcessing_Widget::_updateClaheGrid() {
     // Implementation for CLAHE grid update
@@ -242,20 +273,4 @@ void MediaProcessing_Widget::_updateClaheClip() {
 
 void MediaProcessing_Widget::_activateClahe() {
     // Implementation for CLAHE activation
-}
-
-void MediaProcessing_Widget::_updateBilateralD() {
-    // Implementation for bilateral D update
-}
-
-void MediaProcessing_Widget::_updateBilateralSpatialSigma() {
-    // Implementation for bilateral spatial sigma update
-}
-
-void MediaProcessing_Widget::_updateBilateralColorSigma() {
-    // Implementation for bilateral color sigma update
-}
-
-void MediaProcessing_Widget::_activateBilateral() {
-    // Implementation for bilateral activation
 } 

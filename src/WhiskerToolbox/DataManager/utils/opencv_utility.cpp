@@ -122,7 +122,7 @@ void sharpen_image(cv::Mat & mat, SharpenOptions const& options) {
 
 void bilateral_filter(cv::Mat & mat, BilateralOptions const& options) {
     cv::Mat temp;
-    cv::bilateralFilter(mat, temp, options.diameter, options.color_sigma, options.spatial_sigma);
+    cv::bilateralFilter(mat, temp, options.diameter, options.sigma_color, options.sigma_spatial);
     mat = temp;
 }
 
@@ -156,7 +156,7 @@ void sharpen_image(cv::Mat& img, double const sigma) {
 void bilateral_filter(cv::Mat& img, int d, double sigmaColor, double sigmaSpace) {
     BilateralOptions options;
     options.diameter = d;
-    options.color_sigma = sigmaColor;
-    options.spatial_sigma = sigmaSpace;
+    options.sigma_color = sigmaColor;
+    options.sigma_spatial = sigmaSpace;
     bilateral_filter(img, options);
 }
