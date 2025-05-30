@@ -23,6 +23,8 @@
 #include <ctime>
 #include <ranges>
 #include <algorithm>
+#include <chrono>
+#include <iostream>
 
 // This was a helpful resource for making a dashed line:
 //https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
@@ -908,7 +910,11 @@ void OpenGLWidget::addAnalogTimeSeries(
     display_options->is_visible = true;
     
     // Calculate scale factor based on standard deviation
+    auto start_time = std::chrono::high_resolution_clock::now();
     float const stdDev = calculate_std_dev(*series.get());
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    std::cout << "Standard deviation calculation took " << duration.count() << " milliseconds" << std::endl;
     display_options->scale_factor = stdDev * 5.0f;
     display_options->user_scale_factor = 1.0f; // Default user scale
     
@@ -919,7 +925,11 @@ void OpenGLWidget::addAnalogTimeSeries(
               << std::endl;
     
     // Automatic gap detection and display mode selection
+    start_time = std::chrono::high_resolution_clock::now();
     auto gap_analysis = _analyzeDataGaps(*series);
+    end_time = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    std::cout << "Gap analysis took " << duration.count() << " milliseconds" << std::endl;
     if (gap_analysis.has_gaps) {
         std::cout << "Gaps detected in " << key << ": " << gap_analysis.gap_count 
                   << " gaps, max gap: " << gap_analysis.max_gap_size 
@@ -1592,14 +1602,14 @@ OpenGLWidget::GapAnalysis OpenGLWidget::_analyzeDataGaps(AnalogTimeSeries const 
     }
     
     // Fast gap analysis using running statistics - no storage or sorting required
-    float max_gap = 0.0f;
-    float sum_gaps = 0.0f;
+    size_t max_gap = 0;
+    size_t sum_gaps = 0;
     int gap_count = 0;
     
     // Calculate gaps between consecutive time indices directly
     for (size_t i = 1; i < time_indices.size(); ++i) {
-        // Work directly with time indices - no TimeFrame conversion needed
-        float const gap_size = static_cast<float>(time_indices[i] - time_indices[i-1]);
+
+        auto const gap_size = time_indices[i] - time_indices[i-1];
         
         sum_gaps += gap_size;
         gap_count++;
@@ -1609,22 +1619,21 @@ OpenGLWidget::GapAnalysis OpenGLWidget::_analyzeDataGaps(AnalogTimeSeries const 
         }
     }
     
-    // Calculate mean gap size
-    float const mean_gap = sum_gaps / static_cast<float>(gap_count);
+    size_t const mean_gap = sum_gaps / gap_count; // rounded to nearest int
     
     // Simple heuristic: if the largest gap is significantly bigger than the mean gap,
     // we likely have real gaps in the data (not just regular sampling intervals)
-    constexpr float GAP_MULTIPLIER = 3.0f; // Largest gap must be 3x mean to be considered significant
+    constexpr size_t GAP_MULTIPLIER = 3; // Largest gap must be 3x mean to be considered significant
     bool const has_significant_gaps = (max_gap > mean_gap * GAP_MULTIPLIER);
     
     // Count gaps that are larger than the threshold
     int significant_gap_count = 0;
     if (has_significant_gaps) {
-        float const gap_threshold = mean_gap * GAP_MULTIPLIER;
+        size_t const gap_threshold = mean_gap * GAP_MULTIPLIER;
         
         // Single pass to count significant gaps
         for (size_t i = 1; i < time_indices.size(); ++i) {
-            float const gap_size = static_cast<float>(time_indices[i] - time_indices[i-1]);
+            size_t const gap_size = time_indices[i] - time_indices[i-1];
             if (gap_size > gap_threshold) {
                 significant_gap_count++;
             }
