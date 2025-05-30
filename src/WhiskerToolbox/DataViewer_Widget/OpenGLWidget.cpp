@@ -911,7 +911,8 @@ void OpenGLWidget::addAnalogTimeSeries(
     
     // Calculate scale factor based on standard deviation
     auto start_time = std::chrono::high_resolution_clock::now();
-    float const stdDev = calculate_std_dev(*series.get());
+    //float const stdDev = calculate_std_dev(*series.get());
+    float const stdDev = calculate_std_dev_approximate(*series.get());
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     std::cout << "Standard deviation calculation took " << duration.count() << " milliseconds" << std::endl;

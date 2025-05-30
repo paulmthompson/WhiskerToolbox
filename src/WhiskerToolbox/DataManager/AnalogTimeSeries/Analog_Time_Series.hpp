@@ -181,4 +181,36 @@ float calculate_max(AnalogTimeSeries const & series);
  */
 float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
+/**
+ * @brief Calculate an approximate standard deviation using systematic sampling
+ *
+ * Uses systematic sampling (every Nth element) to estimate standard deviation efficiently.
+ * If the sample size would be below the minimum threshold, falls back to exact calculation.
+ *
+ * @param series The time series to calculate the standard deviation from
+ * @param sample_percentage Percentage of data to sample (e.g., 0.1 for 0.1%)
+ * @param min_sample_threshold Minimum number of samples before falling back to exact calculation
+ * @return float The approximate standard deviation
+ */
+float calculate_std_dev_approximate(AnalogTimeSeries const & series, 
+                                   float sample_percentage = 0.1f, 
+                                   size_t min_sample_threshold = 1000);
+
+/**
+ * @brief Calculate an approximate standard deviation using adaptive sampling
+ *
+ * Starts with a small sample and progressively increases until the estimate
+ * converges within the specified tolerance or reaches maximum samples.
+ *
+ * @param series The time series to calculate the standard deviation from
+ * @param initial_sample_size Starting number of samples
+ * @param max_sample_size Maximum number of samples to use
+ * @param convergence_tolerance Relative tolerance for convergence (e.g., 0.01 for 1%)
+ * @return float The approximate standard deviation
+ */
+float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
+                                size_t initial_sample_size = 100,
+                                size_t max_sample_size = 10000,
+                                float convergence_tolerance = 0.01f);
+
 #endif// ANALOG_TIME_SERIES_HPP
