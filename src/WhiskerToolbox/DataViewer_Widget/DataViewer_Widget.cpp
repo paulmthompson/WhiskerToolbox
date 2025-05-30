@@ -31,6 +31,9 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
       ui(new Ui::DataViewer_Widget) {
 
     ui->setupUi(this);
+    
+    // Initialize vertical space manager with initial canvas dimensions
+    _vertical_space_manager = std::make_unique<VerticalSpaceManager>(400, 2.0f); // Will be updated on first resize
 
     ui->feature_tree_widget->setTypeFilter({DM_DataType::Analog, DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
 
@@ -69,14 +72,10 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
             }
         }
         
-        // Auto-scaling when enabling a group of analog series
-        if (enabled && data_type == DM_DataType::Analog && !group_keys.empty()) {
-            _calculateOptimalScaling(group_keys);
-        }
-        
-        // Auto-spacing when enabling a group of digital event series
-        if (enabled && data_type == DM_DataType::DigitalEvent && !group_keys.empty()) {
-            _calculateOptimalEventSpacing(group_keys);
+        // Auto-arrange and auto-fill when toggling a group to optimize space usage
+        if (!group_keys.empty()) {
+            std::cout << "Auto-arranging and filling canvas for group toggle" << std::endl;
+            autoArrangeVerticalSpacing(); // This now includes auto-fill functionality
         }
         
         // Trigger a single canvas update at the end
@@ -139,6 +138,9 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Vertical spacing connection
     connect(ui->vertical_spacing, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &DataViewer_Widget::_handleVerticalSpacingChanged);
 
+    // Auto-arrange button connection
+    connect(ui->auto_arrange_button, &QPushButton::clicked, this, &DataViewer_Widget::autoArrangeVerticalSpacing);
+
     // Initialize grid line UI to match OpenGLWidget defaults
     ui->grid_lines_enabled->setChecked(ui->openGLWidget->getGridLinesEnabled());
     ui->grid_spacing->setValue(ui->openGLWidget->getGridSpacing());
@@ -172,6 +174,9 @@ void DataViewer_Widget::closeEvent(QCloseEvent * event) {
 
 void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
+    
+    // Update vertical space manager dimensions when widget is resized
+    _updateVerticalSpaceManagerDimensions();
     
     // The OpenGL widget will automatically get its resizeGL called by Qt
     // but we can trigger an additional update if needed
@@ -219,6 +224,14 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
 
     auto data_type = _data_manager->getType(key);
     std::cout << "Feature type: " << convert_data_type_to_string(data_type) << std::endl;
+
+    // Register with vertical space manager for coordinated positioning
+    if (_vertical_space_manager) {
+        DataSeriesType vs_type = _convertDataType(data_type);
+        auto position = _vertical_space_manager->addSeries(key, vs_type);
+        std::cout << "Registered with vertical space manager: y_offset=" << position.y_offset 
+                  << ", height=" << position.allocated_height << std::endl;
+    }
 
     if (data_type == DM_DataType::Analog) {
 
@@ -284,10 +297,16 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
         return;
     }
     
-    // Trigger canvas update to show the new series
-    std::cout << "Triggering canvas update" << std::endl;
-    ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
-    std::cout << "Canvas update completed" << std::endl;
+    // Apply coordinated vertical spacing after adding to OpenGL widget
+    if (_vertical_space_manager) {
+        _applyVerticalSpacing(key);
+    }
+    
+    // Auto-arrange and auto-fill canvas to make optimal use of space
+    std::cout << "Auto-arranging and filling canvas after adding series" << std::endl;
+    autoArrangeVerticalSpacing(); // This now includes auto-fill functionality
+    
+    std::cout << "Series addition and auto-arrangement completed" << std::endl;
 }
 
 void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
@@ -305,6 +324,14 @@ void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
     
     auto data_type = _data_manager->getType(key);
     
+    // Remove from vertical space manager first
+    if (_vertical_space_manager) {
+        bool removed = _vertical_space_manager->removeSeries(key);
+        if (removed) {
+            std::cout << "Unregistered '" << key << "' from vertical space manager" << std::endl;
+        }
+    }
+    
     if (data_type == DM_DataType::Analog) {
         ui->openGLWidget->removeAnalogTimeSeries(key);
     } else if (data_type == DM_DataType::DigitalEvent) {
@@ -316,9 +343,11 @@ void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
         return;
     }
     
-    // Trigger canvas update to reflect the removal
-    std::cout << "Triggering canvas update after removal" << std::endl;
-    ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+    // Auto-arrange and auto-fill canvas to rescale remaining elements
+    std::cout << "Auto-arranging and filling canvas after removing series" << std::endl;
+    autoArrangeVerticalSpacing(); // This now includes auto-fill functionality
+    
+    std::cout << "Series removal and auto-arrangement completed" << std::endl;
 }
 
 void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
@@ -402,6 +431,20 @@ void DataViewer_Widget::updateXAxisSamples(int value) {
 
 void DataViewer_Widget::_updateGlobalScale(double scale) {
     ui->openGLWidget->setGlobalScale(static_cast<float>(scale));
+    
+    // Also update VerticalSpaceManager zoom factor
+    if (_vertical_space_manager) {
+        _vertical_space_manager->setUserZoomFactor(static_cast<float>(scale));
+        
+        // Apply updated positions to all registered series
+        auto all_keys = _vertical_space_manager->getAllSeriesKeys();
+        for (auto const & key : all_keys) {
+            _applyVerticalSpacing(key);
+        }
+        
+        // Trigger canvas update
+        ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+    }
 }
 
 void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
@@ -543,6 +586,22 @@ void DataViewer_Widget::_handleGridSpacingChanged(int spacing) {
 
 void DataViewer_Widget::_handleVerticalSpacingChanged(double spacing) {
     ui->openGLWidget->setVerticalSpacing(static_cast<float>(spacing));
+    
+    // Also update VerticalSpaceManager spacing multiplier
+    if (_vertical_space_manager) {
+        // Convert spacing to a multiplier relative to default (0.1f)
+        float const spacing_multiplier = static_cast<float>(spacing) / 0.1f;
+        _vertical_space_manager->setUserSpacingMultiplier(spacing_multiplier);
+        
+        // Apply updated positions to all registered series
+        auto all_keys = _vertical_space_manager->getAllSeriesKeys();
+        for (auto const & key : all_keys) {
+            _applyVerticalSpacing(key);
+        }
+        
+        // Trigger canvas update
+        ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+    }
 }
 
 void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & key) {
@@ -830,4 +889,327 @@ void DataViewer_Widget::_calculateOptimalEventSpacing(std::vector<std::string> c
     
     std::cout << "Applied auto-calculated event spacing: spacing = " << final_spacing 
               << ", height = " << final_height << std::endl;
+}
+
+void DataViewer_Widget::autoArrangeVerticalSpacing() {
+    std::cout << "DataViewer_Widget: Auto-arranging vertical spacing and auto-filling canvas..." << std::endl;
+    
+    // Update dimensions first
+    _updateVerticalSpaceManagerDimensions();
+    
+    // Trigger recalculation in the vertical space manager
+    _vertical_space_manager->recalculateAllPositions();
+    
+    // Apply new positions to all registered series
+    auto all_keys = _vertical_space_manager->getAllSeriesKeys();
+    for (auto const & key : all_keys) {
+        _applyVerticalSpacing(key);
+    }
+    
+    // Calculate and apply optimal scaling to fill the canvas
+    _autoFillCanvas();
+    
+    // Update OpenGL widget view bounds based on content height
+    _updateViewBounds();
+    
+    // Trigger canvas update to show new positions
+    ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+    
+    std::cout << "DataViewer_Widget: Auto-arrange and auto-fill completed for " << all_keys.size() << " series" << std::endl;
+}
+
+void DataViewer_Widget::_updateViewBounds() {
+    if (!_vertical_space_manager) {
+        return;
+    }
+    
+    // Get total content height from VerticalSpaceManager
+    float const total_content_height = _vertical_space_manager->getTotalContentHeight();
+    
+    // Set view bounds to accommodate all content with some padding
+    float const padding = 0.2f; // 20% padding
+    float const view_height = std::max(2.0f, total_content_height + padding);
+    
+    // Center the view on the content
+    float const view_center = 0.0f; // Content is centered around 0
+    float const half_height = view_height * 0.5f;
+    
+    // Update OpenGL widget bounds - this should be a method we add to OpenGLWidget
+    // For now, we'll use the existing bounds but this enables future enhancement
+    std::cout << "DataViewer_Widget: Content height=" << total_content_height 
+              << ", recommended view height=" << view_height << std::endl;
+}
+
+DataSeriesType DataViewer_Widget::_convertDataType(DM_DataType dm_type) const {
+    switch (dm_type) {
+        case DM_DataType::Analog:
+            return DataSeriesType::Analog;
+        case DM_DataType::DigitalEvent:
+            return DataSeriesType::DigitalEvent;
+        case DM_DataType::DigitalInterval:
+            return DataSeriesType::DigitalInterval;
+        default:
+            // For unsupported types, default to Analog
+            // This should be rare in practice given our type filters
+            std::cerr << "Warning: Unsupported data type " << convert_data_type_to_string(dm_type) 
+                      << " defaulting to Analog for vertical spacing" << std::endl;
+            return DataSeriesType::Analog;
+    }
+}
+
+void DataViewer_Widget::_updateVerticalSpaceManagerDimensions() {
+    if (!_vertical_space_manager) {
+        return;
+    }
+    
+    // Get current canvas dimensions from OpenGL widget
+    auto [canvas_width, canvas_height] = ui->openGLWidget->getCanvasSize();
+    
+    // Update the vertical space manager with current dimensions
+    _vertical_space_manager->updateCanvasDimensions(canvas_height, 2.0f); // Assuming 2.0 normalized height
+    
+    std::cout << "DataViewer_Widget: Updated vertical space manager dimensions: " 
+              << canvas_width << "x" << canvas_height << " pixels" << std::endl;
+}
+
+void DataViewer_Widget::_applyVerticalSpacing(std::string const & series_key) {
+    if (!_vertical_space_manager) {
+        return;
+    }
+    
+    auto position = _vertical_space_manager->getSeriesPosition(series_key);
+    if (!position.has_value()) {
+        std::cerr << "Warning: No position found for series '" << series_key 
+                  << "' in vertical space manager" << std::endl;
+        return;
+    }
+    
+    auto const & pos = position.value();
+    auto data_type = _data_manager->getType(series_key);
+    
+    std::cout << "DataViewer_Widget: Applying vertical spacing for '" << series_key 
+              << "' - y_offset: " << pos.y_offset 
+              << ", height: " << pos.allocated_height 
+              << ", scale: " << pos.scale_factor << std::endl;
+    
+    // Apply positioning based on data type
+    if (data_type == DM_DataType::Analog) {
+        auto config = ui->openGLWidget->getAnalogConfig(series_key);
+        if (config.has_value()) {
+            config.value()->y_offset = pos.y_offset;
+            // Store allocated height for use in OpenGL widget scaling
+            // Don't modify scale_factor directly - let OpenGL widget handle amplitude scaling
+            // The allocated height will be used in the Model matrix for proper scaling
+            config.value()->allocated_height = pos.allocated_height;
+            
+            std::cout << "  Applied positioning to analog '" << series_key 
+                      << "': y_offset=" << pos.y_offset 
+                      << ", allocated_height=" << pos.allocated_height << std::endl;
+        }
+        
+    } else if (data_type == DM_DataType::DigitalEvent) {
+        auto config = ui->openGLWidget->getDigitalEventConfig(series_key);
+        if (config.has_value()) {
+            // Use direct positioning from VerticalSpaceManager
+            // Setting vertical_spacing to 0 signals the OpenGL widget to use y_offset directly
+            config.value()->y_offset = pos.y_offset;
+            config.value()->vertical_spacing = 0.0f; // Signal for direct positioning
+            
+            // Only set default event height if it hasn't been set by auto-fill
+            // Auto-fill sets more intelligent heights based on total canvas usage
+            if (std::abs(config.value()->event_height - 0.08f) < 0.001f) { // Still at default value
+                config.value()->event_height = pos.allocated_height * 0.9f; // 90% of allocated space
+            }
+            config.value()->display_mode = EventDisplayMode::Stacked;
+            
+            std::cout << "  Applied direct positioning to '" << series_key 
+                      << "': y_offset=" << pos.y_offset 
+                      << ", event_height=" << config.value()->event_height << std::endl;
+        }
+        
+    } else if (data_type == DM_DataType::DigitalInterval) {
+        auto config = ui->openGLWidget->getDigitalIntervalConfig(series_key);
+        if (config.has_value()) {
+            config.value()->y_offset = pos.y_offset;
+            
+            // Only set default interval height if it hasn't been set by auto-fill  
+            // Auto-fill sets more intelligent heights based on total canvas usage
+            if (std::abs(config.value()->interval_height - 1.0f) < 0.001f) { // Still at default value
+                config.value()->interval_height = pos.allocated_height * 0.9f; // 90% of allocated space
+            }
+            
+            std::cout << "  Applied positioning to interval '" << series_key 
+                      << "': y_offset=" << pos.y_offset 
+                      << ", interval_height=" << config.value()->interval_height << std::endl;
+        }
+    }
+}
+
+void DataViewer_Widget::_autoFillCanvas() {
+    std::cout << "DataViewer_Widget: Auto-filling canvas..." << std::endl;
+    
+    if (!_vertical_space_manager) {
+        std::cout << "No vertical space manager available" << std::endl;
+        return;
+    }
+    
+    // Get current canvas dimensions
+    auto [canvas_width, canvas_height] = ui->openGLWidget->getCanvasSize();
+    std::cout << "Canvas size: " << canvas_width << "x" << canvas_height << " pixels" << std::endl;
+    
+    // Count all visible series by type
+    int visible_analog_count = 0;
+    int visible_event_count = 0;
+    int visible_interval_count = 0;
+    
+    auto all_keys = _vertical_space_manager->getAllSeriesKeys();
+    for (auto const & key : all_keys) {
+        auto data_type = _data_manager->getType(key);
+        
+        // Check if series is visible
+        bool is_visible = false;
+        if (data_type == DM_DataType::Analog) {
+            auto config = ui->openGLWidget->getAnalogConfig(key);
+            is_visible = config.has_value() && config.value()->is_visible;
+            if (is_visible) visible_analog_count++;
+        } else if (data_type == DM_DataType::DigitalEvent) {
+            auto config = ui->openGLWidget->getDigitalEventConfig(key);
+            is_visible = config.has_value() && config.value()->is_visible;
+            if (is_visible) visible_event_count++;
+        } else if (data_type == DM_DataType::DigitalInterval) {
+            auto config = ui->openGLWidget->getDigitalIntervalConfig(key);
+            is_visible = config.has_value() && config.value()->is_visible;
+            if (is_visible) visible_interval_count++;
+        }
+    }
+    
+    int total_visible = visible_analog_count + visible_event_count + visible_interval_count;
+    std::cout << "Visible series: " << visible_analog_count << " analog, " 
+              << visible_event_count << " events, " << visible_interval_count 
+              << " intervals (total: " << total_visible << ")" << std::endl;
+    
+    if (total_visible == 0) {
+        std::cout << "No visible series to auto-scale" << std::endl;
+        return;
+    }
+    
+    // Calculate optimal vertical spacing to fill canvas
+    // Use 90% of canvas height, leaving 5% margin at top and bottom
+    float const usable_height = static_cast<float>(canvas_height) * 0.9f;
+    float const optimal_spacing_pixels = usable_height / static_cast<float>(total_visible);
+    
+    // Convert to normalized coordinates (assuming 2.0 total normalized height)
+    float const optimal_spacing_normalized = (optimal_spacing_pixels / static_cast<float>(canvas_height)) * 2.0f;
+    
+    // Clamp to reasonable bounds
+    float const min_spacing = 0.02f;
+    float const max_spacing = 1.5f;
+    float const final_spacing = std::clamp(optimal_spacing_normalized, min_spacing, max_spacing);
+    
+    std::cout << "Calculated optimal spacing: " << optimal_spacing_pixels << " pixels -> " 
+              << final_spacing << " normalized units" << std::endl;
+    
+    // Apply the calculated vertical spacing
+    ui->vertical_spacing->setValue(static_cast<double>(final_spacing));
+    
+    // Calculate and apply optimal event heights for digital event series
+    if (visible_event_count > 0) {
+        // Calculate optimal event height to fill most of the allocated space
+        // Use 80% of the spacing to leave some visual separation between events
+        float const optimal_event_height = final_spacing * 0.8f;
+        
+        std::cout << "Calculated optimal event height: " << optimal_event_height << " normalized units" << std::endl;
+        
+        // Apply optimal height to all visible digital event series
+        for (auto const & key : all_keys) {
+            auto data_type = _data_manager->getType(key);
+            if (data_type == DM_DataType::DigitalEvent) {
+                auto config = ui->openGLWidget->getDigitalEventConfig(key);
+                if (config.has_value() && config.value()->is_visible) {
+                    config.value()->event_height = optimal_event_height;
+                    config.value()->display_mode = EventDisplayMode::Stacked; // Ensure stacked mode
+                    std::cout << "  Applied event height " << optimal_event_height 
+                              << " to series '" << key << "'" << std::endl;
+                }
+            }
+        }
+    }
+    
+    // Calculate and apply optimal interval heights for digital interval series  
+    if (visible_interval_count > 0) {
+        // Calculate optimal interval height to fill most of the allocated space
+        // Use 80% of the spacing to leave some visual separation between intervals
+        float const optimal_interval_height = final_spacing * 0.8f;
+        
+        std::cout << "Calculated optimal interval height: " << optimal_interval_height << " normalized units" << std::endl;
+        
+        // Apply optimal height to all visible digital interval series
+        for (auto const & key : all_keys) {
+            auto data_type = _data_manager->getType(key);
+            if (data_type == DM_DataType::DigitalInterval) {
+                auto config = ui->openGLWidget->getDigitalIntervalConfig(key);
+                if (config.has_value() && config.value()->is_visible) {
+                    config.value()->interval_height = optimal_interval_height;
+                    std::cout << "  Applied interval height " << optimal_interval_height 
+                              << " to series '" << key << "'" << std::endl;
+                }
+            }
+        }
+    }
+    
+    // Calculate optimal global scale for analog series to use their allocated space effectively
+    if (visible_analog_count > 0) {
+        // Sample a few analog series to estimate appropriate scaling
+        std::vector<float> sample_std_devs;
+        sample_std_devs.reserve(std::min(5, visible_analog_count)); // Sample up to 5 series
+        
+        int sampled = 0;
+        for (auto const & key : all_keys) {
+            if (sampled >= 5) break;
+            
+            auto data_type = _data_manager->getType(key);
+            if (data_type == DM_DataType::Analog) {
+                auto config = ui->openGLWidget->getAnalogConfig(key);
+                if (config.has_value() && config.value()->is_visible) {
+                    auto series = _data_manager->getData<AnalogTimeSeries>(key);
+                    if (series) {
+                        float std_dev = calculate_std_dev(*series);
+                        if (std_dev > 0.0f) {
+                            sample_std_devs.push_back(std_dev);
+                            sampled++;
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (!sample_std_devs.empty()) {
+            // Use median standard deviation for scaling calculation
+            std::sort(sample_std_devs.begin(), sample_std_devs.end());
+            float median_std_dev = sample_std_devs[sample_std_devs.size() / 2];
+            
+            // Calculate scale so that ±3 standard deviations use ~60% of allocated space
+            float const target_amplitude_fraction = 0.6f;
+            float const target_amplitude_pixels = optimal_spacing_pixels * target_amplitude_fraction;
+            float const target_amplitude_normalized = (target_amplitude_pixels / static_cast<float>(canvas_height)) * 2.0f;
+            
+            // For ±3σ coverage
+            float const three_sigma_coverage = target_amplitude_normalized;
+            float const optimal_global_scale = three_sigma_coverage / (6.0f * median_std_dev);
+            
+            // Clamp to reasonable bounds  
+            float const min_scale = 0.01f;
+            float const max_scale = 100.0f;
+            float const final_scale = std::clamp(optimal_global_scale, min_scale, max_scale);
+            
+            std::cout << "Calculated optimal global scale: median_std_dev=" << median_std_dev 
+                      << ", target_amplitude=" << target_amplitude_pixels << " pixels"
+                      << ", final_scale=" << final_scale << std::endl;
+            
+            // Apply the calculated global scale
+            ui->global_zoom->setValue(static_cast<double>(final_scale));
+        }
+    }
+    
+    std::cout << "Auto-fill canvas completed" << std::endl;
 }

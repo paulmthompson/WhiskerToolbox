@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+// Forward declaration
+class AnalogTimeSeries;
+
 namespace TimeSeriesDefaultValues {
     const std::string COLOR = "#007bff";
     const float ALPHA = 1.0f;
@@ -64,6 +67,13 @@ struct AnalogTimeSeriesDisplayOptions : public BaseTimeSeriesDisplayOptions {
     float user_scale_factor{1.0f}; // User-friendly scale factor (1.0 = normal, 2.0 = double size, etc.)
     int line_thickness{TimeSeriesDefaultValues::LINE_THICKNESS};
     
+    // VerticalSpaceManager integration
+    float allocated_height{0.0f}; // Height allocated by VerticalSpaceManager (normalized coordinates)
+    
+    // Performance cache for display calculations
+    mutable float cached_std_dev{0.0f}; // Cached standard deviation for performance
+    mutable bool std_dev_cache_valid{false}; // Whether cached std dev is valid
+    
     // Gap handling options
     AnalogGapHandling gap_handling{AnalogGapHandling::AlwaysConnect};
     float gap_threshold{TimeSeriesDefaultValues::GAP_THRESHOLD}; // Time units above which to break lines
@@ -93,7 +103,7 @@ struct DigitalEventSeriesDisplayOptions : public BaseTimeSeriesDisplayOptions {
     // Event stacking options
     EventDisplayMode display_mode{EventDisplayMode::Stacked}; ///< Display mode (stacked vs full-canvas)
     float vertical_spacing{0.1f}; ///< Spacing between stacked event series in normalized coordinates
-    float event_height{0.05f}; ///< Height of each event line in stacked mode (normalized coordinates)
+    float event_height{0.08f}; ///< Height of each event line in stacked mode (normalized coordinates)
     
     // Future: event_marker_style (e.g., line, arrow, dot enum)
 };
@@ -108,5 +118,17 @@ struct DigitalIntervalSeriesDisplayOptions : public BaseTimeSeriesDisplayOptions
         alpha = TimeSeriesDefaultValues::INTERVAL_ALPHA;
     }
 };
+
+/**
+ * @brief Get cached standard deviation for an analog series
+ * 
+ * Calculates and caches the standard deviation of the analog series for performance.
+ * The cache is automatically invalidated when the series data changes.
+ * 
+ * @param series The analog time series to calculate standard deviation for
+ * @param display_options The display options containing the cache
+ * @return Cached standard deviation value
+ */
+float getCachedStdDev(AnalogTimeSeries const & series, AnalogTimeSeriesDisplayOptions & display_options);
 
 #endif // TIMESERIES_DISPLAY_OPTIONS_HPP 
