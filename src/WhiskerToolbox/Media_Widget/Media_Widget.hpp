@@ -1,8 +1,6 @@
 #ifndef MEDIA_WIDGET_HPP
 #define MEDIA_WIDGET_HPP
 
-#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
-
 #include <QWidget>
 
 class DataManager;

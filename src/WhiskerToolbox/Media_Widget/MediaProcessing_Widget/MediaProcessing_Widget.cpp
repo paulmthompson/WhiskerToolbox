@@ -59,7 +59,7 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     
     // Create contrast section
     _contrast_widget = new ContrastWidget(this);
-    _contrast_section = new Section(this, "Linear Transform (Contrast/Brightness)");
+    _contrast_section = new Section(this, "Linear Transform");
     _contrast_section->setContentLayout(*new QVBoxLayout());
     _contrast_section->layout()->addWidget(_contrast_widget);
     _contrast_section->autoSetContentLayout();
@@ -110,7 +110,7 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     
     // Create clahe section
     _clahe_widget = new ClaheWidget(this);
-    _clahe_section = new Section(this, "CLAHE (Contrast Limited Adaptive Histogram Equalization)");
+    _clahe_section = new Section(this, "CLAHE");
     _clahe_section->setContentLayout(*new QVBoxLayout());
     _clahe_section->layout()->addWidget(_clahe_widget);
     _clahe_section->autoSetContentLayout();
@@ -127,7 +127,7 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     
     // Create bilateral section
     _bilateral_widget = new BilateralWidget(this);
-    _bilateral_section = new Section(this, "Bilateral Filter (Noise Reduction)");
+    _bilateral_section = new Section(this, "Bilateral Filter");
     _bilateral_section->setContentLayout(*new QVBoxLayout());
     _bilateral_section->layout()->addWidget(_bilateral_widget);
     _bilateral_section->autoSetContentLayout();
@@ -144,7 +144,7 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     
     // Create median section
     _median_widget = new MedianWidget(this);
-    _median_section = new Section(this, "Median Filter (Noise Reduction)");
+    _median_section = new Section(this, "Median Filter");
     _median_section->setContentLayout(*new QVBoxLayout());
     _median_section->layout()->addWidget(_median_widget);
     _median_section->autoSetContentLayout();

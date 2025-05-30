@@ -35,7 +35,7 @@ Media_Widget::Media_Widget(QWidget * parent)
     ui->splitter->setStretchFactor(1, 1);  // Right panel (graphics view) stretches
     
     // Set initial sizes: 200px for left panel, rest for canvas
-    ui->splitter->setSizes({200, 563});
+    ui->splitter->setSizes({300, 563});
     
     // Set collapsible behavior
     ui->splitter->setCollapsible(0, false);  // Prevent left panel from collapsing
