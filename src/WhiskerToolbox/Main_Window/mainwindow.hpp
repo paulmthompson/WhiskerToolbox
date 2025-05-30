@@ -69,7 +69,6 @@ private slots:
     void _loadJSONConfig();
 
     void openWhiskerTracking();
-    void openLabelMaker();
     void openTongueTracking();
     void openMLWidget();
     void openDataViewer();

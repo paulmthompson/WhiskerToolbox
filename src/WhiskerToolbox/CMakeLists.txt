@@ -141,12 +141,6 @@ set(PROJECT_SOURCES
         Whisker_Widget/contact_widget.hpp
         Whisker_Widget/contact_widget.cpp
 
-        Label_Widget/Label_Widget.hpp
-        Label_Widget/Label_Widget.ui
-        Label_Widget/Label_Widget.cpp
-        Label_Widget/label_maker.hpp
-        Label_Widget/label_maker.cpp
-
         Media_Window/Media_Window.hpp
         Media_Window/Media_Window.cpp
 

@@ -15,7 +15,6 @@
 #include "DockAreaWidget.h"
 #include "DockSplitter.h"
 #include "Export_Widgets/Export_Video_Widget/Export_Video_Widget.hpp"
-#include "Label_Widget.hpp"
 #include "IO_Widgets/DigitalTimeSeries/Digital_Interval_Loader_Widget.hpp"
 #include "IO_Widgets/DigitalTimeSeries/Digital_Event_Loader_Widget.hpp"
 #include "IO_Widgets/Lines/Line_Loader_Widget.hpp"
@@ -96,7 +95,6 @@ void MainWindow::_createActions() {
     connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ui->media_widget, &Media_Widget::LoadFrame);
 
     connect(ui->actionWhisker_Tracking, &QAction::triggered, this, &MainWindow::openWhiskerTracking);
-    connect(ui->actionLabel_Maker, &QAction::triggered, this, &MainWindow::openLabelMaker);
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
@@ -257,23 +255,6 @@ void MainWindow::registerDockWidget(std::string const & key, QWidget * widget, a
 
 void MainWindow::showDockWidget(std::string const & key) {
     _m_DockManager->findDockWidget(QString::fromStdString(key))->toggleView();
-}
-
-void MainWindow::openLabelMaker() {
-
-    std::string const key = "label_maker";
-
-    if (_widgets.find(key) == _widgets.end()) {
-        auto labelMaker = std::make_unique<Label_Widget>(_scene, _data_manager);
-        labelMaker->setObjectName(key);
-        registerDockWidget(key, labelMaker.get(), ads::RightDockWidgetArea);
-        _widgets[key] = std::move(labelMaker);
-    }
-
-    auto ptr = dynamic_cast<Label_Widget *>(_widgets[key].get());
-    ptr->openWidget();
-
-    showDockWidget(key);
 }
 
 void MainWindow::openTongueTracking() {
