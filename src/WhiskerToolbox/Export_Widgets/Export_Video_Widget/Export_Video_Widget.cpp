@@ -90,8 +90,8 @@ void Export_Video_Widget::_exportVideo() {
 }
 
 void Export_Video_Widget::_handleCanvasUpdated(QImage const & canvasImage) {
-    auto frame = _data_manager->getTime()->getLastLoadedFrame();
-    std::cout << "saving frame " << frame << std::endl;
+    auto current_time = _data_manager->getCurrentTime();
+    std::cout << "saving frame " << current_time << std::endl;
     std::cout << canvasImage.height() << " x " << canvasImage.width() << std::endl;
 
     // Convert QImage to cv::Mat

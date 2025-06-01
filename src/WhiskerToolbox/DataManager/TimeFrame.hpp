@@ -13,9 +13,6 @@ public:
 
     [[nodiscard]] int getTotalFrameCount() const { return _total_frame_count; };
 
-    void updateLastLoadedFrame(int frame) { _last_loaded_frame = frame; };
-    [[nodiscard]] int getLastLoadedFrame() const { return _last_loaded_frame; };
-
     template<std::integral T>
     [[nodiscard]] int getTimeAtIndex(T index) const {
         if (index < 0 || static_cast<size_t>(index) >= _times.size()) {
@@ -66,7 +63,6 @@ public:
 protected:
 private:
     std::vector<int> _times;
-    int _last_loaded_frame{0};
     int _total_frame_count{0};
 };
 

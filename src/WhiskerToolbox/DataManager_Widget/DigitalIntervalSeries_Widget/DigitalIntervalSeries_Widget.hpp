@@ -41,7 +41,7 @@ private:
     std::string _active_key;
     int _callback_id{-1};// Corrected initialization
     bool _interval_epoch{false};
-    int _interval_start{0};
+    int64_t _interval_start{0};
     IntervalTableModel * _interval_table_model;
 
     enum SaverType { CSV };// Enum for different saver types

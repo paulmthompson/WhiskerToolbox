@@ -121,12 +121,13 @@ void DigitalEventSeries_Widget::_calculateEvents() {
 
 
 void DigitalEventSeries_Widget::_addEventButton() {
-    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+
+    auto current_time = _data_manager->getCurrentTime();
     auto events = _data_manager->getData<DigitalEventSeries>(_active_key);
 
     if (!events) return;
 
-    events->addEvent(static_cast<float>(frame_num));
+    events->addEvent(static_cast<float>(current_time));
 
     std::cout << "Number of events is " << events->size() << std::endl;
 
@@ -134,12 +135,13 @@ void DigitalEventSeries_Widget::_addEventButton() {
 }
 
 void DigitalEventSeries_Widget::_removeEventButton() {
-    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+
+    auto current_time = _data_manager->getCurrentTime();
     auto events = _data_manager->getData<DigitalEventSeries>(_active_key);
 
     if (!events) return;
 
-    bool removed = events->removeEvent(static_cast<float>(frame_num));
+    bool removed = events->removeEvent(static_cast<float>(current_time));
 
     _calculateEvents();
 }

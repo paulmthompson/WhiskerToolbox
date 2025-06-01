@@ -87,12 +87,12 @@ void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
     if (!_selection_enabled || _active_key.empty())
         return;
 
-    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
 
     auto point = _data_manager->getData<PointData>(_active_key);
     if (point) {
 
-        point->overwritePointAtTime(frame_id, {.x = static_cast<float>(x_media),
+        point->overwritePointAtTime(current_time, {.x = static_cast<float>(x_media),
                                                .y = static_cast<float>(y_media)
                                               });
 

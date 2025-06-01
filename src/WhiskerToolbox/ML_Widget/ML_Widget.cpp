@@ -368,7 +368,7 @@ void ML_Widget::_fitModel() {
     if (ui->predict_all_check->isChecked()) {
         current_time_end_frame = _data_manager->getTime()->getTotalFrameCount();
     } else {
-        current_time_end_frame = _data_manager->getTime()->getLastLoadedFrame() + 1;
+        current_time_end_frame = _data_manager->getCurrentTime();
     }
     if (_data_manager->getTime()->getTotalFrameCount() == 0) current_time_end_frame = 0;
 

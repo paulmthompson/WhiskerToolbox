@@ -203,7 +203,7 @@ void MediaLine_Widget::setActiveKey(std::string const& key) {
             
             auto line_data = _data_manager->getData<LineData>(_active_key);
             if (line_data) {
-                auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+                auto current_time = _data_manager->getCurrentTime();
                 auto lines = line_data->getLinesAtTime(current_time);
                 
                 // Update the slider with the number of lines
@@ -255,7 +255,7 @@ void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
     auto const x_media = static_cast<float>(x_canvas);
     auto const y_media = static_cast<float>(y_canvas);
-    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
     auto const line_img_size = line_data->getImageSize();
 
     auto lines = line_data->getLinesAtTime(current_time);
@@ -523,7 +523,7 @@ void MediaLine_Widget::_lineSelectionChanged(int index) {
     if (!_active_key.empty()) {
         auto line_data = _data_manager->getData<LineData>(_active_key);
         if (line_data) {
-            auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+            auto current_time = _data_manager->getCurrentTime();
             auto lines = line_data->getLinesAtTime(current_time);
             
             if (!lines.empty() && _current_line_index < static_cast<int>(lines.size())) {
@@ -555,7 +555,7 @@ void MediaLine_Widget::_detectEdges() {
         return;
     }
     
-    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
     auto frame_data = media->getProcessedData(current_time);
     
     // Convert raw frame data to cv::Mat

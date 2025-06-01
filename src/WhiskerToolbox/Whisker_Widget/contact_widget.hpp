@@ -40,7 +40,7 @@ private:
     Ui::contact_widget *ui;
     std::shared_ptr<DataManager> _data_manager;
 
-    int _contact_start {0};
+    int64_t _contact_start {0};
     bool _contact_epoch {false};
     QGraphicsScene* _scene;
     std::vector<QImage> _contact_imgs;

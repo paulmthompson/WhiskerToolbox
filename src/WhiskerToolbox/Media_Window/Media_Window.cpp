@@ -235,7 +235,7 @@ void Media_Window::UpdateCanvas() {
 
     //_convertNewMediaToQImage();
     auto _media = _data_manager->getData<MediaData>("media");
-    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
     auto media_data = _media->getProcessedData(current_time);
 
     auto unscaled_image = QImage(&media_data[0],
@@ -283,7 +283,7 @@ void Media_Window::UpdateCanvas() {
 //Canvas size, and the canvas is updated
 void Media_Window::_convertNewMediaToQImage() {
     auto _media = _data_manager->getData<MediaData>("media");
-    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
     auto media_data = _media->getProcessedData(current_time);
 
     auto unscaled_image = QImage(&media_data[0],
@@ -389,7 +389,7 @@ float Media_Window::getYAspect() const {
 }
 
 void Media_Window::_plotLineData() {
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
     auto xAspect = getXAspect();
     auto yAspect = getYAspect();
 
@@ -523,7 +523,7 @@ void Media_Window::_plotLineData() {
 }
 
 void Media_Window::_plotMaskData() {
-    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
 
     for (auto const & [mask_key, _mask_config]: _mask_configs) {
         if (!_mask_config.get()->is_visible) continue;
@@ -693,7 +693,8 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, Ima
 }
 
 void Media_Window::_plotPointData() {
-    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    auto const current_time = _data_manager->getCurrentTime();
 
     for (auto const & [point_key, _point_config]: _point_configs) {
         if (!_point_config.get()->is_visible) continue;
@@ -815,7 +816,7 @@ void Media_Window::_plotPointData() {
 }
 
 void Media_Window::_plotDigitalIntervalSeries() {
-    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
 
     for (auto const & [key, _interval_config]: _interval_configs) {
         if (!_interval_config.get()->is_visible) continue;
@@ -850,7 +851,8 @@ void Media_Window::_plotDigitalIntervalSeries() {
 }
 
 void Media_Window::_plotTensorData() {
-    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+
+    auto const current_time = _data_manager->getCurrentTime();
 
     for (auto const & [key, config]: _tensor_configs) {
         if (!config.get()->is_visible) continue;

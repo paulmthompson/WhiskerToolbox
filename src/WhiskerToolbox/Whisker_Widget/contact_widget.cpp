@@ -99,7 +99,7 @@ void Contact_Widget::setPolePos(float pole_x, float pole_y)
         std::string const new_label = "(" + std::to_string(static_cast<int>(pole_x)) + ", " + std::to_string(static_cast<int>(pole_y)) + ")";
         ui->current_location_label->setText(QString::fromStdString(new_label));
         _pole_select_mode = false;
-        updateFrame(_data_manager->getTime()->getLastLoadedFrame());
+        updateFrame(_data_manager->getCurrentTime());
     }
 }
 
@@ -111,7 +111,7 @@ void Contact_Widget::_poleSelectButton()
 void Contact_Widget::_setBoundingBoxWidth(int value)
 {
     _bounding_box_width = value;
-    updateFrame(_data_manager->getTime()->getLastLoadedFrame());
+    updateFrame(_data_manager->getCurrentTime());
 }
 
 void Contact_Widget::updateFrame(int frame_id)
@@ -255,7 +255,7 @@ QImage::Format Contact_Widget::_getQImageFormat() {
 
 void Contact_Widget::_contactButton() {
 
-    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto contactIntervals = _data_manager->getData<DigitalIntervalSeries>("Contact_Events");
 
     // If we are in a contact epoch, we need to mark the termination frame and add those to block
@@ -265,11 +265,11 @@ void Contact_Widget::_contactButton() {
 
         ui->contact_button->setText("Mark Contact");
 
-        contactIntervals->addEvent(_contact_start, frame_num);
+        contactIntervals->addEvent(_contact_start, current_time);
 
     } else {
         // If we are not already in contact epoch, start one
-        _contact_start = frame_num;
+        _contact_start = current_time;
 
         _contact_epoch = true;
 
@@ -279,7 +279,7 @@ void Contact_Widget::_contactButton() {
 
 void Contact_Widget::_noContactButton()
 {
-    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto contactIntervals = _data_manager->getData<DigitalIntervalSeries>("Contact_Events");
 
     // If we are in a contact epoch, we need to mark the termination frame and add those to block
@@ -289,13 +289,13 @@ void Contact_Widget::_noContactButton()
 
         ui->no_contact_button->setText("Mark No Contact");
 
-        for (int i = _contact_start; i < frame_num; i++) {
+        for (int i = _contact_start; i < current_time; i++) {
             contactIntervals->setEventAtTime(i, false);
         }
 
     } else {
         // If we are not already in contact epoch, start one
-        _contact_start = frame_num;
+        _contact_start = current_time;
 
         _contact_epoch = true;
 
@@ -382,8 +382,8 @@ void Contact_Widget::_buildContactTable()
     }
 
     _highlighted_row = -1;
-    auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
-    _updateContactWidgets(frame_id);
+    auto current_time = _data_manager->getCurrentTime();
+    _updateContactWidgets(current_time);
 }
 
 void Contact_Widget::_calculateContactPeriods()
@@ -397,16 +397,15 @@ void Contact_Widget::_calculateContactPeriods()
 
 void Contact_Widget::_flipContactButton()
 {
-
-    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto contact = _data_manager->getData<DigitalIntervalSeries>("Contact_Events");
 
-    if (contact->isEventAtTime(frame_num)) {
-        contact->setEventAtTime(frame_num, false);
+    if (contact->isEventAtTime(current_time)) {
+        contact->setEventAtTime(current_time, false);
     } else {
-        contact->setEventAtTime(frame_num, true);
+        contact->setEventAtTime(current_time, true);
     }
-    _drawContactRectangles(frame_num);
+    _drawContactRectangles(current_time);
 }
 
 void Contact_Widget::_changeOutputDir()

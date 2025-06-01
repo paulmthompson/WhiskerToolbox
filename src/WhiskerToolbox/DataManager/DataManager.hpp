@@ -92,6 +92,9 @@ public:
     */
     [[nodiscard]] std::vector<std::string> getTimeFrameKeys();
 
+    int64_t getCurrentTime() {return _current_time;};
+    void setCurrentTime(int64_t time) {_current_time = time;}
+
     using ObserverCallback = std::function<void()>;
 
     /**
@@ -249,6 +252,8 @@ private:
     std::filesystem::path _output_path;
 
     void _notifyObservers();
+
+    int64_t _current_time;
 };
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);

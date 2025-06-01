@@ -61,7 +61,7 @@ void TimeScrollBar::Slider_Scroll(int newPos)
 
     auto frame_id = _data_manager->getTime()->checkFrameInbounds(newPos);
     ui->horizontalScrollBar->setSliderPosition(newPos);
-    _data_manager->getTime()->updateLastLoadedFrame(frame_id); //
+    _data_manager->setCurrentTime(frame_id);
     _updateFrameLabels(frame_id);
 
     timeChanged(frame_id);
@@ -92,7 +92,7 @@ void TimeScrollBar::PlayButton()
         _play_mode = false;
 
         ui->horizontalScrollBar->blockSignals(true);
-        ui->horizontalScrollBar->setValue(_data_manager->getTime()->getLastLoadedFrame());
+        ui->horizontalScrollBar->setValue(_data_manager->getCurrentTime());
         ui->horizontalScrollBar->blockSignals(false);
 
     } else {
@@ -128,8 +128,8 @@ void TimeScrollBar::FastForwardButton()
 
 void TimeScrollBar::_vidLoop()
 {
-     auto frame_to_load = _data_manager->getTime()->getLastLoadedFrame() + _play_speed;
-     ui->horizontalScrollBar->setSliderPosition(frame_to_load);
+    auto current_time = _data_manager->getCurrentTime() + _play_speed;
+     ui->horizontalScrollBar->setSliderPosition(current_time);
 }
 
 void TimeScrollBar::changeScrollBarValue(int new_value, bool relative)
@@ -139,7 +139,7 @@ void TimeScrollBar::changeScrollBarValue(int new_value, bool relative)
 
     if (relative)
     {
-        new_value = _data_manager->getTime()->getLastLoadedFrame() + new_value;
+        new_value = _data_manager->getCurrentTime() + new_value;
     }
 
     if (new_value < min_value) {

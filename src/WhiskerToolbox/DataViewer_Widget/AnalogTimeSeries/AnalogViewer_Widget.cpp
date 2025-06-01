@@ -74,7 +74,7 @@ void AnalogViewer_Widget::_setAnalogColor(const QString& hex_color) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
             config.value()->hex_color = hex_color.toStdString();
-            _opengl_widget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
         }
         emit colorChanged(_active_key, hex_color.toStdString());
     }
@@ -86,7 +86,7 @@ void AnalogViewer_Widget::_setAnalogAlpha(int alpha) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
             config.value()->alpha = alpha_float;
-            _opengl_widget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
         }
         emit alphaChanged(_active_key, alpha_float);
     }
@@ -98,7 +98,7 @@ void AnalogViewer_Widget::_setAnalogScaleFactor(double scale_factor) {
         if (config.has_value()) {
             // Set the user-friendly scale factor directly
             config.value()->user_scale_factor = static_cast<float>(scale_factor);
-            _opengl_widget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
         }
     }
 }
@@ -108,7 +108,7 @@ void AnalogViewer_Widget::_setLineThickness(int thickness) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
             config.value()->line_thickness = thickness;
-            _opengl_widget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
         }
     }
 }
@@ -118,7 +118,7 @@ void AnalogViewer_Widget::_setGapHandlingMode(int mode_index) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
             config.value()->gap_handling = static_cast<AnalogGapHandling>(mode_index);
-            _opengl_widget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
         }
     }
 }
@@ -128,7 +128,7 @@ void AnalogViewer_Widget::_setGapThreshold(double threshold) {
         auto config = _opengl_widget->getAnalogConfig(_active_key);
         if (config.has_value()) {
             config.value()->gap_threshold = static_cast<float>(threshold);
-            _opengl_widget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+            _opengl_widget->updateCanvas(_data_manager->getCurrentTime());
         }
     }
 } 

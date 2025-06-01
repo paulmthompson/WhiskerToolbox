@@ -120,7 +120,7 @@ void Tongue_Widget::_loadImgTongueMasks(){
 
 void Tongue_Widget::_startGrabCut(){
     auto media = _data_manager->getData<MediaData>("media");
-    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
     auto media_data = media->getProcessedData(current_time);
 
 
@@ -136,9 +136,9 @@ void Tongue_Widget::_startGrabCut(){
     if (!_grabcut_widget){
         _grabcut_widget = new Grabcut_Widget(_scene, _data_manager, _time_scrollbar);
     }
-    auto frame = _data_manager->getTime()->getLastLoadedFrame();
-    _grabcut_widget->setup(img, frame);
-    drawn.push_back(frame);
+
+    _grabcut_widget->setup(img, current_time);
+    drawn.push_back(current_time);
     _grabcut_widget->openWidget();
 }
 

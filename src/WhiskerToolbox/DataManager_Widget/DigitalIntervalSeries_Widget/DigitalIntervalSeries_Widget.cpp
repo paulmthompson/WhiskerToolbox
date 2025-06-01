@@ -115,48 +115,51 @@ void DigitalIntervalSeries_Widget::_calculateIntervals() {
 
 
 void DigitalIntervalSeries_Widget::_createIntervalButton() {
-    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+
+    auto current_time = _data_manager->getCurrentTime();
     auto contactIntervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     if (!contactIntervals) return;
 
     if (_interval_epoch) {
         _interval_epoch = false;
         ui->create_interval_button->setText("Create Interval");
-        contactIntervals->addEvent(_interval_start, frame_num);
+        contactIntervals->addEvent(_interval_start, current_time);
     } else {
-        _interval_start = frame_num;
+        _interval_start = current_time;
         _interval_epoch = true;
         ui->create_interval_button->setText("Mark Interval End");
     }
 }
 
 void DigitalIntervalSeries_Widget::_removeIntervalButton() {
-    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+
+    auto current_time = _data_manager->getCurrentTime();
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 
     if (_interval_epoch) {
         _interval_epoch = false;
         ui->remove_interval_button->setText("Remove Interval");
-        for (int i = _interval_start; i < frame_num; i++) {
+        for (int i = _interval_start; i < current_time; i++) {
             intervals->setEventAtTime(i, false);
         }
     } else {
-        _interval_start = frame_num;
+        _interval_start = current_time;
         _interval_epoch = true;
         ui->remove_interval_button->setText("Mark Remove Interval End");
     }
 }
 
 void DigitalIntervalSeries_Widget::_flipIntervalButton() {
-    auto frame_num = _data_manager->getTime()->getLastLoadedFrame();
+
+    auto current_time = _data_manager->getCurrentTime();
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 
-    if (intervals->isEventAtTime(frame_num)) {
-        intervals->setEventAtTime(frame_num, false);
+    if (intervals->isEventAtTime(current_time)) {
+        intervals->setEventAtTime(current_time, false);
     } else {
-        intervals->setEventAtTime(frame_num, true);
+        intervals->setEventAtTime(current_time, true);
     }
 }
 
@@ -175,17 +178,17 @@ void DigitalIntervalSeries_Widget::_extendInterval() {
         return;
     }
 
-    auto currentFrame = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 
     for (auto const & index: selectedIndexes) {
         if (index.column() == 0) {
             Interval const interval = _interval_table_model->getInterval(index.row());
-            if (currentFrame < interval.start) {
-                intervals->addEvent(Interval{currentFrame, interval.end});
-            } else if (currentFrame > interval.end) {
-                intervals->addEvent(Interval{interval.start, currentFrame});
+            if (current_time < interval.start) {
+                intervals->addEvent(Interval{current_time, interval.end});
+            } else if (current_time > interval.end) {
+                intervals->addEvent(Interval{interval.start, current_time});
             } else {
                 std::cout << "Error: Current frame is within the selected interval." << std::endl;
             }

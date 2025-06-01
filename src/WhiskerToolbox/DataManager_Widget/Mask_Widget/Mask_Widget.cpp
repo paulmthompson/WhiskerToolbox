@@ -200,7 +200,7 @@ void Mask_Widget::selectPoint(float const x, float const y) {
         return;
     }
 
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto const image_size = media->getImageSize();
     if (image_size.width <= 0 || image_size.height <= 0) {
         std::cerr << "Mask_Widget: Invalid image size from media." << std::endl;

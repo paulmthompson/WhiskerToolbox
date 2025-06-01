@@ -199,7 +199,7 @@ void Whisker_Widget::keyPressEvent(QKeyEvent * event) {
 void Whisker_Widget::_traceButton() {
 
     auto media = _data_manager->getData<MediaData>("media");
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
 
     if (ui->num_frames_to_trace->value() <= 1) {
         _traceWhiskers(media->getProcessedData(current_time), media->getImageSize());
@@ -243,7 +243,7 @@ void Whisker_Widget::_traceButton() {
 void Whisker_Widget::_dlTraceButton() {
 
     auto media = _data_manager->getData<MediaData>("media");
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
 
     _traceWhiskersDL(media->getProcessedData(current_time), media->getImageSize());
 }
@@ -257,7 +257,7 @@ void Whisker_Widget::_dlAddMemoryButton() {
     }
 
     auto media = _data_manager->getData<MediaData>("media");
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
 
     auto image = media->getProcessedData(current_time);
 
@@ -295,7 +295,7 @@ void Whisker_Widget::_traceWhiskersDL(std::vector<uint8_t> image, ImageSize cons
 
     auto mask_output = dl_model->process_frame(image, image_size);
 
-    auto const current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
 
     _data_manager->getData<MaskData>("SAM_output")->addAtTime(current_time, mask_output);
 
@@ -338,7 +338,7 @@ void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const 
             whisker_lines,
             whisker_group_name,
             _num_whisker_to_track,
-            _data_manager->getTime()->getLastLoadedFrame(),
+            _data_manager->getCurrentTime(),
             _linking_tolerance);
 
     auto t1 = timer2.elapsed();
@@ -396,9 +396,9 @@ void Whisker_Widget::_saveFaceMask() {
 
     auto const image_size = ImageSize{.width = media_data->getWidth(), .height = media_data->getHeight()};
 
-    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
 
-    auto mask = media_data->getRawData(frame_id);
+    auto mask = media_data->getRawData(current_time);
 
     auto m2 = convert_vector_to_mat(mask, image_size);
 
@@ -413,7 +413,7 @@ void Whisker_Widget::_saveFaceMask() {
                              image_size.height,
                              QImage::Format_Grayscale8);
 
-    std::string const saveName = "mask" + pad_frame_id(frame_id, 7) + ".png";
+    std::string const saveName = "mask" + pad_frame_id(current_time, 7) + ".png";
     std::cout << "Saving file " << saveName << std::endl;
 
     mask_image.save(QString::fromStdString(saveName));
@@ -467,9 +467,9 @@ Single frame whisker saving
 
 */
 void Whisker_Widget::_saveWhiskerAsCSV(std::string const & folder, std::vector<Point2D<float>> const & whisker) {
-    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
 
-    auto saveName = _getWhiskerSaveName(frame_id);
+    auto saveName = _getWhiskerSaveName(current_time);
 
     save_line_as_csv(whisker, folder + saveName);
 }
@@ -593,7 +593,7 @@ void Whisker_Widget::_exportImageCSV() {
 
     auto media = _data_manager->getData<MediaData>("media");
 
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
 
     save_image(media.get(), current_time, opts);
 
@@ -642,7 +642,7 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
     float const x_media = static_cast<float>(x_canvas) / scene->getXAspect();
     float const y_media = static_cast<float>(y_canvas) / scene->getYAspect();
 
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const current_time = _data_manager->getCurrentTime();
 
     switch (_selection_mode) {
         case Whisker_Select: {
@@ -895,9 +895,9 @@ void Whisker_Widget::_drawingFinished() {
 
             auto mask = _scene->getDrawingMask();
 
-            auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
+            auto current_time = _data_manager->getCurrentTime();
 
-            auto image = media->getRawData(frame_id);
+            auto image = media->getRawData(current_time);
             auto const image_size = media->getImageSize();
 
             auto erased = apply_magic_eraser(image, image_size, mask);
@@ -1096,7 +1096,7 @@ void order_whiskers_by_position(
  */
 bool check_whisker_num_matches_export_num(DataManager * dm, int const num_whiskers_to_export, std::string const & whisker_group_name) {
 
-    auto current_time = dm->getTime()->getLastLoadedFrame();
+    auto const current_time = dm->getCurrentTime();
 
     int whiskers_in_frame = 0;
 

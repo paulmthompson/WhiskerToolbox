@@ -82,7 +82,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         // Trigger a single canvas update at the end
         if (!group_keys.empty()) {
             std::cout << "Triggering single canvas update for group toggle" << std::endl;
-            ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+            ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
         }
     });
 
@@ -286,7 +286,7 @@ void DataViewer_Widget::_plotSelectedFeature(std::string const & key) {
     
     // Trigger canvas update to show the new series
     std::cout << "Triggering canvas update" << std::endl;
-    ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
     std::cout << "Canvas update completed" << std::endl;
 }
 
@@ -318,7 +318,7 @@ void DataViewer_Widget::_removeSelectedFeature(std::string const & key) {
     
     // Trigger canvas update to reflect the removal
     std::cout << "Triggering canvas update after removal" << std::endl;
-    ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
 }
 
 void DataViewer_Widget::_handleFeatureSelected(QString const & feature) {
@@ -474,7 +474,7 @@ void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std
     }
     
     // Trigger a redraw
-    ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
     
     std::cout << "Color changed for " << feature_key << " to " << hex_color << std::endl;
 }
