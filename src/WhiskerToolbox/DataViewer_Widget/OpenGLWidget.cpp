@@ -341,19 +341,9 @@ void OpenGLWidget::drawDigitalEventSeries() {
         float const bNorm = static_cast<float>(b) / 255.0f;
         float const alpha = display_options->alpha;
 
-        // Get events in the visible range with proper time frame conversion
-        // start_time and end_time are in master time frame coordinates
-        auto visible_events = [&] {
-            if (time_frame.get() == _master_time_frame.get()) {
-                // Same time frame - use time coordinates directly 
-                return series->getEventsInRange(start_time, end_time);
-            } else {
-                // Different time frames - convert master time coordinates to data time frame indices
-                float data_start_idx = static_cast<float>(time_frame->getIndexAtTime(start_time));
-                float data_end_idx = static_cast<float>(time_frame->getIndexAtTime(end_time));
-                return series->getEventsInRange(data_start_idx, data_end_idx);
-            }
-        }();
+        auto start_time_idx = getTimeIndexForSeries(start_time, *time_frame.get(), *_master_time_frame.get());
+        auto end_time_idx = getTimeIndexForSeries(end_time, *time_frame.get(), *_master_time_frame.get());
+        auto visible_events = series->getEventsInRange(start_time_idx, end_time_idx);
 
         // Determine Y coordinates based on display mode
         float event_y_min, event_y_max;
