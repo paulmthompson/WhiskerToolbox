@@ -102,8 +102,6 @@ private:
 
     std::string _getWhiskerSaveName(int frame_id);
 
-    std::vector<int> _loadCSVWhiskerFromDir(std::string const & dir_name, std::string const & whisker_group_name);
-
     void _addNewTrackedWhisker(int index);
     void _addNewTrackedWhisker(std::vector<int> const & indexes);
 
@@ -121,8 +119,6 @@ private slots:
     void _loadFaceMask();
 
     void _loadJaneliaWhiskers();
-
-    void _loadSingleCSVWhisker();
 
     void _selectWhiskerPad();
     void _changeWhiskerLengthThreshold(double new_threshold);

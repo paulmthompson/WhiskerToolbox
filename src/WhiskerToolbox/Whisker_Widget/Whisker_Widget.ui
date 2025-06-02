@@ -554,7 +554,6 @@
       <string>Load Whiskers</string>
      </property>
      <addaction name="actionLoad_Janelia_Whiskers"/>
-     <addaction name="actionLoad_CSV_Whiskers"/>
      <addaction name="separator"/>
     </widget>
     <addaction name="menuLoad_Whiskers"/>

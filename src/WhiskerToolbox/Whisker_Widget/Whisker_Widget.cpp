@@ -112,8 +112,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
 
-    connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
-
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
     connect(ui->mask_dilation, &QSpinBox::valueChanged, this, &Whisker_Widget::_maskDilation);
@@ -672,67 +670,6 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
     }
 }
 
-
-/**
- * @brief Whisker_Widget::_loadCSVWhiskerFromDir
- *
- * Loads whisker lines where each is defined in a CSV file in
- * the same directory. The filename of the CSV file should
- * correspond to the frame number of the corresponding video
- *
- * The CSV is assumed
- * to have x positions in column 1 and y positions in column 2.
- * Each row should correspond to a single point moving from follicle
- * to whisker tip.
- *
- * @param dir_name
- * @param whisker_group_name
- *
- * @return vector of frame numbers that were loaded
- */
-std::vector<int> Whisker_Widget::_loadCSVWhiskerFromDir(std::string const & dir_name, std::string const & whisker_group_name) {
-    auto dir_path = std::filesystem::path(dir_name);
-    auto const whisker_number = std::stoi(dir_path.filename().string());
-
-    _createNewWhisker(whisker_group_name, whisker_number);
-
-    std::string const whisker_name = whisker_group_name + "_" + std::to_string(whisker_number);
-
-    auto loaded_frames = load_csv_lines_into_data_manager(_data_manager.get(), dir_name, whisker_name);
-
-    return loaded_frames;
-}
-
-
-/**
- *
- * Loads multiple CSV files located in the same directory
- * CSV files are assumed to contain the frame number in the
- * corresponding video. And each CSV should contain two columns
- * with the 1st column being pixel positions in x and 2nd column
- * being pixel positions in y.
- *
- * Each row
- *
- * @brief Whisker_Widget::_loadSingleCSVWhisker
- */
-void Whisker_Widget::_loadSingleCSVWhisker() {
-    auto const dir_name = QFileDialog::getExistingDirectory(
-                                  this,
-                                  "Load Whisker CSV Files",
-                                  QDir::currentPath())
-                                  .toStdString();
-
-    if (dir_name.empty()) {
-        return;
-    }
-
-    std::string const whisker_group_name = "whisker";
-
-    auto loaded_whisker_ids = _loadCSVWhiskerFromDir(dir_name, whisker_group_name);
-
-    _addNewTrackedWhisker(loaded_whisker_ids);
-}
 
 void Whisker_Widget::_openJaneliaConfig() {
     _janelia_config_widget->openWidget();
