@@ -83,28 +83,7 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <item>
-        <widget class="QLabel" name="label_12">
-         <property name="text">
-          <string>Extended Mask Extension</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="mask_dilation_2">
-         <property name="minimum">
-          <number>0</number>
-         </property>
-         <property name="singleStep">
-          <number>1</number>
-         </property>
-         <property name="value">
-          <number>30</number>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <layout class="QHBoxLayout" name="horizontalLayout_3"/>
      </item>
      <item>
       <widget class="QPushButton" name="calculate_mask">
@@ -489,12 +468,6 @@
     <addaction name="menuLoad_Whiskers"/>
     <addaction name="actionJanelia_Settings"/>
    </widget>
-   <widget class="QMenu" name="menuContact">
-    <property name="title">
-     <string>Contact</string>
-    </property>
-    <addaction name="actionOpen_Contact_Detection"/>
-   </widget>
    <widget class="QMenu" name="menuImage">
     <property name="title">
      <string>Image</string>
@@ -510,7 +483,6 @@
    </widget>
    <addaction name="menuImage"/>
    <addaction name="menuWhisker"/>
-   <addaction name="menuContact"/>
   </widget>
   <action name="actionOpen_Contact_Detection">
    <property name="text">

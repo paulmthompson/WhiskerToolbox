@@ -137,9 +137,6 @@ set(PROJECT_SOURCES
         Whisker_Widget/janelia_config.ui
         Whisker_Widget/janelia_config.hpp
         Whisker_Widget/janelia_config.cpp
-        Whisker_Widget/contact_widget.ui
-        Whisker_Widget/contact_widget.hpp
-        Whisker_Widget/contact_widget.cpp
 
         Media_Window/Media_Window.hpp
         Media_Window/Media_Window.cpp

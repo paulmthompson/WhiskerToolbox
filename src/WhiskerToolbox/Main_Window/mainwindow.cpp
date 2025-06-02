@@ -229,8 +229,7 @@ void MainWindow::openWhiskerTracking() {
     if (_widgets.find(key) == _widgets.end()) {
         auto whiskerWidget = std::make_unique<Whisker_Widget>(
                 _scene,
-                _data_manager,
-                this);
+                _data_manager);
         connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, whiskerWidget.get(), &Whisker_Widget::LoadFrame);
 
         _widgets[key] = std::move(whiskerWidget);

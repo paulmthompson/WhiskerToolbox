@@ -41,7 +41,6 @@ class Whisker_Widget : public QMainWindow {
 public:
     Whisker_Widget(Media_Window * scene,
                    std::shared_ptr<DataManager> data_manager,
-                   MainWindow * main_window,
                    QWidget * parent = nullptr);
 
     ~Whisker_Widget() override;
@@ -58,7 +57,6 @@ private:
     std::shared_ptr<whisker::WhiskerTracker> _wt;
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
-    MainWindow * _main_window;
 
     int _selected_whisker{0};
 
@@ -83,8 +81,6 @@ private:
 
     int _num_whisker_to_track{0};
 
-    bool _save_by_frame_name{false};
-
     int _clip_length{0};
 
     int _current_whisker{0};
@@ -104,7 +100,6 @@ private slots:
     void _traceButton();
     void _dlTraceButton();
     void _dlAddMemoryButton();
-    void _saveFaceMask();
     void _loadFaceMask();
 
     void _loadJaneliaWhiskers();
@@ -119,10 +114,8 @@ private slots:
     void _clickedInVideo(qreal x, qreal y);
 
     void _openJaneliaConfig();
-    void _openContactWidget();
 
     void _maskDilation(int dilation_size);
-    void _maskDilationExtended(int dilation_size);
 
     void _changeWhiskerClip(int clip_dist);
 

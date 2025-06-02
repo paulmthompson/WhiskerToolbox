@@ -3,23 +3,17 @@
 
 #include "ui_Whisker_Widget.h"
 
-#include "contact_widget.hpp"
-
 #include "DataManager.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "IO_Widgets/Media/media_export.hpp"
 #include "Magic_Eraser_Widget/magic_eraser.hpp"
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
 #include "janelia_config.hpp"
 #include "mainwindow.hpp"
 #include "utils/opencv_utility.hpp"
-#include "utils/string_manip.hpp"
 #include "whiskertracker.hpp"
 
 
@@ -39,10 +33,7 @@
 #include "utils/Deep_Learning/scm.hpp"
 
 #include <algorithm>
-#include <filesystem>
-#include <iomanip>
 #include <iostream>
-#include <random>
 #include <string>
 
 Line2D & convert_to_Line2D(whisker::Line2D & whisker_line) {
@@ -70,13 +61,11 @@ std::vector<whisker::Line2D> & convert_to_whisker_Line2D(std::vector<Line2D> & l
  */
 Whisker_Widget::Whisker_Widget(Media_Window * scene,
                                std::shared_ptr<DataManager> data_manager,
-                               MainWindow * main_window,
                                QWidget * parent)
     : QMainWindow(parent),
       _wt{std::make_shared<whisker::WhiskerTracker>()},
       _scene{scene},
       _data_manager{std::move(data_manager)},
-      _main_window{main_window},
       ui(new Ui::Whisker_Widget) {
     ui->setupUi(this);
 
@@ -85,10 +74,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
     _janelia_config_widget = new Janelia_Config(_wt);
 
     dl_model = std::make_unique<dl::SCM>();
-
-    if (!_data_manager->getData<DigitalEventSeries>("tracked_frames")) {
-        _data_manager->setData<DigitalEventSeries>("tracked_frames");
-    }
 
     connect(ui->trace_button, &QPushButton::clicked, this, &Whisker_Widget::_traceButton);
     connect(ui->dl_trace_button, &QPushButton::clicked, this, &Whisker_Widget::_dlTraceButton);
@@ -102,12 +87,9 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
 
     connect(ui->manual_whisker_select_spinbox, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectWhisker);
 
-    connect(ui->actionSave_Face_Mask_2, &QAction::triggered, this, &Whisker_Widget::_saveFaceMask);
     connect(ui->actionLoad_Face_Mask, &QAction::triggered, this, &Whisker_Widget::_loadFaceMask);
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
-
-    connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
     connect(ui->mask_dilation, &QSpinBox::valueChanged, this, &Whisker_Widget::_maskDilation);
 
@@ -362,35 +344,6 @@ void Whisker_Widget::_selectWhisker(int whisker_num) {
 
 /////////////////////////////////////////////
 
-void Whisker_Widget::_saveFaceMask() {
-
-    auto const media_data = _data_manager->getData<MediaData>("media");
-
-    auto const image_size = ImageSize{.width = media_data->getWidth(), .height = media_data->getHeight()};
-
-    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
-
-    auto mask = media_data->getRawData(frame_id);
-
-    auto m2 = convert_vector_to_mat(mask, image_size);
-
-    median_blur(m2, 35);
-
-    //TODO I can use OpenCV to save image here instead of converting back to vector
-
-    convert_mat_to_vector(mask, m2, image_size);
-
-    auto mask_image = QImage(&mask[0],
-                             image_size.width,
-                             image_size.height,
-                             QImage::Format_Grayscale8);
-
-    std::string const saveName = "mask" + pad_frame_id(frame_id, 7) + ".png";
-    std::cout << "Saving file " << saveName << std::endl;
-
-    mask_image.save(QString::fromStdString(saveName));
-}
-
 void Whisker_Widget::_loadFaceMask() {
     auto face_mask_name = QFileDialog::getOpenFileName(
             this,
@@ -429,17 +382,6 @@ void Whisker_Widget::_loadFaceMask() {
 
     ui->mask_file_label->setText(face_mask_name);
 
-}
-
-int get_whisker_id(std::string const & whisker_name) {
-    std::string number = "";
-    for (auto c: whisker_name) {
-        if (isdigit(c)) {
-            number += c;
-        }
-    }
-
-    return std::stoi(number);
 }
 
 /////////////////////////////////////////////
@@ -486,10 +428,6 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
                     _data_manager->getData<LineData>(whisker_group_name)->addLineAtTime(current_time, whiskers[_selected_whisker]);
 
                     _data_manager->getData<LineData>("unlabeled_whiskers")->clearLineAtTime(current_time, _selected_whisker);
-
-                    if (_data_manager->getData<DigitalEventSeries>("tracked_frames")) {
-                        _data_manager->getData<DigitalEventSeries>("tracked_frames")->addEvent(current_time);
-                    }
                 }
             }
             break;
@@ -508,10 +446,7 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         default:
             break;
     }
-    auto * contact_widget = _main_window->getWidget("Contact_Widget");
-    if (contact_widget) {
-        dynamic_cast<Contact_Widget *>(contact_widget)->setPolePos(x_media, y_media);// Pass forward to contact widget
-    }
+
 }
 
 void Whisker_Widget::_loadJaneliaWhiskers() {
@@ -539,29 +474,7 @@ void Whisker_Widget::_openJaneliaConfig() {
     _janelia_config_widget->openWidget();
 }
 
-void Whisker_Widget::_openContactWidget() {
-    std::string const key = "Contact_Widget";
-
-    auto * contact_widget = _main_window->getWidget(key);
-    if (!contact_widget) {
-        auto contact_widget_ptr = std::make_unique<Contact_Widget>(_data_manager);
-        _main_window->addWidget(key, std::move(contact_widget_ptr));
-
-        contact_widget = _main_window->getWidget(key);
-        _main_window->registerDockWidget(key, contact_widget, ads::RightDockWidgetArea);
-        dynamic_cast<Contact_Widget *>(contact_widget)->openWidget();
-    } else {
-        dynamic_cast<Contact_Widget *>(contact_widget)->openWidget();
-    }
-
-    _main_window->showDockWidget(key);
-}
-
 void Whisker_Widget::LoadFrame(int frame_id) {
-    auto * contact_widget = _main_window->getWidget("Contact_Widget");
-    if (contact_widget) {
-        dynamic_cast<Contact_Widget *>(contact_widget)->updateFrame(frame_id);
-    }
     if (_auto_dl) {
         _dlTraceButton();
     }
@@ -599,8 +512,6 @@ void Whisker_Widget::_maskDilation(int dilation_size) {
     _wt->setFaceMask(mask_for_tracker);
 }
 
-void Whisker_Widget::_maskDilationExtended(int dilation_size) {
-}
 
 void Whisker_Widget::_magicEraserButton() {
     _selection_mode = Selection_Type::Magic_Eraser;
