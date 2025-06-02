@@ -97,16 +97,8 @@ private:
 
     void _createNewWhisker(std::string const & whisker_group_name, int whisker_id);
 
-    std::string _getWhiskerSaveName(int frame_id);
-
-    void _addNewTrackedWhisker(int index);
-    void _addNewTrackedWhisker(std::vector<int> const & indexes);
-
     void _traceWhiskers(std::vector<uint8_t> image, ImageSize image_size);
     void _traceWhiskersDL(std::vector<uint8_t> image, ImageSize image_size);
-
-    void _addDrawingCallback(std::string data_name);
-
 
 private slots:
     void _traceButton();
@@ -126,8 +118,6 @@ private slots:
 
     void _clickedInVideo(qreal x, qreal y);
 
-    void _saveWhiskerAsCSV(std::string const & folder, std::vector<Point2D<float>> const & whisker);
-
     void _openJaneliaConfig();
     void _openContactWidget();
 
@@ -145,8 +135,6 @@ private slots:
 };
 
 void order_whiskers_by_position(DataManager * dm, std::string const & whisker_group_name, int num_whiskers_to_track, int current_time, float similarity_threshold);
-
-bool check_whisker_num_matches_export_num(DataManager * dm, int num_whiskers_to_export, std::string const & whisker_group_name);
 
 void add_whiskers_to_data_manager(
         DataManager * dm,

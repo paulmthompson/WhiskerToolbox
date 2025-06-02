@@ -81,7 +81,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
     ui->setupUi(this);
 
     _data_manager->setData<LineData>("unlabeled_whiskers");
-    _addDrawingCallback("unlabeled_whiskers");
 
     _janelia_config_widget = new Janelia_Config(_wt);
 
@@ -227,7 +226,6 @@ void Whisker_Widget::_dlAddMemoryButton() {
     if (!_data_manager->getData<MaskData>("SAM_output")) {
         _data_manager->setData<MaskData>("SAM_output");
         _data_manager->getData<MaskData>("SAM_output")->setImageSize({.width=256, .height=256});
-        _addDrawingCallback("SAM_output");
     }
 
     auto media = _data_manager->getData<MediaData>("media");
@@ -431,21 +429,6 @@ void Whisker_Widget::_loadFaceMask() {
 
     ui->mask_file_label->setText(face_mask_name);
 
-    _addDrawingCallback("Face_Mask");
-}
-
-
-/*
-
-Single frame whisker saving
-
-*/
-void Whisker_Widget::_saveWhiskerAsCSV(std::string const & folder, std::vector<Point2D<float>> const & whisker) {
-    auto const frame_id = _data_manager->getTime()->getLastLoadedFrame();
-
-    auto saveName = _getWhiskerSaveName(frame_id);
-
-    save_line_as_csv(whisker, folder + saveName);
 }
 
 int get_whisker_id(std::string const & whisker_name) {
@@ -457,24 +440,6 @@ int get_whisker_id(std::string const & whisker_name) {
     }
 
     return std::stoi(number);
-}
-
-std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
-
-    if (_save_by_frame_name) {
-        auto media = _data_manager->getData<MediaData>("media");
-        auto frame_string = media->GetFrameID(frame_id);
-        frame_string = remove_extension(frame_string);
-
-        //Strip off the img prefix and leave the number
-
-
-        return frame_string + ".csv";
-    } else {
-
-        std::string saveName = pad_frame_id(frame_id, 7) + ".csv";
-        return saveName;
-    }
 }
 
 /////////////////////////////////////////////
@@ -493,8 +458,6 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, i
     if (!_data_manager->getData<LineData>(whisker_name)) {
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->setData<LineData>(whisker_name);
-
-        _addDrawingCallback(whisker_name);
     }
 }
 
@@ -604,27 +567,6 @@ void Whisker_Widget::LoadFrame(int frame_id) {
     }
 }
 
-/**
- * @brief Whisker_Widget::_addNewTrackedWhisker
- *
- * Adds a new whisker to the list of tracked whiskers
- *
- * @param index
- */
-void Whisker_Widget::_addNewTrackedWhisker(int const index) {
-    auto tracked_frames = _data_manager->getData<DigitalEventSeries>("tracked_frames");
-    tracked_frames->addEvent(static_cast<float>(index));
-}
-
-void Whisker_Widget::_addNewTrackedWhisker(std::vector<int> const & indexes) {
-    auto tracked_frames = _data_manager->getData<DigitalEventSeries>("tracked_frames");
-
-    for (auto const index: indexes) {
-        tracked_frames->addEvent(static_cast<float>(index));
-    }
-}
-
-
 void Whisker_Widget::_maskDilation(int dilation_size) {
 
     if (!_data_manager->getData<MaskData>("Face_Mask_Original")) {
@@ -696,12 +638,6 @@ void Whisker_Widget::_changeWhiskerClip(int clip_dist) {
     _clip_length = clip_dist;
 
     _traceButton();
-}
-
-void Whisker_Widget::_addDrawingCallback(std::string data_name) {
-    _data_manager->addCallbackToData(data_name, [this]() {
-        _scene->UpdateCanvas();
-    });
 }
 
 /////////////////////////////////////////////
@@ -816,49 +752,6 @@ void order_whiskers_by_position(
         dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[i]);
     }
 */
-}
-
-/**
- * @brief check_whisker_num_matches_export_num
- *
- * This checks if the number of whiskers that have been ordered in the frame is equal
- * to the number of whiskers we have set to track in the image.
- *
- * This prevents misclicks where we click export and only 4 whiskers may be present
- * but we wish to track 5.
- *
- * @param dm
- * @param num_whiskers_to_export
- *
- * @return
- */
-bool check_whisker_num_matches_export_num(DataManager * dm, int const num_whiskers_to_export, std::string const & whisker_group_name) {
-
-    auto current_time = dm->getTime()->getLastLoadedFrame();
-
-    int whiskers_in_frame = 0;
-
-    for (int i = 0; i < num_whiskers_to_export; i++) {
-        std::string const whisker_name = whisker_group_name + "_" + std::to_string(i);
-
-        if (dm->getData<LineData>(whisker_name)) {
-            auto whiskers = dm->getData<LineData>(whisker_name)->getLinesAtTime(current_time);
-            if (!whiskers.empty()) {
-                if (!whiskers[0].empty()) {
-                    whiskers_in_frame += 1;
-                }
-            }
-        }
-    }
-
-    std::cout << "There are " << whiskers_in_frame << " whiskers in this image" << std::endl;
-
-    if (whiskers_in_frame != num_whiskers_to_export) {
-        std::cout << "There are " << whiskers_in_frame << " in image, but " << num_whiskers_to_export << " are supposed to be tracked" << std::endl;
-        return false;
-    } else {
-        return true;
-    }
 }
 
 /**
