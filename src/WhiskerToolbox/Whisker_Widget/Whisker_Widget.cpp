@@ -77,11 +77,8 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
       _scene{scene},
       _data_manager{std::move(data_manager)},
       _main_window{main_window},
-      _output_path{std::filesystem::current_path()},
       ui(new Ui::Whisker_Widget) {
     ui->setupUi(this);
-
-    ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
 
     _data_manager->setData<LineData>("unlabeled_whiskers");
     _addDrawingCallback("unlabeled_whiskers");
@@ -108,7 +105,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
 
     connect(ui->actionSave_Face_Mask_2, &QAction::triggered, this, &Whisker_Widget::_saveFaceMask);
     connect(ui->actionLoad_Face_Mask, &QAction::triggered, this, &Whisker_Widget::_loadFaceMask);
-    connect(ui->export_image_csv, &QPushButton::clicked, this, &Whisker_Widget::_exportImageCSV);
 
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
 
@@ -116,13 +112,9 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
 
     connect(ui->mask_dilation, &QSpinBox::valueChanged, this, &Whisker_Widget::_maskDilation);
 
-    connect(ui->output_dir_button, &QPushButton::clicked, this, &Whisker_Widget::_changeOutputDir);
-
     connect(ui->whisker_clip, &QSpinBox::valueChanged, this, &Whisker_Widget::_changeWhiskerClip);
 
     connect(ui->magic_eraser_button, &QPushButton::clicked, this, &Whisker_Widget::_magicEraserButton);
-
-    connect(ui->export_all_tracked, &QPushButton::clicked, this, &Whisker_Widget::_exportAllTracked);
 
     connect(ui->auto_dl_checkbox, &QCheckBox::stateChanged, this, [this]() {
         if (ui->auto_dl_checkbox->isChecked()) {
@@ -171,8 +163,6 @@ void Whisker_Widget::keyPressEvent(QKeyEvent * event) {
 
     if (event->key() == Qt::Key_T) {
         _traceButton();
-    } else if (event->key() == Qt::Key_E) {
-        _exportImageCSV();
     } else {
         //QMainWindow::keyPressEvent(event);
     }
@@ -487,95 +477,6 @@ std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
     }
 }
 
-
-void Whisker_Widget::_exportAllTracked() {
-
-    if (_num_whisker_to_track == 0) {
-        std::cout << "No whiskers selected to track" << std::endl;
-        return;
-    }
-    std::string const whisker_group_name = "whisker";
-
-    std::string const whisker_name = whisker_group_name + "_" + std::to_string(_current_whisker);
-
-    auto whisker_id = get_whisker_id(whisker_name);
-
-    std::string const whisker_folder = _output_path.string() + "/" + std::to_string(whisker_id) + "/";
-    std::filesystem::create_directory(whisker_folder);
-
-    auto whiskers = _data_manager->getData<LineData>(whisker_name);
-    auto media = _data_manager->getData<MediaData>("media");
-    auto const width = media->getWidth();
-    auto const height = media->getHeight();
-
-    auto tracked_frames = _data_manager->getData<DigitalEventSeries>("tracked_frames")->getEventSeries();
-
-    MediaExportOptions opts;
-    opts.save_by_frame_name = _save_by_frame_name;
-    opts.frame_id_padding = 7;
-    opts.image_name_prefix = "img";
-    opts.image_save_dir = _output_path.string();
-
-    for (auto const & event_frame : tracked_frames)
-    {
-        int const frame_id = static_cast<int>(event_frame);
-
-        if (whiskers->getLinesAtTime(frame_id).empty()) {
-            continue;
-        }
-
-        save_image(media.get(), frame_id, opts);
-
-        auto saveName = _getWhiskerSaveName(frame_id);
-
-        auto frame_whiskers = whiskers->getLinesAtTime(frame_id);
-
-        save_line_as_csv(frame_whiskers[0], whisker_folder + saveName);
-    }
-}
-
-/**
- * @brief Whisker_Widget::_exportImageCSV
- *
- *
- */
-void Whisker_Widget::_exportImageCSV() {
-
-    std::string const whisker_group_name = "whisker";
-
-    if (!check_whisker_num_matches_export_num(_data_manager.get(), _num_whisker_to_track, whisker_group_name)) {
-        return;
-    }
-
-    MediaExportOptions opts;
-    opts.save_by_frame_name = _save_by_frame_name;
-    opts.frame_id_padding = 7;
-    opts.image_name_prefix = "img";
-    opts.image_save_dir = _output_path.string();
-
-    auto media = _data_manager->getData<MediaData>("media");
-
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
-
-    save_image(media.get(), current_time, opts);
-
-    _addNewTrackedWhisker(current_time);
-
-    for (int i = 0; i < _num_whisker_to_track; i++) {
-        std::string const whisker_name = whisker_group_name + "_" + std::to_string(i);
-
-        if (_data_manager->getData<LineData>(whisker_name)) {
-
-            auto whiskers = _data_manager->getData<LineData>(whisker_name)->getLinesAtTime(current_time);
-
-            std::string const whisker_folder = _output_path.string() + "/" + std::to_string(i) + "/";
-            std::filesystem::create_directory(whisker_folder);
-
-            _saveWhiskerAsCSV(whisker_folder, whiskers[0]);
-        }
-    }
-}
-
 /////////////////////////////////////////////
 
 /**
@@ -789,20 +690,6 @@ void Whisker_Widget::_drawingFinished() {
         default:
             break;
     }
-}
-
-void Whisker_Widget::_changeOutputDir() {
-    QString const dir_name = QFileDialog::getExistingDirectory(
-            this,
-            "Select Directory",
-            QDir::currentPath());
-
-    if (dir_name.isEmpty()) {
-        return;
-    }
-
-    _output_path = std::filesystem::path(dir_name.toStdString());
-    ui->output_dir_label->setText(dir_name);
 }
 
 void Whisker_Widget::_changeWhiskerClip(int clip_dist) {

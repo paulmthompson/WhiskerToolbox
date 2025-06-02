@@ -8,7 +8,6 @@
 #include <QMainWindow>
 #include <QPointer>
 
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
@@ -86,8 +85,6 @@ private:
 
     bool _save_by_frame_name{false};
 
-    std::filesystem::path _output_path;
-
     int _clip_length{0};
 
     int _current_whisker{0};
@@ -129,7 +126,6 @@ private slots:
 
     void _clickedInVideo(qreal x, qreal y);
 
-    void _exportImageCSV();
     void _saveWhiskerAsCSV(std::string const & folder, std::vector<Point2D<float>> const & whisker);
 
     void _openJaneliaConfig();
@@ -137,8 +133,6 @@ private slots:
 
     void _maskDilation(int dilation_size);
     void _maskDilationExtended(int dilation_size);
-
-    void _changeOutputDir();
 
     void _changeWhiskerClip(int clip_dist);
 
@@ -148,7 +142,6 @@ private slots:
 
     void _selectWhisker(int whisker_num);
 
-    void _exportAllTracked();
 };
 
 void order_whiskers_by_position(DataManager * dm, std::string const & whisker_group_name, int num_whiskers_to_track, int current_time, float similarity_threshold);
