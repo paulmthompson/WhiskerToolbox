@@ -230,7 +230,6 @@ void MainWindow::openWhiskerTracking() {
         auto whiskerWidget = std::make_unique<Whisker_Widget>(
                 _scene,
                 _data_manager,
-                ui->time_scrollbar,
                 this);
         connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, whiskerWidget.get(), &Whisker_Widget::LoadFrame);
 

@@ -17,7 +17,6 @@ class DataManager;
 class Janelia_Config;
 class MainWindow;
 class Media_Window;
-class TimeScrollBar;
 
 namespace Ui {
 class Whisker_Widget;
@@ -43,7 +42,6 @@ class Whisker_Widget : public QMainWindow {
 public:
     Whisker_Widget(Media_Window * scene,
                    std::shared_ptr<DataManager> data_manager,
-                   TimeScrollBar * time_scrollbar,
                    MainWindow * main_window,
                    QWidget * parent = nullptr);
 
@@ -61,7 +59,6 @@ private:
     std::shared_ptr<whisker::WhiskerTracker> _wt;
     Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
-    TimeScrollBar * _time_scrollbar;
     MainWindow * _main_window;
 
     int _selected_whisker{0};

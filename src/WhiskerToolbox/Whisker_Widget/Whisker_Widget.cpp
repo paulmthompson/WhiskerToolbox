@@ -16,7 +16,6 @@
 #include "Magic_Eraser_Widget/magic_eraser.hpp"
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
 #include "janelia_config.hpp"
 #include "mainwindow.hpp"
 #include "utils/opencv_utility.hpp"
@@ -46,13 +45,6 @@
 #include <random>
 #include <string>
 
-
-std::vector<std::string> whisker_colors = {"#ff0000", // Red
-                                           "#008000", // Green
-                                           "#00ffff", // Cyan
-                                           "#ff00ff", // Magenta
-                                           "#ffff00"};// Yellow
-
 Line2D & convert_to_Line2D(whisker::Line2D & whisker_line) {
     return reinterpret_cast<Line2D &>(whisker_line);
 }
@@ -73,20 +65,17 @@ std::vector<whisker::Line2D> & convert_to_whisker_Line2D(std::vector<Line2D> & l
  *
  * @param scene
  * @param data_manager
- * @param time_scrollbar
  * @param mainwindow
  * @param parent
  */
 Whisker_Widget::Whisker_Widget(Media_Window * scene,
                                std::shared_ptr<DataManager> data_manager,
-                               TimeScrollBar * time_scrollbar,
                                MainWindow * main_window,
                                QWidget * parent)
     : QMainWindow(parent),
       _wt{std::make_shared<whisker::WhiskerTracker>()},
       _scene{scene},
       _data_manager{std::move(data_manager)},
-      _time_scrollbar{time_scrollbar},
       _main_window{main_window},
       _output_path{std::filesystem::current_path()},
       ui(new Ui::Whisker_Widget) {
@@ -802,7 +791,7 @@ void Whisker_Widget::_openContactWidget() {
 
     auto * contact_widget = _main_window->getWidget(key);
     if (!contact_widget) {
-        auto contact_widget_ptr = std::make_unique<Contact_Widget>(_data_manager, _time_scrollbar);
+        auto contact_widget_ptr = std::make_unique<Contact_Widget>(_data_manager);
         _main_window->addWidget(key, std::move(contact_widget_ptr));
 
         contact_widget = _main_window->getWidget(key);

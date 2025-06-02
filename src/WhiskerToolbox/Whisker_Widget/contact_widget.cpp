@@ -3,13 +3,12 @@
 
 #include "ui_contact_widget.h"
 
-#include "../DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
+#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 
 #include "TimeFrame.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QElapsedTimer>
 #include <QFileDialog>
@@ -22,10 +21,9 @@
 #include <fstream>
 #include <string>
 
-Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
+Contact_Widget::Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     QWidget(parent),
       _data_manager{std::move(data_manager)},
-    _time_scrollbar{time_scrollbar},
     _output_path{std::filesystem::current_path()},
     ui(new Ui::contact_widget)
 {
@@ -81,8 +79,6 @@ void Contact_Widget::openWidget() {
     connect(ui->flip_contact_button, &QPushButton::clicked, this, &Contact_Widget::_flipContactButton);
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &Contact_Widget::_changeOutputDir);
-
-    connect(ui->contact_table, &QTableWidget::cellClicked, this, &Contact_Widget::_contactTableClicked);
 
     this->show();
 
@@ -422,13 +418,6 @@ void Contact_Widget::_changeOutputDir()
 
     _output_path = std::filesystem::path(dir_name.toStdString());
     ui->output_dir_label->setText(dir_name);
-}
-
-void Contact_Widget::_contactTableClicked(int row, int column) {
-    if (column == 0 || column == 1) {
-        int const frame_id = ui->contact_table->item(row, column)->text().toInt();
-        _time_scrollbar->changeScrollBarValue(frame_id);
-    }
 }
 
 int highlight_row(QTableWidget* table, int row_index, Qt::GlobalColor color) {

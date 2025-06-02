@@ -13,7 +13,6 @@ class QGraphicsPathItem;
 class QGraphicsPixmapItem;
 class QGraphicsScene;
 class QTableWidget;
-class TimeScrollBar;
 
 namespace Ui {
 class contact_widget;
@@ -25,7 +24,7 @@ class Contact_Widget : public QWidget
     Q_OBJECT
 public:
 
-    explicit Contact_Widget(std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = nullptr);
+    explicit Contact_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent = nullptr);
 
     ~Contact_Widget() override;
 
@@ -48,7 +47,6 @@ private:
     std::tuple<int, int> _pole_pos {std::make_tuple(250,250)};
     int _bounding_box_width {130};
     bool _pole_select_mode {false};
-    TimeScrollBar* _time_scrollbar;
     std::vector<QGraphicsPathItem*> _contact_rectangle_items;
     std::vector<QGraphicsPixmapItem*> _contact_pixmaps;
     std::filesystem::path _output_path;
@@ -72,7 +70,6 @@ private slots:
     void _setBoundingBoxWidth(int value);
     void _flipContactButton();
     void _changeOutputDir();
-    void _contactTableClicked(int row, int column);
 };
 
 int highlight_row(QTableWidget* table, int row_index, Qt::GlobalColor color);
