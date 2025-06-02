@@ -6,6 +6,7 @@
 #include "FeatureProcessingWidget/FeatureProcessingWidget.hpp"
 #include "MLModelOperation.hpp"
 #include "MLModelRegistry.hpp"
+#include "ModelMetricsWidget/ModelMetricsWidget.hpp"
 #include "Transformations/ITransformation.hpp"
 #include "Transformations/TransformationsCommon.hpp"
 
@@ -115,6 +116,7 @@ private:
 
     FeatureProcessingWidget * _feature_processing_widget;
     ClassBalancingWidget * _class_balancing_widget;
+    ModelMetricsWidget * _model_metrics_widget;
 
     std::map<WhiskerTransformations::TransformationType, std::unique_ptr<ITransformation>> _transformation_registry;
 };

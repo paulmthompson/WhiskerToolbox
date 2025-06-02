@@ -253,6 +253,22 @@
        </layout>
       </widget>
      </item>
+     <item>
+      <widget class="ModelMetricsWidget" name="model_metrics_widget" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>250</height>
+        </size>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>
@@ -274,6 +290,12 @@
    <class>FeatureProcessingWidget</class>
    <extends>QWidget</extends>
    <header>ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ModelMetricsWidget</class>
+   <extends>QWidget</extends>
+   <header>ML_Widget/ModelMetricsWidget/ModelMetricsWidget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -98,6 +98,8 @@ ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
     _class_balancing_widget = ui->class_balancing_widget;
     connect(_class_balancing_widget, &ClassBalancingWidget::balancingSettingsChanged, this, &ML_Widget::_updateClassDistribution);
 
+    _model_metrics_widget = ui->model_metrics_widget;
+
     _data_manager->addObserver([this]() {
         _populateTrainingIntervalComboBox();
         if (_feature_processing_widget) {// Repopulate features if DM changes
@@ -222,6 +224,9 @@ void ML_Widget::_fitModel() {
         std::cerr << "No model operation selected." << std::endl;
         return;
     }
+
+    // Clear previous metrics at start of new fit
+    _model_metrics_widget->clearMetrics();
 
     std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> active_proc_features =
             _feature_processing_widget->getActiveProcessedFeatures();
@@ -389,16 +394,22 @@ bool ML_Widget::_trainModel(arma::Mat<double> const & feature_array,
     }
     std::cout << "Model trained: " << _current_selected_model_operation->getName() << std::endl;
 
-    // Calculate training accuracy
+    // Calculate training accuracy and detailed metrics
     arma::Row<size_t> training_predictions;
     if (balanced_feature_array.n_cols > 0) {
         bool training_predicted = _current_selected_model_operation->predict(balanced_feature_array, training_predictions);
         if (training_predicted && balanced_labels.n_elem > 0) {
+            // Calculate basic accuracy (for console output)
             double const accuracy = 100.0 * (static_cast<double>(arma::accu(training_predictions == balanced_labels))) /
                                     static_cast<double>(balanced_labels.n_elem);
             std::cout << "Training set accuracy (on potentially balanced data) is " << accuracy << "%." << std::endl;
+            
+            // Update metrics widget with detailed binary classification metrics
+            std::string model_name = _current_selected_model_operation->getName();
+            _model_metrics_widget->setBinaryClassificationMetrics(training_predictions, balanced_labels, model_name);
         } else if (balanced_labels.n_elem > 0) {
             std::cerr << "Model prediction on training data failed." << std::endl;
+            _model_metrics_widget->clearMetrics();
         }
     }
 
