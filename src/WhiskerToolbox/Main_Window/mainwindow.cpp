@@ -257,7 +257,7 @@ void MainWindow::openTongueTracking() {
     std::string const key = "tongue_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
-        auto tongueWidget = std::make_unique<Tongue_Widget>(_scene, _data_manager);
+        auto tongueWidget = std::make_unique<Tongue_Widget>(_data_manager);
         tongueWidget->setObjectName(key);
         registerDockWidget(key, tongueWidget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(tongueWidget);
@@ -274,8 +274,7 @@ void MainWindow::openMLWidget() {
 
     if (_widgets.find(key) == _widgets.end()) {
         auto MLWidget = std::make_unique<ML_Widget>(
-                _data_manager,
-                ui->time_scrollbar);
+                _data_manager);
 
         MLWidget->setObjectName(key);
         registerDockWidget(key, MLWidget.get(), ads::RightDockWidgetArea);
@@ -454,7 +453,6 @@ void MainWindow::openDataManager() {
 
     if (_widgets.find(key) == _widgets.end()) {
         auto dm_widget = std::make_unique<DataManager_Widget>(
-                _scene,
                 _data_manager,
                 ui->time_scrollbar,
                 this);

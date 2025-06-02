@@ -20,7 +20,6 @@
 #include "ML_Naive_Bayes_Widget/ML_Naive_Bayes_Widget.hpp"
 #include "ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp"
 #include "TimeFrame.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
 #include "Transformations/IdentityTransform.hpp"
 #include "Transformations/LagLeadTransform.hpp"
 #include "Transformations/SquaredTransform.hpp"
@@ -37,11 +36,9 @@
 
 
 ML_Widget::ML_Widget(std::shared_ptr<DataManager> data_manager,
-                     TimeScrollBar * time_scrollbar,
                      QWidget * parent)
     : QWidget(parent),
       _data_manager{std::move(data_manager)},
-      _time_scrollbar{time_scrollbar},
       _ml_model_registry(std::make_unique<MLModelRegistry>()),
       ui(new Ui::ML_Widget) {
     ui->setupUi(this);

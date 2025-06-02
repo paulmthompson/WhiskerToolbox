@@ -6,12 +6,9 @@
 #include "DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/Points/Point_Data.hpp"
 
 #include "Grabcut_Widget/Grabcut_Widget.hpp"
-#include "Media_Window.hpp"
 #include "TimeFrame.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
 #include "utils/opencv_utility.hpp"
 #include "utils/string_manip.hpp"
 
@@ -27,16 +24,8 @@
 #include <string>
 #include <filesystem>
 
-
-const std::vector<std::string> tongue_colors = {
-    "#00FF00", // greeeeeeeeen 
-    "#8b008b", // dark magenta
-    "#9b870c", // dark yellow
-    "#00008b" // dark blue
-};
-Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, QWidget *parent) :
+Tongue_Widget::Tongue_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     QMainWindow(parent),
-    _scene{scene},
       _data_manager{std::move(data_manager)},
     ui(new Ui::Tongue_Widget)
 {
@@ -109,12 +98,6 @@ void Tongue_Widget::_loadImgTongueMasks(){
         mask->addAtTime(frame_index, img_mask);
         //std::cout << "Added " << x_coords.size() << " pts at frame " << frame_index << '\n';
     }
-
-    _scene->addMaskDataToScene(mask_key);
-    auto mask_opts = _scene->getLineConfig(mask_key);
-    if (mask_opts.has_value()) {
-        mask_opts.value()->hex_color = tongue_colors[mask_num];
-    }
 }
 
 void Tongue_Widget::_startGrabCut(){
@@ -133,7 +116,7 @@ void Tongue_Widget::_startGrabCut(){
     cv::cvtColor(img, img, is_gray ? cv::COLOR_GRAY2BGR : cv::COLOR_BGRA2BGR);
 
     if (!_grabcut_widget){
-        _grabcut_widget = new Grabcut_Widget(_scene, _data_manager);
+        _grabcut_widget = new Grabcut_Widget(_data_manager);
     }
     auto frame = _data_manager->getTime()->getLastLoadedFrame();
     _grabcut_widget->setup(img, frame);

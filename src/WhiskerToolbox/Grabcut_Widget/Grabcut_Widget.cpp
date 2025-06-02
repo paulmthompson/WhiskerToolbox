@@ -17,9 +17,8 @@
  * @param data_manager
  * @param parent
  */
-Grabcut_Widget::Grabcut_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, QWidget *parent) :
+Grabcut_Widget::Grabcut_Widget(std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     QMainWindow(parent),
-    _scene{scene},
     _data_manager{std::move(data_manager)},
     ui(new Ui::Grabcut_Widget)
 {
@@ -209,11 +208,6 @@ void Grabcut_Widget::_saveMask(){
     if (!_data_manager->getData<MaskData>(mask_name)) {
         std::cout << "Creating " << mask_name << " in data manager " << std::endl;
         _data_manager->setData<MaskData>(mask_name);
-        _scene->addMaskDataToScene(mask_name);
-        auto mask_opts = _scene->getLineConfig(mask_name);
-        if (mask_opts.has_value()) {
-            mask_opts.value()->hex_color = "#fca923";
-        }
     }
 
     cv::Mat mask = _tool.getMask();

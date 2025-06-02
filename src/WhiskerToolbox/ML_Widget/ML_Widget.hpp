@@ -35,7 +35,6 @@ class ML_Widget : public QWidget {
 
 public:
     ML_Widget(std::shared_ptr<DataManager> data_manager,
-              TimeScrollBar * time_scrollbar,
               QWidget * parent = nullptr);
 
     ~ML_Widget() override;
