@@ -536,14 +536,23 @@ void Media_Window::_plotMaskData() {
         auto mask = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask->getImageSize();
 
-        auto const & maskData = mask->getAtTime(current_time);
+        // Check for preview data first
+        std::vector<Mask2D> maskData;
+        std::vector<Mask2D> maskData2;
+        
+        if (_mask_preview_active && _preview_mask_data.count(mask_key) > 0) {
+            // Use preview data
+            maskData = _preview_mask_data[mask_key];
+            maskData2.clear(); // No time -1 data for preview
+        } else {
+            // Use original data
+            maskData = mask->getAtTime(current_time);
+            maskData2 = mask->getAtTime(-1);
+        }
 
         _plotSingleMaskData(maskData, image_size, plot_color);
-
-        auto const & maskData2 = mask->getAtTime(-1);
-
         _plotSingleMaskData(maskData2, image_size, plot_color);
-        
+
         // Plot bounding boxes if enabled
         if (_mask_config.get()->show_bounding_box) {
             // Calculate aspect ratios for scaling coordinates
@@ -953,4 +962,27 @@ QRgb plot_color_with_alpha(BaseDisplayOptions const * opts)
     auto output_color = qRgba(color.red(), color.green(), color.blue(), std::lround(opts->alpha * 255.0f));
 
     return output_color;
+}
+
+bool Media_Window::hasPreviewMaskData(std::string const& mask_key) const {
+    return _mask_preview_active && _preview_mask_data.count(mask_key) > 0;
+}
+
+std::vector<Mask2D> Media_Window::getPreviewMaskData(std::string const& mask_key, int time) const {
+    if (hasPreviewMaskData(mask_key)) {
+        return _preview_mask_data.at(mask_key);
+    }
+    return {};
+}
+
+void Media_Window::setPreviewMaskData(std::string const& mask_key, 
+                                     std::vector<std::vector<Point2D<float>>> const& preview_data, 
+                                     bool active) {
+    if (active) {
+        _preview_mask_data[mask_key] = preview_data;
+        _mask_preview_active = true;
+    } else {
+        _preview_mask_data.erase(mask_key);
+        _mask_preview_active = !_preview_mask_data.empty();
+    }
 }

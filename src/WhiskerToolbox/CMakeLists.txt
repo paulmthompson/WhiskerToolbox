@@ -177,6 +177,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.cpp
         Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.hpp
         Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.ui
+        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.cpp
+        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.hpp
+        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.ui
 
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.cpp

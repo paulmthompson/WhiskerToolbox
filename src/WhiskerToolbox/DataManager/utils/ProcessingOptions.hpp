@@ -53,4 +53,15 @@ struct MedianOptions {
     int kernel_size{5};          ///< Kernel size for median filter (must be odd and >= 3)
 };
 
+/**
+ * @brief Options for mask dilation/erosion operations
+ */
+struct MaskDilationOptions {
+    bool active{false};          ///< Whether the dilation filter is active
+    bool preview{false};         ///< Whether to show preview of dilation
+    int grow_size{1};           ///< Size for growing the mask (1-100)
+    int shrink_size{1};         ///< Size for shrinking the mask (1-100)
+    bool is_grow_mode{true};    ///< True for grow mode, false for shrink mode
+};
+
 #endif // PROCESSING_OPTIONS_HPP 

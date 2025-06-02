@@ -127,14 +127,51 @@ void bilateral_filter(cv::Mat & mat, BilateralOptions const& options) {
 }
 
 void median_filter(cv::Mat & mat, MedianOptions const& options) {
-    // Ensure kernel size is odd and >= 3
-    int kernel_size = options.kernel_size;
-    if (kernel_size < 3) {
-        kernel_size = 3;
+    if (options.kernel_size >= 3 && options.kernel_size % 2 == 1) {
+        cv::medianBlur(mat, mat, options.kernel_size);
     }
-    if (kernel_size % 2 == 0) {
-        kernel_size += 1; // Make it odd
+}
+
+std::vector<Point2D<float>> dilate_mask(std::vector<Point2D<float>> const& mask, ImageSize image_size, MaskDilationOptions const& options) {
+    if (mask.empty() || !options.active) {
+        return mask;
     }
     
-    cv::medianBlur(mat, mat, kernel_size);
+    // Convert point-based mask to cv::Mat
+    cv::Mat mask_mat = cv::Mat::zeros(image_size.height, image_size.width, CV_8UC1);
+    
+    // Fill the mask matrix with points
+    for (auto const& point : mask) {
+        int x = static_cast<int>(std::round(point.x));
+        int y = static_cast<int>(std::round(point.y));
+        if (x >= 0 && x < image_size.width && y >= 0 && y < image_size.height) {
+            mask_mat.at<uint8_t>(y, x) = 255;
+        }
+    }
+    
+    // Apply dilation/erosion
+    dilate_mask_mat(mask_mat, options);
+    
+    // Convert back to point-based representation
+    return create_mask(mask_mat);
+}
+
+void dilate_mask_mat(cv::Mat& mat, MaskDilationOptions const& options) {
+    if (!options.active) {
+        return;
+    }
+    
+    int kernel_size = options.is_grow_mode ? options.grow_size : options.shrink_size;
+    
+    if (kernel_size <= 0) {
+        return;
+    }
+    
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(kernel_size, kernel_size));
+    
+    if (options.is_grow_mode) {
+        cv::dilate(mat, mat, kernel);
+    } else {
+        cv::erode(mat, mat, kernel);
+    }
 }

@@ -3,9 +3,12 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/utils/opencv_utility.hpp"
 #include "Media_Window/Media_Window.hpp"
 #include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
 #include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
+#include "MaskDilationWidget/MaskDilationWidget.hpp"
+#include "../../Collapsible_Widget/Section.hpp"
 
 #include <QVBoxLayout>
 #include <QLabel>
@@ -41,6 +44,9 @@ MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Me
             
     // Setup the selection mode widgets
     _setupSelectionModePages();
+    
+    // Setup the dilation widget
+    _setupDilationWidget();
 }
 
 MediaMask_Widget::~MediaMask_Widget() {
@@ -211,4 +217,152 @@ void MediaMask_Widget::_toggleShowOutline(bool checked) {
         _scene->UpdateCanvas();
     }
     std::cout << "Show outline " << (checked ? "enabled" : "disabled") << std::endl;
+}
+
+void MediaMask_Widget::_setupDilationWidget() {
+    // Create the dilation widget and section
+    _dilation_widget = new MaskDilationWidget(this);
+    _dilation_section = new Section(this, "Mask Dilation");
+    _dilation_section->setContentLayout(*new QVBoxLayout());
+    _dilation_section->layout()->addWidget(_dilation_widget);
+    _dilation_section->autoSetContentLayout();
+    
+    // Connect dilation widget signals
+    connect(_dilation_widget, &MaskDilationWidget::optionsChanged,
+            this, &MediaMask_Widget::_onDilationOptionsChanged);
+    connect(_dilation_widget, &MaskDilationWidget::applyRequested,
+            this, &MediaMask_Widget::_onDilationApplyRequested);
+    
+    // Replace the placeholder widget with the dilation section
+    auto* layout = qobject_cast<QVBoxLayout*>(ui->verticalLayout);
+    if (layout) {
+        // Find the placeholder widget
+        for (int i = 0; i < layout->count(); ++i) {
+            QLayoutItem* item = layout->itemAt(i);
+            if (item && item->widget() && item->widget() == ui->dilation_section_placeholder) {
+                // Replace the placeholder with the dilation section
+                layout->removeWidget(ui->dilation_section_placeholder);
+                ui->dilation_section_placeholder->hide();
+                layout->insertWidget(i, _dilation_section);
+                break;
+            }
+        }
+    }
+}
+
+void MediaMask_Widget::_onDilationOptionsChanged(MaskDilationOptions const& options) {
+    if (options.active && options.preview) {
+        _applyMaskDilation(options);
+    } else {
+        _restoreOriginalMaskData();
+    }
+}
+
+void MediaMask_Widget::_onDilationApplyRequested() {
+    _applyDilationPermanently();
+}
+
+void MediaMask_Widget::_applyMaskDilation(MaskDilationOptions const& options) {
+    if (_active_key.empty()) {
+        return;
+    }
+    
+    auto mask_data = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data) {
+        return;
+    }
+    
+    // Store original data if not already stored
+    _storeOriginalMaskData();
+    
+    // Get current time
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const& original_masks = _original_mask_data[_active_key];
+    
+    // Apply dilation to each mask at current time
+    std::vector<std::vector<Point2D<float>>> dilated_masks;
+    auto image_size = mask_data->getImageSize();
+    
+    for (auto const& single_mask : original_masks) {
+        if (!single_mask.empty()) {
+            auto dilated_mask = dilate_mask(single_mask, image_size, options);
+            dilated_masks.push_back(dilated_mask);
+        }
+    }
+    
+    // Set preview data in the Media_Window
+    _scene->setPreviewMaskData(_active_key, dilated_masks, true);
+    _preview_active = true;
+    
+    // Update the display by updating the canvas
+    _scene->UpdateCanvas();
+}
+
+void MediaMask_Widget::_applyDilationPermanently() {
+    if (!_preview_active || _active_key.empty()) {
+        return;
+    }
+    
+    auto mask_data = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data) {
+        return;
+    }
+    
+    // Get current time and get the preview data from Media_Window
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto preview_masks = _scene->getPreviewMaskData(_active_key, current_time);
+    
+    // Clear existing masks at this time
+    mask_data->clearAtTime(current_time, false);
+    
+    // Add the dilated masks
+    for (auto const& dilated_mask : preview_masks) {
+        if (!dilated_mask.empty()) {
+            mask_data->addAtTime(current_time, dilated_mask, false);
+        }
+    }
+    
+    // Notify observers
+    mask_data->notifyObservers();
+    
+    // Clear preview data
+    _scene->setPreviewMaskData(_active_key, {}, false);
+    _preview_active = false;
+    _original_mask_data.clear();
+    
+    // Reset the dilation widget
+    MaskDilationOptions default_options;
+    _dilation_widget->setOptions(default_options);
+    
+    std::cout << "Mask dilation applied permanently" << std::endl;
+}
+
+void MediaMask_Widget::_storeOriginalMaskData() {
+    if (_active_key.empty() || _original_mask_data.count(_active_key) > 0) {
+        return; // Already stored or no active key
+    }
+    
+    auto mask_data = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data) {
+        return;
+    }
+    
+    // Get current time and store the original mask data
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto const& masks_at_time = mask_data->getAtTime(current_time);
+    
+    _original_mask_data[_active_key] = masks_at_time;
+}
+
+void MediaMask_Widget::_restoreOriginalMaskData() {
+    if (!_preview_active) {
+        return;
+    }
+    
+    // Clear preview data from Media_Window
+    _scene->setPreviewMaskData(_active_key, {}, false);
+    _preview_active = false;
+    
+    // Update the display
+    _scene->UpdateCanvas();
 }

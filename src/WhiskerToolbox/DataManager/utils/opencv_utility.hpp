@@ -75,5 +75,20 @@ void bilateral_filter(cv::Mat& mat, BilateralOptions const& options);
  */
 void median_filter(cv::Mat& mat, MedianOptions const& options);
 
+/**
+ * @brief Apply dilation or erosion to a point-based mask
+ * @param mask Input mask as vector of 2D points
+ * @param image_size Size of the image/mask canvas
+ * @param options Dilation options specifying operation parameters
+ * @return Modified mask as vector of 2D points
+ */
+std::vector<Point2D<float>> dilate_mask(std::vector<Point2D<float>> const& mask, ImageSize image_size, MaskDilationOptions const& options);
+
+/**
+ * @brief Apply dilation or erosion to a cv::Mat mask
+ * @param mat Input/output mask matrix (modified in place)
+ * @param options Dilation options specifying operation parameters
+ */
+void dilate_mask_mat(cv::Mat& mat, MaskDilationOptions const& options);
 
 #endif // OPENCV_UTILITY_HPP

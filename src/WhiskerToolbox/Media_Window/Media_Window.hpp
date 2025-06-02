@@ -17,6 +17,7 @@
 class DataManager;
 class QGraphicsPixmapItem;
 class QImage;
+class MediaMask_Widget;
 
 int const default_width = 640;
 int const default_height = 480;
@@ -37,6 +38,9 @@ int const default_height = 480;
  */
 class Media_Window : public QGraphicsScene {
     Q_OBJECT
+    
+    friend class MediaMask_Widget;  // Allow access to preview functionality
+
 public:
     explicit Media_Window(std::shared_ptr<DataManager> data_manager, QObject * parent = nullptr);
 
@@ -121,6 +125,31 @@ public:
         return _tensor_configs.at(tensor_key).get();
     }
 
+    /**
+     * @brief Check if preview mask data is available for a given key
+     * @param mask_key The mask key to check
+     * @return True if preview data exists for this key
+     */
+    bool hasPreviewMaskData(std::string const& mask_key) const;
+
+    /**
+     * @brief Get preview mask data for a given key and time
+     * @param mask_key The mask key
+     * @param time The time index
+     * @return Preview mask data if available, empty vector otherwise
+     */
+    std::vector<Mask2D> getPreviewMaskData(std::string const& mask_key, int time) const;
+
+    /**
+     * @brief Set preview mask data for a given key
+     * @param mask_key The mask key
+     * @param preview_data The preview mask data
+     * @param active Whether preview is active
+     */
+    void setPreviewMaskData(std::string const& mask_key, 
+                           std::vector<std::vector<Point2D<float>>> const& preview_data, 
+                           bool active);
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent * event) override;
@@ -158,6 +187,10 @@ private:
     std::unordered_map<std::string, std::unique_ptr<PointDisplayOptions>> _point_configs;
     std::unordered_map<std::string, std::unique_ptr<DigitalIntervalDisplayOptions>> _interval_configs;
     std::unordered_map<std::string, std::unique_ptr<TensorDisplayOptions>> _tensor_configs;
+
+    // Preview data storage for masks
+    std::unordered_map<std::string, std::vector<std::vector<Point2D<float>>>> _preview_mask_data;
+    bool _mask_preview_active{false};
 
     QImage::Format _getQImageFormat();
     void _createCanvasForData();
