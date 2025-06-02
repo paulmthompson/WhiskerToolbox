@@ -63,8 +63,7 @@ private:
     float _linking_tolerance{20.0f};
 
     enum Selection_Type { Whisker_Select,
-                          Whisker_Pad_Select,
-                          Magic_Eraser};
+                          Whisker_Pad_Select};
 
     Whisker_Widget::Selection_Type _selection_mode{Whisker_Select};
 
@@ -100,7 +99,6 @@ private slots:
     void _traceButton();
     void _dlTraceButton();
     void _dlAddMemoryButton();
-    void _loadFaceMask();
 
     void _loadJaneliaWhiskers();
 
@@ -115,13 +113,7 @@ private slots:
 
     void _openJaneliaConfig();
 
-    void _maskDilation(int dilation_size);
-
     void _changeWhiskerClip(int clip_dist);
-
-    void _magicEraserButton();
-
-    void _drawingFinished();
 
     void _selectWhisker(int whisker_num);
 

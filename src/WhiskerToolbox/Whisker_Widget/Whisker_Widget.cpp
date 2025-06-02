@@ -87,15 +87,9 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
 
     connect(ui->manual_whisker_select_spinbox, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectWhisker);
 
-    connect(ui->actionLoad_Face_Mask, &QAction::triggered, this, &Whisker_Widget::_loadFaceMask);
-
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
 
-    connect(ui->mask_dilation, &QSpinBox::valueChanged, this, &Whisker_Widget::_maskDilation);
-
     connect(ui->whisker_clip, &QSpinBox::valueChanged, this, &Whisker_Widget::_changeWhiskerClip);
-
-    connect(ui->magic_eraser_button, &QPushButton::clicked, this, &Whisker_Widget::_magicEraserButton);
 
     connect(ui->auto_dl_checkbox, &QCheckBox::stateChanged, this, [this]() {
         if (ui->auto_dl_checkbox->isChecked()) {
@@ -125,7 +119,6 @@ void Whisker_Widget::openWidget() {
     std::cout << "Whisker Widget Opened" << std::endl;
 
     connect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
-    connect(_scene, &Media_Window::leftRelease, this, &Whisker_Widget::_drawingFinished);
 
     this->show();
 }
@@ -342,47 +335,6 @@ void Whisker_Widget::_selectWhisker(int whisker_num) {
     _current_whisker = whisker_num;
 }
 
-/////////////////////////////////////////////
-
-void Whisker_Widget::_loadFaceMask() {
-    auto face_mask_name = QFileDialog::getOpenFileName(
-            this,
-            "Load Face Mask",
-            QDir::currentPath(),
-            "All files (*.*)");
-
-    if (face_mask_name.isNull()) {
-        return;
-    }
-
-    auto mat = load_mask_from_image(face_mask_name.toStdString());
-
-    auto mask_original = std::make_shared<MaskData>();
-    mask_original->setImageSize({mat.cols, mat.rows});
-    _data_manager->setData<MaskData>("Face_Mask_Original", mask_original);
-
-    auto mask_points_original = create_mask(mat);
-    _data_manager->getData<MaskData>("Face_Mask_Original")->addAtTime(-1, mask_points_original);
-
-
-    auto mask = std::make_shared<MaskData>();
-    mask->setImageSize({mat.cols, mat.rows});
-    _data_manager->setData<MaskData>("Face_Mask", mask);
-
-    int const dilation_size = 5;
-    grow_mask(mat, dilation_size);
-
-    auto mask_points = create_mask(mat);
-
-    auto face_mask = _data_manager->getData<MaskData>("Face_Mask");
-
-    //std::cout << "Mask has " << mask_points.size() << " pixels " <<  std::endl;
-
-    face_mask->addAtTime(-1, mask_points);
-
-    ui->mask_file_label->setText(face_mask_name);
-
-}
 
 /////////////////////////////////////////////
 
@@ -477,71 +429,6 @@ void Whisker_Widget::_openJaneliaConfig() {
 void Whisker_Widget::LoadFrame(int frame_id) {
     if (_auto_dl) {
         _dlTraceButton();
-    }
-}
-
-void Whisker_Widget::_maskDilation(int dilation_size) {
-
-    if (!_data_manager->getData<MaskData>("Face_Mask_Original")) {
-        return;
-    }
-
-    int const time = -1;
-
-    auto original_mask = _data_manager->getData<MaskData>("Face_Mask_Original");
-
-    auto mask_pixels = original_mask->getAtTime(time)[0];
-
-    //convert mask to opencv
-    auto mat = convert_vector_to_mat(mask_pixels, original_mask->getImageSize());
-
-    grow_mask(mat, dilation_size);
-
-    auto new_mask = create_mask(mat);
-
-    auto dilated_mask = _data_manager->getData<MaskData>("Face_Mask");
-
-    dilated_mask->clearAtTime(time);
-
-    dilated_mask->addAtTime(time, new_mask);
-
-    auto mask_for_tracker = std::vector<whisker::Point2D<float>>();
-    for (auto const & p: new_mask) {
-        mask_for_tracker.push_back(whisker::Point2D<float>{p.x, p.y});
-    }
-    _wt->setFaceMask(mask_for_tracker);
-}
-
-
-void Whisker_Widget::_magicEraserButton() {
-    _selection_mode = Selection_Type::Magic_Eraser;
-    _scene->setDrawingMode(true);
-}
-
-void Whisker_Widget::_drawingFinished() {
-    switch (_selection_mode) {
-        case Magic_Eraser: {
-            std::cout << "Drawing finished" << std::endl;
-
-            auto media = _data_manager->getData<MediaData>("media");
-
-            auto mask = _scene->getDrawingMask();
-
-            auto frame_id = _data_manager->getTime()->getLastLoadedFrame();
-
-            auto image = media->getRawData(frame_id);
-            auto const image_size = media->getImageSize();
-
-            auto erased = apply_magic_eraser(image, image_size, mask);
-
-            _traceWhiskers(erased, image_size);
-
-            _selection_mode = Whisker_Select;
-            _scene->setDrawingMode(false);
-            break;
-        }
-        default:
-            break;
     }
 }
 
