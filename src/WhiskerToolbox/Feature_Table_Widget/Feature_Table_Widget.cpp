@@ -23,9 +23,57 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
       ui(new Ui::Feature_Table_Widget) {
     ui->setupUi(this);
 
-    QFont font = ui->available_features_table->horizontalHeader()->font();
-    font.setPointSize(6);
-    ui->available_features_table->horizontalHeader()->setFont(font);
+    // Set font sizes - increase table content font for better readability
+    QFont headerFont = ui->available_features_table->horizontalHeader()->font();
+    headerFont.setPointSize(8);  // Increased from 6 to 8
+    ui->available_features_table->horizontalHeader()->setFont(headerFont);
+    
+    // Set larger font for table content
+    QFont tableFont = ui->available_features_table->font();
+    tableFont.setPointSize(9);  // Set table content font to 9pt
+    ui->available_features_table->setFont(tableFont);
+
+    // Set uniform row spacing
+    ui->available_features_table->verticalHeader()->setDefaultSectionSize(25);
+    ui->available_features_table->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    
+    // Set equal column widths
+    ui->available_features_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    
+    // Apply dark mode compatible styling to maintain blue selection highlighting
+    // This prevents checkboxes from interfering with row selection colors
+    ui->available_features_table->setStyleSheet(
+        "QTableWidget::item:selected {"
+        "    background-color: #0078d4;"  // Blue selection background
+        "    color: white;"
+        "}"
+        "QTableWidget::item:selected:focus {"
+        "    background-color: #106ebe;"  // Slightly darker blue when focused
+        "    color: white;"
+        "}"
+        "QCheckBox {"
+        "    background-color: transparent;"  // Transparent background for checkboxes
+        "    color: white;"
+        "}"
+        "QCheckBox:checked {"
+        "    background-color: transparent;"
+        "}"
+        "QCheckBox:unchecked {"
+        "    background-color: transparent;"
+        "}"
+        "QCheckBox::indicator {"
+        "    width: 13px;"
+        "    height: 13px;"
+        "}"
+        "QCheckBox::indicator:unchecked {"
+        "    border: 1px solid #cccccc;"
+        "    background-color: #2a2a2a;"
+        "}"
+        "QCheckBox::indicator:checked {"
+        "    border: 1px solid #0078d4;"
+        "    background-color: #0078d4;"
+        "}"
+    );
 
     //connect(ui->refresh_dm_features, &QPushButton::clicked, this, &Feature_Table_Widget::_refreshFeatures);
     connect(ui->available_features_table, &QTableWidget::cellClicked, this, &Feature_Table_Widget::_highlightFeature);
@@ -69,6 +117,10 @@ void Feature_Table_Widget::_addFeatureElements(std::string const & key, int row,
 void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, int col) {
     auto checkboxItem = new QCheckBox();
     checkboxItem->setCheckState(Qt::Unchecked);
+    
+    // Center the checkbox in the cell - using a simpler approach
+    checkboxItem->setAttribute(Qt::WA_TranslucentBackground);
+    
     ui->available_features_table->setCellWidget(row, col, checkboxItem);
 
     connect(checkboxItem, &QCheckBox::stateChanged, [this, key](int state) {
@@ -185,6 +237,19 @@ void Feature_Table_Widget::populateTable() {
             }
         }
     }
+    
+    // Sort the table by feature name (assuming the "Feature" column is the first column)
+    int featureColumnIndex = -1;
+    for (int i = 0; i < _columns.size(); i++) {
+        if (_columns[i] == "Feature") {
+            featureColumnIndex = i;
+            break;
+        }
+    }
+    
+    if (featureColumnIndex != -1) {
+        ui->available_features_table->sortItems(featureColumnIndex, Qt::AscendingOrder);
+    }
 }
 
 void Feature_Table_Widget::_refreshFeatures() {
@@ -192,9 +257,21 @@ void Feature_Table_Widget::_refreshFeatures() {
 }
 
 void Feature_Table_Widget::_highlightFeature(int row, int column) {
-    QTableWidgetItem * item = ui->available_features_table->item(row, column);
-    if (item) {
-        _highlighted_feature = item->text();
-        emit featureSelected(_highlighted_feature);
+    // Always get the feature name from the "Feature" column (typically column 0)
+    // regardless of which column was clicked
+    int featureColumnIndex = -1;
+    for (int i = 0; i < _columns.size(); i++) {
+        if (_columns[i] == "Feature") {
+            featureColumnIndex = i;
+            break;
+        }
+    }
+    
+    if (featureColumnIndex != -1) {
+        QTableWidgetItem * featureItem = ui->available_features_table->item(row, featureColumnIndex);
+        if (featureItem) {
+            _highlighted_feature = featureItem->text();
+            emit featureSelected(_highlighted_feature);
+        }
     }
 }
