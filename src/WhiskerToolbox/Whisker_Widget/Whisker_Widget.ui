@@ -476,7 +476,6 @@
      <property name="title">
       <string>Face Mask</string>
      </property>
-     <addaction name="actionSave_Face_Mask_2"/>
      <addaction name="actionLoad_Face_Mask"/>
     </widget>
     <addaction name="menuFace_Mask"/>

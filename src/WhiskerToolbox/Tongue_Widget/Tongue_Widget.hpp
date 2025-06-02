@@ -36,9 +36,7 @@ private:
     std::vector<int> drawn;
 
 private slots:
-    void _loadImgTongueMasks();
     void _startGrabCut();
-    void _exportMasks();
 };
 
 
