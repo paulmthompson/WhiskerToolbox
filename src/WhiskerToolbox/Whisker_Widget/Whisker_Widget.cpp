@@ -8,16 +8,12 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "Magic_Eraser_Widget/magic_eraser.hpp"
 #include "Media_Window.hpp"
 #include "TimeFrame.hpp"
 #include "janelia_config.hpp"
 #include "mainwindow.hpp"
-#include "utils/opencv_utility.hpp"
 #include "whiskertracker.hpp"
 
-
-#include "opencv2/core/mat.hpp"
 #include "qevent.h"
 #include <QElapsedTimer>
 #include <QFileDialog>
