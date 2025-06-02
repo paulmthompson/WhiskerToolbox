@@ -167,6 +167,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.cpp
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.hpp
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.ui
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.cpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.hpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.ui
 
         Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp
         Media_Widget/MediaMask_Widget/MediaMask_Widget.cpp

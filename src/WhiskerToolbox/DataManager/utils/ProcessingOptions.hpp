@@ -1,6 +1,11 @@
 #ifndef PROCESSING_OPTIONS_HPP
 #define PROCESSING_OPTIONS_HPP
 
+#include "ImageSize/ImageSize.hpp"
+
+#include <cstdint>
+#include <vector>
+
 /**
  * @brief Options structure for linear contrast/brightness transformation
  */
@@ -62,6 +67,18 @@ struct MaskDilationOptions {
     int grow_size{1};           ///< Size for growing the mask (1-100)
     int shrink_size{1};         ///< Size for shrinking the mask (1-100)
     bool is_grow_mode{true};    ///< True for grow mode, false for shrink mode
+};
+
+/**
+ * @brief Options for magic eraser tool operations
+ */
+struct MagicEraserOptions {
+    bool active{false};          ///< Whether the magic eraser is active
+    int brush_size{10};         ///< Size of the eraser brush (1-100 pixels)
+    int median_filter_size{25}; ///< Size of the median filter kernel (3-101, must be odd)
+    bool drawing_mode{false};   ///< Whether currently in drawing mode
+    std::vector<uint8_t> mask;  ///< Mask of pixels to be replaced (empty = no replacement)
+    ImageSize image_size;
 };
 
 #endif // PROCESSING_OPTIONS_HPP 

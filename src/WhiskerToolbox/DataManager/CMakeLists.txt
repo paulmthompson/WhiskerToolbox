@@ -197,7 +197,7 @@ else()
     target_link_libraries(DataManager PRIVATE hdf5::hdf5-shared hdf5::hdf5_cpp-shared)
 endif()
 
-target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
+target_link_libraries(DataManager PRIVATE opencv_core opencv_imgproc opencv_imgcodecs opencv_photo)
 
 target_link_libraries(DataManager PRIVATE armadillo)
 target_link_libraries(DataManager PRIVATE LAPACK::LAPACK)

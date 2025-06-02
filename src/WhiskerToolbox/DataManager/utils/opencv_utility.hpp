@@ -91,4 +91,24 @@ std::vector<Point2D<float>> dilate_mask(std::vector<Point2D<float>> const& mask,
  */
 void dilate_mask_mat(cv::Mat& mat, MaskDilationOptions const& options);
 
+/**
+ * @brief Apply magic eraser effect with configurable parameters
+ * @param image Input image data as vector
+ * @param image_size Dimensions of the image
+ * @param mask Mask indicating areas to erase (brush strokes)
+ * @param options Magic eraser options containing median filter size
+ * @return Modified image with erased areas replaced by median filtered content
+ */
+std::vector<uint8_t> apply_magic_eraser_with_options(std::vector<uint8_t> const& image, 
+                                                    ImageSize image_size, 
+                                                    std::vector<uint8_t> const& mask,
+                                                    MagicEraserOptions const& options);
+
+/**
+ * @brief Apply magic eraser effect to a cv::Mat for process chain
+ * @param mat Input/output image matrix (modified in place)
+ * @param options Magic eraser options containing mask and parameters
+ */
+void apply_magic_eraser(cv::Mat& mat, MagicEraserOptions const& options);
+
 #endif // OPENCV_UTILITY_HPP

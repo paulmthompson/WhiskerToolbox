@@ -6,6 +6,7 @@
 #include "ProcessingOptions/ClaheWidget.hpp"
 #include "ProcessingOptions/BilateralWidget.hpp"
 #include "ProcessingOptions/MedianWidget.hpp"
+#include "ProcessingOptions/MagicEraserWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Media/Media_Data.hpp"
@@ -33,13 +34,18 @@ MediaProcessing_Widget::MediaProcessing_Widget(std::shared_ptr<DataManager> data
       _bilateral_widget(nullptr),
       _bilateral_section(nullptr),
       _median_widget(nullptr),
-      _median_section(nullptr) {
+      _median_section(nullptr),
+      _magic_eraser_widget(nullptr),
+      _magic_eraser_section(nullptr) {
     
     ui->setupUi(this);
     _setupProcessingWidgets();
     
-    // Connect legacy controls for other filters (these will be refactored later)
-    // ... (CLAHE controls would go here)
+   
+    if (_scene) {
+        connect(_scene, &Media_Window::leftRelease, this, &MediaProcessing_Widget::_onDrawingFinished);
+    }
+
 }
 
 MediaProcessing_Widget::~MediaProcessing_Widget() {
@@ -158,6 +164,27 @@ void MediaProcessing_Widget::_setupProcessingWidgets() {
     
     // Set initial median options
     _median_widget->setOptions(_median_options);
+    
+    // Create magic eraser section
+    _magic_eraser_widget = new MagicEraserWidget(this);
+    _magic_eraser_section = new Section(this, "Magic Eraser");
+    _magic_eraser_section->setContentLayout(*new QVBoxLayout());
+    _magic_eraser_section->layout()->addWidget(_magic_eraser_widget);
+    _magic_eraser_section->autoSetContentLayout();
+    
+    // Connect magic eraser widget signals
+    connect(_magic_eraser_widget, &MagicEraserWidget::optionsChanged,
+            this, &MediaProcessing_Widget::_onMagicEraserOptionsChanged);
+    connect(_magic_eraser_widget, &MagicEraserWidget::drawingModeChanged,
+            this, &MediaProcessing_Widget::_onMagicEraserDrawingModeChanged);
+    connect(_magic_eraser_widget, &MagicEraserWidget::clearMaskRequested,
+            this, &MediaProcessing_Widget::_onMagicEraserClearMaskRequested);
+    
+    // Add magic eraser section to the scroll layout (before the spacer)
+    scroll_layout->insertWidget(scroll_layout->count() - 1, _magic_eraser_section);
+    
+    // Set initial magic eraser options
+    _magic_eraser_widget->setOptions(_magic_eraser_options);
 }
 
 void MediaProcessing_Widget::_onContrastOptionsChanged(ContrastOptions const& options) {
@@ -207,6 +234,99 @@ void MediaProcessing_Widget::_onMedianOptionsChanged(MedianOptions const& option
     
     std::cout << "Median options changed - Active: " << options.active
               << ", Kernel Size: " << options.kernel_size << std::endl;
+}
+
+void MediaProcessing_Widget::_onMagicEraserOptionsChanged(MagicEraserOptions const& options) {
+    _magic_eraser_options = options;
+    
+    // If magic eraser is deactivated, clear the stored mask
+    if (!options.active) {
+        _magic_eraser_options.mask.clear();
+        _magic_eraser_options.image_size = {0, 0};
+    }
+    
+    _applyMagicEraser();
+    
+    std::cout << "Magic Eraser options changed - Active: " << options.active
+              << ", Brush Size: " << options.brush_size << ", Median Filter Size: " << options.median_filter_size
+              << ", Drawing Mode: " << options.drawing_mode << std::endl;
+}
+
+void MediaProcessing_Widget::_onMagicEraserDrawingModeChanged(bool enabled) {
+    // Update the scene drawing mode based on the magic eraser state
+    if (_scene && _magic_eraser_options.active) {
+        _scene->setDrawingMode(enabled);
+        if (enabled) {
+            _scene->setHoverCircleRadius(_magic_eraser_options.brush_size);
+            _scene->setShowHoverCircle(true);
+        } else {
+            _scene->setShowHoverCircle(false);
+        }
+    }
+    
+    std::cout << "Magic Eraser drawing mode changed to: " << (enabled ? "enabled" : "disabled") << std::endl;
+}
+
+void MediaProcessing_Widget::_onMagicEraserClearMaskRequested() {
+    // Clear the stored mask
+    _magic_eraser_options.mask.clear();
+    _magic_eraser_options.image_size = {0, 0};
+    
+    // Update the process chain to remove the magic eraser effect
+    _applyMagicEraser();
+    
+    std::cout << "Magic eraser mask cleared" << std::endl;
+}
+
+void MediaProcessing_Widget::_onDrawingFinished() {
+    // Only apply magic eraser if it's active and in drawing mode
+    if (!_magic_eraser_options.active || !_magic_eraser_options.drawing_mode || _active_key.empty()) {
+        return;
+    }
+    
+    auto media_data = _data_manager->getData<MediaData>(_active_key);
+    if (!media_data) {
+        return;
+    }
+    
+    // Get the drawing mask and image size
+    auto new_mask = _scene->getDrawingMask();
+    auto image_size = media_data->getImageSize();
+    
+    // If we already have a mask stored, merge the new drawing with the existing mask
+    if (!_magic_eraser_options.mask.empty() && 
+        _magic_eraser_options.image_size.width == image_size.width &&
+        _magic_eraser_options.image_size.height == image_size.height) {
+        
+        // Merge new mask with existing mask using bitwise OR operation
+        // Both masks should be the same size
+        if (_magic_eraser_options.mask.size() == new_mask.size()) {
+            for (size_t i = 0; i < new_mask.size(); ++i) {
+                // Combine masks: if either pixel is non-zero, result is non-zero
+                _magic_eraser_options.mask[i] = std::max(_magic_eraser_options.mask[i], new_mask[i]);
+            }
+            std::cout << "Magic eraser: Merged new drawing with existing mask" << std::endl;
+        } else {
+            // Size mismatch, replace with new mask
+            _magic_eraser_options.mask = new_mask;
+            std::cout << "Magic eraser: Size mismatch, replaced existing mask" << std::endl;
+        }
+    } else {
+        // No existing mask or different image size, use the new mask
+        _magic_eraser_options.mask = new_mask;
+        std::cout << "Magic eraser: Created new mask" << std::endl;
+    }
+    
+    // Update the stored image size
+    _magic_eraser_options.image_size = image_size;
+
+    // Apply the magic eraser to the process chain
+    _applyMagicEraser();
+    
+    std::cout << "Magic eraser mask stored and applied to process chain. Mask size: " 
+              << _magic_eraser_options.mask.size() << " pixels" << std::endl;
+    std::cout << "The number of non zero pixels in the mask is: "
+              << std::count_if(_magic_eraser_options.mask.begin(), _magic_eraser_options.mask.end(), [](uint8_t pixel) { return pixel != 0; }) << std::endl;
 }
 
 void MediaProcessing_Widget::_applyContrastFilter() {
@@ -339,5 +459,30 @@ void MediaProcessing_Widget::_applyMedianFilter() {
     if (_scene) {
         _scene->UpdateCanvas();
     }
+}
+
+void MediaProcessing_Widget::_applyMagicEraser() {
+    if (_active_key.empty()) return;
+    
+    auto media_data = _data_manager->getData<MediaData>(_active_key);
+    if (!media_data) return;
+    
+    if (_magic_eraser_options.active && !_magic_eraser_options.mask.empty()) {
+        // Add or update the magic eraser filter in the processing chain
+        media_data->setProcess("7__magic_eraser", [options = _magic_eraser_options](cv::Mat& input) {
+            apply_magic_eraser(input, options);
+        });
+    } else {
+        // Remove the magic eraser filter from the processing chain
+        media_data->removeProcess("7__magic_eraser");
+    }
+    
+    // Update the canvas
+    if (_scene) {
+        _scene->UpdateCanvas();
+    }
+    
+    std::cout << "Magic eraser process chain updated - Active: " << _magic_eraser_options.active 
+              << ", Has mask: " << (!_magic_eraser_options.mask.empty()) << std::endl;
 }
 

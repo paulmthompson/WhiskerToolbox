@@ -905,9 +905,12 @@ std::vector<uint8_t> Media_Window::getDrawingMask() {
 
     QPainter painter(&maskImage);
     painter.setPen(Qt::white);
+    painter.setBrush(QBrush(Qt::white));  // Fill the circles with white
 
     for (auto const & point: _drawing_points) {
-        painter.drawPoint(point.toPoint());
+        // Draw a filled circle with the current brush size (hover circle radius)
+        float const radius = static_cast<float>(_hover_circle_radius);
+        painter.drawEllipse(point, radius, radius);
     }
     painter.end();
 
