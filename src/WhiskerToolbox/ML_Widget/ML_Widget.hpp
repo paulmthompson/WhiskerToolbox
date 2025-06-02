@@ -18,11 +18,11 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <optional>
 
 
 class DataManager;
 class DigitalIntervalSeries;
-class MainWindow;
 class TimeScrollBar;
 
 namespace Ui {
@@ -35,7 +35,6 @@ class ML_Widget : public QWidget {
 public:
     ML_Widget(std::shared_ptr<DataManager> data_manager,
               TimeScrollBar * time_scrollbar,
-              MainWindow * main_window,
               QWidget * parent = nullptr);
 
     ~ML_Widget() override;
@@ -67,9 +66,44 @@ private:
     arma::Mat<double> _zScoreNormalizeFeatures(arma::Mat<double> const & matrix, 
             std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & processed_features) const;
 
+    /**
+     * @brief Prepare training data including feature matrix and outcome arrays
+     * @param active_proc_features Vector of processed feature information
+     * @param training_timestamps Output vector of training timestamps
+     * @param feature_array Output feature matrix for training
+     * @param outcome_array Output outcome matrix for training
+     * @return std::optional<arma::Row<size_t>> Labels row if successful, std::nullopt if failed
+     */
+    std::optional<arma::Row<size_t>> _prepareTrainingData(
+            std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & active_proc_features,
+            std::vector<std::size_t> & training_timestamps,
+            arma::Mat<double> & feature_array,
+            arma::Mat<double> & outcome_array) const;
+
+    /**
+     * @brief Train the machine learning model with prepared data
+     * @param feature_array Input feature matrix
+     * @param labels Input labels
+     * @param balanced_feature_array Output balanced feature matrix
+     * @param balanced_labels Output balanced labels
+     * @return bool True if training successful, false otherwise
+     */
+    bool _trainModel(arma::Mat<double> const & feature_array,
+                     arma::Row<size_t> const & labels,
+                     arma::Mat<double> & balanced_feature_array,
+                     arma::Row<size_t> & balanced_labels);
+
+    /**
+     * @brief Predict labels for new data not included in training
+     * @param active_proc_features Vector of processed feature information
+     * @param training_timestamps Training timestamps to exclude from prediction
+     * @return bool True if prediction successful, false otherwise
+     */
+    bool _predictNewData(std::vector<FeatureProcessingWidget::ProcessedFeatureInfo> const & active_proc_features,
+                         std::vector<std::size_t> const & training_timestamps);
+
     std::shared_ptr<DataManager> _data_manager;
     TimeScrollBar * _time_scrollbar;
-    MainWindow * _main_window;
     Ui::ML_Widget * ui;
 
     std::unique_ptr<MLModelRegistry> _ml_model_registry;

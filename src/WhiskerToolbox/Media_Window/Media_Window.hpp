@@ -183,6 +183,8 @@ private:
 
     void _plotHoverCircle();
 
+    void _addRemoveData();
+
 public slots:
     void LoadFrame(int frame_id);
 signals:

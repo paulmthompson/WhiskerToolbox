@@ -40,7 +40,7 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * 
     _createCanvasForData();
 
     _data_manager->addObserver([this]() {
-        UpdateCanvas();
+        _addRemoveData();
     });
 }
 
@@ -225,6 +225,9 @@ void Media_Window::LoadFrame(int frame_id) {
 }
 
 void Media_Window::UpdateCanvas() {
+
+    std::cout << "Update Canvas called" << std::endl;
+
     _clearLines();
     _clearPoints();
     _clearMasks();
@@ -936,6 +939,11 @@ void Media_Window::_plotHoverCircle()
     auto ellipse = addEllipse(_hover_position.x(), _hover_position.y(), _hover_circle_radius*2, _hover_circle_radius*2, circlePen);
     _points.append(ellipse);
 
+}
+
+void Media_Window::_addRemoveData()
+{
+    //New data key was added. This is where we may want to repopulate a custom table
 }
 
 

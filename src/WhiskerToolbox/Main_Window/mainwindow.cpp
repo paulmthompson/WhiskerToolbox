@@ -196,10 +196,6 @@ void MainWindow::_LoadData() {
     _updateFrameCount();
 
     ui->media_widget->updateMedia();
-
-    _data_manager->addCallbackToData("media", [this]() {
-        _scene->UpdateCanvas();
-    });
 }
 
 void MainWindow::_updateFrameCount() {
@@ -279,8 +275,7 @@ void MainWindow::openMLWidget() {
     if (_widgets.find(key) == _widgets.end()) {
         auto MLWidget = std::make_unique<ML_Widget>(
                 _data_manager,
-                ui->time_scrollbar,
-                this);
+                ui->time_scrollbar);
 
         MLWidget->setObjectName(key);
         registerDockWidget(key, MLWidget.get(), ads::RightDockWidgetArea);

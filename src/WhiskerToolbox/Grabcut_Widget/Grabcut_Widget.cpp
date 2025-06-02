@@ -234,7 +234,6 @@ void Grabcut_Widget::_saveMask(){
 
     mask_data->clearAtTime(_frame_index);
     mask_data->addAtTime(_frame_index, pts);
-    _scene->UpdateCanvas();
     this->close();
 }
 
