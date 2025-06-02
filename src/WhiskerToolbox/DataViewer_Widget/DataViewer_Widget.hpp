@@ -3,6 +3,9 @@
 
 #include <QWidget>
 
+#include "VerticalSpaceManager.hpp"
+#include "DataManager/DataManagerTypes.hpp"
+
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -57,6 +60,22 @@ public:
 
     [[nodiscard]] std::optional<DigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) const;
 
+    /**
+     * @brief Automatically arrange all visible series for optimal spacing
+     * 
+     * This function recalculates positioning for all currently visible series
+     * to achieve optimal vertical space distribution and prevent overlap.
+     */
+    void autoArrangeVerticalSpacing();
+
+    /**
+     * @brief Print debug information about vertical spacing and positioning
+     * 
+     * Useful for diagnosing overlap and positioning issues. Prints detailed
+     * information about all series positions, bounds, and spacing.
+     */
+    void debugVerticalSpacing() const;
+
 protected:
     void closeEvent(QCloseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
@@ -91,7 +110,43 @@ private:
     QString _highlighted_available_feature;
     ZoomScalingMode _zoom_scaling_mode{ZoomScalingMode::Adaptive}; // Use adaptive scaling by default
 
+    // Vertical space management
+    std::unique_ptr<VerticalSpaceManager> _vertical_space_manager;
+
     void _updateLabels();
+    
+    /**
+     * @brief Convert DataManager data type to VerticalSpaceManager data type
+     * 
+     * @param dm_type DataManager data type
+     * @return Corresponding DataSeriesType for VerticalSpaceManager
+     */
+    DataSeriesType _convertDataType(DM_DataType dm_type) const;
+    
+    /**
+     * @brief Update canvas dimensions in the vertical space manager
+     * 
+     * Called when the OpenGL widget is resized to keep spacing calculations current.
+     */
+    void _updateVerticalSpaceManagerDimensions();
+    
+    /**
+     * @brief Update OpenGL widget view bounds based on content height
+     * 
+     * Adjusts the viewport to accommodate all content from VerticalSpaceManager.
+     */
+    void _updateViewBounds();
+    
+    /**
+     * @brief Apply vertical space manager positioning to OpenGL widget
+     * 
+     * Updates the positioning parameters for a specific series based on the
+     * vertical space manager's calculations.
+     * 
+     * @param series_key Key of the series to update
+     */
+    void _applyVerticalSpacing(std::string const & series_key);
+    
     void _calculateOptimalScaling(std::vector<std::string> const & group_keys);
     
     /**
@@ -104,6 +159,16 @@ private:
      * @param group_keys Vector of series keys in the group to auto-configure
      */
     void _calculateOptimalEventSpacing(std::vector<std::string> const & group_keys);
+    
+    /**
+     * @brief Automatically scale all visible series to fill the available canvas
+     * 
+     * Calculates optimal scaling factors for all currently visible series
+     * (analog, digital events, digital intervals) to make best use of the
+     * available canvas space. Adjusts global scale and vertical spacing
+     * to minimize empty space.
+     */
+    void _autoFillCanvas();
 };
 
 

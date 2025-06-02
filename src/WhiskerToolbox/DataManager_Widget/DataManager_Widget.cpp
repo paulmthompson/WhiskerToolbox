@@ -27,19 +27,16 @@
 #include "Point_Widget/Point_Widget.hpp"
 #include "Tensor_Widget/Tensor_Widget.hpp"
 
-#include "Media_Window/Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QFileDialog>
 
 DataManager_Widget::DataManager_Widget(
-        Media_Window * scene,
         std::shared_ptr<DataManager> data_manager,
         TimeScrollBar * time_scrollbar,
         QWidget * parent)
     : QWidget(parent),
       ui(new Ui::DataManager_Widget),
-      _scene{scene},
       _time_scrollbar{time_scrollbar},
       _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
@@ -91,15 +88,10 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             point_widget->setActiveKey(key);
 
-            _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
-                _scene->UpdateCanvas();
-            }));
-
             _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [point_widget]() {
                 point_widget->updateTable();
             }));
 
-            connect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
             connect(point_widget, &Point_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             break;
         }
@@ -110,9 +102,6 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             mask_widget->setActiveKey(key);
 
-            _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
-                _scene->UpdateCanvas();
-            }));
             connect(mask_widget, &Mask_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             break;
 
@@ -124,9 +113,7 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             if (line_widget) {
                 line_widget->setActiveKey(key);
                 connect(line_widget, &Line_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
-                _current_data_callbacks.push_back(_data_manager->addCallbackToData(key, [this]() {
-                    _scene->UpdateCanvas();
-                }));
+
             }
             break;
         }
@@ -197,7 +184,6 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
             int const stacked_widget_index = 1;
 
             auto point_widget = dynamic_cast<Point_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
-            disconnect(_time_scrollbar, &TimeScrollBar::timeChanged, point_widget, &Point_Widget::loadFrame);
             disconnect(point_widget, &Point_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             if (point_widget) {
                 point_widget->removeCallbacks();

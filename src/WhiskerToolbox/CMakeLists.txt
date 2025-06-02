@@ -137,9 +137,6 @@ set(PROJECT_SOURCES
         Whisker_Widget/janelia_config.ui
         Whisker_Widget/janelia_config.hpp
         Whisker_Widget/janelia_config.cpp
-        Whisker_Widget/contact_widget.ui
-        Whisker_Widget/contact_widget.hpp
-        Whisker_Widget/contact_widget.cpp
 
         Media_Window/Media_Window.hpp
         Media_Window/Media_Window.cpp
@@ -170,6 +167,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.cpp
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.hpp
         Media_Widget/MediaProcessing_Widget/ProcessingOptions/MedianWidget.ui
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.cpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.hpp
+        Media_Widget/MediaProcessing_Widget/ProcessingOptions/MagicEraserWidget.ui
 
         Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp
         Media_Widget/MediaMask_Widget/MediaMask_Widget.cpp
@@ -180,6 +180,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.cpp
         Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.hpp
         Media_Widget/MediaMask_Widget/SelectionWidgets/MaskBrushSelectionWidget.ui
+        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.cpp
+        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.hpp
+        Media_Widget/MediaMask_Widget/MaskDilationWidget/MaskDilationWidget.ui
 
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.cpp
@@ -219,11 +222,15 @@ set(PROJECT_SOURCES
         DataViewer_Widget/DataViewer_Tree_Widget/DataViewer_Tree_Widget.hpp
         DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.cpp
         DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.hpp
+        DataViewer_Widget/VerticalSpaceManager.cpp
+        DataViewer_Widget/VerticalSpaceManager.hpp
         DataViewer_Widget/OpenGLWidget.cpp
         DataViewer_Widget/OpenGLWidget.hpp
         DataViewer_Widget/XAxis.hpp
         DataViewer_Widget/shaders/dashed_line_shader.hpp
         DataViewer_Widget/shaders/colored_vertex_shader.hpp
+        DataViewer_Widget/DisplayOptions/TimeSeriesDisplayOptions.hpp
+        DataViewer_Widget/DisplayOptions/TimeSeriesDisplayOptions.cpp
         DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.cpp
         DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.hpp
         DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.ui
@@ -261,6 +268,9 @@ set(PROJECT_SOURCES
         ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.cpp
         ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.hpp
         ML_Widget/FeatureProcessingWidget/FeatureProcessingWidget.ui
+        ML_Widget/ModelMetricsWidget/ModelMetricsWidget.cpp
+        ML_Widget/ModelMetricsWidget/ModelMetricsWidget.hpp
+        ML_Widget/ModelMetricsWidget/ModelMetricsWidget.ui
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.hpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.cpp
         ML_Widget/ML_Random_Forest_Widget/ML_Random_Forest_Widget.ui

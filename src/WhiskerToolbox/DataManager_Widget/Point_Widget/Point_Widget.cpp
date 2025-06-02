@@ -92,32 +92,9 @@ void Point_Widget::updateTable() {
     }
 }
 
-void Point_Widget::loadFrame(int frame_id) {
-    if (_previous_frame != frame_id) {
-        if (ui->propagate_checkbox->isChecked()) {
-            _propagateLabel(frame_id);
-        }
-        // Removed: _point_table_model->setActiveFrame(frame_id); as it does not exist
-        // The table model displays all frames; Point_Widget tracks the active frame via _previous_frame.
-        _previous_frame = frame_id;
-        // If the table needs to visually indicate the active frame, that would be a separate feature.
-    }
-}
 
 void Point_Widget::removeCallbacks() {
     remove_callback(_data_manager.get(), _active_key, _callback_id);
-}
-
-void Point_Widget::_propagateLabel(int frame_id) {
-    if (!_active_key.empty()) {
-        auto point_data_ptr = _data_manager->getData<PointData>(_active_key);
-        if (point_data_ptr) {
-            auto const & points_at_previous_frame = point_data_ptr->getPointsAtTime(_previous_frame);
-            if (!points_at_previous_frame.empty()){
-                 point_data_ptr->overwritePointsAtTime(frame_id, points_at_previous_frame);
-            }
-        }
-    }
 }
 
 void Point_Widget::_populateMoveToPointDataComboBox() {

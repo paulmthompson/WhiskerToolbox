@@ -6,6 +6,8 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "TimeFrame.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
+#include "VerticalSpaceManager.hpp"
 #include "shaders/colored_vertex_shader.hpp"
 #include "shaders/dashed_line_shader.hpp"
 #include "utils/color.hpp"
@@ -349,29 +351,62 @@ void OpenGLWidget::drawDigitalEventSeries() {
         float event_y_min, event_y_max;
         
         if (display_options->display_mode == EventDisplayMode::Stacked) {
-            // Calculate Y position for this specific event series in stacked mode
-            float const y_offset = static_cast<float>(visible_series_index) * display_options->vertical_spacing;
-            float const series_center = y_offset + center_coord;
-            float const half_height = display_options->event_height * 0.5f;
-            
-            event_y_min = series_center - half_height;
-            event_y_max = series_center + half_height;
+            // Use normalized coordinates for the event (from -1 to +1 in local space)
+            // The Model matrix will handle positioning and scaling
+            event_y_min = -1.0f;  // Bottom of event in local coordinates
+            event_y_max = +1.0f;  // Top of event in local coordinates
         } else {
             // Full canvas mode - events stretch from top to bottom
             event_y_min = min_y;
             event_y_max = max_y;
         }
 
-        // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
+        // === MVP MATRIX SETUP ===
+        // Model Matrix: Handles series-specific positioning and scaling
         auto Model = glm::mat4(1.0f);
+        
+        if (display_options->display_mode == EventDisplayMode::Stacked) {
+            // Check if this series has been positioned by VerticalSpaceManager
+            if (display_options->vertical_spacing == 0.0f) {
+                // VerticalSpaceManager positioning: use calculated position and scale
+                float const series_center_y = display_options->y_offset;
+                float const series_height = display_options->event_height;
+                
+                // Apply scaling: transform from normalized [-1,+1] to allocated height
+                Model = glm::scale(Model, glm::vec3(1.0f, series_height * 0.5f, 1.0f));
+                
+                // Apply translation: move to calculated center position
+                Model = glm::translate(Model, glm::vec3(0.0f, series_center_y / (series_height * 0.5f), 0.0f));
+                
+                std::cout << "  Event '" << key << "' MVP: center_y=" << series_center_y 
+                          << ", height=" << series_height << std::endl;
+            } else {
+                // Legacy index-based positioning for backward compatibility
+                float const y_offset = static_cast<float>(visible_series_index) * display_options->vertical_spacing;
+                float const series_center = y_offset + center_coord;
+                float const series_height = display_options->event_height;
+                
+                // Apply scaling and translation
+                Model = glm::scale(Model, glm::vec3(1.0f, series_height * 0.5f, 1.0f));
+                Model = glm::translate(Model, glm::vec3(0.0f, series_center / (series_height * 0.5f), 0.0f));
+            }
+        }
+        // For full canvas mode, no Model matrix transformations needed
 
-        // View Matrix. Panning (all lines moved together).
+        // View Matrix: Handles global panning (applied to all series equally)
+        // Note: Pan offset is now handled in Projection matrix for dynamic viewport
         auto View = glm::mat4(1.0f);
-        View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0));
+        // View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0)); // Moved to Projection
 
-        // Projection Matrix. Orthographic. Horizontal Zoom. Vertical Zoom.
-        auto Projection = glm::ortho(start_time, end_time,
-                                     min_y, max_y);
+        // Projection Matrix: Maps world coordinates to screen coordinates
+        // - X axis: maps time range [start_time, end_time] to screen width
+        // - Y axis: maps world Y coordinates [min_y, max_y] to screen height
+        // 
+        // For dynamic viewport: adjust Y bounds based on content and pan offset
+        float dynamic_min_y = _yMin + _verticalPanOffset;
+        float dynamic_max_y = _yMax + _verticalPanOffset;
+        
+        auto Projection = glm::ortho(start_time, end_time, dynamic_min_y, dynamic_max_y);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
@@ -454,16 +489,42 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         float const bNorm = static_cast<float>(b) / 255.0f;
         float const alpha = display_options->alpha;
 
-        // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
+        // === MVP MATRIX SETUP ===
+        // Model Matrix: Handles series-specific positioning and scaling  
         auto Model = glm::mat4(1.0f);
+        
+        // Check if this series has been positioned by VerticalSpaceManager
+        // (VerticalSpaceManager sets a specific y_offset value)
+        if (display_options->y_offset != 0.0f) {
+            // VerticalSpaceManager positioning: use calculated position and scale
+            float const series_center_y = display_options->y_offset;
+            float const series_height = display_options->interval_height;
+            
+            // Apply translation: move to calculated center position
+            Model = glm::translate(Model, glm::vec3(0, series_center_y, 0));
+            
+            // Apply scaling: scale to allocated height 
+            Model = glm::scale(Model, glm::vec3(1, series_height * 0.5f, 1));
+            
+            std::cout << "  Interval '" << key << "' MVP: center_y=" << series_center_y 
+                      << ", height=" << series_height << std::endl;
+        }
+        // For intervals without VerticalSpaceManager, use full canvas (no Model matrix transforms)
 
-        // View Matrix. Panning (all lines moved together).
+        // View Matrix: Handles global panning (applied to all series equally)
+        // Note: Pan offset is now handled in Projection matrix for dynamic viewport
         auto View = glm::mat4(1.0f);
-        //View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0));
+        // View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0)); // Moved to Projection
 
-        // Projection Matrix. Orthographic. Horizontal Zoom. Vertical Zoom.
-        auto Projection = glm::ortho(start_time, end_time,
-                                     min_y, max_y);
+        // Projection Matrix: Maps world coordinates to screen coordinates
+        // - X axis: maps time range [start_time, end_time] to screen width
+        // - Y axis: maps world Y coordinates [min_y, max_y] to screen height  
+        // 
+        // For dynamic viewport: adjust Y bounds based on content and pan offset
+        float dynamic_min_y = _yMin + _verticalPanOffset;
+        float dynamic_max_y = _yMax + _verticalPanOffset;
+        
+        auto Projection = glm::ortho(start_time, end_time, dynamic_min_y, dynamic_max_y);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
@@ -481,15 +542,28 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
             float const xStart = start;
             float const xEnd = end;
 
+            // Determine Y coordinates based on positioning mode
+            float interval_y_min, interval_y_max;
+            if (display_options->y_offset != 0.0f) {
+                // VerticalSpaceManager positioning: use normalized coordinates
+                // The Model matrix will handle positioning and scaling
+                interval_y_min = -1.0f;  // Bottom of interval in local coordinates
+                interval_y_max = +1.0f;  // Top of interval in local coordinates
+            } else {
+                // Legacy full-canvas mode
+                interval_y_min = min_y;
+                interval_y_max = max_y;
+            }
+
             std::array<GLfloat, 24> vertices = {
-                    xStart, min_y, rNorm, gNorm, bNorm, alpha,
-                    xEnd, min_y, rNorm, gNorm, bNorm, alpha,
-                    xEnd, max_y, rNorm, gNorm, bNorm, alpha,
-                    xStart, max_y, rNorm, gNorm, bNorm, alpha};
+                    xStart, interval_y_min, rNorm, gNorm, bNorm, alpha,
+                    xEnd, interval_y_min, rNorm, gNorm, bNorm, alpha,
+                    xEnd, interval_y_max, rNorm, gNorm, bNorm, alpha,
+                    xStart, interval_y_max, rNorm, gNorm, bNorm, alpha};
 
             //glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.bind();
-            m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));// What is this?
+            m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
             m_vbo.release();
 
             GLint const first = 0;  // Starting index of enabled array
@@ -601,8 +675,17 @@ void OpenGLWidget::drawAnalogSeries() {
         
         if (!display_options->is_visible) continue;
         
-        auto const stdDev = display_options->scale_factor * display_options->user_scale_factor / _global_zoom;
-
+        // Calculate scale factor based on standard deviation
+        float const stdDev = getCachedStdDev(*series, *display_options);
+        display_options->scale_factor = stdDev * 5.0f;
+        display_options->user_scale_factor = 1.0f; // Default user scale
+        
+        std::cout << "Standard deviation for "
+                  << key
+                  << " calculated as "
+                  << stdDev
+                  << std::endl;
+        
         // Set the color for the current series
         hexToRGB(display_options->hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
@@ -635,22 +718,69 @@ void OpenGLWidget::drawAnalogSeries() {
             std::cout << "end_idx: " << end_idx << std::endl;
         }
 
-        // Model Matrix. Scale series. Vertical Offset based on display order and offset increment
-        float const y_offset = static_cast<float>(i) * _ySpacing;
+        // === MVP MATRIX SETUP ===
+        // Model Matrix: Handles series-specific positioning and scaling
         auto Model = glm::mat4(1.0f);
-        Model = glm::translate(Model, glm::vec3(0, y_offset, 0));
+        
+        // Check if this series has been positioned by VerticalSpaceManager
+        // (VerticalSpaceManager sets a specific y_offset value and allocated_height > 0)
+        if (display_options->y_offset != 0.0f && display_options->allocated_height > 0.0f) {
+            // VerticalSpaceManager positioning: use calculated position and allocated space
+            float const series_center_y = display_options->y_offset;
+            
+            // Calculate amplitude scaling based on allocated height and data characteristics
+            // Use a reasonable portion of the allocated height for amplitude display
+            float const usable_height = display_options->allocated_height * 0.8f; // 80% of allocated space
+            
+            // Scale amplitude to fit within the usable height
+            // Use the original approach but base it on allocated space rather than corrupted scale_factor
+            float const base_amplitude_scale = 1.0f / stdDev; // Basic amplitude normalization
+            float const height_scale = usable_height / 1.0f;  // Scale to fit in allocated height
+            
+            // Apply user controls: global zoom and user scale factor
+            float const user_controls = display_options->user_scale_factor * _global_zoom;
+            float const amplitude_scale = base_amplitude_scale * height_scale * user_controls;
+            
+            // Apply translation: move to calculated center position
+            Model = glm::translate(Model, glm::vec3(0.0f, series_center_y, 0.0f));
+            
+            // Apply scaling: scale amplitude to fit in allocated space
+            Model = glm::scale(Model, glm::vec3(1.0f, amplitude_scale, 1.0f));
+            
+            std::cout << "  Analog '" << key << "' MVP: center_y=" << series_center_y 
+                      << ", allocated_height=" << display_options->allocated_height
+                      << ", stdDev=" << stdDev << ", user_controls=" << user_controls
+                      << ", amplitude_scale=" << amplitude_scale << std::endl;
+        } else {
+            // Legacy index-based positioning for backward compatibility
+            float const y_offset = static_cast<float>(i) * _ySpacing;
+            
+            // Apply translation: position based on index and spacing
+            Model = glm::translate(Model, glm::vec3(0.0f, y_offset, 0.0f));
+            
+            // Center all series around zero
+            Model = glm::translate(Model, glm::vec3(0.0f, center_coord, 0.0f));
+            
+            // Apply scaling: scale based on actual standard deviation and user settings
+            // Fixed: Apply both user scale factor AND global zoom consistently
+            float const legacy_amplitude_scale = (1.0f / stdDev) * display_options->user_scale_factor * _global_zoom;
+            Model = glm::scale(Model, glm::vec3(1.0f, legacy_amplitude_scale, 1.0f));
+        }
 
-        //Now move so that center of all series is at zero
-        Model = glm::translate(Model, glm::vec3(0, center_coord, 0));
-        Model = glm::scale(Model, glm::vec3(1, 1 / stdDev, 1));
-
-        // View Matrix. Panning (all lines moved together).
+        // View Matrix: Handles global panning (applied to all series equally)
+        // Note: Pan offset is now handled in Projection matrix for dynamic viewport
         auto View = glm::mat4(1.0f);
-        View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0));
+        // View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0)); // Moved to Projection
 
-        // Projection Matrix. Orthographic. Horizontal Zoom. Vertical Zoom.
-        auto Projection = glm::ortho(start_time, end_time,
-                                     min_y, max_y);
+        // Projection Matrix: Maps world coordinates to screen coordinates
+        // - X axis: maps time range [start_time, end_time] to screen width  
+        // - Y axis: maps world Y coordinates [min_y, max_y] to screen height
+        // 
+        // For dynamic viewport: adjust Y bounds based on content and pan offset
+        float dynamic_min_y = _yMin + _verticalPanOffset;
+        float dynamic_max_y = _yMax + _verticalPanOffset;
+        
+        auto Projection = glm::ortho(start_time, end_time, dynamic_min_y, dynamic_max_y);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
@@ -1131,44 +1261,62 @@ float OpenGLWidget::canvasXToTime(float canvas_x) const {
 }
 
 float OpenGLWidget::canvasYToAnalogValue(float canvas_y, std::string const & series_key) const {
-    auto it = _analog_series.find(series_key);
-    if (it == _analog_series.end()) {
-        return 0.0f;
+    // Get canvas dimensions
+    auto [canvas_width, canvas_height] = getCanvasSize();
+    
+    // Convert canvas Y to normalized coordinates [0, 1] where 0 is bottom, 1 is top
+    float const normalized_y = 1.0f - (canvas_y / static_cast<float>(canvas_height));
+    
+    // Convert to view coordinates using current viewport bounds (accounting for pan offset)
+    float const dynamic_min_y = _yMin + _verticalPanOffset;
+    float const dynamic_max_y = _yMax + _verticalPanOffset;
+    float const view_y = dynamic_min_y + normalized_y * (dynamic_max_y - dynamic_min_y);
+    
+    // Find the series configuration to get positioning info
+    auto const analog_it = _analog_series.find(series_key);
+    if (analog_it == _analog_series.end()) {
+        return 0.0f; // Series not found
     }
     
-    auto const & analog_data = it->second;
-    auto const & display_options = analog_data.display_options;
+    auto const & display_options = analog_it->second.display_options;
     
-    // Convert canvas Y coordinate to normalized device coordinate
-    float const canvas_height = static_cast<float>(height());
-    float const normalized_y = 1.0f - (canvas_y / canvas_height); // Flip Y axis (0.0 at bottom, 1.0 at top)
-    
-    // Convert from normalized device coordinates to view coordinates
-    float const view_y = _yMin + normalized_y * (_yMax - _yMin);
-    
-    // Account for vertical panning
-    float const adjusted_y = view_y - _verticalPanOffset;
-    
-    // Account for series-specific transformations
-    // Find the series index for Y offset calculation
-    int series_index = 0;
-    for (auto const & [key, data] : _analog_series) {
-        if (key == series_key) break;
-        if (data.display_options->is_visible) series_index++;
+    // Check if this series uses VerticalSpaceManager positioning
+    if (display_options->y_offset != 0.0f && display_options->allocated_height > 0.0f) {
+        // VerticalSpaceManager mode: series is positioned at y_offset with its own scaling
+        float const series_local_y = view_y - display_options->y_offset;
+        
+        // Apply inverse of the scaling used in rendering to get actual analog value
+        auto const series = analog_it->second.series;
+        auto const stdDev = getCachedStdDev(*series, *display_options);
+        auto const user_scale_combined = display_options->user_scale_factor * _global_zoom;
+        
+        // Calculate the same scaling factors used in rendering
+        float const usable_height = display_options->allocated_height * 0.8f;
+        float const base_amplitude_scale = 1.0f / stdDev;
+        float const height_scale = usable_height / 1.0f;
+        float const amplitude_scale = base_amplitude_scale * height_scale * user_scale_combined;
+        
+        // Apply inverse scaling to get actual data value
+        return series_local_y / amplitude_scale;
+    } else {
+        // Legacy mode: use corrected calculation
+        float const adjusted_y = view_y; // No pan offset adjustment needed since it's in projection
+        
+        // Calculate series center and scaling for legacy mode
+        int const series_index = _series_y_position.at(series_key);
+        float const center_coord = -0.5f * _ySpacing * (static_cast<float>(_analog_series.size() - 1));
+        float const series_y_offset = static_cast<float>(series_index) * _ySpacing + center_coord;
+        
+        float const relative_y = adjusted_y - series_y_offset;
+        
+        // Use corrected scaling calculation
+        auto const series = analog_it->second.series;
+        auto const stdDev = getCachedStdDev(*series, *display_options);
+        auto const user_scale_combined = display_options->user_scale_factor * _global_zoom;
+        float const legacy_amplitude_scale = (1.0f / stdDev) * user_scale_combined;
+        
+        return relative_y / legacy_amplitude_scale;
     }
-    
-    // Calculate the center coordinate for all series
-    float const center_coord = -0.5f * _ySpacing * (static_cast<float>(_analog_series.size() - 1));
-    float const series_y_offset = static_cast<float>(series_index) * _ySpacing + center_coord;
-    
-    // Remove the series offset
-    float const series_relative_y = adjusted_y - series_y_offset;
-    
-    // Convert from scaled coordinates back to original analog values
-    auto const scale_factor = display_options->scale_factor * display_options->user_scale_factor / _global_zoom;
-    float const analog_value = series_relative_y * scale_factor;
-    
-    return analog_value;
 }
 
 // Interval selection methods

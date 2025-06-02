@@ -64,7 +64,6 @@ void Media_Widget::updateMedia() {
     ui->graphicsView->setScene(_scene);
     ui->graphicsView->show();
     
-    // Ensure canvas size is properly set after scene is attached
     _updateCanvasSize();
 }
 
@@ -303,6 +302,18 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
     }
     _scene->UpdateCanvas();
+
+    if (enabled) {
+        _callback_ids[feature_key].push_back(_data_manager->addCallbackToData(feature_key, [this]() {
+            _scene->UpdateCanvas();
+        }));
+    } else {
+        for (auto callback_id : _callback_ids[feature_key]) {
+            _data_manager->removeCallbackFromData(feature_key, callback_id);
+        }
+        _callback_ids[feature_key].clear();
+    }
+
 }
 
 void Media_Widget::setFeatureColor(std::string const & feature, std::string const & hex_color) {
