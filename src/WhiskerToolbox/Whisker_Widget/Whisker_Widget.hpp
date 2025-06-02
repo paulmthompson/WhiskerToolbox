@@ -123,7 +123,6 @@ private slots:
     void _loadJaneliaWhiskers();
 
     void _loadSingleCSVWhisker();
-    void _loadMultiCSVWhiskers();
 
     void _selectWhiskerPad();
     void _changeWhiskerLengthThreshold(double new_threshold);
@@ -152,7 +151,6 @@ private slots:
     void _drawingFinished();
 
     void _selectWhisker(int whisker_num);
-    void _loadMultiFrameCSV();
 
     void _exportAllTracked();
 };

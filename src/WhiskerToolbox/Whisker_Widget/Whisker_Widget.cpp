@@ -113,9 +113,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
     connect(ui->actionLoad_Janelia_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadJaneliaWhiskers);
 
     connect(ui->actionLoad_CSV_Whiskers, &QAction::triggered, this, &Whisker_Widget::_loadSingleCSVWhisker);
-    connect(ui->actionLoad_CSV_Whiskers_Multiple, &QAction::triggered, this, &Whisker_Widget::_loadMultiCSVWhiskers);
-
-    connect(ui->actionLoad_CSV_Whisker_Single_File_Multi_Frame, &QAction::triggered, this, &Whisker_Widget::_loadMultiFrameCSV);
 
     connect(ui->actionOpen_Contact_Detection, &QAction::triggered, this, &Whisker_Widget::_openContactWidget);
 
@@ -474,28 +471,6 @@ int get_whisker_id(std::string const & whisker_name) {
     return std::stoi(number);
 }
 
-void Whisker_Widget::_loadMultiFrameCSV() {
-    auto whisker_filepath = QFileDialog::getOpenFileName(
-            this,
-            "Load Whisker CSV",
-            QDir::currentPath(),
-            "All files (*.*)");
-
-    auto line_map = load_line_csv(whisker_filepath.toStdString());
-
-    //Get the whisker name from the filename using filesystem
-    auto whisker_filename = std::filesystem::path(whisker_filepath.toStdString()).filename().string();
-
-    //Remove .csv suffix from filename
-    auto whisker_name = remove_extension(whisker_filename);
-
-    std::cout << "Creating whisker " << whisker_name << std::endl;
-
-    _data_manager->setData<LineData>(whisker_name, std::make_shared<LineData>(line_map));
-
-    _addDrawingCallback(whisker_name);
-}
-
 std::string Whisker_Widget::_getWhiskerSaveName(int const frame_id) {
 
     if (_save_by_frame_name) {
@@ -755,29 +730,6 @@ void Whisker_Widget::_loadSingleCSVWhisker() {
     std::string const whisker_group_name = "whisker";
 
     auto loaded_whisker_ids = _loadCSVWhiskerFromDir(dir_name, whisker_group_name);
-
-    _addNewTrackedWhisker(loaded_whisker_ids);
-}
-
-void Whisker_Widget::_loadMultiCSVWhiskers() {
-    auto const dir_name = QFileDialog::getExistingDirectory(
-                                  this,
-                                  "Load Whisker CSV Files",
-                                  QDir::currentPath())
-                                  .toStdString();
-
-    if (dir_name.empty()) {
-        return;
-    }
-
-    std::string const whisker_group_name = "whisker";
-
-    std::vector<int> loaded_whisker_ids;
-    for (auto const & entry: std::filesystem::directory_iterator(dir_name)) {
-        if (entry.is_directory()) {
-            loaded_whisker_ids = _loadCSVWhiskerFromDir(entry.path().string(), whisker_group_name);
-        }
-    }
 
     _addNewTrackedWhisker(loaded_whisker_ids);
 }
