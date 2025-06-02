@@ -20,7 +20,7 @@ class Tongue_Widget : public QMainWindow
     Q_OBJECT
 public:
 
-    Tongue_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent = nullptr);
+    Tongue_Widget(Media_Window* scene, std::shared_ptr<DataManager> data_manager, QWidget *parent = nullptr);
 
     ~Tongue_Widget() override;
 

@@ -15,14 +15,12 @@
  * @brief Constructor for Grabcut Widget.
  * @param scene
  * @param data_manager
- * @param time_scrollbar
  * @param parent
  */
-Grabcut_Widget::Grabcut_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
+Grabcut_Widget::Grabcut_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     QMainWindow(parent),
     _scene{scene},
     _data_manager{std::move(data_manager)},
-    _time_scrollbar{time_scrollbar},
     ui(new Ui::Grabcut_Widget)
 {
 

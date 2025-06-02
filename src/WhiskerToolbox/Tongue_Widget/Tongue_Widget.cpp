@@ -34,11 +34,10 @@ const std::vector<std::string> tongue_colors = {
     "#9b870c", // dark yellow
     "#00008b" // dark blue
 };
-Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar* time_scrollbar, QWidget *parent) :
+Tongue_Widget::Tongue_Widget(Media_Window *scene, std::shared_ptr<DataManager> data_manager, QWidget *parent) :
     QMainWindow(parent),
     _scene{scene},
       _data_manager{std::move(data_manager)},
-    _time_scrollbar{time_scrollbar},
     ui(new Ui::Tongue_Widget)
 {
     ui->setupUi(this);
@@ -134,7 +133,7 @@ void Tongue_Widget::_startGrabCut(){
     cv::cvtColor(img, img, is_gray ? cv::COLOR_GRAY2BGR : cv::COLOR_BGRA2BGR);
 
     if (!_grabcut_widget){
-        _grabcut_widget = new Grabcut_Widget(_scene, _data_manager, _time_scrollbar);
+        _grabcut_widget = new Grabcut_Widget(_scene, _data_manager);
     }
     auto frame = _data_manager->getTime()->getLastLoadedFrame();
     _grabcut_widget->setup(img, frame);

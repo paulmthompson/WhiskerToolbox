@@ -64,7 +64,6 @@ void Media_Widget::updateMedia() {
     ui->graphicsView->setScene(_scene);
     ui->graphicsView->show();
     
-    // Ensure canvas size is properly set after scene is attached
     _updateCanvasSize();
 }
 

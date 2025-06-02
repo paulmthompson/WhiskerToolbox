@@ -257,7 +257,7 @@ void MainWindow::openTongueTracking() {
     std::string const key = "tongue_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
-        auto tongueWidget = std::make_unique<Tongue_Widget>(_scene, _data_manager, ui->time_scrollbar);
+        auto tongueWidget = std::make_unique<Tongue_Widget>(_scene, _data_manager);
         tongueWidget->setObjectName(key);
         registerDockWidget(key, tongueWidget.get(), ads::RightDockWidgetArea);
         _widgets[key] = std::move(tongueWidget);
