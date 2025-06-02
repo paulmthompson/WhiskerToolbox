@@ -421,7 +421,8 @@ bool ML_Widget::_predictNewData(std::vector<FeatureProcessingWidget::ProcessedFe
     if (ui->predict_all_check->isChecked()) {
         current_time_end_frame = _data_manager->getTime()->getTotalFrameCount();
     } else {
-        current_time_end_frame = _data_manager->getTime()->getLastLoadedFrame() + 1;
+        std::cout << "Prediction not set to predict all frames." << std::endl;
+        return true;
     }
     if (_data_manager->getTime()->getTotalFrameCount() == 0) current_time_end_frame = 0;
 
