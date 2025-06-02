@@ -183,3 +183,99 @@ TEST_CASE("AnalogTimeSeries - Edge cases and error handling", "[analog][timeseri
         REQUIRE(stored_data == std::vector<float>{1.0f, 2.0f, 3.0f});
     }
 }
+
+TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][approximate]") {
+    SECTION("Approximate standard deviation with percentage sampling") {
+        // Create a large dataset with known statistical properties
+        std::vector<float> data;
+        data.reserve(10000);
+        for (int i = 0; i < 10000; ++i) {
+            data.push_back(static_cast<float>(i % 100));  // Pattern that repeats every 100 values
+        }
+        AnalogTimeSeries series(data);
+
+        float exact_std = calculate_std_dev(series);
+        float approx_std = calculate_std_dev_approximate(series, 1.0f, 50); // Sample 1% with min threshold 50
+
+        // The approximation should be reasonably close (within 10% for this regular pattern)
+        float relative_error = std::abs(exact_std - approx_std) / exact_std;
+        REQUIRE(relative_error < 0.1f);
+    }
+
+    SECTION("Approximate standard deviation falls back to exact for small datasets") {
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        AnalogTimeSeries series(data);
+
+        float exact_std = calculate_std_dev(series);
+        float approx_std = calculate_std_dev_approximate(series, 10.0f, 1000); // High percentage but min threshold 1000
+
+        // Should fall back to exact calculation since 5 * 0.1 < 1000
+        REQUIRE(exact_std == approx_std);
+    }
+
+    SECTION("Adaptive standard deviation convergence") {
+        // Create a dataset with varying values but consistent distribution
+        std::vector<float> data;
+        data.reserve(50000);
+        for (int i = 0; i < 50000; ++i) {
+            data.push_back(static_cast<float>(std::sin(i * 0.1) * 10.0 + 50.0));
+        }
+        AnalogTimeSeries series(data);
+
+        float exact_std = calculate_std_dev(series);
+        float adaptive_std = calculate_std_dev_adaptive(series, 100, 5000, 0.02f);
+
+        // The adaptive method should converge to a reasonable approximation
+        float relative_error = std::abs(exact_std - adaptive_std) / exact_std;
+        REQUIRE(relative_error < 0.05f);
+    }
+
+    SECTION("Adaptive standard deviation falls back to exact for small datasets") {
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        AnalogTimeSeries series(data);
+
+        float exact_std = calculate_std_dev(series);
+        float adaptive_std = calculate_std_dev_adaptive(series, 100, 1000, 0.01f);
+
+        // Should fall back to exact calculation since data size (5) <= max_sample_size (1000)
+        REQUIRE(exact_std == adaptive_std);
+    }
+
+    SECTION("Empty series handling for approximate methods") {
+        AnalogTimeSeries empty_series;
+
+        REQUIRE(calculate_std_dev_approximate(empty_series) == 0.0f);
+        REQUIRE(calculate_std_dev_adaptive(empty_series) == 0.0f);
+    }
+
+    SECTION("Single value series for approximate methods") {
+        std::vector<float> data{42.0f};
+        AnalogTimeSeries series(data);
+
+        REQUIRE(calculate_std_dev_approximate(series) == 0.0f);
+        REQUIRE(calculate_std_dev_adaptive(series) == 0.0f);
+    }
+
+    SECTION("Performance comparison scenario") {
+        // Create a large dataset similar to neuroscience recordings
+        std::vector<float> data;
+        data.reserve(1000000);  // 1M samples
+        for (int i = 0; i < 1000000; ++i) {
+            // Simulate noisy signal with some trend
+            data.push_back(static_cast<float>(std::sin(i * 0.001) * 5.0 + (i * 0.00001) + 
+                          (std::rand() % 100) * 0.01));
+        }
+        AnalogTimeSeries series(data);
+
+        float exact_std = calculate_std_dev(series);
+        float approx_std = calculate_std_dev_approximate(series, 0.1f, 1000); // Sample 0.1%
+        float adaptive_std = calculate_std_dev_adaptive(series, 500, 5000, 0.01f);
+
+        // Both approximations should be reasonably close to exact
+        float approx_error = std::abs(exact_std - approx_std) / exact_std;
+        float adaptive_error = std::abs(exact_std - adaptive_std) / exact_std;
+        
+        REQUIRE(approx_error < 0.05f);
+        REQUIRE(adaptive_error < 0.05f);
+    }
+}

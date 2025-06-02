@@ -20,6 +20,7 @@ class SharpenWidget;
 class ClaheWidget;
 class BilateralWidget;
 class MedianWidget;
+class MagicEraserWidget;
 class Section;
 
 class MediaProcessing_Widget : public QWidget {
@@ -49,6 +50,8 @@ private:
     Section* _bilateral_section;
     MedianWidget* _median_widget;
     Section* _median_section;
+    MagicEraserWidget* _magic_eraser_widget;
+    Section* _magic_eraser_section;
 
     // Current processing options
     ContrastOptions _contrast_options;
@@ -57,6 +60,7 @@ private:
     ClaheOptions _clahe_options;
     BilateralOptions _bilateral_options;
     MedianOptions _median_options;
+    MagicEraserOptions _magic_eraser_options;
 
     void _setupProcessingWidgets();
     void _applyContrastFilter();
@@ -65,6 +69,7 @@ private:
     void _applyClaheFilter();
     void _applyBilateralFilter();
     void _applyMedianFilter();
+    void _applyMagicEraser();
 
 private slots:
     void _onContrastOptionsChanged(ContrastOptions const& options);
@@ -73,6 +78,10 @@ private slots:
     void _onClaheOptionsChanged(ClaheOptions const& options);
     void _onBilateralOptionsChanged(BilateralOptions const& options);
     void _onMedianOptionsChanged(MedianOptions const& options);
+    void _onMagicEraserOptionsChanged(MagicEraserOptions const& options);
+    void _onMagicEraserDrawingModeChanged(bool enabled);
+    void _onDrawingFinished();
+    void _onMagicEraserClearMaskRequested();
 };
 
 #endif // MEDIAPROCESSING_WIDGET_HPP 

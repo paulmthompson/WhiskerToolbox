@@ -39,10 +39,9 @@ using PointSaverOptionsVariant = std::variant<CSVPointSaverOptions>;
  * export frames from currently loaded media simultaneously with the points.
  * 
  * Interaction:
- * 
- * The user can select points, delete them, or move them to another Point Data 
- * Object. The user also has the ability to "propogate" forward in time. This
- * can be useful when curating data with noisy labels for stationary objects.
+ *
+ * The user can select points, delete them, or move them to another Point Data
+ * Object.
  * 
  */
 class Point_Widget : public QWidget {
@@ -55,8 +54,6 @@ public:
     void setActiveKey(std::string const & key);
 
     void updateTable();
-
-    void loadFrame(int frame_id);
 
     void removeCallbacks();
 
@@ -72,8 +69,6 @@ private:
     int _callback_id{-1};
     enum SaverType { CSV };
 
-    //void refreshTable();
-    void _propagateLabel(int frame_id);
     void _populateMoveToPointDataComboBox();
     void _saveToCSVFile(CSVPointSaverOptions & options);
     bool _performActualCSVSave(CSVPointSaverOptions & options);

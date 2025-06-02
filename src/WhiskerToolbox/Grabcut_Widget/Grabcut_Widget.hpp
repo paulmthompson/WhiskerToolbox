@@ -2,8 +2,6 @@
 #define GRABCUT_WIDGET_HPP
 
 #include "GrabCutTool.hpp"
-#include "Media_Window.hpp"
-#include "TimeScrollBar/TimeScrollBar.hpp"
 
 #include <QMainWindow>
 #include <QWidget>
@@ -19,7 +17,7 @@ class Grabcut_Widget;
 class Grabcut_Widget : public QMainWindow {
     Q_OBJECT
 public:
-    Grabcut_Widget(Media_Window * scene, std::shared_ptr<DataManager> data_manager, TimeScrollBar * time_scrollbar, QWidget * parent = nullptr);
+    Grabcut_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
     void setup(cv::Mat img, int _frame_index);
 
     ~Grabcut_Widget() override;
@@ -34,9 +32,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent * event) override;
 
 private:
-    Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
-    TimeScrollBar * _time_scrollbar;
 
     Ui::Grabcut_Widget * ui;
 

@@ -1,11 +1,15 @@
 #ifndef MEDIAMASK_WIDGET_HPP
 #define MEDIAMASK_WIDGET_HPP
 
+#include "DataManager/Points/points.hpp"
+#include "DataManager/utils/ProcessingOptions.hpp"
+
 #include <QWidget>
 #include <QMap>
 
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 namespace Ui {
 class MediaMask_Widget;
@@ -18,6 +22,8 @@ class MaskBrushSelectionWidget;
 
 class DataManager;
 class Media_Window;
+class MaskDilationWidget;
+class Section;
 
 class MediaMask_Widget : public QWidget {
     Q_OBJECT
@@ -45,10 +51,23 @@ private:
     mask_widget::MaskNoneSelectionWidget* _noneSelectionWidget {nullptr};
     mask_widget::MaskBrushSelectionWidget* _brushSelectionWidget {nullptr};
     
+    // Dilation widget and section
+    MaskDilationWidget* _dilation_widget {nullptr};
+    Section* _dilation_section {nullptr};
+    
     QMap<QString, Selection_Mode> _selection_modes;
     Selection_Mode _selection_mode {Selection_Mode::None};
     
+    // Preview state tracking
+    std::unordered_map<std::string, std::vector<std::vector<Point2D<float>>>> _original_mask_data;
+    bool _preview_active {false};
+    
     void _setupSelectionModePages();
+    void _setupDilationWidget();
+    void _applyMaskDilation(MaskDilationOptions const& options);
+    void _applyDilationPermanently();
+    void _storeOriginalMaskData();
+    void _restoreOriginalMaskData();
 
 private slots:
     void _setMaskAlpha(int alpha);
@@ -60,6 +79,8 @@ private slots:
     void _rightClickedInVideo(qreal x, qreal y);
     void _setBrushSize(int size);
     void _toggleShowHoverCircle(bool checked);
+    void _onDilationOptionsChanged(MaskDilationOptions const& options);
+    void _onDilationApplyRequested();
 };
 
 

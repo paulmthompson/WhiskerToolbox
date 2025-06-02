@@ -30,6 +30,20 @@ Media_Widget::Media_Widget(QWidget * parent)
       ui(new Ui::Media_Widget) {
     ui->setupUi(this);
 
+    // Configure splitter behavior
+    ui->splitter->setStretchFactor(0, 0);  // Left panel (scroll area) doesn't stretch
+    ui->splitter->setStretchFactor(1, 1);  // Right panel (graphics view) stretches
+    
+    // Set initial sizes: 200px for left panel, rest for canvas
+    ui->splitter->setSizes({300, 563});
+    
+    // Set collapsible behavior
+    ui->splitter->setCollapsible(0, false);  // Prevent left panel from collapsing
+    ui->splitter->setCollapsible(1, false);  // Prevent canvas from collapsing
+    
+    // Connect splitter moved signal to update canvas size
+    connect(ui->splitter, &QSplitter::splitterMoved, this, &Media_Widget::_updateCanvasSize);
+
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &Media_Widget::_featureSelected);
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature, this, [this](QString const & feature) {
@@ -49,6 +63,8 @@ void Media_Widget::updateMedia() {
 
     ui->graphicsView->setScene(_scene);
     ui->graphicsView->show();
+    
+    _updateCanvasSize();
 }
 
 void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
@@ -181,10 +197,18 @@ void Media_Widget::resizeEvent(QResizeEvent * event) {
 
 void Media_Widget::_updateCanvasSize() {
     if (_scene) {
+        int width = ui->graphicsView->width();
+        int height = ui->graphicsView->height();
+        
+        std::cout << "Updating canvas size to: " << width << "x" << height << std::endl;
+        
         _scene->setCanvasSize(
-                ImageSize{ui->graphicsView->width(),
-                          ui->graphicsView->height()});
+                ImageSize{width, height});
         _scene->UpdateCanvas();
+        
+        // Ensure the view fits the scene properly
+        ui->graphicsView->setSceneRect(0, 0, width, height);
+        ui->graphicsView->fitInView(0, 0, width, height, Qt::IgnoreAspectRatio);
     }
 }
 
@@ -278,6 +302,18 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
     }
     _scene->UpdateCanvas();
+
+    if (enabled) {
+        _callback_ids[feature_key].push_back(_data_manager->addCallbackToData(feature_key, [this]() {
+            _scene->UpdateCanvas();
+        }));
+    } else {
+        for (auto callback_id : _callback_ids[feature_key]) {
+            _data_manager->removeCallbackFromData(feature_key, callback_id);
+        }
+        _callback_ids[feature_key].clear();
+    }
+
 }
 
 void Media_Widget::setFeatureColor(std::string const & feature, std::string const & hex_color) {

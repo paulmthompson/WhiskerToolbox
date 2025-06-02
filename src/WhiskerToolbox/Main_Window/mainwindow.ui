@@ -92,8 +92,6 @@
     </property>
     <addaction name="actionData_Manager"/>
     <addaction name="actionWhisker_Tracking"/>
-    <addaction name="actionLabel_Maker"/>
-    <addaction name="actionAnalog_Viewer"/>
     <addaction name="actionTongue_Tracking"/>
     <addaction name="actionMachine_Learning"/>
     <addaction name="actionData_Viewer"/>
