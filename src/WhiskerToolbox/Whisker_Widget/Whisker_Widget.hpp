@@ -2,8 +2,8 @@
 #define WHISKER_WIDGET_HPP
 
 #include "ImageSize/ImageSize.hpp"// for ImageSize
-#include "Lines/Line_Data.hpp"
-#include "Points/Point_Data.hpp"// for Point2D
+#include "Lines/lines.hpp"
+#include "Points/points.hpp"// for Point2D
 
 #include <QMainWindow>
 #include <QPointer>
@@ -153,8 +153,6 @@ private slots:
 
 void order_whiskers_by_position(DataManager * dm, std::string const & whisker_group_name, int num_whiskers_to_track, int current_time, float similarity_threshold);
 
-std::vector<int> load_csv_lines_into_data_manager(DataManager * dm, std::string const & dir_name, std::string const & line_key);
-
 bool check_whisker_num_matches_export_num(DataManager * dm, int num_whiskers_to_export, std::string const & whisker_group_name);
 
 void add_whiskers_to_data_manager(
@@ -167,8 +165,5 @@ void add_whiskers_to_data_manager(
 
 void clip_whisker(Line2D & line, int clip_length);
 
-std::string generate_color();
-
-std::string get_whisker_color(int whisker_index);
 
 #endif// WHISKER_WIDGET_HPP

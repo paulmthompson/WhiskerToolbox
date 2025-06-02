@@ -820,33 +820,6 @@ void Whisker_Widget::_addDrawingCallback(std::string data_name) {
 /////////////////////////////////////////////
 
 /**
- * @brief load_csv_lines_into_data_manager
- * @param dm
- * @param dir_name
- * @param line_key
- * @return vector of loaded frame IDs
- */
-std::vector<int> load_csv_lines_into_data_manager(DataManager * dm, std::string const & dir_name, std::string const & line_key) {
-    auto loaded_frames = std::vector<int>{};
-
-    for (auto const & entry: std::filesystem::directory_iterator(dir_name)) {
-        auto const frame_num = remove_extension(entry.path().filename().string());
-        auto whisker = load_line_from_csv(entry.path().string());
-
-        //Find the relative frame corresponding to this frame number.
-        auto media = dm->getData<MediaData>("media");
-        auto const frame_index = media->getFrameIndexFromNumber(std::stoi(frame_num));
-
-        dm->getData<LineData>(line_key)->addLineAtTime(frame_index, whisker);
-        loaded_frames.push_back(frame_index);
-    }
-
-    std::cout << "Loaded " << loaded_frames.size() << " whiskers" << std::endl;
-
-    return loaded_frames;
-}
-
-/**
  * @brief order_whiskers_by_position
  *
  * Here we arrange the whiskers
