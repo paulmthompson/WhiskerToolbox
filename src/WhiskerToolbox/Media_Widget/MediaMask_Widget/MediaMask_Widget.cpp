@@ -276,7 +276,7 @@ void MediaMask_Widget::_applyMaskDilation(MaskDilationOptions const& options) {
     _storeOriginalMaskData();
     
     // Get current time
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto const& original_masks = _original_mask_data[_active_key];
     
     // Apply dilation to each mask at current time
@@ -309,7 +309,7 @@ void MediaMask_Widget::_applyDilationPermanently() {
     }
     
     // Get current time and get the preview data from Media_Window
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto preview_masks = _scene->getPreviewMaskData(_active_key, current_time);
     
     // Clear existing masks at this time
@@ -348,7 +348,7 @@ void MediaMask_Widget::_storeOriginalMaskData() {
     }
     
     // Get current time and store the original mask data
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto const& masks_at_time = mask_data->getAtTime(current_time);
     
     _original_mask_data[_active_key] = masks_at_time;

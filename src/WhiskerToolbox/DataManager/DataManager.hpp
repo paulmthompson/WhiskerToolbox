@@ -253,7 +253,7 @@ private:
 
     void _notifyObservers();
 
-    int64_t _current_time;
+    int64_t _current_time {0};
 };
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);

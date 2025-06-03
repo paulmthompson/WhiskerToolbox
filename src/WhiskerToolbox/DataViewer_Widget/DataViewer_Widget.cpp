@@ -81,7 +81,7 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
         // Trigger a single canvas update at the end
         if (!group_keys.empty()) {
             std::cout << "Triggering single canvas update for group toggle" << std::endl;
-            ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+            ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
         }
     });
 
@@ -450,7 +450,7 @@ void DataViewer_Widget::_updateGlobalScale(double scale) {
         }
 
         // Trigger canvas update
-        ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+        ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
     }
 }
 
@@ -607,7 +607,7 @@ void DataViewer_Widget::_handleVerticalSpacingChanged(double spacing) {
         }
 
         // Trigger canvas update
-        ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+        ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
     }
 }
 
@@ -920,7 +920,7 @@ void DataViewer_Widget::autoArrangeVerticalSpacing() {
     _updateViewBounds();
 
     // Trigger canvas update to show new positions
-    ui->openGLWidget->updateCanvas(_data_manager->getTime()->getLastLoadedFrame());
+    ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
 
     std::cout << "DataViewer_Widget: Auto-arrange and auto-fill completed for " << all_keys.size() << " series" << std::endl;
 }
