@@ -171,39 +171,15 @@ void Point_Widget::_movePointsToTarget(std::string const& target_key) {
     std::cout << "Point_Widget: Moving points from " << selected_frames.size() 
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    int frames_with_points = 0;
-    int total_points_moved = 0;
+    // Use the new moveTo method with the vector of selected times
+    std::size_t total_points_moved = source_point_data->moveTo(*target_point_data, selected_frames, true);
 
-    // Batch operations to minimize observer notifications
-    // Move points for each selected frame
-    for (int frame : selected_frames) {
-        auto points_to_move = source_point_data->getPointsAtTime(frame);
-        if (!points_to_move.empty()) {
-            frames_with_points++;
-            total_points_moved += static_cast<int>(points_to_move.size());
-            
-            // Add to target first (without notification)
-            target_point_data->addPointsAtTime(frame, points_to_move, false);
-            // Clear from source (without notification) 
-            // Note: This now properly removes the empty frame entry with map structure
-            source_point_data->clearAtTime(frame, false);
-        }
-    }
-
-    // Notify observers only once at the end for both source and target
-    if (frames_with_points > 0) {
-        source_point_data->notifyObservers();
-        target_point_data->notifyObservers();
-        
+    if (total_points_moved > 0) {
         // Update the table view to reflect changes
         updateTable();
         
         std::cout << "Point_Widget: Successfully moved " << total_points_moved 
-                  << " points from " << frames_with_points << " frames." << std::endl;
-        if (frames_with_points < selected_frames.size()) {
-            std::cout << "Point_Widget: Note: " << (selected_frames.size() - frames_with_points) 
-                      << " selected frames contained no points to move." << std::endl;
-        }
+                  << " points from " << selected_frames.size() << " frames." << std::endl;
     } else {
         std::cout << "Point_Widget: No points found in any of the selected frames to move." << std::endl;
     }
@@ -231,32 +207,12 @@ void Point_Widget::_copyPointsToTarget(std::string const& target_key) {
     std::cout << "Point_Widget: Copying points from " << selected_frames.size() 
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    int frames_with_points = 0;
-    int total_points_copied = 0;
+    // Use the new copyTo method with the vector of selected times
+    std::size_t total_points_copied = source_point_data->copyTo(*target_point_data, selected_frames, true);
 
-    // Batch operations to minimize observer notifications
-    // Copy points for each selected frame
-    for (int frame : selected_frames) {
-        auto points_to_copy = source_point_data->getPointsAtTime(frame);
-        if (!points_to_copy.empty()) {
-            frames_with_points++;
-            total_points_copied += static_cast<int>(points_to_copy.size());
-            
-            // Add to target (without notification until the end)
-            target_point_data->addPointsAtTime(frame, points_to_copy, false);
-        }
-    }
-
-    // Notify observers only once at the end for the target
-    if (frames_with_points > 0) {
-        target_point_data->notifyObservers();
-        
+    if (total_points_copied > 0) {
         std::cout << "Point_Widget: Successfully copied " << total_points_copied 
-                  << " points from " << frames_with_points << " frames." << std::endl;
-        if (frames_with_points < selected_frames.size()) {
-            std::cout << "Point_Widget: Note: " << (selected_frames.size() - frames_with_points) 
-                      << " selected frames contained no points to copy." << std::endl;
-        }
+                  << " points from " << selected_frames.size() << " frames." << std::endl;
     } else {
         std::cout << "Point_Widget: No points found in any of the selected frames to copy." << std::endl;
     }
