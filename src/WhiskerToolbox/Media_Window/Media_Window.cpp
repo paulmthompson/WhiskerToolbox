@@ -422,11 +422,15 @@ void Media_Window::_plotLineData() {
             continue;
         }
 
-        for (auto const & single_line: lineData) {
+        for (int line_idx = 0; line_idx < static_cast<int>(lineData.size()); ++line_idx) {
+            auto const & single_line = lineData[line_idx];
 
             if (single_line.empty()) {
                 continue;
             }
+
+            // Check if this line is selected
+            bool is_selected = (_line_config.get()->selected_line_index == line_idx);
 
             // Use segment if enabled, otherwise use full line
             Line2D line_to_plot;
@@ -460,27 +464,34 @@ void Media_Window::_plotLineData() {
                 }
             }
 
-            // Create pen with configurable thickness
-            QPen linePen(plot_color);
-            linePen.setWidth(_line_config.get()->line_thickness);
+            // Create pen with configurable thickness - selected lines are thicker and have different color
+            QPen linePen;
+            if (is_selected) {
+                linePen.setColor(QColor(255, 0, 0)); // Red for selected lines
+                linePen.setWidth(_line_config.get()->line_thickness + 2); // Thicker for selected
+                linePen.setStyle(Qt::DashLine); // Dashed line for selected
+            } else {
+                linePen.setColor(plot_color);
+                linePen.setWidth(_line_config.get()->line_thickness);
+            }
             
             auto linePath = addPath(path, linePen);
             _line_paths.append(linePath);
 
-
-            // Add dot at line base (always filled)
+            // Add dot at line base (always filled) - selected lines have red dot
+            QColor dot_color = is_selected ? QColor(255, 0, 0) : plot_color;
             auto ellipse = addEllipse(
                     static_cast<float>(line_to_plot[0].x) * xAspect - 2.5,
                     static_cast<float>(line_to_plot[0].y) * yAspect - 2.5,
                     5.0, 5.0,
-                    QPen(plot_color),
-                    QBrush(plot_color));
+                    QPen(dot_color),
+                    QBrush(dot_color));
             _points.append(ellipse);
 
             // If show_points is enabled, add open circles at each point on the line
             if (_line_config.get()->show_points) {
                 // Create pen and brush for open circles
-                QPen pointPen(plot_color);
+                QPen pointPen(dot_color);
                 pointPen.setWidth(1);
                 
                 // Empty brush for open circles
@@ -510,7 +521,7 @@ void Media_Window::_plotLineData() {
                 // Create a distinctive marker (filled circle with border)
                 QPen markerPen(QColor(255, 255, 255)); // White border
                 markerPen.setWidth(2);
-                QBrush markerBrush(plot_color); // Same color as line but filled
+                QBrush markerBrush(dot_color); // Same color as line but filled
                 
                 auto marker = addEllipse(
                     marker_x - 4.0f,

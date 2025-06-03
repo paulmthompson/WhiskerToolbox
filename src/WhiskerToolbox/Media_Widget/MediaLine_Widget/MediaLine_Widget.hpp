@@ -22,6 +22,7 @@ namespace line_widget {
 class LineNoneSelectionWidget;
 class LineAddSelectionWidget;
 class LineEraseSelectionWidget;
+class LineSelectSelectionWidget;
 }
 
 class DataManager;
@@ -48,7 +49,8 @@ private:
     enum class Selection_Mode {
         None,
         Add,
-        Erase
+        Erase,
+        Select
     };
     
     enum class Smoothing_Mode {
@@ -59,12 +61,15 @@ private:
     line_widget::LineNoneSelectionWidget* _noneSelectionWidget {nullptr};
     line_widget::LineAddSelectionWidget* _addSelectionWidget {nullptr};
     line_widget::LineEraseSelectionWidget* _eraseSelectionWidget {nullptr};
+    line_widget::LineSelectSelectionWidget* _selectSelectionWidget {nullptr};
     
     QMap<QString, Selection_Mode> _selection_modes;
     Selection_Mode _selection_mode {Selection_Mode::None};
     Smoothing_Mode _smoothing_mode {Smoothing_Mode::SimpleSmooth};
     int _polynomial_order {3}; // Default polynomial order
     int _current_line_index {0}; // Track which line is currently selected
+    int _selected_line_index {-1}; // Track which line is selected for operations (-1 = none)
+    float _line_selection_threshold {10.0f}; // Pixel threshold for line selection
     
     // Edge detection parameters
     bool _edge_snapping_enabled {false};
@@ -80,8 +85,20 @@ private:
     void _detectEdges();
     std::pair<float, float> _findNearestEdge(float x, float y);
     
+    // Line selection methods
+    int _findNearestLine(float x, float y);
+    void _selectLine(int line_index);
+    void _clearLineSelection();
+    
+    // Context menu and operations
+    void _showLineContextMenu(const QPoint& position);
+    void _moveLineToTarget(const std::string& target_key);
+    void _copyLineToTarget(const std::string& target_key);
+    std::vector<std::string> _getAvailableLineDataKeys();
+    
 private slots:
     void _clickedInVideo(qreal x, qreal y);
+    void _rightClickedInVideo(qreal x, qreal y);
     void _toggleSelectionMode(QString text);
     void _setSmoothingMode(int index);
     void _setPolynomialOrder(int order);

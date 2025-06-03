@@ -1,4 +1,3 @@
-
 #include "Whisker_Widget.hpp"
 
 #include "ui_Whisker_Widget.h"
@@ -50,17 +49,13 @@ std::vector<whisker::Line2D> & convert_to_whisker_Line2D(std::vector<Line2D> & l
  *
  *
  *
- * @param scene
  * @param data_manager
- * @param mainwindow
  * @param parent
  */
-Whisker_Widget::Whisker_Widget(Media_Window * scene,
-                               std::shared_ptr<DataManager> data_manager,
+Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
                                QWidget * parent)
     : QMainWindow(parent),
       _wt{std::make_shared<whisker::WhiskerTracker>()},
-      _scene{scene},
       _data_manager{std::move(data_manager)},
       ui(new Ui::Whisker_Widget) {
     ui->setupUi(this);
@@ -78,7 +73,8 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
     connect(ui->face_orientation, &QComboBox::currentIndexChanged, this, &Whisker_Widget::_selectFaceOrientation);
     connect(ui->length_threshold_spinbox, &QDoubleSpinBox::valueChanged, this,
             &Whisker_Widget::_changeWhiskerLengthThreshold);
-    connect(ui->whisker_pad_select, &QPushButton::clicked, this, &Whisker_Widget::_selectWhiskerPad);
+    connect(ui->whisker_pad_combo, &QComboBox::currentTextChanged, this, &Whisker_Widget::_onWhiskerPadComboChanged);
+    connect(ui->whisker_pad_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Whisker_Widget::_onWhiskerPadFrameChanged);
     connect(ui->whisker_number, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectNumWhiskersToTrack);
 
     connect(ui->manual_whisker_select_spinbox, &QSpinBox::valueChanged, this, &Whisker_Widget::_selectWhisker);
@@ -99,10 +95,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
         _linking_tolerance = static_cast<float>(val);
     });
 
-    connect(ui->select_whisker_button, &QPushButton::clicked, this, [this]() {
-        _selection_mode = Whisker_Select;
-    });
-
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -114,15 +106,14 @@ void Whisker_Widget::openWidget() {
 
     std::cout << "Whisker Widget Opened" << std::endl;
 
-    connect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
+    // Populate the whisker pad combo box with available PointData
+    _populateWhiskerPadCombo();
 
     this->show();
 }
 
 void Whisker_Widget::closeEvent(QCloseEvent * event) {
     std::cout << "Close event detected" << std::endl;
-
-    disconnect(_scene, SIGNAL(leftClick(qreal, qreal)), this, SLOT(_clickedInVideo(qreal, qreal)));
 }
 
 void Whisker_Widget::keyPressEvent(QKeyEvent * event) {
@@ -289,10 +280,6 @@ void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const 
     qDebug() << "The tracing took" << t1 << "ms";
 }
 
-void Whisker_Widget::_selectWhiskerPad() {
-    _selection_mode = Selection_Type::Whisker_Pad_Select;
-}
-
 void Whisker_Widget::_changeWhiskerLengthThreshold(double new_threshold) {
     _wt->setWhiskerLengthThreshold(static_cast<float>(new_threshold));
 }
@@ -349,52 +336,6 @@ void Whisker_Widget::_createNewWhisker(std::string const & whisker_group_name, i
         std::cout << "Creating " << whisker_name << std::endl;
         _data_manager->setData<LineData>(whisker_name);
     }
-}
-
-void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
-
-    auto scene = dynamic_cast<Media_Window *>(sender());
-
-    float const x_media = static_cast<float>(x_canvas) / scene->getXAspect();
-    float const y_media = static_cast<float>(y_canvas) / scene->getYAspect();
-
-    auto const current_time = _data_manager->getCurrentTime();
-
-    switch (_selection_mode) {
-        case Whisker_Select: {
-
-            auto whiskers = _data_manager->getData<LineData>("unlabeled_whiskers")->getLinesAtTime(current_time);
-            std::tuple<float, int> nearest_whisker = whisker::get_nearest_whisker(
-                    convert_to_whisker_Line2D(whiskers),
-                    x_media,
-                    y_media);
-            if (std::get<0>(nearest_whisker) < 10.0f) {
-                _selected_whisker = std::get<1>(nearest_whisker);
-
-                std::string const whisker_group_name = "whisker_" + std::to_string(_current_whisker);
-                if (_data_manager->getData<LineData>(whisker_group_name)) {
-                    _data_manager->getData<LineData>(whisker_group_name)->addLineAtTime(current_time, whiskers[_selected_whisker]);
-
-                    _data_manager->getData<LineData>("unlabeled_whiskers")->clearLineAtTime(current_time, _selected_whisker);
-                }
-            }
-            break;
-        }
-
-        case Whisker_Pad_Select: {
-            _wt->setWhiskerPad(x_media, y_media);
-            dl_model->add_origin(x_media, y_media);
-            std::string const whisker_pad_label =
-                    "(" + std::to_string(static_cast<int>(x_media)) + "," + std::to_string(static_cast<int>(y_media)) +
-                    ")";
-            ui->whisker_pad_pos_label->setText(QString::fromStdString(whisker_pad_label));
-            _selection_mode = Whisker_Select;
-            break;
-        }
-        default:
-            break;
-    }
-
 }
 
 void Whisker_Widget::_loadJaneliaWhiskers() {
@@ -576,8 +517,153 @@ void add_whiskers_to_data_manager(
 }
 
 void clip_whisker(Line2D & line, int clip_length) {
-    if (clip_length <= 0 || clip_length > line.size()) {
-        return;// Invalid clip length, do nothing
+    if (line.size() <= static_cast<std::size_t>(clip_length)) {
+        return;
     }
-    line.erase(line.end() - clip_length, line.end());
+
+    line.erase(line.begin() + clip_length, line.end());
+}
+
+// New whisker pad management methods
+
+void Whisker_Widget::_populateWhiskerPadCombo() {
+    ui->whisker_pad_combo->blockSignals(true);
+    ui->whisker_pad_combo->clear();
+
+    // Add all existing PointData keys
+    auto point_data_keys = _data_manager->getKeys<PointData>();
+    for (const auto& key : point_data_keys) {
+        ui->whisker_pad_combo->addItem(QString::fromStdString(key));
+    }
+
+    // Add "Create New" option at the end
+    ui->whisker_pad_combo->addItem("Create New");
+
+    ui->whisker_pad_combo->blockSignals(false);
+
+    // If there are existing keys, select the first one, otherwise select "Create New"
+    if (!point_data_keys.empty()) {
+        ui->whisker_pad_combo->setCurrentIndex(0);
+        _updateWhiskerPadFromSelection();
+    }
+}
+
+void Whisker_Widget::_updateWhiskerPadFromSelection() {
+    QString selected_text = ui->whisker_pad_combo->currentText();
+
+    if (selected_text == "Create New") {
+        _createNewWhiskerPad();
+        return;
+    }
+
+    _current_whisker_pad_key = selected_text.toStdString();
+
+    // Update the frame spinbox range based on available data
+    auto point_data = _data_manager->getData<PointData>(_current_whisker_pad_key);
+    if (point_data) {
+        auto times_with_data = point_data->getTimesWithData();
+        if (!times_with_data.empty()) {
+            ui->whisker_pad_frame_spinbox->blockSignals(true);
+
+            // Set range to include all available times
+            auto min_time = *std::min_element(times_with_data.begin(), times_with_data.end());
+            auto max_time = *std::max_element(times_with_data.begin(), times_with_data.end());
+            ui->whisker_pad_frame_spinbox->setMinimum(static_cast<int>(min_time));
+            ui->whisker_pad_frame_spinbox->setMaximum(static_cast<int>(max_time));
+
+            // Set to current time if available, otherwise first available time
+            auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+            if (std::find(times_with_data.begin(), times_with_data.end(), current_time) != times_with_data.end()) {
+                ui->whisker_pad_frame_spinbox->setValue(current_time);
+            } else {
+                ui->whisker_pad_frame_spinbox->setValue(static_cast<int>(min_time));
+            }
+
+            ui->whisker_pad_frame_spinbox->blockSignals(false);
+        }
+    }
+
+    _updateWhiskerPadLabel();
+}
+
+void Whisker_Widget::_updateWhiskerPadLabel() {
+    if (_current_whisker_pad_key.empty()) {
+        ui->whisker_pad_pos_label->setText("(0,0)");
+        _current_whisker_pad_point = {0.0f, 0.0f};
+        return;
+    }
+
+    auto point_data = _data_manager->getData<PointData>(_current_whisker_pad_key);
+    if (!point_data) {
+        ui->whisker_pad_pos_label->setText("(0,0)");
+        _current_whisker_pad_point = {0.0f, 0.0f};
+        return;
+    }
+
+    int frame = ui->whisker_pad_frame_spinbox->value();
+    auto points_at_frame = point_data->getPointsAtTime(static_cast<size_t>(frame));
+
+    if (points_at_frame.empty()) {
+        ui->whisker_pad_pos_label->setText("(no data)");
+        _current_whisker_pad_point = {0.0f, 0.0f};
+    } else {
+        // Use the first point if multiple points exist
+        Point2D<float> whisker_pad_point = points_at_frame[0];
+        _current_whisker_pad_point = whisker_pad_point;
+
+        std::string const whisker_pad_label =
+            "(" + std::to_string(static_cast<int>(whisker_pad_point.x)) + "," +
+            std::to_string(static_cast<int>(whisker_pad_point.y)) + ")";
+        ui->whisker_pad_pos_label->setText(QString::fromStdString(whisker_pad_label));
+
+        // Update the whisker tracker and DL model with the new position
+        _wt->setWhiskerPad(whisker_pad_point.x, whisker_pad_point.y);
+        dl_model->add_origin(whisker_pad_point.x, whisker_pad_point.y);
+
+        std::cout << "Whisker pad set to: (" << whisker_pad_point.x << ", " << whisker_pad_point.y << ")" << std::endl;
+    }
+}
+
+void Whisker_Widget::_createNewWhiskerPad() {
+    std::string const new_key = "whisker_pad";
+
+    // Check if "whisker_pad" already exists
+    if (!_data_manager->getData<PointData>(new_key)) {
+        _data_manager->setData<PointData>(new_key);
+        std::cout << "Created new PointData: " << new_key << std::endl;
+
+        // Repopulate the combo box to include the new entry
+        _populateWhiskerPadCombo();
+
+        // Select the newly created whisker_pad
+        int index = ui->whisker_pad_combo->findText("whisker_pad");
+        if (index >= 0) {
+            ui->whisker_pad_combo->setCurrentIndex(index);
+        }
+    } else {
+        // If it already exists, just select it
+        int index = ui->whisker_pad_combo->findText("whisker_pad");
+        if (index >= 0) {
+            ui->whisker_pad_combo->setCurrentIndex(index);
+        } else {
+            // If not in combo box, repopulate
+            _populateWhiskerPadCombo();
+            index = ui->whisker_pad_combo->findText("whisker_pad");
+            if (index >= 0) {
+                ui->whisker_pad_combo->setCurrentIndex(index);
+            }
+        }
+    }
+
+    _updateWhiskerPadFromSelection();
+}
+
+void Whisker_Widget::_onWhiskerPadComboChanged(const QString& text) {
+    std::cout << "Whisker pad selection changed to: " << text.toStdString() << std::endl;
+    _updateWhiskerPadFromSelection();
+}
+
+void Whisker_Widget::_onWhiskerPadFrameChanged(int frame) {
+    std::cout << "Whisker pad frame changed to: " << frame << std::endl;
+    _updateWhiskerPadLabel();
 }

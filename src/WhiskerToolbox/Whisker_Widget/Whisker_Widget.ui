@@ -62,9 +62,40 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <widget class="QPushButton" name="whisker_pad_select">
+         <widget class="QLabel" name="label_whisker_pad">
           <property name="text">
-           <string>Whisker Pad Select</string>
+           <string>Whisker Pad:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="whisker_pad_combo">
+          <property name="toolTip">
+           <string>Select existing PointData or create new whisker pad</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_whisker_pad_frame">
+        <item>
+         <widget class="QLabel" name="label_whisker_pad_frame">
+          <property name="text">
+           <string>Frame:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="whisker_pad_frame_spinbox">
+          <property name="toolTip">
+           <string>Select which frame from the PointData to use</string>
+          </property>
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>999999</number>
           </property>
          </widget>
         </item>
@@ -181,30 +212,6 @@
            <string>Clip Whisker Length</string>
           </property>
          </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_12">
-        <item>
-         <widget class="QPushButton" name="select_whisker_button">
-          <property name="text">
-           <string>Select Whisker</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Orientation::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
         </item>
        </layout>
       </item>
