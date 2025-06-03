@@ -43,9 +43,7 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     connect(ui->tableView, &QTableView::doubleClicked, this, &DigitalIntervalSeries_Widget::_handleCellClicked);
     connect(ui->extend_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_extendInterval);
 
-    // New interval operation connections
-    connect(ui->move_intervals_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_moveIntervalsButton);
-    connect(ui->copy_intervals_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_copyIntervalsButton);
+    // Interval operation connections
     connect(ui->merge_intervals_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_mergeIntervalsButton);
     connect(ui->tableView, &QTableView::customContextMenuRequested, this, &DigitalIntervalSeries_Widget::_showContextMenu);
 
@@ -55,7 +53,6 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
             this, &DigitalIntervalSeries_Widget::_handleSaveIntervalCSVRequested);
 
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
-    _populateMoveToComboBox();
 }
 
 DigitalIntervalSeries_Widget::~DigitalIntervalSeries_Widget() {
@@ -74,7 +71,6 @@ void DigitalIntervalSeries_Widget::setActiveKey(std::string key) {
     _assignCallbacks();
 
     _calculateIntervals();
-    _populateMoveToComboBox();
 }
 
 void DigitalIntervalSeries_Widget::_changeDataTable(QModelIndex const & topLeft, QModelIndex const & bottomRight, QVector<int> const & roles) {
@@ -110,7 +106,6 @@ void DigitalIntervalSeries_Widget::_calculateIntervals() {
         ui->total_interval_label->setText("0");
         _interval_table_model->setIntervals({});
     }
-    _populateMoveToComboBox();
 }
 
 
@@ -266,10 +261,6 @@ bool DigitalIntervalSeries_Widget::_performActualCSVSave(CSVIntervalSaverOptions
     }
 }
 
-void DigitalIntervalSeries_Widget::_populateMoveToComboBox() {
-    populate_move_combo_box<DigitalIntervalSeries>(ui->moveToComboBox, _data_manager.get(), _active_key);
-}
-
 std::vector<Interval> DigitalIntervalSeries_Widget::_getSelectedIntervals() {
     std::vector<Interval> selected_intervals;
     QModelIndexList selected_indexes = ui->tableView->selectionModel()->selectedRows();
@@ -292,31 +283,32 @@ void DigitalIntervalSeries_Widget::_showContextMenu(QPoint const & position) {
 
     QMenu context_menu(this);
 
-    QAction * move_action = context_menu.addAction("Move Selected Intervals");
-    QAction * copy_action = context_menu.addAction("Copy Selected Intervals");
+    // Add move and copy submenus using the utility function
+    auto move_callback = [this](std::string const& target_key) {
+        _moveIntervalsToTarget(target_key);
+    };
+    
+    auto copy_callback = [this](std::string const& target_key) {
+        _copyIntervalsToTarget(target_key);
+    };
+
+    add_move_copy_submenus<DigitalIntervalSeries>(&context_menu, _data_manager.get(), _active_key, move_callback, copy_callback);
+
+    // Add separator and existing operations
     context_menu.addSeparator();
     QAction * merge_action = context_menu.addAction("Merge Selected Intervals");
 
-    connect(move_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_moveIntervalsButton);
-    connect(copy_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_copyIntervalsButton);
     connect(merge_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_mergeIntervalsButton);
 
     context_menu.exec(ui->tableView->mapToGlobal(position));
 }
 
-void DigitalIntervalSeries_Widget::_moveIntervalsButton() {
+void DigitalIntervalSeries_Widget::_moveIntervalsToTarget(std::string const& target_key) {
     std::vector<Interval> selected_intervals = _getSelectedIntervals();
     if (selected_intervals.empty()) {
         std::cout << "No intervals selected to move." << std::endl;
         return;
     }
-
-    QString target_key_qstr = ui->moveToComboBox->currentText();
-    if (target_key_qstr.isEmpty()) {
-        std::cout << "No target selected in ComboBox." << std::endl;
-        return;
-    }
-    std::string target_key = target_key_qstr.toStdString();
 
     auto source_interval_data = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     auto target_interval_data = _data_manager->getData<DigitalIntervalSeries>(target_key);
@@ -343,19 +335,12 @@ void DigitalIntervalSeries_Widget::_moveIntervalsButton() {
               << " to " << target_key << std::endl;
 }
 
-void DigitalIntervalSeries_Widget::_copyIntervalsButton() {
+void DigitalIntervalSeries_Widget::_copyIntervalsToTarget(std::string const& target_key) {
     std::vector<Interval> selected_intervals = _getSelectedIntervals();
     if (selected_intervals.empty()) {
         std::cout << "No intervals selected to copy." << std::endl;
         return;
     }
-
-    QString target_key_qstr = ui->moveToComboBox->currentText();
-    if (target_key_qstr.isEmpty()) {
-        std::cout << "No target selected in ComboBox." << std::endl;
-        return;
-    }
-    std::string target_key = target_key_qstr.toStdString();
 
     auto target_interval_data = _data_manager->getData<DigitalIntervalSeries>(target_key);
 

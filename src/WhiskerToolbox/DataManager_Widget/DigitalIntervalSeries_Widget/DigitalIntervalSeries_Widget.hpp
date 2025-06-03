@@ -2,6 +2,7 @@
 #define DIGITALINTERVALSERIES_WIDGET_HPP
 
 #include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"// For CSVIntervalSaverOptions
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp" // For context menu utilities
 
 #include <QMenu>
 #include <QWidget>
@@ -52,10 +53,22 @@ private:
     void _initiateSaveProcess(SaverType saver_type, IntervalSaverOptionsVariant & options_variant);
     bool _performActualCSVSave(CSVIntervalSaverOptions & options);
 
-
-    void _populateMoveToComboBox();
     std::vector<Interval> _getSelectedIntervals();
     void _showContextMenu(QPoint const & position);
+
+    /**
+     * @brief Move selected intervals to the specified target key
+     * 
+     * @param target_key The key to move intervals to
+     */
+    void _moveIntervalsToTarget(std::string const& target_key);
+
+    /**
+     * @brief Copy selected intervals to the specified target key
+     * 
+     * @param target_key The key to copy intervals to
+     */
+    void _copyIntervalsToTarget(std::string const& target_key);
 
 private slots:
 
@@ -69,8 +82,6 @@ private slots:
     void _onExportTypeChanged(int index);
     void _handleSaveIntervalCSVRequested(CSVIntervalSaverOptions options);
 
-    void _moveIntervalsButton();
-    void _copyIntervalsButton();
     void _mergeIntervalsButton();
 };
 
