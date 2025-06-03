@@ -72,8 +72,32 @@ void DataManager_Widget::openWidget() {
     this->show();
 }
 
+void DataManager_Widget::clearFeatureSelection() {
+    // Disable the currently selected feature if any
+    if (!_highlighted_available_feature.isEmpty()) {
+        _disablePreviousFeature(_highlighted_available_feature);
+    }
+
+    // Clear the highlighted feature
+    _highlighted_available_feature.clear();
+
+    // Reset the feature label to show no selection
+    ui->selected_feature_label->setText("No Feature Selected");
+
+    // Switch to the blank page in the stacked widget
+    ui->stackedWidget->setCurrentIndex(0); // Index 0 is the blank widget
+}
+
 void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
+    // Disable the previously selected feature before switching to the new one
+    if (!_highlighted_available_feature.isEmpty() && _highlighted_available_feature != feature) {
+        _disablePreviousFeature(_highlighted_available_feature);
+    }
+
     _highlighted_available_feature = feature;
+
+    // Update the feature label to show the selected feature name
+    ui->selected_feature_label->setText(feature);
 
     auto key = feature.toStdString();
 

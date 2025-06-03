@@ -25,6 +25,14 @@ public:
 
     void openWidget();// Call
 
+    /**
+     * @brief Clear the currently selected feature and return to no-selection state
+     * 
+     * This method resets the DataManager_Widget to show no feature selection,
+     * clearing any active widgets and resetting the feature label.
+     */
+    void clearFeatureSelection();
+
 private:
     Ui::DataManager_Widget * ui;
     TimeScrollBar * _time_scrollbar;
@@ -34,10 +42,46 @@ private:
 
 
 private slots:
+    /**
+     * @brief Handle change in output directory setting
+     * 
+     * @param dir_name The new directory path as a QString
+     */
     void _changeOutputDir(QString dir_name);
+
+    /**
+     * @brief Handle selection of a feature from the feature table
+     * 
+     * This method updates the UI to show the appropriate widget for the selected
+     * feature type and updates the feature label to display the selected feature name.
+     * 
+     * @param feature The name/key of the selected feature
+     */
     void _handleFeatureSelected(QString const & feature);
+
+    /**
+     * @brief Disable and cleanup the previously selected feature
+     * 
+     * This method disconnects callbacks and signals for the specified feature
+     * and performs necessary cleanup when switching between features.
+     * 
+     * @param feature The name/key of the feature to disable
+     */
     void _disablePreviousFeature(QString const & feature);
+
+    /**
+     * @brief Create new data of the specified type with the given key
+     * 
+     * @param key The unique identifier for the new data
+     * @param type The type of data to create (e.g., "Point", "Mask", "Line")
+     */
     void _createNewData(std::string key, std::string type);
+
+    /**
+     * @brief Handle frame selection from child widgets
+     * 
+     * @param frame_id The ID of the selected frame
+     */
     void _changeScrollbar(int frame_id);
 };
 
