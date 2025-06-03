@@ -6,6 +6,7 @@
 #include "Points/points.hpp"
 #include "masks.hpp"
 
+#include <cstddef>
 #include <map>
 #include <ranges>
 #include <vector>
@@ -112,6 +113,63 @@ public:
     * @return A const reference to a vector of masks at the given time, or an empty vector if no masks exist
     */
     [[nodiscard]] std::vector<Mask2D> const & getAtTime(int time) const;
+
+    /**
+     * @brief Copy masks from this MaskData to another MaskData for a time range
+     * 
+     * Copies all masks within the specified time range [start_time, end_time] (inclusive)
+     * to the target MaskData. If masks already exist at target times, the copied masks
+     * are added to the existing masks.
+     * 
+     * @param target The target MaskData to copy masks to
+     * @param start_time The starting time (inclusive)
+     * @param end_time The ending time (inclusive)
+     * @param notify If true, the target will notify its observers after the operation
+     * @return The number of masks actually copied
+     */
+    std::size_t copyTo(MaskData& target, int start_time, int end_time, bool notify = true) const;
+
+    /**
+     * @brief Copy masks from this MaskData to another MaskData for specific times
+     * 
+     * Copies all masks at the specified times to the target MaskData.
+     * If masks already exist at target times, the copied masks are added to the existing masks.
+     * 
+     * @param target The target MaskData to copy masks to
+     * @param times Vector of specific times to copy (does not need to be sorted)
+     * @param notify If true, the target will notify its observers after the operation
+     * @return The number of masks actually copied
+     */
+    std::size_t copyTo(MaskData& target, std::vector<int> const& times, bool notify = true) const;
+
+    /**
+     * @brief Move masks from this MaskData to another MaskData for a time range
+     * 
+     * Moves all masks within the specified time range [start_time, end_time] (inclusive)
+     * to the target MaskData. Masks are copied to target then removed from source.
+     * If masks already exist at target times, the moved masks are added to the existing masks.
+     * 
+     * @param target The target MaskData to move masks to
+     * @param start_time The starting time (inclusive)
+     * @param end_time The ending time (inclusive)
+     * @param notify If true, both source and target will notify their observers after the operation
+     * @return The number of masks actually moved
+     */
+    std::size_t moveTo(MaskData& target, int start_time, int end_time, bool notify = true);
+
+    /**
+     * @brief Move masks from this MaskData to another MaskData for specific times
+     * 
+     * Moves all masks at the specified times to the target MaskData.
+     * Masks are copied to target then removed from source.
+     * If masks already exist at target times, the moved masks are added to the existing masks.
+     * 
+     * @param target The target MaskData to move masks to
+     * @param times Vector of specific times to move (does not need to be sorted)
+     * @param notify If true, both source and target will notify their observers after the operation
+     * @return The number of masks actually moved
+     */
+    std::size_t moveTo(MaskData& target, std::vector<int> const& times, bool notify = true);
 
     /**
      * @brief Get all masks with their associated times as a range

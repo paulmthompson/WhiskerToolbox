@@ -175,39 +175,15 @@ void Mask_Widget::_moveMasksToTarget(std::string const& target_key) {
     std::cout << "Mask_Widget: Moving masks from " << selected_frames.size() 
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    int frames_with_masks = 0;
-    int total_masks_moved = 0;
+    // Use the new moveTo method with the vector of selected times
+    std::size_t total_masks_moved = source_mask_data->moveTo(*target_mask_data, selected_frames, true);
 
-    // Batch operations to minimize observer notifications
-    for (int frame : selected_frames) {
-        auto masks_to_move = source_mask_data->getAtTime(frame);
-        if (!masks_to_move.empty()) {
-            frames_with_masks++;
-            total_masks_moved += static_cast<int>(masks_to_move.size());
-            
-            // Add to target first (without notification)
-            for (auto const& mask : masks_to_move) {
-                target_mask_data->addAtTime(frame, mask, false);
-            }
-            // Clear from source (without notification)
-            source_mask_data->clearAtTime(frame, false);
-        }
-    }
-
-    // Notify observers only once at the end for both source and target
-    if (frames_with_masks > 0) {
-        source_mask_data->notifyObservers();
-        target_mask_data->notifyObservers();
-        
+    if (total_masks_moved > 0) {
         // Update the table view to reflect changes
         updateTable();
         
         std::cout << "Mask_Widget: Successfully moved " << total_masks_moved 
-                  << " masks from " << frames_with_masks << " frames." << std::endl;
-        if (frames_with_masks < selected_frames.size()) {
-            std::cout << "Mask_Widget: Note: " << (selected_frames.size() - frames_with_masks) 
-                      << " selected frames contained no masks to move." << std::endl;
-        }
+                  << " masks from " << selected_frames.size() << " frames." << std::endl;
     } else {
         std::cout << "Mask_Widget: No masks found in any of the selected frames to move." << std::endl;
     }
@@ -235,33 +211,12 @@ void Mask_Widget::_copyMasksToTarget(std::string const& target_key) {
     std::cout << "Mask_Widget: Copying masks from " << selected_frames.size() 
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    int frames_with_masks = 0;
-    int total_masks_copied = 0;
+    // Use the new copyTo method with the vector of selected times
+    std::size_t total_masks_copied = source_mask_data->copyTo(*target_mask_data, selected_frames, true);
 
-    // Batch operations to minimize observer notifications
-    for (int frame : selected_frames) {
-        auto masks_to_copy = source_mask_data->getAtTime(frame);
-        if (!masks_to_copy.empty()) {
-            frames_with_masks++;
-            total_masks_copied += static_cast<int>(masks_to_copy.size());
-            
-            // Add to target (without notification until the end)
-            for (auto const& mask : masks_to_copy) {
-                target_mask_data->addAtTime(frame, mask, false);
-            }
-        }
-    }
-
-    // Notify observers only once at the end for the target
-    if (frames_with_masks > 0) {
-        target_mask_data->notifyObservers();
-        
+    if (total_masks_copied > 0) {
         std::cout << "Mask_Widget: Successfully copied " << total_masks_copied 
-                  << " masks from " << frames_with_masks << " frames." << std::endl;
-        if (frames_with_masks < selected_frames.size()) {
-            std::cout << "Mask_Widget: Note: " << (selected_frames.size() - frames_with_masks) 
-                      << " selected frames contained no masks to copy." << std::endl;
-        }
+                  << " masks from " << selected_frames.size() << " frames." << std::endl;
     } else {
         std::cout << "Mask_Widget: No masks found in any of the selected frames to copy." << std::endl;
     }

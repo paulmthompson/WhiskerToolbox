@@ -105,3 +105,117 @@ void MaskData::reserveCapacity(size_t capacity) {
     // Note: std::map doesn't have a reserve function, but this is kept for API compatibility
     // The map will allocate nodes as needed
 }
+
+std::size_t MaskData::copyTo(MaskData& target, int start_time, int end_time, bool notify) const {
+    if (start_time > end_time) {
+        std::cerr << "MaskData::copyTo: start_time (" << start_time 
+                  << ") must be <= end_time (" << end_time << ")" << std::endl;
+        return 0;
+    }
+
+    std::size_t total_masks_copied = 0;
+
+    // Iterate through all times in the source data within the range
+    for (auto const & [time, masks] : _data) {
+        if (time >= start_time && time <= end_time && !masks.empty()) {
+            for (auto const& mask : masks) {
+                target.addAtTime(time, mask, false); // Don't notify for each operation
+                total_masks_copied++;
+            }
+        }
+    }
+
+    // Notify observer only once at the end if requested
+    if (notify && total_masks_copied > 0) {
+        target.notifyObservers();
+    }
+
+    return total_masks_copied;
+}
+
+std::size_t MaskData::copyTo(MaskData& target, std::vector<int> const& times, bool notify) const {
+    std::size_t total_masks_copied = 0;
+
+    // Copy masks for each specified time
+    for (int time : times) {
+        auto it = _data.find(time);
+        if (it != _data.end() && !it->second.empty()) {
+            for (auto const& mask : it->second) {
+                target.addAtTime(time, mask, false); // Don't notify for each operation
+                total_masks_copied++;
+            }
+        }
+    }
+
+    // Notify observer only once at the end if requested
+    if (notify && total_masks_copied > 0) {
+        target.notifyObservers();
+    }
+
+    return total_masks_copied;
+}
+
+std::size_t MaskData::moveTo(MaskData& target, int start_time, int end_time, bool notify) {
+    if (start_time > end_time) {
+        std::cerr << "MaskData::moveTo: start_time (" << start_time 
+                  << ") must be <= end_time (" << end_time << ")" << std::endl;
+        return 0;
+    }
+
+    std::size_t total_masks_moved = 0;
+    std::vector<int> times_to_clear;
+
+    // First, copy all masks in the range to target
+    for (auto const & [time, masks] : _data) {
+        if (time >= start_time && time <= end_time && !masks.empty()) {
+            for (auto const& mask : masks) {
+                target.addAtTime(time, mask, false); // Don't notify for each operation
+                total_masks_moved++;
+            }
+            times_to_clear.push_back(time);
+        }
+    }
+
+    // Then, clear all the times from source
+    for (int time : times_to_clear) {
+        clearAtTime(time, false); // Don't notify for each operation
+    }
+
+    // Notify observers only once at the end if requested
+    if (notify && total_masks_moved > 0) {
+        target.notifyObservers();
+        notifyObservers();
+    }
+
+    return total_masks_moved;
+}
+
+std::size_t MaskData::moveTo(MaskData& target, std::vector<int> const& times, bool notify) {
+    std::size_t total_masks_moved = 0;
+    std::vector<int> times_to_clear;
+
+    // First, copy masks for each specified time to target
+    for (int time : times) {
+        auto it = _data.find(time);
+        if (it != _data.end() && !it->second.empty()) {
+            for (auto const& mask : it->second) {
+                target.addAtTime(time, mask, false); // Don't notify for each operation
+                total_masks_moved++;
+            }
+            times_to_clear.push_back(time);
+        }
+    }
+
+    // Then, clear all the times from source
+    for (int time : times_to_clear) {
+        clearAtTime(time, false); // Don't notify for each operation
+    }
+
+    // Notify observers only once at the end if requested
+    if (notify && total_masks_moved > 0) {
+        target.notifyObservers();
+        notifyObservers();
+    }
+
+    return total_masks_moved;
+}

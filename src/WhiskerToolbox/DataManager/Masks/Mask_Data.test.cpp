@@ -226,3 +226,226 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
         REQUIRE(masks[0].size() == 2);
     }
 }
+
+TEST_CASE("MaskData - Copy and Move operations", "[mask][data][copy][move]") {
+    MaskData source_data;
+    MaskData target_data;
+
+    // Setup test data
+    std::vector<float> x1 = {1.0f, 2.0f, 3.0f, 1.0f};
+    std::vector<float> y1 = {1.0f, 1.0f, 2.0f, 2.0f};
+    
+    std::vector<float> x2 = {4.0f, 5.0f, 6.0f, 4.0f};
+    std::vector<float> y2 = {3.0f, 3.0f, 4.0f, 4.0f};
+    
+    std::vector<Point2D<float>> points1 = {{10.0f, 10.0f}, {11.0f, 10.0f}, {11.0f, 11.0f}};
+    std::vector<Point2D<float>> points2 = {{20.0f, 20.0f}, {21.0f, 20.0f}};
+
+    source_data.addAtTime(10, x1, y1);
+    source_data.addAtTime(10, x2, y2);  // Second mask at same time
+    source_data.addAtTime(15, points1);
+    source_data.addAtTime(20, points2);
+
+    SECTION("copyTo - time range operations") {
+        SECTION("Copy entire range") {
+            std::size_t copied = source_data.copyTo(target_data, 10, 20);
+            
+            REQUIRE(copied == 4); // 2 masks at time 10, 1 at time 15, 1 at time 20
+            
+            // Verify all masks were copied
+            REQUIRE(target_data.getAtTime(10).size() == 2);
+            REQUIRE(target_data.getAtTime(15).size() == 1);
+            REQUIRE(target_data.getAtTime(20).size() == 1);
+            
+            // Verify source data is unchanged
+            REQUIRE(source_data.getAtTime(10).size() == 2);
+            REQUIRE(source_data.getAtTime(15).size() == 1);
+            REQUIRE(source_data.getAtTime(20).size() == 1);
+        }
+
+        SECTION("Copy partial range") {
+            std::size_t copied = source_data.copyTo(target_data, 15, 15);
+            
+            REQUIRE(copied == 1); // Only 1 mask at time 15
+            
+            // Verify only masks in range were copied
+            REQUIRE(target_data.getAtTime(10).empty());
+            REQUIRE(target_data.getAtTime(15).size() == 1);
+            REQUIRE(target_data.getAtTime(20).empty());
+        }
+
+        SECTION("Copy non-existent range") {
+            std::size_t copied = source_data.copyTo(target_data, 100, 200);
+            
+            REQUIRE(copied == 0);
+            REQUIRE(target_data.getTimesWithData().empty());
+        }
+
+        SECTION("Copy with invalid range") {
+            std::size_t copied = source_data.copyTo(target_data, 20, 10); // start > end
+            
+            REQUIRE(copied == 0);
+            REQUIRE(target_data.getTimesWithData().empty());
+        }
+    }
+
+    SECTION("copyTo - specific times operations") {
+        SECTION("Copy specific existing times") {
+            std::vector<int> times = {10, 20};
+            std::size_t copied = source_data.copyTo(target_data, times);
+            
+            REQUIRE(copied == 3); // 2 masks at time 10, 1 mask at time 20
+            REQUIRE(target_data.getAtTime(10).size() == 2);
+            REQUIRE(target_data.getAtTime(15).empty());
+            REQUIRE(target_data.getAtTime(20).size() == 1);
+        }
+
+        SECTION("Copy mix of existing and non-existing times") {
+            std::vector<int> times = {10, 100, 20, 200};
+            std::size_t copied = source_data.copyTo(target_data, times);
+            
+            REQUIRE(copied == 3); // Only times 10 and 20 exist
+            REQUIRE(target_data.getAtTime(10).size() == 2);
+            REQUIRE(target_data.getAtTime(20).size() == 1);
+        }
+    }
+
+    SECTION("moveTo - time range operations") {
+        SECTION("Move entire range") {
+            std::size_t moved = source_data.moveTo(target_data, 10, 20);
+            
+            REQUIRE(moved == 4); // 2 + 1 + 1 = 4 masks total
+            
+            // Verify all masks were moved to target
+            REQUIRE(target_data.getAtTime(10).size() == 2);
+            REQUIRE(target_data.getAtTime(15).size() == 1);
+            REQUIRE(target_data.getAtTime(20).size() == 1);
+            
+            // Verify source data is now empty
+            REQUIRE(source_data.getTimesWithData().empty());
+        }
+
+        SECTION("Move partial range") {
+            std::size_t moved = source_data.moveTo(target_data, 15, 20);
+            
+            REQUIRE(moved == 2); // 1 + 1 = 2 masks
+            
+            // Verify only masks in range were moved
+            REQUIRE(target_data.getAtTime(15).size() == 1);
+            REQUIRE(target_data.getAtTime(20).size() == 1);
+            
+            // Verify source still has data outside the range
+            REQUIRE(source_data.getAtTime(10).size() == 2);
+            REQUIRE(source_data.getAtTime(15).empty());
+            REQUIRE(source_data.getAtTime(20).empty());
+        }
+
+        SECTION("Move non-existent range") {
+            std::size_t moved = source_data.moveTo(target_data, 100, 200);
+            
+            REQUIRE(moved == 0);
+            REQUIRE(target_data.getTimesWithData().empty());
+            
+            // Source should be unchanged
+            REQUIRE(source_data.getTimesWithData().size() == 3);
+        }
+    }
+
+    SECTION("moveTo - specific times operations") {
+        SECTION("Move specific existing times") {
+            std::vector<int> times = {15, 10}; // Non-sequential order
+            std::size_t moved = source_data.moveTo(target_data, times);
+            
+            REQUIRE(moved == 3); // 1 + 2 = 3 masks
+            REQUIRE(target_data.getAtTime(10).size() == 2);
+            REQUIRE(target_data.getAtTime(15).size() == 1);
+            
+            // Only time 20 should remain in source
+            REQUIRE(source_data.getTimesWithData().size() == 1);
+            REQUIRE(source_data.getAtTime(20).size() == 1);
+        }
+
+        SECTION("Move mix of existing and non-existing times") {
+            std::vector<int> times = {20, 100, 10, 200};
+            std::size_t moved = source_data.moveTo(target_data, times);
+            
+            REQUIRE(moved == 3); // Only times 10 and 20 exist
+            REQUIRE(target_data.getAtTime(10).size() == 2);
+            REQUIRE(target_data.getAtTime(20).size() == 1);
+            
+            // Only time 15 should remain in source
+            REQUIRE(source_data.getTimesWithData().size() == 1);
+            REQUIRE(source_data.getAtTime(15).size() == 1);
+        }
+    }
+
+    SECTION("Copy/Move to target with existing data") {
+        // Add some existing data to target
+        std::vector<Point2D<float>> existing_mask = {{100.0f, 200.0f}};
+        target_data.addAtTime(10, existing_mask);
+
+        SECTION("Copy to existing time adds masks") {
+            std::size_t copied = source_data.copyTo(target_data, 10, 10);
+            
+            REQUIRE(copied == 2);
+            // Should have existing mask plus copied masks
+            REQUIRE(target_data.getAtTime(10).size() == 3); // 1 existing + 2 copied
+        }
+
+        SECTION("Move to existing time adds masks") {
+            std::size_t moved = source_data.moveTo(target_data, 10, 10);
+            
+            REQUIRE(moved == 2);
+            // Should have existing mask plus moved masks
+            REQUIRE(target_data.getAtTime(10).size() == 3); // 1 existing + 2 moved
+            // Source should no longer have data at time 10
+            REQUIRE(source_data.getAtTime(10).empty());
+        }
+    }
+
+    SECTION("Edge cases") {
+        MaskData empty_source;
+
+        SECTION("Copy from empty source") {
+            std::size_t copied = empty_source.copyTo(target_data, 0, 100);
+            REQUIRE(copied == 0);
+            REQUIRE(target_data.getTimesWithData().empty());
+        }
+
+        SECTION("Move from empty source") {
+            std::size_t moved = empty_source.moveTo(target_data, 0, 100);
+            REQUIRE(moved == 0);
+            REQUIRE(target_data.getTimesWithData().empty());
+        }
+
+        SECTION("Copy to self (same object)") {
+            // This is a corner case - copying to self should double the data
+            std::size_t copied = source_data.copyTo(source_data, 10, 10);
+            REQUIRE(copied == 2);
+            // Should now have doubled the masks at time 10
+            REQUIRE(source_data.getAtTime(10).size() == 4); // 2 original + 2 copied
+        }
+
+        SECTION("Observer notification control") {
+            MaskData test_source;
+            MaskData test_target;
+            
+            test_source.addAtTime(5, points1);
+            
+            int target_notifications = 0;
+            test_target.addObserver([&target_notifications]() {
+                target_notifications++;
+            });
+            
+            // Copy without notification
+            std::size_t copied = test_source.copyTo(test_target, 5, 5, false);
+            REQUIRE(copied == 1);
+            REQUIRE(target_notifications == 0);
+            
+            // Copy with notification
+            copied = test_source.copyTo(test_target, 5, 5, true);
+            REQUIRE(copied == 1);
+            REQUIRE(target_notifications == 1);
+        }
+    }
+}
