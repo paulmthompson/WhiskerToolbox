@@ -203,6 +203,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.cpp
         Media_Widget/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.hpp
         Media_Widget/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.ui
+        Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.cpp
+        Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.hpp
+        Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.ui
 
         Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp
         Media_Widget/MediaInterval_Widget/MediaInterval_Widget.cpp

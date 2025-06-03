@@ -99,10 +99,6 @@ Whisker_Widget::Whisker_Widget(Media_Window * scene,
         _linking_tolerance = static_cast<float>(val);
     });
 
-    connect(ui->select_whisker_button, &QPushButton::clicked, this, [this]() {
-        _selection_mode = Whisker_Select;
-    });
-
 };
 
 Whisker_Widget::~Whisker_Widget() {
@@ -361,25 +357,6 @@ void Whisker_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
     auto current_time = _data_manager->getTime()->getLastLoadedFrame();
 
     switch (_selection_mode) {
-        case Whisker_Select: {
-
-            auto whiskers = _data_manager->getData<LineData>("unlabeled_whiskers")->getLinesAtTime(current_time);
-            std::tuple<float, int> nearest_whisker = whisker::get_nearest_whisker(
-                    convert_to_whisker_Line2D(whiskers),
-                    x_media,
-                    y_media);
-            if (std::get<0>(nearest_whisker) < 10.0f) {
-                _selected_whisker = std::get<1>(nearest_whisker);
-
-                std::string const whisker_group_name = "whisker_" + std::to_string(_current_whisker);
-                if (_data_manager->getData<LineData>(whisker_group_name)) {
-                    _data_manager->getData<LineData>(whisker_group_name)->addLineAtTime(current_time, whiskers[_selected_whisker]);
-
-                    _data_manager->getData<LineData>("unlabeled_whiskers")->clearLineAtTime(current_time, _selected_whisker);
-                }
-            }
-            break;
-        }
 
         case Whisker_Pad_Select: {
             _wt->setWhiskerPad(x_media, y_media);

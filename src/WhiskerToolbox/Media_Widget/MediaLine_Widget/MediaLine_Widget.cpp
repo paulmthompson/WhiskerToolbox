@@ -11,6 +11,7 @@
 #include "SelectionWidgets/LineNoneSelectionWidget.hpp"
 #include "SelectionWidgets/LineAddSelectionWidget.hpp"
 #include "SelectionWidgets/LineEraseSelectionWidget.hpp"
+#include "SelectionWidgets/LineSelectSelectionWidget.hpp"
 
 #include <QLabel>
 #include <QRadioButton>
@@ -19,6 +20,8 @@
 #include <QGroupBox>
 #include <QButtonGroup>
 #include <QCheckBox>
+#include <QMenu>
+#include <QCursor>
 #include <iostream>
 #include <armadillo>
 #include <opencv2/opencv.hpp>
@@ -33,6 +36,7 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
     _selection_modes["(None)"] = Selection_Mode::None;
     _selection_modes["Add Points"] = Selection_Mode::Add;
     _selection_modes["Erase Points"] = Selection_Mode::Erase;
+    _selection_modes["Select Line"] = Selection_Mode::Select;
 
     ui->selection_mode_combo->addItems(QStringList(_selection_modes.keys()));
     
@@ -124,6 +128,15 @@ void MediaLine_Widget::_setupSelectionModePages() {
     connect(_eraseSelectionWidget, &line_widget::LineEraseSelectionWidget::showCircleToggled,
             this, &MediaLine_Widget::_toggleShowHoverCircle);
     
+    _selectSelectionWidget = new line_widget::LineSelectSelectionWidget();
+    ui->mode_stacked_widget->addWidget(_selectSelectionWidget);
+    
+    connect(_selectSelectionWidget, &line_widget::LineSelectSelectionWidget::selectionThresholdChanged,
+            this, [this](float threshold) {
+                _line_selection_threshold = threshold;
+                std::cout << "Line selection threshold set to: " << threshold << std::endl;
+            });
+    
     ui->mode_stacked_widget->setCurrentIndex(0);
 }
 
@@ -134,12 +147,13 @@ MediaLine_Widget::~MediaLine_Widget() {
 void MediaLine_Widget::showEvent(QShowEvent * event) {
     std::cout << "Show Event" << std::endl;
    connect(_scene, &Media_Window::leftClickMedia, this, &MediaLine_Widget::_clickedInVideo);
-
+   connect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
 }
 
 void MediaLine_Widget::hideEvent(QHideEvent * event) {
     std::cout << "Hide Event" << std::endl;
     disconnect(_scene, &Media_Window::leftClickMedia, this, &MediaLine_Widget::_clickedInVideo);
+    disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
 }
 
 void MediaLine_Widget::setActiveKey(std::string const& key) {
@@ -273,6 +287,18 @@ void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
         case Selection_Mode::Erase: {
             std::cout << "Selection mode is Erase" << std::endl;
             std::cout << "Not yet implemented" << std::endl;
+            break;
+        }
+        case Selection_Mode::Select: {
+            std::cout << "Selection mode is Select" << std::endl;
+            int nearest_line = _findNearestLine(x_media, y_media);
+            if (nearest_line >= 0) {
+                _selectLine(nearest_line);
+                std::cout << "Selected line " << nearest_line << std::endl;
+            } else {
+                _clearLineSelection();
+                std::cout << "No line found within threshold" << std::endl;
+            }
             break;
         }
     }
@@ -810,4 +836,205 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
     }
     
     std::cout << "Segment end percentage set to: " << percentage << std::endl;
+}
+
+void MediaLine_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
+    // Only handle right-clicks in Select mode and when a line is selected
+    if (_selection_mode != Selection_Mode::Select || _selected_line_index < 0 || _active_key.empty()) {
+        return;
+    }
+    
+    auto x_media = static_cast<float>(x_canvas);
+    auto y_media = static_cast<float>(y_canvas);
+    
+    // Check if the right-click is near the selected line
+    int nearest_line = _findNearestLine(x_media, y_media);
+    if (nearest_line == _selected_line_index) {
+        // Show context menu at the click position
+        QPoint global_pos = QCursor::pos();
+        _showLineContextMenu(global_pos);
+    }
+}
+
+int MediaLine_Widget::_findNearestLine(float x, float y) {
+    if (_active_key.empty()) {
+        return -1;
+    }
+    
+    auto line_data = _data_manager->getData<LineData>(_active_key);
+    if (!line_data) {
+        return -1;
+    }
+    
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto lines = line_data->getLinesAtTime(current_time);
+    
+    if (lines.empty()) {
+        return -1;
+    }
+    
+    int nearest_line_index = -1;
+    float min_distance = _line_selection_threshold + 1; // Initialize beyond threshold
+    
+    for (int line_idx = 0; line_idx < static_cast<int>(lines.size()); ++line_idx) {
+        const auto& line = lines[line_idx];
+        
+        if (line.empty()) {
+            continue;
+        }
+        
+        // Check distance to each point on the line
+        for (const auto& point : line) {
+            float dx = x - point.x;
+            float dy = y - point.y;
+            float distance = std::sqrt(dx*dx + dy*dy);
+            
+            if (distance < min_distance) {
+                min_distance = distance;
+                nearest_line_index = line_idx;
+            }
+        }
+    }
+    
+    return (min_distance <= _line_selection_threshold) ? nearest_line_index : -1;
+}
+
+void MediaLine_Widget::_selectLine(int line_index) {
+    _selected_line_index = line_index;
+    
+    // Update the line display options to show the selected line differently
+    if (!_active_key.empty()) {
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            line_opts.value()->selected_line_index = line_index;
+        }
+        _scene->UpdateCanvas();
+    }
+}
+
+void MediaLine_Widget::_clearLineSelection() {
+    _selected_line_index = -1;
+    
+    // Update the line display options to clear selection
+    if (!_active_key.empty()) {
+        auto line_opts = _scene->getLineConfig(_active_key);
+        if (line_opts.has_value()) {
+            line_opts.value()->selected_line_index = -1;
+        }
+        _scene->UpdateCanvas();
+    }
+}
+
+void MediaLine_Widget::_showLineContextMenu(const QPoint& position) {
+    QMenu context_menu(this);
+    
+    // Create Move To submenu
+    QMenu* move_menu = context_menu.addMenu("Move Line To");
+    QMenu* copy_menu = context_menu.addMenu("Copy Line To");
+    
+    // Get available LineData keys
+    auto available_keys = _getAvailableLineDataKeys();
+    
+    for (const auto& key : available_keys) {
+        if (key != _active_key) { // Don't include the current key
+            // Add to Move menu
+            QAction* move_action = move_menu->addAction(QString::fromStdString(key));
+            connect(move_action, &QAction::triggered, [this, key]() {
+                _moveLineToTarget(key);
+            });
+            
+            // Add to Copy menu
+            QAction* copy_action = copy_menu->addAction(QString::fromStdString(key));
+            connect(copy_action, &QAction::triggered, [this, key]() {
+                _copyLineToTarget(key);
+            });
+        }
+    }
+    
+    // Disable menus if no other LineData available
+    if (available_keys.size() <= 1) {
+        move_menu->setEnabled(false);
+        copy_menu->setEnabled(false);
+    }
+    
+    context_menu.exec(position);
+}
+
+std::vector<std::string> MediaLine_Widget::_getAvailableLineDataKeys() {
+    return _data_manager->getKeys<LineData>();
+}
+
+void MediaLine_Widget::_moveLineToTarget(const std::string& target_key) {
+    if (_selected_line_index < 0 || _active_key.empty()) {
+        return;
+    }
+    
+    auto source_line_data = _data_manager->getData<LineData>(_active_key);
+    auto target_line_data = _data_manager->getData<LineData>(target_key);
+    
+    if (!source_line_data || !target_line_data) {
+        std::cerr << "Could not retrieve source or target LineData" << std::endl;
+        return;
+    }
+    
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto lines = source_line_data->getLinesAtTime(current_time);
+    
+    if (_selected_line_index >= static_cast<int>(lines.size())) {
+        std::cerr << "Selected line index out of bounds" << std::endl;
+        return;
+    }
+    
+    // Get the selected line
+    Line2D selected_line = lines[_selected_line_index];
+    
+    // Add to target
+    target_line_data->addLineAtTime(current_time, selected_line);
+    
+    // Remove from source by rebuilding the vector without the selected line
+    std::vector<Line2D> remaining_lines;
+    for (int i = 0; i < static_cast<int>(lines.size()); ++i) {
+        if (i != _selected_line_index) {
+            remaining_lines.push_back(lines[i]);
+        }
+    }
+    
+    // Clear and rebuild source lines
+    source_line_data->clearLinesAtTime(current_time);
+    for (const auto& line : remaining_lines) {
+        source_line_data->addLineAtTime(current_time, line);
+    }
+    
+    // Clear selection since the line was moved
+    _clearLineSelection();
+    
+    std::cout << "Moved line from " << _active_key << " to " << target_key << std::endl;
+}
+
+void MediaLine_Widget::_copyLineToTarget(const std::string& target_key) {
+    if (_selected_line_index < 0 || _active_key.empty()) {
+        return;
+    }
+    
+    auto source_line_data = _data_manager->getData<LineData>(_active_key);
+    auto target_line_data = _data_manager->getData<LineData>(target_key);
+    
+    if (!source_line_data || !target_line_data) {
+        std::cerr << "Could not retrieve source or target LineData" << std::endl;
+        return;
+    }
+    
+    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto lines = source_line_data->getLinesAtTime(current_time);
+    
+    if (_selected_line_index >= static_cast<int>(lines.size())) {
+        std::cerr << "Selected line index out of bounds" << std::endl;
+        return;
+    }
+    
+    // Get the selected line and copy it to target
+    Line2D selected_line = lines[_selected_line_index];
+    target_line_data->addLineAtTime(current_time, selected_line);
+    
+    std::cout << "Copied line from " << _active_key << " to " << target_key << std::endl;
 }

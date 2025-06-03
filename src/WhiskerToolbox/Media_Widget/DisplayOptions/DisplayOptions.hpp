@@ -71,6 +71,7 @@ struct LineDisplayOptions : public BaseDisplayOptions {
     bool show_segment{false}; // Show only a segment of the line between two percentages
     int segment_start_percentage{0}; // Start percentage for line segment (0-100%)
     int segment_end_percentage{100}; // End percentage for line segment (0-100%)
+    int selected_line_index{-1}; // Index of selected line (-1 = none selected)
     // Future: line_style (e.g., solid, dashed, dotted enum)
 
     // OptionType getType() const override { return OptionType::Line; }
