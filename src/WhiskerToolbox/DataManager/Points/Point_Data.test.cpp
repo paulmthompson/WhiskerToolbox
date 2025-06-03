@@ -102,7 +102,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
     }
 
     SECTION("Overwriting points at multiple times") {
-        std::vector<size_t> times = {10, 20};
+        std::vector<int> times = {10, 20};
         std::vector<std::vector<Point2D<float>>> points_vec = {points, more_points};
 
         point_data.overwritePointsAtTimes(times, points_vec);
@@ -188,7 +188,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
     }
 
     SECTION("Overwriting points at times with mismatched vectors") {
-        std::vector<size_t> times = {10, 20, 30};
+        std::vector<int> times = {10, 20, 30};
         std::vector<std::vector<Point2D<float>>> points = {
                 {{1.0f, 2.0f}},
                 {{3.0f, 4.0f}}
