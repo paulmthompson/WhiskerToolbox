@@ -15,6 +15,7 @@ class QCheckBox;
 
 #include "DataManager/Lines/IO/CSV/Line_Data_CSV.hpp" // For CSVSingleFileLineSaverOptions
 #include "DataManager/Lines/IO/Binary/Line_Data_Binary.hpp" // For BinaryLineSaverOptions
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp" // For context menu utilities
 #include "IO_Widgets/Media/MediaExport_Widget.hpp" // For MediaExport_Widget
 
 // Forward declarations
@@ -52,12 +53,32 @@ private:
 
     enum SaverType { CSV, BINARY }; // Enum for different saver types
 
+    /**
+     * @brief Move selected line to the specified target key
+     * 
+     * @param target_key The key to move the line to
+     */
+    void _moveLineToTarget(std::string const& target_key);
+
+    /**
+     * @brief Copy selected line to the specified target key
+     * 
+     * @param target_key The key to copy the line to
+     */
+    void _copyLineToTarget(std::string const& target_key);
+
+    /**
+     * @brief Show context menu for the table view
+     * 
+     * @param position The position where the context menu should appear
+     */
+    void _showContextMenu(QPoint const& position);
+
 private slots:
     // Add any slots needed for handling user interactions
     void _handleCellDoubleClicked(QModelIndex const & index); // Slot for table interaction
     void _onDataChanged(); // Slot for DataManager callback
-    void _moveLineButton_clicked(); // Slot for move line button
-    void _deleteLineButton_clicked(); // Slot for delete line button
+    void _deleteSelectedLine(); // Slot for delete line operation
 
     // New slots for saving functionality
     void _onExportTypeChanged(int index);
@@ -67,8 +88,6 @@ private slots:
     void _onExportMediaFramesCheckboxToggled(bool checked);
 
 private:
-    void _populateMoveToComboBox(); // Method to populate the combo box
-
     // New private helper methods for saving
     void _initiateSaveProcess(SaverType saver_type, LineSaverOptionsVariant& options_variant);
     bool _performActualCSVSave(CSVSingleFileLineSaverOptions & options);

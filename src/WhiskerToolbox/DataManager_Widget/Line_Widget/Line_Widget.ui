@@ -101,47 +101,6 @@
      </item>
     </layout>
    </item>
-   <item>
-    <layout class="QHBoxLayout" name="actionButtonsLayout">
-     <item>
-      <widget class="QLabel" name="moveToLabel">
-       <property name="text">
-        <string>Move To:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="moveToComboBox"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="moveLineButton">
-       <property name="text">
-        <string>Move Line</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="deleteLineButton">
-       <property name="text">
-        <string>Delete Line</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="actionButtonSpacer">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
   </layout>
  </widget>
  <customwidgets>
