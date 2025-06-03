@@ -512,6 +512,7 @@ void add_whiskers_to_data_manager(
         int const num_whisker_to_track,
         int current_time,
         float similarity_threshold) {
+
     dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
     for (auto & w: whiskers) {
@@ -528,7 +529,7 @@ void clip_whisker(Line2D & line, int clip_length) {
         return;
     }
 
-    line.erase(line.begin() + clip_length, line.end());
+    line.erase(line.end() - clip_length, line.end());
 }
 
 // New whisker pad management methods
