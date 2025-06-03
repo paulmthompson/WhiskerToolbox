@@ -109,7 +109,8 @@ void updatePointDataFromMlpackMatrix(
             }
         }
     }
-    pointData->overwritePointsAtTimes(timestamps, points);
+    auto times = std::vector<int>(timestamps.begin(), timestamps.end());
+    pointData->overwritePointsAtTimes(times, points);
 }
 
 ////////////////////////////////////////////////////////

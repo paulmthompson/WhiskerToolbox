@@ -16,10 +16,12 @@
 #include <QMessageBox>
 #include <QCheckBox>
 #include <QDir>
+#include <QMenu>
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <set>
 #include <variant>
 
 Point_Widget::Point_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
@@ -32,6 +34,7 @@ Point_Widget::Point_Widget(std::shared_ptr<DataManager> data_manager, QWidget * 
     ui->tableView->setModel(_point_table_model);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &Point_Widget::_onExportTypeChanged);
@@ -40,13 +43,10 @@ Point_Widget::Point_Widget(std::shared_ptr<DataManager> data_manager, QWidget * 
             this, &Point_Widget::_handleSaveCSVRequested);
 
     connect(ui->tableView, &QTableView::doubleClicked, this, &Point_Widget::_handleTableViewDoubleClicked);
-    connect(ui->movePointsButton, &QPushButton::clicked, this, &Point_Widget::_movePointsButton_clicked);
-    connect(ui->deletePointsButton, &QPushButton::clicked, this, &Point_Widget::_deletePointsButton_clicked);
+    connect(ui->tableView, &QTableView::customContextMenuRequested, this, &Point_Widget::_showContextMenu);
 
     connect(ui->export_media_frames_checkbox, &QCheckBox::toggled, 
             this, &Point_Widget::_onExportMediaFramesCheckboxToggled);
-
-    _populateMoveToPointDataComboBox();
 
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
     ui->media_export_options_widget->setVisible(ui->export_media_frames_checkbox->isChecked());
@@ -67,7 +67,6 @@ void Point_Widget::setActiveKey(std::string const & key) {
         // If the key is the same and data exists, a full reset might not be needed,
         // but for simplicity and to ensure correct state, we proceed.
         // updateTable(); // This would be a lighter refresh if data object hasn't changed
-        // _populateMoveToPointDataComboBox();
         // return;
     }
     removeCallbacks();
@@ -81,7 +80,6 @@ void Point_Widget::setActiveKey(std::string const & key) {
         _point_table_model->setPoints(nullptr); // Clear table if data is not available
     }
     // updateTable(); // No longer needed here as setPoints above resets model
-    _populateMoveToPointDataComboBox();
 }
 
 void Point_Widget::updateTable() {
@@ -92,13 +90,8 @@ void Point_Widget::updateTable() {
     }
 }
 
-
 void Point_Widget::removeCallbacks() {
     remove_callback(_data_manager.get(), _active_key, _callback_id);
-}
-
-void Point_Widget::_populateMoveToPointDataComboBox() {
-    populate_move_combo_box<PointData>(ui->moveToPointDataComboBox, _data_manager.get(), _active_key);
 }
 
 void Point_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
@@ -112,31 +105,207 @@ void Point_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
     }
 }
 
-void Point_Widget::_movePointsButton_clicked() {
-    if (!_active_key.empty() && ui->moveToPointDataComboBox->count() > 0) {
-        auto current_pd = _data_manager->getData<PointData>(_active_key);
-        std::string target_key = ui->moveToPointDataComboBox->currentText().toStdString();
-        auto target_pd = _data_manager->getData<PointData>(target_key);
+void Point_Widget::_showContextMenu(QPoint const& position) {
+    QModelIndex index = ui->tableView->indexAt(position);
+    if (!index.isValid()) {
+        return;
+    }
 
-        if (current_pd && target_pd) {
-            // int current_frame = _point_table_model->getActiveFrame(); // Replaced
-            int current_frame = _previous_frame; // Use Point_Widget's tracked active frame
-            auto points_to_move = current_pd->getPointsAtTime(current_frame);
-            if (!points_to_move.empty()) {
-                target_pd->addPointsAtTime(current_frame, points_to_move);
-                current_pd->clearAtTime(current_frame);
+    QMenu context_menu(this);
+
+    // Add move and copy submenus using the utility function
+    auto move_callback = [this](std::string const& target_key) {
+        _movePointsToTarget(target_key);
+    };
+    
+    auto copy_callback = [this](std::string const& target_key) {
+        _copyPointsToTarget(target_key);
+    };
+
+    add_move_copy_submenus<PointData>(&context_menu, _data_manager.get(), _active_key, move_callback, copy_callback);
+
+    // Add separator and existing operations
+    context_menu.addSeparator();
+    QAction* delete_action = context_menu.addAction("Delete Selected Points");
+
+    connect(delete_action, &QAction::triggered, this, &Point_Widget::_deleteSelectedPoints);
+
+    context_menu.exec(ui->tableView->mapToGlobal(position));
+}
+
+std::vector<int> Point_Widget::_getSelectedFrames() {
+    std::vector<int> selected_frames;
+    QModelIndexList selected_rows = ui->tableView->selectionModel()->selectedRows();
+
+    for (QModelIndex const& index : selected_rows) {
+        if (index.isValid()) {
+            int frame = _point_table_model->getFrameForRow(index.row());
+            if (frame != -1) {
+                selected_frames.push_back(frame);
             }
         }
     }
+
+    return selected_frames;
 }
 
-void Point_Widget::_deletePointsButton_clicked() {
-    if (!_active_key.empty()) {
-        auto point_data_ptr = _data_manager->getData<PointData>(_active_key);
-        if (point_data_ptr) {
-            // point_data_ptr->clearPointsAtTime(_point_table_model->getActiveFrame()); // Replaced
-            point_data_ptr->clearAtTime(_previous_frame); // Use Point_Widget's tracked active frame
+void Point_Widget::_movePointsToTarget(std::string const& target_key) {
+    std::vector<int> selected_frames = _getSelectedFrames();
+    if (selected_frames.empty()) {
+        std::cout << "Point_Widget: No points selected to move." << std::endl;
+        return;
+    }
+
+    auto source_point_data = _data_manager->getData<PointData>(_active_key);
+    auto target_point_data = _data_manager->getData<PointData>(target_key);
+
+    if (!source_point_data) {
+        std::cerr << "Point_Widget: Source PointData object ('" << _active_key << "') not found." << std::endl;
+        return;
+    }
+    if (!target_point_data) {
+        std::cerr << "Point_Widget: Target PointData object ('" << target_key << "') not found." << std::endl;
+        return;
+    }
+
+    std::cout << "Point_Widget: Moving points from " << selected_frames.size() 
+              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+
+    int frames_with_points = 0;
+    int total_points_moved = 0;
+
+    // Batch operations to minimize observer notifications
+    // Move points for each selected frame
+    for (int frame : selected_frames) {
+        auto points_to_move = source_point_data->getPointsAtTime(frame);
+        if (!points_to_move.empty()) {
+            frames_with_points++;
+            total_points_moved += static_cast<int>(points_to_move.size());
+            
+            // Add to target first (without notification)
+            target_point_data->addPointsAtTime(frame, points_to_move, false);
+            // Clear from source (without notification) 
+            // Note: This now properly removes the empty frame entry with map structure
+            source_point_data->clearAtTime(frame, false);
         }
+    }
+
+    // Notify observers only once at the end for both source and target
+    if (frames_with_points > 0) {
+        source_point_data->notifyObservers();
+        target_point_data->notifyObservers();
+        
+        // Update the table view to reflect changes
+        updateTable();
+        
+        std::cout << "Point_Widget: Successfully moved " << total_points_moved 
+                  << " points from " << frames_with_points << " frames." << std::endl;
+        if (frames_with_points < selected_frames.size()) {
+            std::cout << "Point_Widget: Note: " << (selected_frames.size() - frames_with_points) 
+                      << " selected frames contained no points to move." << std::endl;
+        }
+    } else {
+        std::cout << "Point_Widget: No points found in any of the selected frames to move." << std::endl;
+    }
+}
+
+void Point_Widget::_copyPointsToTarget(std::string const& target_key) {
+    std::vector<int> selected_frames = _getSelectedFrames();
+    if (selected_frames.empty()) {
+        std::cout << "Point_Widget: No points selected to copy." << std::endl;
+        return;
+    }
+
+    auto source_point_data = _data_manager->getData<PointData>(_active_key);
+    auto target_point_data = _data_manager->getData<PointData>(target_key);
+
+    if (!source_point_data) {
+        std::cerr << "Point_Widget: Source PointData object ('" << _active_key << "') not found." << std::endl;
+        return;
+    }
+    if (!target_point_data) {
+        std::cerr << "Point_Widget: Target PointData object ('" << target_key << "') not found." << std::endl;
+        return;
+    }
+
+    std::cout << "Point_Widget: Copying points from " << selected_frames.size() 
+              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+
+    int frames_with_points = 0;
+    int total_points_copied = 0;
+
+    // Batch operations to minimize observer notifications
+    // Copy points for each selected frame
+    for (int frame : selected_frames) {
+        auto points_to_copy = source_point_data->getPointsAtTime(frame);
+        if (!points_to_copy.empty()) {
+            frames_with_points++;
+            total_points_copied += static_cast<int>(points_to_copy.size());
+            
+            // Add to target (without notification until the end)
+            target_point_data->addPointsAtTime(frame, points_to_copy, false);
+        }
+    }
+
+    // Notify observers only once at the end for the target
+    if (frames_with_points > 0) {
+        target_point_data->notifyObservers();
+        
+        std::cout << "Point_Widget: Successfully copied " << total_points_copied 
+                  << " points from " << frames_with_points << " frames." << std::endl;
+        if (frames_with_points < selected_frames.size()) {
+            std::cout << "Point_Widget: Note: " << (selected_frames.size() - frames_with_points) 
+                      << " selected frames contained no points to copy." << std::endl;
+        }
+    } else {
+        std::cout << "Point_Widget: No points found in any of the selected frames to copy." << std::endl;
+    }
+}
+
+void Point_Widget::_deleteSelectedPoints() {
+    std::vector<int> selected_frames = _getSelectedFrames();
+    if (selected_frames.empty()) {
+        std::cout << "Point_Widget: No points selected to delete." << std::endl;
+        return;
+    }
+
+    auto point_data_ptr = _data_manager->getData<PointData>(_active_key);
+    if (!point_data_ptr) {
+        std::cerr << "Point_Widget: Source PointData object ('" << _active_key << "') not found for deletion." << std::endl;
+        return;
+    }
+
+    std::cout << "Point_Widget: Deleting points from " << selected_frames.size() 
+              << " frames in '" << _active_key << "'..." << std::endl;
+
+    int frames_with_points = 0;
+    int total_points_deleted = 0;
+
+    // Count points before deletion and batch operations to minimize observer notifications
+    for (int frame : selected_frames) {
+        auto points_at_frame = point_data_ptr->getPointsAtTime(frame);
+        if (!points_at_frame.empty()) {
+            frames_with_points++;
+            total_points_deleted += static_cast<int>(points_at_frame.size());
+            point_data_ptr->clearAtTime(frame, false);
+        }
+    }
+
+    // Notify observers only once at the end
+    if (frames_with_points > 0) {
+        point_data_ptr->notifyObservers();
+        
+        // Update the table view to reflect changes
+        updateTable();
+        
+        std::cout << "Point_Widget: Successfully deleted " << total_points_deleted 
+                  << " points from " << frames_with_points << " frames." << std::endl;
+        if (frames_with_points < selected_frames.size()) {
+            std::cout << "Point_Widget: Note: " << (selected_frames.size() - frames_with_points) 
+                      << " selected frames contained no points to delete." << std::endl;
+        }
+    } else {
+        std::cout << "Point_Widget: No points found in any of the selected frames to delete." << std::endl;
     }
 }
 
@@ -184,13 +353,18 @@ void Point_Widget::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsV
     }
 
     if (ui->export_media_frames_checkbox->isChecked()) {
-        std::vector<size_t> frame_ids_to_export = point_data_ptr->getTimesWithData();
+        auto times_with_data = point_data_ptr->getTimesWithData();
+        std::vector<size_t> frame_ids_to_export;
+        frame_ids_to_export.reserve(times_with_data.size());
+        for (int frame_id : times_with_data) {
+            frame_ids_to_export.push_back(static_cast<size_t>(frame_id));
+        }
+        
         export_media_frames(_data_manager.get(),
                             ui->media_export_options_widget,
                             options_variant,
                             this,
                             frame_ids_to_export);
-
     }
 }
 

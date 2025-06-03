@@ -92,47 +92,6 @@
      </item>
     </layout>
    </item>
-   <item>
-    <layout class="QHBoxLayout" name="actionButtonsLayout">
-     <item>
-      <widget class="QLabel" name="moveToLabel">
-       <property name="text">
-        <string>Move Points To:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="moveToPointDataComboBox"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="movePointsButton">
-       <property name="text">
-        <string>Move Points</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="deletePointsButton">
-       <property name="text">
-        <string>Delete Points</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="actionHorizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
   </layout>
  </widget>
  <customwidgets>
