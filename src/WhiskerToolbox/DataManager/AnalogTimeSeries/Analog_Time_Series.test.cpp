@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <map>
+#include <random>
 #include <vector>
 
 
@@ -189,8 +190,11 @@ TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][app
         // Create a large dataset with known statistical properties
         std::vector<float> data;
         data.reserve(10000);
+        //Create gaussian-like data
+        std::default_random_engine generator;
+        std::normal_distribution<float> distribution(50.0f, 10.0f); // Mean 50, StdDev 10
         for (int i = 0; i < 10000; ++i) {
-            data.push_back(static_cast<float>(i % 100));  // Pattern that repeats every 100 values
+            data.push_back(distribution(generator));
         }
         AnalogTimeSeries series(data);
 

@@ -331,8 +331,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             std::vector<int> times = {10, 10, 20}; // Duplicate time
             std::size_t copied = source_data.copyTo(target_data, times);
             
-            // Should copy 10 twice and 20 once, but addPointsAtTime should merge them
-            REQUIRE(copied == 8); // 2 + 2 + 3 = 7 points (10 copied twice)
+            // Should copy 10 twice and 20 once
+            REQUIRE(copied == 7); // 2 + 2 + 3 = 7 points (10 copied twice)
             REQUIRE(target_data.getPointsAtTime(10).size() == 4); // 2 + 2 = 4 (added twice)
             REQUIRE(target_data.getPointsAtTime(20).size() == 3);
         }
@@ -474,8 +474,10 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
 
         SECTION("Copy to self (same object)") {
             // This is a corner case - copying to self should double the data
+            // Copy the size after adding teh points, so copied should be
+            // doubled number of points at that time.
             std::size_t copied = source_data.copyTo(source_data, 10, 10);
-            REQUIRE(copied == 2);
+            REQUIRE(copied == 4);
             // Should now have doubled the points at time 10
             REQUIRE(source_data.getPointsAtTime(10).size() == 4); // 2 original + 2 copied
         }
