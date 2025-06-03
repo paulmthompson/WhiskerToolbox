@@ -109,7 +109,6 @@ private slots:
     void _removeIntervalButton();
     void _flipIntervalButton();
     void _handleCellClicked(QModelIndex const & index);
-    void _changeDataTable(QModelIndex const & topLeft, QModelIndex const & bottomRight, QVector<int> const & roles = QVector<int>());// Added default for roles
     void _extendInterval();
 
     void _onExportTypeChanged(int index);

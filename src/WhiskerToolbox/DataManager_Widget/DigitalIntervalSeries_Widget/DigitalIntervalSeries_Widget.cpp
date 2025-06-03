@@ -36,7 +36,6 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     // Initialize start frame label as hidden
     ui->start_frame_label->setVisible(false);
 
-    ui->tableView->setEditTriggers(QAbstractItemView::SelectedClicked);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -88,17 +87,6 @@ void DigitalIntervalSeries_Widget::setActiveKey(std::string key) {
     
     // Update filename based on new active key
     _updateFilename();
-}
-
-void DigitalIntervalSeries_Widget::_changeDataTable(QModelIndex const & topLeft, QModelIndex const & bottomRight, QVector<int> const & roles) {
-
-    auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
-
-    for (int row = topLeft.row(); row <= bottomRight.row(); ++row) {
-        Interval const interval = _interval_table_model->getInterval(row);
-        std::cout << "Interval changed to " << interval.start << " , " << interval.end << std::endl;
-        intervals->addEvent(interval.start, interval.end);
-    }
 }
 
 void DigitalIntervalSeries_Widget::_assignCallbacks() {

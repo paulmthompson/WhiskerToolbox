@@ -189,6 +189,65 @@ TEST_CASE("DigitalIntervalSeries_Widget filename generation", "[DigitalIntervalS
     }
 }
 
+TEST_CASE("DigitalIntervalSeries_Widget table read-only behavior", "[DigitalIntervalSeries_Widget][table][read_only]") {
+    
+    int argc = 0;
+    char* argv[] = {nullptr};
+    QApplication app(argc, argv);
+    
+    auto data_manager = std::make_shared<DataManager>();
+    data_manager->setData<DigitalIntervalSeries>("test_intervals");
+    
+    // Add some test data
+    auto intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
+    intervals->addEvent(100, 200);
+    intervals->addEvent(300, 400);
+    
+    DigitalIntervalSeries_Widget widget(data_manager);
+    widget.setActiveKey("test_intervals");
+    
+    SECTION("Table model is read-only") {
+        auto table_view = widget.findChild<QTableView*>("tableView");
+        auto model = table_view->model();
+        
+        // Check that editing is disabled
+        QModelIndex test_index = model->index(0, 0);
+        Qt::ItemFlags flags = model->flags(test_index);
+        
+        // Should NOT have Qt::ItemIsEditable flag
+        REQUIRE((flags & Qt::ItemIsEditable) == 0);
+        
+        // Should still be selectable and enabled
+        REQUIRE((flags & Qt::ItemIsSelectable) != 0);
+        REQUIRE((flags & Qt::ItemIsEnabled) != 0);
+    }
+    
+    SECTION("Table displays data correctly but cannot be edited") {
+        auto table_view = widget.findChild<QTableView*>("tableView");
+        auto model = table_view->model();
+        
+        // Verify data is displayed
+        REQUIRE(model->rowCount() == 2);
+        REQUIRE(model->columnCount() == 2);
+        
+        // Check first interval
+        REQUIRE(model->data(model->index(0, 0)).toInt() == 100);
+        REQUIRE(model->data(model->index(0, 1)).toInt() == 200);
+        
+        // Check second interval  
+        REQUIRE(model->data(model->index(1, 0)).toInt() == 300);
+        REQUIRE(model->data(model->index(1, 1)).toInt() == 400);
+        
+        // Attempt to edit should fail (setData should return false or not exist)
+        QModelIndex edit_index = model->index(0, 0);
+        bool edit_successful = model->setData(edit_index, 999, Qt::EditRole);
+        REQUIRE(edit_successful == false);
+        
+        // Data should remain unchanged
+        REQUIRE(model->data(edit_index).toInt() == 100);
+    }
+}
+
 TEST_CASE("DigitalIntervalSeries_Widget error handling", "[DigitalIntervalSeries_Widget][error_handling]") {
     
     int argc = 0;

@@ -69,23 +69,8 @@ public:
         if (!index.isValid()) {
             return Qt::ItemIsEnabled;
         }
-        return QAbstractTableModel::flags(index) | Qt::ItemIsEditable;
+        return QAbstractTableModel::flags(index);
     }
-
-    bool setData(QModelIndex const & index, QVariant const & value, int role) override {
-        if (index.isValid() && role == Qt::EditRole) {
-            Interval & interval = _intervals[index.row()];
-            if (index.column() == 0) {
-                interval.start = value.toInt();
-            } else if (index.column() == 1) {
-                interval.end = value.toInt();
-            }
-            emit dataChanged(index, index, {role});
-            return true;
-        }
-        return false;
-    }
-
 
 private:
     std::vector<Interval> _intervals;
