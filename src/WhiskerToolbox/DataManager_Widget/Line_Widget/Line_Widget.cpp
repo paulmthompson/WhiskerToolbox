@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <set>
 
 Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
@@ -137,17 +138,26 @@ void Line_Widget::_showContextMenu(QPoint const& position) {
     context_menu.exec(ui->tableView->mapToGlobal(position));
 }
 
-void Line_Widget::_moveLineToTarget(std::string const& target_key) {
-    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedIndexes();
-    if (selectedIndexes.isEmpty()) {
-        std::cout << "Line_Widget: No line selected to move." << std::endl;
-        return;
+std::vector<int> Line_Widget::_getSelectedFrames() {
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    std::set<int> unique_frames;
+    
+    for (auto const& index : selectedIndexes) {
+        if (index.isValid()) {
+            LineTableRow row_data = _line_table_model->getRowData(index.row());
+            if (row_data.frame != -1) {
+                unique_frames.insert(row_data.frame);
+            }
+        }
     }
-    int selected_row = selectedIndexes.first().row();
-    LineTableRow row_data = _line_table_model->getRowData(selected_row);
+    
+    return std::vector<int>(unique_frames.begin(), unique_frames.end());
+}
 
-    if (row_data.frame == -1) {
-        std::cout << "Line_Widget: Selected row data is invalid." << std::endl;
+void Line_Widget::_moveLineToTarget(std::string const& target_key) {
+    std::vector<int> selected_frames = _getSelectedFrames();
+    if (selected_frames.empty()) {
+        std::cout << "Line_Widget: No lines selected to move." << std::endl;
         return;
     }
 
@@ -163,33 +173,27 @@ void Line_Widget::_moveLineToTarget(std::string const& target_key) {
         return;
     }
 
-    std::vector<Line2D> const & lines_at_frame = source_line_data->getLinesAtTime(row_data.frame);
-    if (row_data.lineIndex < 0 || static_cast<size_t>(row_data.lineIndex) >= lines_at_frame.size()) {
-        std::cerr << "Line_Widget: Line index out of bounds for frame " << row_data.frame << std::endl;
-        return;
+    std::cout << "Line_Widget: Moving lines from " << selected_frames.size() 
+              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+
+    // Use the new moveTo method with the vector of selected times
+    std::size_t total_lines_moved = source_line_data->moveTo(*target_line_data, selected_frames, true);
+
+    if (total_lines_moved > 0) {
+        // Update the table view to reflect changes
+        updateTable();
+        
+        std::cout << "Line_Widget: Successfully moved " << total_lines_moved 
+                  << " lines from " << selected_frames.size() << " frames." << std::endl;
+    } else {
+        std::cout << "Line_Widget: No lines found in any of the selected frames to move." << std::endl;
     }
-    Line2D line_to_move = lines_at_frame[row_data.lineIndex];
-
-    target_line_data->addLineAtTime(row_data.frame, line_to_move);
-    source_line_data->clearLineAtTime(row_data.frame, row_data.lineIndex);
-
-    updateTable();
-
-    std::cout << "Line moved from " << _active_key << " frame " << row_data.frame << " index " << row_data.lineIndex
-              << " to " << target_key << std::endl;
 }
 
 void Line_Widget::_copyLineToTarget(std::string const& target_key) {
-    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedIndexes();
-    if (selectedIndexes.isEmpty()) {
-        std::cout << "Line_Widget: No line selected to copy." << std::endl;
-        return;
-    }
-    int selected_row = selectedIndexes.first().row();
-    LineTableRow row_data = _line_table_model->getRowData(selected_row);
-
-    if (row_data.frame == -1) {
-        std::cout << "Line_Widget: Selected row data is invalid." << std::endl;
+    std::vector<int> selected_frames = _getSelectedFrames();
+    if (selected_frames.empty()) {
+        std::cout << "Line_Widget: No lines selected to copy." << std::endl;
         return;
     }
 
@@ -205,17 +209,18 @@ void Line_Widget::_copyLineToTarget(std::string const& target_key) {
         return;
     }
 
-    std::vector<Line2D> const & lines_at_frame = source_line_data->getLinesAtTime(row_data.frame);
-    if (row_data.lineIndex < 0 || static_cast<size_t>(row_data.lineIndex) >= lines_at_frame.size()) {
-        std::cerr << "Line_Widget: Line index out of bounds for frame " << row_data.frame << std::endl;
-        return;
+    std::cout << "Line_Widget: Copying lines from " << selected_frames.size() 
+              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+
+    // Use the new copyTo method with the vector of selected times
+    std::size_t total_lines_copied = source_line_data->copyTo(*target_line_data, selected_frames, true);
+
+    if (total_lines_copied > 0) {
+        std::cout << "Line_Widget: Successfully copied " << total_lines_copied 
+                  << " lines from " << selected_frames.size() << " frames." << std::endl;
+    } else {
+        std::cout << "Line_Widget: No lines found in any of the selected frames to copy." << std::endl;
     }
-    Line2D line_to_copy = lines_at_frame[row_data.lineIndex];
-
-    target_line_data->addLineAtTime(row_data.frame, line_to_copy);
-
-    std::cout << "Line copied from " << _active_key << " frame " << row_data.frame << " index " << row_data.lineIndex
-              << " to " << target_key << std::endl;
 }
 
 void Line_Widget::_deleteSelectedLine() {

@@ -1,4 +1,3 @@
-
 #include "Line_Data.hpp"
 #include "Points/points.hpp"
 
@@ -129,4 +128,118 @@ void LineData::changeImageSize(ImageSize const & image_size)
     }
     _image_size = image_size;
 
+}
+
+std::size_t LineData::copyTo(LineData& target, int start_time, int end_time, bool notify) const {
+    if (start_time > end_time) {
+        std::cerr << "LineData::copyTo: start_time (" << start_time 
+                  << ") must be <= end_time (" << end_time << ")" << std::endl;
+        return 0;
+    }
+
+    std::size_t total_lines_copied = 0;
+
+    // Iterate through all times in the source data within the range
+    for (auto const & [time, lines] : _data) {
+        if (time >= start_time && time <= end_time && !lines.empty()) {
+            for (auto const& line : lines) {
+                target.addLineAtTime(time, line, false); // Don't notify for each operation
+                total_lines_copied++;
+            }
+        }
+    }
+
+    // Notify observer only once at the end if requested
+    if (notify && total_lines_copied > 0) {
+        target.notifyObservers();
+    }
+
+    return total_lines_copied;
+}
+
+std::size_t LineData::copyTo(LineData& target, std::vector<int> const& times, bool notify) const {
+    std::size_t total_lines_copied = 0;
+
+    // Copy lines for each specified time
+    for (int time : times) {
+        auto it = _data.find(time);
+        if (it != _data.end() && !it->second.empty()) {
+            for (auto const& line : it->second) {
+                target.addLineAtTime(time, line, false); // Don't notify for each operation
+                total_lines_copied++;
+            }
+        }
+    }
+
+    // Notify observer only once at the end if requested
+    if (notify && total_lines_copied > 0) {
+        target.notifyObservers();
+    }
+
+    return total_lines_copied;
+}
+
+std::size_t LineData::moveTo(LineData& target, int start_time, int end_time, bool notify) {
+    if (start_time > end_time) {
+        std::cerr << "LineData::moveTo: start_time (" << start_time 
+                  << ") must be <= end_time (" << end_time << ")" << std::endl;
+        return 0;
+    }
+
+    std::size_t total_lines_moved = 0;
+    std::vector<int> times_to_clear;
+
+    // First, copy all lines in the range to target
+    for (auto const & [time, lines] : _data) {
+        if (time >= start_time && time <= end_time && !lines.empty()) {
+            for (auto const& line : lines) {
+                target.addLineAtTime(time, line, false); // Don't notify for each operation
+                total_lines_moved++;
+            }
+            times_to_clear.push_back(time);
+        }
+    }
+
+    // Then, clear all the times from source
+    for (int time : times_to_clear) {
+        clearLinesAtTime(time, false); // Don't notify for each operation
+    }
+
+    // Notify observers only once at the end if requested
+    if (notify && total_lines_moved > 0) {
+        target.notifyObservers();
+        notifyObservers();
+    }
+
+    return total_lines_moved;
+}
+
+std::size_t LineData::moveTo(LineData& target, std::vector<int> const& times, bool notify) {
+    std::size_t total_lines_moved = 0;
+    std::vector<int> times_to_clear;
+
+    // First, copy lines for each specified time to target
+    for (int time : times) {
+        auto it = _data.find(time);
+        if (it != _data.end() && !it->second.empty()) {
+            for (auto const& line : it->second) {
+                target.addLineAtTime(time, line, false); // Don't notify for each operation
+                total_lines_moved++;
+            }
+            times_to_clear.push_back(time);
+        }
+    }
+
+    // Then, clear all the times from source
+    for (int time : times_to_clear) {
+        clearLinesAtTime(time, false); // Don't notify for each operation
+    }
+
+    // Notify observers only once at the end if requested
+    if (notify && total_lines_moved > 0) {
+        target.notifyObservers();
+        notifyObservers();
+    }
+
+    return total_lines_moved;
 }

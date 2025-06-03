@@ -93,6 +93,13 @@ private:
     bool _performActualCSVSave(CSVSingleFileLineSaverOptions & options);
     bool _performActualMultiFileCSVSave(CSVMultiFileLineSaverOptions & options);
     bool _performActualBinarySave(BinaryLineSaverOptions & options); // New helper for binary save
+
+    /**
+     * @brief Get selected frames from the table view
+     * 
+     * @return Vector of unique frame numbers that are currently selected
+     */
+    std::vector<int> _getSelectedFrames();
 };
 
 #endif// LINE_WIDGET_HPP

@@ -6,6 +6,7 @@
 #include "Points/points.hpp"
 #include "lines.hpp"
 
+#include <cstddef>
 #include <map>
 #include <ranges>
 #include <vector>
@@ -34,6 +35,63 @@ public:
     [[nodiscard]] std::vector<int> getTimesWithData() const;
 
     [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(int time) const;
+
+    /**
+     * @brief Copy lines from this LineData to another LineData for a time range
+     * 
+     * Copies all lines within the specified time range [start_time, end_time] (inclusive)
+     * to the target LineData. If lines already exist at target times, the copied lines
+     * are added to the existing lines.
+     * 
+     * @param target The target LineData to copy lines to
+     * @param start_time The starting time (inclusive)
+     * @param end_time The ending time (inclusive)
+     * @param notify If true, the target will notify its observers after the operation
+     * @return The number of lines actually copied
+     */
+    std::size_t copyTo(LineData& target, int start_time, int end_time, bool notify = true) const;
+
+    /**
+     * @brief Copy lines from this LineData to another LineData for specific times
+     * 
+     * Copies all lines at the specified times to the target LineData.
+     * If lines already exist at target times, the copied lines are added to the existing lines.
+     * 
+     * @param target The target LineData to copy lines to
+     * @param times Vector of specific times to copy (does not need to be sorted)
+     * @param notify If true, the target will notify its observers after the operation
+     * @return The number of lines actually copied
+     */
+    std::size_t copyTo(LineData& target, std::vector<int> const& times, bool notify = true) const;
+
+    /**
+     * @brief Move lines from this LineData to another LineData for a time range
+     * 
+     * Moves all lines within the specified time range [start_time, end_time] (inclusive)
+     * to the target LineData. Lines are copied to target then removed from source.
+     * If lines already exist at target times, the moved lines are added to the existing lines.
+     * 
+     * @param target The target LineData to move lines to
+     * @param start_time The starting time (inclusive)
+     * @param end_time The ending time (inclusive)
+     * @param notify If true, both source and target will notify their observers after the operation
+     * @return The number of lines actually moved
+     */
+    std::size_t moveTo(LineData& target, int start_time, int end_time, bool notify = true);
+
+    /**
+     * @brief Move lines from this LineData to another LineData for specific times
+     * 
+     * Moves all lines at the specified times to the target LineData.
+     * Lines are copied to target then removed from source.
+     * If lines already exist at target times, the moved lines are added to the existing lines.
+     * 
+     * @param target The target LineData to move lines to
+     * @param times Vector of specific times to move (does not need to be sorted)
+     * @param notify If true, both source and target will notify their observers after the operation
+     * @return The number of lines actually moved
+     */
+    std::size_t moveTo(LineData& target, std::vector<int> const& times, bool notify = true);
 
     /**
      * @brief Change the size of the canvas the line belongs to
