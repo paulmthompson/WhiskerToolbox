@@ -572,7 +572,7 @@ void Whisker_Widget::_updateWhiskerPadFromSelection() {
             ui->whisker_pad_frame_spinbox->setMaximum(static_cast<int>(max_time));
 
             // Set to current time if available, otherwise first available time
-            auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+            auto current_time = _data_manager->getCurrentTime();
             if (std::find(times_with_data.begin(), times_with_data.end(), current_time) != times_with_data.end()) {
                 ui->whisker_pad_frame_spinbox->setValue(current_time);
             } else {

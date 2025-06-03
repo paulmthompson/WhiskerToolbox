@@ -866,7 +866,7 @@ int MediaLine_Widget::_findNearestLine(float x, float y) {
         return -1;
     }
     
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto lines = line_data->getLinesAtTime(current_time);
     
     if (lines.empty()) {
@@ -977,7 +977,7 @@ void MediaLine_Widget::_moveLineToTarget(const std::string& target_key) {
         return;
     }
     
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto lines = source_line_data->getLinesAtTime(current_time);
     
     if (_selected_line_index >= static_cast<int>(lines.size())) {
@@ -1024,7 +1024,7 @@ void MediaLine_Widget::_copyLineToTarget(const std::string& target_key) {
         return;
     }
     
-    auto current_time = _data_manager->getTime()->getLastLoadedFrame();
+    auto current_time = _data_manager->getCurrentTime();
     auto lines = source_line_data->getLinesAtTime(current_time);
     
     if (_selected_line_index >= static_cast<int>(lines.size())) {
