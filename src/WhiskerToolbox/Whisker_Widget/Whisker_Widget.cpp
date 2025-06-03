@@ -107,8 +107,14 @@ void Whisker_Widget::openWidget() {
     std::cout << "Whisker Widget Opened" << std::endl;
 
     // Populate the whisker pad combo box with available PointData
-    _populateWhiskerPadCombo();
 
+    _data_manager->addObserver([this](){
+        _populateWhiskerPadCombo();
+    });
+
+    _createNewWhiskerPad();
+
+    _wt->setWhiskerPadRadius(1000.0f);
     this->show();
 }
 
@@ -137,7 +143,8 @@ void Whisker_Widget::_traceButton() {
     auto const current_time = _data_manager->getCurrentTime();
 
     if (ui->num_frames_to_trace->value() <= 1) {
-        _traceWhiskers(media->getProcessedData(current_time), media->getImageSize());
+       // _traceWhiskers(media->getProcessedData(current_time), media->getImageSize());
+        _traceWhiskers(media->getRawData(current_time), media->getImageSize());
     } else {
 
         auto height = media->getHeight();
@@ -525,7 +532,6 @@ void clip_whisker(Line2D & line, int clip_length) {
 }
 
 // New whisker pad management methods
-
 void Whisker_Widget::_populateWhiskerPadCombo() {
     ui->whisker_pad_combo->blockSignals(true);
     ui->whisker_pad_combo->clear();
@@ -536,24 +542,23 @@ void Whisker_Widget::_populateWhiskerPadCombo() {
         ui->whisker_pad_combo->addItem(QString::fromStdString(key));
     }
 
-    // Add "Create New" option at the end
-    ui->whisker_pad_combo->addItem("Create New");
-
     ui->whisker_pad_combo->blockSignals(false);
 
-    // If there are existing keys, select the first one, otherwise select "Create New"
-    if (!point_data_keys.empty()) {
-        ui->whisker_pad_combo->setCurrentIndex(0);
-        _updateWhiskerPadFromSelection();
+    // Select the _current_whisker_pad_key
+    if (!_current_whisker_pad_key.empty()) {
+        ui->whisker_pad_combo->setCurrentText(QString::fromStdString(_current_whisker_pad_key));
     }
 }
 
 void Whisker_Widget::_updateWhiskerPadFromSelection() {
     QString selected_text = ui->whisker_pad_combo->currentText();
 
-    if (selected_text == "Create New") {
-        _createNewWhiskerPad();
+    if (selected_text.toStdString() == _current_whisker_pad_key) {
         return;
+    }
+
+    if (_whisker_pad_callback_id != -1) {
+        _data_manager->getData<PointData>(_current_whisker_pad_key)->removeObserver(_whisker_pad_callback_id);
     }
 
     _current_whisker_pad_key = selected_text.toStdString();
@@ -581,6 +586,10 @@ void Whisker_Widget::_updateWhiskerPadFromSelection() {
 
             ui->whisker_pad_frame_spinbox->blockSignals(false);
         }
+
+        _whisker_pad_callback_id = point_data->addObserver([this]() {
+            _updateWhiskerPadLabel();
+        });
     }
 
     _updateWhiskerPadLabel();
@@ -631,6 +640,9 @@ void Whisker_Widget::_createNewWhiskerPad() {
     if (!_data_manager->getData<PointData>(new_key)) {
         _data_manager->setData<PointData>(new_key);
         std::cout << "Created new PointData: " << new_key << std::endl;
+
+        // Create a new point at frame one with value 0,0
+        _data_manager->getData<PointData>(new_key)->addPointAtTime(0, {0.0f, 0.0f});
 
         // Repopulate the combo box to include the new entry
         _populateWhiskerPadCombo();

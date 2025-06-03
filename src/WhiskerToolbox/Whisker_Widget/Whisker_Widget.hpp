@@ -76,6 +76,8 @@ private:
     int _current_whisker{0};
 
     bool _auto_dl{false};
+
+    int _whisker_pad_callback_id {-1};
     
     std::string _current_whisker_pad_key; // Current selected PointData key for whisker pad
     Point2D<float> _current_whisker_pad_point{0.0f, 0.0f}; // Current whisker pad position
