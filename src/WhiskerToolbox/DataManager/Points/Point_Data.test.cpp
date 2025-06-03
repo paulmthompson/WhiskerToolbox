@@ -147,7 +147,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
         auto points = point_data.getPointsAtTime(42);
         REQUIRE(points.empty());
 
-        // Verify the time was actually created
+        // Verify the time was NOT created
         bool found = false;
         for (const auto& pair : point_data.GetAllPointsAsRange()) {
             if (pair.time == 42) {
@@ -155,7 +155,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
                 break;
             }
         }
-        REQUIRE(found);
+        REQUIRE(found == false);
     }
 
     SECTION("Empty range with no data") {

@@ -139,7 +139,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
 
         // Position at 40% with polynomial fitting
         auto params = std::make_unique<LineAngleParameters>();
-        params->position = 0.4f; // Around point 2
+        params->position = 0.4f; // Around x=3 (37% of length of line)
         params->method = AngleCalculationMethod::PolynomialFit;
         params->polynomial_order = 2; // Use a quadratic fit for this parabola
 
@@ -152,10 +152,10 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         REQUIRE(values.size() == 1);
         REQUIRE(times[0] == 70);
 
-        // For a parabola y = x², the derivative is 2x, and the angle at x=2 would be around 63.4 degrees
-        // Given parameterization may vary, we'll use a wider tolerance
-        REQUIRE(values[0] > 55.0f);
-        REQUIRE(values[0] < 75.0f);
+        // For a parabola y = x², the derivative is 2x. So slope at x=3 is 6
+        // Angle of atan(6,1) is approximately 80.537 degrees. 
+        REQUIRE(values[0] > 75.0f);
+        REQUIRE(values[0] < 85.0f);
     }
 
     SECTION("Different polynomial orders") {

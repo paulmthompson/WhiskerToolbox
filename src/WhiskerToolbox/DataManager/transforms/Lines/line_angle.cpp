@@ -3,6 +3,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
+#include "utils/line_geometry.hpp"
 
 #include <armadillo>
 
@@ -72,16 +73,22 @@ float calculate_polynomial_angle(Line2D const & line, float position, int polyno
     // Extract x and y coordinates
     std::vector<double> x_coords;
     std::vector<double> y_coords;
-    std::vector<double> t_values;// Parameter values (0 to 1)
+
+    auto length = calculate_line_length(line);
 
     x_coords.reserve(line.size());
     y_coords.reserve(line.size());
-    t_values.reserve(line.size());
+    auto t_values_f = calculate_cumulative_distances(line);
+    for (size_t i = 0; i < line.size(); ++i) {
+        // Normalize t_values to [0, 1]
+        t_values_f[i] /= length;
+    }
+
+    std::vector<double> t_values(t_values_f.begin(), t_values_f.end());
 
     for (size_t i = 0; i < line.size(); ++i) {
         x_coords.push_back(static_cast<double>(line[i].x));
         y_coords.push_back(static_cast<double>(line[i].y));
-        t_values.push_back(static_cast<double>(i) / static_cast<double>(line.size() - 1));
     }
 
     // Fit polynomials to x(t) and y(t)
