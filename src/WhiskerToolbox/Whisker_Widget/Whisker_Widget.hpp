@@ -14,8 +14,6 @@
 
 class DataManager;
 class Janelia_Config;
-class MainWindow;
-class Media_Window;
 
 namespace Ui {
 class Whisker_Widget;
@@ -39,8 +37,7 @@ This is our interface to using the Janelia whisker tracker.
 class Whisker_Widget : public QMainWindow {
     Q_OBJECT
 public:
-    Whisker_Widget(Media_Window * scene,
-                   std::shared_ptr<DataManager> data_manager,
+    Whisker_Widget(std::shared_ptr<DataManager> data_manager,
                    QWidget * parent = nullptr);
 
     ~Whisker_Widget() override;
@@ -55,17 +52,11 @@ protected:
 
 private:
     std::shared_ptr<whisker::WhiskerTracker> _wt;
-    Media_Window * _scene;
     std::shared_ptr<DataManager> _data_manager;
 
     int _selected_whisker{0};
 
     float _linking_tolerance{20.0f};
-
-    enum Selection_Type { Whisker_Select,
-                          Whisker_Pad_Select};
-
-    Whisker_Widget::Selection_Type _selection_mode{Whisker_Select};
 
     QPointer<Janelia_Config> _janelia_config_widget;
 
@@ -85,15 +76,27 @@ private:
     int _current_whisker{0};
 
     bool _auto_dl{false};
+    
+    std::string _current_whisker_pad_key; // Current selected PointData key for whisker pad
+    Point2D<float> _current_whisker_pad_point{0.0f, 0.0f}; // Current whisker pad position
+
+    /*
+     * DL Model for whisker tracing
+     */
+    std::unique_ptr<dl::SCM> dl_model{nullptr};
 
     Ui::Whisker_Widget * ui;
-
-    std::unique_ptr<dl::SCM> dl_model{nullptr};
 
     void _createNewWhisker(std::string const & whisker_group_name, int whisker_id);
 
     void _traceWhiskers(std::vector<uint8_t> image, ImageSize image_size);
     void _traceWhiskersDL(std::vector<uint8_t> image, ImageSize image_size);
+
+    // Whisker pad management methods
+    void _populateWhiskerPadCombo();
+    void _updateWhiskerPadFromSelection();
+    void _updateWhiskerPadLabel();
+    void _createNewWhiskerPad();
 
 private slots:
     void _traceButton();
@@ -102,20 +105,21 @@ private slots:
 
     void _loadJaneliaWhiskers();
 
-    void _selectWhiskerPad();
     void _changeWhiskerLengthThreshold(double new_threshold);
 
     void _selectFaceOrientation(int index);
 
     void _selectNumWhiskersToTrack(int n_whiskers);
 
-    void _clickedInVideo(qreal x, qreal y);
-
     void _openJaneliaConfig();
 
     void _changeWhiskerClip(int clip_dist);
 
     void _selectWhisker(int whisker_num);
+    
+    // New slots for whisker pad management
+    void _onWhiskerPadComboChanged(const QString& text);
+    void _onWhiskerPadFrameChanged(int frame);
 
 };
 
