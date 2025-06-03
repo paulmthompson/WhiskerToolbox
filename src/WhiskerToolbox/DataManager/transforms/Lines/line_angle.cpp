@@ -18,6 +18,8 @@ float normalize_angle(float raw_angle, float reference_x, float reference_y) {
     float reference_angle = 0.0f;
     if (!(reference_x == 1.0f && reference_y == 0.0f)) {
         reference_angle = std::atan2(reference_y, reference_x);
+        // Convert to degrees
+        reference_angle *= 180.0f / static_cast<float>(std::numbers::pi);
     }
 
     // Adjust the raw angle by subtracting the reference angle
