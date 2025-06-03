@@ -43,6 +43,7 @@ private:
     int _callback_id{-1};// Corrected initialization
     bool _interval_epoch{false};
     int64_t _interval_start{0};
+    int64_t _interval_end{0}; // Track both start and end for bidirectional support
     IntervalTableModel * _interval_table_model;
 
     enum SaverType { CSV };// Enum for different saver types
@@ -55,6 +56,25 @@ private:
 
     std::vector<Interval> _getSelectedIntervals();
     void _showContextMenu(QPoint const & position);
+
+    /**
+     * @brief Update the start frame label display
+     * 
+     * @param frame_number The frame number to display, or -1 to clear
+     */
+    void _updateStartFrameLabel(int64_t frame_number = -1);
+
+    /**
+     * @brief Cancel the current interval creation process
+     */
+    void _cancelIntervalCreation();
+
+    /**
+     * @brief Show context menu for create interval button
+     * 
+     * @param position The position where the menu should appear
+     */
+    void _showCreateIntervalContextMenu(QPoint const & position);
 
     /**
      * @brief Move selected intervals to the specified target key
@@ -83,6 +103,8 @@ private slots:
     void _handleSaveIntervalCSVRequested(CSVIntervalSaverOptions options);
 
     void _mergeIntervalsButton();
+    void _cancelIntervalButton();
+    void _createIntervalContextMenuRequested(QPoint const & position);
 };
 
 #endif// DIGITALINTERVALSERIES_WIDGET_HPP

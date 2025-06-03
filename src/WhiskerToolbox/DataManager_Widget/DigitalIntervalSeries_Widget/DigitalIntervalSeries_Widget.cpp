@@ -32,6 +32,9 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     _interval_table_model = new IntervalTableModel(this);
     ui->tableView->setModel(_interval_table_model);
 
+    // Initialize start frame label as hidden
+    ui->start_frame_label->setVisible(false);
+
     ui->tableView->setEditTriggers(QAbstractItemView::SelectedClicked);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     ui->tableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -46,6 +49,10 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
     // Interval operation connections
     connect(ui->merge_intervals_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_mergeIntervalsButton);
     connect(ui->tableView, &QTableView::customContextMenuRequested, this, &DigitalIntervalSeries_Widget::_showContextMenu);
+
+    // New interval creation enhancements
+    connect(ui->cancel_interval_button, &QPushButton::clicked, this, &DigitalIntervalSeries_Widget::_cancelIntervalButton);
+    connect(ui->create_interval_button, &QPushButton::customContextMenuRequested, this, &DigitalIntervalSeries_Widget::_createIntervalContextMenuRequested);
 
     connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &DigitalIntervalSeries_Widget::_onExportTypeChanged);
@@ -67,6 +74,9 @@ void DigitalIntervalSeries_Widget::setActiveKey(std::string key) {
     _active_key = std::move(key);
 
     _data_manager->removeCallbackFromData(_active_key, _callback_id);
+
+    // Reset interval creation state when switching to new key
+    _cancelIntervalCreation();
 
     _assignCallbacks();
 
@@ -95,6 +105,9 @@ void DigitalIntervalSeries_Widget::removeCallbacks() {
         _data_manager->removeCallbackFromData(_active_key, _callback_id);
         _callback_id = -1;
     }
+    
+    // Cancel any ongoing interval creation
+    _cancelIntervalCreation();
 }
 
 void DigitalIntervalSeries_Widget::_calculateIntervals() {
@@ -116,13 +129,30 @@ void DigitalIntervalSeries_Widget::_createIntervalButton() {
     if (!contactIntervals) return;
 
     if (_interval_epoch) {
+        // User is selecting the second frame
         _interval_epoch = false;
+        _interval_end = current_time;
+        
+        // Ensure proper ordering (start <= end) by swapping if necessary
+        int64_t start = std::min(_interval_start, _interval_end);
+        int64_t end = std::max(_interval_start, _interval_end);
+        
+        contactIntervals->addEvent(start, end);
+        
+        // Reset UI state
         ui->create_interval_button->setText("Create Interval");
-        contactIntervals->addEvent(_interval_start, current_time);
+        ui->cancel_interval_button->setVisible(false);
+        _updateStartFrameLabel(-1); // Clear the label
+        
     } else {
+        // User is selecting the first frame
         _interval_start = current_time;
         _interval_epoch = true;
+        
+        // Update UI state
         ui->create_interval_button->setText("Mark Interval End");
+        ui->cancel_interval_button->setVisible(true);
+        _updateStartFrameLabel(_interval_start);
     }
 }
 
@@ -392,4 +422,47 @@ void DigitalIntervalSeries_Widget::_mergeIntervalsButton() {
 
     std::cout << "Merged " << selected_intervals.size() << " intervals into range ["
               << min_start << ", " << max_end << "]" << std::endl;
+}
+
+void DigitalIntervalSeries_Widget::_updateStartFrameLabel(int64_t frame_number) {
+    if (frame_number == -1) {
+        ui->start_frame_label->setText("");
+        ui->start_frame_label->setVisible(false);
+    } else {
+        ui->start_frame_label->setText(QString("Start: %1").arg(frame_number));
+        ui->start_frame_label->setVisible(true);
+    }
+}
+
+void DigitalIntervalSeries_Widget::_cancelIntervalCreation() {
+    if (_interval_epoch) {
+        _interval_epoch = false;
+        ui->create_interval_button->setText("Create Interval");
+        ui->cancel_interval_button->setVisible(false);
+        _updateStartFrameLabel(-1);
+        
+        std::cout << "Interval creation cancelled" << std::endl;
+    }
+}
+
+void DigitalIntervalSeries_Widget::_cancelIntervalButton() {
+    _cancelIntervalCreation();
+}
+
+void DigitalIntervalSeries_Widget::_createIntervalContextMenuRequested(QPoint const & position) {
+    _showCreateIntervalContextMenu(position);
+}
+
+void DigitalIntervalSeries_Widget::_showCreateIntervalContextMenu(QPoint const & position) {
+    // Only show context menu if we're in interval creation mode
+    if (!_interval_epoch) {
+        return;
+    }
+    
+    QMenu context_menu(this);
+    QAction * cancel_action = context_menu.addAction("Cancel Interval Creation");
+    
+    connect(cancel_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_cancelIntervalCreation);
+    
+    context_menu.exec(ui->create_interval_button->mapToGlobal(position));
 }
