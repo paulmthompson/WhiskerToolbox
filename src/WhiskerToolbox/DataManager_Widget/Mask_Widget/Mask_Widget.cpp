@@ -18,12 +18,14 @@
 #include <QComboBox>
 #include <QDir>
 #include <QFileDialog>
+#include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QStackedWidget>
 #include <QTableView>
 #include <filesystem>
 #include <iostream>
+#include <set>
 
 Mask_Widget::Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
@@ -34,12 +36,13 @@ Mask_Widget::Mask_Widget(std::shared_ptr<DataManager> data_manager, QWidget * pa
     _mask_table_model = new MaskTableModel(this);
     ui->tableView->setModel(_mask_table_model);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
 
     connect(ui->load_sam_button, &QPushButton::clicked, this, &Mask_Widget::_loadSamModel);
     connect(ui->tableView, &QTableView::doubleClicked, this, &Mask_Widget::_handleTableViewDoubleClicked);
-    connect(ui->moveMasksButton, &QPushButton::clicked, this, &Mask_Widget::_moveMasksButton_clicked);
-    connect(ui->deleteMasksButton, &QPushButton::clicked, this, &Mask_Widget::_deleteMasksButton_clicked);
+    connect(ui->tableView, &QTableView::customContextMenuRequested, this, &Mask_Widget::_showContextMenu);
 
     // Connect export functionality
     connect(ui->export_type_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -64,14 +67,12 @@ void Mask_Widget::openWidget() {
 void Mask_Widget::setActiveKey(std::string const & key) {
     if (_active_key == key && _callback_id != -1) {
         updateTable();
-        _populateMoveToMaskDataComboBox();
         return;
     }
     removeCallbacks();
 
     _active_key = key;
     updateTable();
-    _populateMoveToMaskDataComboBox();
 
     if (!_active_key.empty()) {
         auto mask_data = _data_manager->getData<MaskData>(_active_key);
@@ -108,85 +109,209 @@ void Mask_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
     }
 }
 
-void Mask_Widget::_populateMoveToMaskDataComboBox() {
+std::vector<int> Mask_Widget::_getSelectedFrames() {
+    std::vector<int> selected_frames;
+    QModelIndexList selected_rows = ui->tableView->selectionModel()->selectedRows();
 
-    populate_move_combo_box<MaskData>(ui->moveToMaskDataComboBox, _data_manager.get(), _active_key);
+    for (QModelIndex const & index : selected_rows) {
+        if (index.isValid()) {
+            int frame = _mask_table_model->getFrameForRow(index.row());
+            if (frame != -1) {
+                selected_frames.push_back(frame);
+            }
+        }
+    }
+
+    return selected_frames;
 }
 
-void Mask_Widget::_moveMasksButton_clicked() {
-    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedIndexes();
-    if (selectedIndexes.isEmpty()) {
-        std::cout << "Mask_Widget: No frame selected to move masks from." << std::endl;
-        return;
-    }
-    int selected_row = selectedIndexes.first().row();
-    int frame_to_move = _mask_table_model->getFrameForRow(selected_row);
-
-    if (frame_to_move == -1) {
-        std::cout << "Mask_Widget: Selected row data is invalid (no valid frame)." << std::endl;
+void Mask_Widget::_showContextMenu(QPoint const& position) {
+    QModelIndex index = ui->tableView->indexAt(position);
+    if (!index.isValid()) {
         return;
     }
 
-    QString target_key_qstr = ui->moveToMaskDataComboBox->currentText();
-    if (target_key_qstr.isEmpty()) {
-        std::cout << "Mask_Widget: No target MaskData selected in ComboBox." << std::endl;
+    QMenu context_menu(this);
+
+    // Add move and copy submenus using the utility function
+    auto move_callback = [this](std::string const& target_key) {
+        _moveMasksToTarget(target_key);
+    };
+    
+    auto copy_callback = [this](std::string const& target_key) {
+        _copyMasksToTarget(target_key);
+    };
+
+    add_move_copy_submenus<MaskData>(&context_menu, _data_manager.get(), _active_key, move_callback, copy_callback);
+
+    // Add separator and delete operation
+    context_menu.addSeparator();
+    QAction* delete_action = context_menu.addAction("Delete Selected Masks");
+
+    connect(delete_action, &QAction::triggered, this, &Mask_Widget::_deleteSelectedMasks);
+
+    context_menu.exec(ui->tableView->mapToGlobal(position));
+}
+
+void Mask_Widget::_moveMasksToTarget(std::string const& target_key) {
+    std::vector<int> selected_frames = _getSelectedFrames();
+    if (selected_frames.empty()) {
+        std::cout << "Mask_Widget: No masks selected to move." << std::endl;
         return;
     }
-    std::string target_key = target_key_qstr.toStdString();
 
     auto source_mask_data = _data_manager->getData<MaskData>(_active_key);
     auto target_mask_data = _data_manager->getData<MaskData>(target_key);
 
     if (!source_mask_data) {
-        std::cerr << "Mask_Widget: Source MaskData ('" << _active_key << "') not found." << std::endl;
+        std::cerr << "Mask_Widget: Source MaskData object ('" << _active_key << "') not found." << std::endl;
         return;
     }
     if (!target_mask_data) {
-        std::cerr << "Mask_Widget: Target MaskData ('" << target_key << "') not found." << std::endl;
+        std::cerr << "Mask_Widget: Target MaskData object ('" << target_key << "') not found." << std::endl;
         return;
     }
 
-    std::vector<Mask2D> const & masks_to_move = source_mask_data->getAtTime(frame_to_move);
-    if (!masks_to_move.empty()) {
-        for (Mask2D const & individual_mask: masks_to_move) {
-            target_mask_data->addAtTime(frame_to_move, individual_mask);// Add one by one
+    std::cout << "Mask_Widget: Moving masks from " << selected_frames.size() 
+              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
+
+    int frames_with_masks = 0;
+    int total_masks_moved = 0;
+
+    // Batch operations to minimize observer notifications
+    for (int frame : selected_frames) {
+        auto masks_to_move = source_mask_data->getAtTime(frame);
+        if (!masks_to_move.empty()) {
+            frames_with_masks++;
+            total_masks_moved += static_cast<int>(masks_to_move.size());
+            
+            // Add to target first (without notification)
+            for (auto const& mask : masks_to_move) {
+                target_mask_data->addAtTime(frame, mask, false);
+            }
+            // Clear from source (without notification)
+            source_mask_data->clearAtTime(frame, false);
         }
     }
 
-    source_mask_data->clearAtTime(frame_to_move);// Clear all masks from source at this frame
-
-    updateTable();
-    _populateMoveToMaskDataComboBox();
-
-    std::cout << "Masks from frame " << frame_to_move << " moved from " << _active_key << " to " << target_key << std::endl;
+    // Notify observers only once at the end for both source and target
+    if (frames_with_masks > 0) {
+        source_mask_data->notifyObservers();
+        target_mask_data->notifyObservers();
+        
+        // Update the table view to reflect changes
+        updateTable();
+        
+        std::cout << "Mask_Widget: Successfully moved " << total_masks_moved 
+                  << " masks from " << frames_with_masks << " frames." << std::endl;
+        if (frames_with_masks < selected_frames.size()) {
+            std::cout << "Mask_Widget: Note: " << (selected_frames.size() - frames_with_masks) 
+                      << " selected frames contained no masks to move." << std::endl;
+        }
+    } else {
+        std::cout << "Mask_Widget: No masks found in any of the selected frames to move." << std::endl;
+    }
 }
 
-void Mask_Widget::_deleteMasksButton_clicked() {
-    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedIndexes();
-    if (selectedIndexes.isEmpty()) {
-        std::cout << "Mask_Widget: No frame selected to delete masks from." << std::endl;
-        return;
-    }
-    int selected_row = selectedIndexes.first().row();
-    int frame_to_delete = _mask_table_model->getFrameForRow(selected_row);
-
-    if (frame_to_delete == -1) {
-        std::cout << "Mask_Widget: Selected row data for deletion is invalid (no valid frame)." << std::endl;
+void Mask_Widget::_copyMasksToTarget(std::string const& target_key) {
+    std::vector<int> selected_frames = _getSelectedFrames();
+    if (selected_frames.empty()) {
+        std::cout << "Mask_Widget: No masks selected to copy." << std::endl;
         return;
     }
 
     auto source_mask_data = _data_manager->getData<MaskData>(_active_key);
+    auto target_mask_data = _data_manager->getData<MaskData>(target_key);
+
     if (!source_mask_data) {
-        std::cerr << "Mask_Widget: Source MaskData ('" << _active_key << "') not found for deletion." << std::endl;
+        std::cerr << "Mask_Widget: Source MaskData object ('" << _active_key << "') not found." << std::endl;
+        return;
+    }
+    if (!target_mask_data) {
+        std::cerr << "Mask_Widget: Target MaskData object ('" << target_key << "') not found." << std::endl;
         return;
     }
 
-    source_mask_data->clearAtTime(frame_to_delete);
+    std::cout << "Mask_Widget: Copying masks from " << selected_frames.size() 
+              << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    updateTable();
-    _populateMoveToMaskDataComboBox();
+    int frames_with_masks = 0;
+    int total_masks_copied = 0;
 
-    std::cout << "Masks deleted from frame " << frame_to_delete << " in " << _active_key << std::endl;
+    // Batch operations to minimize observer notifications
+    for (int frame : selected_frames) {
+        auto masks_to_copy = source_mask_data->getAtTime(frame);
+        if (!masks_to_copy.empty()) {
+            frames_with_masks++;
+            total_masks_copied += static_cast<int>(masks_to_copy.size());
+            
+            // Add to target (without notification until the end)
+            for (auto const& mask : masks_to_copy) {
+                target_mask_data->addAtTime(frame, mask, false);
+            }
+        }
+    }
+
+    // Notify observers only once at the end for the target
+    if (frames_with_masks > 0) {
+        target_mask_data->notifyObservers();
+        
+        std::cout << "Mask_Widget: Successfully copied " << total_masks_copied 
+                  << " masks from " << frames_with_masks << " frames." << std::endl;
+        if (frames_with_masks < selected_frames.size()) {
+            std::cout << "Mask_Widget: Note: " << (selected_frames.size() - frames_with_masks) 
+                      << " selected frames contained no masks to copy." << std::endl;
+        }
+    } else {
+        std::cout << "Mask_Widget: No masks found in any of the selected frames to copy." << std::endl;
+    }
+}
+
+void Mask_Widget::_deleteSelectedMasks() {
+    std::vector<int> selected_frames = _getSelectedFrames();
+    if (selected_frames.empty()) {
+        std::cout << "Mask_Widget: No masks selected to delete." << std::endl;
+        return;
+    }
+
+    auto mask_data_ptr = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data_ptr) {
+        std::cerr << "Mask_Widget: Source MaskData object ('" << _active_key << "') not found for deletion." << std::endl;
+        return;
+    }
+
+    std::cout << "Mask_Widget: Deleting masks from " << selected_frames.size() 
+              << " frames in '" << _active_key << "'..." << std::endl;
+
+    int frames_with_masks = 0;
+    int total_masks_deleted = 0;
+
+    // Count masks before deletion and batch operations to minimize observer notifications
+    for (int frame : selected_frames) {
+        auto masks_at_frame = mask_data_ptr->getAtTime(frame);
+        if (!masks_at_frame.empty()) {
+            frames_with_masks++;
+            total_masks_deleted += static_cast<int>(masks_at_frame.size());
+            mask_data_ptr->clearAtTime(frame, false);
+        }
+    }
+
+    // Notify observers only once at the end
+    if (frames_with_masks > 0) {
+        mask_data_ptr->notifyObservers();
+        
+        // Update the table view to reflect changes
+        updateTable();
+        
+        std::cout << "Mask_Widget: Successfully deleted " << total_masks_deleted 
+                  << " masks from " << frames_with_masks << " frames." << std::endl;
+        if (frames_with_masks < selected_frames.size()) {
+            std::cout << "Mask_Widget: Note: " << (selected_frames.size() - frames_with_masks) 
+                      << " selected frames contained no masks to delete." << std::endl;
+        }
+    } else {
+        std::cout << "Mask_Widget: No masks found in any of the selected frames to delete." << std::endl;
+    }
 }
 
 void Mask_Widget::selectPoint(float const x, float const y) {
@@ -307,7 +432,11 @@ void Mask_Widget::_initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVar
 
     if (ui->export_media_frames_checkbox->isChecked()) {
         auto times_with_data = mask_data_ptr->getTimesWithData();
-        std::vector<size_t> frame_ids_to_export = times_with_data;
+        std::vector<size_t> frame_ids_to_export;
+        frame_ids_to_export.reserve(times_with_data.size());
+        for (int frame_id : times_with_data) {
+            frame_ids_to_export.push_back(static_cast<size_t>(frame_id));
+        }
 
         if (frame_ids_to_export.empty()) {
             QMessageBox::information(this, "No Frames", "No masks found in data, so no media frames to export.");

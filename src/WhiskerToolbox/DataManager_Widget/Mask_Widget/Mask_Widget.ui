@@ -102,47 +102,6 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="actionButtonsLayout">
-     <item>
-      <widget class="QLabel" name="moveToLabel">
-       <property name="text">
-        <string>Move Masks To:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="moveToMaskDataComboBox"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="moveMasksButton">
-       <property name="text">
-        <string>Move Masks</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="deleteMasksButton">
-       <property name="text">
-        <string>Delete Masks at Frame</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="actionHorizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
     <widget class="QPushButton" name="load_sam_button">
      <property name="text">
       <string>Load SAM Model</string>

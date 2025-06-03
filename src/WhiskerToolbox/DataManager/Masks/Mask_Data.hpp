@@ -6,6 +6,7 @@
 #include "Points/points.hpp"
 #include "masks.hpp"
 
+#include <map>
 #include <ranges>
 #include <vector>
 
@@ -27,7 +28,7 @@ public:
     * @param notify If true, observers will be notified of the change
     * @return True if masks existed at the specified time and were cleared, false otherwise
     */
-    bool clearAtTime(size_t time, bool notify = true);
+    bool clearAtTime(int time, bool notify = true);
 
     /**
      * @brief Adds a new mask at the specified time using separate x and y coordinate arrays
@@ -42,7 +43,7 @@ public:
     *
     * @note x and y vectors must be the same length, representing coordinate pairs
     */
-    void addAtTime(size_t time,
+    void addAtTime(int time,
                        std::vector<float> const & x,
                        std::vector<float> const & y,
                        bool notify = true);
@@ -57,7 +58,7 @@ public:
     * @param mask Vector of 2D points defining the mask
     * @param notify If true, observers will be notified of the change (default: true)
     */
-    void addAtTime(size_t time,
+    void addAtTime(int time,
                        std::vector<Point2D<float>> mask,
                        bool notify = true);
 
@@ -75,7 +76,7 @@ public:
     *
     * @note x and y vectors must be the same length, representing coordinate pairs
     */
-    void addAtTime(size_t time,
+    void addAtTime(int time,
                        std::vector<float> && x,
                        std::vector<float> && y,
                        bool notify = true);
@@ -89,7 +90,7 @@ public:
      */
     void reserveCapacity(size_t capacity);
 
-    std::vector<size_t> getTimesWithData();
+    std::vector<int> getTimesWithData() const;
 
     /**
      * @brief Change the size of the canvas the mask belongs to
@@ -110,7 +111,7 @@ public:
     * @param time The timestamp for which to retrieve masks
     * @return A const reference to a vector of masks at the given time, or an empty vector if no masks exist
     */
-    [[nodiscard]] std::vector<Mask2D> const & getAtTime(size_t time) const;
+    [[nodiscard]] std::vector<Mask2D> const & getAtTime(int time) const;
 
     /**
      * @brief Get all masks with their associated times as a range
@@ -123,18 +124,15 @@ public:
             std::vector<Mask2D> const & masks;
         };
 
-        return std::views::iota(size_t{0}, _time.size()) |
-               std::views::transform([this](size_t i) {
-                   return TimeMaskPair{static_cast<int>(_time[i]), _data[i]};
+        return _data | std::views::transform([](auto const & pair) {
+                   return TimeMaskPair{pair.first, pair.second};
                });
     }
 
 protected:
 private:
-    std::vector<size_t> _time;
-    std::vector<std::vector<Mask2D>> _data;
-    //std::map<int, std::vector<Mask2D>> _data;
-    std::vector<Mask2D> _empty;
+    std::map<int, std::vector<Mask2D>> _data;
+    std::vector<Mask2D> _empty{};
     ImageSize _image_size;
 };
 

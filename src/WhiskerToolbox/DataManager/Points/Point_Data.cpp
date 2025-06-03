@@ -99,7 +99,7 @@ std::size_t PointData::getMaxPoints() const {
 
 void PointData::changeImageSize(ImageSize const & image_size) {
     if (_image_size.width == -1 || _image_size.height == -1) {
-        std::cout << "No size set for current image."
+        std::cout << "No size set for current image. "
                   << " Please set a valid image size before trying to scale" << std::endl;
         _image_size = image_size; // Set the image size if it wasn't set before
         return;
@@ -120,4 +120,110 @@ void PointData::changeImageSize(ImageSize const & image_size) {
         }
     }
     _image_size = image_size;
+}
+
+std::size_t PointData::copyTo(PointData& target, int start_time, int end_time, bool notify) const {
+    if (start_time > end_time) {
+        std::cerr << "PointData::copyTo: start_time (" << start_time 
+                  << ") must be <= end_time (" << end_time << ")" << std::endl;
+        return 0;
+    }
+
+    std::size_t total_points_copied = 0;
+
+    // Iterate through all times in the source data within the range
+    for (auto const & [time, points] : _data) {
+        if (time >= start_time && time <= end_time && !points.empty()) {
+            target.addPointsAtTime(time, points, false); // Don't notify for each operation
+            total_points_copied += points.size();
+        }
+    }
+
+    // Notify observer only once at the end if requested
+    if (notify && total_points_copied > 0) {
+        target.notifyObservers();
+    }
+
+    return total_points_copied;
+}
+
+std::size_t PointData::copyTo(PointData& target, std::vector<int> const& times, bool notify) const {
+    std::size_t total_points_copied = 0;
+
+    // Copy points for each specified time
+    for (int time : times) {
+        auto it = _data.find(time);
+        if (it != _data.end() && !it->second.empty()) {
+            target.addPointsAtTime(time, it->second, false); // Don't notify for each operation
+            total_points_copied += it->second.size();
+        }
+    }
+
+    // Notify observer only once at the end if requested
+    if (notify && total_points_copied > 0) {
+        target.notifyObservers();
+    }
+
+    return total_points_copied;
+}
+
+std::size_t PointData::moveTo(PointData& target, int start_time, int end_time, bool notify) {
+    if (start_time > end_time) {
+        std::cerr << "PointData::moveTo: start_time (" << start_time 
+                  << ") must be <= end_time (" << end_time << ")" << std::endl;
+        return 0;
+    }
+
+    std::size_t total_points_moved = 0;
+    std::vector<int> times_to_clear;
+
+    // First, copy all points in the range to target
+    for (auto const & [time, points] : _data) {
+        if (time >= start_time && time <= end_time && !points.empty()) {
+            target.addPointsAtTime(time, points, false); // Don't notify for each operation
+            total_points_moved += points.size();
+            times_to_clear.push_back(time);
+        }
+    }
+
+    // Then, clear all the times from source
+    for (int time : times_to_clear) {
+        clearAtTime(time, false); // Don't notify for each operation
+    }
+
+    // Notify observers only once at the end if requested
+    if (notify && total_points_moved > 0) {
+        target.notifyObservers();
+        notifyObservers();
+    }
+
+    return total_points_moved;
+}
+
+std::size_t PointData::moveTo(PointData& target, std::vector<int> const& times, bool notify) {
+    std::size_t total_points_moved = 0;
+    std::vector<int> times_to_clear;
+
+    // First, copy points for each specified time to target
+    for (int time : times) {
+        auto it = _data.find(time);
+        if (it != _data.end() && !it->second.empty()) {
+            target.addPointsAtTime(time, it->second, false); // Don't notify for each operation
+            total_points_moved += it->second.size();
+            times_to_clear.push_back(time);
+        }
+    }
+
+    // Then, clear all the times from source
+    for (int time : times_to_clear) {
+        clearAtTime(time, false); // Don't notify for each operation
+    }
+
+    // Notify observers only once at the end if requested
+    if (notify && total_points_moved > 0) {
+        target.notifyObservers();
+        notifyObservers();
+    }
+
+    return total_points_moved;
 }
