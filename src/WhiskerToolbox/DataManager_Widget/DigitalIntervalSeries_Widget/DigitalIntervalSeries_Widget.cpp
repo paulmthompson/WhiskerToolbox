@@ -21,6 +21,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <algorithm>
 
 
 DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
@@ -60,6 +61,9 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
             this, &DigitalIntervalSeries_Widget::_handleSaveIntervalCSVRequested);
 
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
+    
+    // Set initial filename
+    _updateFilename();
 }
 
 DigitalIntervalSeries_Widget::~DigitalIntervalSeries_Widget() {
@@ -81,6 +85,9 @@ void DigitalIntervalSeries_Widget::setActiveKey(std::string key) {
     _assignCallbacks();
 
     _calculateIntervals();
+    
+    // Update filename based on new active key
+    _updateFilename();
 }
 
 void DigitalIntervalSeries_Widget::_changeDataTable(QModelIndex const & topLeft, QModelIndex const & bottomRight, QVector<int> const & roles) {
@@ -228,6 +235,9 @@ void DigitalIntervalSeries_Widget::_onExportTypeChanged(int index) {
     } else {
         // Handle other export types if added in the future
     }
+    
+    // Update filename based on new export type
+    _updateFilename();
 }
 
 void DigitalIntervalSeries_Widget::_handleSaveIntervalCSVRequested(CSVIntervalSaverOptions options) {
@@ -465,4 +475,46 @@ void DigitalIntervalSeries_Widget::_showCreateIntervalContextMenu(QPoint const &
     connect(cancel_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_cancelIntervalCreation);
     
     context_menu.exec(ui->create_interval_button->mapToGlobal(position));
+}
+
+std::string DigitalIntervalSeries_Widget::_generateFilename() const {
+    if (_active_key.empty()) {
+        return "intervals_output.csv"; // Fallback default
+    }
+    
+    // Sanitize the active key for filesystem safety
+    std::string sanitized_key = _active_key;
+    
+    // Replace characters that might be problematic in filenames
+    std::string invalid_chars = "<>:\"/\\|?*";
+    for (char invalid_char : invalid_chars) {
+        std::replace(sanitized_key.begin(), sanitized_key.end(), invalid_char, '_');
+    }
+    
+    // Remove leading/trailing whitespace and dots
+    auto start = sanitized_key.find_first_not_of(" \t\n\r\f\v.");
+    auto end = sanitized_key.find_last_not_of(" \t\n\r\f\v.");
+    if (start == std::string::npos) {
+        sanitized_key = "intervals_output"; // Fallback if only invalid chars
+    } else {
+        sanitized_key = sanitized_key.substr(start, end - start + 1);
+    }
+    
+    QString current_export_type = ui->export_type_combo->currentText();
+    std::string extension;
+    
+    if (current_export_type == "CSV") {
+        extension = ".csv";
+    } else {
+        // Future export types can be added here
+        // Example: if (current_export_type == "JSON") extension = ".json";
+        extension = ".csv"; // Default fallback
+    }
+    
+    return sanitized_key + extension;
+}
+
+void DigitalIntervalSeries_Widget::_updateFilename() {
+    std::string filename = _generateFilename();
+    ui->filename_edit->setText(QString::fromStdString(filename));
 }

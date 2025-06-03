@@ -77,6 +77,19 @@ private:
     void _showCreateIntervalContextMenu(QPoint const & position);
 
     /**
+     * @brief Generate appropriate filename based on active key and export type
+     * 
+     * @return String containing the filename with appropriate extension
+     * @note Returns the active key with the appropriate file extension for the current export type
+     */
+    std::string _generateFilename() const;
+
+    /**
+     * @brief Update the filename field based on current active key and export type
+     */
+    void _updateFilename();
+
+    /**
      * @brief Move selected intervals to the specified target key
      * 
      * @param target_key The key to move intervals to

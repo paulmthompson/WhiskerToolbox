@@ -147,6 +147,48 @@ TEST_CASE("DigitalIntervalSeries_Widget state management", "[DigitalIntervalSeri
     }
 }
 
+TEST_CASE("DigitalIntervalSeries_Widget filename generation", "[DigitalIntervalSeries_Widget][filename]") {
+    
+    int argc = 0;
+    char* argv[] = {nullptr};
+    QApplication app(argc, argv);
+    
+    auto data_manager = std::make_shared<DataManager>();
+    data_manager->setData<DigitalIntervalSeries>("whisker_contacts");
+    data_manager->setData<DigitalIntervalSeries>("object_interactions");
+    
+    DigitalIntervalSeries_Widget widget(data_manager);
+    
+    SECTION("Filename updates when active key changes") {
+        // Set active key and verify filename updates
+        widget.setActiveKey("whisker_contacts");
+        REQUIRE(widget.findChild<QLineEdit*>("filename_edit")->text() == "whisker_contacts.csv");
+        
+        // Change to different key
+        widget.setActiveKey("object_interactions");
+        REQUIRE(widget.findChild<QLineEdit*>("filename_edit")->text() == "object_interactions.csv");
+    }
+    
+    SECTION("Filename updates when export type changes") {
+        widget.setActiveKey("whisker_contacts");
+        
+        // Initially should be CSV
+        REQUIRE(widget.findChild<QLineEdit*>("filename_edit")->text() == "whisker_contacts.csv");
+        
+        // If future export types are added, they should update filename accordingly
+        // For now, only CSV is available, so this test validates the existing behavior
+        auto export_combo = widget.findChild<QComboBox*>("export_type_combo");
+        export_combo->setCurrentIndex(0); // CSV
+        REQUIRE(widget.findChild<QLineEdit*>("filename_edit")->text() == "whisker_contacts.csv");
+    }
+    
+    SECTION("Empty active key uses fallback filename") {
+        // Widget without active key should use fallback
+        DigitalIntervalSeries_Widget widget_no_key(data_manager);
+        REQUIRE(widget_no_key.findChild<QLineEdit*>("filename_edit")->text() == "intervals_output.csv");
+    }
+}
+
 TEST_CASE("DigitalIntervalSeries_Widget error handling", "[DigitalIntervalSeries_Widget][error_handling]") {
     
     int argc = 0;
