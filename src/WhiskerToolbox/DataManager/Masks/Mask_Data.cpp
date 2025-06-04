@@ -113,6 +113,12 @@ std::size_t MaskData::copyTo(MaskData& target, int start_time, int end_time, boo
         return 0;
     }
 
+    // Ensure target is not the same as source
+    if (this == &target) {
+        std::cerr << "MaskData::copyTo: Cannot copy to self" << std::endl;
+        return 0;
+    }
+
     std::size_t total_masks_copied = 0;
 
     // Iterate through all times in the source data within the range

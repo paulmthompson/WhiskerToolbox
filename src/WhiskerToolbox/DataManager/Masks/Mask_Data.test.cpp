@@ -419,11 +419,12 @@ TEST_CASE("MaskData - Copy and Move operations", "[mask][data][copy][move]") {
         }
 
         SECTION("Copy to self (same object)") {
-            // This is a corner case - copying to self should double the data
+            // This is a corner case - copying to self should return 0 and not
+            // modify the data
             std::size_t copied = source_data.copyTo(source_data, 10, 10);
-            REQUIRE(copied == 2);
+            REQUIRE(copied == 0);
             // Should now have doubled the masks at time 10
-            REQUIRE(source_data.getAtTime(10).size() == 4); // 2 original + 2 copied
+            REQUIRE(source_data.getAtTime(10).size() == 2); // 2 original
         }
 
         SECTION("Observer notification control") {
