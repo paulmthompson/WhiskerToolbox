@@ -1,5 +1,5 @@
 #include "utils/line_resampling.hpp"
-#include <vector> // Included via lines.hpp, but good practice for direct use
+
 #include <cmath>  // For std::sqrt, std::abs
 
 // Function definition moved from mask_to_line.cpp

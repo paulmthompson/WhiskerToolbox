@@ -3,7 +3,6 @@
 
 #include "Points/points.hpp"
 
-#include <cmath>
 #include <cstdint>
 #include <vector>
 

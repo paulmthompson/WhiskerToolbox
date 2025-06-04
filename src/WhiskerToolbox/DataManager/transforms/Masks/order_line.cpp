@@ -1,32 +1,12 @@
 #include "order_line.hpp"
 
+#include "Masks/masks.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <vector>
 #include <cstddef>  // for size_t
-
-std::vector<Point2D<float>> extract_line_pixels(
-        std::vector<uint8_t> const & binary_img,
-        ImageSize const image_size) {
-
-    auto const height = image_size.height;
-    auto const width = image_size.width;
-    
-    // Extract coordinates of the line pixels
-    std::vector<Point2D<float>> line_pixels;
-    line_pixels.reserve(width * height / 10); // Reserve space to avoid reallocations
-    
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
-            if (binary_img[row * width + col] > 0) {
-                line_pixels.push_back({static_cast<float>(col), static_cast<float>(row)});
-            }
-        }
-    }
-
-    return line_pixels;
-}
 
 // Find putative endpoints of the line
 std::pair<size_t, size_t> find_line_endpoints(const std::vector<Point2D<float>>& points) {

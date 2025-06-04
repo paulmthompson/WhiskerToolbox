@@ -1,8 +1,7 @@
 
 #include "scm.hpp"
-#include "DataManager/utils/mask_operations.hpp"
-#include "DataManager/Lines/lines.hpp"
-#include "DataManager/transforms/Masks/order_line.hpp"
+
+#include "DataManager/Masks/masks.hpp"
 
 #include "torch_helpers.hpp"
 #include <torch/torch.h>

@@ -6,7 +6,6 @@
 #include <memory>
 #include <string>
 #include <typeindex>
-#include <vector>
 
 class LineData;
 class MaskData;
@@ -20,7 +19,7 @@ struct MaskToLineParameters : public TransformParametersBase {
     // Reference point parameters
     float reference_x = 0.0f;
     float reference_y = 0.0f;
-    
+
     // Processing parameters
     LinePointSelectionMethod method = LinePointSelectionMethod::Skeletonize;
     int polynomial_order = 3;
@@ -30,6 +29,21 @@ struct MaskToLineParameters : public TransformParametersBase {
     bool should_smooth_line = false; // Smooth the final line using polynomial fit
     float output_resolution = 5.0f; // Approximate spacing in pixels between output points
 };
+
+
+/**
+ * @brief Convert a mask to a line by ordering points
+ *
+ * @param mask_data The mask data to convert
+ * @param params Parameters controlling the conversion process
+ * @return std::shared_ptr<LineData> The resulting line data
+ */
+std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data, MaskToLineParameters const * params);
+
+
+std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
+                                       MaskToLineParameters const* params,
+                                       ProgressCallback progressCallback);
 
 class MaskToLineOperation final : public TransformOperation {
 public:
@@ -76,19 +90,5 @@ public:
                            TransformParametersBase const * transformParameters,
                            ProgressCallback progressCallback) override;
 };
-
-/**
- * @brief Convert a mask to a line by ordering points
- *
- * @param mask_data The mask data to convert
- * @param params Parameters controlling the conversion process
- * @return std::shared_ptr<LineData> The resulting line data
- */
-std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data, MaskToLineParameters const * params);
-
-
-std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
-                                       MaskToLineParameters const* params,
-                                       ProgressCallback progressCallback);
 
 #endif // MASK_TO_LINE_HPP 

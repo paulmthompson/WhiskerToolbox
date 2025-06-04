@@ -1,6 +1,7 @@
 #ifndef DATAMANAGER_MASKS_HPP
 #define DATAMANAGER_MASKS_HPP
 
+#include "ImageSize/ImageSize.hpp"
 #include "Points/points.hpp"
 
 #include <vector>
@@ -29,6 +30,10 @@ std::pair<Point2D<float>,Point2D<float>> get_bounding_box(Mask2D const& mask);
  * @note If mask is empty or has only one point, returns empty outline
  */
 std::vector<Point2D<float>> get_mask_outline(Mask2D const& mask);
+
+std::vector<Point2D<float>> extract_line_pixels(
+        std::vector<uint8_t> const & binary_img,
+        ImageSize const image_size);
 
 
 #endif // DATAMANAGER_MASKS_HPP

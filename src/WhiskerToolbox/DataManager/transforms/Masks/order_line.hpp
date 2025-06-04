@@ -11,10 +11,6 @@
 // Find putative endpoints of a line based on distance
 std::pair<size_t, size_t> find_line_endpoints(const std::vector<Point2D<float>>& points);
 
-std::vector<Point2D<float>> extract_line_pixels(
-        std::vector<uint8_t> const & binary_img,
-        ImageSize const image_size);
-
 std::vector<Point2D<float>> order_line(
         std::vector<Point2D<float>> & line_pixels,
         Point2D<float> const & origin,

@@ -28,6 +28,8 @@ add_library(DataManager SHARED
         Lines/Line_Data.hpp
         Lines/Line_Data.cpp
         Lines/lines.hpp
+        Lines/lines.cpp
+        Lines/utils/line_geometry.hpp
         Lines/IO/CSV/Line_Data_CSV.hpp
         Lines/IO/CSV/Line_Data_CSV.cpp
         Lines/IO/HDF5/Line_Data_HDF5.hpp
@@ -62,6 +64,7 @@ add_library(DataManager SHARED
         Points/IO/JSON/Point_Data_JSON.hpp
         Points/IO/JSON/Point_Data_JSON.cpp
         Points/points.hpp
+        Points/utils/point_geometry.hpp
 
         Masks/Mask_Data.hpp
         Masks/Mask_Data.cpp
@@ -117,8 +120,8 @@ add_library(DataManager SHARED
         utils/json_helpers.hpp
         utils/line_resampling.cpp
         utils/line_resampling.hpp
-        utils/line_geometry.cpp
-        utils/line_geometry.hpp
+
+
         loaders/loading_utils.hpp
         loaders/loading_utils.cpp
         utils/mask_operations.cpp
@@ -174,7 +177,7 @@ add_library(DataManager SHARED
 
         LockState/LockState.hpp
         ImageSize/ImageSize.hpp
-        Lines/lines.cpp
+        Lines/utils/line_geometry.cpp
 )
 
 message(STATUS "NPY source dir:")

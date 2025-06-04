@@ -1,9 +1,9 @@
 #include "line_subsegment.hpp"
 
 #include "Lines/Line_Data.hpp"
+#include "Lines/utils/line_geometry.hpp"
 #include "utils/polynomial/parametric_polynomial_utils.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
-#include "utils/line_geometry.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -56,7 +56,7 @@ std::vector<Point2D<float>> extract_parametric_subsegment(
     }
     
     // Calculate cumulative distances for distance-based parameterization
-    std::vector<float> distances = calculate_cumulative_distances(line);
+    std::vector<float> distances = calc_cumulative_length(line);
     float total_length = distances.back();
     
     if (total_length < 1e-6f) {
