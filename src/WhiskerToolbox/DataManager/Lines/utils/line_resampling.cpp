@@ -1,4 +1,4 @@
-#include "utils/line_resampling.hpp"
+#include "line_resampling.hpp"
 
 #include <cmath>  // For std::sqrt, std::abs
 

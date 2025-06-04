@@ -118,8 +118,8 @@ add_library(DataManager SHARED
         utils/connected_component.cpp
         utils/hdf5_mask_load.hpp
         utils/json_helpers.hpp
-        utils/line_resampling.cpp
-        utils/line_resampling.hpp
+        Lines/utils/line_resampling.cpp
+        Lines/utils/line_resampling.hpp
 
 
         loaders/loading_utils.hpp

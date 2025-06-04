@@ -1,7 +1,7 @@
 #include "line_resample.hpp"
 
 #include "Lines/Line_Data.hpp"
-#include "utils/line_resampling.hpp" // For the actual resampling
+#include "Lines/utils/line_resampling.hpp"// For the actual resampling
 
 #include <iostream> // For error messages / cout
 #include <map> // for std::map

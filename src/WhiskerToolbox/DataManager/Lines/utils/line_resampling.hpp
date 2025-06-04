@@ -2,8 +2,6 @@
 #define LINE_RESAMPLING_HPP
 
 #include "Lines/lines.hpp" // For Line2D and Point2D
-#include <vector> // For std::vector (used by Line2D)
-#include <cmath> // For std::sqrt, std::abs
 
 /**
  * @brief Resamples a line to a target point spacing.
