@@ -1,5 +1,8 @@
+#include "line_geometry.hpp"
+
 #include <catch2/catch_test_macros.hpp>
-#include "lines.hpp"
+#include <catch2/catch_approx.hpp>
+
 
 /**
  * @brief Test file for lines utility functions
@@ -125,21 +128,24 @@ TEST_CASE("Line segment extraction functionality", "[lines][segment]") {
 
     SECTION("Complex multi-segment line") {
         // Create an L-shaped line: horizontal then vertical
+        // 10 + 10 = 20 total length
         Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}, {10.0f, 10.0f}};
 
         // Extract from 25% to 75% (should span the corner)
+        // 25% of 20 = 5, 75% of 20 = 15
+        // So we expect to start at (5, 0) and end at (10, 5)
         auto segment = get_segment_between_percentages(line, 0.25f, 0.75f);
 
         REQUIRE(!segment.empty());
         REQUIRE(segment.size() >= 2);
 
         // Should start at 25% along first segment
-        REQUIRE(segment[0].x == Catch::Approx(2.5f).margin(0.1f));
+        REQUIRE(segment[0].x == Catch::Approx(5.0f).margin(0.1f));
         REQUIRE(segment[0].y == Catch::Approx(0.0f).margin(0.1f));
 
         // Should end at 25% along second segment
         REQUIRE(segment.back().x == Catch::Approx(10.0f).margin(0.1f));
-        REQUIRE(segment.back().y == Catch::Approx(2.5f).margin(0.1f));
+        REQUIRE(segment.back().y == Catch::Approx(5.0f).margin(0.1f));
     }
 }
 

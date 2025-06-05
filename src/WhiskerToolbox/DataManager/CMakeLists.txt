@@ -139,6 +139,9 @@ set(DATAMANAGER_SOURCES
         transforms/Masks/mask_skeletonize.hpp
 )
 
+
+set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
+
 add_subdirectory(AnalogTimeSeries)
 add_subdirectory(Lines)
 

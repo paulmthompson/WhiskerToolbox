@@ -4,6 +4,7 @@
 #include "ImageSize/ImageSize.hpp"
 #include "Points/points.hpp"
 
+#include <cstdint>
 #include <vector>
 
 using Mask2D = std::vector<Point2D<float>>;

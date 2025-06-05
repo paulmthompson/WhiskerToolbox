@@ -13,6 +13,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
+get_property(DATAMANAGER_TEST_SOURCES_TEMP GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES)
+message(STATUS ${DATAMANAGER_TEST_SOURCES_TEMP})
+
 add_executable(test_data_manager
         test_data_manager.cpp
         test_time_frame.cpp
@@ -24,6 +27,8 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
+
+        ${DATAMANAGER_TEST_SOURCES_TEMP}
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Masks/Mask_Data.test.cpp
 

@@ -26,6 +26,11 @@ set(lines_subdirectory_sources
         #Lines/IO/LMDB/Line_Data_LMDB.cpp
 )
 
+set(lines_test_sources
+        Line_Data.test.cpp
+        utils/line_geometry.test.cpp
+)
+
 # Prepare a list of sources with paths relative to the PARENT CMakeLists.txt
 set(sources_to_add_to_parent "")
 foreach(source_file ${lines_subdirectory_sources})
@@ -34,3 +39,15 @@ foreach(source_file ${lines_subdirectory_sources})
 endforeach()
 
 set(DATAMANAGER_SOURCES ${DATAMANAGER_SOURCES} ${sources_to_add_to_parent} PARENT_SCOPE)
+
+
+
+set(test_to_add_to_parent "")
+foreach(source_file ${lines_test_sources})
+    list(APPEND test_to_add_to_parent "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Lines/${source_file}")
+endforeach()
+
+get_property(DATA_MANAGER_TEST_SOURCES_TEMP GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES)
+list(APPEND DATAMANAGER_TEST_SOURCES_TEMP ${test_to_add_to_parent})
+
+set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "${DATAMANAGER_TEST_SOURCES_TEMP}")
