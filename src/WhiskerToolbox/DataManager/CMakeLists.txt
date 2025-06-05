@@ -17,35 +17,13 @@ find_package(LAPACK REQUIRED)
 # Add Observer subdirectory to build the ObserverData library
 add_subdirectory(Observer)
 
-add_library(DataManager SHARED
+set(DATAMANAGER_SOURCES
         DataManager.hpp
         DataManager.cpp
         DataManagerTypes.hpp
-
         TimeFrame.hpp
         TimeFrame.cpp
-
-        Lines/Line_Data.hpp
-        Lines/Line_Data.cpp
-        Lines/lines.hpp
-        Lines/lines.cpp
-        Lines/utils/line_geometry.hpp
-        Lines/IO/CSV/Line_Data_CSV.hpp
-        Lines/IO/CSV/Line_Data_CSV.cpp
-        Lines/IO/HDF5/Line_Data_HDF5.hpp
-        Lines/IO/HDF5/Line_Data_HDF5.cpp
-        Lines/IO/CAPNP/Line_Data_CAPNP.hpp
-        Lines/IO/CAPNP/Line_Data_CAPNP.cpp
-        Lines/IO/CAPNP/line_data.capnp.h
-        Lines/IO/CAPNP/line_data.capnp.c++
-        Lines/IO/Binary/Line_Data_Binary.hpp
-        Lines/IO/Binary/Line_Data_Binary.cpp
-        Lines/IO/JSON/Line_Data_JSON.hpp
-        Lines/IO/JSON/Line_Data_JSON.cpp
-        #Lines/IO/RocksDB/Line_Data_RocksDB.hpp
-        #Lines/IO/RocksDB/Line_Data_RocksDB.cpp
-        #Lines/IO/LMDB/Line_Data_LMDB.hpp
-        #Lines/IO/LMDB/Line_Data_LMDB.cpp
+        ImageSize/ImageSize.hpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp
@@ -77,15 +55,6 @@ add_library(DataManager SHARED
         Masks/masks.hpp
         Masks/masks.cpp
 
-        AnalogTimeSeries/Analog_Time_Series.hpp
-        AnalogTimeSeries/Analog_Time_Series.cpp
-        AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.hpp
-        AnalogTimeSeries/IO/Binary/Analog_Time_Series_Binary.cpp
-        AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.hpp
-        AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.cpp
-        AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.hpp
-        AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.cpp
-
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
         DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp
@@ -95,7 +64,6 @@ add_library(DataManager SHARED
         DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp
         DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.cpp
         DigitalTimeSeries/interval_data.hpp
-
         DigitalTimeSeries/Digital_Event_Series.hpp
         DigitalTimeSeries/Digital_Event_Series.cpp
         DigitalTimeSeries/IO/CSV/Digital_Event_Series_CSV.cpp
@@ -111,6 +79,8 @@ add_library(DataManager SHARED
         loaders/binary_loaders.hpp
         loaders/hdf5_loaders.hpp
         loaders/hdf5_loaders.cpp
+        loaders/loading_utils.hpp
+        loaders/loading_utils.cpp
 
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
@@ -118,12 +88,6 @@ add_library(DataManager SHARED
         utils/connected_component.cpp
         utils/hdf5_mask_load.hpp
         utils/json_helpers.hpp
-        Lines/utils/line_resampling.cpp
-        Lines/utils/line_resampling.hpp
-
-
-        loaders/loading_utils.hpp
-        loaders/loading_utils.cpp
         utils/mask_operations.cpp
         utils/mask_operations.hpp
         utils/opencv_utility.hpp
@@ -143,7 +107,6 @@ add_library(DataManager SHARED
         transforms/data_transforms.hpp
         transforms/TransformRegistry.hpp
         transforms/TransformRegistry.cpp
-
         transforms/AnalogTimeSeries/analog_event_threshold.cpp
         transforms/AnalogTimeSeries/analog_event_threshold.hpp
         transforms/AnalogTimeSeries/analog_interval_threshold.cpp
@@ -174,11 +137,13 @@ add_library(DataManager SHARED
         transforms/Masks/order_line.hpp
         transforms/Masks/mask_skeletonize.cpp
         transforms/Masks/mask_skeletonize.hpp
-
-        LockState/LockState.hpp
-        ImageSize/ImageSize.hpp
-        Lines/utils/line_geometry.cpp
 )
+
+add_subdirectory(AnalogTimeSeries)
+add_subdirectory(Lines)
+
+add_library(DataManager SHARED ${DATAMANAGER_SOURCES}
+    )
 
 message(STATUS "NPY source dir:")
 message(STATUS ${npy_SOURCE_DIR})
