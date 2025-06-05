@@ -31,23 +31,9 @@ set(lines_test_sources
         utils/line_geometry.test.cpp
 )
 
-# Prepare a list of sources with paths relative to the PARENT CMakeLists.txt
-set(sources_to_add_to_parent "")
-foreach(source_file ${lines_subdirectory_sources})
-    # Prepend "Lines/" to make paths relative to the parent DataManager/CMakeLists.txt
-    list(APPEND sources_to_add_to_parent "Lines/${source_file}")
-endforeach()
+prefix_list_items(lines_subdirectory_sources "Lines")
+set(DATAMANAGER_SOURCES ${DATAMANAGER_SOURCES} ${lines_subdirectory_sources} PARENT_SCOPE)
 
-set(DATAMANAGER_SOURCES ${DATAMANAGER_SOURCES} ${sources_to_add_to_parent} PARENT_SCOPE)
-
-
-
-set(test_to_add_to_parent "")
-foreach(source_file ${lines_test_sources})
-    list(APPEND test_to_add_to_parent "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Lines/${source_file}")
-endforeach()
-
-get_property(DATA_MANAGER_TEST_SOURCES_TEMP GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES)
-list(APPEND DATAMANAGER_TEST_SOURCES_TEMP ${test_to_add_to_parent})
-
-set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "${DATAMANAGER_TEST_SOURCES_TEMP}")
+add_tests_to_global(lines_test_sources 
+                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Lines" 
+                    DATAMANAGER_TEST_SOURCES)
