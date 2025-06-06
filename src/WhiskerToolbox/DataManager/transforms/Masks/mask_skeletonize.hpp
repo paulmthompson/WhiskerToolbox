@@ -18,6 +18,8 @@ struct MaskSkeletonizeParameters : public TransformParametersBase {
     // int min_branch_length = 0;
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Skeletonize mask data by converting to binary image, applying skeletonization, and converting back
  * @param mask_data The MaskData to skeletonize
@@ -39,6 +41,8 @@ std::shared_ptr<MaskData> skeletonize_mask(
         MaskData const * mask_data,
         MaskSkeletonizeParameters const * params,
         ProgressCallback progressCallback);
+
+///////////////////////////////////////////////////////////////////////////////
 
 class MaskSkeletonizeOperation final : public TransformOperation {
 public:

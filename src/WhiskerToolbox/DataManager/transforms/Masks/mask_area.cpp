@@ -24,6 +24,8 @@ std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data) {
     return analog_time_series;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 std::string MaskAreaOperation::getName() const {
     return "Calculate Area";
 }

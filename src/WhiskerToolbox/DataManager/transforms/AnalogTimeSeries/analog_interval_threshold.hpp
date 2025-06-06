@@ -19,6 +19,8 @@ struct IntervalThresholdParams : public TransformParametersBase {
     double minDuration = 0.0;
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Detects intervals in an AnalogTimeSeries based on a threshold.
  * 
@@ -54,6 +56,8 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
         AnalogTimeSeries const * analog_time_series,
         IntervalThresholdParams const & thresholdParams,
         ProgressCallback progressCallback);
+
+///////////////////////////////////////////////////////////////////////////////
 
 class IntervalThresholdOperation final : public TransformOperation {
 public:

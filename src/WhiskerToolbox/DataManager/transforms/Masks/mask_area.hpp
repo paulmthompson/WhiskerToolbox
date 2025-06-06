@@ -18,6 +18,8 @@ class MaskData;
  */
 std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data);
 
+///////////////////////////////////////////////////////////////////////////////
+
 
 class MaskAreaOperation final : public TransformOperation {
 public:

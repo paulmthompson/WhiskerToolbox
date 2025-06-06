@@ -8,19 +8,17 @@
 #include <iostream>
 #include <vector>
 
-namespace {
-/**
-     * @brief Internal implementation of interval threshold detection with optional progress reporting.
-     * @param analog_time_series Input time series data
-     * @param thresholdParams Parameters for the detection
-     * @param progressCallback Optional progress callback (can be nullptr)
-     * @return Shared pointer to the resulting interval series
-     */
-std::shared_ptr<DigitalIntervalSeries> interval_threshold_impl(
+
+std::shared_ptr<DigitalIntervalSeries> interval_threshold(
+        AnalogTimeSeries const * analog_time_series,
+        IntervalThresholdParams const & thresholdParams) {
+    return interval_threshold(analog_time_series, thresholdParams, [](int) {});
+}
+
+std::shared_ptr<DigitalIntervalSeries> interval_threshold(
         AnalogTimeSeries const * analog_time_series,
         IntervalThresholdParams const & thresholdParams,
-        ProgressCallback progressCallback = nullptr) {
-
+        ProgressCallback progressCallback) {
     auto interval_series = std::make_shared<DigitalIntervalSeries>();
 
     // Input validation
@@ -117,20 +115,8 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold_impl(
 
     return interval_series;
 }
-}// namespace
 
-std::shared_ptr<DigitalIntervalSeries> interval_threshold(
-        AnalogTimeSeries const * analog_time_series,
-        IntervalThresholdParams const & thresholdParams) {
-    return interval_threshold_impl(analog_time_series, thresholdParams);
-}
-
-std::shared_ptr<DigitalIntervalSeries> interval_threshold(
-        AnalogTimeSeries const * analog_time_series,
-        IntervalThresholdParams const & thresholdParams,
-        ProgressCallback progressCallback) {
-    return interval_threshold_impl(analog_time_series, thresholdParams, progressCallback);
-}
+///////////////////////////////////////////////////////////////////////////////
 
 std::string IntervalThresholdOperation::getName() const {
     return "Threshold Interval Detection";

@@ -18,6 +18,8 @@ struct ThresholdParams : public TransformParametersBase {
     double lockoutTime = 0.0;// Time in the same units as the AnalogTimeSeries timestamps
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Detects events in an AnalogTimeSeries based on a threshold.
  *
@@ -42,6 +44,7 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
         ThresholdParams const & thresholdParams,
         ProgressCallback progressCallback);
 
+///////////////////////////////////////////////////////////////////////////////
 
 class EventThresholdOperation final : public TransformOperation {
 public:// Added public keyword here for clarity, assuming it was intended.

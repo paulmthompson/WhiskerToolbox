@@ -4,8 +4,8 @@
 #include "Masks/Mask_Data.hpp"
 
 #include "Lines/utils/line_resampling.hpp"
+#include "Lines/utils/order_line.hpp"
 #include "Masks/utils/skeletonize.hpp"
-#include "order_line.hpp"
 #include "utils/polynomial/parametric_polynomial_utils.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
 
@@ -65,13 +65,6 @@ std::vector<double> fit_polynomial_to_points(std::vector<Point2D<float>> const &
     std::vector<double> result(coeffs.begin(), coeffs.end());
     return result;
 }
-
-// Helper function to fit parametric polynomials to X(t) and Y(t)
-struct ParametricCoefficients {
-    std::vector<double> x_coeffs;
-    std::vector<double> y_coeffs;
-    bool success = false;
-};
 
 ParametricCoefficients fit_parametric_polynomials(std::vector<Point2D<float>> const & points, int order) {
     if (points.size() <= order) {
@@ -189,7 +182,7 @@ std::vector<float> calculate_fitting_errors(std::vector<Point2D<float>> const & 
 std::vector<Point2D<float>> remove_outliers_recursive(std::vector<Point2D<float>> const & points,
                                                       float error_threshold_squared,
                                                       int polynomial_order,
-                                                      int max_iterations = 10) {
+                                                      int max_iterations) {
     if (points.size() < polynomial_order + 2 || max_iterations <= 0) {
         return points;// Base case: not enough points or max iterations reached
     }
@@ -287,6 +280,8 @@ std::vector<Point2D<float>> remove_outliers(std::vector<Point2D<float>> const & 
     // Call recursive helper with a reasonable iteration limit
     return remove_outliers_recursive(points, error_threshold_squared, polynomial_order, 10);
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data, MaskToLineParameters const * params) {
     // Call the version with progress reporting but ignore progress
@@ -514,6 +509,8 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
 
     return line_data;
 }
+
+///////////////////////////////////////////////////////////////////////////////// 
 
 std::string MaskToLineOperation::getName() const {
     return "Convert Mask to Line";

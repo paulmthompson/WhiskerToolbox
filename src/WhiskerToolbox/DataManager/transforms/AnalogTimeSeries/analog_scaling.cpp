@@ -53,6 +53,8 @@ AnalogStatistics calculate_analog_statistics(AnalogTimeSeries const * analog_tim
     return stats;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<AnalogTimeSeries> scale_analog_time_series(
         AnalogTimeSeries const * analog_time_series,
         AnalogScalingParams const & params) {
@@ -139,6 +141,8 @@ std::shared_ptr<AnalogTimeSeries> scale_analog_time_series(
     
     return std::make_shared<AnalogTimeSeries>(scaled_data, time_data);
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 std::string AnalogScalingOperation::getName() const {
     return "Scale and Normalize";

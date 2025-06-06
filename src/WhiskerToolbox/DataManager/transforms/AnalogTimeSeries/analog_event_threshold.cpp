@@ -99,6 +99,8 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
     return event_series;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 std::string EventThresholdOperation::getName() const {
     return "Threshold Event Detection";
 }

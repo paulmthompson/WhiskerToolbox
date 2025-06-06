@@ -3,6 +3,8 @@
 
 #include "transforms/data_transforms.hpp"
 
+#include "Points/points.hpp"
+
 #include <memory>
 #include <string>
 #include <typeindex>
@@ -30,6 +32,39 @@ struct MaskToLineParameters : public TransformParametersBase {
     float output_resolution = 5.0f; // Approximate spacing in pixels between output points
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
+std::vector<double> fit_polynomial_to_points(std::vector<Point2D<float>> const & points, int order);
+
+struct ParametricCoefficients {
+    std::vector<double> x_coeffs;
+    std::vector<double> y_coeffs;
+    bool success = false;
+};
+
+ParametricCoefficients fit_parametric_polynomials(std::vector<Point2D<float>> const & points, int order);
+
+std::vector<Point2D<float>> generate_smoothed_line(
+        std::vector<Point2D<float>> const & original_points,// Used to estimate total length
+        std::vector<double> const & x_coeffs,
+        std::vector<double> const & y_coeffs,
+        int order,
+        float target_spacing);
+
+std::vector<float> calculate_fitting_errors(std::vector<Point2D<float>> const & points,
+                                            std::vector<double> const & x_coeffs,
+                                            std::vector<double> const & y_coeffs);
+
+std::vector<Point2D<float>> remove_outliers_recursive(std::vector<Point2D<float>> const & points,
+                                                      float error_threshold_squared,
+                                                      int polynomial_order,
+                                                      int max_iterations = 10);
+
+std::vector<Point2D<float>> remove_outliers(std::vector<Point2D<float>> const & points,
+                                            float error_threshold,
+                                            int polynomial_order);
+
+///////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Convert a mask to a line by ordering points
@@ -38,12 +73,14 @@ struct MaskToLineParameters : public TransformParametersBase {
  * @param params Parameters controlling the conversion process
  * @return std::shared_ptr<LineData> The resulting line data
  */
-std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data, MaskToLineParameters const * params);
-
+std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data, 
+                                       MaskToLineParameters const * params);
 
 std::shared_ptr<LineData> mask_to_line(MaskData const* mask_data,
                                        MaskToLineParameters const* params,
                                        ProgressCallback progressCallback);
+
+///////////////////////////////////////////////////////////////////////////////
 
 class MaskToLineOperation final : public TransformOperation {
 public:

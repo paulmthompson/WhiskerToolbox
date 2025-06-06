@@ -37,6 +37,8 @@ struct AnalogScalingParams : public TransformParametersBase {
     double quantile_high = 0.75;  // Third quartile
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
 struct AnalogStatistics {
     double mean = 0.0;
     double std_dev = 0.0;
@@ -56,6 +58,8 @@ struct AnalogStatistics {
  */
 AnalogStatistics calculate_analog_statistics(AnalogTimeSeries const * analog_time_series);
 
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Apply scaling/normalization to an AnalogTimeSeries
  * @param analog_time_series The AnalogTimeSeries to scale
@@ -65,6 +69,8 @@ AnalogStatistics calculate_analog_statistics(AnalogTimeSeries const * analog_tim
 std::shared_ptr<AnalogTimeSeries> scale_analog_time_series(
         AnalogTimeSeries const * analog_time_series,
         AnalogScalingParams const & params);
+
+///////////////////////////////////////////////////////////////////////////////
 
 class AnalogScalingOperation final : public TransformOperation {
 public:

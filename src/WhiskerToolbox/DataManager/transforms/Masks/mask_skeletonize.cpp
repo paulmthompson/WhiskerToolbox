@@ -115,7 +115,7 @@ std::shared_ptr<MaskData> skeletonize_mask(
     return result_mask_data;
 }
 
-// MaskSkeletonizeOperation implementation
+///////////////////////////////////////////////////////////////////////////////// MaskSkeletonizeOperation implementation
 
 std::string MaskSkeletonizeOperation::getName() const {
     return "Skeletonize Mask";

@@ -105,8 +105,6 @@ set(DATAMANAGER_SOURCES
         transforms/Masks/mask_area.hpp
         transforms/Masks/mask_to_line.cpp
         transforms/Masks/mask_to_line.hpp
-        transforms/Masks/order_line.cpp
-        transforms/Masks/order_line.hpp
         transforms/Masks/mask_skeletonize.cpp
         transforms/Masks/mask_skeletonize.hpp
 )
