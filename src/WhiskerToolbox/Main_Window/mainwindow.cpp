@@ -21,6 +21,7 @@
 #include "IO_Widgets/Masks/Mask_Loader_Widget.hpp"
 #include "IO_Widgets/Points/Point_Loader_Widget.hpp"
 #include "IO_Widgets/Tensors/Tensor_Loader_Widget.hpp"
+#include "IO_Widgets/DataAggregation/DataAggregationExporter_Widget.hpp"
 #include "ML_Widget/ML_Widget.hpp"
 #include "Media_Widget/Media_Widget.hpp"
 #include "Media_Window.hpp"
@@ -106,6 +107,7 @@ void MainWindow::_createActions() {
     connect(ui->actionLoad_Tensor, &QAction::triggered, this, &MainWindow::openTensorLoaderWidget);
     connect(ui->actionData_Manager, &QAction::triggered, this, &MainWindow::openDataManager);
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
+    connect(ui->actionExport_Spreadsheet, &QAction::triggered, this, &MainWindow::openSpreadsheetExportWidget);
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
 }
 
@@ -484,6 +486,26 @@ void MainWindow::openVideoExportWidget() {
     auto ptr = dynamic_cast<Export_Video_Widget *>(_widgets[key].get());
     //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
     ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openSpreadsheetExportWidget() {
+    std::string const key = "SpreadsheetExport_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto vid_widget = std::make_unique<DataAggregationExporter_Widget>(
+                this);
+
+        vid_widget->setObjectName(key);
+        registerDockWidget(key, vid_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(vid_widget);
+    }
+
+    auto ptr = dynamic_cast<DataAggregationExporter_Widget *>(_widgets[key].get());
+    ptr->setDataManager(_data_manager);
+    //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
+    //ptr->openWidget();
 
     showDockWidget(key);
 }
