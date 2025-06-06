@@ -13,6 +13,8 @@ struct LineResampleParameters : public TransformParametersBase {
     // Min/Max values will be handled by the UI widget
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
 class LineResampleOperation final : public TransformOperation {
 public:
     [[nodiscard]] std::string getName() const override;

@@ -83,6 +83,8 @@ std::optional<Point2D<float>> extract_parametric_point(
     return Point2D<float>{static_cast<float>(x), static_cast<float>(y)};
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<PointData> extract_line_point(
         LineData const * line_data,
         LinePointExtractionParameters const & params) {
@@ -155,7 +157,7 @@ std::shared_ptr<PointData> extract_line_point(
     return result_point_data;
 }
 
-// LinePointExtractionOperation implementation
+///////////////////////////////////////////////////////////////////////////////
 
 std::string LinePointExtractionOperation::getName() const {
     return "Extract Point from Line";

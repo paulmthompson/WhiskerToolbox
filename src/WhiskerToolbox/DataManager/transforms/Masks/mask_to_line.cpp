@@ -4,10 +4,10 @@
 #include "Masks/Mask_Data.hpp"
 
 #include "Lines/utils/line_resampling.hpp"
+#include "Masks/utils/skeletonize.hpp"
 #include "order_line.hpp"
 #include "utils/polynomial/parametric_polynomial_utils.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
-#include "utils/skeletonize.hpp"
 
 #include <armadillo>
 

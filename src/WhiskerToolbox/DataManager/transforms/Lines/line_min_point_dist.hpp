@@ -4,6 +4,7 @@
 #include "transforms/data_transforms.hpp"
 
 #include "Points/points.hpp"
+#include "ImageSize/ImageSize.hpp"
 
 #include <memory>       // std::shared_ptr
 #include <string>       // std::string
@@ -12,6 +13,34 @@
 class AnalogTimeSeries;
 class LineData;
 class PointData;
+
+float point_to_line_segment_distance2(
+        Point2D<float> const & point,
+        Point2D<float> const & line_start,
+        Point2D<float> const & line_end);
+
+Point2D<float> scale_point(Point2D<float> const & point, 
+                           ImageSize const & from_size, 
+                           ImageSize const & to_size);
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data,
+                                                      PointData const * point_data);
+
+/**
+ * @brief Calculate the minimum distance from points to a line at each timestamp
+ *
+ * @param line_data The line data to measure distances from
+ * @param point_data The point data to measure distances to
+ * @return A new AnalogTimeSeries containing minimum distances at each timestamp
+ */
+std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data,
+                                                      PointData const * point_data,
+                                                      ProgressCallback progressCallback);
+
+///////////////////////////////////////////////////////////////////////////////
 
 struct LineMinPointDistParameters : public TransformParametersBase {
     std::shared_ptr<PointData> point_data;  // Pointer to the PointData
@@ -55,24 +84,5 @@ public:
                            TransformParametersBase const * transformParameters,
                            ProgressCallback progressCallback) override;
 };
-
-std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data,
-                                                      PointData const * point_data);
-
-/**
- * @brief Calculate the minimum distance from points to a line at each timestamp
- *
- * @param line_data The line data to measure distances from
- * @param point_data The point data to measure distances to
- * @return A new AnalogTimeSeries containing minimum distances at each timestamp
- */
-std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data,
-                                                      PointData const * point_data,
-                                                      ProgressCallback progressCallback);
-
-float point_to_line_segment_distance2(
-        Point2D<float> const & point,
-        Point2D<float> const & line_start,
-        Point2D<float> const & line_end);
 
 #endif//LINE_MIN_POINT_DIST_HPP

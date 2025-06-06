@@ -2,6 +2,7 @@
 #define LINE_ANGLE_HPP
 
 #include "transforms/data_transforms.hpp"
+#include "Lines/lines.hpp"
 
 #include <memory>   // std::shared_ptr
 #include <string>   // std::string
@@ -25,6 +26,34 @@ struct LineAngleParameters : public TransformParametersBase {
     float reference_x = 1.0f;
     float reference_y = 0.0f;
 };
+
+///////////////////////////////////////////////////////////////////////////////
+
+float normalize_angle(float raw_angle, float reference_x, float reference_y);
+
+float calculate_direct_angle(Line2D const & line, float position, float reference_x, float reference_y);
+
+float calculate_polynomial_angle(Line2D const & line, float position, int polynomial_order,
+                                 float reference_x, float reference_y);
+
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Calculate the angle at a specified position along a line at each timestamp
+ *
+ * @param line_data The line data to calculate angles from
+ * @param params Parameters including the position along the line (0.0-1.0)
+ * @return A new AnalogTimeSeries containing angle values at each timestamp
+ */
+std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
+                                             LineAngleParameters const * params);
+
+std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
+                                             LineAngleParameters const * params,
+                                             ProgressCallback progressCallback);
+
+///////////////////////////////////////////////////////////////////////////////
+
 
 class LineAngleOperation final : public TransformOperation {
 public:
@@ -60,19 +89,5 @@ public:
                             TransformParametersBase const * transformParameters) override;
 };
 
-
-/**
- * @brief Calculate the angle at a specified position along a line at each timestamp
- *
- * @param line_data The line data to calculate angles from
- * @param params Parameters including the position along the line (0.0-1.0)
- * @return A new AnalogTimeSeries containing angle values at each timestamp
- */
-std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
-                                             LineAngleParameters const * params);
-
-std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
-                                             LineAngleParameters const * params,
-                                             ProgressCallback progressCallback);
 
 #endif//LINE_ANGLE_HPP

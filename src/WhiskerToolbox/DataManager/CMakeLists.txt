@@ -35,17 +35,6 @@ set(DATAMANAGER_SOURCES
         Media/HDF5_Data.cpp
         Media/Video_Data_Loader.hpp
 
-        Masks/Mask_Data.hpp
-        Masks/Mask_Data.cpp
-        Masks/IO/HDF5/Mask_Data_HDF5.hpp
-        Masks/IO/HDF5/Mask_Data_HDF5.cpp
-        Masks/IO/Image/Mask_Data_Image.hpp
-        Masks/IO/Image/Mask_Data_Image.cpp
-        Masks/IO/JSON/Mask_Data_JSON.hpp
-        Masks/IO/JSON/Mask_Data_JSON.cpp
-        Masks/masks.hpp
-        Masks/masks.cpp
-
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
         DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp
@@ -75,8 +64,6 @@ set(DATAMANAGER_SOURCES
 
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
-        utils/connected_component.hpp
-        utils/connected_component.cpp
         utils/hdf5_mask_load.hpp
         utils/json_helpers.hpp
         utils/opencv_utility.hpp
@@ -86,8 +73,6 @@ set(DATAMANAGER_SOURCES
         utils/polynomial/parametric_polynomial_utils.cpp
         utils/polynomial/parametric_polynomial_utils.hpp
         utils/ProcessingOptions.hpp
-        utils/skeletonize.cpp
-        utils/skeletonize.hpp
         utils/string_manip.hpp
 
         transforms/data_transforms.cpp
@@ -131,6 +116,7 @@ set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
 
 add_subdirectory(AnalogTimeSeries)
 add_subdirectory(Lines)
+add_subdirectory(Masks)
 add_subdirectory(Points)
 
 add_library(DataManager SHARED ${DATAMANAGER_SOURCES}

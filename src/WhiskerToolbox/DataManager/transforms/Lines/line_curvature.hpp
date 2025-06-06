@@ -22,6 +22,25 @@ struct LineCurvatureParameters : public TransformParametersBase {
     float fitting_window_percentage = 0.1f;// Default fitting window percentage
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
+std::optional<float> calculate_polynomial_curvature(
+        Line2D const & line,
+        float t_position,
+        int polynomial_order,
+        float fitting_window_percentage);
+
+///////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<AnalogTimeSeries> line_curvature(LineData const * line_data,
+                                                 LineCurvatureParameters const * params);
+
+std::shared_ptr<AnalogTimeSeries> line_curvature(LineData const * line_data,
+                                                 LineCurvatureParameters const * params,
+                                                 ProgressCallback progressCallback);
+
+///////////////////////////////////////////////////////////////////////////////
+
 class LineCurvatureOperation final : public TransformOperation {
 public:
     [[nodiscard]] std::string getName() const override;
@@ -35,18 +54,5 @@ public:
                             TransformParametersBase const * transformParameters,
                             ProgressCallback progressCallback) override;
 };
-
-std::shared_ptr<AnalogTimeSeries> line_curvature(LineData const * line_data,
-                                                 LineCurvatureParameters const * params);
-
-std::shared_ptr<AnalogTimeSeries> line_curvature(LineData const * line_data,
-                                                 LineCurvatureParameters const * params,
-                                                 ProgressCallback progressCallback);
-
-std::optional<float> calculate_polynomial_curvature(
-        Line2D const & line,
-        float t_position,
-        int polynomial_order,
-        float fitting_window_percentage);
 
 #endif// LINE_CURVATURE_HPP

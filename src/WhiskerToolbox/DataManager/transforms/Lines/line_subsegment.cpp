@@ -113,6 +113,8 @@ std::vector<Point2D<float>> extract_parametric_subsegment(
     return subsegment;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<LineData> extract_line_subsegment(
         LineData const * line_data,
         LineSubsegmentParameters const & params) {
@@ -187,7 +189,7 @@ std::shared_ptr<LineData> extract_line_subsegment(
     return result_line_data;
 }
 
-// LineSubsegmentOperation implementation
+///////////////////////////////////////////////////////////////////////////////
 
 std::string LineSubsegmentOperation::getName() const {
     return "Extract Line Subsegment";

@@ -117,6 +117,8 @@ float calculate_polynomial_angle(Line2D const & line, float position, int polyno
     return normalize_angle(angle_degrees, reference_x, reference_y);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data, LineAngleParameters const * params) {
     // Call the version with progress reporting but ignore progress
     return line_angle(line_data, params, [](int) {});
@@ -181,6 +183,8 @@ std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
     analog_time_series->setData(angles);
     return analog_time_series;
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 std::string LineAngleOperation::getName() const {
     return "Calculate Line Angle";

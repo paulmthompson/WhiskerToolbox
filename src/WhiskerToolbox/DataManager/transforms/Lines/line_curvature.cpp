@@ -128,6 +128,8 @@ std::optional<float> calculate_polynomial_curvature(
     return static_cast<float>(curvature);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<AnalogTimeSeries> line_curvature(
         LineData const * line_data,
         LineCurvatureParameters const * params) {
@@ -205,7 +207,7 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
     return analog_time_series;
 }
 
-// --- LineCurvatureOperation Implementation ---
+///////////////////////////////////////////////////////////////////////////////
 
 std::string LineCurvatureOperation::getName() const {
     return "Calculate Line Curvature";

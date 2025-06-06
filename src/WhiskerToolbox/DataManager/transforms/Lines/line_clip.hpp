@@ -23,6 +23,8 @@ struct LineClipParameters : public TransformParametersBase {
     ClipSide clip_side = ClipSide::KeepBase;       // Which side of the intersection to keep
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Find intersection point between two line segments
  * @param p1 Start point of first line segment
@@ -55,6 +57,8 @@ Line2D clip_line_at_intersection(
     Line2D const & line, 
     Line2D const & reference_line, 
     ClipSide clip_side);
+
+///////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Clip line data using a reference line

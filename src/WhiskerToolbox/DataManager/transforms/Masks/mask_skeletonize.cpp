@@ -1,7 +1,7 @@
 #include "mask_skeletonize.hpp"
 
 #include "Masks/Mask_Data.hpp"
-#include "utils/skeletonize.hpp"
+#include "Masks/utils/skeletonize.hpp"
 
 #include <algorithm>
 #include <cmath>        // std::round

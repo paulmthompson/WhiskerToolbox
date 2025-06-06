@@ -3,9 +3,14 @@
 
 #include "transforms/data_transforms.hpp"
 
+#include "Lines/lines.hpp"
+#include "Points/points.hpp"
+
 #include <memory>   // std::shared_ptr
+#include <optional> // std::optional
 #include <string>   // std::string
 #include <typeindex>// std::type_index
+#include <vector>   // std::vector
 
 class LineData;
 
@@ -28,6 +33,21 @@ struct LineSubsegmentParameters : public TransformParametersBase {
     bool preserve_original_spacing = true;  // Keep original point spacing vs. resample
 };
 
+///////////////////////////////////////////////////////////////////////////////
+
+std::vector<Point2D<float>> extract_direct_subsegment(Line2D const & line,
+                                                      float start_pos,
+                                                      float end_pos,
+                                                      bool preserve_spacing);
+
+std::vector<Point2D<float>> extract_parametric_subsegment(Line2D const & line,
+                                                          float start_pos,
+                                                          float end_pos,
+                                                          int polynomial_order,
+                                                          int output_points);
+
+///////////////////////////////////////////////////////////////////////////////
+
 /**
  * @brief Extract a subsegment from LineData between specified positions
  * @param line_data The LineData to extract from
@@ -49,6 +69,8 @@ std::shared_ptr<LineData> extract_line_subsegment(
         LineData const * line_data,
         LineSubsegmentParameters const & params,
         ProgressCallback progressCallback);
+
+///////////////////////////////////////////////////////////////////////////////
 
 class LineSubsegmentOperation final : public TransformOperation {
 public:

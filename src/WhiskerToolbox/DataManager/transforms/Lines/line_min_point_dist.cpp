@@ -47,6 +47,8 @@ Point2D<float> scale_point(Point2D<float> const & point, ImageSize const & from_
             point.y * scale_y};
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 std::string LineMinPointDistOperation::getName() const {
     return "Calculate Line to Point Distance";
 }

@@ -110,6 +110,8 @@ Line2D clip_line_at_intersection(
     return clipped_line;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 std::shared_ptr<LineData> clip_lines(
     LineData const * line_data,
     LineClipParameters const * params) {
@@ -182,7 +184,7 @@ std::shared_ptr<LineData> clip_lines(
     return result_line_data;
 }
 
-// LineClipOperation implementation
+///////////////////////////////////////////////////////////////////////////////
 
 std::string LineClipOperation::getName() const {
     return "Clip Line by Reference Line";

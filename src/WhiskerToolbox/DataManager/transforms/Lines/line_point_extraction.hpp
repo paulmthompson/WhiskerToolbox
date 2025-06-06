@@ -3,9 +3,14 @@
 
 #include "transforms/data_transforms.hpp"
 
+#include "Lines/lines.hpp"
+#include "Points/points.hpp"
+
 #include <memory>   // std::shared_ptr
+#include <optional> // std::optional
 #include <string>   // std::string
 #include <typeindex>// std::type_index
+
 
 class LineData;
 class PointData;
@@ -26,6 +31,18 @@ struct LinePointExtractionParameters : public TransformParametersBase {
     // For direct method
     bool use_interpolation = true;   // Interpolate between points vs. use nearest point
 };
+
+///////////////////////////////////////////////////////////////////////////////
+
+std::optional<Point2D<float>> extract_direct_point(Line2D const & line,
+                                                   float position,
+                                                   bool use_interpolation);
+
+std::optional<Point2D<float>> extract_parametric_point(Line2D const & line,
+                                                       float position,
+                                                       int polynomial_order);
+
+///////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Extract a point from LineData at specified position
@@ -48,6 +65,8 @@ std::shared_ptr<PointData> extract_line_point(
         LineData const * line_data,
         LinePointExtractionParameters const & params,
         ProgressCallback progressCallback);
+
+///////////////////////////////////////////////////////////////////////////////
 
 class LinePointExtractionOperation final : public TransformOperation {
 public:
