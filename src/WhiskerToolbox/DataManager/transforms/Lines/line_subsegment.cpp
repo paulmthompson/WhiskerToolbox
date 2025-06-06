@@ -56,7 +56,7 @@ std::vector<Point2D<float>> extract_parametric_subsegment(
     }
     
     // Calculate cumulative distances for distance-based parameterization
-    std::vector<float> distances = calc_cumulative_length(line);
+    std::vector<float> distances = calc_cumulative_length_vector(line);
     float total_length = distances.back();
     
     if (total_length < 1e-6f) {

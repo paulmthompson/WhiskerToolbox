@@ -32,6 +32,7 @@ include(enable_sanitizers)
 include(CompilerWarnings)
 include(set_rpath)
 include(iwyu)
+include(DataManagerUtils)
 
 #only have coverage option on linux
 if (LINUX)

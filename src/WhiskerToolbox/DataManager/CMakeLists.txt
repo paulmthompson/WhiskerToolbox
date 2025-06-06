@@ -35,15 +35,6 @@ set(DATAMANAGER_SOURCES
         Media/HDF5_Data.cpp
         Media/Video_Data_Loader.hpp
 
-        Points/Point_Data.hpp
-        Points/Point_Data.cpp
-        Points/IO/CSV/Point_Data_CSV.hpp
-        Points/IO/CSV/Point_Data_CSV.cpp
-        Points/IO/JSON/Point_Data_JSON.hpp
-        Points/IO/JSON/Point_Data_JSON.cpp
-        Points/points.hpp
-        Points/utils/point_geometry.hpp
-
         Masks/Mask_Data.hpp
         Masks/Mask_Data.cpp
         Masks/IO/HDF5/Mask_Data_HDF5.hpp
@@ -144,6 +135,7 @@ set_property(GLOBAL PROPERTY DATAMANAGER_TEST_SOURCES "")
 
 add_subdirectory(AnalogTimeSeries)
 add_subdirectory(Lines)
+add_subdirectory(Points)
 
 add_library(DataManager SHARED ${DATAMANAGER_SOURCES}
     )

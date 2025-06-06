@@ -11,10 +11,13 @@ set(analog_subdirectory_sources
     IO/JSON/Analog_Time_Series_JSON.cpp
 )
 
-# Prepare a list of sources with paths relative to the PARENT CMakeLists.txt
-set(sources_to_add_to_parent "")
-foreach(source_file ${analog_subdirectory_sources})
-    list(APPEND sources_to_add_to_parent "AnalogTimeSeries/${source_file}")
-endforeach()
+set(analog_test_sources
+    Analog_Time_series.text.cpp
+    IO/CSV/Analog_Time_Series_CSV.test.cpp)
 
-set(DATAMANAGER_SOURCES ${DATAMANAGER_SOURCES} ${sources_to_add_to_parent} PARENT_SCOPE)
+prefix_list_items(analog_subdirectory_sources "AnalogTimeSeries")
+set(DATAMANAGER_SOURCES ${DATAMANAGER_SOURCES} ${analog_subdirectory_sources} PARENT_SCOPE)
+
+add_tests_to_global(analog_test_sources
+                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/AnalogTimeSeries"
+                    DATAMANAGER_TEST_SOURCES)

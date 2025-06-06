@@ -20,7 +20,7 @@ float calc_length2(Line2D const & line);
  * @param line The line to calculate distances for
  * @return Vector of cumulative distances from start of line to each point
  */
-std::vector<float> calc_cumulative_length(Line2D const & line);
+std::vector<float> calc_cumulative_length_vector(Line2D const & line);
 
 
 /**

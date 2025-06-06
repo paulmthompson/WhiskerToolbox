@@ -80,7 +80,7 @@ float calculate_polynomial_angle(Line2D const & line, float position, int polyno
 
     x_coords.reserve(line.size());
     y_coords.reserve(line.size());
-    auto t_values_f = calc_cumulative_length(line);
+    auto t_values_f = calc_cumulative_length_vector(line);
     for (size_t i = 0; i < line.size(); ++i) {
         // Normalize t_values to [0, 1]
         t_values_f[i] /= length;

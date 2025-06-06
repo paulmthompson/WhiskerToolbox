@@ -11,4 +11,6 @@ struct Point2D {
     }
 };
 
+extern template struct Point2D<float>;
+
 #endif // DATAMANGER_POINTS_HPP

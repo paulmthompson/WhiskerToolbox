@@ -28,7 +28,7 @@ float calc_length2(Line2D const & line) {
     return total_length;
 }
 
-std::vector<float> calc_cumulative_length(Line2D const & line) {
+std::vector<float> calc_cumulative_length_vector(Line2D const & line) {
     std::vector<float> distances;
     if (line.empty()) {
         return distances;
@@ -59,7 +59,7 @@ std::optional<Point2D<float>> point_at_distance(
     }
 
     // Calculate cumulative distances
-    std::vector<float> distances = calc_cumulative_length(line);
+    std::vector<float> distances = calc_cumulative_length_vector(line);
 
     // Clamp target distance to valid range
     target_distance = std::max(0.0f, std::min(target_distance, distances.back()));
@@ -92,14 +92,7 @@ std::optional<Point2D<float>> point_at_distance(
 
     float t = (target_distance - segment_start_dist) / segment_length;
 
-    Point2D<float> const & p1 = line[prev_index];
-    Point2D<float> const & p2 = line[index];
-
-    Point2D<float> interpolated_point;
-    interpolated_point.x = p1.x + t * (p2.x - p1.x);
-    interpolated_point.y = p1.y + t * (p2.y - p1.y);
-
-    return interpolated_point;
+    return interpolate_point(line[prev_index], line[index], t);
 }
 
 std::optional<Point2D<float>> point_at_fractional_position(
@@ -147,7 +140,7 @@ std::vector<Point2D<float>> extract_line_subsegment_by_distance(
         return {};
     }
 
-    std::vector<float> distances = calc_cumulative_length(line);
+    std::vector<float> distances = calc_cumulative_length_vector(line);
     float total_length = distances.back();
 
     if (total_length < 1e-6f) {
@@ -232,9 +225,7 @@ Point2D<float> get_position_at_percentage(Line2D const & line, float percentage)
 
     float total_length = 0.0f;
     for (size_t i = 1; i < line.size(); ++i) {
-        float dx = line[i].x - line[i-1].x;
-        float dy = line[i].y - line[i-1].y;
-        float segment_length = std::sqrt(dx * dx + dy * dy);
+        float segment_length = calc_distance(line[i], line[i-1]);
         total_length += segment_length;
         cumulative_distances.push_back(total_length);
     }
@@ -260,14 +251,7 @@ Point2D<float> get_position_at_percentage(Line2D const & line, float percentage)
 
             float t = (target_distance - segment_start_distance) / segment_length;
 
-            // Linear interpolation between points
-            Point2D<float> p1 = line[i-1];
-            Point2D<float> p2 = line[i];
-
-            return Point2D<float>{
-                    p1.x + t * (p2.x - p1.x),
-                    p1.y + t * (p2.y - p1.y)
-            };
+            return interpolate_point(line[i-1], line[i], t);
         }
     }
 
@@ -296,9 +280,7 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
 
     float total_distance = 0.0f;
     for (size_t i = 1; i < line.size(); ++i) {
-        float dx = line[i].x - line[i-1].x;
-        float dy = line[i].y - line[i-1].y;
-        float segment_distance = std::sqrt(dx * dx + dy * dy);
+        float segment_distance = calc_distance(line[i], line[i-1]);
         total_distance += segment_distance;
         cumulative_distances.push_back(total_distance);
     }
@@ -327,10 +309,7 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
             } else {
                 // Interpolate start point
                 float t = (start_distance - current_distance) / (next_distance - current_distance);
-                Point2D<float> start_point;
-                start_point.x = line[i].x + t * (line[i+1].x - line[i].x);
-                start_point.y = line[i].y + t * (line[i+1].y - line[i].y);
-                segment.push_back(start_point);
+                segment.push_back(interpolate_point(line[i], line[i+1], t));
             }
         }
 
@@ -344,10 +323,7 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
             } else {
                 // Interpolate end point
                 float t = (end_distance - current_distance) / (next_distance - current_distance);
-                Point2D<float> end_point;
-                end_point.x = line[i].x + t * (line[i+1].x - line[i].x);
-                end_point.y = line[i].y + t * (line[i+1].y - line[i].y);
-                segment.push_back(end_point);
+                segment.push_back(interpolate_point(line[i], line[i+1], t));
             }
             break; // We've reached the end
         }
@@ -360,4 +336,5 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
 
     return segment;
 }
+
 

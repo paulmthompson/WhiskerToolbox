@@ -22,17 +22,12 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Observer/Observer_Data.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/AnalogTimeSeries/IO/CSV/Analog_Time_Series_CSV.test.cpp
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/AnalogTimeSeries/Analog_Time_Series.test.cpp
-
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/DigitalTimeSeries/Digital_Event_Series.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/DigitalTimeSeries/Digital_Interval_Series.test.cpp
 
         ${DATAMANAGER_TEST_SOURCES_TEMP}
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Masks/Mask_Data.test.cpp
-
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Points/Point_Data.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp
 
