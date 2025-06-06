@@ -79,8 +79,6 @@ set(DATAMANAGER_SOURCES
         utils/connected_component.cpp
         utils/hdf5_mask_load.hpp
         utils/json_helpers.hpp
-        utils/mask_operations.cpp
-        utils/mask_operations.hpp
         utils/opencv_utility.hpp
         utils/opencv_utility.cpp
         utils/polynomial/polynomial_fit.hpp
@@ -88,8 +86,6 @@ set(DATAMANAGER_SOURCES
         utils/polynomial/parametric_polynomial_utils.cpp
         utils/polynomial/parametric_polynomial_utils.hpp
         utils/ProcessingOptions.hpp
-        utils/simplify_line.cpp
-        utils/simplify_line.hpp
         utils/skeletonize.cpp
         utils/skeletonize.hpp
         utils/string_manip.hpp
