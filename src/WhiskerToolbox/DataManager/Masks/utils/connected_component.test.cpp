@@ -112,9 +112,9 @@ TEST_CASE("remove_small_clusters happy path tests", "[connected_component][morph
         
         // L-shaped cluster (7 pixels total):
         // XX....
-        // X.....
-        // X.....
-        // XXXX..
+        // X...O.
+        // X...O.
+        // XXX...
         // ......
         // ......
         
@@ -122,7 +122,7 @@ TEST_CASE("remove_small_clusters happy path tests", "[connected_component][morph
         image[1 * 6 + 0] = 255; // Vertical part
         image[2 * 6 + 0] = 255; // Vertical part  
         image[3 * 6 + 0] = 255; image[3 * 6 + 1] = 255; // Bottom horizontal part
-        image[3 * 6 + 2] = 255; image[3 * 6 + 3] = 255;
+        image[3 * 6 + 2] = 255;
         
         // Small separate cluster (2 pixels)
         image[1 * 6 + 4] = 255;
@@ -140,7 +140,6 @@ TEST_CASE("remove_small_clusters happy path tests", "[connected_component][morph
         REQUIRE(result[3 * 6 + 0] == 1);
         REQUIRE(result[3 * 6 + 1] == 1);
         REQUIRE(result[3 * 6 + 2] == 1);
-        REQUIRE(result[3 * 6 + 3] == 1);
         
         // Small cluster should be removed
         REQUIRE(result[1 * 6 + 4] == 0);

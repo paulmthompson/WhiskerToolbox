@@ -12,7 +12,7 @@ set(analog_subdirectory_sources
 )
 
 set(analog_test_sources
-    Analog_Time_series.text.cpp
+    Analog_Time_Series.test.cpp
     IO/CSV/Analog_Time_Series_CSV.test.cpp)
 
 prefix_list_items(analog_subdirectory_sources "AnalogTimeSeries")
