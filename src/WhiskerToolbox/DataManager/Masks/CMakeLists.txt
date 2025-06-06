@@ -17,7 +17,9 @@ set(mask_sources
 
 set(mask_test_sources
     masks.test.cpp
-    Mask_Data.test.cpp)
+    Mask_Data.test.cpp
+    utils/connected_component.test.cpp
+    utils/skeletonize.test.cpp)
 
 prefix_list_items(mask_sources "Masks")
 set(DATAMANAGER_SOURCES ${DATAMANAGER_SOURCES} ${mask_sources} PARENT_SCOPE)

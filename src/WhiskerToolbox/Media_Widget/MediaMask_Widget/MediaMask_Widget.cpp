@@ -275,8 +275,6 @@ void MediaMask_Widget::_applyMaskDilation(MaskDilationOptions const& options) {
     // Store original data if not already stored
     _storeOriginalMaskData();
     
-    // Get current time
-    auto current_time = _data_manager->getCurrentTime();
     auto const& original_masks = _original_mask_data[_active_key];
     
     // Apply dilation to each mask at current time
