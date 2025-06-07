@@ -286,6 +286,74 @@ void OpenGLWidget::setupVertexAttribs() {
     m_vbo.release();
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+// Model Matrix: Handles series-specific positioning and scaling
+glm::mat4 getEventModelMat(DigitalEventSeriesDisplayOptions const * display_options,
+                           int visible_series_index,
+                           int center_coord) {
+
+    auto Model = glm::mat4(1.0f);
+
+    if (display_options->display_mode == EventDisplayMode::Stacked) {
+        // Check if this series has been positioned by VerticalSpaceManager
+        if (display_options->vertical_spacing == 0.0f) {
+            // VerticalSpaceManager positioning: use calculated position and scale
+            float const series_center_y = display_options->y_offset;
+            float const series_height = display_options->event_height;
+
+            // Apply scaling: transform from normalized [-1,+1] to allocated height
+            Model = glm::scale(Model, glm::vec3(1.0f, series_height * 0.5f, 1.0f));
+
+            // Apply translation: move to calculated center position
+            Model = glm::translate(Model, glm::vec3(0.0f, series_center_y / (series_height * 0.5f), 0.0f));
+
+        } else {
+            // Legacy index-based positioning for backward compatibility
+            float const y_offset = static_cast<float>(visible_series_index) * display_options->vertical_spacing;
+            float const series_center = y_offset + center_coord;
+            float const series_height = display_options->event_height;
+
+            // Apply scaling and translation
+            Model = glm::scale(Model, glm::vec3(1.0f, series_height * 0.5f, 1.0f));
+            Model = glm::translate(Model, glm::vec3(0.0f, series_center / (series_height * 0.5f), 0.0f));
+        }
+    }
+
+    return Model;
+}
+
+// View Matrix: Handles global panning (applied to all series equally)
+// Note: Pan offset is now handled in Projection matrix for dynamic viewport
+glm::mat4 getEventViewMat() {
+
+    auto View = glm::mat4(1.0f);
+    return View;
+}
+
+glm::mat4 getEventProjectionMat(float yMin,
+                                float yMax,
+                                float verticalPanOffset,
+                                int64_t start_time,
+                                int64_t end_time)
+{
+    // Projection Matrix: Maps world coordinates to screen coordinates
+    // - X axis: maps time range [start_time, end_time] to screen width
+    // - Y axis: maps world Y coordinates [min_y, max_y] to screen height
+    //
+    // For dynamic viewport: adjust Y bounds based on content and pan offset
+    float dynamic_min_y = yMin + verticalPanOffset;
+    float dynamic_max_y = yMax + verticalPanOffset;
+
+    // Projection Matrix. Orthographic. Horizontal Zoom. Vertical Zoom.
+    auto Projection = glm::ortho(static_cast<float>(start_time),
+                                 static_cast<float>(end_time),
+                                 dynamic_min_y,
+                                 dynamic_max_y);
+
+    return Projection;
+}
+
 /**
  * @brief OpenGLWidget::drawDigitalEventSeries
  *
@@ -299,8 +367,8 @@ void OpenGLWidget::setupVertexAttribs() {
  */
 void OpenGLWidget::drawDigitalEventSeries() {
     int r, g, b;
-    auto const start_time = static_cast<float>(_xAxis.getStart());
-    auto const end_time = static_cast<float>(_xAxis.getEnd());
+    auto const start_time = _xAxis.getStart();
+    auto const end_time = _xAxis.getEnd();
     auto const m_program_ID = m_program->programId();
 
     auto const min_y = _yMin;
@@ -343,9 +411,10 @@ void OpenGLWidget::drawDigitalEventSeries() {
         float const bNorm = static_cast<float>(b) / 255.0f;
         float const alpha = display_options->alpha;
 
-        auto start_time_idx = getTimeIndexForSeries(start_time, *time_frame.get(), *_master_time_frame.get());
-        auto end_time_idx = getTimeIndexForSeries(end_time, *time_frame.get(), *_master_time_frame.get());
-        auto visible_events = series->getEventsInRange(start_time_idx, end_time_idx);
+        auto visible_events = series->getEventsInRange(TimeIndex(start_time),
+                                                       TimeIndex(end_time),
+                                                       time_frame.get(),
+                                                       _master_time_frame.get());
 
         // Determine Y coordinates based on display mode
         float event_y_min, event_y_max;
@@ -362,51 +431,18 @@ void OpenGLWidget::drawDigitalEventSeries() {
         }
 
         // === MVP MATRIX SETUP ===
-        // Model Matrix: Handles series-specific positioning and scaling
-        auto Model = glm::mat4(1.0f);
-        
-        if (display_options->display_mode == EventDisplayMode::Stacked) {
-            // Check if this series has been positioned by VerticalSpaceManager
-            if (display_options->vertical_spacing == 0.0f) {
-                // VerticalSpaceManager positioning: use calculated position and scale
-                float const series_center_y = display_options->y_offset;
-                float const series_height = display_options->event_height;
-                
-                // Apply scaling: transform from normalized [-1,+1] to allocated height
-                Model = glm::scale(Model, glm::vec3(1.0f, series_height * 0.5f, 1.0f));
-                
-                // Apply translation: move to calculated center position
-                Model = glm::translate(Model, glm::vec3(0.0f, series_center_y / (series_height * 0.5f), 0.0f));
-                
-                std::cout << "  Event '" << key << "' MVP: center_y=" << series_center_y 
-                          << ", height=" << series_height << std::endl;
-            } else {
-                // Legacy index-based positioning for backward compatibility
-                float const y_offset = static_cast<float>(visible_series_index) * display_options->vertical_spacing;
-                float const series_center = y_offset + center_coord;
-                float const series_height = display_options->event_height;
-                
-                // Apply scaling and translation
-                Model = glm::scale(Model, glm::vec3(1.0f, series_height * 0.5f, 1.0f));
-                Model = glm::translate(Model, glm::vec3(0.0f, series_center / (series_height * 0.5f), 0.0f));
-            }
-        }
-        // For full canvas mode, no Model matrix transformations needed
 
-        // View Matrix: Handles global panning (applied to all series equally)
-        // Note: Pan offset is now handled in Projection matrix for dynamic viewport
-        auto View = glm::mat4(1.0f);
-        // View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0)); // Moved to Projection
+        auto Model = getEventModelMat(display_options.get(),
+                                      visible_series_index,
+                                      center_coord);
 
-        // Projection Matrix: Maps world coordinates to screen coordinates
-        // - X axis: maps time range [start_time, end_time] to screen width
-        // - Y axis: maps world Y coordinates [min_y, max_y] to screen height
-        // 
-        // For dynamic viewport: adjust Y bounds based on content and pan offset
-        float dynamic_min_y = _yMin + _verticalPanOffset;
-        float dynamic_max_y = _yMax + _verticalPanOffset;
-        
-        auto Projection = glm::ortho(start_time, end_time, dynamic_min_y, dynamic_max_y);
+        auto View = getEventViewMat();
+
+        auto Projection = getEventProjectionMat(_yMin,
+                                                _yMax,
+                                                _verticalPanOffset,
+                                                start_time,
+                                                end_time);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
@@ -423,7 +459,7 @@ void OpenGLWidget::drawDigitalEventSeries() {
                 xCanvasPos = event;
             } else {
                 // Different time frames - convert event index to time, then to master time frame
-                float event_time = static_cast<float>(time_frame->getTimeAtIndex(static_cast<int>(event)));
+                float event_time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(static_cast<int>(event))));
                 xCanvasPos = event_time; // This should work if both time frames use the same time units
             }
 
@@ -446,6 +482,8 @@ void OpenGLWidget::drawDigitalEventSeries() {
     glLineWidth(1.0f);
     glUseProgram(0);
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 void OpenGLWidget::drawDigitalIntervalSeries() {
     int r, g, b;
@@ -480,7 +518,7 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
                 static_cast<int64_t>(start_time),
                 static_cast<int64_t>(end_time),
                 [&time_frame](int64_t idx) {
-                    return static_cast<float>(time_frame->getTimeAtIndex(idx));
+                    return static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(idx)));
                 });
 
         hexToRGB(display_options->hex_color, r, g, b);
@@ -532,8 +570,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 
         for (auto const & interval: visible_intervals) {
 
-            auto start = static_cast<float>(time_frame->getTimeAtIndex(interval.start));
-            auto end = static_cast<float>(time_frame->getTimeAtIndex(interval.end));
+            auto start = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(interval.start)));
+            auto end = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(interval.end)));
 
             //Clip the interval to the visible range
             start = std::max(start, start_time);
@@ -641,6 +679,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
     glUseProgram(0);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 void OpenGLWidget::drawAnalogSeries() {
     int r, g, b;
 
@@ -702,9 +742,9 @@ void OpenGLWidget::drawAnalogSeries() {
         // Otherwise, convert the master time coordinates to data time frame indices
         if (time_frame.get() == _master_time_frame.get()) {
             start_it = std::lower_bound(data_time.begin(), data_time.end(), start_time,
-                                         [&time_frame](auto const & time, auto const & value) { return time_frame->getTimeAtIndex(time) < value; });
+                                         [&time_frame](auto const & time, auto const & value) { return time_frame->getTimeAtIndex(TimeIndex(time)) < value; });
             end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
-                                       [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(time); });
+                                       [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(TimeIndex(time)); });
         } else {
            auto start_idx = time_frame->getIndexAtTime(start_time); // index in time vector
            auto end_idx = time_frame->getIndexAtTime(end_time); // index in time vector
@@ -792,7 +832,7 @@ void OpenGLWidget::drawAnalogSeries() {
             // Original behavior: connect all points
             for (auto it = start_it; it != end_it; ++it) {
                 size_t const index = std::distance(data_time.begin(), it);
-                auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
+                auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[index])));
                 float const xCanvasPos = time;
                 float const yCanvasPos = data[index];
                 m_vertices.push_back(xCanvasPos);
@@ -846,14 +886,14 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator
     
     for (auto it = start_it; it != end_it; ++it) {
         size_t const index = std::distance(data_time.begin(), it);
-        auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
+        auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[index])));
         float const xCanvasPos = time;
         float const yCanvasPos = data[index];
         
         // Check for gap if this isn't the first point
         if (it != start_it) {
             size_t const prev_index = std::distance(data_time.begin(), prev_it);
-            auto const prev_time = static_cast<float>(time_frame->getTimeAtIndex(data_time[prev_index]));
+            auto const prev_time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[prev_index])));
             //float const time_gap = time - prev_time;
             float const time_gap = index - prev_index;
             
@@ -912,12 +952,12 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it
         float xCanvasPos;
         if (time_frame.get() == _master_time_frame.get()) {
             // Same time frame - convert data index to time coordinate
-            auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
+            auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[index])));
             xCanvasPos = time;
         } else {
             // Different time frames - data_time[index] is already an index in the data's time frame
             // Convert to actual time, which should be compatible with master time frame
-            auto const time = static_cast<float>(time_frame->getTimeAtIndex(data_time[index]));
+            auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[index])));
             xCanvasPos = time;
         }
         
@@ -942,6 +982,8 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it
         //glPointSize(1.0f); // Reset to default
     }
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 void OpenGLWidget::paintGL() {
     int r, g, b;
@@ -1375,8 +1417,8 @@ std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std:
             interval_end_master = interval.end;
         } else {
             // Convert series indices to master time frame coordinates
-            interval_start_master = static_cast<int64_t>(time_frame->getTimeAtIndex(interval.start));
-            interval_end_master = static_cast<int64_t>(time_frame->getTimeAtIndex(interval.end));
+            interval_start_master = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeIndex(interval.start)));
+            interval_end_master = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeIndex(interval.end)));
         }
         
         return std::make_pair(interval_start_master, interval_end_master);
@@ -1549,8 +1591,8 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
     } else {
         // Convert series indices back to master time coordinates
         try {
-            _dragged_start_time = static_cast<int64_t>(time_frame->getTimeAtIndex(static_cast<int>(new_start_series)));
-            _dragged_end_time = static_cast<int64_t>(time_frame->getTimeAtIndex(static_cast<int>(new_end_series)));
+            _dragged_start_time = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeIndex(new_start_series)));
+            _dragged_end_time = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeIndex(new_end_series)));
         } catch (...) {
             // Conversion failed - abort drag
             cancelIntervalDrag();

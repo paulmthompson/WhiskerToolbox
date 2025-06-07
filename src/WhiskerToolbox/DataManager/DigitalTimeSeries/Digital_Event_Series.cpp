@@ -1,5 +1,7 @@
 #include "Digital_Event_Series.hpp"
 
+#include "TimeFrame.hpp"
+
 #include <algorithm> // std::sort
 
 DigitalEventSeries::DigitalEventSeries(std::vector<float> event_vector) {
@@ -42,3 +44,4 @@ bool DigitalEventSeries::removeEvent(float const event_time) {
 void DigitalEventSeries::_sortEvents() {
     std::sort(_data.begin(), _data.end());
 }
+

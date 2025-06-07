@@ -2,6 +2,7 @@
 #define BEHAVIORTOOLBOX_DIGITAL_EVENT_SERIES_HPP
 
 #include "Observer/Observer_Data.hpp"
+#include "TimeFrame.hpp"
 
 #include <ranges>
 #include <vector>
@@ -47,6 +48,16 @@ public:
     [[nodiscard]] auto getEventsInRange(float start_time, float stop_time) const {
         return getEventsInRange(start_time, stop_time, std::identity{});
     }
+
+    [[nodiscard]] auto getEventsInRange(TimeIndex start_index,
+                                        TimeIndex stop_index,
+                                        TimeFrame const * source_time_frame,
+                                        TimeFrame const * destination_time_frame) const {
+
+        auto start_time_idx = getTimeIndexForSeries(start_index, source_time_frame, destination_time_frame);
+        auto end_time_idx = getTimeIndexForSeries(stop_index, source_time_frame, destination_time_frame);
+        return getEventsInRange(start_time_idx, end_time_idx);
+    };
 
     template<typename TransformFunc = std::identity>
     std::vector<float> getEventsAsVector(float start_time, float stop_time,

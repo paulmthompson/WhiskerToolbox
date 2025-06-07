@@ -187,7 +187,7 @@ void DataViewer_Widget::resizeEvent(QResizeEvent * event) {
 
 void DataViewer_Widget::_updatePlot(int time) {
     //std::cout << "Time is " << time;
-    time = _data_manager->getTime("time")->getTimeAtIndex(time);
+    time = _data_manager->getTime("time")->getTimeAtIndex(TimeIndex(time));
     //std::cout << ""
     ui->openGLWidget->updateCanvas(time);
 
@@ -532,7 +532,7 @@ void DataViewer_Widget::_handleColorChanged(std::string const & feature_key, std
 void DataViewer_Widget::_updateCoordinateDisplay(float time_coordinate, float canvas_y, QString const & series_info) {
     // Convert time coordinate to actual time using the time frame
     int const time_index = static_cast<int>(std::round(time_coordinate));
-    int const actual_time = _time_frame->getTimeAtIndex(time_index);
+    int const actual_time = _time_frame->getTimeAtIndex(TimeIndex(time_index));
     
     // Get canvas size for debugging
     auto [canvas_width, canvas_height] = ui->openGLWidget->getCanvasSize();

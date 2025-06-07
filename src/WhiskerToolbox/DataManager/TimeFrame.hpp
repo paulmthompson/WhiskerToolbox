@@ -1,10 +1,33 @@
 #ifndef TIMEFRAME_HPP
 #define TIMEFRAME_HPP
 
-#include <cmath>
 #include <concepts>
 #include <iostream>
 #include <vector>
+
+struct TimeIndex {
+    explicit TimeIndex(int64_t val) : value(val) {}
+
+    // Getter for the underlying value
+    [[nodiscard]] int64_t getValue() const {
+        return value;
+    }
+
+    // (Optional) Overload comparison operators if needed
+    bool operator==(TimeIndex const& other) const {
+        return value == other.value;
+    }
+
+    bool operator!=(TimeIndex const& other) const {
+        return value != other.value;
+    }
+
+    bool operator<(TimeIndex const& other) const {
+        return value < other.value;
+    }
+private:
+    int64_t value;
+};
 
 class TimeFrame {
 public:
@@ -13,52 +36,11 @@ public:
 
     [[nodiscard]] int getTotalFrameCount() const { return _total_frame_count; };
 
-    template<std::integral T>
-    [[nodiscard]] int getTimeAtIndex(T index) const {
-        if (index < 0 || static_cast<size_t>(index) >= _times.size()) {
-            std::cout << "Index " << index << " out of range" << " for time frame of size " << _times.size() << std::endl;
-            return 0;
-        }
-        return _times[static_cast<size_t>(index)];
-    }
+    [[nodiscard]] int getTimeAtIndex(TimeIndex index) const;
 
-    [[nodiscard]] int getIndexAtTime(float time) const {
-        // Binary search to find the index closest to the given time
-        auto it = std::lower_bound(_times.begin(), _times.end(), time);
+    [[nodiscard]] int getIndexAtTime(float time) const;
 
-        // If exact match found
-        if (it != _times.end() && static_cast<float>(*it) == time) {
-            return static_cast<int>(std::distance(_times.begin(), it));
-        }
-
-        // If time is beyond the last time point
-        if (it == _times.end()) {
-            return static_cast<int>(_times.size() - 1);
-        }
-
-        // If time is before the first time point
-        if (it == _times.begin()) {
-            return 0;
-        }
-
-        // Find the closest time point
-        auto prev = it - 1;
-        if (std::abs(static_cast<float>(*prev) - time) <= std::abs(static_cast<float>(*it) - time)) {
-            return static_cast<int>(std::distance(_times.begin(), prev));
-        } else {
-            return static_cast<int>(std::distance(_times.begin(), it));
-        }
-    }
-
-    [[nodiscard]] int checkFrameInbounds(int frame_id) const {
-
-        if (frame_id < 0) {
-            frame_id = 0;
-        } else if (frame_id >= _total_frame_count) {
-            frame_id = _total_frame_count;
-        }
-        return frame_id;
-    }
+    [[nodiscard]] int checkFrameInbounds(int frame_id) const;
 
 protected:
 private:
@@ -81,9 +63,9 @@ private:
  * @return The original `time_value_in_source_frame` if frames are the same object instance,
  *         or the corresponding index in `destination_time_frame` if frames are different.
  */
-float getTimeIndexForSeries(int64_t time_value_in_source_frame,
-                                 TimeFrame const & source_time_frame,
-                                 TimeFrame const & destination_time_frame);
+int64_t getTimeIndexForSeries(TimeIndex time_value_in_source_frame,
+                                 TimeFrame const * source_time_frame,
+                                 TimeFrame const * destination_time_frame);
 
 
 #endif// TIMEFRAME_HPP
