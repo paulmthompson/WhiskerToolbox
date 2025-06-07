@@ -485,6 +485,60 @@ void OpenGLWidget::drawDigitalEventSeries() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// Model Matrix: Handles series-specific positioning and scaling for digital intervals
+glm::mat4 getIntervalModelMat(DigitalIntervalSeriesDisplayOptions const * display_options,
+                              std::string const & key) {
+    auto Model = glm::mat4(1.0f);
+    
+    // Check if this series has been positioned by VerticalSpaceManager
+    // (VerticalSpaceManager sets a specific y_offset value)
+    if (display_options->y_offset != 0.0f) {
+        // VerticalSpaceManager positioning: use calculated position and scale
+        float const series_center_y = display_options->y_offset;
+        float const series_height = display_options->interval_height;
+        
+        // Apply translation: move to calculated center position
+        Model = glm::translate(Model, glm::vec3(0, series_center_y, 0));
+        
+        // Apply scaling: scale to allocated height 
+        Model = glm::scale(Model, glm::vec3(1, series_height * 0.5f, 1));
+        
+        std::cout << "  Interval '" << key << "' MVP: center_y=" << series_center_y 
+                  << ", height=" << series_height << std::endl;
+    }
+    // For intervals without VerticalSpaceManager, use full canvas (no Model matrix transforms)
+
+    return Model;
+}
+
+// View Matrix: Handles global panning (applied to all series equally) for digital intervals
+// Note: Pan offset is now handled in Projection matrix for dynamic viewport
+glm::mat4 getIntervalViewMat() {
+    auto View = glm::mat4(1.0f);
+    // View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0)); // Moved to Projection
+    
+    return View;
+}
+
+// Projection Matrix: Maps world coordinates to screen coordinates for digital intervals
+glm::mat4 getIntervalProjectionMat(float start_time,
+                                   float end_time,
+                                   float yMin,
+                                   float yMax,
+                                   float verticalPanOffset) {
+    // Projection Matrix: Maps world coordinates to screen coordinates
+    // - X axis: maps time range [start_time, end_time] to screen width
+    // - Y axis: maps world Y coordinates [min_y, max_y] to screen height  
+    // 
+    // For dynamic viewport: adjust Y bounds based on content and pan offset
+    float dynamic_min_y = yMin + verticalPanOffset;
+    float dynamic_max_y = yMax + verticalPanOffset;
+    
+    auto Projection = glm::ortho(start_time, end_time, dynamic_min_y, dynamic_max_y);
+    
+    return Projection;
+}
+
 void OpenGLWidget::drawDigitalIntervalSeries() {
     int r, g, b;
     auto const start_time = static_cast<float>(_xAxis.getStart());
@@ -528,41 +582,16 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         float const alpha = display_options->alpha;
 
         // === MVP MATRIX SETUP ===
-        // Model Matrix: Handles series-specific positioning and scaling  
-        auto Model = glm::mat4(1.0f);
-        
-        // Check if this series has been positioned by VerticalSpaceManager
-        // (VerticalSpaceManager sets a specific y_offset value)
-        if (display_options->y_offset != 0.0f) {
-            // VerticalSpaceManager positioning: use calculated position and scale
-            float const series_center_y = display_options->y_offset;
-            float const series_height = display_options->interval_height;
-            
-            // Apply translation: move to calculated center position
-            Model = glm::translate(Model, glm::vec3(0, series_center_y, 0));
-            
-            // Apply scaling: scale to allocated height 
-            Model = glm::scale(Model, glm::vec3(1, series_height * 0.5f, 1));
-            
-            std::cout << "  Interval '" << key << "' MVP: center_y=" << series_center_y 
-                      << ", height=" << series_height << std::endl;
-        }
-        // For intervals without VerticalSpaceManager, use full canvas (no Model matrix transforms)
 
-        // View Matrix: Handles global panning (applied to all series equally)
-        // Note: Pan offset is now handled in Projection matrix for dynamic viewport
-        auto View = glm::mat4(1.0f);
-        // View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0)); // Moved to Projection
+        auto Model = getIntervalModelMat(display_options.get(), key);
 
-        // Projection Matrix: Maps world coordinates to screen coordinates
-        // - X axis: maps time range [start_time, end_time] to screen width
-        // - Y axis: maps world Y coordinates [min_y, max_y] to screen height  
-        // 
-        // For dynamic viewport: adjust Y bounds based on content and pan offset
-        float dynamic_min_y = _yMin + _verticalPanOffset;
-        float dynamic_max_y = _yMax + _verticalPanOffset;
-        
-        auto Projection = glm::ortho(start_time, end_time, dynamic_min_y, dynamic_max_y);
+        auto View = getIntervalViewMat();
+
+        auto Projection = getIntervalProjectionMat(start_time,
+                                                   end_time,
+                                                   _yMin,
+                                                   _yMax,
+                                                   _verticalPanOffset);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
