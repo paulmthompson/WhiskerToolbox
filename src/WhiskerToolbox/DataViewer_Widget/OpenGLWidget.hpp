@@ -12,6 +12,9 @@
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <cstdint>
 #include <iostream>
 #include <map>
@@ -59,6 +62,156 @@ enum class PlotTheme {
     Dark,   // Black background, white axes (default)
     Light   // White background, dark axes
 };
+
+// Forward declarations for MVP matrix functions
+class AnalogTimeSeriesDisplayOptions;
+class DigitalEventSeriesDisplayOptions;
+class DigitalIntervalSeriesDisplayOptions;
+
+// Digital Event Series MVP Matrix Functions
+
+/**
+ * @brief Create Model matrix for digital event series positioning and scaling
+ * 
+ * Handles series-specific transformations for digital event series including
+ * stacked positioning with VerticalSpaceManager or legacy index-based positioning.
+ * 
+ * @param display_options Display configuration for the event series
+ * @param visible_series_index Index of this series among visible series  
+ * @param center_coord Centering coordinate for legacy positioning
+ * @return Model transformation matrix
+ */
+glm::mat4 getEventModelMat(DigitalEventSeriesDisplayOptions const * display_options,
+                           int visible_series_index,
+                           int center_coord);
+
+/**
+ * @brief Create View matrix for digital event series global transformations
+ * 
+ * Handles view-level transformations applied to all digital event series.
+ * Currently returns identity matrix as pan offset is handled in projection.
+ * 
+ * @return View transformation matrix
+ */
+glm::mat4 getEventViewMat();
+
+/**
+ * @brief Create Projection matrix for digital event series coordinate mapping
+ * 
+ * Maps world coordinates to screen coordinates for digital event series,
+ * including dynamic viewport adjustments for panning and zooming.
+ * 
+ * @param yMin Minimum Y coordinate of viewport
+ * @param yMax Maximum Y coordinate of viewport
+ * @param verticalPanOffset Vertical pan offset for dynamic viewport
+ * @param start_time Start time of visible range
+ * @param end_time End time of visible range
+ * @return Projection transformation matrix
+ */
+glm::mat4 getEventProjectionMat(float yMin,
+                                float yMax,
+                                float verticalPanOffset,
+                                int64_t start_time,
+                                int64_t end_time);
+
+// Digital Interval Series MVP Matrix Functions
+
+/**
+ * @brief Create Model matrix for digital interval series positioning and scaling
+ * 
+ * Handles series-specific transformations for digital interval series including
+ * VerticalSpaceManager positioning with allocated height or full canvas mode.
+ * 
+ * @param display_options Display configuration for the interval series
+ * @param key Series key for debugging output
+ * @return Model transformation matrix
+ */
+glm::mat4 getIntervalModelMat(DigitalIntervalSeriesDisplayOptions const * display_options,
+                              std::string const & key);
+
+/**
+ * @brief Create View matrix for digital interval series global transformations
+ * 
+ * Handles view-level transformations applied to all digital interval series.
+ * Currently returns identity matrix as pan offset is handled in projection.
+ * 
+ * @return View transformation matrix
+ */
+glm::mat4 getIntervalViewMat();
+
+/**
+ * @brief Create Projection matrix for digital interval series coordinate mapping
+ * 
+ * Maps world coordinates to screen coordinates for digital interval series,
+ * including dynamic viewport adjustments for panning and zooming.
+ * 
+ * @param start_time Start time of visible range
+ * @param end_time End time of visible range
+ * @param yMin Minimum Y coordinate of viewport
+ * @param yMax Maximum Y coordinate of viewport
+ * @param verticalPanOffset Vertical pan offset for dynamic viewport
+ * @return Projection transformation matrix
+ */
+glm::mat4 getIntervalProjectionMat(float start_time,
+                                   float end_time,
+                                   float yMin,
+                                   float yMax,
+                                   float verticalPanOffset);
+
+// Analog Series MVP Matrix Functions
+
+/**
+ * @brief Create Model matrix for analog series positioning and scaling
+ * 
+ * Handles series-specific transformations for analog series including
+ * VerticalSpaceManager positioning with allocated space or legacy index-based
+ * positioning. Applies amplitude scaling based on data characteristics and user controls.
+ * 
+ * @param display_options Display configuration for the analog series
+ * @param key Series key for debugging output
+ * @param stdDev Standard deviation of the data for amplitude scaling
+ * @param series_index Index of this series for legacy positioning
+ * @param ySpacing Vertical spacing between series for legacy positioning
+ * @param center_coord Centering coordinate for legacy positioning
+ * @param global_zoom Global zoom factor applied to all series
+ * @return Model transformation matrix
+ */
+glm::mat4 getAnalogModelMat(AnalogTimeSeriesDisplayOptions const * display_options,
+                            std::string const & key,
+                            float stdDev,
+                            int series_index,
+                            float ySpacing,
+                            float center_coord,
+                            float global_zoom);
+
+/**
+ * @brief Create View matrix for analog series global transformations
+ * 
+ * Handles view-level transformations applied to all analog series.
+ * Currently returns identity matrix as pan offset is handled in projection.
+ * 
+ * @return View transformation matrix
+ */
+glm::mat4 getAnalogViewMat();
+
+/**
+ * @brief Create Projection matrix for analog series coordinate mapping
+ * 
+ * Maps world coordinates to screen coordinates for analog series,
+ * including dynamic viewport adjustments for panning and zooming.
+ * 
+ * @param start_time Start time of visible range
+ * @param end_time End time of visible range
+ * @param yMin Minimum Y coordinate of viewport
+ * @param yMax Maximum Y coordinate of viewport
+ * @param verticalPanOffset Vertical pan offset for dynamic viewport
+ * @return Projection transformation matrix
+ */
+glm::mat4 getAnalogProjectionMat(float start_time,
+                                 float end_time,
+                                 float yMin,
+                                 float yMax,
+                                 float verticalPanOffset);
 
 //class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
 class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
