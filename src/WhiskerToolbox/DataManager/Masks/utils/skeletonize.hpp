@@ -1,6 +1,9 @@
 #ifndef SKELETONIZE_HPP
 #define SKELETONIZE_HPP
 
+#include "Image.hpp"
+#include "ImageSize/ImageSize.hpp"
+
 #include <cstdint>
 #include <vector>
 
@@ -19,12 +22,33 @@
  * @pre image.size() must equal height * width
  * @pre height and width must be greater than 0
  * @pre Image data should be binary (0 or non-zero values)
+ * @pre Image data is expected in row-major order: index = row * width + col
  * 
  * @post Returns a binary image of the same dimensions with skeletonized objects
  * 
- * @return std::vector<uint8_t> Skeletonized binary image as a 1D vector
+ * @return std::vector<uint8_t> Skeletonized binary image as a 1D vector in row-major order
  */
 std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t height, size_t width);
+
+/**
+ * @brief Performs fast skeletonization of a binary image using morphological thinning.
+ * 
+ * This is the preferred interface that uses the Image struct to ensure consistency
+ * in data layout and dimensions. The input image data must be in row-major order.
+ * 
+ * @param input_image Input binary image where non-zero values represent foreground pixels
+ * 
+ * @pre input_image.data.size() must equal input_image.size.width * input_image.size.height
+ * @pre input_image.size.width and input_image.size.height must be greater than 0
+ * @pre Image data should be binary (0 or non-zero values)
+ * @pre Image data must be in row-major order as documented in Image struct
+ * 
+ * @post Returns a binary image of the same dimensions with skeletonized objects
+ * @post Output image maintains row-major data layout
+ * 
+ * @return Image Skeletonized binary image with same dimensions as input
+ */
+Image fast_skeletonize(Image const & input_image);
 
 
 #endif// SKELETONIZE_HPP

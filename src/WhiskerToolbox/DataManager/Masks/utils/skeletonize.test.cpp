@@ -2,6 +2,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "skeletonize.hpp"
+#include "Image.hpp"
 
 #include <vector>
 #include <algorithm>
@@ -189,5 +190,80 @@ TEST_CASE("fast_skeletonize edge cases and error handling", "[skeletonize][morph
         size_t total_skeleton_pixels = std::accumulate(result.begin(), result.end(), 0);
         REQUIRE(total_skeleton_pixels > 0);
         REQUIRE(total_skeleton_pixels < 18 * 255); // Should be less than original pixel count
+    }
+}
+
+TEST_CASE("fast_skeletonize Image interface tests", "[skeletonize][morphology][Image]") {
+    
+    SECTION("horizontal rectangle reduces to horizontal line using Image interface") {
+        // Create a 5x15 horizontal rectangle (5 height, 15 width)
+        ImageSize size = {15, 5}; // width, height
+        Image input_image(size);
+        
+        // Fill the rectangle with foreground pixels (value 255)
+        for (int row = 0; row < size.height; ++row) {
+            for (int col = 0; col < size.width; ++col) {
+                input_image.set(row, col, 255);
+            }
+        }
+        
+        // Perform skeletonization using Image interface
+        Image result = fast_skeletonize(input_image);
+        
+        // The result should have the same dimensions
+        REQUIRE(result.size.width == size.width);
+        REQUIRE(result.size.height == size.height);
+        REQUIRE(result.pixel_count() == input_image.pixel_count());
+        
+        // Count non-zero pixels in each row
+        std::vector<size_t> row_counts(size.height, 0);
+        for (int row = 0; row < size.height; ++row) {
+            for (int col = 0; col < size.width; ++col) {
+                if (result.at(row, col) > 0) {
+                    row_counts[row]++;
+                }
+            }
+        }
+        
+        // The skeleton should be concentrated in the middle row(s)
+        size_t middle_row = size.height / 2;
+        REQUIRE(row_counts[middle_row] > 0);
+        
+        // The skeleton should span most of the width
+        REQUIRE(row_counts[middle_row] >= size.width * 0.8);
+        
+        // Edge rows should have fewer or no pixels
+        REQUIRE(row_counts[0] <= row_counts[middle_row]);
+        REQUIRE(row_counts[size.height - 1] <= row_counts[middle_row]);
+    }
+    
+    SECTION("consistency between vector and Image interfaces") {
+        // Create the same test image using both interfaces
+        ImageSize size = {10, 8}; // 10 width, 8 height
+        
+        // Create pattern using Image interface
+        Image img_input(size);
+        for (int row = 2; row < 6; ++row) {
+            for (int col = 3; col < 7; ++col) {
+                img_input.set(row, col, 255);
+            }
+        }
+        
+        // Create same pattern using vector interface
+        std::vector<uint8_t> vec_input(size.width * size.height, 0);
+        for (int row = 2; row < 6; ++row) {
+            for (int col = 3; col < 7; ++col) {
+                vec_input[row * size.width + col] = 255;
+            }
+        }
+        
+        // Run skeletonization with both interfaces
+        Image img_result = fast_skeletonize(img_input);
+        std::vector<uint8_t> vec_result = fast_skeletonize(vec_input, size.height, size.width);
+        
+        // Results should be identical
+        REQUIRE(img_result.data == vec_result);
+        REQUIRE(img_result.size.width == size.width);
+        REQUIRE(img_result.size.height == size.height);
     }
 } 

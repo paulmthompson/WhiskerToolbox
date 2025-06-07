@@ -1,4 +1,3 @@
-
 /*
 
 The code below was adapted from scikit-image
@@ -96,3 +95,14 @@ std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t
 
     return result;
 }
+
+Image fast_skeletonize(Image const & input_image) {
+    // Delegate to the existing function
+    auto result_data = fast_skeletonize(input_image.data, 
+                                       static_cast<size_t>(input_image.size.height), 
+                                       static_cast<size_t>(input_image.size.width));
+    
+    // Return as Image struct
+    return Image(std::move(result_data), input_image.size);
+}
+

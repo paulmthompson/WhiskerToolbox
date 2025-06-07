@@ -12,6 +12,7 @@ set(mask_sources
     IO/JSON/Mask_Data_JSON.cpp
     utils/connected_component.hpp
     utils/connected_component.cpp
+    utils/Image.hpp
     utils/skeletonize.cpp
     utils/skeletonize.hpp)
 
@@ -19,6 +20,7 @@ set(mask_test_sources
     masks.test.cpp
     Mask_Data.test.cpp
     utils/connected_component.test.cpp
+    utils/Image.test.cpp
     utils/skeletonize.test.cpp)
 
 prefix_list_items(mask_sources "Masks")
