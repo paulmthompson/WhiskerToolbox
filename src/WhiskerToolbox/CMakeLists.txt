@@ -20,6 +20,7 @@ find_package(glm CONFIG REQUIRED)
 qt_standard_project_setup()
 
 add_subdirectory(DataManager)
+add_subdirectory(DataViewer)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -225,11 +226,8 @@ set(PROJECT_SOURCES
         DataViewer_Widget/DataViewer_Tree_Widget/DataViewer_Tree_Widget.hpp
         DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.cpp
         DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.hpp
-        DataViewer_Widget/VerticalSpaceManager.cpp
-        DataViewer_Widget/VerticalSpaceManager.hpp
         DataViewer_Widget/OpenGLWidget.cpp
         DataViewer_Widget/OpenGLWidget.hpp
-        DataViewer_Widget/XAxis.hpp
         DataViewer_Widget/shaders/dashed_line_shader.hpp
         DataViewer_Widget/shaders/colored_vertex_shader.hpp
         DataViewer_Widget/DisplayOptions/TimeSeriesDisplayOptions.hpp
@@ -438,6 +436,7 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
+        DataViewer/CMakeLists.txt
 
 )
 
@@ -473,7 +472,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
-target_link_libraries(WhiskerToolbox PRIVATE DataManager)
+target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 

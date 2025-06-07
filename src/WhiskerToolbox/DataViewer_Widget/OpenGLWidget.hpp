@@ -1,7 +1,7 @@
 #ifndef OPENGLWIDGET_HPP
 #define OPENGLWIDGET_HPP
 
-#include "XAxis.hpp"
+#include "DataViewer/XAxis.hpp"
 #include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
 
 #include <QMatrix4x4>

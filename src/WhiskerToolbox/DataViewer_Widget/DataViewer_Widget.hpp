@@ -3,7 +3,7 @@
 
 #include <QWidget>
 
-#include "VerticalSpaceManager.hpp"
+#include "DataViewer/VerticalSpaceManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 
 #include <memory>
