@@ -63,11 +63,6 @@ enum class PlotTheme {
     Light   // White background, dark axes
 };
 
-// Forward declarations for MVP matrix functions
-class AnalogTimeSeriesDisplayOptions;
-class DigitalEventSeriesDisplayOptions;
-class DigitalIntervalSeriesDisplayOptions;
-
 // Digital Event Series MVP Matrix Functions
 
 /**
