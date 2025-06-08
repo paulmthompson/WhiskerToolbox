@@ -1,7 +1,7 @@
 #ifndef DISPLAY_OPTIONS_HPP
 #define DISPLAY_OPTIONS_HPP
 
-#include "utils/color.hpp"
+#include "../../DataManager/utils/color.hpp"
 
 #include <string>
 #include <vector> 

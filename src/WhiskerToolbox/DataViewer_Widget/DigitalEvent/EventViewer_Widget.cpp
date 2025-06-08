@@ -1,9 +1,9 @@
 #include "EventViewer_Widget.hpp"
 #include "ui_EventViewer_Widget.h"
 
+#include "../../DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataViewer_Widget/OpenGLWidget.hpp"
-#include "DataViewer_Widget/DisplayOptions/TimeSeriesDisplayOptions.hpp"
 
 #include <iostream>
 

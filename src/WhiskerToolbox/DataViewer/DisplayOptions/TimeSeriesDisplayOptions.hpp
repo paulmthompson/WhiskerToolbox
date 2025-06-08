@@ -131,4 +131,4 @@ struct DigitalIntervalSeriesDisplayOptions : public BaseTimeSeriesDisplayOptions
  */
 float getCachedStdDev(AnalogTimeSeries const & series, AnalogTimeSeriesDisplayOptions & display_options);
 
-#endif // TIMESERIES_DISPLAY_OPTIONS_HPP 
+#endif // TIMESERIES_DISPLAY_OPTIONS_HPP

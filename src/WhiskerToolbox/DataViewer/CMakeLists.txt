@@ -4,13 +4,22 @@ find_package(glm CONFIG REQUIRED)
 set(DATAVIEWER_SOURCES
     XAxis.hpp
     VerticalSpaceManager.cpp
-    VerticalSpaceManager.hpp)
+    VerticalSpaceManager.hpp
+
+    AnalogTimeSeries/MVP_AnalogTimeSeries.hpp
+    AnalogTimeSeries/MVP_AnalogTimeSeries.cpp
+
+    DisplayOptions/TimeSeriesDisplayOptions.hpp
+    DisplayOptions/TimeSeriesDisplayOptions.cpp)
 
 add_library(DataViewer SHARED ${DATAVIEWER_SOURCES}
     )
 
+target_link_libraries(DataViewer PRIVATE DataManager)
+
 target_include_directories(DataViewer PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../DataManager>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
     )
 

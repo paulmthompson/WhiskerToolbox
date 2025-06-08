@@ -1,16 +1,16 @@
 #include "OpenGLWidget.hpp"
 
-#include "DataViewer/VerticalSpaceManager.hpp"
+#include "DataManager/utils/color.hpp"
+#include "DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataViewer/VerticalSpaceManager.hpp"
 #include "DataViewer_Widget.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "TimeFrame.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "shaders/colored_vertex_shader.hpp"
 #include "shaders/dashed_line_shader.hpp"
-#include "utils/color.hpp"
 
 #include <QMouseEvent>
 #include <QOpenGLContext>

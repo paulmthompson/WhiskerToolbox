@@ -64,6 +64,8 @@ set(DATAMANAGER_SOURCES
 
         utils/armadillo_wrap/analog_armadillo.hpp
         utils/armadillo_wrap/analog_armadillo.cpp
+        utils/color.hpp
+        utils/color.cpp
         utils/hdf5_mask_load.hpp
         utils/json_helpers.hpp
         utils/opencv_utility.hpp

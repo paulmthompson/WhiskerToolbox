@@ -230,8 +230,6 @@ set(PROJECT_SOURCES
         DataViewer_Widget/OpenGLWidget.hpp
         DataViewer_Widget/shaders/dashed_line_shader.hpp
         DataViewer_Widget/shaders/colored_vertex_shader.hpp
-        DataViewer_Widget/DisplayOptions/TimeSeriesDisplayOptions.hpp
-        DataViewer_Widget/DisplayOptions/TimeSeriesDisplayOptions.cpp
         DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.cpp
         DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.hpp
         DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.ui
@@ -424,9 +422,6 @@ set(PROJECT_SOURCES
 
         utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp
         utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.cpp
-
-        utils/color.hpp
-        utils/color.cpp
 )
 
 if (WIN32)
@@ -436,8 +431,6 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
-        DataViewer/CMakeLists.txt
-
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)
