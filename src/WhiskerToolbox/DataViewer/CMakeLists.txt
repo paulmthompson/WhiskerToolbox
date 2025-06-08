@@ -9,6 +9,12 @@ set(DATAVIEWER_SOURCES
     AnalogTimeSeries/MVP_AnalogTimeSeries.hpp
     AnalogTimeSeries/MVP_AnalogTimeSeries.cpp
 
+    DigitalEvent/MVP_DigitalEvent.cpp
+    DigitalEvent/MVP_DigitalEvent.hpp
+
+    DigitalInterval/MVP_DigitalInterval.hpp
+    DigitalInterval/MVP_DigitalInterval.cpp
+
     DisplayOptions/TimeSeriesDisplayOptions.hpp
     DisplayOptions/TimeSeriesDisplayOptions.cpp)
 
