@@ -42,9 +42,9 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         REQUIRE(retrieved_camera->getTotalFrameCount() == 100);
         
         // Test time coordinate conversion
-        REQUIRE(retrieved_camera->getTimeAtIndex(0) == 1);
-        REQUIRE(retrieved_camera->getTimeAtIndex(1) == 301);
-        REQUIRE(retrieved_camera->getTimeAtIndex(99) == 29701);
+        REQUIRE(retrieved_camera->getTimeAtIndex(TimeIndex(0)) == 1);
+        REQUIRE(retrieved_camera->getTimeAtIndex(TimeIndex(1)) == 301);
+        REQUIRE(retrieved_camera->getTimeAtIndex(TimeIndex(99)) == 29701);
         
         // Test reverse conversion (master time to camera index)
         REQUIRE(retrieved_camera->getIndexAtTime(1) == 0);
@@ -172,7 +172,7 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         // Test with time transformation (camera frame to master time)
         auto master_transform = [&camera_timeframe](int64_t camera_frame) -> int64_t {
             // Convert camera frame index to master time
-            return camera_timeframe->getTimeAtIndex(static_cast<int>(camera_frame));
+            return camera_timeframe->getTimeAtIndex(TimeIndex(static_cast<int>(camera_frame)));
         };
         
         // Query intervals in master time coordinates
@@ -263,9 +263,9 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         REQUIRE(retrieved_sparse->getIndexAtTime(5000) == 5);
         
         // Test time retrieval
-        REQUIRE(retrieved_sparse->getTimeAtIndex(0) == 1);
-        REQUIRE(retrieved_sparse->getTimeAtIndex(3) == 2000);
-        REQUIRE(retrieved_sparse->getTimeAtIndex(5) == 5000);
+        REQUIRE(retrieved_sparse->getTimeAtIndex(TimeIndex(0)) == 1);
+        REQUIRE(retrieved_sparse->getTimeAtIndex(TimeIndex(3)) == 2000);
+        REQUIRE(retrieved_sparse->getTimeAtIndex(TimeIndex(5)) == 5000);
     }
     
     SECTION("Integration test: Full pipeline with coordinate transformations") {
@@ -317,9 +317,9 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         auto neural_data = dm.getData<AnalogTimeSeries>("neural");
         
         // Convert first behavior interval (camera frames 10-20) to master times
-        int64_t behavior_start_master = camera_timeframe->getTimeAtIndex(10); // Should be 3001
-        int64_t behavior_end_master = camera_timeframe->getTimeAtIndex(20);   // Should be 6001
-        
+        int64_t behavior_start_master = camera_timeframe->getTimeAtIndex(TimeIndex(10)); // Should be 3001
+        int64_t behavior_end_master = camera_timeframe->getTimeAtIndex(TimeIndex(20));   // Should be 6001
+
         REQUIRE(behavior_start_master == 3001);
         REQUIRE(behavior_end_master == 6001);
         
@@ -329,7 +329,7 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         
         std::vector<float> neural_during_behavior;
         for (size_t i = 0; i < neural_times.size(); ++i) {
-            int neural_time = master_timeframe->getTimeAtIndex(static_cast<int>(neural_times[i]));
+            int neural_time = master_timeframe->getTimeAtIndex(TimeIndex(static_cast<int>(neural_times[i])));
             if (neural_time >= behavior_start_master && neural_time <= behavior_end_master) {
                 neural_during_behavior.push_back(neural_values[i]);
             }

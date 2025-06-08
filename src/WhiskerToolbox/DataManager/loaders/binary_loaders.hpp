@@ -52,7 +52,7 @@ inline std::vector<T> readBinaryFile(BinaryAnalogOptions const & options) {
 
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 
-    std::cout << "Total time to load " << options.file_path << ": " << elapsed << std::endl;
+    std::cout << "Total time to load " << options.file_path << ": " << elapsed.count() << std::endl;
 
     return data;
 }
@@ -114,7 +114,7 @@ inline std::vector<std::vector<T>> readBinaryFileMultiChannel(BinaryAnalogOption
 
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
 
-    std::cout << "Total time to load " << elapsed << std::endl;
+    std::cout << "Total time to load " << elapsed.count() << std::endl;
     return data;
 }
 

@@ -18,6 +18,15 @@ set(DATAVIEWER_SOURCES
     DisplayOptions/TimeSeriesDisplayOptions.hpp
     DisplayOptions/TimeSeriesDisplayOptions.cpp)
 
+set_property(GLOBAL PROPERTY DATAVIEWER_TEST_SOURCES "")
+
+set(dataviewer_test_sources
+    VerticalSpaceManager.test.cpp)
+
+add_tests_to_global(dataviewer_test_sources 
+                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer" 
+                    DATAVIEWER_TEST_SOURCES)
+
 add_library(DataViewer SHARED ${DATAVIEWER_SOURCES}
     )
 
