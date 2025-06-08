@@ -17,6 +17,8 @@ add_library(DataViewer SHARED ${DATAVIEWER_SOURCES}
 
 target_link_libraries(DataViewer PRIVATE DataManager)
 
+target_link_libraries(DataViewer PUBLIC glm::glm)
+
 target_include_directories(DataViewer PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../DataManager>"
@@ -34,6 +36,10 @@ endif()
 
 if (MSVC)
     target_compile_options(DataViewer PRIVATE ${MSVC_WARNINGS})
+endif()
+
+if(WIN32)
+    set_target_properties(DataViewer PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 
 set_target_properties(DataViewer PROPERTIES

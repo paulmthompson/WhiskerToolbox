@@ -4,6 +4,7 @@
 #include "DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 
+#include "DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "DataViewer_Tree_Widget/DataViewer_Tree_Widget.hpp"
 #include "OpenGLWidget.hpp"
 #include "TimeFrame.hpp"

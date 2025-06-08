@@ -2,6 +2,7 @@
 #include "ui_IntervalViewer_Widget.h"
 
 #include "DataManager/DataManager.hpp"
+#include "DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "DataViewer_Widget/OpenGLWidget.hpp"
 
 #include <iostream>

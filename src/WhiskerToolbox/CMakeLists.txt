@@ -451,8 +451,8 @@ message(STATUS ${MLPACK_INCLUDE_DIRS})
 target_include_directories(WhiskerToolbox PRIVATE
 
   #      "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/AnalogViewer>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Covariate_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataManager>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/DataViewer>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Label_Widget>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Main_Window>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Media_Window>"
