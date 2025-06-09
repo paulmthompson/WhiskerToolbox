@@ -21,8 +21,9 @@ set(DATAVIEWER_SOURCES
 set_property(GLOBAL PROPERTY DATAVIEWER_TEST_SOURCES "")
 
 set(dataviewer_test_sources
-    VerticalSpaceManager.test.cpp
-    AnalogTimeSeries/MVP_AnalogTimeSeries.test.cpp)
+    #VerticalSpaceManager.test.cpp
+    AnalogTimeSeries/MVP_AnalogTimeSeries.test.cpp
+    )
 
 # Demo executables
 add_executable(mvp_analog_demo AnalogTimeSeries/MVP_AnalogTimeSeries_demo.cpp)

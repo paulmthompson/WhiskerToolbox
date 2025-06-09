@@ -1,5 +1,6 @@
 set(executable_path "$<TARGET_FILE_NAME:WhiskerToolbox>.app")
 set(data_manager_path "lib/$<TARGET_FILE_NAME:DataManager>")
+set(data_viewer_path "lib/$<TARGET_FILE_NAME:DataViewer>")
 
 # Generate a deployment script to be executed at install time
 qt_generate_deploy_script(
@@ -8,7 +9,7 @@ qt_generate_deploy_script(
         CONTENT "
    qt_deploy_runtime_dependencies(
    EXECUTABLE ${executable_path}
-   ADDITIONAL_LIBRARIES ${data_manager_path}
+   ADDITIONAL_LIBRARIES ${data_manager_path} ${data_viewer_path}
    GENERATE_QT_CONF
    VERBOSE
    )")
@@ -35,6 +36,7 @@ set(MY_DYLIBS
         "${CMAKE_BINARY_DIR}/libWhisker-Analysis.dylib"
         "${CMAKE_BINARY_DIR}/bin/libqt6advanceddocking.dylib"
         "${CMAKE_BINARY_DIR}/libDataManager.dylib"
+        "${CMAKE_BINARY_DIR}/libDataViewer.dylib"
      #   "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTPlotter6_Release.5.0.0.dylib"
      #   "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTMath6_Release.5.0.0.dylib"
      #   "${CMAKE_BINARY_DIR}/_deps/jkqtplotter6-build/output/libJKQTMathText6_Release.5.0.0.dylib"
@@ -62,6 +64,7 @@ endfunction()
 update_install_name("janelia" "@executable_path/../Frameworks/libjanelia.dylib" "libjanelia.dylib" )
 update_install_name("Whisker-Analysis" "@executable_path/../Frameworks/libWhisker-Analysis.dylib" "libWhisker-Analysis.dylib")
 update_install_name("DataManager" "@executable_path/../Frameworks/libDataManager.dylib" "libDataManager.dylib")
+update_install_name("DataViewer" "@executable_path/../Frameworks/libDataViewer.dylib" "libDataViewer.dylib")
 update_install_name("qt6advanceddocking" "@executable_path/../Frameworks/libqt6advanceddocking.dylib" "bin/libqt6advanceddocking.4.3.1.dylib")
 #update_install_name("JKQTPlotter6" "@executable_path/../Frameworks/libJKQTPlotter6_Release.5.0.0.dylib" "_deps/jkqtplotter6-build/output/libJKQTPlotter6_Release.5.0.0.dylib")
 #update_install_name("Torch" "@executable_path/../Frameworks/libtorch.dylib" "_deps/torch-src/lib/libtorch.dylib")
