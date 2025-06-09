@@ -37,6 +37,12 @@ int PlottingManager::addDigitalIntervalSeries() {
     return new_series_index;
 }
 
+int PlottingManager::addDigitalEventSeries() {
+    int const new_series_index = total_event_series;
+    ++total_event_series;
+    return new_series_index;
+}
+
 void PlottingManager::calculateDigitalIntervalSeriesAllocation(int series_index,
                                                                float & allocated_center,
                                                                float & allocated_height) const {
@@ -49,6 +55,24 @@ void PlottingManager::calculateDigitalIntervalSeriesAllocation(int series_index,
 
     // Note: In the future, if we want to support stacked digital intervals,
     // we can implement spacing logic similar to analog series allocation
+}
+
+void PlottingManager::calculateDigitalEventSeriesAllocation(int series_index,
+                                                            float & allocated_center,
+                                                            float & allocated_height) const {
+    // Digital event allocation depends on plotting mode
+    // For FullCanvas mode: Use full canvas height (like digital intervals)
+    // For Stacked mode: Share space with analog series (like analog time series)
+    //
+    // Note: Since plotting mode is determined at display options level,
+    // we provide both allocations and let the MVP functions decide based on mode
+
+    // Full canvas allocation (used in FullCanvas mode)
+    allocated_center = (viewport_y_min + viewport_y_max) * 0.5f;// Center of viewport
+    allocated_height = viewport_y_max - viewport_y_min;         // Full viewport height
+
+    // Note: For Stacked mode, events would share the analog allocation space
+    // This would require coordination between analog and event series in the future
 }
 
 void PlottingManager::setPanOffset(float pan_offset) {

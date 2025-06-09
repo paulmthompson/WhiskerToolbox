@@ -32,6 +32,7 @@ struct PlottingManager {
     // Series management
     int total_analog_series{0}; ///< Number of analog series being displayed
     int total_digital_series{0};///< Number of digital series being displayed
+    int total_event_series{0};  ///< Number of digital event series being displayed
 
     /**
      * @brief Calculate Y-coordinate allocation for an analog series
@@ -76,6 +77,16 @@ struct PlottingManager {
     int addDigitalIntervalSeries();
 
     /**
+     * @brief Add a digital event series to the plotting manager
+     * 
+     * Registers a new digital event series and updates internal bookkeeping
+     * for coordinate allocation. Event behavior depends on plotting mode.
+     * 
+     * @return Series index for the newly added digital event series
+     */
+    int addDigitalEventSeries();
+
+    /**
      * @brief Calculate Y-coordinate allocation for a digital interval series
      * 
      * Determines the center Y coordinate and allocated height for digital interval series.
@@ -88,6 +99,22 @@ struct PlottingManager {
     void calculateDigitalIntervalSeriesAllocation(int series_index,
                                                   float & allocated_center,
                                                   float & allocated_height) const;
+
+    /**
+     * @brief Calculate Y-coordinate allocation for a digital event series
+     * 
+     * Determines the center Y coordinate and allocated height for digital event series.
+     * Allocation behavior depends on the plotting mode:
+     * - FullCanvas mode: Uses full canvas height (like digital intervals)
+     * - Stacked mode: Shares space with analog series (like analog time series)
+     * 
+     * @param series_index Index of the digital event series (0-based)
+     * @param allocated_center Output parameter for center Y coordinate
+     * @param allocated_height Output parameter for allocated height
+     */
+    void calculateDigitalEventSeriesAllocation(int series_index,
+                                               float & allocated_center,
+                                               float & allocated_height) const;
 
     /**
      * @brief Set vertical pan offset in normalized device coordinates
