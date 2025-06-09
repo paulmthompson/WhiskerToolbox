@@ -81,6 +81,39 @@ void PlottingManager::calculateDigitalEventSeriesAllocation(int series_index,
     }
 }
 
+void PlottingManager::calculateGlobalStackedAllocation(int analog_series_index,
+                                                       int event_series_index,
+                                                       int total_stackable_series,
+                                                       float & allocated_center,
+                                                       float & allocated_height) const {
+    // Global stacked allocation: divide canvas equally among all stackable series
+    // regardless of their data type (analog or digital event)
+
+    if (total_stackable_series <= 0) {
+        allocated_center = 0.0f;
+        allocated_height = viewport_y_max - viewport_y_min;
+        return;
+    }
+
+    float const total_viewport_height = viewport_y_max - viewport_y_min;
+    float const series_height = total_viewport_height / static_cast<float>(total_stackable_series);
+
+    // Determine the global series index (position in the overall stack)
+    int global_series_index;
+    if (analog_series_index >= 0) {
+        // This is an analog series - it comes first in the stack
+        global_series_index = analog_series_index;
+    } else {
+        // This is a digital event series - it comes after all analog series
+        global_series_index = total_analog_series + event_series_index;
+    }
+
+    // Calculate center position for this series in the global stack
+    float const series_bottom = viewport_y_min + static_cast<float>(global_series_index) * series_height;
+    allocated_center = series_bottom + series_height * 0.5f;
+    allocated_height = series_height;
+}
+
 void PlottingManager::setPanOffset(float pan_offset) {
     vertical_pan_offset = pan_offset;
 }

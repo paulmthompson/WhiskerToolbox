@@ -303,4 +303,179 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
         REQUIRE_THAT(model2[1][1], WithinRel(expected_scale, 0.05f));
         REQUIRE_THAT(model3[1][1], WithinRel(expected_scale, 0.05f));
     }
+
+    SECTION("Panning behavior - FullCanvas mode (viewport-pinned)") {
+        PlottingManager manager;
+        manager.setVisibleDataRange(1, 1000);
+
+        int event_series = manager.addDigitalEventSeries();
+
+        NewDigitalEventSeriesDisplayOptions options;
+        options.plotting_mode = EventPlottingMode::FullCanvas;
+
+        float center, height;
+        manager.calculateDigitalEventSeriesAllocation(event_series, center, height);
+        options.allocated_y_center = center;
+        options.allocated_height = height;
+
+        // Test without panning (baseline)
+        glm::mat4 model_no_pan = new_getEventModelMat(options, manager);
+        glm::mat4 view_no_pan = new_getEventViewMat(options, manager);
+
+        // Events should extend full canvas height
+        REQUIRE(model_no_pan[1][1] > 0.0f);
+        REQUIRE(model_no_pan[3][1] == 0.0f);// Centered
+        REQUIRE(view_no_pan[3][1] == 0.0f); // No pan translation
+
+        // Test with positive panning
+        manager.setPanOffset(1.5f);
+        glm::mat4 model_pan_up = new_getEventModelMat(options, manager);
+        glm::mat4 view_pan_up = new_getEventViewMat(options, manager);
+
+        // FullCanvas mode: Events should NOT move with panning (viewport-pinned)
+        REQUIRE(model_pan_up[1][1] == model_no_pan[1][1]);// Same scaling
+        REQUIRE(model_pan_up[3][1] == model_no_pan[3][1]);// Same position
+        REQUIRE(view_pan_up[3][1] == 0.0f);               // No pan applied
+
+        // Test with negative panning
+        manager.setPanOffset(-1.2f);
+        glm::mat4 model_pan_down = new_getEventModelMat(options, manager);
+        glm::mat4 view_pan_down = new_getEventViewMat(options, manager);
+
+        // FullCanvas mode: Events should still NOT move
+        REQUIRE(model_pan_down[1][1] == model_no_pan[1][1]);// Same scaling
+        REQUIRE(model_pan_down[3][1] == model_no_pan[3][1]);// Same position
+        REQUIRE(view_pan_down[3][1] == 0.0f);               // No pan applied
+
+        manager.resetPan();
+        REQUIRE(manager.getPanOffset() == 0.0f);
+    }
+
+    SECTION("Panning behavior - Stacked mode (content-following)") {
+        PlottingManager manager;
+        manager.setVisibleDataRange(1, 1000);
+
+        int event_series = manager.addDigitalEventSeries();
+
+        NewDigitalEventSeriesDisplayOptions options;
+        options.plotting_mode = EventPlottingMode::Stacked;
+        options.allocated_y_center = -0.3f;// Simulate specific allocation
+        options.allocated_height = 1.2f;
+
+        // Test without panning (baseline)
+        glm::mat4 model_no_pan = new_getEventModelMat(options, manager);
+        glm::mat4 view_no_pan = new_getEventViewMat(options, manager);
+
+        REQUIRE(model_no_pan[1][1] > 0.0f);
+        REQUIRE(model_no_pan[3][1] == -0.3f);// At allocated center
+        REQUIRE(view_no_pan[3][1] == 0.0f);  // No pan translation
+
+        // Test with positive panning
+        float pan_offset_up = 0.8f;
+        manager.setPanOffset(pan_offset_up);
+        glm::mat4 model_pan_up = new_getEventModelMat(options, manager);
+        glm::mat4 view_pan_up = new_getEventViewMat(options, manager);
+
+        // Stacked mode: Events should move with panning
+        REQUIRE(model_pan_up[1][1] == model_no_pan[1][1]);// Same scaling
+        REQUIRE(model_pan_up[3][1] == model_no_pan[3][1]);// Model position unchanged
+        REQUIRE(view_pan_up[3][1] == pan_offset_up);      // Pan applied in view matrix
+
+        // Test with negative panning
+        float pan_offset_down = -1.1f;
+        manager.setPanOffset(pan_offset_down);
+        glm::mat4 model_pan_down = new_getEventModelMat(options, manager);
+        glm::mat4 view_pan_down = new_getEventViewMat(options, manager);
+
+        // Stacked mode: Events should move with negative panning too
+        REQUIRE(model_pan_down[1][1] == model_no_pan[1][1]);// Same scaling
+        REQUIRE(model_pan_down[3][1] == model_no_pan[3][1]);// Model position unchanged
+        REQUIRE(view_pan_down[3][1] == pan_offset_down);    // Pan applied in view matrix
+
+        manager.resetPan();
+        REQUIRE(manager.getPanOffset() == 0.0f);
+    }
+
+    SECTION("Panning behavior - Multiple stacked series") {
+        PlottingManager manager;
+        manager.setVisibleDataRange(1, 1000);
+
+        // Add 3 stacked event series
+        int event1 = manager.addDigitalEventSeries();
+        int event2 = manager.addDigitalEventSeries();
+        int event3 = manager.addDigitalEventSeries();
+
+        // Get allocations for each series
+        float center1, height1, center2, height2, center3, height3;
+        manager.calculateDigitalEventSeriesAllocation(event1, center1, height1);
+        manager.calculateDigitalEventSeriesAllocation(event2, center2, height2);
+        manager.calculateDigitalEventSeriesAllocation(event3, center3, height3);
+
+        NewDigitalEventSeriesDisplayOptions options1, options2, options3;
+        options1.plotting_mode = EventPlottingMode::Stacked;
+        options2.plotting_mode = EventPlottingMode::Stacked;
+        options3.plotting_mode = EventPlottingMode::Stacked;
+
+        options1.allocated_y_center = center1;
+        options1.allocated_height = height1;
+        options2.allocated_y_center = center2;
+        options2.allocated_height = height2;
+        options3.allocated_y_center = center3;
+        options3.allocated_height = height3;
+
+        // Test without panning
+        glm::mat4 view1_no_pan = new_getEventViewMat(options1, manager);
+        glm::mat4 view2_no_pan = new_getEventViewMat(options2, manager);
+        glm::mat4 view3_no_pan = new_getEventViewMat(options3, manager);
+
+        REQUIRE(view1_no_pan[3][1] == 0.0f);
+        REQUIRE(view2_no_pan[3][1] == 0.0f);
+        REQUIRE(view3_no_pan[3][1] == 0.0f);
+
+        // Test with panning - all stacked series should move together
+        float pan_offset = 0.6f;
+        manager.setPanOffset(pan_offset);
+
+        glm::mat4 view1_panned = new_getEventViewMat(options1, manager);
+        glm::mat4 view2_panned = new_getEventViewMat(options2, manager);
+        glm::mat4 view3_panned = new_getEventViewMat(options3, manager);
+
+        // All stacked series should move by the same pan offset
+        REQUIRE(view1_panned[3][1] == pan_offset);
+        REQUIRE(view2_panned[3][1] == pan_offset);
+        REQUIRE(view3_panned[3][1] == pan_offset);
+
+        manager.resetPan();
+    }
+
+    SECTION("Mixed panning behavior - FullCanvas vs Stacked") {
+        PlottingManager manager;
+        manager.setVisibleDataRange(1, 1000);
+
+        // Simulate having both types (though they'd typically be separate series)
+        NewDigitalEventSeriesDisplayOptions fullcanvas_options;
+        fullcanvas_options.plotting_mode = EventPlottingMode::FullCanvas;
+        fullcanvas_options.allocated_y_center = 0.0f;
+        fullcanvas_options.allocated_height = 2.0f;
+
+        NewDigitalEventSeriesDisplayOptions stacked_options;
+        stacked_options.plotting_mode = EventPlottingMode::Stacked;
+        stacked_options.allocated_y_center = -0.5f;
+        stacked_options.allocated_height = 1.0f;
+
+        // Apply panning
+        float pan_offset = 1.0f;
+        manager.setPanOffset(pan_offset);
+
+        glm::mat4 fullcanvas_view = new_getEventViewMat(fullcanvas_options, manager);
+        glm::mat4 stacked_view = new_getEventViewMat(stacked_options, manager);
+
+        // FullCanvas should NOT move (viewport-pinned)
+        REQUIRE(fullcanvas_view[3][1] == 0.0f);
+
+        // Stacked should move (content-following)
+        REQUIRE(stacked_view[3][1] == pan_offset);
+
+        manager.resetPan();
+    }
 }

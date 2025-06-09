@@ -1,4 +1,5 @@
 #include "AnalogTimeSeries/MVP_AnalogTimeSeries.hpp"
+#include "DigitalEvent/MVP_DigitalEvent.hpp"
 #include "DigitalInterval/MVP_DigitalInterval.hpp"
 #include "PlottingManager/PlottingManager.hpp"
 
@@ -295,5 +296,133 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         // Reset and verify
         manager.resetPan();
         REQUIRE(manager.getPanOffset() == 0.0f);
+    }
+}
+
+TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integration][mvp][mixed_analog_events]") {
+
+    SECTION("Global stacked allocation: 2 analog + 2 digital events = 4 series each getting 1/4 canvas") {
+        // Set up plotting manager with mixed data types
+        PlottingManager manager;
+
+        // Add 2 analog series and 2 digital event series
+        int analog1 = manager.addAnalogSeries();
+        int analog2 = manager.addAnalogSeries();
+        int event1 = manager.addDigitalEventSeries();
+        int event2 = manager.addDigitalEventSeries();
+
+        // Verify series indices and counts
+        REQUIRE(analog1 == 0);
+        REQUIRE(analog2 == 1);
+        REQUIRE(event1 == 0);
+        REQUIRE(event2 == 1);
+        REQUIRE(manager.total_analog_series == 2);
+        REQUIRE(manager.total_event_series == 2);
+
+        // Set visible data range
+        manager.setVisibleDataRange(1, 10000);
+
+        // Generate test data
+        constexpr size_t num_points = 10000;
+        auto analog1_data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 42);
+        auto analog2_data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 123);
+        auto events1 = generateTestEventData(50, 10000.0f, 456);
+        auto events2 = generateTestEventData(30, 10000.0f, 789);
+
+        // Set up display options
+        NewAnalogTimeSeriesDisplayOptions analog1_options;
+        NewAnalogTimeSeriesDisplayOptions analog2_options;
+        NewDigitalEventSeriesDisplayOptions event1_options;
+        NewDigitalEventSeriesDisplayOptions event2_options;
+
+        // Configure digital events for stacked mode
+        event1_options.plotting_mode = EventPlottingMode::Stacked;
+        event2_options.plotting_mode = EventPlottingMode::Stacked;
+
+        // Calculate global stacked allocation (4 total series sharing canvas)
+        int const total_stackable_series = manager.total_analog_series + manager.total_event_series;
+        REQUIRE(total_stackable_series == 4);
+
+        float analog1_center, analog1_height;
+        float analog2_center, analog2_height;
+        float event1_center, event1_height;
+        float event2_center, event2_height;
+
+        manager.calculateGlobalStackedAllocation(analog1, -1, total_stackable_series, analog1_center, analog1_height);
+        manager.calculateGlobalStackedAllocation(analog2, -1, total_stackable_series, analog2_center, analog2_height);
+        manager.calculateGlobalStackedAllocation(-1, event1, total_stackable_series, event1_center, event1_height);
+        manager.calculateGlobalStackedAllocation(-1, event2, total_stackable_series, event2_center, event2_height);
+
+        // Verify that each series gets 1/4 of the canvas (2.0 total height / 4 = 0.5)
+        float expected_height = 2.0f / 4.0f;
+        REQUIRE_THAT(analog1_height, WithinRel(expected_height, 0.01f));
+        REQUIRE_THAT(analog2_height, WithinRel(expected_height, 0.01f));
+        REQUIRE_THAT(event1_height, WithinRel(expected_height, 0.01f));
+        REQUIRE_THAT(event2_height, WithinRel(expected_height, 0.01f));
+
+        // Verify proper stacking order and centers
+        // Series should be stacked from top to bottom: analog1, analog2, event1, event2
+        float expected_analog1_center = -1.0f + expected_height * 0.5f;// First quarter
+        float expected_analog2_center = -1.0f + expected_height * 1.5f;// Second quarter
+        float expected_event1_center = -1.0f + expected_height * 2.5f; // Third quarter
+        float expected_event2_center = -1.0f + expected_height * 3.5f; // Fourth quarter
+
+        REQUIRE_THAT(analog1_center, WithinRel(expected_analog1_center, 0.01f));
+        REQUIRE_THAT(analog2_center, WithinRel(expected_analog2_center, 0.01f));
+        REQUIRE_THAT(event1_center, WithinRel(expected_event1_center, 0.01f));
+        REQUIRE_THAT(event2_center, WithinRel(expected_event2_center, 0.01f));
+
+        // Configure display options with allocated coordinates
+        analog1_options.allocated_y_center = analog1_center;
+        analog1_options.allocated_height = analog1_height;
+        analog2_options.allocated_y_center = analog2_center;
+        analog2_options.allocated_height = analog2_height;
+        event1_options.allocated_y_center = event1_center;
+        event1_options.allocated_height = event1_height;
+        event2_options.allocated_y_center = event2_center;
+        event2_options.allocated_height = event2_height;
+
+        // Set intrinsic properties
+        setAnalogIntrinsicProperties(analog1_data, analog1_options);
+        setAnalogIntrinsicProperties(analog2_data, analog2_options);
+        setEventIntrinsicProperties(events1, event1_options);
+        setEventIntrinsicProperties(events2, event2_options);
+
+        // Test MVP matrix generation
+        glm::mat4 analog1_model = new_getAnalogModelMat(analog1_options, analog1_options.cached_std_dev, analog1_options.cached_mean, manager);
+        glm::mat4 analog2_model = new_getAnalogModelMat(analog2_options, analog2_options.cached_std_dev, analog2_options.cached_mean, manager);
+        glm::mat4 event1_model = new_getEventModelMat(event1_options, manager);
+        glm::mat4 event2_model = new_getEventModelMat(event2_options, manager);
+
+        // Verify that analog series are positioned at their allocated centers
+        // For analog series, the mean should map to the allocated center
+        glm::vec2 analog1_mean_point = applyMVPTransformationIntegration(5000, analog1_options.cached_mean, analog1_model,
+                                                                         new_getAnalogViewMat(manager),
+                                                                         new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager));
+        glm::vec2 analog2_mean_point = applyMVPTransformationIntegration(5000, analog2_options.cached_mean, analog2_model,
+                                                                         new_getAnalogViewMat(manager),
+                                                                         new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager));
+
+        REQUIRE_THAT(analog1_mean_point.y, WithinRel(analog1_center, 0.02f));
+        REQUIRE_THAT(analog2_mean_point.y, WithinRel(analog2_center, 0.02f));
+
+        // Verify that digital events are positioned at their allocated centers
+        REQUIRE_THAT(event1_model[3][1], WithinRel(event1_center, 0.01f));
+        REQUIRE_THAT(event2_model[3][1], WithinRel(event2_center, 0.01f));
+
+        // Test panning behavior: analog series and stacked digital events should move together
+        float pan_offset = 0.5f;
+        manager.setPanOffset(pan_offset);
+
+        glm::mat4 analog1_view_panned = new_getAnalogViewMat(manager);
+        glm::mat4 event1_view_panned = new_getEventViewMat(event1_options, manager);
+        glm::mat4 event2_view_panned = new_getEventViewMat(event2_options, manager);
+
+        // All should move with panning in stacked mode
+        REQUIRE(analog1_view_panned[3][1] == pan_offset);
+        REQUIRE(event1_view_panned[3][1] == pan_offset);
+        REQUIRE(event2_view_panned[3][1] == pan_offset);
+
+        manager.resetPan();
     }
 }

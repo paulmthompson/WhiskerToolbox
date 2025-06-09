@@ -117,6 +117,25 @@ struct PlottingManager {
                                                float & allocated_height) const;
 
     /**
+     * @brief Calculate global stacked allocation for mixed data types
+     * 
+     * Coordinates allocation between analog series and stacked digital event series.
+     * This allows analog time series and digital events to share canvas space
+     * proportionally when both are present.
+     * 
+     * @param analog_series_index Index of analog series (-1 if calculating for event)
+     * @param event_series_index Index of digital event series (-1 if calculating for analog)
+     * @param total_stackable_series Total number of series sharing the canvas
+     * @param allocated_center Output parameter for center Y coordinate
+     * @param allocated_height Output parameter for allocated height
+     */
+    void calculateGlobalStackedAllocation(int analog_series_index,
+                                          int event_series_index,
+                                          int total_stackable_series,
+                                          float & allocated_center,
+                                          float & allocated_height) const;
+
+    /**
      * @brief Set vertical pan offset in normalized device coordinates
      * 
      * Sets the vertical panning offset that will be applied to all series equally.
