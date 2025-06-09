@@ -1,9 +1,11 @@
 #include "MVP_AnalogTimeSeries.hpp"
 
-#include <iostream>
-#include <vector>
-#include <random>
+#include <algorithm>
 #include <iomanip>
+#include <iostream>
+#include <random>
+#include <vector>
+
 
 /**
  * @brief Demo program showcasing the new MVP matrix system for analog time series

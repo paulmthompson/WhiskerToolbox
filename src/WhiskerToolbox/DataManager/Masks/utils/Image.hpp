@@ -22,14 +22,14 @@
  *       - Iterating through data linearly processes all columns of row 0, then row 1, etc.
  */
 struct Image {
-    std::vector<uint8_t> data;  ///< Pixel data in row-major order (0 = background, non-zero = foreground)
-    ImageSize size;             ///< Image dimensions (width and height)
-    
+    std::vector<uint8_t> data;///< Pixel data in row-major order (0 = background, non-zero = foreground)
+    ImageSize size;           ///< Image dimensions (width and height)
+
     /**
      * @brief Default constructor creates an empty image.
      */
     Image() = default;
-    
+
     /**
      * @brief Constructs an image with specified data and size.
      * 
@@ -40,8 +40,9 @@ struct Image {
      * @pre image_size.width and image_size.height must be greater than 0
      */
     Image(std::vector<uint8_t> pixel_data, ImageSize image_size)
-        : data(std::move(pixel_data)), size(image_size) {}
-    
+        : data(std::move(pixel_data)),
+          size(image_size) {}
+
     /**
      * @brief Constructs an image with specified dimensions, initialized to zero.
      * 
@@ -49,9 +50,10 @@ struct Image {
      * 
      * @pre image_size.width and image_size.height must be greater than 0
      */
-    explicit Image(ImageSize image_size) 
-        : data(static_cast<size_t>(image_size.width * image_size.height), 0), size(image_size) {}
-    
+    explicit Image(ImageSize image_size)
+        : data(static_cast<size_t>(image_size.width * image_size.height), 0),
+          size(image_size) {}
+
     /**
      * @brief Gets the pixel value at the specified coordinates.
      * 
@@ -65,7 +67,7 @@ struct Image {
     uint8_t at(int row, int col) const {
         return data[static_cast<size_t>(row * size.width + col)];
     }
-    
+
     /**
      * @brief Sets the pixel value at the specified coordinates.
      * 
@@ -79,24 +81,27 @@ struct Image {
     void set(int row, int col, uint8_t value) {
         data[static_cast<size_t>(row * size.width + col)] = value;
     }
-    
+
     /**
      * @brief Gets the total number of pixels in the image.
      * 
-     * @return size_t Total pixel count (width * height)
+     * @return size_t Total pixel count (width * height), or 0 if image is empty
      */
-    size_t pixel_count() const {
+    [[nodiscard]]size_t pixel_count() const {
+        if (empty()) {
+            return 0;
+        }
         return static_cast<size_t>(size.width * size.height);
     }
-    
+
     /**
      * @brief Checks if the image is empty (no pixels).
      * 
      * @return bool True if the image has no pixels, false otherwise
      */
-    bool empty() const {
+    [[nodiscard]] bool empty() const {
         return size.width <= 0 || size.height <= 0 || data.empty();
     }
 };
 
-#endif // WHISKERTOOLBOX_IMAGE_HPP 
+#endif// WHISKERTOOLBOX_IMAGE_HPP
