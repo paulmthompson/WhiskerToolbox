@@ -10,12 +10,12 @@
 using Mask2D = std::vector<Point2D<float>>;
 
 
-Mask2D create_mask(std::vector<float> const& x, std::vector<float> const& y);
+Mask2D create_mask(std::vector<float> const & x, std::vector<float> const & y);
 
 // Optimized version that moves the input vectors
 Mask2D create_mask(std::vector<float> && x, std::vector<float> && y);
 
-std::pair<Point2D<float>,Point2D<float>> get_bounding_box(Mask2D const& mask);
+std::pair<Point2D<float>, Point2D<float>> get_bounding_box(Mask2D const & mask);
 
 /**
  * @brief Compute the outline of a mask by finding extremal points
@@ -30,11 +30,11 @@ std::pair<Point2D<float>,Point2D<float>> get_bounding_box(Mask2D const& mask);
  *
  * @note If mask is empty or has only one point, returns empty outline
  */
-std::vector<Point2D<float>> get_mask_outline(Mask2D const& mask);
+std::vector<Point2D<float>> get_mask_outline(Mask2D const & mask);
 
 std::vector<Point2D<float>> extract_line_pixels(
         std::vector<uint8_t> const & binary_img,
         ImageSize const image_size);
 
 
-#endif // DATAMANAGER_MASKS_HPP
+#endif// DATAMANAGER_MASKS_HPP
