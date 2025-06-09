@@ -44,9 +44,11 @@ std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t
     std::vector<uint8_t> skeleton(nrows * ncols, 0);
     std::vector<uint8_t> cleaned_skeleton(nrows * ncols, 0);
 
-    // Copy image into skeleton with border
+    // Copy image into skeleton with border, normalizing to binary 0/1 values
     for (int row = 0; row < height; ++row) {
-        std::memcpy(&skeleton[(row + 1) * ncols + 1], &image[row * width], width);
+        for (int col = 0; col < width; ++col) {
+            skeleton[(row + 1) * ncols + (col + 1)] = (image[row * width + col] > 0) ? 1 : 0;
+        }
     }
 
     std::memcpy(cleaned_skeleton.data(), skeleton.data(), nrows * ncols);
@@ -90,7 +92,9 @@ std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t
     // Remove border and return the result
     std::vector<uint8_t> result(height * width, 0);
     for (int row = 0; row < height; ++row) {
-        std::memcpy(&result[row * width], &skeleton[(row + 1) * ncols + 1], width);
+        for (int col = 0; col < width; ++col) {
+            result[row * width + col] = skeleton[(row + 1) * ncols + (col + 1)];
+        }
     }
 
     return result;
@@ -98,11 +102,10 @@ std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t
 
 Image fast_skeletonize(Image const & input_image) {
     // Delegate to the existing function
-    auto result_data = fast_skeletonize(input_image.data, 
-                                       static_cast<size_t>(input_image.size.height), 
-                                       static_cast<size_t>(input_image.size.width));
-    
-    // Return as Image struct
-    return Image(std::move(result_data), input_image.size);
-}
+    auto result_data = fast_skeletonize(input_image.data,
+                                        static_cast<size_t>(input_image.size.height),
+                                        static_cast<size_t>(input_image.size.width));
 
+    // Return as Image struct
+    return {std::move(result_data), input_image.size};
+}

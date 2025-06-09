@@ -25,8 +25,9 @@
  * @pre Image data is expected in row-major order: index = row * width + col
  * 
  * @post Returns a binary image of the same dimensions with skeletonized objects
+ * @post Output values are strictly binary: 0 (background) or 1 (skeleton pixels)
  * 
- * @return std::vector<uint8_t> Skeletonized binary image as a 1D vector in row-major order
+ * @return std::vector<uint8_t> Skeletonized binary image as a 1D vector in row-major order (values: 0 or 1)
  */
 std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t height, size_t width);
 
@@ -45,8 +46,9 @@ std::vector<uint8_t> fast_skeletonize(std::vector<uint8_t> const & image, size_t
  * 
  * @post Returns a binary image of the same dimensions with skeletonized objects
  * @post Output image maintains row-major data layout
+ * @post Output values are strictly binary: 0 (background) or 1 (skeleton pixels)
  * 
- * @return Image Skeletonized binary image with same dimensions as input
+ * @return Image Skeletonized binary image with same dimensions as input (values: 0 or 1)
  */
 Image fast_skeletonize(Image const & input_image);
 
