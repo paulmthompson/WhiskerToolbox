@@ -199,19 +199,17 @@ glm::mat4 new_getAnalogProjectionMat(int start_data_index,
                                      PlottingManager const & plotting_manager) {
     // Map data indices to normalized device coordinates [-1, 1]
     // X-axis: map [start_data_index, end_data_index] to screen width
-    // Y-axis: map [y_min, y_max] to viewport height with pan offset
+    // Y-axis: map [y_min, y_max] to viewport height
+    //
+    // Note: Pan offset is handled in the View matrix for analog series,
+    // so we don't apply it here to avoid double application
 
     auto const data_start = static_cast<float>(start_data_index);
     auto const data_end = static_cast<float>(end_data_index);
 
-    // Apply vertical pan offset to Y bounds
-    float const adjusted_y_min = y_min + plotting_manager.vertical_pan_offset;
-    float const adjusted_y_max = y_max + plotting_manager.vertical_pan_offset;
-
-    // Create orthographic projection matrix
-    // This maps world coordinates to normalized device coordinates [-1, 1]
-    auto Projection = glm::ortho(data_start, data_end,
-                                 adjusted_y_min, adjusted_y_max);
+    // Create orthographic projection matrix without pan offset
+    // Pan offset is applied in View matrix for consistent behavior
+    auto Projection = glm::ortho(data_start, data_end, y_min, y_max);
 
     return Projection;
 }
