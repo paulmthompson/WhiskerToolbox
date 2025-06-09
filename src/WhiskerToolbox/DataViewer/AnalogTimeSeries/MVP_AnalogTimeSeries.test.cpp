@@ -346,6 +346,193 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         REQUIRE(min_point.y >= -2.0f); // Within reasonable bounds
         REQUIRE(max_point.y <= 2.0f);  // Within reasonable bounds
     }
+    
+    SECTION("Vertical panning functionality") {
+        // Create test data for panning tests
+        auto test_data = generateGaussianData(1000, 0.0f, 5.0f, 999);
+        
+        PlottingManager manager;
+        int series_idx = manager.addAnalogSeries();
+        manager.setVisibleDataRange(1, 1000);
+        
+        // Set up display options
+        NewAnalogTimeSeriesDisplayOptions display_options;
+        float allocated_center, allocated_height;
+        manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
+        display_options.allocated_y_center = allocated_center;
+        display_options.allocated_height = allocated_height;
+        setAnalogIntrinsicProperties(test_data, display_options);
+        
+        // Test initial state (no panning)
+        REQUIRE(manager.getPanOffset() == 0.0f);
+        
+        // Generate MVP matrices without panning
+        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 view_no_pan = new_getAnalogViewMat(manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(1, 1000, -1.0f, 1.0f, manager);
+        
+        // Test a reference point without panning
+        glm::vec2 reference_point = applyMVPTransformation(500, 0.0f, model, view_no_pan, projection);
+        
+        // Apply pan offset (positive = upward)
+        float pan_delta = 0.5f; // Pan upward by 0.5 NDC units
+        manager.setPanOffset(pan_delta);
+        REQUIRE(manager.getPanOffset() == pan_delta);
+        
+        // Generate view matrix with panning
+        glm::mat4 view_with_pan = new_getAnalogViewMat(manager);
+        
+        // Test same point with panning applied
+        glm::vec2 panned_point = applyMVPTransformation(500, 0.0f, model, view_with_pan, projection);
+        
+        // The Y coordinate should be shifted upward by the pan amount
+        REQUIRE_THAT(panned_point.y, WithinRel(reference_point.y + pan_delta, 0.01f));
+        
+        // X coordinate should remain unchanged
+        REQUIRE_THAT(panned_point.x, WithinRel(reference_point.x, 0.01f));
+        
+        // Test negative panning (downward)
+        float negative_pan = -0.3f;
+        manager.setPanOffset(negative_pan);
+        
+        glm::mat4 view_negative_pan = new_getAnalogViewMat(manager);
+        glm::vec2 negative_panned_point = applyMVPTransformation(500, 0.0f, model, view_negative_pan, projection);
+        
+        REQUIRE_THAT(negative_panned_point.y, WithinRel(reference_point.y + negative_pan, 0.01f));
+        
+        // Test applyPanDelta functionality
+        manager.resetPan();
+        REQUIRE(manager.getPanOffset() == 0.0f);
+        
+        manager.applyPanDelta(0.2f);
+        REQUIRE_THAT(manager.getPanOffset(), WithinRel(0.2f, 0.001f));
+        
+        manager.applyPanDelta(0.1f);
+        REQUIRE_THAT(manager.getPanOffset(), WithinRel(0.3f, 0.001f));
+        
+        manager.applyPanDelta(-0.5f);
+        REQUIRE_THAT(manager.getPanOffset(), WithinRel(-0.2f, 0.001f));
+    }
+    
+    SECTION("Multiple series panning consistency") {
+        // Test that all series are panned equally when multiple series exist
+        auto data1 = generateGaussianData(1000, 0.0f, 3.0f, 111);
+        auto data2 = generateGaussianData(1000, 5.0f, 2.0f, 222);  // Different mean and std dev
+        auto data3 = generateGaussianData(1000, -2.0f, 8.0f, 333); // Another different dataset
+        
+        PlottingManager manager;
+        int series1_idx = manager.addAnalogSeries();
+        int series2_idx = manager.addAnalogSeries(); 
+        int series3_idx = manager.addAnalogSeries();
+        manager.setVisibleDataRange(1, 1000);
+        
+        // Set up display options for all series
+        NewAnalogTimeSeriesDisplayOptions display_options1, display_options2, display_options3;
+        
+        float center1, height1, center2, height2, center3, height3;
+        manager.calculateAnalogSeriesAllocation(series1_idx, center1, height1);
+        manager.calculateAnalogSeriesAllocation(series2_idx, center2, height2);
+        manager.calculateAnalogSeriesAllocation(series3_idx, center3, height3);
+        
+        display_options1.allocated_y_center = center1;
+        display_options1.allocated_height = height1;
+        setAnalogIntrinsicProperties(data1, display_options1);
+        
+        display_options2.allocated_y_center = center2;
+        display_options2.allocated_height = height2;
+        setAnalogIntrinsicProperties(data2, display_options2);
+        
+        display_options3.allocated_y_center = center3;
+        display_options3.allocated_height = height3;
+        setAnalogIntrinsicProperties(data3, display_options3);
+        
+        // Generate models for all series
+        glm::mat4 model1 = new_getAnalogModelMat(display_options1, display_options1.cached_std_dev, display_options1.cached_mean, manager);
+        glm::mat4 model2 = new_getAnalogModelMat(display_options2, display_options2.cached_std_dev, display_options2.cached_mean, manager);
+        glm::mat4 model3 = new_getAnalogModelMat(display_options3, display_options3.cached_std_dev, display_options3.cached_mean, manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(1, 1000, -1.0f, 1.0f, manager);
+        
+        // Test reference points without panning
+        glm::mat4 view_no_pan = new_getAnalogViewMat(manager);
+        glm::vec2 ref1 = applyMVPTransformation(500, display_options1.cached_mean, model1, view_no_pan, projection);
+        glm::vec2 ref2 = applyMVPTransformation(500, display_options2.cached_mean, model2, view_no_pan, projection);
+        glm::vec2 ref3 = applyMVPTransformation(500, display_options3.cached_mean, model3, view_no_pan, projection);
+        
+        // Verify initial relative positions
+        float initial_spacing12 = ref2.y - ref1.y;
+        float initial_spacing23 = ref3.y - ref2.y;
+        
+        // Apply panning
+        float pan_amount = 0.8f;
+        manager.setPanOffset(pan_amount);
+        glm::mat4 view_with_pan = new_getAnalogViewMat(manager);
+        
+        // Test points with panning
+        glm::vec2 pan1 = applyMVPTransformation(500, display_options1.cached_mean, model1, view_with_pan, projection);
+        glm::vec2 pan2 = applyMVPTransformation(500, display_options2.cached_mean, model2, view_with_pan, projection);
+        glm::vec2 pan3 = applyMVPTransformation(500, display_options3.cached_mean, model3, view_with_pan, projection);
+        
+        // All series should be panned by the same amount
+        REQUIRE_THAT(pan1.y, WithinRel(ref1.y + pan_amount, 0.01f));
+        REQUIRE_THAT(pan2.y, WithinRel(ref2.y + pan_amount, 0.01f));
+        REQUIRE_THAT(pan3.y, WithinRel(ref3.y + pan_amount, 0.01f));
+        
+        // Relative spacing between series should be preserved
+        float panned_spacing12 = pan2.y - pan1.y;
+        float panned_spacing23 = pan3.y - pan2.y;
+        REQUIRE_THAT(panned_spacing12, WithinRel(initial_spacing12, 0.01f));
+        REQUIRE_THAT(panned_spacing23, WithinRel(initial_spacing23, 0.01f));
+        
+        // X coordinates should remain unchanged
+        REQUIRE_THAT(pan1.x, WithinRel(ref1.x, 0.01f));
+        REQUIRE_THAT(pan2.x, WithinRel(ref2.x, 0.01f));
+        REQUIRE_THAT(pan3.x, WithinRel(ref3.x, 0.01f));
+    }
+    
+    SECTION("Panning data out of view") {
+        // Test that data can be panned completely out of the visible area
+        auto test_data = generateGaussianData(1000, 0.0f, 1.0f, 444);
+        
+        PlottingManager manager;
+        int series_idx = manager.addAnalogSeries();
+        manager.setVisibleDataRange(1, 1000);
+        
+        NewAnalogTimeSeriesDisplayOptions display_options;
+        float allocated_center, allocated_height;
+        manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
+        display_options.allocated_y_center = allocated_center;
+        display_options.allocated_height = allocated_height;
+        setAnalogIntrinsicProperties(test_data, display_options);
+        
+        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(1, 1000, -1.0f, 1.0f, manager);
+        
+        // Pan so far upward that data goes above the visible area
+        float extreme_pan_up = 5.0f; // Very large positive pan
+        manager.setPanOffset(extreme_pan_up);
+        glm::mat4 view_extreme_up = new_getAnalogViewMat(manager);
+        
+        glm::vec2 out_of_view_up = applyMVPTransformation(500, display_options.cached_mean, model, view_extreme_up, projection);
+        
+        // Data should be well above the normal NDC range [-1, 1]
+        REQUIRE(out_of_view_up.y > 2.0f);
+        
+        // Pan so far downward that data goes below the visible area
+        float extreme_pan_down = -5.0f; // Very large negative pan
+        manager.setPanOffset(extreme_pan_down);
+        glm::mat4 view_extreme_down = new_getAnalogViewMat(manager);
+        
+        glm::vec2 out_of_view_down = applyMVPTransformation(500, display_options.cached_mean, model, view_extreme_down, projection);
+        
+        // Data should be well below the normal NDC range [-1, 1]
+        REQUIRE(out_of_view_down.y < -2.0f);
+        
+        // X coordinates should remain in normal range regardless of Y panning
+        REQUIRE(out_of_view_up.x >= -1.1f);
+        REQUIRE(out_of_view_up.x <= 1.1f);
+        REQUIRE(out_of_view_down.x >= -1.1f);
+        REQUIRE(out_of_view_down.x <= 1.1f);
+    }
 }
 
 TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][edge]") {

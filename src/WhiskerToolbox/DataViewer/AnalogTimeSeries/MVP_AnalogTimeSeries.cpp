@@ -163,6 +163,22 @@ int PlottingManager::addAnalogSeries() {
     return new_series_index;
 }
 
+void PlottingManager::setPanOffset(float pan_offset) {
+    vertical_pan_offset = pan_offset;
+}
+
+void PlottingManager::applyPanDelta(float pan_delta) {
+    vertical_pan_offset += pan_delta;
+}
+
+float PlottingManager::getPanOffset() const {
+    return vertical_pan_offset;
+}
+
+void PlottingManager::resetPan() {
+    vertical_pan_offset = 0.0f;
+}
+
 // New MVP matrix functions
 glm::mat4 new_getAnalogModelMat(NewAnalogTimeSeriesDisplayOptions const & display_options,
                                 float std_dev,

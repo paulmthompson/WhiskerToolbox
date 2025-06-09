@@ -211,6 +211,77 @@ int main() {
     std::cout << "✓ Applied three-tier scaling (intrinsic, user, global)" << std::endl;
     std::cout << "✓ Transformed data coordinates to normalized device coordinates" << std::endl;
     std::cout << "✓ Maintained proper coordinate system bounds and separation" << std::endl;
+    std::cout << std::endl;
+    
+    // Demonstrate panning functionality
+    std::cout << "=== Panning Demonstration ===" << std::endl;
+    
+    // Test center points before panning
+    glm::vec2 center1_no_pan = transformPoint(500, 0.0f, model1, view1, projection);
+    glm::vec2 center2_no_pan = transformPoint(500, 0.0f, model2, view2, projection);
+    
+    std::cout << "Before panning:" << std::endl;
+    std::cout << "  Series 1 center: (" << center1_no_pan.x << ", " << center1_no_pan.y << ")" << std::endl;
+    std::cout << "  Series 2 center: (" << center2_no_pan.x << ", " << center2_no_pan.y << ")" << std::endl;
+    std::cout << "  Series spacing: " << (center2_no_pan.y - center1_no_pan.y) << std::endl;
+    std::cout << std::endl;
+    
+    // Apply panning
+    float pan_amount = 0.4f; // Pan upward
+    manager.setPanOffset(pan_amount);
+    std::cout << "Applying pan offset: " << pan_amount << " (upward)" << std::endl;
+    
+    // Regenerate view matrices with panning
+    glm::mat4 view1_panned = new_getAnalogViewMat(manager);
+    glm::mat4 view2_panned = new_getAnalogViewMat(manager); // Same view for both
+    
+    // Test center points after panning
+    glm::vec2 center1_panned = transformPoint(500, 0.0f, model1, view1_panned, projection);
+    glm::vec2 center2_panned = transformPoint(500, 0.0f, model2, view2_panned, projection);
+    
+    std::cout << "After panning:" << std::endl;
+    std::cout << "  Series 1 center: (" << center1_panned.x << ", " << center1_panned.y << ")" << std::endl;
+    std::cout << "  Series 2 center: (" << center2_panned.x << ", " << center2_panned.y << ")" << std::endl;
+    std::cout << "  Series spacing: " << (center2_panned.y - center1_panned.y) << std::endl;
+    std::cout << std::endl;
+    
+    // Verify panning behavior
+    float delta1 = center1_panned.y - center1_no_pan.y;
+    float delta2 = center2_panned.y - center2_no_pan.y;
+    float spacing_preserved = std::abs((center2_panned.y - center1_panned.y) - (center2_no_pan.y - center1_no_pan.y));
+    
+    std::cout << "Panning validation:" << std::endl;
+    std::cout << "  Series 1 Y delta: " << delta1 << " (should ≈ " << pan_amount << ")" << std::endl;
+    std::cout << "  Series 2 Y delta: " << delta2 << " (should ≈ " << pan_amount << ")" << std::endl;
+    std::cout << "  Spacing change: " << spacing_preserved << " (should ≈ 0)" << std::endl;
+    std::cout << "  Equal panning: " << (std::abs(delta1 - delta2) < 0.01f ? "PASS" : "FAIL") << std::endl;
+    std::cout << "  Spacing preserved: " << (spacing_preserved < 0.01f ? "PASS" : "FAIL") << std::endl;
+    std::cout << std::endl;
+    
+    // Test extreme panning (data out of view)
+    manager.setPanOffset(3.0f); // Very large pan
+    glm::mat4 view_extreme = new_getAnalogViewMat(manager);
+    glm::vec2 extreme_point = transformPoint(500, 0.0f, model1, view_extreme, projection);
+    
+    std::cout << "Extreme panning (3.0 upward):" << std::endl;
+    std::cout << "  Series 1 center Y: " << extreme_point.y << " (out of normal range [-1,1])" << std::endl;
+    std::cout << "  Data visibility: " << (extreme_point.y > 1.0f ? "OUT OF VIEW (above)" : "VISIBLE") << std::endl;
+    std::cout << std::endl;
+    
+    // Reset panning
+    manager.resetPan();
+    std::cout << "Pan reset. Current offset: " << manager.getPanOffset() << std::endl;
+    std::cout << std::endl;
+    
+    std::cout << "=== Demo Complete ===" << std::endl;
+    std::cout << "The new MVP system successfully:" << std::endl;
+    std::cout << "✓ Generated Gaussian test data with correct statistics" << std::endl;
+    std::cout << "✓ Managed multiple analog series with coordinate allocation" << std::endl;
+    std::cout << "✓ Applied three-tier scaling (intrinsic, user, global)" << std::endl;
+    std::cout << "✓ Transformed data coordinates to normalized device coordinates" << std::endl;
+    std::cout << "✓ Maintained proper coordinate system bounds and separation" << std::endl;
+    std::cout << "✓ Implemented vertical panning with equal translation of all series" << std::endl;
+    std::cout << "✓ Demonstrated data can be panned out of view while preserving relationships" << std::endl;
     
     return 0;
 } 

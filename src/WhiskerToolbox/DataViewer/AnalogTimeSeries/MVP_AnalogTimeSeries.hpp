@@ -219,6 +219,39 @@ struct PlottingManager {
      * @return Series index for the newly added series
      */
     int addAnalogSeries();
+    
+    /**
+     * @brief Set vertical pan offset in normalized device coordinates
+     * 
+     * Sets the vertical panning offset that will be applied to all series equally.
+     * Positive values pan upward, negative values pan downward.
+     * Values are in normalized device coordinates (typical range: -2.0 to 2.0).
+     * 
+     * @param pan_offset Vertical pan offset in NDC
+     */
+    void setPanOffset(float pan_offset);
+    
+    /**
+     * @brief Apply relative pan delta to current pan offset
+     * 
+     * Adds a delta to the current pan offset, useful for implementing
+     * click-and-drag panning interactions.
+     * 
+     * @param pan_delta Change in pan offset (positive = upward)
+     */
+    void applyPanDelta(float pan_delta);
+    
+    /**
+     * @brief Get current vertical pan offset
+     * 
+     * @return Current vertical pan offset in normalized device coordinates
+     */
+    float getPanOffset() const;
+    
+    /**
+     * @brief Reset pan offset to zero (no panning)
+     */
+    void resetPan();
 };
 
 /**

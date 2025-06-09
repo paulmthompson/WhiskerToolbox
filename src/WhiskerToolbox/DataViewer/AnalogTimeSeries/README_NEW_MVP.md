@@ -46,6 +46,12 @@ struct AnalogScalingConfig {
 - Manages series registration and coordinate allocation
 - Handles viewport configuration and data range management
 - Provides methods for calculating series-specific positioning
+- Implements vertical panning in normalized device coordinates
+  - `setPanOffset(float)`: Set absolute pan position
+  - `applyPanDelta(float)`: Apply relative pan movement (for click-and-drag)
+  - `resetPan()`: Reset to no panning
+  - Equal translation applied to all series while preserving relationships
+  - Data can be panned completely out of view
 
 ## Function Implementation
 
@@ -56,8 +62,9 @@ struct AnalogScalingConfig {
 - Uses 80% of allocated height for safe visual spacing
 
 ### View Matrix (`new_getAnalogViewMat`)
-- Handles global view transformations
-- Currently implements vertical panning offset
+- Handles global view transformations applied to all series equally
+- Implements vertical panning offset in normalized device coordinates
+- Panning maintains data scaling and inter-series relationships
 - Designed for future expansion with additional view-level effects
 
 ### Projection Matrix (`new_getAnalogProjectionMat`)
@@ -77,6 +84,9 @@ struct AnalogScalingConfig {
 - **Multiple Series Allocation**: Coordinate distribution and non-overlap verification
 - **Scaling Validation**: User and global scaling factor effects
 - **Coordinate System Validation**: NDC range compliance
+- **Vertical Panning**: Equal translation of all series in normalized coordinates
+- **Multi-Series Panning**: Preserves relative positioning between series
+- **Extreme Panning**: Data can be moved completely out of visible range
 
 ### Gold Standard Validation
 - Data points 1-10000 mapped to X-axis range [-1, 1]
