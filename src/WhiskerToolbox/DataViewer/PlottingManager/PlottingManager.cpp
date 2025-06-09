@@ -60,19 +60,25 @@ void PlottingManager::calculateDigitalIntervalSeriesAllocation(int series_index,
 void PlottingManager::calculateDigitalEventSeriesAllocation(int series_index,
                                                             float & allocated_center,
                                                             float & allocated_height) const {
-    // Digital event allocation depends on plotting mode
-    // For FullCanvas mode: Use full canvas height (like digital intervals)
-    // For Stacked mode: Share space with analog series (like analog time series)
-    //
-    // Note: Since plotting mode is determined at display options level,
-    // we provide both allocations and let the MVP functions decide based on mode
+    // Digital event allocation strategy:
+    // - Single event series: Gets full canvas (equivalent behavior for both modes)
+    // - Multiple event series: Assumes stacked mode and divides canvas equally
 
-    // Full canvas allocation (used in FullCanvas mode)
-    allocated_center = (viewport_y_min + viewport_y_max) * 0.5f;// Center of viewport
-    allocated_height = viewport_y_max - viewport_y_min;         // Full viewport height
+    if (total_event_series <= 1) {
+        // Single event series gets full canvas (same for both FullCanvas and Stacked modes)
+        allocated_center = (viewport_y_min + viewport_y_max) * 0.5f;// Center of viewport
+        allocated_height = viewport_y_max - viewport_y_min;         // Full viewport height
+    } else {
+        // Multiple event series: divide canvas equally (stacked mode behavior)
+        float const total_viewport_height = viewport_y_max - viewport_y_min;
+        float const series_height = total_viewport_height / static_cast<float>(total_event_series);
 
-    // Note: For Stacked mode, events would share the analog allocation space
-    // This would require coordination between analog and event series in the future
+        // Calculate center position for this series
+        // Series are stacked from top to bottom
+        float const series_bottom = viewport_y_min + static_cast<float>(series_index) * series_height;
+        allocated_center = series_bottom + series_height * 0.5f;
+        allocated_height = series_height;
+    }
 }
 
 void PlottingManager::setPanOffset(float pan_offset) {
