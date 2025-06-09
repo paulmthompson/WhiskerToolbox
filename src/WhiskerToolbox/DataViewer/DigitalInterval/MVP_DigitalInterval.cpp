@@ -92,9 +92,10 @@ glm::mat4 new_getIntervalModelMat(NewDigitalIntervalSeriesDisplayOptions const &
 glm::mat4 new_getIntervalViewMat(PlottingManager const & plotting_manager) {
     auto View = glm::mat4(1.0f);
 
-    // Apply global vertical panning
-    // Pan offset is applied in view space to affect all series equally
-    View = glm::translate(View, glm::vec3(0.0f, plotting_manager.vertical_pan_offset, 0.0f));
+    // Digital intervals should NOT move with vertical panning
+    // They always extend from the top to bottom of the current view
+    // Unlike analog series, panning should not affect their position
+    // (they remain "pinned" to the current viewport)
 
     return View;
 }

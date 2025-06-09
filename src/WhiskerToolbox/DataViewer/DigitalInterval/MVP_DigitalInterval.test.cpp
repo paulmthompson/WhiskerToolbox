@@ -259,8 +259,9 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         // Test point transformation with panning
         glm::vec2 center_point = applyIntervalMVPTransformation(5000.0f, 0.0f, model, view, projection);
 
-        // Y coordinate should be shifted by pan offset (pan is applied in view matrix)
-        float expected_y = allocated_center + pan_offset;
+        // Y coordinate should NOT be shifted by pan offset for digital intervals
+        // Digital intervals should remain pinned to the current viewport
+        float expected_y = allocated_center;// Should remain at original position
         REQUIRE_THAT(center_point.y, WithinRel(expected_y, 0.01f));
 
         // X coordinate should be unaffected by vertical panning
@@ -274,5 +275,83 @@ TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_i
         // Reset panning
         manager.resetPan();
         REQUIRE(manager.getPanOffset() == 0.0f);
+    }
+
+    SECTION("Digital intervals always extend full view height during panning - CORRECTED BEHAVIOR") {
+        PlottingManager manager;
+        int series_idx = manager.addDigitalIntervalSeries();
+        manager.setVisibleDataRange(1, 10000);
+
+        // Set up display options
+        NewDigitalIntervalSeriesDisplayOptions display_options;
+        float allocated_center, allocated_height;
+        manager.calculateDigitalIntervalSeriesAllocation(series_idx, allocated_center, allocated_height);
+        display_options.allocated_y_center = allocated_center;
+        display_options.allocated_height = allocated_height;
+
+        // Test with no panning first (baseline)
+        {
+            glm::mat4 model = new_getIntervalModelMat(display_options, manager);
+            glm::mat4 view = new_getIntervalViewMat(manager);
+            glm::mat4 projection = new_getIntervalProjectionMat(1, 10000, -1.0f, 1.0f, manager);
+
+            // Test top and bottom corners of an interval
+            glm::vec2 bottom_corner = applyIntervalMVPTransformation(5000.0f, -1.0f, model, view, projection);
+            glm::vec2 top_corner = applyIntervalMVPTransformation(5000.0f, 1.0f, model, view, projection);
+
+            // Should extend from -0.95 to +0.95 (with margin factor)
+            float expected_bottom = -1.0f * (allocated_height * display_options.margin_factor * 0.5f);
+            float expected_top = 1.0f * (allocated_height * display_options.margin_factor * 0.5f);
+
+            REQUIRE_THAT(bottom_corner.y, WithinRel(expected_bottom, 0.01f));
+            REQUIRE_THAT(top_corner.y, WithinRel(expected_top, 0.01f));
+        }
+
+        // Apply significant vertical pan (1.0 units upward)
+        float pan_offset = 1.0f;
+        manager.setPanOffset(pan_offset);
+
+        // Generate MVP matrices with panning
+        {
+            glm::mat4 model = new_getIntervalModelMat(display_options, manager);
+            glm::mat4 view = new_getIntervalViewMat(manager);
+            glm::mat4 projection = new_getIntervalProjectionMat(1, 10000, -1.0f, 1.0f, manager);
+
+            // CRITICAL TEST: Digital intervals should STILL extend from top to bottom of current view
+            // Unlike analog series, they should NOT move with the pan offset
+            glm::vec2 bottom_corner_panned = applyIntervalMVPTransformation(5000.0f, -1.0f, model, view, projection);
+            glm::vec2 top_corner_panned = applyIntervalMVPTransformation(5000.0f, 1.0f, model, view, projection);
+
+            // Intervals should still extend the same relative amount in the current view
+            // They should NOT be shifted by the pan offset like analog series would be
+            float expected_bottom_panned = -1.0f * (allocated_height * display_options.margin_factor * 0.5f);
+            float expected_top_panned = 1.0f * (allocated_height * display_options.margin_factor * 0.5f);
+
+            REQUIRE_THAT(bottom_corner_panned.y, WithinRel(expected_bottom_panned, 0.01f));
+            REQUIRE_THAT(top_corner_panned.y, WithinRel(expected_top_panned, 0.01f));
+
+            // X coordinates should be unaffected by vertical panning
+            float expected_x = (5000.0f - 1.0f) / (10000.0f - 1.0f) * 2.0f - 1.0f;// Should be ~0
+            REQUIRE_THAT(bottom_corner_panned.x, WithinRel(expected_x, 0.01f));
+            REQUIRE_THAT(top_corner_panned.x, WithinRel(expected_x, 0.01f));
+        }
+
+        // Test with negative pan as well
+        manager.setPanOffset(-1.0f);
+        {
+            glm::mat4 model = new_getIntervalModelMat(display_options, manager);
+            glm::mat4 view = new_getIntervalViewMat(manager);
+            glm::mat4 projection = new_getIntervalProjectionMat(1, 10000, -1.0f, 1.0f, manager);
+
+            glm::vec2 bottom_corner_neg_pan = applyIntervalMVPTransformation(5000.0f, -1.0f, model, view, projection);
+            glm::vec2 top_corner_neg_pan = applyIntervalMVPTransformation(5000.0f, 1.0f, model, view, projection);
+
+            // Should still extend the same amount regardless of pan direction
+            float expected_bottom_neg_pan = -1.0f * (allocated_height * display_options.margin_factor * 0.5f);
+            float expected_top_neg_pan = 1.0f * (allocated_height * display_options.margin_factor * 0.5f);
+
+            REQUIRE_THAT(bottom_corner_neg_pan.y, WithinRel(expected_bottom_neg_pan, 0.01f));
+            REQUIRE_THAT(top_corner_neg_pan.y, WithinRel(expected_top_neg_pan, 0.01f));
+        }
     }
 }
