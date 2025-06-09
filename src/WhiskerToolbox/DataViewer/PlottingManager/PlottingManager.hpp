@@ -4,8 +4,16 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+// Forward declarations for DataManager types
+class AnalogTimeSeries;
+class DigitalEventSeries;
+class DigitalIntervalSeries;
+class TimeFrame;
 
 /**
  * @brief Plotting manager for coordinating multiple data series visualization
@@ -33,6 +41,35 @@ struct PlottingManager {
     int total_analog_series{0}; ///< Number of analog series being displayed
     int total_digital_series{0};///< Number of digital series being displayed
     int total_event_series{0};  ///< Number of digital event series being displayed
+
+    // Series storage for DataManager integration
+    struct AnalogSeriesInfo {
+        std::shared_ptr<AnalogTimeSeries> series;
+        std::shared_ptr<TimeFrame> time_frame;
+        std::string key;
+        std::string color;
+        bool visible{true};
+    };
+
+    struct DigitalEventSeriesInfo {
+        std::shared_ptr<DigitalEventSeries> series;
+        std::shared_ptr<TimeFrame> time_frame;
+        std::string key;
+        std::string color;
+        bool visible{true};
+    };
+
+    struct DigitalIntervalSeriesInfo {
+        std::shared_ptr<DigitalIntervalSeries> series;
+        std::shared_ptr<TimeFrame> time_frame;
+        std::string key;
+        std::string color;
+        bool visible{true};
+    };
+
+    std::unordered_map<std::string, AnalogSeriesInfo> analog_series_map;
+    std::unordered_map<std::string, DigitalEventSeriesInfo> digital_event_series_map;
+    std::unordered_map<std::string, DigitalIntervalSeriesInfo> digital_interval_series_map;
 
     /**
      * @brief Calculate Y-coordinate allocation for an analog series
@@ -85,6 +122,158 @@ struct PlottingManager {
      * @return Series index for the newly added digital event series
      */
     int addDigitalEventSeries();
+
+    /**
+     * @brief Add an analog series with DataManager integration
+     * 
+     * @param key Unique key for the series
+     * @param series Shared pointer to AnalogTimeSeries data
+     * @param time_frame Shared pointer to TimeFrame for the series
+     * @param color Color string for rendering (hex format)
+     * @return Series index for the newly added series
+     */
+    int addAnalogSeries(std::string const & key,
+                        std::shared_ptr<AnalogTimeSeries> series,
+                        std::shared_ptr<TimeFrame> time_frame,
+                        std::string const & color = "");
+
+    /**
+     * @brief Add a digital event series with DataManager integration
+     * 
+     * @param key Unique key for the series
+     * @param series Shared pointer to DigitalEventSeries data
+     * @param time_frame Shared pointer to TimeFrame for the series
+     * @param color Color string for rendering (hex format)
+     * @return Series index for the newly added series
+     */
+    int addDigitalEventSeries(std::string const & key,
+                              std::shared_ptr<DigitalEventSeries> series,
+                              std::shared_ptr<TimeFrame> time_frame,
+                              std::string const & color = "");
+
+    /**
+     * @brief Add a digital interval series with DataManager integration
+     * 
+     * @param key Unique key for the series
+     * @param series Shared pointer to DigitalIntervalSeries data
+     * @param time_frame Shared pointer to TimeFrame for the series
+     * @param color Color string for rendering (hex format)
+     * @return Series index for the newly added series
+     */
+    int addDigitalIntervalSeries(std::string const & key,
+                                 std::shared_ptr<DigitalIntervalSeries> series,
+                                 std::shared_ptr<TimeFrame> time_frame,
+                                 std::string const & color = "");
+
+    /**
+     * @brief Remove an analog series by key
+     * 
+     * @param key Unique key for the series to remove
+     * @return True if series was found and removed, false otherwise
+     */
+    bool removeAnalogSeries(std::string const & key);
+
+    /**
+     * @brief Remove a digital event series by key
+     * 
+     * @param key Unique key for the series to remove
+     * @return True if series was found and removed, false otherwise
+     */
+    bool removeDigitalEventSeries(std::string const & key);
+
+    /**
+     * @brief Remove a digital interval series by key
+     * 
+     * @param key Unique key for the series to remove
+     * @return True if series was found and removed, false otherwise
+     */
+    bool removeDigitalIntervalSeries(std::string const & key);
+
+    /**
+     * @brief Clear all series
+     */
+    void clearAllSeries();
+
+    /**
+     * @brief Get analog series info by key
+     * 
+     * @param key Unique key for the series
+     * @return Pointer to AnalogSeriesInfo or nullptr if not found
+     */
+    AnalogSeriesInfo * getAnalogSeriesInfo(std::string const & key);
+
+    /**
+     * @brief Get digital event series info by key
+     * 
+     * @param key Unique key for the series
+     * @return Pointer to DigitalEventSeriesInfo or nullptr if not found
+     */
+    DigitalEventSeriesInfo * getDigitalEventSeriesInfo(std::string const & key);
+
+    /**
+     * @brief Get digital interval series info by key
+     * 
+     * @param key Unique key for the series
+     * @return Pointer to DigitalIntervalSeriesInfo or nullptr if not found
+     */
+    DigitalIntervalSeriesInfo * getDigitalIntervalSeriesInfo(std::string const & key);
+
+    /**
+     * @brief Set series visibility
+     * 
+     * @param key Unique key for the series
+     * @param visible True to show series, false to hide
+     */
+    void setSeriesVisibility(std::string const & key, bool visible);
+
+    /**
+     * @brief Get all visible analog series keys
+     * 
+     * @return Vector of keys for visible analog series
+     */
+    std::vector<std::string> getVisibleAnalogSeriesKeys() const;
+
+    /**
+     * @brief Get all visible digital event series keys
+     * 
+     * @return Vector of keys for visible digital event series
+     */
+    std::vector<std::string> getVisibleDigitalEventSeriesKeys() const;
+
+    /**
+     * @brief Get all visible digital interval series keys
+     * 
+     * @return Vector of keys for visible digital interval series
+     */
+    std::vector<std::string> getVisibleDigitalIntervalSeriesKeys() const;
+
+    /**
+     * @brief Set global zoom factor
+     * 
+     * @param zoom Zoom factor (1.0 = normal, >1.0 = zoomed in, <1.0 = zoomed out)
+     */
+    void setGlobalZoom(float zoom);
+
+    /**
+     * @brief Get current global zoom factor
+     * 
+     * @return Current zoom factor
+     */
+    [[nodiscard]] float getGlobalZoom() const;
+
+    /**
+     * @brief Set global vertical scale
+     * 
+     * @param scale Vertical scale factor
+     */
+    void setGlobalVerticalScale(float scale);
+
+    /**
+     * @brief Get current global vertical scale
+     * 
+     * @return Current vertical scale factor
+     */
+    [[nodiscard]] float getGlobalVerticalScale() const;
 
     /**
      * @brief Calculate Y-coordinate allocation for a digital interval series
@@ -167,6 +356,23 @@ struct PlottingManager {
      * @brief Reset pan offset to zero (no panning)
      */
     void resetPan();
+
+    /**
+     * @brief Update series counts based on currently stored series
+     * 
+     * Recalculates total_analog_series, total_event_series, and total_digital_series
+     * based on the current state of the series maps. Call this after adding/removing series.
+     */
+    void updateSeriesCounts();
+
+private:
+    /**
+     * @brief Generate a default color for a series
+     * 
+     * @param series_index Index of the series
+     * @return Hex color string
+     */
+    std::string generateDefaultColor(int series_index) const;
 };
 
 #endif// DATAVIEWER_PLOTTINGMANAGER_HPP
