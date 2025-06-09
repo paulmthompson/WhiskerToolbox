@@ -89,3 +89,111 @@ glm::mat4 getAnalogProjectionMat(float start_time,
 
     return Projection;
 }
+
+// NEW INFRASTRUCTURE IMPLEMENTATIONS
+
+// PlottingManager methods
+void PlottingManager::calculateAnalogSeriesAllocation(int series_index, 
+                                                     float & allocated_center, 
+                                                     float & allocated_height) const {
+    if (total_analog_series <= 0) {
+        allocated_center = 0.0f;
+        allocated_height = viewport_y_max - viewport_y_min;
+        return;
+    }
+    
+    // Calculate equal spacing for all analog series within the viewport
+    float const total_viewport_height = viewport_y_max - viewport_y_min;
+    float const series_height = total_viewport_height / static_cast<float>(total_analog_series);
+    
+    // Calculate center position for this series
+    // Series are stacked from top to bottom
+    float const series_bottom = viewport_y_min + static_cast<float>(series_index) * series_height;
+    allocated_center = series_bottom + series_height * 0.5f;
+    allocated_height = series_height;
+}
+
+void PlottingManager::setVisibleDataRange(int start_index, int end_index) {
+    visible_start_index = start_index;
+    visible_end_index = end_index;
+}
+
+int PlottingManager::addAnalogSeries() {
+    int const new_series_index = total_analog_series;
+    ++total_analog_series;
+    return new_series_index;
+}
+
+// New MVP matrix functions
+glm::mat4 new_getAnalogModelMat(NewAnalogTimeSeriesDisplayOptions const & display_options,
+                                float std_dev,
+                                PlottingManager const & plotting_manager) {
+    auto Model = glm::mat4(1.0f);
+    
+    // Apply translation to the allocated center position
+    Model = glm::translate(Model, glm::vec3(0.0f, display_options.allocated_y_center, 0.0f));
+    
+    // Calculate intrinsic scaling (3 standard deviations for full range)
+    // This maps ±3*std_dev to ±1.0 in normalized space
+    // Protect against division by zero
+    float const safe_std_dev = (std_dev > 1e-6f) ? std_dev : 1.0f;
+    float const intrinsic_scale = 1.0f / (3.0f * safe_std_dev);
+    
+    // Combine all scaling factors: intrinsic, user, and global
+    float const total_y_scale = intrinsic_scale * 
+                               display_options.scaling.intrinsic_scale *
+                               display_options.scaling.user_scale_factor *
+                               display_options.scaling.global_zoom *
+                               plotting_manager.global_zoom *
+                               plotting_manager.global_vertical_scale;
+    
+    // Scale to fit within allocated height (use 80% of allocated space for safety)
+    // This means ±3*std_dev will span ±80% of the allocated height
+    float const height_scale = display_options.allocated_height * 0.8f;
+    float const final_y_scale = total_y_scale * height_scale;
+    
+    // Apply scaling (X scale = 1.0 for time axis, Y scale for amplitude)  
+    Model = glm::scale(Model, glm::vec3(1.0f, final_y_scale, 1.0f));
+    
+    // Apply any additional user-specified offsets
+    if (display_options.scaling.user_vertical_offset != 0.0f) {
+        Model = glm::translate(Model, glm::vec3(0.0f, display_options.scaling.user_vertical_offset, 0.0f));
+    }
+    
+    return Model;
+}
+
+glm::mat4 new_getAnalogViewMat(PlottingManager const & plotting_manager) {
+    auto View = glm::mat4(1.0f);
+    
+    // Apply global vertical panning
+    if (plotting_manager.vertical_pan_offset != 0.0f) {
+        View = glm::translate(View, glm::vec3(0.0f, plotting_manager.vertical_pan_offset, 0.0f));
+    }
+    
+    return View;
+}
+
+glm::mat4 new_getAnalogProjectionMat(int start_data_index,
+                                     int end_data_index,
+                                     float y_min,
+                                     float y_max,
+                                     PlottingManager const & plotting_manager) {
+    // Map data indices to normalized device coordinates [-1, 1]
+    // X-axis: map [start_data_index, end_data_index] to screen width
+    // Y-axis: map [y_min, y_max] to viewport height with pan offset
+    
+    float const data_start = static_cast<float>(start_data_index);
+    float const data_end = static_cast<float>(end_data_index);
+    
+    // Apply vertical pan offset to Y bounds
+    float const adjusted_y_min = y_min + plotting_manager.vertical_pan_offset;
+    float const adjusted_y_max = y_max + plotting_manager.vertical_pan_offset;
+    
+    // Create orthographic projection matrix
+    // This maps world coordinates to normalized device coordinates [-1, 1]
+    auto Projection = glm::ortho(data_start, data_end, 
+                                adjusted_y_min, adjusted_y_max);
+    
+    return Projection;
+}

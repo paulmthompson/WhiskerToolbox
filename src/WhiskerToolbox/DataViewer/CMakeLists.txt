@@ -21,7 +21,14 @@ set(DATAVIEWER_SOURCES
 set_property(GLOBAL PROPERTY DATAVIEWER_TEST_SOURCES "")
 
 set(dataviewer_test_sources
-    VerticalSpaceManager.test.cpp)
+    VerticalSpaceManager.test.cpp
+    AnalogTimeSeries/MVP_AnalogTimeSeries.test.cpp)
+
+# Demo executables
+add_executable(mvp_analog_demo AnalogTimeSeries/MVP_AnalogTimeSeries_demo.cpp)
+target_link_libraries(mvp_analog_demo PRIVATE DataViewer)
+target_include_directories(mvp_analog_demo PRIVATE 
+    "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_tests_to_global(dataviewer_test_sources 
                     "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataViewer" 
