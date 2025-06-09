@@ -3,6 +3,7 @@
 #include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
 
 #include <iostream>
+#include <cmath>
 
 // Model Matrix: Handles series-specific positioning and scaling for analog series
 glm::mat4 getAnalogModelMat(AnalogTimeSeriesDisplayOptions const * display_options,
@@ -90,6 +91,44 @@ glm::mat4 getAnalogProjectionMat(float start_time,
     return Projection;
 }
 
+// Helper functions for intrinsic data properties
+float calculateDataMean(std::vector<float> const & data) {
+    if (data.empty()) return 0.0f;
+    
+    float sum = 0.0f;
+    for (float value : data) {
+        sum += value;
+    }
+    
+    return sum / static_cast<float>(data.size());
+}
+
+void setAnalogIntrinsicProperties(std::vector<float> const & data,
+                                 NewAnalogTimeSeriesDisplayOptions & display_options) {
+    if (data.empty()) {
+        display_options.cached_mean = 0.0f;
+        display_options.cached_std_dev = 0.0f;
+        display_options.mean_cache_valid = true;
+        display_options.std_dev_cache_valid = true;
+        return;
+    }
+    
+    // Calculate mean
+    display_options.cached_mean = calculateDataMean(data);
+    display_options.mean_cache_valid = true;
+    
+    // Calculate standard deviation
+    float variance = 0.0f;
+    for (float value : data) {
+        float diff = value - display_options.cached_mean;
+        variance += diff * diff;
+    }
+    variance /= static_cast<float>(data.size());
+    
+    display_options.cached_std_dev = std::sqrt(variance);
+    display_options.std_dev_cache_valid = true;
+}
+
 // NEW INFRASTRUCTURE IMPLEMENTATIONS
 
 // PlottingManager methods
@@ -127,14 +166,10 @@ int PlottingManager::addAnalogSeries() {
 // New MVP matrix functions
 glm::mat4 new_getAnalogModelMat(NewAnalogTimeSeriesDisplayOptions const & display_options,
                                 float std_dev,
+                                float data_mean,
                                 PlottingManager const & plotting_manager) {
-    auto Model = glm::mat4(1.0f);
-    
-    // Apply translation to the allocated center position
-    Model = glm::translate(Model, glm::vec3(0.0f, display_options.allocated_y_center, 0.0f));
-    
     // Calculate intrinsic scaling (3 standard deviations for full range)
-    // This maps ±3*std_dev to ±1.0 in normalized space
+    // This maps ±3*std_dev (from the mean) to ±1.0 in normalized space
     // Protect against division by zero
     float const safe_std_dev = (std_dev > 1e-6f) ? std_dev : 1.0f;
     float const intrinsic_scale = 1.0f / (3.0f * safe_std_dev);
@@ -148,12 +183,27 @@ glm::mat4 new_getAnalogModelMat(NewAnalogTimeSeriesDisplayOptions const & displa
                                plotting_manager.global_vertical_scale;
     
     // Scale to fit within allocated height (use 80% of allocated space for safety)
-    // This means ±3*std_dev will span ±80% of the allocated height
+    // This means ±3*std_dev (from mean) will span ±80% of the allocated height
     float const height_scale = display_options.allocated_height * 0.8f;
     float const final_y_scale = total_y_scale * height_scale;
     
-    // Apply scaling (X scale = 1.0 for time axis, Y scale for amplitude)  
-    Model = glm::scale(Model, glm::vec3(1.0f, final_y_scale, 1.0f));
+    // Build the transformation to achieve: (data_value - data_mean) * scale + allocated_center
+    // This ensures data_mean maps exactly to allocated_center
+    
+    // Method: Use matrix construction to implement the formula directly
+    // For Y coordinate: y_out = (y_in - data_mean) * final_y_scale + allocated_center
+    // This can be written as: y_out = y_in * final_y_scale - data_mean * final_y_scale + allocated_center
+    // So: y_out = y_in * final_y_scale + (allocated_center - data_mean * final_y_scale)
+    
+    float const y_offset = display_options.allocated_y_center - data_mean * final_y_scale;
+    
+    // Use explicit matrix construction to avoid confusion with GLM order
+    // We want the transformation: y_out = y_in * final_y_scale + y_offset
+    // This is an affine transformation: [scale 0 offset; 0 scale 0; 0 0 1]
+    
+    glm::mat4 Model(1.0f);
+    Model[1][1] = final_y_scale;  // Y scaling
+    Model[3][1] = y_offset;       // Y translation
     
     // Apply any additional user-specified offsets
     if (display_options.scaling.user_vertical_offset != 0.0f) {

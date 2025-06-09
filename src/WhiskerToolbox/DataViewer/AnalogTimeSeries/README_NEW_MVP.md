@@ -7,8 +7,8 @@ This document describes the new Model-View-Projection (MVP) matrix system implem
 ## Key Features
 
 ### 1. Three-Tier Scaling System
-- **Intrinsic Scaling**: Data-based normalization (currently 3 standard deviations)
-- **User-Specified Scaling**: User-controlled amplitude and positioning adjustments
+- **Intrinsic Scaling**: Data-based normalization (3 standard deviations from mean) with mean-centering
+- **User-Specified Scaling**: User-controlled amplitude and positioning adjustments  
 - **Global Scaling**: System-wide zoom and scale factors
 
 ### 2. PlottingManager Class
@@ -80,10 +80,11 @@ struct AnalogScalingConfig {
 
 ### Gold Standard Validation
 - Data points 1-10000 mapped to X-axis range [-1, 1]
-- ±3 standard deviations scaled by intrinsic normalization and 80% height factor
-- +3σ maps to `allocated_center + (allocated_height * 0.8)`
-- -3σ maps to `allocated_center - (allocated_height * 0.8)`
-- Center values (data value = 0) mapped to allocated center coordinates
+- ±3 standard deviations from data mean scaled by intrinsic normalization and 80% height factor
+- Data mean maps to `allocated_center` (proper visual centering)
+- +3σ from mean maps to `allocated_center + (allocated_height * 0.8)`
+- -3σ from mean maps to `allocated_center - (allocated_height * 0.8)`
+- Uniform [0,1] data: mean (≈0.5) centered, min/max (0.0/1.0) symmetric around center
 - Series separation maintained for multiple series
 
 ## Files Created/Modified
@@ -113,8 +114,13 @@ manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_
 display_options.allocated_y_center = allocated_center;
 display_options.allocated_height = allocated_height;
 
+// Set intrinsic properties (mean, std dev) from your data
+std::vector<float> your_data = ...; // Your actual data
+setAnalogIntrinsicProperties(your_data, display_options);
+
 // Generate MVP matrices
-glm::mat4 model = new_getAnalogModelMat(display_options, std_dev, manager);
+glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, 
+                                       display_options.cached_mean, manager);
 glm::mat4 view = new_getAnalogViewMat(manager);
 glm::mat4 projection = new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager);
 

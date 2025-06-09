@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <string>
+#include <vector>
 
 struct AnalogTimeSeriesDisplayOptions;
 
@@ -106,6 +107,8 @@ struct NewAnalogTimeSeriesDisplayOptions {
     // Data range information (for optimization)
     mutable float cached_std_dev{0.0f};
     mutable bool std_dev_cache_valid{false};
+    mutable float cached_mean{0.0f};
+    mutable bool mean_cache_valid{false};
 };
 
 // Forward declaration for PlottingManager
@@ -116,14 +119,17 @@ struct PlottingManager;
  *
  * New implementation that handles the three-tier scaling system:
  * intrinsic (data-based), user-specified, and global scaling.
+ * Data is centered around its mean value for proper visual centering.
  *
  * @param display_options New display configuration for the analog series
  * @param std_dev Standard deviation of the data for intrinsic scaling
+ * @param data_mean Mean value of the data for intrinsic centering
  * @param plotting_manager Reference to plotting manager for coordinate allocation
  * @return Model transformation matrix
  */
 glm::mat4 new_getAnalogModelMat(NewAnalogTimeSeriesDisplayOptions const & display_options,
                                 float std_dev,
+                                float data_mean,
                                 PlottingManager const & plotting_manager);
 
 /**
@@ -214,5 +220,28 @@ struct PlottingManager {
      */
     int addAnalogSeries();
 };
+
+/**
+ * @brief Calculate the mean of a data vector
+ * 
+ * Helper function to calculate the arithmetic mean of data values.
+ * Used for intrinsic data centering in the scaling system.
+ * 
+ * @param data Vector of data values
+ * @return Arithmetic mean of the data
+ */
+float calculateDataMean(std::vector<float> const & data);
+
+/**
+ * @brief Set intrinsic properties for analog display options
+ * 
+ * Calculates and caches the mean and standard deviation for a dataset,
+ * storing them in the display options for use during MVP matrix generation.
+ * 
+ * @param data Vector of data values
+ * @param display_options Display options to update with intrinsic properties
+ */
+void setAnalogIntrinsicProperties(std::vector<float> const & data,
+                                 NewAnalogTimeSeriesDisplayOptions & display_options);
 
 #endif// MVP_ANALOGTIMESERIES_HPP

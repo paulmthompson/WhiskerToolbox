@@ -134,12 +134,16 @@ int main() {
     std::cout << "  User scale factor: " << display_options2.scaling.user_scale_factor << std::endl;
     std::cout << std::endl;
     
+    // Set intrinsic properties for both series (using same data)
+    setAnalogIntrinsicProperties(data, display_options1);
+    setAnalogIntrinsicProperties(data, display_options2);
+    
     // Generate MVP matrices for both series
-    glm::mat4 model1 = new_getAnalogModelMat(display_options1, actual_std_dev, manager);
+    glm::mat4 model1 = new_getAnalogModelMat(display_options1, display_options1.cached_std_dev, display_options1.cached_mean, manager);
     glm::mat4 view1 = new_getAnalogViewMat(manager);
     glm::mat4 projection = new_getAnalogProjectionMat(1, 1000, -1.0f, 1.0f, manager);
     
-    glm::mat4 model2 = new_getAnalogModelMat(display_options2, actual_std_dev, manager);
+    glm::mat4 model2 = new_getAnalogModelMat(display_options2, display_options2.cached_std_dev, display_options2.cached_mean, manager);
     glm::mat4 view2 = new_getAnalogViewMat(manager); // Same view for both
     
     std::cout << "Generated MVP matrices successfully!" << std::endl;

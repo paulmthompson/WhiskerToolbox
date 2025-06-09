@@ -10,6 +10,7 @@
 #include <random>
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 using Catch::Matchers::WithinRel;
 
@@ -161,8 +162,11 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         display_options.allocated_y_center = allocated_center;
         display_options.allocated_height = allocated_height;
         
+        // Set intrinsic properties for the data
+        setAnalogIntrinsicProperties(data, display_options);
+        
         // Generate MVP matrices
-        glm::mat4 model = new_getAnalogModelMat(display_options, actual_std_dev, manager);
+        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         glm::mat4 view = new_getAnalogViewMat(manager);
         glm::mat4 projection = new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager);
         
@@ -170,23 +174,24 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         // Test point at data index 1, value 0 (should map to left center)
         glm::vec2 left_center = applyMVPTransformation(1, 0.0f, model, view, projection);
         REQUIRE_THAT(left_center.x, WithinRel(-1.0f, 0.01f)); // Left edge of NDC
-        REQUIRE_THAT(left_center.y, WithinRel(0.0f, 0.01f));  // Center Y (value = 0)
+        REQUIRE_THAT(left_center.y, Catch::Matchers::WithinAbs(0.0f, 0.02f));  // Center Y (value = 0)
         
         // Test point at data index 10000, value 0 (should map to right center)
         glm::vec2 right_center = applyMVPTransformation(10000, 0.0f, model, view, projection);
         REQUIRE_THAT(right_center.x, WithinRel(1.0f, 0.01f));  // Right edge of NDC
-        REQUIRE_THAT(right_center.y, WithinRel(0.0f, 0.01f));  // Center Y (value = 0)
+        REQUIRE_THAT(right_center.y, Catch::Matchers::WithinAbs(0.0f, 0.02f));  // Center Y (value = 0)
         
         // Test point at middle index with +3*std_dev value (should map to top edge)
         float three_sigma_pos = 3.0f * actual_std_dev;
         glm::vec2 top_edge = applyMVPTransformation(5500, three_sigma_pos, model, view, projection);
         REQUIRE_THAT(top_edge.x, WithinRel(0.09f, 0.1f)); // Middle X: (5500-1)/(10000-1) * 2 - 1 ≈ 0.09
         
-        // The Y coordinate calculation:
-        // +3*std_dev maps to intrinsic_scale * 3*std_dev = 1.0
-        // Then scaled by height_scale = allocated_height * 0.8 = 1.6
-        // Then translated by allocated_center = 0.0
-        // Final Y = 0.0 + 1.6 = 1.6
+        // The Y coordinate calculation with new mean-centered scaling:
+        // Formula: y_out = (y_in - data_mean) * final_y_scale + allocated_center
+        // For Gaussian data with mean ≈ 0, allocated_center = 0:
+        // +3*std_dev: y_out = (3*std_dev - 0) * scale + 0 = 3*std_dev * scale
+        // where scale = (1/(3*std_dev)) * height_factor = (1/(3*std_dev)) * (2.0 * 0.8) = 1.6/(3*std_dev)
+        // So: y_out = 3*std_dev * 1.6/(3*std_dev) = 1.6
         float expected_top_y = allocated_center + (allocated_height * 0.8f);
         REQUIRE_THAT(top_edge.y, WithinRel(expected_top_y, 0.1f));
         
@@ -195,8 +200,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         glm::vec2 bottom_edge = applyMVPTransformation(5500, three_sigma_neg, model, view, projection);
         REQUIRE_THAT(bottom_edge.x, WithinRel(0.09f, 0.1f)); // Same X as above
         
-        // -3*std_dev maps to -1.6, then translated by allocated_center = 0.0
-        // Final Y = 0.0 + (-1.6) = -1.6
+        // -3*std_dev: y_out = (-3*std_dev - 0) * scale + 0 = -1.6
         float expected_bottom_y = allocated_center - (allocated_height * 0.8f);
         REQUIRE_THAT(bottom_edge.y, WithinRel(expected_bottom_y, 0.1f));
     }
@@ -247,11 +251,14 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         display_options.allocated_y_center = allocated_center;
         display_options.allocated_height = allocated_height;
         
-        glm::mat4 model_2x = new_getAnalogModelMat(display_options, std_dev, manager);
+        // Set intrinsic properties for the test data
+        setAnalogIntrinsicProperties(data, display_options);
+        
+        glm::mat4 model_2x = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         
         // Compare with 1x scaling
         display_options.scaling.user_scale_factor = 1.0f;
-        glm::mat4 model_1x = new_getAnalogModelMat(display_options, std_dev, manager);
+        glm::mat4 model_1x = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         
         // The 2x model should scale Y coordinates by factor of 2
         glm::vec4 test_point(100.0f, 10.0f, 0.0f, 1.0f);
@@ -264,6 +271,80 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         
         // X coordinate should be the same
         REQUIRE_THAT(result_1x.x, WithinRel(result_2x.x, 0.01f));
+    }
+    
+    SECTION("Uniform [0,1] data centering test") {
+        // Generate uniform [0,1] data to test offset handling
+        std::mt19937 gen(789);
+        std::uniform_real_distribution<float> uniform_dist(0.0f, 1.0f);
+        
+        std::vector<float> uniform_data;
+        uniform_data.reserve(10000);
+        for (size_t i = 0; i < 10000; ++i) {
+            uniform_data.push_back(uniform_dist(gen));
+        }
+        
+        float uniform_std_dev = calculateStdDev(uniform_data);
+        float uniform_mean = 0.0f;
+        for (float value : uniform_data) {
+            uniform_mean += value;
+        }
+        uniform_mean /= static_cast<float>(uniform_data.size());
+        
+        // Verify data characteristics
+        REQUIRE_THAT(uniform_mean, WithinRel(0.5f, 0.1f)); // Should be around 0.5
+        REQUIRE_THAT(uniform_std_dev, WithinRel(0.289f, 0.1f)); // Should be around sqrt(1/12) ≈ 0.289
+        
+        // Set up plotting manager for single series
+        PlottingManager manager;
+        int series_idx = manager.addAnalogSeries();
+        manager.setVisibleDataRange(1, 1000);
+        
+        NewAnalogTimeSeriesDisplayOptions display_options;
+        float allocated_center, allocated_height;
+        manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
+        display_options.allocated_y_center = allocated_center;
+        display_options.allocated_height = allocated_height;
+        
+        // Set intrinsic properties for the uniform data
+        setAnalogIntrinsicProperties(uniform_data, display_options);
+        
+        // Generate MVP matrices
+        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
+        glm::mat4 view = new_getAnalogViewMat(manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(1, 1000, -1.0f, 1.0f, manager);
+        
+        // Test key transformations
+        // Test where the mean value (0.5) gets positioned
+        glm::vec2 mean_point = applyMVPTransformation(500, uniform_mean, model, view, projection);
+        
+        // Test where the range endpoints (0.0 and 1.0) get positioned
+        glm::vec2 min_point = applyMVPTransformation(500, 0.0f, model, view, projection);
+        glm::vec2 max_point = applyMVPTransformation(500, 1.0f, model, view, projection);
+        
+        std::cout << "Uniform [0,1] data transformation results:" << std::endl;
+        std::cout << "  Mean value (" << uniform_mean << ") maps to Y = " << mean_point.y << std::endl;
+        std::cout << "  Min value (0.0) maps to Y = " << min_point.y << std::endl;
+        std::cout << "  Max value (1.0) maps to Y = " << max_point.y << std::endl;
+        std::cout << "  Allocated center: " << allocated_center << std::endl;
+        std::cout << "  Cached mean: " << display_options.cached_mean << std::endl;
+        std::cout << "  Cached std dev: " << display_options.cached_std_dev << std::endl;
+        
+        // NEW BEHAVIOR: With mean-centered scaling, the data mean (≈0.5) should map to allocated_center
+        REQUIRE_THAT(mean_point.y, WithinRel(allocated_center, 0.05f));
+        
+        // The min (0.0) and max (1.0) should be symmetrically positioned around the center
+        float distance_min = std::abs(min_point.y - allocated_center);
+        float distance_max = std::abs(max_point.y - allocated_center);
+        REQUIRE_THAT(distance_min, WithinRel(distance_max, 0.1f)); // Should be symmetric
+        
+        // Min should be below center, max should be above center
+        REQUIRE(min_point.y < allocated_center);
+        REQUIRE(max_point.y > allocated_center);
+        
+        // Test that the data range is reasonable (not extending beyond viewport)
+        REQUIRE(min_point.y >= -2.0f); // Within reasonable bounds
+        REQUIRE(max_point.y <= 2.0f);  // Within reasonable bounds
     }
 }
 
@@ -296,8 +377,11 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         display_options.allocated_y_center = allocated_center;
         display_options.allocated_height = allocated_height;
         
+        // Set intrinsic properties (will be mean=5.0, std_dev=0.0)
+        setAnalogIntrinsicProperties(constant_data, display_options);
+        
         // Should not crash with zero std_dev (division by zero protection)
-        glm::mat4 model = new_getAnalogModelMat(display_options, std_dev, manager);
+        glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         
         // Matrix should be valid (not NaN or infinite)
         for (int i = 0; i < 4; ++i) {
@@ -320,13 +404,16 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         display_options.allocated_y_center = allocated_center;
         display_options.allocated_height = allocated_height;
         
+        // Set intrinsic properties for the test data
+        setAnalogIntrinsicProperties(data, display_options);
+        
         // Test very large scaling factor
         display_options.scaling.user_scale_factor = 1000.0f;
-        glm::mat4 model_large = new_getAnalogModelMat(display_options, std_dev, manager);
+        glm::mat4 model_large = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         
         // Test very small scaling factor
         display_options.scaling.user_scale_factor = 0.001f;
-        glm::mat4 model_small = new_getAnalogModelMat(display_options, std_dev, manager);
+        glm::mat4 model_small = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         
         // Both matrices should be finite
         for (int i = 0; i < 4; ++i) {
