@@ -3,6 +3,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
+#include "DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
 #include "DataViewer_Widget/OpenGLWidget.hpp"
 
 #include <iostream>

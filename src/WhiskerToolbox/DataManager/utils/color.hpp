@@ -1,5 +1,5 @@
-#ifndef COLOR_HPP
-#define COLOR_HPP
+#ifndef DATAMANAGER_COLOR_HPP
+#define DATAMANAGER_COLOR_HPP
 
 #include <string>
 

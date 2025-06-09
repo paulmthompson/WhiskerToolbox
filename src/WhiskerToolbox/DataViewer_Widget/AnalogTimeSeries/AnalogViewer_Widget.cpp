@@ -1,10 +1,11 @@
 #include "AnalogViewer_Widget.hpp"
 #include "ui_AnalogViewer_Widget.h"
 
-#include "../../DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
+#include "DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataViewer_Widget/OpenGLWidget.hpp"
+#include "DataViewer/AnalogTimeSeries/MVP_AnalogTimeSeries.hpp"
 
 #include <iostream>
 

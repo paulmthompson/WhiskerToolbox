@@ -3,8 +3,8 @@
 
 #include <QWidget>
 
-#include "DataViewer/VerticalSpaceManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
+#include "DataViewer/PlottingManager/PlottingManager.hpp"
 
 #include <memory>
 #include <string>
@@ -23,13 +23,13 @@ class AnalogViewer_Widget;
 class IntervalViewer_Widget;
 class EventViewer_Widget;
 enum class PlotTheme;
-struct AnalogTimeSeriesDisplayOptions;
-struct DigitalEventSeriesDisplayOptions;
-struct DigitalIntervalSeriesDisplayOptions;
+struct NewAnalogTimeSeriesDisplayOptions;
+struct NewDigitalEventSeriesDisplayOptions;
+struct NewDigitalIntervalSeriesDisplayOptions;
 
 enum class ZoomScalingMode {
-    Fixed,      // Original fixed zoom factor
-    Adaptive    // Zoom factor scales with current zoom level
+    Fixed,  // Original fixed zoom factor
+    Adaptive// Zoom factor scales with current zoom level
 };
 
 namespace Ui {
@@ -54,11 +54,11 @@ public:
     void setZoomScalingMode(ZoomScalingMode mode) { _zoom_scaling_mode = mode; }
     [[nodiscard]] ZoomScalingMode getZoomScalingMode() const { return _zoom_scaling_mode; }
 
-    [[nodiscard]] std::optional<AnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const;
+    [[nodiscard]] std::optional<NewAnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const;
 
-    [[nodiscard]] std::optional<DigitalEventSeriesDisplayOptions *> getDigitalEventConfig(std::string const & key) const;
+    [[nodiscard]] std::optional<NewDigitalEventSeriesDisplayOptions *> getDigitalEventConfig(std::string const & key) const;
 
-    [[nodiscard]] std::optional<DigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) const;
+    [[nodiscard]] std::optional<NewDigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) const;
 
     /**
      * @brief Automatically arrange all visible series for optimal spacing
@@ -108,47 +108,47 @@ private:
     std::shared_ptr<TimeFrame> _time_frame;
 
     QString _highlighted_available_feature;
-    ZoomScalingMode _zoom_scaling_mode{ZoomScalingMode::Adaptive}; // Use adaptive scaling by default
+    ZoomScalingMode _zoom_scaling_mode{ZoomScalingMode::Adaptive};// Use adaptive scaling by default
 
-    // Vertical space management
-    std::unique_ptr<VerticalSpaceManager> _vertical_space_manager;
+    // Plotting management
+    std::unique_ptr<PlottingManager> _plotting_manager;
 
     void _updateLabels();
-    
+
     /**
-     * @brief Convert DataManager data type to VerticalSpaceManager data type
+     * @brief Convert DataManager data type to series type for PlottingManager
      * 
      * @param dm_type DataManager data type
-     * @return Corresponding DataSeriesType for VerticalSpaceManager
+     * @return String identifier for the data type
      */
-    DataSeriesType _convertDataType(DM_DataType dm_type) const;
-    
+    std::string _convertDataType(DM_DataType dm_type) const;
+
     /**
-     * @brief Update canvas dimensions in the vertical space manager
+     * @brief Update plotting manager dimensions when widget is resized
      * 
-     * Called when the OpenGL widget is resized to keep spacing calculations current.
+     * Called when the OpenGL widget is resized to keep coordinate calculations current.
      */
-    void _updateVerticalSpaceManagerDimensions();
-    
+    void _updatePlottingManagerDimensions();
+
     /**
-     * @brief Update OpenGL widget view bounds based on content height
+     * @brief Update OpenGL widget view bounds based on PlottingManager
      * 
-     * Adjusts the viewport to accommodate all content from VerticalSpaceManager.
+     * Adjusts the viewport to accommodate all content from PlottingManager.
      */
     void _updateViewBounds();
-    
+
     /**
-     * @brief Apply vertical space manager positioning to OpenGL widget
+     * @brief Apply PlottingManager coordinate allocation to OpenGL widget
      * 
      * Updates the positioning parameters for a specific series based on the
-     * vertical space manager's calculations.
+     * PlottingManager's calculations.
      * 
      * @param series_key Key of the series to update
      */
-    void _applyVerticalSpacing(std::string const & series_key);
-    
+    void _applyPlottingManagerAllocation(std::string const & series_key);
+
     void _calculateOptimalScaling(std::vector<std::string> const & group_keys);
-    
+
     /**
      * @brief Calculate optimal spacing and height for digital event series when loading groups
      * 
@@ -159,7 +159,7 @@ private:
      * @param group_keys Vector of series keys in the group to auto-configure
      */
     void _calculateOptimalEventSpacing(std::vector<std::string> const & group_keys);
-    
+
     /**
      * @brief Automatically scale all visible series to fill the available canvas
      * 

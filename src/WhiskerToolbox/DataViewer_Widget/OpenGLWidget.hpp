@@ -25,30 +25,31 @@
 
 
 class AnalogTimeSeries;
-struct AnalogTimeSeriesDisplayOptions;
+struct NewAnalogTimeSeriesDisplayOptions;
 class DigitalEventSeries;
-struct DigitalEventSeriesDisplayOptions;
+struct NewDigitalEventSeriesDisplayOptions;
 class DigitalIntervalSeries;
-struct DigitalIntervalSeriesDisplayOptions;
+struct NewDigitalIntervalSeriesDisplayOptions;
 class TimeFrame;
 class QMouseEvent;
+struct PlottingManager;
 
 struct AnalogSeriesData {
     std::shared_ptr<AnalogTimeSeries> series;
     std::shared_ptr<TimeFrame> time_frame;
-    std::unique_ptr<AnalogTimeSeriesDisplayOptions> display_options;
+    std::unique_ptr<NewAnalogTimeSeriesDisplayOptions> display_options;
 };
 
 struct DigitalEventSeriesData {
     std::shared_ptr<DigitalEventSeries> series;
     std::shared_ptr<TimeFrame> time_frame;
-    std::unique_ptr<DigitalEventSeriesDisplayOptions> display_options;
+    std::unique_ptr<NewDigitalEventSeriesDisplayOptions> display_options;
 };
 
 struct DigitalIntervalSeriesData {
     std::shared_ptr<DigitalIntervalSeries> series;
     std::shared_ptr<TimeFrame> time_frame;
-    std::unique_ptr<DigitalIntervalSeriesDisplayOptions> display_options;
+    std::unique_ptr<NewDigitalIntervalSeriesDisplayOptions> display_options;
 };
 
 struct LineParameters {
@@ -61,8 +62,8 @@ struct LineParameters {
 };
 
 enum class PlotTheme {
-    Dark,   // Black background, white axes (default)
-    Light   // White background, dark axes
+    Dark,// Black background, white axes (default)
+    Light// White background, dark axes
 };
 
 //class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
@@ -99,17 +100,26 @@ public:
     [[nodiscard]] PlotTheme getPlotTheme() const { return _plot_theme; }
 
     // Grid line controls
-    void setGridLinesEnabled(bool enabled) { _grid_lines_enabled = enabled; updateCanvas(_time); }
+    void setGridLinesEnabled(bool enabled) {
+        _grid_lines_enabled = enabled;
+        updateCanvas(_time);
+    }
     [[nodiscard]] bool getGridLinesEnabled() const { return _grid_lines_enabled; }
-    void setGridSpacing(int spacing) { _grid_spacing = spacing; updateCanvas(_time); }
+    void setGridSpacing(int spacing) {
+        _grid_spacing = spacing;
+        updateCanvas(_time);
+    }
     [[nodiscard]] int getGridSpacing() const { return _grid_spacing; }
 
     // Vertical spacing controls for analog series
-    void setVerticalSpacing(float spacing) { _ySpacing = spacing; updateCanvas(_time); }
+    void setVerticalSpacing(float spacing) {
+        _ySpacing = spacing;
+        updateCanvas(_time);
+    }
     [[nodiscard]] float getVerticalSpacing() const { return _ySpacing; }
 
     // Interval selection and manipulation controls
-    
+
     /**
      * @brief Set the highlighted interval for a digital interval series
      * 
@@ -118,14 +128,14 @@ public:
      * @param end_time End time of the interval in master time frame coordinates
      */
     void setSelectedInterval(std::string const & series_key, int64_t start_time, int64_t end_time);
-    
+
     /**
      * @brief Clear the highlighted interval for a digital interval series
      * 
      * @param series_key The key identifying the digital interval series
      */
     void clearSelectedInterval(std::string const & series_key);
-    
+
     /**
      * @brief Get the currently highlighted interval for a digital interval series
      * 
@@ -134,7 +144,7 @@ public:
      *         or nullopt if no interval is selected
      */
     std::optional<std::pair<int64_t, int64_t>> getSelectedInterval(std::string const & series_key) const;
-    
+
     /**
      * @brief Find an interval at the specified time coordinate
      * 
@@ -155,7 +165,7 @@ public:
     std::optional<std::pair<int64_t, int64_t>> findIntervalAtTime(std::string const & series_key, float time_coord) const;
 
     // Interval edge dragging controls
-    
+
     /**
      * @brief Find interval edges near the specified canvas position
      * 
@@ -165,7 +175,7 @@ public:
      *         or nullopt if no edge is found near the position
      */
     std::optional<std::pair<std::string, bool>> findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const;
-    
+
     /**
      * @brief Start dragging an interval edge
      * 
@@ -183,7 +193,7 @@ public:
      *       - Display coordinates remain in master time frame for consistent rendering
      */
     void startIntervalDrag(std::string const & series_key, bool is_left_edge, QPoint const & start_pos);
-    
+
     /**
      * @brief Update the dragged interval position
      * 
@@ -198,7 +208,7 @@ public:
      *       - Invalid interval bounds are rejected and the drag state is preserved
      */
     void updateIntervalDrag(QPoint const & current_pos);
-    
+
     /**
      * @brief Complete the interval dragging operation
      * 
@@ -217,7 +227,7 @@ public:
      *       - Selection tracking remains in master time frame coordinates
      */
     void finishIntervalDrag();
-    
+
     /**
      * @brief Cancel the interval dragging operation
      * 
@@ -245,10 +255,19 @@ public:
         _master_time_frame = master_time_frame;
     }
 
+    /**
+     * @brief Set the PlottingManager reference for coordinate allocation
+     * 
+     * @param plotting_manager Pointer to PlottingManager managed by DataViewer_Widget
+     */
+    void setPlottingManager(PlottingManager * plotting_manager) {
+        _plotting_manager = plotting_manager;
+    }
+
     void changeRangeWidth(int64_t range_delta) {
         int64_t const center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
         int64_t const current_range = _xAxis.getEnd() - _xAxis.getStart();
-        int64_t const new_range = current_range + range_delta; // Add delta to current range
+        int64_t const new_range = current_range + range_delta;// Add delta to current range
         _xAxis.setCenterAndZoom(center, new_range);
         updateCanvas(_time);
     }
@@ -257,7 +276,7 @@ public:
         int64_t const center = (_xAxis.getStart() + _xAxis.getEnd()) / 2;
         int64_t const actual_range = _xAxis.setCenterAndZoomWithFeedback(center, range_width);
         updateCanvas(_time);
-        return actual_range; // Return the actual range width achieved
+        return actual_range;// Return the actual range width achieved
     }
 
     [[nodiscard]] XAxis getXAxis() const { return _xAxis; }
@@ -278,7 +297,7 @@ public:
     [[nodiscard]] float canvasYToAnalogValue(float canvas_y, std::string const & series_key) const;
 
     // Display options getters (similar to Media_Window pattern)
-    [[nodiscard]] std::optional<AnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const {
+    [[nodiscard]] std::optional<NewAnalogTimeSeriesDisplayOptions *> getAnalogConfig(std::string const & key) const {
         auto it = _analog_series.find(key);
         if (it != _analog_series.end()) {
             return it->second.display_options.get();
@@ -286,7 +305,7 @@ public:
         return std::nullopt;
     }
 
-    [[nodiscard]] std::optional<DigitalEventSeriesDisplayOptions *> getDigitalEventConfig(std::string const & key) const {
+    [[nodiscard]] std::optional<NewDigitalEventSeriesDisplayOptions *> getDigitalEventConfig(std::string const & key) const {
         auto it = _digital_event_series.find(key);
         if (it != _digital_event_series.end()) {
             return it->second.display_options.get();
@@ -294,7 +313,7 @@ public:
         return std::nullopt;
     }
 
-    [[nodiscard]] std::optional<DigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) const {
+    [[nodiscard]] std::optional<NewDigitalIntervalSeriesDisplayOptions *> getDigitalIntervalConfig(std::string const & key) const {
         auto it = _digital_interval_series.find(key);
         if (it != _digital_interval_series.end()) {
             return it->second.display_options.get();
@@ -336,22 +355,22 @@ private:
     void _addSeries(std::string const & key);
     void _removeSeries(std::string const & key);
     void _updateYViewBoundaries();
-    
+
     // Gap detection helper methods for analog series
     template<typename Iterator>
     void _drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator end_it,
-                                          std::vector<float> const & data,
-                                          std::vector<size_t> const & data_time,
-                                          std::shared_ptr<TimeFrame> const & time_frame,
-                                          float gap_threshold,
-                                          float rNorm, float gNorm, float bNorm);
-    
+                                           std::vector<float> const & data,
+                                           std::vector<size_t> const & data_time,
+                                           std::shared_ptr<TimeFrame> const & time_frame,
+                                           float gap_threshold,
+                                           float rNorm, float gNorm, float bNorm);
+
     template<typename Iterator>
     void _drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it,
-                                   std::vector<float> const & data,
-                                   std::vector<size_t> const & data_time,
-                                   std::shared_ptr<TimeFrame> const & time_frame,
-                                   float rNorm, float gNorm, float bNorm);
+                                    std::vector<float> const & data,
+                                    std::vector<size_t> const & data_time,
+                                    std::shared_ptr<TimeFrame> const & time_frame,
+                                    float rNorm, float gNorm, float bNorm);
 
     // Gap analysis for automatic display mode selection
     struct GapAnalysis {
@@ -361,7 +380,7 @@ private:
         float mean_gap_size{0.0f};
         float recommended_threshold{5.0f};
     };
-    
+
     GapAnalysis _analyzeDataGaps(AnalogTimeSeries const & series);
 
     std::unordered_map<std::string, AnalogSeriesData> _analog_series;
@@ -399,15 +418,15 @@ private:
     float _ySpacing{0.1f};
 
     std::string m_background_color{"#000000"};// black
-    std::string m_axis_color{"#FFFFFF"};// white (for dark theme)
+    std::string m_axis_color{"#FFFFFF"};      // white (for dark theme)
 
     std::vector<GLfloat> m_vertices;// for testing
 
     PlotTheme _plot_theme{PlotTheme::Dark};
 
     // Grid line settings
-    bool _grid_lines_enabled{false}; // Default to disabled
-    int _grid_spacing{100}; // Default spacing of 100 time units
+    bool _grid_lines_enabled{false};// Default to disabled
+    int _grid_spacing{100};         // Default spacing of 100 time units
 
     // Interval selection tracking
     std::unordered_map<std::string, std::pair<int64_t, int64_t>> _selected_intervals;
@@ -415,15 +434,18 @@ private:
     // Interval dragging state
     bool _is_dragging_interval{false};
     std::string _dragging_series_key;
-    bool _dragging_left_edge{false}; // true for left edge, false for right edge
+    bool _dragging_left_edge{false};// true for left edge, false for right edge
     int64_t _original_start_time{0};
     int64_t _original_end_time{0};
     int64_t _dragged_start_time{0};
     int64_t _dragged_end_time{0};
     QPoint _drag_start_pos;
-    
+
     // Master time frame for X-axis coordinate system
     std::shared_ptr<TimeFrame> _master_time_frame;
+
+    // PlottingManager for coordinate allocation
+    PlottingManager * _plotting_manager{nullptr};
 };
 
 

@@ -7,54 +7,9 @@
 #include <string>
 #include <vector>
 
-struct DigitalEventSeriesDisplayOptions;
+#include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
+
 struct PlottingManager;
-
-/**
- * @brief Create Model matrix for digital event series positioning and scaling (legacy)
- *
- * Handles series-specific transformations for digital event series including
- * stacked positioning with VerticalSpaceManager or legacy index-based positioning.
- *
- * @param display_options Display configuration for the event series
- * @param visible_series_index Index of this series among visible series
- * @param center_coord Centering coordinate for legacy positioning
- * @return Model transformation matrix
- */
-glm::mat4 getEventModelMat(DigitalEventSeriesDisplayOptions const * display_options,
-                           int visible_series_index,
-                           int center_coord);
-
-/**
- * @brief Create View matrix for digital event series global transformations (legacy)
- *
- * Handles view-level transformations applied to all digital event series.
- * Currently returns identity matrix as pan offset is handled in projection.
- *
- * @return View transformation matrix
- */
-glm::mat4 getEventViewMat();
-
-/**
- * @brief Create Projection matrix for digital event series coordinate mapping (legacy)
- *
- * Maps world coordinates to screen coordinates for digital event series,
- * including dynamic viewport adjustments for panning and zooming.
- *
- * @param yMin Minimum Y coordinate of viewport
- * @param yMax Maximum Y coordinate of viewport
- * @param verticalPanOffset Vertical pan offset for dynamic viewport
- * @param start_time Start time of visible range
- * @param end_time End time of visible range
- * @return Projection transformation matrix
- */
-glm::mat4 getEventProjectionMat(float yMin,
-                                float yMax,
-                                float verticalPanOffset,
-                                int64_t start_time,
-                                int64_t end_time);
-
-// NEW INFRASTRUCTURE - Building from scratch
 
 /**
  * @brief Plotting mode for digital event series
@@ -107,6 +62,11 @@ struct NewDigitalEventSeriesDisplayOptions {
 
     // Plotting mode configuration
     EventPlottingMode plotting_mode{EventPlottingMode::FullCanvas};///< How events should be plotted
+
+    // Legacy compatibility members for widget configuration
+    EventDisplayMode display_mode{EventDisplayMode::Stacked};///< Legacy display mode for widget compatibility
+    float vertical_spacing{0.1f};                            ///< Vertical spacing between stacked events (legacy)
+    float event_height{0.05f};                               ///< Height of individual events (legacy)
 
     // Global scaling applied by PlottingManager
     float global_zoom{1.0f};          ///< Global zoom factor
