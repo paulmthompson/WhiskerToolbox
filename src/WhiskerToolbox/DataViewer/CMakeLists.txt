@@ -5,6 +5,8 @@ set(DATAVIEWER_SOURCES
     XAxis.hpp
     VerticalSpaceManager.cpp
     VerticalSpaceManager.hpp
+    PlottingManager/PlottingManager.hpp
+    PlottingManager/PlottingManager.cpp
 
     AnalogTimeSeries/MVP_AnalogTimeSeries.hpp
     AnalogTimeSeries/MVP_AnalogTimeSeries.cpp
@@ -23,6 +25,7 @@ set_property(GLOBAL PROPERTY DATAVIEWER_TEST_SOURCES "")
 set(dataviewer_test_sources
     #VerticalSpaceManager.test.cpp
     AnalogTimeSeries/MVP_AnalogTimeSeries.test.cpp
+    DigitalInterval/MVP_DigitalInterval.test.cpp
     )
 
 # Demo executables

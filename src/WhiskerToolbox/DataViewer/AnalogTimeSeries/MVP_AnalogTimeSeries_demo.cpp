@@ -1,4 +1,5 @@
 #include "MVP_AnalogTimeSeries.hpp"
+#include "PlottingManager/PlottingManager.hpp"
 
 #include <algorithm>
 #include <iomanip>
