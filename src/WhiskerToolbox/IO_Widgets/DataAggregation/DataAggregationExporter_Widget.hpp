@@ -2,11 +2,13 @@
 #define DATA_AGGREGATION_EXPORTER_WIDGET_HPP
 
 #include "DataManager/DataManagerTypes.hpp"
+#include "DataManager/utils/DataAggregation/DataAggregation.hpp"
 
 #include <QWidget>
 #include <QString>
 #include <QStringList>
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -20,42 +22,19 @@ namespace Ui {
 class DataAggregationExporter_Widget;
 }
 
-/**
- * @brief Enumeration of available transformation operations for different data types
- */
-enum class TransformationType {
-    // For AnalogTimeSeries
-    Mean,
-    Min,
-    Max,
-    StdDev,
-    
-    // For PointData (using first point only)
-    PointX_Mean,
-    PointY_Mean,
-    PointX_Min,
-    PointX_Max,
-    PointY_Min,
-    PointY_Max,
-    
-    // For DigitalIntervalSeries
-    IntervalCount,
-    TotalDuration,
-    
-    // For interval metadata (always available)
-    IntervalStart,
-    IntervalEnd,
-    IntervalDuration
-};
+// Use the TransformationType from DataAggregation module
+using TransformationType = DataAggregation::TransformationType;
+using TransformationConfig = DataAggregation::TransformationConfig;
 
 /**
- * @brief Structure representing an export column configuration
+ * @brief Structure representing an export column configuration for the UI
  */
 struct ExportColumn {
-    std::string data_key;           // Key in DataManager
-    DM_DataType data_type;          // Type of the data
-    TransformationType transformation; // Transformation to apply
-    std::string column_name;        // Name for CSV column
+    std::string data_key;                    // Key in DataManager
+    DM_DataType data_type;                   // Type of the data  
+    TransformationType transformation;        // Transformation to apply
+    std::string column_name;                 // Name for CSV column
+    std::string reference_data_key;          // For transformations that need reference data
 };
 
 /**
@@ -102,7 +81,9 @@ private:
     void _updateExportListTable();
     
     // Transformation and naming methods
-    std::vector<TransformationType> _getAvailableTransformations(DM_DataType data_type) const;
+    std::vector<TransformationType> _getAvailableTransformations(DM_DataType data_type, 
+                                                               const std::string& selected_key,
+                                                               const std::string& interval_source) const;
     QString _getTransformationDisplayName(TransformationType transformation) const;
     QString _generateDefaultColumnName(const std::string& data_key, TransformationType transformation) const;
     
@@ -118,16 +99,11 @@ private:
     bool _shouldIncludeHeader() const;
     int _getPrecision() const;
     
-    // Data aggregation methods
-    double _calculateTransformation(const ExportColumn& column, int64_t start_time, int64_t end_time) const;
-    double _calculateAnalogTransformation(const std::string& data_key, TransformationType transformation, 
-                                        int64_t start_time, int64_t end_time) const;
-    double _calculatePointTransformation(const std::string& data_key, TransformationType transformation, 
-                                       int64_t start_time, int64_t end_time) const;
-    double _calculateIntervalTransformation(const std::string& data_key, TransformationType transformation, 
-                                          int64_t start_time, int64_t end_time) const;
-    double _calculateIntervalMetadata(TransformationType transformation, 
-                                    int64_t start_time, int64_t end_time) const;
+    // Helper methods for building reference data maps
+    std::map<std::string, std::vector<Interval>> _buildReferenceIntervals() const;
+    std::map<std::string, std::shared_ptr<AnalogTimeSeries>> _buildReferenceAnalog() const;
+    std::map<std::string, std::shared_ptr<PointData>> _buildReferencePoints() const;
+    std::vector<TransformationConfig> _buildTransformationConfigs() const;
 };
 
 #endif // DATA_AGGREGATION_EXPORTER_WIDGET_HPP 
