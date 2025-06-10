@@ -3,23 +3,24 @@
 #include "ui_DataTransform_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 #include "DataManager/transforms/TransformRegistry.hpp"
+#include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp"
-#include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp"
+#include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalThreshold_Widget/AnalogIntervalThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogScaling_Widget/AnalogScaling_Widget.hpp"
-#include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
-#include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
-#include "DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp"
+#include "DataTransform_Widget/DigitalIntervalSeries/GroupIntervals_Widget/GroupIntervals_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineAngle_Widget/LineAngle_Widget.hpp"
-#include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
-#include "DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp"
-#include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
-#include "DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.hpp"
-#include "DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
+#include "DataTransform_Widget/Lines/LinePointExtraction_Widget/LinePointExtraction_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.hpp"
+#include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
+#include "DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp"
+#include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
 
 #include <QApplication>
 
@@ -80,7 +81,7 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         widget->setDataManager(_data_manager);
         return widget;
     };
-    
+
     _parameterWidgetFactories["Calculate Line Angle"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new LineAngle_Widget(parent);
     };
@@ -90,7 +91,7 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         widget->setDataManager(_data_manager);
         return widget;
     };
-    
+
     _parameterWidgetFactories["Convert Mask to Line"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new MaskToLine_Widget(parent);
         widget->setDataManager(_data_manager);
@@ -117,6 +118,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
         auto widget = new LineClip_Widget(parent);
         widget->setDataManager(_data_manager);
         return widget;
+    };
+
+    _parameterWidgetFactories["Group Intervals"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new GroupIntervals_Widget(parent);
     };
 }
 
@@ -146,15 +151,15 @@ void DataTransform_Widget::_handleFeatureSelected(QString const & feature) {
     }
 
     _currentSelectedDataVariant = data_variant.value();
-    
+
     // Update current parameter widget if it's a scaling widget
     if (_currentParameterWidget) {
-        auto scalingWidget = dynamic_cast<AnalogScaling_Widget*>(_currentParameterWidget);
+        auto scalingWidget = dynamic_cast<AnalogScaling_Widget *>(_currentParameterWidget);
         if (scalingWidget) {
             scalingWidget->setCurrentDataKey(feature);
         }
     }
-    
+
     // Update the output name based on the selected feature and current operation
     _updateOutputName();
 }
@@ -181,7 +186,7 @@ void DataTransform_Widget::_onOperationSelected(int index) {
     }
 
     _displayParameterWidget(op_name);
-    
+
     // Update the output name based on the selected operation and current feature
     _updateOutputName();
 }
@@ -214,9 +219,9 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
         int const widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
         targetWidget = newParamWidget;
         _currentParameterWidget = newParamWidget;// Set as active
-        
+
         // If this is a scaling widget, set the current data key
-        auto scalingWidget = dynamic_cast<AnalogScaling_Widget*>(newParamWidget);
+        auto scalingWidget = dynamic_cast<AnalogScaling_Widget *>(newParamWidget);
         if (scalingWidget && !_highlighted_available_feature.isEmpty()) {
             scalingWidget->setCurrentDataKey(_highlighted_available_feature);
         }
@@ -233,16 +238,16 @@ void DataTransform_Widget::_updateProgress(int progress) {
 
     if (progress > _current_progress) {
         ui->transform_progress_bar->setValue(progress);
-        ui->transform_progress_bar->setFormat("%p%");  // Show percentage text
-        ui->transform_progress_bar->repaint();  // Force immediate repaint
-        QApplication::processEvents();  // Process all pending events to ensure UI updates
+        ui->transform_progress_bar->setFormat("%p%");// Show percentage text
+        ui->transform_progress_bar->repaint();       // Force immediate repaint
+        QApplication::processEvents();               // Process all pending events to ensure UI updates
         _current_progress = progress;
     }
 }
 
 void DataTransform_Widget::_doTransform() {
     auto const new_data_key = ui->output_name_edit->text().toStdString();
-    
+
     if (new_data_key.empty()) {
         std::cout << "Output name is empty" << std::endl;
         return;
@@ -271,22 +276,21 @@ void DataTransform_Widget::_doTransform() {
     }
 
     std::cout << "Executing '" << _currentSelectedOperation->getName() << "'..." << std::endl;
-    
+
     // Create a progress callback - use direct connection for immediate updates
     auto progressCallback = [this](int progress) {
         // Update directly from the UI thread to ensure immediate updates
         _updateProgress(progress);
     };
-    
+
     // Pass non-owning raw pointer to the Qt-agnostic execute method with progress callback
     auto result_any = _currentSelectedOperation->execute(
             _currentSelectedDataVariant,
             params_owner_ptr.get(),
-            progressCallback
-    );
+            progressCallback);
 
     _data_manager->setData(new_data_key, result_any);
-    
+
     // Ensure progress bar shows completion
     ui->transform_progress_bar->setValue(100);
     ui->do_transform_button->setEnabled(true);
@@ -300,23 +304,23 @@ QString DataTransform_Widget::_generateOutputName() const {
 
     QString inputKey = _highlighted_available_feature;
     QString transformName = QString::fromStdString(_currentSelectedOperation->getName());
-    
+
     // Clean up the transform name for use in the output name:
     // - Convert to lowercase
     // - Replace spaces with underscores
     // - Remove common prefixes like "Calculate", "Extract", etc.
     transformName = transformName.toLower();
     transformName.replace(' ', '_');
-    
+
     // Remove common operation prefixes to make names more concise
     QStringList prefixesToRemove = {"calculate_", "extract_", "convert_", "threshold_"};
-    for (const QString& prefix : prefixesToRemove) {
+    for (QString const & prefix: prefixesToRemove) {
         if (transformName.startsWith(prefix)) {
             transformName = transformName.mid(prefix.length());
             break;
         }
     }
-    
+
     // Combine input key and cleaned transform name
     return inputKey + "_" + transformName;
 }
