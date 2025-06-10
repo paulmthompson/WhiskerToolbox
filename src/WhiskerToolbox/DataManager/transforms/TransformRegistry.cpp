@@ -1,19 +1,20 @@
 #include "TransformRegistry.hpp"
 
-#include "transforms/Masks/mask_area.hpp"
-#include "transforms/Masks/mask_to_line.hpp"
-#include "transforms/Masks/mask_skeletonize.hpp"
 #include "transforms/AnalogTimeSeries/analog_event_threshold.hpp"
-#include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
+#include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_scaling.hpp"
+#include "transforms/DigitalIntervalSeries/digital_interval_group.hpp"
 #include "transforms/Lines/line_angle.hpp"
-#include "transforms/Lines/line_min_point_dist.hpp"
-#include "transforms/Lines/line_resample.hpp"
-#include "transforms/Lines/line_curvature.hpp"
-#include "transforms/Lines/line_subsegment.hpp"
-#include "transforms/Lines/line_point_extraction.hpp"
 #include "transforms/Lines/line_clip.hpp"
+#include "transforms/Lines/line_curvature.hpp"
+#include "transforms/Lines/line_min_point_dist.hpp"
+#include "transforms/Lines/line_point_extraction.hpp"
+#include "transforms/Lines/line_resample.hpp"
+#include "transforms/Lines/line_subsegment.hpp"
+#include "transforms/Masks/mask_area.hpp"
+#include "transforms/Masks/mask_skeletonize.hpp"
+#include "transforms/Masks/mask_to_line.hpp"
 
 #include <iostream>// For init messages
 #include <map>
@@ -42,6 +43,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<LineSubsegmentOperation>());
     _registerOperation(std::make_unique<LinePointExtractionOperation>());
     _registerOperation(std::make_unique<LineClipOperation>());
+    _registerOperation(std::make_unique<GroupOperation>());
 
     _computeApplicableOperations();
     std::cout << "Operation Registry Initialized." << std::endl;

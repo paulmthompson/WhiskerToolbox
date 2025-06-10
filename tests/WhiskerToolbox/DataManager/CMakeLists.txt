@@ -31,6 +31,9 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.test.cpp
+
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/DigitalIntervalSeries/digital_interval_group.test.cpp
+
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Lines/line_angle.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Lines/line_min_point_dist.test.cpp
 
