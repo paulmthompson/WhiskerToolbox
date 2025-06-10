@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <stdexcept>
 
 namespace DataAggregation {
@@ -112,7 +113,19 @@ double applyTransformation(Interval const & interval,
                 return std::nan("");// Reference data not found
             }
 
-            return static_cast<double>(calculate_mean(*it->second, interval.start, interval.end + 1));
+            // Get data within the time interval
+            auto [times, values] = it->second->getDataVectorsInRange(static_cast<float>(interval.start), 
+                                                                    static_cast<float>(interval.end));
+            
+            if (values.empty()) {
+                return std::nan("");// No data in interval
+            }
+            
+            double sum = 0.0;
+            for (float value : values) {
+                sum += static_cast<double>(value);
+            }
+            return sum / static_cast<double>(values.size());
         }
 
         case TransformationType::AnalogMin: {
@@ -121,7 +134,16 @@ double applyTransformation(Interval const & interval,
                 return std::nan("");// Reference data not found
             }
 
-            return static_cast<double>(calculate_min(*it->second, interval.start, interval.end + 1));
+            // Get data within the time interval
+            auto [times, values] = it->second->getDataVectorsInRange(static_cast<float>(interval.start), 
+                                                                    static_cast<float>(interval.end));
+            
+            if (values.empty()) {
+                return std::nan("");// No data in interval
+            }
+            
+            float min_value = *std::min_element(values.begin(), values.end());
+            return static_cast<double>(min_value);
         }
 
         case TransformationType::AnalogMax: {
@@ -130,7 +152,16 @@ double applyTransformation(Interval const & interval,
                 return std::nan("");// Reference data not found
             }
 
-            return static_cast<double>(calculate_max(*it->second, interval.start, interval.end + 1));
+            // Get data within the time interval
+            auto [times, values] = it->second->getDataVectorsInRange(static_cast<float>(interval.start), 
+                                                                    static_cast<float>(interval.end));
+            
+            if (values.empty()) {
+                return std::nan("");// No data in interval
+            }
+            
+            float max_value = *std::max_element(values.begin(), values.end());
+            return static_cast<double>(max_value);
         }
 
         case TransformationType::AnalogStdDev: {
@@ -139,7 +170,29 @@ double applyTransformation(Interval const & interval,
                 return std::nan("");// Reference data not found
             }
 
-            return static_cast<double>(calculate_std_dev(*it->second, interval.start, interval.end + 1));
+            // Get data within the time interval
+            auto [times, values] = it->second->getDataVectorsInRange(static_cast<float>(interval.start), 
+                                                                    static_cast<float>(interval.end));
+            
+            if (values.empty()) {
+                return std::nan("");// No data in interval
+            }
+            
+            // Calculate mean
+            double sum = 0.0;
+            for (float value : values) {
+                sum += static_cast<double>(value);
+            }
+            double mean = sum / static_cast<double>(values.size());
+            
+            // Calculate standard deviation
+            double variance_sum = 0.0;
+            for (float value : values) {
+                double diff = static_cast<double>(value) - mean;
+                variance_sum += diff * diff;
+            }
+            
+            return std::sqrt(variance_sum / static_cast<double>(values.size()));
         }
 
         case TransformationType::PointMeanX: {

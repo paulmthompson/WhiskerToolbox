@@ -702,6 +702,83 @@ TEST_CASE("DataAggregation - Point data transformations", "[data_aggregation][po
     }
 }
 
+TEST_CASE("DataAggregation - Time index vs array index bug test", "[data_aggregation][time_index_bug]") {
+    SECTION("Analog data with non-sequential time indices") {
+        // Create analog data where time indices don't match array positions
+        // This tests the bug where we were using array positions instead of time indices
+        std::vector<float> analog_values = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+        std::vector<size_t> analog_times = {100, 200, 300, 400, 500}; // Non-sequential, sparse times
+        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_values, analog_times);
+        
+        // Test interval that should include times 200, 300, 400 (values 20.0, 30.0, 40.0)
+        std::vector<Interval> row_intervals = {
+            {200, 400}  // Should capture analog data at times 200, 300, 400
+        };
+        
+        std::map<std::string, std::shared_ptr<AnalogTimeSeries>> reference_analog = {
+            {"sparse_analog", analog_series}
+        };
+        
+        std::vector<TransformationConfig> transformations = {
+            {TransformationType::AnalogMean, "mean", "sparse_analog"},
+            {TransformationType::AnalogMin, "min", "sparse_analog"},
+            {TransformationType::AnalogMax, "max", "sparse_analog"}
+        };
+        
+        auto result = aggregateData(row_intervals, transformations, {}, reference_analog, {});
+        
+        REQUIRE(result.size() == 1);
+        REQUIRE(result[0].size() == 3);
+        
+        // Expected: values 20.0, 30.0, 40.0 from times 200, 300, 400
+        // Mean = (20 + 30 + 40) / 3 = 30.0
+        // Min = 20.0
+        // Max = 40.0
+        REQUIRE_THAT(result[0][0], Catch::Matchers::WithinRel(30.0, 1e-3));  // mean
+        REQUIRE_THAT(result[0][1], Catch::Matchers::WithinRel(20.0, 1e-3));  // min  
+        REQUIRE_THAT(result[0][2], Catch::Matchers::WithinRel(40.0, 1e-3));  // max
+    }
+    
+    SECTION("Analog data with gaps - test edge case") {
+        // Test case where interval spans a gap in time indices
+        std::vector<float> analog_values = {100.0f, 200.0f, 300.0f};
+        std::vector<size_t> analog_times = {10, 50, 90}; // Large gaps between samples
+        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_values, analog_times);
+        
+        std::vector<Interval> row_intervals = {
+            {0, 20},   // Should only capture first sample (value 100.0 at time 10)
+            {45, 95},  // Should capture second and third samples (values 200.0, 300.0 at times 50, 90)
+            {100, 200} // Should capture no samples
+        };
+        
+        std::map<std::string, std::shared_ptr<AnalogTimeSeries>> reference_analog = {
+            {"gapped_analog", analog_series}
+        };
+        
+        std::vector<TransformationConfig> transformations = {
+            {TransformationType::AnalogMean, "mean", "gapped_analog"},
+            {TransformationType::AnalogMin, "min", "gapped_analog"}
+        };
+        
+        auto result = aggregateData(row_intervals, transformations, {}, reference_analog, {});
+        
+        REQUIRE(result.size() == 3);
+        REQUIRE(result[0].size() == 2);
+        
+        // Row 1: interval [0, 20] - should capture value 100.0 at time 10
+        REQUIRE_THAT(result[0][0], Catch::Matchers::WithinRel(100.0, 1e-3));  // mean = 100.0
+        REQUIRE_THAT(result[0][1], Catch::Matchers::WithinRel(100.0, 1e-3));  // min = 100.0
+        
+        // Row 2: interval [45, 95] - should capture values 200.0, 300.0 at times 50, 90
+        REQUIRE_THAT(result[1][0], Catch::Matchers::WithinRel(250.0, 1e-3));  // mean = (200+300)/2 = 250.0
+        REQUIRE_THAT(result[1][1], Catch::Matchers::WithinRel(200.0, 1e-3));  // min = 200.0
+        
+        // Row 3: interval [100, 200] - should capture no samples
+        REQUIRE(std::isnan(result[2][0]));  // mean should be NaN
+        REQUIRE(std::isnan(result[2][1]));  // min should be NaN
+    }
+}
+
 TEST_CASE("DataAggregation - Complex mixed transformations", "[data_aggregation][complex_mixed]") {
     SECTION("All transformation types together") {
         // Set up complex test scenario with multiple data types
