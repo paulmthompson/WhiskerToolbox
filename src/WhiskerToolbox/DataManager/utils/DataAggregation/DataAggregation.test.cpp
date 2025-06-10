@@ -61,7 +61,7 @@ TEST_CASE("DataAggregation - User scenario test", "[data_aggregation][user_scena
                 {TransformationType::IntervalStart, "start_time"},
                 {TransformationType::IntervalEnd, "end_time"}};
 
-        auto result = aggregateData(interval_foo, transformations, reference_data, {});
+        auto result = aggregateData(interval_foo, transformations, reference_data, {}, {});
 
         REQUIRE(result.size() == 3);   // 3 rows
         REQUIRE(result[0].size() == 2);// 2 columns
@@ -85,7 +85,7 @@ TEST_CASE("DataAggregation - User scenario test", "[data_aggregation][user_scena
                 {TransformationType::IntervalEnd, "end_time"},
                 {TransformationType::IntervalID, "interval_bar_id", "interval_bar", OverlapStrategy::First}};
 
-        auto result = aggregateData(interval_foo, transformations, reference_data, {});
+        auto result = aggregateData(interval_foo, transformations, reference_data, {}, {});
 
         REQUIRE(result.size() == 3);   // 3 rows
         REQUIRE(result[0].size() == 3);// 3 columns
@@ -103,7 +103,7 @@ TEST_CASE("DataAggregation - User scenario test", "[data_aggregation][user_scena
         std::vector<TransformationConfig> transformations = {
                 {TransformationType::IntervalDuration, "duration"}};
 
-        auto result = aggregateData(interval_foo, transformations, reference_data, {});
+        auto result = aggregateData(interval_foo, transformations, reference_data, {}, {});
 
         REQUIRE(result.size() == 3);
         REQUIRE(result[0].size() == 1);
@@ -133,7 +133,7 @@ TEST_CASE("DataAggregation - Overlap strategies", "[data_aggregation][overlap_st
         std::vector<TransformationConfig> transformations = {
                 {TransformationType::IntervalID, "first_id", "multi_overlap", OverlapStrategy::First}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
         REQUIRE(result[0][0] == 0.0);// First overlapping interval
     }
 
@@ -141,7 +141,7 @@ TEST_CASE("DataAggregation - Overlap strategies", "[data_aggregation][overlap_st
         std::vector<TransformationConfig> transformations = {
                 {TransformationType::IntervalID, "last_id", "multi_overlap", OverlapStrategy::Last}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
         REQUIRE(result[0][0] == 2.0);// Last overlapping interval
     }
 
@@ -149,7 +149,7 @@ TEST_CASE("DataAggregation - Overlap strategies", "[data_aggregation][overlap_st
         std::vector<TransformationConfig> transformations = {
                 {TransformationType::IntervalID, "max_id", "multi_overlap", OverlapStrategy::MaxOverlap}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
         REQUIRE(result[0][0] == 1.0);// Interval with maximum overlap (101 units)
     }
 }
@@ -170,7 +170,7 @@ TEST_CASE("DataAggregation - Edge cases and error handling", "[data_aggregation]
         std::vector<TransformationConfig> transformations = {
                 {TransformationType::IntervalID, "id", "no_overlap"}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
         REQUIRE(std::isnan(result[0][0]));
     }
 
@@ -183,7 +183,7 @@ TEST_CASE("DataAggregation - Edge cases and error handling", "[data_aggregation]
         std::vector<TransformationConfig> transformations = {
                 {TransformationType::IntervalID, "missing_id", "nonexistent_key"}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
         REQUIRE(std::isnan(result[0][0]));
     }
 
@@ -192,7 +192,7 @@ TEST_CASE("DataAggregation - Edge cases and error handling", "[data_aggregation]
         std::vector<TransformationConfig> transformations = {
                 {TransformationType::IntervalStart, "start"}};
 
-        auto result = aggregateData(empty_intervals, transformations);
+        auto result = aggregateData(empty_intervals, transformations, {}, {}, {});
         REQUIRE(result.empty());
     }
 
@@ -201,7 +201,7 @@ TEST_CASE("DataAggregation - Edge cases and error handling", "[data_aggregation]
                 {100, 200}};
         std::vector<TransformationConfig> empty_transformations = {};
 
-        auto result = aggregateData(row_intervals, empty_transformations);
+        auto result = aggregateData(row_intervals, empty_transformations, {}, {}, {});
         REQUIRE(result.size() == 1);
         REQUIRE(result[0].empty());
     }
@@ -216,7 +216,7 @@ TEST_CASE("DataAggregation - Edge cases and error handling", "[data_aggregation]
                 {TransformationType::IntervalEnd, "end"},
                 {TransformationType::IntervalDuration, "duration"}};
 
-        auto result = aggregateData(row_intervals, transformations);
+        auto result = aggregateData(row_intervals, transformations, {}, {}, {});
         REQUIRE(result[0][0] == 100.0);// start
         REQUIRE(result[0][1] == 100.0);// end
         REQUIRE(result[0][2] == 1.0);  // duration (100-100+1=1)
@@ -253,7 +253,7 @@ TEST_CASE("DataAggregation - Complex scenario", "[data_aggregation][complex]") {
                 {TransformationType::IntervalID, "ref1_id", "ref1", OverlapStrategy::First},
                 {TransformationType::IntervalID, "ref2_id", "ref2", OverlapStrategy::MaxOverlap}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
 
         REQUIRE(result.size() == 3);
         REQUIRE(result[0].size() == 5);
@@ -303,7 +303,7 @@ TEST_CASE("DataAggregation - IntervalCount transformation", "[data_aggregation][
                 {TransformationType::IntervalStart, "start"},
                 {TransformationType::IntervalCount, "overlap_count", "test_ref"}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
 
         REQUIRE(result.size() == 3);
         REQUIRE(result[0].size() == 2);
@@ -339,7 +339,7 @@ TEST_CASE("DataAggregation - IntervalCount transformation", "[data_aggregation][
         std::vector<TransformationConfig> transformations = {
                 {TransformationType::IntervalCount, "count", "multi_ref"}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
         REQUIRE(result[0][0] == 3.0);// Should count 3 overlapping intervals
     }
 
@@ -357,7 +357,7 @@ TEST_CASE("DataAggregation - IntervalCount transformation", "[data_aggregation][
         std::vector<TransformationConfig> transformations = {
                 {TransformationType::IntervalCount, "count", "no_overlap_ref"}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
         REQUIRE(result[0][0] == 0.0);// Should count 0 overlapping intervals
     }
 
@@ -370,7 +370,7 @@ TEST_CASE("DataAggregation - IntervalCount transformation", "[data_aggregation][
         std::vector<TransformationConfig> transformations = {
                 {TransformationType::IntervalCount, "count", "missing_ref"}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
         REQUIRE(std::isnan(result[0][0]));// Should return NaN for missing reference
     }
 }
@@ -396,7 +396,7 @@ TEST_CASE("DataAggregation - Combined transformations with IntervalCount", "[dat
                 {TransformationType::IntervalID, "first_id", "combined_ref", OverlapStrategy::First},
                 {TransformationType::IntervalCount, "total_count", "combined_ref"}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_data, {});
+        auto result = aggregateData(row_intervals, transformations, reference_data, {}, {});
 
         REQUIRE(result.size() == 1);
         REQUIRE(result[0].size() == 5);
@@ -428,7 +428,7 @@ TEST_CASE("DataAggregation - Analog time series transformations", "[data_aggrega
                 {TransformationType::AnalogMax, "max", "test_analog"},
                 {TransformationType::AnalogStdDev, "std", "test_analog"}};
 
-        auto result = aggregateData(row_intervals, transformations, {}, reference_analog);
+        auto result = aggregateData(row_intervals, transformations, {}, reference_analog, {});
 
         REQUIRE(result.size() == 1);
         REQUIRE(result[0].size() == 4);
@@ -458,7 +458,7 @@ TEST_CASE("DataAggregation - Analog time series transformations", "[data_aggrega
                 {TransformationType::AnalogMean, "mean", "multi_analog"},
                 {TransformationType::AnalogMax, "max", "multi_analog"}};
 
-        auto result = aggregateData(row_intervals, transformations, {}, reference_analog);
+        auto result = aggregateData(row_intervals, transformations, {}, reference_analog, {});
 
         REQUIRE(result.size() == 3);
         REQUIRE(result[0].size() == 3);
@@ -500,7 +500,7 @@ TEST_CASE("DataAggregation - Analog time series transformations", "[data_aggrega
                 {TransformationType::AnalogMean, "analog_mean", "analog"},
                 {TransformationType::AnalogMin, "analog_min", "analog"}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_intervals, reference_analog);
+        auto result = aggregateData(row_intervals, transformations, reference_intervals, reference_analog, {});
 
         REQUIRE(result.size() == 1);
         REQUIRE(result[0].size() == 4);
@@ -518,7 +518,7 @@ TEST_CASE("DataAggregation - Analog time series transformations", "[data_aggrega
             std::vector<TransformationConfig> transformations = {
                     {TransformationType::AnalogMean, "mean", "nonexistent"}};
 
-            auto result = aggregateData(row_intervals, transformations, {}, {});
+            auto result = aggregateData(row_intervals, transformations, {}, {}, {});
             REQUIRE(std::isnan(result[0][0]));
         }
 
@@ -529,8 +529,175 @@ TEST_CASE("DataAggregation - Analog time series transformations", "[data_aggrega
             std::vector<TransformationConfig> transformations = {
                     {TransformationType::AnalogMean, "mean", "null_data"}};
 
-            auto result = aggregateData(row_intervals, transformations, {}, reference_analog);
+            auto result = aggregateData(row_intervals, transformations, {}, reference_analog, {});
             REQUIRE(std::isnan(result[0][0]));
+        }
+    }
+}
+
+TEST_CASE("DataAggregation - Point data transformations", "[data_aggregation][points]") {
+    SECTION("Basic point mean transformations") {
+        // Create test point data
+        auto point_data = std::make_shared<PointData>();
+        
+        // Add points at different times within the interval
+        point_data->addPointAtTime(1, {10.0f, 20.0f}, false);  // Time 1: (10, 20)
+        point_data->addPointAtTime(2, {30.0f, 40.0f}, false);  // Time 2: (30, 40)
+        point_data->addPointAtTime(3, {50.0f, 60.0f}, false);  // Time 3: (50, 60)
+        
+        std::vector<Interval> row_intervals = {
+            {1, 3}  // Should include all three points
+        };
+        
+        std::map<std::string, std::shared_ptr<PointData>> reference_points = {
+            {"test_points", point_data}
+        };
+        
+        std::vector<TransformationConfig> transformations = {
+            {TransformationType::PointMeanX, "mean_x", "test_points"},
+            {TransformationType::PointMeanY, "mean_y", "test_points"}
+        };
+        
+        auto result = aggregateData(row_intervals, transformations, {}, {}, reference_points);
+        
+        REQUIRE(result.size() == 1);
+        REQUIRE(result[0].size() == 2);
+        
+        // Expected mean X = (10 + 30 + 50) / 3 = 30.0
+        // Expected mean Y = (20 + 40 + 60) / 3 = 40.0
+        REQUIRE_THAT(result[0][0], Catch::Matchers::WithinRel(30.0, 1e-3));  // mean_x
+        REQUIRE_THAT(result[0][1], Catch::Matchers::WithinRel(40.0, 1e-3));  // mean_y
+    }
+    
+    SECTION("Multiple points at same time") {
+        auto point_data = std::make_shared<PointData>();
+        
+        // Add multiple points at the same time
+        std::vector<Point2D<float>> points_at_time_1 = {{10.0f, 20.0f}, {30.0f, 40.0f}};
+        std::vector<Point2D<float>> points_at_time_2 = {{50.0f, 60.0f}, {70.0f, 80.0f}};
+        
+        point_data->addPointsAtTime(1, points_at_time_1, false);
+        point_data->addPointsAtTime(2, points_at_time_2, false);
+        
+        std::vector<Interval> row_intervals = {
+            {1, 2}  // Should include all four points
+        };
+        
+        std::map<std::string, std::shared_ptr<PointData>> reference_points = {
+            {"multi_points", point_data}
+        };
+        
+        std::vector<TransformationConfig> transformations = {
+            {TransformationType::IntervalStart, "start"},
+            {TransformationType::PointMeanX, "mean_x", "multi_points"},
+            {TransformationType::PointMeanY, "mean_y", "multi_points"}
+        };
+        
+        auto result = aggregateData(row_intervals, transformations, {}, {}, reference_points);
+        
+        REQUIRE(result.size() == 1);
+        REQUIRE(result[0].size() == 3);
+        
+        REQUIRE(result[0][0] == 1.0);  // start
+        
+        // Expected mean X = (10 + 30 + 50 + 70) / 4 = 40.0
+        // Expected mean Y = (20 + 40 + 60 + 80) / 4 = 50.0
+        REQUIRE_THAT(result[0][1], Catch::Matchers::WithinRel(40.0, 1e-3));  // mean_x
+        REQUIRE_THAT(result[0][2], Catch::Matchers::WithinRel(50.0, 1e-3));  // mean_y
+    }
+    
+    SECTION("Mixed interval, analog, and point transformations") {
+        // Create interval reference data
+        std::vector<Interval> ref_intervals = {{0, 5}, {250, 350}};
+        
+        // Create analog reference data
+        std::vector<float> analog_data = {1.0f, 4.0f, 2.0f, 8.0f, 3.0f, 6.0f};
+        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_data);
+        
+        // Create point reference data
+        auto point_data = std::make_shared<PointData>();
+        point_data->addPointAtTime(1, {100.0f, 200.0f}, false);
+        point_data->addPointAtTime(2, {300.0f, 400.0f}, false);
+        point_data->addPointAtTime(3, {500.0f, 600.0f}, false);
+        
+        std::vector<Interval> row_intervals = {
+            {1, 3}  // Will overlap with ref_intervals[0], include analog values, and include 3 points
+        };
+        
+        std::map<std::string, std::vector<Interval>> reference_intervals = {
+            {"intervals", ref_intervals}
+        };
+        std::map<std::string, std::shared_ptr<AnalogTimeSeries>> reference_analog = {
+            {"analog", analog_series}
+        };
+        std::map<std::string, std::shared_ptr<PointData>> reference_points = {
+            {"points", point_data}
+        };
+        
+        std::vector<TransformationConfig> transformations = {
+            {TransformationType::IntervalStart, "start"},
+            {TransformationType::IntervalID, "interval_id", "intervals"},
+            {TransformationType::AnalogMean, "analog_mean", "analog"},
+            {TransformationType::PointMeanX, "point_mean_x", "points"},
+            {TransformationType::PointMeanY, "point_mean_y", "points"}
+        };
+        
+        auto result = aggregateData(row_intervals, transformations, reference_intervals, reference_analog, reference_points);
+        
+        REQUIRE(result.size() == 1);
+        REQUIRE(result[0].size() == 5);
+        
+        REQUIRE(result[0][0] == 1.0);     // start
+        REQUIRE(result[0][1] == 0.0);     // interval_id (first interval)
+        REQUIRE_THAT(result[0][2], Catch::Matchers::WithinRel(4.667, 1e-3));  // analog mean ≈ (4+2+8)/3
+        
+        // Point means: X = (100+300+500)/3 = 300.0, Y = (200+400+600)/3 = 400.0
+        REQUIRE_THAT(result[0][3], Catch::Matchers::WithinRel(300.0, 1e-3));  // point_mean_x
+        REQUIRE_THAT(result[0][4], Catch::Matchers::WithinRel(400.0, 1e-3));  // point_mean_y
+    }
+    
+    SECTION("Point transformations - error cases") {
+        std::vector<Interval> row_intervals = {{0, 2}};
+        
+        SECTION("Missing point reference data") {
+            std::vector<TransformationConfig> transformations = {
+                {TransformationType::PointMeanX, "mean_x", "nonexistent"}
+            };
+            
+            auto result = aggregateData(row_intervals, transformations, {}, {}, {});
+            REQUIRE(std::isnan(result[0][0]));
+        }
+        
+        SECTION("Null point data pointer") {
+            std::map<std::string, std::shared_ptr<PointData>> reference_points = {
+                {"null_data", nullptr}
+            };
+            
+            std::vector<TransformationConfig> transformations = {
+                {TransformationType::PointMeanX, "mean_x", "null_data"}
+            };
+            
+            auto result = aggregateData(row_intervals, transformations, {}, {}, reference_points);
+            REQUIRE(std::isnan(result[0][0]));
+        }
+        
+        SECTION("No points in interval") {
+            auto point_data = std::make_shared<PointData>();
+            // Add points outside the interval
+            point_data->addPointAtTime(10, {100.0f, 200.0f}, false);
+            
+            std::map<std::string, std::shared_ptr<PointData>> reference_points = {
+                {"empty_interval", point_data}
+            };
+            
+            std::vector<TransformationConfig> transformations = {
+                {TransformationType::PointMeanX, "mean_x", "empty_interval"},
+                {TransformationType::PointMeanY, "mean_y", "empty_interval"}
+            };
+            
+            auto result = aggregateData(row_intervals, transformations, {}, {}, reference_points);
+            REQUIRE(std::isnan(result[0][0]));  // mean_x should be NaN
+            REQUIRE(std::isnan(result[0][1]));  // mean_y should be NaN
         }
     }
 }
@@ -573,7 +740,7 @@ TEST_CASE("DataAggregation - Complex mixed transformations", "[data_aggregation]
                 {TransformationType::AnalogMax, "analog_max", "test_analog"},
                 {TransformationType::AnalogStdDev, "analog_std", "test_analog"}};
 
-        auto result = aggregateData(row_intervals, transformations, reference_intervals, reference_analog);
+        auto result = aggregateData(row_intervals, transformations, reference_intervals, reference_analog, {});
 
         REQUIRE(result.size() == 2);
         REQUIRE(result[0].size() == 9);

@@ -63,7 +63,8 @@ int findOverlappingIntervalIndex(Interval const & target_interval,
 double applyTransformation(Interval const & interval,
                            TransformationConfig const & config,
                            std::map<std::string, std::vector<Interval>> const & reference_intervals,
-                           std::map<std::string, std::shared_ptr<AnalogTimeSeries>> const & reference_analog) {
+                           std::map<std::string, std::shared_ptr<AnalogTimeSeries>> const & reference_analog,
+                           std::map<std::string, std::shared_ptr<PointData>> const & reference_points) {
     switch (config.type) {
         case TransformationType::IntervalStart:
             return static_cast<double>(interval.start);
@@ -141,6 +142,60 @@ double applyTransformation(Interval const & interval,
             return static_cast<double>(calculate_std_dev(*it->second, interval.start, interval.end + 1));
         }
 
+        case TransformationType::PointMeanX: {
+            auto it = reference_points.find(config.reference_data_key);
+            if (it == reference_points.end() || !it->second) {
+                return std::nan("");// Reference data not found
+            }
+
+            // Collect all X coordinates within the interval
+            std::vector<float> x_values;
+            for (int64_t t = interval.start; t <= interval.end; ++t) {
+                const auto& points = it->second->getPointsAtTime(static_cast<int>(t));
+                for (const auto& point : points) {
+                    x_values.push_back(point.x);
+                }
+            }
+
+            if (x_values.empty()) {
+                return std::nan("");// No points found in interval
+            }
+
+            // Calculate mean
+            double sum = 0.0;
+            for (float x : x_values) {
+                sum += static_cast<double>(x);
+            }
+            return sum / static_cast<double>(x_values.size());
+        }
+
+        case TransformationType::PointMeanY: {
+            auto it = reference_points.find(config.reference_data_key);
+            if (it == reference_points.end() || !it->second) {
+                return std::nan("");// Reference data not found
+            }
+
+            // Collect all Y coordinates within the interval
+            std::vector<float> y_values;
+            for (int64_t t = interval.start; t <= interval.end; ++t) {
+                const auto& points = it->second->getPointsAtTime(static_cast<int>(t));
+                for (const auto& point : points) {
+                    y_values.push_back(point.y);
+                }
+            }
+
+            if (y_values.empty()) {
+                return std::nan("");// No points found in interval
+            }
+
+            // Calculate mean
+            double sum = 0.0;
+            for (float y : y_values) {
+                sum += static_cast<double>(y);
+            }
+            return sum / static_cast<double>(y_values.size());
+        }
+
         default:
             throw std::invalid_argument("Unknown transformation type");
     }
@@ -150,7 +205,8 @@ std::vector<std::vector<double>> aggregateData(
         std::vector<Interval> const & row_intervals,
         std::vector<TransformationConfig> const & transformations,
         std::map<std::string, std::vector<Interval>> const & reference_intervals,
-        std::map<std::string, std::shared_ptr<AnalogTimeSeries>> const & reference_analog) {
+        std::map<std::string, std::shared_ptr<AnalogTimeSeries>> const & reference_analog,
+        std::map<std::string, std::shared_ptr<PointData>> const & reference_points) {
 
     std::vector<std::vector<double>> result;
     result.reserve(row_intervals.size());
@@ -160,7 +216,7 @@ std::vector<std::vector<double>> aggregateData(
         row.reserve(transformations.size());
 
         for (auto const & transformation: transformations) {
-            const double value = applyTransformation(interval, transformation, reference_intervals, reference_analog);
+            const double value = applyTransformation(interval, transformation, reference_intervals, reference_analog, reference_points);
             row.push_back(value);
         }
 

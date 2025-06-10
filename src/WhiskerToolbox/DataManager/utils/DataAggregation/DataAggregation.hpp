@@ -3,6 +3,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
+#include "Points/Point_Data.hpp"
 
 #include <cstdint>
 #include <map>
@@ -31,6 +32,10 @@
  * auto analog_data = std::make_shared<AnalogTimeSeries>(std::vector<float>{1.0f, 2.0f, 3.0f, 4.0f, 5.0f});
  * std::map<std::string, std::shared_ptr<AnalogTimeSeries>> reference_analog = {{"sensor", analog_data}};
  * 
+ * // Define reference point data (e.g., tracked features)
+ * auto point_data = std::make_shared<PointData>();
+ * std::map<std::string, std::shared_ptr<PointData>> reference_points = {{"features", point_data}};
+ * 
  * // Configure transformations for columns
  * std::vector<TransformationConfig> transformations = {
  *     {TransformationType::IntervalStart, "start_time"},
@@ -38,13 +43,15 @@
  *     {TransformationType::IntervalID, "bar_id", "interval_bar", OverlapStrategy::First},
  *     {TransformationType::IntervalCount, "bar_count", "interval_bar"},
  *     {TransformationType::AnalogMean, "sensor_mean", "sensor"},
- *     {TransformationType::AnalogMax, "sensor_max", "sensor"}
+ *     {TransformationType::AnalogMax, "sensor_max", "sensor"},
+ *     {TransformationType::PointMeanX, "feature_x_mean", "features"},
+ *     {TransformationType::PointMeanY, "feature_y_mean", "features"}
  * };
  * 
  * // Generate aggregated data
- * auto result = aggregateData(row_intervals, transformations, reference_intervals, reference_analog);
+ * auto result = aggregateData(row_intervals, transformations, reference_intervals, reference_analog, reference_points);
  * 
- * // Result will be a 3x6 matrix with interval and analog statistics for each row interval
+ * // Result will be a 3x8 matrix with interval, analog, and point statistics for each row interval
  * @endcode
  */
 namespace DataAggregation {
@@ -64,7 +71,11 @@ enum class TransformationType {
     AnalogMean, // Mean value of analog data within the interval
     AnalogMin,  // Minimum value of analog data within the interval
     AnalogMax,  // Maximum value of analog data within the interval
-    AnalogStdDev// Standard deviation of analog data within the interval
+    AnalogStdDev,// Standard deviation of analog data within the interval
+    
+    // Point data transformations
+    PointMeanX, // Mean X coordinate of points within the interval
+    PointMeanY  // Mean Y coordinate of points within the interval
 };
 
 /**
@@ -122,12 +133,14 @@ int findOverlappingIntervalIndex(Interval const & target_interval,
  * @param config The transformation configuration
  * @param reference_intervals Map of reference interval data for IntervalID/IntervalCount transformations
  * @param reference_analog Map of reference analog data for analog transformations
+ * @param reference_points Map of reference point data for point transformations
  * @return The transformed value (NaN for invalid/no overlap cases)
  */
 double applyTransformation(Interval const & interval,
                            TransformationConfig const & config,
                            std::map<std::string, std::vector<Interval>> const & reference_intervals,
-                           std::map<std::string, std::shared_ptr<AnalogTimeSeries>> const & reference_analog);
+                           std::map<std::string, std::shared_ptr<AnalogTimeSeries>> const & reference_analog,
+                           std::map<std::string, std::shared_ptr<PointData>> const & reference_points);
 
 /**
  * @brief Aggregate data according to transformation configurations
@@ -135,13 +148,15 @@ double applyTransformation(Interval const & interval,
  * @param transformations Vector of transformation configurations for columns
  * @param reference_intervals Map of reference interval data for IntervalID/IntervalCount transformations
  * @param reference_analog Map of reference analog data for analog transformations
+ * @param reference_points Map of reference point data for point transformations
  * @return 2D vector where result[row][col] contains the aggregated value
  */
 std::vector<std::vector<double>> aggregateData(
         std::vector<Interval> const & row_intervals,
         std::vector<TransformationConfig> const & transformations,
         std::map<std::string, std::vector<Interval>> const & reference_intervals = {},
-        std::map<std::string, std::shared_ptr<AnalogTimeSeries>> const & reference_analog = {});
+        std::map<std::string, std::shared_ptr<AnalogTimeSeries>> const & reference_analog = {},
+        std::map<std::string, std::shared_ptr<PointData>> const & reference_points = {});
 
 
 }// namespace DataAggregation
