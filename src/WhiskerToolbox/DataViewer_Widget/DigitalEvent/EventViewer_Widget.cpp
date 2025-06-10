@@ -2,8 +2,7 @@
 #include "ui_EventViewer_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
-#include "DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
+#include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer_Widget/OpenGLWidget.hpp"
 
 #include <iostream>

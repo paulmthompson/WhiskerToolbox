@@ -2,8 +2,11 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/utils/color.hpp"
+#include "DataViewer/AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 #include "DataViewer/AnalogTimeSeries/MVP_AnalogTimeSeries.hpp"
+#include "DataViewer/DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
+#include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
 #include "DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "DataViewer/PlottingManager/PlottingManager.hpp"
@@ -635,10 +638,6 @@ void OpenGLWidget::drawAnalogSeries() {
         display_options->allocated_y_center = allocated_y_center;
         display_options->allocated_height = allocated_height;
 
-        // Set intrinsic properties for the display options
-        // (This requires the series data to calculate statistics)
-        setAnalogIntrinsicProperties(data, *display_options);
-
         // Set the color for the current series
         hexToRGB(display_options->hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
@@ -931,12 +930,11 @@ void OpenGLWidget::addAnalogTimeSeries(
 
     // Calculate scale factor based on standard deviation
     auto start_time = std::chrono::high_resolution_clock::now();
-    //float const stdDev = calculate_std_dev(*series.get());
-    float const stdDev = calculate_std_dev_approximate(*series.get());
+    setAnalogIntrinsicProperties(series.get(), *display_options);
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     std::cout << "Standard deviation calculation took " << duration.count() << " milliseconds" << std::endl;
-    display_options->scale_factor = stdDev * 5.0f;
+    display_options->scale_factor = display_options->cached_std_dev * 5.0f;
     display_options->user_scale_factor = 1.0f;// Default user scale
 
     // Automatic gap detection and display mode selection

@@ -1,6 +1,6 @@
 #include "MVP_DigitalInterval.hpp"
 
-#include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
+#include "DigitalIntervalSeriesDisplayOptions.hpp"
 #include "PlottingManager/PlottingManager.hpp"
 
 #include <algorithm>

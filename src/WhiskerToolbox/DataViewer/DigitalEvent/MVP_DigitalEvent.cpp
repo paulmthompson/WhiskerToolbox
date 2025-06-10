@@ -1,15 +1,10 @@
 #include "MVP_DigitalEvent.hpp"
 
+#include "DigitalEventSeriesDisplayOptions.hpp"
 #include "PlottingManager/PlottingManager.hpp"
-#include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
 
 #include <algorithm>
-#include <cmath>
-#include <iostream>
 #include <random>
-
-
-// NEW INFRASTRUCTURE - Digital Event MVP matrix functions
 
 glm::mat4 new_getEventModelMat(NewDigitalEventSeriesDisplayOptions const & display_options,
                                PlottingManager const & plotting_manager) {

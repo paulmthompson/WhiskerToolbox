@@ -1,6 +1,6 @@
 #include "TimeSeriesDisplayOptions.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "AnalogTimeSeries/MVP_AnalogTimeSeries.hpp"
+#include "AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
 
 #include "utils/color.hpp"
 

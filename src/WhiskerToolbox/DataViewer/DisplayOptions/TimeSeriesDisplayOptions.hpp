@@ -39,32 +39,8 @@ std::vector<std::string> const DEFAULT_COLORS = {
 std::string getColorForIndex(size_t index);
 }// namespace TimeSeriesDefaultValues
 
-struct BaseTimeSeriesDisplayOptions {
-    std::string hex_color{TimeSeriesDefaultValues::COLOR};
-    float alpha{TimeSeriesDefaultValues::ALPHA};
-    bool is_visible{TimeSeriesDefaultValues::VISIBLE};
-    float y_offset{TimeSeriesDefaultValues::Y_OFFSET};
 
-    virtual ~BaseTimeSeriesDisplayOptions() = default;
-};
 
-enum class AnalogGapHandling {
-    AlwaysConnect,// Always connect points (current behavior)
-    DetectGaps,   // Break lines when gaps exceed threshold
-    ShowMarkers   // Show individual markers instead of lines
-};
-
-/**
- * @brief Event display modes for digital event series
- * 
- * Controls how digital events are visually presented on the canvas:
- * - Stacked: Events are positioned in separate horizontal lanes with configurable spacing
- * - FullCanvas: Events stretch from top to bottom of the entire canvas
- */
-enum class EventDisplayMode {
-    Stacked,  ///< Stack events with configurable spacing (default)
-    FullCanvas///< Events stretch from top to bottom of canvas
-};
 
 // Forward declaration for new display options
 struct NewAnalogTimeSeriesDisplayOptions;

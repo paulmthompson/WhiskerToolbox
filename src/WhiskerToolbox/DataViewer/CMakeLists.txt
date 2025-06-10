@@ -8,10 +8,13 @@ set(DATAVIEWER_SOURCES
 
     AnalogTimeSeries/MVP_AnalogTimeSeries.hpp
     AnalogTimeSeries/MVP_AnalogTimeSeries.cpp
+    AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp
 
+    DigitalEvent/DigitalEventSeriesDisplayOptions.hpp
     DigitalEvent/MVP_DigitalEvent.cpp
     DigitalEvent/MVP_DigitalEvent.hpp
 
+    DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp
     DigitalInterval/MVP_DigitalInterval.hpp
     DigitalInterval/MVP_DigitalInterval.cpp
 
@@ -31,6 +34,7 @@ add_tests_to_global(dataviewer_test_sources
                     DATAVIEWER_TEST_SOURCES)
 
 add_library(DataViewer SHARED ${DATAVIEWER_SOURCES}
+
     )
 
 target_link_libraries(DataViewer PRIVATE DataManager)

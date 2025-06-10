@@ -1,5 +1,6 @@
 #include "MVP_AnalogTimeSeries.hpp"
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "PlottingManager/PlottingManager.hpp"
 
@@ -7,21 +8,9 @@
 #include <iostream>
 
 
-// Helper functions for intrinsic data properties
-float calculateDataMean(std::vector<float> const & data) {
-    if (data.empty()) return 0.0f;
-
-    float sum = 0.0f;
-    for (float value: data) {
-        sum += value;
-    }
-
-    return sum / static_cast<float>(data.size());
-}
-
-void setAnalogIntrinsicProperties(std::vector<float> const & data,
+void setAnalogIntrinsicProperties(AnalogTimeSeries const * analog,
                                   NewAnalogTimeSeriesDisplayOptions & display_options) {
-    if (data.empty()) {
+    if (!analog) {
         display_options.cached_mean = 0.0f;
         display_options.cached_std_dev = 0.0f;
         display_options.mean_cache_valid = true;
@@ -30,18 +19,10 @@ void setAnalogIntrinsicProperties(std::vector<float> const & data,
     }
 
     // Calculate mean
-    display_options.cached_mean = calculateDataMean(data);
+    display_options.cached_mean = calculate_mean(*analog);
     display_options.mean_cache_valid = true;
 
-    // Calculate standard deviation
-    float variance = 0.0f;
-    for (float value: data) {
-        float diff = value - display_options.cached_mean;
-        variance += diff * diff;
-    }
-    variance /= static_cast<float>(data.size());
-
-    display_options.cached_std_dev = std::sqrt(variance);
+    display_options.cached_std_dev = calculate_std_dev_approximate(*analog);
     display_options.std_dev_cache_valid = true;
 }
 
