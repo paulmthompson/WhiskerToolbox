@@ -10,6 +10,43 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <cmath>
+
+// Helper function to validate that all values during intervals are above threshold
+auto validateIntervalsAboveThreshold = [](
+    const std::vector<float>& values,
+    const std::vector<size_t>& times, 
+    const std::vector<Interval>& intervals,
+    const IntervalThresholdParams& params) -> bool {
+    
+    for (const auto& interval : intervals) {
+        // Find all time indices that fall within this interval
+        for (size_t i = 0; i < times.size(); ++i) {
+            if (static_cast<int64_t>(times[i]) >= interval.start && 
+                static_cast<int64_t>(times[i]) <= interval.end) {
+                
+                // Check if this value meets the threshold criteria
+                bool meetsThreshold = false;
+                switch (params.direction) {
+                    case IntervalThresholdParams::ThresholdDirection::POSITIVE:
+                        meetsThreshold = values[i] > static_cast<float>(params.thresholdValue);
+                        break;
+                    case IntervalThresholdParams::ThresholdDirection::NEGATIVE:
+                        meetsThreshold = values[i] < static_cast<float>(params.thresholdValue);
+                        break;
+                    case IntervalThresholdParams::ThresholdDirection::ABSOLUTE:
+                        meetsThreshold = std::abs(values[i]) > static_cast<float>(params.thresholdValue);
+                        break;
+                }
+                
+                if (!meetsThreshold) {
+                    return false; // Found a value in interval that doesn't meet threshold
+                }
+            }
+        }
+    }
+    return true; // All values in all intervals meet threshold
+};
 
 TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_threshold]") {
     std::vector<float> values;
@@ -44,6 +81,9 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         REQUIRE(intervals[0].end == 400);
         REQUIRE(intervals[1].start == 600);
         REQUIRE(intervals[1].end == 700);
+        
+        // Validate that all values during intervals are above threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
 
         // Test with progress callback
         progress_val = -1;
@@ -74,6 +114,9 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         REQUIRE(intervals[0].end == 400);
         REQUIRE(intervals[1].start == 600);
         REQUIRE(intervals[1].end == 700);
+        
+        // Validate that all values during intervals meet negative threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
 
     SECTION("Absolute threshold") {
@@ -96,6 +139,9 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         REQUIRE(intervals[0].end == 400);
         REQUIRE(intervals[1].start == 600);
         REQUIRE(intervals[1].end == 700);
+        
+        // Validate that all values during intervals meet absolute threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
 
     SECTION("With lockout time") {
@@ -120,6 +166,9 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         REQUIRE(intervals[1].end == 300);
         REQUIRE(intervals[2].start == 450);
         REQUIRE(intervals[2].end == 450);
+        
+        // Validate that all values during intervals are above threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
 
     SECTION("With minimum duration") {
@@ -140,6 +189,9 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         
         REQUIRE(intervals[0].start == 300);
         REQUIRE(intervals[0].end == 500);
+        
+        // Validate that all values during intervals are above threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
 
     SECTION("Signal ends while above threshold") {
@@ -160,6 +212,9 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         
         REQUIRE(intervals[0].start == 200);
         REQUIRE(intervals[0].end == 500); // Should extend to end of signal
+        
+        // Validate that all values during intervals are above threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
 
     SECTION("No intervals detected") {
@@ -233,6 +288,9 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         REQUIRE(intervals[0].end == 200);
         REQUIRE(intervals[1].start == 400);
         REQUIRE(intervals[1].end == 500);
+        
+        // Validate that all values during intervals are above threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
 }
 
@@ -295,6 +353,9 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
         REQUIRE(intervals.size() == 1);
         REQUIRE(intervals[0].start == 100);
         REQUIRE(intervals[0].end == 100);
+        
+        // Validate that all values during intervals are above threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
 
     SECTION("Single sample below threshold") {
@@ -457,13 +518,12 @@ TEST_CASE("Single Sample Above Threshold Zero Lockout", "[transforms][analog_int
         REQUIRE(intervals.size() == 1);
         
         // The interval should start and end at time 200 (the single sample above threshold)
-        // This ensures all signals during the interval are above threshold
+        // This ensures all signals during the detected interval are above threshold
         REQUIRE(intervals[0].start == 200);
         REQUIRE(intervals[0].end == 200);
         
-        // Verify that all values during the detected interval are indeed above threshold
-        // In this case, there's only one sample at time 200 with value 2.0, which is > 1.0
-        REQUIRE(values[1] > params.thresholdValue);  // value at time 200
+        // Validate that all values during intervals are above threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
     
     SECTION("Multiple single samples above threshold") {
@@ -491,6 +551,9 @@ TEST_CASE("Single Sample Above Threshold Zero Lockout", "[transforms][analog_int
         REQUIRE(intervals[1].end == 400);
         REQUIRE(intervals[2].start == 600);
         REQUIRE(intervals[2].end == 600);
+        
+        // Validate that all values during intervals are above threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
 }
 
