@@ -4,6 +4,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -72,13 +73,60 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
                 return false;
         }
     };
+    
+    // Check if zero meets threshold (for missing data handling)
+    bool const zeroMeetsThreshold = meetsThreshold(0.0f);
+
+    // Calculate typical time step to detect actual gaps (not just large regular intervals)
+    size_t const total_samples = timestamps.size();
+    size_t typical_time_step = 1;
+    if (total_samples > 1) {
+        // Use the first time difference as the expected step size
+        typical_time_step = timestamps[1] - timestamps[0];
+        
+        // Validate this against a few more samples if available
+        if (total_samples > 2) {
+            size_t second_step = timestamps[2] - timestamps[1];
+            // If steps are very different, fall back to minimum step size
+            if (second_step != typical_time_step) {
+                typical_time_step = std::min(typical_time_step, second_step);
+            }
+        }
+    }
 
     // Process the time series
-    size_t const total_samples = timestamps.size();
     for (size_t i = 0; i < total_samples; ++i) {
         if (progressCallback && i % 1000 == 0) {
             int const progress = 20 + static_cast<int>((i * 70) / total_samples);
             progressCallback(progress);
+        }
+
+        // Handle missing data gaps if treating missing as zero
+        if (i > 0 && thresholdParams.missingDataMode == IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO) {
+            size_t const prev_time = timestamps[i - 1];
+            size_t const curr_time = timestamps[i];
+            size_t const actual_step = curr_time - prev_time;
+            
+            // Check if there's a gap (more than 1.5x the typical time step)
+            if (actual_step > (typical_time_step * 3 / 2)) {
+                // There's a gap - handle missing data as zeros
+                if (in_interval && !zeroMeetsThreshold) {
+                    // We're in an interval but zeros don't meet threshold - end the interval at the gap start
+                    int64_t const gap_start = static_cast<int64_t>(prev_time);
+                    addIntervalIfValid(interval_start, gap_start);
+                    last_interval_end = static_cast<double>(gap_start);
+                    in_interval = false;
+                } else if (!in_interval && zeroMeetsThreshold) {
+                    // We're not in an interval but zeros meet threshold - start interval in the gap
+                    int64_t const gap_start = static_cast<int64_t>(prev_time + typical_time_step);
+                    if (static_cast<double>(gap_start) - last_interval_end >= thresholdParams.lockoutTime) {
+                        interval_start = gap_start;
+                        in_interval = true;
+                    }
+                }
+                // If we started an interval in the gap and current sample doesn't meet threshold,
+                // we'll end it when processing the current sample below
+            }
         }
 
         bool const threshold_met = meetsThreshold(values[i]);

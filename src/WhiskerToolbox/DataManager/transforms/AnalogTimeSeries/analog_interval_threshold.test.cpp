@@ -54,6 +54,8 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
     std::shared_ptr<AnalogTimeSeries> ats;
     std::shared_ptr<DigitalIntervalSeries> result_intervals;
     IntervalThresholdParams params;
+    // Set default to IGNORE mode to preserve original test behavior
+    params.missingDataMode = IntervalThresholdParams::MissingDataMode::IGNORE;
     volatile int progress_val = -1;
     volatile int call_count = 0;
     ProgressCallback cb = [&](int p) {
@@ -70,6 +72,7 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 0.0;
         params.minDuration = 0.0;
+        params.missingDataMode = IntervalThresholdParams::MissingDataMode::IGNORE;
 
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
@@ -103,6 +106,7 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         params.direction = IntervalThresholdParams::ThresholdDirection::NEGATIVE;
         params.lockoutTime = 0.0;
         params.minDuration = 0.0;
+        params.missingDataMode = IntervalThresholdParams::MissingDataMode::IGNORE;
 
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
@@ -298,6 +302,8 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
     std::shared_ptr<AnalogTimeSeries> ats;
     std::shared_ptr<DigitalIntervalSeries> result_intervals;
     IntervalThresholdParams params;
+    // Set default to IGNORE mode to preserve original test behavior
+    params.missingDataMode = IntervalThresholdParams::MissingDataMode::IGNORE;
     volatile int progress_val = -1;
     volatile int call_count = 0;
     ProgressCallback cb = [&](int p) {
@@ -510,6 +516,7 @@ TEST_CASE("Single Sample Above Threshold Zero Lockout", "[transforms][analog_int
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 0.0;  // Zero lockout period
         params.minDuration = 0.0;
+        params.missingDataMode = IntervalThresholdParams::MissingDataMode::IGNORE;
 
         auto result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
@@ -537,6 +544,7 @@ TEST_CASE("Single Sample Above Threshold Zero Lockout", "[transforms][analog_int
         params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
         params.lockoutTime = 0.0;  // Zero lockout period
         params.minDuration = 0.0;
+        params.missingDataMode = IntervalThresholdParams::MissingDataMode::IGNORE;
 
         auto result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
@@ -565,6 +573,7 @@ TEST_CASE("IntervalThresholdOperation Class Tests", "[transforms][analog_interva
     params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
     params.lockoutTime = 0.0;
     params.minDuration = 0.0;
+    params.missingDataMode = IntervalThresholdParams::MissingDataMode::IGNORE;
 
     SECTION("Operation metadata") {
         REQUIRE(operation.getName() == "Threshold Interval Detection");
@@ -690,5 +699,129 @@ TEST_CASE("IntervalThresholdOperation Class Tests", "[transforms][analog_interva
         
         auto const & abs_intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(abs_intervals.size() == 2);
+    }
+}
+
+TEST_CASE("Missing Data Handling", "[transforms][analog_interval_threshold]") {
+    std::vector<float> values;
+    std::vector<size_t> times;
+    std::shared_ptr<AnalogTimeSeries> ats;
+    std::shared_ptr<DigitalIntervalSeries> result_intervals;
+    IntervalThresholdParams params;
+    
+    SECTION("Missing data treated as zero - positive threshold") {
+        // Signal with gaps: times are not consecutive (gaps of 50 vs normal step of 1)
+        values = {0.5f, 1.5f, 1.8f, 0.5f, 1.2f};  // above, above, above, below, above
+        times = {100, 101, 102, 152, 153};         // Gap between 102 and 152 (50 missing samples)
+        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        
+        params.thresholdValue = 1.0;
+        params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
+        params.lockoutTime = 0.0;
+        params.minDuration = 0.0;
+        params.missingDataMode = IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO;
+
+        result_intervals = interval_threshold(ats.get(), params);
+        REQUIRE(result_intervals != nullptr);
+        
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        // Should get: [101,102] (ends when gap with zeros starts), [153,153] (single sample)
+        REQUIRE(intervals.size() == 2);
+        
+        REQUIRE(intervals[0].start == 101);
+        REQUIRE(intervals[0].end == 102);  // Ends before gap because zeros don't meet threshold
+        REQUIRE(intervals[1].start == 153);
+        REQUIRE(intervals[1].end == 153);
+        
+        // Validate that all values during intervals are above threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
+    }
+    
+    SECTION("Missing data treated as zero - negative threshold") {
+        // Test case where zeros DO meet the threshold (negative threshold)
+        values = {0.5f, -1.5f, 0.5f, -1.2f};  // above, below, above, below  
+        times = {100, 101, 151, 152};          // Gap between 101 and 151 (50 missing samples)
+        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        
+        params.thresholdValue = -0.5;
+        params.direction = IntervalThresholdParams::ThresholdDirection::NEGATIVE;
+        params.lockoutTime = 0.0;
+        params.minDuration = 0.0;
+        params.missingDataMode = IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO;
+
+        result_intervals = interval_threshold(ats.get(), params);
+        REQUIRE(result_intervals != nullptr);
+        
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        // Should get: [101,101], [102,150] (gap filled with zeros that meet negative threshold), [152,152]
+        REQUIRE(intervals.size() == 3);
+        
+        REQUIRE(intervals[0].start == 101);
+        REQUIRE(intervals[0].end == 101);
+        REQUIRE(intervals[1].start == 102);   // Gap filled with zeros
+        REQUIRE(intervals[1].end == 150);     // Until just before next sample
+        REQUIRE(intervals[2].start == 152);
+        REQUIRE(intervals[2].end == 152);
+    }
+    
+    SECTION("Missing data ignored mode") {
+        // Same data as first test but with IGNORE mode
+        values = {0.5f, 1.5f, 1.8f, 0.5f, 1.2f};  
+        times = {100, 101, 102, 152, 153};         
+        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        
+        params.thresholdValue = 1.0;
+        params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
+        params.lockoutTime = 0.0;
+        params.minDuration = 0.0;
+        params.missingDataMode = IntervalThresholdParams::MissingDataMode::IGNORE;
+
+        result_intervals = interval_threshold(ats.get(), params);
+        REQUIRE(result_intervals != nullptr);
+        
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        // With IGNORE mode, gaps are not considered, so we get: [101,102] and [153,153]
+        REQUIRE(intervals.size() == 2);
+        
+        REQUIRE(intervals[0].start == 101);
+        REQUIRE(intervals[0].end == 102);  // Continuous despite time gap
+        REQUIRE(intervals[1].start == 153);
+        REQUIRE(intervals[1].end == 153);
+        
+        // Validate that all values during intervals are above threshold
+        REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
+    }
+    
+    SECTION("No gaps in data") {
+        // Test that normal continuous data works the same regardless of mode
+        values = {0.5f, 1.5f, 1.8f, 0.5f, 1.2f};  
+        times = {100, 101, 102, 103, 104};  // Consecutive times        
+        ats = std::make_shared<AnalogTimeSeries>(values, times);
+        
+        params.thresholdValue = 1.0;
+        params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
+        params.lockoutTime = 0.0;
+        params.minDuration = 0.0;
+        
+        // Test both modes give same result for continuous data
+        params.missingDataMode = IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO;
+        auto result_zero_mode = interval_threshold(ats.get(), params);
+        
+        params.missingDataMode = IntervalThresholdParams::MissingDataMode::IGNORE;
+        auto result_ignore_mode = interval_threshold(ats.get(), params);
+        
+        REQUIRE(result_zero_mode != nullptr);
+        REQUIRE(result_ignore_mode != nullptr);
+        
+        auto const & intervals_zero = result_zero_mode->getDigitalIntervalSeries();
+        auto const & intervals_ignore = result_ignore_mode->getDigitalIntervalSeries();
+        
+        REQUIRE(intervals_zero.size() == intervals_ignore.size());
+        REQUIRE(intervals_zero.size() == 2);  // [101,102] and [104,104]
+        
+        for (size_t i = 0; i < intervals_zero.size(); ++i) {
+            REQUIRE(intervals_zero[i].start == intervals_ignore[i].start);
+            REQUIRE(intervals_zero[i].end == intervals_ignore[i].end);
+        }
     }
 } 

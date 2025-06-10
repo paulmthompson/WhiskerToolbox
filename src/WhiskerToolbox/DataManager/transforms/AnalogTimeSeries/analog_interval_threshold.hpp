@@ -17,6 +17,8 @@ struct IntervalThresholdParams : public TransformParametersBase {
                                     ABSOLUTE } direction = ThresholdDirection::POSITIVE;
     double lockoutTime = 0.0;
     double minDuration = 0.0;
+    enum class MissingDataMode { IGNORE,           // Current behavior: skip missing time points
+                                TREAT_AS_ZERO } missingDataMode = MissingDataMode::TREAT_AS_ZERO;  // Default: treat missing as zero
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,9 +30,15 @@ struct IntervalThresholdParams : public TransformParametersBase {
  * where the signal meets specified threshold criteria. It supports positive, negative,
  * and absolute value thresholding with configurable lockout time and minimum duration
  * requirements.
+ * 
+ * Missing data handling: When time indices are not consecutive (indicating missing samples),
+ * the behavior depends on the missingDataMode parameter:
+ * - TREAT_AS_ZERO (default): Missing time points are treated as having zero values
+ * - IGNORE: Missing time points are skipped (original behavior)
  *
  * @param analog_time_series The AnalogTimeSeries to process. Must not be null.
- * @param thresholdParams Parameters containing threshold value, direction, lockout time, and minimum duration.
+ * @param thresholdParams Parameters containing threshold value, direction, lockout time, 
+ *                        minimum duration, and missing data handling mode.
  * @return A new DigitalIntervalSeries containing detected intervals.
  *         Returns an empty series if input is null or empty.
  */
@@ -45,9 +53,15 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
  * where the signal meets specified threshold criteria. It supports positive, negative,
  * and absolute value thresholding with configurable lockout time and minimum duration
  * requirements. Progress is reported through the provided callback.
+ * 
+ * Missing data handling: When time indices are not consecutive (indicating missing samples),
+ * the behavior depends on the missingDataMode parameter:
+ * - TREAT_AS_ZERO (default): Missing time points are treated as having zero values
+ * - IGNORE: Missing time points are skipped (original behavior)
  *
  * @param analog_time_series The AnalogTimeSeries to process. Must not be null.
- * @param thresholdParams Parameters containing threshold value, direction, lockout time, and minimum duration.
+ * @param thresholdParams Parameters containing threshold value, direction, lockout time, 
+ *                        minimum duration, and missing data handling mode.
  * @param progressCallback Function called with progress percentage (0-100) during computation.
  * @return A new DigitalIntervalSeries containing detected intervals.
  *         Returns an empty series if input is null or empty.

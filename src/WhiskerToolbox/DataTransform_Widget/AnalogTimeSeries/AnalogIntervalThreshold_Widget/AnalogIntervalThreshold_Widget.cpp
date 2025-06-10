@@ -39,6 +39,16 @@ std::unique_ptr<TransformParametersBase> AnalogIntervalThreshold_Widget::getPara
 
     params->minDuration = ui->min_duration_spinbox->value();
 
+    auto const missing_data_mode = ui->missing_data_combobox->currentText();
+    if (missing_data_mode == "Treat as Zero (Default)") {
+        params->missingDataMode = IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO;
+    } else if (missing_data_mode == "Ignore Missing Points") {
+        params->missingDataMode = IntervalThresholdParams::MissingDataMode::IGNORE;
+    } else {
+        std::cout << "Unknown missing data mode, using default (Treat as Zero)!" << std::endl;
+        params->missingDataMode = IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO;
+    }
+
     return params;
 }
 

@@ -108,6 +108,31 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <item>
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Missing Data Handling</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="missing_data_combobox">
+       <item>
+        <property name="text">
+         <string>Treat as Zero (Default)</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Ignore Missing Points</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
       <widget class="QLabel" name="label_5">
@@ -132,7 +157,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Description:&lt;/span&gt; Specify the minimum number of samples that must pass &lt;span style=&quot; font-style:italic;&quot;&gt;after&lt;/span&gt; an interval &lt;span style=&quot; font-style:italic;&quot;&gt;has ended&lt;/span&gt; before another threshold crossing can trigger a new event. Enter &lt;span style=&quot; font-family:'Courier New';&quot;&gt;0&lt;/span&gt; (or less) to disable the lockout.&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Minimum Duration (Samples):&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Description&lt;/span&gt;:  Specify the minimum number of samples that must be in an interval to be included. Threshold crossings with durations shorter than &lt;span style=&quot; font-weight:700;&quot;&gt;Minimum Duration&lt;/span&gt; will not be included in result.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Description&lt;/span&gt;:  Specify the minimum number of samples that must be in an interval to be included. Threshold crossings with durations shorter than &lt;span style=&quot; font-weight:700;&quot;&gt;Minimum Duration&lt;/span&gt; will not be included in result.&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Missing Data Handling:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;Description:&lt;/span&gt; Controls how gaps in the time series (non-consecutive time indices) are handled:&lt;/p&gt;
+&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;
+&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Treat as Zero (Default):&lt;/span&gt; Missing time points are treated as having zero values. Intervals may end when gaps contain zeros that don't meet the threshold, or extend through gaps if zeros do meet the threshold.&lt;/li&gt;
+&lt;li style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Ignore Missing Points:&lt;/span&gt; Gaps in time are ignored completely. Only actual data points are considered for threshold detection.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="scaledContents">
         <bool>false</bool>
