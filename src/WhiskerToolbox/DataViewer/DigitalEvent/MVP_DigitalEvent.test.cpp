@@ -1,5 +1,9 @@
 #include "MVP_DigitalEvent.hpp"
+
+#include "DigitalEventSeriesDisplayOptions.hpp"
 #include "PlottingManager/PlottingManager.hpp"
+
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -49,6 +53,7 @@ TEST_CASE("Digital Event MVP Functions", "[digital_event][mvp]") {
 
         // Test with empty events
         std::vector<EventData> empty_events;
+
         setEventIntrinsicProperties(empty_events, options);
         REQUIRE(options.alpha == 0.8f);// Should remain unchanged
 

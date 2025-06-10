@@ -1,5 +1,6 @@
 #include "MVP_DigitalInterval.hpp"
 
+#include "DigitalIntervalSeriesDisplayOptions.hpp"
 #include "PlottingManager/PlottingManager.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -46,47 +47,47 @@ glm::vec2 applyIntervalMVPTransformation(float time_value, float y_value,
 
 TEST_CASE("New Digital Interval MVP System - Happy Path Tests", "[mvp][digital_interval][new]") {
 
-    SECTION("IntervalData basic functionality") {
-        // Test construction and validation
-        IntervalData interval1(100.0f, 200.0f);
-        REQUIRE(interval1.start_time == 100.0f);
-        REQUIRE(interval1.end_time == 200.0f);
-        REQUIRE(interval1.isValid());
-        REQUIRE(interval1.getDuration() == 100.0f);
+    SECTION("Interval basic functionality") {
+        // Test basic interval construction and validation
+        Interval interval1{100, 200};
+        REQUIRE(interval1.start == 100);
+        REQUIRE(interval1.end == 200);
+        REQUIRE(interval1.end > interval1.start);
 
-        // Test invalid interval
-        IntervalData interval2(200.0f, 100.0f);
-        REQUIRE_FALSE(interval2.isValid());
+        // Test invalid interval (end <= start)
+        Interval interval2{200, 100};
+        REQUIRE(interval2.start == 200);
+        REQUIRE(interval2.end == 100);
+        REQUIRE(interval2.end <= interval2.start);
 
-        // Test edge case (zero duration)
-        IntervalData interval3(100.0f, 100.0f);
-        REQUIRE_FALSE(interval3.isValid());
+        Interval interval3{100, 100};
+        REQUIRE(interval3.start == 100);
+        REQUIRE(interval3.end == 100);
 
-        // Test default constructor
-        IntervalData interval4;
-        REQUIRE(interval4.start_time == 0.0f);
-        REQUIRE(interval4.end_time == 0.0f);
-        REQUIRE_FALSE(interval4.isValid());
+        Interval interval4{};
+        REQUIRE(interval4.start == 0);
+        REQUIRE(interval4.end == 0);
     }
 
     SECTION("Generate test interval data") {
-        // Generate intervals between 0 and 10000
+        // Generate test intervals and validate properties
         auto intervals = generateTestIntervalData(50, 10000.0f, 50.0f, 500.0f, 42);
 
         REQUIRE(intervals.size() == 50);
 
         // Verify all intervals are valid
         for (auto const & interval: intervals) {
-            REQUIRE(interval.isValid());
-            REQUIRE(interval.start_time >= 0.0f);
-            REQUIRE(interval.end_time <= 10000.0f);
-            REQUIRE(interval.getDuration() >= 50.0f);
-            REQUIRE(interval.getDuration() <= 500.0f);
+            REQUIRE(interval.end > interval.start);
+            REQUIRE(interval.start >= 0);
+            REQUIRE(interval.end <= 10000);
+            int64_t duration = interval.end - interval.start;
+            REQUIRE(duration >= 50);
+            REQUIRE(duration <= 500);
         }
 
         // Verify intervals are ordered by start time
         for (size_t i = 1; i < intervals.size(); ++i) {
-            REQUIRE(intervals[i].start_time >= intervals[i - 1].start_time);
+            REQUIRE(intervals[i].start >= intervals[i - 1].start);
         }
     }
 

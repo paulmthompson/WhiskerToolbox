@@ -1,5 +1,7 @@
 #include "MVP_AnalogTimeSeries.hpp"
 
+#include "AnalogTimeSeriesDisplayOptions.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "PlottingManager/PlottingManager.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -144,6 +146,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         constexpr float expected_std_dev = 10.0f;
         
         auto data = generateGaussianData(num_points, expected_mean, expected_std_dev, 42);
+        auto time_series = std::make_shared<AnalogTimeSeries>(data);
         REQUIRE(data.size() == num_points);
         
         // Verify the generated data has approximately correct statistics
@@ -165,7 +168,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         display_options.allocated_height = allocated_height;
         
         // Set intrinsic properties for the data
-        setAnalogIntrinsicProperties(data, display_options);
+        setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Generate MVP matrices
         glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
@@ -239,6 +242,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
     SECTION("User and global scaling effects") {
         // Generate test data
         auto data = generateGaussianData(1000, 0.0f, 5.0f, 123);
+        auto time_series = std::make_shared<AnalogTimeSeries>(data);
         float std_dev = calculateStdDev(data);
         
         PlottingManager manager;
@@ -254,7 +258,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         display_options.allocated_height = allocated_height;
         
         // Set intrinsic properties for the test data
-        setAnalogIntrinsicProperties(data, display_options);
+        setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         glm::mat4 model_2x = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         
@@ -286,6 +290,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
             uniform_data.push_back(uniform_dist(gen));
         }
         
+        auto time_series = std::make_shared<AnalogTimeSeries>(uniform_data);
         float uniform_std_dev = calculateStdDev(uniform_data);
         float uniform_mean = 0.0f;
         for (float value : uniform_data) {
@@ -309,7 +314,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         display_options.allocated_height = allocated_height;
         
         // Set intrinsic properties for the uniform data
-        setAnalogIntrinsicProperties(uniform_data, display_options);
+        setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Generate MVP matrices
         glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
@@ -352,7 +357,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
     SECTION("Vertical panning functionality") {
         // Create test data for panning tests
         auto test_data = generateGaussianData(1000, 0.0f, 5.0f, 999);
-        
+        auto time_series = std::make_shared<AnalogTimeSeries>(test_data);
         PlottingManager manager;
         int series_idx = manager.addAnalogSeries();
         manager.setVisibleDataRange(1, 1000);
@@ -363,7 +368,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
         display_options.allocated_y_center = allocated_center;
         display_options.allocated_height = allocated_height;
-        setAnalogIntrinsicProperties(test_data, display_options);
+        setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Test initial state (no panning)
         REQUIRE(manager.getPanOffset() == 0.0f);
@@ -421,7 +426,11 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         auto data1 = generateGaussianData(1000, 0.0f, 3.0f, 111);
         auto data2 = generateGaussianData(1000, 5.0f, 2.0f, 222);  // Different mean and std dev
         auto data3 = generateGaussianData(1000, -2.0f, 8.0f, 333); // Another different dataset
-        
+
+        auto time_series1 = std::make_shared<AnalogTimeSeries>(data1);
+        auto time_series2 = std::make_shared<AnalogTimeSeries>(data2);
+        auto time_series3 = std::make_shared<AnalogTimeSeries>(data3);
+
         PlottingManager manager;
         int series1_idx = manager.addAnalogSeries();
         int series2_idx = manager.addAnalogSeries(); 
@@ -438,15 +447,15 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         
         display_options1.allocated_y_center = center1;
         display_options1.allocated_height = height1;
-        setAnalogIntrinsicProperties(data1, display_options1);
+        setAnalogIntrinsicProperties(time_series1.get(), display_options1);
         
         display_options2.allocated_y_center = center2;
         display_options2.allocated_height = height2;
-        setAnalogIntrinsicProperties(data2, display_options2);
+        setAnalogIntrinsicProperties(time_series2.get(), display_options2);
         
         display_options3.allocated_y_center = center3;
         display_options3.allocated_height = height3;
-        setAnalogIntrinsicProperties(data3, display_options3);
+        setAnalogIntrinsicProperties(time_series3.get(), display_options3);
         
         // Generate models for all series
         glm::mat4 model1 = new_getAnalogModelMat(display_options1, display_options1.cached_std_dev, display_options1.cached_mean, manager);
@@ -494,7 +503,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
     SECTION("Panning data out of view") {
         // Test that data can be panned completely out of the visible area
         auto test_data = generateGaussianData(1000, 0.0f, 1.0f, 444);
-        
+        auto time_series = std::make_shared<AnalogTimeSeries>(test_data);
         PlottingManager manager;
         int series_idx = manager.addAnalogSeries();
         manager.setVisibleDataRange(1, 1000);
@@ -504,7 +513,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         manager.calculateAnalogSeriesAllocation(series_idx, allocated_center, allocated_height);
         display_options.allocated_y_center = allocated_center;
         display_options.allocated_height = allocated_height;
-        setAnalogIntrinsicProperties(test_data, display_options);
+        setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         glm::mat4 projection = new_getAnalogProjectionMat(1, 1000, -1.0f, 1.0f, manager);
@@ -554,6 +563,7 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
     SECTION("Zero standard deviation data") {
         // Create constant data (zero standard deviation)
         std::vector<float> constant_data(1000, 5.0f);
+        auto time_series = std::make_shared<AnalogTimeSeries>(constant_data);
         float std_dev = calculateStdDev(constant_data);
         REQUIRE_THAT(std_dev, WithinRel(0.0f, 0.01f));
         
@@ -567,7 +577,7 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         display_options.allocated_height = allocated_height;
         
         // Set intrinsic properties (will be mean=5.0, std_dev=0.0)
-        setAnalogIntrinsicProperties(constant_data, display_options);
+        setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Should not crash with zero std_dev (division by zero protection)
         glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
@@ -582,6 +592,7 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
     
     SECTION("Extreme scaling values") {
         auto data = generateGaussianData(1000, 0.0f, 1.0f, 456);
+        auto time_series = std::make_shared<AnalogTimeSeries>(data);
         float std_dev = calculateStdDev(data);
         
         PlottingManager manager;
@@ -594,7 +605,7 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         display_options.allocated_height = allocated_height;
         
         // Set intrinsic properties for the test data
-        setAnalogIntrinsicProperties(data, display_options);
+        setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         // Test very large scaling factor
         display_options.scaling.user_scale_factor = 1000.0f;

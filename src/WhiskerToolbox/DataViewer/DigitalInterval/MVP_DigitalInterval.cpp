@@ -67,16 +67,16 @@ glm::mat4 new_getIntervalProjectionMat(int start_data_index,
     return Projection;
 }
 
-std::vector<IntervalData> generateTestIntervalData(size_t num_intervals,
-                                                   float max_time,
-                                                   float min_duration,
-                                                   float max_duration,
-                                                   unsigned int seed) {
+std::vector<Interval> generateTestIntervalData(size_t num_intervals,
+                                               float max_time,
+                                               float min_duration,
+                                               float max_duration,
+                                               unsigned int seed) {
     std::mt19937 gen(seed);
     std::uniform_real_distribution<float> time_dist(0.0f, max_time * 0.8f);// Leave some space for intervals
     std::uniform_real_distribution<float> duration_dist(min_duration, max_duration);
 
-    std::vector<IntervalData> intervals;
+    std::vector<Interval> intervals;
     intervals.reserve(num_intervals);
 
     // Generate random intervals
@@ -91,27 +91,28 @@ std::vector<IntervalData> generateTestIntervalData(size_t num_intervals,
             start_time = std::max(0.0f, end_time - duration);
         }
 
-        intervals.emplace_back(start_time, end_time);
+        // Convert to int64_t for Interval struct
+        intervals.emplace_back(Interval{static_cast<int64_t>(start_time), static_cast<int64_t>(end_time)});
     }
 
     // Sort intervals by start time to ensure ordering requirement
     std::sort(intervals.begin(), intervals.end(),
-              [](IntervalData const & a, IntervalData const & b) {
-                  return a.start_time < b.start_time;
+              [](Interval const & a, Interval const & b) {
+                  return a.start < b.start;
               });
 
     // Validate all intervals (end > start)
     for (auto & interval: intervals) {
-        if (!interval.isValid()) {
+        if (interval.end <= interval.start) {
             // This shouldn't happen with our generation method, but just in case
-            interval.end_time = interval.start_time + min_duration;
+            interval.end = interval.start + static_cast<int64_t>(min_duration);
         }
     }
 
     return intervals;
 }
 
-void setIntervalIntrinsicProperties(std::vector<IntervalData> const & intervals,
+void setIntervalIntrinsicProperties(std::vector<Interval> const & intervals,
                                     NewDigitalIntervalSeriesDisplayOptions & display_options) {
     if (intervals.empty()) {
         return;
@@ -122,18 +123,18 @@ void setIntervalIntrinsicProperties(std::vector<IntervalData> const & intervals,
     // ensuring good visibility across the canvas.
 
     // Calculate some basic statistics for potential future use
-    float total_duration = 0.0f;
-    float min_duration = std::numeric_limits<float>::max();
-    float max_duration = 0.0f;
+    int64_t total_duration = 0;
+    int64_t min_duration_val = std::numeric_limits<int64_t>::max();
+    int64_t max_duration_val = 0;
 
     for (auto const & interval: intervals) {
-        float const duration = interval.getDuration();
+        int64_t const duration = interval.end - interval.start;
         total_duration += duration;
-        min_duration = std::min(min_duration, duration);
-        max_duration = std::max(max_duration, duration);
+        min_duration_val = std::min(min_duration_val, duration);
+        max_duration_val = std::max(max_duration_val, duration);
     }
 
-    float const avg_duration = total_duration / static_cast<float>(intervals.size());
+    int64_t const avg_duration = total_duration / static_cast<int64_t>(intervals.size());
 
     // For now, we keep the default display options
     // Future enhancements could adjust alpha based on interval density,

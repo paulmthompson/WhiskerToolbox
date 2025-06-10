@@ -1,6 +1,7 @@
 #ifndef MVP_DIGITALINTERVAL_HPP
 #define MVP_DIGITALINTERVAL_HPP
 
+#include "DigitalTimeSeries/interval_data.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -8,44 +9,6 @@
 
 struct NewDigitalIntervalSeriesDisplayOptions;
 struct PlottingManager;
-
-/**
- * @brief Interval pair representing start and end times
- */
-struct IntervalData {
-    float start_time{0.0f};///< Start time of the interval
-    float end_time{0.0f};  ///< End time of the interval
-
-    /**
-     * @brief Constructor for IntervalData
-     * @param start Start time of the interval
-     * @param end End time of the interval
-     */
-    IntervalData(float start, float end)
-        : start_time(start),
-          end_time(end) {}
-
-    /**
-     * @brief Default constructor
-     */
-    IntervalData() = default;
-
-    /**
-     * @brief Check if interval is valid (end > start)
-     * @return true if interval is valid
-     */
-    [[nodiscard]] bool isValid() const {
-        return end_time > start_time;
-    }
-
-    /**
-     * @brief Get duration of the interval
-     * @return Duration (end_time - start_time)
-     */
-    [[nodiscard]] float getDuration() const {
-        return end_time - start_time;
-    }
-};
 
 /**
  * @brief Create new Model matrix for digital interval series positioning and scaling
@@ -105,11 +68,11 @@ glm::mat4 new_getIntervalProjectionMat(int start_data_index,
  * @param seed Random seed for reproducibility
  * @return Vector of generated interval data
  */
-std::vector<IntervalData> generateTestIntervalData(size_t num_intervals,
-                                                   float max_time = 10000.0f,
-                                                   float min_duration = 50.0f,
-                                                   float max_duration = 500.0f,
-                                                   unsigned int seed = 42);
+std::vector<Interval> generateTestIntervalData(size_t num_intervals,
+                                               float max_time = 10000.0f,
+                                               float min_duration = 50.0f,
+                                               float max_duration = 500.0f,
+                                               unsigned int seed = 42);
 
 /**
  * @brief Set intrinsic properties for digital interval display options
@@ -120,7 +83,7 @@ std::vector<IntervalData> generateTestIntervalData(size_t num_intervals,
  * @param intervals Vector of interval data to analyze
  * @param display_options Display options to configure
  */
-void setIntervalIntrinsicProperties(std::vector<IntervalData> const & intervals,
+void setIntervalIntrinsicProperties(std::vector<Interval> const & intervals,
                                     NewDigitalIntervalSeriesDisplayOptions & display_options);
 
 #endif// MVP_DIGITALINTERVAL_HPP

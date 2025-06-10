@@ -1,6 +1,12 @@
+#include "AnalogTimeSeries/AnalogTimeSeriesDisplayOptions.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/MVP_AnalogTimeSeries.hpp"
+#include "DigitalEvent/DigitalEventSeriesDisplayOptions.hpp"
 #include "DigitalEvent/MVP_DigitalEvent.hpp"
+#include "DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DigitalInterval/MVP_DigitalInterval.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "PlottingManager/PlottingManager.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -142,6 +148,10 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         auto uniform_data = generateUniformDataIntegration(num_points, 0.0f, 1.0f, 123);
         auto intervals = generateTestIntervalData(10, 10000.0f, 200.0f, 800.0f, 456);
 
+        auto gaussian_time_series = std::make_shared<AnalogTimeSeries>(gaussian_data);
+        auto uniform_time_series = std::make_shared<AnalogTimeSeries>(uniform_data);
+        auto intervals_time_series = std::make_shared<DigitalIntervalSeries>(intervals);
+
         // Set up analog series display options
         NewAnalogTimeSeriesDisplayOptions gaussian_options;
         NewAnalogTimeSeriesDisplayOptions uniform_options;
@@ -176,8 +186,8 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         interval_options.allocated_height = interval_height;
 
         // Set intrinsic properties
-        setAnalogIntrinsicProperties(gaussian_data, gaussian_options);
-        setAnalogIntrinsicProperties(uniform_data, uniform_options);
+        setAnalogIntrinsicProperties(gaussian_time_series.get(), gaussian_options);
+        setAnalogIntrinsicProperties(uniform_time_series.get(), uniform_options);
         setIntervalIntrinsicProperties(intervals, interval_options);
 
         // Test coordinate allocation without panning
@@ -329,6 +339,9 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
         auto events1 = generateTestEventData(50, 10000.0f, 456);
         auto events2 = generateTestEventData(30, 10000.0f, 789);
 
+        auto analog1_time_series = std::make_shared<AnalogTimeSeries>(analog1_data);
+        auto analog2_time_series = std::make_shared<AnalogTimeSeries>(analog2_data);
+
         // Set up display options
         NewAnalogTimeSeriesDisplayOptions analog1_options;
         NewAnalogTimeSeriesDisplayOptions analog2_options;
@@ -383,8 +396,8 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
         event2_options.allocated_height = event2_height;
 
         // Set intrinsic properties
-        setAnalogIntrinsicProperties(analog1_data, analog1_options);
-        setAnalogIntrinsicProperties(analog2_data, analog2_options);
+        setAnalogIntrinsicProperties(analog1_time_series.get(), analog1_options);
+        setAnalogIntrinsicProperties(analog2_time_series.get(), analog2_options);
         setEventIntrinsicProperties(events1, event1_options);
         setEventIntrinsicProperties(events2, event2_options);
 
