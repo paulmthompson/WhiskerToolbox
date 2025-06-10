@@ -76,6 +76,8 @@ set(DATAMANAGER_SOURCES
         utils/polynomial/parametric_polynomial_utils.hpp
         utils/ProcessingOptions.hpp
         utils/string_manip.hpp
+        utils/DataAggregation/DataAggregation.hpp
+        utils/DataAggregation/DataAggregation.cpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
