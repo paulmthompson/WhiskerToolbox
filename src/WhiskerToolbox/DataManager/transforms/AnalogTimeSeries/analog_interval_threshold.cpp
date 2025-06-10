@@ -85,7 +85,7 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
 
         if (threshold_met && !in_interval) {
             // Start of a new interval
-            if (static_cast<double>(timestamps[i] - last_interval_end) >= thresholdParams.lockoutTime) {
+            if (static_cast<double>(timestamps[i]) - last_interval_end >= thresholdParams.lockoutTime) {
                 interval_start = static_cast<int64_t>(timestamps[i]);
                 in_interval = true;
             }

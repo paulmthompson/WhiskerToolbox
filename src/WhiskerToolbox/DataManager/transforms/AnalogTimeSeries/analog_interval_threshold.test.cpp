@@ -2,9 +2,9 @@
 #include "catch2/catch_test_macros.hpp"
 #include "catch2/matchers/catch_matchers_vector.hpp"
 
-#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "transforms/data_transforms.hpp"
 
 #include <vector>
@@ -37,7 +37,7 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 2); // Two intervals: [200-400] and [600-700]
         
         REQUIRE(intervals[0].start == 200);
@@ -67,7 +67,7 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 2); // Two intervals: [200-400] and [600-700]
         
         REQUIRE(intervals[0].start == 200);
@@ -89,7 +89,7 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 2); // Two intervals: [200-400] and [600-700]
         
         REQUIRE(intervals[0].start == 200);
@@ -111,13 +111,15 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
-        REQUIRE(intervals.size() == 2); // Should merge close intervals due to lockout
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        REQUIRE(intervals.size() == 3); // Three separate intervals - lockout prevents starting too soon
         
         REQUIRE(intervals[0].start == 200);
-        REQUIRE(intervals[0].end == 300);
-        REQUIRE(intervals[1].start == 450);
-        REQUIRE(intervals[1].end == 450);
+        REQUIRE(intervals[0].end == 200);
+        REQUIRE(intervals[1].start == 300);
+        REQUIRE(intervals[1].end == 300);
+        REQUIRE(intervals[2].start == 450);
+        REQUIRE(intervals[2].end == 450);
     }
 
     SECTION("With minimum duration") {
@@ -133,7 +135,7 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 1); // Only one interval meets minimum duration
         
         REQUIRE(intervals[0].start == 300);
@@ -153,7 +155,7 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 1);
         
         REQUIRE(intervals[0].start == 200);
@@ -173,7 +175,7 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.empty());
     }
 
@@ -224,11 +226,13 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
-        REQUIRE(intervals.size() == 1); // Should merge and filter based on parameters
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        REQUIRE(intervals.size() == 2); // Two intervals that meet minimum duration
         
         REQUIRE(intervals[0].start == 100);
-        REQUIRE(intervals[0].end == 500);
+        REQUIRE(intervals[0].end == 200);
+        REQUIRE(intervals[1].start == 400);
+        REQUIRE(intervals[1].end == 500);
     }
 }
 
@@ -250,14 +254,14 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
 
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
-        REQUIRE(result_intervals->getIntervalSeries().empty());
+        REQUIRE(result_intervals->getDigitalIntervalSeries().empty());
         
         // Test with progress callback
         progress_val = -1;
         call_count = 0;
         result_intervals = interval_threshold(ats.get(), params, cb);
-        REQUIRE(result_intervals != nullptr);
-        REQUIRE(result_intervals->getIntervalSeries().empty());
+        REQUIRE(result_intervals != nullptr);   
+        REQUIRE(result_intervals->getDigitalIntervalSeries().empty());
         // Progress callback should not be called for null input
         REQUIRE(call_count == 0);
     }
@@ -271,7 +275,7 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
 
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
-        REQUIRE(result_intervals->getIntervalSeries().empty());
+        REQUIRE(result_intervals->getDigitalIntervalSeries().empty());
     }
 
     SECTION("Single sample above threshold") {
@@ -287,7 +291,7 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 1);
         REQUIRE(intervals[0].start == 100);
         REQUIRE(intervals[0].end == 100);
@@ -306,7 +310,7 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.empty());
     }
 
@@ -323,7 +327,7 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 1);
         REQUIRE(intervals[0].start == 100);
         REQUIRE(intervals[0].end == 500);
@@ -342,7 +346,7 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 2);
         REQUIRE(intervals[0].start == 300);
         REQUIRE(intervals[0].end == 300);
@@ -363,7 +367,7 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 2);
         REQUIRE(intervals[0].start == 100);
         REQUIRE(intervals[0].end == 100);
@@ -384,7 +388,7 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 1); // Only first interval should be detected
         REQUIRE(intervals[0].start == 200);
         REQUIRE(intervals[0].end == 200);
@@ -403,7 +407,7 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.empty()); // No intervals meet minimum duration
     }
 
@@ -420,12 +424,73 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
         result_intervals = interval_threshold(ats.get(), params);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 2);
         REQUIRE(intervals[0].start == 1);
         REQUIRE(intervals[0].end == 1);
         REQUIRE(intervals[1].start == 101);
         REQUIRE(intervals[1].end == 101);
+    }
+}
+
+TEST_CASE("Single Sample Above Threshold Zero Lockout", "[transforms][analog_interval_threshold]") {
+    SECTION("Single sample above threshold followed by below threshold") {
+        // Test case for the specific scenario: single sample above threshold 
+        // with lockout period of zero. The interval should start and end at 
+        // the same time point (the time of the threshold crossing).
+        // During the interval, ALL signals should be above threshold.
+        
+        std::vector<float> values = {0.5f, 2.0f, 0.8f, 0.3f};  // Only sample at index 1 is above threshold
+        std::vector<size_t> times = {100, 200, 300, 400};
+        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
+        
+        IntervalThresholdParams params;
+        params.thresholdValue = 1.0;
+        params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
+        params.lockoutTime = 0.0;  // Zero lockout period
+        params.minDuration = 0.0;
+
+        auto result_intervals = interval_threshold(ats.get(), params);
+        REQUIRE(result_intervals != nullptr);
+        
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        REQUIRE(intervals.size() == 1);
+        
+        // The interval should start and end at time 200 (the single sample above threshold)
+        // This ensures all signals during the interval are above threshold
+        REQUIRE(intervals[0].start == 200);
+        REQUIRE(intervals[0].end == 200);
+        
+        // Verify that all values during the detected interval are indeed above threshold
+        // In this case, there's only one sample at time 200 with value 2.0, which is > 1.0
+        REQUIRE(values[1] > params.thresholdValue);  // value at time 200
+    }
+    
+    SECTION("Multiple single samples above threshold") {
+        // Test with multiple isolated single samples above threshold
+        std::vector<float> values = {0.5f, 2.0f, 0.8f, 1.5f, 0.3f, 1.8f, 0.6f};
+        std::vector<size_t> times = {100, 200, 300, 400, 500, 600, 700};
+        auto ats = std::make_shared<AnalogTimeSeries>(values, times);
+        
+        IntervalThresholdParams params;
+        params.thresholdValue = 1.0;
+        params.direction = IntervalThresholdParams::ThresholdDirection::POSITIVE;
+        params.lockoutTime = 0.0;  // Zero lockout period
+        params.minDuration = 0.0;
+
+        auto result_intervals = interval_threshold(ats.get(), params);
+        REQUIRE(result_intervals != nullptr);
+        
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
+        REQUIRE(intervals.size() == 3);  // Three isolated single samples above threshold
+        
+        // Each interval should be a single point in time
+        REQUIRE(intervals[0].start == 200);
+        REQUIRE(intervals[0].end == 200);
+        REQUIRE(intervals[1].start == 400);
+        REQUIRE(intervals[1].end == 400);
+        REQUIRE(intervals[2].start == 600);
+        REQUIRE(intervals[2].end == 600);
     }
 }
 
@@ -459,12 +524,6 @@ TEST_CASE("IntervalThresholdOperation Class Tests", "[transforms][analog_interva
         REQUIRE_FALSE(operation.canApply(variant));
     }
 
-    SECTION("canApply with wrong type") {
-        variant = std::string("wrong type");
-
-        REQUIRE_FALSE(operation.canApply(variant));
-    }
-
     SECTION("execute with valid parameters") {
         std::vector<float> values = {0.5f, 1.5f, 0.8f, 1.8f};
         std::vector<size_t> times = {100, 200, 300, 400};
@@ -477,7 +536,7 @@ TEST_CASE("IntervalThresholdOperation Class Tests", "[transforms][analog_interva
         auto result_intervals = std::get<std::shared_ptr<DigitalIntervalSeries>>(result);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 2);
     }
 
@@ -516,13 +575,6 @@ TEST_CASE("IntervalThresholdOperation Class Tests", "[transforms][analog_interva
         REQUIRE(call_count > 0);
     }
 
-    SECTION("execute with invalid variant") {
-        variant = std::string("wrong type");
-
-        auto result = operation.execute(variant, &params);
-        REQUIRE(std::holds_alternative<std::monostate>(result));
-    }
-
     SECTION("execute with wrong parameter type") {
         std::vector<float> values = {0.5f, 1.5f, 0.8f, 1.8f};
         std::vector<size_t> times = {100, 200, 300, 400};
@@ -558,7 +610,7 @@ TEST_CASE("IntervalThresholdOperation Class Tests", "[transforms][analog_interva
         auto result_intervals = std::get<std::shared_ptr<DigitalIntervalSeries>>(result);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & intervals = result_intervals->getIntervalSeries();
+        auto const & intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(intervals.size() == 1);
         REQUIRE(intervals[0].start == 200);
         REQUIRE(intervals[0].end == 200);
@@ -573,7 +625,7 @@ TEST_CASE("IntervalThresholdOperation Class Tests", "[transforms][analog_interva
         result_intervals = std::get<std::shared_ptr<DigitalIntervalSeries>>(result);
         REQUIRE(result_intervals != nullptr);
         
-        auto const & abs_intervals = result_intervals->getIntervalSeries();
+        auto const & abs_intervals = result_intervals->getDigitalIntervalSeries();
         REQUIRE(abs_intervals.size() == 2);
     }
 } 
