@@ -12,7 +12,6 @@
 #include "DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
-#include "DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "DataViewer_Tree_Widget/DataViewer_Tree_Widget.hpp"
 #include "OpenGLWidget.hpp"
 #include "TimeFrame.hpp"

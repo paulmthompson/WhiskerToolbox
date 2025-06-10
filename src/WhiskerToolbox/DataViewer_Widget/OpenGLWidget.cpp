@@ -8,7 +8,6 @@
 #include "DataViewer/DigitalEvent/MVP_DigitalEvent.hpp"
 #include "DataViewer/DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp"
 #include "DataViewer/DigitalInterval/MVP_DigitalInterval.hpp"
-#include "DataViewer/DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "DataViewer/PlottingManager/PlottingManager.hpp"
 #include "DataViewer_Widget.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -1686,3 +1685,13 @@ OpenGLWidget::GapAnalysis OpenGLWidget::_analyzeDataGaps(AnalogTimeSeries const 
 
     return analysis;
 }
+
+namespace TimeSeriesDefaultValues {
+std::string getColorForIndex(size_t index) {
+    if (index < DEFAULT_COLORS.size()) {
+        return DEFAULT_COLORS[index];
+    } else {
+        return generateRandomColor();
+    }
+}
+}// namespace TimeSeriesDefaultValues

@@ -17,9 +17,7 @@ set(DATAVIEWER_SOURCES
     DigitalInterval/DigitalIntervalSeriesDisplayOptions.hpp
     DigitalInterval/MVP_DigitalInterval.hpp
     DigitalInterval/MVP_DigitalInterval.cpp
-
-    DisplayOptions/TimeSeriesDisplayOptions.hpp
-    DisplayOptions/TimeSeriesDisplayOptions.cpp)
+)
 
 set_property(GLOBAL PROPERTY DATAVIEWER_TEST_SOURCES "")
 

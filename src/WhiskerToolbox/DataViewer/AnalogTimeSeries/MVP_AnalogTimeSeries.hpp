@@ -71,4 +71,24 @@ glm::mat4 new_getAnalogProjectionMat(int start_data_index,
 void setAnalogIntrinsicProperties(AnalogTimeSeries const * analog,
                                   NewAnalogTimeSeriesDisplayOptions & display_options);
 
+/**
+ * @brief Get cached standard deviation for an analog series (new display options)
+ *
+ * Overload for the new display options structure.
+ *
+ * @param series The analog time series to calculate standard deviation for
+ * @param display_options The new display options containing the cache
+ * @return Cached standard deviation value
+ */
+float getCachedStdDev(AnalogTimeSeries const & series, NewAnalogTimeSeriesDisplayOptions & display_options);
+
+/**
+ * @brief Invalidate cached display calculations (new display options)
+ *
+ * Overload for the new display options structure.
+ *
+ * @param display_options The new display options to invalidate
+ */
+void invalidateDisplayCache(NewAnalogTimeSeriesDisplayOptions & display_options);
+
 #endif// MVP_ANALOGTIMESERIES_HPP

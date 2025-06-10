@@ -1,7 +1,6 @@
 #include "MVP_AnalogTimeSeries.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "DisplayOptions/TimeSeriesDisplayOptions.hpp"
 #include "PlottingManager/PlottingManager.hpp"
 
 #include <cmath>
@@ -108,4 +107,18 @@ glm::mat4 new_getAnalogProjectionMat(int start_data_index,
     auto Projection = glm::ortho(data_start, data_end, y_min, y_max);
 
     return Projection;
+}
+
+
+float getCachedStdDev(AnalogTimeSeries const & series, NewAnalogTimeSeriesDisplayOptions & display_options) {
+    if (!display_options.std_dev_cache_valid) {
+        // Calculate and cache the standard deviation
+        display_options.cached_std_dev = calculate_std_dev(series);
+        display_options.std_dev_cache_valid = true;
+    }
+    return display_options.cached_std_dev;
+}
+
+void invalidateDisplayCache(NewAnalogTimeSeriesDisplayOptions & display_options) {
+    display_options.std_dev_cache_valid = false;
 }

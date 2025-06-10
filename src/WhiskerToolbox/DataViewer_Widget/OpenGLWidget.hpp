@@ -448,5 +448,21 @@ private:
     PlottingManager * _plotting_manager{nullptr};
 };
 
+namespace TimeSeriesDefaultValues {
+
+std::vector<std::string> const DEFAULT_COLORS = {
+        "#ff0000",// Red
+        "#008000",// Green
+        "#0000ff",// Blue
+        "#ff00ff",// Magenta
+        "#ffff00",// Yellow
+        "#00ffff",// Cyan
+        "#ffa500",// Orange
+        "#800080" // Purple
+};
+
+// Get color from index, returns random color if index exceeds DEFAULT_COLORS size
+std::string getColorForIndex(size_t index);
+}// namespace TimeSeriesDefaultValues
 
 #endif//OPENGLWIDGET_HPP
