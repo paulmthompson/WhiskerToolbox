@@ -229,14 +229,54 @@ public:
     void finishIntervalDrag();
 
     /**
-     * @brief Cancel the interval dragging operation
+     * @brief Cancel the current interval drag operation
      * 
-     * Cancels the current drag operation without making any changes to the data.
-     * The original interval remains unchanged.
+     * Cancels any ongoing interval drag operation and returns to normal state.
+     * This resets all drag-related state without applying any changes.
      */
     void cancelIntervalDrag();
 
     [[nodiscard]] bool isDraggingInterval() const { return _is_dragging_interval; }
+
+    // New interval creation controls
+
+    /**
+     * @brief Start creating a new interval by double-clicking and dragging
+     * 
+     * Initiates the creation of a new interval starting at the specified position.
+     * The user can then drag left or right to define the interval bounds.
+     * 
+     * @param series_key The key identifying the digital interval series
+     * @param start_pos Initial mouse position where double-click occurred
+     */
+    void startNewIntervalCreation(std::string const & series_key, QPoint const & start_pos);
+
+    /**
+     * @brief Update the new interval being created
+     * 
+     * Updates the bounds of the interval being created based on current mouse position.
+     * Visual feedback is provided similar to interval edge dragging.
+     * 
+     * @param current_pos Current mouse position
+     */
+    void updateNewIntervalCreation(QPoint const & current_pos);
+
+    /**
+     * @brief Finish creating the new interval
+     * 
+     * Completes the new interval creation process by adding the interval to the series.
+     * The interval start and end times are automatically ordered correctly.
+     */
+    void finishNewIntervalCreation();
+
+    /**
+     * @brief Cancel the new interval creation process
+     * 
+     * Cancels the current new interval creation and returns to normal state.
+     */
+    void cancelNewIntervalCreation();
+
+    [[nodiscard]] bool isCreatingNewInterval() const { return _is_creating_new_interval; }
 
     void setXLimit(int xmax) {
         _xAxis.setMax(xmax);
@@ -339,6 +379,7 @@ protected:
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
+    void mouseDoubleClickEvent(QMouseEvent * event) override;
 
 private:
     void setupVertexAttribs();
@@ -352,6 +393,7 @@ private:
     void drawGridLines();
     void drawDashedLine(LineParameters const & params);
     void drawDraggedInterval();
+    void drawNewIntervalBeingCreated();
     void _addSeries(std::string const & key);
     void _removeSeries(std::string const & key);
     void _updateYViewBoundaries();
@@ -446,6 +488,14 @@ private:
 
     // PlottingManager for coordinate allocation
     PlottingManager * _plotting_manager{nullptr};
+
+    // New interval creation state
+    bool _is_creating_new_interval{false};
+    std::string _new_interval_series_key;
+    int64_t _new_interval_start_time{0};
+    int64_t _new_interval_end_time{0};
+    int64_t _new_interval_click_time{0};  // Time coordinate where double-click occurred
+    QPoint _new_interval_click_pos;
 };
 
 namespace TimeSeriesDefaultValues {
