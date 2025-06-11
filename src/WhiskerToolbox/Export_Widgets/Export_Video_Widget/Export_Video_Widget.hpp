@@ -41,6 +41,10 @@ private:
 private slots:
     void _exportVideo();
     void _handleCanvasUpdated(QImage const & canvasImage);
+    void _updateTitlePreview();
+
+private:
+    QImage _generateTitleFrame(int width, int height, QString const & text, int font_size);
 };
 
 
