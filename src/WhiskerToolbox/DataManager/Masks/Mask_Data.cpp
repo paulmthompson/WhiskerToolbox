@@ -48,7 +48,8 @@ void MaskData::addAtTime(int const time,
     new_mask.reserve(x.size());
     
     for (std::size_t i = 0; i < x.size(); i++) {
-        new_mask.emplace_back(x[i], y[i]);
+        //new_mask.emplace_back(x[i], y[i]);
+        new_mask.push_back({x[i], y[i]});
     }
 
     _data[time].push_back(std::move(new_mask));
