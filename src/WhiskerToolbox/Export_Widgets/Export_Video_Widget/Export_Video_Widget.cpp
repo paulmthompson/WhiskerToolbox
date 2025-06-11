@@ -14,6 +14,7 @@
 #include <QPainter>
 #include <QFont>
 #include <QFontMetrics>
+#include <QCoreApplication>
 
 #include <filesystem>
 #include <iostream>
@@ -76,13 +77,25 @@ void Export_Video_Widget::_exportVideo() {
         filename += ".mp4";
     }
 
-    // Initialize the VideoWriter
-    auto [width, height] = _scene->getCanvasSize();
-
-    std::cout << "Initial height x width: " << width << " x " << height << std::endl;
+    // Get a sample frame first to determine the exact canvas dimensions
+    // This ensures title frames match the actual video frame size
+    _time_scrollbar->changeScrollBarValue(start_num);
+    
+    // Force canvas update and wait briefly for it to process
+    QCoreApplication::processEvents();
+    
+    // Get the actual canvas image to determine real dimensions
+    QImage scene_image(_scene->getCanvasSize().first, _scene->getCanvasSize().second, QImage::Format_ARGB32);
+    scene_image.fill(Qt::transparent);
+    QPainter scene_painter(&scene_image);
+    _scene->render(&scene_painter);
+    scene_painter.end();
+    
+    int const actual_width = scene_image.width();
+    int const actual_height = scene_image.height();
 
     int const fps = 30;// Set the desired frame rate
-    _video_writer->open(filename, cv::VideoWriter::fourcc('X', '2', '6', '4'), fps, cv::Size(width, height), true);
+    _video_writer->open(filename, cv::VideoWriter::fourcc('X', '2', '6', '4'), fps, cv::Size(actual_width, actual_height), true);
 
     if (!_video_writer->isOpened()) {
         std::cout << "Could not open the output video file for write" << std::endl;
@@ -95,18 +108,11 @@ void Export_Video_Widget::_exportVideo() {
         QString title_text = ui->title_text_edit->toPlainText();
         int font_size = ui->font_size_spinbox->value();
         
-        std::cout << "Generating " << title_frame_count << " title frames..." << std::endl;
-        
         for (int i = 0; i < title_frame_count; i++) {
-            QImage title_frame = _generateTitleFrame(width, height, title_text, font_size);
+            QImage title_frame = _generateTitleFrame(actual_width, actual_height, title_text, font_size);
             
-            // Convert QImage to cv::Mat and write to video
-            QImage convertedImage = title_frame.convertToFormat(QImage::Format_RGB888);
-            cv::Mat const mat(convertedImage.height(), convertedImage.width(), CV_8UC3, 
-                             const_cast<uchar *>(convertedImage.bits()), convertedImage.bytesPerLine());
-            cv::Mat matBGR;
-            cv::cvtColor(mat, matBGR, cv::COLOR_RGB2BGR);
-            _video_writer->write(matBGR);
+            // Use the same conversion process as canvas frames
+            _writeFrameToVideo(title_frame);
         }
     }
 
@@ -123,17 +129,10 @@ void Export_Video_Widget::_exportVideo() {
 
 void Export_Video_Widget::_handleCanvasUpdated(QImage const & canvasImage) {
     auto current_time = _data_manager->getCurrentTime();
-    std::cout << "saving frame " << current_time << std::endl;
-    std::cout << canvasImage.height() << " x " << canvasImage.width() << std::endl;
+    std::cout << "Saving frame " << current_time << std::endl;
 
-    // Convert QImage to cv::Mat
-    QImage convertedImage = canvasImage.convertToFormat(QImage::Format_RGB888);
-    cv::Mat const mat(convertedImage.height(), convertedImage.width(), CV_8UC3, const_cast<uchar *>(convertedImage.bits()), convertedImage.bytesPerLine());
-    cv::Mat matBGR;
-    cv::cvtColor(mat, matBGR, cv::COLOR_RGB2BGR);
-
-    // Write the frame to the video
-    _video_writer->write(matBGR);
+    // Use the same conversion process as title frames
+    _writeFrameToVideo(canvasImage);
 }
 
 void Export_Video_Widget::_updateTitlePreview() {
@@ -156,9 +155,25 @@ void Export_Video_Widget::_updateTitlePreview() {
     ui->title_preview->setStyleSheet("background-color: black; border: 1px solid gray;");
 }
 
+void Export_Video_Widget::_writeFrameToVideo(QImage const & frame) {
+    // Ensure consistent format conversion for all frames
+    QImage convertedImage = frame.convertToFormat(QImage::Format_RGB888);
+    
+    // Create cv::Mat with explicit stride to ensure consistency
+    cv::Mat const mat(convertedImage.height(), convertedImage.width(), CV_8UC3, 
+                     const_cast<uchar *>(convertedImage.bits()), convertedImage.bytesPerLine());
+    
+    // Convert RGB to BGR for OpenCV
+    cv::Mat matBGR;
+    cv::cvtColor(mat, matBGR, cv::COLOR_RGB2BGR);
+    
+    // Write the frame to the video
+    _video_writer->write(matBGR);
+}
+
 QImage Export_Video_Widget::_generateTitleFrame(int width, int height, QString const & text, int font_size) {
-    // Create a black background image
-    QImage title_image(width, height, QImage::Format_RGB888);
+    // Create title image with ARGB32 format to match typical canvas format
+    QImage title_image(width, height, QImage::Format_ARGB32);
     title_image.fill(Qt::black);
     
     // Setup painter and font

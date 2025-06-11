@@ -45,6 +45,7 @@ private slots:
 
 private:
     QImage _generateTitleFrame(int width, int height, QString const & text, int font_size);
+    void _writeFrameToVideo(QImage const & frame);
 };
 
 
