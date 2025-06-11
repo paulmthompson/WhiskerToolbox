@@ -191,6 +191,7 @@ set(PROJECT_SOURCES
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.cpp
         Media_Widget/MediaPoint_Widget/MediaPoint_Widget.ui
+
         Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp
         Media_Widget/MediaTensor_Widget/MediaTensor_Widget.cpp
         Media_Widget/MediaTensor_Widget/MediaTensor_Widget.ui
@@ -214,6 +215,10 @@ set(PROJECT_SOURCES
         Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp
         Media_Widget/MediaInterval_Widget/MediaInterval_Widget.cpp
         Media_Widget/MediaInterval_Widget/MediaInterval_Widget.ui
+        Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.hpp
+        Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.cpp
+        Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.ui
+
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.hpp
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.cpp
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.ui

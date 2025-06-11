@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>BoxIntervalStyle_Widget</class>
+ <widget class="QWidget" name="BoxIntervalStyle_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QFormLayout" name="formLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_box_size">
+     <property name="text">
+      <string>Box Size:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QSpinBox" name="box_size_spinbox">
+     <property name="toolTip">
+      <string>Size of each interval indicator box in pixels</string>
+     </property>
+     <property name="minimum">
+      <number>10</number>
+     </property>
+     <property name="maximum">
+      <number>50</number>
+     </property>
+     <property name="value">
+      <number>20</number>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_frame_range">
+     <property name="text">
+      <string>Frame Range:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QSpinBox" name="frame_range_spinbox">
+     <property name="toolTip">
+      <string>Number of frames before and after current frame to display (+/- range)</string>
+     </property>
+     <property name="minimum">
+      <number>0</number>
+     </property>
+     <property name="maximum">
+      <number>5</number>
+     </property>
+     <property name="value">
+      <number>2</number>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_location">
+     <property name="text">
+      <string>Location:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QComboBox" name="location_combobox">
+     <property name="toolTip">
+      <string>Location of interval indicator boxes on the video</string>
+     </property>
+     <item>
+      <property name="text">
+       <string>Top Left</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Top Right</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Bottom Left</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Bottom Right</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 

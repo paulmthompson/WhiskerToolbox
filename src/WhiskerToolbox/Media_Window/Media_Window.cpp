@@ -841,6 +841,9 @@ void Media_Window::_plotDigitalIntervalSeries() {
 
     for (auto const & [key, _interval_config]: _interval_configs) {
         if (!_interval_config.get()->is_visible) continue;
+        
+        // Only render if using Box plotting style
+        if (_interval_config.get()->plotting_style != IntervalPlottingStyle::Box) continue;
 
         auto plot_color = plot_color_with_alpha(_interval_config.get());
 

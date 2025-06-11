@@ -89,6 +89,11 @@ struct TensorDisplayOptions : public BaseDisplayOptions {
     // OptionType getType() const override { return OptionType::Tensor; }
 };
 
+enum class IntervalPlottingStyle {
+    Box,        // Box indicators in corners
+    // Future styles can be added here
+};
+
 enum class IntervalLocation {
     TopLeft,
     TopRight,
@@ -97,6 +102,9 @@ enum class IntervalLocation {
 };
 
 struct DigitalIntervalDisplayOptions : public BaseDisplayOptions {
+    IntervalPlottingStyle plotting_style{IntervalPlottingStyle::Box}; // Overall plotting style
+    
+    // Box style specific options
     int box_size{20};                                     // Size of each interval box in pixels
     int frame_range{2};                                   // Number of frames before/after current (+/- range)
     IntervalLocation location{IntervalLocation::TopRight};// Location of interval boxes
