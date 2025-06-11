@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
 
     steps:
       - name: Checkout repository
@@ -56,3 +56,9 @@ jobs:
         with:
           name: cpack-artifact
           path: ${{ env.ARTIFACT_PATH }}
+
+      - name: Save vcpkg cache
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ${{ github.workspace }}/vcpkg_cache
+          key: vcpkg-linux-clang-${{ hashFiles('vcpkg.json') }}
