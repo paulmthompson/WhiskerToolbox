@@ -10,7 +10,8 @@ Mask2D create_mask(std::vector<float> const & x, std::vector<float> const & y) {
     new_mask.reserve(x.size());// Reserve space to avoid reallocations
 
     for (std::size_t i = 0; i < x.size(); i++) {
-        new_mask.emplace_back(Point2D<float>{x[i], y[i]});// Use emplace_back for efficiency
+        //new_mask.emplace_back(Point2D<float>{x[i], y[i]});// Use emplace_back for efficiency
+        new_mask.push_back({x[i], y[i]});
     }
 
     return new_mask;
@@ -22,7 +23,8 @@ Mask2D create_mask(std::vector<float> && x, std::vector<float> && y) {
     new_mask.reserve(x.size());// Reserve space to avoid reallocations
 
     for (std::size_t i = 0; i < x.size(); i++) {
-        new_mask.emplace_back(Point2D<float>{x[i], y[i]});// Access elements directly
+        //new_mask.emplace_back(Point2D<float>{x[i], y[i]});// Access elements directly
+        new_mask.push_back({x[i], y[i]});
     }
 
     return new_mask;
