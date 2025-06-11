@@ -28,7 +28,10 @@ private:
 
 private slots:
     void _setIntervalAlpha(int alpha);
-    void _setIntervalColor(const QString& hex_color);
+    void _setIntervalColor(QString const & hex_color);
+    void _setBoxSize(int size);
+    void _setFrameRange(int range);
+    void _setLocation(int location_index);
 };
 
 #endif// MEDIAINTERVAL_WIDGET_HPP

@@ -873,10 +873,35 @@ void Media_Window::_plotDigitalIntervalSeries() {
             }
         }
 
-        std::vector<int> relative_times = {-2, -1, 0, 1, 2};
-        int const square_size = 20;
-        int const top_right_x = _canvasWidth - square_size;
-        int const top_right_y = 0;
+        // Generate relative times based on frame range setting
+        std::vector<int> relative_times;
+        int const frame_range = _interval_config->frame_range;
+        for (int i = -frame_range; i <= frame_range; ++i) {
+            relative_times.push_back(i);
+        }
+
+        int const square_size = _interval_config->box_size;
+
+        // Calculate position based on location setting
+        int start_x, start_y;
+        switch (_interval_config->location) {
+            case IntervalLocation::TopLeft:
+                start_x = 0;
+                start_y = 0;
+                break;
+            case IntervalLocation::TopRight:
+                start_x = _canvasWidth - square_size * static_cast<int>(relative_times.size());
+                start_y = 0;
+                break;
+            case IntervalLocation::BottomLeft:
+                start_x = 0;
+                start_y = _canvasHeight - square_size;
+                break;
+            case IntervalLocation::BottomRight:
+                start_x = _canvasWidth - square_size * static_cast<int>(relative_times.size());
+                start_y = _canvasHeight - square_size;
+                break;
+        }
 
         for (int i = 0; i < relative_times.size(); ++i) {
             int const video_time = current_time + relative_times[i];
@@ -896,8 +921,8 @@ void Media_Window::_plotDigitalIntervalSeries() {
             auto color = event_present ? plot_color : QColor(255, 255, 255, 10);// Transparent if no event
 
             auto intervalPixmap = addRect(
-                    top_right_x - (relative_times.size() - 1 - i) * square_size,
-                    top_right_y,
+                    start_x + i * square_size,
+                    start_y,
                     square_size,
                     square_size,
                     QPen(Qt::black),// Black border
