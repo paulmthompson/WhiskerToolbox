@@ -14,7 +14,6 @@
 #include <QPainter>
 #include <QFont>
 #include <QFontMetrics>
-#include <QCoreApplication>
 
 #include <filesystem>
 #include <iostream>
@@ -77,25 +76,13 @@ void Export_Video_Widget::_exportVideo() {
         filename += ".mp4";
     }
 
-    // Get a sample frame first to determine the exact canvas dimensions
-    // This ensures title frames match the actual video frame size
-    _time_scrollbar->changeScrollBarValue(start_num);
+    // Get canvas dimensions at export time and use consistently throughout
+    auto [canvas_width, canvas_height] = _scene->getCanvasSize();
     
-    // Force canvas update and wait briefly for it to process
-    QCoreApplication::processEvents();
-    
-    // Get the actual canvas image to determine real dimensions
-    QImage scene_image(_scene->getCanvasSize().first, _scene->getCanvasSize().second, QImage::Format_ARGB32);
-    scene_image.fill(Qt::transparent);
-    QPainter scene_painter(&scene_image);
-    _scene->render(&scene_painter);
-    scene_painter.end();
-    
-    int const actual_width = scene_image.width();
-    int const actual_height = scene_image.height();
+    std::cout << "Exporting video with canvas dimensions: " << canvas_width << "x" << canvas_height << std::endl;
 
     int const fps = 30;// Set the desired frame rate
-    _video_writer->open(filename, cv::VideoWriter::fourcc('X', '2', '6', '4'), fps, cv::Size(actual_width, actual_height), true);
+    _video_writer->open(filename, cv::VideoWriter::fourcc('X', '2', '6', '4'), fps, cv::Size(canvas_width, canvas_height), true);
 
     if (!_video_writer->isOpened()) {
         std::cout << "Could not open the output video file for write" << std::endl;
@@ -109,7 +96,7 @@ void Export_Video_Widget::_exportVideo() {
         int font_size = ui->font_size_spinbox->value();
         
         for (int i = 0; i < title_frame_count; i++) {
-            QImage title_frame = _generateTitleFrame(actual_width, actual_height, title_text, font_size);
+            QImage title_frame = _generateTitleFrame(canvas_width, canvas_height, title_text, font_size);
             
             // Use the same conversion process as canvas frames
             _writeFrameToVideo(title_frame);

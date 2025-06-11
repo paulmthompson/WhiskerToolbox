@@ -98,6 +98,8 @@ set(EXTRA_DLLS
         "${CMAKE_BINARY_DIR}/liblzma.dll"
         "${CMAKE_BINARY_DIR}/openblas.dll"
         "${CMAKE_BINARY_DIR}/liblapack.dll"
+        "${CMAKE_BINARY_DIR}/libgcc_s_seh-1.dll"
+        "${CMAKE_BINARY_DIR}/libgfortran-5.dll"
 )
 
 set(TORCH_DLLS
