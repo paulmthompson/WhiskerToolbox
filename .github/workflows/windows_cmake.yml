@@ -40,10 +40,10 @@ jobs:
 
       - uses: seanmiddleditch/gha-setup-ninja@master
 
-      - name: Setup cmake
-        uses: jwlawson/actions-setup-cmake@v2
+      - name: install-cmake
+        uses: lukka/get-cmake@latest
         with:
-          cmake-version: '3.30.x'
+          cmakeVersion: "~3.30.0"
 
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows' && matrix.compiler == 'msvc'
