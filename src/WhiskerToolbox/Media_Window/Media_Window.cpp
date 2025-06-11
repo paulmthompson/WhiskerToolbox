@@ -265,6 +265,8 @@ void Media_Window::UpdateCanvas() {
     _plotPointData();
 
     _plotDigitalIntervalSeries();
+    
+    _plotDigitalIntervalBorders();
 
     _plotTensorData();
 
@@ -933,6 +935,75 @@ void Media_Window::_plotDigitalIntervalSeries() {
             );
 
             _intervals.append(intervalPixmap);
+        }
+    }
+}
+
+void Media_Window::_plotDigitalIntervalBorders() {
+    auto const current_time = _data_manager->getCurrentTime();
+
+    for (auto const & [key, _interval_config]: _interval_configs) {
+        if (!_interval_config.get()->is_visible) continue;
+        
+        // Only render if using Border plotting style
+        if (_interval_config.get()->plotting_style != IntervalPlottingStyle::Border) continue;
+
+        auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
+
+        // Get the timeframe for this interval series
+        auto interval_timeframe_key = _data_manager->getTimeFrame(key);
+        if (interval_timeframe_key.empty()) {
+            std::cerr << "Error: No timeframe found for digital interval series: " << key << std::endl;
+            continue;
+        }
+
+        // Check if an interval is present at the current frame
+        bool interval_present = false;
+        if (interval_timeframe_key != "time") {
+            // Need timeframe conversion
+            auto video_timeframe = _data_manager->getTime("time");
+            auto interval_timeframe = _data_manager->getTime(interval_timeframe_key);
+
+            if (!video_timeframe || !interval_timeframe) {
+                std::cerr << "Error: Could not get timeframes for interval conversion" << std::endl;
+                continue;
+            }
+
+            // Convert current video time to interval timeframe
+            auto video_time = video_timeframe->getTimeAtIndex(TimeIndex(current_time));
+            auto interval_index = interval_timeframe->getIndexAtTime(video_time);
+            interval_present = interval_series->isEventAtTime(interval_index);
+        } else {
+            // Direct comparison (no timeframe conversion needed)
+            interval_present = interval_series->isEventAtTime(current_time);
+        }
+
+        // If an interval is present, draw a border around the entire image
+        if (interval_present) {
+            auto plot_color = plot_color_with_alpha(_interval_config.get());
+            
+            // Get border thickness from config
+            int thickness = _interval_config->border_thickness;
+            
+            QPen border_pen(plot_color);
+            border_pen.setWidth(thickness);
+            
+            // Draw border as 4 rectangles around the edges of the canvas
+            // Top border
+            auto top_border = addRect(0, 0, _canvasWidth, thickness, border_pen, QBrush(plot_color));
+            _intervals.append(top_border);
+            
+            // Bottom border
+            auto bottom_border = addRect(0, _canvasHeight - thickness, _canvasWidth, thickness, border_pen, QBrush(plot_color));
+            _intervals.append(bottom_border);
+            
+            // Left border
+            auto left_border = addRect(0, 0, thickness, _canvasHeight, border_pen, QBrush(plot_color));
+            _intervals.append(left_border);
+            
+            // Right border
+            auto right_border = addRect(_canvasWidth - thickness, 0, thickness, _canvasHeight, border_pen, QBrush(plot_color));
+            _intervals.append(right_border);
         }
     }
 }

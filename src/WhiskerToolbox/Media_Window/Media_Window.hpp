@@ -209,6 +209,7 @@ private:
     void _clearPoints();
 
     void _plotDigitalIntervalSeries();
+    void _plotDigitalIntervalBorders();
     void _clearIntervals();
 
     void _plotTensorData();

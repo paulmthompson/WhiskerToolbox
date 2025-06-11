@@ -4,6 +4,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Media_Window/Media_Window.hpp"
+#include "StyleWidgets/BorderIntervalStyle_Widget.hpp"
 
 #include <iostream>
 
@@ -25,6 +26,7 @@ MediaInterval_Widget::MediaInterval_Widget(std::shared_ptr<DataManager> data_man
     
     // Initialize and setup sub-widgets
     ui->box_style_widget->setScene(_scene);
+    ui->border_style_widget->setScene(_scene);
 }
 
 MediaInterval_Widget::~MediaInterval_Widget() {
@@ -46,9 +48,17 @@ void MediaInterval_Widget::setActiveKey(std::string const & key) {
             // Set the plotting style and corresponding widget
             ui->plotting_style_combobox->setCurrentIndex(static_cast<int>(config.value()->plotting_style));
             
-            // Update the appropriate style widget
-            ui->box_style_widget->setActiveKey(key);
-            ui->box_style_widget->updateFromConfig(config.value());
+            // Update the appropriate style widget based on current style
+            switch (config.value()->plotting_style) {
+                case IntervalPlottingStyle::Box:
+                    ui->box_style_widget->setActiveKey(key);
+                    ui->box_style_widget->updateFromConfig(config.value());
+                    break;
+                case IntervalPlottingStyle::Border:
+                    ui->border_style_widget->setActiveKey(key);
+                    ui->border_style_widget->updateFromConfig(config.value());
+                    break;
+            }
         }
     }
 }
@@ -89,6 +99,10 @@ void MediaInterval_Widget::_setPlottingStyle(int style_index) {
                 case IntervalPlottingStyle::Box:
                     ui->box_style_widget->setActiveKey(_active_key);
                     ui->box_style_widget->updateFromConfig(interval_opts.value());
+                    break;
+                case IntervalPlottingStyle::Border:
+                    ui->border_style_widget->setActiveKey(_active_key);
+                    ui->border_style_widget->updateFromConfig(interval_opts.value());
                     break;
                 // Future styles can be added here
             }

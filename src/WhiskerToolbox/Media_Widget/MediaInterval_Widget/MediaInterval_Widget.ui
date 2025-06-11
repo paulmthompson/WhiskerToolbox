@@ -78,6 +78,11 @@
          <string>Box</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>Border</string>
+        </property>
+       </item>
       </widget>
      </item>
     </layout>
@@ -91,6 +96,13 @@
       <layout class="QVBoxLayout" name="box_style_layout">
        <item>
         <widget class="BoxIntervalStyle_Widget" name="box_style_widget" native="true"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="border_style_page">
+      <layout class="QVBoxLayout" name="border_style_layout">
+       <item>
+        <widget class="BorderIntervalStyle_Widget" name="border_style_widget" native="true"/>
        </item>
       </layout>
      </widget>
@@ -122,6 +134,12 @@
    <class>BoxIntervalStyle_Widget</class>
    <extends>QWidget</extends>
    <header>Media_Widget/MediaInterval_Widget/StyleWidgets/BoxIntervalStyle_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>BorderIntervalStyle_Widget</class>
+   <extends>QWidget</extends>
+   <header>Media_Widget/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

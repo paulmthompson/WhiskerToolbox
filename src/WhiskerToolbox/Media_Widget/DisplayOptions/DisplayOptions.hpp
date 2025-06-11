@@ -91,6 +91,7 @@ struct TensorDisplayOptions : public BaseDisplayOptions {
 
 enum class IntervalPlottingStyle {
     Box,        // Box indicators in corners
+    Border,     // Border around entire image
     // Future styles can be added here
 };
 
@@ -108,6 +109,9 @@ struct DigitalIntervalDisplayOptions : public BaseDisplayOptions {
     int box_size{20};                                     // Size of each interval box in pixels
     int frame_range{2};                                   // Number of frames before/after current (+/- range)
     IntervalLocation location{IntervalLocation::TopRight};// Location of interval boxes
+    
+    // Border style specific options
+    int border_thickness{5};                              // Thickness of border in pixels
 
     // OptionType getType() const override { return OptionType::DigitalInterval; }
 };
