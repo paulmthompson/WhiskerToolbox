@@ -138,6 +138,119 @@ p, li { white-space: pre-wrap; }
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="sequences_groupbox">
+     <property name="title">
+      <string>Video Sequences</string>
+     </property>
+     <layout class="QVBoxLayout" name="sequences_layout">
+      <item>
+       <widget class="QLabel" name="sequences_info_label">
+        <property name="text">
+         <string>Add multiple frame sequences to concatenate into one video. Leave empty to use single sequence mode.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>color: gray; font-style: italic;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="sequence_buttons_layout">
+        <item>
+         <widget class="QPushButton" name="add_sequence_button">
+          <property name="text">
+           <string>Add Sequence</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="remove_sequence_button">
+          <property name="text">
+           <string>Remove Selected</string>
+          </property>
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="button_spacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="sequences_table">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>150</height>
+         </size>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+        </property>
+        <property name="gridStyle">
+         <enum>Qt::PenStyle::SolidLine</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>Start Frame</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>End Frame</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Has Title</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Title Text</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Title Frames</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="mode_separator">
+     <property name="text">
+      <string>─── Single Sequence Mode (used when no sequences above) ───</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+     <property name="styleSheet">
+      <string>color: gray; font-style: italic;</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QSpinBox" name="start_frame_spinbox"/>

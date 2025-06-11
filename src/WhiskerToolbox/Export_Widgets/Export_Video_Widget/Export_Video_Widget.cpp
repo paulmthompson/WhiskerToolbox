@@ -14,6 +14,8 @@
 #include <QPainter>
 #include <QFont>
 #include <QFontMetrics>
+#include <QTableWidget>
+#include <QTableWidgetItem>
 
 #include <filesystem>
 #include <iostream>
@@ -46,6 +48,13 @@ Export_Video_Widget::Export_Video_Widget(
     connect(ui->start_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Export_Video_Widget::_updateDurationEstimate);
     connect(ui->end_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Export_Video_Widget::_updateDurationEstimate);
     connect(ui->frame_rate_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Export_Video_Widget::_updateDurationEstimate);
+    
+    // Connect sequence management buttons
+    connect(ui->add_sequence_button, &QPushButton::clicked, this, &Export_Video_Widget::_addSequence);
+    connect(ui->remove_sequence_button, &QPushButton::clicked, this, &Export_Video_Widget::_removeSequence);
+    connect(ui->sequences_table, &QTableWidget::itemSelectionChanged, this, [this]() {
+        ui->remove_sequence_button->setEnabled(ui->sequences_table->currentRow() >= 0);
+    });
 
     ui->start_frame_spinbox->setMaximum(_data_manager->getTime()->getTotalFrameCount());
     ui->end_frame_spinbox->setMaximum(_data_manager->getTime()->getTotalFrameCount());
@@ -66,22 +75,9 @@ void Export_Video_Widget::openWidget() {
 }
 
 void Export_Video_Widget::_exportVideo() {
-
-    auto start_num = ui->start_frame_spinbox->value();
-
-    auto end_num = ui->end_frame_spinbox->value();
-
-    if (end_num == -1) {
-        end_num = _data_manager->getTime()->getTotalFrameCount();
-    }
-
-    if (start_num >= end_num) {
-        std::cout << "Start frame must be less than end frame" << std::endl;
-    }
-
     auto filename = ui->output_filename->text().toStdString();
 
-    // If filename doens't have .mp4 as ending, add it
+    // If filename doesn't have .mp4 as ending, add it
     if (!std::regex_match(filename, std::regex(".*\\.mp4"))) {
         filename += ".mp4";
     }
@@ -100,29 +96,76 @@ void Export_Video_Widget::_exportVideo() {
         return;
     }
 
-    // Generate title sequence frames if enabled
-    if (ui->title_sequence_groupbox->isChecked()) {
-        int title_frame_count = ui->title_frames_spinbox->value();
-        QString title_text = ui->title_text_edit->toPlainText();
-        int font_size = ui->font_size_spinbox->value();
+    connect(_scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
+
+    if (!_video_sequences.empty()) {
+        // Multi-sequence mode
+        std::cout << "Exporting " << _video_sequences.size() << " sequences" << std::endl;
         
-        for (int i = 0; i < title_frame_count; i++) {
-            QImage title_frame = _generateTitleFrame(canvas_width, canvas_height, title_text, font_size);
+        for (size_t seq_idx = 0; seq_idx < _video_sequences.size(); ++seq_idx) {
+            const VideoSequence& sequence = _video_sequences[seq_idx];
             
-            // Use the same conversion process as canvas frames
-            _writeFrameToVideo(title_frame);
+            std::cout << "Processing sequence " << (seq_idx + 1) << ": frames " 
+                      << sequence.start_frame << "-" << sequence.end_frame << std::endl;
+            
+            // Generate title sequence for this sequence if enabled
+            if (sequence.has_title) {
+                std::cout << "Generating " << sequence.title_frames << " title frames for sequence " << (seq_idx + 1) << std::endl;
+                
+                for (int i = 0; i < sequence.title_frames; i++) {
+                    QImage title_frame = _generateTitleFrame(canvas_width, canvas_height, 
+                                                           sequence.title_text, sequence.title_font_size);
+                    _writeFrameToVideo(title_frame);
+                }
+            }
+            
+            // Export content frames for this sequence
+            for (int i = sequence.start_frame; i < sequence.end_frame; i++) {
+                _time_scrollbar->changeScrollBarValue(i);
+            }
+        }
+    } else {
+        // Single sequence mode (existing behavior)
+        auto start_num = ui->start_frame_spinbox->value();
+        auto end_num = ui->end_frame_spinbox->value();
+
+        if (end_num == -1) {
+            end_num = _data_manager->getTime()->getTotalFrameCount();
+        }
+
+        if (start_num >= end_num) {
+            std::cout << "Start frame must be less than end frame" << std::endl;
+            disconnect(_scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
+            _video_writer->release();
+            return;
+        }
+
+        std::cout << "Exporting single sequence: frames " << start_num << "-" << end_num << std::endl;
+
+        // Generate title sequence frames if enabled
+        if (ui->title_sequence_groupbox->isChecked()) {
+            int title_frame_count = ui->title_frames_spinbox->value();
+            QString title_text = ui->title_text_edit->toPlainText();
+            int font_size = ui->font_size_spinbox->value();
+            
+            std::cout << "Generating " << title_frame_count << " title frames" << std::endl;
+            
+            for (int i = 0; i < title_frame_count; i++) {
+                QImage title_frame = _generateTitleFrame(canvas_width, canvas_height, title_text, font_size);
+                _writeFrameToVideo(title_frame);
+            }
+        }
+
+        // Export content frames
+        for (int i = start_num; i < end_num; i++) {
+            _time_scrollbar->changeScrollBarValue(i);
         }
     }
 
-    connect(_scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
-
-    for (int i = start_num; i < end_num; i++) {
-        _time_scrollbar->changeScrollBarValue(i);
-    }
-
     disconnect(_scene, &Media_Window::canvasUpdated, this, &Export_Video_Widget::_handleCanvasUpdated);
-
     _video_writer->release();
+    
+    std::cout << "Video export completed: " << filename << std::endl;
 }
 
 void Export_Video_Widget::_handleCanvasUpdated(QImage const & canvasImage) {
@@ -169,47 +212,163 @@ void Export_Video_Widget::_writeFrameToVideo(QImage const & frame) {
     _video_writer->write(matBGR);
 }
 
-void Export_Video_Widget::_updateDurationEstimate() {
+void Export_Video_Widget::_addSequence() {
     int start_frame = ui->start_frame_spinbox->value();
     int end_frame = ui->end_frame_spinbox->value();
-    int frame_rate = ui->frame_rate_spinbox->value();
     
     // Handle end_frame of -1 (use total frame count)
     if (end_frame == -1) {
         end_frame = _data_manager->getTime()->getTotalFrameCount();
     }
     
-    // Calculate video duration
-    if (start_frame < end_frame && frame_rate > 0) {
-        int total_frames = end_frame - start_frame;
+    // Validate frame range
+    if (start_frame >= end_frame) {
+        std::cout << "Invalid frame range: start frame must be less than end frame" << std::endl;
+        return;
+    }
+    
+    // Create new sequence with current title settings
+    bool has_title = ui->title_sequence_groupbox->isChecked();
+    QString title_text = has_title ? ui->title_text_edit->toPlainText() : "";
+    int title_frames = has_title ? ui->title_frames_spinbox->value() : 100;
+    int title_font_size = has_title ? ui->font_size_spinbox->value() : 24;
+    
+    VideoSequence sequence(start_frame, end_frame, has_title, title_text, title_frames, title_font_size);
+    _video_sequences.push_back(sequence);
+    
+    _updateSequenceTable();
+    _updateDurationEstimate();
+    
+    std::cout << "Added sequence: frames " << start_frame << "-" << end_frame 
+              << (has_title ? " with title" : "") << std::endl;
+}
+
+void Export_Video_Widget::_removeSequence() {
+    int selected_row = ui->sequences_table->currentRow();
+    if (selected_row >= 0 && selected_row < static_cast<int>(_video_sequences.size())) {
+        _video_sequences.erase(_video_sequences.begin() + selected_row);
+        _updateSequenceTable();
+        _updateDurationEstimate();
         
-        // Add title sequence frames if enabled
-        if (ui->title_sequence_groupbox->isChecked()) {
-            total_frames += ui->title_frames_spinbox->value();
+        std::cout << "Removed sequence at row " << selected_row << std::endl;
+    }
+}
+
+void Export_Video_Widget::_updateSequenceTable() {
+    ui->sequences_table->setRowCount(static_cast<int>(_video_sequences.size()));
+    
+    for (int i = 0; i < static_cast<int>(_video_sequences.size()); ++i) {
+        const VideoSequence& seq = _video_sequences[i];
+        
+        // Start Frame
+        ui->sequences_table->setItem(i, 0, new QTableWidgetItem(QString::number(seq.start_frame)));
+        
+        // End Frame
+        ui->sequences_table->setItem(i, 1, new QTableWidgetItem(QString::number(seq.end_frame)));
+        
+        // Has Title
+        ui->sequences_table->setItem(i, 2, new QTableWidgetItem(seq.has_title ? "Yes" : "No"));
+        
+        // Title Text (truncated for display)
+        QString display_text = seq.title_text;
+        if (display_text.length() > 30) {
+            display_text = display_text.left(27) + "...";
+        }
+        ui->sequences_table->setItem(i, 3, new QTableWidgetItem(display_text));
+        
+        // Title Frames
+        ui->sequences_table->setItem(i, 4, new QTableWidgetItem(QString::number(seq.title_frames)));
+    }
+    
+    // Resize columns to content
+    ui->sequences_table->resizeColumnsToContents();
+}
+
+void Export_Video_Widget::_updateDurationEstimate() {
+    int frame_rate = ui->frame_rate_spinbox->value();
+    int total_frames = 0;
+    
+    if (!_video_sequences.empty()) {
+        // Multi-sequence mode
+        for (const VideoSequence& seq : _video_sequences) {
+            // Add content frames
+            if (seq.start_frame < seq.end_frame) {
+                total_frames += (seq.end_frame - seq.start_frame);
+                
+                // Add title frames if enabled for this sequence
+                if (seq.has_title) {
+                    total_frames += seq.title_frames;
+                }
+            }
         }
         
-        double duration_seconds = static_cast<double>(total_frames) / static_cast<double>(frame_rate);
-        
-        // Format duration nicely (show minutes if > 60 seconds)
-        QString duration_text;
-        if (duration_seconds >= 60.0) {
-            int minutes = static_cast<int>(duration_seconds / 60.0);
-            double remaining_seconds = duration_seconds - (minutes * 60.0);
-            duration_text = QString("Estimated Duration: %1m %2s (%3 frames)")
-                           .arg(minutes)
-                           .arg(remaining_seconds, 0, 'f', 1)
-                           .arg(total_frames);
+        if (total_frames > 0 && frame_rate > 0) {
+            double duration_seconds = static_cast<double>(total_frames) / static_cast<double>(frame_rate);
+            
+            QString duration_text;
+            if (duration_seconds >= 60.0) {
+                int minutes = static_cast<int>(duration_seconds / 60.0);
+                double remaining_seconds = duration_seconds - (minutes * 60.0);
+                duration_text = QString("Estimated Duration: %1m %2s (%3 frames, %4 sequences)")
+                               .arg(minutes)
+                               .arg(remaining_seconds, 0, 'f', 1)
+                               .arg(total_frames)
+                               .arg(_video_sequences.size());
+            } else {
+                duration_text = QString("Estimated Duration: %1 seconds (%2 frames, %3 sequences)")
+                               .arg(duration_seconds, 0, 'f', 1)
+                               .arg(total_frames)
+                               .arg(_video_sequences.size());
+            }
+            
+            ui->duration_estimate_label->setText(duration_text);
+            ui->duration_estimate_label->setStyleSheet("color: blue; font-weight: bold;");
         } else {
-            duration_text = QString("Estimated Duration: %1 seconds (%2 frames)")
-                           .arg(duration_seconds, 0, 'f', 1)
-                           .arg(total_frames);
+            ui->duration_estimate_label->setText("Estimated Duration: Invalid sequences");
+            ui->duration_estimate_label->setStyleSheet("color: red; font-weight: bold;");
+        }
+    } else {
+        // Single sequence mode (existing behavior)
+        int start_frame = ui->start_frame_spinbox->value();
+        int end_frame = ui->end_frame_spinbox->value();
+        
+        // Handle end_frame of -1 (use total frame count)
+        if (end_frame == -1) {
+            end_frame = _data_manager->getTime()->getTotalFrameCount();
         }
         
-        ui->duration_estimate_label->setText(duration_text);
-        ui->duration_estimate_label->setStyleSheet("color: blue; font-weight: bold;");
-    } else {
-        ui->duration_estimate_label->setText("Estimated Duration: Invalid frame range");
-        ui->duration_estimate_label->setStyleSheet("color: red; font-weight: bold;");
+        // Calculate video duration
+        if (start_frame < end_frame && frame_rate > 0) {
+            total_frames = end_frame - start_frame;
+            
+            // Add title sequence frames if enabled
+            if (ui->title_sequence_groupbox->isChecked()) {
+                total_frames += ui->title_frames_spinbox->value();
+            }
+            
+            double duration_seconds = static_cast<double>(total_frames) / static_cast<double>(frame_rate);
+            
+            // Format duration nicely (show minutes if > 60 seconds)
+            QString duration_text;
+            if (duration_seconds >= 60.0) {
+                int minutes = static_cast<int>(duration_seconds / 60.0);
+                double remaining_seconds = duration_seconds - (minutes * 60.0);
+                duration_text = QString("Estimated Duration: %1m %2s (%3 frames)")
+                               .arg(minutes)
+                               .arg(remaining_seconds, 0, 'f', 1)
+                               .arg(total_frames);
+            } else {
+                duration_text = QString("Estimated Duration: %1 seconds (%2 frames)")
+                               .arg(duration_seconds, 0, 'f', 1)
+                               .arg(total_frames);
+            }
+            
+            ui->duration_estimate_label->setText(duration_text);
+            ui->duration_estimate_label->setStyleSheet("color: blue; font-weight: bold;");
+        } else {
+            ui->duration_estimate_label->setText("Estimated Duration: Invalid frame range");
+            ui->duration_estimate_label->setStyleSheet("color: red; font-weight: bold;");
+        }
     }
 }
 
