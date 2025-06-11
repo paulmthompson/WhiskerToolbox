@@ -170,6 +170,43 @@ p, li { white-space: pre-wrap; }
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="frame_rate_layout">
+     <item>
+      <widget class="QSpinBox" name="frame_rate_spinbox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>120</number>
+       </property>
+       <property name="value">
+        <number>30</number>
+       </property>
+       <property name="suffix">
+        <string> fps</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="frame_rate_label">
+       <property name="text">
+        <string>Frame Rate</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="duration_estimate_label">
+     <property name="text">
+      <string>Estimated Duration: 0.0 seconds</string>
+     </property>
+     <property name="styleSheet">
+      <string>color: blue; font-weight: bold;</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLineEdit" name="output_filename">
      <property name="text">
       <string>output.mp4</string>

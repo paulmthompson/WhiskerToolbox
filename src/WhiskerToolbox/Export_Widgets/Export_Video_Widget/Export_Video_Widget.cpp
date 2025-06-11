@@ -37,14 +37,24 @@ Export_Video_Widget::Export_Video_Widget(
     connect(ui->title_text_edit, &QTextEdit::textChanged, this, &Export_Video_Widget::_updateTitlePreview);
     connect(ui->font_size_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Export_Video_Widget::_updateTitlePreview);
     connect(ui->title_sequence_groupbox, &QGroupBox::toggled, this, &Export_Video_Widget::_updateTitlePreview);
+    
+    // Connect title sequence settings for duration estimate updates
+    connect(ui->title_sequence_groupbox, &QGroupBox::toggled, this, &Export_Video_Widget::_updateDurationEstimate);
+    connect(ui->title_frames_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Export_Video_Widget::_updateDurationEstimate);
+    
+    // Connect frame controls for duration estimate updates
+    connect(ui->start_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Export_Video_Widget::_updateDurationEstimate);
+    connect(ui->end_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Export_Video_Widget::_updateDurationEstimate);
+    connect(ui->frame_rate_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &Export_Video_Widget::_updateDurationEstimate);
 
     ui->start_frame_spinbox->setMaximum(_data_manager->getTime()->getTotalFrameCount());
     ui->end_frame_spinbox->setMaximum(_data_manager->getTime()->getTotalFrameCount());
 
     _video_writer = std::make_unique<cv::VideoWriter>();
     
-    // Initialize title preview
+    // Initialize title preview and duration estimate
     _updateTitlePreview();
+    _updateDurationEstimate();
 }
 
 Export_Video_Widget::~Export_Video_Widget() {
@@ -81,7 +91,8 @@ void Export_Video_Widget::_exportVideo() {
     
     std::cout << "Exporting video with canvas dimensions: " << canvas_width << "x" << canvas_height << std::endl;
 
-    int const fps = 30;// Set the desired frame rate
+    int const fps = ui->frame_rate_spinbox->value();// Get frame rate from user control
+    std::cout << "Using frame rate: " << fps << " fps" << std::endl;
     _video_writer->open(filename, cv::VideoWriter::fourcc('X', '2', '6', '4'), fps, cv::Size(canvas_width, canvas_height), true);
 
     if (!_video_writer->isOpened()) {
@@ -156,6 +167,50 @@ void Export_Video_Widget::_writeFrameToVideo(QImage const & frame) {
     
     // Write the frame to the video
     _video_writer->write(matBGR);
+}
+
+void Export_Video_Widget::_updateDurationEstimate() {
+    int start_frame = ui->start_frame_spinbox->value();
+    int end_frame = ui->end_frame_spinbox->value();
+    int frame_rate = ui->frame_rate_spinbox->value();
+    
+    // Handle end_frame of -1 (use total frame count)
+    if (end_frame == -1) {
+        end_frame = _data_manager->getTime()->getTotalFrameCount();
+    }
+    
+    // Calculate video duration
+    if (start_frame < end_frame && frame_rate > 0) {
+        int total_frames = end_frame - start_frame;
+        
+        // Add title sequence frames if enabled
+        if (ui->title_sequence_groupbox->isChecked()) {
+            total_frames += ui->title_frames_spinbox->value();
+        }
+        
+        double duration_seconds = static_cast<double>(total_frames) / static_cast<double>(frame_rate);
+        
+        // Format duration nicely (show minutes if > 60 seconds)
+        QString duration_text;
+        if (duration_seconds >= 60.0) {
+            int minutes = static_cast<int>(duration_seconds / 60.0);
+            double remaining_seconds = duration_seconds - (minutes * 60.0);
+            duration_text = QString("Estimated Duration: %1m %2s (%3 frames)")
+                           .arg(minutes)
+                           .arg(remaining_seconds, 0, 'f', 1)
+                           .arg(total_frames);
+        } else {
+            duration_text = QString("Estimated Duration: %1 seconds (%2 frames)")
+                           .arg(duration_seconds, 0, 'f', 1)
+                           .arg(total_frames);
+        }
+        
+        ui->duration_estimate_label->setText(duration_text);
+        ui->duration_estimate_label->setStyleSheet("color: blue; font-weight: bold;");
+    } else {
+        ui->duration_estimate_label->setText("Estimated Duration: Invalid frame range");
+        ui->duration_estimate_label->setStyleSheet("color: red; font-weight: bold;");
+    }
 }
 
 QImage Export_Video_Widget::_generateTitleFrame(int width, int height, QString const & text, int font_size) {

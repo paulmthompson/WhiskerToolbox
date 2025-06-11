@@ -100,6 +100,8 @@ set(EXTRA_DLLS
         "${CMAKE_BINARY_DIR}/liblapack.dll"
         "${CMAKE_BINARY_DIR}/libgcc_s_seh-1.dll"
         "${CMAKE_BINARY_DIR}/libgfortran-5.dll"
+        "${CMAKE_BINARY_DIR}/libquadmath-0.dll"
+        "${CMAKE_BINARY_DIR}/libwinpthread-1.dll"
 )
 
 set(TORCH_DLLS
