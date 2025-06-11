@@ -14,6 +14,18 @@ install(TARGETS DataManager
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
+install(TARGETS DataViewer
+        BUNDLE DESTINATION .
+        LIBRARY
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
 
 install(TARGETS WhiskerToolbox
         BUNDLE DESTINATION .
@@ -85,6 +97,7 @@ set(EXTRA_DLLS
         "${CMAKE_BINARY_DIR}/szip.dll"
         "${CMAKE_BINARY_DIR}/liblzma.dll"
         "${CMAKE_BINARY_DIR}/openblas.dll"
+        "${CMAKE_BINARY_DIR}/liblapack.dll"
 )
 
 set(TORCH_DLLS

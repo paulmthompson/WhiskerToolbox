@@ -11,8 +11,8 @@
 #include "Tensors/Tensor_Data.hpp"
 
 #include "AnalogTimeSeries/IO/JSON/Analog_Time_Series_JSON.hpp"
-#include "DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.hpp"
 #include "DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
+#include "DigitalTimeSeries/IO/JSON/Digital_Event_Series_JSON.hpp"
 #include "DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp"
 #include "Lines/IO/JSON/Line_Data_JSON.hpp"
 #include "Masks/IO/JSON/Mask_Data_JSON.hpp"
@@ -64,7 +64,7 @@ bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> ti
     return true;
 }
 
-std::shared_ptr<TimeFrame>  DataManager::getTime() {
+std::shared_ptr<TimeFrame> DataManager::getTime() {
     return _times["time"];
 };
 
@@ -75,8 +75,7 @@ std::shared_ptr<TimeFrame> DataManager::getTime(std::string const & key) {
     return nullptr;
 };
 
-bool DataManager::removeTime(std::string const & key)
-{
+bool DataManager::removeTime(std::string const & key) {
     if (_times.find(key) == _times.end()) {
         std::cerr << "Error: could not find time key in DataManager: " << key << std::endl;
         return false;
@@ -113,7 +112,7 @@ std::string DataManager::getTimeFrame(std::string const & data_key) {
     if (_time_frames.find(data_key) == _time_frames.end()) {
         std::cerr << "Error: Data key "
                   << data_key
-                  << " exists, but not assigned to a TimeFrame" <<  std::endl;
+                  << " exists, but not assigned to a TimeFrame" << std::endl;
         return "";
     }
 
@@ -139,7 +138,8 @@ int DataManager::addCallbackToData(std::string const & key, ObserverCallback cal
 
         id = std::visit([callback](auto & x) {
             return x.get()->addObserver(callback);
-        }, data);
+        },
+                        data);
     }
 
     return id;
@@ -151,7 +151,8 @@ bool DataManager::removeCallbackFromData(std::string const & key, int callback_i
 
         std::visit([callback_id](auto & x) {
             x.get()->removeObserver(callback_id);
-        }, data);
+        },
+                   data);
 
         return true;
     }

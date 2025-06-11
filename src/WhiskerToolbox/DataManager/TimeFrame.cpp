@@ -2,10 +2,9 @@
 #include "TimeFrame.hpp"
 
 #include <cmath>
-#include <cstdint> // For int64_t
+#include <cstdint>// For int64_t
 
-TimeFrame::TimeFrame(std::vector<int> const & times)
-{
+TimeFrame::TimeFrame(std::vector<int> const & times) {
     _times = times;
     _total_frame_count = static_cast<int>(times.size());
 }

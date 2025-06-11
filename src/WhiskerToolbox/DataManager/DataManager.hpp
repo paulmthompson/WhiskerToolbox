@@ -92,8 +92,8 @@ public:
     */
     [[nodiscard]] std::vector<std::string> getTimeFrameKeys();
 
-    int64_t getCurrentTime() {return _current_time;};
-    void setCurrentTime(int64_t time) {_current_time = time;}
+    int64_t getCurrentTime() { return _current_time; };
+    void setCurrentTime(int64_t time) { _current_time = time; }
 
     using ObserverCallback = std::function<void()>;
 
@@ -239,7 +239,6 @@ public:
     }
 
 private:
-
     std::unordered_map<std::string, std::shared_ptr<TimeFrame>> _times;
 
     std::vector<ObserverCallback> _observers;
@@ -253,7 +252,7 @@ private:
 
     void _notifyObservers();
 
-    int64_t _current_time {0};
+    int64_t _current_time{0};
 };
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);

@@ -6,7 +6,8 @@
 #include <vector>
 
 struct TimeIndex {
-    explicit TimeIndex(int64_t val) : value(val) {}
+    explicit TimeIndex(int64_t val)
+        : value(val) {}
 
     // Getter for the underlying value
     [[nodiscard]] int64_t getValue() const {
@@ -14,17 +15,18 @@ struct TimeIndex {
     }
 
     // (Optional) Overload comparison operators if needed
-    bool operator==(TimeIndex const& other) const {
+    bool operator==(TimeIndex const & other) const {
         return value == other.value;
     }
 
-    bool operator!=(TimeIndex const& other) const {
+    bool operator!=(TimeIndex const & other) const {
         return value != other.value;
     }
 
-    bool operator<(TimeIndex const& other) const {
+    bool operator<(TimeIndex const & other) const {
         return value < other.value;
     }
+
 private:
     int64_t value;
 };
@@ -64,8 +66,8 @@ private:
  *         or the corresponding index in `destination_time_frame` if frames are different.
  */
 int64_t getTimeIndexForSeries(TimeIndex time_value_in_source_frame,
-                                 TimeFrame const * source_time_frame,
-                                 TimeFrame const * destination_time_frame);
+                              TimeFrame const * source_time_frame,
+                              TimeFrame const * destination_time_frame);
 
 
 #endif// TIMEFRAME_HPP
