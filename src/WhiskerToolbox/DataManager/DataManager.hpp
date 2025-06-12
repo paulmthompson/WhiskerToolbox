@@ -5,6 +5,7 @@
 
 #include "TimeFrame.hpp"
 #include "TimeFrame/TimeFrameV2.hpp"
+#include "TimeFrame/StrongTimeTypes.hpp"
 
 #include <filesystem>
 #include <functional>   // std::function
@@ -382,6 +383,113 @@ public:
         return _output_path;
     }
 
+    // ========== Enhanced AnalogTimeSeries Support ==========
+
+    /**
+    * @brief Create AnalogTimeSeries with ClockTicks timeframe 
+    *
+    * Convenience method that creates both the data and timeframe in one call.
+    * Ideal for neural/physiological data sampled at regular rates.
+    *
+    * @param data_key Unique key for the analog data
+    * @param timeframe_key Unique key for the timeframe (optional)
+    * @param analog_data Vector of analog values
+    * @param start_tick Starting clock tick
+    * @param sampling_rate_hz Sampling rate in Hz
+    * @param overwrite Whether to overwrite existing keys
+    * @return bool True if successfully created
+    */
+    bool createAnalogTimeSeriesWithClock(std::string const & data_key,
+                                        std::string const & timeframe_key,
+                                        std::vector<float> analog_data,
+                                        int64_t start_tick,
+                                        double sampling_rate_hz,
+                                        bool overwrite = false);
+
+    /**
+    * @brief Create AnalogTimeSeries with CameraFrameIndex timeframe
+    *
+    * Convenience method for data synchronized to camera frames.
+    * Useful for behavioral or imaging data.
+    *
+    * @param data_key Unique key for the analog data
+    * @param timeframe_key Unique key for the timeframe (optional)
+    * @param analog_data Vector of analog values
+    * @param frame_indices Vector of camera frame indices
+    * @param overwrite Whether to overwrite existing keys
+    * @return bool True if successfully created
+    */
+    bool createAnalogTimeSeriesWithCamera(std::string const & data_key,
+                                         std::string const & timeframe_key,
+                                         std::vector<float> analog_data,
+                                         std::vector<int64_t> frame_indices,
+                                         bool overwrite = false);
+
+    /**
+    * @brief Create AnalogTimeSeries with dense camera frames
+    *
+    * Convenience method for data from regularly sampled camera frames.
+    *
+    * @param data_key Unique key for the analog data
+    * @param timeframe_key Unique key for the timeframe
+    * @param analog_data Vector of analog values
+    * @param start_frame Starting camera frame index
+    * @param overwrite Whether to overwrite existing keys
+    * @return bool True if successfully created
+    */
+    bool createAnalogTimeSeriesWithDenseCamera(std::string const & data_key,
+                                              std::string const & timeframe_key,
+                                              std::vector<float> analog_data,
+                                              int64_t start_frame,
+                                              bool overwrite = false);
+
+    /**
+    * @brief Query analog data using any coordinate type (runtime type checking)
+    *
+    * This method allows you to query any AnalogTimeSeries regardless of its 
+    * coordinate type, as long as you provide matching coordinates.
+    *
+    * @param data_key Key of the AnalogTimeSeries to query
+    * @param start_coord Start coordinate (any coordinate type)
+    * @param end_coord End coordinate (any coordinate type)
+    * @return Vector of values in the specified range
+    * @throws std::runtime_error if data doesn't exist or coordinate types don't match
+    */
+    std::vector<float> queryAnalogData(std::string const & data_key,
+                                      TimeCoordinate start_coord,
+                                      TimeCoordinate end_coord);
+
+    /**
+    * @brief Query analog data and coordinates using any coordinate type
+    *
+    * @param data_key Key of the AnalogTimeSeries to query
+    * @param start_coord Start coordinate (any coordinate type)
+    * @param end_coord End coordinate (any coordinate type)
+    * @return Pair of coordinate vector and value vector
+    */
+    std::pair<std::vector<TimeCoordinate>, std::vector<float>> queryAnalogDataWithCoords(
+            std::string const & data_key,
+            TimeCoordinate start_coord,
+            TimeCoordinate end_coord);
+
+    /**
+    * @brief Get coordinate type information for an AnalogTimeSeries
+    *
+    * @param data_key Key of the AnalogTimeSeries
+    * @return String describing the coordinate type ("ClockTicks", "CameraFrameIndex", etc.)
+    */
+    std::string getAnalogCoordinateType(std::string const & data_key);
+
+    /**
+    * @brief Check if AnalogTimeSeries uses a specific coordinate type
+    *
+    * @tparam CoordinateType The coordinate type to check for
+    * @param data_key Key of the AnalogTimeSeries
+    * @return True if the series uses the specified coordinate type
+    */
+    template<typename CoordinateType>
+    bool analogUsesCoordinateType(std::string const & data_key);
+
 private:
     std::unordered_map<std::string, std::shared_ptr<TimeFrame>> _times;
 
@@ -401,10 +509,34 @@ private:
     void _notifyObservers();
 
     int64_t _current_time{0};
+
+    // Helper function for template method (implemented in .cpp)
+    bool analogUsesCoordinateTypeImpl(std::string const & data_key, std::string const & type_name);
 };
 
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
 
 std::string convert_data_type_to_string(DM_DataType type);
+
+// ========== Template implementations ==========
+
+template<typename CoordinateType>
+bool DataManager::analogUsesCoordinateType(std::string const & data_key) {
+    // Map coordinate types to string identifiers
+    std::string type_name;
+    if constexpr (std::is_same_v<CoordinateType, ClockTicks>) {
+        type_name = "ClockTicks";
+    } else if constexpr (std::is_same_v<CoordinateType, CameraFrameIndex>) {
+        type_name = "CameraFrameIndex";
+    } else if constexpr (std::is_same_v<CoordinateType, Seconds>) {
+        type_name = "Seconds";
+    } else if constexpr (std::is_same_v<CoordinateType, UncalibratedIndex>) {
+        type_name = "UncalibratedIndex";
+    } else {
+        return false; // Unknown coordinate type
+    }
+    
+    return analogUsesCoordinateTypeImpl(data_key, type_name);
+}
 
 #endif// DATAMANAGER_HPP

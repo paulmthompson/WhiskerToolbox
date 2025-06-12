@@ -1,4 +1,3 @@
-
 #include "DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -583,4 +582,158 @@ std::string convert_data_type_to_string(DM_DataType type) {
         default:
             return "unknown";
     }
+}
+
+// ========== Enhanced AnalogTimeSeries Support Implementation ==========
+
+bool DataManager::createAnalogTimeSeriesWithClock(std::string const & data_key,
+                                                  std::string const & timeframe_key,
+                                                  std::vector<float> analog_data,
+                                                  int64_t start_tick,
+                                                  double sampling_rate_hz,
+                                                  bool overwrite) {
+    // Create the clock timeframe
+    if (!createClockTimeFrame(timeframe_key, start_tick, 
+                             static_cast<int64_t>(analog_data.size()), 
+                             sampling_rate_hz, overwrite)) {
+        return false;
+    }
+
+    // Get the timeframe
+    auto timeframe_opt = getTimeV2(timeframe_key);
+    if (!timeframe_opt.has_value()) {
+        return false;
+    }
+
+    // Create the analog series
+    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data));
+    setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
+    return true;
+}
+
+bool DataManager::createAnalogTimeSeriesWithCamera(std::string const & data_key,
+                                                   std::string const & timeframe_key,
+                                                   std::vector<float> analog_data,
+                                                   std::vector<int64_t> frame_indices,
+                                                   bool overwrite) {
+    if (analog_data.size() != frame_indices.size()) {
+        std::cerr << "Error: analog data and frame indices must have same size" << std::endl;
+        return false;
+    }
+
+    // Create the camera timeframe
+    if (!createCameraTimeFrame(timeframe_key, std::move(frame_indices), overwrite)) {
+        return false;
+    }
+
+    // Get the timeframe
+    auto timeframe_opt = getTimeV2(timeframe_key);
+    if (!timeframe_opt.has_value()) {
+        return false;
+    }
+
+    // Create the analog series
+    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data));
+    setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
+    return true;
+}
+
+bool DataManager::createAnalogTimeSeriesWithDenseCamera(std::string const & data_key,
+                                                        std::string const & timeframe_key,
+                                                        std::vector<float> analog_data,
+                                                        int64_t start_frame,
+                                                        bool overwrite) {
+    // Create the dense camera timeframe
+    if (!createDenseCameraTimeFrame(timeframe_key, start_frame, 
+                                   static_cast<int64_t>(analog_data.size()), overwrite)) {
+        return false;
+    }
+
+    // Get the timeframe
+    auto timeframe_opt = getTimeV2(timeframe_key);
+    if (!timeframe_opt.has_value()) {
+        return false;
+    }
+
+    // Create the analog series
+    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data));
+    setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
+    return true;
+}
+
+std::vector<float> DataManager::queryAnalogData(std::string const & data_key,
+                                               TimeCoordinate start_coord,
+                                               TimeCoordinate end_coord) {
+    // Check if the data exists and is an AnalogTimeSeries
+    if (_data.find(data_key) == _data.end()) {
+        throw std::runtime_error("Data not found: " + data_key);
+    }
+
+    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(_data[data_key])) {
+        throw std::runtime_error("Data is not an AnalogTimeSeries: " + data_key);
+    }
+
+    auto series = std::get<std::shared_ptr<AnalogTimeSeries>>(_data[data_key]);
+    if (!series) {
+        throw std::runtime_error("AnalogTimeSeries is null: " + data_key);
+    }
+
+    return series->getDataInCoordinateRange(start_coord, end_coord);
+}
+
+std::pair<std::vector<TimeCoordinate>, std::vector<float>> DataManager::queryAnalogDataWithCoords(
+        std::string const & data_key,
+        TimeCoordinate start_coord,
+        TimeCoordinate end_coord) {
+    // Check if the data exists and is an AnalogTimeSeries
+    if (_data.find(data_key) == _data.end()) {
+        throw std::runtime_error("Data not found: " + data_key);
+    }
+
+    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(_data[data_key])) {
+        throw std::runtime_error("Data is not an AnalogTimeSeries: " + data_key);
+    }
+
+    auto series = std::get<std::shared_ptr<AnalogTimeSeries>>(_data[data_key]);
+    if (!series) {
+        throw std::runtime_error("AnalogTimeSeries is null: " + data_key);
+    }
+
+    return series->getDataAndCoordsInRange(start_coord, end_coord);
+}
+
+std::string DataManager::getAnalogCoordinateType(std::string const & data_key) {
+    // Check if the data exists and is an AnalogTimeSeries
+    if (_data.find(data_key) == _data.end()) {
+        return "not_found";
+    }
+
+    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(_data[data_key])) {
+        return "not_analog_timeseries";
+    }
+
+    auto series = std::get<std::shared_ptr<AnalogTimeSeries>>(_data[data_key]);
+    if (!series) {
+        return "null_series";
+    }
+
+    return series->getCoordinateType();
+}
+
+bool DataManager::analogUsesCoordinateTypeImpl(std::string const & data_key, std::string const & type_name) {
+    // Check if the data exists and is an AnalogTimeSeries
+    if (_data.find(data_key) == _data.end()) {
+        return false;
+    }
+
+    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(_data[data_key])) {
+        return false;
+    }
+
+    auto series = std::get<std::shared_ptr<AnalogTimeSeries>>(_data[data_key]);
+    if (!series) {
+        return false;
+    }
+
+    return series->getCoordinateType() == type_name;
 }

@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <map>
+#include <ranges>
 #include <random>
 #include <vector>
 

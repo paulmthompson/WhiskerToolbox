@@ -6,44 +6,74 @@
 #include <numeric>// std::iota
 #include <vector>
 
-AnalogTimeSeries::AnalogTimeSeries(std::map<int, float> analog_map) {
+AnalogTimeSeries::AnalogTimeSeries() :
+ _data(),
+ _time_storage(DenseTimeRange(0, 0)),
+ _timeframe_v2() {}
+
+AnalogTimeSeries::AnalogTimeSeries(std::map<int, float> analog_map) :
+ _data(),
+ _time_storage(DenseTimeRange(0, 0)),
+ _timeframe_v2() {
     setData(std::move(analog_map));
 }
 
-AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector) {
+AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector) :
+ _data(),
+ _time_storage(DenseTimeRange(0, 0)),
+ _timeframe_v2() {
     setData(std::move(analog_vector));
 }
 
-AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, std::vector<size_t> time_vector) {
+AnalogTimeSeries::AnalogTimeSeries(std::vector<float> analog_vector, std::vector<size_t> time_vector) :
+_data(),
+_time_storage(DenseTimeRange(0, 0)),
+_timeframe_v2() {
     setData(std::move(analog_vector), std::move(time_vector));
 }
 
 void AnalogTimeSeries::setData(std::vector<float> analog_vector) {
-    _data.clear();
     _data = std::move(analog_vector);
-    _time = std::vector<size_t>(_data.size());
-    std::iota(_time.begin(), _time.end(), 0);
+    // Use dense time storage for consecutive indices starting from 0
+    _time_storage = DenseTimeRange(0, _data.size());
 }
 
 void AnalogTimeSeries::setData(std::vector<float> analog_vector, std::vector<size_t> time_vector) {
-    _data.clear();
-    _time.clear();
     if (analog_vector.size() != time_vector.size()) {
         std::cerr << "Error: size of analog vector and time vector are not the same!" << std::endl;
+        return;
     }
+    
     _data = std::move(analog_vector);
-    _time = std::move(time_vector);
+    
+    // Check if we can use dense storage (consecutive indices)
+    bool is_dense = true;
+    if (!time_vector.empty()) {
+        size_t expected_value = time_vector[0];
+        for (size_t i = 0; i < time_vector.size(); ++i) {
+            if (time_vector[i] != expected_value + i) {
+                is_dense = false;
+                break;
+            }
+        }
+    }
+    
+    if (is_dense && !time_vector.empty()) {
+        _time_storage = DenseTimeRange(time_vector[0], time_vector.size());
+    } else {
+        _time_storage = SparseTimeIndices(std::move(time_vector));
+    }
 }
 
 void AnalogTimeSeries::setData(std::map<int, float> analog_map) {
     _data.clear();
-    _time.clear();
     _data = std::vector<float>();
-    _time = std::vector<size_t>();
+    auto time_storage = std::vector<size_t>();
     for (auto & [key, value]: analog_map) {
-        _time.push_back(key);
+        time_storage.push_back(key);
         _data.push_back(value);
     }
+    _time_storage = SparseTimeIndices(std::move(time_storage));
 }
 
 void AnalogTimeSeries::overwriteAtTimes(std::vector<float> & analog_data, std::vector<size_t> & time) {
@@ -51,10 +81,18 @@ void AnalogTimeSeries::overwriteAtTimes(std::vector<float> & analog_data, std::v
         std::cerr << "Analog data and time vectors must be the same size" << std::endl;
         return;
     }
+
+    auto indices = std::visit([](auto const & time_storage) -> std::vector<size_t> {
+        if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
+            return std::vector<size_t>(time_storage.count);
+        } else {
+            return time_storage.indices;
+        }
+    }, _time_storage);
     for (size_t i = 0; i < time.size(); ++i) {
-        auto it = std::find(_time.begin(), _time.end(), time[i]);
-        if (it != _time.end()) {
-            _data[std::distance(_time.begin(), it)] = analog_data[i];
+        auto it = std::find(indices.begin(), indices.end(), time[i]);
+        if (it != indices.end()) {
+            _data[std::distance(indices.begin(), it)] = analog_data[i];
         } else {
             std::cerr << "Time " << time[i] << " not found in time series" << std::endl;
         }
