@@ -5,6 +5,8 @@
 #include <iostream>
 #include <numeric>// std::iota
 #include <vector>
+#include <stdexcept>
+#include <span>
 
 AnalogTimeSeries::AnalogTimeSeries() :
  _data(),
@@ -270,4 +272,30 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
     }
 
     return previous_std_dev;
+}
+
+std::span<const float> AnalogTimeSeries::getDataSpanInCoordinateRange(TimeCoordinate start_coord, TimeCoordinate end_coord) const {
+    if (!_timeframe_v2.has_value()) {
+        throw std::runtime_error("No TimeFrameV2 associated with this AnalogTimeSeries");
+    }
+    return std::visit([&](auto const & timeframe_ptr) -> std::span<const float> {
+        using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
+        using FrameCoordType = typename FrameType::coordinate_type;
+        if (!std::holds_alternative<FrameCoordType>(start_coord) ||
+            !std::holds_alternative<FrameCoordType>(end_coord)) {
+            throw std::runtime_error("Coordinate type mismatch with TimeFrameV2. Expected: " + getCoordinateType());
+        }
+        auto start_typed = std::get<FrameCoordType>(start_coord);
+        auto end_typed = std::get<FrameCoordType>(end_coord);
+        int64_t start_idx = timeframe_ptr->getIndexAtTime(start_typed);
+        int64_t end_idx = timeframe_ptr->getIndexAtTime(end_typed);
+        if (start_idx > end_idx) std::swap(start_idx, end_idx);
+        // Clamp indices to valid range
+        start_idx = std::max<int64_t>(0, start_idx);
+        end_idx = std::min<int64_t>(_data.size() - 1, end_idx);
+        if (start_idx > end_idx || start_idx >= static_cast<int64_t>(_data.size())) {
+            return std::span<const float>(); // empty span
+        }
+        return std::span<const float>(&_data[start_idx], static_cast<size_t>(end_idx - start_idx + 1));
+    }, _timeframe_v2.value());
 }

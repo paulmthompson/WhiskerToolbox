@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <vector>
 #include <variant>
+#include <span>
 
 /**
  * @brief The AnalogTimeSeries class
@@ -435,6 +436,20 @@ public:
         }, _timeframe_v2.value());
     }
 
+    /**
+    * @brief Get a span (view) of data values in a time range using any coordinate type
+    *
+    * This method returns a std::span<const float> over the contiguous block of data
+    * corresponding to the given coordinate range. No data is copied.
+    *
+    * @param start_coord Start coordinate (any coordinate type)
+    * @param end_coord End coordinate (any coordinate type)
+    * @return std::span<const float> view into the data in the specified range
+    * @throws std::runtime_error if no TimeFrameV2 is associated or coordinate types don't match
+    * @note The returned span is valid as long as the AnalogTimeSeries is not modified.
+    */
+    std::span<const float> getDataSpanInCoordinateRange(TimeCoordinate start_coord, TimeCoordinate end_coord) const;
+
     // ========== Time Storage Optimization ==========
     
     /**
@@ -482,6 +497,15 @@ public:
     };
     
     using TimeStorage = std::variant<DenseTimeRange, SparseTimeIndices>;
+
+    /**
+    * @brief Get a const reference to the time storage variant (DenseTimeRange or SparseTimeIndices)
+    *
+    * This allows efficient access to the underlying time mapping without copying.
+    *
+    * @return const TimeStorage& (std::variant<DenseTimeRange, SparseTimeIndices>)
+    */
+    const TimeStorage& getTimeStorage() const noexcept { return _time_storage; }
 
 protected:
 private:
