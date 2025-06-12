@@ -5,6 +5,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
+#include "DataManager/Media/Media_Data.hpp"
 
 #include "Media_Window/Media_Window.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
@@ -55,11 +56,17 @@ Export_Video_Widget::Export_Video_Widget(
     connect(ui->sequences_table, &QTableWidget::itemSelectionChanged, this, [this]() {
         ui->remove_sequence_button->setEnabled(ui->sequences_table->currentRow() >= 0);
     });
+    
+    // Connect output size controls
+    connect(ui->reset_to_media_size_button, &QPushButton::clicked, this, &Export_Video_Widget::_resetToMediaSize);
 
     ui->start_frame_spinbox->setMaximum(_data_manager->getTime()->getTotalFrameCount());
     ui->end_frame_spinbox->setMaximum(_data_manager->getTime()->getTotalFrameCount());
 
     _video_writer = std::make_unique<cv::VideoWriter>();
+    
+    // Initialize output size to media dimensions
+    _resetToMediaSize();
     
     // Initialize title preview and duration estimate
     _updateTitlePreview();
@@ -82,14 +89,15 @@ void Export_Video_Widget::_exportVideo() {
         filename += ".mp4";
     }
 
-    // Get canvas dimensions at export time and use consistently throughout
-    auto [canvas_width, canvas_height] = _scene->getCanvasSize();
+    // Get configured output dimensions
+    int output_width = ui->output_width_spinbox->value();
+    int output_height = ui->output_height_spinbox->value();
     
-    std::cout << "Exporting video with canvas dimensions: " << canvas_width << "x" << canvas_height << std::endl;
+    std::cout << "Exporting video with output dimensions: " << output_width << "x" << output_height << std::endl;
 
     int const fps = ui->frame_rate_spinbox->value();// Get frame rate from user control
     std::cout << "Using frame rate: " << fps << " fps" << std::endl;
-    _video_writer->open(filename, cv::VideoWriter::fourcc('X', '2', '6', '4'), fps, cv::Size(canvas_width, canvas_height), true);
+    _video_writer->open(filename, cv::VideoWriter::fourcc('X', '2', '6', '4'), fps, cv::Size(output_width, output_height), true);
 
     if (!_video_writer->isOpened()) {
         std::cout << "Could not open the output video file for write" << std::endl;
@@ -113,7 +121,7 @@ void Export_Video_Widget::_exportVideo() {
                 std::cout << "Generating " << sequence.title_frames << " title frames for sequence " << (seq_idx + 1) << std::endl;
                 
                 for (int i = 0; i < sequence.title_frames; i++) {
-                    QImage title_frame = _generateTitleFrame(canvas_width, canvas_height, 
+                    QImage title_frame = _generateTitleFrame(output_width, output_height, 
                                                            sequence.title_text, sequence.title_font_size);
                     _writeFrameToVideo(title_frame);
                 }
@@ -151,7 +159,7 @@ void Export_Video_Widget::_exportVideo() {
             std::cout << "Generating " << title_frame_count << " title frames" << std::endl;
             
             for (int i = 0; i < title_frame_count; i++) {
-                QImage title_frame = _generateTitleFrame(canvas_width, canvas_height, title_text, font_size);
+                QImage title_frame = _generateTitleFrame(output_width, output_height, title_text, font_size);
                 _writeFrameToVideo(title_frame);
             }
         }
@@ -172,8 +180,14 @@ void Export_Video_Widget::_handleCanvasUpdated(QImage const & canvasImage) {
     auto current_time = _data_manager->getCurrentTime();
     std::cout << "Saving frame " << current_time << std::endl;
 
+    // Resize canvas image to output dimensions
+    int output_width = ui->output_width_spinbox->value();
+    int output_height = ui->output_height_spinbox->value();
+    
+    QImage resized_image = canvasImage.scaled(output_width, output_height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    
     // Use the same conversion process as title frames
-    _writeFrameToVideo(canvasImage);
+    _writeFrameToVideo(resized_image);
 }
 
 void Export_Video_Widget::_updateTitlePreview() {
@@ -370,6 +384,30 @@ void Export_Video_Widget::_updateDurationEstimate() {
             ui->duration_estimate_label->setStyleSheet("color: red; font-weight: bold;");
         }
     }
+}
+
+std::pair<int, int> Export_Video_Widget::_getMediaDimensions() const {
+    // Try to get media dimensions from DataManager
+    auto media_data = _data_manager->getData<MediaData>("media");
+    if (media_data != nullptr) {
+            int width = media_data->getWidth();
+            int height = media_data->getHeight();
+            std::cout << "Retrieved media dimensions: " << width << "x" << height << std::endl;
+        return std::make_pair(width, height);
+    }
+    
+    // Fallback to common video resolution
+    std::cout << "Using fallback dimensions: 1920x1080" << std::endl;
+    return std::make_pair(1920, 1080);
+}
+
+void Export_Video_Widget::_resetToMediaSize() {
+    auto [width, height] = _getMediaDimensions();
+    
+    ui->output_width_spinbox->setValue(width);
+    ui->output_height_spinbox->setValue(height);
+    
+    std::cout << "Reset output size to media dimensions: " << width << "x" << height << std::endl;
 }
 
 QImage Export_Video_Widget::_generateTitleFrame(int width, int height, QString const & text, int font_size) {

@@ -63,10 +63,12 @@ private slots:
     void _addSequence();
     void _removeSequence();
     void _updateSequenceTable();
+    void _resetToMediaSize();
 
 private:
     QImage _generateTitleFrame(int width, int height, QString const & text, int font_size);
     void _writeFrameToVideo(QImage const & frame);
+    std::pair<int, int> _getMediaDimensions() const;
 };
 
 
