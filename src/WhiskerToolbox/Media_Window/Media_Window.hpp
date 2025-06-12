@@ -1,23 +1,28 @@
 #ifndef MEDIA_WINDOW_HPP
 #define MEDIA_WINDOW_HPP
 
-#include "DataManager/Masks/masks.hpp"
 #include "DataManager/ImageSize/ImageSize.hpp"
+#include "DataManager/Masks/masks.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 
+#include <QGraphicsItem>
 #include <QGraphicsScene>
 #include <QtCore/QtGlobal>
-#include <QGraphicsItem>
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 class DataManager;
 class QGraphicsPixmapItem;
 class QImage;
 class MediaMask_Widget;
+class MediaText_Widget;
+
+// Forward declare the TextOverlay struct
+struct TextOverlay;
 
 int const default_width = 640;
 int const default_height = 480;
@@ -38,8 +43,8 @@ int const default_height = 480;
  */
 class Media_Window : public QGraphicsScene {
     Q_OBJECT
-    
-    friend class MediaMask_Widget;  // Allow access to preview functionality
+
+    friend class MediaMask_Widget;// Allow access to preview functionality
 
 public:
     explicit Media_Window(std::shared_ptr<DataManager> data_manager, QObject * parent = nullptr);
@@ -59,6 +64,9 @@ public:
 
     void addTensorDataToScene(std::string const & tensor_key);
     void removeTensorDataFromScene(std::string const & tensor_key);
+
+    // Text overlay methods
+    void setTextWidget(MediaText_Widget * text_widget);
 
     /**
      *
@@ -130,7 +138,7 @@ public:
      * @param mask_key The mask key to check
      * @return True if preview data exists for this key
      */
-    bool hasPreviewMaskData(std::string const& mask_key) const;
+    bool hasPreviewMaskData(std::string const & mask_key) const;
 
     /**
      * @brief Get preview mask data for a given key and time
@@ -138,7 +146,7 @@ public:
      * @param time The time index
      * @return Preview mask data if available, empty vector otherwise
      */
-    std::vector<Mask2D> getPreviewMaskData(std::string const& mask_key, int time) const;
+    std::vector<Mask2D> getPreviewMaskData(std::string const & mask_key, int time) const;
 
     /**
      * @brief Set preview mask data for a given key
@@ -146,9 +154,9 @@ public:
      * @param preview_data The preview mask data
      * @param active Whether preview is active
      */
-    void setPreviewMaskData(std::string const& mask_key, 
-                           std::vector<std::vector<Point2D<float>>> const& preview_data, 
-                           bool active);
+    void setPreviewMaskData(std::string const & mask_key,
+                            std::vector<std::vector<Point2D<float>>> const & preview_data,
+                            bool active);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
@@ -172,12 +180,13 @@ private:
     QVector<QGraphicsPathItem *> _mask_outlines;
     QVector<QGraphicsRectItem *> _intervals;
     QVector<QGraphicsPixmapItem *> _tensors;
+    QVector<QGraphicsTextItem *> _text_items;// Text overlay items
 
     bool _is_verbose{false};
     bool _drawing_mode{false};
     bool _is_drawing{false};
-    bool _show_hover_circle {false};
-    int _hover_circle_radius {10};
+    bool _show_hover_circle{false};
+    int _hover_circle_radius{10};
     QPointF _hover_position;
 
     std::vector<QPointF> _drawing_points;
@@ -191,6 +200,9 @@ private:
     // Preview data storage for masks
     std::unordered_map<std::string, std::vector<std::vector<Point2D<float>>>> _preview_mask_data;
     bool _mask_preview_active{false};
+
+    // Text overlay support
+    MediaText_Widget * _text_widget = nullptr;
 
     QImage::Format _getQImageFormat();
     void _createCanvasForData();
@@ -214,6 +226,9 @@ private:
 
     void _plotTensorData();
     void _clearTensors();
+
+    void _plotTextOverlays();
+    void _clearTextOverlays();
 
     void _plotHoverCircle();
 

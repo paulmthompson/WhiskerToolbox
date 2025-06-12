@@ -10,6 +10,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
+#include "Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -20,8 +21,10 @@
 
 
 #include <QElapsedTimer>
+#include <QFont>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsTextItem>
 #include <QImage>
 #include <QPainter>
 
@@ -198,9 +201,9 @@ void Media_Window::addTensorDataToScene(std::string const & tensor_key) {
 }
 
 void Media_Window::removeTensorDataFromScene(std::string const & tensor_key) {
-    auto item = _tensor_configs.find(tensor_key);
-    if (item != _tensor_configs.end()) {
-        _tensor_configs.erase(item);
+    auto tensorItem = _tensor_configs.find(tensor_key);
+    if (tensorItem != _tensor_configs.end()) {
+        _tensor_configs.erase(tensorItem);
     }
 
     UpdateCanvas();
@@ -215,6 +218,62 @@ void Media_Window::_clearTensors() {
         delete item;
     }
     _tensors.clear();
+}
+
+void Media_Window::setTextWidget(MediaText_Widget * text_widget) {
+    _text_widget = text_widget;
+}
+
+void Media_Window::_plotTextOverlays() {
+    if (!_text_widget) {
+        return;
+    }
+
+    // Get enabled text overlays from the widget
+    auto text_overlays = _text_widget->getEnabledTextOverlays();
+
+    for (auto const & overlay: text_overlays) {
+        if (!overlay.enabled) {
+            continue;
+        }
+
+        // Calculate position based on relative coordinates (0.0-1.0)
+        float x_pos = overlay.x_position * static_cast<float>(_canvasWidth);
+        float y_pos = overlay.y_position * static_cast<float>(_canvasHeight);
+
+        // Create text item
+        auto text_item = addText(overlay.text);
+
+        // Set font and size
+        QFont font = text_item->font();
+        font.setPointSize(overlay.font_size);
+        text_item->setFont(font);
+
+        // Set color
+        QColor text_color(overlay.color);
+        text_item->setDefaultTextColor(text_color);
+
+        // Handle orientation
+        if (overlay.orientation == TextOrientation::Vertical) {
+            text_item->setRotation(90.0);// Rotate 90 degrees for vertical text
+        }
+
+        // Set position
+        text_item->setPos(x_pos, y_pos);
+
+        // Add to our collection for cleanup
+        _text_items.append(text_item);
+    }
+}
+
+void Media_Window::_clearTextOverlays() {
+    for (auto text_item: _text_items) {
+        removeItem(text_item);
+    }
+    for (auto text_item: _text_items) {
+        delete text_item;
+    }
+    _text_items.clear();
 }
 
 void Media_Window::LoadFrame(int frame_id) {
@@ -236,6 +295,7 @@ void Media_Window::UpdateCanvas() {
     _clearMaskOutlines();
     _clearIntervals();
     _clearTensors();
+    _clearTextOverlays();
 
     //_convertNewMediaToQImage();
     auto _media = _data_manager->getData<MediaData>("media");
@@ -265,10 +325,12 @@ void Media_Window::UpdateCanvas() {
     _plotPointData();
 
     _plotDigitalIntervalSeries();
-    
+
     _plotDigitalIntervalBorders();
 
     _plotTensorData();
+
+    _plotTextOverlays();
 
     if (_show_hover_circle) {
         _plotHoverCircle();
@@ -843,7 +905,7 @@ void Media_Window::_plotDigitalIntervalSeries() {
 
     for (auto const & [key, _interval_config]: _interval_configs) {
         if (!_interval_config.get()->is_visible) continue;
-        
+
         // Only render if using Box plotting style
         if (_interval_config.get()->plotting_style != IntervalPlottingStyle::Box) continue;
 
@@ -944,7 +1006,7 @@ void Media_Window::_plotDigitalIntervalBorders() {
 
     for (auto const & [key, _interval_config]: _interval_configs) {
         if (!_interval_config.get()->is_visible) continue;
-        
+
         // Only render if using Border plotting style
         if (_interval_config.get()->plotting_style != IntervalPlottingStyle::Border) continue;
 
@@ -981,26 +1043,26 @@ void Media_Window::_plotDigitalIntervalBorders() {
         // If an interval is present, draw a border around the entire image
         if (interval_present) {
             auto plot_color = plot_color_with_alpha(_interval_config.get());
-            
+
             // Get border thickness from config
             int thickness = _interval_config->border_thickness;
-            
+
             QPen border_pen(plot_color);
             border_pen.setWidth(thickness);
-            
+
             // Draw border as 4 rectangles around the edges of the canvas
             // Top border
             auto top_border = addRect(0, 0, _canvasWidth, thickness, border_pen, QBrush(plot_color));
             _intervals.append(top_border);
-            
+
             // Bottom border
             auto bottom_border = addRect(0, _canvasHeight - thickness, _canvasWidth, thickness, border_pen, QBrush(plot_color));
             _intervals.append(bottom_border);
-            
+
             // Left border
             auto left_border = addRect(0, 0, thickness, _canvasHeight, border_pen, QBrush(plot_color));
             _intervals.append(left_border);
-            
+
             // Right border
             auto right_border = addRect(_canvasWidth - thickness, 0, thickness, _canvasHeight, border_pen, QBrush(plot_color));
             _intervals.append(right_border);

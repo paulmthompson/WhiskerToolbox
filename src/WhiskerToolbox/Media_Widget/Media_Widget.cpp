@@ -3,11 +3,11 @@
 #include "ui_Media_Widget.h"
 
 #include "DataManager/DataManager.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/ImageSize/ImageSize.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
@@ -16,12 +16,14 @@
 #define slots Q_SLOTS
 
 
+#include "Collapsible_Widget/Section.hpp"
+#include "Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp"
 #include "Media_Widget/MediaLine_Widget/MediaLine_Widget.hpp"
 #include "Media_Widget/MediaMask_Widget/MediaMask_Widget.hpp"
 #include "Media_Widget/MediaPoint_Widget/MediaPoint_Widget.hpp"
-#include "Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp"
-#include "Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp"
 #include "Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp"
+#include "Media_Widget/MediaTensor_Widget/MediaTensor_Widget.hpp"
+#include "Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.hpp"
 #include "Media_Window/Media_Window.hpp"
 
 
@@ -31,18 +33,29 @@ Media_Widget::Media_Widget(QWidget * parent)
     ui->setupUi(this);
 
     // Configure splitter behavior
-    ui->splitter->setStretchFactor(0, 0);  // Left panel (scroll area) doesn't stretch
-    ui->splitter->setStretchFactor(1, 1);  // Right panel (graphics view) stretches
-    
+    ui->splitter->setStretchFactor(0, 0);// Left panel (scroll area) doesn't stretch
+    ui->splitter->setStretchFactor(1, 1);// Right panel (graphics view) stretches
+
     // Set initial sizes: 200px for left panel, rest for canvas
     ui->splitter->setSizes({300, 563});
-    
+
     // Set collapsible behavior
-    ui->splitter->setCollapsible(0, false);  // Prevent left panel from collapsing
-    ui->splitter->setCollapsible(1, false);  // Prevent canvas from collapsing
-    
+    ui->splitter->setCollapsible(0, false);// Prevent left panel from collapsing
+    ui->splitter->setCollapsible(1, false);// Prevent canvas from collapsing
+
     // Connect splitter moved signal to update canvas size
     connect(ui->splitter, &QSplitter::splitterMoved, this, &Media_Widget::_updateCanvasSize);
+
+    // Create text overlay section
+    _text_section = new Section(this, "Text Overlays");
+    _text_widget = new MediaText_Widget(this);
+    _text_section->setContentLayout(*new QVBoxLayout());
+    _text_section->layout()->addWidget(_text_widget);
+    _text_section->autoSetContentLayout();
+
+    // Add text section to the vertical layout in scroll area
+    // Insert before the feature table widget (at index 0, after the Zoom button)
+    ui->verticalLayout->insertWidget(1, _text_section);
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &Media_Widget::_featureSelected);
 
@@ -63,7 +76,7 @@ void Media_Widget::updateMedia() {
 
     ui->graphicsView->setScene(_scene);
     ui->graphicsView->show();
-    
+
     _updateCanvasSize();
 }
 
@@ -82,6 +95,9 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     ui->stackedWidget->addWidget(new MediaTensor_Widget(_data_manager, _scene));
     ui->stackedWidget->addWidget(new MediaProcessing_Widget(_data_manager, _scene));
 
+    // Connect text widget to scene if both are available
+    _connectTextWidgetToScene();
+
     _data_manager->addObserver([this]() {
         _createOptions();
     });
@@ -90,7 +106,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 void Media_Widget::_createOptions() {
     // Setup line data
     auto line_keys = _data_manager->getKeys<LineData>();
-    for (auto line_key : line_keys) {
+    for (auto line_key: line_keys) {
         auto opts = _scene->getLineConfig(line_key);
         if (opts.has_value()) continue;
 
@@ -99,7 +115,7 @@ void Media_Widget::_createOptions() {
 
     // Setup mask data
     auto mask_keys = _data_manager->getKeys<MaskData>();
-    for (auto mask_key : mask_keys) {
+    for (auto mask_key: mask_keys) {
         auto opts = _scene->getMaskConfig(mask_key);
         if (opts.has_value()) continue;
 
@@ -108,29 +124,41 @@ void Media_Widget::_createOptions() {
 
     // Setup point data
     auto point_keys = _data_manager->getKeys<PointData>();
-    for (auto point_key : point_keys) {
+    for (auto point_key: point_keys) {
         auto opts = _scene->getPointConfig(point_key);
         if (opts.has_value()) continue;
 
         _scene->addPointDataToScene(point_key);
     }
-    
+
     // Setup digital interval data
     auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
-    for (auto interval_key : interval_keys) {
+    for (auto interval_key: interval_keys) {
         auto opts = _scene->getIntervalConfig(interval_key);
         if (opts.has_value()) continue;
 
         _scene->addDigitalIntervalSeries(interval_key);
     }
-    
+
     // Setup tensor data
     auto tensor_keys = _data_manager->getKeys<TensorData>();
-    for (auto tensor_key : tensor_keys) {
+    for (auto tensor_key: tensor_keys) {
         auto opts = _scene->getTensorConfig(tensor_key);
         if (opts.has_value()) continue;
 
         _scene->addTensorDataToScene(tensor_key);
+    }
+}
+
+void Media_Widget::_connectTextWidgetToScene() {
+    if (_scene && _text_widget) {
+        _scene->setTextWidget(_text_widget);
+
+        // Connect text widget signals to update canvas when overlays change
+        connect(_text_widget, &MediaText_Widget::textOverlayAdded, _scene, &Media_Window::UpdateCanvas);
+        connect(_text_widget, &MediaText_Widget::textOverlayRemoved, _scene, &Media_Window::UpdateCanvas);
+        connect(_text_widget, &MediaText_Widget::textOverlayUpdated, _scene, &Media_Window::UpdateCanvas);
+        connect(_text_widget, &MediaText_Widget::textOverlaysCleared, _scene, &Media_Window::UpdateCanvas);
     }
 }
 
@@ -199,13 +227,13 @@ void Media_Widget::_updateCanvasSize() {
     if (_scene) {
         int width = ui->graphicsView->width();
         int height = ui->graphicsView->height();
-        
+
         std::cout << "Updating canvas size to: " << width << "x" << height << std::endl;
-        
+
         _scene->setCanvasSize(
                 ImageSize{width, height});
         _scene->UpdateCanvas();
-        
+
         // Ensure the view fits the scene properly
         ui->graphicsView->setSceneRect(0, 0, width, height);
         ui->graphicsView->fitInView(0, 0, width, height, Qt::IgnoreAspectRatio);
@@ -308,17 +336,16 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             _scene->UpdateCanvas();
         }));
     } else {
-        for (auto callback_id : _callback_ids[feature_key]) {
+        for (auto callback_id: _callback_ids[feature_key]) {
             _data_manager->removeCallbackFromData(feature_key, callback_id);
         }
         _callback_ids[feature_key].clear();
     }
-
 }
 
 void Media_Widget::setFeatureColor(std::string const & feature, std::string const & hex_color) {
     auto const type = _data_manager->getType(feature);
-    
+
     if (type == DM_DataType::Line) {
         auto opts = _scene->getLineConfig(feature);
         if (opts.has_value()) {
@@ -345,7 +372,7 @@ void Media_Widget::setFeatureColor(std::string const & feature, std::string cons
             opts.value()->hex_color = hex_color;
         }
     }
-    
+
     // Update the canvas with the new color
     _scene->UpdateCanvas();
 }
@@ -355,21 +382,21 @@ void Media_Widget::LoadFrame(int frame_id) {
     if (_scene) {
         _scene->LoadFrame(frame_id);
     }
-    
+
     // Then propagate the frame change to any active subwidgets
     // that need to respond to time changes
-    
+
     // Check if we have a MediaLine_Widget active in the stackedWidget
     int currentIndex = ui->stackedWidget->currentIndex();
-    if (currentIndex > 0) { // Index 0 is typically the empty widget
+    if (currentIndex > 0) {// Index 0 is typically the empty widget
         auto currentWidget = ui->stackedWidget->currentWidget();
-        
+
         // Check for each type of widget and propagate the frame change
-        auto lineWidget = dynamic_cast<MediaLine_Widget*>(currentWidget);
+        auto lineWidget = dynamic_cast<MediaLine_Widget *>(currentWidget);
         if (lineWidget) {
             lineWidget->LoadFrame(frame_id);
         }
-        
+
         // Add similar handling for other types of media subwidgets as needed
         // For example:
         // auto pointWidget = dynamic_cast<MediaPoint_Widget*>(currentWidget);

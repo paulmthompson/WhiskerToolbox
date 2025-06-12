@@ -6,6 +6,8 @@
 class DataManager;
 class MainWindow;
 class Media_Window;
+class MediaText_Widget;
+class Section;
 
 namespace Ui {
 class Media_Widget;
@@ -19,12 +21,15 @@ public:
     ~Media_Widget() override;
 
     void setDataManager(std::shared_ptr<DataManager> data_manager);
-    void setScene(Media_Window * scene) { _scene = scene; };
+    void setScene(Media_Window * scene) {
+        _scene = scene;
+        _connectTextWidgetToScene();
+    };
 
     void updateMedia();
 
     void setFeatureColor(std::string const & feature, std::string const & hex_color);
-    
+
     // Method to handle time changes and propagate them
     void LoadFrame(int frame_id);
 
@@ -37,7 +42,12 @@ private:
     Media_Window * _scene = nullptr;
     std::map<std::string, std::vector<int>> _callback_ids;
 
+    // Text overlay widgets
+    Section * _text_section = nullptr;
+    MediaText_Widget * _text_widget = nullptr;
+
     void _createOptions();
+    void _connectTextWidgetToScene();
 
 private slots:
     void _updateCanvasSize();

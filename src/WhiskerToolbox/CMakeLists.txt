@@ -222,6 +222,10 @@ set(PROJECT_SOURCES
         Media_Widget/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.cpp
         Media_Widget/MediaInterval_Widget/StyleWidgets/BorderIntervalStyle_Widget.ui
 
+        Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.hpp
+        Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.cpp
+        Media_Widget/MediaText_Widget/MediaText_Widget/MediaText_Widget.ui
+
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.hpp
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.cpp
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.ui
