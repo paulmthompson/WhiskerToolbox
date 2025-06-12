@@ -43,10 +43,10 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
     float const threshold = static_cast<float>(thresholdParams.thresholdValue);
     std::vector<float> events;
 
-    auto const & timestamps = analog_time_series->getTimeSeries();
     auto const & values = analog_time_series->getAnalogTimeSeries();
+    auto const & time_storage = analog_time_series->getTimeStorage();
 
-    if (timestamps.empty()) {
+    if (values.empty()) {
         if (progressCallback) {
             progressCallback(100);// No data to process, so 100% complete.
         }
@@ -54,7 +54,7 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
     }
 
     double last_ts = -thresholdParams.lockoutTime - 1.0;// Initialize to allow first event
-    size_t const total_samples = timestamps.size();
+    size_t const total_samples = values.size();
 
     for (size_t i = 0; i < total_samples; ++i) {
         bool event_detected = false;
@@ -79,10 +79,15 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
         }
 
         if (event_detected) {
+
+            auto timestamp = std::visit([i](auto const & time_storage) {
+                return time_storage.getTimeAtIndex(i);
+            }, time_storage);
+
             // Check if the event is not too close to the last one
-            if (static_cast<double>(timestamps[i]) - last_ts >= thresholdParams.lockoutTime) {
-                events.push_back(static_cast<float>(timestamps[i]));
-                last_ts = static_cast<double>(timestamps[i]);
+            if (static_cast<double>(timestamp) - last_ts >= thresholdParams.lockoutTime) {
+                events.push_back(static_cast<float>(timestamp));
+                last_ts = static_cast<double>(timestamp);
             }
         }
 
