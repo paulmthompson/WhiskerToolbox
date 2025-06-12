@@ -127,7 +127,6 @@ std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data, LineAng
 std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
                                              LineAngleParameters const * params,
                                              ProgressCallback progressCallback) {
-    auto analog_time_series = std::make_shared<AnalogTimeSeries>();
     std::map<int, float> angles;
 
     // Use default parameters if none provided
@@ -180,8 +179,7 @@ std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
         angles[line_and_time.time] = angle;
     }
 
-    analog_time_series->setData(angles);
-    return analog_time_series;
+    return std::make_shared<AnalogTimeSeries>(angles);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

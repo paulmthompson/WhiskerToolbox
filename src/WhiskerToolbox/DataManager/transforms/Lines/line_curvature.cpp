@@ -142,13 +142,12 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
         LineCurvatureParameters const * params,
         ProgressCallback progressCallback) {
 
-    auto analog_time_series = std::make_shared<AnalogTimeSeries>();
     std::map<int, float> curvatures_map;
 
     if (!line_data || !params) {
         std::cerr << "LineCurvature: Null LineData or parameters provided." << std::endl;
         progressCallback(100);    // Still call progress to complete
-        return analog_time_series;// Return empty series
+        return std::make_shared<AnalogTimeSeries>();// Return empty series
     }
 
     // Determine total number of time points for progress calculation
@@ -158,7 +157,7 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
     }
     if (total_time_points == 0) {
         progressCallback(100);
-        return analog_time_series;
+        return std::make_shared<AnalogTimeSeries>();
     }
 
     size_t processed_time_points = 0;
@@ -202,9 +201,8 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
         progressCallback(current_progress);
     }
 
-    analog_time_series->setData(curvatures_map);
     progressCallback(100);// Final progress update
-    return analog_time_series;
+    return std::make_shared<AnalogTimeSeries>(curvatures_map);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

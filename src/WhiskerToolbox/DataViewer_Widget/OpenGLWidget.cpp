@@ -626,7 +626,12 @@ void OpenGLWidget::drawAnalogSeries() {
         auto const & series = analog_data.series;
         auto const & data = series->getAnalogTimeSeries();
         auto const & data_time = series->getTimeSeries();
-        auto const & time_frame = analog_data.time_frame;
+        if (!series->hasTimeFrameV2()) {
+            continue;
+        }
+        //auto time_frame = series->getTimeFrameV2().value();
+        auto time_frame = analog_data.time_frame;
+
         auto const & display_options = analog_data.display_options;
 
         if (!display_options->is_visible) continue;

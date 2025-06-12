@@ -8,7 +8,6 @@
 #include <map>
 
 std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data) {
-    auto analog_time_series = std::make_shared<AnalogTimeSeries>();
     std::map<int, float> areas;
 
     for (auto const & mask_and_time: mask_data->getAllAsRange()) {
@@ -19,9 +18,7 @@ std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data) {
         areas[mask_and_time.time] = area;
     }
 
-    analog_time_series->setData(areas);
-
-    return analog_time_series;
+    return std::make_shared<AnalogTimeSeries>(areas);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

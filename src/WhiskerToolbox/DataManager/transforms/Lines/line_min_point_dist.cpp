@@ -123,13 +123,12 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data
                                                       PointData const * point_data,
                                                       ProgressCallback progressCallback) {
 
-    auto analog_time_series = std::make_shared<AnalogTimeSeries>();
     std::map<int, float> distances;
 
     if (!line_data || !point_data) {
         std::cerr << "LineMinPointDist: Null LineData or PointData provided." << std::endl;
         if (progressCallback) progressCallback(100);// Complete progress
-        return analog_time_series;
+        return std::make_shared<AnalogTimeSeries>();
     }
 
     // Get the image sizes to check if scaling is needed
@@ -152,7 +151,7 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data
 
     if (line_times.empty()) {
         if (progressCallback) progressCallback(100);
-        return analog_time_series;
+        return std::make_shared<AnalogTimeSeries>();
     }
 
     size_t total_time_points = line_times.size();
@@ -209,10 +208,8 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data
         }
     }
 
-    // Create the analog time series from the distances map
-    analog_time_series->setData(distances);
     if (progressCallback) progressCallback(100);// Final progress update
-    return analog_time_series;
+    return std::make_shared<AnalogTimeSeries>(distances);
 }
 
 float point_to_line_segment_distance2(

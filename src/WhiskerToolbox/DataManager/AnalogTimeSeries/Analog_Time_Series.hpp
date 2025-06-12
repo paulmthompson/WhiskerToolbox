@@ -29,12 +29,6 @@ public:
     AnalogTimeSeries(std::vector<float> analog_vector, std::vector<size_t> time_vector);
     explicit AnalogTimeSeries(std::map<int, float> analog_map);
 
-    void setData(std::vector<float> analog_vector);
-
-    void setData(std::vector<float> analog_vector, std::vector<size_t> time_vector);
-
-    void setData(std::map<int, float> analog_map);
-
     void overwriteAtTimes(std::vector<float> & analog_data, std::vector<size_t> & time);
 
     [[nodiscard]] float getDataAtIndex(size_t i) const { return _data[i]; };
@@ -514,6 +508,10 @@ private:
 
     // New TimeFrameV2 support
     std::optional<AnyTimeFrame> _timeframe_v2;
+
+    void setData(std::vector<float> analog_vector);
+    void setData(std::vector<float> analog_vector, std::vector<size_t> time_vector);
+    void setData(std::map<int, float> analog_map);
 };
 
 /**

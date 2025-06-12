@@ -173,18 +173,16 @@ std::shared_ptr<AnalogTimeSeries> hilbert_phase(
         HilbertPhaseParams const & phaseParams,
         ProgressCallback progressCallback) {
 
-    auto phase_series = std::make_shared<AnalogTimeSeries>();
-
     // Input validation
     if (!analog_time_series) {
         std::cerr << "hilbert_phase: Input AnalogTimeSeries is null" << std::endl;
-        return phase_series;
+        return std::make_shared<AnalogTimeSeries>();
     }
 
     auto const & timestamps = analog_time_series->getTimeSeries();
     if (timestamps.empty()) {
         std::cerr << "hilbert_phase: Input time series is empty" << std::endl;
-        return phase_series;
+        return std::make_shared<AnalogTimeSeries>();
     }
 
     if (progressCallback) {
@@ -232,17 +230,10 @@ std::shared_ptr<AnalogTimeSeries> hilbert_phase(
     }
 
     if (progressCallback) {
-        progressCallback(90);
-    }
-
-    // Set the data in the output time series
-    phase_series->setData(phase_output, output_timestamps);
-
-    if (progressCallback) {
         progressCallback(100);
     }
 
-    return phase_series;
+    return std::make_shared<AnalogTimeSeries>(phase_output, output_timestamps);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
