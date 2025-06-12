@@ -400,6 +400,138 @@ p, li { white-space: pre-wrap; }
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="audio_output_groupbox">
+     <property name="title">
+      <string>Audio Output</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <layout class="QVBoxLayout" name="audio_layout">
+      <item>
+       <widget class="QLabel" name="audio_description_label">
+        <property name="text">
+         <string>Generate audio clicks from digital event series aligned with video timeline.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>color: gray; font-style: italic;</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="audio_settings_layout">
+        <item>
+         <widget class="QSpinBox" name="audio_sample_rate_spinbox">
+          <property name="minimum">
+           <number>8000</number>
+          </property>
+          <property name="maximum">
+           <number>96000</number>
+          </property>
+          <property name="value">
+           <number>44100</number>
+          </property>
+          <property name="suffix">
+           <string> Hz</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="audio_sample_rate_label">
+          <property name="text">
+           <string>Audio Sample Rate</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="click_duration_spinbox">
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.050000000000000</double>
+          </property>
+          <property name="suffix">
+           <string> s</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="click_duration_label">
+          <property name="text">
+           <string>Click Duration</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="audio_sources_label">
+        <property name="text">
+         <string>Available Digital Event Series:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="audio_sources_table">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>120</height>
+         </size>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+        </property>
+        <property name="gridStyle">
+         <enum>Qt::PenStyle::SolidLine</enum>
+        </property>
+        <column>
+         <property name="text">
+          <string>Enabled</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Event Series Key</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Time Frame</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Event Count</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Volume</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Orientation::Vertical</enum>
