@@ -23,6 +23,7 @@
 #include "transforms/Masks/mask_area.hpp"
 
 #include "TimeFrame.hpp"
+#include "TimeFrame/TimeFrameV2.hpp"
 
 #include "nlohmann/json.hpp"
 #include "utils/string_manip.hpp"
@@ -419,7 +420,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                     auto opts = Loader::BinaryAnalogOptions{.file_path = file_path,
                                                             .header_size_bytes = static_cast<size_t>(header_size)};
-                    auto data = readBinaryFile<uint16_t>(opts);
+                    auto data = Loader::readBinaryFile<uint16_t>(opts);
 
                     auto digital_data = Loader::extractDigitalData(data, channel);
                     auto events = Loader::extractEvents(digital_data, transition);
@@ -442,7 +443,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
 
                     auto opts = Loader::BinaryAnalogOptions{.file_path = file_path,
                                                             .header_size_bytes = static_cast<size_t>(header_size)};
-                    auto data = readBinaryFile<uint16_t>(opts);
+                    auto data = Loader::readBinaryFile<uint16_t>(opts);
 
                     std::vector<int> t(data.size());
                     std::iota(std::begin(t), std::end(t), 0);
@@ -491,6 +492,72 @@ DM_DataType DataManager::getType(std::string const & key) const {
         return DM_DataType::Unknown;
     }
     return DM_DataType::Unknown;
+}
+
+// ========== TimeFrameV2 Implementation ==========
+
+bool DataManager::setTimeV2(std::string const & key, AnyTimeFrame timeframe, bool overwrite) {
+    if (_times_v2.find(key) != _times_v2.end()) {
+        if (overwrite) {
+            _times_v2[key] = std::move(timeframe);
+            return true;
+        } else {
+            std::cerr << "Error: TimeFrameV2 key already exists in DataManager: " << key << std::endl;
+            return false;
+        }
+    }
+
+    _times_v2[key] = std::move(timeframe);
+    return true;
+}
+
+std::optional<AnyTimeFrame> DataManager::getTimeV2(std::string const & key) {
+    if (_times_v2.find(key) != _times_v2.end()) {
+        return _times_v2[key];
+    }
+    return std::nullopt;
+}
+
+bool DataManager::removeTimeV2(std::string const & key) {
+    if (_times_v2.find(key) == _times_v2.end()) {
+        std::cerr << "Error: could not find TimeFrameV2 key in DataManager: " << key << std::endl;
+        return false;
+    }
+
+    auto it = _times_v2.find(key);
+    _times_v2.erase(it);
+    return true;
+}
+
+std::vector<std::string> DataManager::getTimeFrameV2Keys() {
+    std::vector<std::string> keys;
+    keys.reserve(_times_v2.size());
+    for (auto const & [key, value]: _times_v2) {
+        keys.push_back(key);
+    }
+    return keys;
+}
+
+bool DataManager::createClockTimeFrame(std::string const & key, int64_t start_tick,
+                                       int64_t num_samples, double sampling_rate_hz,
+                                       bool overwrite) {
+    auto clock_frame = TimeFrameUtils::createDenseClockTimeFrame(start_tick, num_samples, sampling_rate_hz);
+    AnyTimeFrame any_frame = clock_frame;
+    return setTimeV2(key, std::move(any_frame), overwrite);
+}
+
+bool DataManager::createCameraTimeFrame(std::string const & key, std::vector<int64_t> frame_indices,
+                                        bool overwrite) {
+    auto camera_frame = TimeFrameUtils::createSparseCameraTimeFrame(std::move(frame_indices));
+    AnyTimeFrame any_frame = camera_frame;
+    return setTimeV2(key, std::move(any_frame), overwrite);
+}
+
+bool DataManager::createDenseCameraTimeFrame(std::string const & key, int64_t start_frame,
+                                             int64_t num_frames, bool overwrite) {
+    auto camera_frame = TimeFrameUtils::createDenseCameraTimeFrame(start_frame, num_frames);
+    AnyTimeFrame any_frame = camera_frame;
+    return setTimeV2(key, std::move(any_frame), overwrite);
 }
 
 std::string convert_data_type_to_string(DM_DataType type) {

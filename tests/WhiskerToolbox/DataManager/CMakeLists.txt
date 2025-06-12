@@ -19,6 +19,10 @@ message(STATUS ${DATAMANAGER_TEST_SOURCES_TEMP})
 add_executable(test_data_manager
         test_data_manager.cpp
         test_time_frame.cpp
+        test_datamanager_timeframe_v2_integration.cpp
+
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/TimeFrame/StrongTimeTypes.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/TimeFrame/TimeFrameV2.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/Observer/Observer_Data.test.cpp
 

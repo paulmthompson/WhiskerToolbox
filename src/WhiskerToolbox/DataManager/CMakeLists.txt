@@ -54,6 +54,9 @@ set(DATAMANAGER_SOURCES
         Tensors/Tensor_Data.hpp
         Tensors/Tensor_Data.cpp
 
+        TimeFrame/StrongTimeTypes.hpp
+        TimeFrame/TimeFrameV2.hpp
+
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp
         loaders/binary_loaders.hpp

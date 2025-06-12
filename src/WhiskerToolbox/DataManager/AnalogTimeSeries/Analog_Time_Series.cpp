@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>// std::nan, std::sqrt
 #include <iostream>
-#include <numeric> // std::iota
+#include <numeric>// std::iota
 #include <vector>
 
 AnalogTimeSeries::AnalogTimeSeries(std::map<int, float> analog_map) {
@@ -134,9 +134,9 @@ float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end)
     return *std::max_element(data.begin() + start, data.begin() + end);
 }
 
-float calculate_std_dev_approximate(AnalogTimeSeries const & series, 
-                                   float sample_percentage, 
-                                   size_t min_sample_threshold) {
+float calculate_std_dev_approximate(AnalogTimeSeries const & series,
+                                    float sample_percentage,
+                                    size_t min_sample_threshold) {
     auto const & data = series.getAnalogTimeSeries();
     if (data.empty()) {
         return 0.0f;
@@ -144,7 +144,7 @@ float calculate_std_dev_approximate(AnalogTimeSeries const & series,
 
     size_t const data_size = data.size();
     size_t const target_sample_size = static_cast<size_t>(data_size * sample_percentage / 100.0f);
-    
+
     // Fall back to exact calculation if sample would be too small
     if (target_sample_size < min_sample_threshold) {
         return calculate_std_dev(series);
@@ -176,9 +176,9 @@ float calculate_std_dev_approximate(AnalogTimeSeries const & series,
 }
 
 float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
-                                size_t initial_sample_size,
-                                size_t max_sample_size,
-                                float convergence_tolerance) {
+                                 size_t initial_sample_size,
+                                 size_t max_sample_size,
+                                 float convergence_tolerance) {
     auto const & data = series.getAnalogTimeSeries();
     if (data.empty()) {
         return 0.0f;
@@ -217,8 +217,8 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
 
         // Check for convergence (skip first iteration)
         if (!first_iteration) {
-            float const relative_change = std::abs(current_std_dev - previous_std_dev) / 
-                                         std::max(current_std_dev, previous_std_dev);
+            float const relative_change = std::abs(current_std_dev - previous_std_dev) /
+                                          std::max(current_std_dev, previous_std_dev);
             if (relative_change < convergence_tolerance) {
                 return current_std_dev;
             }

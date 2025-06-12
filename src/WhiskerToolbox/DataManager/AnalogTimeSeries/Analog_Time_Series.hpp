@@ -2,9 +2,12 @@
 #define ANALOG_TIME_SERIES_HPP
 
 #include "Observer/Observer_Data.hpp"
+#include "TimeFrame/TimeFrameV2.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <map>
+#include <optional>
 #include <ranges>
 #include <vector>
 
@@ -50,7 +53,7 @@ public:
      * @see getDataInRange() for accessing data within a specific time range
      */
     [[nodiscard]] std::vector<float> const & getAnalogTimeSeries() const { return _data; };
-    
+
     /**
      * @brief Get a const reference to the time indices vector
      * 
@@ -69,9 +72,24 @@ public:
      */
     [[nodiscard]] std::vector<size_t> const & getTimeSeries() const { return _time; };
 
-    template<typename TransformFunc = std::identity>
-    auto getDataInRange(float start_time, float stop_time,
-                        TransformFunc && time_transform = {}) const {
+    auto getDataInRange(float start_time, float stop_time) const {
+        struct DataPoint {
+            size_t time_idx;
+            float value;
+        };
+
+        return std::views::iota(size_t{0}, getNumSamples()) |
+               std::views::filter([this, start_time, stop_time](size_t i) {
+                   auto transformed_time = static_cast<float>(getTimeAtIndex(i));
+                   return transformed_time >= start_time && transformed_time <= stop_time;
+               }) |
+               std::views::transform([this](size_t i) {
+                   return DataPoint{getTimeAtIndex(i), getDataAtIndex(i)};
+               });
+    }
+
+    template<typename TransformFunc>
+    auto getDataInRange(float start_time, float stop_time, TransformFunc time_transform) const {
         struct DataPoint {
             size_t time_idx;
             float value;
@@ -87,10 +105,23 @@ public:
                });
     }
 
-    template<typename TransformFunc = std::identity>
     std::pair<std::vector<size_t>, std::vector<float>> getDataVectorsInRange(
-            float start_time, float stop_time,
-            TransformFunc && time_transform = {}) const {
+            float start_time, float stop_time) const {
+        std::vector<size_t> times;
+        std::vector<float> values;
+
+        auto range = getDataInRange(start_time, stop_time);
+        for (auto const & point: range) {
+            times.push_back(point.time_idx);
+            values.push_back(point.value);
+        }
+
+        return {times, values};
+    }
+
+    template<typename TransformFunc>
+    std::pair<std::vector<size_t>, std::vector<float>> getDataVectorsInRange(
+            float start_time, float stop_time, TransformFunc time_transform) const {
         std::vector<size_t> times;
         std::vector<float> values;
 
@@ -103,10 +134,141 @@ public:
         return {times, values};
     }
 
+    // ========== TimeFrameV2 Support ==========
+
+    /**
+    * @brief Set a TimeFrameV2 reference for this data series
+    *
+    * Associates this AnalogTimeSeries with a strongly-typed TimeFrameV2,
+    * enabling type-safe time coordinate operations.
+    *
+    * @param timeframe The TimeFrameV2 variant to associate with this data
+    */
+    void setTimeFrameV2(AnyTimeFrame timeframe) {
+        _timeframe_v2 = std::move(timeframe);
+    }
+
+    /**
+    * @brief Get the TimeFrameV2 reference for this data series
+    *
+    * @return Optional TimeFrameV2 variant if set, nullopt otherwise
+    */
+    [[nodiscard]] std::optional<AnyTimeFrame> getTimeFrameV2() const {
+        return _timeframe_v2;
+    }
+
+    /**
+    * @brief Check if this series has a TimeFrameV2 reference
+    *
+    * @return True if a TimeFrameV2 is associated with this series
+    */
+    [[nodiscard]] bool hasTimeFrameV2() const {
+        return _timeframe_v2.has_value();
+    }
+
+    /**
+    * @brief Get data values in a time range using TimeFrameV2 coordinates
+    *
+    * This method uses the associated TimeFrameV2 to perform type-safe
+    * time coordinate queries. It works with any coordinate type.
+    *
+    * @tparam CoordinateType The time coordinate type (e.g., ClockTicks, CameraFrameIndex)
+    * @param start_coord Start coordinate in the TimeFrameV2's coordinate system
+    * @param end_coord End coordinate in the TimeFrameV2's coordinate system
+    * @return Vector of data values within the specified coordinate range
+    * @throws std::runtime_error if no TimeFrameV2 is associated or types don't match
+    */
+    template<typename CoordinateType>
+    std::vector<float> getDataInCoordinateRange(CoordinateType start_coord, CoordinateType end_coord) const {
+        if (!_timeframe_v2.has_value()) {
+            throw std::runtime_error("No TimeFrameV2 associated with this AnalogTimeSeries");
+        }
+
+        return std::visit([&](auto const & timeframe_ptr) -> std::vector<float> {
+            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
+            using FrameCoordType = typename FrameType::coordinate_type;
+
+            if constexpr (std::is_same_v<FrameCoordType, CoordinateType>) {
+                std::vector<float> result;
+
+                // Get the range of indices for the coordinate range
+                int64_t start_idx = timeframe_ptr->getIndexAtTime(start_coord);
+                int64_t end_idx = timeframe_ptr->getIndexAtTime(end_coord);
+
+                if (start_idx > end_idx) std::swap(start_idx, end_idx);
+
+                result.reserve(static_cast<size_t>(end_idx - start_idx + 1));
+
+                for (int64_t idx = start_idx; idx <= end_idx; ++idx) {
+                    if (idx >= 0 && static_cast<size_t>(idx) < _data.size()) {
+                        result.push_back(_data[static_cast<size_t>(idx)]);
+                    }
+                }
+
+                return result;
+            } else {
+                throw std::runtime_error("Coordinate type mismatch with TimeFrameV2");
+            }
+        },
+                          _timeframe_v2.value());
+    }
+
+    /**
+    * @brief Get data values and their coordinates in a time range
+    *
+    * Similar to getDataInCoordinateRange but returns both values and coordinates.
+    *
+    * @tparam CoordinateType The time coordinate type
+    * @param start_coord Start coordinate
+    * @param end_coord End coordinate
+    * @return Pair of coordinate vector and value vector
+    */
+    template<typename CoordinateType>
+    std::pair<std::vector<CoordinateType>, std::vector<float>> getDataAndCoordsInRange(
+            CoordinateType start_coord, CoordinateType end_coord) const {
+        if (!_timeframe_v2.has_value()) {
+            throw std::runtime_error("No TimeFrameV2 associated with this AnalogTimeSeries");
+        }
+
+        return std::visit([&](auto const & timeframe_ptr) -> std::pair<std::vector<CoordinateType>, std::vector<float>> {
+            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
+            using FrameCoordType = typename FrameType::coordinate_type;
+
+            if constexpr (std::is_same_v<FrameCoordType, CoordinateType>) {
+                std::vector<CoordinateType> coords;
+                std::vector<float> values;
+
+                // Get the range of indices for the coordinate range
+                int64_t start_idx = timeframe_ptr->getIndexAtTime(start_coord);
+                int64_t end_idx = timeframe_ptr->getIndexAtTime(end_coord);
+
+                if (start_idx > end_idx) std::swap(start_idx, end_idx);
+
+                coords.reserve(static_cast<size_t>(end_idx - start_idx + 1));
+                values.reserve(static_cast<size_t>(end_idx - start_idx + 1));
+
+                for (int64_t idx = start_idx; idx <= end_idx; ++idx) {
+                    if (idx >= 0 && static_cast<size_t>(idx) < _data.size()) {
+                        coords.push_back(timeframe_ptr->getTimeAtIndex(idx));
+                        values.push_back(_data[static_cast<size_t>(idx)]);
+                    }
+                }
+
+                return {coords, values};
+            } else {
+                throw std::runtime_error("Coordinate type mismatch with TimeFrameV2");
+            }
+        },
+                          _timeframe_v2.value());
+    }
+
 protected:
 private:
     std::vector<float> _data;
     std::vector<size_t> _time;
+
+    // New TimeFrameV2 support
+    std::optional<AnyTimeFrame> _timeframe_v2;
 };
 
 /**
@@ -192,9 +354,9 @@ float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end)
  * @param min_sample_threshold Minimum number of samples before falling back to exact calculation
  * @return float The approximate standard deviation
  */
-float calculate_std_dev_approximate(AnalogTimeSeries const & series, 
-                                   float sample_percentage = 0.1f, 
-                                   size_t min_sample_threshold = 1000);
+float calculate_std_dev_approximate(AnalogTimeSeries const & series,
+                                    float sample_percentage = 0.1f,
+                                    size_t min_sample_threshold = 1000);
 
 /**
  * @brief Calculate an approximate standard deviation using adaptive sampling
@@ -209,8 +371,8 @@ float calculate_std_dev_approximate(AnalogTimeSeries const & series,
  * @return float The approximate standard deviation
  */
 float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
-                                size_t initial_sample_size = 100,
-                                size_t max_sample_size = 10000,
-                                float convergence_tolerance = 0.01f);
+                                 size_t initial_sample_size = 100,
+                                 size_t max_sample_size = 10000,
+                                 float convergence_tolerance = 0.01f);
 
 #endif// ANALOG_TIME_SERIES_HPP

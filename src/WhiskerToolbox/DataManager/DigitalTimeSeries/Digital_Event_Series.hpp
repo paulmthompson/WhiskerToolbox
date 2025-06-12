@@ -36,17 +36,18 @@ public:
         notifyObservers();
     }
 
-    template<typename TransformFunc = std::identity>
-    auto getEventsInRange(float start_time, float stop_time,
-                          TransformFunc && time_transform = {}) const {
+    [[nodiscard]] auto getEventsInRange(float start_time, float stop_time) const {
+        return _data | std::views::filter([start_time, stop_time](float time) {
+                   return time >= start_time && time <= stop_time;
+               });
+    }
+
+    template<typename TransformFunc>
+    auto getEventsInRange(float start_time, float stop_time, TransformFunc time_transform) const {
         return _data | std::views::filter([start_time, stop_time, time_transform](float time) {
                    auto transformed_time = time_transform(time);
                    return transformed_time >= start_time && transformed_time <= stop_time;
                });
-    }
-
-    [[nodiscard]] auto getEventsInRange(float start_time, float stop_time) const {
-        return getEventsInRange(start_time, stop_time, std::identity{});
     }
 
     [[nodiscard]] auto getEventsInRange(TimeIndex start_index,
@@ -59,11 +60,26 @@ public:
         return getEventsInRange(start_time_idx, end_time_idx);
     };
 
-    template<typename TransformFunc = std::identity>
-    std::vector<float> getEventsAsVector(float start_time, float stop_time,
-                                         TransformFunc && time_transform = {}) const {
-        auto range = getEventsInRange(start_time, stop_time, time_transform);
-        return {std::ranges::begin(range), std::ranges::end(range)};
+    std::vector<float> getEventsAsVector(float start_time, float stop_time) const {
+        std::vector<float> result;
+        for (float time : _data) {
+            if (time >= start_time && time <= stop_time) {
+                result.push_back(time);
+            }
+        }
+        return result;
+    }
+
+    template<typename TransformFunc>
+    std::vector<float> getEventsAsVector(float start_time, float stop_time, TransformFunc time_transform) const {
+        std::vector<float> result;
+        for (float time : _data) {
+            auto transformed_time = time_transform(time);
+            if (transformed_time >= start_time && transformed_time <= stop_time) {
+                result.push_back(time);
+            }
+        }
+        return result;
     }
 
 private:
