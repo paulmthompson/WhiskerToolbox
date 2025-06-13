@@ -47,6 +47,8 @@ bool MaskAreaOperation::canApply(DataTypeVariant const & dataVariant) const {
 
 DataTypeVariant MaskAreaOperation::execute(DataTypeVariant const & dataVariant, TransformParametersBase const * transformParameters) {
 
+    static_cast<void>(transformParameters);
+
     // 1. Safely get pointer to the shared_ptr<MaskData> if variant holds it.
     auto const * ptr_ptr = std::get_if<std::shared_ptr<MaskData>>(&dataVariant);
 

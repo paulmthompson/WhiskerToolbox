@@ -44,6 +44,8 @@ until we have finished the most recent one.
 
 void TimeScrollBar::Slider_Drag(int newPos)
 {
+    static_cast<void>(newPos);
+
     auto media = _data_manager->getData<MediaData>("media");
     if (dynamic_cast<VideoData*>(media.get())) {
         auto current_frame = ui->horizontalScrollBar->sliderPosition();
@@ -64,7 +66,7 @@ void TimeScrollBar::Slider_Scroll(int newPos)
     _data_manager->setCurrentTime(frame_id);
     _updateFrameLabels(frame_id);
 
-    timeChanged(frame_id);
+    emit timeChanged(frame_id);
 }
 
 

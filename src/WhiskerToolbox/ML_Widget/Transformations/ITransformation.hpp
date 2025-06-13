@@ -40,7 +40,7 @@ public:
      * @param type The DM_DataType to check.
      * @return True if the transformation supports this data type, false otherwise.
      */
-    virtual bool isSupported(DM_DataType type) const = 0;
+    [[nodiscard]] virtual bool isSupported(DM_DataType type) const = 0;
 };
 
 #endif//ITRANSFORMATION_HPP

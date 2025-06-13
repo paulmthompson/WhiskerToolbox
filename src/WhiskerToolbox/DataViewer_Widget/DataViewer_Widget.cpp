@@ -181,6 +181,8 @@ void DataViewer_Widget::openWidget() {
 }
 
 void DataViewer_Widget::closeEvent(QCloseEvent * event) {
+    static_cast<void>(event);
+
     std::cout << "Close event detected" << std::endl;
 }
 
@@ -969,7 +971,7 @@ void DataViewer_Widget::autoArrangeVerticalSpacing() {
     // Trigger canvas update to show new positions
     ui->openGLWidget->updateCanvas(_data_manager->getCurrentTime());
 
-    int total_keys = analog_keys.size() + event_keys.size() + interval_keys.size();
+    auto total_keys = analog_keys.size() + event_keys.size() + interval_keys.size();
     std::cout << "DataViewer_Widget: Auto-arrange completed for " << total_keys << " series" << std::endl;
 }
 

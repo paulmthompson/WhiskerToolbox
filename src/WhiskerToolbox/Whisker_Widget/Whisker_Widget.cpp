@@ -119,6 +119,7 @@ void Whisker_Widget::openWidget() {
 }
 
 void Whisker_Widget::closeEvent(QCloseEvent * event) {
+    static_cast<void>(event);
     std::cout << "Close event detected" << std::endl;
 }
 
@@ -371,6 +372,9 @@ void Whisker_Widget::_openJaneliaConfig() {
 }
 
 void Whisker_Widget::LoadFrame(int frame_id) {
+
+    static_cast<void>(frame_id);
+
     if (_auto_dl) {
         _dlTraceButton();
     }

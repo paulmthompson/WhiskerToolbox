@@ -68,6 +68,8 @@ std::vector<Point2D<float>> order_line(
         int subsample,
         float tolerance) {
 
+    static_cast<void>(tolerance);
+
     // If there are no line pixels, return empty vector
     if (line_pixels.empty()) {
         return {};

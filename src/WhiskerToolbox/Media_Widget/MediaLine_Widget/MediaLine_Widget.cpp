@@ -145,12 +145,18 @@ MediaLine_Widget::~MediaLine_Widget() {
 }
 
 void MediaLine_Widget::showEvent(QShowEvent * event) {
+
+    static_cast<void>(event);
+
     std::cout << "Show Event" << std::endl;
-   connect(_scene, &Media_Window::leftClickMedia, this, &MediaLine_Widget::_clickedInVideo);
-   connect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
+    connect(_scene, &Media_Window::leftClickMedia, this, &MediaLine_Widget::_clickedInVideo);
+    connect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
 }
 
 void MediaLine_Widget::hideEvent(QHideEvent * event) {
+
+    static_cast<void>(event);
+
     std::cout << "Hide Event" << std::endl;
     disconnect(_scene, &Media_Window::leftClickMedia, this, &MediaLine_Widget::_clickedInVideo);
     disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
@@ -394,7 +400,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, int current
 }
 
 void MediaLine_Widget::_applyPolynomialFit(Line2D& line, int order) {
-    if (line.size() < order + 1) {
+    if (line.size() < static_cast<size_t>(order + 1)) {
         // Not enough points for the requested polynomial order
         return;
     }

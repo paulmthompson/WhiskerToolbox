@@ -473,8 +473,8 @@ QImage Export_Video_Widget::_generateTitleFrame(int width, int height, QString c
 
     // Calculate text positioning for center alignment
     QFontMetrics font_metrics(font);
-    QRect text_rect = font_metrics.boundingRect(QRect(0, 0, width, height),
-                                                Qt::AlignCenter | Qt::TextWordWrap, text);
+    //QRect text_rect = font_metrics.boundingRect(QRect(0, 0, width, height),
+    //                                            Qt::AlignCenter | Qt::TextWordWrap, text);
 
     // Draw the text centered
     painter.drawText(QRect(0, 0, width, height),
@@ -668,7 +668,12 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
     return audio_track;
 }
 
-void Export_Video_Widget::_writeAudioFile(std::string const & audio_filename, std::vector<float> const & audio_data, int sample_rate) const {
+void Export_Video_Widget::_writeAudioFile(std::string const & audio_filename,
+                                          std::vector<float> const & audio_data,
+                                          int sample_rate) const {
+
+    static_cast<void>(audio_filename);
+
     // For now, we'll output a simple informational message about audio generation
     // In a full implementation, you would use a library like libsndfile, Qt's audio classes,
     // or integrate with FFmpeg to create an actual audio file

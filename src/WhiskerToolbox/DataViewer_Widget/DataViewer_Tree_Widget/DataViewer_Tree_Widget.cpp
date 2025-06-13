@@ -215,6 +215,9 @@ void DataViewer_Tree_Widget::_onItemChanged(QTreeWidgetItem* item, int column) {
 }
 
 void DataViewer_Tree_Widget::_onItemClicked(QTreeWidgetItem* item, int column) {
+
+    static_cast<void>(column);
+
     if (!item) {
         std::cerr << "Error: null item in _onItemClicked" << std::endl;
         return;

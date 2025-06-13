@@ -100,6 +100,9 @@ void GrabCutTool::_mouseHandlerWrapper(int event, int x, int y, int flags, void*
  * @param flags Flags
  */
 void GrabCutTool::_mouseHandler(int event, int x, int y, int flags){
+
+    static_cast<void>(flags);
+
     if (event == cv::EVENT_LBUTTONDOWN){
         mouseDown(x, y);
     } else if (event == cv::EVENT_MOUSEMOVE){
@@ -148,6 +151,10 @@ void GrabCutTool::mouseMove(int x, int y){
  * @param y y coordinate of the mouse
  */
 void GrabCutTool::mouseUp(int x, int y){
+
+    static_cast<void>(x);
+    static_cast<void>(y);
+
     _drawing = false;
     if (_rect_stage){
         _rect_stage = false;

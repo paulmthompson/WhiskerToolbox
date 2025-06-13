@@ -71,6 +71,10 @@ void IntervalViewer_Widget::setActiveKey(std::string const & key) {
 }
 
 void IntervalViewer_Widget::_selectInterval(float time_coordinate, float canvas_y, QString const & series_info) {
+
+    static_cast<void>(canvas_y);
+    static_cast<void>(series_info);
+
     if (!_selection_enabled || _active_key.empty()) {
         return;
     }

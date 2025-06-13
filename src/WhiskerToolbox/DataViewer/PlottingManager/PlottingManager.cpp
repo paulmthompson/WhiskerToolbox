@@ -228,6 +228,9 @@ float PlottingManager::getGlobalVerticalScale() const {
 void PlottingManager::calculateDigitalIntervalSeriesAllocation(int series_index,
                                                                float & allocated_center,
                                                                float & allocated_height) const {
+
+    static_cast<void>(series_index);
+
     // Digital intervals use the full canvas height by default
     allocated_center = (viewport_y_min + viewport_y_max) * 0.5f;// Center of viewport
     allocated_height = viewport_y_max - viewport_y_min;         // Full viewport height

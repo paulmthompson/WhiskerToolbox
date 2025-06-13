@@ -517,7 +517,7 @@ void Media_Window::_plotLineData() {
 
             path.moveTo(QPointF(static_cast<float>(line_to_plot[0].x) * xAspect, static_cast<float>(line_to_plot[0].y) * yAspect));
 
-            for (int i = 1; i < line_to_plot.size(); i++) {
+            for (size_t i = 1; i < line_to_plot.size(); i++) {
                 auto dx = line_to_plot[i].x - line_to_plot[i - 1].x;
                 auto dy = line_to_plot[i].y - line_to_plot[i - 1].y;
                 auto d = std::sqrt((dx * dx) + (dy * dy));
@@ -562,7 +562,7 @@ void Media_Window::_plotLineData() {
                 QBrush emptyBrush(Qt::NoBrush);
 
                 // Start from the second point (first one is already shown as filled)
-                for (int i = 1; i < line_to_plot.size(); i++) {
+                for (size_t i = 1; i < line_to_plot.size(); i++) {
                     auto ellipse = addEllipse(
                             static_cast<float>(line_to_plot[i].x) * xAspect - 2.5,
                             static_cast<float>(line_to_plot[i].y) * yAspect - 2.5,
@@ -970,7 +970,7 @@ void Media_Window::_plotDigitalIntervalSeries() {
                 break;
         }
 
-        for (int i = 0; i < relative_times.size(); ++i) {
+        for (size_t i = 0; i < relative_times.size(); ++i) {
             int const video_time = current_time + relative_times[i];
             int query_time = video_time;// Default: no conversion needed
 
@@ -1085,10 +1085,10 @@ void Media_Window::_plotTensorData() {
 
         // Create a QImage from the tensor data
         QImage tensor_image(static_cast<int>(tensor_shape[1]), static_cast<int>(tensor_shape[0]), QImage::Format::Format_ARGB32);
-        for (int y = 0; y < tensor_shape[0]; ++y) {
-            for (int x = 0; x < tensor_shape[1]; ++x) {
+        for (size_t y = 0; y < tensor_shape[0]; ++y) {
+            for (size_t x = 0; x < tensor_shape[1]; ++x) {
                 float const value = tensor_slice[y * tensor_shape[1] + x];
-                int const pixel_value = static_cast<int>(value * 255);// Assuming the tensor values are normalized between 0 and 1
+                //int const pixel_value = static_cast<int>(value * 255);// Assuming the tensor values are normalized between 0 and 1
 
                 // Use the config color with alpha
                 QColor color(QString::fromStdString(config->hex_color));
@@ -1177,6 +1177,9 @@ bool Media_Window::hasPreviewMaskData(std::string const & mask_key) const {
 }
 
 std::vector<Mask2D> Media_Window::getPreviewMaskData(std::string const & mask_key, int time) const {
+
+    static_cast<void>(time);
+
     if (hasPreviewMaskData(mask_key)) {
         return _preview_mask_data.at(mask_key);
     }

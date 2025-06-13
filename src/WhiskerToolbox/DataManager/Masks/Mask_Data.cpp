@@ -103,6 +103,8 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
 }
 
 void MaskData::reserveCapacity(size_t capacity) {
+
+    static_cast<void>(capacity);
     // Note: std::map doesn't have a reserve function, but this is kept for API compatibility
     // The map will allocate nodes as needed
 }
