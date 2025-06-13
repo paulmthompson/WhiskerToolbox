@@ -32,11 +32,11 @@ public:
     virtual DataTypeVariant execute(DataTypeVariant const & dataVariant,
                                    TransformParametersBase const * transformParameters) = 0;
                                    
-    // New overload with progress reporting
+
     virtual DataTypeVariant execute(DataTypeVariant const & dataVariant,
                                    TransformParametersBase const * transformParameters,
                                    ProgressCallback progressCallback) {
-        // Default implementation ignores progress callback
+        static_cast<void>(progressCallback);
         return execute(dataVariant, transformParameters);
     }
 };

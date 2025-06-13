@@ -15,6 +15,9 @@ std::vector<uint8_t> MagicEraser::applyMagicEraser(std::vector<uint8_t> & image,
 }
 
 cv::Mat MagicEraser::_createBackgroundImage(std::vector<uint8_t> const & image, ImageSize const image_size) {
+
+    static_cast<void>(image_size);
+
     // Convert the input vector to a cv::Mat
     cv::Mat const inputImage{image, false};
 

@@ -4,6 +4,9 @@ arma::Mat<double> SquaredTransform::_applyTransformationLogic(
         arma::Mat<double> const & base_data,
         WhiskerTransformations::AppliedTransformation const & transform_config,
         std::string & error_message) const {
+
+    static_cast<void>(transform_config);
+
     if (base_data.empty()) {
         error_message = "Base data for SquaredTransform is empty.";
         return arma::Mat<double>();

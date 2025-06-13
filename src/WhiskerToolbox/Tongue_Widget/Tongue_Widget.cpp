@@ -40,6 +40,9 @@ void Tongue_Widget::openWidget() {
 }
 
 void Tongue_Widget::closeEvent(QCloseEvent *event) {
+
+    static_cast<void>(event);
+
     std::cout << "Close event detected" << std::endl;
 
 }

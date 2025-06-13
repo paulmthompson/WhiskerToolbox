@@ -8,7 +8,7 @@
 #include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
 #include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
 #include "MaskDilationWidget/MaskDilationWidget.hpp"
-#include "../../Collapsible_Widget/Section.hpp"
+#include "Collapsible_Widget/Section.hpp"
 
 #include <QVBoxLayout>
 #include <QLabel>
@@ -54,12 +54,18 @@ MediaMask_Widget::~MediaMask_Widget() {
 }
 
 void MediaMask_Widget::showEvent(QShowEvent * event) {
+
+    static_cast<void>(event);
+
     std::cout << "MediaMask_Widget Show Event" << std::endl;
     connect(_scene, &Media_Window::leftClickMedia, this, &MediaMask_Widget::_clickedInVideo);
     connect(_scene, &Media_Window::rightClickMedia, this, &MediaMask_Widget::_rightClickedInVideo);
 }
 
 void MediaMask_Widget::hideEvent(QHideEvent * event) {
+
+    static_cast<void>(event);
+
     std::cout << "MediaMask_Widget Hide Event" << std::endl;
     disconnect(_scene, &Media_Window::leftClickMedia, this, &MediaMask_Widget::_clickedInVideo);
     disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaMask_Widget::_rightClickedInVideo);

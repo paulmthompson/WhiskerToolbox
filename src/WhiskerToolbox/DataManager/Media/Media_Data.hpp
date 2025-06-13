@@ -64,9 +64,15 @@ public:
      */
     void LoadFrame(int frame_id);
 
-    [[nodiscard]] virtual std::string GetFrameID(int frame_id) const { return ""; };
+    [[nodiscard]] virtual std::string GetFrameID(int frame_id) const {
+        static_cast<void>(frame_id);
+        return "";
+    };
 
-    virtual int getFrameIndexFromNumber(int frame_id) { return 0; };
+    virtual int getFrameIndexFromNumber(int frame_id) {
+        static_cast<void>(frame_id);
+        return 0;
+    };
 
     std::vector<uint8_t> const & getRawData(int frame_number);
     void setRawData(std::vector<uint8_t> data) { _rawData = std::move(data); };
@@ -77,8 +83,12 @@ public:
     void removeProcess(std::string const & key);
 
 protected:
-    virtual void doLoadMedia(std::string const & name) {};
-    virtual void doLoadFrame(int frame_id) {};
+    virtual void doLoadMedia(std::string const & name) {
+        static_cast<void>(name);
+    };
+    virtual void doLoadFrame(int frame_id) {
+        static_cast<void>(frame_id);
+    };
 
 private:
     std::string _filename;

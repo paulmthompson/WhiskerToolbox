@@ -87,13 +87,17 @@ void DigitalEventSeries_Widget::setActiveKey(std::string key) {
     _calculateEvents();
 }
 
-void DigitalEventSeries_Widget::_changeDataTable(QModelIndex const & topLeft, QModelIndex const & bottomRight, QVector<int> const & roles) {
+void DigitalEventSeries_Widget::_changeDataTable(QModelIndex const & topLeft,
+                                                 QModelIndex const & bottomRight,
+                                                 QVector<int> const & roles) {
+    static_cast<void>(roles);
+
     auto events = _data_manager->getData<DigitalEventSeries>(_active_key);
     auto event_series = events->getEventSeries();
 
     for (int row = topLeft.row(); row <= bottomRight.row(); ++row) {
         float newTime = _event_table_model->getEvent(row);
-        if (row < event_series.size()) {
+        if (static_cast<size_t>(row) < event_series.size()) {
             events->removeEvent(event_series[row]);
             events->addEvent(newTime);
         }
@@ -142,6 +146,7 @@ void DigitalEventSeries_Widget::_removeEventButton() {
     if (!events) return;
 
     bool removed = events->removeEvent(static_cast<float>(current_time));
+    static_cast<void>(removed);
 
     _calculateEvents();
 }
@@ -151,7 +156,7 @@ void DigitalEventSeries_Widget::_handleCellClicked(QModelIndex const & index) {
         return;
     }
 
-    float frameNumber = _event_table_model->getEvent(index.row());
+    float const frameNumber = _event_table_model->getEvent(index.row());
 
     emit frameSelected(static_cast<int>(frameNumber));
 }

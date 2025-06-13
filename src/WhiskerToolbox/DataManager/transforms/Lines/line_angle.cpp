@@ -65,9 +65,12 @@ float calculate_direct_angle(Line2D const & line, float position, float referenc
 }
 
 // Calculate angle using polynomial parameterization
-float calculate_polynomial_angle(Line2D const & line, float position, int polynomial_order,
-                                 float reference_x, float reference_y) {
-    if (line.size() < polynomial_order + 1) {
+float calculate_polynomial_angle(Line2D const & line,
+                                 float position,
+                                 int polynomial_order,
+                                 float reference_x,
+                                 float reference_y) {
+    if (line.size() < static_cast<size_t>(polynomial_order + 1)) {
         // Fall back to direct method if not enough points
         return calculate_direct_angle(line, position, reference_x, reference_y);
     }
@@ -127,6 +130,9 @@ std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data, LineAng
 std::shared_ptr<AnalogTimeSeries> line_angle(LineData const * line_data,
                                              LineAngleParameters const * params,
                                              ProgressCallback progressCallback) {
+
+    static_cast<void>(progressCallback);
+
     std::map<int, float> angles;
 
     // Use default parameters if none provided

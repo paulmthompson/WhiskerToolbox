@@ -17,7 +17,7 @@ public:
      *
      * @note Supports Analog, Points, and Tensor data types.
      */
-    bool isSupported(DM_DataType type) const override;
+    [[nodiscard]] bool isSupported(DM_DataType type) const override;
 };
 
 #endif//SQUAREDTRANSFORM_HPP

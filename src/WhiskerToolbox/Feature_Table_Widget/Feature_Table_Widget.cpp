@@ -111,6 +111,8 @@ void Feature_Table_Widget::_addFeatureClock(std::string const & key, int row, in
 
 void Feature_Table_Widget::_addFeatureElements(std::string const & key, int row, int col) {
 
+    static_cast<void>(key);
+
     ui->available_features_table->setItem(row, col, new QTableWidgetItem("1"));
 }
 
@@ -135,7 +137,7 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
 void Feature_Table_Widget::_addFeatureColor(std::string const & key, int row, int col) {
 
     auto colorWidget = new ColorWidget();
-    if (row < default_colors.size()) {
+    if (static_cast<size_t>(row) < default_colors.size()) {
         colorWidget->setText(QString::fromStdString(default_colors[row]));
     } else {
         colorWidget->setText(QString::fromStdString(generateRandomColor()));
@@ -257,6 +259,9 @@ void Feature_Table_Widget::_refreshFeatures() {
 }
 
 void Feature_Table_Widget::_highlightFeature(int row, int column) {
+
+    static_cast<void>(column);
+
     // Always get the feature name from the "Feature" column (typically column 0)
     // regardless of which column was clicked
     int featureColumnIndex = -1;

@@ -20,7 +20,7 @@
 
 // Helper function to fit a polynomial to the given data
 std::vector<double> fit_polynomial_to_points(std::vector<Point2D<float>> const & points, int order) {
-    if (points.size() <= order) {
+    if (points.size() <= static_cast<size_t>(order)) {
         return {};// Not enough data points
     }
 
@@ -67,7 +67,7 @@ std::vector<double> fit_polynomial_to_points(std::vector<Point2D<float>> const &
 }
 
 ParametricCoefficients fit_parametric_polynomials(std::vector<Point2D<float>> const & points, int order) {
-    if (points.size() <= order) {
+    if (points.size() <= static_cast<size_t>(order)) {
         return {{}, {}, false};// Not enough points
     }
 
@@ -103,6 +103,9 @@ std::vector<Point2D<float>> generate_smoothed_line(
         std::vector<double> const & y_coeffs,
         int order,
         float target_spacing) {
+
+    static_cast<void>(order);
+
     if (original_points.empty() || x_coeffs.empty() || y_coeffs.empty()) {
         return {};
     }
@@ -183,7 +186,7 @@ std::vector<Point2D<float>> remove_outliers_recursive(std::vector<Point2D<float>
                                                       float error_threshold_squared,
                                                       int polynomial_order,
                                                       int max_iterations) {
-    if (points.size() < polynomial_order + 2 || max_iterations <= 0) {
+    if (points.size() < static_cast<size_t>(polynomial_order + 2) || max_iterations <= 0) {
         return points;// Base case: not enough points or max iterations reached
     }
 
@@ -254,7 +257,7 @@ std::vector<Point2D<float>> remove_outliers_recursive(std::vector<Point2D<float>
     }
 
     // If we filtered too many points, return original set
-    if (filtered_points.size() < polynomial_order + 2) {
+    if (filtered_points.size() < static_cast<size_t>(polynomial_order + 2)) {
         return points;
     }
 
@@ -270,7 +273,7 @@ std::vector<Point2D<float>> remove_outliers_recursive(std::vector<Point2D<float>
 std::vector<Point2D<float>> remove_outliers(std::vector<Point2D<float>> const & points,
                                             float error_threshold,
                                             int polynomial_order) {
-    if (points.size() < polynomial_order + 2) {
+    if (points.size() < static_cast<size_t>(polynomial_order + 2)) {
         return points;// Not enough points to fit and filter
     }
 
@@ -408,7 +411,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
                             .count());
         }
 
-        if (should_remove_outliers && line_points.size() > polynomial_order + 2) {
+        if (should_remove_outliers && line_points.size() > static_cast<size_t>(polynomial_order + 2)) {
             // Time outlier removal
             auto outlier_start = std::chrono::high_resolution_clock::now();
             line_points = remove_outliers(line_points, error_threshold, polynomial_order);
@@ -420,7 +423,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
         }
 
         // Apply smoothing if requested and enough points exist
-        if (should_smooth_line && line_points.size() > polynomial_order) {// Need at least order+1 points
+        if (should_smooth_line && line_points.size() > static_cast<size_t>(polynomial_order)) {// Need at least order+1 points
             auto smoothing_start = std::chrono::high_resolution_clock::now();
             ParametricCoefficients coeffs = fit_parametric_polynomials(line_points, polynomial_order);
             if (coeffs.success) {

@@ -43,12 +43,18 @@ MediaPoint_Widget::~MediaPoint_Widget() {
 }
 
 void MediaPoint_Widget::showEvent(QShowEvent * event) {
+
+    static_cast<void>(event);
+
     std::cout << "Show Event" << std::endl;
     connect(_scene, &Media_Window::leftClickMedia, this, &MediaPoint_Widget::_assignPoint);
 
 }
 
 void MediaPoint_Widget::hideEvent(QHideEvent * event) {
+
+    static_cast<void>(event);
+
     std::cout << "Hide Event" << std::endl;
     disconnect(_scene, &Media_Window::leftClickMedia, this, &MediaPoint_Widget::_assignPoint);
 }

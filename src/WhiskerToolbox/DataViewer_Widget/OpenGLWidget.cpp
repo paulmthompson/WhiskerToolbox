@@ -340,7 +340,7 @@ void OpenGLWidget::drawDigitalEventSeries() {
     }
 
     // Calculate center coordinate for stacked mode (similar to analog series)
-    float const center_coord = -0.5f * 0.1f * (static_cast<float>(visible_event_count - 1));// Use default spacing for center calculation
+    //float const center_coord = -0.5f * 0.1f * (static_cast<float>(visible_event_count - 1));// Use default spacing for center calculation
 
     int visible_series_index = 0;
 
@@ -432,8 +432,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
     auto const start_time = static_cast<float>(_xAxis.getStart());
     auto const end_time = static_cast<float>(_xAxis.getEnd());
 
-    auto const min_y = _yMin;
-    auto const max_y = _yMax;
+    //auto const min_y = _yMin;
+    //auto const max_y = _yMax;
 
     auto const m_program_ID = m_program->programId();
 
@@ -603,10 +603,10 @@ void OpenGLWidget::drawAnalogSeries() {
     auto const start_time = static_cast<float>(_xAxis.getStart());
     auto const end_time = static_cast<float>(_xAxis.getEnd());
 
-    auto const min_y = _yMin;
-    auto const max_y = _yMax;
+    //auto const min_y = _yMin;
+    //auto const max_y = _yMax;
 
-    float const center_coord = -0.5f * _ySpacing * (static_cast<float>(_analog_series.size() - 1));
+    //float const center_coord = -0.5f * _ySpacing * (static_cast<float>(_analog_series.size() - 1));
 
     auto const m_program_ID = m_program->programId();
 
@@ -762,7 +762,7 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator
         // Check for gap if this isn't the first point
         if (it != start_it) {
             size_t const prev_index = std::distance(data_time.begin(), prev_it);
-            auto const prev_time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[prev_index])));
+            //auto const prev_time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[prev_index])));
             //float const time_gap = time - prev_time;
             float const time_gap = index - prev_index;
 
@@ -886,6 +886,10 @@ void OpenGLWidget::paintGL() {
 }
 
 void OpenGLWidget::resizeGL(int w, int h) {
+
+    static_cast<void>(w);
+    static_cast<void>(h);
+
     // Store the new dimensions
     // Note: width() and height() will return the new values after this call
 
@@ -1047,7 +1051,8 @@ void OpenGLWidget::removeDigitalIntervalSeries(std::string const & key) {
 }
 
 void OpenGLWidget::_addSeries(std::string const & key) {
-    auto item = _series_y_position.find(key);
+    static_cast<void>(key);
+    //auto item = _series_y_position.find(key);
 }
 
 void OpenGLWidget::_removeSeries(std::string const & key) {
@@ -1294,6 +1299,9 @@ std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std:
 
 // Interval edge dragging methods
 std::optional<std::pair<std::string, bool>> OpenGLWidget::findIntervalEdgeAtPosition(float canvas_x, float canvas_y) const {
+
+    static_cast<void>(canvas_y);
+
     float const time_coord = canvasXToTime(canvas_x);
     constexpr float EDGE_TOLERANCE_PX = 10.0f;
 
@@ -1713,8 +1721,8 @@ std::string getColorForIndex(size_t index) {
 void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         // Check if we're double-clicking over a digital interval series
-        float const canvas_x = static_cast<float>(event->pos().x());
-        float const canvas_y = static_cast<float>(event->pos().y());
+        //float const canvas_x = static_cast<float>(event->pos().x());
+        //float const canvas_y = static_cast<float>(event->pos().y());
         
         // Find which digital interval series (if any) is at this Y position
         // For now, use the first visible digital interval series

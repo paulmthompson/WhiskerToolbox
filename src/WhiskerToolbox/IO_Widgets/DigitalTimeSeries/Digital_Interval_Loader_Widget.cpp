@@ -2,13 +2,14 @@
 
 #include "ui_Digital_Interval_Loader_Widget.h"
 
-#include "../../DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"
 
 #include <QFileDialog>
 #include <QComboBox>
 #include <QStackedWidget>
+
 #include <iostream>
 
 Digital_Interval_Loader_Widget::Digital_Interval_Loader_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
@@ -34,6 +35,9 @@ Digital_Interval_Loader_Widget::~Digital_Interval_Loader_Widget() {
 }
 
 void Digital_Interval_Loader_Widget::_onLoaderTypeChanged(int index) {
+
+    static_cast<void>(index);
+
     if (ui->loader_type_combo->currentText() == "CSV") {
         ui->stacked_loader_options->setCurrentWidget(ui->csv_digital_interval_loader_widget);
     } else if (ui->loader_type_combo->currentText() == "Binary") {

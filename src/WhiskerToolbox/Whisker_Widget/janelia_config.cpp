@@ -79,6 +79,8 @@ void Janelia_Config::openWidget() {
 
 void Janelia_Config::closeEvent(QCloseEvent *event) {
 
+    static_cast<void>(event);
+
     disconnect(ui->seed_on_grid_lattice_spacing, SIGNAL(valueChanged(int)), this,
             SLOT(_changeSeedOnGridLatticeSpacing(int)));
 

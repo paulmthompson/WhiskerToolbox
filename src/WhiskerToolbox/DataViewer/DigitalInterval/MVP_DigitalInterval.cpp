@@ -11,6 +11,9 @@
 
 glm::mat4 new_getIntervalModelMat(NewDigitalIntervalSeriesDisplayOptions const & display_options,
                                   PlottingManager const & plotting_manager) {
+
+    static_cast<void>(plotting_manager);
+
     auto Model = glm::mat4(1.0f);
 
     // Apply global zoom scaling
@@ -35,6 +38,9 @@ glm::mat4 new_getIntervalModelMat(NewDigitalIntervalSeriesDisplayOptions const &
 }
 
 glm::mat4 new_getIntervalViewMat(PlottingManager const & plotting_manager) {
+
+    static_cast<void>(plotting_manager);
+
     auto View = glm::mat4(1.0f);
 
     // Digital intervals should NOT move with vertical panning
@@ -50,6 +56,10 @@ glm::mat4 new_getIntervalProjectionMat(int start_data_index,
                                        float y_min,
                                        float y_max,
                                        PlottingManager const & plotting_manager) {
+
+    static_cast<void>(y_min);
+    static_cast<void>(y_max);
+
     // Convert data indices to normalized coordinate range
     // Map [start_data_index, end_data_index] to [-1, 1] in X
     // Map [y_min, y_max] to viewport range in Y
@@ -58,8 +68,8 @@ glm::mat4 new_getIntervalProjectionMat(int start_data_index,
     auto const right = static_cast<float>(end_data_index);
 
     // Use viewport Y range from plotting manager with any additional pan offset
-    float bottom = plotting_manager.viewport_y_min;
-    float top = plotting_manager.viewport_y_max;
+    float const bottom = plotting_manager.viewport_y_min;
+    float const top = plotting_manager.viewport_y_max;
 
     // Create orthographic projection matrix
     auto Projection = glm::ortho(left, right, bottom, top);
@@ -134,7 +144,7 @@ void setIntervalIntrinsicProperties(std::vector<Interval> const & intervals,
         max_duration_val = std::max(max_duration_val, duration);
     }
 
-    int64_t const avg_duration = total_duration / static_cast<int64_t>(intervals.size());
+    //int64_t const avg_duration = total_duration / static_cast<int64_t>(intervals.size());
 
     // For now, we keep the default display options
     // Future enhancements could adjust alpha based on interval density,

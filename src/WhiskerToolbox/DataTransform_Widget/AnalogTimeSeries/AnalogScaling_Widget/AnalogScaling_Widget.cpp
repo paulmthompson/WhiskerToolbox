@@ -59,6 +59,8 @@ void AnalogScaling_Widget::setupMethodComboBox()
 
 void AnalogScaling_Widget::onMethodChanged(int index)
 {
+    static_cast<void>(index);
+
     updateParameterVisibility();
     updateMethodDescription();
     validateParameters();

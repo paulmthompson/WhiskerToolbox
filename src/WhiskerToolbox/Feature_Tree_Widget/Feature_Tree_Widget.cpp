@@ -122,6 +122,9 @@ void Feature_Tree_Widget::refreshTree() {
 }
 
 void Feature_Tree_Widget::_itemSelected(QTreeWidgetItem * item, int column) {
+
+    static_cast<void>(column);
+
     if (!item) return;
 
     std::string const key = item->text(0).toStdString();

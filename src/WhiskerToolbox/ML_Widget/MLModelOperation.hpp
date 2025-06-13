@@ -28,6 +28,10 @@ public:
     virtual bool predictProbabilities(arma::Mat<double> const & features,
                                       arma::Row<size_t> & predictions,
                                       arma::Mat<double> & probabilities) {
+
+        static_cast<void>(features);
+        static_cast<void>(predictions);
+
         probabilities.clear();
         return false;
     }

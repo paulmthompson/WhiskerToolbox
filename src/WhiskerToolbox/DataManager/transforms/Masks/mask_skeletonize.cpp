@@ -18,6 +18,8 @@ std::shared_ptr<MaskData> skeletonize_mask(
         MaskData const * mask_data,
         MaskSkeletonizeParameters const * params,
         ProgressCallback progressCallback) {
+
+    static_cast<void>(params);
     
     auto result_mask_data = std::make_shared<MaskData>();
     

@@ -18,6 +18,9 @@ std::unique_ptr<MLModelParametersBase> NaiveBayesModelOperation::getDefaultParam
 bool NaiveBayesModelOperation::train(arma::Mat<double> const& features,
                                    arma::Row<size_t> const& labels,
                                    MLModelParametersBase const* params_base) {
+
+    static_cast<void>(params_base);
+
     if (!_model) {
         std::cerr << "NaiveBayesModelOperation error: Model not initialized." << std::endl;
         return false;

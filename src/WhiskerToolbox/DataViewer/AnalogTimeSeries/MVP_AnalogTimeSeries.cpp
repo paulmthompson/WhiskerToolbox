@@ -92,6 +92,8 @@ glm::mat4 new_getAnalogProjectionMat(int start_data_index,
                                      float y_min,
                                      float y_max,
                                      PlottingManager const & plotting_manager) {
+
+    static_cast<void>(plotting_manager);
     // Map data indices to normalized device coordinates [-1, 1]
     // X-axis: map [start_data_index, end_data_index] to screen width
     // Y-axis: map [y_min, y_max] to viewport height
