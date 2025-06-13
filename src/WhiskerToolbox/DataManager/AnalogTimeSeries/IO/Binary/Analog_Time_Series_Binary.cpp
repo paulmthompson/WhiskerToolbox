@@ -29,7 +29,7 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions & 
                     channel.end(),
                     std::back_inserter(data_float), [](int16_t i) { return i; });
 
-            analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(data_float));
+            analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(data_float, data_float.size()));
         }
 
     } else {
@@ -43,7 +43,7 @@ std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions & 
                 data.end(),
                 std::back_inserter(data_float), [](int16_t i) { return i; });
 
-        analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(data_float));
+        analog_time_series.push_back(std::make_shared<AnalogTimeSeries>(data_float, data_float.size()));
     }
 
     return analog_time_series;

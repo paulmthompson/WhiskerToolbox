@@ -80,14 +80,14 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
 
         if (event_detected) {
 
-            auto timestamp = std::visit([i](auto const & time_storage) {
-                return time_storage.getTimeAtIndex(i);
+            auto timestamp = std::visit([i](auto const & time_storage) -> TimeFrameIndex {
+                return time_storage.getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i));
             }, time_storage);
 
             // Check if the event is not too close to the last one
-            if (static_cast<double>(timestamp) - last_ts >= thresholdParams.lockoutTime) {
-                events.push_back(static_cast<float>(timestamp));
-                last_ts = static_cast<double>(timestamp);
+            if (static_cast<double>(timestamp.getValue()) - last_ts >= thresholdParams.lockoutTime) {
+                events.push_back(static_cast<float>(timestamp.getValue()));
+                last_ts = static_cast<double>(timestamp.getValue());
             }
         }
 

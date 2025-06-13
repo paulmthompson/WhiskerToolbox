@@ -31,7 +31,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
 
         REQUIRE(times.size() == 1);
         REQUIRE(values.size() == 1);
-        REQUIRE(times[0] == 10);
+        REQUIRE(times[0] == TimeFrameIndex(10));
         REQUIRE(values[0] == 3.0f); // 3 points in the mask
     }
 
@@ -53,7 +53,7 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
 
         REQUIRE(times.size() == 1);
         REQUIRE(values.size() == 1);
-        REQUIRE(times[0] == 20);
+        REQUIRE(times[0] == TimeFrameIndex(20));
         REQUIRE(values[0] == 8.0f); // 3 + 5 = 8 points total
     }
 
@@ -81,11 +81,11 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
         REQUIRE(values.size() == 2);
 
         // Check timestamp 30
-        auto time30_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), 30));
+        auto time30_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(30)));
         REQUIRE(values[time30_idx] == 2.0f);
 
         // Check timestamp 40
-        auto time40_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), 40));
+        auto time40_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(40)));
         REQUIRE(values[time40_idx] == 7.0f); // 3 + 4 = 7 points
     }
 

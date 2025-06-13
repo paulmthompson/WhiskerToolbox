@@ -8,6 +8,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "PlottingManager/PlottingManager.hpp"
+#include "TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -144,12 +145,16 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
 
         // Generate test data
         constexpr size_t num_points = 10000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
         auto gaussian_data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 42);
         auto uniform_data = generateUniformDataIntegration(num_points, 0.0f, 1.0f, 123);
         auto intervals = generateTestIntervalData(10, 10000.0f, 200.0f, 800.0f, 456);
 
-        auto gaussian_time_series = std::make_shared<AnalogTimeSeries>(gaussian_data);
-        auto uniform_time_series = std::make_shared<AnalogTimeSeries>(uniform_data);
+        auto gaussian_time_series = std::make_shared<AnalogTimeSeries>(gaussian_data, time_vector);
+        auto uniform_time_series = std::make_shared<AnalogTimeSeries>(uniform_data, time_vector);
         auto intervals_time_series = std::make_shared<DigitalIntervalSeries>(intervals);
 
         // Set up analog series display options
@@ -334,13 +339,17 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
 
         // Generate test data
         constexpr size_t num_points = 10000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
         auto analog1_data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 42);
         auto analog2_data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 123);
         auto events1 = generateTestEventData(50, 10000.0f, 456);
         auto events2 = generateTestEventData(30, 10000.0f, 789);
 
-        auto analog1_time_series = std::make_shared<AnalogTimeSeries>(analog1_data);
-        auto analog2_time_series = std::make_shared<AnalogTimeSeries>(analog2_data);
+        auto analog1_time_series = std::make_shared<AnalogTimeSeries>(analog1_data, time_vector);
+        auto analog2_time_series = std::make_shared<AnalogTimeSeries>(analog2_data, time_vector);
 
         // Set up display options
         NewAnalogTimeSeriesDisplayOptions analog1_options;

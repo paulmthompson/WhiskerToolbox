@@ -4,6 +4,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "TimeFrame/TimeFrameV2.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -25,16 +26,58 @@
 class AnalogTimeSeries : public ObserverData {
 public:
     AnalogTimeSeries();
-    explicit AnalogTimeSeries(std::vector<float> analog_vector);
-    AnalogTimeSeries(std::vector<float> analog_vector, std::vector<size_t> time_vector);
+    explicit AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
+
+    /**
+     * @brief Constructor for AnalogTimeSeries from a map of int to float
+     * 
+     * The key in the map is assumed to the be TimeFrameIndex for each sample
+     * 
+     * @param analog_map Map of int to float
+     */
     explicit AnalogTimeSeries(std::map<int, float> analog_map);
 
-    void overwriteAtTimes(std::vector<float> & analog_data, std::vector<size_t> & time);
+    /**
+     * @brief Constructor for AnalogTimeSeries from a vector of floats and a number of samples
+     * 
+     * @param analog_vector Vector of floats
+     * @param num_samples Number of samples
+     */
+    explicit AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples);
 
+    /**
+     * @brief Overwrite data at specific TimeFrameIndex values
+     * 
+     * This function finds DataArrayIndex positions that correspond to the given TimeFrameIndex values
+     * and overwrites the data at those positions. If a TimeFrameIndex doesn't exist in the series,
+     * it will be ignored (no overwrite occurs).
+     * 
+     * @param analog_data Vector of new analog values
+     * @param time_indices Vector of TimeFrameIndex values where data should be overwritten
+     */
+    void overwriteAtTimeIndexes(std::vector<float> & analog_data, std::vector<TimeFrameIndex> & time_indices);
+    
+    /**
+     * @brief Overwrite data at specific DataArrayIndex positions
+     * 
+     * This function directly overwrites data at the specified DataArrayIndex positions.
+     * Bounds checking is performed - indices outside the data array range will be ignored.
+     * 
+     * @param analog_data Vector of new analog values
+     * @param data_indices Vector of DataArrayIndex positions where data should be overwritten
+     */
+    void overwriteAtDataArrayIndexes(std::vector<float> & analog_data, std::vector<DataArrayIndex> & data_indices);
+
+    [[nodiscard]] float getDataAtDataArrayIndex(DataArrayIndex i) const { return _data[i.getValue()]; };
+    
+    // Legacy method for backward compatibility
     [[nodiscard]] float getDataAtIndex(size_t i) const { return _data[i]; };
-    [[nodiscard]] size_t getTimeAtIndex(size_t i) const {
-        return std::visit([i](auto const & time_storage) -> size_t {
-            return time_storage.getTimeAtIndex(i);
+
+
+
+    [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
+        return std::visit([i](auto const & time_storage) -> TimeFrameIndex {
+            return time_storage.getTimeFrameIndexAtDataArrayIndex(i);
         }, _time_storage);
     }
 
@@ -88,52 +131,53 @@ public:
      * @see getDataInRange() for accessing time-value pairs within a specific range
      * @see getTimeAtIndex() for single index lookups
      */
-    [[nodiscard]] std::vector<size_t> getTimeSeries() const {
-        return std::visit([](auto const & time_storage) -> std::vector<size_t> {
+    [[nodiscard]] std::vector<TimeFrameIndex> getTimeSeries() const {
+        return std::visit([](auto const & time_storage) -> std::vector<TimeFrameIndex> {
             if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
                 // Generate vector for dense storage
-                std::vector<size_t> result(time_storage.count);
+                std::vector<TimeFrameIndex> result;
+                result.reserve(time_storage.count);
                 for (size_t i = 0; i < time_storage.count; ++i) {
-                    result[i] = time_storage.start_index + i;
+                    result.push_back(time_storage.start_time_frame_index + TimeFrameIndex(static_cast<int64_t>(i)));
                 }
                 return result;
             } else {
                 // Return copy for sparse storage
-                return time_storage.indices;
+                return time_storage.time_frame_indices;
             }
         }, _time_storage);
     }
 
     auto getDataInRange(float start_time, float stop_time) const {
         struct DataPoint {
-            size_t time_idx;
+            TimeFrameIndex time_idx;
             float value;
         };
 
         return std::views::iota(size_t{0}, getNumSamples()) |
                std::views::filter([this, start_time, stop_time](size_t i) {
-                   auto transformed_time = static_cast<float>(getTimeAtIndex(i));
+                   auto transformed_time = getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)).getValue();
                    return transformed_time >= start_time && transformed_time <= stop_time;
                }) |
                std::views::transform([this](size_t i) {
-                   return DataPoint{getTimeAtIndex(i), getDataAtIndex(i)};
+                   return DataPoint{getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)), getDataAtDataArrayIndex(DataArrayIndex(i))};
                });
     }
 
     template<typename TransformFunc>
     auto getDataInRange(float start_time, float stop_time, TransformFunc time_transform) const {
         struct DataPoint {
-            size_t time_idx;
+            TimeFrameIndex time_idx;
             float value;
         };
 
         return std::views::iota(size_t{0}, getNumSamples()) |
                std::views::filter([this, start_time, stop_time, time_transform](size_t i) {
-                   auto transformed_time = time_transform(getTimeAtIndex(i));
+                   auto transformed_time = time_transform(getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)).getValue());
                    return transformed_time >= start_time && transformed_time <= stop_time;
                }) |
                std::views::transform([this](size_t i) {
-                   return DataPoint{getTimeAtIndex(i), getDataAtIndex(i)};
+                   return DataPoint{getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)), getDataAtDataArrayIndex(DataArrayIndex(i))};
                });
     }
 
@@ -250,17 +294,30 @@ public:
 
             std::vector<float> result;
 
-            // Get the range of indices for the coordinate range
-            TimeFrameIndex start_idx = timeframe_ptr->getIndexAtTime(start_typed);
-            TimeFrameIndex end_idx = timeframe_ptr->getIndexAtTime(end_typed);
+            // Convert coordinate range to TimeFrameIndex values for comparison
+            TimeFrameIndex start_time_idx = timeframe_ptr->getIndexAtTime(start_typed);
+            TimeFrameIndex end_time_idx = timeframe_ptr->getIndexAtTime(end_typed);
 
-            if (start_idx > end_idx) std::swap(start_idx, end_idx);
+            if (start_time_idx > end_time_idx) std::swap(start_time_idx, end_time_idx);
 
-            result.reserve(static_cast<size_t>((end_idx - start_idx).getValue() + 1));
+            // Convert the TimeFrameV2 indices back to actual coordinate values for range checking
+            auto start_coord_value = timeframe_ptr->getTimeAtIndex(start_time_idx);
+            auto end_coord_value = timeframe_ptr->getTimeAtIndex(end_time_idx);
 
-            for (TimeFrameIndex idx = start_idx; idx <= end_idx; ++idx) {
-                if (idx.getValue() >= 0 && static_cast<size_t>(idx.getValue()) < _data.size()) {
-                    result.push_back(_data[static_cast<size_t>(idx.getValue())]);
+            // Iterate through our data and check which points fall within the coordinate range
+            size_t data_size = _data.size();
+            for (size_t i = 0; i < data_size; ++i) {
+                DataArrayIndex data_idx(i);
+                
+                // Get the TimeFrameIndex for this data point
+                TimeFrameIndex our_time_frame_idx = getTimeFrameIndexAtDataArrayIndex(data_idx);
+                
+                // Convert our TimeFrameIndex to the same coordinate type for comparison
+                FrameCoordType our_coord_value(our_time_frame_idx.getValue());
+                
+                // Check if this coordinate falls within the requested range
+                if (our_coord_value >= start_coord_value && our_coord_value <= end_coord_value) {
+                    result.push_back(_data[i]);
                 }
             }
 
@@ -301,20 +358,31 @@ public:
             std::vector<TimeCoordinate> coords;
             std::vector<float> values;
 
-            // Get the range of indices for the coordinate range
-            TimeFrameIndex start_idx = timeframe_ptr->getIndexAtTime(start_typed);
-            TimeFrameIndex end_idx = timeframe_ptr->getIndexAtTime(end_typed);
+            // Convert coordinate range to TimeFrameIndex values for comparison
+            TimeFrameIndex start_time_idx = timeframe_ptr->getIndexAtTime(start_typed);
+            TimeFrameIndex end_time_idx = timeframe_ptr->getIndexAtTime(end_typed);
 
-            if (start_idx > end_idx) std::swap(start_idx, end_idx);
+            if (start_time_idx > end_time_idx) std::swap(start_time_idx, end_time_idx);
 
-            coords.reserve(static_cast<size_t>((end_idx - start_idx).getValue() + 1));
-            values.reserve(static_cast<size_t>((end_idx - start_idx).getValue() + 1));
+            // Convert the TimeFrameV2 indices back to actual coordinate values for range checking
+            auto start_coord_value = timeframe_ptr->getTimeAtIndex(start_time_idx);
+            auto end_coord_value = timeframe_ptr->getTimeAtIndex(end_time_idx);
 
-            for (TimeFrameIndex idx = start_idx; idx <= end_idx; ++idx) {
-                if (idx.getValue() >= 0 && static_cast<size_t>(idx.getValue()) < _data.size()) {
-                    // Store coordinate as TimeCoordinate variant
-                    coords.push_back(TimeCoordinate{timeframe_ptr->getTimeAtIndex(idx)});
-                    values.push_back(_data[static_cast<size_t>(idx.getValue())]);
+            // Iterate through our data and check which points fall within the coordinate range
+            size_t data_size = _data.size();
+            for (size_t i = 0; i < data_size; ++i) {
+                DataArrayIndex data_idx(i);
+                
+                // Get the TimeFrameIndex for this data point
+                TimeFrameIndex our_time_frame_idx = getTimeFrameIndexAtDataArrayIndex(data_idx);
+                
+                // Convert our TimeFrameIndex to the same coordinate type for comparison
+                FrameCoordType our_coord_value(our_time_frame_idx.getValue());
+                
+                // Check if this coordinate falls within the requested range
+                if (our_coord_value >= start_coord_value && our_coord_value <= end_coord_value) {
+                    coords.push_back(TimeCoordinate{our_coord_value});
+                    values.push_back(_data[i]);
                 }
             }
 
@@ -423,19 +491,21 @@ public:
      * 
      * More memory efficient than storing every index individually.
      * Represents: start_index, start_index+1, start_index+2, ..., start_index+count-1
+     * 
+     * Now strongly typed: indexed by DataArrayIndex, returns TimeFrameIndex
      */
     struct DenseTimeRange {
-        size_t start_index;
+        TimeFrameIndex start_time_frame_index;
         size_t count;
         
-        DenseTimeRange(size_t start, size_t num_samples) 
-            : start_index(start), count(num_samples) {}
+        DenseTimeRange(TimeFrameIndex start, size_t num_samples) 
+            : start_time_frame_index(start), count(num_samples) {}
             
-        [[nodiscard]] size_t getTimeAtIndex(size_t i) const {
-            if (i >= count) {
-                throw std::out_of_range("Index out of range for DenseTimeRange");
+        [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
+            if (i.getValue() >= count) {
+                throw std::out_of_range("DataArrayIndex out of range for DenseTimeRange");
             }
-            return start_index + i;
+            return TimeFrameIndex(start_time_frame_index.getValue() + static_cast<int64_t>(i.getValue()));
         }
         
         [[nodiscard]] size_t size() const { return count; }
@@ -445,21 +515,23 @@ public:
      * @brief Sparse time representation for irregularly sampled data
      * 
      * Stores explicit time indices for each sample.
+     * 
+     * Now strongly typed: indexed by DataArrayIndex, returns TimeFrameIndex
      */
     struct SparseTimeIndices {
-        std::vector<size_t> indices;
+        std::vector<TimeFrameIndex> time_frame_indices;
         
-        explicit SparseTimeIndices(std::vector<size_t> time_indices) 
-            : indices(std::move(time_indices)) {}
+        explicit SparseTimeIndices(std::vector<TimeFrameIndex> time_indices) 
+            : time_frame_indices(std::move(time_indices)) {}
             
-        [[nodiscard]] size_t getTimeAtIndex(size_t i) const {
-            if (i >= indices.size()) {
-                throw std::out_of_range("Index out of range for SparseTimeIndices");
+        [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
+            if (i.getValue() >= time_frame_indices.size()) {
+                throw std::out_of_range("DataArrayIndex out of range for SparseTimeIndices");
             }
-            return indices[i];
+            return time_frame_indices[i.getValue()];
         }
 
-        [[nodiscard]] size_t size() const { return indices.size(); }
+        [[nodiscard]] size_t size() const { return time_frame_indices.size(); }
     };
     
     using TimeStorage = std::variant<DenseTimeRange, SparseTimeIndices>;
@@ -482,7 +554,7 @@ private:
     std::optional<AnyTimeFrame> _timeframe_v2;
 
     void setData(std::vector<float> analog_vector);
-    void setData(std::vector<float> analog_vector, std::vector<size_t> time_vector);
+    void setData(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
     void setData(std::map<int, float> analog_map);
 };
 

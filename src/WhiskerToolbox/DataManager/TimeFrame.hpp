@@ -38,8 +38,15 @@ struct TimeFrameIndex {
         return value >= other.value;
     }
 
-    TimeFrameIndex operator++() {
-        return TimeFrameIndex(value + 1);
+    TimeFrameIndex& operator++() {
+        ++value;
+        return *this;
+    }
+    
+    TimeFrameIndex operator++(int) {
+        TimeFrameIndex temp(*this);
+        ++value;
+        return temp;
     }
 
     //Arithmetic operations

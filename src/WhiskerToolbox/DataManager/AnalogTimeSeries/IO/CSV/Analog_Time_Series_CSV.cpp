@@ -44,7 +44,7 @@ std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options) {
     }
 
     std::vector<float> data_values;
-    std::vector<size_t> time_values;
+    std::vector<TimeFrameIndex> time_values;
     std::string line;
     
     // Skip header if present
@@ -71,12 +71,12 @@ std::shared_ptr<AnalogTimeSeries> load(CSVAnalogLoaderOptions const & options) {
                 // Single column format: only data, time is inferred as index
                 if (!row.empty()) {
                     data_values.push_back(std::stof(row[0]));
-                    time_values.push_back(time_values.size()); // Use index as time
+                    time_values.push_back(TimeFrameIndex(time_values.size())); // Use index as time
                 }
             } else {
                 // Two column format: time and data columns
                 if (row.size() > std::max(options.time_column, options.data_column)) {
-                    time_values.push_back(static_cast<size_t>(std::stof(row[options.time_column])));
+                    time_values.push_back(TimeFrameIndex(static_cast<int64_t>(std::stof(row[options.time_column]))));
                     data_values.push_back(std::stof(row[options.data_column]));
                 }
             }
@@ -121,9 +121,9 @@ void save(AnalogTimeSeries * analog_data,
 
     size_t num_samples = analog_data->getNumSamples();
     for (size_t i = 0; i < num_samples; ++i) {
-        fout << analog_data->getTimeAtIndex(i) 
+        fout << analog_data->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)).getValue() 
              << opts.delimiter 
-             << analog_data->getDataAtIndex(i) 
+             << analog_data->getDataAtDataArrayIndex(DataArrayIndex(i)) 
              << opts.line_delim;
         if (fout.fail()) {
             std::cerr << "Error: Failed while writing data to file: " << filename << std::endl;

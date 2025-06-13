@@ -5,6 +5,7 @@
 #include "TimeFrame/TimeFrameV2.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "TimeFrame.hpp"
 
 #include <memory>
 #include <ranges>
@@ -59,9 +60,13 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
         for (size_t i = 0; i < neural_data.size(); ++i) {
             neural_data[i] = dist(gen) + std::sin(2.0f * M_PI * i / 1000.0f);
         }
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < neural_data.size(); ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
         
         // Create AnalogTimeSeries with legacy interface
-        auto neural_series = std::make_shared<AnalogTimeSeries>(neural_data);
+        auto neural_series = std::make_shared<AnalogTimeSeries>(neural_data, time_vector);
         
         // Use new DataManager API to associate with TimeFrameV2
         dm.setDataV2("neural_signal", neural_series, clock_timeframe, "master_clock");
@@ -95,7 +100,11 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
         auto camera_timeframe = TimeFrameUtils::createDenseCameraTimeFrame(0, 100);
         
         std::vector<float> data(100, 1.0f);
-        auto series = std::make_shared<AnalogTimeSeries>(data);
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < data.size(); ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto series = std::make_shared<AnalogTimeSeries>(data, time_vector);
         
         dm.setDataV2("test_data", series, camera_timeframe);
         auto retrieved = dm.getData<AnalogTimeSeries>("test_data");
@@ -181,7 +190,11 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
         neural_data[1500] = 10.0f;  // Spike at tick 1500 (should be in camera frame 5)
         neural_data[9000] = 15.0f;  // Spike at tick 9000 (should be in camera frame 30)
         
-        auto neural_series = std::make_shared<AnalogTimeSeries>(neural_data);
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < neural_data.size(); ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto neural_series = std::make_shared<AnalogTimeSeries>(neural_data, time_vector);
         dm.setDataV2("neural", neural_series, master_clock);
         
         // Query neural data using clock coordinates
@@ -230,12 +243,20 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
         
         // Create data with legacy system
         std::vector<float> legacy_data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        auto legacy_series = std::make_shared<AnalogTimeSeries>(legacy_data);
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < legacy_data.size(); ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto legacy_series = std::make_shared<AnalogTimeSeries>(legacy_data, time_vector);
         dm.setData("legacy_data", legacy_series, "legacy_clock");
         
         // Create data with new system
         std::vector<float> new_data = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
-        auto new_series = std::make_shared<AnalogTimeSeries>(new_data);
+        time_vector.clear();
+        for (size_t i = 0; i < new_data.size(); ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto new_series = std::make_shared<AnalogTimeSeries>(new_data, time_vector);
         auto camera_tf = dm.getTimeV2("new_camera").value();
         dm.setDataV2("new_data", new_series, camera_tf);
         
@@ -279,7 +300,11 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
         
         // Test setting data with non-existent TimeFrameV2 key
         std::vector<float> data = {1.0f, 2.0f, 3.0f};
-        auto series = std::make_shared<AnalogTimeSeries>(data);
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < data.size(); ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto series = std::make_shared<AnalogTimeSeries>(data, time_vector);
         
         // This should fail gracefully (error message to stderr)
         dm.setDataV2("test", series, "nonexistent_key");
@@ -288,7 +313,7 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
         REQUIRE(dm.getData<AnalogTimeSeries>("test") == nullptr);
         
         // Test AnalogTimeSeries methods without TimeFrameV2
-        auto series_no_tf = std::make_shared<AnalogTimeSeries>(data);
+        auto series_no_tf = std::make_shared<AnalogTimeSeries>(data, time_vector);
         ClockTicks start(0);
         ClockTicks end(10);
         
@@ -300,6 +325,7 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
 }
 
 TEST_CASE("DataManager - Enhanced AnalogTimeSeries Variant Coordinate Support", "[datamanager][analog][variant][coordinates]") {
+    
     SECTION("Create AnalogTimeSeries with ClockTicks using convenience methods") {
         DataManager dm;
         
@@ -316,6 +342,8 @@ TEST_CASE("DataManager - Enhanced AnalogTimeSeries Variant Coordinate Support", 
             std::move(neural_data), 0, 30000.0, false);
         
         REQUIRE(success);
+
+ 
         
         // Verify creation
         auto series = dm.getData<AnalogTimeSeries>("neural_signal");
@@ -326,6 +354,7 @@ TEST_CASE("DataManager - Enhanced AnalogTimeSeries Variant Coordinate Support", 
         REQUIRE(dm.analogUsesCoordinateType<ClockTicks>("neural_signal"));
         REQUIRE_FALSE(dm.analogUsesCoordinateType<CameraFrameIndex>("neural_signal"));
         
+        
         // Query using DataManager convenience methods
         TimeCoordinate start_coord = ClockTicks(99);
         TimeCoordinate end_coord = ClockTicks(101);
@@ -334,12 +363,14 @@ TEST_CASE("DataManager - Enhanced AnalogTimeSeries Variant Coordinate Support", 
         REQUIRE(values.size() == 3);
         REQUIRE_THAT(values[1], Catch::Matchers::WithinRel(10.0f, 1e-6f)); // The spike at tick 100
         
+  
         // Query with coordinates
         auto [coords, vals] = dm.queryAnalogDataWithCoords("neural_signal", start_coord, end_coord);
         REQUIRE(coords.size() == 3);
         REQUIRE(vals.size() == 3);
         REQUIRE(std::holds_alternative<ClockTicks>(coords[1]));
         REQUIRE(std::get<ClockTicks>(coords[1]).getValue() == 100);
+
     }
     
     SECTION("Create AnalogTimeSeries with CameraFrameIndex using convenience methods") {
@@ -482,7 +513,11 @@ TEST_CASE("DataManager - Enhanced AnalogTimeSeries Variant Coordinate Support", 
         dm.setTime("legacy", legacy_timeframe);
         
         std::vector<float> legacy_data{100.0f, 200.0f, 300.0f, 400.0f};
-        auto legacy_series = std::make_shared<AnalogTimeSeries>(legacy_data);
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < legacy_data.size(); ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto legacy_series = std::make_shared<AnalogTimeSeries>(legacy_data, time_vector);
         dm.setData("legacy_data", legacy_series, "legacy");
         
         // Create using new API
@@ -516,4 +551,5 @@ TEST_CASE("DataManager - Enhanced AnalogTimeSeries Variant Coordinate Support", 
         REQUIRE_THROWS_AS(dm.queryAnalogData("legacy_data", start, end),
                          std::runtime_error);
     }
+
 } 

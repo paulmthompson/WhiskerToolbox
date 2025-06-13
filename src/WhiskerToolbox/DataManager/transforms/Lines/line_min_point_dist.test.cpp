@@ -28,7 +28,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         // Verify the result
         REQUIRE(result->getNumSamples() == 1);
         REQUIRE_THAT(result->getDataAtIndex(0), Catch::Matchers::WithinAbs(5.0f, 0.001f));
-        REQUIRE(result->getTimeAtIndex(0) == timestamp);
+        REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(timestamp));
     }
 
     SECTION("Multiple points with different distances") {
@@ -53,7 +53,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         // Verify the result - minimum distance should be 1.0
         REQUIRE(result->getNumSamples() == 1);
         REQUIRE_THAT(result->getDataAtIndex(0), Catch::Matchers::WithinAbs(1.0f, 0.001f));
-        REQUIRE(result->getTimeAtIndex(0) == timestamp);
+        REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(timestamp));
     }
 
     SECTION("Multiple timesteps with lines and points") {
@@ -90,15 +90,15 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         // Find the indices for both timestamps
         size_t idx30 = 0;
         size_t idx40 = 1;
-        if (result->getTimeAtIndex(0) == 40) {
+        if (result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(40)) {
             idx30 = 1;
             idx40 = 0;
         }
 
-        REQUIRE(result->getTimeAtIndex(idx30) == 30);
+        REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(idx30)) == TimeFrameIndex(30));
         REQUIRE_THAT(result->getDataAtIndex(idx30), Catch::Matchers::WithinAbs(2.0f, 0.001f));
 
-        REQUIRE(result->getTimeAtIndex(idx40) == 40);
+        REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(idx40)) == TimeFrameIndex(40));
         REQUIRE_THAT(result->getDataAtIndex(idx40), Catch::Matchers::WithinAbs(3.0f, 0.001f));
     }
 

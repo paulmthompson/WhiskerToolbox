@@ -672,11 +672,11 @@ void OpenGLWidget::drawAnalogSeries() {
         } else {
             auto start_idx = time_frame->getIndexAtTime(start_time);                   // index in time vector
             auto end_idx = time_frame->getIndexAtTime(end_time);                       // index in time vector
-            start_it = std::lower_bound(data_time.begin(), data_time.end(), start_idx);// index in data vector
-            end_it = std::upper_bound(data_time.begin(), data_time.end(), end_idx);    // index in data vector
+            start_it = std::lower_bound(data_time.begin(), data_time.end(), TimeFrameIndex(start_idx));// index in data vector
+            end_it = std::upper_bound(data_time.begin(), data_time.end(), TimeFrameIndex(end_idx));    // index in data vector
 
-            std::cout << "start_it: " << *start_it << std::endl;
-            std::cout << "end_it: " << *end_it << std::endl;
+            std::cout << "start_it: " << (*start_it).getValue() << std::endl;
+            std::cout << "end_it: " << (*end_it).getValue() << std::endl;
 
             std::cout << "start_idx: " << start_idx << std::endl;
             std::cout << "end_idx: " << end_idx << std::endl;
@@ -744,7 +744,7 @@ void OpenGLWidget::drawAnalogSeries() {
 template<typename Iterator>
 void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator end_it,
                                                      std::vector<float> const & data,
-                                                     std::vector<size_t> const & data_time,
+                                                     std::vector<TimeFrameIndex> const & data_time,
                                                      std::shared_ptr<TimeFrame> const & time_frame,
                                                      float gap_threshold,
                                                      float rNorm, float gNorm, float bNorm) {
@@ -809,7 +809,7 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator
 template<typename Iterator>
 void OpenGLWidget::_drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it,
                                               std::vector<float> const & data,
-                                              std::vector<size_t> const & data_time,
+                                              std::vector<TimeFrameIndex> const & data_time,
                                               std::shared_ptr<TimeFrame> const & time_frame,
                                               float rNorm, float gNorm, float bNorm) {
     m_vertices.clear();
@@ -1663,11 +1663,11 @@ OpenGLWidget::GapAnalysis OpenGLWidget::_analyzeDataGaps(AnalogTimeSeries const 
 
         auto const gap_size = time_indices[i] - time_indices[i - 1];
 
-        sum_gaps += gap_size;
+        sum_gaps += gap_size.getValue();
         gap_count++;
 
-        if (gap_size > max_gap) {
-            max_gap = gap_size;
+        if (gap_size.getValue() > max_gap) {
+            max_gap = gap_size.getValue();
         }
     }
 
@@ -1685,8 +1685,8 @@ OpenGLWidget::GapAnalysis OpenGLWidget::_analyzeDataGaps(AnalogTimeSeries const 
 
         // Single pass to count significant gaps
         for (size_t i = 1; i < time_indices.size(); ++i) {
-            size_t const gap_size = time_indices[i] - time_indices[i - 1];
-            if (gap_size > gap_threshold) {
+            auto const gap_size = time_indices[i] - time_indices[i - 1];
+            if (gap_size.getValue() > gap_threshold) {
                 significant_gap_count++;
             }
         }

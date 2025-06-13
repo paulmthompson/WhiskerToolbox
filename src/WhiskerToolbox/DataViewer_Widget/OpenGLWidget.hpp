@@ -2,6 +2,7 @@
 #define OPENGLWIDGET_HPP
 
 #include "DataViewer/XAxis.hpp"
+#include "TimeFrame.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -402,7 +403,7 @@ private:
     template<typename Iterator>
     void _drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator end_it,
                                            std::vector<float> const & data,
-                                           std::vector<size_t> const & data_time,
+                                           std::vector<TimeFrameIndex> const & data_time,
                                            std::shared_ptr<TimeFrame> const & time_frame,
                                            float gap_threshold,
                                            float rNorm, float gNorm, float bNorm);
@@ -410,7 +411,7 @@ private:
     template<typename Iterator>
     void _drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it,
                                     std::vector<float> const & data,
-                                    std::vector<size_t> const & data_time,
+                                    std::vector<TimeFrameIndex> const & data_time,
                                     std::shared_ptr<TimeFrame> const & time_frame,
                                     float rNorm, float gNorm, float bNorm);
 

@@ -3,6 +3,7 @@
 #include "AnalogTimeSeriesDisplayOptions.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "PlottingManager/PlottingManager.hpp"
+#include "TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -142,11 +143,15 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
     SECTION("Single Gaussian series MVP transformation - Gold Standard Test") {
         // Generate 100,000 point Gaussian data (mean=0, sigma=10)
         constexpr size_t num_points = 100000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
         constexpr float expected_mean = 0.0f;
         constexpr float expected_std_dev = 10.0f;
         
         auto data = generateGaussianData(num_points, expected_mean, expected_std_dev, 42);
-        auto time_series = std::make_shared<AnalogTimeSeries>(data);
+        auto time_series = std::make_shared<AnalogTimeSeries>(data, time_vector);
         REQUIRE(data.size() == num_points);
         
         // Verify the generated data has approximately correct statistics
@@ -241,8 +246,13 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
     
     SECTION("User and global scaling effects") {
         // Generate test data
-        auto data = generateGaussianData(1000, 0.0f, 5.0f, 123);
-        auto time_series = std::make_shared<AnalogTimeSeries>(data);
+        constexpr size_t num_points = 1000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto data = generateGaussianData(num_points, 0.0f, 5.0f, 123);
+        auto time_series = std::make_shared<AnalogTimeSeries>(data, time_vector);
         float std_dev = calculateStdDev(data);
         
         PlottingManager manager;
@@ -289,8 +299,11 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         for (size_t i = 0; i < 10000; ++i) {
             uniform_data.push_back(uniform_dist(gen));
         }
-        
-        auto time_series = std::make_shared<AnalogTimeSeries>(uniform_data);
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < 10000; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto time_series = std::make_shared<AnalogTimeSeries>(uniform_data, time_vector);
         float uniform_std_dev = calculateStdDev(uniform_data);
         float uniform_mean = 0.0f;
         for (float value : uniform_data) {
@@ -356,8 +369,13 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
     
     SECTION("Vertical panning functionality") {
         // Create test data for panning tests
-        auto test_data = generateGaussianData(1000, 0.0f, 5.0f, 999);
-        auto time_series = std::make_shared<AnalogTimeSeries>(test_data);
+        constexpr size_t num_points = 1000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto test_data = generateGaussianData(num_points, 0.0f, 5.0f, 999);
+        auto time_series = std::make_shared<AnalogTimeSeries>(test_data, time_vector);
         PlottingManager manager;
         int series_idx = manager.addAnalogSeries();
         manager.setVisibleDataRange(1, 1000);
@@ -423,13 +441,18 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
     
     SECTION("Multiple series panning consistency") {
         // Test that all series are panned equally when multiple series exist
-        auto data1 = generateGaussianData(1000, 0.0f, 3.0f, 111);
-        auto data2 = generateGaussianData(1000, 5.0f, 2.0f, 222);  // Different mean and std dev
-        auto data3 = generateGaussianData(1000, -2.0f, 8.0f, 333); // Another different dataset
+        constexpr size_t num_points = 1000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto data1 = generateGaussianData(num_points, 0.0f, 3.0f, 111);
+        auto data2 = generateGaussianData(num_points, 5.0f, 2.0f, 222);  // Different mean and std dev
+        auto data3 = generateGaussianData(num_points, -2.0f, 8.0f, 333); // Another different dataset
 
-        auto time_series1 = std::make_shared<AnalogTimeSeries>(data1);
-        auto time_series2 = std::make_shared<AnalogTimeSeries>(data2);
-        auto time_series3 = std::make_shared<AnalogTimeSeries>(data3);
+        auto time_series1 = std::make_shared<AnalogTimeSeries>(data1, time_vector);
+        auto time_series2 = std::make_shared<AnalogTimeSeries>(data2, time_vector);
+        auto time_series3 = std::make_shared<AnalogTimeSeries>(data3, time_vector);
 
         PlottingManager manager;
         int series1_idx = manager.addAnalogSeries();
@@ -502,8 +525,13 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
     
     SECTION("Panning data out of view") {
         // Test that data can be panned completely out of the visible area
-        auto test_data = generateGaussianData(1000, 0.0f, 1.0f, 444);
-        auto time_series = std::make_shared<AnalogTimeSeries>(test_data);
+        constexpr size_t num_points = 1000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto test_data = generateGaussianData(num_points, 0.0f, 1.0f, 444);
+        auto time_series = std::make_shared<AnalogTimeSeries>(test_data, time_vector);
         PlottingManager manager;
         int series_idx = manager.addAnalogSeries();
         manager.setVisibleDataRange(1, 1000);
@@ -562,8 +590,13 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
     
     SECTION("Zero standard deviation data") {
         // Create constant data (zero standard deviation)
-        std::vector<float> constant_data(1000, 5.0f);
-        auto time_series = std::make_shared<AnalogTimeSeries>(constant_data);
+        constexpr size_t num_points = 1000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        std::vector<float> constant_data(num_points, 5.0f);
+        auto time_series = std::make_shared<AnalogTimeSeries>(constant_data, time_vector);
         float std_dev = calculateStdDev(constant_data);
         REQUIRE_THAT(std_dev, WithinRel(0.0f, 0.01f));
         
@@ -591,8 +624,13 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
     }
     
     SECTION("Extreme scaling values") {
-        auto data = generateGaussianData(1000, 0.0f, 1.0f, 456);
-        auto time_series = std::make_shared<AnalogTimeSeries>(data);
+        constexpr size_t num_points = 1000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        auto data = generateGaussianData(num_points, 0.0f, 1.0f, 456);
+        auto time_series = std::make_shared<AnalogTimeSeries>(data, time_vector);
         float std_dev = calculateStdDev(data);
         
         PlottingManager manager;

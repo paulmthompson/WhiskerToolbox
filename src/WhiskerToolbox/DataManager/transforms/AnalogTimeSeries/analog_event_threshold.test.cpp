@@ -15,7 +15,7 @@
 
 TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]") {
     std::vector<float> values;
-    std::vector<size_t> times;
+    std::vector<TimeFrameIndex> times;
     std::shared_ptr<AnalogTimeSeries> ats;
     std::shared_ptr<DigitalEventSeries> result_events;
     ThresholdParams params;
@@ -29,7 +29,7 @@ TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]
 
     SECTION("Positive threshold, no lockout") {
         values = {0.5f, 1.5f, 0.8f, 2.5f, 1.2f};
-        times  = {100, 200, 300, 400, 500};
+        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
@@ -49,7 +49,7 @@ TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]
 
     SECTION("Positive threshold, with lockout") {
         values = {0.5f, 1.5f, 1.8f, 0.5f, 2.5f, 2.2f};
-        times  = {100, 200, 300, 400, 500, 600};
+        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500), TimeFrameIndex(600)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
@@ -69,7 +69,7 @@ TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]
 
     SECTION("Negative threshold, no lockout") {
         values = {0.5f, -1.5f, -0.8f, -2.5f, -1.2f};
-        times  = {100, 200, 300, 400, 500};
+        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = -1.0;
         params.direction = ThresholdParams::ThresholdDirection::NEGATIVE;
@@ -82,7 +82,7 @@ TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]
 
     SECTION("Negative threshold, with lockout") {
         values = {0.0f, -1.5f, -1.2f, 0.0f, -2.0f, -0.5f};
-        times  = {100, 200, 300, 400, 500, 600};
+        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500), TimeFrameIndex(600)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = -1.0;
         params.direction = ThresholdParams::ThresholdDirection::NEGATIVE;
@@ -95,7 +95,7 @@ TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]
 
     SECTION("Absolute threshold, no lockout") {
         values = {0.5f, -1.5f, 0.8f, 2.5f, -1.2f, 0.9f};
-        times  = {100, 200, 300, 400, 500, 600};
+        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500), TimeFrameIndex(600)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::ABSOLUTE;
@@ -108,7 +108,7 @@ TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]
 
     SECTION("Absolute threshold, with lockout") {
         values = {0.5f, 1.5f, -1.2f, 0.5f, -2.0f, 0.8f};
-        times  = {100, 200, 300, 400, 500, 600};
+        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500), TimeFrameIndex(600)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::ABSOLUTE;
@@ -121,7 +121,7 @@ TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]
 
     SECTION("No events expected (threshold too high)") {
         values = {0.5f, 1.5f, 0.8f, 2.5f, 1.2f};
-        times  = {100, 200, 300, 400, 500};
+        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 10.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
@@ -133,7 +133,7 @@ TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]
 
     SECTION("All events expected (threshold very low, no lockout)") {
         values = {0.5f, 1.5f, 0.8f, 2.5f, 1.2f};
-        times  = {100, 200, 300, 400, 500};
+        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 0.1;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
@@ -146,7 +146,7 @@ TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]
 
     SECTION("Progress callback detailed check") {
         values = {0.5f, 1.5f, 0.8f, 2.5f, 1.2f}; // 5 samples
-        times  = {100, 200, 300, 400, 500};
+        times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300), TimeFrameIndex(400), TimeFrameIndex(500)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
@@ -210,7 +210,7 @@ TEST_CASE("Event Thresholding Error and Edge Cases", "[transforms][analog_event_
 
     SECTION("Empty AnalogTimeSeries (no timestamps/values)") {
         std::vector<float> values_empty = {};
-        std::vector<size_t> times_empty = {};
+        std::vector<TimeFrameIndex> times_empty = {};
         ats = std::make_shared<AnalogTimeSeries>(values_empty, times_empty);
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
@@ -231,7 +231,7 @@ TEST_CASE("Event Thresholding Error and Edge Cases", "[transforms][analog_event_
 
     SECTION("Lockout time larger than series duration or any interval") {
         std::vector<float> values = {1.5f, 2.5f, 3.5f};
-        std::vector<size_t> times  = {100, 200, 300};
+        std::vector<TimeFrameIndex> times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
@@ -244,7 +244,7 @@ TEST_CASE("Event Thresholding Error and Edge Cases", "[transforms][analog_event_
 
     SECTION("Events exactly at threshold value") {
         std::vector<float> values = {0.5f, 1.0f, 1.5f};
-        std::vector<size_t> times  = {100, 200, 300};
+        std::vector<TimeFrameIndex> times  = {TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(300)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
@@ -263,7 +263,7 @@ TEST_CASE("Event Thresholding Error and Edge Cases", "[transforms][analog_event_
 
     SECTION("Timestamps are zero or start from zero") {
         std::vector<float> values = {1.5f, 0.5f, 2.5f};
-        std::vector<size_t> times  = {0, 10, 20};
+        std::vector<TimeFrameIndex> times  = {TimeFrameIndex(0), TimeFrameIndex(10), TimeFrameIndex(20)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 1.0;
         params.direction = ThresholdParams::ThresholdDirection::POSITIVE;
@@ -276,7 +276,7 @@ TEST_CASE("Event Thresholding Error and Edge Cases", "[transforms][analog_event_
 
     SECTION("Unknown threshold direction (should return empty and log error)") {
         std::vector<float> values = {1.5f, 2.5f};
-        std::vector<size_t> times  = {100, 200};
+        std::vector<TimeFrameIndex> times  = {TimeFrameIndex(100), TimeFrameIndex(200)};
         ats = std::make_shared<AnalogTimeSeries>(values, times);
         params.thresholdValue = 1.0;
         // Intentionally use an invalid enum value, requires careful casting if enum is not class enum

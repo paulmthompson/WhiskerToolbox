@@ -1,7 +1,11 @@
 #ifndef ANALOG_ARMADILLO_HPP
 #define ANALOG_ARMADILLO_HPP
 
+#include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame.hpp"
+
 #include <armadillo>
+
 
 class AnalogTimeSeries;
 
@@ -13,7 +17,7 @@ class AnalogTimeSeries;
  */
 arma::Row<double> convertAnalogTimeSeriesToMlpackArray(
         AnalogTimeSeries const * analogTimeSeries,
-        std::vector<std::size_t> const & timestamps);
+        std::vector<size_t> const & timestamps);
 
 /**
  * Update an AnalogTimeSeries from an mlpack row vector
@@ -23,7 +27,7 @@ arma::Row<double> convertAnalogTimeSeriesToMlpackArray(
  */
 void updateAnalogTimeSeriesFromMlpackArray(
         arma::Row<double> const & array,
-        std::vector<std::size_t> & timestamps,
+        std::vector<TimeFrameIndex> & timestamps,
         AnalogTimeSeries * analogTimeSeries);
 
 #endif// ANALOG_ARMADILLO_HPP

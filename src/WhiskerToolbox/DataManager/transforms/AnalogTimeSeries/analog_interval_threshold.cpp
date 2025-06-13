@@ -83,11 +83,11 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
     size_t typical_time_step = 1;
     if (total_samples > 1) {
         // Use the first time difference as the expected step size
-        typical_time_step = timestamps[1] - timestamps[0];
+        typical_time_step = static_cast<size_t>(timestamps[1].getValue() - timestamps[0].getValue());
 
         // Validate this against a few more samples if available
         if (total_samples > 2) {
-            size_t second_step = timestamps[2] - timestamps[1];
+            size_t second_step = static_cast<size_t>(timestamps[2].getValue() - timestamps[1].getValue());
             // If steps are very different, fall back to minimum step size
             if (second_step != typical_time_step) {
                 typical_time_step = std::min(typical_time_step, second_step);
@@ -104,13 +104,13 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
 
         // Initialize last_valid_time for first sample
         if (i == 0) {
-            last_valid_time = static_cast<int64_t>(timestamps[i]);
+            last_valid_time = timestamps[i].getValue();
         }
 
         // Handle missing data gaps if treating missing as zero
         if (i > 0 && thresholdParams.missingDataMode == IntervalThresholdParams::MissingDataMode::TREAT_AS_ZERO) {
-            size_t const prev_time = timestamps[i - 1];
-            size_t const curr_time = timestamps[i];
+            size_t const prev_time = static_cast<size_t>(timestamps[i - 1].getValue());
+            size_t const curr_time = static_cast<size_t>(timestamps[i].getValue());
             size_t const actual_step = curr_time - prev_time;
 
             // Check if there's a gap (more than 1.5x the typical time step)
@@ -133,16 +133,16 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
 
                 // If we're in an interval and zeros meet threshold, update last_valid_time to end of gap
                 if (in_interval && zeroMeetsThreshold) {
-                    last_valid_time = static_cast<int64_t>(curr_time - typical_time_step);
+                    last_valid_time = curr_time - typical_time_step;
                 } else {
-                    last_valid_time = static_cast<int64_t>(prev_time);
+                    last_valid_time = prev_time;
                 }
             } else {
                 last_valid_time = static_cast<int64_t>(prev_time);
             }
         } else {
             if (i > 0) {
-                last_valid_time = static_cast<int64_t>(timestamps[i - 1]);
+                last_valid_time = timestamps[i - 1].getValue();
             }
         }
 
@@ -150,8 +150,8 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
 
         if (threshold_met && !in_interval) {
             // Start of a new interval
-            if (static_cast<double>(timestamps[i]) - last_interval_end >= thresholdParams.lockoutTime) {
-                interval_start = static_cast<int64_t>(timestamps[i]);
+            if (static_cast<double>(timestamps[i].getValue()) - last_interval_end >= thresholdParams.lockoutTime) {
+                interval_start = timestamps[i].getValue();
                 in_interval = true;
             }
         } else if (!threshold_met && in_interval) {
@@ -163,12 +163,12 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
         }
 
         // Update last_valid_time to current timestamp
-        last_valid_time = static_cast<int64_t>(timestamps[i]);
+        last_valid_time = timestamps[i].getValue();
     }
 
     // Handle case where signal still meets threshold at the end
     if (in_interval) {
-        addIntervalIfValid(interval_start, static_cast<int64_t>(timestamps.back()));
+        addIntervalIfValid(interval_start, timestamps.back().getValue());
     }
 
     if (progressCallback) {

@@ -605,8 +605,15 @@ bool DataManager::createAnalogTimeSeriesWithClock(std::string const & data_key,
         return false;
     }
 
+    // Create time vector with the actual tick values
+    std::vector<TimeFrameIndex> time_vector;
+    time_vector.reserve(analog_data.size());
+    for (size_t i = 0; i < analog_data.size(); ++i) {
+        time_vector.push_back(TimeFrameIndex(start_tick + static_cast<int64_t>(i)));
+    }
+
     // Create the analog series
-    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data));
+    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data), std::move(time_vector));
     setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
     return true;
 }
@@ -621,6 +628,9 @@ bool DataManager::createAnalogTimeSeriesWithCamera(std::string const & data_key,
         return false;
     }
 
+    // Save frame_indices before they're moved
+    std::vector<int64_t> frame_indices_copy = frame_indices;
+
     // Create the camera timeframe
     if (!createCameraTimeFrame(timeframe_key, std::move(frame_indices), overwrite)) {
         return false;
@@ -632,8 +642,15 @@ bool DataManager::createAnalogTimeSeriesWithCamera(std::string const & data_key,
         return false;
     }
 
+    // Create time vector with the actual frame indices
+    std::vector<TimeFrameIndex> time_vector;
+    time_vector.reserve(analog_data.size());
+    for (int64_t frame_idx : frame_indices_copy) {
+        time_vector.push_back(TimeFrameIndex(frame_idx));
+    }
+
     // Create the analog series
-    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data));
+    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data), std::move(time_vector));
     setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
     return true;
 }
@@ -655,8 +672,15 @@ bool DataManager::createAnalogTimeSeriesWithDenseCamera(std::string const & data
         return false;
     }
 
+    // Create time vector with the actual frame indices
+    std::vector<TimeFrameIndex> time_vector;
+    time_vector.reserve(analog_data.size());
+    for (size_t i = 0; i < analog_data.size(); ++i) {
+        time_vector.push_back(TimeFrameIndex(start_frame + static_cast<int64_t>(i)));
+    }
+
     // Create the analog series
-    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data));
+    auto series = std::make_shared<AnalogTimeSeries>(std::move(analog_data), std::move(time_vector));
     setDataV2(data_key, series, timeframe_opt.value(), timeframe_key);
     return true;
 }

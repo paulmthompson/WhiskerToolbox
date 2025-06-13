@@ -413,7 +413,7 @@ TEST_CASE("DataAggregation - Analog time series transformations", "[data_aggrega
     SECTION("Basic analog transformations") {
         // Create test analog data: values 1.0, 2.0, 3.0, 4.0, 5.0 at times 0, 1, 2, 3, 4
         std::vector<float> analog_data = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_data);
+        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_data, analog_data.size());
 
         std::vector<Interval> row_intervals = {
                 {1, 3}// Should include values 2.0, 3.0, 4.0 (indices 1, 2, 3)
@@ -442,7 +442,7 @@ TEST_CASE("DataAggregation - Analog time series transformations", "[data_aggrega
 
     SECTION("Multiple intervals with same analog data") {
         std::vector<float> analog_data = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f};
-        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_data);
+        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_data, analog_data.size());
 
         std::vector<Interval> row_intervals = {
                 {0, 1},// Values: 10.0, 20.0
@@ -483,7 +483,7 @@ TEST_CASE("DataAggregation - Analog time series transformations", "[data_aggrega
         // Create both interval and analog reference data
         std::vector<Interval> ref_intervals = {{0, 5}, {250, 350}};
         std::vector<float> analog_data = {1.0f, 4.0f, 2.0f, 8.0f, 3.0f, 6.0f};
-        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_data);
+        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_data, analog_data.size());
 
         std::vector<Interval> row_intervals = {
                 {1, 3}// Will overlap with ref_intervals[0] and include analog values [4.0, 2.0, 8.0]
@@ -612,7 +612,7 @@ TEST_CASE("DataAggregation - Point data transformations", "[data_aggregation][po
         
         // Create analog reference data
         std::vector<float> analog_data = {1.0f, 4.0f, 2.0f, 8.0f, 3.0f, 6.0f};
-        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_data);
+        auto analog_series = std::make_shared<AnalogTimeSeries>(analog_data, analog_data.size());
         
         // Create point reference data
         auto point_data = std::make_shared<PointData>();
@@ -707,7 +707,11 @@ TEST_CASE("DataAggregation - Time index vs array index bug test", "[data_aggrega
         // Create analog data where time indices don't match array positions
         // This tests the bug where we were using array positions instead of time indices
         std::vector<float> analog_values = {10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
-        std::vector<size_t> analog_times = {100, 200, 300, 400, 500}; // Non-sequential, sparse times
+        std::vector<TimeFrameIndex> analog_times = {TimeFrameIndex(100), 
+                 TimeFrameIndex(200), 
+                 TimeFrameIndex(300), 
+                 TimeFrameIndex(400), 
+                 TimeFrameIndex(500)}; // Non-sequential, sparse times
         auto analog_series = std::make_shared<AnalogTimeSeries>(analog_values, analog_times);
         
         // Test interval that should include times 200, 300, 400 (values 20.0, 30.0, 40.0)
@@ -742,7 +746,9 @@ TEST_CASE("DataAggregation - Time index vs array index bug test", "[data_aggrega
     SECTION("Analog data with gaps - test edge case") {
         // Test case where interval spans a gap in time indices
         std::vector<float> analog_values = {100.0f, 200.0f, 300.0f};
-        std::vector<size_t> analog_times = {10, 50, 90}; // Large gaps between samples
+        std::vector<TimeFrameIndex> analog_times = {TimeFrameIndex(10), 
+                 TimeFrameIndex(50), 
+                 TimeFrameIndex(90)}; // Large gaps between samples
         auto analog_series = std::make_shared<AnalogTimeSeries>(analog_values, analog_times);
         
         std::vector<Interval> row_intervals = {
@@ -794,10 +800,10 @@ TEST_CASE("DataAggregation - Complex mixed transformations", "[data_aggregation]
 
         // Analog reference data with values at indices corresponding to time
         std::vector<float> analog_values;
-        std::vector<size_t> analog_times;
+        std::vector<TimeFrameIndex> analog_times;
         for (int i = 0; i <= 500; ++i) {
             analog_values.push_back(static_cast<float>(std::sin(i * 0.1) + i * 0.01));
-            analog_times.push_back(i);
+            analog_times.push_back(TimeFrameIndex(i));
         }
         auto analog_series = std::make_shared<AnalogTimeSeries>(analog_values, analog_times);
 

@@ -37,7 +37,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
 
         REQUIRE(times.size() == 1);
         REQUIRE(values.size() == 1);
-        REQUIRE(times[0] == 10);
+        REQUIRE(times[0] == TimeFrameIndex(10));
         // Angle should be 0 degrees (horizontal line points right)
         REQUIRE_THAT(values[0], Catch::Matchers::WithinAbs(0.0f, 0.001f));
     }
@@ -60,7 +60,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
 
         REQUIRE(times.size() == 1);
         REQUIRE(values.size() == 1);
-        REQUIRE(times[0] == 20);
+        REQUIRE(times[0] == TimeFrameIndex(20));
         // Angle should be 90 degrees (vertical line points up)
         REQUIRE_THAT(values[0], Catch::Matchers::WithinAbs(90.0f, 0.001f));
     }
@@ -83,7 +83,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
 
         REQUIRE(times.size() == 1);
         REQUIRE(values.size() == 1);
-        REQUIRE(times[0] == 30);
+        REQUIRE(times[0] == TimeFrameIndex(30));
         // Angle should be 45 degrees
         REQUIRE_THAT(values[0], Catch::Matchers::WithinAbs(45.0f, 0.001f));
     }
@@ -120,9 +120,9 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
         REQUIRE(values.size() == 3);
 
         // Find time indices and check angles
-        auto time40_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), 40));
-        auto time50_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), 50));
-        auto time60_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), 60));
+        auto time40_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(40)));
+        auto time50_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(50)));
+        auto time60_idx = std::distance(times.begin(), std::find(times.begin(), times.end(), TimeFrameIndex(60)));
 
         // Horizontal line: 0 degrees
         REQUIRE_THAT(values[time40_idx], Catch::Matchers::WithinAbs(0.0f, 0.001f));
@@ -151,7 +151,7 @@ TEST_CASE("Line angle calculation - Core functionality", "[line][angle][transfor
 
         REQUIRE(times.size() == 1);
         REQUIRE(values.size() == 1);
-        REQUIRE(times[0] == 70);
+        REQUIRE(times[0] == TimeFrameIndex(70));
 
         // For a parabola y = x², the derivative is 2x. So slope at x=3 is 6
         // Angle of atan(6,1) is approximately 80.537 degrees. 

@@ -2,6 +2,7 @@
 #define STRONG_TIME_TYPES_HPP
 
 #include <cstdint>
+#include <cstddef>
 #include <variant>
 #include <type_traits>
 
@@ -151,6 +152,43 @@ public:
     
 private:
     int64_t _value;
+};
+
+/**
+ * @brief Strong type for indices into data arrays within time series objects
+ * 
+ * Represents direct indices into the _data vector of time series classes.
+ * This is distinct from TimeFrameIndex (which indexes into time coordinate space)
+ * and from time coordinates themselves. Use this when you need to access
+ * data by its position in the storage array, regardless of time semantics.
+ */
+class DataArrayIndex {
+public:
+    explicit DataArrayIndex(size_t value) : _value(value) {}
+    
+    [[nodiscard]] size_t getValue() const { return _value; }
+    
+    // Comparison operators
+    bool operator==(DataArrayIndex const& other) const { return _value == other._value; }
+    bool operator!=(DataArrayIndex const& other) const { return _value != other._value; }
+    bool operator<(DataArrayIndex const& other) const { return _value < other._value; }
+    bool operator<=(DataArrayIndex const& other) const { return _value <= other._value; }
+    bool operator>(DataArrayIndex const& other) const { return _value > other._value; }
+    bool operator>=(DataArrayIndex const& other) const { return _value >= other._value; }
+    
+    // Arithmetic operations
+    DataArrayIndex operator+(size_t offset) const { return DataArrayIndex(_value + offset); }
+    DataArrayIndex operator-(size_t offset) const { return DataArrayIndex(_value - offset); }
+    size_t operator-(DataArrayIndex const& other) const { return _value - other._value; }
+    
+    // Pre and post increment/decrement for iteration
+    DataArrayIndex& operator++() { ++_value; return *this; }
+    DataArrayIndex operator++(int) { DataArrayIndex temp(*this); ++_value; return temp; }
+    DataArrayIndex& operator--() { --_value; return *this; }
+    DataArrayIndex operator--(int) { DataArrayIndex temp(*this); --_value; return temp; }
+    
+private:
+    size_t _value;
 };
 
 /**

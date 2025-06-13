@@ -72,8 +72,10 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
             analog_values[i] = dist(gen) + std::sin(2.0f * M_PI * i / 1000.0f); // Sine wave + noise
         }
         
-        std::vector<size_t> analog_indices(30000);
-        std::iota(analog_indices.begin(), analog_indices.end(), 0);
+        std::vector<TimeFrameIndex> analog_indices;
+        for (size_t i = 0; i < analog_values.size(); ++i) {
+            analog_indices.push_back(TimeFrameIndex(i));
+        }
         
         auto analog_series = std::make_shared<AnalogTimeSeries>(analog_values, analog_indices);
         dm.setData<AnalogTimeSeries>("neural_signal", analog_series, "master");
@@ -292,8 +294,10 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         for (size_t i = 0; i < neural_signal.size(); ++i) {
             neural_signal[i] = std::sin(2.0f * M_PI * i / 3000.0f); // 10 Hz sine wave
         }
-        std::vector<size_t> neural_indices(30000);
-        std::iota(neural_indices.begin(), neural_indices.end(), 0);
+        std::vector<TimeFrameIndex> neural_indices;
+        for (size_t i = 0; i < neural_signal.size(); ++i) {
+            neural_indices.push_back(TimeFrameIndex(i));
+        }
         auto neural_series = std::make_shared<AnalogTimeSeries>(neural_signal, neural_indices);
         dm.setData<AnalogTimeSeries>("neural", neural_series, "master");
         
@@ -329,7 +333,7 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         
         std::vector<float> neural_during_behavior;
         for (size_t i = 0; i < neural_times.size(); ++i) {
-            int neural_time = master_timeframe->getTimeAtIndex(TimeFrameIndex(static_cast<int>(neural_times[i])));
+            int neural_time = master_timeframe->getTimeAtIndex(neural_times[i]);
             if (neural_time >= behavior_start_master && neural_time <= behavior_end_master) {
                 neural_during_behavior.push_back(neural_values[i]);
             }
