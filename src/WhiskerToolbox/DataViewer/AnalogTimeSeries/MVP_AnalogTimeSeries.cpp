@@ -1,6 +1,7 @@
 #include "MVP_AnalogTimeSeries.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/utils/statistics.hpp"
 #include "PlottingManager/PlottingManager.hpp"
 
 #include <cmath>

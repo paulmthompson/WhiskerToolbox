@@ -9,8 +9,8 @@ TimeFrame::TimeFrame(std::vector<int> const & times) {
     _total_frame_count = static_cast<int>(times.size());
 }
 
-int TimeFrame::getTimeAtIndex(TimeIndex index) const {
-    if (index < TimeIndex(0) || index.getValue() >= _times.size()) {
+int TimeFrame::getTimeAtIndex(TimeFrameIndex index) const {
+    if (index < TimeFrameIndex(0) || index.getValue() >= _times.size()) {
         std::cout << "Index " << index.getValue() << " out of range" << " for time frame of size " << _times.size() << std::endl;
         return 0;
     }
@@ -55,7 +55,7 @@ int TimeFrame::checkFrameInbounds(int frame_id) const {
     return frame_id;
 }
 
-int64_t getTimeIndexForSeries(TimeIndex source_index,
+int64_t getTimeIndexForSeries(TimeFrameIndex source_index,
                               TimeFrame const * source_time_frame,
                               TimeFrame const * destination_time_frame) {
     if (source_time_frame == destination_time_frame) {

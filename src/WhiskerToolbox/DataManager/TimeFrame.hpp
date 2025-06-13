@@ -5,27 +5,52 @@
 #include <iostream>
 #include <vector>
 
-struct TimeIndex {
-    explicit TimeIndex(int64_t val)
+
+struct TimeFrameIndex {
+    explicit TimeFrameIndex(int64_t val)
         : value(val) {}
 
-    // Getter for the underlying value
     [[nodiscard]] int64_t getValue() const {
         return value;
     }
 
-    // (Optional) Overload comparison operators if needed
-    bool operator==(TimeIndex const & other) const {
+    bool operator==(TimeFrameIndex const & other) const {
         return value == other.value;
     }
 
-    bool operator!=(TimeIndex const & other) const {
+    bool operator!=(TimeFrameIndex const & other) const {
         return value != other.value;
     }
 
-    bool operator<(TimeIndex const & other) const {
+    bool operator<(TimeFrameIndex const & other) const {
         return value < other.value;
     }
+
+    bool operator>(TimeFrameIndex const & other) const {
+        return value > other.value;
+    }
+
+    bool operator<=(TimeFrameIndex const & other) const {
+        return value <= other.value;
+    }
+
+    bool operator>=(TimeFrameIndex const & other) const {
+        return value >= other.value;
+    }
+
+    TimeFrameIndex operator++() {
+        return TimeFrameIndex(value + 1);
+    }
+
+    //Arithmetic operations
+    TimeFrameIndex operator+(TimeFrameIndex const & other) const {
+        return TimeFrameIndex(value + other.value);
+    }
+
+    TimeFrameIndex operator-(TimeFrameIndex const & other) const {
+        return TimeFrameIndex(value - other.value);
+    }
+
 
 private:
     int64_t value;
@@ -38,7 +63,7 @@ public:
 
     [[nodiscard]] int getTotalFrameCount() const { return _total_frame_count; };
 
-    [[nodiscard]] int getTimeAtIndex(TimeIndex index) const;
+    [[nodiscard]] int getTimeAtIndex(TimeFrameIndex index) const;
 
     [[nodiscard]] int getIndexAtTime(float time) const;
 
@@ -65,7 +90,7 @@ private:
  * @return The original `time_value_in_source_frame` if frames are the same object instance,
  *         or the corresponding index in `destination_time_frame` if frames are different.
  */
-int64_t getTimeIndexForSeries(TimeIndex time_value_in_source_frame,
+int64_t getTimeIndexForSeries(TimeFrameIndex time_value_in_source_frame,
                               TimeFrame const * source_time_frame,
                               TimeFrame const * destination_time_frame);
 

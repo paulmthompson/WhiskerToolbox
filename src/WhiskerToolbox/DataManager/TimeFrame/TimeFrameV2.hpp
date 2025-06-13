@@ -2,6 +2,7 @@
 #define TIMEFRAME_V2_HPP
 
 #include "StrongTimeTypes.hpp"
+#include "TimeFrame.hpp"
 
 #include <ranges>
 #include <algorithm>
@@ -31,11 +32,11 @@ struct DenseTimeRange {
      * @param index Index into the dense range
      * @return Time value at the given index
      */
-    [[nodiscard]] int64_t getTimeAtIndex(int64_t index) const {
-        if (index < 0 || index >= count) {
+    [[nodiscard]] int64_t getTimeAtIndex(TimeFrameIndex index) const {
+        if (index.getValue() < 0 || index.getValue() >= count) {
             return start; // Return start value for out-of-bounds access
         }
-        return start + index * step;
+        return start + index.getValue() * step;
     }
     
     /**
@@ -44,14 +45,14 @@ struct DenseTimeRange {
      * @param time_value Time value to search for
      * @return Index of the closest time value
      */
-    [[nodiscard]] int64_t getIndexAtTime(double time_value) const {
-        if (count == 0) return 0;
+    [[nodiscard]] TimeFrameIndex getIndexAtTime(double time_value) const {
+        if (count == 0) return TimeFrameIndex(0);
         
-        int64_t index = static_cast<int64_t>((time_value - start) / step);
-        
+        TimeFrameIndex index = TimeFrameIndex(static_cast<int64_t>((time_value - start) / step));
+
         // Clamp to valid range
-        if (index < 0) return 0;
-        if (index >= count) return count - 1;
+        if (index.getValue() < 0) return TimeFrameIndex(0);
+        if (index.getValue() >= count) return TimeFrameIndex(count - 1);
         
         return index;
     }
@@ -109,13 +110,13 @@ public:
      * @param index Index into the time frame
      * @return Time coordinate at the given index
      */
-    [[nodiscard]] CoordinateType getTimeAtIndex(int64_t index) const {
+    [[nodiscard]] CoordinateType getTimeAtIndex(TimeFrameIndex index) const {
         return std::visit([index](auto const& storage) -> CoordinateType {
             if constexpr (std::is_same_v<std::decay_t<decltype(storage)>, std::vector<int64_t>>) {
-                if (index < 0 || static_cast<size_t>(index) >= storage.size()) {
+                if (index.getValue() < 0 || static_cast<size_t>(index.getValue()) >= storage.size()) {
                     return CoordinateType(0); // Return zero for out-of-bounds
                 }
-                return CoordinateType(storage[static_cast<size_t>(index)]);
+                return CoordinateType(storage[static_cast<size_t>(index.getValue())]);
             } else { // DenseTimeRange
                 return CoordinateType(storage.getTimeAtIndex(index));
             }
@@ -128,26 +129,26 @@ public:
      * @param time_value Time value to search for (in the same coordinate system)
      * @return Index of the closest time value
      */
-    [[nodiscard]] int64_t getIndexAtTime(CoordinateType time_value) const {
-        return std::visit([time_value](auto const& storage) -> int64_t {
+    [[nodiscard]] TimeFrameIndex getIndexAtTime(CoordinateType time_value) const {
+        return std::visit([time_value](auto const& storage) -> TimeFrameIndex {
             if constexpr (std::is_same_v<std::decay_t<decltype(storage)>, std::vector<int64_t>>) {
                 // Binary search for sparse storage
                 double target = static_cast<double>(time_value.getValue());
                 auto it = std::lower_bound(storage.begin(), storage.end(), target);
                 
                 if (it == storage.end()) {
-                    return static_cast<int64_t>(storage.size()) - 1;
+                    return TimeFrameIndex(static_cast<int64_t>(storage.size()) - 1);
                 }
                 if (it == storage.begin()) {
-                    return 0;
+                    return TimeFrameIndex(0);
                 }
                 
                 // Find closest value
                 auto prev = it - 1;
                 if (std::abs(static_cast<double>(*prev) - target) <= std::abs(static_cast<double>(*it) - target)) {
-                    return static_cast<int64_t>(std::distance(storage.begin(), prev));
+                    return TimeFrameIndex(static_cast<int64_t>(std::distance(storage.begin(), prev)));
                 } else {
-                    return static_cast<int64_t>(std::distance(storage.begin(), it));
+                    return TimeFrameIndex(static_cast<int64_t>(std::distance(storage.begin(), it)));
                 }
             } else { // DenseTimeRange
                 return storage.getIndexAtTime(static_cast<double>(time_value.getValue()));
@@ -174,11 +175,11 @@ public:
      * @param index Index to check
      * @return Clamped index within valid range
      */
-    [[nodiscard]] int64_t checkIndexInBounds(int64_t index) const {
+    [[nodiscard]] TimeFrameIndex checkIndexInBounds(TimeFrameIndex index) const {
         int64_t total_count = getTotalFrameCount();
-        if (index < 0) return 0;
-        if (index >= total_count) return total_count - 1;
-        return index;
+        if (index.getValue() < 0) return TimeFrameIndex(0);
+        if (index.getValue() >= total_count) return TimeFrameIndex(total_count - 1);
+        return TimeFrameIndex(index.getValue());
     }
     
     /**

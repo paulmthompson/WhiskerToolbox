@@ -50,8 +50,8 @@ public:
                });
     }
 
-    [[nodiscard]] auto getEventsInRange(TimeIndex start_index,
-                                        TimeIndex stop_index,
+    [[nodiscard]] auto getEventsInRange(TimeFrameIndex start_index,
+                                        TimeFrameIndex stop_index,
                                         TimeFrame const * source_time_frame,
                                         TimeFrame const * destination_time_frame) const {
 

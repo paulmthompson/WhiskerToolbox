@@ -632,7 +632,7 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
             for (float event_idx: all_events) {
                 try {
                     // Convert series time index to actual time, then to master time frame
-                    float event_time = static_cast<float>(series_time_frame->getTimeAtIndex(TimeIndex(static_cast<int>(event_idx))));
+                    float event_time = static_cast<float>(series_time_frame->getTimeAtIndex(TimeFrameIndex(static_cast<int>(event_idx))));
 
                     // Check if this event time falls within our frame range
                     if (event_time >= start_time && event_time <= end_time) {

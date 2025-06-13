@@ -139,8 +139,8 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
         // Test coordinate access on both
         std::visit([](auto const & timeframe_ptr) {
             // Test a few coordinates
-            auto coord_100 = timeframe_ptr->getTimeAtIndex(100);
-            auto coord_1000 = timeframe_ptr->getTimeAtIndex(1000);
+            auto coord_100 = timeframe_ptr->getTimeAtIndex(TimeFrameIndex(100));
+            auto coord_1000 = timeframe_ptr->getTimeAtIndex(TimeFrameIndex(1000));
             
             if constexpr (std::is_same_v<typename std::decay_t<decltype(*timeframe_ptr)>::coordinate_type, ClockTicks>) {
                 REQUIRE(coord_100.getValue() == 100);
@@ -149,8 +149,8 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
         }, dense_ref.value());
         
         std::visit([](auto const & timeframe_ptr) {
-            auto coord_100 = timeframe_ptr->getTimeAtIndex(100);
-            auto coord_1000 = timeframe_ptr->getTimeAtIndex(1000);
+            auto coord_100 = timeframe_ptr->getTimeAtIndex(TimeFrameIndex(100));
+            auto coord_1000 = timeframe_ptr->getTimeAtIndex(TimeFrameIndex(1000));
             
             if constexpr (std::is_same_v<typename std::decay_t<decltype(*timeframe_ptr)>::coordinate_type, ClockTicks>) {
                 REQUIRE(coord_100.getValue() == 100);

@@ -357,8 +357,8 @@ void OpenGLWidget::drawDigitalEventSeries() {
         float const bNorm = static_cast<float>(b) / 255.0f;
         float const alpha = display_options->alpha;
 
-        auto visible_events = series->getEventsInRange(TimeIndex(start_time),
-                                                       TimeIndex(end_time),
+        auto visible_events = series->getEventsInRange(TimeFrameIndex(start_time),
+                                                       TimeFrameIndex(end_time),
                                                        time_frame.get(),
                                                        _master_time_frame.get());
 
@@ -401,7 +401,7 @@ void OpenGLWidget::drawDigitalEventSeries() {
                 xCanvasPos = event;
             } else {
                 // Different time frames - convert event index to time, then to master time frame
-                float event_time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(static_cast<int>(event))));
+                float event_time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(static_cast<int>(event))));
                 xCanvasPos = event_time;// This should work if both time frames use the same time units
             }
 
@@ -460,7 +460,7 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
                 static_cast<int64_t>(start_time),
                 static_cast<int64_t>(end_time),
                 [&time_frame](int64_t idx) {
-                    return static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(idx)));
+                    return static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(idx)));
                 });
 
         hexToRGB(display_options->hex_color, r, g, b);
@@ -498,8 +498,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 
         for (auto const & interval: visible_intervals) {
 
-            auto start = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(interval.start)));
-            auto end = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(interval.end)));
+            auto start = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.start)));
+            auto end = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.end)));
 
             //Clip the interval to the visible range
             start = std::max(start, start_time);
@@ -666,9 +666,9 @@ void OpenGLWidget::drawAnalogSeries() {
         // Otherwise, convert the master time coordinates to data time frame indices
         if (time_frame.get() == _master_time_frame.get()) {
             start_it = std::lower_bound(data_time.begin(), data_time.end(), start_time,
-                                        [&time_frame](auto const & time, auto const & value) { return time_frame->getTimeAtIndex(TimeIndex(time)) < value; });
+                                        [&time_frame](auto const & time, auto const & value) { return time_frame->getTimeAtIndex(TimeFrameIndex(time)) < value; });
             end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
-                                      [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(TimeIndex(time)); });
+                                      [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(TimeFrameIndex(time)); });
         } else {
             auto start_idx = time_frame->getIndexAtTime(start_time);                   // index in time vector
             auto end_idx = time_frame->getIndexAtTime(end_time);                       // index in time vector
@@ -701,7 +701,7 @@ void OpenGLWidget::drawAnalogSeries() {
             // Original behavior: connect all points
             for (auto it = start_it; it != end_it; ++it) {
                 size_t const index = std::distance(data_time.begin(), it);
-                auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[index])));
+                auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(data_time[index])));
                 float const xCanvasPos = time;
                 float const yCanvasPos = data[index];
                 m_vertices.push_back(xCanvasPos);
@@ -755,14 +755,14 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator
 
     for (auto it = start_it; it != end_it; ++it) {
         size_t const index = std::distance(data_time.begin(), it);
-        auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[index])));
+        auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(data_time[index])));
         float const xCanvasPos = time;
         float const yCanvasPos = data[index];
 
         // Check for gap if this isn't the first point
         if (it != start_it) {
             size_t const prev_index = std::distance(data_time.begin(), prev_it);
-            auto const prev_time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[prev_index])));
+            auto const prev_time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(data_time[prev_index])));
             //float const time_gap = time - prev_time;
             float const time_gap = index - prev_index;
 
@@ -821,12 +821,12 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it
         float xCanvasPos;
         if (time_frame.get() == _master_time_frame.get()) {
             // Same time frame - convert data index to time coordinate
-            auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[index])));
+            auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(data_time[index])));
             xCanvasPos = time;
         } else {
             // Different time frames - data_time[index] is already an index in the data's time frame
             // Convert to actual time, which should be compatible with master time frame
-            auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeIndex(data_time[index])));
+            auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(data_time[index])));
             xCanvasPos = time;
         }
 
@@ -1282,8 +1282,8 @@ std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std:
             interval_end_master = interval.end;
         } else {
             // Convert series indices to master time frame coordinates
-            interval_start_master = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeIndex(interval.start)));
-            interval_end_master = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeIndex(interval.end)));
+            interval_start_master = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.start)));
+            interval_end_master = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.end)));
         }
 
         return std::make_pair(interval_start_master, interval_end_master);
@@ -1456,8 +1456,8 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
     } else {
         // Convert series indices back to master time coordinates
         try {
-            _dragged_start_time = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeIndex(new_start_series)));
-            _dragged_end_time = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeIndex(new_end_series)));
+            _dragged_start_time = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeFrameIndex(new_start_series)));
+            _dragged_end_time = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeFrameIndex(new_end_series)));
         } catch (...) {
             // Conversion failed - abort drag
             cancelIntervalDrag();
@@ -1841,8 +1841,8 @@ void OpenGLWidget::updateNewIntervalCreation(QPoint const & current_pos) {
     } else {
         // Convert series indices back to master time coordinates
         try {
-            _new_interval_start_time = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeIndex(new_start_series)));
-            _new_interval_end_time = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeIndex(new_end_series)));
+            _new_interval_start_time = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeFrameIndex(new_start_series)));
+            _new_interval_end_time = static_cast<int64_t>(time_frame->getTimeAtIndex(TimeFrameIndex(new_end_series)));
         } catch (...) {
             // Conversion failed - abort creation
             cancelNewIntervalCreation();

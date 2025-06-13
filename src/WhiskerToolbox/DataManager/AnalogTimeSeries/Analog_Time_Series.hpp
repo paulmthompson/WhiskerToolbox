@@ -57,6 +57,21 @@ public:
     [[nodiscard]] std::vector<float> const & getAnalogTimeSeries() const { return _data; };
 
     /**
+    * @brief Get a span (view) of data values in a time range using any coordinate type
+    *
+    * This method returns a std::span<const float> over the contiguous block of data
+    * corresponding to the given coordinate range. No data is copied.
+    *
+    * @param start_coord Start coordinate (any coordinate type)
+    * @param end_coord End coordinate (any coordinate type)
+    * @return std::span<const float> view into the data in the specified range
+    * @throws std::runtime_error if no TimeFrameV2 is associated or coordinate types don't match
+    * @note The returned span is valid as long as the AnalogTimeSeries is not modified.
+    */
+    [[nodiscard]] std::span<const float> getDataSpanInCoordinateRange(TimeCoordinate start_coord, 
+                                                                      TimeCoordinate end_coord) const;
+
+    /**
      * @brief Get the time indices as a vector
      * 
      * Returns a vector containing the time indices corresponding to each analog data sample.
@@ -120,35 +135,6 @@ public:
                std::views::transform([this](size_t i) {
                    return DataPoint{getTimeAtIndex(i), getDataAtIndex(i)};
                });
-    }
-
-    std::pair<std::vector<size_t>, std::vector<float>> getDataVectorsInRange(
-            float start_time, float stop_time) const {
-        std::vector<size_t> times;
-        std::vector<float> values;
-
-        auto range = getDataInRange(start_time, stop_time);
-        for (auto const & point: range) {
-            times.push_back(point.time_idx);
-            values.push_back(point.value);
-        }
-
-        return {times, values};
-    }
-
-    template<typename TransformFunc>
-    std::pair<std::vector<size_t>, std::vector<float>> getDataVectorsInRange(
-            float start_time, float stop_time, TransformFunc time_transform) const {
-        std::vector<size_t> times;
-        std::vector<float> values;
-
-        auto range = getDataInRange(start_time, stop_time, time_transform);
-        for (auto const & point: range) {
-            times.push_back(point.time_idx);
-            values.push_back(point.value);
-        }
-
-        return {times, values};
     }
 
     // ========== TimeFrameV2 Support ==========
@@ -265,16 +251,16 @@ public:
             std::vector<float> result;
 
             // Get the range of indices for the coordinate range
-            int64_t start_idx = timeframe_ptr->getIndexAtTime(start_typed);
-            int64_t end_idx = timeframe_ptr->getIndexAtTime(end_typed);
+            TimeFrameIndex start_idx = timeframe_ptr->getIndexAtTime(start_typed);
+            TimeFrameIndex end_idx = timeframe_ptr->getIndexAtTime(end_typed);
 
             if (start_idx > end_idx) std::swap(start_idx, end_idx);
 
-            result.reserve(static_cast<size_t>(end_idx - start_idx + 1));
+            result.reserve(static_cast<size_t>((end_idx - start_idx).getValue() + 1));
 
-            for (int64_t idx = start_idx; idx <= end_idx; ++idx) {
-                if (idx >= 0 && static_cast<size_t>(idx) < _data.size()) {
-                    result.push_back(_data[static_cast<size_t>(idx)]);
+            for (TimeFrameIndex idx = start_idx; idx <= end_idx; ++idx) {
+                if (idx.getValue() >= 0 && static_cast<size_t>(idx.getValue()) < _data.size()) {
+                    result.push_back(_data[static_cast<size_t>(idx.getValue())]);
                 }
             }
 
@@ -316,19 +302,19 @@ public:
             std::vector<float> values;
 
             // Get the range of indices for the coordinate range
-            int64_t start_idx = timeframe_ptr->getIndexAtTime(start_typed);
-            int64_t end_idx = timeframe_ptr->getIndexAtTime(end_typed);
+            TimeFrameIndex start_idx = timeframe_ptr->getIndexAtTime(start_typed);
+            TimeFrameIndex end_idx = timeframe_ptr->getIndexAtTime(end_typed);
 
             if (start_idx > end_idx) std::swap(start_idx, end_idx);
 
-            coords.reserve(static_cast<size_t>(end_idx - start_idx + 1));
-            values.reserve(static_cast<size_t>(end_idx - start_idx + 1));
+            coords.reserve(static_cast<size_t>((end_idx - start_idx).getValue() + 1));
+            values.reserve(static_cast<size_t>((end_idx - start_idx).getValue() + 1));
 
-            for (int64_t idx = start_idx; idx <= end_idx; ++idx) {
-                if (idx >= 0 && static_cast<size_t>(idx) < _data.size()) {
+            for (TimeFrameIndex idx = start_idx; idx <= end_idx; ++idx) {
+                if (idx.getValue() >= 0 && static_cast<size_t>(idx.getValue()) < _data.size()) {
                     // Store coordinate as TimeCoordinate variant
                     coords.push_back(TimeCoordinate{timeframe_ptr->getTimeAtIndex(idx)});
-                    values.push_back(_data[static_cast<size_t>(idx)]);
+                    values.push_back(_data[static_cast<size_t>(idx.getValue())]);
                 }
             }
 
@@ -430,20 +416,6 @@ public:
         }, _timeframe_v2.value());
     }
 
-    /**
-    * @brief Get a span (view) of data values in a time range using any coordinate type
-    *
-    * This method returns a std::span<const float> over the contiguous block of data
-    * corresponding to the given coordinate range. No data is copied.
-    *
-    * @param start_coord Start coordinate (any coordinate type)
-    * @param end_coord End coordinate (any coordinate type)
-    * @return std::span<const float> view into the data in the specified range
-    * @throws std::runtime_error if no TimeFrameV2 is associated or coordinate types don't match
-    * @note The returned span is valid as long as the AnalogTimeSeries is not modified.
-    */
-    std::span<const float> getDataSpanInCoordinateRange(TimeCoordinate start_coord, TimeCoordinate end_coord) const;
-
     // ========== Time Storage Optimization ==========
     
     /**
@@ -486,7 +458,7 @@ public:
             }
             return indices[i];
         }
-        
+
         [[nodiscard]] size_t size() const { return indices.size(); }
     };
     
@@ -513,109 +485,5 @@ private:
     void setData(std::vector<float> analog_vector, std::vector<size_t> time_vector);
     void setData(std::map<int, float> analog_map);
 };
-
-/**
- * @brief Calculate the mean value of an AnalogTimeSeries
- *
- * @param series The time series to calculate the mean from
- * @return float The mean value
- */
-float calculate_mean(AnalogTimeSeries const & series);
-
-/**
- * @brief Calculate the mean value of an AnalogTimeSeries in a specific range
- *
- * @param series The time series to calculate the mean from
- * @param start Start index of the range (inclusive)
- * @param end End index of the range (exclusive)
- * @return float The mean value in the specified range
- */
-float calculate_mean(AnalogTimeSeries const & series, int64_t start, int64_t end);
-
-/**
- * @brief Calculate the standard deviation of an AnalogTimeSeries
- *
- * @param series The time series to calculate the standard deviation from
- * @return float The standard deviation
- */
-float calculate_std_dev(AnalogTimeSeries const & series);
-
-/**
- * @brief Calculate the standard deviation of an AnalogTimeSeries in a specific range
- *
- * @param series The time series to calculate the standard deviation from
- * @param start Start index of the range (inclusive)
- * @param end End index of the range (exclusive)
- * @return float The standard deviation in the specified range
- */
-float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t end);
-
-/**
- * @brief Calculate the minimum value in an AnalogTimeSeries
- *
- * @param series The time series to find the minimum value in
- * @return float The minimum value
- */
-float calculate_min(AnalogTimeSeries const & series);
-
-/**
- * @brief Calculate the minimum value in an AnalogTimeSeries in a specific range
- *
- * @param series The time series to find the minimum value in
- * @param start Start index of the range (inclusive)
- * @param end End index of the range (exclusive)
- * @return float The minimum value in the specified range
- */
-float calculate_min(AnalogTimeSeries const & series, int64_t start, int64_t end);
-
-/**
- * @brief Calculate the maximum value in an AnalogTimeSeries
- *
- * @param series The time series to find the maximum value in
- * @return float The maximum value
- */
-float calculate_max(AnalogTimeSeries const & series);
-
-/**
- * @brief Calculate the maximum value in an AnalogTimeSeries in a specific range
- *
- * @param series The time series to find the maximum value in
- * @param start Start index of the range (inclusive)
- * @param end End index of the range (exclusive)
- * @return float The maximum value in the specified range
- */
-float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end);
-
-/**
- * @brief Calculate an approximate standard deviation using systematic sampling
- *
- * Uses systematic sampling (every Nth element) to estimate standard deviation efficiently.
- * If the sample size would be below the minimum threshold, falls back to exact calculation.
- *
- * @param series The time series to calculate the standard deviation from
- * @param sample_percentage Percentage of data to sample (e.g., 0.1 for 0.1%)
- * @param min_sample_threshold Minimum number of samples before falling back to exact calculation
- * @return float The approximate standard deviation
- */
-float calculate_std_dev_approximate(AnalogTimeSeries const & series,
-                                    float sample_percentage = 0.1f,
-                                    size_t min_sample_threshold = 1000);
-
-/**
- * @brief Calculate an approximate standard deviation using adaptive sampling
- *
- * Starts with a small sample and progressively increases until the estimate
- * converges within the specified tolerance or reaches maximum samples.
- *
- * @param series The time series to calculate the standard deviation from
- * @param initial_sample_size Starting number of samples
- * @param max_sample_size Maximum number of samples to use
- * @param convergence_tolerance Relative tolerance for convergence (e.g., 0.01 for 1%)
- * @return float The approximate standard deviation
- */
-float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
-                                 size_t initial_sample_size = 100,
-                                 size_t max_sample_size = 10000,
-                                 float convergence_tolerance = 0.01f);
 
 #endif// ANALOG_TIME_SERIES_HPP

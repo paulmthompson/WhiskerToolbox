@@ -977,7 +977,7 @@ void Media_Window::_plotDigitalIntervalSeries() {
             if (needs_conversion) {
                 // Convert from video timeframe ("time") to interval series timeframe
                 // 1. Convert video time index to actual time value
-                int const video_time_value = video_timeframe->getTimeAtIndex(TimeIndex(video_time));
+                int const video_time_value = video_timeframe->getTimeAtIndex(TimeFrameIndex(video_time));
 
                 // 2. Convert time value to index in interval series timeframe
                 query_time = interval_timeframe->getIndexAtTime(static_cast<float>(video_time_value));
@@ -1032,7 +1032,7 @@ void Media_Window::_plotDigitalIntervalBorders() {
             }
 
             // Convert current video time to interval timeframe
-            auto video_time = video_timeframe->getTimeAtIndex(TimeIndex(current_time));
+            auto video_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
             auto interval_index = interval_timeframe->getIndexAtTime(video_time);
             interval_present = interval_series->isEventAtTime(interval_index);
         } else {

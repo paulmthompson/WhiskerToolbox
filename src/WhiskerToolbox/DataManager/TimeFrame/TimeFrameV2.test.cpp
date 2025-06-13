@@ -8,44 +8,44 @@ TEST_CASE("DenseTimeRange - Basic functionality", "[timeframev2][dense]") {
         DenseTimeRange range(1000, 100, 10); // Start=1000, Count=100, Step=10
         
         REQUIRE(range.size() == 100);
-        REQUIRE(range.getTimeAtIndex(0) == 1000);
-        REQUIRE(range.getTimeAtIndex(1) == 1010);
-        REQUIRE(range.getTimeAtIndex(99) == 1990);
+        REQUIRE(range.getTimeAtIndex(TimeFrameIndex(0)) == 1000);
+        REQUIRE(range.getTimeAtIndex(TimeFrameIndex(1)) == 1010);
+        REQUIRE(range.getTimeAtIndex(TimeFrameIndex(99)) == 1990);
     }
     
     SECTION("Index-to-time conversion") {
         DenseTimeRange range(0, 1000, 1); // Simple 0-999 range
         
-        REQUIRE(range.getTimeAtIndex(0) == 0);
-        REQUIRE(range.getTimeAtIndex(500) == 500);
-        REQUIRE(range.getTimeAtIndex(999) == 999);
+        REQUIRE(range.getTimeAtIndex(TimeFrameIndex(0)) == 0);
+        REQUIRE(range.getTimeAtIndex(TimeFrameIndex(500)) == 500);
+        REQUIRE(range.getTimeAtIndex(TimeFrameIndex(999)) == 999);
         
         // Out of bounds should return start value
-        REQUIRE(range.getTimeAtIndex(-1) == 0);
-        REQUIRE(range.getTimeAtIndex(1000) == 0);
+        REQUIRE(range.getTimeAtIndex(TimeFrameIndex(-1)) == 0);
+        REQUIRE(range.getTimeAtIndex(TimeFrameIndex(1000)) == 0);
     }
     
     SECTION("Time-to-index conversion") {
         DenseTimeRange range(100, 50, 2); // 100, 102, 104, ..., 198
         
-        REQUIRE(range.getIndexAtTime(100) == 0);
-        REQUIRE(range.getIndexAtTime(110) == 5);
-        REQUIRE(range.getIndexAtTime(198) == 49);
+        REQUIRE(range.getIndexAtTime(100.0) == TimeFrameIndex(0));
+        REQUIRE(range.getIndexAtTime(110.0) == TimeFrameIndex(5));
+        REQUIRE(range.getIndexAtTime(198.0) == TimeFrameIndex(49));
         
         // Test clamping behavior
-        REQUIRE(range.getIndexAtTime(50) == 0);   // Before start
-        REQUIRE(range.getIndexAtTime(300) == 49); // After end
+        REQUIRE(range.getIndexAtTime(50.0) == TimeFrameIndex(0));   // Before start
+        REQUIRE(range.getIndexAtTime(300.0) == TimeFrameIndex(49)); // After end
         
         // Test closest value selection
-        REQUIRE(range.getIndexAtTime(101) == 0); // Closer to 100
-        REQUIRE(range.getIndexAtTime(103) == 1); // Closer to 102
+        REQUIRE(range.getIndexAtTime(101.0) == TimeFrameIndex(0)); // Closer to 100
+        REQUIRE(range.getIndexAtTime(103.0) == TimeFrameIndex(1)); // Closer to 102
     }
     
     SECTION("Empty range") {
         DenseTimeRange empty_range(0, 0, 1);
         
         REQUIRE(empty_range.size() == 0);
-        REQUIRE(empty_range.getIndexAtTime(100) == 0);
+        REQUIRE(empty_range.getIndexAtTime(100.0) == TimeFrameIndex(0));
     }
 }
 
@@ -65,19 +65,19 @@ TEST_CASE("TimeFrameV2 - Dense storage with ClockTicks", "[timeframev2][clocktic
         ClockTimeFrame clock_frame(0, 1000, 1, 30000.0);
         
         // Test getTimeAtIndex
-        ClockTicks first_tick = clock_frame.getTimeAtIndex(0);
+        ClockTicks first_tick = clock_frame.getTimeAtIndex(TimeFrameIndex(0));
         REQUIRE(first_tick.getValue() == 0);
         
-        ClockTicks middle_tick = clock_frame.getTimeAtIndex(500);
+        ClockTicks middle_tick = clock_frame.getTimeAtIndex(TimeFrameIndex(500));
         REQUIRE(middle_tick.getValue() == 500);
         
-        ClockTicks last_tick = clock_frame.getTimeAtIndex(999);
+        ClockTicks last_tick = clock_frame.getTimeAtIndex(TimeFrameIndex(999));
         REQUIRE(last_tick.getValue() == 999);
         
         // Test getIndexAtTime
-        REQUIRE(clock_frame.getIndexAtTime(ClockTicks(0)) == 0);
-        REQUIRE(clock_frame.getIndexAtTime(ClockTicks(500)) == 500);
-        REQUIRE(clock_frame.getIndexAtTime(ClockTicks(999)) == 999);
+        REQUIRE(clock_frame.getIndexAtTime(ClockTicks(0)) == TimeFrameIndex(0));
+        REQUIRE(clock_frame.getIndexAtTime(ClockTicks(500)) == TimeFrameIndex(500));
+        REQUIRE(clock_frame.getIndexAtTime(ClockTicks(999)) == TimeFrameIndex(999));
     }
     
     SECTION("Conversion to seconds") {
@@ -98,9 +98,9 @@ TEST_CASE("TimeFrameV2 - Dense storage with ClockTicks", "[timeframev2][clocktic
     SECTION("Bounds checking") {
         ClockTimeFrame clock_frame(100, 50, 1, 30000.0);
         
-        REQUIRE(clock_frame.checkIndexInBounds(-10) == 0);
-        REQUIRE(clock_frame.checkIndexInBounds(25) == 25);
-        REQUIRE(clock_frame.checkIndexInBounds(100) == 49);
+        REQUIRE(clock_frame.checkIndexInBounds(TimeFrameIndex(-10)) == TimeFrameIndex(0));
+        REQUIRE(clock_frame.checkIndexInBounds(TimeFrameIndex(25)) == TimeFrameIndex(25));
+        REQUIRE(clock_frame.checkIndexInBounds(TimeFrameIndex(100)) == TimeFrameIndex(49));
     }
 }
 
@@ -120,23 +120,23 @@ TEST_CASE("TimeFrameV2 - Sparse storage with CameraFrameIndex", "[timeframev2][c
         CameraTimeFrame camera_frame(frame_times);
         
         // Test getTimeAtIndex
-        CameraFrameIndex first_frame = camera_frame.getTimeAtIndex(0);
+        CameraFrameIndex first_frame = camera_frame.getTimeAtIndex(TimeFrameIndex(0));
         REQUIRE(first_frame.getValue() == 10);
         
-        CameraFrameIndex middle_frame = camera_frame.getTimeAtIndex(2);
+        CameraFrameIndex middle_frame = camera_frame.getTimeAtIndex(TimeFrameIndex(2));
         REQUIRE(middle_frame.getValue() == 40);
         
-        CameraFrameIndex last_frame = camera_frame.getTimeAtIndex(4);
+        CameraFrameIndex last_frame = camera_frame.getTimeAtIndex(TimeFrameIndex(4));
         REQUIRE(last_frame.getValue() == 120);
         
         // Test getIndexAtTime
-        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(10)) == 0);
-        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(40)) == 2);
-        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(120)) == 4);
+        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(10)) == TimeFrameIndex(0));
+        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(40)) == TimeFrameIndex(2));
+        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(120)) == TimeFrameIndex(4));
         
         // Test closest value selection
-        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(15)) == 0); // Closer to 10
-        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(20)) == 1); // Closer to 25
+        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(15)) == TimeFrameIndex(0)); // Closer to 10
+        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(20)) == TimeFrameIndex(1)); // Closer to 25
     }
     
     SECTION("Out of bounds behavior") {
@@ -144,15 +144,15 @@ TEST_CASE("TimeFrameV2 - Sparse storage with CameraFrameIndex", "[timeframev2][c
         CameraTimeFrame camera_frame(frame_times);
         
         // Out of bounds index should return zero coordinate
-        CameraFrameIndex out_of_bounds = camera_frame.getTimeAtIndex(-1);
+        CameraFrameIndex out_of_bounds = camera_frame.getTimeAtIndex(TimeFrameIndex(-1));
         REQUIRE(out_of_bounds.getValue() == 0);
         
-        out_of_bounds = camera_frame.getTimeAtIndex(10);
+        out_of_bounds = camera_frame.getTimeAtIndex(TimeFrameIndex(10));
         REQUIRE(out_of_bounds.getValue() == 0);
         
         // Out of bounds time should clamp to valid range
-        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(50)) == 0);   // Before first
-        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(500)) == 2);  // After last
+        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(50)) == TimeFrameIndex(0));   // Before first
+        REQUIRE(camera_frame.getIndexAtTime(CameraFrameIndex(500)) == TimeFrameIndex(2));  // After last
     }
 }
 
@@ -164,10 +164,10 @@ TEST_CASE("TimeFrameV2 - Seconds coordinate type", "[timeframev2][seconds]") {
         REQUIRE(seconds_frame.getTotalFrameCount() == 100);
         REQUIRE(seconds_frame.isDense());
         
-        Seconds first_time = seconds_frame.getTimeAtIndex(0);
+        Seconds first_time = seconds_frame.getTimeAtIndex(TimeFrameIndex(0));
         REQUIRE_THAT(first_time.getValue(), Catch::Matchers::WithinRel(0.0, 1e-9));
         
-        Seconds last_time = seconds_frame.getTimeAtIndex(99);
+        Seconds last_time = seconds_frame.getTimeAtIndex(TimeFrameIndex(99));
         REQUIRE_THAT(last_time.getValue(), Catch::Matchers::WithinRel(99.0, 1e-9));
     }
     
@@ -178,7 +178,7 @@ TEST_CASE("TimeFrameV2 - Seconds coordinate type", "[timeframev2][seconds]") {
         REQUIRE(seconds_frame.getTotalFrameCount() == 5);
         REQUIRE(seconds_frame.isSparse());
         
-        Seconds middle_time = seconds_frame.getTimeAtIndex(2);
+        Seconds middle_time = seconds_frame.getTimeAtIndex(TimeFrameIndex(2));
         REQUIRE_THAT(middle_time.getValue(), Catch::Matchers::WithinRel(12.0, 1e-9));
     }
 }
@@ -190,10 +190,10 @@ TEST_CASE("TimeFrameV2 - UncalibratedIndex operations", "[timeframev2][uncalibra
         REQUIRE(uncalib_frame.getTotalFrameCount() == 500);
         REQUIRE(uncalib_frame.isDense());
         
-        UncalibratedIndex first_index = uncalib_frame.getTimeAtIndex(0);
+        UncalibratedIndex first_index = uncalib_frame.getTimeAtIndex(TimeFrameIndex(0));
         REQUIRE(first_index.getValue() == 1000);
         
-        UncalibratedIndex last_index = uncalib_frame.getTimeAtIndex(499);
+        UncalibratedIndex last_index = uncalib_frame.getTimeAtIndex(TimeFrameIndex(499));
         REQUIRE(last_index.getValue() == 1000 + 499 * 2);
     }
     
@@ -204,7 +204,7 @@ TEST_CASE("TimeFrameV2 - UncalibratedIndex operations", "[timeframev2][uncalibra
         REQUIRE(uncalib_frame.getTotalFrameCount() == 5);
         REQUIRE(uncalib_frame.isSparse());
         
-        UncalibratedIndex middle_index = uncalib_frame.getTimeAtIndex(2);
+        UncalibratedIndex middle_index = uncalib_frame.getTimeAtIndex(TimeFrameIndex(2));
         REQUIRE(middle_index.getValue() == 75);
     }
 }
@@ -228,7 +228,7 @@ TEST_CASE("TimeFrameUtils - Factory functions", "[timeframev2][utils]") {
         REQUIRE(camera_frame->getTotalFrameCount() == 5);
         REQUIRE(camera_frame->isSparse());
         
-        CameraFrameIndex frame = camera_frame->getTimeAtIndex(2);
+        CameraFrameIndex frame = camera_frame->getTimeAtIndex(TimeFrameIndex(2));
         REQUIRE(frame.getValue() == 25);
     }
     
@@ -239,8 +239,8 @@ TEST_CASE("TimeFrameUtils - Factory functions", "[timeframev2][utils]") {
         REQUIRE(camera_frame->getTotalFrameCount() == 1000);
         REQUIRE(camera_frame->isDense());
         
-        CameraFrameIndex first_frame = camera_frame->getTimeAtIndex(0);
-        CameraFrameIndex last_frame = camera_frame->getTimeAtIndex(999);
+        CameraFrameIndex first_frame = camera_frame->getTimeAtIndex(TimeFrameIndex(0));
+        CameraFrameIndex last_frame = camera_frame->getTimeAtIndex(TimeFrameIndex(999));
         
         REQUIRE(first_frame.getValue() == 0);
         REQUIRE(last_frame.getValue() == 999);
@@ -256,10 +256,10 @@ TEST_CASE("TimeFrameV2 - Memory efficiency scenarios", "[timeframev2][memory]") 
         REQUIRE(large_dense_frame.isDense());
         
         // Should be able to access any element efficiently
-        ClockTicks middle_tick = large_dense_frame.getTimeAtIndex(500000);
+        ClockTicks middle_tick = large_dense_frame.getTimeAtIndex(TimeFrameIndex(500000));
         REQUIRE(middle_tick.getValue() == 500000);
         
-        ClockTicks last_tick = large_dense_frame.getTimeAtIndex(999999);
+        ClockTicks last_tick = large_dense_frame.getTimeAtIndex(TimeFrameIndex(999999));
         REQUIRE(last_tick.getValue() == 999999);
     }
     
@@ -280,8 +280,8 @@ TEST_CASE("TimeFrameV2 - Memory efficiency scenarios", "[timeframev2][memory]") 
         REQUIRE(sparse_frame.isSparse());
         
         // Should handle irregular timing correctly
-        CameraFrameIndex first_frame = sparse_frame.getTimeAtIndex(0);
-        CameraFrameIndex some_frame = sparse_frame.getTimeAtIndex(500);
+        CameraFrameIndex first_frame = sparse_frame.getTimeAtIndex(TimeFrameIndex(0));
+        CameraFrameIndex some_frame = sparse_frame.getTimeAtIndex(TimeFrameIndex(500));
         
         REQUIRE(first_frame.getValue() == sparse_times[0]);
         REQUIRE(some_frame.getValue() == sparse_times[500]);
@@ -293,8 +293,8 @@ TEST_CASE("TimeFrameV2 - Type safety verification", "[timeframev2][safety]") {
         ClockTimeFrame clock_frame(0, 1000, 1, 30000.0);
         CameraTimeFrame camera_frame(0, 1000, 1);
         
-        ClockTicks clock_tick = clock_frame.getTimeAtIndex(100);
-        CameraFrameIndex camera_frame_idx = camera_frame.getTimeAtIndex(100);
+        ClockTicks clock_tick = clock_frame.getTimeAtIndex(TimeFrameIndex(100));
+        CameraFrameIndex camera_frame_idx = camera_frame.getTimeAtIndex(TimeFrameIndex(100));
         
         // These should not compile if uncommented:
         // int64_t result = clock_frame.getIndexAtTime(camera_frame_idx); // Type error

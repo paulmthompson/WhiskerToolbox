@@ -9,6 +9,8 @@ set(analog_subdirectory_sources
     IO/CSV/Analog_Time_Series_CSV.cpp
     IO/JSON/Analog_Time_Series_JSON.hpp
     IO/JSON/Analog_Time_Series_JSON.cpp
+    utils/statistics.hpp
+    utils/statistics.cpp
 )
 
 set(analog_test_sources

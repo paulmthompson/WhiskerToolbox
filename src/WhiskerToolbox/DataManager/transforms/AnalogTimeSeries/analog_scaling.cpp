@@ -1,6 +1,7 @@
 #include "analog_scaling.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/utils/statistics.hpp"
 
 #include <algorithm>
 #include <iostream>
