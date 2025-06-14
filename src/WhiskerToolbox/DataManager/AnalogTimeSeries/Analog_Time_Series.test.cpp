@@ -161,6 +161,218 @@ TEST_CASE("AnalogTimeSeries - Edge cases and error handling", "[analog][timeseri
     }
 }
 
+TEST_CASE("AnalogTimeSeries - Boundary finding methods", "[analog][timeseries][boundary]") {
+
+    SECTION("findDataArrayIndexGreaterOrEqual - sparse data with gaps") {
+        // Create data with irregular TimeFrameIndex spacing: 1, 5, 7, 15, 20, 100, 200, 250, 300, 500
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), 
+            TimeFrameIndex(20), TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(250), 
+            TimeFrameIndex(300), TimeFrameIndex(500)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact matches
+        auto result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(5));
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 1); // Index of TimeFrameIndex(5)
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(100));
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 5); // Index of TimeFrameIndex(100)
+
+        // Test boundary cases - values between existing times
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(3)); // Between 1 and 5
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 1); // Should find TimeFrameIndex(5)
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(50)); // Between 20 and 100
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 5); // Should find TimeFrameIndex(100)
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(275)); // Between 250 and 300
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 8); // Should find TimeFrameIndex(300)
+
+        // Test edge cases
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(0)); // Before all data
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 0); // Should find TimeFrameIndex(1)
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(500)); // Last value
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 9); // Should find TimeFrameIndex(500)
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(1000)); // Beyond all data
+        REQUIRE_FALSE(result.has_value());
+    }
+
+    SECTION("findDataArrayIndexLessOrEqual - sparse data with gaps") {
+        // Create data with irregular TimeFrameIndex spacing: 1, 5, 7, 15, 20, 100, 200, 250, 300, 500
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), 
+            TimeFrameIndex(20), TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(250), 
+            TimeFrameIndex(300), TimeFrameIndex(500)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact matches
+        auto result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(5));
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 1); // Index of TimeFrameIndex(5)
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(100));
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 5); // Index of TimeFrameIndex(100)
+
+        // Test boundary cases - values between existing times
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(3)); // Between 1 and 5
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 0); // Should find TimeFrameIndex(1)
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(50)); // Between 20 and 100
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 4); // Should find TimeFrameIndex(20)
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(275)); // Between 250 and 300
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 7); // Should find TimeFrameIndex(250)
+
+        // Test edge cases
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(0)); // Before all data
+        REQUIRE_FALSE(result.has_value());
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(500)); // Last value
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 9); // Should find TimeFrameIndex(500)
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(1000)); // Beyond all data
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 9); // Should find TimeFrameIndex(500)
+    }
+
+    SECTION("Boundary finding - dense consecutive storage") {
+        // Create data with consecutive TimeFrameIndex values starting from 100
+        std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102), TimeFrameIndex(103), TimeFrameIndex(104)};
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test findDataArrayIndexGreaterOrEqual
+        auto result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(99)); // Before start
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 0); // Should find TimeFrameIndex(100)
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(102)); // Exact match
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 2); // Should find TimeFrameIndex(102)
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(105)); // After end
+        REQUIRE_FALSE(result.has_value());
+
+        // Test findDataArrayIndexLessOrEqual
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(99)); // Before start
+        REQUIRE_FALSE(result.has_value());
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(102)); // Exact match
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 2); // Should find TimeFrameIndex(102)
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(105)); // After end
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 4); // Should find TimeFrameIndex(104)
+    }
+
+    SECTION("Boundary finding - dense storage starting from 0") {
+        // Create data using the constructor that should produce dense storage starting from 0
+        std::vector<float> data{5.5f, 6.6f, 7.7f, 8.8f, 9.9f};
+        AnalogTimeSeries series(data, data.size()); // Dense storage from TimeFrameIndex(0)
+
+        // Test findDataArrayIndexGreaterOrEqual
+        auto result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(-1)); // Before start
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 0); // Should find TimeFrameIndex(0)
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(2)); // Middle
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 2); // Should find TimeFrameIndex(2)
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(5)); // After end
+        REQUIRE_FALSE(result.has_value());
+
+        // Test findDataArrayIndexLessOrEqual
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(-1)); // Before start
+        REQUIRE_FALSE(result.has_value());
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(2)); // Middle
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 2); // Should find TimeFrameIndex(2)
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(5)); // After end
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 4); // Should find TimeFrameIndex(4)
+    }
+
+    SECTION("Boundary finding with single data point") {
+        std::vector<float> data{42.0f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(50)};
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test findDataArrayIndexGreaterOrEqual
+        auto result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(40)); // Before
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 0);
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(50)); // Exact
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 0);
+        
+        result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(60)); // After
+        REQUIRE_FALSE(result.has_value());
+
+        // Test findDataArrayIndexLessOrEqual
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(40)); // Before
+        REQUIRE_FALSE(result.has_value());
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(50)); // Exact
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 0);
+        
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(60)); // After
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 0);
+    }
+
+    SECTION("Verify data values at found indices") {
+        // Test that the boundary-finding methods return indices that give access to correct data
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(2), TimeFrameIndex(4), TimeFrameIndex(6), TimeFrameIndex(8), TimeFrameIndex(10)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Find index >= 5 (should find TimeFrameIndex(6) at DataArrayIndex(2))
+        auto result = series.findDataArrayIndexGreaterOrEqual(TimeFrameIndex(5));
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 2);
+        REQUIRE(series.getDataAtDataArrayIndex(result.value()) == 30.0f);
+        REQUIRE(series.getTimeFrameIndexAtDataArrayIndex(result.value()) == TimeFrameIndex(6));
+
+        // Find index <= 5 (should find TimeFrameIndex(4) at DataArrayIndex(1))
+        result = series.findDataArrayIndexLessOrEqual(TimeFrameIndex(5));
+        REQUIRE(result.has_value());
+        REQUIRE(result.value().getValue() == 1);
+        REQUIRE(series.getDataAtDataArrayIndex(result.value()) == 20.0f);
+        REQUIRE(series.getTimeFrameIndexAtDataArrayIndex(result.value()) == TimeFrameIndex(4));
+    }
+}
+
 TEST_CASE("AnalogTimeSeries - findDataArrayIndexForTimeFrameIndex functionality", "[analog][timeseries][index_lookup]") {
 
     SECTION("Regular spacing - even TimeFrameIndex values") {

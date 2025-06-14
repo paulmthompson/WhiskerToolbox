@@ -431,6 +431,29 @@ public:
     [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const;
 
     /**
+     * @brief Find the DataArrayIndex for the smallest TimeFrameIndex >= target_time
+     * 
+     * This function finds the first data point where TimeFrameIndex >= target_time.
+     * Useful for finding the start boundary of a time range when the exact time may not exist.
+     * 
+     * @param target_time The target TimeFrameIndex
+     * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the first TimeFrameIndex >= target_time, or std::nullopt if no such index exists
+     */
+    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const;
+
+    /**
+     * @brief Find the DataArrayIndex for the largest TimeFrameIndex <= target_time
+     * 
+     * This function finds the last data point where TimeFrameIndex <= target_time.
+     * Useful for finding the end boundary of a time range when the exact time may not exist.
+     * 
+     * @param target_time The target TimeFrameIndex
+     * @return std::optional<DataArrayIndex> containing the DataArrayIndex of the last TimeFrameIndex <= target_time, or std::nullopt if no such index exists
+     */
+    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const;
+
+
+    /**
      * @brief Get the TimeFrameIndex that corresponds to a given DataArrayIndex
      * 
      * @param i The DataArrayIndex to get the TimeFrameIndex for

@@ -149,6 +149,59 @@ std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexForTimeFrameIn
     }, _time_storage);
 }
 
+std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexGreaterOrEqual(TimeFrameIndex target_time) const {
+    return std::visit([target_time](auto const & time_storage) -> std::optional<DataArrayIndex> {
+        if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
+            // For dense storage, calculate the position if target_time falls within our range
+            TimeFrameIndex start = time_storage.start_time_frame_index;
+            TimeFrameIndex end = TimeFrameIndex(start.getValue() + static_cast<int64_t>(time_storage.count) - 1);
+            
+            if (target_time <= end) {
+                // Find the first index >= target_time
+                TimeFrameIndex effective_start = (target_time >= start) ? target_time : start;
+                size_t offset = static_cast<size_t>(effective_start.getValue() - start.getValue());
+                return DataArrayIndex(offset);
+            }
+            return std::nullopt;
+        } else {
+            // For sparse storage, use lower_bound to find first element >= target_time
+            auto it = std::lower_bound(time_storage.time_frame_indices.begin(), time_storage.time_frame_indices.end(), target_time);
+            if (it != time_storage.time_frame_indices.end()) {
+                size_t index = static_cast<size_t>(std::distance(time_storage.time_frame_indices.begin(), it));
+                return DataArrayIndex(index);
+            }
+            return std::nullopt;
+        }
+    }, _time_storage);
+}
+
+std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const {
+    return std::visit([target_time](auto const & time_storage) -> std::optional<DataArrayIndex> {
+        if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
+            // For dense storage, calculate the position if target_time falls within our range
+            TimeFrameIndex start = time_storage.start_time_frame_index;
+            TimeFrameIndex end = TimeFrameIndex(start.getValue() + static_cast<int64_t>(time_storage.count) - 1);
+            
+            if (target_time >= start) {
+                // Find the last index <= target_time
+                TimeFrameIndex effective_end = (target_time <= end) ? target_time : end;
+                size_t offset = static_cast<size_t>(effective_end.getValue() - start.getValue());
+                return DataArrayIndex(offset);
+            }
+            return std::nullopt;
+        } else {
+            // For sparse storage, use upper_bound to find first element > target_time, then step back
+            auto it = std::upper_bound(time_storage.time_frame_indices.begin(), time_storage.time_frame_indices.end(), target_time);
+            if (it != time_storage.time_frame_indices.begin()) {
+                --it; // Step back to get the last element <= target_time
+                size_t index = static_cast<size_t>(std::distance(time_storage.time_frame_indices.begin(), it));
+                return DataArrayIndex(index);
+            }
+            return std::nullopt;
+        }
+    }, _time_storage);
+}
+
 std::span<const float> AnalogTimeSeries::getDataSpanInCoordinateRange(TimeCoordinate start_coord, TimeCoordinate end_coord) const {
     // Note: This implementation is simplified and may not return a contiguous span
     // for all cases. For non-contiguous data, consider using getDataInCoordinateRange() instead.
