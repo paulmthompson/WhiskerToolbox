@@ -373,6 +373,211 @@ TEST_CASE("AnalogTimeSeries - Boundary finding methods", "[analog][timeseries][b
     }
 }
 
+TEST_CASE("AnalogTimeSeries - getDataInTimeFrameIndexRange functionality", "[analog][timeseries][span_range]") {
+
+    SECTION("Basic range extraction - sparse data") {
+        // Create data with irregular TimeFrameIndex spacing
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), 
+            TimeFrameIndex(20), TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(250), 
+            TimeFrameIndex(300), TimeFrameIndex(500)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact range [5, 20] - should include indices 1, 2, 3, 4 (values 20.0f, 30.0f, 40.0f, 50.0f)
+        auto span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(5), TimeFrameIndex(20));
+        REQUIRE(span.size() == 4);
+        REQUIRE(span[0] == 20.0f); // TimeFrameIndex(5)
+        REQUIRE(span[1] == 30.0f); // TimeFrameIndex(7)  
+        REQUIRE(span[2] == 40.0f); // TimeFrameIndex(15)
+        REQUIRE(span[3] == 50.0f); // TimeFrameIndex(20)
+
+        // Test boundary approximation [3, 50] - should find >= 3 (starts at 5) and <= 50 (ends at 20)
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(3), TimeFrameIndex(50));
+        REQUIRE(span.size() == 4);
+        REQUIRE(span[0] == 20.0f); // TimeFrameIndex(5) - first >= 3
+        REQUIRE(span[3] == 50.0f); // TimeFrameIndex(20) - last <= 50
+
+        // Test single element range [100, 100]
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(100), TimeFrameIndex(100));
+        REQUIRE(span.size() == 1);
+        REQUIRE(span[0] == 60.0f); // TimeFrameIndex(100)
+
+        // Test larger range [200, 500]
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(200), TimeFrameIndex(500));
+        REQUIRE(span.size() == 4);
+        REQUIRE(span[0] == 70.0f);  // TimeFrameIndex(200)
+        REQUIRE(span[1] == 80.0f);  // TimeFrameIndex(250)
+        REQUIRE(span[2] == 90.0f);  // TimeFrameIndex(300)
+        REQUIRE(span[3] == 100.0f); // TimeFrameIndex(500)
+    }
+
+    SECTION("Range boundary testing - sparse data") {
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(2), TimeFrameIndex(4), TimeFrameIndex(6), TimeFrameIndex(8), TimeFrameIndex(10)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test range that includes all data [0, 15]
+        auto span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(0), TimeFrameIndex(15));
+        REQUIRE(span.size() == 5);
+        for (size_t i = 0; i < span.size(); ++i) {
+            REQUIRE(span[i] == data[i]);
+        }
+
+        // Test range before all data [0, 1] - should be empty
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(0), TimeFrameIndex(1));
+        REQUIRE(span.empty());
+
+        // Test range after all data [11, 20] - should be empty
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(11), TimeFrameIndex(20));
+        REQUIRE(span.empty());
+
+        // Test inverted range [10, 2] - should be empty
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(10), TimeFrameIndex(2));
+        REQUIRE(span.empty());
+
+        // Test partial overlap at start [1, 5] - should get TimeFrameIndex(2) and TimeFrameIndex(4)
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(1), TimeFrameIndex(5));
+        REQUIRE(span.size() == 2);
+        REQUIRE(span[0] == 10.0f); // TimeFrameIndex(2)
+        REQUIRE(span[1] == 20.0f); // TimeFrameIndex(4)
+
+        // Test partial overlap at end [7, 15] - should get TimeFrameIndex(8) and TimeFrameIndex(10)
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(7), TimeFrameIndex(15));
+        REQUIRE(span.size() == 2);
+        REQUIRE(span[0] == 40.0f); // TimeFrameIndex(8)
+        REQUIRE(span[1] == 50.0f); // TimeFrameIndex(10)
+    }
+
+    SECTION("Dense consecutive storage") {
+        // Create data with consecutive TimeFrameIndex values starting from 100
+        std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102), TimeFrameIndex(103), TimeFrameIndex(104)};
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact range [101, 103]
+        auto span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(101), TimeFrameIndex(103));
+        REQUIRE(span.size() == 3);
+        REQUIRE(span[0] == 2.2f); // TimeFrameIndex(101)
+        REQUIRE(span[1] == 3.3f); // TimeFrameIndex(102)
+        REQUIRE(span[2] == 4.4f); // TimeFrameIndex(103)
+
+        // Test boundary approximation [99, 105] - should get all data
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(99), TimeFrameIndex(105));
+        REQUIRE(span.size() == 5);
+        for (size_t i = 0; i < span.size(); ++i) {
+            REQUIRE(span[i] == data[i]);
+        }
+
+        // Test range within bounds [102, 102] - single element
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(102), TimeFrameIndex(102));
+        REQUIRE(span.size() == 1);
+        REQUIRE(span[0] == 3.3f);
+    }
+
+    SECTION("Dense storage starting from 0") {
+        // Create data using the constructor that produces dense storage starting from 0
+        std::vector<float> data{5.5f, 6.6f, 7.7f, 8.8f, 9.9f};
+        AnalogTimeSeries series(data, data.size()); // Dense storage from TimeFrameIndex(0)
+
+        // Test range [1, 3]
+        auto span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(1), TimeFrameIndex(3));
+        REQUIRE(span.size() == 3);
+        REQUIRE(span[0] == 6.6f); // TimeFrameIndex(1)
+        REQUIRE(span[1] == 7.7f); // TimeFrameIndex(2)
+        REQUIRE(span[2] == 8.8f); // TimeFrameIndex(3)
+
+        // Test range including start [0, 2]
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(0), TimeFrameIndex(2));
+        REQUIRE(span.size() == 3);
+        REQUIRE(span[0] == 5.5f); // TimeFrameIndex(0)
+        REQUIRE(span[1] == 6.6f); // TimeFrameIndex(1)
+        REQUIRE(span[2] == 7.7f); // TimeFrameIndex(2)
+
+        // Test all data [0, 4]
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(0), TimeFrameIndex(4));
+        REQUIRE(span.size() == 5);
+        for (size_t i = 0; i < span.size(); ++i) {
+            REQUIRE(span[i] == data[i]);
+        }
+    }
+
+    SECTION("Single data point") {
+        std::vector<float> data{42.0f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(50)};
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact match [50, 50]
+        auto span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(50), TimeFrameIndex(50));
+        REQUIRE(span.size() == 1);
+        REQUIRE(span[0] == 42.0f);
+
+        // Test range that includes the point [40, 60]
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(40), TimeFrameIndex(60));
+        REQUIRE(span.size() == 1);
+        REQUIRE(span[0] == 42.0f);
+
+        // Test range before the point [30, 40]
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(30), TimeFrameIndex(40));
+        REQUIRE(span.empty());
+
+        // Test range after the point [60, 70]
+        span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(60), TimeFrameIndex(70));
+        REQUIRE(span.empty());
+    }
+
+    SECTION("Empty series") {
+        AnalogTimeSeries series; // Default constructor creates empty series
+
+        // Test any range on empty series
+        auto span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(0), TimeFrameIndex(10));
+        REQUIRE(span.empty());
+    }
+
+    SECTION("Span properties and memory safety") {
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        auto span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(20), TimeFrameIndex(40));
+        
+        // Verify span properties
+        REQUIRE(span.size() == 3);
+        REQUIRE_FALSE(span.empty());
+        
+        // Verify data access
+        REQUIRE(span.data() != nullptr);
+        REQUIRE(span[0] == 2.0f);
+        REQUIRE(span[1] == 3.0f);
+        REQUIRE(span[2] == 4.0f);
+        
+        // Verify iterator access
+        auto it = span.begin();
+        REQUIRE(*it == 2.0f);
+        ++it;
+        REQUIRE(*it == 3.0f);
+        ++it;
+        REQUIRE(*it == 4.0f);
+        ++it;
+        REQUIRE(it == span.end());
+
+        // Verify the span points to the same memory as the original data
+        // (span should be a view, not a copy)
+        auto const& original_data = series.getAnalogTimeSeries();
+        REQUIRE(span.data() == &original_data[1]); // Should point to the second element (index 1)
+    }
+}
+
 TEST_CASE("AnalogTimeSeries - findDataArrayIndexForTimeFrameIndex functionality", "[analog][timeseries][index_lookup]") {
 
     SECTION("Regular spacing - even TimeFrameIndex values") {
