@@ -27,7 +27,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
 
         // Verify the result
         REQUIRE(result->getNumSamples() == 1);
-        REQUIRE_THAT(result->getDataAtIndex(0), Catch::Matchers::WithinAbs(5.0f, 0.001f));
+        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(5.0f, 0.001f));
         REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(timestamp));
     }
 
@@ -52,7 +52,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
 
         // Verify the result - minimum distance should be 1.0
         REQUIRE(result->getNumSamples() == 1);
-        REQUIRE_THAT(result->getDataAtIndex(0), Catch::Matchers::WithinAbs(1.0f, 0.001f));
+        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(1.0f, 0.001f));
         REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(0)) == TimeFrameIndex(timestamp));
     }
 
@@ -96,10 +96,10 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         }
 
         REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(idx30)) == TimeFrameIndex(30));
-        REQUIRE_THAT(result->getDataAtIndex(idx30), Catch::Matchers::WithinAbs(2.0f, 0.001f));
+        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(idx30)), Catch::Matchers::WithinAbs(2.0f, 0.001f));
 
         REQUIRE(result->getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(idx40)) == TimeFrameIndex(40));
-        REQUIRE_THAT(result->getDataAtIndex(idx40), Catch::Matchers::WithinAbs(3.0f, 0.001f));
+        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(idx40)), Catch::Matchers::WithinAbs(3.0f, 0.001f));
     }
 
     SECTION("Scaling points with different image sizes") {
@@ -124,7 +124,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
 
         // Verify the result
         REQUIRE(result->getNumSamples() == 1);
-        REQUIRE_THAT(result->getDataAtIndex(0), Catch::Matchers::WithinAbs(20.0f, 0.001f));
+        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(20.0f, 0.001f));
     }
 
     SECTION("Point directly on the line has zero distance") {
@@ -143,7 +143,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
 
         // Verify the result
         REQUIRE(result->getNumSamples() == 1);
-        REQUIRE_THAT(result->getDataAtIndex(0), Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(0.0f, 0.001f));
     }
 }
 
@@ -231,7 +231,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
 
         // Verify the result is calculated without scaling
         REQUIRE(result->getNumSamples() == 1);
-        REQUIRE_THAT(result->getDataAtIndex(0), Catch::Matchers::WithinAbs(5.0f, 0.001f));
+        REQUIRE_THAT(result->getDataAtDataArrayIndex(DataArrayIndex(0)), Catch::Matchers::WithinAbs(5.0f, 0.001f));
     }
 
     SECTION("Transform operation with null point data in parameters") {

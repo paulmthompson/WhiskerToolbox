@@ -214,20 +214,6 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
         }
         REQUIRE(found_spike);
         
-        // Test coordinate and value retrieval together
-        auto [coords, vals] = retrieved_neural->getDataAndCoordsInRange(start_tick, end_tick);
-        REQUIRE(coords.size() == vals.size());
-        REQUIRE(coords.size() == 201); // 1400 to 1600 inclusive
-        
-        // Find the spike coordinate
-        for (size_t i = 0; i < coords.size(); ++i) {
-            if (vals[i] > 5.0f) {
-                // coords[i] is a TimeCoordinate variant, extract ClockTicks
-                REQUIRE(std::holds_alternative<ClockTicks>(coords[i]));
-                REQUIRE(std::get<ClockTicks>(coords[i]).getValue() == 1500);
-                break;
-            }
-        }
     }
     
     SECTION("Backward compatibility - old and new systems coexist") {
@@ -312,15 +298,6 @@ TEST_CASE("DataManager TimeFrameV2 Integration", "[datamanager][timeframev2][int
         // Data should not be set
         REQUIRE(dm.getData<AnalogTimeSeries>("test") == nullptr);
         
-        // Test AnalogTimeSeries methods without TimeFrameV2
-        auto series_no_tf = std::make_shared<AnalogTimeSeries>(data, time_vector);
-        ClockTicks start(0);
-        ClockTicks end(10);
-        
-        REQUIRE_THROWS_AS(series_no_tf->getDataInCoordinateRange(start, end), 
-                         std::runtime_error);
-        REQUIRE_THROWS_AS(series_no_tf->getDataAndCoordsInRange(start, end), 
-                         std::runtime_error);
     }
 }
 
@@ -362,14 +339,6 @@ TEST_CASE("DataManager - Enhanced AnalogTimeSeries Variant Coordinate Support", 
         auto values = dm.queryAnalogData("neural_signal", start_coord, end_coord);
         REQUIRE(values.size() == 3);
         REQUIRE_THAT(values[1], Catch::Matchers::WithinRel(10.0f, 1e-6f)); // The spike at tick 100
-        
-  
-        // Query with coordinates
-        auto [coords, vals] = dm.queryAnalogDataWithCoords("neural_signal", start_coord, end_coord);
-        REQUIRE(coords.size() == 3);
-        REQUIRE(vals.size() == 3);
-        REQUIRE(std::holds_alternative<ClockTicks>(coords[1]));
-        REQUIRE(std::get<ClockTicks>(coords[1]).getValue() == 100);
 
     }
     

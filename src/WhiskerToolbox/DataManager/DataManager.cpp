@@ -705,27 +705,6 @@ std::vector<float> DataManager::queryAnalogData(std::string const & data_key,
     return series->getDataInCoordinateRange(start_coord, end_coord);
 }
 
-std::pair<std::vector<TimeCoordinate>, std::vector<float>> DataManager::queryAnalogDataWithCoords(
-        std::string const & data_key,
-        TimeCoordinate start_coord,
-        TimeCoordinate end_coord) {
-    // Check if the data exists and is an AnalogTimeSeries
-    if (_data.find(data_key) == _data.end()) {
-        throw std::runtime_error("Data not found: " + data_key);
-    }
-
-    if (!std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(_data[data_key])) {
-        throw std::runtime_error("Data is not an AnalogTimeSeries: " + data_key);
-    }
-
-    auto series = std::get<std::shared_ptr<AnalogTimeSeries>>(_data[data_key]);
-    if (!series) {
-        throw std::runtime_error("AnalogTimeSeries is null: " + data_key);
-    }
-
-    return series->getDataAndCoordsInRange(start_coord, end_coord);
-}
-
 std::string DataManager::getAnalogCoordinateType(std::string const & data_key) {
     // Check if the data exists and is an AnalogTimeSeries
     if (_data.find(data_key) == _data.end()) {

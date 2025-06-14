@@ -25,7 +25,27 @@
  */
 class AnalogTimeSeries : public ObserverData {
 public:
+
+    // ========== Constructors ==========
+    /**
+     * @brief Default constructor
+     * 
+     * This constructor creates an empty AnalogTimeSeries with no data
+     */ 
     AnalogTimeSeries();
+
+    /**
+     * @brief Constructor for AnalogTimeSeries from a vector of floats and a vector of TimeFrameIndex values
+     * 
+     * Use this constructor when the data is sampled at irregular intervals
+     * 
+     * @param analog_vector Vector of floats
+     * @param time_vector Vector of TimeFrameIndex values
+     * @see AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples) 
+     * for a constructor that takes a vector of floats that are consecutive samples
+     * @see AnalogTimeSeries(std::map<int, float> analog_map) 
+     * for a constructor that takes a map of int to float
+     */
     explicit AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector);
 
     /**
@@ -34,16 +54,24 @@ public:
      * The key in the map is assumed to the be TimeFrameIndex for each sample
      * 
      * @param analog_map Map of int to float
+     * @see AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) 
+     * for a constructor that takes a vector of floats and a vector of TimeFrameIndex values
+     * @see AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples) 
+     * for a constructor that takes a vector of floats that are consecutive samples
      */
     explicit AnalogTimeSeries(std::map<int, float> analog_map);
 
     /**
      * @brief Constructor for AnalogTimeSeries from a vector of floats and a number of samples
      * 
+     * Use this constructor when the data is sampled at regular intervals
+     * 
      * @param analog_vector Vector of floats
      * @param num_samples Number of samples
      */
     explicit AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples);
+
+    // ========== Overwriting Data ==========
 
     /**
      * @brief Overwrite data at specific TimeFrameIndex values
@@ -68,18 +96,19 @@ public:
      */
     void overwriteAtDataArrayIndexes(std::vector<float> & analog_data, std::vector<DataArrayIndex> & data_indices);
 
+    // ========== Getting Data ==========
+
+    /**
+     * @brief Get the data value at a specific DataArrayIndex
+     * 
+     * This does not consider time information so DataArrayIndex 1 and 2 may represent 
+     * values at are irregularly spaced. Use this if you are processing data
+     * where the time information is not important (e.g. statistical calculations)
+     * 
+     * @param i The DataArrayIndex to get the data value at
+     * @return The data value at the specified DataArrayIndex
+     */
     [[nodiscard]] float getDataAtDataArrayIndex(DataArrayIndex i) const { return _data[i.getValue()]; };
-    
-    // Legacy method for backward compatibility
-    [[nodiscard]] float getDataAtIndex(size_t i) const { return _data[i]; };
-
-
-
-    [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
-        return std::visit([i](auto const & time_storage) -> TimeFrameIndex {
-            return time_storage.getTimeFrameIndexAtDataArrayIndex(i);
-        }, _time_storage);
-    }
 
     [[nodiscard]] size_t getNumSamples() const { return _data.size(); };
 
@@ -114,39 +143,8 @@ public:
     [[nodiscard]] std::span<const float> getDataSpanInCoordinateRange(TimeCoordinate start_coord, 
                                                                       TimeCoordinate end_coord) const;
 
-    /**
-     * @brief Get the time indices as a vector
-     * 
-     * Returns a vector containing the time indices corresponding to each analog data sample.
-     * For dense time storage, this generates the indices on-demand.
-     * For sparse time storage, this returns a copy of the stored indices.
-     * 
-     * @return std::vector<size_t> containing the time indices
-     * 
-     * @note For dense storage, this method has O(n) time complexity as it generates the vector.
-     *       Consider using getTimeAtIndex() for single lookups or iterating with getNumSamples().
-     *       For sparse storage, this returns a copy of the internal vector.
-     * 
-     * @see getAnalogTimeSeries() for accessing the corresponding data values
-     * @see getDataInRange() for accessing time-value pairs within a specific range
-     * @see getTimeAtIndex() for single index lookups
-     */
-    [[nodiscard]] std::vector<TimeFrameIndex> getTimeSeries() const {
-        return std::visit([](auto const & time_storage) -> std::vector<TimeFrameIndex> {
-            if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
-                // Generate vector for dense storage
-                std::vector<TimeFrameIndex> result;
-                result.reserve(time_storage.count);
-                for (size_t i = 0; i < time_storage.count; ++i) {
-                    result.push_back(time_storage.start_time_frame_index + TimeFrameIndex(static_cast<int64_t>(i)));
-                }
-                return result;
-            } else {
-                // Return copy for sparse storage
-                return time_storage.time_frame_indices;
-            }
-        }, _time_storage);
-    }
+    //[[nodiscard]] std::span<const float> getDataSpanInTimeFrameIndexRange(TimeFrameIndex start, 
+    //                                                                      TimeFrameIndex end) const; 
 
     auto getDataInRange(float start_time, float stop_time) const {
         struct DataPoint {
@@ -179,85 +177,6 @@ public:
                std::views::transform([this](size_t i) {
                    return DataPoint{getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)), getDataAtDataArrayIndex(DataArrayIndex(i))};
                });
-    }
-
-    // ========== TimeFrameV2 Support ==========
-
-    /**
-    * @brief Set a TimeFrameV2 reference for this data series
-    *
-    * Associates this AnalogTimeSeries with a strongly-typed TimeFrameV2,
-    * enabling type-safe time coordinate operations.
-    *
-    * @param timeframe The TimeFrameV2 variant to associate with this data
-    */
-    void setTimeFrameV2(AnyTimeFrame timeframe) {
-        _timeframe_v2 = std::move(timeframe);
-    }
-
-    /**
-    * @brief Get the TimeFrameV2 reference for this data series
-    *
-    * @return Optional TimeFrameV2 variant if set, nullopt otherwise
-    */
-    [[nodiscard]] std::optional<AnyTimeFrame> getTimeFrameV2() const {
-        return _timeframe_v2;
-    }
-
-    /**
-    * @brief Check if this series has a TimeFrameV2 reference
-    *
-    * @return True if a TimeFrameV2 is associated with this series
-    */
-    [[nodiscard]] bool hasTimeFrameV2() const {
-        return _timeframe_v2.has_value();
-    }
-
-    /**
-    * @brief Get the coordinate type of the associated TimeFrameV2
-    *
-    * @return String identifier for the coordinate type, or "none" if no TimeFrameV2 is set
-    */
-    [[nodiscard]] std::string getCoordinateType() const {
-        if (!_timeframe_v2.has_value()) {
-            return "none";
-        }
-
-        return std::visit([](auto const & timeframe_ptr) -> std::string {
-            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
-            using CoordType = typename FrameType::coordinate_type;
-            
-            if constexpr (std::is_same_v<CoordType, ClockTicks>) {
-                return "ClockTicks";
-            } else if constexpr (std::is_same_v<CoordType, CameraFrameIndex>) {
-                return "CameraFrameIndex";
-            } else if constexpr (std::is_same_v<CoordType, Seconds>) {
-                return "Seconds";
-            } else if constexpr (std::is_same_v<CoordType, UncalibratedIndex>) {
-                return "UncalibratedIndex";
-            } else {
-                return "unknown";
-            }
-        }, _timeframe_v2.value());
-    }
-
-    /**
-    * @brief Check if the TimeFrameV2 uses a specific coordinate type
-    *
-    * @tparam CoordinateType The coordinate type to check for
-    * @return True if the TimeFrameV2 uses the specified coordinate type
-    */
-    template<typename CoordinateType>
-    [[nodiscard]] bool hasCoordinateType() const {
-        if (!_timeframe_v2.has_value()) {
-            return false;
-        }
-
-        return std::visit([](auto const & timeframe_ptr) -> bool {
-            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
-            using FrameCoordType = typename FrameType::coordinate_type;
-            return std::is_same_v<FrameCoordType, CoordinateType>;
-        }, _timeframe_v2.value());
     }
 
     /**
@@ -325,70 +244,6 @@ public:
         }, _timeframe_v2.value());
     }
 
-    /**
-    * @brief Get data values and their coordinates in a time range using any coordinate type
-    *
-    * Similar to getDataInCoordinateRange but returns both values and coordinates.
-    * Uses TimeCoordinate variant to handle any coordinate type at runtime.
-    *
-    * @param start_coord Start coordinate (any coordinate type)
-    * @param end_coord End coordinate (any coordinate type)
-    * @return Pair of coordinate vector and value vector
-    */
-    std::pair<std::vector<TimeCoordinate>, std::vector<float>> getDataAndCoordsInRange(
-            TimeCoordinate start_coord, TimeCoordinate end_coord) const {
-        if (!_timeframe_v2.has_value()) {
-            throw std::runtime_error("No TimeFrameV2 associated with this AnalogTimeSeries");
-        }
-
-        return std::visit([&](auto const & timeframe_ptr) -> std::pair<std::vector<TimeCoordinate>, std::vector<float>> {
-            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
-            using FrameCoordType = typename FrameType::coordinate_type;
-            
-            // Check coordinate type compatibility
-            if (!std::holds_alternative<FrameCoordType>(start_coord) || 
-                !std::holds_alternative<FrameCoordType>(end_coord)) {
-                throw std::runtime_error("Coordinate type mismatch with TimeFrameV2. Expected: " + 
-                                       getCoordinateType());
-            }
-
-            auto start_typed = std::get<FrameCoordType>(start_coord);
-            auto end_typed = std::get<FrameCoordType>(end_coord);
-
-            std::vector<TimeCoordinate> coords;
-            std::vector<float> values;
-
-            // Convert coordinate range to TimeFrameIndex values for comparison
-            TimeFrameIndex start_time_idx = timeframe_ptr->getIndexAtTime(start_typed);
-            TimeFrameIndex end_time_idx = timeframe_ptr->getIndexAtTime(end_typed);
-
-            if (start_time_idx > end_time_idx) std::swap(start_time_idx, end_time_idx);
-
-            // Convert the TimeFrameV2 indices back to actual coordinate values for range checking
-            auto start_coord_value = timeframe_ptr->getTimeAtIndex(start_time_idx);
-            auto end_coord_value = timeframe_ptr->getTimeAtIndex(end_time_idx);
-
-            // Iterate through our data and check which points fall within the coordinate range
-            size_t data_size = _data.size();
-            for (size_t i = 0; i < data_size; ++i) {
-                DataArrayIndex data_idx(i);
-                
-                // Get the TimeFrameIndex for this data point
-                TimeFrameIndex our_time_frame_idx = getTimeFrameIndexAtDataArrayIndex(data_idx);
-                
-                // Convert our TimeFrameIndex to the same coordinate type for comparison
-                FrameCoordType our_coord_value(our_time_frame_idx.getValue());
-                
-                // Check if this coordinate falls within the requested range
-                if (our_coord_value >= start_coord_value && our_coord_value <= end_coord_value) {
-                    coords.push_back(TimeCoordinate{our_coord_value});
-                    values.push_back(_data[i]);
-                }
-            }
-
-            return {coords, values};
-        }, _timeframe_v2.value());
-    }
 
     /**
     * @brief Strongly-typed coordinate range query (compile-time type checking)
@@ -482,6 +337,143 @@ public:
                                        getCoordinateType() + ", Got: " + typeid(CoordinateType).name());
             }
         }, _timeframe_v2.value());
+    }
+
+    // ========== TimeFrameV2 Support ==========
+
+    /**
+    * @brief Set a TimeFrameV2 reference for this data series
+    *
+    * Associates this AnalogTimeSeries with a strongly-typed TimeFrameV2,
+    * enabling type-safe time coordinate operations.
+    *
+    * @param timeframe The TimeFrameV2 variant to associate with this data
+    */
+    void setTimeFrameV2(AnyTimeFrame timeframe) {
+        _timeframe_v2 = std::move(timeframe);
+    }
+
+    /**
+    * @brief Get the TimeFrameV2 reference for this data series
+    *
+    * @return Optional TimeFrameV2 variant if set, nullopt otherwise
+    */
+    [[nodiscard]] std::optional<AnyTimeFrame> getTimeFrameV2() const {
+        return _timeframe_v2;
+    }
+
+    /**
+    * @brief Check if this series has a TimeFrameV2 reference
+    *
+    * @return True if a TimeFrameV2 is associated with this series
+    */
+    [[nodiscard]] bool hasTimeFrameV2() const {
+        return _timeframe_v2.has_value();
+    }
+
+    /**
+    * @brief Get the coordinate type of the associated TimeFrameV2
+    *
+    * @return String identifier for the coordinate type, or "none" if no TimeFrameV2 is set
+    */
+    [[nodiscard]] std::string getCoordinateType() const {
+        if (!_timeframe_v2.has_value()) {
+            return "none";
+        }
+
+        return std::visit([](auto const & timeframe_ptr) -> std::string {
+            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
+            using CoordType = typename FrameType::coordinate_type;
+            
+            if constexpr (std::is_same_v<CoordType, ClockTicks>) {
+                return "ClockTicks";
+            } else if constexpr (std::is_same_v<CoordType, CameraFrameIndex>) {
+                return "CameraFrameIndex";
+            } else if constexpr (std::is_same_v<CoordType, Seconds>) {
+                return "Seconds";
+            } else if constexpr (std::is_same_v<CoordType, UncalibratedIndex>) {
+                return "UncalibratedIndex";
+            } else {
+                return "unknown";
+            }
+        }, _timeframe_v2.value());
+    }
+
+    /**
+    * @brief Check if the TimeFrameV2 uses a specific coordinate type
+    *
+    * @tparam CoordinateType The coordinate type to check for
+    * @return True if the TimeFrameV2 uses the specified coordinate type
+    */
+    template<typename CoordinateType>
+    [[nodiscard]] bool hasCoordinateType() const {
+        if (!_timeframe_v2.has_value()) {
+            return false;
+        }
+
+        return std::visit([](auto const & timeframe_ptr) -> bool {
+            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
+            using FrameCoordType = typename FrameType::coordinate_type;
+            return std::is_same_v<FrameCoordType, CoordinateType>;
+        }, _timeframe_v2.value());
+    }
+
+        /**
+     * @brief Find the DataArrayIndex that corresponds to a given TimeFrameIndex
+     * 
+     * This function searches for the DataArrayIndex position that corresponds to the given TimeFrameIndex.
+     * For dense storage, it calculates the position if the TimeFrameIndex falls within the range.
+     * For sparse storage, it searches for the TimeFrameIndex in the stored indices.
+     * 
+     * @param time_index The TimeFrameIndex to search for
+     * @return std::optional<DataArrayIndex> containing the corresponding DataArrayIndex, or std::nullopt if not found
+     */
+    [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const;
+
+    /**
+     * @brief Get the TimeFrameIndex that corresponds to a given DataArrayIndex
+     * 
+     * @param i The DataArrayIndex to get the TimeFrameIndex for
+     * @return The TimeFrameIndex that corresponds to the given DataArrayIndex
+     */
+    [[nodiscard]] TimeFrameIndex getTimeFrameIndexAtDataArrayIndex(DataArrayIndex i) const {
+        return std::visit([i](auto const & time_storage) -> TimeFrameIndex {
+            return time_storage.getTimeFrameIndexAtDataArrayIndex(i);
+        }, _time_storage);
+    }
+
+      /**
+     * @brief Get the time indices as a vector
+     * 
+     * Returns a vector containing the time indices corresponding to each analog data sample.
+     * For dense time storage, this generates the indices on-demand.
+     * For sparse time storage, this returns a copy of the stored indices.
+     * 
+     * @return std::vector<size_t> containing the time indices
+     * 
+     * @note For dense storage, this method has O(n) time complexity as it generates the vector.
+     *       Consider using getTimeAtIndex() for single lookups or iterating with getNumSamples().
+     *       For sparse storage, this returns a copy of the internal vector.
+     * 
+     * @see getAnalogTimeSeries() for accessing the corresponding data values
+     * @see getDataInRange() for accessing time-value pairs within a specific range
+     * @see getTimeAtIndex() for single index lookups
+     */
+    [[nodiscard]] std::vector<TimeFrameIndex> getTimeSeries() const {
+        return std::visit([](auto const & time_storage) -> std::vector<TimeFrameIndex> {
+            if constexpr (std::is_same_v<std::decay_t<decltype(time_storage)>, DenseTimeRange>) {
+                // Generate vector for dense storage
+                std::vector<TimeFrameIndex> result;
+                result.reserve(time_storage.count);
+                for (size_t i = 0; i < time_storage.count; ++i) {
+                    result.push_back(time_storage.start_time_frame_index + TimeFrameIndex(static_cast<int64_t>(i)));
+                }
+                return result;
+            } else {
+                // Return copy for sparse storage
+                return time_storage.time_frame_indices;
+            }
+        }, _time_storage);
     }
 
     // ========== Time Storage Optimization ==========

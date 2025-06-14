@@ -160,3 +160,129 @@ TEST_CASE("AnalogTimeSeries - Edge cases and error handling", "[analog][timeseri
         REQUIRE(stored_data == std::vector<float>{1.0f, 9.0f, 3.0f, 8.0f, 5.0f});
     }
 }
+
+TEST_CASE("AnalogTimeSeries - findDataArrayIndexForTimeFrameIndex functionality", "[analog][timeseries][index_lookup]") {
+
+    SECTION("Regular spacing - even TimeFrameIndex values") {
+        // Create 10 values (0-9) with even TimeFrameIndex values (2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+        std::vector<float> data{0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f};
+        std::vector<TimeFrameIndex> times;
+        for (int i = 0; i < 10; ++i) {
+            times.push_back(TimeFrameIndex(2 * (i + 1))); // 2, 4, 6, 8, 10, 12, 14, 16, 18, 20
+        }
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test finding DataArrayIndex for each TimeFrameIndex
+        for (size_t i = 0; i < times.size(); ++i) {
+            auto result = series.findDataArrayIndexForTimeFrameIndex(times[i]);
+            REQUIRE(result.has_value());
+            REQUIRE(result.value().getValue() == i);
+            
+            // Verify the data value matches
+            REQUIRE(series.getDataAtDataArrayIndex(result.value()) == data[i]);
+        }
+
+        // Test non-existent TimeFrameIndex values
+        auto result_odd = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(3)); // Should not exist
+        REQUIRE_FALSE(result_odd.has_value());
+        
+        auto result_too_high = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(22)); // Should not exist
+        REQUIRE_FALSE(result_too_high.has_value());
+        
+        auto result_too_low = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(1)); // Should not exist
+        REQUIRE_FALSE(result_too_low.has_value());
+    }
+
+    SECTION("Irregular spacing - scattered TimeFrameIndex values") {
+        // Create 10 values with irregular TimeFrameIndex spacing
+        std::vector<float> data{10.5f, 20.3f, 30.1f, 40.7f, 50.2f, 60.9f, 70.4f, 80.8f, 90.6f, 100.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), 
+            TimeFrameIndex(20), TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(250), 
+            TimeFrameIndex(300), TimeFrameIndex(500)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test finding DataArrayIndex for each TimeFrameIndex
+        for (size_t i = 0; i < times.size(); ++i) {
+            auto result = series.findDataArrayIndexForTimeFrameIndex(times[i]);
+            REQUIRE(result.has_value());
+            REQUIRE(result.value().getValue() == i);
+            
+            // Verify the data value matches
+            REQUIRE(series.getDataAtDataArrayIndex(result.value()) == Catch::Approx(data[i]));
+        }
+
+        // Test non-existent TimeFrameIndex values in the gaps
+        auto result_gap1 = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(3)); // Between 1 and 5
+        REQUIRE_FALSE(result_gap1.has_value());
+        
+        auto result_gap2 = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(50)); // Between 20 and 100
+        REQUIRE_FALSE(result_gap2.has_value());
+        
+        auto result_gap3 = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(275)); // Between 250 and 300
+        REQUIRE_FALSE(result_gap3.has_value());
+        
+        auto result_beyond = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(1000)); // Beyond all values
+        REQUIRE_FALSE(result_beyond.has_value());
+        
+        auto result_before = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(0)); // Before all values
+        REQUIRE_FALSE(result_before.has_value());
+    }
+
+    SECTION("Dense time storage - consecutive TimeFrameIndex values starting from non-zero") {
+        // Create data using the constructor that should produce dense storage
+        std::vector<float> data{5.5f, 6.6f, 7.7f, 8.8f, 9.9f};
+        // This should create DenseTimeRange starting from TimeFrameIndex(0)
+        AnalogTimeSeries series(data, data.size());
+
+        // Test finding DataArrayIndex for consecutive TimeFrameIndex values starting from 0
+        for (size_t i = 0; i < data.size(); ++i) {
+            auto result = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(static_cast<int64_t>(i)));
+            REQUIRE(result.has_value());
+            REQUIRE(result.value().getValue() == i);
+            
+            // Verify the data value matches
+            REQUIRE(series.getDataAtDataArrayIndex(result.value()) == Catch::Approx(data[i]));
+        }
+
+        // Test non-existent TimeFrameIndex values outside the range
+        auto result_negative = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(-1));
+        REQUIRE_FALSE(result_negative.has_value());
+        
+        auto result_too_high = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(static_cast<int64_t>(data.size())));
+        REQUIRE_FALSE(result_too_high.has_value());
+    }
+
+    SECTION("Dense time storage - consecutive TimeFrameIndex values with custom start") {
+        // Create data with consecutive TimeFrameIndex values starting from 100
+        std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102), TimeFrameIndex(103)};
+        
+        AnalogTimeSeries series(data, times);
+
+        // This should optimize to dense storage since the times are consecutive
+        // Test finding DataArrayIndex for consecutive TimeFrameIndex values
+        for (size_t i = 0; i < data.size(); ++i) {
+            TimeFrameIndex target_time(100 + static_cast<int64_t>(i));
+            auto result = series.findDataArrayIndexForTimeFrameIndex(target_time);
+            REQUIRE(result.has_value());
+            REQUIRE(result.value().getValue() == i);
+            
+            // Verify the data value matches
+            REQUIRE(series.getDataAtDataArrayIndex(result.value()) == Catch::Approx(data[i]));
+        }
+
+        // Test non-existent TimeFrameIndex values outside the range
+        auto result_before = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(99));
+        REQUIRE_FALSE(result_before.has_value());
+        
+        auto result_after = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(104));
+        REQUIRE_FALSE(result_after.has_value());
+        
+        auto result_gap = series.findDataArrayIndexForTimeFrameIndex(TimeFrameIndex(50));
+        REQUIRE_FALSE(result_gap.has_value());
+    }
+}

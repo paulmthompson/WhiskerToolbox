@@ -460,19 +460,6 @@ public:
                                       TimeCoordinate end_coord);
 
     /**
-    * @brief Query analog data and coordinates using any coordinate type
-    *
-    * @param data_key Key of the AnalogTimeSeries to query
-    * @param start_coord Start coordinate (any coordinate type)
-    * @param end_coord End coordinate (any coordinate type)
-    * @return Pair of coordinate vector and value vector
-    */
-    std::pair<std::vector<TimeCoordinate>, std::vector<float>> queryAnalogDataWithCoords(
-            std::string const & data_key,
-            TimeCoordinate start_coord,
-            TimeCoordinate end_coord);
-
-    /**
     * @brief Get coordinate type information for an AnalogTimeSeries
     *
     * @param data_key Key of the AnalogTimeSeries
