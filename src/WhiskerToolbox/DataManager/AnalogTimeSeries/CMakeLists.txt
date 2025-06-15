@@ -15,7 +15,8 @@ set(analog_subdirectory_sources
 
 set(analog_test_sources
     Analog_Time_Series.test.cpp
-    IO/CSV/Analog_Time_Series_CSV.test.cpp)
+    IO/CSV/Analog_Time_Series_CSV.test.cpp
+    utils/statistics.test.cpp)
 
 prefix_list_items(analog_subdirectory_sources "AnalogTimeSeries")
 set(DATAMANAGER_SOURCES ${DATAMANAGER_SOURCES} ${analog_subdirectory_sources} PARENT_SCOPE)

@@ -16,7 +16,7 @@ TEST_CASE("AnalogTimeSeries - Statistics", "[analog][timeseries][statistics]") {
 
     SECTION("Statistical calculations") {
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        AnalogTimeSeries series(data);
+        AnalogTimeSeries series(data, 5);
 
         REQUIRE_THAT(calculate_mean(series), Catch::Matchers::WithinRel(3.0f, 1e-3f));
         REQUIRE_THAT(calculate_std_dev(series), Catch::Matchers::WithinRel(1.41421f, 1e-3f));// 1.41421 for N, 1.5811 for N-1 denom
@@ -43,7 +43,7 @@ TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][app
         for (int i = 0; i < 10000; ++i) {
             data.push_back(distribution(generator));
         }
-        AnalogTimeSeries series(data);
+        AnalogTimeSeries series(data, 10000);
 
         float exact_std = calculate_std_dev(series);
         float approx_std = calculate_std_dev_approximate(series, 1.0f, 50);// Sample 1% with min threshold 50
@@ -55,7 +55,7 @@ TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][app
 
     SECTION("Single data point") {
         std::vector<float> data{42.0f};
-        AnalogTimeSeries series(data);
+        AnalogTimeSeries series(data, 1);
 
         REQUIRE(calculate_mean(series) == 42.0f);
         REQUIRE(calculate_min(series) == 42.0f);
@@ -65,7 +65,7 @@ TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][app
 
     SECTION("Approximate standard deviation falls back to exact for small datasets") {
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        AnalogTimeSeries series(data);
+        AnalogTimeSeries series(data, 5);
 
         float exact_std = calculate_std_dev(series);
         float approx_std = calculate_std_dev_approximate(series, 10.0f, 1000);// High percentage but min threshold 1000
@@ -81,7 +81,7 @@ TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][app
         for (int i = 0; i < 50000; ++i) {
             data.push_back(static_cast<float>(std::sin(i * 0.1) * 10.0 + 50.0));
         }
-        AnalogTimeSeries series(data);
+        AnalogTimeSeries series(data, 50000);
 
         float exact_std = calculate_std_dev(series);
         float adaptive_std = calculate_std_dev_adaptive(series, 100, 5000, 0.02f);
@@ -93,7 +93,7 @@ TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][app
 
     SECTION("Adaptive standard deviation falls back to exact for small datasets") {
         std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        AnalogTimeSeries series(data);
+        AnalogTimeSeries series(data, 5);
 
         float exact_std = calculate_std_dev(series);
         float adaptive_std = calculate_std_dev_adaptive(series, 100, 1000, 0.01f);
@@ -111,7 +111,7 @@ TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][app
 
     SECTION("Single value series for approximate methods") {
         std::vector<float> data{42.0f};
-        AnalogTimeSeries series(data);
+        AnalogTimeSeries series(data, 1);
 
         REQUIRE(calculate_std_dev_approximate(series) == 0.0f);
         REQUIRE(calculate_std_dev_adaptive(series) == 0.0f);
@@ -126,7 +126,7 @@ TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][app
             data.push_back(static_cast<float>(std::sin(i * 0.001) * 5.0 + (i * 0.00001) +
                                               (std::rand() % 100) * 0.01));
         }
-        AnalogTimeSeries series(data);
+        AnalogTimeSeries series(data, 1000000);
 
         float exact_std = calculate_std_dev(series);
         float approx_std = calculate_std_dev_approximate(series, 0.1f, 1000);// Sample 0.1%
