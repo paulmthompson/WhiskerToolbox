@@ -4,30 +4,47 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numeric>
 
+// ========== Mean ==========
+
+float calculate_mean_impl(std::vector<float> const & data, size_t start, size_t end) {
+    if (data.empty() || start >= end || start >= data.size() || end > data.size()) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    return calculate_mean_impl(data.begin() + start, data.begin() + end);
+}
+
+float calculate_mean(std::span<const float> data_span) {
+    return calculate_mean_impl(data_span.begin(), data_span.end());
+}
 
 float calculate_mean(AnalogTimeSeries const & series) {
     auto const & data = series.getAnalogTimeSeries();
-    if (data.empty()) {
-        return 0.0f;
-    }
-    return std::accumulate(data.begin(), data.end(), 0.0f) / static_cast<float>(data.size());
+    return calculate_mean_impl(data, 0, data.size());
 }
 
 float calculate_mean(AnalogTimeSeries const & series, int64_t start, int64_t end) {
     auto const & data = series.getAnalogTimeSeries();
-    if (data.empty() || start >= end || start < 0 || end > static_cast<int64_t>(data.size())) {
-        return 0.0f;
+    if (start < 0 || end < 0 || start >= end) {
+        return std::numeric_limits<float>::quiet_NaN();
     }
-    return std::accumulate(data.begin() + start, data.begin() + end, 0.0f) /
-           static_cast<float>(end - start);
+    return calculate_mean_impl(data, static_cast<size_t>(start), static_cast<size_t>(end));
 }
+
+float calculate_mean_in_time_range(AnalogTimeSeries const & series, TimeFrameIndex start_time, TimeFrameIndex end_time) {
+
+    auto data_span = series.getDataInTimeFrameIndexRange(start_time, end_time);
+    return calculate_mean(data_span);
+}
+
+// ========== Standard Deviation ==========
 
 float calculate_std_dev(AnalogTimeSeries const & series) {
     auto const & data = series.getAnalogTimeSeries();
     if (data.empty()) {
-        return 0.0f;
+        return std::numeric_limits<float>::quiet_NaN();
     }
 
     float const mean = calculate_mean(series);
@@ -39,7 +56,7 @@ float calculate_std_dev(AnalogTimeSeries const & series) {
 float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t end) {
     auto const & data = series.getAnalogTimeSeries();
     if (data.empty() || start >= end || start < 0 || end > static_cast<int64_t>(data.size())) {
-        return 0.0f;
+        return std::numeric_limits<float>::quiet_NaN();
     }
 
     float const mean = calculate_mean(series, start, end);
@@ -48,44 +65,12 @@ float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t 
     return std::sqrt(sum / static_cast<float>((end - start)));
 }
 
-float calculate_min(AnalogTimeSeries const & series) {
-    auto const & data = series.getAnalogTimeSeries();
-    if (data.empty()) {
-        return 0.0f;
-    }
-    return *std::min_element(data.begin(), data.end());
-}
-
-float calculate_min(AnalogTimeSeries const & series, int64_t start, int64_t end) {
-    auto const & data = series.getAnalogTimeSeries();
-    if (data.empty() || start >= end || start < 0 || end > static_cast<int64_t>(data.size())) {
-        return 0.0f;
-    }
-    return *std::min_element(data.begin() + start, data.begin() + end);
-}
-
-float calculate_max(AnalogTimeSeries const & series) {
-    auto const & data = series.getAnalogTimeSeries();
-    if (data.empty()) {
-        return 0.0f;
-    }
-    return *std::max_element(data.begin(), data.end());
-}
-
-float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end) {
-    auto const & data = series.getAnalogTimeSeries();
-    if (data.empty() || start >= end || start < 0 || end > static_cast<int64_t>(data.size())) {
-        return 0.0f;
-    }
-    return *std::max_element(data.begin() + start, data.begin() + end);
-}
-
 float calculate_std_dev_approximate(AnalogTimeSeries const & series,
                                     float sample_percentage,
                                     size_t min_sample_threshold) {
     auto const & data = series.getAnalogTimeSeries();
     if (data.empty()) {
-        return 0.0f;
+        return std::numeric_limits<float>::quiet_NaN();
     }
 
     size_t const data_size = data.size();
@@ -127,7 +112,7 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
                                  float convergence_tolerance) {
     auto const & data = series.getAnalogTimeSeries();
     if (data.empty()) {
-        return 0.0f;
+        return std::numeric_limits<float>::quiet_NaN();
     }
 
     size_t const data_size = data.size();
@@ -179,4 +164,42 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
 
     return previous_std_dev;
 }
+
+// ========== Minimum ==========
+
+float calculate_min(AnalogTimeSeries const & series) {
+    auto const & data = series.getAnalogTimeSeries();
+    if (data.empty()) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    return *std::min_element(data.begin(), data.end());
+}
+
+float calculate_min(AnalogTimeSeries const & series, int64_t start, int64_t end) {
+    auto const & data = series.getAnalogTimeSeries();
+    if (data.empty() || start >= end || start < 0 || end > static_cast<int64_t>(data.size())) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    return *std::min_element(data.begin() + start, data.begin() + end);
+}
+
+// ========== Maximum ==========
+
+float calculate_max(AnalogTimeSeries const & series) {
+    auto const & data = series.getAnalogTimeSeries();
+    if (data.empty()) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    return *std::max_element(data.begin(), data.end());
+}
+
+float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end) {
+    auto const & data = series.getAnalogTimeSeries();
+    if (data.empty() || start >= end || start < 0 || end > static_cast<int64_t>(data.size())) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    return *std::max_element(data.begin() + start, data.begin() + end);
+}
+
+
 

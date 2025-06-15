@@ -1,10 +1,67 @@
 #ifndef ANALOG_TIME_SERIES_STATISTICS_HPP
 #define ANALOG_TIME_SERIES_STATISTICS_HPP
 
+#include "TimeFrame.hpp"
+#include "TimeFrame/StrongTimeTypes.hpp"
+
 class AnalogTimeSeries;
 
 #include <cstdint>
 #include <cstddef>
+#include <iterator>
+#include <limits>
+#include <span>
+#include <vector>
+
+// ========== Mean ==========
+
+/**
+ * @brief Raw mean calculation implementation using iterators
+ * 
+ * This is the core implementation that all other mean functions call.
+ * 
+ * @param begin Iterator to the start of the data range
+ * @param end Iterator to the end of the data range (exclusive)
+ * @return float The mean value of the range
+ */
+template<typename Iterator>
+float calculate_mean_impl(Iterator begin, Iterator end) {
+    if (begin == end) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
+    auto const distance = std::distance(begin, end);
+    if (distance <= 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
+    float sum = 0.0f;
+    for (auto it = begin; it != end; ++it) {
+        sum += *it;
+    }
+    
+    return sum / static_cast<float>(distance);
+}
+
+/**
+ * @brief Raw mean calculation implementation using vector with indices
+ * 
+ * This is an alternative implementation for when you have indices rather than iterators.
+ * 
+ * @param data Vector containing the data
+ * @param start Start index of the range (inclusive)
+ * @param end End index of the range (exclusive)
+ * @return float The mean value in the specified range
+ */
+float calculate_mean_impl(std::vector<float> const & data, size_t start, size_t end);
+
+/**
+ * @brief Calculate the mean value of a span of data
+ * 
+ * @param data_span Span of float data
+ * @return float The mean value
+ */
+float calculate_mean(std::span<const float> data_span);
 
 /**
  * @brief Calculate the mean value of an AnalogTimeSeries
@@ -25,6 +82,22 @@ float calculate_mean(AnalogTimeSeries const & series);
 float calculate_mean(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
 /**
+ * @brief Calculate the mean value of an AnalogTimeSeries within a TimeFrameIndex range
+ * 
+ * This function uses the new getDataInTimeFrameIndexRange functionality to efficiently
+ * calculate the mean for data points where TimeFrameIndex >= start_time and <= end_time.
+ * It automatically handles boundary approximation if exact times don't exist.
+ * 
+ * @param series The time series to calculate the mean from
+ * @param start_time The start TimeFrameIndex (inclusive boundary)
+ * @param end_time The end TimeFrameIndex (inclusive boundary)
+ * @return float The mean value in the specified time range
+ */
+float calculate_mean_in_time_range(AnalogTimeSeries const & series, TimeFrameIndex start_time, TimeFrameIndex end_time);
+
+// ========== Standard Deviation ==========
+
+/**
  * @brief Calculate the standard deviation of an AnalogTimeSeries
  *
  * @param series The time series to calculate the standard deviation from
@@ -41,42 +114,6 @@ float calculate_std_dev(AnalogTimeSeries const & series);
  * @return float The standard deviation in the specified range
  */
 float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t end);
-
-/**
- * @brief Calculate the minimum value in an AnalogTimeSeries
- *
- * @param series The time series to find the minimum value in
- * @return float The minimum value
- */
-float calculate_min(AnalogTimeSeries const & series);
-
-/**
- * @brief Calculate the minimum value in an AnalogTimeSeries in a specific range
- *
- * @param series The time series to find the minimum value in
- * @param start Start index of the range (inclusive)
- * @param end End index of the range (exclusive)
- * @return float The minimum value in the specified range
- */
-float calculate_min(AnalogTimeSeries const & series, int64_t start, int64_t end);
-
-/**
- * @brief Calculate the maximum value in an AnalogTimeSeries
- *
- * @param series The time series to find the maximum value in
- * @return float The maximum value
- */
-float calculate_max(AnalogTimeSeries const & series);
-
-/**
- * @brief Calculate the maximum value in an AnalogTimeSeries in a specific range
- *
- * @param series The time series to find the maximum value in
- * @param start Start index of the range (inclusive)
- * @param end End index of the range (exclusive)
- * @return float The maximum value in the specified range
- */
-float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
 /**
  * @brief Calculate an approximate standard deviation using systematic sampling
@@ -109,6 +146,46 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
                                  size_t initial_sample_size = 100,
                                  size_t max_sample_size = 10000,
                                  float convergence_tolerance = 0.01f);
+
+// ========== Minimum ==========
+
+/**
+ * @brief Calculate the minimum value in an AnalogTimeSeries
+ *
+ * @param series The time series to find the minimum value in
+ * @return float The minimum value
+ */
+float calculate_min(AnalogTimeSeries const & series);
+
+/**
+ * @brief Calculate the minimum value in an AnalogTimeSeries in a specific range
+ *
+ * @param series The time series to find the minimum value in
+ * @param start Start index of the range (inclusive)
+ * @param end End index of the range (exclusive)
+ * @return float The minimum value in the specified range
+ */
+float calculate_min(AnalogTimeSeries const & series, int64_t start, int64_t end);
+
+// ========== Maximum ==========
+
+/**
+ * @brief Calculate the maximum value in an AnalogTimeSeries
+ *
+ * @param series The time series to find the maximum value in
+ * @return float The maximum value
+ */
+float calculate_max(AnalogTimeSeries const & series);
+
+/**
+ * @brief Calculate the maximum value in an AnalogTimeSeries in a specific range
+ *
+ * @param series The time series to find the maximum value in
+ * @param start Start index of the range (inclusive)
+ * @param end End index of the range (exclusive)
+ * @return float The maximum value in the specified range
+ */
+float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
 
 
