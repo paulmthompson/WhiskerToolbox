@@ -281,4 +281,289 @@ TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][app
         mean = calculate_mean_impl(data, 0, 10); // end > size  
         REQUIRE(std::isnan(mean));
     }
+
+    SECTION("calculate_min with span - basic functionality") {
+        std::vector<float> data{5.0f, 2.0f, 8.0f, 1.0f, 9.0f};
+        std::span<const float> data_span(data);
+        
+        float min_val = calculate_min(data_span);
+        REQUIRE(min_val == Catch::Approx(1.0f));
+        
+        // Test partial span
+        std::span<const float> partial_span(data.data() + 1, 3); // {2.0f, 8.0f, 1.0f}
+        min_val = calculate_min(partial_span);
+        REQUIRE(min_val == Catch::Approx(1.0f));
+        
+        // Test empty span
+        std::span<const float> empty_span;
+        min_val = calculate_min(empty_span);
+        REQUIRE(std::isnan(min_val));
+    }
+
+    SECTION("calculate_max with span - basic functionality") {
+        std::vector<float> data{5.0f, 2.0f, 8.0f, 1.0f, 9.0f};
+        std::span<const float> data_span(data);
+        
+        float max_val = calculate_max(data_span);
+        REQUIRE(max_val == Catch::Approx(9.0f));
+        
+        // Test partial span
+        std::span<const float> partial_span(data.data() + 1, 3); // {2.0f, 8.0f, 1.0f}
+        max_val = calculate_max(partial_span);
+        REQUIRE(max_val == Catch::Approx(8.0f));
+        
+        // Test empty span
+        std::span<const float> empty_span;
+        max_val = calculate_max(empty_span);
+        REQUIRE(std::isnan(max_val));
+    }
+
+    SECTION("calculate_min_in_time_range - sparse data") {
+        // Create data with irregular TimeFrameIndex spacing
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), 
+            TimeFrameIndex(20), TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(250), 
+            TimeFrameIndex(300), TimeFrameIndex(500)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact range [5, 20] - includes values 20.0f, 30.0f, 40.0f, 50.0f
+        float min_val = calculate_min_in_time_range(series, TimeFrameIndex(5), TimeFrameIndex(20));
+        REQUIRE(min_val == Catch::Approx(20.0f)); // Minimum of 20.0f, 30.0f, 40.0f, 50.0f
+
+        // Test boundary approximation [3, 50] - should find >= 3 (starts at 5) and <= 50 (ends at 20)
+        min_val = calculate_min_in_time_range(series, TimeFrameIndex(3), TimeFrameIndex(50));
+        REQUIRE(min_val == Catch::Approx(20.0f)); // Same range as above
+
+        // Test single element range [100, 100]
+        min_val = calculate_min_in_time_range(series, TimeFrameIndex(100), TimeFrameIndex(100));
+        REQUIRE(min_val == Catch::Approx(60.0f)); // Value at TimeFrameIndex(100)
+
+        // Test larger range [200, 500] - includes values 70.0f, 80.0f, 90.0f, 100.0f
+        min_val = calculate_min_in_time_range(series, TimeFrameIndex(200), TimeFrameIndex(500));
+        REQUIRE(min_val == Catch::Approx(70.0f)); // Minimum of 70.0f, 80.0f, 90.0f, 100.0f
+
+        // Test range with no data [600, 700]
+        min_val = calculate_min_in_time_range(series, TimeFrameIndex(600), TimeFrameIndex(700));
+        REQUIRE(std::isnan(min_val)); // Empty span should return NaN
+    }
+
+    SECTION("calculate_max_in_time_range - sparse data") {
+        // Create data with irregular TimeFrameIndex spacing
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), 
+            TimeFrameIndex(20), TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(250), 
+            TimeFrameIndex(300), TimeFrameIndex(500)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact range [5, 20] - includes values 20.0f, 30.0f, 40.0f, 50.0f
+        float max_val = calculate_max_in_time_range(series, TimeFrameIndex(5), TimeFrameIndex(20));
+        REQUIRE(max_val == Catch::Approx(50.0f)); // Maximum of 20.0f, 30.0f, 40.0f, 50.0f
+
+        // Test boundary approximation [3, 50] - should find >= 3 (starts at 5) and <= 50 (ends at 20)
+        max_val = calculate_max_in_time_range(series, TimeFrameIndex(3), TimeFrameIndex(50));
+        REQUIRE(max_val == Catch::Approx(50.0f)); // Same range as above
+
+        // Test single element range [100, 100]
+        max_val = calculate_max_in_time_range(series, TimeFrameIndex(100), TimeFrameIndex(100));
+        REQUIRE(max_val == Catch::Approx(60.0f)); // Value at TimeFrameIndex(100)
+
+        // Test larger range [200, 500] - includes values 70.0f, 80.0f, 90.0f, 100.0f
+        max_val = calculate_max_in_time_range(series, TimeFrameIndex(200), TimeFrameIndex(500));
+        REQUIRE(max_val == Catch::Approx(100.0f)); // Maximum of 70.0f, 80.0f, 90.0f, 100.0f
+
+        // Test range with no data [600, 700]
+        max_val = calculate_max_in_time_range(series, TimeFrameIndex(600), TimeFrameIndex(700));
+        REQUIRE(std::isnan(max_val)); // Empty span should return NaN
+    }
+
+    SECTION("calculate_min_in_time_range - dense consecutive storage") {
+        // Create data with consecutive TimeFrameIndex values starting from 100
+        std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102), TimeFrameIndex(103), TimeFrameIndex(104)};
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact range [101, 103] - includes values 2.2f, 3.3f, 4.4f
+        float min_val = calculate_min_in_time_range(series, TimeFrameIndex(101), TimeFrameIndex(103));
+        REQUIRE(min_val == Catch::Approx(2.2f));
+
+        // Test all data [99, 105]
+        min_val = calculate_min_in_time_range(series, TimeFrameIndex(99), TimeFrameIndex(105));
+        REQUIRE(min_val == Catch::Approx(1.1f)); // Minimum of all data
+
+        // Test single element [102, 102]
+        min_val = calculate_min_in_time_range(series, TimeFrameIndex(102), TimeFrameIndex(102));
+        REQUIRE(min_val == Catch::Approx(3.3f));
+    }
+
+    SECTION("calculate_max_in_time_range - dense consecutive storage") {
+        // Create data with consecutive TimeFrameIndex values starting from 100
+        std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102), TimeFrameIndex(103), TimeFrameIndex(104)};
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact range [101, 103] - includes values 2.2f, 3.3f, 4.4f
+        float max_val = calculate_max_in_time_range(series, TimeFrameIndex(101), TimeFrameIndex(103));
+        REQUIRE(max_val == Catch::Approx(4.4f));
+
+        // Test all data [99, 105]
+        max_val = calculate_max_in_time_range(series, TimeFrameIndex(99), TimeFrameIndex(105));
+        REQUIRE(max_val == Catch::Approx(5.5f)); // Maximum of all data
+
+        // Test single element [102, 102]
+        max_val = calculate_max_in_time_range(series, TimeFrameIndex(102), TimeFrameIndex(102));
+        REQUIRE(max_val == Catch::Approx(3.3f));
+    }
+
+    SECTION("Verify consistency between different min/max calculation methods") {
+        // Create test data
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(4),
+            TimeFrameIndex(5), TimeFrameIndex(6), TimeFrameIndex(7), TimeFrameIndex(8), TimeFrameIndex(9)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Calculate min/max using different methods and verify they match
+        
+        // Method 1: Traditional AnalogTimeSeries function (entire series)
+        float min1 = calculate_min(series);
+        float max1 = calculate_max(series);
+        
+        // Method 2: TimeFrameIndex range method (entire series)
+        float min2 = calculate_min_in_time_range(series, TimeFrameIndex(0), TimeFrameIndex(9));
+        float max2 = calculate_max_in_time_range(series, TimeFrameIndex(0), TimeFrameIndex(9));
+        
+        // Method 3: Direct span method (entire series)
+        auto data_span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(0), TimeFrameIndex(9));
+        float min3 = calculate_min(data_span);
+        float max3 = calculate_max(data_span);
+        
+        // Method 4: Array index range method (entire series)
+        float min4 = calculate_min(series, 0, static_cast<int64_t>(data.size()));
+        float max4 = calculate_max(series, 0, static_cast<int64_t>(data.size()));
+        
+        // All methods should give the same result for the entire series
+        REQUIRE(min1 == Catch::Approx(min2));
+        REQUIRE(min1 == Catch::Approx(min3));
+        REQUIRE(min1 == Catch::Approx(min4));
+        REQUIRE(min1 == Catch::Approx(1.0f)); // Expected min of 1-10
+        
+        REQUIRE(max1 == Catch::Approx(max2));
+        REQUIRE(max1 == Catch::Approx(max3));
+        REQUIRE(max1 == Catch::Approx(max4));
+        REQUIRE(max1 == Catch::Approx(10.0f)); // Expected max of 1-10
+
+        // Test partial range consistency
+        // Method 1: Array index range [2, 7) - indices 2,3,4,5,6 -> values 3,4,5,6,7
+        float partial_min1 = calculate_min(series, 2, 7);
+        float partial_max1 = calculate_max(series, 2, 7);
+        
+        // Method 2: TimeFrameIndex range [2, 6] - TimeFrameIndex 2,3,4,5,6 -> values 3,4,5,6,7
+        float partial_min2 = calculate_min_in_time_range(series, TimeFrameIndex(2), TimeFrameIndex(6));
+        float partial_max2 = calculate_max_in_time_range(series, TimeFrameIndex(2), TimeFrameIndex(6));
+        
+        REQUIRE(partial_min1 == Catch::Approx(partial_min2));
+        REQUIRE(partial_min1 == Catch::Approx(3.0f)); // Expected min of 3,4,5,6,7
+        
+        REQUIRE(partial_max1 == Catch::Approx(partial_max2));
+        REQUIRE(partial_max1 == Catch::Approx(7.0f)); // Expected max of 3,4,5,6,7
+    }
+
+    SECTION("calculate_min_impl with vector indices") {
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+        
+        // Test normal range
+        float min_val = calculate_min_impl(data, 1, 4); // indices 1,2,3 -> values 20,30,40
+        REQUIRE(min_val == Catch::Approx(20.0f));
+        
+        // Test full range
+        min_val = calculate_min_impl(data, 0, data.size());
+        REQUIRE(min_val == Catch::Approx(10.0f)); // Min of 10,20,30,40,50
+        
+        // Test single element
+        min_val = calculate_min_impl(data, 2, 3); // index 2 -> value 30
+        REQUIRE(min_val == Catch::Approx(30.0f));
+        
+        // Test invalid ranges
+        min_val = calculate_min_impl(data, 3, 2); // start > end
+        REQUIRE(std::isnan(min_val));
+        
+        min_val = calculate_min_impl(data, 5, 6); // start >= size
+        REQUIRE(std::isnan(min_val));
+        
+        min_val = calculate_min_impl(data, 0, 10); // end > size  
+        REQUIRE(std::isnan(min_val));
+    }
+
+    SECTION("calculate_max_impl with vector indices") {
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+        
+        // Test normal range
+        float max_val = calculate_max_impl(data, 1, 4); // indices 1,2,3 -> values 20,30,40
+        REQUIRE(max_val == Catch::Approx(40.0f));
+        
+        // Test full range
+        max_val = calculate_max_impl(data, 0, data.size());
+        REQUIRE(max_val == Catch::Approx(50.0f)); // Max of 10,20,30,40,50
+        
+        // Test single element
+        max_val = calculate_max_impl(data, 2, 3); // index 2 -> value 30
+        REQUIRE(max_val == Catch::Approx(30.0f));
+        
+        // Test invalid ranges
+        max_val = calculate_max_impl(data, 3, 2); // start > end
+        REQUIRE(std::isnan(max_val));
+        
+        max_val = calculate_max_impl(data, 5, 6); // start >= size
+        REQUIRE(std::isnan(max_val));
+        
+        max_val = calculate_max_impl(data, 0, 10); // end > size  
+        REQUIRE(std::isnan(max_val));
+    }
+
+    SECTION("Min/Max with negative values") {
+        std::vector<float> data{-5.0f, -2.0f, 3.0f, -8.0f, 1.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test entire series
+        float min_val = calculate_min(series);
+        float max_val = calculate_max(series);
+        REQUIRE(min_val == Catch::Approx(-8.0f));
+        REQUIRE(max_val == Catch::Approx(3.0f));
+
+        // Test time range [20, 40] - includes values -2.0f, 3.0f, -8.0f
+        min_val = calculate_min_in_time_range(series, TimeFrameIndex(20), TimeFrameIndex(40));
+        max_val = calculate_max_in_time_range(series, TimeFrameIndex(20), TimeFrameIndex(40));
+        REQUIRE(min_val == Catch::Approx(-8.0f));
+        REQUIRE(max_val == Catch::Approx(3.0f));
+    }
+
+    SECTION("Min/Max with identical values") {
+        std::vector<float> data{42.0f, 42.0f, 42.0f, 42.0f, 42.0f};
+        AnalogTimeSeries series(data, data.size());
+
+        float min_val = calculate_min(series);
+        float max_val = calculate_max(series);
+        REQUIRE(min_val == Catch::Approx(42.0f));
+        REQUIRE(max_val == Catch::Approx(42.0f));
+
+        // Test time range
+        min_val = calculate_min_in_time_range(series, TimeFrameIndex(1), TimeFrameIndex(3));
+        max_val = calculate_max_in_time_range(series, TimeFrameIndex(1), TimeFrameIndex(3));
+        REQUIRE(min_val == Catch::Approx(42.0f));
+        REQUIRE(max_val == Catch::Approx(42.0f));
+    }
 }

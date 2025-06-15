@@ -6,6 +6,7 @@
 
 class AnalogTimeSeries;
 
+#include <algorithm>
 #include <cstdint>
 #include <cstddef>
 #include <iterator>
@@ -150,6 +151,49 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
 // ========== Minimum ==========
 
 /**
+ * @brief Raw minimum calculation implementation using iterators
+ * 
+ * This is the core implementation that all other minimum functions call.
+ * 
+ * @param begin Iterator to the start of the data range
+ * @param end Iterator to the end of the data range (exclusive)
+ * @return float The minimum value of the range
+ */
+template<typename Iterator>
+float calculate_min_impl(Iterator begin, Iterator end) {
+    if (begin == end) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
+    auto const distance = std::distance(begin, end);
+    if (distance <= 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
+    return *std::min_element(begin, end);
+}
+
+/**
+ * @brief Raw minimum calculation implementation using vector with indices
+ * 
+ * This is an alternative implementation for when you have indices rather than iterators.
+ * 
+ * @param data Vector containing the data
+ * @param start Start index of the range (inclusive)
+ * @param end End index of the range (exclusive)
+ * @return float The minimum value in the specified range
+ */
+float calculate_min_impl(std::vector<float> const & data, size_t start, size_t end);
+
+/**
+ * @brief Calculate the minimum value of a span of data
+ * 
+ * @param data_span Span of float data
+ * @return float The minimum value
+ */
+float calculate_min(std::span<const float> data_span);
+
+/**
  * @brief Calculate the minimum value in an AnalogTimeSeries
  *
  * @param series The time series to find the minimum value in
@@ -167,7 +211,64 @@ float calculate_min(AnalogTimeSeries const & series);
  */
 float calculate_min(AnalogTimeSeries const & series, int64_t start, int64_t end);
 
+/**
+ * @brief Calculate the minimum value of an AnalogTimeSeries within a TimeFrameIndex range
+ * 
+ * This function uses the getDataInTimeFrameIndexRange functionality to efficiently
+ * calculate the minimum for data points where TimeFrameIndex >= start_time and <= end_time.
+ * It automatically handles boundary approximation if exact times don't exist.
+ * 
+ * @param series The time series to calculate the minimum from
+ * @param start_time The start TimeFrameIndex (inclusive boundary)
+ * @param end_time The end TimeFrameIndex (inclusive boundary)
+ * @return float The minimum value in the specified time range
+ */
+float calculate_min_in_time_range(AnalogTimeSeries const & series, TimeFrameIndex start_time, TimeFrameIndex end_time);
+
 // ========== Maximum ==========
+
+/**
+ * @brief Raw maximum calculation implementation using iterators
+ * 
+ * This is the core implementation that all other maximum functions call.
+ * 
+ * @param begin Iterator to the start of the data range
+ * @param end Iterator to the end of the data range (exclusive)
+ * @return float The maximum value of the range
+ */
+template<typename Iterator>
+float calculate_max_impl(Iterator begin, Iterator end) {
+    if (begin == end) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
+    auto const distance = std::distance(begin, end);
+    if (distance <= 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
+    return *std::max_element(begin, end);
+}
+
+/**
+ * @brief Raw maximum calculation implementation using vector with indices
+ * 
+ * This is an alternative implementation for when you have indices rather than iterators.
+ * 
+ * @param data Vector containing the data
+ * @param start Start index of the range (inclusive)
+ * @param end End index of the range (exclusive)
+ * @return float The maximum value in the specified range
+ */
+float calculate_max_impl(std::vector<float> const & data, size_t start, size_t end);
+
+/**
+ * @brief Calculate the maximum value of a span of data
+ * 
+ * @param data_span Span of float data
+ * @return float The maximum value
+ */
+float calculate_max(std::span<const float> data_span);
 
 /**
  * @brief Calculate the maximum value in an AnalogTimeSeries
@@ -186,6 +287,20 @@ float calculate_max(AnalogTimeSeries const & series);
  * @return float The maximum value in the specified range
  */
 float calculate_max(AnalogTimeSeries const & series, int64_t start, int64_t end);
+
+/**
+ * @brief Calculate the maximum value of an AnalogTimeSeries within a TimeFrameIndex range
+ * 
+ * This function uses the getDataInTimeFrameIndexRange functionality to efficiently
+ * calculate the maximum for data points where TimeFrameIndex >= start_time and <= end_time.
+ * It automatically handles boundary approximation if exact times don't exist.
+ * 
+ * @param series The time series to calculate the maximum from
+ * @param start_time The start TimeFrameIndex (inclusive boundary)
+ * @param end_time The end TimeFrameIndex (inclusive boundary)
+ * @return float The maximum value in the specified time range
+ */
+float calculate_max_in_time_range(AnalogTimeSeries const & series, TimeFrameIndex start_time, TimeFrameIndex end_time);
 
 
 
