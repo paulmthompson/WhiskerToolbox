@@ -64,10 +64,12 @@ public:
     /**
      * @brief Constructor for AnalogTimeSeries from a vector of floats and a number of samples
      * 
-     * Use this constructor when the data is sampled at regular intervals
+     * Use this constructor when the data is sampled at regular intervals increasing by 1
      * 
      * @param analog_vector Vector of floats
      * @param num_samples Number of samples
+     * @see AnalogTimeSeries(std::vector<float> analog_vector, std::vector<TimeFrameIndex> time_vector) 
+     * for constructors that support irregular sampling
      */
     explicit AnalogTimeSeries(std::vector<float> analog_vector, size_t num_samples);
 
@@ -128,58 +130,27 @@ public:
      */
     [[nodiscard]] std::vector<float> const & getAnalogTimeSeries() const { return _data; };
 
-    /**
-    * @brief Get a span (view) of data values in a time range using any coordinate type
-    *
-    * This method returns a std::span<const float> over the contiguous block of data
-    * corresponding to the given coordinate range. No data is copied.
-    *
-    * @param start_coord Start coordinate (any coordinate type)
-    * @param end_coord End coordinate (any coordinate type)
-    * @return std::span<const float> view into the data in the specified range
-    * @throws std::runtime_error if no TimeFrameV2 is associated or coordinate types don't match
-    * @note The returned span is valid as long as the AnalogTimeSeries is not modified.
-    */
-    [[nodiscard]] std::span<const float> getDataSpanInCoordinateRange(TimeCoordinate start_coord, 
-                                                                      TimeCoordinate end_coord) const;
-
-    //[[nodiscard]] std::span<const float> getDataSpanInTimeFrameIndexRange(TimeFrameIndex start, 
-    //                                                                      TimeFrameIndex end) const; 
-
-    auto getDataInRange(float start_time, float stop_time) const {
-        struct DataPoint {
-            TimeFrameIndex time_idx;
-            float value;
-        };
-
-        return std::views::iota(size_t{0}, getNumSamples()) |
-               std::views::filter([this, start_time, stop_time](size_t i) {
-                   auto transformed_time = getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)).getValue();
-                   return transformed_time >= start_time && transformed_time <= stop_time;
-               }) |
-               std::views::transform([this](size_t i) {
-                   return DataPoint{getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)), getDataAtDataArrayIndex(DataArrayIndex(i))};
-               });
-    }
-
-    template<typename TransformFunc>
-    auto getDataInRange(float start_time, float stop_time, TransformFunc time_transform) const {
-        struct DataPoint {
-            TimeFrameIndex time_idx;
-            float value;
-        };
-
-        return std::views::iota(size_t{0}, getNumSamples()) |
-               std::views::filter([this, start_time, stop_time, time_transform](size_t i) {
-                   auto transformed_time = time_transform(getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)).getValue());
-                   return transformed_time >= start_time && transformed_time <= stop_time;
-               }) |
-               std::views::transform([this](size_t i) {
-                   return DataPoint{getTimeFrameIndexAtDataArrayIndex(DataArrayIndex(i)), getDataAtDataArrayIndex(DataArrayIndex(i))};
-               });
-    }
-
-
+     /**
+     * @brief Get a span (view) of data values within a TimeFrameIndex range
+     * 
+     * This function returns a std::span over the data array for all points where 
+     * TimeFrameIndex >= start_time and TimeFrameIndex <= end_time. The span provides
+     * a zero-copy view into the underlying data.
+     * 
+     * If the exact start_time or end_time don't exist in the series, it finds the closest available times:
+     * - For start: finds the smallest TimeFrameIndex >= start_time  
+     * - For end: finds the largest TimeFrameIndex <= end_time
+     * 
+     * @param start_time The start time (inclusive boundary)
+     * @param end_time The end time (inclusive boundary)
+     * @return std::span<const float> view over the data in the specified range
+     * 
+     * @note Returns an empty span if no data points fall within the specified range
+     * @note The span is valid as long as the AnalogTimeSeries object exists and is not modified
+     * @see findDataArrayIndexGreaterOrEqual() and findDataArrayIndexLessOrEqual() for the underlying boundary logic
+     */
+    [[nodiscard]] std::span<const float> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+    
     // ========== TimeFrameV2 Support ==========
 
     /**
@@ -293,26 +264,6 @@ public:
      */
     [[nodiscard]] std::optional<DataArrayIndex> findDataArrayIndexLessOrEqual(TimeFrameIndex target_time) const;
 
-    /**
-     * @brief Get a span (view) of data values within a TimeFrameIndex range
-     * 
-     * This function returns a std::span over the data array for all points where 
-     * TimeFrameIndex >= start_time and TimeFrameIndex <= end_time. The span provides
-     * a zero-copy view into the underlying data.
-     * 
-     * If the exact start_time or end_time don't exist in the series, it finds the closest available times:
-     * - For start: finds the smallest TimeFrameIndex >= start_time  
-     * - For end: finds the largest TimeFrameIndex <= end_time
-     * 
-     * @param start_time The start time (inclusive boundary)
-     * @param end_time The end time (inclusive boundary)
-     * @return std::span<const float> view over the data in the specified range
-     * 
-     * @note Returns an empty span if no data points fall within the specified range
-     * @note The span is valid as long as the AnalogTimeSeries object exists and is not modified
-     * @see findDataArrayIndexGreaterOrEqual() and findDataArrayIndexLessOrEqual() for the underlying boundary logic
-     */
-    [[nodiscard]] std::span<const float> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
 
     // ========== Time-Value Range Access ==========
 

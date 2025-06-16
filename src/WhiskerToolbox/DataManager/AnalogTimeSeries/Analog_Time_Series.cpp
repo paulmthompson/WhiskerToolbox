@@ -122,6 +122,34 @@ void AnalogTimeSeries::overwriteAtDataArrayIndexes(std::vector<float> & analog_d
 
 // ========== Getting Data ==========
 
+std::span<const float> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
+    // Find the start and end indices using our boundary-finding methods
+    auto start_index_opt = findDataArrayIndexGreaterOrEqual(start_time);
+    auto end_index_opt = findDataArrayIndexLessOrEqual(end_time);
+
+    // Check if both boundaries were found
+    if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
+        // Return empty span if either boundary is not found
+        return std::span<const float>();
+    }
+
+    size_t start_idx = start_index_opt.value().getValue();
+    size_t end_idx = end_index_opt.value().getValue();
+
+    // Validate that start <= end (should always be true if our logic is correct)
+    if (start_idx > end_idx) {
+        // Return empty span for invalid range
+        return std::span<const float>();
+    }
+
+    // Calculate the size of the range (inclusive of both endpoints)
+    size_t range_size = end_idx - start_idx + 1;
+
+    // Return span from start_idx with range_size elements
+    return std::span<const float>(_data.data() + start_idx, range_size);
+}
+
+
 // ========== TimeFrame Support ==========
 
 std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const {
@@ -200,39 +228,6 @@ std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexLessOrEqual(Ti
             return std::nullopt;
         }
     }, _time_storage);
-}
-
-std::span<const float> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
-    // Find the start and end indices using our boundary-finding methods
-    auto start_index_opt = findDataArrayIndexGreaterOrEqual(start_time);
-    auto end_index_opt = findDataArrayIndexLessOrEqual(end_time);
-
-    // Check if both boundaries were found
-    if (!start_index_opt.has_value() || !end_index_opt.has_value()) {
-        // Return empty span if either boundary is not found
-        return std::span<const float>();
-    }
-
-    size_t start_idx = start_index_opt.value().getValue();
-    size_t end_idx = end_index_opt.value().getValue();
-
-    // Validate that start <= end (should always be true if our logic is correct)
-    if (start_idx > end_idx) {
-        // Return empty span for invalid range
-        return std::span<const float>();
-    }
-
-    // Calculate the size of the range (inclusive of both endpoints)
-    size_t range_size = end_idx - start_idx + 1;
-
-    // Return span from start_idx with range_size elements
-    return std::span<const float>(_data.data() + start_idx, range_size);
-}
-
-std::span<const float> AnalogTimeSeries::getDataSpanInCoordinateRange(TimeCoordinate start_coord, TimeCoordinate end_coord) const {
-    // Note: This implementation is simplified and may not return a contiguous span
-    // for all cases. For non-contiguous data, consider using getDataInCoordinateRange() instead.
-    throw std::runtime_error("getDataSpanInCoordinateRange not fully implemented due to potential non-contiguous data. Use getDataInCoordinateRange() instead.");
 }
 
 // ========== Time-Value Range Access Implementation ==========
