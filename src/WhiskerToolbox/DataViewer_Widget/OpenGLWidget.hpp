@@ -2,6 +2,7 @@
 #define OPENGLWIDGET_HPP
 
 #include "DataViewer/XAxis.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "TimeFrame.hpp"
 
 #include <QMatrix4x4>
@@ -400,31 +401,16 @@ private:
     void _updateYViewBoundaries();
 
     // Gap detection helper methods for analog series
-    template<typename Iterator>
-    void _drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator end_it,
-                                           std::vector<float> const & data,
-                                           std::vector<TimeFrameIndex> const & data_time,
+    void _drawAnalogSeriesWithGapDetection(std::vector<float> const & data,
                                            std::shared_ptr<TimeFrame> const & time_frame,
+                                           AnalogTimeSeries::TimeValueSpanPair analog_range,
                                            float gap_threshold,
                                            float rNorm, float gNorm, float bNorm);
 
-    template<typename Iterator>
-    void _drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it,
-                                    std::vector<float> const & data,
-                                    std::vector<TimeFrameIndex> const & data_time,
+    void _drawAnalogSeriesAsMarkers(std::vector<float> const & data,
                                     std::shared_ptr<TimeFrame> const & time_frame,
+                                    AnalogTimeSeries::TimeValueSpanPair analog_range,
                                     float rNorm, float gNorm, float bNorm);
-
-    // Gap analysis for automatic display mode selection
-    struct GapAnalysis {
-        bool has_gaps{false};
-        int gap_count{0};
-        float max_gap_size{0.0f};
-        float mean_gap_size{0.0f};
-        float recommended_threshold{5.0f};
-    };
-
-    GapAnalysis _analyzeDataGaps(AnalogTimeSeries const & series);
 
     std::unordered_map<std::string, AnalogSeriesData> _analog_series;
     std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;

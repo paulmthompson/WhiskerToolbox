@@ -600,13 +600,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 void OpenGLWidget::drawAnalogSeries() {
     int r, g, b;
 
-    auto const start_time = static_cast<float>(_xAxis.getStart());
-    auto const end_time = static_cast<float>(_xAxis.getEnd());
-
-    //auto const min_y = _yMin;
-    //auto const max_y = _yMax;
-
-    //float const center_coord = -0.5f * _ySpacing * (static_cast<float>(_analog_series.size() - 1));
+    auto const start_time = TimeFrameIndex(_xAxis.getStart());
+    auto const end_time = TimeFrameIndex(_xAxis.getEnd());
 
     auto const m_program_ID = m_program->programId();
 
@@ -625,7 +620,6 @@ void OpenGLWidget::drawAnalogSeries() {
     for (auto const & [key, analog_data]: _analog_series) {
         auto const & series = analog_data.series;
         auto const & data = series->getAnalogTimeSeries();
-        auto const & data_time = series->getTimeSeries();
         //if (!series->hasTimeFrameV2()) {
         //    continue;
         //}
@@ -658,29 +652,8 @@ void OpenGLWidget::drawAnalogSeries() {
 
         m_vertices.clear();
 
-        // Define iterators for the data points in the visible range
-        auto start_it = data_time.begin();
-        auto end_it = data_time.end();
-
-        // If the time frame is the master time frame, use the time coordinates directly
-        // Otherwise, convert the master time coordinates to data time frame indices
-        if (time_frame.get() == _master_time_frame.get()) {
-            start_it = std::lower_bound(data_time.begin(), data_time.end(), start_time,
-                                        [&time_frame](auto const & time, auto const & value) { return time_frame->getTimeAtIndex(TimeFrameIndex(time)) < value; });
-            end_it = std::upper_bound(data_time.begin(), data_time.end(), end_time,
-                                      [&time_frame](auto const & value, auto const & time) { return value < time_frame->getTimeAtIndex(TimeFrameIndex(time)); });
-        } else {
-            auto start_idx = time_frame->getIndexAtTime(start_time);                   // index in time vector
-            auto end_idx = time_frame->getIndexAtTime(end_time);                       // index in time vector
-            start_it = std::lower_bound(data_time.begin(), data_time.end(), TimeFrameIndex(start_idx));// index in data vector
-            end_it = std::upper_bound(data_time.begin(), data_time.end(), TimeFrameIndex(end_idx));    // index in data vector
-
-            std::cout << "start_it: " << (*start_it).getValue() << std::endl;
-            std::cout << "end_it: " << (*end_it).getValue() << std::endl;
-
-            std::cout << "start_idx: " << start_idx << std::endl;
-            std::cout << "end_idx: " << end_idx << std::endl;
-        }
+        auto series_start_index = TimeFrameIndex(getTimeIndexForSeries(start_time, _master_time_frame.get(), time_frame.get()));
+        auto series_end_index = TimeFrameIndex(getTimeIndexForSeries(end_time, _master_time_frame.get(), time_frame.get()));
 
         // === MVP MATRIX SETUP ===
 
@@ -689,29 +662,36 @@ void OpenGLWidget::drawAnalogSeries() {
 
         auto Model = new_getAnalogModelMat(*display_options, display_options->cached_std_dev, display_options->cached_mean, *_plotting_manager);
         auto View = new_getAnalogViewMat(*_plotting_manager);
-        auto Projection = new_getAnalogProjectionMat(TimeFrameIndex(start_time), TimeFrameIndex(end_time), _yMin, _yMax, *_plotting_manager);
+        auto Projection = new_getAnalogProjectionMat(start_time, end_time, _yMin, _yMax, *_plotting_manager);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
         glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
 
-        // Handle different gap handling modes
+        auto analog_range = series->getTimeValueSpanInTimeFrameIndexRange(series_start_index, series_end_index);
+
+        if (analog_range.values.empty()) {
+            return;
+        }
 
         if (display_options->gap_handling == AnalogGapHandling::AlwaysConnect) {
-            // Original behavior: connect all points
-            for (auto it = start_it; it != end_it; ++it) {
-                size_t const index = std::distance(data_time.begin(), it);
-                auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(data_time[index])));
-                float const xCanvasPos = time;
-                float const yCanvasPos = data[index];
+
+            auto time_begin = analog_range.time_indices.begin();
+
+            for (size_t i = 0; i < analog_range.values.size(); i++) {
+                auto const xCanvasPos = time_frame->getTimeAtIndex(**time_begin);
+                //auto const xCanvasPos = point.time_frame_index.getValue();
+                auto const yCanvasPos = analog_range.values[i];
+
                 m_vertices.push_back(xCanvasPos);
                 m_vertices.push_back(yCanvasPos);
                 m_vertices.push_back(rNorm);
                 m_vertices.push_back(gNorm);
                 m_vertices.push_back(bNorm);
                 m_vertices.push_back(1.0f);// alpha
-            }
 
+                ++(*time_begin);
+            }
             m_vbo.bind();
             m_vbo.allocate(m_vertices.data(), static_cast<int>(m_vertices.size() * sizeof(GLfloat)));
             m_vbo.release();
@@ -724,14 +704,15 @@ void OpenGLWidget::drawAnalogSeries() {
             // Draw multiple line segments, breaking at gaps
             // Set line thickness before drawing segments
             glLineWidth(static_cast<float>(display_options->line_thickness));
-            _drawAnalogSeriesWithGapDetection(start_it, end_it, data, data_time, time_frame,
+            _drawAnalogSeriesWithGapDetection(data, time_frame, analog_range,
                                               display_options->gap_threshold, rNorm, gNorm, bNorm);
 
         } else if (display_options->gap_handling == AnalogGapHandling::ShowMarkers) {
             // Draw individual markers instead of lines
-            _drawAnalogSeriesAsMarkers(start_it, end_it, data, data_time, time_frame,
+            _drawAnalogSeriesAsMarkers(data, time_frame, analog_range,
                                        rNorm, gNorm, bNorm);
         }
+
 
         i++;
     }
@@ -741,30 +722,25 @@ void OpenGLWidget::drawAnalogSeries() {
     glUseProgram(0);
 }
 
-template<typename Iterator>
-void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator end_it,
-                                                     std::vector<float> const & data,
-                                                     std::vector<TimeFrameIndex> const & data_time,
+void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & data,
                                                      std::shared_ptr<TimeFrame> const & time_frame,
+                                                     AnalogTimeSeries::TimeValueSpanPair analog_range,
                                                      float gap_threshold,
                                                      float rNorm, float gNorm, float bNorm) {
-    if (start_it == end_it) return;
 
     std::vector<GLfloat> segment_vertices;
-    auto prev_it = start_it;
+    auto prev_index = 0;
 
-    for (auto it = start_it; it != end_it; ++it) {
-        size_t const index = std::distance(data_time.begin(), it);
-        auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(data_time[index])));
-        float const xCanvasPos = time;
-        float const yCanvasPos = data[index];
+    auto time_begin = analog_range.time_indices.begin();
+
+    for (size_t i = 0; i < analog_range.values.size(); i++) {
+        auto const xCanvasPos = time_frame->getTimeAtIndex(**time_begin);
+        auto const yCanvasPos = analog_range.values[i];
 
         // Check for gap if this isn't the first point
-        if (it != start_it) {
-            size_t const prev_index = std::distance(data_time.begin(), prev_it);
-            auto const prev_time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(data_time[prev_index])));
-            //float const time_gap = time - prev_time;
-            float const time_gap = index - prev_index;
+        if (prev_index != 0) {
+
+            float const time_gap = (**time_begin).getValue() - prev_index;
 
             if (time_gap > gap_threshold) {
                 // Draw current segment if it has points
@@ -788,7 +764,8 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator
         segment_vertices.push_back(bNorm);
         segment_vertices.push_back(1.0f);// alpha
 
-        prev_it = it;
+        prev_index = (**time_begin).getValue();
+        ++(*time_begin);
     }
 
     // Draw final segment
@@ -806,31 +783,18 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(Iterator start_it, Iterator
     }
 }
 
-template<typename Iterator>
-void OpenGLWidget::_drawAnalogSeriesAsMarkers(Iterator start_it, Iterator end_it,
-                                              std::vector<float> const & data,
-                                              std::vector<TimeFrameIndex> const & data_time,
+void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::vector<float> const & data,
                                               std::shared_ptr<TimeFrame> const & time_frame,
+                                              AnalogTimeSeries::TimeValueSpanPair analog_range,
                                               float rNorm, float gNorm, float bNorm) {
     m_vertices.clear();
 
-    for (auto it = start_it; it != end_it; ++it) {
-        size_t const index = std::distance(data_time.begin(), it);
+    auto time_begin = analog_range.time_indices.begin();
 
-        // Calculate X position with proper time frame handling
-        float xCanvasPos;
-        if (time_frame.get() == _master_time_frame.get()) {
-            // Same time frame - convert data index to time coordinate
-            auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(data_time[index])));
-            xCanvasPos = time;
-        } else {
-            // Different time frames - data_time[index] is already an index in the data's time frame
-            // Convert to actual time, which should be compatible with master time frame
-            auto const time = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(data_time[index])));
-            xCanvasPos = time;
-        }
+    for (size_t i = 0; i < analog_range.values.size(); i++) {
 
-        float const yCanvasPos = data[index];
+        auto const xCanvasPos = time_frame->getTimeAtIndex(**time_begin);
+        auto const yCanvasPos = analog_range.values[i];
 
         m_vertices.push_back(xCanvasPos);
         m_vertices.push_back(yCanvasPos);
@@ -954,28 +918,14 @@ void OpenGLWidget::addAnalogTimeSeries(
     display_options->scale_factor = display_options->cached_std_dev * 5.0f;
     display_options->user_scale_factor = 1.0f;// Default user scale
 
-    // Automatic gap detection and display mode selection
-    start_time = std::chrono::high_resolution_clock::now();
-    auto gap_analysis = _analyzeDataGaps(*series);
-    end_time = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-    std::cout << "Gap analysis took " << duration.count() << " milliseconds" << std::endl;
-    if (gap_analysis.has_gaps) {
-        std::cout << "Gaps detected in " << key << ": " << gap_analysis.gap_count
-                  << " gaps, max gap: " << gap_analysis.max_gap_size
-                  << ", mean gap: " << gap_analysis.mean_gap_size
-                  << " time units. Using gap-aware display." << std::endl;
-
-        display_options->gap_handling = AnalogGapHandling::DetectGaps;
-        display_options->enable_gap_detection = true;
-        display_options->gap_threshold = gap_analysis.recommended_threshold;
-    } else {
-        std::cout << "No significant gaps detected in " << key
-                  << " (max/mean ratio: " << (gap_analysis.max_gap_size / gap_analysis.mean_gap_size)
-                  << "). Using continuous display." << std::endl;
-
+    if (time_frame->getTotalFrameCount() / 5 > series->getNumSamples()) {
         display_options->gap_handling = AnalogGapHandling::AlwaysConnect;
         display_options->enable_gap_detection = false;
+
+    } else {
+        display_options->enable_gap_detection = true;
+        display_options->gap_handling = AnalogGapHandling::DetectGaps;
+        display_options->gap_threshold = time_frame->getTotalFrameCount() / 1000;
     }
 
     _analog_series[key] = AnalogSeriesData{
@@ -1642,70 +1592,6 @@ void OpenGLWidget::drawDraggedInterval() {
     glDrawArrays(GL_QUADS, 0, 4);
 
     glUseProgram(0);
-}
-
-OpenGLWidget::GapAnalysis OpenGLWidget::_analyzeDataGaps(AnalogTimeSeries const & series) {
-    GapAnalysis analysis;
-
-    auto const & time_indices = series.getTimeSeries();
-    if (time_indices.size() < 2) {
-        // Not enough data points to analyze gaps
-        return analysis;
-    }
-
-    // Fast gap analysis using running statistics - no storage or sorting required
-    size_t max_gap = 0;
-    size_t sum_gaps = 0;
-    int gap_count = 0;
-
-    // Calculate gaps between consecutive time indices directly
-    for (size_t i = 1; i < time_indices.size(); ++i) {
-
-        auto const gap_size = time_indices[i] - time_indices[i - 1];
-
-        sum_gaps += gap_size.getValue();
-        gap_count++;
-
-        if (gap_size.getValue() > max_gap) {
-            max_gap = gap_size.getValue();
-        }
-    }
-
-    size_t const mean_gap = sum_gaps / gap_count;// rounded to nearest int
-
-    // Simple heuristic: if the largest gap is significantly bigger than the mean gap,
-    // we likely have real gaps in the data (not just regular sampling intervals)
-    constexpr size_t GAP_MULTIPLIER = 3;// Largest gap must be 3x mean to be considered significant
-    bool const has_significant_gaps = (max_gap > mean_gap * GAP_MULTIPLIER);
-
-    // Count gaps that are larger than the threshold
-    int significant_gap_count = 0;
-    if (has_significant_gaps) {
-        size_t const gap_threshold = mean_gap * GAP_MULTIPLIER;
-
-        // Single pass to count significant gaps
-        for (size_t i = 1; i < time_indices.size(); ++i) {
-            auto const gap_size = time_indices[i] - time_indices[i - 1];
-            if (gap_size.getValue() > gap_threshold) {
-                significant_gap_count++;
-            }
-        }
-    }
-
-    // Set analysis results
-    analysis.has_gaps = has_significant_gaps;
-    analysis.gap_count = significant_gap_count;
-    analysis.max_gap_size = max_gap;
-    analysis.mean_gap_size = mean_gap;
-
-    // Set recommended threshold slightly below the detection threshold
-    if (has_significant_gaps) {
-        analysis.recommended_threshold = mean_gap * GAP_MULTIPLIER * 0.8f;// 80% of threshold
-    } else {
-        analysis.recommended_threshold = mean_gap * 2.0f;// Conservative default
-    }
-
-    return analysis;
 }
 
 namespace TimeSeriesDefaultValues {

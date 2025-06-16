@@ -821,7 +821,7 @@ void DataViewer_Widget::_calculateOptimalScaling(std::vector<std::string> const 
     for (auto const & key: group_keys) {
         auto series = _data_manager->getData<AnalogTimeSeries>(key);
         if (series) {
-            float const std_dev = calculate_std_dev(*series);
+            float const std_dev = calculate_std_dev_approximate(*series);
             std_devs.push_back(std_dev);
             std::cout << "Series " << key << " std dev: " << std_dev << std::endl;
         }
