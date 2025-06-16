@@ -881,14 +881,16 @@ void OpenGLWidget::drawAxis() {
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
 
-    // Get axis color from theme
+    // Get axis color from theme and set uniforms
     float r, g, b;
     hexToRGB(m_axis_color, r, g, b);
+    glUniform3f(m_colorLoc, r, g, b);
+    glUniform1f(m_alphaLoc, 1.0f);
 
     // Draw horizontal line at x=0
-    std::array<GLfloat, 12> lineVertices = {
-            0.0f, _yMin, r, g, b, 1.0f,
-            0.0f, _yMax, r, g, b, 1.0f};
+    std::array<GLfloat, 4> lineVertices = {
+            0.0f, _yMin,
+            0.0f, _yMax};
 
     m_vbo.bind();
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
