@@ -4,8 +4,8 @@
 static char const * vertexShaderSource =
         "#version 410 core\n"
         "in vec4 vertex;\n"
-        "in vec3 color;\n"
-        "in float alpha;\n"
+        "uniform vec3 u_color;\n"
+        "uniform float u_alpha;\n"
         "out vec3 fragColor;\n"
         "out float fragAlpha;\n"
         "uniform mat4 projMatrix;\n"
@@ -13,8 +13,8 @@ static char const * vertexShaderSource =
         "uniform mat4 modelMatrix;\n"
         "void main() {\n"
         "   gl_Position = projMatrix * viewMatrix * modelMatrix * vertex;\n"
-        "   fragColor = color;\n"
-        "   fragAlpha = alpha;\n"
+        "   fragColor = u_color;\n"
+        "   fragAlpha = u_alpha;\n"
         "}\n";
 
 static char const * fragmentShaderSource =

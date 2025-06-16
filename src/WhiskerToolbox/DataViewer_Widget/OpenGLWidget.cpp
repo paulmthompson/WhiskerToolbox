@@ -254,6 +254,8 @@ void OpenGLWidget::initializeGL() {
     m_projMatrixLoc = glGetUniformLocation(m_program_ID, "projMatrix");
     m_viewMatrixLoc = glGetUniformLocation(m_program_ID, "viewMatrix");
     m_modelMatrixLoc = glGetUniformLocation(m_program_ID, "modelMatrix");
+    m_colorLoc = glGetUniformLocation(m_program_ID, "u_color");
+    m_alphaLoc = glGetUniformLocation(m_program_ID, "u_alpha");
 
     m_dashedProgram = create_shader_program(dashedVertexShaderSource, dashedFragmentShaderSource);
 
@@ -279,22 +281,17 @@ void OpenGLWidget::initializeGL() {
 
 void OpenGLWidget::setupVertexAttribs() {
 
-    m_vbo.bind();// glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
-    int const vertex_argument_num = 6;
+    m_vbo.bind();                     // glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
+    int const vertex_argument_num = 2;// Only position (x, y) now
 
     // Attribute 0: vertex positions (x, y)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), nullptr);
 
-    // Attribute 1: color (r, g, b)
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), reinterpret_cast<void *>(2 * sizeof(GLfloat)));
+    // Disable unused vertex attributes
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
 
-    // Attribute 2: alpha
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), reinterpret_cast<void *>(5 * sizeof(GLfloat)));
-
-    //glDisableVertexAttribArray(0);
     m_vbo.release();
 }
 
@@ -668,6 +665,10 @@ void OpenGLWidget::drawAnalogSeries() {
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
         glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
 
+        // Set color and alpha uniforms
+        glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
+        glUniform1f(m_alphaLoc, 1.0f);
+
         auto analog_range = series->getTimeValueSpanInTimeFrameIndexRange(series_start_index, series_end_index);
 
         if (analog_range.values.empty()) {
@@ -685,10 +686,6 @@ void OpenGLWidget::drawAnalogSeries() {
 
                 m_vertices.push_back(xCanvasPos);
                 m_vertices.push_back(yCanvasPos);
-                m_vertices.push_back(rNorm);
-                m_vertices.push_back(gNorm);
-                m_vertices.push_back(bNorm);
-                m_vertices.push_back(1.0f);// alpha
 
                 ++(*time_begin);
             }
@@ -698,19 +695,18 @@ void OpenGLWidget::drawAnalogSeries() {
 
             // Set line thickness from display options
             glLineWidth(static_cast<float>(display_options->line_thickness));
-            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 6));
+            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 2));
 
         } else if (display_options->gap_handling == AnalogGapHandling::DetectGaps) {
             // Draw multiple line segments, breaking at gaps
             // Set line thickness before drawing segments
             glLineWidth(static_cast<float>(display_options->line_thickness));
             _drawAnalogSeriesWithGapDetection(data, time_frame, analog_range,
-                                              display_options->gap_threshold, rNorm, gNorm, bNorm);
+                                              display_options->gap_threshold);
 
         } else if (display_options->gap_handling == AnalogGapHandling::ShowMarkers) {
             // Draw individual markers instead of lines
-            _drawAnalogSeriesAsMarkers(data, time_frame, analog_range,
-                                       rNorm, gNorm, bNorm);
+            _drawAnalogSeriesAsMarkers(data, time_frame, analog_range);
         }
 
 
@@ -725,8 +721,7 @@ void OpenGLWidget::drawAnalogSeries() {
 void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & data,
                                                      std::shared_ptr<TimeFrame> const & time_frame,
                                                      AnalogTimeSeries::TimeValueSpanPair analog_range,
-                                                     float gap_threshold,
-                                                     float rNorm, float gNorm, float bNorm) {
+                                                     float gap_threshold) {
 
     std::vector<GLfloat> segment_vertices;
     auto prev_index = 0;
@@ -744,11 +739,11 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & 
 
             if (time_gap > gap_threshold) {
                 // Draw current segment if it has points
-                if (segment_vertices.size() >= 12) {// At least 2 points (6 floats each)
+                if (segment_vertices.size() >= 4) {// At least 2 points (2 floats each)
                     m_vbo.bind();
                     m_vbo.allocate(segment_vertices.data(), static_cast<int>(segment_vertices.size() * sizeof(GLfloat)));
                     m_vbo.release();
-                    glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 6));
+                    glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 2));
                 }
 
                 // Start new segment
@@ -756,37 +751,32 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & 
             }
         }
 
-        // Add current point to segment
+        // Add current point to segment (only position now)
         segment_vertices.push_back(xCanvasPos);
         segment_vertices.push_back(yCanvasPos);
-        segment_vertices.push_back(rNorm);
-        segment_vertices.push_back(gNorm);
-        segment_vertices.push_back(bNorm);
-        segment_vertices.push_back(1.0f);// alpha
 
         prev_index = (**time_begin).getValue();
         ++(*time_begin);
     }
 
     // Draw final segment
-    if (segment_vertices.size() >= 6) {// At least 1 point
+    if (segment_vertices.size() >= 2) {// At least 1 point
         m_vbo.bind();
         m_vbo.allocate(segment_vertices.data(), static_cast<int>(segment_vertices.size() * sizeof(GLfloat)));
         m_vbo.release();
 
-        if (segment_vertices.size() >= 12) {
-            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 6));
+        if (segment_vertices.size() >= 4) {
+            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 2));
         } else {
             // Single point - draw as a small marker
-            glDrawArrays(GL_POINTS, 0, static_cast<int>(segment_vertices.size() / 6));
+            glDrawArrays(GL_POINTS, 0, static_cast<int>(segment_vertices.size() / 2));
         }
     }
 }
 
 void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::vector<float> const & data,
                                               std::shared_ptr<TimeFrame> const & time_frame,
-                                              AnalogTimeSeries::TimeValueSpanPair analog_range,
-                                              float rNorm, float gNorm, float bNorm) {
+                                              AnalogTimeSeries::TimeValueSpanPair analog_range) {
     m_vertices.clear();
 
     auto time_begin = analog_range.time_indices.begin();
@@ -798,10 +788,8 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::vector<float> const & data,
 
         m_vertices.push_back(xCanvasPos);
         m_vertices.push_back(yCanvasPos);
-        m_vertices.push_back(rNorm);
-        m_vertices.push_back(gNorm);
-        m_vertices.push_back(bNorm);
-        m_vertices.push_back(1.0f);// alpha
+
+        ++(*time_begin);
     }
 
     if (!m_vertices.empty()) {
@@ -811,7 +799,7 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::vector<float> const & data,
 
         // Set point size for better visibility
         //glPointSize(3.0f);
-        glDrawArrays(GL_POINTS, 0, static_cast<int>(m_vertices.size() / 6));
+        glDrawArrays(GL_POINTS, 0, static_cast<int>(m_vertices.size() / 2));
         //glPointSize(1.0f); // Reset to default
     }
 }
@@ -1609,18 +1597,18 @@ void OpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
         // Check if we're double-clicking over a digital interval series
         //float const canvas_x = static_cast<float>(event->pos().x());
         //float const canvas_y = static_cast<float>(event->pos().y());
-        
+
         // Find which digital interval series (if any) is at this Y position
         // For now, use the first visible digital interval series
         // TODO: Improve this to detect which series based on Y coordinate
-        for (auto const & [series_key, data] : _digital_interval_series) {
+        for (auto const & [series_key, data]: _digital_interval_series) {
             if (data.display_options->is_visible) {
                 startNewIntervalCreation(series_key, event->pos());
                 return;
             }
         }
     }
-    
+
     QOpenGLWidget::mouseDoubleClickEvent(event);
 }
 
@@ -1639,11 +1627,11 @@ void OpenGLWidget::startNewIntervalCreation(std::string const & series_key, QPoi
     _is_creating_new_interval = true;
     _new_interval_series_key = series_key;
     _new_interval_click_pos = start_pos;
-    
+
     // Convert click position to time coordinate (in master time frame)
     float const click_time_master = canvasXToTime(static_cast<float>(start_pos.x()));
     _new_interval_click_time = static_cast<int64_t>(std::round(click_time_master));
-    
+
     // Initialize start and end to the click position
     _new_interval_start_time = _new_interval_click_time;
     _new_interval_end_time = _new_interval_click_time;
@@ -1651,7 +1639,7 @@ void OpenGLWidget::startNewIntervalCreation(std::string const & series_key, QPoi
     // Set cursor to indicate creation mode
     setCursor(Qt::SizeHorCursor);
 
-    std::cout << "Started new interval creation for series " << series_key 
+    std::cout << "Started new interval creation for series " << series_key
               << " at time " << _new_interval_click_time << std::endl;
 }
 
@@ -1705,7 +1693,7 @@ void OpenGLWidget::updateNewIntervalCreation(QPoint const & current_pos) {
             new_start_series, new_end_series);
 
     // If there are overlapping intervals, constrain the new interval
-    for (auto const & interval : overlapping_intervals) {
+    for (auto const & interval: overlapping_intervals) {
         if (current_time_series >= click_time_series) {
             // Dragging right - stop before the first overlapping interval
             if (new_end_series >= interval.start) {
@@ -1789,8 +1777,8 @@ void OpenGLWidget::finishNewIntervalCreation() {
         // Set the new interval as selected (stored in master time frame coordinates)
         setSelectedInterval(_new_interval_series_key, _new_interval_start_time, _new_interval_end_time);
 
-        std::cout << "Created new interval [" << _new_interval_start_time 
-                  << ", " << _new_interval_end_time << "] for series " 
+        std::cout << "Created new interval [" << _new_interval_start_time
+                  << ", " << _new_interval_end_time << "] for series "
                   << _new_interval_series_key << std::endl;
 
     } catch (...) {

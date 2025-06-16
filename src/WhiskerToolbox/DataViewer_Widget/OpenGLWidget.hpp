@@ -1,8 +1,8 @@
 #ifndef OPENGLWIDGET_HPP
 #define OPENGLWIDGET_HPP
 
-#include "DataViewer/XAxis.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataViewer/XAxis.hpp"
 #include "TimeFrame.hpp"
 
 #include <QMatrix4x4>
@@ -404,13 +404,11 @@ private:
     void _drawAnalogSeriesWithGapDetection(std::vector<float> const & data,
                                            std::shared_ptr<TimeFrame> const & time_frame,
                                            AnalogTimeSeries::TimeValueSpanPair analog_range,
-                                           float gap_threshold,
-                                           float rNorm, float gNorm, float bNorm);
+                                           float gap_threshold);
 
     void _drawAnalogSeriesAsMarkers(std::vector<float> const & data,
                                     std::shared_ptr<TimeFrame> const & time_frame,
-                                    AnalogTimeSeries::TimeValueSpanPair analog_range,
-                                    float rNorm, float gNorm, float bNorm);
+                                    AnalogTimeSeries::TimeValueSpanPair analog_range);
 
     std::unordered_map<std::string, AnalogSeriesData> _analog_series;
     std::unordered_map<std::string, DigitalEventSeriesData> _digital_event_series;
@@ -429,6 +427,8 @@ private:
     int m_projMatrixLoc{};
     int m_viewMatrixLoc{};
     int m_modelMatrixLoc{};
+    int m_colorLoc{};
+    int m_alphaLoc{};
 
     QOpenGLShaderProgram * m_dashedProgram{nullptr};
     int m_dashedProjMatrixLoc{};
@@ -481,7 +481,7 @@ private:
     std::string _new_interval_series_key;
     int64_t _new_interval_start_time{0};
     int64_t _new_interval_end_time{0};
-    int64_t _new_interval_click_time{0};  // Time coordinate where double-click occurred
+    int64_t _new_interval_click_time{0};// Time coordinate where double-click occurred
     QPoint _new_interval_click_pos;
 };
 
