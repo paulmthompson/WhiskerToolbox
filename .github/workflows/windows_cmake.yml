@@ -45,6 +45,11 @@ jobs:
         with:
           cmakeVersion: "~3.30.0"
 
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: '10b7a178346f3f0abef60cecd5130e295afd8da4' #2024.10.21
+
       - uses: ilammy/msvc-dev-cmd@v1
         if: runner.os == 'Windows' && matrix.compiler == 'msvc'
 
@@ -78,12 +83,6 @@ jobs:
         run: |
           echo "QTDIR=$QT_ROOT_DIR" >> "$GITHUB_ENV"
           echo "QtToolsPath=$QT_ROOT_DIR/bin" >> "$GITHUB_ENV"
-
-      - name: "Set environmental variables"
-        if: runner.os == 'Linux' || runner.os == 'Windows'
-        shell: bash
-        run: |
-          echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
       - name: Setup headless display
         uses: pyvista/setup-headless-display-action@v2

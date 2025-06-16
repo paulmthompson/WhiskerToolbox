@@ -82,13 +82,6 @@ set(HDF5_DLLS
         "${CMAKE_BINARY_DIR}/hdf5.dll"
 )
 
-set(JKQTPLOTTER_DLLS
-        $<$<CONFIG:Release>:"${CMAKE_BINARY_DIR}/JKQTPlotter6_Release.dll">
-        $<$<CONFIG:Release>:"${CMAKE_BINARY_DIR}/JKQTMath6_Release.dll">
-        $<$<CONFIG:Release>:"${CMAKE_BINARY_DIR}/JKQTMathText6_Release.dll">
-        $<$<CONFIG:Release>:"${CMAKE_BINARY_DIR}/JKQTCommon6_Release.dll">
-)
-
 set(WHISKER_DLLS
         "${CMAKE_BINARY_DIR}/janelia.dll"
 )
@@ -102,7 +95,8 @@ set(EXTRA_DLLS
         "${CMAKE_BINARY_DIR}/libgfortran-5.dll"
         "${CMAKE_BINARY_DIR}/libquadmath-0.dll"
         "${CMAKE_BINARY_DIR}/libwinpthread-1.dll"
-        "${CMAKE_BINARY_DIR}/libomp140.x86_64.dll"
+        #"${CMAKE_BINARY_DIR}/libomp140.x86_64.dll" #This is located in C:\Windows\System32
+        "C:/Windows/System32/libomp140.x86_64.dll"
 )
 
 set(TORCH_DLLS
@@ -120,7 +114,6 @@ copy_dlls_during_install("${OPENCV_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${HDF5_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${WHISKER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${EXTRA_DLLS}" "${CMAKE_INSTALL_BINDIR}")
-#copy_dlls_during_install("${JKQTPLOTTER_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 copy_dlls_during_install("${TORCH_DLLS}" "${CMAKE_INSTALL_BINDIR}")
 
 # Print support and xml are dependencies of JKQTPlotter6
