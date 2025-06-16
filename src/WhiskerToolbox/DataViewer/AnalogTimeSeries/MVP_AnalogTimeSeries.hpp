@@ -2,6 +2,7 @@
 #define MVP_ANALOGTIMESERIES_HPP
 
 #include "AnalogTimeSeriesDisplayOptions.hpp"
+#include "TimeFrame.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -53,8 +54,8 @@ glm::mat4 new_getAnalogViewMat(PlottingManager const & plotting_manager);
  * @param plotting_manager Reference to plotting manager for viewport configuration
  * @return Projection transformation matrix
  */
-glm::mat4 new_getAnalogProjectionMat(int start_data_index,
-                                     int end_data_index,
+glm::mat4 new_getAnalogProjectionMat(TimeFrameIndex start_data_index,
+                                     TimeFrameIndex end_data_index,
                                      float y_min,
                                      float y_max,
                                      PlottingManager const & plotting_manager);

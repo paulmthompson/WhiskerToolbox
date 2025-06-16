@@ -626,9 +626,9 @@ void OpenGLWidget::drawAnalogSeries() {
         auto const & series = analog_data.series;
         auto const & data = series->getAnalogTimeSeries();
         auto const & data_time = series->getTimeSeries();
-        if (!series->hasTimeFrameV2()) {
-            continue;
-        }
+        //if (!series->hasTimeFrameV2()) {
+        //    continue;
+        //}
         //auto time_frame = series->getTimeFrameV2().value();
         auto time_frame = analog_data.time_frame;
 
@@ -689,7 +689,7 @@ void OpenGLWidget::drawAnalogSeries() {
 
         auto Model = new_getAnalogModelMat(*display_options, display_options->cached_std_dev, display_options->cached_mean, *_plotting_manager);
         auto View = new_getAnalogViewMat(*_plotting_manager);
-        auto Projection = new_getAnalogProjectionMat(start_time, end_time, _yMin, _yMax, *_plotting_manager);
+        auto Projection = new_getAnalogProjectionMat(TimeFrameIndex(start_time), TimeFrameIndex(end_time), _yMin, _yMax, *_plotting_manager);
 
         glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, &Projection[0][0]);
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);

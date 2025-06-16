@@ -200,11 +200,11 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
             // Generate MVP matrices for all series
             glm::mat4 gaussian_model = new_getAnalogModelMat(gaussian_options, gaussian_options.cached_std_dev, gaussian_options.cached_mean, manager);
             glm::mat4 gaussian_view = new_getAnalogViewMat(manager);
-            glm::mat4 gaussian_projection = new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager);
+            glm::mat4 gaussian_projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
 
             glm::mat4 uniform_model = new_getAnalogModelMat(uniform_options, uniform_options.cached_std_dev, uniform_options.cached_mean, manager);
             glm::mat4 uniform_view = new_getAnalogViewMat(manager);
-            glm::mat4 uniform_projection = new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager);
+            glm::mat4 uniform_projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
 
             glm::mat4 interval_model = new_getIntervalModelMat(interval_options, manager);
             glm::mat4 interval_view = new_getIntervalViewMat(manager);
@@ -257,11 +257,11 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
             // Generate MVP matrices with panning applied
             glm::mat4 gaussian_model_panned = new_getAnalogModelMat(gaussian_options, gaussian_options.cached_std_dev, gaussian_options.cached_mean, manager);
             glm::mat4 gaussian_view_panned = new_getAnalogViewMat(manager);
-            glm::mat4 gaussian_projection_panned = new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager);
+            glm::mat4 gaussian_projection_panned = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
 
             glm::mat4 uniform_model_panned = new_getAnalogModelMat(uniform_options, uniform_options.cached_std_dev, uniform_options.cached_mean, manager);
             glm::mat4 uniform_view_panned = new_getAnalogViewMat(manager);
-            glm::mat4 uniform_projection_panned = new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager);
+            glm::mat4 uniform_projection_panned = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
 
             glm::mat4 interval_model_panned = new_getIntervalModelMat(interval_options, manager);
             glm::mat4 interval_view_panned = new_getIntervalViewMat(manager);
@@ -292,7 +292,7 @@ TEST_CASE("Integration Test: Mixed Data Types with Coordinate Allocation and Pan
         {
             glm::mat4 gaussian_model_neg = new_getAnalogModelMat(gaussian_options, gaussian_options.cached_std_dev, gaussian_options.cached_mean, manager);
             glm::mat4 gaussian_view_neg = new_getAnalogViewMat(manager);
-            glm::mat4 gaussian_projection_neg = new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager);
+            glm::mat4 gaussian_projection_neg = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
 
             glm::mat4 interval_model_neg = new_getIntervalModelMat(interval_options, manager);
             glm::mat4 interval_view_neg = new_getIntervalViewMat(manager);
@@ -420,10 +420,10 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
         // For analog series, the mean should map to the allocated center
         glm::vec2 analog1_mean_point = applyMVPTransformationIntegration(5000, analog1_options.cached_mean, analog1_model,
                                                                          new_getAnalogViewMat(manager),
-                                                                         new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager));
+                                                                         new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager));
         glm::vec2 analog2_mean_point = applyMVPTransformationIntegration(5000, analog2_options.cached_mean, analog2_model,
                                                                          new_getAnalogViewMat(manager),
-                                                                         new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager));
+                                                                         new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager));
 
         REQUIRE_THAT(analog1_mean_point.y, WithinRel(analog1_center, 0.02f));
         REQUIRE_THAT(analog2_mean_point.y, WithinRel(analog2_center, 0.02f));

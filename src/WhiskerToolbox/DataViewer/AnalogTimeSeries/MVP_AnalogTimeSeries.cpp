@@ -88,8 +88,8 @@ glm::mat4 new_getAnalogViewMat(PlottingManager const & plotting_manager) {
     return View;
 }
 
-glm::mat4 new_getAnalogProjectionMat(int start_data_index,
-                                     int end_data_index,
+glm::mat4 new_getAnalogProjectionMat(TimeFrameIndex start_data_index,
+                                     TimeFrameIndex end_data_index,
                                      float y_min,
                                      float y_max,
                                      PlottingManager const & plotting_manager) {
@@ -102,8 +102,8 @@ glm::mat4 new_getAnalogProjectionMat(int start_data_index,
     // Note: Pan offset is handled in the View matrix for analog series,
     // so we don't apply it here to avoid double application
 
-    auto const data_start = static_cast<float>(start_data_index);
-    auto const data_end = static_cast<float>(end_data_index);
+    auto const data_start = static_cast<float>(start_data_index.getValue());
+    auto const data_end = static_cast<float>(end_data_index.getValue());
 
     // Create orthographic projection matrix without pan offset
     // Pan offset is applied in View matrix for consistent behavior

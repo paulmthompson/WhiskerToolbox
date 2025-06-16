@@ -178,7 +178,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         // Generate MVP matrices
         glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         glm::mat4 view = new_getAnalogViewMat(manager);
-        glm::mat4 projection = new_getAnalogProjectionMat(1, 10000, -1.0f, 1.0f, manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(10000), -1.0f, 1.0f, manager);
         
         // Test key data points transformation
         // Test point at data index 1, value 0 (should map to left center)
@@ -332,7 +332,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         // Generate MVP matrices
         glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         glm::mat4 view = new_getAnalogViewMat(manager);
-        glm::mat4 projection = new_getAnalogProjectionMat(1, 1000, -1.0f, 1.0f, manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(1000), -1.0f, 1.0f, manager);
         
         // Test key transformations
         // Test where the mean value (0.5) gets positioned
@@ -394,7 +394,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         // Generate MVP matrices without panning
         glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
         glm::mat4 view_no_pan = new_getAnalogViewMat(manager);
-        glm::mat4 projection = new_getAnalogProjectionMat(1, 1000, -1.0f, 1.0f, manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(1000), -1.0f, 1.0f, manager);
         
         // Test a reference point without panning
         glm::vec2 reference_point = applyMVPTransformation(500, 0.0f, model, view_no_pan, projection);
@@ -484,7 +484,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         glm::mat4 model1 = new_getAnalogModelMat(display_options1, display_options1.cached_std_dev, display_options1.cached_mean, manager);
         glm::mat4 model2 = new_getAnalogModelMat(display_options2, display_options2.cached_std_dev, display_options2.cached_mean, manager);
         glm::mat4 model3 = new_getAnalogModelMat(display_options3, display_options3.cached_std_dev, display_options3.cached_mean, manager);
-        glm::mat4 projection = new_getAnalogProjectionMat(1, 1000, -1.0f, 1.0f, manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(1000), -1.0f, 1.0f, manager);
         
         // Test reference points without panning
         glm::mat4 view_no_pan = new_getAnalogViewMat(manager);
@@ -544,7 +544,7 @@ TEST_CASE("New MVP System - Happy Path Tests", "[mvp][analog][new]") {
         setAnalogIntrinsicProperties(time_series.get(), display_options);
         
         glm::mat4 model = new_getAnalogModelMat(display_options, display_options.cached_std_dev, display_options.cached_mean, manager);
-        glm::mat4 projection = new_getAnalogProjectionMat(1, 1000, -1.0f, 1.0f, manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(1), TimeFrameIndex(1000), -1.0f, 1.0f, manager);
         
         // Pan so far upward that data goes above the visible area
         float extreme_pan_up = 5.0f; // Very large positive pan
@@ -667,7 +667,7 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         manager.setVisibleDataRange(1, 10000);
         
         // Test projection with invalid ranges
-        glm::mat4 projection = new_getAnalogProjectionMat(10000, 1, -1.0f, 1.0f, manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(10000), TimeFrameIndex(1), -1.0f, 1.0f, manager);
         
         // Matrix should still be valid even with inverted range
         for (int i = 0; i < 4; ++i) {
@@ -685,7 +685,7 @@ TEST_CASE("New MVP System - Error Handling and Edge Cases", "[mvp][analog][new][
         constexpr int large_end = 2000000;
         
         manager.setVisibleDataRange(large_start, large_end);
-        glm::mat4 projection = new_getAnalogProjectionMat(large_start, large_end, -100.0f, 100.0f, manager);
+        glm::mat4 projection = new_getAnalogProjectionMat(TimeFrameIndex(large_start), TimeFrameIndex(large_end), -100.0f, 100.0f, manager);
         
         // Should handle large numbers without overflow
         for (int i = 0; i < 4; ++i) {
