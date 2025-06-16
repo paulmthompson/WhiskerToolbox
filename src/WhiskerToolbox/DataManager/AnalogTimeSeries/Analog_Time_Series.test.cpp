@@ -704,3 +704,373 @@ TEST_CASE("AnalogTimeSeries - findDataArrayIndexForTimeFrameIndex functionality"
         REQUIRE_FALSE(result_gap.has_value());
     }
 }
+
+TEST_CASE("AnalogTimeSeries - Time-Value Range Interface", "[analog][timeseries][time_value_range]") {
+
+    SECTION("Range interface - basic iteration with sparse data") {
+        // Create data with irregular TimeFrameIndex spacing
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(2), TimeFrameIndex(4), TimeFrameIndex(6), TimeFrameIndex(8), TimeFrameIndex(10)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test range-based for loop iteration
+        auto range = series.getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex(3), TimeFrameIndex(9));
+        
+        std::vector<TimeFrameIndex> collected_times;
+        std::vector<float> collected_values;
+        
+        for (auto const& point : range) {
+            collected_times.push_back(point.time_frame_index);
+            collected_values.push_back(point.value);
+        }
+        
+        // Should get TimeFrameIndex 4, 6, 8 (data values 20.0f, 30.0f, 40.0f)
+        REQUIRE(collected_times.size() == 3);
+        REQUIRE(collected_values.size() == 3);
+        
+        REQUIRE(collected_times[0] == TimeFrameIndex(4));
+        REQUIRE(collected_values[0] == 20.0f);
+        
+        REQUIRE(collected_times[1] == TimeFrameIndex(6));
+        REQUIRE(collected_values[1] == 30.0f);
+        
+        REQUIRE(collected_times[2] == TimeFrameIndex(8));
+        REQUIRE(collected_values[2] == 40.0f);
+    }
+
+    SECTION("Range interface - dense consecutive storage") {
+        // Create data with consecutive TimeFrameIndex values starting from 100
+        std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102), TimeFrameIndex(103), TimeFrameIndex(104)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test range iteration [101, 103]
+        auto range = series.getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex(101), TimeFrameIndex(103));
+        
+        std::vector<std::pair<int64_t, float>> collected_points;
+        
+        for (auto const& point : range) {
+            collected_points.emplace_back(point.time_frame_index.getValue(), point.value);
+        }
+        
+        // Should get TimeFrameIndex 101, 102, 103 (values 2.2f, 3.3f, 4.4f)
+        REQUIRE(collected_points.size() == 3);
+        
+        REQUIRE(collected_points[0].first == 101);
+        REQUIRE(collected_points[0].second == 2.2f);
+        
+        REQUIRE(collected_points[1].first == 102);
+        REQUIRE(collected_points[1].second == 3.3f);
+        
+        REQUIRE(collected_points[2].first == 103);
+        REQUIRE(collected_points[2].second == 4.4f);
+    }
+
+    SECTION("Range interface - empty range") {
+        std::vector<float> data{1.0f, 2.0f, 3.0f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test range that doesn't overlap with data
+        auto range = series.getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex(40), TimeFrameIndex(50));
+        
+        REQUIRE(range.empty());
+        REQUIRE(range.size() == 0);
+        
+    }
+
+    SECTION("Range interface - single point") {
+        std::vector<float> data{42.0f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(50)};
+        
+        AnalogTimeSeries series(data, times);
+
+        auto range = series.getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex(45), TimeFrameIndex(55));
+        
+        REQUIRE_FALSE(range.empty());
+        REQUIRE(range.size() == 1);
+        
+        auto it = range.begin();
+        REQUIRE(it != range.end());
+        
+        auto const& point = *it;
+        REQUIRE(point.time_frame_index == TimeFrameIndex(50));
+        REQUIRE(point.value == 42.0f);
+        
+        ++it;
+        REQUIRE(it == range.end());
+    }
+
+    SECTION("Range interface - iterator operations") {
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        auto range = series.getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex(15), TimeFrameIndex(35));
+        
+        auto it = range.begin();
+        auto end_it = range.end();
+        
+        REQUIRE(it != end_it);
+        
+        // Test dereference and arrow operator
+        REQUIRE((*it).time_frame_index == TimeFrameIndex(20));
+        REQUIRE(it->value == 2.0f);
+        
+        // Test pre-increment
+        ++it;
+        REQUIRE(it->time_frame_index == TimeFrameIndex(30));
+        REQUIRE(it->value == 3.0f);
+        
+        // Test post-increment
+        auto old_it = it++;
+        REQUIRE(old_it->time_frame_index == TimeFrameIndex(30));
+        REQUIRE(it == end_it);
+    }
+}
+
+TEST_CASE("AnalogTimeSeries - Time-Value Span Interface", "[analog][timeseries][time_value_span]") {
+
+    SECTION("Span interface - basic zero-copy access with sparse data") {
+        // Create data with irregular TimeFrameIndex spacing
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(2), TimeFrameIndex(4), TimeFrameIndex(6), TimeFrameIndex(8), TimeFrameIndex(10)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        auto span_pair = series.getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex(3), TimeFrameIndex(9));
+        
+        // Verify the data span
+        REQUIRE(span_pair.values.size() == 3);
+        REQUIRE(span_pair.values[0] == 20.0f); // TimeFrameIndex(4)
+        REQUIRE(span_pair.values[1] == 30.0f); // TimeFrameIndex(6)
+        REQUIRE(span_pair.values[2] == 40.0f); // TimeFrameIndex(8)
+        
+        // Verify span points to original data memory (zero-copy)
+        auto const& original_data = series.getAnalogTimeSeries();
+        REQUIRE(span_pair.values.data() == &original_data[1]); // Should point to index 1 in original data
+        
+        // Verify the time iterator
+        REQUIRE(span_pair.time_indices.size() == 3);
+        REQUIRE_FALSE(span_pair.time_indices.empty());
+        
+        // Test basic time iterator functionality
+        auto time_begin = span_pair.time_indices.begin();
+        REQUIRE(**time_begin == TimeFrameIndex(4));
+        
+        ++(*time_begin);
+        REQUIRE(**time_begin == TimeFrameIndex(6));
+        
+        ++(*time_begin);
+        REQUIRE(**time_begin == TimeFrameIndex(8));
+    }
+
+    SECTION("Span interface - dense consecutive storage") {
+        // Create data with consecutive TimeFrameIndex values starting from 100
+        std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102), TimeFrameIndex(103), TimeFrameIndex(104)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        auto span_pair = series.getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex(101), TimeFrameIndex(103));
+        
+        // Verify the data span (zero-copy)
+        REQUIRE(span_pair.values.size() == 3);
+        REQUIRE(span_pair.values[0] == 2.2f); // TimeFrameIndex(101)
+        REQUIRE(span_pair.values[1] == 3.3f); // TimeFrameIndex(102)
+        REQUIRE(span_pair.values[2] == 4.4f); // TimeFrameIndex(103)
+        
+        // Verify span points to original data memory
+        auto const& original_data = series.getAnalogTimeSeries();
+        REQUIRE(span_pair.values.data() == &original_data[1]); // Should point to index 1 in original data
+        
+        // Verify the time iterator works for dense storage
+        REQUIRE(span_pair.time_indices.size() == 3);
+        
+        // Test dense time iterator manually (should generate consecutive values)
+        auto time_it = span_pair.time_indices.begin();
+        REQUIRE(**time_it == TimeFrameIndex(101));
+        
+        ++(*time_it);
+        REQUIRE(**time_it == TimeFrameIndex(102));
+        
+        ++(*time_it);
+        REQUIRE(**time_it == TimeFrameIndex(103));
+    }
+
+    SECTION("Span interface - empty range") {
+        std::vector<float> data{1.0f, 2.0f, 3.0f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30)};
+        
+        AnalogTimeSeries series(data, times);
+
+        auto span_pair = series.getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex(40), TimeFrameIndex(50));
+        
+        REQUIRE(span_pair.values.empty());
+        REQUIRE(span_pair.values.size() == 0);
+        REQUIRE(span_pair.time_indices.empty());
+        REQUIRE(span_pair.time_indices.size() == 0);
+    }
+
+    SECTION("Span interface - single point") {
+        std::vector<float> data{42.0f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(50)};
+        
+        AnalogTimeSeries series(data, times);
+
+        auto span_pair = series.getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex(45), TimeFrameIndex(55));
+        
+        REQUIRE(span_pair.values.size() == 1);
+        REQUIRE(span_pair.values[0] == 42.0f);
+        
+        REQUIRE(span_pair.time_indices.size() == 1);
+        REQUIRE_FALSE(span_pair.time_indices.empty());
+        
+        auto time_it = span_pair.time_indices.begin();
+        REQUIRE(**time_it == TimeFrameIndex(50));
+    }
+
+    SECTION("Span interface - boundary approximation") {
+        // Test data with gaps to verify boundary approximation logic
+        std::vector<float> data{100.0f, 200.0f, 300.0f, 400.0f, 500.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), TimeFrameIndex(20)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Request range [3, 18] - should get [5, 15] due to boundary approximation
+        auto span_pair = series.getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex(3), TimeFrameIndex(18));
+        
+        REQUIRE(span_pair.values.size() == 3);
+        REQUIRE(span_pair.values[0] == 200.0f); // TimeFrameIndex(5)
+        REQUIRE(span_pair.values[1] == 300.0f); // TimeFrameIndex(7)
+        REQUIRE(span_pair.values[2] == 400.0f); // TimeFrameIndex(15)
+        
+        REQUIRE(span_pair.time_indices.size() == 3);
+    }
+
+    SECTION("Span interface - consistency with existing methods") {
+        // Verify that the span interface returns the same data as existing methods
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(10), TimeFrameIndex(15), TimeFrameIndex(20), TimeFrameIndex(25), TimeFrameIndex(30), TimeFrameIndex(35)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        TimeFrameIndex start_time(18);
+        TimeFrameIndex end_time(32);
+
+        // Get span from new interface
+        auto span_pair = series.getTimeValueSpanInTimeFrameIndexRange(start_time, end_time);
+        
+        // Get span from existing method for comparison
+        auto existing_span = series.getDataInTimeFrameIndexRange(start_time, end_time);
+        
+        // Should be identical
+        REQUIRE(span_pair.values.size() == existing_span.size());
+        REQUIRE(span_pair.values.data() == existing_span.data());
+        
+        for (size_t i = 0; i < span_pair.values.size(); ++i) {
+            REQUIRE(span_pair.values[i] == existing_span[i]);
+        }
+    }
+
+    SECTION("Span interface - dense storage from constructor") {
+        // Test with dense storage created by the num_samples constructor
+        std::vector<float> data{5.5f, 6.6f, 7.7f, 8.8f, 9.9f};
+        AnalogTimeSeries series(data, data.size()); // Dense storage from TimeFrameIndex(0)
+
+        auto span_pair = series.getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex(1), TimeFrameIndex(3));
+        
+        REQUIRE(span_pair.values.size() == 3);
+        REQUIRE(span_pair.values[0] == 6.6f); // TimeFrameIndex(1)
+        REQUIRE(span_pair.values[1] == 7.7f); // TimeFrameIndex(2)
+        REQUIRE(span_pair.values[2] == 8.8f); // TimeFrameIndex(3)
+        
+        // Verify zero-copy property
+        auto const& original_data = series.getAnalogTimeSeries();
+        REQUIRE(span_pair.values.data() == &original_data[1]);
+        
+        // Verify time indices work for dense storage starting from 0
+        REQUIRE(span_pair.time_indices.size() == 3);
+        auto time_it = span_pair.time_indices.begin();
+        REQUIRE(**time_it == TimeFrameIndex(1));
+    }
+}
+
+TEST_CASE("AnalogTimeSeries - Time-Value Interface Comparison", "[analog][timeseries][time_value_comparison]") {
+
+    SECTION("Range vs Span interface - equivalent results") {
+        // Test that both interfaces return the same time-value pairs
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(2), TimeFrameIndex(5), TimeFrameIndex(8), TimeFrameIndex(12), TimeFrameIndex(15), TimeFrameIndex(20)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        TimeFrameIndex start_time(6);
+        TimeFrameIndex end_time(16);
+
+        // Get data using range interface
+        auto range = series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time);
+        std::vector<std::pair<int64_t, float>> range_results;
+        
+        for (auto const& point : range) {
+            range_results.emplace_back(point.time_frame_index.getValue(), point.value);
+        }
+
+        // Get data using span interface - simple test just checking values match
+        auto span_pair = series.getTimeValueSpanInTimeFrameIndexRange(start_time, end_time);
+        
+        // Results should have same size and values
+        REQUIRE(range_results.size() == span_pair.values.size());
+        
+        for (size_t i = 0; i < range_results.size(); ++i) {
+            REQUIRE(range_results[i].second == span_pair.values[i]); // Values should match
+        }
+    }
+
+    SECTION("Performance characteristics - zero-copy verification") {
+        // Verify that span interface provides true zero-copy access
+        std::vector<float> data;
+        std::vector<TimeFrameIndex> times;
+        
+        // Create larger dataset for meaningful test
+        for (int i = 0; i < 1000; ++i) {
+            data.push_back(static_cast<float>(i) * 1.5f);
+            times.push_back(TimeFrameIndex(i * 2)); // Even indices
+        }
+        
+        AnalogTimeSeries series(data, times);
+
+        auto span_pair = series.getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex(100), TimeFrameIndex(500));
+        
+        // Verify that span points to original memory
+        auto const& original_data = series.getAnalogTimeSeries();
+        bool points_to_original = (span_pair.values.data() >= original_data.data()) && 
+                                 (span_pair.values.data() < original_data.data() + original_data.size());
+        
+        REQUIRE(points_to_original);
+        
+        // Verify span size is reasonable
+        REQUIRE(span_pair.values.size() > 100); // Should capture many points
+        REQUIRE(span_pair.values.size() <= 1000); // But not more than total data
+    }
+}

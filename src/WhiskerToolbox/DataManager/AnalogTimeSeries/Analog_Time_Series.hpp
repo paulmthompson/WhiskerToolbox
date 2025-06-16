@@ -179,165 +179,6 @@ public:
                });
     }
 
-    /**
-    * @brief Get data values in a time range using any coordinate type
-    *
-    * This method automatically determines the correct coordinate type from the
-    * associated TimeFrameV2 and validates that the provided coordinates match.
-    * It uses std::holds_alternative internally for type safety.
-    *
-    * @param start_coord Start coordinate (any coordinate type)
-    * @param end_coord End coordinate (any coordinate type) 
-    * @return Vector of data values within the specified coordinate range
-    * @throws std::runtime_error if no TimeFrameV2 is associated or coordinate types don't match
-    */
-    std::vector<float> getDataInCoordinateRange(TimeCoordinate start_coord, TimeCoordinate end_coord) const {
-        if (!_timeframe_v2.has_value()) {
-            throw std::runtime_error("No TimeFrameV2 associated with this AnalogTimeSeries");
-        }
-
-        return std::visit([&](auto const & timeframe_ptr) -> std::vector<float> {
-            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
-            using FrameCoordType = typename FrameType::coordinate_type;
-            
-            // Check if the provided coordinates match the TimeFrame's coordinate type
-            if (!std::holds_alternative<FrameCoordType>(start_coord) || 
-                !std::holds_alternative<FrameCoordType>(end_coord)) {
-                throw std::runtime_error("Coordinate type mismatch with TimeFrameV2. Expected: " + 
-                                       getCoordinateType());
-            }
-
-            // Extract the correct coordinate values
-            auto start_typed = std::get<FrameCoordType>(start_coord);
-            auto end_typed = std::get<FrameCoordType>(end_coord);
-
-            std::vector<float> result;
-
-            // Convert coordinate range to TimeFrameIndex values for comparison
-            TimeFrameIndex start_time_idx = timeframe_ptr->getIndexAtTime(start_typed);
-            TimeFrameIndex end_time_idx = timeframe_ptr->getIndexAtTime(end_typed);
-
-            if (start_time_idx > end_time_idx) std::swap(start_time_idx, end_time_idx);
-
-            // Convert the TimeFrameV2 indices back to actual coordinate values for range checking
-            auto start_coord_value = timeframe_ptr->getTimeAtIndex(start_time_idx);
-            auto end_coord_value = timeframe_ptr->getTimeAtIndex(end_time_idx);
-
-            // Iterate through our data and check which points fall within the coordinate range
-            size_t data_size = _data.size();
-            for (size_t i = 0; i < data_size; ++i) {
-                DataArrayIndex data_idx(i);
-                
-                // Get the TimeFrameIndex for this data point
-                TimeFrameIndex our_time_frame_idx = getTimeFrameIndexAtDataArrayIndex(data_idx);
-                
-                // Convert our TimeFrameIndex to the same coordinate type for comparison
-                FrameCoordType our_coord_value(our_time_frame_idx.getValue());
-                
-                // Check if this coordinate falls within the requested range
-                if (our_coord_value >= start_coord_value && our_coord_value <= end_coord_value) {
-                    result.push_back(_data[i]);
-                }
-            }
-
-            return result;
-        }, _timeframe_v2.value());
-    }
-
-
-    /**
-    * @brief Strongly-typed coordinate range query (compile-time type checking)
-    *
-    * This method provides compile-time type safety for coordinate queries.
-    * Use this when you know the exact coordinate type at compile time.
-    *
-    * @tparam CoordinateType The expected coordinate type
-    * @param start_coord Start coordinate 
-    * @param end_coord End coordinate
-    * @return Vector of data values within the specified coordinate range
-    * @throws std::runtime_error if no TimeFrameV2 is associated or types don't match
-    */
-    template<typename CoordinateType>
-    std::vector<float> getDataInTypedCoordinateRange(CoordinateType start_coord, CoordinateType end_coord) const {
-        if (!_timeframe_v2.has_value()) {
-            throw std::runtime_error("No TimeFrameV2 associated with this AnalogTimeSeries");
-        }
-
-        return std::visit([&](auto const & timeframe_ptr) -> std::vector<float> {
-            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
-            using FrameCoordType = typename FrameType::coordinate_type;
-            
-            if constexpr (std::is_same_v<FrameCoordType, CoordinateType>) {
-                std::vector<float> result;
-
-                // Get the range of indices for the coordinate range
-                int64_t start_idx = timeframe_ptr->getIndexAtTime(start_coord);
-                int64_t end_idx = timeframe_ptr->getIndexAtTime(end_coord);
-
-                if (start_idx > end_idx) std::swap(start_idx, end_idx);
-
-                result.reserve(static_cast<size_t>(end_idx - start_idx + 1));
-
-                for (int64_t idx = start_idx; idx <= end_idx; ++idx) {
-                    if (idx >= 0 && static_cast<size_t>(idx) < _data.size()) {
-                        result.push_back(_data[static_cast<size_t>(idx)]);
-                    }
-                }
-
-                return result;
-            } else {
-                throw std::runtime_error("Coordinate type mismatch with TimeFrameV2. Expected: " + 
-                                       getCoordinateType() + ", Got: " + typeid(CoordinateType).name());
-            }
-        }, _timeframe_v2.value());
-    }
-
-    /**
-    * @brief Strongly-typed coordinate and value range query
-    *
-    * @tparam CoordinateType The expected coordinate type
-    * @param start_coord Start coordinate
-    * @param end_coord End coordinate
-    * @return Pair of coordinate vector and value vector
-    */
-    template<typename CoordinateType>
-    std::pair<std::vector<CoordinateType>, std::vector<float>> getDataAndTypedCoordsInRange(
-            CoordinateType start_coord, CoordinateType end_coord) const {
-        if (!_timeframe_v2.has_value()) {
-            throw std::runtime_error("No TimeFrameV2 associated with this AnalogTimeSeries");
-        }
-
-        return std::visit([&](auto const & timeframe_ptr) -> std::pair<std::vector<CoordinateType>, std::vector<float>> {
-            using FrameType = std::decay_t<decltype(*timeframe_ptr)>;
-            using FrameCoordType = typename FrameType::coordinate_type;
-            
-            if constexpr (std::is_same_v<FrameCoordType, CoordinateType>) {
-                std::vector<CoordinateType> coords;
-                std::vector<float> values;
-
-                // Get the range of indices for the coordinate range
-                int64_t start_idx = timeframe_ptr->getIndexAtTime(start_coord);
-                int64_t end_idx = timeframe_ptr->getIndexAtTime(end_coord);
-
-                if (start_idx > end_idx) std::swap(start_idx, end_idx);
-
-                coords.reserve(static_cast<size_t>(end_idx - start_idx + 1));
-                values.reserve(static_cast<size_t>(end_idx - start_idx + 1));
-
-                for (int64_t idx = start_idx; idx <= end_idx; ++idx) {
-                    if (idx >= 0 && static_cast<size_t>(idx) < _data.size()) {
-                        coords.push_back(timeframe_ptr->getTimeAtIndex(idx));
-                        values.push_back(_data[static_cast<size_t>(idx)]);
-                    }
-                }
-
-                return {coords, values};
-            } else {
-                throw std::runtime_error("Coordinate type mismatch with TimeFrameV2. Expected: " + 
-                                       getCoordinateType() + ", Got: " + typeid(CoordinateType).name());
-            }
-        }, _timeframe_v2.value());
-    }
 
     // ========== TimeFrameV2 Support ==========
 
@@ -472,6 +313,146 @@ public:
      * @see findDataArrayIndexGreaterOrEqual() and findDataArrayIndexLessOrEqual() for the underlying boundary logic
      */
     [[nodiscard]] std::span<const float> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+
+    // ========== Time-Value Range Access ==========
+
+    /**
+     * @brief Data structure representing a single time-value point
+     */
+    struct TimeValuePoint {
+        TimeFrameIndex time_frame_index{TimeFrameIndex(0)};
+        float value{0.0f};
+        
+        TimeValuePoint() = default;
+        TimeValuePoint(TimeFrameIndex time_idx, float val) : time_frame_index(time_idx), value(val) {}
+    };
+
+    /**
+     * @brief Iterator for time-value ranges that handles both dense and sparse storage efficiently
+     */
+    class TimeValueRangeIterator {
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = TimeValuePoint;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const TimeValuePoint*;
+        using reference = const TimeValuePoint&;
+
+        TimeValueRangeIterator(AnalogTimeSeries const* series, DataArrayIndex start_index, DataArrayIndex end_index, bool is_end = false);
+
+        reference operator*() const;
+        pointer operator->() const;
+        TimeValueRangeIterator& operator++();
+        TimeValueRangeIterator operator++(int);
+        bool operator==(TimeValueRangeIterator const& other) const;
+        bool operator!=(TimeValueRangeIterator const& other) const;
+
+    private:
+        AnalogTimeSeries const* _series;
+        DataArrayIndex _current_index;
+        DataArrayIndex _end_index;
+        mutable TimeValuePoint _current_point; // mutable for lazy evaluation in operator*
+        bool _is_end;
+
+        void _updateCurrentPoint() const;
+    };
+
+    /**
+     * @brief Range view for time-value pairs that supports range-based for loops
+     */
+    class TimeValueRangeView {
+    public:
+        TimeValueRangeView(AnalogTimeSeries const* series, DataArrayIndex start_index, DataArrayIndex end_index);
+
+        TimeValueRangeIterator begin() const;
+        TimeValueRangeIterator end() const;
+        size_t size() const;
+        bool empty() const;
+
+    private:
+        AnalogTimeSeries const* _series;
+        DataArrayIndex _start_index;
+        DataArrayIndex _end_index;
+    };
+
+    /**
+     * @brief Abstract base class for time index iteration over ranges
+     */
+    class TimeIndexIterator {
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = TimeFrameIndex;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const TimeFrameIndex*;
+        using reference = const TimeFrameIndex&;
+
+        virtual ~TimeIndexIterator() = default;
+        virtual reference operator*() const = 0;
+        virtual TimeIndexIterator& operator++() = 0;
+        virtual bool operator==(TimeIndexIterator const& other) const = 0;
+        virtual bool operator!=(TimeIndexIterator const& other) const = 0;
+        virtual std::unique_ptr<TimeIndexIterator> clone() const = 0;
+    };
+
+    /**
+     * @brief Time index range abstraction that handles both dense and sparse storage
+     */
+    class TimeIndexRange {
+    public:
+        TimeIndexRange(AnalogTimeSeries const* series, DataArrayIndex start_index, DataArrayIndex end_index);
+
+        std::unique_ptr<TimeIndexIterator> begin() const;
+        std::unique_ptr<TimeIndexIterator> end() const;
+        size_t size() const;
+        bool empty() const;
+
+    private:
+        AnalogTimeSeries const* _series;
+        DataArrayIndex _start_index;
+        DataArrayIndex _end_index;
+    };
+
+    /**
+     * @brief Paired span and time iterator for zero-copy time-value access
+     */
+    struct TimeValueSpanPair {
+        std::span<const float> values;
+        TimeIndexRange time_indices;
+
+        TimeValueSpanPair(std::span<const float> data_span, AnalogTimeSeries const* series, DataArrayIndex start_index, DataArrayIndex end_index);
+    };
+
+    /**
+     * @brief Get time-value pairs as a range for convenient iteration
+     * 
+     * Returns a range view that can be used with range-based for loops to iterate over
+     * time-value pairs within the specified TimeFrameIndex range. This is the high-level,
+     * convenient interface.
+     * 
+     * @param start_time The start TimeFrameIndex (inclusive boundary)
+     * @param end_time The end TimeFrameIndex (inclusive boundary)
+     * @return TimeValueRangeView that supports range-based for loops
+     * 
+     * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
+     * @see getTimeValueSpanInTimeFrameIndexRange() for zero-copy alternative
+     */
+    [[nodiscard]] TimeValueRangeView getTimeValueRangeInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
+
+    /**
+     * @brief Get time-value pairs as span and time iterator for zero-copy access
+     * 
+     * Returns a structure containing a zero-copy span over the data values and a
+     * time iterator for the corresponding TimeFrameIndex values. This is the 
+     * performance-optimized interface.
+     * 
+     * @param start_time The start TimeFrameIndex (inclusive boundary)
+     * @param end_time The end TimeFrameIndex (inclusive boundary)
+     * @return TimeValueSpanPair with zero-copy data access
+     * 
+     * @note Uses the same boundary logic as getDataInTimeFrameIndexRange()
+     * @see getTimeValueRangeInTimeFrameIndexRange() for convenient range-based alternative
+     */
+    [[nodiscard]] TimeValueSpanPair getTimeValueSpanInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
 
 
     /**

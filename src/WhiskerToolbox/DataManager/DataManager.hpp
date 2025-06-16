@@ -444,22 +444,6 @@ public:
                                               bool overwrite = false);
 
     /**
-    * @brief Query analog data using any coordinate type (runtime type checking)
-    *
-    * This method allows you to query any AnalogTimeSeries regardless of its 
-    * coordinate type, as long as you provide matching coordinates.
-    *
-    * @param data_key Key of the AnalogTimeSeries to query
-    * @param start_coord Start coordinate (any coordinate type)
-    * @param end_coord End coordinate (any coordinate type)
-    * @return Vector of values in the specified range
-    * @throws std::runtime_error if data doesn't exist or coordinate types don't match
-    */
-    std::vector<float> queryAnalogData(std::string const & data_key,
-                                      TimeCoordinate start_coord,
-                                      TimeCoordinate end_coord);
-
-    /**
     * @brief Get coordinate type information for an AnalogTimeSeries
     *
     * @param data_key Key of the AnalogTimeSeries
