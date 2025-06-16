@@ -566,4 +566,237 @@ TEST_CASE("AnalogTimeSeries - Approximate Statistics", "[analog][timeseries][app
         REQUIRE(min_val == Catch::Approx(42.0f));
         REQUIRE(max_val == Catch::Approx(42.0f));
     }
+
+    SECTION("calculate_std_dev with span - basic functionality") {
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        std::span<const float> data_span(data);
+        
+        float std_dev = calculate_std_dev(data_span);
+        REQUIRE(std_dev == Catch::Approx(1.41421f).margin(1e-3f)); // sqrt(10/5) = sqrt(2) ≈ 1.41421
+        
+        // Test partial span
+        std::span<const float> partial_span(data.data() + 1, 3); // {2.0f, 3.0f, 4.0f}
+        std_dev = calculate_std_dev(partial_span);
+        REQUIRE(std_dev == Catch::Approx(0.8165f).margin(1e-3f)); // sqrt(2/3) ≈ 0.8165
+        
+        // Test empty span
+        std::span<const float> empty_span;
+        std_dev = calculate_std_dev(empty_span);
+        REQUIRE(std::isnan(std_dev));
+    }
+
+    SECTION("calculate_std_dev_in_time_range - sparse data") {
+        // Create data with irregular TimeFrameIndex spacing
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(1), TimeFrameIndex(5), TimeFrameIndex(7), TimeFrameIndex(15), 
+            TimeFrameIndex(20), TimeFrameIndex(100), TimeFrameIndex(200), TimeFrameIndex(250), 
+            TimeFrameIndex(300), TimeFrameIndex(500)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact range [5, 20] - includes values 20.0f, 30.0f, 40.0f, 50.0f
+        float std_dev = calculate_std_dev_in_time_range(series, TimeFrameIndex(5), TimeFrameIndex(20));
+        // Mean = 35.0f, Variance = ((20-35)²+(30-35)²+(40-35)²+(50-35)²)/4 = (225+25+25+225)/4 = 125
+        float expected_std_dev = std::sqrt(125.0f); // ≈ 11.18
+        REQUIRE(std_dev == Catch::Approx(expected_std_dev).margin(1e-2f));
+
+        // Test boundary approximation [3, 50] - should find >= 3 (starts at 5) and <= 50 (ends at 20)
+        std_dev = calculate_std_dev_in_time_range(series, TimeFrameIndex(3), TimeFrameIndex(50));
+        REQUIRE(std_dev == Catch::Approx(expected_std_dev).margin(1e-2f)); // Same range as above
+
+        // Test single element range [100, 100]
+        std_dev = calculate_std_dev_in_time_range(series, TimeFrameIndex(100), TimeFrameIndex(100));
+        REQUIRE(std_dev == 0.0f); // Single element has 0 std dev
+
+        // Test larger range [200, 500] - includes values 70.0f, 80.0f, 90.0f, 100.0f
+        std_dev = calculate_std_dev_in_time_range(series, TimeFrameIndex(200), TimeFrameIndex(500));
+        // Mean = 85.0f, Variance = ((70-85)²+(80-85)²+(90-85)²+(100-85)²)/4 = (225+25+25+225)/4 = 125
+        expected_std_dev = std::sqrt(125.0f); // ≈ 11.18
+        REQUIRE(std_dev == Catch::Approx(expected_std_dev).margin(1e-2f));
+
+        // Test range with no data [600, 700]
+        std_dev = calculate_std_dev_in_time_range(series, TimeFrameIndex(600), TimeFrameIndex(700));
+        REQUIRE(std::isnan(std_dev)); // Empty span should return NaN
+    }
+
+    SECTION("calculate_std_dev_in_time_range - dense consecutive storage") {
+        // Create data with consecutive TimeFrameIndex values starting from 100
+        std::vector<float> data{1.1f, 2.2f, 3.3f, 4.4f, 5.5f};
+        std::vector<TimeFrameIndex> times{TimeFrameIndex(100), TimeFrameIndex(101), TimeFrameIndex(102), TimeFrameIndex(103), TimeFrameIndex(104)};
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test exact range [101, 103] - includes values 2.2f, 3.3f, 4.4f
+        float std_dev = calculate_std_dev_in_time_range(series, TimeFrameIndex(101), TimeFrameIndex(103));
+        // Mean = 3.3f, Variance = ((2.2-3.3)²+(3.3-3.3)²+(4.4-3.3)²)/3 = (1.21+0+1.21)/3 = 0.8067
+        float expected_std_dev = std::sqrt(0.8067f); // ≈ 0.898
+        REQUIRE(std_dev == Catch::Approx(expected_std_dev).margin(1e-2f));
+
+        // Test all data [99, 105]
+        std_dev = calculate_std_dev_in_time_range(series, TimeFrameIndex(99), TimeFrameIndex(105));
+        // Should match exact calculation for entire series
+        float exact_std_dev = calculate_std_dev(series);
+        REQUIRE(std_dev == Catch::Approx(exact_std_dev));
+
+        // Test single element [102, 102]
+        std_dev = calculate_std_dev_in_time_range(series, TimeFrameIndex(102), TimeFrameIndex(102));
+        REQUIRE(std_dev == 0.0f); // Single element has 0 std dev
+    }
+
+    SECTION("calculate_std_dev_approximate_in_time_range - basic functionality") {
+        // Create a large dataset with known statistical properties
+        std::vector<float> data;
+        std::vector<TimeFrameIndex> times;
+        data.reserve(1000);
+        times.reserve(1000);
+        
+        // Create data with a clear pattern: values increase linearly with some variance
+        for (int i = 0; i < 1000; ++i) {
+            data.push_back(static_cast<float>(i * 0.1f + 50.0f)); // Linear trend from 50.0 to 149.9
+            times.push_back(TimeFrameIndex(i * 2)); // TimeFrameIndex values: 0, 2, 4, ..., 1998
+        }
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test approximate calculation on a subset [500, 1000] (TimeFrameIndex range)
+        float exact_std = calculate_std_dev_in_time_range(series, TimeFrameIndex(500), TimeFrameIndex(1000));
+        float approx_std = calculate_std_dev_approximate_in_time_range(series, TimeFrameIndex(500), TimeFrameIndex(1000), 10.0f, 10); // 10% sampling
+        
+        // For linear data, the approximation should be quite close
+        float relative_error = std::abs(exact_std - approx_std) / exact_std;
+        REQUIRE(relative_error < 0.1f); // Within 10%
+
+        // Test fallback to exact calculation for small ranges
+        float small_exact = calculate_std_dev_in_time_range(series, TimeFrameIndex(10), TimeFrameIndex(20));
+        float small_approx = calculate_std_dev_approximate_in_time_range(series, TimeFrameIndex(10), TimeFrameIndex(20), 10.0f, 1000); // High threshold
+        
+        REQUIRE(small_exact == small_approx); // Should fall back to exact
+    }
+
+    SECTION("Verify consistency between different std_dev calculation methods") {
+        // Create test data
+        std::vector<float> data{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(0), TimeFrameIndex(1), TimeFrameIndex(2), TimeFrameIndex(3), TimeFrameIndex(4),
+            TimeFrameIndex(5), TimeFrameIndex(6), TimeFrameIndex(7), TimeFrameIndex(8), TimeFrameIndex(9)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Calculate std_dev using different methods and verify they match
+        
+        // Method 1: Traditional AnalogTimeSeries function (entire series)
+        float std_dev1 = calculate_std_dev(series);
+        
+        // Method 2: TimeFrameIndex range method (entire series)
+        float std_dev2 = calculate_std_dev_in_time_range(series, TimeFrameIndex(0), TimeFrameIndex(9));
+        
+        // Method 3: Direct span method (entire series)
+        auto data_span = series.getDataInTimeFrameIndexRange(TimeFrameIndex(0), TimeFrameIndex(9));
+        float std_dev3 = calculate_std_dev(data_span);
+        
+        // Method 4: Array index range method (entire series)
+        float std_dev4 = calculate_std_dev(series, 0, static_cast<int64_t>(data.size()));
+        
+        // All methods should give the same result for the entire series
+        REQUIRE(std_dev1 == Catch::Approx(std_dev2));
+        REQUIRE(std_dev1 == Catch::Approx(std_dev3));
+        REQUIRE(std_dev1 == Catch::Approx(std_dev4));
+        
+        // Expected std dev for 1-10: sqrt(sum((x-5.5)²)/10) = sqrt(82.5/10) = sqrt(8.25) ≈ 2.87
+        float expected_std_dev = std::sqrt(8.25f);
+        REQUIRE(std_dev1 == Catch::Approx(expected_std_dev).margin(1e-3f));
+
+        // Test partial range consistency
+        // Method 1: Array index range [2, 7) - indices 2,3,4,5,6 -> values 3,4,5,6,7
+        float partial_std_dev1 = calculate_std_dev(series, 2, 7);
+        
+        // Method 2: TimeFrameIndex range [2, 6] - TimeFrameIndex 2,3,4,5,6 -> values 3,4,5,6,7
+        float partial_std_dev2 = calculate_std_dev_in_time_range(series, TimeFrameIndex(2), TimeFrameIndex(6));
+        
+        REQUIRE(partial_std_dev1 == Catch::Approx(partial_std_dev2));
+        
+        // Expected std dev for 3,4,5,6,7: mean=5, sqrt(sum((x-5)²)/5) = sqrt(10/5) = sqrt(2) ≈ 1.414
+        float expected_partial_std_dev = std::sqrt(2.0f);
+        REQUIRE(partial_std_dev1 == Catch::Approx(expected_partial_std_dev).margin(1e-3f));
+    }
+
+    SECTION("calculate_std_dev_impl with vector indices") {
+        std::vector<float> data{10.0f, 20.0f, 30.0f, 40.0f, 50.0f};
+        
+        // Test normal range
+        float std_dev = calculate_std_dev_impl(data, 1, 4); // indices 1,2,3 -> values 20,30,40
+        // Mean = 30, Variance = ((20-30)²+(30-30)²+(40-30)²)/3 = (100+0+100)/3 = 66.67
+        float expected_std_dev = std::sqrt(200.0f / 3.0f); // ≈ 8.165
+        REQUIRE(std_dev == Catch::Approx(expected_std_dev).margin(1e-3f));
+        
+        // Test full range
+        std_dev = calculate_std_dev_impl(data, 0, data.size());
+        // Mean = 30, Variance = ((10-30)²+(20-30)²+(30-30)²+(40-30)²+(50-30)²)/5 = (400+100+0+100+400)/5 = 200
+        expected_std_dev = std::sqrt(200.0f); // ≈ 14.142
+        REQUIRE(std_dev == Catch::Approx(expected_std_dev).margin(1e-3f));
+        
+        // Test single element
+        std_dev = calculate_std_dev_impl(data, 2, 3); // index 2 -> value 30
+        REQUIRE(std_dev == 0.0f); // Single element has 0 std dev
+        
+        // Test invalid ranges
+        std_dev = calculate_std_dev_impl(data, 3, 2); // start > end
+        REQUIRE(std::isnan(std_dev));
+        
+        std_dev = calculate_std_dev_impl(data, 5, 6); // start >= size
+        REQUIRE(std::isnan(std_dev));
+        
+        std_dev = calculate_std_dev_impl(data, 0, 10); // end > size  
+        REQUIRE(std::isnan(std_dev));
+    }
+
+    SECTION("Standard deviation with negative values") {
+        std::vector<float> data{-5.0f, -2.0f, 3.0f, -8.0f, 1.0f};
+        std::vector<TimeFrameIndex> times{
+            TimeFrameIndex(10), TimeFrameIndex(20), TimeFrameIndex(30), TimeFrameIndex(40), TimeFrameIndex(50)
+        };
+        
+        AnalogTimeSeries series(data, times);
+
+        // Test entire series
+        float std_dev = calculate_std_dev(series);
+        // Mean = (-5-2+3-8+1)/5 = -11/5 = -2.2
+        // Variance = ((-5-(-2.2))²+(-2-(-2.2))²+(3-(-2.2))²+(-8-(-2.2))²+(1-(-2.2))²)/5
+        //          = ((-2.8)²+(0.2)²+(5.2)²+(-5.8)²+(3.2)²)/5
+        //          = (7.84+0.04+27.04+33.64+10.24)/5 = 78.8/5 = 15.76
+        float expected_std_dev = std::sqrt(15.76f); // ≈ 3.97
+        REQUIRE(std_dev == Catch::Approx(expected_std_dev).margin(1e-2f));
+
+        // Test time range [20, 40] - includes values -2.0f, 3.0f, -8.0f
+        std_dev = calculate_std_dev_in_time_range(series, TimeFrameIndex(20), TimeFrameIndex(40));
+        // Mean = (-2+3-8)/3 = -7/3 ≈ -2.33
+        // Variance = ((-2-(-2.33))²+(3-(-2.33))²+(-8-(-2.33))²)/3
+        //          = ((0.33)²+(5.33)²+(-5.67)²)/3
+        //          = (0.11+28.41+32.15)/3 = 60.67/3 ≈ 20.22
+        expected_std_dev = std::sqrt(20.22f); // ≈ 4.497
+        REQUIRE(std_dev == Catch::Approx(expected_std_dev).margin(1e-2f));
+    }
+
+    SECTION("Standard deviation with identical values") {
+        std::vector<float> data{42.0f, 42.0f, 42.0f, 42.0f, 42.0f};
+        AnalogTimeSeries series(data, data.size());
+
+        float std_dev = calculate_std_dev(series);
+        REQUIRE(std_dev == Catch::Approx(0.0f)); // No variance
+
+        // Test time range
+        std_dev = calculate_std_dev_in_time_range(series, TimeFrameIndex(1), TimeFrameIndex(3));
+        REQUIRE(std_dev == Catch::Approx(0.0f)); // No variance
+    }
+
+    SECTION("Empty series handling for std_dev methods") {
+        AnalogTimeSeries empty_series;
+
+        REQUIRE(std::isnan(calculate_std_dev(empty_series)));
+        REQUIRE(std::isnan(calculate_std_dev_in_time_range(empty_series, TimeFrameIndex(0), TimeFrameIndex(10))));
+        REQUIRE(std::isnan(calculate_std_dev_approximate_in_time_range(empty_series, TimeFrameIndex(0), TimeFrameIndex(10))));
+    }
 }

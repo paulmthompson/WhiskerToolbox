@@ -142,15 +142,7 @@ double applyTransformation(Interval const & interval,
                 return std::nan("");// Reference data not found
             }
 
-            // Get data within the time interval
-            auto start_index = it->second->findDataArrayIndexGreaterOrEqual(TimeFrameIndex(interval.start));
-            auto end_index = it->second->findDataArrayIndexLessOrEqual(TimeFrameIndex(interval.end));
-
-            if (!start_index.has_value() || !end_index.has_value()) {
-                return std::nan("");// No data found in interval
-            }
-
-            return calculate_std_dev(*it->second, start_index.value().getValue(), end_index.value().getValue() + 1); // exclusive end
+            return calculate_std_dev_in_time_range(*it->second, TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
         }
 
         case TransformationType::PointMeanX: {

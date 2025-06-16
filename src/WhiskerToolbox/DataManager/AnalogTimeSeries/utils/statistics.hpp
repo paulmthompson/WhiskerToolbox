@@ -7,6 +7,7 @@
 class AnalogTimeSeries;
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstddef>
 #include <iterator>
@@ -99,6 +100,62 @@ float calculate_mean_in_time_range(AnalogTimeSeries const & series, TimeFrameInd
 // ========== Standard Deviation ==========
 
 /**
+ * @brief Raw standard deviation calculation implementation using iterators
+ * 
+ * This is the core implementation that all other standard deviation functions call.
+ * 
+ * @param begin Iterator to the start of the data range
+ * @param end Iterator to the end of the data range (exclusive)
+ * @return float The standard deviation of the range
+ */
+template<typename Iterator>
+float calculate_std_dev_impl(Iterator begin, Iterator end) {
+    if (begin == end) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
+    auto const distance = std::distance(begin, end);
+    if (distance <= 0) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
+    // Calculate mean first
+    float const mean = calculate_mean_impl(begin, end);
+    if (std::isnan(mean)) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+    
+    // Calculate variance
+    float sum = 0.0f;
+    for (auto it = begin; it != end; ++it) {
+        float const diff = *it - mean;
+        sum += diff * diff;
+    }
+    
+    return std::sqrt(sum / static_cast<float>(distance));
+}
+
+/**
+ * @brief Raw standard deviation calculation implementation using vector with indices
+ * 
+ * This is an alternative implementation for when you have indices rather than iterators.
+ * 
+ * @param data Vector containing the data
+ * @param start Start index of the range (inclusive)
+ * @param end End index of the range (exclusive)
+ * @return float The standard deviation in the specified range
+ */
+float calculate_std_dev_impl(std::vector<float> const & data, size_t start, size_t end);
+
+/**
+ * @brief Calculate the standard deviation of a span of data
+ * 
+ * @param data_span Span of float data
+ * @return float The standard deviation
+ */
+float calculate_std_dev(std::span<const float> data_span);
+
+/**
  * @brief Calculate the standard deviation of an AnalogTimeSeries
  *
  * @param series The time series to calculate the standard deviation from
@@ -115,6 +172,20 @@ float calculate_std_dev(AnalogTimeSeries const & series);
  * @return float The standard deviation in the specified range
  */
 float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t end);
+
+/**
+ * @brief Calculate the standard deviation of an AnalogTimeSeries within a TimeFrameIndex range
+ * 
+ * This function uses the getDataInTimeFrameIndexRange functionality to efficiently
+ * calculate the standard deviation for data points where TimeFrameIndex >= start_time and <= end_time.
+ * It automatically handles boundary approximation if exact times don't exist.
+ * 
+ * @param series The time series to calculate the standard deviation from
+ * @param start_time The start TimeFrameIndex (inclusive boundary)
+ * @param end_time The end TimeFrameIndex (inclusive boundary)
+ * @return float The standard deviation in the specified time range
+ */
+float calculate_std_dev_in_time_range(AnalogTimeSeries const & series, TimeFrameIndex start_time, TimeFrameIndex end_time);
 
 /**
  * @brief Calculate an approximate standard deviation using systematic sampling
@@ -147,6 +218,25 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
                                  size_t initial_sample_size = 100,
                                  size_t max_sample_size = 10000,
                                  float convergence_tolerance = 0.01f);
+
+/**
+ * @brief Calculate an approximate standard deviation using systematic sampling within a TimeFrameIndex range
+ *
+ * Uses systematic sampling on the data within the specified time range to estimate standard deviation efficiently.
+ * If the sample size would be below the minimum threshold, falls back to exact calculation.
+ *
+ * @param series The time series to calculate the standard deviation from
+ * @param start_time The start TimeFrameIndex (inclusive boundary)
+ * @param end_time The end TimeFrameIndex (inclusive boundary)
+ * @param sample_percentage Percentage of data to sample (e.g., 0.1 for 0.1%)
+ * @param min_sample_threshold Minimum number of samples before falling back to exact calculation
+ * @return float The approximate standard deviation in the specified time range
+ */
+float calculate_std_dev_approximate_in_time_range(AnalogTimeSeries const & series,
+                                                  TimeFrameIndex start_time, 
+                                                  TimeFrameIndex end_time,
+                                                  float sample_percentage = 0.1f,
+                                                  size_t min_sample_threshold = 1000);
 
 // ========== Minimum ==========
 

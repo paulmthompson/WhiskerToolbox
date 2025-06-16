@@ -41,28 +41,33 @@ float calculate_mean_in_time_range(AnalogTimeSeries const & series, TimeFrameInd
 
 // ========== Standard Deviation ==========
 
-float calculate_std_dev(AnalogTimeSeries const & series) {
-    auto const & data = series.getAnalogTimeSeries();
-    if (data.empty()) {
+float calculate_std_dev_impl(std::vector<float> const & data, size_t start, size_t end) {
+    if (data.empty() || start >= end || start >= data.size() || end > data.size()) {
         return std::numeric_limits<float>::quiet_NaN();
     }
+    return calculate_std_dev_impl(data.begin() + start, data.begin() + end);
+}
 
-    float const mean = calculate_mean(series);
-    float const sum = std::accumulate(data.begin(), data.end(), 0.0f,
-                                      [mean](float acc, float val) { return acc + (val - mean) * (val - mean); });
-    return std::sqrt(sum / static_cast<float>(data.size()));
+float calculate_std_dev(std::span<const float> data_span) {
+    return calculate_std_dev_impl(data_span.begin(), data_span.end());
+}
+
+float calculate_std_dev(AnalogTimeSeries const & series) {
+    auto const & data = series.getAnalogTimeSeries();
+    return calculate_std_dev_impl(data, 0, data.size());
 }
 
 float calculate_std_dev(AnalogTimeSeries const & series, int64_t start, int64_t end) {
     auto const & data = series.getAnalogTimeSeries();
-    if (data.empty() || start >= end || start < 0 || end > static_cast<int64_t>(data.size())) {
+    if (start < 0 || end < 0 || start >= end) {
         return std::numeric_limits<float>::quiet_NaN();
     }
+    return calculate_std_dev_impl(data, static_cast<size_t>(start), static_cast<size_t>(end));
+}
 
-    float const mean = calculate_mean(series, start, end);
-    float const sum = std::accumulate(data.begin() + start, data.begin() + end, 0.0f,
-                                      [mean](float acc, float val) { return acc + (val - mean) * (val - mean); });
-    return std::sqrt(sum / static_cast<float>((end - start)));
+float calculate_std_dev_in_time_range(AnalogTimeSeries const & series, TimeFrameIndex start_time, TimeFrameIndex end_time) {
+    auto data_span = series.getDataInTimeFrameIndexRange(start_time, end_time);
+    return calculate_std_dev(data_span);
 }
 
 float calculate_std_dev_approximate(AnalogTimeSeries const & series,
@@ -163,6 +168,49 @@ float calculate_std_dev_adaptive(AnalogTimeSeries const & series,
     }
 
     return previous_std_dev;
+}
+
+float calculate_std_dev_approximate_in_time_range(AnalogTimeSeries const & series,
+                                                  TimeFrameIndex start_time, 
+                                                  TimeFrameIndex end_time,
+                                                  float sample_percentage,
+                                                  size_t min_sample_threshold) {
+    auto data_span = series.getDataInTimeFrameIndexRange(start_time, end_time);
+    if (data_span.empty()) {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    size_t const data_size = data_span.size();
+    size_t const target_sample_size = static_cast<size_t>(data_size * sample_percentage / 100.0f);
+
+    // Fall back to exact calculation if sample would be too small
+    if (target_sample_size < min_sample_threshold) {
+        return calculate_std_dev(data_span);
+    }
+
+    // Use systematic sampling for better cache performance
+    size_t const step_size = data_size / target_sample_size;
+    if (step_size == 0) {
+        return calculate_std_dev(data_span);
+    }
+
+    // Calculate mean of sampled data
+    float sum = 0.0f;
+    size_t sample_count = 0;
+    for (size_t i = 0; i < data_size; i += step_size) {
+        sum += data_span[i];
+        ++sample_count;
+    }
+    float const mean = sum / static_cast<float>(sample_count);
+
+    // Calculate variance of sampled data
+    float variance_sum = 0.0f;
+    for (size_t i = 0; i < data_size; i += step_size) {
+        float const diff = data_span[i] - mean;
+        variance_sum += diff * diff;
+    }
+
+    return std::sqrt(variance_sum / static_cast<float>(sample_count));
 }
 
 // ========== Minimum ==========
