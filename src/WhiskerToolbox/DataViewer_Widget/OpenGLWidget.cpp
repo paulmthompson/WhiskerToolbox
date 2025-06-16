@@ -387,6 +387,10 @@ void OpenGLWidget::drawDigitalEventSeries() {
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
         glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
 
+        // Set color and alpha uniforms
+        glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
+        glUniform1f(m_alphaLoc, alpha);
+
         // Set line thickness from display options
         glLineWidth(static_cast<float>(display_options->line_thickness));
 
@@ -402,9 +406,9 @@ void OpenGLWidget::drawDigitalEventSeries() {
                 xCanvasPos = event_time;// This should work if both time frames use the same time units
             }
 
-            std::array<GLfloat, 12> vertices = {
-                    xCanvasPos, min_y, rNorm, gNorm, bNorm, alpha,
-                    xCanvasPos, max_y, rNorm, gNorm, bNorm, alpha};
+            std::array<GLfloat, 4> vertices = {
+                    xCanvasPos, min_y,
+                    xCanvasPos, max_y};
 
             glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
@@ -493,6 +497,10 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, &View[0][0]);
         glUniformMatrix4fv(m_modelMatrixLoc, 1, GL_FALSE, &Model[0][0]);
 
+        // Set color and alpha uniforms
+        glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
+        glUniform1f(m_alphaLoc, alpha);
+
         for (auto const & interval: visible_intervals) {
 
             auto start = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.start)));
@@ -510,11 +518,11 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
             float const interval_y_min = -1.0f;// Bottom of interval in local coordinates
             float const interval_y_max = +1.0f;// Top of interval in local coordinates
 
-            std::array<GLfloat, 24> vertices = {
-                    xStart, interval_y_min, rNorm, gNorm, bNorm, alpha,
-                    xEnd, interval_y_min, rNorm, gNorm, bNorm, alpha,
-                    xEnd, interval_y_max, rNorm, gNorm, bNorm, alpha,
-                    xStart, interval_y_max, rNorm, gNorm, bNorm, alpha};
+            std::array<GLfloat, 8> vertices = {
+                    xStart, interval_y_min,
+                    xEnd, interval_y_min,
+                    xEnd, interval_y_max,
+                    xStart, interval_y_max};
 
             //glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.bind();
@@ -547,37 +555,41 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
                 glLineWidth(4.0f);
 
                 // Draw the four border lines of the rectangle
+                // Set highlight color uniforms
+                glUniform3f(m_colorLoc, highlight_rNorm, highlight_gNorm, highlight_bNorm);
+                glUniform1f(m_alphaLoc, 1.0f);
+
                 // Bottom edge
-                std::array<GLfloat, 12> bottom_edge = {
-                        highlighted_start, -1.0f, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f,
-                        highlighted_end, -1.0f, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f};
+                std::array<GLfloat, 4> bottom_edge = {
+                        highlighted_start, -1.0f,
+                        highlighted_end, -1.0f};
                 m_vbo.bind();
                 m_vbo.allocate(bottom_edge.data(), bottom_edge.size() * sizeof(GLfloat));
                 m_vbo.release();
                 glDrawArrays(GL_LINES, 0, 2);
 
                 // Top edge
-                std::array<GLfloat, 12> top_edge = {
-                        highlighted_start, 1.0f, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f,
-                        highlighted_end, 1.0f, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f};
+                std::array<GLfloat, 4> top_edge = {
+                        highlighted_start, 1.0f,
+                        highlighted_end, 1.0f};
                 m_vbo.bind();
                 m_vbo.allocate(top_edge.data(), top_edge.size() * sizeof(GLfloat));
                 m_vbo.release();
                 glDrawArrays(GL_LINES, 0, 2);
 
                 // Left edge
-                std::array<GLfloat, 12> left_edge = {
-                        highlighted_start, -1.0f, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f,
-                        highlighted_start, 1.0f, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f};
+                std::array<GLfloat, 4> left_edge = {
+                        highlighted_start, -1.0f,
+                        highlighted_start, 1.0f};
                 m_vbo.bind();
                 m_vbo.allocate(left_edge.data(), left_edge.size() * sizeof(GLfloat));
                 m_vbo.release();
                 glDrawArrays(GL_LINES, 0, 2);
 
                 // Right edge
-                std::array<GLfloat, 12> right_edge = {
-                        highlighted_end, -1.0f, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f,
-                        highlighted_end, 1.0f, highlight_rNorm, highlight_gNorm, highlight_bNorm, 1.0f};
+                std::array<GLfloat, 4> right_edge = {
+                        highlighted_end, -1.0f,
+                        highlighted_end, 1.0f};
                 m_vbo.bind();
                 m_vbo.allocate(right_edge.data(), right_edge.size() * sizeof(GLfloat));
                 m_vbo.release();
@@ -1556,23 +1568,30 @@ void OpenGLWidget::drawDraggedInterval() {
     float const original_start = std::max(static_cast<float>(_original_start_time), start_time);
     float const original_end = std::min(static_cast<float>(_original_end_time), end_time);
 
-    std::array<GLfloat, 24> original_vertices = {
-            original_start, min_y, rNorm, gNorm, bNorm, 0.2f,
-            original_end, min_y, rNorm, gNorm, bNorm, 0.2f,
-            original_end, max_y, rNorm, gNorm, bNorm, 0.2f,
-            original_start, max_y, rNorm, gNorm, bNorm, 0.2f};
+    // Set color and alpha uniforms for original interval (dimmed)
+    glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
+    glUniform1f(m_alphaLoc, 0.2f);
+
+    std::array<GLfloat, 8> original_vertices = {
+            original_start, min_y,
+            original_end, min_y,
+            original_end, max_y,
+            original_start, max_y};
 
     m_vbo.bind();
     m_vbo.allocate(original_vertices.data(), original_vertices.size() * sizeof(GLfloat));
     m_vbo.release();
     glDrawArrays(GL_QUADS, 0, 4);
 
-    // Draw the dragged interval semi-transparent (alpha = 0.8)
-    std::array<GLfloat, 24> dragged_vertices = {
-            dragged_start, min_y, rNorm, gNorm, bNorm, 0.8f,
-            dragged_end, min_y, rNorm, gNorm, bNorm, 0.8f,
-            dragged_end, max_y, rNorm, gNorm, bNorm, 0.8f,
-            dragged_start, max_y, rNorm, gNorm, bNorm, 0.8f};
+    // Set color and alpha uniforms for dragged interval (semi-transparent)
+    glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
+    glUniform1f(m_alphaLoc, 0.8f);
+
+    std::array<GLfloat, 8> dragged_vertices = {
+            dragged_start, min_y,
+            dragged_end, min_y,
+            dragged_end, max_y,
+            dragged_start, max_y};
 
     m_vbo.bind();
     m_vbo.allocate(dragged_vertices.data(), dragged_vertices.size() * sizeof(GLfloat));
@@ -1858,16 +1877,20 @@ void OpenGLWidget::drawNewIntervalBeingCreated() {
     float const gNorm = static_cast<float>(g) / 255.0f;
     float const bNorm = static_cast<float>(b) / 255.0f;
 
+    // Set color and alpha uniforms for new interval (50% transparency)
+    glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
+    glUniform1f(m_alphaLoc, 0.5f);
+
     // Clip the new interval to visible range
     float const new_start = std::max(static_cast<float>(_new_interval_start_time), start_time);
     float const new_end = std::min(static_cast<float>(_new_interval_end_time), end_time);
 
     // Draw the new interval being created with 50% transparency
-    std::array<GLfloat, 24> new_interval_vertices = {
-            new_start, min_y, rNorm, gNorm, bNorm, 0.5f,
-            new_end, min_y, rNorm, gNorm, bNorm, 0.5f,
-            new_end, max_y, rNorm, gNorm, bNorm, 0.5f,
-            new_start, max_y, rNorm, gNorm, bNorm, 0.5f};
+    std::array<GLfloat, 8> new_interval_vertices = {
+            new_start, min_y,
+            new_end, min_y,
+            new_end, max_y,
+            new_start, max_y};
 
     m_vbo.bind();
     m_vbo.allocate(new_interval_vertices.data(), new_interval_vertices.size() * sizeof(GLfloat));
