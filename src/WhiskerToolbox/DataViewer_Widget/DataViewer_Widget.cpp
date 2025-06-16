@@ -1156,7 +1156,7 @@ void DataViewer_Widget::_autoFillCanvas() {
             if (config.has_value() && config.value()->is_visible) {
                 auto series = _data_manager->getData<AnalogTimeSeries>(key);
                 if (series) {
-                    float std_dev = calculate_std_dev(*series);
+                    float std_dev = calculate_std_dev_approximate(*series);
                     if (std_dev > 0.0f) {
                         sample_std_devs.push_back(std_dev);
                         sampled++;
