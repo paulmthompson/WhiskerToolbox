@@ -244,6 +244,8 @@ signals:
     void rightClickMedia(qreal, qreal);
     void leftRelease();
     void rightRelease();
+    void leftReleaseDrawing(); // Only emitted when in drawing mode
+    void rightReleaseDrawing();// Only emitted when in drawing mode
     void canvasUpdated(QImage const & canvasImage);
     void mouseMove(qreal x, qreal y);
 

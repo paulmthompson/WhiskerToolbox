@@ -149,6 +149,7 @@ set(PROJECT_SOURCES
         Media_Widget/Media_Widget.cpp
         Media_Widget/Media_Widget.ui
         Media_Widget/DisplayOptions/DisplayOptions.hpp
+        Media_Widget/DisplayOptions/CoordinateTypes.hpp
 
         Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.cpp
         Media_Widget/MediaProcessing_Widget/MediaProcessing_Widget.hpp

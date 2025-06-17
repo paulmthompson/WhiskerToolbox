@@ -433,12 +433,24 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
     }
 }
 void Media_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent * event) {
-    if (event->button() == Qt::LeftButton && _is_drawing) {
-        _is_drawing = false;
+    if (event->button() == Qt::LeftButton) {
+        // Always emit leftRelease signal
         emit leftRelease();
-    } else if (event->button() == Qt::RightButton && _is_drawing) {
-        _is_drawing = false;
+
+        // Only emit drawing-specific signal and reset drawing state when in drawing mode
+        if (_is_drawing) {
+            _is_drawing = false;
+            emit leftReleaseDrawing();
+        }
+    } else if (event->button() == Qt::RightButton) {
+        // Always emit rightRelease signal
         emit rightRelease();
+
+        // Only emit drawing-specific signal and reset drawing state when in drawing mode
+        if (_is_drawing) {
+            _is_drawing = false;
+            emit rightReleaseDrawing();
+        }
     }
     QGraphicsScene::mouseReleaseEvent(event);
 }

@@ -562,7 +562,14 @@ void MediaMask_Widget::_mouseMoveInVideo(CanvasCoordinates const & canvas_coords
 
 void MediaMask_Widget::_mouseReleased() {
     // Stop dragging when mouse is released
+    bool was_dragging = _is_dragging;
     _is_dragging = false;
+
+    // Update canvas once when brush drag operation is completed
+    if (_selection_mode == Selection_Mode::Brush && was_dragging) {
+        _scene->UpdateCanvas();
+        std::cout << "Brush drag operation completed, canvas updated" << std::endl;
+    }
 }
 
 std::vector<Point2D<float>> MediaMask_Widget::_generateBrushCircle(float center_x, float center_y, float radius_x, float radius_y) {
