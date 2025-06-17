@@ -453,7 +453,13 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
         _drawing_points.push_back(pos);
     }
 
+    // Emit legacy signal
     emit mouseMove(event->scenePos().x(), event->scenePos().y());
+
+    // Emit strong-typed coordinate signal
+    CanvasCoordinates canvas_coords(static_cast<float>(event->scenePos().x()),
+                                    static_cast<float>(event->scenePos().y()));
+    emit mouseMoveCanvas(canvas_coords);
 
     QGraphicsScene::mouseMoveEvent(event);
 }

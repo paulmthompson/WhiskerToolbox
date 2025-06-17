@@ -63,6 +63,10 @@ private:
     std::unordered_map<std::string, std::vector<std::vector<Point2D<float>>>> _original_mask_data;
     bool _preview_active{false};
 
+    // Brush drag state
+    bool _is_dragging{false};
+    bool _is_adding_mode{true};// true for add, false for remove
+
     void _setupSelectionModePages();
     void _setupDilationWidget();
     void _applyMaskDilation(MaskDilationOptions const & options);
@@ -83,6 +87,8 @@ private slots:
     void _toggleSelectionMode(QString text);
     void _clickedInVideo(CanvasCoordinates const & canvas_coords);
     void _rightClickedInVideo(CanvasCoordinates const & canvas_coords);
+    void _mouseMoveInVideo(CanvasCoordinates const & canvas_coords);
+    void _mouseReleased();
     void _setBrushSize(int size);
     void _toggleShowHoverCircle(bool checked);
     void _onDilationOptionsChanged(MaskDilationOptions const & options);

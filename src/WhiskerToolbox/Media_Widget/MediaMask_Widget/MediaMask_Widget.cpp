@@ -14,6 +14,7 @@
 #include <QVBoxLayout>
 #include <cmath>
 #include <iostream>
+#include <set>
 
 MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent)
     : QWidget(parent),
@@ -61,6 +62,9 @@ void MediaMask_Widget::showEvent(QShowEvent * event) {
     std::cout << "MediaMask_Widget Show Event" << std::endl;
     connect(_scene, &Media_Window::leftClickCanvas, this, &MediaMask_Widget::_clickedInVideo);
     connect(_scene, &Media_Window::rightClickCanvas, this, &MediaMask_Widget::_rightClickedInVideo);
+    connect(_scene, &Media_Window::mouseMoveCanvas, this, &MediaMask_Widget::_mouseMoveInVideo);
+    connect(_scene, &Media_Window::leftRelease, this, &MediaMask_Widget::_mouseReleased);
+    connect(_scene, &Media_Window::rightRelease, this, &MediaMask_Widget::_mouseReleased);
 }
 
 void MediaMask_Widget::hideEvent(QHideEvent * event) {
@@ -70,6 +74,9 @@ void MediaMask_Widget::hideEvent(QHideEvent * event) {
     std::cout << "MediaMask_Widget Hide Event" << std::endl;
     disconnect(_scene, &Media_Window::leftClickCanvas, this, &MediaMask_Widget::_clickedInVideo);
     disconnect(_scene, &Media_Window::rightClickCanvas, this, &MediaMask_Widget::_rightClickedInVideo);
+    disconnect(_scene, &Media_Window::mouseMoveCanvas, this, &MediaMask_Widget::_mouseMoveInVideo);
+    disconnect(_scene, &Media_Window::leftRelease, this, &MediaMask_Widget::_mouseReleased);
+    disconnect(_scene, &Media_Window::rightRelease, this, &MediaMask_Widget::_mouseReleased);
 }
 
 void MediaMask_Widget::_setupSelectionModePages() {
@@ -171,6 +178,8 @@ void MediaMask_Widget::_clickedInVideo(CanvasCoordinates const & canvas_coords) 
             // Do nothing in None mode
             break;
         case Selection_Mode::Brush:
+            _is_dragging = true;
+            _is_adding_mode = true;
             _addToMask(canvas_coords);
             break;
     }
@@ -183,6 +192,8 @@ void MediaMask_Widget::_rightClickedInVideo(CanvasCoordinates const & canvas_coo
 
     std::cout << "Right clicked in video at canvas (" << canvas_coords.x << ", " << canvas_coords.y << ")" << std::endl;
 
+    _is_dragging = true;
+    _is_adding_mode = false;
     _removeFromMask(canvas_coords);
 }
 
@@ -398,11 +409,11 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     int brush_radius_canvas = _brushSelectionWidget->getBrushSize();
     float scale_x = static_cast<float>(mask_image_size.width) / static_cast<float>(canvas_width);
     float scale_y = static_cast<float>(mask_image_size.height) / static_cast<float>(canvas_height);
-    
+
     // Calculate scaled brush radius for each dimension
     float brush_radius_x = static_cast<float>(brush_radius_canvas) * scale_x;
     float brush_radius_y = static_cast<float>(brush_radius_canvas) * scale_y;
-    
+
     // Adjust the center position to account for the brush circle being drawn with cursor at top-left
     // The hover circle is drawn with the cursor at the top-left of its bounding box,
     // so we need to offset by the radius to get the actual center
@@ -412,15 +423,36 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     // Generate circle of pixels
     auto brush_pixels = _generateBrushCircle(x_mask, y_mask, brush_radius_x, brush_radius_y);
 
-    // Add pixels to mask at current time
+    // Get existing pixels to avoid duplicates
     auto current_time = _data_manager->getCurrentTime();
-    mask_data->addAtTime(current_time, brush_pixels);
+    auto const & existing_masks = mask_data->getAtTime(current_time);
 
-    // Update display
-    _scene->UpdateCanvas();
+    // Create a set of existing pixels for fast lookup
+    std::set<std::pair<int, int>> existing_pixel_set;
+    for (auto const & single_mask: existing_masks) {
+        for (auto const & point: single_mask) {
+            existing_pixel_set.insert({static_cast<int>(std::round(point.x)),
+                                       static_cast<int>(std::round(point.y))});
+        }
+    }
 
-    std::cout << "Added " << brush_pixels.size() << " pixels to mask at ("
-              << x_mask << ", " << y_mask << ") in mask coordinates (from canvas "
+    // Filter out pixels that already exist
+    std::vector<Point2D<float>> new_pixels;
+    for (auto const & pixel: brush_pixels) {
+        std::pair<int, int> pixel_key = {static_cast<int>(std::round(pixel.x)),
+                                         static_cast<int>(std::round(pixel.y))};
+        if (existing_pixel_set.find(pixel_key) == existing_pixel_set.end()) {
+            new_pixels.push_back(pixel);
+        }
+    }
+
+    // Only add new pixels if there are any
+    if (!new_pixels.empty()) {
+        mask_data->addAtTime(current_time, new_pixels);
+    }
+
+    std::cout << "Added " << new_pixels.size() << " new pixels (out of " << brush_pixels.size()
+              << " generated) to mask at (" << x_mask << ", " << y_mask << ") in mask coordinates (from canvas "
               << canvas_coords.x << ", " << canvas_coords.y << ") with canvas radius " << brush_radius_canvas
               << " (scaled to " << brush_radius_x << "x" << brush_radius_y << " in mask coordinates)" << std::endl;
 }
@@ -455,11 +487,11 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     int brush_radius_canvas = _brushSelectionWidget->getBrushSize();
     float scale_x = static_cast<float>(mask_image_size.width) / static_cast<float>(canvas_width);
     float scale_y = static_cast<float>(mask_image_size.height) / static_cast<float>(canvas_height);
-    
+
     // Calculate scaled brush radius for each dimension
     float brush_radius_x = static_cast<float>(brush_radius_canvas) * scale_x;
     float brush_radius_y = static_cast<float>(brush_radius_canvas) * scale_y;
-    
+
     // Adjust the center position to account for the brush circle being drawn with cursor at top-left
     // The hover circle is drawn with the cursor at the top-left of its bounding box,
     // so we need to offset by the radius to get the actual center
@@ -508,13 +540,29 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     // Notify observers once at the end
     mask_data->notifyObservers();
 
-    // Update display
-    _scene->UpdateCanvas();
-
     std::cout << "Removed " << removed_count << " pixels from mask at ("
               << x_mask << ", " << y_mask << ") in mask coordinates (from canvas "
               << canvas_coords.x << ", " << canvas_coords.y << ") with canvas radius " << brush_radius_canvas
               << " (scaled to " << brush_radius_x << "x" << brush_radius_y << " in mask coordinates)" << std::endl;
+}
+
+void MediaMask_Widget::_mouseMoveInVideo(CanvasCoordinates const & canvas_coords) {
+    // Only process mouse move if we're in brush mode and currently dragging
+    if (_active_key.empty() || _selection_mode != Selection_Mode::Brush || !_is_dragging) {
+        return;
+    }
+
+    // Continue adding or removing based on the mode set when dragging started
+    if (_is_adding_mode) {
+        _addToMask(canvas_coords);
+    } else {
+        _removeFromMask(canvas_coords);
+    }
+}
+
+void MediaMask_Widget::_mouseReleased() {
+    // Stop dragging when mouse is released
+    _is_dragging = false;
 }
 
 std::vector<Point2D<float>> MediaMask_Widget::_generateBrushCircle(float center_x, float center_y, float radius_x, float radius_y) {
@@ -529,7 +577,7 @@ std::vector<Point2D<float>> MediaMask_Widget::_generateBrushCircle(float center_
             float normalized_dx = static_cast<float>(dx) / radius_x;
             float normalized_dy = static_cast<float>(dy) / radius_y;
             float ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
-            
+
             if (ellipse_distance <= 1.0f) {
                 float x = center_x + static_cast<float>(dx);
                 float y = center_y + static_cast<float>(dy);

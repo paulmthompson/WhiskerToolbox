@@ -252,6 +252,7 @@ signals:
     void rightClickCanvas(CanvasCoordinates const & coords);
     void leftClickMediaCoords(MediaCoordinates const & coords);
     void rightClickMediaCoords(MediaCoordinates const & coords);
+    void mouseMoveCanvas(CanvasCoordinates const & coords);
 };
 
 QRgb plot_color_with_alpha(BaseDisplayOptions const * opts);
