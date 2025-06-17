@@ -26,9 +26,9 @@ runs:
         cmakeVersion: "~3.30.0"
 
     - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: '10b7a178346f3f0abef60cecd5130e295afd8da4' #2024.10.21
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgGitCommitId: '10b7a178346f3f0abef60cecd5130e295afd8da4' #2024.10.21
 
     - name: Export GitHub Actions cache environment variables
       uses: actions/github-script@v7
