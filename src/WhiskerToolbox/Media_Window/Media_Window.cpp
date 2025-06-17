@@ -141,6 +141,10 @@ void Media_Window::addPointDataToScene(std::string const & point_key) {
 }
 
 void Media_Window::_clearPoints() {
+    if (_debug_performance) {
+        std::cout << "CLEARING POINTS - Count before: " << _points.size() << std::endl;
+    }
+
     for (auto pathItem: _points) {
         removeItem(pathItem);
     }
@@ -148,6 +152,11 @@ void Media_Window::_clearPoints() {
         delete pathItem;
     }
     _points.clear();
+
+    if (_debug_performance) {
+        std::cout << "  Points cleared. Count after: " << _points.size() << std::endl;
+        std::cout << "  Hover circle item still exists: " << (_hover_circle_item ? "YES" : "NO") << std::endl;
+    }
 }
 
 void Media_Window::removePointDataFromScene(std::string const & point_key) {
@@ -281,12 +290,32 @@ void Media_Window::LoadFrame(int frame_id) {
     auto media = _data_manager->getData<MediaData>("media");
     media->LoadFrame(frame_id);
 
+    // Clear any accumulated drawing points when changing frames
+    // This ensures no cross-frame accumulation and explains why lag disappears on frame change
+    _drawing_points.clear();
+    _is_drawing = false;
+
     UpdateCanvas();
 }
 
 void Media_Window::UpdateCanvas() {
 
-    std::cout << "Update Canvas called" << std::endl;
+    if (_debug_performance) {
+        std::cout << "========== Update Canvas called ==========" << std::endl;
+
+        // Debug: Show current item counts before clearing
+        std::cout << "BEFORE CLEAR - Items in scene: " << items().size() << std::endl;
+        std::cout << "  Lines: " << _line_paths.size() << std::endl;
+        std::cout << "  Points: " << _points.size() << std::endl;
+        std::cout << "  Masks: " << _masks.size() << std::endl;
+        std::cout << "  Mask bounding boxes: " << _mask_bounding_boxes.size() << std::endl;
+        std::cout << "  Mask outlines: " << _mask_outlines.size() << std::endl;
+        std::cout << "  Intervals: " << _intervals.size() << std::endl;
+        std::cout << "  Tensors: " << _tensors.size() << std::endl;
+        std::cout << "  Text items: " << _text_items.size() << std::endl;
+        std::cout << "  Drawing points accumulated: " << _drawing_points.size() << std::endl;
+        std::cout << "  Hover circle item exists: " << (_hover_circle_item ? "YES" : "NO") << std::endl;
+    }
 
     _clearLines();
     _clearPoints();
@@ -332,8 +361,20 @@ void Media_Window::UpdateCanvas() {
 
     _plotTextOverlays();
 
-    if (_show_hover_circle) {
-        _plotHoverCircle();
+    // Note: Hover circle is now handled efficiently via _updateHoverCirclePosition()
+    // and doesn't need to be redrawn on every UpdateCanvas() call
+
+    if (_debug_performance) {
+        // Debug: Show item counts after plotting
+        std::cout << "AFTER PLOTTING - Items in scene: " << items().size() << std::endl;
+        std::cout << "  Lines plotted: " << _line_paths.size() << std::endl;
+        std::cout << "  Points plotted: " << _points.size() << std::endl;
+        std::cout << "  Masks plotted: " << _masks.size() << std::endl;
+        std::cout << "  Mask bounding boxes plotted: " << _mask_bounding_boxes.size() << std::endl;
+        std::cout << "  Mask outlines plotted: " << _mask_outlines.size() << std::endl;
+        std::cout << "  Intervals plotted: " << _intervals.size() << std::endl;
+        std::cout << "  Tensors plotted: " << _tensors.size() << std::endl;
+        std::cout << "  Text items plotted: " << _text_items.size() << std::endl;
     }
 
     // Save the entire QGraphicsScene as an image
@@ -384,12 +425,20 @@ void Media_Window::_createCanvasForData() {
 }
 
 void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
+    if (_debug_performance) {
+        std::cout << "Mouse PRESS - Button: " << (event->button() == Qt::LeftButton ? "LEFT" : "RIGHT")
+                  << ", Drawing mode: " << _drawing_mode << ", Current drawing points: " << _drawing_points.size() << std::endl;
+    }
+
     if (event->button() == Qt::LeftButton) {
         if (_drawing_mode) {
             auto pos = event->scenePos();
             _drawing_points.clear();
             _drawing_points.push_back(pos);
             _is_drawing = true;
+            if (_debug_performance) {
+                std::cout << "  Started drawing - cleared and added first point" << std::endl;
+            }
         }
 
         // Emit legacy signals (qreal values)
@@ -433,6 +482,11 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
     }
 }
 void Media_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent * event) {
+    if (_debug_performance) {
+        std::cout << "Mouse RELEASE - Button: " << (event->button() == Qt::LeftButton ? "LEFT" : "RIGHT")
+                  << ", Was drawing: " << _is_drawing << ", Drawing points: " << _drawing_points.size() << std::endl;
+    }
+
     if (event->button() == Qt::LeftButton) {
         // Always emit leftRelease signal
         emit leftRelease();
@@ -441,6 +495,9 @@ void Media_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent * event) {
         if (_is_drawing) {
             _is_drawing = false;
             emit leftReleaseDrawing();
+            if (_debug_performance) {
+                std::cout << "  Drawing finished - emitted leftReleaseDrawing signal" << std::endl;
+            }
         }
     } else if (event->button() == Qt::RightButton) {
         // Always emit rightRelease signal
@@ -455,14 +512,21 @@ void Media_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent * event) {
     QGraphicsScene::mouseReleaseEvent(event);
 }
 void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
+    static int move_count = 0;
+    move_count++;
 
     auto pos = event->scenePos();
 
     _hover_position = pos;
 
     if (_is_drawing) {
-
         _drawing_points.push_back(pos);
+        if (_debug_performance && move_count % 10 == 0) {// Only print every 10th move to avoid spam
+            std::cout << "Mouse MOVE #" << move_count << " - Drawing: adding point (total: "
+                      << _drawing_points.size() << ")" << std::endl;
+        }
+    } else if (_debug_performance && move_count % 50 == 0) {// Print every 50th move when not drawing
+        std::cout << "Mouse MOVE #" << move_count << " - Hover only" << std::endl;
     }
 
     // Emit legacy signal
@@ -1178,25 +1242,76 @@ std::vector<uint8_t> Media_Window::getDrawingMask() {
 void Media_Window::setShowHoverCircle(bool show) {
     _show_hover_circle = show;
     if (_show_hover_circle) {
-        std::cout << "Hover circle enabled" << std::endl;
+        if (_debug_performance) {
+            std::cout << "Hover circle enabled" << std::endl;
+        }
 
-        connect(this, &Media_Window::mouseMove, this, &Media_Window::UpdateCanvas);
+        // Create the hover circle item if it doesn't exist
+        if (!_hover_circle_item) {
+            QPen circlePen(Qt::red);
+            circlePen.setWidth(2);
+            _hover_circle_item = addEllipse(0, 0, _hover_circle_radius * 2, _hover_circle_radius * 2, circlePen);
+            _hover_circle_item->setVisible(false);// Initially hidden until mouse moves
+            // DO NOT add to _points vector - hover circle is managed separately
+            if (_debug_performance) {
+                std::cout << "  Created new hover circle item" << std::endl;
+            }
+        }
+
+        // Connect mouse move to efficient hover circle update instead of full canvas update
+        connect(this, &Media_Window::mouseMove, this, &Media_Window::_updateHoverCirclePosition);
     } else {
-        std::cout << "Hover circle disabled" << std::endl;
-        disconnect(this, &Media_Window::mouseMove, this, &Media_Window::UpdateCanvas);
+        if (_debug_performance) {
+            std::cout << "Hover circle disabled" << std::endl;
+        }
+
+        // Remove the hover circle item
+        if (_hover_circle_item) {
+            removeItem(_hover_circle_item);
+            delete _hover_circle_item;
+            _hover_circle_item = nullptr;
+            if (_debug_performance) {
+                std::cout << "  Deleted hover circle item" << std::endl;
+            }
+        }
+
+        // Disconnect the mouse move signal
+        disconnect(this, &Media_Window::mouseMove, this, &Media_Window::_updateHoverCirclePosition);
     }
 }
 
 void Media_Window::setHoverCircleRadius(int radius) {
     _hover_circle_radius = radius;
+
+    // Update the existing hover circle item if it exists
+    if (_hover_circle_item && _show_hover_circle) {
+        qreal x = _hover_position.x() - _hover_circle_radius;
+        qreal y = _hover_position.y() - _hover_circle_radius;
+        _hover_circle_item->setRect(x, y, _hover_circle_radius * 2, _hover_circle_radius * 2);
+    }
 }
 
-void Media_Window::_plotHoverCircle() {
-    QPen circlePen(Qt::red);
-    circlePen.setWidth(2);
+void Media_Window::_updateHoverCirclePosition() {
+    static int call_count = 0;
+    call_count++;
 
-    auto ellipse = addEllipse(_hover_position.x(), _hover_position.y(), _hover_circle_radius * 2, _hover_circle_radius * 2, circlePen);
-    _points.append(ellipse);
+    if (_hover_circle_item && _show_hover_circle) {
+        // Update the position of the existing hover circle item
+        qreal x = _hover_position.x() - _hover_circle_radius;
+        qreal y = _hover_position.y() - _hover_circle_radius;
+        _hover_circle_item->setRect(x, y, _hover_circle_radius * 2, _hover_circle_radius * 2);
+        _hover_circle_item->setVisible(true);
+
+        if (_debug_performance) {
+            std::cout << "Hover circle updated (call #" << call_count << ") at ("
+                      << _hover_position.x() << ", " << _hover_position.y() << ")" << std::endl;
+        }
+    } else {
+        if (_debug_performance) {
+            std::cout << "Hover circle update skipped (call #" << call_count << ") - item: "
+                      << (_hover_circle_item ? "exists" : "null") << ", show: " << _show_hover_circle << std::endl;
+        }
+    }
 }
 
 void Media_Window::_addRemoveData() {

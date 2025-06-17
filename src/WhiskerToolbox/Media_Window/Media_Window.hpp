@@ -6,6 +6,7 @@
 #include "Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 
+#include <QGraphicsEllipseItem>
 #include <QGraphicsItem>
 #include <QGraphicsScene>
 #include <QtCore/QtGlobal>
@@ -184,11 +185,13 @@ private:
     QVector<QGraphicsTextItem *> _text_items;// Text overlay items
 
     bool _is_verbose{false};
+    bool _debug_performance{false};// Debug flag for performance-related output
     bool _drawing_mode{false};
     bool _is_drawing{false};
     bool _show_hover_circle{false};
     int _hover_circle_radius{10};
     QPointF _hover_position;
+    QGraphicsEllipseItem * _hover_circle_item{nullptr};// Track hover circle item
 
     std::vector<QPointF> _drawing_points;
 
@@ -231,7 +234,7 @@ private:
     void _plotTextOverlays();
     void _clearTextOverlays();
 
-    void _plotHoverCircle();
+    void _updateHoverCirclePosition();
 
     void _addRemoveData();
 

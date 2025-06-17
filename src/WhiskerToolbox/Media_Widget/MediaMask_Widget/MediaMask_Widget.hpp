@@ -65,7 +65,8 @@ private:
 
     // Brush drag state
     bool _is_dragging{false};
-    bool _is_adding_mode{true};// true for add, false for remove
+    bool _is_adding_mode{true};    // true for add, false for remove
+    bool _debug_performance{false};// Debug flag for performance-related output
 
     void _setupSelectionModePages();
     void _setupDilationWidget();

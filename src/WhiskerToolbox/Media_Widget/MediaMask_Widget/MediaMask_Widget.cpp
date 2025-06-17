@@ -382,21 +382,27 @@ void MediaMask_Widget::_restoreOriginalMaskData() {
 void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     auto mask_data = _data_manager->getData<MaskData>(_active_key);
     if (!mask_data) {
-        std::cout << "Error: Could not retrieve mask data for key: " << _active_key << std::endl;
+        if (_debug_performance) {
+            std::cout << "Error: Could not retrieve mask data for key: " << _active_key << std::endl;
+        }
         return;
     }
 
     // Get mask image size for coordinate transformation
     auto mask_image_size = mask_data->getImageSize();
     if (mask_image_size.width <= 0 || mask_image_size.height <= 0) {
-        std::cout << "Error: Invalid mask image size" << std::endl;
+        if (_debug_performance) {
+            std::cout << "Error: Invalid mask image size" << std::endl;
+        }
         return;
     }
 
     // Get canvas size for transformation
     auto [canvas_width, canvas_height] = _scene->getCanvasSize();
     if (canvas_width <= 0 || canvas_height <= 0) {
-        std::cout << "Error: Invalid canvas size" << std::endl;
+        if (_debug_performance) {
+            std::cout << "Error: Invalid canvas size" << std::endl;
+        }
         return;
     }
 
@@ -414,67 +420,84 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     float brush_radius_x = static_cast<float>(brush_radius_canvas) * scale_x;
     float brush_radius_y = static_cast<float>(brush_radius_canvas) * scale_y;
 
-    // Adjust the center position to account for the brush circle being drawn with cursor at top-left
-    // The hover circle is drawn with the cursor at the top-left of its bounding box,
-    // so we need to offset by the radius to get the actual center
-    float x_mask = x_mask_raw + brush_radius_x;
-    float y_mask = y_mask_raw + brush_radius_y;
+    // Use the transformed coordinates directly - hover circle is now centered on cursor
+    float x_mask = x_mask_raw;
+    float y_mask = y_mask_raw;
 
     // Generate circle of pixels
     auto brush_pixels = _generateBrushCircle(x_mask, y_mask, brush_radius_x, brush_radius_y);
 
-    // Get existing pixels to avoid duplicates
+    // Get current time and existing masks
     auto current_time = _data_manager->getCurrentTime();
     auto const & existing_masks = mask_data->getAtTime(current_time);
 
-    // Create a set of existing pixels for fast lookup
+    // Get or create the primary mask (index 0)
+    std::vector<Point2D<float>> primary_mask;
+    if (!existing_masks.empty()) {
+        primary_mask = existing_masks[0];// Copy the existing mask at index 0
+    }
+    // If no masks exist, primary_mask starts empty
+
+    // Create a set of existing pixels in the primary mask for fast lookup
     std::set<std::pair<int, int>> existing_pixel_set;
-    for (auto const & single_mask: existing_masks) {
-        for (auto const & point: single_mask) {
-            existing_pixel_set.insert({static_cast<int>(std::round(point.x)),
-                                       static_cast<int>(std::round(point.y))});
-        }
+    for (auto const & point: primary_mask) {
+        existing_pixel_set.insert({static_cast<int>(std::round(point.x)),
+                                   static_cast<int>(std::round(point.y))});
     }
 
-    // Filter out pixels that already exist
-    std::vector<Point2D<float>> new_pixels;
+    // Add new pixels that don't already exist in the primary mask
+    int added_count = 0;
     for (auto const & pixel: brush_pixels) {
         std::pair<int, int> pixel_key = {static_cast<int>(std::round(pixel.x)),
                                          static_cast<int>(std::round(pixel.y))};
         if (existing_pixel_set.find(pixel_key) == existing_pixel_set.end()) {
-            new_pixels.push_back(pixel);
+            primary_mask.push_back(pixel);
+            existing_pixel_set.insert(pixel_key);// Update set to avoid adding duplicates within this operation
+            added_count++;
         }
     }
 
-    // Only add new pixels if there are any
-    if (!new_pixels.empty()) {
-        mask_data->addAtTime(current_time, new_pixels);
+    // Only update the mask data if we added new pixels
+    if (added_count > 0) {
+        // Clear all masks at this time and set the single updated primary mask
+        mask_data->clearAtTime(current_time, false);
+        mask_data->addAtTime(current_time, std::move(primary_mask), false);
+
+        // Notify observers
+        mask_data->notifyObservers();
     }
 
-    std::cout << "Added " << new_pixels.size() << " new pixels (out of " << brush_pixels.size()
-              << " generated) to mask at (" << x_mask << ", " << y_mask << ") in mask coordinates (from canvas "
-              << canvas_coords.x << ", " << canvas_coords.y << ") with canvas radius " << brush_radius_canvas
-              << " (scaled to " << brush_radius_x << "x" << brush_radius_y << " in mask coordinates)" << std::endl;
+    if (_debug_performance) {
+        std::cout << "BRUSH ADD: Added " << added_count << " new pixels (out of " << brush_pixels.size()
+                  << " generated) to primary mask at index 0. Total mask size: "
+                  << (primary_mask.size() - added_count + added_count) << " pixels" << std::endl;
+    }
 }
 
 void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) {
     auto mask_data = _data_manager->getData<MaskData>(_active_key);
     if (!mask_data) {
-        std::cout << "Error: Could not retrieve mask data for key: " << _active_key << std::endl;
+        if (_debug_performance) {
+            std::cout << "Error: Could not retrieve mask data for key: " << _active_key << std::endl;
+        }
         return;
     }
 
     // Get mask image size for coordinate transformation
     auto mask_image_size = mask_data->getImageSize();
     if (mask_image_size.width <= 0 || mask_image_size.height <= 0) {
-        std::cout << "Error: Invalid mask image size" << std::endl;
+        if (_debug_performance) {
+            std::cout << "Error: Invalid mask image size" << std::endl;
+        }
         return;
     }
 
     // Get canvas size for transformation
     auto [canvas_width, canvas_height] = _scene->getCanvasSize();
     if (canvas_width <= 0 || canvas_height <= 0) {
-        std::cout << "Error: Invalid canvas size" << std::endl;
+        if (_debug_performance) {
+            std::cout << "Error: Invalid canvas size" << std::endl;
+        }
         return;
     }
 
@@ -492,58 +515,62 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     float brush_radius_x = static_cast<float>(brush_radius_canvas) * scale_x;
     float brush_radius_y = static_cast<float>(brush_radius_canvas) * scale_y;
 
-    // Adjust the center position to account for the brush circle being drawn with cursor at top-left
-    // The hover circle is drawn with the cursor at the top-left of its bounding box,
-    // so we need to offset by the radius to get the actual center
-    float x_mask = x_mask_raw + brush_radius_x;
-    float y_mask = y_mask_raw + brush_radius_y;
+    // Use the transformed coordinates directly - hover circle is now centered on cursor
+    float x_mask = x_mask_raw;
+    float y_mask = y_mask_raw;
 
-    // Get existing masks at current time
+    // Get current time and existing masks
     auto current_time = _data_manager->getCurrentTime();
     auto const & existing_masks = mask_data->getAtTime(current_time);
 
-    // Filter out pixels within brush radius from all existing masks
-    std::vector<std::vector<Point2D<float>>> filtered_masks;
+    // Check if there's a primary mask (index 0) to remove from
+    if (existing_masks.empty()) {
+        if (_debug_performance) {
+            std::cout << "BRUSH REMOVE: No mask exists to remove from" << std::endl;
+        }
+        return;
+    }
+
+    // Work with the primary mask (index 0)
+    auto const & primary_mask = existing_masks[0];
+    std::vector<Point2D<float>> filtered_mask;
     int removed_count = 0;
 
-    for (auto const & single_mask: existing_masks) {
-        std::vector<Point2D<float>> filtered_mask;
+    // Filter out pixels within brush radius from the primary mask
+    for (auto const & point: primary_mask) {
+        // Calculate elliptical distance from brush center
+        float dx = point.x - x_mask;
+        float dy = point.y - y_mask;
+        float normalized_dx = dx / brush_radius_x;
+        float normalized_dy = dy / brush_radius_y;
+        float ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
 
-        for (auto const & point: single_mask) {
-            // Calculate elliptical distance from brush center
-            float dx = point.x - x_mask;
-            float dy = point.y - y_mask;
-            float normalized_dx = dx / brush_radius_x;
-            float normalized_dy = dy / brush_radius_y;
-            float ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
-
-            // Keep pixels outside brush ellipse
-            if (ellipse_distance > 1.0f) {
-                filtered_mask.push_back(point);
-            } else {
-                removed_count++;
-            }
+        // Keep pixels outside brush ellipse
+        if (ellipse_distance > 1.0f) {
+            filtered_mask.push_back(point);
+        } else {
+            removed_count++;
         }
+    }
 
-        // Only add the mask if it still has points
+    // Only update if we actually removed pixels
+    if (removed_count > 0) {
+        // Clear all masks at this time
+        mask_data->clearAtTime(current_time, false);
+
+        // Add the filtered mask back if it still has points
         if (!filtered_mask.empty()) {
-            filtered_masks.push_back(filtered_mask);
+            mask_data->addAtTime(current_time, std::move(filtered_mask), false);
         }
+
+        // Notify observers
+        mask_data->notifyObservers();
     }
 
-    // Clear existing masks and add filtered masks
-    mask_data->clearAtTime(current_time, false);
-    for (auto const & filtered_mask: filtered_masks) {
-        mask_data->addAtTime(current_time, filtered_mask, false);
+    if (_debug_performance) {
+        std::cout << "BRUSH REMOVE: Removed " << removed_count << " pixels from primary mask at index 0. "
+                  << "Remaining mask size: " << filtered_mask.size() << " pixels" << std::endl;
     }
-
-    // Notify observers once at the end
-    mask_data->notifyObservers();
-
-    std::cout << "Removed " << removed_count << " pixels from mask at ("
-              << x_mask << ", " << y_mask << ") in mask coordinates (from canvas "
-              << canvas_coords.x << ", " << canvas_coords.y << ") with canvas radius " << brush_radius_canvas
-              << " (scaled to " << brush_radius_x << "x" << brush_radius_y << " in mask coordinates)" << std::endl;
 }
 
 void MediaMask_Widget::_mouseMoveInVideo(CanvasCoordinates const & canvas_coords) {
@@ -568,7 +595,9 @@ void MediaMask_Widget::_mouseReleased() {
     // Update canvas once when brush drag operation is completed
     if (_selection_mode == Selection_Mode::Brush && was_dragging) {
         _scene->UpdateCanvas();
-        std::cout << "Brush drag operation completed, canvas updated" << std::endl;
+        if (_debug_performance) {
+            std::cout << "Brush drag operation completed, canvas updated" << std::endl;
+        }
     }
 }
 
