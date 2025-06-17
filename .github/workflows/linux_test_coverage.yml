@@ -55,4 +55,4 @@ jobs:
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: ${{ github.workspace }}/vcpkg_cache
-          key: vcpkg-linux-gcc-${{ hashFiles('vcpkg.json') }}
+          key: vcpkg-linux-gcc-${{ hashFiles('vcpkg.json') }}-${{ github.run_id }}
