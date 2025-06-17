@@ -25,6 +25,11 @@ runs:
       with:
         cmakeVersion: "~3.30.0"
 
+    - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: '10b7a178346f3f0abef60cecd5130e295afd8da4' #2024.10.21
+
     - name: Export GitHub Actions cache environment variables
       uses: actions/github-script@v7
       with:
@@ -43,11 +48,6 @@ runs:
       run: |
         echo "QTDIR=$QT_ROOT_DIR" >> "$GITHUB_ENV"
         echo "QtToolsPath=$QT_ROOT_DIR/bin" >> "$GITHUB_ENV"
-
-    - name: "Set environmental variables"
-      shell: bash
-      run: |
-        echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> $GITHUB_ENV
 
     - name: Install nasm and other libraries on Linux
       shell: bash
