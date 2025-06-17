@@ -3,12 +3,13 @@
 
 #include "DataManager/Points/points.hpp"
 #include "DataManager/utils/ProcessingOptions.hpp"
+#include "Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 
-#include <QWidget>
 #include <QMap>
+#include <QWidget>
 
-#include <string>
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 namespace Ui {
@@ -18,7 +19,7 @@ class MediaMask_Widget;
 namespace mask_widget {
 class MaskNoneSelectionWidget;
 class MaskBrushSelectionWidget;
-}
+}// namespace mask_widget
 
 class DataManager;
 class Media_Window;
@@ -40,46 +41,51 @@ private:
     std::shared_ptr<DataManager> _data_manager;
     Media_Window * _scene;
     std::string _active_key;
-    
+
     // Selection mode enum
     enum class Selection_Mode {
         None,
         Brush
     };
-    
+
     // Selection widget pointers
-    mask_widget::MaskNoneSelectionWidget* _noneSelectionWidget {nullptr};
-    mask_widget::MaskBrushSelectionWidget* _brushSelectionWidget {nullptr};
-    
+    mask_widget::MaskNoneSelectionWidget * _noneSelectionWidget{nullptr};
+    mask_widget::MaskBrushSelectionWidget * _brushSelectionWidget{nullptr};
+
     // Dilation widget and section
-    MaskDilationWidget* _dilation_widget {nullptr};
-    Section* _dilation_section {nullptr};
-    
+    MaskDilationWidget * _dilation_widget{nullptr};
+    Section * _dilation_section{nullptr};
+
     QMap<QString, Selection_Mode> _selection_modes;
-    Selection_Mode _selection_mode {Selection_Mode::None};
-    
+    Selection_Mode _selection_mode{Selection_Mode::None};
+
     // Preview state tracking
     std::unordered_map<std::string, std::vector<std::vector<Point2D<float>>>> _original_mask_data;
-    bool _preview_active {false};
-    
+    bool _preview_active{false};
+
     void _setupSelectionModePages();
     void _setupDilationWidget();
-    void _applyMaskDilation(MaskDilationOptions const& options);
+    void _applyMaskDilation(MaskDilationOptions const & options);
     void _applyDilationPermanently();
     void _storeOriginalMaskData();
     void _restoreOriginalMaskData();
 
+    // Brush functionality
+    void _addToMask(CanvasCoordinates const & canvas_coords);
+    void _removeFromMask(CanvasCoordinates const & canvas_coords);
+    std::vector<Point2D<float>> _generateBrushCircle(float center_x, float center_y, float radius_x, float radius_y);
+
 private slots:
     void _setMaskAlpha(int alpha);
-    void _setMaskColor(const QString& hex_color);
+    void _setMaskColor(QString const & hex_color);
     void _toggleShowBoundingBox(bool checked);
     void _toggleShowOutline(bool checked);
     void _toggleSelectionMode(QString text);
-    void _clickedInVideo(qreal x, qreal y);
-    void _rightClickedInVideo(qreal x, qreal y);
+    void _clickedInVideo(CanvasCoordinates const & canvas_coords);
+    void _rightClickedInVideo(CanvasCoordinates const & canvas_coords);
     void _setBrushSize(int size);
     void _toggleShowHoverCircle(bool checked);
-    void _onDilationOptionsChanged(MaskDilationOptions const& options);
+    void _onDilationOptionsChanged(MaskDilationOptions const & options);
     void _onDilationApplyRequested();
 };
 

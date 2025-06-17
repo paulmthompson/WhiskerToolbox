@@ -1,17 +1,18 @@
 #include "MediaMask_Widget.hpp"
 #include "ui_MediaMask_Widget.h"
 
+#include "Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/utils/opencv_utility.hpp"
-#include "Media_Window/Media_Window.hpp"
-#include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
-#include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
 #include "MaskDilationWidget/MaskDilationWidget.hpp"
-#include "Collapsible_Widget/Section.hpp"
+#include "Media_Window/Media_Window.hpp"
+#include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
+#include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
 
-#include <QVBoxLayout>
 #include <QLabel>
+#include <QVBoxLayout>
+#include <cmath>
 #include <iostream>
 
 MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent)
@@ -26,25 +27,25 @@ MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Me
     _selection_modes["Brush"] = Selection_Mode::Brush;
 
     ui->selection_mode_combo->addItems(QStringList(_selection_modes.keys()));
-    
+
     connect(ui->selection_mode_combo, &QComboBox::currentTextChanged, this, &MediaMask_Widget::_toggleSelectionMode);
 
     connect(ui->color_picker, &ColorPicker_Widget::alphaChanged,
             this, &MediaMask_Widget::_setMaskAlpha);
     connect(ui->color_picker, &ColorPicker_Widget::colorChanged,
             this, &MediaMask_Widget::_setMaskColor);
-    
+
     // Connect bounding box control
     connect(ui->show_bounding_box_checkbox, &QCheckBox::toggled,
             this, &MediaMask_Widget::_toggleShowBoundingBox);
-    
+
     // Connect outline control
     connect(ui->show_outline_checkbox, &QCheckBox::toggled,
             this, &MediaMask_Widget::_toggleShowOutline);
-            
+
     // Setup the selection mode widgets
     _setupSelectionModePages();
-    
+
     // Setup the dilation widget
     _setupDilationWidget();
 }
@@ -58,8 +59,8 @@ void MediaMask_Widget::showEvent(QShowEvent * event) {
     static_cast<void>(event);
 
     std::cout << "MediaMask_Widget Show Event" << std::endl;
-    connect(_scene, &Media_Window::leftClickMedia, this, &MediaMask_Widget::_clickedInVideo);
-    connect(_scene, &Media_Window::rightClickMedia, this, &MediaMask_Widget::_rightClickedInVideo);
+    connect(_scene, &Media_Window::leftClickCanvas, this, &MediaMask_Widget::_clickedInVideo);
+    connect(_scene, &Media_Window::rightClickCanvas, this, &MediaMask_Widget::_rightClickedInVideo);
 }
 
 void MediaMask_Widget::hideEvent(QHideEvent * event) {
@@ -67,25 +68,25 @@ void MediaMask_Widget::hideEvent(QHideEvent * event) {
     static_cast<void>(event);
 
     std::cout << "MediaMask_Widget Hide Event" << std::endl;
-    disconnect(_scene, &Media_Window::leftClickMedia, this, &MediaMask_Widget::_clickedInVideo);
-    disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaMask_Widget::_rightClickedInVideo);
+    disconnect(_scene, &Media_Window::leftClickCanvas, this, &MediaMask_Widget::_clickedInVideo);
+    disconnect(_scene, &Media_Window::rightClickCanvas, this, &MediaMask_Widget::_rightClickedInVideo);
 }
 
 void MediaMask_Widget::_setupSelectionModePages() {
     // Create the "None" mode page using our widget
     _noneSelectionWidget = new mask_widget::MaskNoneSelectionWidget();
     ui->mode_stacked_widget->addWidget(_noneSelectionWidget);
-    
+
     // Create the "Brush" mode page using our new widget
     _brushSelectionWidget = new mask_widget::MaskBrushSelectionWidget();
     ui->mode_stacked_widget->addWidget(_brushSelectionWidget);
-    
+
     // Connect signals from the brush selection widget
     connect(_brushSelectionWidget, &mask_widget::MaskBrushSelectionWidget::brushSizeChanged,
             this, &MediaMask_Widget::_setBrushSize);
     connect(_brushSelectionWidget, &mask_widget::MaskBrushSelectionWidget::hoverCircleVisibilityChanged,
             this, &MediaMask_Widget::_toggleShowHoverCircle);
-    
+
     // Set initial page
     ui->mode_stacked_widget->setCurrentIndex(0);
 }
@@ -101,12 +102,12 @@ void MediaMask_Widget::setActiveKey(std::string const & key) {
         if (config) {
             ui->color_picker->setColor(QString::fromStdString(config.value()->hex_color));
             ui->color_picker->setAlpha(static_cast<int>(config.value()->alpha * 100));
-            
+
             // Set bounding box checkbox
             ui->show_bounding_box_checkbox->blockSignals(true);
             ui->show_bounding_box_checkbox->setChecked(config.value()->show_bounding_box);
             ui->show_bounding_box_checkbox->blockSignals(false);
-            
+
             // Set outline checkbox
             ui->show_outline_checkbox->blockSignals(true);
             ui->show_outline_checkbox->setChecked(config.value()->show_outline);
@@ -127,7 +128,7 @@ void MediaMask_Widget::_setMaskAlpha(int alpha) {
     }
 }
 
-void MediaMask_Widget::_setMaskColor(const QString& hex_color) {
+void MediaMask_Widget::_setMaskColor(QString const & hex_color) {
     if (!_active_key.empty()) {
         auto mask_opts = _scene->getMaskConfig(_active_key);
         if (mask_opts.has_value()) {
@@ -139,11 +140,11 @@ void MediaMask_Widget::_setMaskColor(const QString& hex_color) {
 
 void MediaMask_Widget::_toggleSelectionMode(QString text) {
     _selection_mode = _selection_modes[text];
-    
+
     // Switch to the appropriate page in the stacked widget
     int pageIndex = static_cast<int>(_selection_mode);
     ui->mode_stacked_widget->setCurrentIndex(pageIndex);
-    
+
     // Update hover circle visibility based on the mode
     if (_selection_mode == Selection_Mode::Brush) {
         _scene->setShowHoverCircle(_brushSelectionWidget->isHoverCircleVisible());
@@ -151,42 +152,38 @@ void MediaMask_Widget::_toggleSelectionMode(QString text) {
     } else {
         _scene->setShowHoverCircle(false);
     }
-    
+
     std::cout << "MediaMask_Widget selection mode changed to: " << text.toStdString() << std::endl;
 }
 
-void MediaMask_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
+void MediaMask_Widget::_clickedInVideo(CanvasCoordinates const & canvas_coords) {
     if (_active_key.empty()) {
         std::cout << "No active mask key" << std::endl;
         return;
     }
 
-    std::cout << "Left clicked in video at (" << x_canvas << ", " << y_canvas 
+    std::cout << "Left clicked in video at canvas (" << canvas_coords.x << ", " << canvas_coords.y
               << ") with selection mode: " << static_cast<int>(_selection_mode) << std::endl;
-              
+
     // Process the click based on selection mode
     switch (_selection_mode) {
         case Selection_Mode::None:
             // Do nothing in None mode
             break;
         case Selection_Mode::Brush:
-            // Add to mask (would be implemented in the future)
-            std::cout << "Brush mode: Add to mask at (" << x_canvas << ", " << y_canvas 
-                      << ") with radius " << _brushSelectionWidget->getBrushSize() << std::endl;
+            _addToMask(canvas_coords);
             break;
     }
 }
 
-void MediaMask_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
+void MediaMask_Widget::_rightClickedInVideo(CanvasCoordinates const & canvas_coords) {
     if (_active_key.empty() || _selection_mode != Selection_Mode::Brush) {
         return;
     }
-    
-    std::cout << "Right clicked in video at (" << x_canvas << ", " << y_canvas << ")" << std::endl;
-    
-    // Erase from mask (would be implemented in the future)
-    std::cout << "Brush mode: Erase from mask at (" << x_canvas << ", " << y_canvas 
-              << ") with radius " << _brushSelectionWidget->getBrushSize() << std::endl;
+
+    std::cout << "Right clicked in video at canvas (" << canvas_coords.x << ", " << canvas_coords.y << ")" << std::endl;
+
+    _removeFromMask(canvas_coords);
 }
 
 void MediaMask_Widget::_setBrushSize(int size) {
@@ -232,19 +229,19 @@ void MediaMask_Widget::_setupDilationWidget() {
     _dilation_section->setContentLayout(*new QVBoxLayout());
     _dilation_section->layout()->addWidget(_dilation_widget);
     _dilation_section->autoSetContentLayout();
-    
+
     // Connect dilation widget signals
     connect(_dilation_widget, &MaskDilationWidget::optionsChanged,
             this, &MediaMask_Widget::_onDilationOptionsChanged);
     connect(_dilation_widget, &MaskDilationWidget::applyRequested,
             this, &MediaMask_Widget::_onDilationApplyRequested);
-    
+
     // Replace the placeholder widget with the dilation section
-    auto* layout = qobject_cast<QVBoxLayout*>(ui->verticalLayout);
+    auto * layout = qobject_cast<QVBoxLayout *>(ui->verticalLayout);
     if (layout) {
         // Find the placeholder widget
         for (int i = 0; i < layout->count(); ++i) {
-            QLayoutItem* item = layout->itemAt(i);
+            QLayoutItem * item = layout->itemAt(i);
             if (item && item->widget() && item->widget() == ui->dilation_section_placeholder) {
                 // Replace the placeholder with the dilation section
                 layout->removeWidget(ui->dilation_section_placeholder);
@@ -256,7 +253,7 @@ void MediaMask_Widget::_setupDilationWidget() {
     }
 }
 
-void MediaMask_Widget::_onDilationOptionsChanged(MaskDilationOptions const& options) {
+void MediaMask_Widget::_onDilationOptionsChanged(MaskDilationOptions const & options) {
     if (options.active && options.preview) {
         _applyMaskDilation(options);
     } else {
@@ -268,36 +265,36 @@ void MediaMask_Widget::_onDilationApplyRequested() {
     _applyDilationPermanently();
 }
 
-void MediaMask_Widget::_applyMaskDilation(MaskDilationOptions const& options) {
+void MediaMask_Widget::_applyMaskDilation(MaskDilationOptions const & options) {
     if (_active_key.empty()) {
         return;
     }
-    
+
     auto mask_data = _data_manager->getData<MaskData>(_active_key);
     if (!mask_data) {
         return;
     }
-    
+
     // Store original data if not already stored
     _storeOriginalMaskData();
-    
-    auto const& original_masks = _original_mask_data[_active_key];
-    
+
+    auto const & original_masks = _original_mask_data[_active_key];
+
     // Apply dilation to each mask at current time
     std::vector<std::vector<Point2D<float>>> dilated_masks;
     auto image_size = mask_data->getImageSize();
-    
-    for (auto const& single_mask : original_masks) {
+
+    for (auto const & single_mask: original_masks) {
         if (!single_mask.empty()) {
             auto dilated_mask = dilate_mask(single_mask, image_size, options);
             dilated_masks.push_back(dilated_mask);
         }
     }
-    
+
     // Set preview data in the Media_Window
     _scene->setPreviewMaskData(_active_key, dilated_masks, true);
     _preview_active = true;
-    
+
     // Update the display by updating the canvas
     _scene->UpdateCanvas();
 }
@@ -306,55 +303,55 @@ void MediaMask_Widget::_applyDilationPermanently() {
     if (!_preview_active || _active_key.empty()) {
         return;
     }
-    
+
     auto mask_data = _data_manager->getData<MaskData>(_active_key);
     if (!mask_data) {
         return;
     }
-    
+
     // Get current time and get the preview data from Media_Window
     auto current_time = _data_manager->getCurrentTime();
     auto preview_masks = _scene->getPreviewMaskData(_active_key, current_time);
-    
+
     // Clear existing masks at this time
     mask_data->clearAtTime(current_time, false);
-    
+
     // Add the dilated masks
-    for (auto const& dilated_mask : preview_masks) {
+    for (auto const & dilated_mask: preview_masks) {
         if (!dilated_mask.empty()) {
             mask_data->addAtTime(current_time, dilated_mask, false);
         }
     }
-    
+
     // Notify observers
     mask_data->notifyObservers();
-    
+
     // Clear preview data
     _scene->setPreviewMaskData(_active_key, {}, false);
     _preview_active = false;
     _original_mask_data.clear();
-    
+
     // Reset the dilation widget
     MaskDilationOptions default_options;
     _dilation_widget->setOptions(default_options);
-    
+
     std::cout << "Mask dilation applied permanently" << std::endl;
 }
 
 void MediaMask_Widget::_storeOriginalMaskData() {
     if (_active_key.empty() || _original_mask_data.count(_active_key) > 0) {
-        return; // Already stored or no active key
+        return;// Already stored or no active key
     }
-    
+
     auto mask_data = _data_manager->getData<MaskData>(_active_key);
     if (!mask_data) {
         return;
     }
-    
+
     // Get current time and store the original mask data
     auto current_time = _data_manager->getCurrentTime();
-    auto const& masks_at_time = mask_data->getAtTime(current_time);
-    
+    auto const & masks_at_time = mask_data->getAtTime(current_time);
+
     _original_mask_data[_active_key] = masks_at_time;
 }
 
@@ -362,11 +359,188 @@ void MediaMask_Widget::_restoreOriginalMaskData() {
     if (!_preview_active) {
         return;
     }
-    
+
     // Clear preview data from Media_Window
     _scene->setPreviewMaskData(_active_key, {}, false);
     _preview_active = false;
-    
+
     // Update the display
     _scene->UpdateCanvas();
+}
+
+void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
+    auto mask_data = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data) {
+        std::cout << "Error: Could not retrieve mask data for key: " << _active_key << std::endl;
+        return;
+    }
+
+    // Get mask image size for coordinate transformation
+    auto mask_image_size = mask_data->getImageSize();
+    if (mask_image_size.width <= 0 || mask_image_size.height <= 0) {
+        std::cout << "Error: Invalid mask image size" << std::endl;
+        return;
+    }
+
+    // Get canvas size for transformation
+    auto [canvas_width, canvas_height] = _scene->getCanvasSize();
+    if (canvas_width <= 0 || canvas_height <= 0) {
+        std::cout << "Error: Invalid canvas size" << std::endl;
+        return;
+    }
+
+    // Transform canvas coordinates directly to mask coordinates
+    // This maintains separation of concerns - no need to access media data
+    float x_mask_raw = (canvas_coords.x / static_cast<float>(canvas_width)) * static_cast<float>(mask_image_size.width);
+    float y_mask_raw = (canvas_coords.y / static_cast<float>(canvas_height)) * static_cast<float>(mask_image_size.height);
+
+    // Get brush size and scale it separately for each dimension to preserve circle shape
+    int brush_radius_canvas = _brushSelectionWidget->getBrushSize();
+    float scale_x = static_cast<float>(mask_image_size.width) / static_cast<float>(canvas_width);
+    float scale_y = static_cast<float>(mask_image_size.height) / static_cast<float>(canvas_height);
+    
+    // Calculate scaled brush radius for each dimension
+    float brush_radius_x = static_cast<float>(brush_radius_canvas) * scale_x;
+    float brush_radius_y = static_cast<float>(brush_radius_canvas) * scale_y;
+    
+    // Adjust the center position to account for the brush circle being drawn with cursor at top-left
+    // The hover circle is drawn with the cursor at the top-left of its bounding box,
+    // so we need to offset by the radius to get the actual center
+    float x_mask = x_mask_raw + brush_radius_x;
+    float y_mask = y_mask_raw + brush_radius_y;
+
+    // Generate circle of pixels
+    auto brush_pixels = _generateBrushCircle(x_mask, y_mask, brush_radius_x, brush_radius_y);
+
+    // Add pixels to mask at current time
+    auto current_time = _data_manager->getCurrentTime();
+    mask_data->addAtTime(current_time, brush_pixels);
+
+    // Update display
+    _scene->UpdateCanvas();
+
+    std::cout << "Added " << brush_pixels.size() << " pixels to mask at ("
+              << x_mask << ", " << y_mask << ") in mask coordinates (from canvas "
+              << canvas_coords.x << ", " << canvas_coords.y << ") with canvas radius " << brush_radius_canvas
+              << " (scaled to " << brush_radius_x << "x" << brush_radius_y << " in mask coordinates)" << std::endl;
+}
+
+void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) {
+    auto mask_data = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data) {
+        std::cout << "Error: Could not retrieve mask data for key: " << _active_key << std::endl;
+        return;
+    }
+
+    // Get mask image size for coordinate transformation
+    auto mask_image_size = mask_data->getImageSize();
+    if (mask_image_size.width <= 0 || mask_image_size.height <= 0) {
+        std::cout << "Error: Invalid mask image size" << std::endl;
+        return;
+    }
+
+    // Get canvas size for transformation
+    auto [canvas_width, canvas_height] = _scene->getCanvasSize();
+    if (canvas_width <= 0 || canvas_height <= 0) {
+        std::cout << "Error: Invalid canvas size" << std::endl;
+        return;
+    }
+
+    // Transform canvas coordinates directly to mask coordinates
+    // This maintains separation of concerns - no need to access media data
+    float x_mask_raw = (canvas_coords.x / static_cast<float>(canvas_width)) * static_cast<float>(mask_image_size.width);
+    float y_mask_raw = (canvas_coords.y / static_cast<float>(canvas_height)) * static_cast<float>(mask_image_size.height);
+
+    // Get brush size and scale it separately for each dimension to preserve circle shape
+    int brush_radius_canvas = _brushSelectionWidget->getBrushSize();
+    float scale_x = static_cast<float>(mask_image_size.width) / static_cast<float>(canvas_width);
+    float scale_y = static_cast<float>(mask_image_size.height) / static_cast<float>(canvas_height);
+    
+    // Calculate scaled brush radius for each dimension
+    float brush_radius_x = static_cast<float>(brush_radius_canvas) * scale_x;
+    float brush_radius_y = static_cast<float>(brush_radius_canvas) * scale_y;
+    
+    // Adjust the center position to account for the brush circle being drawn with cursor at top-left
+    // The hover circle is drawn with the cursor at the top-left of its bounding box,
+    // so we need to offset by the radius to get the actual center
+    float x_mask = x_mask_raw + brush_radius_x;
+    float y_mask = y_mask_raw + brush_radius_y;
+
+    // Get existing masks at current time
+    auto current_time = _data_manager->getCurrentTime();
+    auto const & existing_masks = mask_data->getAtTime(current_time);
+
+    // Filter out pixels within brush radius from all existing masks
+    std::vector<std::vector<Point2D<float>>> filtered_masks;
+    int removed_count = 0;
+
+    for (auto const & single_mask: existing_masks) {
+        std::vector<Point2D<float>> filtered_mask;
+
+        for (auto const & point: single_mask) {
+            // Calculate elliptical distance from brush center
+            float dx = point.x - x_mask;
+            float dy = point.y - y_mask;
+            float normalized_dx = dx / brush_radius_x;
+            float normalized_dy = dy / brush_radius_y;
+            float ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
+
+            // Keep pixels outside brush ellipse
+            if (ellipse_distance > 1.0f) {
+                filtered_mask.push_back(point);
+            } else {
+                removed_count++;
+            }
+        }
+
+        // Only add the mask if it still has points
+        if (!filtered_mask.empty()) {
+            filtered_masks.push_back(filtered_mask);
+        }
+    }
+
+    // Clear existing masks and add filtered masks
+    mask_data->clearAtTime(current_time, false);
+    for (auto const & filtered_mask: filtered_masks) {
+        mask_data->addAtTime(current_time, filtered_mask, false);
+    }
+
+    // Notify observers once at the end
+    mask_data->notifyObservers();
+
+    // Update display
+    _scene->UpdateCanvas();
+
+    std::cout << "Removed " << removed_count << " pixels from mask at ("
+              << x_mask << ", " << y_mask << ") in mask coordinates (from canvas "
+              << canvas_coords.x << ", " << canvas_coords.y << ") with canvas radius " << brush_radius_canvas
+              << " (scaled to " << brush_radius_x << "x" << brush_radius_y << " in mask coordinates)" << std::endl;
+}
+
+std::vector<Point2D<float>> MediaMask_Widget::_generateBrushCircle(float center_x, float center_y, float radius_x, float radius_y) {
+    std::vector<Point2D<float>> circle_pixels;
+
+    // Generate all pixels within the elliptical brush (circle when radius_x == radius_y)
+    int max_radius = static_cast<int>(std::max(radius_x, radius_y)) + 1;
+    for (int dx = -max_radius; dx <= max_radius; ++dx) {
+        for (int dy = -max_radius; dy <= max_radius; ++dy) {
+            // Check if point is within elliptical radius using ellipse equation
+            // (dx/radius_x)^2 + (dy/radius_y)^2 <= 1
+            float normalized_dx = static_cast<float>(dx) / radius_x;
+            float normalized_dy = static_cast<float>(dy) / radius_y;
+            float ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
+            
+            if (ellipse_distance <= 1.0f) {
+                float x = center_x + static_cast<float>(dx);
+                float y = center_y + static_cast<float>(dy);
+
+                // Only add pixels that are within valid bounds (non-negative)
+                if (x >= 0.0f && y >= 0.0f) {
+                    circle_pixels.push_back({x, y});
+                }
+            }
+        }
+    }
+
+    return circle_pixels;
 }

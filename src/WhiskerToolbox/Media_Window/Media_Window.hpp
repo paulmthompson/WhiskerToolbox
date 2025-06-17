@@ -3,6 +3,7 @@
 
 #include "DataManager/ImageSize/ImageSize.hpp"
 #include "DataManager/Masks/masks.hpp"
+#include "Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 
 #include <QGraphicsItem>
@@ -245,6 +246,12 @@ signals:
     void rightRelease();
     void canvasUpdated(QImage const & canvasImage);
     void mouseMove(qreal x, qreal y);
+
+    // Strong-typed coordinate signals
+    void leftClickCanvas(CanvasCoordinates const & coords);
+    void rightClickCanvas(CanvasCoordinates const & coords);
+    void leftClickMediaCoords(MediaCoordinates const & coords);
+    void rightClickMediaCoords(MediaCoordinates const & coords);
 };
 
 QRgb plot_color_with_alpha(BaseDisplayOptions const * opts);

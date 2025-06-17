@@ -391,10 +391,21 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
             _drawing_points.push_back(pos);
             _is_drawing = true;
         }
+
+        // Emit legacy signals (qreal values)
         emit leftClick(event->scenePos().x(), event->scenePos().y());
         emit leftClickMedia(
                 event->scenePos().x() / getXAspect(),
                 event->scenePos().y() / getYAspect());
+
+        // Emit strong-typed coordinate signals
+        CanvasCoordinates canvas_coords(static_cast<float>(event->scenePos().x()),
+                                        static_cast<float>(event->scenePos().y()));
+        MediaCoordinates media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
+                                      static_cast<float>(event->scenePos().y() / getYAspect()));
+        emit leftClickCanvas(canvas_coords);
+        emit leftClickMediaCoords(media_coords);
+
     } else if (event->button() == Qt::RightButton) {
         if (_drawing_mode) {
             auto pos = event->scenePos();
@@ -402,10 +413,20 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
             _drawing_points.push_back(pos);
             _is_drawing = true;
         }
+
+        // Emit legacy signals (qreal values)
         emit rightClick(event->scenePos().x(), event->scenePos().y());
         emit rightClickMedia(
                 event->scenePos().x() / getXAspect(),
                 event->scenePos().y() / getYAspect());
+
+        // Emit strong-typed coordinate signals
+        CanvasCoordinates canvas_coords(static_cast<float>(event->scenePos().x()),
+                                        static_cast<float>(event->scenePos().y()));
+        MediaCoordinates media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
+                                      static_cast<float>(event->scenePos().y() / getYAspect()));
+        emit rightClickCanvas(canvas_coords);
+        emit rightClickMediaCoords(media_coords);
 
     } else {
         QGraphicsScene::mousePressEvent(event);
