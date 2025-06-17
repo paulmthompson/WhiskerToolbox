@@ -150,6 +150,8 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
     
     int files_saved = 0;
     int files_skipped = 0;
+
+    auto mask_data_size = mask_data->getImageSize();
     
     std::cout << "Saving mask images to directory: " << opts.parent_dir << std::endl;
     
@@ -164,7 +166,7 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
         }
         
         // Create a blank image using OpenCV
-        cv::Mat image = cv::Mat::zeros(opts.image_height, opts.image_width, CV_8UC1);
+        cv::Mat image = cv::Mat::zeros(mask_data_size.height, mask_data_size.width, CV_8UC1);
         image.setTo(opts.background_value);
         
         // Draw all masks for this frame
@@ -176,9 +178,13 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
                 // Check bounds
                 if (x >= 0 && x < opts.image_width && y >= 0 && y < opts.image_height) {
                     image.at<uint8_t>(y, x) = static_cast<uint8_t>(opts.mask_value);
+                    //image.at<uint8_t>(x, y) = static_cast<uint8_t>(opts.mask_value);
                 }
             }
         }
+
+        cv::Mat output_img;
+        cv::resize(image, output_img, cv::Size(opts.image_width, opts.image_height), cv::INTER_NEAREST);
         
         // Generate filename using the pad_frame_id utility
         std::string filename;
@@ -205,7 +211,7 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
         }
         
         // Save the image using OpenCV
-        if (cv::imwrite(full_path.string(), image)) {
+        if (cv::imwrite(full_path.string(), output_img)) {
             files_saved++;
             if (std::filesystem::exists(full_path) && opts.overwrite_existing) {
                 std::cout << "Overwritten existing file: " << full_path.string() << std::endl;
