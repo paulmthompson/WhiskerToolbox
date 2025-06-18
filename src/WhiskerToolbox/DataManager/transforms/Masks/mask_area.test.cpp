@@ -20,8 +20,8 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
 
     SECTION("Calculating area from single mask at one timestamp") {
         // Create a simple mask (3 points)
-        std::vector<float> x_coords = {1.0f, 2.0f, 3.0f};
-        std::vector<float> y_coords = {1.0f, 2.0f, 3.0f};
+        std::vector<uint32_t> x_coords = {1, 2, 3};
+        std::vector<uint32_t> y_coords = {1, 2, 3};
         mask_data->addAtTime(10, x_coords, y_coords);
 
         auto result = area(mask_data.get());
@@ -37,13 +37,13 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
 
     SECTION("Calculating area from multiple masks at one timestamp") {
         // First mask (3 points)
-        std::vector<float> x1 = {1.0f, 2.0f, 3.0f};
-        std::vector<float> y1 = {1.0f, 2.0f, 3.0f};
+        std::vector<uint32_t> x1 = {1, 2, 3};
+        std::vector<uint32_t> y1 = {1, 2, 3};
         mask_data->addAtTime(20, x1, y1);
 
         // Second mask (5 points)
-        std::vector<float> x2 = {4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
-        std::vector<float> y2 = {4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
+        std::vector<uint32_t> x2 = {4, 5, 6, 7, 8};
+        std::vector<uint32_t> y2 = {4, 5, 6, 7, 8};
         mask_data->addAtTime(20, x2, y2);
 
         auto result = area(mask_data.get());
@@ -59,17 +59,17 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
 
     SECTION("Calculating areas from masks across multiple timestamps") {
         // Timestamp 30: One mask with 2 points
-        std::vector<float> x1 = {1.0f, 2.0f};
-        std::vector<float> y1 = {1.0f, 2.0f};
+        std::vector<uint32_t> x1 = {1, 2};
+        std::vector<uint32_t> y1 = {1, 2};
         mask_data->addAtTime(30, x1, y1);
 
         // Timestamp 40: Two masks with 3 and 4 points
-        std::vector<float> x2 = {1.0f, 2.0f, 3.0f};
-        std::vector<float> y2 = {1.0f, 2.0f, 3.0f};
+        std::vector<uint32_t> x2 = {1, 2, 3};
+        std::vector<uint32_t> y2 = {1, 2, 3};
         mask_data->addAtTime(40, x2, y2);
 
-        std::vector<float> x3 = {4.0f, 5.0f, 6.0f, 7.0f};
-        std::vector<float> y3 = {4.0f, 5.0f, 6.0f, 7.0f};
+        std::vector<uint32_t> x3 = {4, 5, 6, 7};
+        std::vector<uint32_t> y3 = {4, 5, 6, 7};
         mask_data->addAtTime(40, x3, y3);
 
         auto result = area(mask_data.get());
@@ -91,8 +91,8 @@ TEST_CASE("Mask area calculation - Core functionality", "[mask][area][transform]
 
     SECTION("Verify returned AnalogTimeSeries structure") {
         // Add some mask data
-        std::vector<float> x = {1.0f, 2.0f, 3.0f, 4.0f};
-        std::vector<float> y = {1.0f, 2.0f, 3.0f, 4.0f};
+        std::vector<uint32_t> x = {1, 2, 3, 4};
+        std::vector<uint32_t> y = {1, 2, 3, 4};
         mask_data->addAtTime(100, x, y);
 
         auto result = area(mask_data.get());
@@ -115,8 +115,8 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
 
     SECTION("Masks with zero points") {
         // Add an empty mask (should be handled gracefully)
-        std::vector<float> empty_x;
-        std::vector<float> empty_y;
+        std::vector<uint32_t> empty_x;
+        std::vector<uint32_t> empty_y;
         mask_data->addAtTime(10, empty_x, empty_y);
 
         auto result = area(mask_data.get());
@@ -128,13 +128,13 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
 
     SECTION("Mixed empty and non-empty masks") {
         // Add an empty mask
-        std::vector<float> empty_x;
-        std::vector<float> empty_y;
+        std::vector<uint32_t> empty_x;
+        std::vector<uint32_t> empty_y;
         mask_data->addAtTime(20, empty_x, empty_y);
 
         // Add a non-empty mask at the same timestamp
-        std::vector<float> x = {1.0f, 2.0f, 3.0f};
-        std::vector<float> y = {1.0f, 2.0f, 3.0f};
+        std::vector<uint32_t> x = {1, 2, 3};
+        std::vector<uint32_t> y = {1, 2, 3};
         mask_data->addAtTime(20, x, y);
 
         auto result = area(mask_data.get());
@@ -147,8 +147,8 @@ TEST_CASE("Mask area calculation - Edge cases and error handling", "[mask][area]
     SECTION("Large number of masks and points") {
         // Create a timestamp with many small masks
         for (int i = 0; i < 10; i++) {
-            std::vector<float> x(i+1, 1.0f);
-            std::vector<float> y(i+1, 1.0f);
+            std::vector<uint32_t> x(i+1, 1);
+            std::vector<uint32_t> y(i+1, 1);
             mask_data->addAtTime(30, x, y);
         }
 

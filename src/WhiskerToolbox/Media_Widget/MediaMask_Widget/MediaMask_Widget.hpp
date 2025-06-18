@@ -60,7 +60,7 @@ private:
     Selection_Mode _selection_mode{Selection_Mode::None};
 
     // Preview state tracking
-    std::unordered_map<std::string, std::vector<std::vector<Point2D<float>>>> _original_mask_data;
+    std::unordered_map<std::string, std::vector<std::vector<Point2D<uint32_t>>>> _original_mask_data;
     bool _preview_active{false};
 
     // Brush drag state

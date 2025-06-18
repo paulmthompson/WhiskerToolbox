@@ -16,7 +16,7 @@ cv::Mat convert_vector_to_mat(std::vector<Point2D<float>>& vec, ImageSize image_
 
 void convert_mat_to_vector(std::vector<uint8_t>& vec, cv::Mat & mat, ImageSize image_size);
 
-std::vector<Point2D<float>> create_mask(cv::Mat const & mat);
+std::vector<Point2D<uint32_t>> create_mask(cv::Mat const & mat);
 
 /**
  * @brief Load mask from image file
@@ -82,7 +82,7 @@ void median_filter(cv::Mat& mat, MedianOptions const& options);
  * @param options Dilation options specifying operation parameters
  * @return Modified mask as vector of 2D points
  */
-std::vector<Point2D<float>> dilate_mask(std::vector<Point2D<float>> const& mask, ImageSize image_size, MaskDilationOptions const& options);
+std::vector<Point2D<uint32_t>> dilate_mask(std::vector<Point2D<uint32_t>> const& mask, ImageSize image_size, MaskDilationOptions const& options);
 
 /**
  * @brief Apply dilation or erosion to a cv::Mat mask

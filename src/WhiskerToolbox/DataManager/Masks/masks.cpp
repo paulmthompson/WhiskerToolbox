@@ -5,36 +5,36 @@
 #include <map>
 #include <set>
 
+Mask2D create_mask(std::vector<uint32_t> const & x, std::vector<uint32_t> const & y) {
+    auto new_mask = Mask2D{};
+    new_mask.reserve(x.size());// Reserve space to avoid reallocations
+
+    for (std::size_t i = 0; i < x.size(); i++) {
+        new_mask.push_back({x[i], y[i]});
+    }
+
+    return new_mask;
+}
+
 Mask2D create_mask(std::vector<float> const & x, std::vector<float> const & y) {
     auto new_mask = Mask2D{};
     new_mask.reserve(x.size());// Reserve space to avoid reallocations
 
     for (std::size_t i = 0; i < x.size(); i++) {
-        //new_mask.emplace_back(Point2D<float>{x[i], y[i]});// Use emplace_back for efficiency
-        new_mask.push_back({x[i], y[i]});
+        // Round coordinates to nearest integers and ensure non-negative
+        uint32_t rounded_x = static_cast<uint32_t>(std::max(0.0f, std::round(x[i])));
+        uint32_t rounded_y = static_cast<uint32_t>(std::max(0.0f, std::round(y[i])));
+        new_mask.push_back({rounded_x, rounded_y});
     }
 
     return new_mask;
 }
 
-
-Mask2D create_mask(std::vector<float> && x, std::vector<float> && y) {
-    auto new_mask = Mask2D{};
-    new_mask.reserve(x.size());// Reserve space to avoid reallocations
-
-    for (std::size_t i = 0; i < x.size(); i++) {
-        //new_mask.emplace_back(Point2D<float>{x[i], y[i]});// Access elements directly
-        new_mask.push_back({x[i], y[i]});
-    }
-
-    return new_mask;
-}
-
-std::pair<Point2D<float>, Point2D<float>> get_bounding_box(Mask2D const & mask) {
-    float min_x = mask[0].x;
-    float max_x = mask[0].x;
-    float min_y = mask[0].y;
-    float max_y = mask[0].y;
+std::pair<Point2D<uint32_t>, Point2D<uint32_t>> get_bounding_box(Mask2D const & mask) {
+    uint32_t min_x = mask[0].x;
+    uint32_t max_x = mask[0].x;
+    uint32_t min_y = mask[0].y;
+    uint32_t max_y = mask[0].y;
 
     for (auto const & point: mask) {
         min_x = std::min(min_x, point.x);
@@ -43,19 +43,19 @@ std::pair<Point2D<float>, Point2D<float>> get_bounding_box(Mask2D const & mask) 
         max_y = std::max(max_y, point.y);
     }
 
-    return {Point2D<float>{min_x, min_y}, Point2D<float>{max_x, max_y}};
+    return {Point2D<uint32_t>{min_x, min_y}, Point2D<uint32_t>{max_x, max_y}};
 }
 
-std::vector<Point2D<float>> get_mask_outline(Mask2D const & mask) {
+std::vector<Point2D<uint32_t>> get_mask_outline(Mask2D const & mask) {
     if (mask.empty() || mask.size() < 2) {
         return {};
     }
 
     // Create maps to store extremal points
-    std::map<float, float> max_y_for_x;// x -> max_y
-    std::map<float, float> min_y_for_x;// x -> min_y
-    std::map<float, float> max_x_for_y;// y -> max_x
-    std::map<float, float> min_x_for_y;// y -> min_x
+    std::map<uint32_t, uint32_t> max_y_for_x;// x -> max_y
+    std::map<uint32_t, uint32_t> min_y_for_x;// x -> min_y
+    std::map<uint32_t, uint32_t> max_x_for_y;// y -> max_x
+    std::map<uint32_t, uint32_t> min_x_for_y;// y -> min_x
 
     // Find extremal points
     for (auto const & point: mask) {
@@ -81,7 +81,7 @@ std::vector<Point2D<float>> get_mask_outline(Mask2D const & mask) {
     }
 
     // Collect all extremal points
-    std::set<std::pair<float, float>> extremal_points_set;
+    std::set<std::pair<uint32_t, uint32_t>> extremal_points_set;
 
     // Add max_y points for each x
     for (auto const & [x, max_y]: max_y_for_x) {
@@ -104,7 +104,7 @@ std::vector<Point2D<float>> get_mask_outline(Mask2D const & mask) {
     }
 
     // Convert to vector and sort by angle from centroid for proper ordering
-    std::vector<Point2D<float>> extremal_points;
+    std::vector<Point2D<uint32_t>> extremal_points;
     extremal_points.reserve(extremal_points_set.size());
 
     for (auto const & [x, y]: extremal_points_set) {
@@ -118,25 +118,29 @@ std::vector<Point2D<float>> get_mask_outline(Mask2D const & mask) {
     // Calculate centroid
     float centroid_x = 0.0f, centroid_y = 0.0f;
     for (auto const & point: extremal_points) {
-        centroid_x += point.x;
-        centroid_y += point.y;
+        centroid_x += static_cast<float>(point.x);
+        centroid_y += static_cast<float>(point.y);
     }
     centroid_x /= static_cast<float>(extremal_points.size());
     centroid_y /= static_cast<float>(extremal_points.size());
 
     // Sort points by angle from centroid (for proper connection order)
     std::sort(extremal_points.begin(), extremal_points.end(),
-              [centroid_x, centroid_y](Point2D<float> const & a, Point2D<float> const & b) {
-                  float const angle_a = std::atan2(a.y - centroid_y, a.x - centroid_x);
-                  float const angle_b = std::atan2(b.y - centroid_y, b.x - centroid_x);
+              [centroid_x, centroid_y](Point2D<uint32_t> const & a, Point2D<uint32_t> const & b) {
+                  float const angle_a = std::atan2(static_cast<float>(a.y) - centroid_y, static_cast<float>(a.x) - centroid_x);
+                  float const angle_b = std::atan2(static_cast<float>(b.y) - centroid_y, static_cast<float>(b.x) - centroid_x);
                   return angle_a < angle_b;
               });
 
     return extremal_points;
 }
 
-std::vector<Point2D<float>> generate_ellipse_pixels(float center_x, float center_y, float radius_x, float radius_y) {
-    std::vector<Point2D<float>> ellipse_pixels;
+std::vector<Point2D<uint32_t>> generate_ellipse_pixels(float center_x, float center_y, float radius_x, float radius_y) {
+    std::vector<Point2D<uint32_t>> ellipse_pixels;
+
+    // Round center coordinates for calculation
+    int rounded_center_x = static_cast<int>(std::round(center_x));
+    int rounded_center_y = static_cast<int>(std::round(center_y));
 
     // Generate all pixels within the elliptical region (circle when radius_x == radius_y)
     int max_radius = static_cast<int>(std::max(radius_x, radius_y)) + 1;
@@ -149,12 +153,12 @@ std::vector<Point2D<float>> generate_ellipse_pixels(float center_x, float center
             float ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
 
             if (ellipse_distance <= 1.0f) {
-                float x = center_x + static_cast<float>(dx);
-                float y = center_y + static_cast<float>(dy);
+                int x = rounded_center_x + dx;
+                int y = rounded_center_y + dy;
 
                 // Only add pixels that are within valid bounds (non-negative)
-                if (x >= 0.0f && y >= 0.0f) {
-                    ellipse_pixels.push_back({x, y});
+                if (x >= 0 && y >= 0) {
+                    ellipse_pixels.push_back({static_cast<uint32_t>(x), static_cast<uint32_t>(y)});
                 }
             }
         }
@@ -164,15 +168,13 @@ std::vector<Point2D<float>> generate_ellipse_pixels(float center_x, float center
 }
 
 Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2) {
-    // Use a set to efficiently track unique pixel coordinates (rounded to integers)
-    std::set<std::pair<int, int>> unique_pixels;
+    // Use a set to efficiently track unique pixel coordinates
+    std::set<std::pair<uint32_t, uint32_t>> unique_pixels;
     Mask2D combined_mask;
 
     // Add all pixels from mask1
     for (auto const & point : mask1) {
-        int rounded_x = static_cast<int>(std::round(point.x));
-        int rounded_y = static_cast<int>(std::round(point.y));
-        std::pair<int, int> pixel_key = {rounded_x, rounded_y};
+        std::pair<uint32_t, uint32_t> pixel_key = {point.x, point.y};
         
         if (unique_pixels.find(pixel_key) == unique_pixels.end()) {
             unique_pixels.insert(pixel_key);
@@ -182,9 +184,7 @@ Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2) {
 
     // Add pixels from mask2 that aren't already present
     for (auto const & point : mask2) {
-        int rounded_x = static_cast<int>(std::round(point.x));
-        int rounded_y = static_cast<int>(std::round(point.y));
-        std::pair<int, int> pixel_key = {rounded_x, rounded_y};
+        std::pair<uint32_t, uint32_t> pixel_key = {point.x, point.y};
         
         if (unique_pixels.find(pixel_key) == unique_pixels.end()) {
             unique_pixels.insert(pixel_key);
@@ -196,20 +196,16 @@ Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2) {
 }
 
 Mask2D subtract_masks(Mask2D const & mask1, Mask2D const & mask2) {
-    // Create a set of pixels in mask2 for efficient lookup (rounded to integers)
-    std::set<std::pair<int, int>> mask2_pixels;
+    // Create a set of pixels in mask2 for efficient lookup
+    std::set<std::pair<uint32_t, uint32_t>> mask2_pixels;
     for (auto const & point : mask2) {
-        int rounded_x = static_cast<int>(std::round(point.x));
-        int rounded_y = static_cast<int>(std::round(point.y));
-        mask2_pixels.insert({rounded_x, rounded_y});
+        mask2_pixels.insert({point.x, point.y});
     }
 
     // Keep only pixels from mask1 that are NOT in mask2
     Mask2D result_mask;
     for (auto const & point : mask1) {
-        int rounded_x = static_cast<int>(std::round(point.x));
-        int rounded_y = static_cast<int>(std::round(point.y));
-        std::pair<int, int> pixel_key = {rounded_x, rounded_y};
+        std::pair<uint32_t, uint32_t> pixel_key = {point.x, point.y};
         
         if (mask2_pixels.find(pixel_key) == mask2_pixels.end()) {
             result_mask.push_back(point);
@@ -219,7 +215,7 @@ Mask2D subtract_masks(Mask2D const & mask1, Mask2D const & mask2) {
     return result_mask;
 }
 
-std::vector<Point2D<float>> extract_line_pixels(
+std::vector<Point2D<uint32_t>> extract_line_pixels(
         std::vector<uint8_t> const & binary_img,
         ImageSize const image_size) {
 
@@ -227,13 +223,13 @@ std::vector<Point2D<float>> extract_line_pixels(
     auto const width = image_size.width;
 
     // Extract coordinates of the line pixels
-    std::vector<Point2D<float>> line_pixels;
+    std::vector<Point2D<uint32_t>> line_pixels;
     line_pixels.reserve(width * height / 10);// Reserve space to avoid reallocations
 
     for (int row = 0; row < height; ++row) {
         for (int col = 0; col < width; ++col) {
             if (binary_img[row * width + col] > 0) {
-                line_pixels.push_back({static_cast<float>(col), static_cast<float>(row)});
+                line_pixels.push_back({static_cast<uint32_t>(col), static_cast<uint32_t>(row)});
             }
         }
     }

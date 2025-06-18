@@ -299,11 +299,11 @@ void Mask_Widget::selectPoint(float const x, float const y) {
             static_cast<int>(std::round(x)),
             static_cast<int>(std::round(y)));
 
-    std::vector<Point2D<float>> mask;
+    std::vector<Point2D<uint32_t>> mask;
     for (size_t i = 0; i < mask_image.size(); i++) {
         if (mask_image[i] > 0) {
-            mask.push_back(Point2D<float>{static_cast<float>(i % image_size.width),
-                                          static_cast<float>(i / image_size.width)});
+            mask.push_back(Point2D<uint32_t>{static_cast<uint32_t>(i % image_size.width),
+                                          static_cast<uint32_t>(i / image_size.width)});
         }
     }
     if (_active_key.empty()) {

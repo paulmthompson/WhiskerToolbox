@@ -12,6 +12,12 @@
 std::pair<size_t, size_t> find_line_endpoints(const std::vector<Point2D<float>>& points);
 
 std::vector<Point2D<float>> order_line(
+        std::vector<Point2D<uint32_t>> const & line_pixels,
+        Point2D<float> const & origin,
+        int subsample = 1,
+        float tolerance = 5.0f);
+
+std::vector<Point2D<float>> order_line(
         std::vector<Point2D<float>> & line_pixels,
         Point2D<float> const & origin,
         int subsample = 1,

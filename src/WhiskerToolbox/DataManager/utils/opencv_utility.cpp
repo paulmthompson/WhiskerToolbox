@@ -71,13 +71,13 @@ void convert_mat_to_vector(std::vector<uint8_t> & vec, cv::Mat & mat, ImageSize 
     std::memcpy(vec.data(), mat.data, vec.size());
 }
 
-std::vector<Point2D<float>> create_mask(cv::Mat const & mat) {
-    std::vector<Point2D<float>> mask;
+std::vector<Point2D<uint32_t>> create_mask(cv::Mat const & mat) {
+    std::vector<Point2D<uint32_t>> mask;
 
     for (int y = 0; y < mat.rows; ++y) {
         for (int x = 0; x < mat.cols; ++x) {
             if (mat.at<uint8_t>(y, x) > 0) { // Assuming a binary mask where 0 is background
-                mask.push_back({static_cast<float>(x), static_cast<float>(y)});
+                mask.push_back({static_cast<uint32_t>(x), static_cast<uint32_t>(y)});
             }
         }
     }
@@ -133,7 +133,7 @@ void median_filter(cv::Mat & mat, MedianOptions const& options) {
     }
 }
 
-std::vector<Point2D<float>> dilate_mask(std::vector<Point2D<float>> const& mask, ImageSize image_size, MaskDilationOptions const& options) {
+std::vector<Point2D<uint32_t>> dilate_mask(std::vector<Point2D<uint32_t>> const& mask, ImageSize image_size, MaskDilationOptions const& options) {
     if (mask.empty() || !options.active) {
         return mask;
     }

@@ -7,15 +7,14 @@
 #include <cstdint>
 #include <vector>
 
-using Mask2D = std::vector<Point2D<float>>;
+using Mask2D = std::vector<Point2D<uint32_t>>;
 
+Mask2D create_mask(std::vector<uint32_t> const & x, std::vector<uint32_t> const & y);
 
 Mask2D create_mask(std::vector<float> const & x, std::vector<float> const & y);
 
-// Optimized version that moves the input vectors
-Mask2D create_mask(std::vector<float> && x, std::vector<float> && y);
 
-std::pair<Point2D<float>, Point2D<float>> get_bounding_box(Mask2D const & mask);
+std::pair<Point2D<uint32_t>, Point2D<uint32_t>> get_bounding_box(Mask2D const & mask);
 
 /**
  * @brief Compute the outline of a mask by finding extremal points
@@ -30,13 +29,14 @@ std::pair<Point2D<float>, Point2D<float>> get_bounding_box(Mask2D const & mask);
  *
  * @note If mask is empty or has only one point, returns empty outline
  */
-std::vector<Point2D<float>> get_mask_outline(Mask2D const & mask);
+std::vector<Point2D<uint32_t>> get_mask_outline(Mask2D const & mask);
 
 /**
  * @brief Generate mask pixels within an elliptical region
  *
  * Generates all pixels that fall within an elliptical region centered at the given point.
  * When radius_x == radius_y, this creates a perfect circle.
+ * Input coordinates are rounded to nearest integers for pixel precision.
  *
  * @param center_x X coordinate of the ellipse center
  * @param center_y Y coordinate of the ellipse center  
@@ -47,7 +47,7 @@ std::vector<Point2D<float>> get_mask_outline(Mask2D const & mask);
  * @note Only returns pixels with non-negative coordinates
  * @note Uses the standard ellipse equation: (dx/radius_x)² + (dy/radius_y)² ≤ 1
  */
-std::vector<Point2D<float>> generate_ellipse_pixels(float center_x, float center_y, float radius_x, float radius_y);
+std::vector<Point2D<uint32_t>> generate_ellipse_pixels(float center_x, float center_y, float radius_x, float radius_y);
 
 /**
  * @brief Combine two masks using union operation (no duplicate pixels)
@@ -75,7 +75,7 @@ Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2);
  */
 Mask2D subtract_masks(Mask2D const & mask1, Mask2D const & mask2);
 
-std::vector<Point2D<float>> extract_line_pixels(
+std::vector<Point2D<uint32_t>> extract_line_pixels(
         std::vector<uint8_t> const & binary_img,
         ImageSize const image_size);
 

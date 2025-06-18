@@ -1,6 +1,7 @@
 #include "Mask_Data.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 
 bool MaskData::clearAtTime(int const time, bool notify) {
@@ -18,8 +19,8 @@ bool MaskData::clearAtTime(int const time, bool notify) {
 }
 
 void MaskData::addAtTime(int const time,
-                             std::vector<float> const & x,
-                             std::vector<float> const & y,
+                             std::vector<uint32_t> const & x,
+                             std::vector<uint32_t> const & y,
                              bool notify) {
     auto new_mask = create_mask(x, y);
     _data[time].push_back(new_mask);
@@ -30,7 +31,7 @@ void MaskData::addAtTime(int const time,
 }
 
 void MaskData::addAtTime(int const time,
-                             std::vector<Point2D<float>> mask,
+                             std::vector<Point2D<uint32_t>> mask,
                              bool notify) {
     _data[time].push_back(std::move(mask));
     
@@ -38,10 +39,10 @@ void MaskData::addAtTime(int const time,
         notifyObservers();
     }
 }
-
+        
 void MaskData::addAtTime(int const time,
-                             std::vector<float> && x,
-                             std::vector<float> && y,
+                             std::vector<uint32_t> && x,
+                             std::vector<uint32_t> && y,
                              bool notify) {
     // Create mask efficiently using move semantics
     auto new_mask = Mask2D{};
@@ -94,8 +95,8 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
     for (auto & [time, masks] : _data) {
         for (auto & mask : masks) {
             for (auto & point : mask) {
-                point.x *= scale_x;
-                point.y *= scale_y;
+                point.x = static_cast<uint32_t>(std::round(static_cast<float>(point.x) * scale_x));
+                point.y = static_cast<uint32_t>(std::round(static_cast<float>(point.y) * scale_y));
             }
         }
     }

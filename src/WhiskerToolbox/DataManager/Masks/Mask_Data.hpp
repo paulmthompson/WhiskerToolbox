@@ -45,8 +45,8 @@ public:
     * @note x and y vectors must be the same length, representing coordinate pairs
     */
     void addAtTime(int time,
-                       std::vector<float> const & x,
-                       std::vector<float> const & y,
+                       std::vector<uint32_t> const & x,
+                       std::vector<uint32_t> const & y,
                        bool notify = true);
 
     /**
@@ -60,7 +60,7 @@ public:
     * @param notify If true, observers will be notified of the change (default: true)
     */
     void addAtTime(int time,
-                       std::vector<Point2D<float>> mask,
+                       std::vector<Point2D<uint32_t>> mask,
                        bool notify = true);
 
     /**
@@ -78,8 +78,8 @@ public:
     * @note x and y vectors must be the same length, representing coordinate pairs
     */
     void addAtTime(int time,
-                       std::vector<float> && x,
-                       std::vector<float> && y,
+                       std::vector<uint32_t> && x,
+                       std::vector<uint32_t> && y,
                        bool notify = true);
 
     /**

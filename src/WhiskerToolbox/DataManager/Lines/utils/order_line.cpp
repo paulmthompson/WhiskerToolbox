@@ -51,6 +51,21 @@ std::pair<size_t, size_t> find_line_endpoints(const std::vector<Point2D<float>>&
 }
 
 std::vector<Point2D<float>> order_line(
+        std::vector<Point2D<uint32_t>> const & line_pixels,
+        Point2D<float> const & origin,
+        int subsample,
+        float tolerance) {
+
+    std::vector<Point2D<float>> line_pixels_float;
+    line_pixels_float.reserve(line_pixels.size());
+    for (auto const & point : line_pixels) {
+        line_pixels_float.push_back({static_cast<float>(point.x), static_cast<float>(point.y)});
+    }
+
+    return order_line(line_pixels_float, origin, subsample, tolerance);
+}
+
+std::vector<Point2D<float>> order_line(
         std::vector<uint8_t> const & binary_img,
         ImageSize const image_size,
         Point2D<float> const & origin,

@@ -88,7 +88,7 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
         }
         
         // Extract mask points from image
-        std::vector<Point2D<float>> mask_points;
+        std::vector<Point2D<uint32_t>> mask_points;
         int const width = image.cols;
         int const height = image.rows;
         
@@ -107,7 +107,7 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
                 
                 if (is_mask_pixel) {
                     //mask_points.emplace_back(static_cast<float>(x), static_cast<float>(y)); // This fails on mac
-                    mask_points.push_back(Point2D<float>{static_cast<float>(x), static_cast<float>(y)});
+                    mask_points.push_back(Point2D<uint32_t>{static_cast<uint32_t>(x), static_cast<uint32_t>(y)});
                 }
             }
         }
@@ -171,9 +171,9 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
         
         // Draw all masks for this frame
         for (Mask2D const & mask : masks) {
-            for (Point2D<float> const & point : mask) {
-                int x = static_cast<int>(std::round(point.x));
-                int y = static_cast<int>(std::round(point.y));
+            for (Point2D<uint32_t> const & point : mask) {
+                int x = static_cast<int>(point.x);
+                int y = static_cast<int>(point.y);
                 
                 // Check bounds
                 if (x >= 0 && x < opts.image_width && y >= 0 && y < opts.image_height) {

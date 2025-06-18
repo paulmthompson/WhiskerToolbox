@@ -16,7 +16,8 @@ std::shared_ptr<MaskData> load(HDF5MaskLoaderOptions & opts) {
     mask_data_ptr->reserveCapacity(frames.size());
 
     for (std::size_t i = 0; i < frames.size(); i++) {
-        mask_data_ptr->addAtTime(frames[i], std::move(x_coords[i]), std::move(y_coords[i]));
+        auto mask = create_mask(std::move(x_coords[i]), std::move(y_coords[i]));
+        mask_data_ptr->addAtTime(frames[i], std::move(mask), false);
     }
 
     return mask_data_ptr;

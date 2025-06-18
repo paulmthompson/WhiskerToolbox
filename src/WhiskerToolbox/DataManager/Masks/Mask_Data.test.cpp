@@ -8,17 +8,17 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
     MaskData mask_data;
 
     // Setup some test data
-    std::vector<float> x1 = {1.0f, 2.0f, 3.0f, 1.0f};
-    std::vector<float> y1 = {1.0f, 1.0f, 2.0f, 2.0f};
+    std::vector<uint32_t> x1 = {1, 2, 3, 1};
+    std::vector<uint32_t> y1 = {1, 1, 2, 2};
 
-    std::vector<float> x2 = {4.0f, 5.0f, 6.0f, 4.0f};
-    std::vector<float> y2 = {3.0f, 3.0f, 4.0f, 4.0f};
+    std::vector<uint32_t> x2 = {4, 5, 6, 4};
+    std::vector<uint32_t> y2 = {3, 3, 4, 4};
 
-    std::vector<Point2D<float>> points = {
-            {10.0f, 10.0f},
-            {11.0f, 10.0f},
-            {11.0f, 11.0f},
-            {10.0f, 11.0f}
+    std::vector<Point2D<uint32_t>> points = {
+            {10, 10},
+            {11, 10},
+            {11, 11},
+            {10, 11}
     };
 
     SECTION("Adding masks at time") {
@@ -28,22 +28,22 @@ TEST_CASE("MaskData - Core functionality", "[mask][data][core]") {
         auto masks_at_0 = mask_data.getAtTime(0);
         REQUIRE(masks_at_0.size() == 1);
         REQUIRE(masks_at_0[0].size() == 4);
-        REQUIRE(masks_at_0[0][0].x == 1.0f);
-        REQUIRE(masks_at_0[0][0].y == 1.0f);
+        REQUIRE(masks_at_0[0][0].x == 1);
+        REQUIRE(masks_at_0[0][0].y == 1);
 
         // Add second mask at time 0
         mask_data.addAtTime(0, x2, y2);
         masks_at_0 = mask_data.getAtTime(0);
         REQUIRE(masks_at_0.size() == 2);
         REQUIRE(masks_at_0[1].size() == 4);
-        REQUIRE(masks_at_0[1][0].x == 4.0f);
+        REQUIRE(masks_at_0[1][0].x == 4);
 
         // Add mask at new time 10
         mask_data.addAtTime(10, points);
         auto masks_at_10 = mask_data.getAtTime(10);
         REQUIRE(masks_at_10.size() == 1);
         REQUIRE(masks_at_10[0].size() == 4);
-        REQUIRE(masks_at_10[0][0].x == 10.0f);
+        REQUIRE(masks_at_10[0][0].x == 10);
     }
 
     SECTION("Clearing masks at time") {
@@ -101,8 +101,8 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
     MaskData mask_data;
 
     // Setup some test data
-    std::vector<float> x1 = {1.0f, 2.0f, 3.0f, 1.0f};
-    std::vector<float> y1 = {1.0f, 1.0f, 2.0f, 2.0f};
+    std::vector<uint32_t> x1 = {1, 2, 3, 1};
+    std::vector<uint32_t> y1 = {1, 1, 2, 2};
 
     int notification_count = 0;
     int observer_id = mask_data.addObserver([&notification_count]() {
@@ -137,7 +137,7 @@ TEST_CASE("MaskData - Observer notification", "[mask][data][observer]") {
         REQUIRE(notification_count == 1);  // Still 1, not incremented
 
         // Add using point vector with notification
-        std::vector<Point2D<float>> points = {{1.0f, 1.0f}, {2.0f, 2.0f}};
+        std::vector<Point2D<uint32_t>> points = {{1, 1}, {2, 2}};
         mask_data.addAtTime(1, points);
         REQUIRE(notification_count == 2);
 
@@ -168,8 +168,8 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
     }
 
     SECTION("Adding masks with empty point vectors") {
-        std::vector<float> empty_x;
-        std::vector<float> empty_y;
+        std::vector<uint32_t> empty_x;
+        std::vector<uint32_t> empty_y;
 
         // This shouldn't crash
         mask_data.addAtTime(0, empty_x, empty_y);
@@ -215,7 +215,7 @@ TEST_CASE("MaskData - Edge cases and error handling", "[mask][data][error]") {
 
     SECTION("Multiple operations sequence") {
         // Add, clear, add again to test internal state consistency
-        std::vector<Point2D<float>> points = {{1.0f, 1.0f}, {2.0f, 2.0f}};
+        std::vector<Point2D<uint32_t>> points = {{1, 1}, {2, 2}};
 
         mask_data.addAtTime(5, points);
         mask_data.clearAtTime(5);
@@ -232,14 +232,14 @@ TEST_CASE("MaskData - Copy and Move operations", "[mask][data][copy][move]") {
     MaskData target_data;
 
     // Setup test data
-    std::vector<float> x1 = {1.0f, 2.0f, 3.0f, 1.0f};
-    std::vector<float> y1 = {1.0f, 1.0f, 2.0f, 2.0f};
+    std::vector<uint32_t> x1 = {1, 2, 3, 1};
+    std::vector<uint32_t> y1 = {1, 1, 2, 2};
     
-    std::vector<float> x2 = {4.0f, 5.0f, 6.0f, 4.0f};
-    std::vector<float> y2 = {3.0f, 3.0f, 4.0f, 4.0f};
+    std::vector<uint32_t> x2 = {4, 5, 6, 4};
+    std::vector<uint32_t> y2 = {3, 3, 4, 4};
     
-    std::vector<Point2D<float>> points1 = {{10.0f, 10.0f}, {11.0f, 10.0f}, {11.0f, 11.0f}};
-    std::vector<Point2D<float>> points2 = {{20.0f, 20.0f}, {21.0f, 20.0f}};
+    std::vector<Point2D<uint32_t>> points1 = {{10, 10}, {11, 10}, {11, 11}};
+    std::vector<Point2D<uint32_t>> points2 = {{20, 20}, {21, 20}};
 
     source_data.addAtTime(10, x1, y1);
     source_data.addAtTime(10, x2, y2);  // Second mask at same time
@@ -381,7 +381,7 @@ TEST_CASE("MaskData - Copy and Move operations", "[mask][data][copy][move]") {
 
     SECTION("Copy/Move to target with existing data") {
         // Add some existing data to target
-        std::vector<Point2D<float>> existing_mask = {{100.0f, 200.0f}};
+        std::vector<Point2D<uint32_t>> existing_mask = {{100, 200}};
         target_data.addAtTime(10, existing_mask);
 
         SECTION("Copy to existing time adds masks") {

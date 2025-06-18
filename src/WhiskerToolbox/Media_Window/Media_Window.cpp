@@ -739,14 +739,14 @@ void Media_Window::_plotMaskData() {
             for (auto const & single_mask: maskData) {
                 if (!single_mask.empty()) {
                     auto bounding_box = get_bounding_box(single_mask);
-                    Point2D<float> min_point = bounding_box.first;
-                    Point2D<float> max_point = bounding_box.second;
+                    auto min_point = bounding_box.first;
+                    auto max_point = bounding_box.second;
 
                     // Scale coordinates to canvas using mask image size
-                    float min_x = min_point.x * xAspect;
-                    float min_y = min_point.y * yAspect;
-                    float max_x = max_point.x * xAspect;
-                    float max_y = max_point.y * yAspect;
+                    float min_x = static_cast<float>(min_point.x) * xAspect;
+                    float min_y = static_cast<float>(min_point.y) * yAspect;
+                    float max_x = static_cast<float>(max_point.x) * xAspect;
+                    float max_y = static_cast<float>(max_point.y) * yAspect;
 
                     // Draw bounding box rectangle (no fill, just outline)
                     QPen boundingBoxPen(plot_color);
@@ -763,14 +763,14 @@ void Media_Window::_plotMaskData() {
             for (auto const & single_mask: maskData2) {
                 if (!single_mask.empty()) {
                     auto bounding_box = get_bounding_box(single_mask);
-                    Point2D<float> min_point = bounding_box.first;
-                    Point2D<float> max_point = bounding_box.second;
+                    auto min_point = bounding_box.first;
+                    auto max_point = bounding_box.second;
 
                     // Scale coordinates to canvas using mask image size
-                    float min_x = min_point.x * xAspect;
-                    float min_y = min_point.y * yAspect;
-                    float max_x = max_point.x * xAspect;
-                    float max_y = max_point.y * yAspect;
+                    float min_x = static_cast<float>(min_point.x) * xAspect;
+                    float min_y = static_cast<float>(min_point.y) * yAspect;
+                    float max_x = static_cast<float>(max_point.x) * xAspect;
+                    float max_y = static_cast<float>(max_point.y) * yAspect;
 
                     // Draw bounding box rectangle (no fill, just outline)
                     QPen boundingBoxPen(plot_color);
@@ -799,14 +799,14 @@ void Media_Window::_plotMaskData() {
                         QPainterPath outlinePath;
 
                         // Move to the first point (scaled using mask image size)
-                        float first_x = outline_points[0].x * xAspect;
-                        float first_y = outline_points[0].y * yAspect;
+                        float first_x = static_cast<float>(outline_points[0].x) * xAspect;
+                        float first_y = static_cast<float>(outline_points[0].y) * yAspect;
                         outlinePath.moveTo(first_x, first_y);
 
                         // Connect to all other points (scaled using mask image size)
                         for (size_t i = 1; i < outline_points.size(); ++i) {
-                            float x = outline_points[i].x * xAspect;
-                            float y = outline_points[i].y * yAspect;
+                            float x = static_cast<float>(outline_points[i].x) * xAspect;
+                            float y = static_cast<float>(outline_points[i].y) * yAspect;
                             outlinePath.lineTo(x, y);
                         }
 
@@ -832,14 +832,14 @@ void Media_Window::_plotMaskData() {
                         QPainterPath outlinePath;
 
                         // Move to the first point (scaled using mask image size)
-                        float first_x = outline_points[0].x * xAspect;
-                        float first_y = outline_points[0].y * yAspect;
+                        float first_x = static_cast<float>(outline_points[0].x) * xAspect;
+                        float first_y = static_cast<float>(outline_points[0].y) * yAspect;
                         outlinePath.moveTo(first_x, first_y);
 
                         // Connect to all other points (scaled using mask image size)
                         for (size_t i = 1; i < outline_points.size(); ++i) {
-                            float x = outline_points[i].x * xAspect;
-                            float y = outline_points[i].y * yAspect;
+                            float x = static_cast<float>(outline_points[i].x) * xAspect;
+                            float y = static_cast<float>(outline_points[i].y) * yAspect;
                             outlinePath.lineTo(x, y);
                         }
 
@@ -868,7 +868,7 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, Ima
 
         for (auto const point: single_mask) {
             unscaled_mask_image.setPixel(
-                    QPoint(std::lround(point.x), std::lround(point.y)),
+                    QPoint(static_cast<int>(point.x), static_cast<int>(point.y)),
                     plot_color);
         }
 
@@ -1341,7 +1341,7 @@ std::vector<Mask2D> Media_Window::getPreviewMaskData(std::string const & mask_ke
 }
 
 void Media_Window::setPreviewMaskData(std::string const & mask_key,
-                                      std::vector<std::vector<Point2D<float>>> const & preview_data,
+                                      std::vector<std::vector<Point2D<uint32_t>>> const & preview_data,
                                       bool active) {
     if (active) {
         _preview_mask_data[mask_key] = preview_data;

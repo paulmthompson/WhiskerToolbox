@@ -113,7 +113,7 @@ Mask2D SCM::process_frame(std::vector<uint8_t>& image, ImageSize const image_siz
     if (_memory.empty())
     {
         std::cout << "Currently no frames in memory. Please select some" << std::endl;
-        return std::vector<Point2D<float>>{};
+        return std::vector<Point2D<uint32_t>>{};
     }
 
     auto image_tensor = convert_image_vec_to_tensor(image, image_size);

@@ -75,8 +75,8 @@ std::shared_ptr<MaskData> skeletonize_mask(
             
             // Convert mask points to binary image
             for (auto const & point : mask) {
-                int x = static_cast<int>(std::round(point.x));
-                int y = static_cast<int>(std::round(point.y));
+                int x = static_cast<int>(point.x);
+                int y = static_cast<int>(point.y);
                 
                 // Check bounds
                 if (x >= 0 && x < image_size.width && 
@@ -89,11 +89,11 @@ std::shared_ptr<MaskData> skeletonize_mask(
             auto skeleton = fast_skeletonize(binary_image, image_size.height, image_size.width);
             
             // Convert skeleton back to mask points
-            std::vector<Point2D<float>> skeleton_points;
+            std::vector<Point2D<uint32_t>> skeleton_points;
             for (int y = 0; y < image_size.height; ++y) {
                 for (int x = 0; x < image_size.width; ++x) {
                     if (skeleton[y * image_size.width + x] > 0) {
-                        skeleton_points.push_back({static_cast<float>(x), static_cast<float>(y)});
+                        skeleton_points.push_back({static_cast<uint32_t>(x), static_cast<uint32_t>(y)});
                     }
                 }
             }

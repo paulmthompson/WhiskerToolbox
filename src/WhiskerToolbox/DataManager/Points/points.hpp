@@ -1,6 +1,8 @@
 #ifndef DATAMANGER_POINTS_HPP
 #define DATAMANGER_POINTS_HPP
 
+#include <cstdint>
+
 template<typename T>
 struct Point2D {
     T x;
@@ -12,5 +14,6 @@ struct Point2D {
 };
 
 extern template struct Point2D<float>;
+extern template struct Point2D<uint32_t>;
 
 #endif // DATAMANGER_POINTS_HPP

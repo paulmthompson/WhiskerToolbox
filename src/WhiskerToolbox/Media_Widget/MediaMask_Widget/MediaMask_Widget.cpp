@@ -293,7 +293,7 @@ void MediaMask_Widget::_applyMaskDilation(MaskDilationOptions const & options) {
     auto const & original_masks = _original_mask_data[_active_key];
 
     // Apply dilation to each mask at current time
-    std::vector<std::vector<Point2D<float>>> dilated_masks;
+    std::vector<std::vector<Point2D<uint32_t>>> dilated_masks;
     auto image_size = mask_data->getImageSize();
 
     for (auto const & single_mask: original_masks) {
@@ -433,7 +433,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     auto const & existing_masks = mask_data->getAtTime(current_time);
 
     // Get or create the primary mask (index 0)
-    std::vector<Point2D<float>> primary_mask;
+    std::vector<Point2D<uint32_t>> primary_mask;
     if (!existing_masks.empty()) {
         primary_mask = existing_masks[0];// Copy the existing mask at index 0
     }
@@ -442,15 +442,15 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     // Create a set of existing pixels in the primary mask for fast lookup
     std::set<std::pair<int, int>> existing_pixel_set;
     for (auto const & point: primary_mask) {
-        existing_pixel_set.insert({static_cast<int>(std::round(point.x)),
-                                   static_cast<int>(std::round(point.y))});
+        existing_pixel_set.insert({static_cast<int>(point.x),
+                                   static_cast<int>(point.y)});
     }
 
     // Add new pixels that don't already exist in the primary mask
     int added_count = 0;
     for (auto const & pixel: brush_pixels) {
-        std::pair<int, int> pixel_key = {static_cast<int>(std::round(pixel.x)),
-                                         static_cast<int>(std::round(pixel.y))};
+        std::pair<int, int> pixel_key = {static_cast<int>(pixel.x),
+                                         static_cast<int>(pixel.y)};
         if (existing_pixel_set.find(pixel_key) == existing_pixel_set.end()) {
             primary_mask.push_back(pixel);
             existing_pixel_set.insert(pixel_key);// Update set to avoid adding duplicates within this operation
@@ -534,7 +534,7 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
 
     // Work with the primary mask (index 0)
     auto const & primary_mask = existing_masks[0];
-    std::vector<Point2D<float>> filtered_mask;
+    std::vector<Point2D<uint32_t>> filtered_mask;
     int removed_count = 0;
 
     // Filter out pixels within brush radius from the primary mask

@@ -11,50 +11,50 @@ TEST_CASE("Mask utility functions", "[masks][utilities]") {
     SECTION("get_bounding_box basic functionality") {
         // Create a simple rectangular mask
         Mask2D mask = {
-                {1.0f, 1.0f},
-                {3.0f, 1.0f},
-                {3.0f, 4.0f},
-                {1.0f, 4.0f}};
+                {1, 1},
+                {3, 1},
+                {3, 4},
+                {1, 4}};
 
         auto bounding_box = get_bounding_box(mask);
-        Point2D<float> min_point = bounding_box.first;
-        Point2D<float> max_point = bounding_box.second;
+        Point2D<uint32_t> min_point = bounding_box.first;
+        Point2D<uint32_t> max_point = bounding_box.second;
 
-        REQUIRE(min_point.x == 1.0f);
-        REQUIRE(min_point.y == 1.0f);
-        REQUIRE(max_point.x == 3.0f);
-        REQUIRE(max_point.y == 4.0f);
+        REQUIRE(min_point.x == 1);
+        REQUIRE(min_point.y == 1);
+        REQUIRE(max_point.x == 3);
+        REQUIRE(max_point.y == 4);
     }
 
     SECTION("get_bounding_box with single point") {
-        Mask2D mask = {{5.0f, 7.0f}};
+        Mask2D mask = {{5, 7}};
 
         auto bounding_box = get_bounding_box(mask);
-        Point2D<float> min_point = bounding_box.first;
-        Point2D<float> max_point = bounding_box.second;
+        Point2D<uint32_t> min_point = bounding_box.first;
+        Point2D<uint32_t> max_point = bounding_box.second;
 
-        REQUIRE(min_point.x == 5.0f);
-        REQUIRE(min_point.y == 7.0f);
-        REQUIRE(max_point.x == 5.0f);
-        REQUIRE(max_point.y == 7.0f);
+        REQUIRE(min_point.x == 5);
+        REQUIRE(min_point.y == 7);
+        REQUIRE(max_point.x == 5);
+        REQUIRE(max_point.y == 7);
     }
 
     SECTION("get_bounding_box with irregular mask") {
-        // Create an irregular shaped mask
+        // Create an irregular shaped mask (note: uint32_t can't be negative, so we use larger values)
         Mask2D mask = {
-                {0.0f, 2.0f},
-                {5.0f, 1.0f},
-                {3.0f, 8.0f},
-                {-2.0f, 4.0f}};
+                {2, 2},
+                {5, 1},
+                {3, 8},
+                {0, 4}};
 
         auto bounding_box = get_bounding_box(mask);
-        Point2D<float> min_point = bounding_box.first;
-        Point2D<float> max_point = bounding_box.second;
+        Point2D<uint32_t> min_point = bounding_box.first;
+        Point2D<uint32_t> max_point = bounding_box.second;
 
-        REQUIRE(min_point.x == -2.0f);
-        REQUIRE(min_point.y == 1.0f);
-        REQUIRE(max_point.x == 5.0f);
-        REQUIRE(max_point.y == 8.0f);
+        REQUIRE(min_point.x == 0);
+        REQUIRE(min_point.y == 1);
+        REQUIRE(max_point.x == 5);
+        REQUIRE(max_point.y == 8);
     }
 }
 
@@ -67,12 +67,12 @@ TEST_CASE("create_mask utility function", "[masks][create]") {
         auto mask = create_mask(x, y);
 
         REQUIRE(mask.size() == 3);
-        REQUIRE(mask[0].x == 1.0f);
-        REQUIRE(mask[0].y == 4.0f);
-        REQUIRE(mask[1].x == 2.0f);
-        REQUIRE(mask[1].y == 5.0f);
-        REQUIRE(mask[2].x == 3.0f);
-        REQUIRE(mask[2].y == 6.0f);
+        REQUIRE(mask[0].x == 1);
+        REQUIRE(mask[0].y == 4);
+        REQUIRE(mask[1].x == 2);
+        REQUIRE(mask[1].y == 5);
+        REQUIRE(mask[2].x == 3);
+        REQUIRE(mask[2].y == 6);
     }
 
     SECTION("create_mask with move semantics") {
@@ -82,10 +82,40 @@ TEST_CASE("create_mask utility function", "[masks][create]") {
         auto mask = create_mask(std::move(x), std::move(y));
 
         REQUIRE(mask.size() == 2);
-        REQUIRE(mask[0].x == 10.0f);
-        REQUIRE(mask[0].y == 30.0f);
-        REQUIRE(mask[1].x == 20.0f);
-        REQUIRE(mask[1].y == 40.0f);
+        REQUIRE(mask[0].x == 10);
+        REQUIRE(mask[0].y == 30);
+        REQUIRE(mask[1].x == 20);
+        REQUIRE(mask[1].y == 40);
+    }
+
+    SECTION("create_mask with rounding") {
+        std::vector<float> x = {1.4f, 2.6f, 3.1f};
+        std::vector<float> y = {4.7f, 5.2f, 6.9f};
+
+        auto mask = create_mask(x, y);
+
+        REQUIRE(mask.size() == 3);
+        REQUIRE(mask[0].x == 1);  // 1.4 rounds to 1
+        REQUIRE(mask[0].y == 5);  // 4.7 rounds to 5
+        REQUIRE(mask[1].x == 3);  // 2.6 rounds to 3
+        REQUIRE(mask[1].y == 5);  // 5.2 rounds to 5
+        REQUIRE(mask[2].x == 3);  // 3.1 rounds to 3
+        REQUIRE(mask[2].y == 7);  // 6.9 rounds to 7
+    }
+
+    SECTION("create_mask with negative values") {
+        std::vector<float> x = {-1.0f, 2.0f, 3.0f};
+        std::vector<float> y = {4.0f, -5.0f, 6.0f};
+
+        auto mask = create_mask(x, y);
+
+        REQUIRE(mask.size() == 3);
+        REQUIRE(mask[0].x == 0);  // -1.0 clamped to 0
+        REQUIRE(mask[0].y == 4);
+        REQUIRE(mask[1].x == 2);
+        REQUIRE(mask[1].y == 0);  // -5.0 clamped to 0
+        REQUIRE(mask[2].x == 3);
+        REQUIRE(mask[2].y == 6);
     }
 }
 
@@ -97,21 +127,21 @@ TEST_CASE("get_mask_outline function", "[masks][outline]") {
     }
 
     SECTION("Single point mask returns empty outline") {
-        Mask2D single_point_mask = {{5.0f, 5.0f}};
+        Mask2D single_point_mask = {{5, 5}};
         auto outline = get_mask_outline(single_point_mask);
         REQUIRE(outline.empty());
     }
 
     SECTION("Two point mask returns both points") {
-        Mask2D two_point_mask = {{1.0f, 1.0f}, {3.0f, 3.0f}};
+        Mask2D two_point_mask = {{1, 1}, {3, 3}};
         auto outline = get_mask_outline(two_point_mask);
         REQUIRE(outline.size() == 2);
 
         // Should contain both points
         bool found_1_1 = false, found_3_3 = false;
         for (auto const & point: outline) {
-            if (point.x == 1.0f && point.y == 1.0f) found_1_1 = true;
-            if (point.x == 3.0f && point.y == 3.0f) found_3_3 = true;
+            if (point.x == 1 && point.y == 1) found_1_1 = true;
+            if (point.x == 3 && point.y == 3) found_3_3 = true;
         }
         REQUIRE(found_1_1);
         REQUIRE(found_3_3);
@@ -120,8 +150,8 @@ TEST_CASE("get_mask_outline function", "[masks][outline]") {
     SECTION("Rectangular mask outline") {
         // Create a filled rectangle mask
         Mask2D rect_mask;
-        for (float x = 1.0f; x <= 5.0f; x += 1.0f) {
-            for (float y = 2.0f; y <= 4.0f; y += 1.0f) {
+        for (uint32_t x = 1; x <= 5; x += 1) {
+            for (uint32_t y = 2; y <= 4; y += 1) {
                 rect_mask.push_back({x, y});
             }
         }
@@ -138,10 +168,10 @@ TEST_CASE("get_mask_outline function", "[masks][outline]") {
         bool found_min_x_max_y = false;// (1, 4)
 
         for (auto const & point: outline) {
-            if (point.x == 5.0f && point.y == 2.0f) found_max_x_min_y = true;
-            if (point.x == 5.0f && point.y == 4.0f) found_max_x_max_y = true;
-            if (point.x == 1.0f && point.y == 2.0f) found_min_x_min_y = true;
-            if (point.x == 1.0f && point.y == 4.0f) found_min_x_max_y = true;
+            if (point.x == 5 && point.y == 2) found_max_x_min_y = true;
+            if (point.x == 5 && point.y == 4) found_max_x_max_y = true;
+            if (point.x == 1 && point.y == 2) found_min_x_min_y = true;
+            if (point.x == 1 && point.y == 4) found_min_x_max_y = true;
         }
 
         REQUIRE(found_max_x_min_y);
@@ -156,12 +186,12 @@ TEST_CASE("get_mask_outline function", "[masks][outline]") {
         // (1,2)
         // (1,1) (2,1) (3,1)
         Mask2D l_mask = {
-                {1.0f, 3.0f},
-                {2.0f, 3.0f},
-                {1.0f, 2.0f},
-                {1.0f, 1.0f},
-                {2.0f, 1.0f},
-                {3.0f, 1.0f}};
+                {1, 3},
+                {2, 3},
+                {1, 2},
+                {1, 1},
+                {2, 1},
+                {3, 1}};
 
         auto outline = get_mask_outline(l_mask);
 
@@ -178,9 +208,9 @@ TEST_CASE("get_mask_outline function", "[masks][outline]") {
         bool found_2_3 = false;
 
         for (auto const & point: outline) {
-            if (point.x == 3.0f && point.y == 1.0f) found_3_1 = true;
-            if (point.x == 1.0f && point.y == 3.0f) found_1_3 = true;
-            if (point.x == 2.0f && point.y == 3.0f) found_2_3 = true;
+            if (point.x == 3 && point.y == 1) found_3_1 = true;
+            if (point.x == 1 && point.y == 3) found_1_3 = true;
+            if (point.x == 2 && point.y == 3) found_2_3 = true;
         }
 
         REQUIRE(found_3_1);
@@ -200,7 +230,7 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
         // Check that center point is included
         bool found_center = false;
         for (auto const & pixel: pixels) {
-            if (pixel.x == 5.0f && pixel.y == 5.0f) {
+            if (pixel.x == 5 && pixel.y == 5) {
                 found_center = true;
                 break;
             }
@@ -209,8 +239,8 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
 
         // All pixels should be within distance 1 from center
         for (auto const & pixel: pixels) {
-            float dx = pixel.x - 5.0f;
-            float dy = pixel.y - 5.0f;
+            float dx = static_cast<float>(pixel.x) - 5.0f;
+            float dy = static_cast<float>(pixel.y) - 5.0f;
             float distance = std::sqrt(dx * dx + dy * dy);
             REQUIRE(distance <= 1.01f);// Small tolerance for floating point
         }
@@ -224,8 +254,8 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
 
         // All pixels should be within distance 2 from center
         for (auto const & pixel: pixels) {
-            float dx = pixel.x - 10.0f;
-            float dy = pixel.y - 10.0f;
+            float dx = static_cast<float>(pixel.x) - 10.0f;
+            float dy = static_cast<float>(pixel.y) - 10.0f;
             float distance = std::sqrt(dx * dx + dy * dy);
             REQUIRE(distance <= 2.01f);// Small tolerance for floating point
         }
@@ -233,10 +263,10 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
         // Should include pixels at approximately (8,10), (12,10), (10,8), (10,12)
         bool found_left = false, found_right = false, found_top = false, found_bottom = false;
         for (auto const & pixel: pixels) {
-            if (std::abs(pixel.x - 8.0f) < 0.1f && std::abs(pixel.y - 10.0f) < 0.1f) found_left = true;
-            if (std::abs(pixel.x - 12.0f) < 0.1f && std::abs(pixel.y - 10.0f) < 0.1f) found_right = true;
-            if (std::abs(pixel.x - 10.0f) < 0.1f && std::abs(pixel.y - 8.0f) < 0.1f) found_top = true;
-            if (std::abs(pixel.x - 10.0f) < 0.1f && std::abs(pixel.y - 12.0f) < 0.1f) found_bottom = true;
+            if (pixel.x == 8 && pixel.y == 10) found_left = true;
+            if (pixel.x == 12 && pixel.y == 10) found_right = true;
+            if (pixel.x == 10 && pixel.y == 8) found_top = true;
+            if (pixel.x == 10 && pixel.y == 12) found_bottom = true;
         }
         REQUIRE(found_left);
         REQUIRE(found_right);
@@ -252,8 +282,8 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
 
         // All pixels should satisfy ellipse equation: (dx/3)² + (dy/1)² ≤ 1
         for (auto const & pixel: pixels) {
-            float dx = pixel.x - 5.0f;
-            float dy = pixel.y - 5.0f;
+            float dx = static_cast<float>(pixel.x) - 5.0f;
+            float dy = static_cast<float>(pixel.y) - 5.0f;
             float ellipse_value = (dx / 3.0f) * (dx / 3.0f) + (dy / 1.0f) * (dy / 1.0f);
             REQUIRE(ellipse_value <= 1.01f);// Small tolerance
         }
@@ -261,8 +291,8 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
         // Should include pixels farther in X direction than Y direction
         bool found_far_x = false, found_far_y = false;
         for (auto const & pixel: pixels) {
-            if (std::abs(pixel.x - 8.0f) < 0.1f && std::abs(pixel.y - 5.0f) < 0.1f) found_far_x = true;
-            if (std::abs(pixel.x - 5.0f) < 0.1f && std::abs(pixel.y - 4.0f) < 0.1f) found_far_y = true;
+            if (pixel.x == 8 && pixel.y == 5) found_far_x = true;
+            if (pixel.x == 5 && pixel.y == 4) found_far_y = true;
         }
         REQUIRE(found_far_x);// Should reach to x=8 (3 units away)
         REQUIRE(found_far_y);// Should reach to y=4 (1 unit away)
@@ -274,7 +304,7 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
         // Should include origin
         bool found_origin = false;
         for (auto const & pixel: pixels) {
-            if (pixel.x == 0.0f && pixel.y == 0.0f) {
+            if (pixel.x == 0 && pixel.y == 0) {
                 found_origin = true;
                 break;
             }
@@ -283,8 +313,8 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
 
         // All pixels should have non-negative coordinates (bounds checking)
         for (auto const & pixel: pixels) {
-            REQUIRE(pixel.x >= 0.0f);
-            REQUIRE(pixel.y >= 0.0f);
+            REQUIRE(pixel.x >= 0);
+            REQUIRE(pixel.y >= 0);
         }
     }
 
@@ -294,14 +324,14 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
 
         // All returned pixels should have non-negative coordinates
         for (auto const & pixel: pixels) {
-            REQUIRE(pixel.x >= 0.0f);
-            REQUIRE(pixel.y >= 0.0f);
+            REQUIRE(pixel.x >= 0);
+            REQUIRE(pixel.y >= 0);
         }
 
         // Should still include the center
         bool found_center = false;
         for (auto const & pixel: pixels) {
-            if (pixel.x == 1.0f && pixel.y == 1.0f) {
+            if (pixel.x == 1 && pixel.y == 1) {
                 found_center = true;
                 break;
             }
@@ -320,7 +350,7 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
 
         bool found_center = false;
         for (auto const & pixel: pixels) {
-            if (pixel.x == 10.0f && pixel.y == 10.0f) {
+            if (pixel.x == 10 && pixel.y == 10) {
                 found_center = true;
                 break;
             }
@@ -339,7 +369,7 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
             // If any pixels returned, center should be included
             bool found_center = false;
             for (auto const & pixel: pixels) {
-                if (pixel.x == 5.0f && pixel.y == 5.0f) {
+                if (pixel.x == 5 && pixel.y == 5) {
                     found_center = true;
                     break;
                 }
@@ -352,8 +382,8 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
 TEST_CASE("combine_masks function", "[masks][combination]") {
 
     SECTION("Combine two non-overlapping masks") {
-        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}};
-        Mask2D mask2 = {{3.0f, 3.0f}, {4.0f, 4.0f}};
+        Mask2D mask1 = {{1, 1}, {2, 2}};
+        Mask2D mask2 = {{3, 3}, {4, 4}};
 
         auto combined = combine_masks(mask1, mask2);
 
@@ -362,10 +392,10 @@ TEST_CASE("combine_masks function", "[masks][combination]") {
         // Should contain all original points
         bool found_1_1 = false, found_2_2 = false, found_3_3 = false, found_4_4 = false;
         for (auto const & point : combined) {
-            if (point.x == 1.0f && point.y == 1.0f) found_1_1 = true;
-            if (point.x == 2.0f && point.y == 2.0f) found_2_2 = true;
-            if (point.x == 3.0f && point.y == 3.0f) found_3_3 = true;
-            if (point.x == 4.0f && point.y == 4.0f) found_4_4 = true;
+            if (point.x == 1 && point.y == 1) found_1_1 = true;
+            if (point.x == 2 && point.y == 2) found_2_2 = true;
+            if (point.x == 3 && point.y == 3) found_3_3 = true;
+            if (point.x == 4 && point.y == 4) found_4_4 = true;
         }
         REQUIRE(found_1_1);
         REQUIRE(found_2_2);
@@ -374,8 +404,8 @@ TEST_CASE("combine_masks function", "[masks][combination]") {
     }
 
     SECTION("Combine masks with exact duplicates") {
-        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}};
-        Mask2D mask2 = {{2.0f, 2.0f}, {3.0f, 3.0f}, {4.0f, 4.0f}};
+        Mask2D mask1 = {{1, 1}, {2, 2}, {3, 3}};
+        Mask2D mask2 = {{2, 2}, {3, 3}, {4, 4}};
 
         auto combined = combine_masks(mask1, mask2);
 
@@ -384,10 +414,10 @@ TEST_CASE("combine_masks function", "[masks][combination]") {
 
         bool found_1_1 = false, found_2_2 = false, found_3_3 = false, found_4_4 = false;
         for (auto const & point : combined) {
-            if (point.x == 1.0f && point.y == 1.0f) found_1_1 = true;
-            if (point.x == 2.0f && point.y == 2.0f) found_2_2 = true;
-            if (point.x == 3.0f && point.y == 3.0f) found_3_3 = true;
-            if (point.x == 4.0f && point.y == 4.0f) found_4_4 = true;
+            if (point.x == 1 && point.y == 1) found_1_1 = true;
+            if (point.x == 2 && point.y == 2) found_2_2 = true;
+            if (point.x == 3 && point.y == 3) found_3_3 = true;
+            if (point.x == 4 && point.y == 4) found_4_4 = true;
         }
         REQUIRE(found_1_1);
         REQUIRE(found_2_2);
@@ -395,18 +425,8 @@ TEST_CASE("combine_masks function", "[masks][combination]") {
         REQUIRE(found_4_4);
     }
 
-    SECTION("Combine masks with near-duplicate pixels (rounding)") {
-        Mask2D mask1 = {{1.0f, 1.0f}, {2.1f, 2.1f}};
-        Mask2D mask2 = {{1.1f, 0.9f}, {2.0f, 2.0f}};  // Should round to (1,1) and (2,2)
-
-        auto combined = combine_masks(mask1, mask2);
-
-        // Should have 2 unique pixels after rounding: (1,1) and (2,2)
-        REQUIRE(combined.size() == 2);
-    }
-
     SECTION("Combine with empty masks") {
-        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}};
+        Mask2D mask1 = {{1, 1}, {2, 2}};
         Mask2D empty_mask = {};
 
         auto combined1 = combine_masks(mask1, empty_mask);
@@ -414,11 +434,10 @@ TEST_CASE("combine_masks function", "[masks][combination]") {
 
         REQUIRE(combined1.size() == 2);
         REQUIRE(combined2.size() == 2);
-
     }
 
     SECTION("Combine identical masks") {
-        Mask2D mask = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}};
+        Mask2D mask = {{1, 1}, {2, 2}, {3, 3}};
 
         auto combined = combine_masks(mask, mask);
 
@@ -430,8 +449,8 @@ TEST_CASE("combine_masks function", "[masks][combination]") {
 TEST_CASE("subtract_masks function", "[masks][subtraction]") {
 
     SECTION("Subtract non-overlapping masks") {
-        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}};
-        Mask2D mask2 = {{4.0f, 4.0f}, {5.0f, 5.0f}};
+        Mask2D mask1 = {{1, 1}, {2, 2}, {3, 3}};
+        Mask2D mask2 = {{4, 4}, {5, 5}};
 
         auto result = subtract_masks(mask1, mask2);
 
@@ -440,9 +459,9 @@ TEST_CASE("subtract_masks function", "[masks][subtraction]") {
 
         bool found_1_1 = false, found_2_2 = false, found_3_3 = false;
         for (auto const & point : result) {
-            if (point.x == 1.0f && point.y == 1.0f) found_1_1 = true;
-            if (point.x == 2.0f && point.y == 2.0f) found_2_2 = true;
-            if (point.x == 3.0f && point.y == 3.0f) found_3_3 = true;
+            if (point.x == 1 && point.y == 1) found_1_1 = true;
+            if (point.x == 2 && point.y == 2) found_2_2 = true;
+            if (point.x == 3 && point.y == 3) found_3_3 = true;
         }
         REQUIRE(found_1_1);
         REQUIRE(found_2_2);
@@ -450,8 +469,8 @@ TEST_CASE("subtract_masks function", "[masks][subtraction]") {
     }
 
     SECTION("Subtract overlapping masks") {
-        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}, {4.0f, 4.0f}};
-        Mask2D mask2 = {{2.0f, 2.0f}, {4.0f, 4.0f}};
+        Mask2D mask1 = {{1, 1}, {2, 2}, {3, 3}, {4, 4}};
+        Mask2D mask2 = {{2, 2}, {4, 4}};
 
         auto result = subtract_masks(mask1, mask2);
 
@@ -460,47 +479,35 @@ TEST_CASE("subtract_masks function", "[masks][subtraction]") {
 
         bool found_1_1 = false, found_3_3 = false;
         for (auto const & point : result) {
-            if (point.x == 1.0f && point.y == 1.0f) found_1_1 = true;
-            if (point.x == 3.0f && point.y == 3.0f) found_3_3 = true;
+            if (point.x == 1 && point.y == 1) found_1_1 = true;
+            if (point.x == 3 && point.y == 3) found_3_3 = true;
             // Should not find (2,2) or (4,4)
-            REQUIRE_FALSE(point.x == 2.0f);
-            REQUIRE_FALSE(point.y == 2.0f);
-            REQUIRE_FALSE(point.x == 4.0f);
-            REQUIRE_FALSE(point.y == 4.0f);
+            REQUIRE_FALSE(point.x == 2);
+            REQUIRE_FALSE(point.y == 2);
+            REQUIRE_FALSE(point.x == 4);
+            REQUIRE_FALSE(point.y == 4);
         }
         REQUIRE(found_1_1);
         REQUIRE(found_3_3);
     }
 
-    SECTION("Subtract masks with near-duplicate pixels (rounding)") {
-        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}};
-        Mask2D mask2 = {{1.1f, 0.9f}, {2.9f, 3.1f}};  // Should round to (1,1) and (3,3)
-
-        auto result = subtract_masks(mask1, mask2);
-
-        // Should keep only (2,2)
-        REQUIRE(result.size() == 1);
-        REQUIRE(result[0].x == 2.0f);
-        REQUIRE(result[0].y == 2.0f);
-    }
-
     SECTION("Subtract empty mask") {
-        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}};
+        Mask2D mask1 = {{1, 1}, {2, 2}};
         Mask2D empty_mask = {};
 
         auto result = subtract_masks(mask1, empty_mask);
 
         // Should keep all of mask1
         REQUIRE(result.size() == 2);
-        REQUIRE(result[0].x == 1.0f);
-        REQUIRE(result[0].y == 1.0f);
-        REQUIRE(result[1].x == 2.0f);
-        REQUIRE(result[1].y == 2.0f);
+        REQUIRE(result[0].x == 1);
+        REQUIRE(result[0].y == 1);
+        REQUIRE(result[1].x == 2);
+        REQUIRE(result[1].y == 2);
     }
 
     SECTION("Subtract from empty mask") {
         Mask2D empty_mask = {};
-        Mask2D mask2 = {{1.0f, 1.0f}, {2.0f, 2.0f}};
+        Mask2D mask2 = {{1, 1}, {2, 2}};
 
         auto result = subtract_masks(empty_mask, mask2);
 
@@ -509,7 +516,7 @@ TEST_CASE("subtract_masks function", "[masks][subtraction]") {
     }
 
     SECTION("Subtract identical masks") {
-        Mask2D mask = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}};
+        Mask2D mask = {{1, 1}, {2, 2}, {3, 3}};
 
         auto result = subtract_masks(mask, mask);
 
@@ -518,8 +525,8 @@ TEST_CASE("subtract_masks function", "[masks][subtraction]") {
     }
 
     SECTION("Subtract superset from subset") {
-        Mask2D mask1 = {{2.0f, 2.0f}, {3.0f, 3.0f}};
-        Mask2D mask2 = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}, {4.0f, 4.0f}};
+        Mask2D mask1 = {{2, 2}, {3, 3}};
+        Mask2D mask2 = {{1, 1}, {2, 2}, {3, 3}, {4, 4}};
 
         auto result = subtract_masks(mask1, mask2);
 
