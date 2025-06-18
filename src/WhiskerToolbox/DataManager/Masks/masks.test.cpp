@@ -348,3 +348,182 @@ TEST_CASE("generate_ellipse_pixels function", "[masks][ellipse]") {
         }
     }
 }
+
+TEST_CASE("combine_masks function", "[masks][combination]") {
+
+    SECTION("Combine two non-overlapping masks") {
+        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}};
+        Mask2D mask2 = {{3.0f, 3.0f}, {4.0f, 4.0f}};
+
+        auto combined = combine_masks(mask1, mask2);
+
+        REQUIRE(combined.size() == 4);
+
+        // Should contain all original points
+        bool found_1_1 = false, found_2_2 = false, found_3_3 = false, found_4_4 = false;
+        for (auto const & point : combined) {
+            if (point.x == 1.0f && point.y == 1.0f) found_1_1 = true;
+            if (point.x == 2.0f && point.y == 2.0f) found_2_2 = true;
+            if (point.x == 3.0f && point.y == 3.0f) found_3_3 = true;
+            if (point.x == 4.0f && point.y == 4.0f) found_4_4 = true;
+        }
+        REQUIRE(found_1_1);
+        REQUIRE(found_2_2);
+        REQUIRE(found_3_3);
+        REQUIRE(found_4_4);
+    }
+
+    SECTION("Combine masks with exact duplicates") {
+        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}};
+        Mask2D mask2 = {{2.0f, 2.0f}, {3.0f, 3.0f}, {4.0f, 4.0f}};
+
+        auto combined = combine_masks(mask1, mask2);
+
+        // Should have 4 unique pixels: (1,1), (2,2), (3,3), (4,4)
+        REQUIRE(combined.size() == 4);
+
+        bool found_1_1 = false, found_2_2 = false, found_3_3 = false, found_4_4 = false;
+        for (auto const & point : combined) {
+            if (point.x == 1.0f && point.y == 1.0f) found_1_1 = true;
+            if (point.x == 2.0f && point.y == 2.0f) found_2_2 = true;
+            if (point.x == 3.0f && point.y == 3.0f) found_3_3 = true;
+            if (point.x == 4.0f && point.y == 4.0f) found_4_4 = true;
+        }
+        REQUIRE(found_1_1);
+        REQUIRE(found_2_2);
+        REQUIRE(found_3_3);
+        REQUIRE(found_4_4);
+    }
+
+    SECTION("Combine masks with near-duplicate pixels (rounding)") {
+        Mask2D mask1 = {{1.0f, 1.0f}, {2.1f, 2.1f}};
+        Mask2D mask2 = {{1.1f, 0.9f}, {2.0f, 2.0f}};  // Should round to (1,1) and (2,2)
+
+        auto combined = combine_masks(mask1, mask2);
+
+        // Should have 2 unique pixels after rounding: (1,1) and (2,2)
+        REQUIRE(combined.size() == 2);
+    }
+
+    SECTION("Combine with empty masks") {
+        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}};
+        Mask2D empty_mask = {};
+
+        auto combined1 = combine_masks(mask1, empty_mask);
+        auto combined2 = combine_masks(empty_mask, mask1);
+
+        REQUIRE(combined1.size() == 2);
+        REQUIRE(combined2.size() == 2);
+
+    }
+
+    SECTION("Combine identical masks") {
+        Mask2D mask = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}};
+
+        auto combined = combine_masks(mask, mask);
+
+        // Should have same size as original (no duplicates)
+        REQUIRE(combined.size() == 3);
+    }
+}
+
+TEST_CASE("subtract_masks function", "[masks][subtraction]") {
+
+    SECTION("Subtract non-overlapping masks") {
+        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}};
+        Mask2D mask2 = {{4.0f, 4.0f}, {5.0f, 5.0f}};
+
+        auto result = subtract_masks(mask1, mask2);
+
+        // Should keep all of mask1 since no overlap
+        REQUIRE(result.size() == 3);
+
+        bool found_1_1 = false, found_2_2 = false, found_3_3 = false;
+        for (auto const & point : result) {
+            if (point.x == 1.0f && point.y == 1.0f) found_1_1 = true;
+            if (point.x == 2.0f && point.y == 2.0f) found_2_2 = true;
+            if (point.x == 3.0f && point.y == 3.0f) found_3_3 = true;
+        }
+        REQUIRE(found_1_1);
+        REQUIRE(found_2_2);
+        REQUIRE(found_3_3);
+    }
+
+    SECTION("Subtract overlapping masks") {
+        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}, {4.0f, 4.0f}};
+        Mask2D mask2 = {{2.0f, 2.0f}, {4.0f, 4.0f}};
+
+        auto result = subtract_masks(mask1, mask2);
+
+        // Should keep only (1,1) and (3,3)
+        REQUIRE(result.size() == 2);
+
+        bool found_1_1 = false, found_3_3 = false;
+        for (auto const & point : result) {
+            if (point.x == 1.0f && point.y == 1.0f) found_1_1 = true;
+            if (point.x == 3.0f && point.y == 3.0f) found_3_3 = true;
+            // Should not find (2,2) or (4,4)
+            REQUIRE_FALSE(point.x == 2.0f);
+            REQUIRE_FALSE(point.y == 2.0f);
+            REQUIRE_FALSE(point.x == 4.0f);
+            REQUIRE_FALSE(point.y == 4.0f);
+        }
+        REQUIRE(found_1_1);
+        REQUIRE(found_3_3);
+    }
+
+    SECTION("Subtract masks with near-duplicate pixels (rounding)") {
+        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}};
+        Mask2D mask2 = {{1.1f, 0.9f}, {2.9f, 3.1f}};  // Should round to (1,1) and (3,3)
+
+        auto result = subtract_masks(mask1, mask2);
+
+        // Should keep only (2,2)
+        REQUIRE(result.size() == 1);
+        REQUIRE(result[0].x == 2.0f);
+        REQUIRE(result[0].y == 2.0f);
+    }
+
+    SECTION("Subtract empty mask") {
+        Mask2D mask1 = {{1.0f, 1.0f}, {2.0f, 2.0f}};
+        Mask2D empty_mask = {};
+
+        auto result = subtract_masks(mask1, empty_mask);
+
+        // Should keep all of mask1
+        REQUIRE(result.size() == 2);
+        REQUIRE(result[0].x == 1.0f);
+        REQUIRE(result[0].y == 1.0f);
+        REQUIRE(result[1].x == 2.0f);
+        REQUIRE(result[1].y == 2.0f);
+    }
+
+    SECTION("Subtract from empty mask") {
+        Mask2D empty_mask = {};
+        Mask2D mask2 = {{1.0f, 1.0f}, {2.0f, 2.0f}};
+
+        auto result = subtract_masks(empty_mask, mask2);
+
+        // Should return empty mask
+        REQUIRE(result.empty());
+    }
+
+    SECTION("Subtract identical masks") {
+        Mask2D mask = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}};
+
+        auto result = subtract_masks(mask, mask);
+
+        // Should return empty mask
+        REQUIRE(result.empty());
+    }
+
+    SECTION("Subtract superset from subset") {
+        Mask2D mask1 = {{2.0f, 2.0f}, {3.0f, 3.0f}};
+        Mask2D mask2 = {{1.0f, 1.0f}, {2.0f, 2.0f}, {3.0f, 3.0f}, {4.0f, 4.0f}};
+
+        auto result = subtract_masks(mask1, mask2);
+
+        // Should return empty mask since all of mask1 is in mask2
+        REQUIRE(result.empty());
+    }
+}

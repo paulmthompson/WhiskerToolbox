@@ -49,6 +49,32 @@ std::vector<Point2D<float>> get_mask_outline(Mask2D const & mask);
  */
 std::vector<Point2D<float>> generate_ellipse_pixels(float center_x, float center_y, float radius_x, float radius_y);
 
+/**
+ * @brief Combine two masks using union operation (no duplicate pixels)
+ *
+ * Takes two masks and returns a new mask containing all pixels from both masks,
+ * with duplicates removed. Pixels are considered duplicates if they have the
+ * same rounded integer coordinates.
+ *
+ * @param mask1 First mask
+ * @param mask2 Second mask to union with the first
+ * @return New mask containing union of both input masks
+ */
+Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2);
+
+/**
+ * @brief Subtract mask2 from mask1 (remove intersecting pixels)
+ *
+ * Takes two masks and returns a new mask containing only pixels from mask1
+ * that are NOT present in mask2. Pixels are considered equal if they have
+ * the same rounded integer coordinates.
+ *
+ * @param mask1 Base mask to subtract from
+ * @param mask2 Mask containing pixels to remove from mask1
+ * @return New mask with mask2 pixels removed from mask1
+ */
+Mask2D subtract_masks(Mask2D const & mask1, Mask2D const & mask2);
+
 std::vector<Point2D<float>> extract_line_pixels(
         std::vector<uint8_t> const & binary_img,
         ImageSize const image_size);

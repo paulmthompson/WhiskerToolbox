@@ -163,6 +163,62 @@ std::vector<Point2D<float>> generate_ellipse_pixels(float center_x, float center
     return ellipse_pixels;
 }
 
+Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2) {
+    // Use a set to efficiently track unique pixel coordinates (rounded to integers)
+    std::set<std::pair<int, int>> unique_pixels;
+    Mask2D combined_mask;
+
+    // Add all pixels from mask1
+    for (auto const & point : mask1) {
+        int rounded_x = static_cast<int>(std::round(point.x));
+        int rounded_y = static_cast<int>(std::round(point.y));
+        std::pair<int, int> pixel_key = {rounded_x, rounded_y};
+        
+        if (unique_pixels.find(pixel_key) == unique_pixels.end()) {
+            unique_pixels.insert(pixel_key);
+            combined_mask.push_back(point);
+        }
+    }
+
+    // Add pixels from mask2 that aren't already present
+    for (auto const & point : mask2) {
+        int rounded_x = static_cast<int>(std::round(point.x));
+        int rounded_y = static_cast<int>(std::round(point.y));
+        std::pair<int, int> pixel_key = {rounded_x, rounded_y};
+        
+        if (unique_pixels.find(pixel_key) == unique_pixels.end()) {
+            unique_pixels.insert(pixel_key);
+            combined_mask.push_back(point);
+        }
+    }
+
+    return combined_mask;
+}
+
+Mask2D subtract_masks(Mask2D const & mask1, Mask2D const & mask2) {
+    // Create a set of pixels in mask2 for efficient lookup (rounded to integers)
+    std::set<std::pair<int, int>> mask2_pixels;
+    for (auto const & point : mask2) {
+        int rounded_x = static_cast<int>(std::round(point.x));
+        int rounded_y = static_cast<int>(std::round(point.y));
+        mask2_pixels.insert({rounded_x, rounded_y});
+    }
+
+    // Keep only pixels from mask1 that are NOT in mask2
+    Mask2D result_mask;
+    for (auto const & point : mask1) {
+        int rounded_x = static_cast<int>(std::round(point.x));
+        int rounded_y = static_cast<int>(std::round(point.y));
+        std::pair<int, int> pixel_key = {rounded_x, rounded_y};
+        
+        if (mask2_pixels.find(pixel_key) == mask2_pixels.end()) {
+            result_mask.push_back(point);
+        }
+    }
+
+    return result_mask;
+}
+
 std::vector<Point2D<float>> extract_line_pixels(
         std::vector<uint8_t> const & binary_img,
         ImageSize const image_size) {
