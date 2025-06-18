@@ -731,9 +731,9 @@ void Media_Window::_plotMaskData() {
 
         // Plot bounding boxes if enabled
         if (_mask_config.get()->show_bounding_box) {
-            // Calculate aspect ratios for scaling coordinates
-            auto xAspect = getXAspect();
-            auto yAspect = getYAspect();
+            // Calculate scaling factors based on mask image size, not media aspect ratio
+            float xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
+            float yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
 
             // For current time masks
             for (auto const & single_mask: maskData) {
@@ -742,7 +742,7 @@ void Media_Window::_plotMaskData() {
                     Point2D<float> min_point = bounding_box.first;
                     Point2D<float> max_point = bounding_box.second;
 
-                    // Scale coordinates to canvas
+                    // Scale coordinates to canvas using mask image size
                     float min_x = min_point.x * xAspect;
                     float min_y = min_point.y * yAspect;
                     float max_x = max_point.x * xAspect;
@@ -766,7 +766,7 @@ void Media_Window::_plotMaskData() {
                     Point2D<float> min_point = bounding_box.first;
                     Point2D<float> max_point = bounding_box.second;
 
-                    // Scale coordinates to canvas
+                    // Scale coordinates to canvas using mask image size
                     float min_x = min_point.x * xAspect;
                     float min_y = min_point.y * yAspect;
                     float max_x = max_point.x * xAspect;
@@ -786,9 +786,9 @@ void Media_Window::_plotMaskData() {
 
         // Plot outlines if enabled
         if (_mask_config.get()->show_outline) {
-            // Calculate aspect ratios for scaling coordinates
-            auto xAspect = getXAspect();
-            auto yAspect = getYAspect();
+            // Calculate scaling factors based on mask image size, not media aspect ratio
+            float xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
+            float yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
 
             // For current time masks
             for (auto const & single_mask: maskData) {
@@ -798,12 +798,12 @@ void Media_Window::_plotMaskData() {
                     if (outline_points.size() >= 2) {
                         QPainterPath outlinePath;
 
-                        // Move to the first point
+                        // Move to the first point (scaled using mask image size)
                         float first_x = outline_points[0].x * xAspect;
                         float first_y = outline_points[0].y * yAspect;
                         outlinePath.moveTo(first_x, first_y);
 
-                        // Connect to all other points
+                        // Connect to all other points (scaled using mask image size)
                         for (size_t i = 1; i < outline_points.size(); ++i) {
                             float x = outline_points[i].x * xAspect;
                             float y = outline_points[i].y * yAspect;
@@ -831,12 +831,12 @@ void Media_Window::_plotMaskData() {
                     if (outline_points.size() >= 2) {
                         QPainterPath outlinePath;
 
-                        // Move to the first point
+                        // Move to the first point (scaled using mask image size)
                         float first_x = outline_points[0].x * xAspect;
                         float first_y = outline_points[0].y * yAspect;
                         outlinePath.moveTo(first_x, first_y);
 
-                        // Connect to all other points
+                        // Connect to all other points (scaled using mask image size)
                         for (size_t i = 1; i < outline_points.size(); ++i) {
                             float x = outline_points[i].x * xAspect;
                             float y = outline_points[i].y * yAspect;
