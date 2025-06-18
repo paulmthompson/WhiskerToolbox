@@ -131,6 +131,11 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
         } else {
             emit removeFeature(QString::fromStdString(key));
         }
+        
+        // Also emit featureSelected signal to ensure the stacked widget shows the correct pane
+        // when user directly clicks the checkbox
+        _highlighted_feature = QString::fromStdString(key);
+        emit featureSelected(_highlighted_feature);
     });
 }
 
