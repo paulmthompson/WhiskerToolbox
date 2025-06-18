@@ -32,6 +32,23 @@ std::pair<Point2D<float>, Point2D<float>> get_bounding_box(Mask2D const & mask);
  */
 std::vector<Point2D<float>> get_mask_outline(Mask2D const & mask);
 
+/**
+ * @brief Generate mask pixels within an elliptical region
+ *
+ * Generates all pixels that fall within an elliptical region centered at the given point.
+ * When radius_x == radius_y, this creates a perfect circle.
+ *
+ * @param center_x X coordinate of the ellipse center
+ * @param center_y Y coordinate of the ellipse center  
+ * @param radius_x Radius in the X direction
+ * @param radius_y Radius in the Y direction
+ * @return Vector of Point2D containing all pixels within the ellipse
+ *
+ * @note Only returns pixels with non-negative coordinates
+ * @note Uses the standard ellipse equation: (dx/radius_x)² + (dy/radius_y)² ≤ 1
+ */
+std::vector<Point2D<float>> generate_ellipse_pixels(float center_x, float center_y, float radius_x, float radius_y);
+
 std::vector<Point2D<float>> extract_line_pixels(
         std::vector<uint8_t> const & binary_img,
         ImageSize const image_size);

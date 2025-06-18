@@ -4,6 +4,7 @@
 #include "Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Masks/masks.hpp"
 #include "DataManager/utils/opencv_utility.hpp"
 #include "MaskDilationWidget/MaskDilationWidget.hpp"
 #include "Media_Window/Media_Window.hpp"
@@ -424,8 +425,8 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     float x_mask = x_mask_raw;
     float y_mask = y_mask_raw;
 
-    // Generate circle of pixels
-    auto brush_pixels = _generateBrushCircle(x_mask, y_mask, brush_radius_x, brush_radius_y);
+    // Generate ellipse pixels using the new general-purpose function
+    auto brush_pixels = generate_ellipse_pixels(x_mask, y_mask, brush_radius_x, brush_radius_y);
 
     // Get current time and existing masks
     auto current_time = _data_manager->getCurrentTime();
@@ -599,32 +600,4 @@ void MediaMask_Widget::_mouseReleased() {
             std::cout << "Brush drag operation completed, canvas updated" << std::endl;
         }
     }
-}
-
-std::vector<Point2D<float>> MediaMask_Widget::_generateBrushCircle(float center_x, float center_y, float radius_x, float radius_y) {
-    std::vector<Point2D<float>> circle_pixels;
-
-    // Generate all pixels within the elliptical brush (circle when radius_x == radius_y)
-    int max_radius = static_cast<int>(std::max(radius_x, radius_y)) + 1;
-    for (int dx = -max_radius; dx <= max_radius; ++dx) {
-        for (int dy = -max_radius; dy <= max_radius; ++dy) {
-            // Check if point is within elliptical radius using ellipse equation
-            // (dx/radius_x)^2 + (dy/radius_y)^2 <= 1
-            float normalized_dx = static_cast<float>(dx) / radius_x;
-            float normalized_dy = static_cast<float>(dy) / radius_y;
-            float ellipse_distance = normalized_dx * normalized_dx + normalized_dy * normalized_dy;
-
-            if (ellipse_distance <= 1.0f) {
-                float x = center_x + static_cast<float>(dx);
-                float y = center_y + static_cast<float>(dy);
-
-                // Only add pixels that are within valid bounds (non-negative)
-                if (x >= 0.0f && y >= 0.0f) {
-                    circle_pixels.push_back({x, y});
-                }
-            }
-        }
-    }
-
-    return circle_pixels;
 }

@@ -78,7 +78,6 @@ private:
     // Brush functionality
     void _addToMask(CanvasCoordinates const & canvas_coords);
     void _removeFromMask(CanvasCoordinates const & canvas_coords);
-    std::vector<Point2D<float>> _generateBrushCircle(float center_x, float center_y, float radius_x, float radius_y);
 
 private slots:
     void _setMaskAlpha(int alpha);
