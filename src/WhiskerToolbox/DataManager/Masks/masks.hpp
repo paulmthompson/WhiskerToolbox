@@ -75,6 +75,21 @@ Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2);
  */
 Mask2D subtract_masks(Mask2D const & mask1, Mask2D const & mask2);
 
+/**
+ * @brief Generate an outline mask from an existing mask
+ *
+ * Creates a new mask that represents the outline/border of the input mask.
+ * The outline is created by including pixels that are on the edge of the mask
+ * (pixels that have at least one neighbor that is not in the original mask).
+ *
+ * @param mask The input mask to generate outline from
+ * @param thickness The thickness of the outline in pixels (default: 1)
+ * @param image_width Width of the image bounds for edge detection
+ * @param image_height Height of the image bounds for edge detection
+ * @return New mask containing only the outline pixels
+ */
+Mask2D generate_outline_mask(Mask2D const & mask, int thickness = 1, uint32_t image_width = UINT32_MAX, uint32_t image_height = UINT32_MAX);
+
 std::vector<Point2D<uint32_t>> extract_line_pixels(
         std::vector<uint8_t> const & binary_img,
         ImageSize const image_size);

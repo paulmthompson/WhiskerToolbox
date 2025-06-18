@@ -173,9 +173,9 @@ Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2) {
     Mask2D combined_mask;
 
     // Add all pixels from mask1
-    for (auto const & point : mask1) {
+    for (auto const & point: mask1) {
         std::pair<uint32_t, uint32_t> pixel_key = {point.x, point.y};
-        
+
         if (unique_pixels.find(pixel_key) == unique_pixels.end()) {
             unique_pixels.insert(pixel_key);
             combined_mask.push_back(point);
@@ -183,9 +183,9 @@ Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2) {
     }
 
     // Add pixels from mask2 that aren't already present
-    for (auto const & point : mask2) {
+    for (auto const & point: mask2) {
         std::pair<uint32_t, uint32_t> pixel_key = {point.x, point.y};
-        
+
         if (unique_pixels.find(pixel_key) == unique_pixels.end()) {
             unique_pixels.insert(pixel_key);
             combined_mask.push_back(point);
@@ -198,21 +198,88 @@ Mask2D combine_masks(Mask2D const & mask1, Mask2D const & mask2) {
 Mask2D subtract_masks(Mask2D const & mask1, Mask2D const & mask2) {
     // Create a set of pixels in mask2 for efficient lookup
     std::set<std::pair<uint32_t, uint32_t>> mask2_pixels;
-    for (auto const & point : mask2) {
+    for (auto const & point: mask2) {
         mask2_pixels.insert({point.x, point.y});
     }
 
     // Keep only pixels from mask1 that are NOT in mask2
     Mask2D result_mask;
-    for (auto const & point : mask1) {
+    for (auto const & point: mask1) {
         std::pair<uint32_t, uint32_t> pixel_key = {point.x, point.y};
-        
+
         if (mask2_pixels.find(pixel_key) == mask2_pixels.end()) {
             result_mask.push_back(point);
         }
     }
 
     return result_mask;
+}
+
+Mask2D generate_outline_mask(Mask2D const & mask, int thickness, uint32_t image_width, uint32_t image_height) {
+    if (mask.empty() || thickness <= 0) {
+        return {};
+    }
+
+    // Create a set for fast lookup of mask pixels
+    std::set<std::pair<uint32_t, uint32_t>> mask_pixels;
+    for (auto const & point: mask) {
+        mask_pixels.insert({point.x, point.y});
+    }
+
+    // Find outline pixels
+    Mask2D outline_mask;
+    std::set<std::pair<uint32_t, uint32_t>> outline_pixels;
+
+    // For each pixel in the original mask, check if it's on the edge
+    for (auto const & point: mask) {
+        bool is_edge = false;
+
+        // Check all 8 neighbors (including diagonals)
+        for (int dx = -thickness; dx <= thickness; ++dx) {
+            for (int dy = -thickness; dy <= thickness; ++dy) {
+                if (dx == 0 && dy == 0) continue;// Skip the center pixel itself
+
+                int32_t neighbor_x = static_cast<int32_t>(point.x) + dx;
+                int32_t neighbor_y = static_cast<int32_t>(point.y) + dy;
+
+                // Check bounds
+                if (neighbor_x < 0 || neighbor_y < 0) {
+                    is_edge = true;
+                    break;
+                }
+
+                if (image_width != UINT32_MAX && static_cast<uint32_t>(neighbor_x) >= image_width) {
+                    is_edge = true;
+                    break;
+                }
+
+                if (image_height != UINT32_MAX && static_cast<uint32_t>(neighbor_y) >= image_height) {
+                    is_edge = true;
+                    break;
+                }
+
+                // Check if neighbor is not in the mask
+                if (mask_pixels.find({static_cast<uint32_t>(neighbor_x), static_cast<uint32_t>(neighbor_y)}) == mask_pixels.end()) {
+                    is_edge = true;
+                    break;
+                }
+            }
+            if (is_edge) break;
+        }
+
+        // If this pixel is on the edge, add it to outline
+        if (is_edge) {
+            outline_pixels.insert({point.x, point.y});
+        }
+    }
+
+    // Convert set to vector
+    outline_mask.reserve(outline_pixels.size());
+    for (auto const & pixel: outline_pixels) {
+        outline_mask.push_back({pixel.first, pixel.second});
+    }
+
+    return outline_mask;
 }
 
 std::vector<Point2D<uint32_t>> extract_line_pixels(

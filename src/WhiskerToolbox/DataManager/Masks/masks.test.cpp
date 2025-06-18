@@ -95,12 +95,12 @@ TEST_CASE("create_mask utility function", "[masks][create]") {
         auto mask = create_mask(x, y);
 
         REQUIRE(mask.size() == 3);
-        REQUIRE(mask[0].x == 1);  // 1.4 rounds to 1
-        REQUIRE(mask[0].y == 5);  // 4.7 rounds to 5
-        REQUIRE(mask[1].x == 3);  // 2.6 rounds to 3
-        REQUIRE(mask[1].y == 5);  // 5.2 rounds to 5
-        REQUIRE(mask[2].x == 3);  // 3.1 rounds to 3
-        REQUIRE(mask[2].y == 7);  // 6.9 rounds to 7
+        REQUIRE(mask[0].x == 1);// 1.4 rounds to 1
+        REQUIRE(mask[0].y == 5);// 4.7 rounds to 5
+        REQUIRE(mask[1].x == 3);// 2.6 rounds to 3
+        REQUIRE(mask[1].y == 5);// 5.2 rounds to 5
+        REQUIRE(mask[2].x == 3);// 3.1 rounds to 3
+        REQUIRE(mask[2].y == 7);// 6.9 rounds to 7
     }
 
     SECTION("create_mask with negative values") {
@@ -110,10 +110,10 @@ TEST_CASE("create_mask utility function", "[masks][create]") {
         auto mask = create_mask(x, y);
 
         REQUIRE(mask.size() == 3);
-        REQUIRE(mask[0].x == 0);  // -1.0 clamped to 0
+        REQUIRE(mask[0].x == 0);// -1.0 clamped to 0
         REQUIRE(mask[0].y == 4);
         REQUIRE(mask[1].x == 2);
-        REQUIRE(mask[1].y == 0);  // -5.0 clamped to 0
+        REQUIRE(mask[1].y == 0);// -5.0 clamped to 0
         REQUIRE(mask[2].x == 3);
         REQUIRE(mask[2].y == 6);
     }
@@ -391,7 +391,7 @@ TEST_CASE("combine_masks function", "[masks][combination]") {
 
         // Should contain all original points
         bool found_1_1 = false, found_2_2 = false, found_3_3 = false, found_4_4 = false;
-        for (auto const & point : combined) {
+        for (auto const & point: combined) {
             if (point.x == 1 && point.y == 1) found_1_1 = true;
             if (point.x == 2 && point.y == 2) found_2_2 = true;
             if (point.x == 3 && point.y == 3) found_3_3 = true;
@@ -413,7 +413,7 @@ TEST_CASE("combine_masks function", "[masks][combination]") {
         REQUIRE(combined.size() == 4);
 
         bool found_1_1 = false, found_2_2 = false, found_3_3 = false, found_4_4 = false;
-        for (auto const & point : combined) {
+        for (auto const & point: combined) {
             if (point.x == 1 && point.y == 1) found_1_1 = true;
             if (point.x == 2 && point.y == 2) found_2_2 = true;
             if (point.x == 3 && point.y == 3) found_3_3 = true;
@@ -458,7 +458,7 @@ TEST_CASE("subtract_masks function", "[masks][subtraction]") {
         REQUIRE(result.size() == 3);
 
         bool found_1_1 = false, found_2_2 = false, found_3_3 = false;
-        for (auto const & point : result) {
+        for (auto const & point: result) {
             if (point.x == 1 && point.y == 1) found_1_1 = true;
             if (point.x == 2 && point.y == 2) found_2_2 = true;
             if (point.x == 3 && point.y == 3) found_3_3 = true;
@@ -478,7 +478,7 @@ TEST_CASE("subtract_masks function", "[masks][subtraction]") {
         REQUIRE(result.size() == 2);
 
         bool found_1_1 = false, found_3_3 = false;
-        for (auto const & point : result) {
+        for (auto const & point: result) {
             if (point.x == 1 && point.y == 1) found_1_1 = true;
             if (point.x == 3 && point.y == 3) found_3_3 = true;
             // Should not find (2,2) or (4,4)
@@ -532,5 +532,125 @@ TEST_CASE("subtract_masks function", "[masks][subtraction]") {
 
         // Should return empty mask since all of mask1 is in mask2
         REQUIRE(result.empty());
+    }
+}
+
+TEST_CASE("generate_outline_mask function", "[masks][outline_mask]") {
+
+    SECTION("Empty mask returns empty outline") {
+        Mask2D empty_mask;
+        auto outline = generate_outline_mask(empty_mask);
+        REQUIRE(outline.empty());
+    }
+
+    SECTION("Single pixel mask returns outline") {
+        Mask2D single_pixel = {{5, 5}};
+        auto outline = generate_outline_mask(single_pixel, 1);
+
+        // Single pixel should be considered an edge pixel
+        REQUIRE(outline.size() == 1);
+        REQUIRE(outline[0].x == 5);
+        REQUIRE(outline[0].y == 5);
+    }
+
+    SECTION("Simple 2x2 square mask") {
+        Mask2D square_mask = {{1, 1}, {1, 2}, {2, 1}, {2, 2}};
+        auto outline = generate_outline_mask(square_mask, 1);
+
+        // All pixels in a 2x2 square should be edge pixels
+        REQUIRE(outline.size() == 4);
+
+        // Check that all original pixels are in the outline
+        bool found_1_1 = false, found_1_2 = false, found_2_1 = false, found_2_2 = false;
+        for (auto const & point: outline) {
+            if (point.x == 1 && point.y == 1) found_1_1 = true;
+            if (point.x == 1 && point.y == 2) found_1_2 = true;
+            if (point.x == 2 && point.y == 1) found_2_1 = true;
+            if (point.x == 2 && point.y == 2) found_2_2 = true;
+        }
+        REQUIRE(found_1_1);
+        REQUIRE(found_1_2);
+        REQUIRE(found_2_1);
+        REQUIRE(found_2_2);
+    }
+
+    SECTION("3x3 square with filled center") {
+        // Create a 3x3 filled square
+        Mask2D filled_square;
+        for (uint32_t x = 1; x <= 3; ++x) {
+            for (uint32_t y = 1; y <= 3; ++y) {
+                filled_square.push_back({x, y});
+            }
+        }
+
+        auto outline = generate_outline_mask(filled_square, 1);
+
+        // Only the border pixels should be in the outline (center should not be)
+        REQUIRE(outline.size() == 8);// 3x3 - 1 center = 8 edge pixels
+
+        // Check that center pixel (2,2) is NOT in outline
+        bool found_center = false;
+        for (auto const & point: outline) {
+            if (point.x == 2 && point.y == 2) {
+                found_center = true;
+                break;
+            }
+        }
+        REQUIRE_FALSE(found_center);
+
+        // Check that corner pixels ARE in outline
+        bool found_corner = false;
+        for (auto const & point: outline) {
+            if (point.x == 1 && point.y == 1) {
+                found_corner = true;
+                break;
+            }
+        }
+        REQUIRE(found_corner);
+    }
+
+    SECTION("L-shaped mask outline") {
+        // Create an L-shaped mask:
+        // XX.
+        // XX.
+        // XXX
+        Mask2D l_mask = {
+                {1, 1},
+                {2, 1},
+                {1, 2},
+                {2, 2},
+                {1, 3},
+                {2, 3},
+                {3, 3}};
+
+        auto outline = generate_outline_mask(l_mask, 1);
+
+        // All pixels should be edge pixels since none have all 8 neighbors filled
+        REQUIRE(outline.size() == 7);
+    }
+
+    SECTION("Outline with thickness 2") {
+        Mask2D single_pixel = {{5, 5}};
+        auto outline = generate_outline_mask(single_pixel, 2);
+
+        // With thickness 2, should still be edge pixel
+        REQUIRE(outline.size() == 1);
+        REQUIRE(outline[0].x == 5);
+        REQUIRE(outline[0].y == 5);
+    }
+
+    SECTION("Outline with image bounds") {
+        // Mask at edge of image
+        Mask2D edge_mask = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+        auto outline = generate_outline_mask(edge_mask, 1, 10, 10);
+
+        // All pixels should be edge pixels due to image boundary
+        REQUIRE(outline.size() == 4);
+    }
+
+    SECTION("Zero thickness returns empty") {
+        Mask2D mask = {{1, 1}, {2, 2}};
+        auto outline = generate_outline_mask(mask, 0);
+        REQUIRE(outline.empty());
     }
 }

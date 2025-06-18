@@ -786,39 +786,18 @@ void Media_Window::_plotMaskData() {
 
         // Plot outlines if enabled
         if (_mask_config.get()->show_outline) {
-            // Calculate scaling factors based on mask image size, not media aspect ratio
-            float xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
-            float yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
+            // Create a slightly darker color for outlines
+            QRgb outline_color = plot_color;
 
             // For current time masks
             for (auto const & single_mask: maskData) {
                 if (!single_mask.empty()) {
-                    auto outline_points = get_mask_outline(single_mask);
+                    // Generate outline mask with thickness of 2 pixels
+                    auto outline_mask = generate_outline_mask(single_mask, 2, image_size.width, image_size.height);
 
-                    if (outline_points.size() >= 2) {
-                        QPainterPath outlinePath;
-
-                        // Move to the first point (scaled using mask image size)
-                        float first_x = static_cast<float>(outline_points[0].x) * xAspect;
-                        float first_y = static_cast<float>(outline_points[0].y) * yAspect;
-                        outlinePath.moveTo(first_x, first_y);
-
-                        // Connect to all other points (scaled using mask image size)
-                        for (size_t i = 1; i < outline_points.size(); ++i) {
-                            float x = static_cast<float>(outline_points[i].x) * xAspect;
-                            float y = static_cast<float>(outline_points[i].y) * yAspect;
-                            outlinePath.lineTo(x, y);
-                        }
-
-                        // Close the outline by connecting back to start
-                        outlinePath.lineTo(first_x, first_y);
-
-                        // Draw thick outline
-                        QPen outlinePen(plot_color);
-                        outlinePen.setWidth(4);// Thick line
-
-                        auto outlinePathItem = addPath(outlinePath, outlinePen);
-                        _mask_outlines.append(outlinePathItem);
+                    if (!outline_mask.empty()) {
+                        // Plot the outline mask using the same approach as regular masks
+                        _plotSingleMaskData({outline_mask}, image_size, outline_color);
                     }
                 }
             }
@@ -826,32 +805,12 @@ void Media_Window::_plotMaskData() {
             // For time -1 masks
             for (auto const & single_mask: maskData2) {
                 if (!single_mask.empty()) {
-                    auto outline_points = get_mask_outline(single_mask);
+                    // Generate outline mask with thickness of 2 pixels
+                    auto outline_mask = generate_outline_mask(single_mask, 2, image_size.width, image_size.height);
 
-                    if (outline_points.size() >= 2) {
-                        QPainterPath outlinePath;
-
-                        // Move to the first point (scaled using mask image size)
-                        float first_x = static_cast<float>(outline_points[0].x) * xAspect;
-                        float first_y = static_cast<float>(outline_points[0].y) * yAspect;
-                        outlinePath.moveTo(first_x, first_y);
-
-                        // Connect to all other points (scaled using mask image size)
-                        for (size_t i = 1; i < outline_points.size(); ++i) {
-                            float x = static_cast<float>(outline_points[i].x) * xAspect;
-                            float y = static_cast<float>(outline_points[i].y) * yAspect;
-                            outlinePath.lineTo(x, y);
-                        }
-
-                        // Close the outline by connecting back to start
-                        outlinePath.lineTo(first_x, first_y);
-
-                        // Draw thick outline
-                        QPen outlinePen(plot_color);
-                        outlinePen.setWidth(4);// Thick line
-
-                        auto outlinePathItem = addPath(outlinePath, outlinePen);
-                        _mask_outlines.append(outlinePathItem);
+                    if (!outline_mask.empty()) {
+                        // Plot the outline mask using the same approach as regular masks
+                        _plotSingleMaskData({outline_mask}, image_size, outline_color);
                     }
                 }
             }
