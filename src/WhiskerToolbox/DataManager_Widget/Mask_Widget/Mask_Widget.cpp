@@ -3,6 +3,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
+#include "DataManager/Masks/masks.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/points.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
@@ -177,8 +178,51 @@ void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
     std::cout << "Mask_Widget: Moving masks from " << selected_frames.size()
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    // Use the new moveTo method with the vector of selected times
-    std::size_t total_masks_moved = source_mask_data->moveTo(*target_mask_data, selected_frames, true);
+    // Check if image sizes differ and we need to resize masks
+    ImageSize source_size = source_mask_data->getImageSize();
+    ImageSize target_size = target_mask_data->getImageSize();
+    bool need_resize = (source_size.width != target_size.width || source_size.height != target_size.height);
+
+    if (need_resize && (source_size.width <= 0 || source_size.height <= 0 ||
+                        target_size.width <= 0 || target_size.height <= 0)) {
+        std::cerr << "Mask_Widget: Cannot resize masks - invalid source (" << source_size.width
+                  << "x" << source_size.height << ") or target (" << target_size.width
+                  << "x" << target_size.height << ") image size." << std::endl;
+        return;
+    }
+
+    std::size_t total_masks_moved = 0;
+
+    if (need_resize) {
+        std::cout << "Mask_Widget: Resizing masks from " << source_size.width << "x" << source_size.height
+                  << " to " << target_size.width << "x" << target_size.height << std::endl;
+
+        // Manual copy with resize, then delete from source
+        for (int frame: selected_frames) {
+            auto const & masks_at_frame = source_mask_data->getAtTime(frame);
+            if (!masks_at_frame.empty()) {
+                for (auto const & mask: masks_at_frame) {
+                    // Resize the mask to target dimensions
+                    Mask2D resized_mask = resize_mask(mask, source_size, target_size);
+                    if (!resized_mask.empty()) {
+                        target_mask_data->addAtTime(frame, std::move(resized_mask), false);
+                        total_masks_moved++;
+                    }
+                }
+                // Clear the frame from source after copying all masks
+                source_mask_data->clearAtTime(frame, false);
+            }
+        }
+
+        // Notify observers for both source and target
+        if (total_masks_moved > 0) {
+            source_mask_data->notifyObservers();
+            target_mask_data->notifyObservers();
+        }
+    } else {
+        // Use the existing moveTo method when no resizing is needed
+        total_masks_moved = source_mask_data->moveTo(*target_mask_data, selected_frames, true);
+    }
 
     if (total_masks_moved > 0) {
         // Update the table view to reflect changes
@@ -186,6 +230,10 @@ void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
 
         std::cout << "Mask_Widget: Successfully moved " << total_masks_moved
                   << " masks from " << selected_frames.size() << " frames." << std::endl;
+        if (need_resize) {
+            std::cout << "Mask_Widget: Masks were resized from " << source_size.width << "x" << source_size.height
+                      << " to " << target_size.width << "x" << target_size.height << std::endl;
+        }
     } else {
         std::cout << "Mask_Widget: No masks found in any of the selected frames to move." << std::endl;
     }
@@ -213,12 +261,56 @@ void Mask_Widget::_copyMasksToTarget(std::string const & target_key) {
     std::cout << "Mask_Widget: Copying masks from " << selected_frames.size()
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
-    // Use the new copyTo method with the vector of selected times
-    std::size_t total_masks_copied = source_mask_data->copyTo(*target_mask_data, selected_frames, true);
+    // Check if image sizes differ and we need to resize masks
+    ImageSize source_size = source_mask_data->getImageSize();
+    ImageSize target_size = target_mask_data->getImageSize();
+    bool need_resize = (source_size.width != target_size.width || source_size.height != target_size.height);
+
+    if (need_resize && (source_size.width <= 0 || source_size.height <= 0 ||
+                        target_size.width <= 0 || target_size.height <= 0)) {
+        std::cerr << "Mask_Widget: Cannot resize masks - invalid source (" << source_size.width
+                  << "x" << source_size.height << ") or target (" << target_size.width
+                  << "x" << target_size.height << ") image size." << std::endl;
+        return;
+    }
+
+    std::size_t total_masks_copied = 0;
+
+    if (need_resize) {
+        std::cout << "Mask_Widget: Resizing masks from " << source_size.width << "x" << source_size.height
+                  << " to " << target_size.width << "x" << target_size.height << std::endl;
+
+        // Manual copy with resize
+        for (int frame: selected_frames) {
+            auto const & masks_at_frame = source_mask_data->getAtTime(frame);
+            if (!masks_at_frame.empty()) {
+                for (auto const & mask: masks_at_frame) {
+                    // Resize the mask to target dimensions
+                    Mask2D resized_mask = resize_mask(mask, source_size, target_size);
+                    if (!resized_mask.empty()) {
+                        target_mask_data->addAtTime(frame, std::move(resized_mask), false);
+                        total_masks_copied++;
+                    }
+                }
+            }
+        }
+
+        // Notify observers for target
+        if (total_masks_copied > 0) {
+            target_mask_data->notifyObservers();
+        }
+    } else {
+        // Use the existing copyTo method when no resizing is needed
+        total_masks_copied = source_mask_data->copyTo(*target_mask_data, selected_frames, true);
+    }
 
     if (total_masks_copied > 0) {
         std::cout << "Mask_Widget: Successfully copied " << total_masks_copied
                   << " masks from " << selected_frames.size() << " frames." << std::endl;
+        if (need_resize) {
+            std::cout << "Mask_Widget: Masks were resized from " << source_size.width << "x" << source_size.height
+                      << " to " << target_size.width << "x" << target_size.height << std::endl;
+        }
     } else {
         std::cout << "Mask_Widget: No masks found in any of the selected frames to copy." << std::endl;
     }
