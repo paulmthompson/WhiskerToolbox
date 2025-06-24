@@ -6,10 +6,10 @@
 #include <QRadioButton>
 #include <QSpinBox>
 
-MaskDilationWidget::MaskDilationWidget(QWidget* parent)
+MaskDilationWidget::MaskDilationWidget(QWidget * parent)
     : QWidget(parent),
       ui(new Ui::MaskDilationWidget) {
-    
+
     ui->setupUi(this);
 
     // Connect UI controls to slots
@@ -32,18 +32,18 @@ MaskDilationWidget::~MaskDilationWidget() {
 MaskDilationOptions MaskDilationWidget::getOptions() const {
     MaskDilationOptions options;
     options.preview = ui->preview_checkbox->isChecked();
-    options.active = options.preview; // Active when preview is enabled
+    options.active = options.preview;// Active when preview is enabled
     options.is_grow_mode = ui->grow_radio->isChecked();
-    
+
     // Use the same size value for both grow and shrink
     int size = ui->size_spinbox->value();
     options.grow_size = size;
     options.shrink_size = size;
-    
+
     return options;
 }
 
-void MaskDilationWidget::setOptions(MaskDilationOptions const& options) {
+void MaskDilationWidget::setOptions(MaskDilationOptions const & options) {
     _blockSignalsAndSetValues(options);
 }
 
@@ -79,7 +79,7 @@ void MaskDilationWidget::_updateOptions() {
     emit optionsChanged(getOptions());
 }
 
-void MaskDilationWidget::_blockSignalsAndSetValues(MaskDilationOptions const& options) {
+void MaskDilationWidget::_blockSignalsAndSetValues(MaskDilationOptions const & options) {
     // Block signals to prevent recursive updates
     ui->preview_checkbox->blockSignals(true);
     ui->grow_radio->blockSignals(true);
@@ -90,7 +90,7 @@ void MaskDilationWidget::_blockSignalsAndSetValues(MaskDilationOptions const& op
     ui->preview_checkbox->setChecked(options.preview);
     ui->grow_radio->setChecked(options.is_grow_mode);
     ui->shrink_radio->setChecked(!options.is_grow_mode);
-    
+
     // Use grow_size as the default, but if it's 1 and shrink_size is different, use shrink_size
     int size_to_use = options.is_grow_mode ? options.grow_size : options.shrink_size;
     ui->size_spinbox->setValue(size_to_use);
@@ -100,4 +100,4 @@ void MaskDilationWidget::_blockSignalsAndSetValues(MaskDilationOptions const& op
     ui->grow_radio->blockSignals(false);
     ui->shrink_radio->blockSignals(false);
     ui->size_spinbox->blockSignals(false);
-} 
+}

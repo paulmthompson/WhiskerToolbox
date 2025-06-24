@@ -82,6 +82,19 @@ Left click to add to the mask, right click to erase from it.</string>
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="allowEmptyMaskCheckbox">
+     <property name="text">
+      <string>Allow empty masks (preserve mask when all pixels are erased)</string>
+     </property>
+     <property name="toolTip">
+      <string>When enabled, masks will be preserved even when all pixels are erased, useful for creating negative labels for semantic segmentation</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="infoLabel">
      <property name="text">
       <string>Note: The same brush size applies to both adding and erasing operations.</string>

@@ -3,9 +3,9 @@
 
 namespace mask_widget {
 
-MaskNoneSelectionWidget::MaskNoneSelectionWidget(QWidget* parent)
-    : QWidget(parent)
-    , ui(new Ui::MaskNoneSelectionWidget) {
+MaskNoneSelectionWidget::MaskNoneSelectionWidget(QWidget * parent)
+    : QWidget(parent),
+      ui(new Ui::MaskNoneSelectionWidget) {
     ui->setupUi(this);
 }
 
@@ -13,4 +13,4 @@ MaskNoneSelectionWidget::~MaskNoneSelectionWidget() {
     delete ui;
 }
 
-} // namespace mask_widget 
+}// namespace mask_widget

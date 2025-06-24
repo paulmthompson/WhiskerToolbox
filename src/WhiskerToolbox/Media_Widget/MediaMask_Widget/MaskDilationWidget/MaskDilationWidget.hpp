@@ -19,7 +19,7 @@ class MaskDilationWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MaskDilationWidget(QWidget* parent = nullptr);
+    explicit MaskDilationWidget(QWidget * parent = nullptr);
     ~MaskDilationWidget() override;
 
     /**
@@ -32,14 +32,14 @@ public:
      * @brief Set the mask dilation options and update UI controls
      * @param options MaskDilationOptions to apply to the widget
      */
-    void setOptions(MaskDilationOptions const& options);
+    void setOptions(MaskDilationOptions const & options);
 
 signals:
     /**
      * @brief Emitted when any dilation option changes
      * @param options Updated MaskDilationOptions structure
      */
-    void optionsChanged(MaskDilationOptions const& options);
+    void optionsChanged(MaskDilationOptions const & options);
 
     /**
      * @brief Emitted when user clicks the apply button
@@ -53,10 +53,10 @@ private slots:
     void _onApplyClicked();
 
 private:
-    Ui::MaskDilationWidget* ui;
+    Ui::MaskDilationWidget * ui;
 
     void _updateOptions();
-    void _blockSignalsAndSetValues(MaskDilationOptions const& options);
+    void _blockSignalsAndSetValues(MaskDilationOptions const & options);
 };
 
-#endif // MASK_DILATION_WIDGET_HPP 
+#endif// MASK_DILATION_WIDGET_HPP

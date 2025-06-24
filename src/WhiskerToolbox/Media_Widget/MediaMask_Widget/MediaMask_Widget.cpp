@@ -94,6 +94,8 @@ void MediaMask_Widget::_setupSelectionModePages() {
             this, &MediaMask_Widget::_setBrushSize);
     connect(_brushSelectionWidget, &mask_widget::MaskBrushSelectionWidget::hoverCircleVisibilityChanged,
             this, &MediaMask_Widget::_toggleShowHoverCircle);
+    connect(_brushSelectionWidget, &mask_widget::MaskBrushSelectionWidget::allowEmptyMaskChanged,
+            this, &MediaMask_Widget::_onAllowEmptyMaskChanged);
 
     // Set initial page
     ui->mode_stacked_widget->setCurrentIndex(0);
@@ -559,8 +561,8 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
         // Clear all masks at this time
         mask_data->clearAtTime(current_time, false);
 
-        // Add the filtered mask back if it still has points
-        if (!filtered_mask.empty()) {
+        // Add the filtered mask back if it still has points OR if empty masks are allowed
+        if (!filtered_mask.empty() || _allow_empty_mask) {
             mask_data->addAtTime(current_time, std::move(filtered_mask), false);
         }
 
@@ -599,5 +601,12 @@ void MediaMask_Widget::_mouseReleased() {
         if (_debug_performance) {
             std::cout << "Brush drag operation completed, canvas updated" << std::endl;
         }
+    }
+}
+
+void MediaMask_Widget::_onAllowEmptyMaskChanged(bool allow) {
+    _allow_empty_mask = allow;
+    if (_debug_performance) {
+        std::cout << "Allow empty mask setting changed to: " << (allow ? "enabled" : "disabled") << std::endl;
     }
 }

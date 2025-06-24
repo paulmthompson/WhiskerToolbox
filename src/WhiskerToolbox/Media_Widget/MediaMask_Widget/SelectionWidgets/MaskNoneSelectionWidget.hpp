@@ -23,17 +23,17 @@ public:
      * @brief Constructor
      * @param parent The parent widget
      */
-    explicit MaskNoneSelectionWidget(QWidget* parent = nullptr);
-    
+    explicit MaskNoneSelectionWidget(QWidget * parent = nullptr);
+
     /**
      * @brief Destructor
      */
     ~MaskNoneSelectionWidget();
 
 private:
-    Ui::MaskNoneSelectionWidget* ui;
+    Ui::MaskNoneSelectionWidget * ui;
 };
 
-} // namespace mask_widget
+}// namespace mask_widget
 
-#endif // WHISKER_TOOLBOX_MASK_NONE_SELECTION_WIDGET_HPP 
+#endif// WHISKER_TOOLBOX_MASK_NONE_SELECTION_WIDGET_HPP

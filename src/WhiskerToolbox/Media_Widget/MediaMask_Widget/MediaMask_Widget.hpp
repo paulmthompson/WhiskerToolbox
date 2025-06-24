@@ -67,6 +67,7 @@ private:
     bool _is_dragging{false};
     bool _is_adding_mode{true};    // true for add, false for remove
     bool _debug_performance{false};// Debug flag for performance-related output
+    bool _allow_empty_mask{false}; // Whether to preserve empty masks during brush removal
 
     void _setupSelectionModePages();
     void _setupDilationWidget();
@@ -93,6 +94,7 @@ private slots:
     void _toggleShowHoverCircle(bool checked);
     void _onDilationOptionsChanged(MaskDilationOptions const & options);
     void _onDilationApplyRequested();
+    void _onAllowEmptyMaskChanged(bool allow);
 };
 
 
