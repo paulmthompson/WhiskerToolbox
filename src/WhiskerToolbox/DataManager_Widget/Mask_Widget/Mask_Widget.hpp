@@ -2,7 +2,7 @@
 #define MASK_WIDGET_HPP
 
 #include "DataManager/Masks/IO/Image/Mask_Data_Image.hpp"
-#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp" // For context menu utilities
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"// For context menu utilities
 
 #include <QModelIndex>
 #include <QWidget>
@@ -62,21 +62,28 @@ private:
      * 
      * @param target_key The key to move masks to
      */
-    void _moveMasksToTarget(std::string const& target_key);
+    void _moveMasksToTarget(std::string const & target_key);
 
     /**
      * @brief Copy selected masks to the specified target key
      * 
      * @param target_key The key to copy masks to
      */
-    void _copyMasksToTarget(std::string const& target_key);
+    void _copyMasksToTarget(std::string const & target_key);
 
     /**
      * @brief Show context menu for the table view
      * 
      * @param position The position where the context menu should appear
      */
-    void _showContextMenu(QPoint const& position);
+    void _showContextMenu(QPoint const & position);
+
+    /**
+     * @brief Update the ImageSize display labels
+     * 
+     * Updates the UI labels to show the current ImageSize of the active mask data
+     */
+    void _updateImageSizeDisplay();
 
     enum SaverType { HDF5,
                      IMAGE };
@@ -87,7 +94,7 @@ private slots:
     void _loadSamModel();
     void _handleTableViewDoubleClicked(QModelIndex const & index);
     void _onDataChanged();
-    void _deleteSelectedMasks(); // New slot for delete operation
+    void _deleteSelectedMasks();// New slot for delete operation
 
     // Export slots
     void _onExportTypeChanged(int index);

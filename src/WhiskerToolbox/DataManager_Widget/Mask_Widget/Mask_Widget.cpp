@@ -22,6 +22,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QStackedWidget>
+#include <QString>
 #include <QTableView>
 #include <filesystem>
 #include <iostream>
@@ -91,6 +92,7 @@ void Mask_Widget::updateTable() {
     } else {
         _mask_table_model->setMasks(nullptr);
     }
+    _updateImageSizeDisplay();
 }
 
 void Mask_Widget::removeCallbacks() {
@@ -113,7 +115,7 @@ std::vector<int> Mask_Widget::_getSelectedFrames() {
     std::vector<int> selected_frames;
     QModelIndexList selected_rows = ui->tableView->selectionModel()->selectedRows();
 
-    for (QModelIndex const & index : selected_rows) {
+    for (QModelIndex const & index: selected_rows) {
         if (index.isValid()) {
             int frame = _mask_table_model->getFrameForRow(index.row());
             if (frame != -1) {
@@ -125,7 +127,7 @@ std::vector<int> Mask_Widget::_getSelectedFrames() {
     return selected_frames;
 }
 
-void Mask_Widget::_showContextMenu(QPoint const& position) {
+void Mask_Widget::_showContextMenu(QPoint const & position) {
     QModelIndex index = ui->tableView->indexAt(position);
     if (!index.isValid()) {
         return;
@@ -134,11 +136,11 @@ void Mask_Widget::_showContextMenu(QPoint const& position) {
     QMenu context_menu(this);
 
     // Add move and copy submenus using the utility function
-    auto move_callback = [this](std::string const& target_key) {
+    auto move_callback = [this](std::string const & target_key) {
         _moveMasksToTarget(target_key);
     };
-    
-    auto copy_callback = [this](std::string const& target_key) {
+
+    auto copy_callback = [this](std::string const & target_key) {
         _copyMasksToTarget(target_key);
     };
 
@@ -146,14 +148,14 @@ void Mask_Widget::_showContextMenu(QPoint const& position) {
 
     // Add separator and delete operation
     context_menu.addSeparator();
-    QAction* delete_action = context_menu.addAction("Delete Selected Masks");
+    QAction * delete_action = context_menu.addAction("Delete Selected Masks");
 
     connect(delete_action, &QAction::triggered, this, &Mask_Widget::_deleteSelectedMasks);
 
     context_menu.exec(ui->tableView->mapToGlobal(position));
 }
 
-void Mask_Widget::_moveMasksToTarget(std::string const& target_key) {
+void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
     std::vector<int> selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Mask_Widget: No masks selected to move." << std::endl;
@@ -172,7 +174,7 @@ void Mask_Widget::_moveMasksToTarget(std::string const& target_key) {
         return;
     }
 
-    std::cout << "Mask_Widget: Moving masks from " << selected_frames.size() 
+    std::cout << "Mask_Widget: Moving masks from " << selected_frames.size()
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the new moveTo method with the vector of selected times
@@ -181,15 +183,15 @@ void Mask_Widget::_moveMasksToTarget(std::string const& target_key) {
     if (total_masks_moved > 0) {
         // Update the table view to reflect changes
         updateTable();
-        
-        std::cout << "Mask_Widget: Successfully moved " << total_masks_moved 
+
+        std::cout << "Mask_Widget: Successfully moved " << total_masks_moved
                   << " masks from " << selected_frames.size() << " frames." << std::endl;
     } else {
         std::cout << "Mask_Widget: No masks found in any of the selected frames to move." << std::endl;
     }
 }
 
-void Mask_Widget::_copyMasksToTarget(std::string const& target_key) {
+void Mask_Widget::_copyMasksToTarget(std::string const & target_key) {
     std::vector<int> selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Mask_Widget: No masks selected to copy." << std::endl;
@@ -208,14 +210,14 @@ void Mask_Widget::_copyMasksToTarget(std::string const& target_key) {
         return;
     }
 
-    std::cout << "Mask_Widget: Copying masks from " << selected_frames.size() 
+    std::cout << "Mask_Widget: Copying masks from " << selected_frames.size()
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the new copyTo method with the vector of selected times
     std::size_t total_masks_copied = source_mask_data->copyTo(*target_mask_data, selected_frames, true);
 
     if (total_masks_copied > 0) {
-        std::cout << "Mask_Widget: Successfully copied " << total_masks_copied 
+        std::cout << "Mask_Widget: Successfully copied " << total_masks_copied
                   << " masks from " << selected_frames.size() << " frames." << std::endl;
     } else {
         std::cout << "Mask_Widget: No masks found in any of the selected frames to copy." << std::endl;
@@ -235,14 +237,14 @@ void Mask_Widget::_deleteSelectedMasks() {
         return;
     }
 
-    std::cout << "Mask_Widget: Deleting masks from " << selected_frames.size() 
+    std::cout << "Mask_Widget: Deleting masks from " << selected_frames.size()
               << " frames in '" << _active_key << "'..." << std::endl;
 
     int frames_with_masks = 0;
     int total_masks_deleted = 0;
 
     // Count masks before deletion and batch operations to minimize observer notifications
-    for (int frame : selected_frames) {
+    for (int frame: selected_frames) {
         auto masks_at_frame = mask_data_ptr->getAtTime(frame);
         if (!masks_at_frame.empty()) {
             frames_with_masks++;
@@ -254,14 +256,14 @@ void Mask_Widget::_deleteSelectedMasks() {
     // Notify observers only once at the end
     if (frames_with_masks > 0) {
         mask_data_ptr->notifyObservers();
-        
+
         // Update the table view to reflect changes
         updateTable();
-        
-        std::cout << "Mask_Widget: Successfully deleted " << total_masks_deleted 
+
+        std::cout << "Mask_Widget: Successfully deleted " << total_masks_deleted
                   << " masks from " << frames_with_masks << " frames." << std::endl;
         if (frames_with_masks < selected_frames.size()) {
-            std::cout << "Mask_Widget: Note: " << (selected_frames.size() - frames_with_masks) 
+            std::cout << "Mask_Widget: Note: " << (selected_frames.size() - frames_with_masks)
                       << " selected frames contained no masks to delete." << std::endl;
         }
     } else {
@@ -303,7 +305,7 @@ void Mask_Widget::selectPoint(float const x, float const y) {
     for (size_t i = 0; i < mask_image.size(); i++) {
         if (mask_image[i] > 0) {
             mask.push_back(Point2D<uint32_t>{static_cast<uint32_t>(i % image_size.width),
-                                          static_cast<uint32_t>(i / image_size.width)});
+                                             static_cast<uint32_t>(i / image_size.width)});
         }
     }
     if (_active_key.empty()) {
@@ -389,7 +391,7 @@ void Mask_Widget::_initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVar
         auto times_with_data = mask_data_ptr->getTimesWithData();
         std::vector<size_t> frame_ids_to_export;
         frame_ids_to_export.reserve(times_with_data.size());
-        for (int frame_id : times_with_data) {
+        for (int frame_id: times_with_data) {
             frame_ids_to_export.push_back(static_cast<size_t>(frame_id));
         }
 
@@ -421,5 +423,31 @@ bool Mask_Widget::_performActualImageSave(ImageMaskSaverOptions & options) {
         QMessageBox::critical(this, "Save Error", "Failed to save mask data: " + QString::fromStdString(e.what()));
         std::cerr << "Failed to save mask data: " << e.what() << std::endl;
         return false;
+    }
+}
+
+void Mask_Widget::_updateImageSizeDisplay() {
+    if (_active_key.empty()) {
+        ui->label_image_size_value->setText("Not Available");
+        ui->label_image_size_value->setStyleSheet("color: rgb(100, 100, 100);");
+        return;
+    }
+
+    auto mask_data = _data_manager->getData<MaskData>(_active_key);
+    if (!mask_data) {
+        ui->label_image_size_value->setText("Not Available");
+        ui->label_image_size_value->setStyleSheet("color: rgb(100, 100, 100);");
+        return;
+    }
+
+    ImageSize image_size = mask_data->getImageSize();
+
+    if (image_size.width == -1 && image_size.height == -1) {
+        ui->label_image_size_value->setText("Uninitialized (-1 x -1)");
+        ui->label_image_size_value->setStyleSheet("color: rgb(255, 140, 0);");// Orange color for uninitialized
+    } else {
+        QString size_text = QString("%1 x %2").arg(image_size.height).arg(image_size.width);
+        ui->label_image_size_value->setText(size_text);
+        ui->label_image_size_value->setStyleSheet("color: rgb(0, 120, 0);");// Green color for valid size
     }
 }

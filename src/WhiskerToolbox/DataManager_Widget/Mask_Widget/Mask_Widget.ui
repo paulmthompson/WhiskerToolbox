@@ -31,6 +31,46 @@
     </widget>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="imageSizeLayout">
+     <item>
+      <widget class="QLabel" name="label_image_size_title">
+       <property name="text">
+        <string>Image Size:</string>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_image_size_value">
+       <property name="text">
+        <string>Not Available</string>
+       </property>
+       <property name="styleSheet">
+        <string>color: rgb(100, 100, 100);</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_imageSize">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="topControlsLayout">
      <item>
       <layout class="QVBoxLayout" name="leftVerticalLayout">
