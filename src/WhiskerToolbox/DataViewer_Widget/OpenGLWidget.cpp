@@ -684,7 +684,11 @@ void OpenGLWidget::drawAnalogSeries() {
         auto analog_range = series->getTimeValueSpanInTimeFrameIndexRange(series_start_index, series_end_index);
 
         if (analog_range.values.empty()) {
-            return;
+            // Instead of returning early (which stops rendering ALL series),
+            // continue to the next series. This allows other series to still be rendered
+            // even if this particular series has no data in the current visible range.
+            i++;
+            continue;
         }
 
         if (display_options->gap_handling == AnalogGapHandling::AlwaysConnect) {

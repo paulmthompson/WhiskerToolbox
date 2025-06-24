@@ -4,6 +4,7 @@
 #include "PlottingManager/PlottingManager.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <random>
 
 glm::mat4 new_getEventModelMat(NewDigitalEventSeriesDisplayOptions const & display_options,
@@ -84,9 +85,94 @@ glm::mat4 new_getEventProjectionMat(int start_data_index,
     auto const data_start = static_cast<float>(start_data_index);
     auto const data_end = static_cast<float>(end_data_index);
 
-    // Create orthographic projection matrix
+    // Validate and sanitize input parameters to prevent OpenGL state corruption
+    float safe_data_start = data_start;
+    float safe_data_end = data_end;
+    float safe_y_min = y_min;
+    float safe_y_max = y_max;
+    
+    // Check for and fix invalid or extreme values that could cause NaN/Infinity
+    
+    // 1. Ensure all values are finite
+    if (!std::isfinite(safe_data_start)) {
+        std::cout << "Warning: Invalid event data_start=" << safe_data_start << ", using fallback" << std::endl;
+        safe_data_start = 0.0f;
+    }
+    if (!std::isfinite(safe_data_end)) {
+        std::cout << "Warning: Invalid event data_end=" << safe_data_end << ", using fallback" << std::endl;
+        safe_data_end = 1000.0f;
+    }
+    if (!std::isfinite(safe_y_min)) {
+        std::cout << "Warning: Invalid event y_min=" << safe_y_min << ", using fallback" << std::endl;
+        safe_y_min = -1.0f;
+    }
+    if (!std::isfinite(safe_y_max)) {
+        std::cout << "Warning: Invalid event y_max=" << safe_y_max << ", using fallback" << std::endl;
+        safe_y_max = 1.0f;
+    }
+    
+    // 2. Ensure data range is valid (start < end with minimum separation)
+    constexpr float min_range = 1e-6f;  // Minimum range to prevent division by zero
+    if (safe_data_end <= safe_data_start) {
+        std::cout << "Warning: Invalid event data range [" << safe_data_start << ", " << safe_data_end 
+                  << "], fixing to valid range" << std::endl;
+        float center = (safe_data_start + safe_data_end) * 0.5f;
+        safe_data_start = center - min_range * 0.5f;
+        safe_data_end = center + min_range * 0.5f;
+    } else if ((safe_data_end - safe_data_start) < min_range) {
+        std::cout << "Warning: Event data range too small [" << safe_data_start << ", " << safe_data_end 
+                  << "], expanding to minimum safe range" << std::endl;
+        float center = (safe_data_start + safe_data_end) * 0.5f;
+        safe_data_start = center - min_range * 0.5f;
+        safe_data_end = center + min_range * 0.5f;
+    }
+    
+    // 3. Ensure Y range is valid
+    if (safe_y_max <= safe_y_min) {
+        std::cout << "Warning: Invalid event Y range [" << safe_y_min << ", " << safe_y_max 
+                  << "], fixing to valid range" << std::endl;
+        float center = (safe_y_min + safe_y_max) * 0.5f;
+        safe_y_min = center - min_range * 0.5f;
+        safe_y_max = center + min_range * 0.5f;
+    } else if ((safe_y_max - safe_y_min) < min_range) {
+        std::cout << "Warning: Event Y range too small [" << safe_y_min << ", " << safe_y_max 
+                  << "], expanding to minimum safe range" << std::endl;
+        float center = (safe_y_min + safe_y_max) * 0.5f;
+        safe_y_min = center - min_range * 0.5f;
+        safe_y_max = center + min_range * 0.5f;
+    }
+    
+    // 4. Clamp extreme values to prevent numerical issues
+    constexpr float max_abs_value = 1e8f;  // Large but safe limit
+    if (std::abs(safe_data_start) > max_abs_value || std::abs(safe_data_end) > max_abs_value) {
+        std::cout << "Warning: Extremely large event data range [" << safe_data_start << ", " << safe_data_end 
+                  << "], clamping to safe range" << std::endl;
+        float range = safe_data_end - safe_data_start;
+        if (range > 2 * max_abs_value) {
+            safe_data_start = -max_abs_value;
+            safe_data_end = max_abs_value;
+        } else {
+            float center = (safe_data_start + safe_data_end) * 0.5f;
+            center = std::clamp(center, -max_abs_value * 0.5f, max_abs_value * 0.5f);
+            safe_data_start = center - range * 0.5f;
+            safe_data_end = center + range * 0.5f;
+        }
+    }
+
+    // Create orthographic projection matrix with validated parameters
     // This maps world coordinates to normalized device coordinates [-1, 1]
-    auto Projection = glm::ortho(data_start, data_end, y_min, y_max);
+    auto Projection = glm::ortho(safe_data_start, safe_data_end, safe_y_min, safe_y_max);
+    
+    // Final validation: check that the resulting matrix is valid
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (!std::isfinite(Projection[i][j])) {
+                std::cout << "Error: Event projection matrix contains invalid value at [" << i << "][" << j 
+                          << "]=" << Projection[i][j] << ", using identity matrix" << std::endl;
+                return glm::mat4(1.0f);  // Return identity matrix as safe fallback
+            }
+        }
+    }
 
     return Projection;
 }

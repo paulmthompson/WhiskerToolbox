@@ -9,6 +9,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "PlottingManager/PlottingManager.hpp"
 #include "TimeFrame.hpp"
+#include "XAxis.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -446,5 +447,629 @@ TEST_CASE("Integration Test: Mixed Analog and Digital Event Series", "[integrati
         REQUIRE(event2_view_panned[3][1] == pan_offset);
 
         manager.resetPan();
+    }
+}
+
+TEST_CASE("X-Axis Extreme Range Scrolling Test", "[integration][xaxis][extreme_range]") {
+    SECTION("Full range to normal window transition with data validation") {
+        // Create test data with a large range
+        constexpr size_t num_points = 100000;  // Large dataset
+        constexpr int64_t data_start = 0;
+        constexpr int64_t data_end = num_points - 1;
+        
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));
+        }
+        
+        // Generate test data with known characteristics at specific points
+        auto gaussian_data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 42);
+        
+        // Create specific test points for validation
+        gaussian_data[1000] = 100.0f;   // Known value at index 1000
+        gaussian_data[50000] = 200.0f;  // Known value at index 50000
+        gaussian_data[99000] = 300.0f;  // Known value at index 99000
+        
+        auto time_series = std::make_shared<AnalogTimeSeries>(gaussian_data, time_vector);
+        
+        // Set up plotting manager with analog series
+        PlottingManager manager;
+        int series_index = manager.addAnalogSeries();
+        
+        // Configure display options
+        NewAnalogTimeSeriesDisplayOptions display_options;
+        float allocated_center, allocated_height;
+        manager.calculateAnalogSeriesAllocation(series_index, allocated_center, allocated_height);
+        display_options.allocated_y_center = allocated_center;
+        display_options.allocated_height = allocated_height;
+        setAnalogIntrinsicProperties(time_series.get(), display_options);
+        
+        // Test Case 1: Set x-axis to the entirety of the data range
+        INFO("Testing full range display");
+        manager.setVisibleDataRange(static_cast<int>(data_start), static_cast<int>(data_end));
+        
+        // Generate MVP matrices for full range
+        glm::mat4 model_full = new_getAnalogModelMat(display_options, 
+                                                    display_options.cached_std_dev, 
+                                                    display_options.cached_mean, 
+                                                    manager);
+        glm::mat4 view_full = new_getAnalogViewMat(manager);
+        glm::mat4 projection_full = new_getAnalogProjectionMat(TimeFrameIndex(data_start), 
+                                                              TimeFrameIndex(data_end), 
+                                                              -400.0f, 400.0f, 
+                                                              manager);
+        
+        // Verify matrices are valid (not NaN or infinite)
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                REQUIRE(std::isfinite(model_full[i][j]));
+                REQUIRE(std::isfinite(view_full[i][j]));
+                REQUIRE(std::isfinite(projection_full[i][j]));
+            }
+        }
+        
+        // Test transformations at key points for full range
+        glm::vec2 point_1000_full = applyMVPTransformationIntegration(1000, 100.0f, 
+                                                                     model_full, view_full, projection_full);
+        glm::vec2 point_50000_full = applyMVPTransformationIntegration(50000, 200.0f, 
+                                                                      model_full, view_full, projection_full);
+        glm::vec2 point_99000_full = applyMVPTransformationIntegration(99000, 300.0f, 
+                                                                      model_full, view_full, projection_full);
+        
+        // Verify points are within reasonable NDC range [-1.1, 1.1] with tolerance
+        REQUIRE(point_1000_full.x >= -1.1f);
+        REQUIRE(point_1000_full.x <= 1.1f);
+        REQUIRE(point_50000_full.x >= -1.1f);
+        REQUIRE(point_50000_full.x <= 1.1f);
+        REQUIRE(point_99000_full.x >= -1.1f);
+        REQUIRE(point_99000_full.x <= 1.1f);
+        
+        // Verify Y coordinates are finite and reasonable
+        REQUIRE(std::isfinite(point_1000_full.y));
+        REQUIRE(std::isfinite(point_50000_full.y));
+        REQUIRE(std::isfinite(point_99000_full.y));
+        
+        // Test Case 2: Change back to a normal window (zoom in to a specific range)
+        INFO("Testing normal window display");
+        constexpr int64_t normal_start = 45000;
+        constexpr int64_t normal_end = 55000;
+        
+        manager.setVisibleDataRange(static_cast<int>(normal_start), static_cast<int>(normal_end));
+        
+        // Generate MVP matrices for normal range
+        glm::mat4 model_normal = new_getAnalogModelMat(display_options, 
+                                                      display_options.cached_std_dev, 
+                                                      display_options.cached_mean, 
+                                                      manager);
+        glm::mat4 view_normal = new_getAnalogViewMat(manager);
+        glm::mat4 projection_normal = new_getAnalogProjectionMat(TimeFrameIndex(normal_start), 
+                                                                TimeFrameIndex(normal_end), 
+                                                                -400.0f, 400.0f, 
+                                                                manager);
+        
+        // Verify matrices are valid
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                REQUIRE(std::isfinite(model_normal[i][j]));
+                REQUIRE(std::isfinite(view_normal[i][j]));
+                REQUIRE(std::isfinite(projection_normal[i][j]));
+            }
+        }
+        
+        // Test transformations for the point that should be visible (index 50000)
+        glm::vec2 point_50000_normal = applyMVPTransformationIntegration(50000, 200.0f, 
+                                                                        model_normal, view_normal, projection_normal);
+        
+        // Verify the visible point is within NDC range
+        REQUIRE(point_50000_normal.x >= -1.1f);
+        REQUIRE(point_50000_normal.x <= 1.1f);
+        REQUIRE(std::isfinite(point_50000_normal.y));
+        
+        // Test transformations for points outside the normal range
+        glm::vec2 point_1000_normal = applyMVPTransformationIntegration(1000, 100.0f, 
+                                                                       model_normal, view_normal, projection_normal);
+        glm::vec2 point_99000_normal = applyMVPTransformationIntegration(99000, 300.0f, 
+                                                                        model_normal, view_normal, projection_normal);
+        
+        // Points outside the visible range should be outside NDC range
+        INFO("Point 1000 (outside range) x-coordinate: " << point_1000_normal.x);
+        INFO("Point 99000 (outside range) x-coordinate: " << point_99000_normal.x);
+        
+        // These should be outside the visible range but still finite
+        REQUIRE(std::isfinite(point_1000_normal.x));
+        REQUIRE(std::isfinite(point_1000_normal.y));
+        REQUIRE(std::isfinite(point_99000_normal.x));
+        REQUIRE(std::isfinite(point_99000_normal.y));
+        
+        // Test Case 3: Verify data consistency after range changes
+        INFO("Testing data consistency after range changes");
+        
+        // The point at index 50000 should have the same Y-transformation in both cases
+        // (only X should change due to different projection ranges)
+        // Model and View matrices should be identical for the same series
+        REQUIRE_THAT(model_normal[1][1], WithinRel(model_full[1][1], 0.01f)); // Y scaling should be the same
+        REQUIRE_THAT(model_normal[3][1], WithinRel(model_full[3][1], 0.01f)); // Y offset should be the same
+        
+        // Test Case 4: Extreme range transitions (stress test)
+        INFO("Testing extreme range transitions");
+        
+        // Go to a very small range
+        constexpr int64_t tiny_start = 50000;
+        constexpr int64_t tiny_end = 50010;  // Only 10 data points
+        
+        manager.setVisibleDataRange(static_cast<int>(tiny_start), static_cast<int>(tiny_end));
+        
+        glm::mat4 projection_tiny = new_getAnalogProjectionMat(TimeFrameIndex(tiny_start), 
+                                                              TimeFrameIndex(tiny_end), 
+                                                              -400.0f, 400.0f, 
+                                                              manager);
+        
+        // Verify tiny range projection is valid
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                REQUIRE(std::isfinite(projection_tiny[i][j]));
+            }
+        }
+        
+        // Test transformation for point in tiny range
+        glm::vec2 point_50005_tiny = applyMVPTransformationIntegration(50005, 200.0f, 
+                                                                      model_normal, view_normal, projection_tiny);
+        
+        REQUIRE(std::isfinite(point_50005_tiny.x));
+        REQUIRE(std::isfinite(point_50005_tiny.y));
+        
+        // Go back to full range to verify system recovery
+        manager.setVisibleDataRange(static_cast<int>(data_start), static_cast<int>(data_end));
+        
+        glm::mat4 projection_recovery = new_getAnalogProjectionMat(TimeFrameIndex(data_start), 
+                                                                  TimeFrameIndex(data_end), 
+                                                                  -400.0f, 400.0f, 
+                                                                  manager);
+        
+        // Verify recovery matrices are valid
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                REQUIRE(std::isfinite(projection_recovery[i][j]));
+            }
+        }
+        
+        // Verify that after recovery, transformations work correctly again
+        glm::vec2 point_50000_recovery = applyMVPTransformationIntegration(50000, 200.0f, 
+                                                                          model_normal, view_normal, projection_recovery);
+        
+        REQUIRE(std::isfinite(point_50000_recovery.x));
+        REQUIRE(std::isfinite(point_50000_recovery.y));
+        REQUIRE(point_50000_recovery.x >= -1.1f);
+        REQUIRE(point_50000_recovery.x <= 1.1f);
+    }
+    
+    SECTION("XAxis integration with PlottingManager") {
+        // Test the integration between XAxis class and PlottingManager
+        // This simulates how the OpenGLWidget would use both systems
+        
+        constexpr int64_t data_min = 0;
+        constexpr int64_t data_max = 100000;
+        
+        // Create XAxis with full data range
+        XAxis x_axis(data_min, data_min + 1000, data_min, data_max);  // Start with small visible range
+        
+        // Create plotting manager and set it to match XAxis
+        PlottingManager manager;
+        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
+        
+        // Test synchronized range changes
+        INFO("Testing synchronized XAxis and PlottingManager range changes");
+        
+        // Change to full range
+        x_axis.setVisibleRange(data_min, data_max);
+        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
+        
+        REQUIRE(x_axis.getStart() == data_min);
+        REQUIRE(x_axis.getEnd() == data_max);
+        REQUIRE(manager.visible_start_index == static_cast<int>(data_min));
+        REQUIRE(manager.visible_end_index == static_cast<int>(data_max));
+        
+        // Change to middle range
+        constexpr int64_t mid_start = 40000;
+        constexpr int64_t mid_end = 60000;
+        
+        x_axis.setVisibleRange(mid_start, mid_end);
+        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
+        
+        REQUIRE(x_axis.getStart() == mid_start);
+        REQUIRE(x_axis.getEnd() == mid_end);
+        REQUIRE(manager.visible_start_index == static_cast<int>(mid_start));
+        REQUIRE(manager.visible_end_index == static_cast<int>(mid_end));
+        
+        // Test zoom functionality with feedback
+        INFO("Testing zoom functionality with range feedback");
+        
+        int64_t const zoom_center = 50000;
+        int64_t const zoom_range = 2000;
+        
+        int64_t actual_range = x_axis.setCenterAndZoomWithFeedback(zoom_center, zoom_range);
+        manager.setVisibleDataRange(static_cast<int>(x_axis.getStart()), static_cast<int>(x_axis.getEnd()));
+        
+        // Verify zoom worked as expected
+        REQUIRE(actual_range > 0);
+        REQUIRE(x_axis.getEnd() - x_axis.getStart() == actual_range);
+        
+        // Center should be approximately correct (may be adjusted due to clamping)
+        int64_t actual_center = (x_axis.getStart() + x_axis.getEnd()) / 2;
+        REQUIRE_THAT(static_cast<float>(actual_center), WithinRel(static_cast<float>(zoom_center), 0.1f));
+        
+        // Test extreme zoom out (beyond data boundaries)
+        INFO("Testing extreme zoom out behavior");
+        
+        int64_t const extreme_range = 200000;  // Larger than data range
+        int64_t extreme_actual_range = x_axis.setCenterAndZoomWithFeedback(zoom_center, extreme_range);
+        
+        // Should be clamped to maximum data range
+        REQUIRE(extreme_actual_range <= (data_max - data_min));
+        REQUIRE(x_axis.getStart() >= data_min);
+        REQUIRE(x_axis.getEnd() <= data_max);
+    }
+    
+    SECTION("Data range retrieval edge cases - reproducing OpenGLWidget issue") {
+        // This section reproduces the specific issue in OpenGLWidget where 
+        // getTimeValueSpanInTimeFrameIndexRange returns empty when scrolled too far
+        
+        // Create a small dataset to make the issue easier to reproduce
+        constexpr size_t num_points = 1000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));  // Data exists from 0 to 999
+        }
+        
+        auto data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 42);
+        auto time_series = std::make_shared<AnalogTimeSeries>(data, time_vector);
+        
+        INFO("Testing data retrieval when range is completely outside data bounds");
+        
+        // Test case 1: Request range completely before data (should return empty)
+        auto analog_range_before = time_series->getTimeValueSpanInTimeFrameIndexRange(
+            TimeFrameIndex(-2000), TimeFrameIndex(-1000));
+        
+        INFO("Range before data: start=-2000, end=-1000, result size=" << analog_range_before.values.size());
+        REQUIRE(analog_range_before.values.empty());  // This is the "no data shown" issue
+        
+        // Test case 2: Request range completely after data (should return empty)
+        auto analog_range_after = time_series->getTimeValueSpanInTimeFrameIndexRange(
+            TimeFrameIndex(2000), TimeFrameIndex(3000));
+        
+        INFO("Range after data: start=2000, end=3000, result size=" << analog_range_after.values.size());
+        REQUIRE(analog_range_after.values.empty());  // This is the "no data shown" issue
+        
+        // Test case 3: Request range partially overlapping data (should return partial data)
+        auto analog_range_partial_before = time_series->getTimeValueSpanInTimeFrameIndexRange(
+            TimeFrameIndex(-500), TimeFrameIndex(100));
+        
+        INFO("Range partial before: start=-500, end=100, result size=" << analog_range_partial_before.values.size());
+        REQUIRE(!analog_range_partial_before.values.empty());  // Should have data from 0 to 100
+        REQUIRE(analog_range_partial_before.values.size() == 101);  // 0 through 100 inclusive
+        
+        auto analog_range_partial_after = time_series->getTimeValueSpanInTimeFrameIndexRange(
+            TimeFrameIndex(900), TimeFrameIndex(1500));
+        
+        INFO("Range partial after: start=900, end=1500, result size=" << analog_range_partial_after.values.size());
+        REQUIRE(!analog_range_partial_after.values.empty());  // Should have data from 900 to 999
+        REQUIRE(analog_range_partial_after.values.size() == 100);  // 900 through 999 inclusive
+        
+        // Test case 4: Request range much larger than data (should return all data)
+        auto analog_range_huge = time_series->getTimeValueSpanInTimeFrameIndexRange(
+            TimeFrameIndex(-10000), TimeFrameIndex(10000));
+        
+        INFO("Range huge: start=-10000, end=10000, result size=" << analog_range_huge.values.size());
+        REQUIRE(!analog_range_huge.values.empty());  // Should have all data
+        REQUIRE(analog_range_huge.values.size() == num_points);  // All 1000 points
+        
+        INFO("Testing how OpenGLWidget would handle these cases");
+        
+        // Simulate what OpenGLWidget does:
+        // 1. Get XAxis range
+        // 2. Convert to series time frame
+        // 3. Call getTimeValueSpanInTimeFrameIndexRange
+        // 4. Check if result is empty and return early if so
+        
+        auto simulate_opengl_widget_logic = [&](TimeFrameIndex start, TimeFrameIndex end) -> bool {
+            auto range = time_series->getTimeValueSpanInTimeFrameIndexRange(start, end);
+            if (range.values.empty()) {
+                // This is where OpenGLWidget returns early, causing "no data shown"
+                return false;  // No data shown
+            }
+            return true;  // Data would be shown
+        };
+        
+        // Cases that cause "no data shown" in OpenGLWidget
+        REQUIRE(!simulate_opengl_widget_logic(TimeFrameIndex(-2000), TimeFrameIndex(-1000)));
+        REQUIRE(!simulate_opengl_widget_logic(TimeFrameIndex(2000), TimeFrameIndex(3000)));
+        
+        // Cases that should show data
+        REQUIRE(simulate_opengl_widget_logic(TimeFrameIndex(-500), TimeFrameIndex(100)));
+        REQUIRE(simulate_opengl_widget_logic(TimeFrameIndex(900), TimeFrameIndex(1500)));
+        REQUIRE(simulate_opengl_widget_logic(TimeFrameIndex(-10000), TimeFrameIndex(10000)));
+        REQUIRE(simulate_opengl_widget_logic(TimeFrameIndex(100), TimeFrameIndex(200)));
+    }
+    
+    SECTION("Multi-series range handling - ensuring fix doesn't break other series") {
+        // This test verifies that when one series has no data in the visible range,
+        // other series can still be rendered properly (testing the OpenGLWidget fix)
+        
+        // Create multiple series with different data ranges
+        constexpr size_t num_points = 1000;
+        
+        // Series 1: Data from 0 to 999
+        std::vector<TimeFrameIndex> time_vector1;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector1.push_back(TimeFrameIndex(i));
+        }
+        auto data1 = generateGaussianDataIntegration(num_points, 10.0f, 1.0f, 42);
+        auto series1 = std::make_shared<AnalogTimeSeries>(data1, time_vector1);
+        
+        // Series 2: Data from 5000 to 5999 (completely different range)
+        std::vector<TimeFrameIndex> time_vector2;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector2.push_back(TimeFrameIndex(5000 + i));
+        }
+        auto data2 = generateGaussianDataIntegration(num_points, 20.0f, 2.0f, 123);
+        auto series2 = std::make_shared<AnalogTimeSeries>(data2, time_vector2);
+        
+        // Series 3: Data from 10000 to 10999 (even further away)
+        std::vector<TimeFrameIndex> time_vector3;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector3.push_back(TimeFrameIndex(10000 + i));
+        }
+        auto data3 = generateGaussianDataIntegration(num_points, 30.0f, 3.0f, 456);
+        auto series3 = std::make_shared<AnalogTimeSeries>(data3, time_vector3);
+        
+        INFO("Testing scenarios where different series have data in different ranges");
+        
+        // Test scenario 1: Visible range overlaps only Series 1
+        TimeFrameIndex range1_start(100);
+        TimeFrameIndex range1_end(200);
+        
+        auto range1_series1 = series1->getTimeValueSpanInTimeFrameIndexRange(range1_start, range1_end);
+        auto range1_series2 = series2->getTimeValueSpanInTimeFrameIndexRange(range1_start, range1_end);
+        auto range1_series3 = series3->getTimeValueSpanInTimeFrameIndexRange(range1_start, range1_end);
+        
+        REQUIRE(!range1_series1.values.empty());  // Series 1 has data
+        REQUIRE(range1_series2.values.empty());   // Series 2 has no data (would trigger early return in old code)
+        REQUIRE(range1_series3.values.empty());   // Series 3 has no data (would trigger early return in old code)
+        
+        // Test scenario 2: Visible range overlaps only Series 2
+        TimeFrameIndex range2_start(5100);
+        TimeFrameIndex range2_end(5200);
+        
+        auto range2_series1 = series1->getTimeValueSpanInTimeFrameIndexRange(range2_start, range2_end);
+        auto range2_series2 = series2->getTimeValueSpanInTimeFrameIndexRange(range2_start, range2_end);
+        auto range2_series3 = series3->getTimeValueSpanInTimeFrameIndexRange(range2_start, range2_end);
+        
+        REQUIRE(range2_series1.values.empty());   // Series 1 has no data
+        REQUIRE(!range2_series2.values.empty());  // Series 2 has data
+        REQUIRE(range2_series3.values.empty());   // Series 3 has no data
+        
+        // Test scenario 3: Visible range overlaps multiple series
+        TimeFrameIndex range3_start(-1000);
+        TimeFrameIndex range3_end(15000);
+        
+        auto range3_series1 = series1->getTimeValueSpanInTimeFrameIndexRange(range3_start, range3_end);
+        auto range3_series2 = series2->getTimeValueSpanInTimeFrameIndexRange(range3_start, range3_end);
+        auto range3_series3 = series3->getTimeValueSpanInTimeFrameIndexRange(range3_start, range3_end);
+        
+        REQUIRE(!range3_series1.values.empty());  // Series 1 has data
+        REQUIRE(!range3_series2.values.empty());  // Series 2 has data
+        REQUIRE(!range3_series3.values.empty());  // Series 3 has data
+        
+        // Test scenario 4: Visible range overlaps no series (gap between series)
+        TimeFrameIndex range4_start(2000);
+        TimeFrameIndex range4_end(3000);
+        
+        auto range4_series1 = series1->getTimeValueSpanInTimeFrameIndexRange(range4_start, range4_end);
+        auto range4_series2 = series2->getTimeValueSpanInTimeFrameIndexRange(range4_start, range4_end);
+        auto range4_series3 = series3->getTimeValueSpanInTimeFrameIndexRange(range4_start, range4_end);
+        
+        REQUIRE(range4_series1.values.empty());   // Series 1 has no data
+        REQUIRE(range4_series2.values.empty());   // Series 2 has no data
+        REQUIRE(range4_series3.values.empty());   // Series 3 has no data
+        
+        INFO("Verifying that the fix allows partial rendering of available series");
+        
+        // Simulate the improved OpenGLWidget logic that continues instead of returning early
+        auto simulate_improved_opengl_logic = [&](TimeFrameIndex start, TimeFrameIndex end) -> std::vector<bool> {
+            std::vector<bool> series_rendered;
+            
+            // Test each series
+            for (auto series : {series1, series2, series3}) {
+                auto range = series->getTimeValueSpanInTimeFrameIndexRange(start, end);
+                if (range.values.empty()) {
+                    // With the fix: continue to next series instead of early return
+                    series_rendered.push_back(false);
+                    continue;
+                } else {
+                    // Series has data and would be rendered
+                    series_rendered.push_back(true);
+                }
+            }
+            
+            return series_rendered;
+        };
+        
+        // Test scenario 1: Only series 1 should be rendered
+        auto result1 = simulate_improved_opengl_logic(range1_start, range1_end);
+        REQUIRE(result1.size() == 3);
+        REQUIRE(result1[0] == true);   // Series 1 rendered
+        REQUIRE(result1[1] == false);  // Series 2 not rendered (but doesn't stop others)
+        REQUIRE(result1[2] == false);  // Series 3 not rendered (but doesn't stop others)
+        
+        // Test scenario 2: Only series 2 should be rendered
+        auto result2 = simulate_improved_opengl_logic(range2_start, range2_end);
+        REQUIRE(result2.size() == 3);
+        REQUIRE(result2[0] == false);  // Series 1 not rendered
+        REQUIRE(result2[1] == true);   // Series 2 rendered
+        REQUIRE(result2[2] == false);  // Series 3 not rendered
+        
+        // Test scenario 3: All series should be rendered
+        auto result3 = simulate_improved_opengl_logic(range3_start, range3_end);
+        REQUIRE(result3.size() == 3);
+        REQUIRE(result3[0] == true);   // Series 1 rendered
+        REQUIRE(result3[1] == true);   // Series 2 rendered
+        REQUIRE(result3[2] == true);   // Series 3 rendered
+        
+        // Test scenario 4: No series should be rendered
+        auto result4 = simulate_improved_opengl_logic(range4_start, range4_end);
+        REQUIRE(result4.size() == 3);
+        REQUIRE(result4[0] == false);  // Series 1 not rendered
+        REQUIRE(result4[1] == false);  // Series 2 not rendered
+        REQUIRE(result4[2] == false);  // Series 3 not rendered
+    }
+    
+    SECTION("MVP Matrix corruption with extreme ranges - testing for NaN/Infinity") {
+        // This test specifically checks for NaN/Infinity values in MVP matrices
+        // which could cause persistent OpenGL state corruption
+        
+        constexpr size_t num_points = 1000;
+        std::vector<TimeFrameIndex> time_vector;
+        for (size_t i = 0; i < num_points; ++i) {
+            time_vector.push_back(TimeFrameIndex(i));  // Data from 0 to 999
+        }
+        
+        auto data = generateGaussianDataIntegration(num_points, 0.0f, 10.0f, 42);
+        auto time_series = std::make_shared<AnalogTimeSeries>(data, time_vector);
+        
+        PlottingManager manager;
+        int series_index = manager.addAnalogSeries();
+        
+        NewAnalogTimeSeriesDisplayOptions display_options;
+        float allocated_center, allocated_height;
+        manager.calculateAnalogSeriesAllocation(series_index, allocated_center, allocated_height);
+        display_options.allocated_y_center = allocated_center;
+        display_options.allocated_height = allocated_height;
+        setAnalogIntrinsicProperties(time_series.get(), display_options);
+        
+        auto test_matrix_validity = [](glm::mat4 const& matrix, std::string const& name) {
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    if (!std::isfinite(matrix[i][j])) {
+                        FAIL("Matrix " << name << "[" << i << "][" << j << "] contains invalid value: " << matrix[i][j]);
+                    }
+                }
+            }
+        };
+        
+        INFO("Testing MVP matrices with extreme ranges that could cause NaN/Infinity");
+        
+        // Test Case 1: Extremely large range (potential overflow)
+        constexpr int64_t huge_start = -1000000000LL;
+        constexpr int64_t huge_end = 1000000000LL;
+        
+        manager.setVisibleDataRange(static_cast<int>(huge_start), static_cast<int>(huge_end));
+        
+        auto model_huge = new_getAnalogModelMat(display_options, 
+                                               display_options.cached_std_dev, 
+                                               display_options.cached_mean, 
+                                               manager);
+        auto view_huge = new_getAnalogViewMat(manager);
+        auto projection_huge = new_getAnalogProjectionMat(TimeFrameIndex(huge_start), 
+                                                          TimeFrameIndex(huge_end), 
+                                                          -1000.0f, 1000.0f, 
+                                                          manager);
+        
+        test_matrix_validity(model_huge, "Model (huge range)");
+        test_matrix_validity(view_huge, "View (huge range)");
+        test_matrix_validity(projection_huge, "Projection (huge range)");
+        
+        // Test Case 2: Zero or near-zero range (potential division by zero)
+        constexpr int64_t tiny_start = 1000;
+        constexpr int64_t tiny_end = 1001;  // Range of 1
+        
+        manager.setVisibleDataRange(static_cast<int>(tiny_start), static_cast<int>(tiny_end));
+        
+        auto model_tiny = new_getAnalogModelMat(display_options, 
+                                               display_options.cached_std_dev, 
+                                               display_options.cached_mean, 
+                                               manager);
+        auto view_tiny = new_getAnalogViewMat(manager);
+        auto projection_tiny = new_getAnalogProjectionMat(TimeFrameIndex(tiny_start), 
+                                                          TimeFrameIndex(tiny_end), 
+                                                          -1000.0f, 1000.0f, 
+                                                          manager);
+        
+        test_matrix_validity(model_tiny, "Model (tiny range)");
+        test_matrix_validity(view_tiny, "View (tiny range)");
+        test_matrix_validity(projection_tiny, "Projection (tiny range)");
+        
+        // Test Case 3: Inverted range (end < start)
+        constexpr int64_t inv_start = 1000;
+        constexpr int64_t inv_end = 500;  // Invalid: end < start
+        
+        manager.setVisibleDataRange(static_cast<int>(inv_start), static_cast<int>(inv_end));
+        
+        auto model_inv = new_getAnalogModelMat(display_options, 
+                                              display_options.cached_std_dev, 
+                                              display_options.cached_mean, 
+                                              manager);
+        auto view_inv = new_getAnalogViewMat(manager);
+        auto projection_inv = new_getAnalogProjectionMat(TimeFrameIndex(inv_start), 
+                                                         TimeFrameIndex(inv_end), 
+                                                         -1000.0f, 1000.0f, 
+                                                         manager);
+        
+        test_matrix_validity(model_inv, "Model (inverted range)");
+        test_matrix_validity(view_inv, "View (inverted range)");
+        test_matrix_validity(projection_inv, "Projection (inverted range)");
+        
+        // Test Case 4: Zero standard deviation (could cause division by zero in model matrix)
+        std::vector<float> constant_data(num_points, 42.0f);  // All same value
+        auto constant_series = std::make_shared<AnalogTimeSeries>(constant_data, time_vector);
+        
+        NewAnalogTimeSeriesDisplayOptions constant_options;
+        constant_options.allocated_y_center = allocated_center;
+        constant_options.allocated_height = allocated_height;
+        setAnalogIntrinsicProperties(constant_series.get(), constant_options);
+        
+        // Reset to normal range for this test
+        manager.setVisibleDataRange(0, 999);
+        
+        auto model_zero_std = new_getAnalogModelMat(constant_options, 
+                                                   constant_options.cached_std_dev,  // Should be ~0
+                                                   constant_options.cached_mean, 
+                                                   manager);
+        auto view_zero_std = new_getAnalogViewMat(manager);
+        auto projection_zero_std = new_getAnalogProjectionMat(TimeFrameIndex(0), 
+                                                              TimeFrameIndex(999), 
+                                                              -1000.0f, 1000.0f, 
+                                                              manager);
+        
+        test_matrix_validity(model_zero_std, "Model (zero std dev)");
+        test_matrix_validity(view_zero_std, "View (zero std dev)");
+        test_matrix_validity(projection_zero_std, "Projection (zero std dev)");
+        
+        INFO("Testing that matrices remain valid after returning to normal range");
+        
+        // Test Case 5: Return to normal range after extreme cases
+        manager.setVisibleDataRange(100, 200);
+        
+        auto model_recovery = new_getAnalogModelMat(display_options, 
+                                                   display_options.cached_std_dev, 
+                                                   display_options.cached_mean, 
+                                                   manager);
+        auto view_recovery = new_getAnalogViewMat(manager);
+        auto projection_recovery = new_getAnalogProjectionMat(TimeFrameIndex(100), 
+                                                              TimeFrameIndex(200), 
+                                                              -1000.0f, 1000.0f, 
+                                                              manager);
+        
+        test_matrix_validity(model_recovery, "Model (recovery)");
+        test_matrix_validity(view_recovery, "View (recovery)");
+        test_matrix_validity(projection_recovery, "Projection (recovery)");
+        
+        // Test that transformation still works correctly after recovery
+        glm::vec2 recovery_point = applyMVPTransformationIntegration(150, 0.0f, 
+                                                                    model_recovery, view_recovery, projection_recovery);
+        
+        REQUIRE(std::isfinite(recovery_point.x));
+        REQUIRE(std::isfinite(recovery_point.y));
+        REQUIRE(recovery_point.x >= -1.1f);
+        REQUIRE(recovery_point.x <= 1.1f);
     }
 }

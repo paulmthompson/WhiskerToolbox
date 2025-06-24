@@ -71,8 +71,93 @@ glm::mat4 new_getIntervalProjectionMat(int start_data_index,
     float const bottom = plotting_manager.viewport_y_min;
     float const top = plotting_manager.viewport_y_max;
 
-    // Create orthographic projection matrix
-    auto Projection = glm::ortho(left, right, bottom, top);
+    // Validate and sanitize input parameters to prevent OpenGL state corruption
+    float safe_left = left;
+    float safe_right = right;
+    float safe_bottom = bottom;
+    float safe_top = top;
+    
+    // Check for and fix invalid or extreme values that could cause NaN/Infinity
+    
+    // 1. Ensure all values are finite
+    if (!std::isfinite(safe_left)) {
+        std::cout << "Warning: Invalid interval left=" << safe_left << ", using fallback" << std::endl;
+        safe_left = 0.0f;
+    }
+    if (!std::isfinite(safe_right)) {
+        std::cout << "Warning: Invalid interval right=" << safe_right << ", using fallback" << std::endl;
+        safe_right = 1000.0f;
+    }
+    if (!std::isfinite(safe_bottom)) {
+        std::cout << "Warning: Invalid interval bottom=" << safe_bottom << ", using fallback" << std::endl;
+        safe_bottom = -1.0f;
+    }
+    if (!std::isfinite(safe_top)) {
+        std::cout << "Warning: Invalid interval top=" << safe_top << ", using fallback" << std::endl;
+        safe_top = 1.0f;
+    }
+    
+    // 2. Ensure X range is valid (left < right with minimum separation)
+    constexpr float min_range = 1e-6f;  // Minimum range to prevent division by zero
+    if (safe_right <= safe_left) {
+        std::cout << "Warning: Invalid interval X range [" << safe_left << ", " << safe_right 
+                  << "], fixing to valid range" << std::endl;
+        float center = (safe_left + safe_right) * 0.5f;
+        safe_left = center - min_range * 0.5f;
+        safe_right = center + min_range * 0.5f;
+    } else if ((safe_right - safe_left) < min_range) {
+        std::cout << "Warning: Interval X range too small [" << safe_left << ", " << safe_right 
+                  << "], expanding to minimum safe range" << std::endl;
+        float center = (safe_left + safe_right) * 0.5f;
+        safe_left = center - min_range * 0.5f;
+        safe_right = center + min_range * 0.5f;
+    }
+    
+    // 3. Ensure Y range is valid
+    if (safe_top <= safe_bottom) {
+        std::cout << "Warning: Invalid interval Y range [" << safe_bottom << ", " << safe_top 
+                  << "], fixing to valid range" << std::endl;
+        float center = (safe_bottom + safe_top) * 0.5f;
+        safe_bottom = center - min_range * 0.5f;
+        safe_top = center + min_range * 0.5f;
+    } else if ((safe_top - safe_bottom) < min_range) {
+        std::cout << "Warning: Interval Y range too small [" << safe_bottom << ", " << safe_top 
+                  << "], expanding to minimum safe range" << std::endl;
+        float center = (safe_bottom + safe_top) * 0.5f;
+        safe_bottom = center - min_range * 0.5f;
+        safe_top = center + min_range * 0.5f;
+    }
+    
+    // 4. Clamp extreme values to prevent numerical issues
+    constexpr float max_abs_value = 1e8f;  // Large but safe limit
+    if (std::abs(safe_left) > max_abs_value || std::abs(safe_right) > max_abs_value) {
+        std::cout << "Warning: Extremely large interval X range [" << safe_left << ", " << safe_right 
+                  << "], clamping to safe range" << std::endl;
+        float range = safe_right - safe_left;
+        if (range > 2 * max_abs_value) {
+            safe_left = -max_abs_value;
+            safe_right = max_abs_value;
+        } else {
+            float center = (safe_left + safe_right) * 0.5f;
+            center = std::clamp(center, -max_abs_value * 0.5f, max_abs_value * 0.5f);
+            safe_left = center - range * 0.5f;
+            safe_right = center + range * 0.5f;
+        }
+    }
+
+    // Create orthographic projection matrix with validated parameters
+    auto Projection = glm::ortho(safe_left, safe_right, safe_bottom, safe_top);
+    
+    // Final validation: check that the resulting matrix is valid
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            if (!std::isfinite(Projection[i][j])) {
+                std::cout << "Error: Interval projection matrix contains invalid value at [" << i << "][" << j 
+                          << "]=" << Projection[i][j] << ", using identity matrix" << std::endl;
+                return glm::mat4(1.0f);  // Return identity matrix as safe fallback
+            }
+        }
+    }
 
     return Projection;
 }

@@ -122,6 +122,11 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
     // Set the master time frame for proper coordinate conversion
     ui->openGLWidget->setMasterTimeFrame(_time_frame);
 
+    // Set spinbox maximum to the actual data range (not the hardcoded UI limit)
+    int const data_range = static_cast<int>(_time_frame->getTotalFrameCount());
+    std::cout << "Setting x_axis_samples maximum to " << data_range << std::endl;
+    ui->x_axis_samples->setMaximum(data_range);
+
     // Setup stacked widget with data-type specific viewers
     auto analog_widget = new AnalogViewer_Widget(_data_manager, ui->openGLWidget);
     auto interval_widget = new IntervalViewer_Widget(_data_manager, ui->openGLWidget);
@@ -518,13 +523,15 @@ void DataViewer_Widget::wheelEvent(QWheelEvent * event) {
     // Wheel down (negative numSteps) should zoom OUT (increase range width)
     auto const range_delta = static_cast<int64_t>(-numSteps * rangeFactor);
 
-    // Apply range delta
+    // Apply range delta and get the actual achieved range
     ui->openGLWidget->changeRangeWidth(range_delta);
 
-    // Calculate new range width for spinbox update
-    auto const new_range = std::max(1, current_range + static_cast<int>(range_delta));
+    // Get the actual range that was achieved (may be different due to clamping)
+    auto x_axis = ui->openGLWidget->getXAxis();
+    auto const actual_range = static_cast<int>(x_axis.getEnd() - x_axis.getStart());
 
-    updateXAxisSamples(new_range);
+    // Update spinbox with the actual achieved range (not the requested range)
+    updateXAxisSamples(actual_range);
     _updateLabels();
 }
 
