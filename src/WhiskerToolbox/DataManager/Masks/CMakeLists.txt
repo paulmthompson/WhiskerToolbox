@@ -13,6 +13,7 @@ set(mask_sources
     utils/connected_component.hpp
     utils/connected_component.cpp
     utils/Image.hpp
+    utils/Image.cpp
     utils/skeletonize.cpp
     utils/skeletonize.hpp)
 

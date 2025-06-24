@@ -5,6 +5,9 @@
 #include <map>
 #include <set>
 
+#include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+
 Mask2D create_mask(std::vector<uint32_t> const & x, std::vector<uint32_t> const & y) {
     auto new_mask = Mask2D{};
     new_mask.reserve(x.size());// Reserve space to avoid reallocations
@@ -302,4 +305,44 @@ std::vector<Point2D<uint32_t>> extract_line_pixels(
     }
 
     return line_pixels;
+}
+
+Mask2D resize_mask(Mask2D const & mask, ImageSize const & source_size, ImageSize const & dest_size) {
+    // Validate input parameters
+    if (mask.empty() || source_size.width <= 0 || source_size.height <= 0 ||
+        dest_size.width <= 0 || dest_size.height <= 0) {
+        return {};
+    }
+
+    // If sizes are the same, return a copy of the original mask
+    if (source_size.width == dest_size.width && source_size.height == dest_size.height) {
+        return mask;
+    }
+
+    // Create a binary image from the mask
+    cv::Mat source_image = cv::Mat::zeros(source_size.height, source_size.width, CV_8UC1);
+
+    // Set mask pixels to white (255)
+    for (auto const & point: mask) {
+        if (point.x < static_cast<uint32_t>(source_size.width) &&
+            point.y < static_cast<uint32_t>(source_size.height)) {
+            source_image.at<uint8_t>(point.y, point.x) = 255;
+        }
+    }
+
+    // Resize the image using nearest neighbor interpolation
+    cv::Mat resized_image;
+    cv::resize(source_image, resized_image, cv::Size(dest_size.width, dest_size.height), 0, 0, cv::INTER_NEAREST);
+
+    // Extract the new mask points from the resized binary image
+    Mask2D resized_mask;
+    for (int y = 0; y < dest_size.height; ++y) {
+        for (int x = 0; x < dest_size.width; ++x) {
+            if (resized_image.at<uint8_t>(y, x) > 0) {
+                resized_mask.push_back({static_cast<uint32_t>(x), static_cast<uint32_t>(y)});
+            }
+        }
+    }
+
+    return resized_mask;
 }

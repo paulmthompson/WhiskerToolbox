@@ -90,6 +90,23 @@ Mask2D subtract_masks(Mask2D const & mask1, Mask2D const & mask2);
  */
 Mask2D generate_outline_mask(Mask2D const & mask, int thickness = 1, uint32_t image_width = UINT32_MAX, uint32_t image_height = UINT32_MAX);
 
+/**
+ * @brief Resize a mask from one image size to another using nearest interpolation
+ *
+ * Converts mask coordinates from source image dimensions to destination image dimensions
+ * using OpenCV's nearest neighbor interpolation. This ensures the mask remains homogeneous
+ * (binary) after resizing.
+ *
+ * @param mask The input mask to resize
+ * @param source_size The original image size that the mask coordinates correspond to
+ * @param dest_size The target image size to resize the mask to
+ * @return New mask with coordinates scaled to the destination image size
+ *
+ * @note If source or destination dimensions are invalid (<=0), returns empty mask
+ * @note Uses OpenCV's INTER_NEAREST interpolation to maintain binary mask properties
+ */
+Mask2D resize_mask(Mask2D const & mask, ImageSize const & source_size, ImageSize const & dest_size);
+
 std::vector<Point2D<uint32_t>> extract_line_pixels(
         std::vector<uint8_t> const & binary_img,
         ImageSize const image_size);
