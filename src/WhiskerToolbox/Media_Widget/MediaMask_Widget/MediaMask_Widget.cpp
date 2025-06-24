@@ -78,6 +78,9 @@ void MediaMask_Widget::hideEvent(QHideEvent * event) {
     disconnect(_scene, &Media_Window::mouseMoveCanvas, this, &MediaMask_Widget::_mouseMoveInVideo);
     disconnect(_scene, &Media_Window::leftRelease, this, &MediaMask_Widget::_mouseReleased);
     disconnect(_scene, &Media_Window::rightRelease, this, &MediaMask_Widget::_mouseReleased);
+    
+    // Clean up hover circle when switching away from mask widget
+    _scene->setShowHoverCircle(false);
 }
 
 void MediaMask_Widget::_setupSelectionModePages() {

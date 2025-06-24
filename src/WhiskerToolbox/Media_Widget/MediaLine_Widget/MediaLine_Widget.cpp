@@ -160,6 +160,9 @@ void MediaLine_Widget::hideEvent(QHideEvent * event) {
     std::cout << "Hide Event" << std::endl;
     disconnect(_scene, &Media_Window::leftClickMedia, this, &MediaLine_Widget::_clickedInVideo);
     disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
+    
+    // Clean up hover circle when switching away from line widget
+    _scene->setShowHoverCircle(false);
 }
 
 void MediaLine_Widget::setActiveKey(std::string const& key) {

@@ -14,6 +14,7 @@
 #include "DataManager/utils/opencv_utility.hpp"
 #include "Media_Window/Media_Window.hpp"
 
+#include <QHideEvent>
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include <iostream>
@@ -275,6 +276,18 @@ void MediaProcessing_Widget::_onMagicEraserClearMaskRequested() {
     _applyMagicEraser();
 
     std::cout << "Magic eraser mask cleared" << std::endl;
+}
+
+void MediaProcessing_Widget::hideEvent(QHideEvent * event) {
+    static_cast<void>(event);
+
+    std::cout << "MediaProcessing_Widget Hide Event" << std::endl;
+
+    // Clean up hover circle when switching away from processing widget
+    if (_scene) {
+        _scene->setShowHoverCircle(false);
+        _scene->setDrawingMode(false);
+    }
 }
 
 void MediaProcessing_Widget::_onDrawingFinished() {
