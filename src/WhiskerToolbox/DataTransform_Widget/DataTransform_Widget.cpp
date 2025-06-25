@@ -180,6 +180,14 @@ void DataTransform_Widget::_onOperationSelected(int index) {
     if (index < 0) {
         std::cout << "selected index is less than 0 and invalid: " << index << std::endl;
         _currentSelectedOperation = nullptr;
+
+        // Clear all parameter widgets when no operation is selected
+        while (ui->stackedWidget->count() > 1) {
+            QWidget * widget = ui->stackedWidget->widget(1);
+            ui->stackedWidget->removeWidget(widget);
+            widget->deleteLater();
+        }
+
         ui->stackedWidget->setCurrentIndex(0);// Show default page
         return;
     }
@@ -203,19 +211,28 @@ void DataTransform_Widget::_onOperationSelected(int index) {
 
 // Helper function to show the correct widget
 void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) {
+    // Clear current parameter widget
     _currentParameterWidget = nullptr;
-    QWidget * targetWidget = nullptr;
+
+    // Remove all widgets from stacked widget except the default page (index 0)
+    while (ui->stackedWidget->count() > 1) {
+        QWidget * widget = ui->stackedWidget->widget(1);
+        ui->stackedWidget->removeWidget(widget);
+        widget->deleteLater();
+    }
 
     // Find the factory function for this operation name
     auto factoryIt = _parameterWidgetFactories.find(op_name);
 
     if (factoryIt == _parameterWidgetFactories.end()) {
         std::cout << op_name << " does not appear in the factory registry" << std::endl;
+        ui->stackedWidget->setCurrentIndex(0);
         return;
     }
 
     if (!factoryIt->second) {
         std::cout << "Factory function not found for " << op_name << std::endl;
+        ui->stackedWidget->setCurrentIndex(0);
         return;
     }
 
@@ -227,7 +244,6 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
     if (newParamWidget) {
         std::cout << "Adding Widget" << std::endl;
         int const widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
-        targetWidget = newParamWidget;
         _currentParameterWidget = newParamWidget;// Set as active
 
         // If this is a scaling widget, set the current data key
@@ -235,10 +251,8 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
         if (scalingWidget && !_highlighted_available_feature.isEmpty()) {
             scalingWidget->setCurrentDataKey(_highlighted_available_feature);
         }
-    }
 
-    if (targetWidget) {
-        ui->stackedWidget->setCurrentWidget(targetWidget);
+        ui->stackedWidget->setCurrentWidget(newParamWidget);
     } else {
         ui->stackedWidget->setCurrentIndex(0);
     }
