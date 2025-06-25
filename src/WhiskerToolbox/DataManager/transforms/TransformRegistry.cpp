@@ -16,6 +16,7 @@
 #include "transforms/Masks/mask_centroid.hpp"
 #include "transforms/Masks/mask_connected_component.hpp"
 #include "transforms/Masks/mask_hole_filling.hpp"
+#include "transforms/Masks/mask_median_filter.hpp"
 #include "transforms/Masks/mask_principal_axis.hpp"
 #include "transforms/Masks/mask_skeletonize.hpp"
 #include "transforms/Masks/mask_to_line.hpp"
@@ -37,6 +38,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<MaskCentroidOperation>());
     _registerOperation(std::make_unique<MaskConnectedComponentOperation>());
     _registerOperation(std::make_unique<MaskHoleFillingOperation>());
+    _registerOperation(std::make_unique<MaskMedianFilterOperation>());
     _registerOperation(std::make_unique<MaskPrincipalAxisOperation>());
     _registerOperation(std::make_unique<MaskToLineOperation>());
     _registerOperation(std::make_unique<MaskSkeletonizeOperation>());

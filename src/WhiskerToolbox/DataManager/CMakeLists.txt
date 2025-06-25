@@ -118,6 +118,8 @@ set(DATAMANAGER_SOURCES
         transforms/Masks/mask_connected_component.hpp
         transforms/Masks/mask_hole_filling.cpp
         transforms/Masks/mask_hole_filling.hpp
+        transforms/Masks/mask_median_filter.cpp
+        transforms/Masks/mask_median_filter.hpp
         transforms/Masks/mask_principal_axis.cpp
         transforms/Masks/mask_principal_axis.hpp
         transforms/Masks/mask_to_line.cpp

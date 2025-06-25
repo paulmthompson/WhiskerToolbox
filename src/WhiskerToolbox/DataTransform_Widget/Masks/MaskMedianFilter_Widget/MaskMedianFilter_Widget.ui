@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MaskMedianFilter_Widget</class>
+ <widget class="QWidget" name="MaskMedianFilter_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>350</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Apply Median Filter</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>Apply Median Filter</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="margin">
+      <number>5</number>
+     </property>
+     <property name="styleSheet">
+      <string>font-weight: bold; font-size: 14px;</string>
+     </property>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="descriptionGroupBox">
+     <property name="title">
+      <string>Operation Description</string>
+     </property>
+     <layout class="QVBoxLayout" name="descriptionLayout">
+      <item>
+       <widget class="QLabel" name="descriptionLabel">
+        <property name="text">
+         <string>Median filtering is a noise reduction technique that replaces each pixel with the median value of pixels in its neighborhood. This operation:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="bulletPointsLabel">
+        <property name="text">
+         <string>• Removes salt-and-pepper noise (isolated pixels)
+• Preserves edges better than linear filters
+• Fills small gaps in mask boundaries
+• Uses a square window centered on each pixel
+• Larger windows provide more aggressive smoothing</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>margin-left: 10px;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="parametersGroupBox">
+     <property name="title">
+      <string>Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="parametersLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="windowSizeLabel">
+        <property name="text">
+         <string>Window Size:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="windowSizeSpinBox">
+        <property name="toolTip">
+         <string>Size of the square window for median filtering (must be odd)</string>
+        </property>
+        <property name="suffix">
+         <string> pixels</string>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>15</number>
+        </property>
+        <property name="singleStep">
+         <number>2</number>
+        </property>
+        <property name="value">
+         <number>3</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QLabel" name="windowSizeHelpLabel">
+        <property name="text">
+         <string>Larger window sizes provide more aggressive noise reduction but may remove fine details. Window size must be odd (1, 3, 5, 7, etc.).</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>color: #666; font-size: 10px;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="notesGroupBox">
+     <property name="title">
+      <string>Usage Notes</string>
+     </property>
+     <layout class="QVBoxLayout" name="notesLayout">
+      <item>
+       <widget class="QLabel" name="notesLabel">
+        <property name="text">
+         <string>• Window size 3: Light noise reduction, preserves fine details
+• Window size 5: Moderate smoothing, removes small features
+• Window size 7+: Heavy smoothing, may alter object shapes
+• Best results on masks with well-defined boundaries</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>color: #666;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 

@@ -45,6 +45,7 @@ add_executable(test_data_manager
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_centroid.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_connected_component.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_hole_filling.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_median_filter.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/Masks/mask_principal_axis.test.cpp
 )
 
