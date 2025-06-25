@@ -12,6 +12,8 @@ set(mask_sources
     IO/JSON/Mask_Data_JSON.cpp
     utils/connected_component.hpp
     utils/connected_component.cpp
+    utils/hole_filling.hpp
+    utils/hole_filling.cpp
     utils/Image.hpp
     utils/Image.cpp
     utils/mask_utils.hpp
@@ -23,6 +25,7 @@ set(mask_test_sources
     masks.test.cpp
     Mask_Data.test.cpp
     utils/connected_component.test.cpp
+    utils/hole_filling.test.cpp
     utils/Image.test.cpp
     utils/skeletonize.test.cpp)
 

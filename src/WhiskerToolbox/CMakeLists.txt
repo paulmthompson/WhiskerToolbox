@@ -98,6 +98,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.hpp
         DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.cpp
         DataTransform_Widget/Masks/MaskConnectedComponent_Widget/MaskConnectedComponent_Widget.ui
+        DataTransform_Widget/Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.hpp
+        DataTransform_Widget/Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.cpp
+        DataTransform_Widget/Masks/MaskHoleFilling_Widget/MaskHoleFilling_Widget.ui
         DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.hpp
         DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.cpp
         DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.ui
