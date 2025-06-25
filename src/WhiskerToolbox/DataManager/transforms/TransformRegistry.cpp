@@ -13,6 +13,7 @@
 #include "transforms/Lines/line_resample.hpp"
 #include "transforms/Lines/line_subsegment.hpp"
 #include "transforms/Masks/mask_area.hpp"
+#include "transforms/Masks/mask_centroid.hpp"
 #include "transforms/Masks/mask_skeletonize.hpp"
 #include "transforms/Masks/mask_to_line.hpp"
 
@@ -30,6 +31,7 @@ TransformRegistry::TransformRegistry() {
     std::cout << "Initializing Operation Registry..." << std::endl;
 
     _registerOperation(std::make_unique<MaskAreaOperation>());
+    _registerOperation(std::make_unique<MaskCentroidOperation>());
     _registerOperation(std::make_unique<MaskToLineOperation>());
     _registerOperation(std::make_unique<MaskSkeletonizeOperation>());
     _registerOperation(std::make_unique<EventThresholdOperation>());

@@ -112,6 +112,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/line_clip.hpp
         transforms/Masks/mask_area.cpp
         transforms/Masks/mask_area.hpp
+        transforms/Masks/mask_centroid.cpp
+        transforms/Masks/mask_centroid.hpp
         transforms/Masks/mask_to_line.cpp
         transforms/Masks/mask_to_line.hpp
         transforms/Masks/mask_skeletonize.cpp
