@@ -1,6 +1,7 @@
 #include "mask_skeletonize.hpp"
 
 #include "Masks/Mask_Data.hpp"
+#include "Masks/utils/mask_utils.hpp"
 #include "Masks/utils/skeletonize.hpp"
 
 #include <algorithm>
@@ -21,100 +22,18 @@ std::shared_ptr<MaskData> skeletonize_mask(
 
     static_cast<void>(params);
     
-    auto result_mask_data = std::make_shared<MaskData>();
-    
     if (!mask_data) {
         progressCallback(100);
-        return result_mask_data;
+        return std::make_shared<MaskData>();
     }
     
-    // Copy image size from input
-    result_mask_data->setImageSize(mask_data->getImageSize());
+    // Create binary processing function that uses the skeletonization algorithm
+    auto binary_processor = [](Image const & input_image) -> Image {
+        return fast_skeletonize(input_image);
+    };
     
-    // Get image dimensions
-    auto image_size = mask_data->getImageSize();
-    if (image_size.width <= 0 || image_size.height <= 0) {
-        // Use default size if mask data doesn't specify
-        image_size.width = 256;
-        image_size.height = 256;
-        result_mask_data->setImageSize(image_size);
-    }
-    
-    // Count total masks to process for progress calculation
-    size_t total_masks = 0;
-    for (auto const & mask_time_pair : mask_data->getAllAsRange()) {
-        if (!mask_time_pair.masks.empty()) {
-            total_masks += mask_time_pair.masks.size();
-        }
-    }
-    
-    if (total_masks == 0) {
-        progressCallback(100);
-        return result_mask_data;
-    }
-    
-    progressCallback(0);
-    
-    // Create binary image buffer (reused for each mask)
-    std::vector<uint8_t> binary_image(image_size.width * image_size.height);
-    
-    size_t processed_masks = 0;
-    
-    for (auto const & mask_time_pair : mask_data->getAllAsRange()) {
-        int time = mask_time_pair.time;
-        auto const & masks = mask_time_pair.masks;
-        
-        for (auto const & mask : masks) {
-            if (mask.empty()) {
-                processed_masks++;
-                continue;
-            }
-            
-            // Clear the binary image
-            std::fill(binary_image.begin(), binary_image.end(), 0);
-            
-            // Convert mask points to binary image
-            for (auto const & point : mask) {
-                int x = static_cast<int>(point.x);
-                int y = static_cast<int>(point.y);
-                
-                // Check bounds
-                if (x >= 0 && x < image_size.width && 
-                    y >= 0 && y < image_size.height) {
-                    binary_image[y * image_size.width + x] = 1;
-                }
-            }
-            
-            // Apply skeletonization
-            auto skeleton = fast_skeletonize(binary_image, image_size.height, image_size.width);
-            
-            // Convert skeleton back to mask points
-            std::vector<Point2D<uint32_t>> skeleton_points;
-            for (int y = 0; y < image_size.height; ++y) {
-                for (int x = 0; x < image_size.width; ++x) {
-                    if (skeleton[y * image_size.width + x] > 0) {
-                        skeleton_points.push_back({static_cast<uint32_t>(x), static_cast<uint32_t>(y)});
-                    }
-                }
-            }
-            
-            // Add the skeletonized mask to result (only if it has points)
-            if (!skeleton_points.empty()) {
-                result_mask_data->addAtTime(time, skeleton_points, false);
-            }
-            
-            processed_masks++;
-            
-            // Update progress
-            int progress = static_cast<int>(
-                std::round(static_cast<double>(processed_masks) / total_masks * 100.0)
-            );
-            progressCallback(progress);
-        }
-    }
-    
-    progressCallback(100);
-    return result_mask_data;
+    // Use the utility function to apply the algorithm
+    return apply_binary_image_algorithm(mask_data, binary_processor, progressCallback);
 }
 
 ///////////////////////////////////////////////////////////////////////////////// MaskSkeletonizeOperation implementation

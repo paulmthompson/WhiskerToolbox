@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MaskConnectedComponent_Widget</class>
+ <widget class="QWidget" name="MaskConnectedComponent_Widget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Remove Small Connected Components</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>Remove Small Connected Components</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="margin">
+      <number>5</number>
+     </property>
+     <property name="styleSheet">
+      <string>font-weight: bold; font-size: 14px;</string>
+     </property>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="descriptionGroupBox">
+     <property name="title">
+      <string>Operation Description</string>
+     </property>
+     <layout class="QVBoxLayout" name="descriptionLayout">
+      <item>
+       <widget class="QLabel" name="descriptionLabel">
+        <property name="text">
+         <string>Removes small isolated regions from mask data using connected component analysis. This operation:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="bulletPointsLabel">
+        <property name="text">
+         <string>• Identifies connected regions using 8-connectivity (including diagonals)
+• Removes components smaller than the specified threshold
+• Preserves larger connected regions intact
+• Helps eliminate noise and small artifacts from mask data</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>margin-left: 10px;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="parametersGroupBox">
+     <property name="title">
+      <string>Parameters</string>
+     </property>
+     <layout class="QFormLayout" name="parametersLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="thresholdLabel">
+        <property name="text">
+         <string>Minimum Component Size (pixels):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="thresholdSpinBox">
+        <property name="toolTip">
+         <string>Connected components smaller than this threshold will be removed</string>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="value">
+         <number>10</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <widget class="QGroupBox" name="notesGroupBox">
+     <property name="title">
+      <string>Notes</string>
+     </property>
+     <layout class="QVBoxLayout" name="notesLayout">
+      <item>
+       <widget class="QLabel" name="notesLabel">
+        <property name="text">
+         <string>This operation uses 8-connectivity, meaning pixels connected horizontally, vertically, or diagonally are considered part of the same component. Choose a threshold that removes unwanted noise while preserving meaningful mask regions.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>color: #666;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 

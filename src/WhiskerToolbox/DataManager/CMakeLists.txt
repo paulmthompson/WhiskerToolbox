@@ -114,6 +114,8 @@ set(DATAMANAGER_SOURCES
         transforms/Masks/mask_area.hpp
         transforms/Masks/mask_centroid.cpp
         transforms/Masks/mask_centroid.hpp
+        transforms/Masks/mask_connected_component.cpp
+        transforms/Masks/mask_connected_component.hpp
         transforms/Masks/mask_principal_axis.cpp
         transforms/Masks/mask_principal_axis.hpp
         transforms/Masks/mask_to_line.cpp
