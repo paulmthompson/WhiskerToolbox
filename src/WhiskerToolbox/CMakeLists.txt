@@ -95,6 +95,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.hpp
         DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.cpp
         DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.ui
+        DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.hpp
+        DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.cpp
+        DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.ui
         DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.cpp
         DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp
         DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.ui
