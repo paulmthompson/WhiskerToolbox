@@ -14,6 +14,8 @@ set(mask_sources
     utils/connected_component.cpp
     utils/hole_filling.hpp
     utils/hole_filling.cpp
+    utils/median_filter.hpp
+    utils/median_filter.cpp
     utils/Image.hpp
     utils/Image.cpp
     utils/mask_utils.hpp
@@ -26,6 +28,7 @@ set(mask_test_sources
     Mask_Data.test.cpp
     utils/connected_component.test.cpp
     utils/hole_filling.test.cpp
+    utils/median_filter.test.cpp
     utils/Image.test.cpp
     utils/skeletonize.test.cpp)
 
