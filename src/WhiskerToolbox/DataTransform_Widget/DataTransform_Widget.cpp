@@ -19,6 +19,7 @@
 #include "DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineSubsegment_Widget/LineSubsegment_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskArea_Widget/MaskArea_Widget.hpp"
+#include "DataTransform_Widget/Masks/MaskCentroid_Widget/MaskCentroid_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
 
@@ -58,6 +59,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Calculate Area"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new MaskArea_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Calculate Mask Centroid"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new MaskCentroid_Widget(parent);
     };
 
     _parameterWidgetFactories["Skeletonize Mask"] = [](QWidget * parent) -> TransformParameter_Widget * {
