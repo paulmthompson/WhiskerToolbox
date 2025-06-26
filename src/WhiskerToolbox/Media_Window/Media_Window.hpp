@@ -18,6 +18,7 @@
 #include <vector>
 
 class DataManager;
+class TimeFrame;
 class QGraphicsPixmapItem;
 class QImage;
 class MediaMask_Widget;
@@ -237,6 +238,10 @@ private:
     void _updateHoverCirclePosition();
 
     void _addRemoveData();
+
+    // Helper for timeframe conversion
+    bool _needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe, 
+                                   std::shared_ptr<TimeFrame> interval_timeframe);
 
 public slots:
     void LoadFrame(int frame_id);

@@ -842,6 +842,12 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, Ima
 void Media_Window::_plotPointData() {
 
     auto const current_time = _data_manager->getCurrentTime();
+    auto video_timeframe = _data_manager->getTime("time");
+
+    if (!video_timeframe) {
+        std::cerr << "Error: Could not get video timeframe 'time' for point conversion" << std::endl;
+        return;
+    }
 
     for (auto const & [point_key, _point_config]: _point_configs) {
         if (!_point_config.get()->is_visible) continue;
@@ -849,6 +855,20 @@ void Media_Window::_plotPointData() {
         auto plot_color = plot_color_with_alpha(_point_config.get());
 
         auto point = _data_manager->getData<PointData>(point_key);
+
+        auto point_timeframe_key = _data_manager->getTimeFrame(point_key);
+        if (point_timeframe_key.empty()) {
+            std::cerr << "Error: No timeframe found for point data: " << point_key << std::endl;
+            continue;
+        }
+
+        auto point_timeframe = _data_manager->getTime(point_timeframe_key);
+
+        auto point_time = current_time;
+        if (video_timeframe.get() != point_timeframe.get()) {
+            auto video_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
+            point_time = point_timeframe->getIndexAtTime(video_time);
+        } 
 
         auto xAspect = getXAspect();
         auto yAspect = getYAspect();
@@ -865,7 +885,7 @@ void Media_Window::_plotPointData() {
             xAspect = static_cast<float>(_canvasWidth) / mask_width;
         }
 
-        auto pointData = point->getPointsAtTime(current_time);
+        auto pointData = point->getPointsAtTime(point_time);
 
         // Get configurable point size
         float const point_size = static_cast<float>(_point_config.get()->point_size);
@@ -964,6 +984,7 @@ void Media_Window::_plotPointData() {
 
 void Media_Window::_plotDigitalIntervalSeries() {
     auto const current_time = _data_manager->getCurrentTime();
+    auto video_timeframe = _data_manager->getTime("time");
 
     for (auto const & [key, _interval_config]: _interval_configs) {
         if (!_interval_config.get()->is_visible) continue;
@@ -975,32 +996,26 @@ void Media_Window::_plotDigitalIntervalSeries() {
 
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
 
-        // Get the timeframe for this interval series
+        // Get the timeframes for conversion
         auto interval_timeframe_key = _data_manager->getTimeFrame(key);
         if (interval_timeframe_key.empty()) {
             std::cerr << "Error: No timeframe found for digital interval series: " << key << std::endl;
             continue;
         }
 
-        // Check if we need to do timeframe conversion
-        bool needs_conversion = (interval_timeframe_key != "time");
-        std::shared_ptr<TimeFrame> video_timeframe = nullptr;
-        std::shared_ptr<TimeFrame> interval_timeframe = nullptr;
+        auto interval_timeframe = _data_manager->getTime(interval_timeframe_key);
 
-        if (needs_conversion) {
-            video_timeframe = _data_manager->getTime("time");
-            interval_timeframe = _data_manager->getTime(interval_timeframe_key);
-
-            if (!video_timeframe) {
-                std::cerr << "Error: Could not get video timeframe 'time' for interval conversion" << std::endl;
-                continue;
-            }
-            if (!interval_timeframe) {
-                std::cerr << "Error: Could not get interval timeframe '" << interval_timeframe_key
-                          << "' for series: " << key << std::endl;
-                continue;
-            }
+        if (!video_timeframe) {
+            std::cerr << "Error: Could not get video timeframe 'time' for interval conversion" << std::endl;
+            continue;
         }
+        if (!interval_timeframe) {
+            std::cerr << "Error: Could not get interval timeframe '" << interval_timeframe_key
+                      << "' for series: " << key << std::endl;
+            continue;
+        }
+
+        bool needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
 
         // Generate relative times based on frame range setting
         std::vector<int> relative_times;
@@ -1074,25 +1089,31 @@ void Media_Window::_plotDigitalIntervalBorders() {
 
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(key);
 
-        // Get the timeframe for this interval series
+        // Get the timeframes for conversion
         auto interval_timeframe_key = _data_manager->getTimeFrame(key);
         if (interval_timeframe_key.empty()) {
             std::cerr << "Error: No timeframe found for digital interval series: " << key << std::endl;
             continue;
         }
 
+        auto video_timeframe = _data_manager->getTime("time");
+        auto interval_timeframe = _data_manager->getTime(interval_timeframe_key);
+
+        if (!video_timeframe) {
+            std::cerr << "Error: Could not get video timeframe 'time' for interval conversion" << std::endl;
+            continue;
+        }
+        if (!interval_timeframe) {
+            std::cerr << "Error: Could not get interval timeframe '" << interval_timeframe_key
+                      << "' for series: " << key << std::endl;
+            continue;
+        }
+
+        bool needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
+
         // Check if an interval is present at the current frame
         bool interval_present = false;
-        if (interval_timeframe_key != "time") {
-            // Need timeframe conversion
-            auto video_timeframe = _data_manager->getTime("time");
-            auto interval_timeframe = _data_manager->getTime(interval_timeframe_key);
-
-            if (!video_timeframe || !interval_timeframe) {
-                std::cerr << "Error: Could not get timeframes for interval conversion" << std::endl;
-                continue;
-            }
-
+        if (needs_conversion) {
             // Convert current video time to interval timeframe
             auto video_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
             auto interval_index = interval_timeframe->getIndexAtTime(video_time);
@@ -1275,6 +1296,17 @@ void Media_Window::_updateHoverCirclePosition() {
 
 void Media_Window::_addRemoveData() {
     //New data key was added. This is where we may want to repopulate a custom table
+}
+
+bool Media_Window::_needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe, 
+                                             std::shared_ptr<TimeFrame> interval_timeframe) {
+    // If either timeframe is null, no conversion is possible/needed
+    if (!video_timeframe || !interval_timeframe) {
+        return false;
+    }
+    
+    // Conversion is needed if the timeframes are different objects
+    return video_timeframe.get() != interval_timeframe.get();
 }
 
 
