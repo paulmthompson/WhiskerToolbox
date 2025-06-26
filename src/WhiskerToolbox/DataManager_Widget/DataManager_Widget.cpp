@@ -58,6 +58,9 @@ DataManager_Widget::DataManager_Widget(
     ui->new_data_section->autoSetContentLayout();
     ui->new_data_section->setTitle("Create New Data");
 
+    // Set the DataManager for the NewDataWidget that was created from the UI file
+    ui->new_data_widget->setDataManager(_data_manager);
+
     connect(ui->output_dir_widget, &OutputDirectoryWidget::dirChanged, this, &DataManager_Widget::_changeOutputDir);
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataManager_Widget::_handleFeatureSelected);
     connect(ui->new_data_widget, &NewDataWidget::createNewData, this, &DataManager_Widget::_createNewData);
@@ -69,6 +72,10 @@ DataManager_Widget::~DataManager_Widget() {
 
 void DataManager_Widget::openWidget() {
     ui->feature_table_widget->populateTable();
+    // Refresh timeframes when opening the widget
+    if (ui->new_data_widget) {
+        ui->new_data_widget->populateTimeframes();
+    }
     this->show();
 }
 
@@ -85,7 +92,7 @@ void DataManager_Widget::clearFeatureSelection() {
     ui->selected_feature_label->setText("No Feature Selected");
 
     // Switch to the blank page in the stacked widget
-    ui->stackedWidget->setCurrentIndex(0); // Index 0 is the blank widget
+    ui->stackedWidget->setCurrentIndex(0);// Index 0 is the blank widget
 }
 
 void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
@@ -128,7 +135,6 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
 
             connect(mask_widget, &Mask_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             break;
-
         }
         case DM_DataType::Line: {
             int const stacked_widget_index = 3;
@@ -137,7 +143,6 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             if (line_widget) {
                 line_widget->setActiveKey(key);
                 connect(line_widget, &Line_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
-
             }
             break;
         }
@@ -148,7 +153,6 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             auto analog_widget = dynamic_cast<AnalogTimeSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             analog_widget->setActiveKey(key);
             break;
-
         }
         case DM_DataType::DigitalInterval: {
 
@@ -171,7 +175,6 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
 
             connect(event_widget, &DigitalEventSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             break;
-
         }
         case DM_DataType::Tensor: {
 
@@ -183,8 +186,7 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             std::cout << "Unsupported feature type" << std::endl;
             break;
         }
-        default:
-        {
+        default: {
             std::cout << "You shouldn't be here" << std::endl;
         }
     }
@@ -202,7 +204,7 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
 
     auto feature_type = _data_manager->getType(feature.toStdString());
 
-    switch(feature_type) {
+    switch (feature_type) {
         case DM_DataType::Points: {
 
             int const stacked_widget_index = 1;
@@ -213,7 +215,6 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
                 point_widget->removeCallbacks();
             }
             break;
-
         }
         case DM_DataType::Mask: {
 
@@ -253,11 +254,12 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
             disconnect(event_widget, &DigitalEventSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             event_widget->removeCallbacks();
             break;
-
-        } case DM_DataType::Tensor: {
+        }
+        case DM_DataType::Tensor: {
             int const stacked_widget_index = 7;
             break;
-        } case DM_DataType::Unknown: {
+        }
+        case DM_DataType::Unknown: {
             std::cout << "Unsupported feature type" << std::endl;
             break;
         }
@@ -275,7 +277,7 @@ void DataManager_Widget::_changeOutputDir(QString dir_name) {
     ui->output_dir_widget->setDirLabel(dir_name);
 }
 
-void DataManager_Widget::_createNewData(std::string key, std::string type) {
+void DataManager_Widget::_createNewData(std::string key, std::string type, std::string timeframe_key) {
 
     if (key.empty()) {
         return;
@@ -302,6 +304,12 @@ void DataManager_Widget::_createNewData(std::string key, std::string type) {
         _data_manager->setData<TensorData>(key);
     } else {
         std::cout << "Unsupported data type" << std::endl;
+        return;
+    }
+
+    // Set the selected timeframe for the newly created data
+    if (!timeframe_key.empty() && timeframe_key != "time") {
+        _data_manager->setTimeFrame(key, timeframe_key);
     }
 }
 

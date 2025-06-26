@@ -1,20 +1,20 @@
 #ifndef WHISKERTOOLBOX_LINETABLEMODEL_HPP
 #define WHISKERTOOLBOX_LINETABLEMODEL_HPP
 
-#include "DataManager/Lines/Line_Data.hpp" // Assuming Line_Data.hpp is the correct path
-#include "DataManager/Points/points.hpp" // For Line2D definition
+#include "DataManager/Lines/Line_Data.hpp"// Assuming Line_Data.hpp is the correct path
+#include "DataManager/Points/points.hpp"  // For Line2D definition
 
 #include <QAbstractTableModel>
-#include <vector>
 #include <string>
+#include <vector>
 
 // Forward declaration
 class LineData;
 
 struct LineTableRow {
     int frame;
-    int lineIndex; // Index of the line within that frame
-    int length;    // Number of points in the line
+    int lineIndex;// Index of the line within that frame
+    int length;   // Number of points in the line
 };
 
 class LineTableModel : public QAbstractTableModel {
@@ -36,7 +36,7 @@ public:
 
 private:
     std::vector<LineTableRow> _display_data;
-    LineData const * _line_data_source{nullptr}; // Optional: direct pointer to source for more complex ops
+    LineData const * _line_data_source{nullptr};// Optional: direct pointer to source for more complex ops
 };
 
-#endif//WHISKERTOOLBOX_LINETABLEMODEL_HPP 
+#endif//WHISKERTOOLBOX_LINETABLEMODEL_HPP

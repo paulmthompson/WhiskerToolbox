@@ -74,8 +74,9 @@ private slots:
      * 
      * @param key The unique identifier for the new data
      * @param type The type of data to create (e.g., "Point", "Mask", "Line")
+     * @param timeframe_key The timeframe to assign to the new data
      */
-    void _createNewData(std::string key, std::string type);
+    void _createNewData(std::string key, std::string type, std::string timeframe_key);
 
     /**
      * @brief Handle frame selection from child widgets

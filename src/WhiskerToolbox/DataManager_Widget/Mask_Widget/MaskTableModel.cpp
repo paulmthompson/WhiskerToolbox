@@ -2,7 +2,7 @@
 
 #include "DataManager/Masks/Mask_Data.hpp"
 
-#include <iostream> // For debugging
+#include <iostream>// For debugging
 
 MaskTableModel::MaskTableModel(QObject * parent)
     : QAbstractTableModel(parent) {}
@@ -11,10 +11,10 @@ void MaskTableModel::setMasks(MaskData const * maskData) {
     beginResetModel();
     _display_data.clear();
     if (maskData) {
-        for (auto const & timeMaskPair : maskData->getAllAsRange()) {
+        for (auto const & timeMaskPair: maskData->getAllAsRange()) {
             int frame = timeMaskPair.time;
             int totalPoints = 0;
-            for (auto const & mask : timeMaskPair.masks) {
+            for (auto const & mask: timeMaskPair.masks) {
                 totalPoints += static_cast<int>(mask.size());
             }
             _display_data.push_back({frame, totalPoints});
@@ -30,7 +30,7 @@ int MaskTableModel::rowCount(QModelIndex const & parent) const {
 
 int MaskTableModel::columnCount(QModelIndex const & parent) const {
     Q_UNUSED(parent);
-    return 2; // Frame, Total Points
+    return 2;// Frame, Total Points
 }
 
 QVariant MaskTableModel::data(QModelIndex const & index, int role) const {
@@ -69,12 +69,12 @@ QVariant MaskTableModel::headerData(int section, Qt::Orientation orientation, in
                 return QVariant{};
         }
     }
-    return QVariant{}; // No vertical header
+    return QVariant{};// No vertical header
 }
 
 int MaskTableModel::getFrameForRow(int row) const {
     if (row >= 0 && static_cast<size_t>(row) < _display_data.size()) {
         return _display_data[row].frame;
     }
-    return -1; // Invalid row
-} 
+    return -1;// Invalid row
+}

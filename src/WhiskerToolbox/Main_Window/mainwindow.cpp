@@ -223,7 +223,7 @@ void MainWindow::_updateFrameCount() {
         _data_manager->setTime("time", new_timeframe);
     }
 
-    ui->time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount());
+    ui->time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount() - 1);
 
     ui->time_scrollbar->changeScrollBarValue(0);
 }

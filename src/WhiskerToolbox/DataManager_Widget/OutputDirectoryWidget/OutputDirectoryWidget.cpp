@@ -9,13 +9,12 @@
 
 OutputDirectoryWidget::OutputDirectoryWidget(QWidget * parent)
     : QWidget(parent),
-      ui(new Ui::OutputDirectoryWidget){
+      ui(new Ui::OutputDirectoryWidget) {
     ui->setupUi(this);
 
     ui->output_dir_label->setText(QString::fromStdString(std::filesystem::current_path().string()));
 
     connect(ui->output_dir_button, &QPushButton::clicked, this, &OutputDirectoryWidget::_changeOutputDir);
-
 }
 
 OutputDirectoryWidget::~OutputDirectoryWidget() {
@@ -35,5 +34,4 @@ void OutputDirectoryWidget::_changeOutputDir() {
 
 
     emit dirChanged(dir_name);
-
 }

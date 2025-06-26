@@ -3,13 +3,13 @@
 
 #include <QWidget>
 
-#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp" // For CSVPointSaverOptions
-#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp" // For context menu utilities
-#include "IO_Widgets/Media/MediaExport_Widget.hpp"     // For MediaExport_Widget
+#include "DataManager/Points/IO/CSV/Point_Data_CSV.hpp"         // For CSVPointSaverOptions
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"// For context menu utilities
+#include "IO_Widgets/Media/MediaExport_Widget.hpp"              // For MediaExport_Widget
 
 #include <memory>
 #include <string>
-#include <variant> // std::variant
+#include <variant>// std::variant
 
 namespace Ui {
 class Point_Widget;
@@ -62,7 +62,7 @@ private:
 
     void _saveToCSVFile(CSVPointSaverOptions & options);
     bool _performActualCSVSave(CSVPointSaverOptions & options);
-    void _initiateSaveProcess(SaverType saver_type, PointSaverOptionsVariant& options_variant);
+    void _initiateSaveProcess(SaverType saver_type, PointSaverOptionsVariant & options_variant);
 
     /**
      * @brief Get frame numbers from selected table rows
@@ -76,21 +76,21 @@ private:
      * 
      * @param target_key The key to move points to
      */
-    void _movePointsToTarget(std::string const& target_key);
+    void _movePointsToTarget(std::string const & target_key);
 
     /**
      * @brief Copy selected points to the specified target key
      * 
      * @param target_key The key to copy points to
      */
-    void _copyPointsToTarget(std::string const& target_key);
+    void _copyPointsToTarget(std::string const & target_key);
 
     /**
      * @brief Show context menu for the table view
      * 
      * @param position The position where the context menu should appear
      */
-    void _showContextMenu(QPoint const& position);
+    void _showContextMenu(QPoint const & position);
 
 private slots:
     void _handleTableViewDoubleClicked(QModelIndex const & index);
@@ -98,7 +98,7 @@ private slots:
     void _onExportTypeChanged(int index);
     void _handleSaveCSVRequested(CSVPointSaverOptions options);
     void _onExportMediaFramesCheckboxToggled(bool checked);
-    void _deleteSelectedPoints(); // New slot for delete operation
+    void _deleteSelectedPoints();// New slot for delete operation
 };
 
 #endif// POINT_WIDGET_HPP

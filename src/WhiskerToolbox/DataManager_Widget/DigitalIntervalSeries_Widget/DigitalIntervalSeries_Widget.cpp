@@ -19,9 +19,9 @@
 #include <QPushButton>
 #include <QStackedWidget>
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
-#include <algorithm>
 
 
 DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
@@ -60,7 +60,7 @@ DigitalIntervalSeries_Widget::DigitalIntervalSeries_Widget(std::shared_ptr<DataM
             this, &DigitalIntervalSeries_Widget::_handleSaveIntervalCSVRequested);
 
     _onExportTypeChanged(ui->export_type_combo->currentIndex());
-    
+
     // Set initial filename
     _updateFilename();
 }
@@ -84,7 +84,7 @@ void DigitalIntervalSeries_Widget::setActiveKey(std::string key) {
     _assignCallbacks();
 
     _calculateIntervals();
-    
+
     // Update filename based on new active key
     _updateFilename();
 }
@@ -100,7 +100,7 @@ void DigitalIntervalSeries_Widget::removeCallbacks() {
         _data_manager->removeCallbackFromData(_active_key, _callback_id);
         _callback_id = -1;
     }
-    
+
     // Cancel any ongoing interval creation
     _cancelIntervalCreation();
 }
@@ -127,23 +127,23 @@ void DigitalIntervalSeries_Widget::_createIntervalButton() {
         // User is selecting the second frame
         _interval_epoch = false;
         _interval_end = current_time;
-        
+
         // Ensure proper ordering (start <= end) by swapping if necessary
         int64_t start = std::min(_interval_start, _interval_end);
         int64_t end = std::max(_interval_start, _interval_end);
-        
+
         contactIntervals->addEvent(start, end);
-        
+
         // Reset UI state
         ui->create_interval_button->setText("Create Interval");
         ui->cancel_interval_button->setVisible(false);
-        _updateStartFrameLabel(-1); // Clear the label
-        
+        _updateStartFrameLabel(-1);// Clear the label
+
     } else {
         // User is selecting the first frame
         _interval_start = current_time;
         _interval_epoch = true;
-        
+
         // Update UI state
         ui->create_interval_button->setText("Mark Interval End");
         ui->cancel_interval_button->setVisible(true);
@@ -223,7 +223,7 @@ void DigitalIntervalSeries_Widget::_onExportTypeChanged(int index) {
     } else {
         // Handle other export types if added in the future
     }
-    
+
     // Update filename based on new export type
     _updateFilename();
 }
@@ -312,11 +312,11 @@ void DigitalIntervalSeries_Widget::_showContextMenu(QPoint const & position) {
     QMenu context_menu(this);
 
     // Add move and copy submenus using the utility function
-    auto move_callback = [this](std::string const& target_key) {
+    auto move_callback = [this](std::string const & target_key) {
         _moveIntervalsToTarget(target_key);
     };
-    
-    auto copy_callback = [this](std::string const& target_key) {
+
+    auto copy_callback = [this](std::string const & target_key) {
         _copyIntervalsToTarget(target_key);
     };
 
@@ -331,7 +331,7 @@ void DigitalIntervalSeries_Widget::_showContextMenu(QPoint const & position) {
     context_menu.exec(ui->tableView->mapToGlobal(position));
 }
 
-void DigitalIntervalSeries_Widget::_moveIntervalsToTarget(std::string const& target_key) {
+void DigitalIntervalSeries_Widget::_moveIntervalsToTarget(std::string const & target_key) {
     std::vector<Interval> selected_intervals = _getSelectedIntervals();
     if (selected_intervals.empty()) {
         std::cout << "No intervals selected to move." << std::endl;
@@ -363,7 +363,7 @@ void DigitalIntervalSeries_Widget::_moveIntervalsToTarget(std::string const& tar
               << " to " << target_key << std::endl;
 }
 
-void DigitalIntervalSeries_Widget::_copyIntervalsToTarget(std::string const& target_key) {
+void DigitalIntervalSeries_Widget::_copyIntervalsToTarget(std::string const & target_key) {
     std::vector<Interval> selected_intervals = _getSelectedIntervals();
     if (selected_intervals.empty()) {
         std::cout << "No intervals selected to copy." << std::endl;
@@ -438,7 +438,7 @@ void DigitalIntervalSeries_Widget::_cancelIntervalCreation() {
         ui->create_interval_button->setText("Create Interval");
         ui->cancel_interval_button->setVisible(false);
         _updateStartFrameLabel(-1);
-        
+
         std::cout << "Interval creation cancelled" << std::endl;
     }
 }
@@ -456,49 +456,49 @@ void DigitalIntervalSeries_Widget::_showCreateIntervalContextMenu(QPoint const &
     if (!_interval_epoch) {
         return;
     }
-    
+
     QMenu context_menu(this);
     QAction * cancel_action = context_menu.addAction("Cancel Interval Creation");
-    
+
     connect(cancel_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_cancelIntervalCreation);
-    
+
     context_menu.exec(ui->create_interval_button->mapToGlobal(position));
 }
 
 std::string DigitalIntervalSeries_Widget::_generateFilename() const {
     if (_active_key.empty()) {
-        return "intervals_output.csv"; // Fallback default
+        return "intervals_output.csv";// Fallback default
     }
-    
+
     // Sanitize the active key for filesystem safety
     std::string sanitized_key = _active_key;
-    
+
     // Replace characters that might be problematic in filenames
     std::string invalid_chars = "<>:\"/\\|?*";
-    for (char invalid_char : invalid_chars) {
+    for (char invalid_char: invalid_chars) {
         std::replace(sanitized_key.begin(), sanitized_key.end(), invalid_char, '_');
     }
-    
+
     // Remove leading/trailing whitespace and dots
     auto start = sanitized_key.find_first_not_of(" \t\n\r\f\v.");
     auto end = sanitized_key.find_last_not_of(" \t\n\r\f\v.");
     if (start == std::string::npos) {
-        sanitized_key = "intervals_output"; // Fallback if only invalid chars
+        sanitized_key = "intervals_output";// Fallback if only invalid chars
     } else {
         sanitized_key = sanitized_key.substr(start, end - start + 1);
     }
-    
+
     QString current_export_type = ui->export_type_combo->currentText();
     std::string extension;
-    
+
     if (current_export_type == "CSV") {
         extension = ".csv";
     } else {
         // Future export types can be added here
         // Example: if (current_export_type == "JSON") extension = ".json";
-        extension = ".csv"; // Default fallback
+        extension = ".csv";// Default fallback
     }
-    
+
     return sanitized_key + extension;
 }
 

@@ -7,22 +7,22 @@
 #include "LineTableModel.hpp"
 
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
-#include "IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp"
 #include "IO_Widgets/Lines/Binary/BinaryLineSaver_Widget.hpp"
+#include "IO_Widgets/Lines/CSV/CSVLineSaver_Widget.hpp"
 #include "IO_Widgets/Media/MediaExport_Widget.hpp"
 
-#include <QTableView>
-#include <QStackedWidget>
-#include <QComboBox>
 #include <QCheckBox>
-#include <QPushButton>
-#include <QMessageBox>
-#include <QFileDialog>
+#include <QComboBox>
 #include <QDir>
+#include <QFileDialog>
 #include <QMenu>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QStackedWidget>
+#include <QTableView>
 
-#include <iostream>
 #include <filesystem>
+#include <iostream>
 #include <set>
 
 Line_Widget::Line_Widget(std::shared_ptr<DataManager> data_manager, QWidget * parent)
@@ -110,7 +110,7 @@ void Line_Widget::_onDataChanged() {
     updateTable();
 }
 
-void Line_Widget::_showContextMenu(QPoint const& position) {
+void Line_Widget::_showContextMenu(QPoint const & position) {
     QModelIndex index = ui->tableView->indexAt(position);
     if (!index.isValid()) {
         return;
@@ -119,11 +119,11 @@ void Line_Widget::_showContextMenu(QPoint const& position) {
     QMenu context_menu(this);
 
     // Add move and copy submenus using the utility function
-    auto move_callback = [this](std::string const& target_key) {
+    auto move_callback = [this](std::string const & target_key) {
         _moveLineToTarget(target_key);
     };
-    
-    auto copy_callback = [this](std::string const& target_key) {
+
+    auto copy_callback = [this](std::string const & target_key) {
         _copyLineToTarget(target_key);
     };
 
@@ -131,7 +131,7 @@ void Line_Widget::_showContextMenu(QPoint const& position) {
 
     // Add separator and existing operations
     context_menu.addSeparator();
-    QAction* delete_action = context_menu.addAction("Delete Selected Line");
+    QAction * delete_action = context_menu.addAction("Delete Selected Line");
 
     connect(delete_action, &QAction::triggered, this, &Line_Widget::_deleteSelectedLine);
 
@@ -141,8 +141,8 @@ void Line_Widget::_showContextMenu(QPoint const& position) {
 std::vector<int> Line_Widget::_getSelectedFrames() {
     QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
     std::set<int> unique_frames;
-    
-    for (auto const& index : selectedIndexes) {
+
+    for (auto const & index: selectedIndexes) {
         if (index.isValid()) {
             LineTableRow row_data = _line_table_model->getRowData(index.row());
             if (row_data.frame != -1) {
@@ -150,11 +150,11 @@ std::vector<int> Line_Widget::_getSelectedFrames() {
             }
         }
     }
-    
+
     return std::vector<int>(unique_frames.begin(), unique_frames.end());
 }
 
-void Line_Widget::_moveLineToTarget(std::string const& target_key) {
+void Line_Widget::_moveLineToTarget(std::string const & target_key) {
     std::vector<int> selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Line_Widget: No lines selected to move." << std::endl;
@@ -173,7 +173,7 @@ void Line_Widget::_moveLineToTarget(std::string const& target_key) {
         return;
     }
 
-    std::cout << "Line_Widget: Moving lines from " << selected_frames.size() 
+    std::cout << "Line_Widget: Moving lines from " << selected_frames.size()
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the new moveTo method with the vector of selected times
@@ -182,15 +182,15 @@ void Line_Widget::_moveLineToTarget(std::string const& target_key) {
     if (total_lines_moved > 0) {
         // Update the table view to reflect changes
         updateTable();
-        
-        std::cout << "Line_Widget: Successfully moved " << total_lines_moved 
+
+        std::cout << "Line_Widget: Successfully moved " << total_lines_moved
                   << " lines from " << selected_frames.size() << " frames." << std::endl;
     } else {
         std::cout << "Line_Widget: No lines found in any of the selected frames to move." << std::endl;
     }
 }
 
-void Line_Widget::_copyLineToTarget(std::string const& target_key) {
+void Line_Widget::_copyLineToTarget(std::string const & target_key) {
     std::vector<int> selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Line_Widget: No lines selected to copy." << std::endl;
@@ -209,14 +209,14 @@ void Line_Widget::_copyLineToTarget(std::string const& target_key) {
         return;
     }
 
-    std::cout << "Line_Widget: Copying lines from " << selected_frames.size() 
+    std::cout << "Line_Widget: Copying lines from " << selected_frames.size()
               << " frames from '" << _active_key << "' to '" << target_key << "'..." << std::endl;
 
     // Use the new copyTo method with the vector of selected times
     std::size_t total_lines_copied = source_line_data->copyTo(*target_line_data, selected_frames, true);
 
     if (total_lines_copied > 0) {
-        std::cout << "Line_Widget: Successfully copied " << total_lines_copied 
+        std::cout << "Line_Widget: Successfully copied " << total_lines_copied
                   << " lines from " << selected_frames.size() << " frames." << std::endl;
     } else {
         std::cout << "Line_Widget: No lines found in any of the selected frames to copy." << std::endl;
@@ -245,7 +245,7 @@ void Line_Widget::_deleteSelectedLine() {
 
     std::vector<Line2D> const & lines_at_frame = source_line_data->getLinesAtTime(row_data.frame);
     if (row_data.lineIndex < 0 || static_cast<size_t>(row_data.lineIndex) >= lines_at_frame.size()) {
-        std::cerr << "Line_Widget: Line index out of bounds for deletion. Frame: " << row_data.frame 
+        std::cerr << "Line_Widget: Line index out of bounds for deletion. Frame: " << row_data.frame
                   << ", Index: " << row_data.lineIndex << std::endl;
         updateTable();
         return;
@@ -288,7 +288,7 @@ void Line_Widget::_onExportMediaFramesCheckboxToggled(bool checked) {
     ui->media_export_options_widget->setVisible(checked);
 }
 
-void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVariant& options_variant) {
+void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVariant & options_variant) {
     if (_active_key.empty()) {
         QMessageBox::warning(this, "No Data Selected", "Please select a LineData item to save.");
         return;
@@ -306,26 +306,26 @@ void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVar
     switch (saver_type) {
         case SaverType::CSV: {
             if (std::holds_alternative<CSVSingleFileLineSaverOptions>(options_variant)) {
-                CSVSingleFileLineSaverOptions& specific_csv_options = std::get<CSVSingleFileLineSaverOptions>(options_variant);
+                CSVSingleFileLineSaverOptions & specific_csv_options = std::get<CSVSingleFileLineSaverOptions>(options_variant);
                 specific_csv_options.parent_dir = _data_manager->getOutputPath().string();
-                saved_parent_dir = specific_csv_options.parent_dir; // Store for media export
+                saved_parent_dir = specific_csv_options.parent_dir;// Store for media export
                 save_successful = _performActualCSVSave(specific_csv_options);
             } else if (std::holds_alternative<CSVMultiFileLineSaverOptions>(options_variant)) {
-                CSVMultiFileLineSaverOptions& specific_multi_csv_options = std::get<CSVMultiFileLineSaverOptions>(options_variant);
+                CSVMultiFileLineSaverOptions & specific_multi_csv_options = std::get<CSVMultiFileLineSaverOptions>(options_variant);
                 specific_multi_csv_options.parent_dir = _data_manager->getOutputPath().string() + "/" + specific_multi_csv_options.parent_dir;
-                saved_parent_dir = specific_multi_csv_options.parent_dir; // Store for media export
+                saved_parent_dir = specific_multi_csv_options.parent_dir;// Store for media export
                 save_successful = _performActualMultiFileCSVSave(specific_multi_csv_options);
             }
             break;
         }
         case SaverType::BINARY: {
-            BinaryLineSaverOptions& specific_binary_options = std::get<BinaryLineSaverOptions>(options_variant);
+            BinaryLineSaverOptions & specific_binary_options = std::get<BinaryLineSaverOptions>(options_variant);
             specific_binary_options.parent_dir = _data_manager->getOutputPath().string();
-            saved_parent_dir = specific_binary_options.parent_dir; // Store for media export
+            saved_parent_dir = specific_binary_options.parent_dir;// Store for media export
             save_successful = _performActualBinarySave(specific_binary_options);
             break;
         }
-        // Future saver types can be added here
+            // Future saver types can be added here
     }
 
     if (!save_successful) {
@@ -337,25 +337,25 @@ void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVar
         auto times_with_data_int = line_data_ptr->getTimesWithData();
         std::vector<size_t> frame_ids_to_export;
         frame_ids_to_export.reserve(times_with_data_int.size());
-        for(int frame_id : times_with_data_int){
+        for (int frame_id: times_with_data_int) {
             frame_ids_to_export.push_back(static_cast<size_t>(frame_id));
         }
 
-        if (frame_ids_to_export.empty()){
+        if (frame_ids_to_export.empty()) {
             QMessageBox::information(this, "No Frames", "No lines found in data, so no media frames to export.");
         } else {
             // Ensure frame ID padding consistency with multi-file CSV when media export is enabled
             if (std::holds_alternative<CSVMultiFileLineSaverOptions>(options_variant)) {
                 auto media_export_opts = ui->media_export_options_widget->getOptions();
-                CSVMultiFileLineSaverOptions& multi_csv_opts = std::get<CSVMultiFileLineSaverOptions>(options_variant);
+                CSVMultiFileLineSaverOptions & multi_csv_opts = std::get<CSVMultiFileLineSaverOptions>(options_variant);
                 // Update the media export widget's frame padding to match CSV multi-file padding
                 // This ensures consistency between CSV filenames and media frame filenames
                 // Note: This is a design choice to keep frame numbering consistent
             }
-            
+
             export_media_frames(_data_manager.get(),
                                 ui->media_export_options_widget,
-                                options_variant, // Pass the original variant with parent_dir set
+                                options_variant,// Pass the original variant with parent_dir set
                                 this,
                                 frame_ids_to_export);
         }
@@ -370,7 +370,7 @@ bool Line_Widget::_performActualCSVSave(CSVSingleFileLineSaverOptions & options)
     }
 
     try {
-        save(line_data_ptr.get(), options); // options.parent_dir and options.filename are used by this function
+        save(line_data_ptr.get(), options);// options.parent_dir and options.filename are used by this function
         std::string full_path = options.parent_dir + "/" + options.filename;
         QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to " + full_path));
         std::cout << "Line data saved to: " << full_path << std::endl;
@@ -415,7 +415,7 @@ bool Line_Widget::_performActualMultiFileCSVSave(CSVMultiFileLineSaverOptions & 
     }
 
     try {
-        save(line_data_ptr.get(), options); // options.parent_dir is used by this function
+        save(line_data_ptr.get(), options);// options.parent_dir is used by this function
         QMessageBox::information(this, "Save Successful", QString::fromStdString("Line data saved to directory: " + options.parent_dir));
         std::cout << "Line data saved to directory: " << options.parent_dir << std::endl;
         return true;

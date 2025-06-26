@@ -9,7 +9,7 @@ class MaskData;
 
 struct MaskTableRow {
     int frame;
-    int totalPointsInFrame; // Sum of points in all Mask2D objects at this frame
+    int totalPointsInFrame;// Sum of points in all Mask2D objects at this frame
 };
 
 class MaskTableModel : public QAbstractTableModel {
@@ -32,4 +32,4 @@ private:
     std::vector<MaskTableRow> _display_data;
 };
 
-#endif//WHISKERTOOLBOX_MASKTABLEMODEL_HPP 
+#endif//WHISKERTOOLBOX_MASKTABLEMODEL_HPP

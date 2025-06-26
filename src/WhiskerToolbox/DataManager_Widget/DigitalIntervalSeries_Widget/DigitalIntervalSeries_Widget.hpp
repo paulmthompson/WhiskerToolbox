@@ -2,7 +2,7 @@
 #define DIGITALINTERVALSERIES_WIDGET_HPP
 
 #include "DataManager/DigitalTimeSeries/IO/CSV/Digital_Interval_Series_CSV.hpp"// For CSVIntervalSaverOptions
-#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp" // For context menu utilities
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"               // For context menu utilities
 
 #include <QMenu>
 #include <QWidget>
@@ -43,7 +43,7 @@ private:
     int _callback_id{-1};// Corrected initialization
     bool _interval_epoch{false};
     int64_t _interval_start{0};
-    int64_t _interval_end{0}; // Track both start and end for bidirectional support
+    int64_t _interval_end{0};// Track both start and end for bidirectional support
     IntervalTableModel * _interval_table_model;
 
     enum SaverType { CSV };// Enum for different saver types
@@ -94,14 +94,14 @@ private:
      * 
      * @param target_key The key to move intervals to
      */
-    void _moveIntervalsToTarget(std::string const& target_key);
+    void _moveIntervalsToTarget(std::string const & target_key);
 
     /**
      * @brief Copy selected intervals to the specified target key
      * 
      * @param target_key The key to copy intervals to
      */
-    void _copyIntervalsToTarget(std::string const& target_key);
+    void _copyIntervalsToTarget(std::string const & target_key);
 
 private slots:
 

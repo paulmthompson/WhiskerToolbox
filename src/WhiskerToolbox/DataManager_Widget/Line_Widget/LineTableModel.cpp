@@ -1,7 +1,7 @@
 #include "LineTableModel.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 
-#include <iostream> // For debugging
+#include <iostream>// For debugging
 
 LineTableModel::LineTableModel(QObject * parent)
     : QAbstractTableModel(parent) {}
@@ -11,10 +11,10 @@ void LineTableModel::setLines(LineData const * lineData) {
     _display_data.clear();
     _line_data_source = lineData;
     if (lineData) {
-        for (auto const & timeLinesPair : lineData->GetAllLinesAsRange()) {
+        for (auto const & timeLinesPair: lineData->GetAllLinesAsRange()) {
             int frame = timeLinesPair.time;
             int lineIndex = 0;
-            for (auto const & line : timeLinesPair.lines) {
+            for (auto const & line: timeLinesPair.lines) {
                 _display_data.push_back({frame, lineIndex, static_cast<int>(line.size())});
                 lineIndex++;
             }
@@ -30,7 +30,7 @@ int LineTableModel::rowCount(QModelIndex const & parent) const {
 
 int LineTableModel::columnCount(QModelIndex const & parent) const {
     Q_UNUSED(parent);
-    return 3; // Frame, Line Index, Length
+    return 3;// Frame, Line Index, Length
 }
 
 QVariant LineTableModel::data(QModelIndex const & index, int role) const {
@@ -73,7 +73,7 @@ QVariant LineTableModel::headerData(int section, Qt::Orientation orientation, in
                 return QVariant{};
         }
     }
-    return QVariant{}; // No vertical header
+    return QVariant{};// No vertical header
 }
 
 LineTableRow LineTableModel::getRowData(int row) const {
@@ -82,5 +82,5 @@ LineTableRow LineTableModel::getRowData(int row) const {
     }
     // Return a default/invalid LineTableRow or throw an exception
     // For simplicity, returning a default-constructed one here, but error handling might be better.
-    return LineTableRow{-1, -1, -1}; 
-} 
+    return LineTableRow{-1, -1, -1};
+}

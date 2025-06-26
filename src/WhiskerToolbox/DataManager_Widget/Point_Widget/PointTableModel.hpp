@@ -18,8 +18,8 @@ public:
 
     void setPoints(PointData const * pointData) {
         beginResetModel();
-        _points.clear(); // Clear previous data
-        if (pointData) { // Check if pointData is not null
+        _points.clear();// Clear previous data
+        if (pointData) {// Check if pointData is not null
             for (auto const & timePointsPair: pointData->GetAllPointsAsRange()) {
                 _points[timePointsPair.time] = timePointsPair.points;
             }
@@ -77,10 +77,10 @@ public:
 
     [[nodiscard]] int getFrameForRow(int row) const {
         if (row < 0 || static_cast<size_t>(row) >= _points.size()) {
-            return -1; // Invalid row
+            return -1;// Invalid row
         }
         auto it = std::next(_points.begin(), row);
-        return it->first; // Return the frame number (the key in the map)
+        return it->first;// Return the frame number (the key in the map)
     }
 
 private:
