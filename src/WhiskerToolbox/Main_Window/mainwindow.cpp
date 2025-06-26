@@ -32,6 +32,13 @@
 #include <QFileDialog>
 #include <QImage>
 #include <QKeyEvent>
+#include <QLineEdit>
+#include <QPlainTextEdit>
+#include <QTextEdit>
+#include <QComboBox>
+#include <QListWidget>
+#include <QTableWidget>
+#include <QTreeWidget>
 
 #include <QElapsedTimer>
 #include <QTimer>
@@ -65,7 +72,12 @@ MainWindow::MainWindow(QWidget * parent)
 
     _createActions();// Creates callback functions
 
-    QWidget::grabKeyboard();
+    // Install event filter on the dock manager to catch events from docked widgets
+    _m_DockManager->installEventFilter(this);
+    // Also install on the main window for events not captured by dock manager
+    this->installEventFilter(this);
+    // Install application-wide event filter for targeted key interception
+    qApp->installEventFilter(this);
 
     _buildInitialLayout();
 }
@@ -309,37 +321,66 @@ void MainWindow::openDataViewer() {
     showDockWidget(key);
 }
 
-void MainWindow::keyPressEvent(QKeyEvent * event) {
-    static QWidget * lastSender = nullptr;
-
-    auto handleEvent = [this, event](QWidget * sender) {
-        if (sender == lastSender) {
-            return;
-        }
-        lastSender = sender;
-
-        if (sender->objectName().toStdString().find("dockWidget") != std::string::npos) {
-            auto dockWidget = _m_DockManager->findDockWidget("whisker_widget");
-            if (dockWidget && dockWidget->widget() != sender) {
-                QApplication::sendEvent(dockWidget->widget(), event);
+bool MainWindow::eventFilter(QObject * obj, QEvent * event) {
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent * keyEvent = static_cast<QKeyEvent *>(event);
+        
+        // Always handle Ctrl+Left/Right for frame navigation regardless of focus
+        if (keyEvent->modifiers() & Qt::ControlModifier) {
+            if (keyEvent->key() == Qt::Key_Right) {
+                ui->time_scrollbar->changeScrollBarValue(1, true);
+                return true; // Event handled, don't pass it on
+            } else if (keyEvent->key() == Qt::Key_Left) {
+                ui->time_scrollbar->changeScrollBarValue(-1, true);
+                return true; // Event handled, don't pass it on
             }
-        } else {
-            QApplication::sendEvent(sender, event);
         }
-    };
-
-    if (event->key() == Qt::Key_Right) {
-        ui->time_scrollbar->changeScrollBarValue(1, true);
-    } else if (event->key() == Qt::Key_Left) {
-        ui->time_scrollbar->changeScrollBarValue(-1, true);
-    } else {
-        auto focusedWidget = QApplication::focusWidget();
-        if (focusedWidget && focusedWidget != this) {
-            handleEvent(focusedWidget);
+        
+        // For plain arrow keys, be very selective
+        if (keyEvent->modifiers() == Qt::NoModifier && 
+            (keyEvent->key() == Qt::Key_Right || keyEvent->key() == Qt::Key_Left)) {
+            
+            QWidget * focusedWidget = QApplication::focusWidget();
+            
+            // If we're in a text input widget, let it handle the arrow keys for cursor movement
+            if (focusedWidget) {
+                // Check for text input widgets
+                if (qobject_cast<QLineEdit *>(focusedWidget) || 
+                    qobject_cast<QTextEdit *>(focusedWidget) || 
+                    qobject_cast<QPlainTextEdit *>(focusedWidget)) {
+                    // Let the text widget handle the event normally
+                    return false;
+                }
+                
+                // Check if we're in a widget that should handle arrow keys (like combo boxes, lists, etc.)
+                if (qobject_cast<QComboBox *>(focusedWidget) || 
+                    qobject_cast<QListWidget *>(focusedWidget) ||
+                    qobject_cast<QTableWidget *>(focusedWidget) ||
+                    qobject_cast<QTreeWidget *>(focusedWidget)) {
+                    // Let these widgets handle their own arrow key navigation
+                    return false;
+                }
+            }
+            
+            // Otherwise, use arrow keys for frame navigation
+            if (keyEvent->key() == Qt::Key_Right) {
+                ui->time_scrollbar->changeScrollBarValue(1, true);
+                return true; // Event handled
+            } else if (keyEvent->key() == Qt::Key_Left) {
+                ui->time_scrollbar->changeScrollBarValue(-1, true);
+                return true; // Event handled
+            }
         }
     }
+    
+    // For all other events, let them be handled normally
+    return QMainWindow::eventFilter(obj, event);
+}
 
-    lastSender = nullptr;
+void MainWindow::keyPressEvent(QKeyEvent * event) {
+    // The event filter handles most key events now
+    // This is mainly for direct main window key events
+    QMainWindow::keyPressEvent(event);
 }
 
 void MainWindow::openPointLoaderWidget() {
