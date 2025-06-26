@@ -4,13 +4,17 @@
 #include "StrongTimeTypes.hpp"
 #include "TimeFrame.hpp"
 
-#include <ranges>
 #include <algorithm>
-#include <variant>
-#include <vector>
+#include <cstdint>
 #include <memory>
 #include <optional>
-#include <cstdint>
+#include <ranges>
+#include <variant>
+#include <vector>
+
+// Forward declarations for filename-based creation
+enum class FilenameTimeFrameMode;
+struct FilenameTimeFrameOptions;
 
 /**
  * @brief Dense time range representation using std::ranges::iota_view
@@ -22,10 +26,12 @@ struct DenseTimeRange {
     int64_t start;
     int64_t count;
     int64_t step;
-    
+
     DenseTimeRange(int64_t start_val, int64_t count_val, int64_t step_val = 1)
-        : start(start_val), count(count_val), step(step_val) {}
-    
+        : start(start_val),
+          count(count_val),
+          step(step_val) {}
+
     /**
      * @brief Get the time value at a specific index
      * 
@@ -34,11 +40,11 @@ struct DenseTimeRange {
      */
     [[nodiscard]] int64_t getTimeAtIndex(TimeFrameIndex index) const {
         if (index.getValue() < 0 || index.getValue() >= count) {
-            return start; // Return start value for out-of-bounds access
+            return start;// Return start value for out-of-bounds access
         }
         return start + index.getValue() * step;
     }
-    
+
     /**
      * @brief Find the index closest to a given time value
      * 
@@ -47,16 +53,16 @@ struct DenseTimeRange {
      */
     [[nodiscard]] TimeFrameIndex getIndexAtTime(double time_value) const {
         if (count == 0) return TimeFrameIndex(0);
-        
+
         TimeFrameIndex index = TimeFrameIndex(static_cast<int64_t>((time_value - start) / step));
 
         // Clamp to valid range
         if (index.getValue() < 0) return TimeFrameIndex(0);
         if (index.getValue() >= count) return TimeFrameIndex(count - 1);
-        
+
         return index;
     }
-    
+
     /**
      * @brief Get the total number of time points
      */
@@ -80,7 +86,7 @@ using TimeStorage = std::variant<std::vector<int64_t>, DenseTimeRange>;
 template<typename CoordinateType>
 class TimeFrameV2 {
     using TimeStorage = std::variant<std::vector<int64_t>, DenseTimeRange>;
-    
+
 public:
     // Type alias to expose template parameter
     using coordinate_type = CoordinateType;
@@ -91,8 +97,9 @@ public:
      * @param sampling_rate_hz Optional sampling rate in Hz (for ClockTicks conversion to seconds)
      */
     explicit TimeFrameV2(std::vector<int64_t> times, std::optional<double> sampling_rate_hz = std::nullopt)
-        : _storage(std::move(times)), _sampling_rate_hz(sampling_rate_hz) {}
-    
+        : _storage(std::move(times)),
+          _sampling_rate_hz(sampling_rate_hz) {}
+
     /**
      * @brief Create a TimeFrame with dense storage
      * 
@@ -102,8 +109,9 @@ public:
      * @param sampling_rate_hz Optional sampling rate in Hz (for ClockTicks conversion to seconds)
      */
     TimeFrameV2(int64_t start, int64_t count, int64_t step = 1, std::optional<double> sampling_rate_hz = std::nullopt)
-        : _storage(DenseTimeRange(start, count, step)), _sampling_rate_hz(sampling_rate_hz) {}
-    
+        : _storage(DenseTimeRange(start, count, step)),
+          _sampling_rate_hz(sampling_rate_hz) {}
+
     /**
      * @brief Get the time value at a specific index
      * 
@@ -111,18 +119,19 @@ public:
      * @return Time coordinate at the given index
      */
     [[nodiscard]] CoordinateType getTimeAtIndex(TimeFrameIndex index) const {
-        return std::visit([index](auto const& storage) -> CoordinateType {
+        return std::visit([index](auto const & storage) -> CoordinateType {
             if constexpr (std::is_same_v<std::decay_t<decltype(storage)>, std::vector<int64_t>>) {
                 if (index.getValue() < 0 || static_cast<size_t>(index.getValue()) >= storage.size()) {
-                    return CoordinateType(0); // Return zero for out-of-bounds
+                    return CoordinateType(0);// Return zero for out-of-bounds
                 }
                 return CoordinateType(storage[static_cast<size_t>(index.getValue())]);
-            } else { // DenseTimeRange
+            } else {// DenseTimeRange
                 return CoordinateType(storage.getTimeAtIndex(index));
             }
-        }, _storage);
+        },
+                          _storage);
     }
-    
+
     /**
      * @brief Find the index closest to a given time value
      * 
@@ -130,19 +139,19 @@ public:
      * @return Index of the closest time value
      */
     [[nodiscard]] TimeFrameIndex getIndexAtTime(CoordinateType time_value) const {
-        return std::visit([time_value](auto const& storage) -> TimeFrameIndex {
+        return std::visit([time_value](auto const & storage) -> TimeFrameIndex {
             if constexpr (std::is_same_v<std::decay_t<decltype(storage)>, std::vector<int64_t>>) {
                 // Binary search for sparse storage
                 double target = static_cast<double>(time_value.getValue());
                 auto it = std::lower_bound(storage.begin(), storage.end(), target);
-                
+
                 if (it == storage.end()) {
                     return TimeFrameIndex(static_cast<int64_t>(storage.size()) - 1);
                 }
                 if (it == storage.begin()) {
                     return TimeFrameIndex(0);
                 }
-                
+
                 // Find closest value
                 auto prev = it - 1;
                 if (std::abs(static_cast<double>(*prev) - target) <= std::abs(static_cast<double>(*it) - target)) {
@@ -150,25 +159,27 @@ public:
                 } else {
                     return TimeFrameIndex(static_cast<int64_t>(std::distance(storage.begin(), it)));
                 }
-            } else { // DenseTimeRange
+            } else {// DenseTimeRange
                 return storage.getIndexAtTime(static_cast<double>(time_value.getValue()));
             }
-        }, _storage);
+        },
+                          _storage);
     }
-    
+
     /**
      * @brief Get the total number of time points
      */
     [[nodiscard]] int64_t getTotalFrameCount() const {
-        return std::visit([](auto const& storage) -> int64_t {
+        return std::visit([](auto const & storage) -> int64_t {
             if constexpr (std::is_same_v<std::decay_t<decltype(storage)>, std::vector<int64_t>>) {
                 return static_cast<int64_t>(storage.size());
-            } else { // DenseTimeRange
+            } else {// DenseTimeRange
                 return storage.size();
             }
-        }, _storage);
+        },
+                          _storage);
     }
-    
+
     /**
      * @brief Check if an index is within bounds and clamp if necessary
      * 
@@ -181,7 +192,7 @@ public:
         if (index.getValue() >= total_count) return TimeFrameIndex(total_count - 1);
         return TimeFrameIndex(index.getValue());
     }
-    
+
     /**
      * @brief Get the sampling rate (if available)
      * 
@@ -190,7 +201,7 @@ public:
      * @return Sampling rate in Hz, or nullopt if not set
      */
     [[nodiscard]] std::optional<double> getSamplingRate() const { return _sampling_rate_hz; }
-    
+
     /**
      * @brief Convert coordinate to seconds (if sampling rate is available)
      * 
@@ -207,7 +218,7 @@ public:
         }
         return std::nullopt;
     }
-    
+
     /**
      * @brief Convert seconds to coordinate (if sampling rate is available)
      * 
@@ -225,14 +236,14 @@ public:
         }
         return std::nullopt;
     }
-    
+
     /**
      * @brief Check if this TimeFrame uses dense storage
      */
     [[nodiscard]] bool isDense() const {
         return std::holds_alternative<DenseTimeRange>(_storage);
     }
-    
+
     /**
      * @brief Check if this TimeFrame uses sparse storage
      */
@@ -255,18 +266,17 @@ using UncalibratedTimeFrame = TimeFrameV2<UncalibratedIndex>;
  * @brief Variant type that can hold any TimeFrame type
  */
 using AnyTimeFrame = std::variant<
-    std::shared_ptr<CameraTimeFrame>,
-    std::shared_ptr<ClockTimeFrame>, 
-    std::shared_ptr<SecondsTimeFrame>,
-    std::shared_ptr<UncalibratedTimeFrame>
->;
+        std::shared_ptr<CameraTimeFrame>,
+        std::shared_ptr<ClockTimeFrame>,
+        std::shared_ptr<SecondsTimeFrame>,
+        std::shared_ptr<UncalibratedTimeFrame>>;
 
 /**
  * @brief Utility functions for TimeFrame operations
  */
 namespace TimeFrameUtils {
-    
-    /**
+
+/**
      * @brief Create a dense ClockTimeFrame for regular sampling
      * 
      * @param start_tick Starting tick value
@@ -274,45 +284,71 @@ namespace TimeFrameUtils {
      * @param sampling_rate_hz Sampling rate in Hz
      * @return Shared pointer to the created ClockTimeFrame
      */
-    [[nodiscard]] inline std::shared_ptr<ClockTimeFrame> createDenseClockTimeFrame(
+[[nodiscard]] inline std::shared_ptr<ClockTimeFrame> createDenseClockTimeFrame(
         int64_t start_tick, int64_t num_samples, double sampling_rate_hz) {
-        return std::make_shared<ClockTimeFrame>(start_tick, num_samples, 1, sampling_rate_hz);
-    }
-    
-    /**
+    return std::make_shared<ClockTimeFrame>(start_tick, num_samples, 1, sampling_rate_hz);
+}
+
+/**
      * @brief Create a sparse ClockTimeFrame from tick indices
      * 
      * @param tick_indices Vector of clock tick indices
      * @param sampling_rate_hz Sampling rate in Hz
      * @return Shared pointer to the created ClockTimeFrame
      */
-    [[nodiscard]] inline std::shared_ptr<ClockTimeFrame> createSparseClockTimeFrame(
+[[nodiscard]] inline std::shared_ptr<ClockTimeFrame> createSparseClockTimeFrame(
         std::vector<int64_t> tick_indices, double sampling_rate_hz) {
-        return std::make_shared<ClockTimeFrame>(std::move(tick_indices), sampling_rate_hz);
-    }
-    
-    /**
+    return std::make_shared<ClockTimeFrame>(std::move(tick_indices), sampling_rate_hz);
+}
+
+/**
      * @brief Create a sparse CameraTimeFrame from frame indices
      * 
      * @param frame_indices Vector of camera frame indices
      * @return Shared pointer to the created CameraTimeFrame
      */
-    [[nodiscard]] inline std::shared_ptr<CameraTimeFrame> createSparseCameraTimeFrame(
+[[nodiscard]] inline std::shared_ptr<CameraTimeFrame> createSparseCameraTimeFrame(
         std::vector<int64_t> frame_indices) {
-        return std::make_shared<CameraTimeFrame>(std::move(frame_indices));
-    }
-    
-    /**
+    return std::make_shared<CameraTimeFrame>(std::move(frame_indices));
+}
+
+/**
      * @brief Create a dense CameraTimeFrame for regular frame capture
      * 
      * @param start_frame Starting frame index
      * @param num_frames Number of frames
      * @return Shared pointer to the created CameraTimeFrame
      */
-    [[nodiscard]] inline std::shared_ptr<CameraTimeFrame> createDenseCameraTimeFrame(
+[[nodiscard]] inline std::shared_ptr<CameraTimeFrame> createDenseCameraTimeFrame(
         int64_t start_frame, int64_t num_frames) {
-        return std::make_shared<CameraTimeFrame>(start_frame, num_frames, 1);
-    }
+    return std::make_shared<CameraTimeFrame>(start_frame, num_frames, 1);
 }
 
-#endif // TIMEFRAME_V2_HPP 
+// ========== Filename-based TimeFrameV2 Creation ==========
+
+/**
+     * @brief Create a CameraTimeFrame from image folder filenames
+     * 
+     * This function is the TimeFrameV2 equivalent of createTimeFrameFromFilenames.
+     * It extracts frame indices from filenames and creates a CameraTimeFrame.
+     * 
+     * @param options Configuration options (same as legacy version)
+     * @return A shared pointer to the created CameraTimeFrame, or nullptr on failure
+     */
+[[nodiscard]] std::shared_ptr<CameraTimeFrame> createCameraTimeFrameFromFilenames(
+        FilenameTimeFrameOptions const & options);
+
+/**
+     * @brief Create an UncalibratedTimeFrame from image folder filenames
+     * 
+     * For when the extracted values don't represent camera frames but some other
+     * uncalibrated indexing scheme.
+     * 
+     * @param options Configuration options (same as legacy version)
+     * @return A shared pointer to the created UncalibratedTimeFrame, or nullptr on failure
+     */
+[[nodiscard]] std::shared_ptr<UncalibratedTimeFrame> createUncalibratedTimeFrameFromFilenames(
+        FilenameTimeFrameOptions const & options);
+}// namespace TimeFrameUtils
+
+#endif// TIMEFRAME_V2_HPP

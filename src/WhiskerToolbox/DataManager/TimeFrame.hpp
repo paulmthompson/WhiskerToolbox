@@ -3,6 +3,7 @@
 
 #include <concepts>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 
@@ -38,11 +39,11 @@ struct TimeFrameIndex {
         return value >= other.value;
     }
 
-    TimeFrameIndex& operator++() {
+    TimeFrameIndex & operator++() {
         ++value;
         return *this;
     }
-    
+
     TimeFrameIndex operator++(int) {
         TimeFrameIndex temp(*this);
         ++value;
@@ -97,9 +98,56 @@ private:
  * @return The original `time_value_in_source_frame` if frames are the same object instance,
  *         or the corresponding index in `destination_time_frame` if frames are different.
  */
-int64_t getTimeIndexForSeries(TimeFrameIndex time_value_in_source_frame,
+int64_t getTimeIndexForSeries(TimeFrameIndex source_index,
                               TimeFrame const * source_time_frame,
                               TimeFrame const * destination_time_frame);
 
+// ========== Filename-based TimeFrame Creation ==========
+
+/**
+ * @brief Mode for creating TimeFrame from filename-extracted values
+ */
+enum class FilenameTimeFrameMode {
+    FOUND_VALUES,///< Use only the values found in filenames (sparse)
+    ZERO_TO_MAX, ///< Create range from 0 to maximum found value (dense)
+    MIN_TO_MAX   ///< Create range from minimum to maximum found value (dense)
+};
+
+/**
+ * @brief Options for creating TimeFrame from image folder filenames
+ */
+struct FilenameTimeFrameOptions {
+    std::string folder_path;   ///< Path to the folder containing files
+    std::string file_extension;///< File extension to filter (e.g., ".jpg", ".png")
+    std::string regex_pattern; ///< Regex pattern to extract numerical values from filenames
+    FilenameTimeFrameMode mode;///< Mode for TimeFrame creation
+    bool sort_ascending = true;///< Whether to sort extracted values in ascending order
+};
+
+/**
+ * @brief Create a legacy TimeFrame from image folder filenames
+ * 
+ * This function scans a folder for files with a specific extension, extracts numerical
+ * values from their filenames using a regex pattern, and creates a TimeFrame based on
+ * the specified mode.
+ * 
+ * @param options Configuration options for the operation
+ * @return A shared pointer to the created TimeFrame, or nullptr on failure
+ * 
+ * @note Files with no extractable numbers or invalid patterns are skipped with warnings
+ * @note The regex pattern should contain exactly one capture group for the numerical value
+ * 
+ * @example
+ * ```cpp
+ * FilenameTimeFrameOptions opts;
+ * opts.folder_path = "/path/to/images";
+ * opts.file_extension = ".jpg";
+ * opts.regex_pattern = R"(frame_(\d+)\.jpg)";  // Captures number after "frame_"
+ * opts.mode = FilenameTimeFrameMode::FOUND_VALUES;
+ * 
+ * auto timeframe = createTimeFrameFromFilenames(opts);
+ * ```
+ */
+std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions const & options);
 
 #endif// TIMEFRAME_HPP

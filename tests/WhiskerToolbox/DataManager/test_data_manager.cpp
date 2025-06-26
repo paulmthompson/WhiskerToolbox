@@ -1,9 +1,9 @@
-
 #include <catch2/catch_test_macros.hpp>
 
 #include "DataManager.hpp"
 #include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
+#include "Media/Image_Data.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
@@ -596,4 +596,112 @@ auto dm_media = dm.getData<MediaData>("media");
 
 REQUIRE(dm_media->getHeight() == 480);
 REQUIRE(dm_media->getWidth() == 640);
+}
+
+TEST_CASE("DataManager::getType returns correct data types", "[DataManager][getType]") {
+    DataManager dm;
+
+    SECTION("Default media type") {
+        // By default, DataManager has MediaData with key "media"
+        // Since it's not VideoData or ImageData, it should return Video (default behavior)
+        REQUIRE(dm.getType("media") == DM_DataType::Video);
+    }
+
+    SECTION("VideoData type detection") {
+        // Create VideoData object without loading from file
+        auto video_data = std::make_shared<VideoData>();
+        dm.setData<VideoData>("test_video", video_data);
+
+        // getType should correctly identify it as Video
+        REQUIRE(dm.getType("test_video") == DM_DataType::Video);
+        
+        // Also test that it doesn't misidentify as Images
+        REQUIRE(dm.getType("test_video") != DM_DataType::Images);
+        REQUIRE(dm.getType("test_video") != DM_DataType::Unknown);
+    }
+
+    SECTION("ImageData type detection") {
+        // Create ImageData object without loading from folder
+        auto image_data = std::make_shared<ImageData>();
+        dm.setData<ImageData>("test_images", image_data);
+
+        // getType should correctly identify it as Images
+        REQUIRE(dm.getType("test_images") == DM_DataType::Images);
+        
+        // Also test that it doesn't misidentify as Video
+        REQUIRE(dm.getType("test_images") != DM_DataType::Video);
+        REQUIRE(dm.getType("test_images") != DM_DataType::Unknown);
+    }
+
+    SECTION("Multiple media types coexisting") {
+        // Test both VideoData and ImageData in the same DataManager
+        auto video_data = std::make_shared<VideoData>();
+        auto image_data = std::make_shared<ImageData>();
+        
+        dm.setData<VideoData>("my_video", video_data);
+        dm.setData<ImageData>("my_images", image_data);
+
+        // Each should be correctly identified
+        REQUIRE(dm.getType("my_video") == DM_DataType::Video);
+        REQUIRE(dm.getType("my_images") == DM_DataType::Images);
+        
+        // Cross-check that they don't interfere with each other
+        REQUIRE(dm.getType("my_video") != dm.getType("my_images"));
+    }
+
+    SECTION("All supported data types") {
+        // Test all data types that getType should recognize
+        
+        // Points
+        dm.setData<PointData>("test_points");
+        REQUIRE(dm.getType("test_points") == DM_DataType::Points);
+        
+        // Lines
+        dm.setData<LineData>("test_lines");
+        REQUIRE(dm.getType("test_lines") == DM_DataType::Line);
+        
+        // Masks
+        dm.setData<MaskData>("test_mask");
+        REQUIRE(dm.getType("test_mask") == DM_DataType::Mask);
+        
+    }
+
+    SECTION("Non-existent key returns Unknown") {
+        // Test behavior for keys that don't exist
+        REQUIRE(dm.getType("nonexistent_key") == DM_DataType::Unknown);
+        REQUIRE(dm.getType("") == DM_DataType::Unknown);
+        REQUIRE(dm.getType("another_missing_key") == DM_DataType::Unknown);
+    }
+
+    SECTION("Media type inheritance and polymorphism") {
+        // Test that both VideoData and ImageData are correctly handled
+        // even though they inherit from MediaData
+        
+        auto video_data = std::make_shared<VideoData>();
+        auto image_data = std::make_shared<ImageData>();
+        
+        // Store them as their base class (MediaData) to test polymorphism
+        dm.setData<MediaData>("poly_video", video_data);
+        dm.setData<MediaData>("poly_images", image_data);
+        
+        // getType should still correctly identify the derived types via dynamic_cast
+        REQUIRE(dm.getType("poly_video") == DM_DataType::Video);
+        REQUIRE(dm.getType("poly_images") == DM_DataType::Images);
+    }
+
+    SECTION("Replacing data updates type correctly") {
+        // Start with one type
+        auto video_data = std::make_shared<VideoData>();
+        dm.setData<VideoData>("replaceable", video_data);
+        REQUIRE(dm.getType("replaceable") == DM_DataType::Video);
+        
+        // Replace with different type
+        auto image_data = std::make_shared<ImageData>();
+        dm.setData<ImageData>("replaceable", image_data);
+        REQUIRE(dm.getType("replaceable") == DM_DataType::Images);
+        
+        // Replace with completely different type
+        dm.setData<PointData>("replaceable");
+        REQUIRE(dm.getType("replaceable") == DM_DataType::Points);
+    }
 }

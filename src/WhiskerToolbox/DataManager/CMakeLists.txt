@@ -56,6 +56,7 @@ set(DATAMANAGER_SOURCES
 
         TimeFrame/StrongTimeTypes.hpp
         TimeFrame/TimeFrameV2.hpp
+        TimeFrame/TimeFrameV2.cpp
 
         loaders/CSV_Loaders.cpp
         loaders/CSV_Loaders.hpp

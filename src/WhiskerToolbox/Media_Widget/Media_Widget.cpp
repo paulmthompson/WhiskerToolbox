@@ -84,7 +84,7 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = std::move(data_manager);
 
     ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->feature_table_widget->setTypeFilter({DM_DataType::Line, DM_DataType::Mask, DM_DataType::Points, DM_DataType::DigitalInterval, DM_DataType::Tensor, DM_DataType::Video});
+    ui->feature_table_widget->setTypeFilter({DM_DataType::Line, DM_DataType::Mask, DM_DataType::Points, DM_DataType::DigitalInterval, DM_DataType::Tensor, DM_DataType::Video, DM_DataType::Images});
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
 
@@ -212,6 +212,13 @@ void Media_Widget::_featureSelected(QString const & feature) {
         ui->stackedWidget->setCurrentIndex(stacked_widget_index);
         auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
         processing_widget->setActiveKey(key);
+    } else if (type == DM_DataType::Images) {
+        // Images are handled similarly to Video, using the MediaProcessing_Widget
+        int const stacked_widget_index = 6;
+
+        ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+        auto processing_widget = dynamic_cast<MediaProcessing_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+        processing_widget->setActiveKey(key);
     } else {
         ui->stackedWidget->setCurrentIndex(0);
         std::cout << "Unsupported feature type" << std::endl;
@@ -326,6 +333,11 @@ void Media_Widget::_addFeatureToDisplay(QString const & feature, bool enabled) {
             std::cout << "Disabling tensor data from scene" << std::endl;
             opts.value()->is_visible = false;
         }
+    } else if (type == DM_DataType::Video || type == DM_DataType::Images) {
+        // Video and Image data don't use the same overlay system as other data types
+        // They are handled through the MediaProcessing_Widget and don't need visibility toggling
+        // The checkbox functionality is mainly for overlay features, not base media
+        std::cout << "Media type " << convert_data_type_to_string(type) << " - feature display toggling not applicable" << std::endl;
     } else {
         std::cout << "Feature type " << convert_data_type_to_string(type) << " not supported" << std::endl;
     }

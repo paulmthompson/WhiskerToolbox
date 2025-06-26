@@ -184,6 +184,9 @@ void MainWindow::_loadJSONConfig() {
     for (auto const & data: data_info) {
         if (data.data_class == "VideoData") {
             _LoadData();
+
+        } else if (data.data_class == "ImageData") {
+            _LoadData();
         } else if (
                 (data.data_class == "PointData") ||
                 (data.data_class == "MaskData") ||

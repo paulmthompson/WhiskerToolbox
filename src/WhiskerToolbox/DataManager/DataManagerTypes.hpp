@@ -17,6 +17,7 @@ class TensorData;
 
 enum class DM_DataType {
     Video,
+    Images,
     Points,
     Mask,
     Line,

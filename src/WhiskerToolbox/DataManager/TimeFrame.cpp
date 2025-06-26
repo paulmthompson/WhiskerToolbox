@@ -1,4 +1,3 @@
-
 #include "TimeFrame.hpp"
 
 #include <cmath>
@@ -62,7 +61,132 @@ int64_t getTimeIndexForSeries(TimeFrameIndex source_index,
         // Frames are the same. The time value can be used directly.
         return source_index.getValue();
     } else {
-        auto destination_index = destination_time_frame->getIndexAtTime(source_index.getValue());
+        auto destination_index = destination_time_frame->getIndexAtTime(static_cast<float>(source_index.getValue()));
         return destination_index;
+    }
+}
+
+// ========== Filename-based TimeFrame Creation Implementation ==========
+
+#include <algorithm>
+#include <filesystem>
+#include <iostream>
+#include <numeric>
+#include <regex>
+
+std::shared_ptr<TimeFrame> createTimeFrameFromFilenames(FilenameTimeFrameOptions const & options) {
+    try {
+        // Check if directory exists - be more permissive for WSL/Windows mounted drives
+        std::cout << "Checking directory: " << options.folder_path << std::endl;
+        
+        bool directory_accessible = false;
+        try {
+            // First try the standard check
+            if (std::filesystem::exists(options.folder_path) && std::filesystem::is_directory(options.folder_path)) {
+                directory_accessible = true;
+                std::cout << "Directory verified via filesystem::exists" << std::endl;
+            } else {
+                // If that fails, try to iterate the directory as a fallback
+                // This can work even when exists() fails on WSL mounted drives
+                std::filesystem::directory_iterator dir_iter(options.folder_path);
+                directory_accessible = true; // If we get here, directory is accessible
+                std::cout << "Directory verified via directory_iterator (filesystem::exists failed)" << std::endl;
+            }
+        } catch (std::filesystem::filesystem_error const & e) {
+            std::cerr << "Error accessing directory: " << options.folder_path << " - " << e.what() << std::endl;
+            return nullptr;
+        }
+        
+        if (!directory_accessible) {
+            std::cerr << "Error: Directory is not accessible: " << options.folder_path << std::endl;
+            return nullptr;
+        }
+
+        std::vector<int64_t> extracted_values;
+        std::regex const pattern(options.regex_pattern);
+        std::smatch match;
+
+        // Iterate through files in directory
+        for (auto const & entry: std::filesystem::directory_iterator(options.folder_path)) {
+            if (!entry.is_regular_file()) {
+                continue;
+            }
+
+            std::string const filename = entry.path().filename().string();
+
+                        // Check file extension
+            if (!options.file_extension.empty() && 
+                !filename.ends_with(options.file_extension)) {
+                continue;
+            }
+
+            // Extract numerical value using regex
+            if (std::regex_search(filename, match, pattern)) {
+                if (match.size() >= 2) {// Must have at least one capture group
+                    try {
+                        int64_t const value = std::stoll(match[1].str());
+                        extracted_values.push_back(value);
+                    } catch (std::exception const & e) {
+                        std::cout << "Warning: Could not parse number from filename " << filename
+                                  << " (matched: '" << match[1].str() << "'): " << e.what() << std::endl;
+                    }
+                } else {
+                    std::cout << "Warning: Regex pattern matched but no capture group found in filename: "
+                              << filename << std::endl;
+                }
+            } else {
+                std::cout << "Warning: No match found for pattern in filename: " << filename << std::endl;
+            }
+        }
+
+        if (extracted_values.empty()) {
+            std::cerr << "Error: No valid numerical values extracted from filenames" << std::endl;
+            return nullptr;
+        }
+
+        // Sort values if requested
+        if (options.sort_ascending) {
+            std::sort(extracted_values.begin(), extracted_values.end());
+        }
+
+        // Create TimeFrame based on mode
+        std::vector<int> time_values;
+
+        switch (options.mode) {
+            case FilenameTimeFrameMode::FOUND_VALUES: {
+                // Use only the extracted values
+                time_values.reserve(extracted_values.size());
+                for (int64_t val: extracted_values) {
+                    time_values.push_back(static_cast<int>(val));
+                }
+                break;
+            }
+            case FilenameTimeFrameMode::ZERO_TO_MAX: {
+                // Create range from 0 to maximum value
+                auto max_val = *std::max_element(extracted_values.begin(), extracted_values.end());
+                time_values.resize(static_cast<size_t>(max_val + 1));
+                std::iota(time_values.begin(), time_values.end(), 0);
+                break;
+            }
+            case FilenameTimeFrameMode::MIN_TO_MAX: {
+                // Create range from minimum to maximum value
+                auto [min_it, max_it] = std::minmax_element(extracted_values.begin(), extracted_values.end());
+                int64_t const min_val = *min_it;
+                int64_t const max_val = *max_it;
+                auto const range_size = static_cast<size_t>(max_val - min_val + 1);
+                time_values.resize(range_size);
+                std::iota(time_values.begin(), time_values.end(), static_cast<int>(min_val));
+                break;
+            }
+        }
+
+        std::cout << "Created TimeFrame from " << extracted_values.size()
+                  << " filenames with " << time_values.size() << " time points" << std::endl;
+
+        return std::make_shared<TimeFrame>(time_values);
+
+    } catch (std::exception const & e) {
+        std::cerr << "Error creating TimeFrame from filenames: " << e.what() << std::endl;
+        return nullptr;
     }
 }

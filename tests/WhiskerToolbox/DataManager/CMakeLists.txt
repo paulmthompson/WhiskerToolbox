@@ -20,6 +20,7 @@ add_executable(test_data_manager
         test_data_manager.cpp
         test_time_frame.cpp
         test_datamanager_timeframe_v2_integration.cpp
+        test_filename_timeframe.cpp
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/TimeFrame/StrongTimeTypes.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/TimeFrame/TimeFrameV2.test.cpp

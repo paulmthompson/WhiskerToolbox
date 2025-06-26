@@ -5,6 +5,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Media/Media_Data.hpp"
+#include "Media/Image_Data.hpp"
 #include "Media/Video_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "Tensors/Tensor_Data.hpp"
@@ -248,6 +249,7 @@ void checkOptionalFields(json const & item, std::vector<std::string> const & opt
 
 DM_DataType stringToDataType(std::string const & data_type_str) {
     if (data_type_str == "video") return DM_DataType::Video;
+    if (data_type_str == "images") return DM_DataType::Images;
     if (data_type_str == "points") return DM_DataType::Points;
     if (data_type_str == "mask") return DM_DataType::Mask;
     if (data_type_str == "line") return DM_DataType::Line;
@@ -306,6 +308,15 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 dm->setData<VideoData>("media", video_data);
 
                 data_info_list.push_back({name, "VideoData", ""});
+                break;
+            }
+            case DM_DataType::Images: {
+
+                auto media = std::make_shared<ImageData>();
+                media->LoadMedia(file_path);
+                dm->setData<ImageData>("media", media);
+
+                data_info_list.push_back({name, "ImageData", ""});
                 break;
             }
             case DM_DataType::Points: {
@@ -452,6 +463,45 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                     auto timeframe = std::make_shared<TimeFrame>(t);
                     dm->setTime(name, timeframe, true);
                 }
+
+                if (item["format"] == "filename") {
+
+                    // Get required parameters
+                    std::string const folder_path = file_path; // file path is required argument
+                    std::string const regex_pattern = item["regex_pattern"];
+
+                    // Get optional parameters with defaults
+                    std::string const file_extension = item.value("file_extension", "");
+                    std::string const mode_str = item.value("mode", "found_values");
+                    bool const sort_ascending = item.value("sort_ascending", true);
+
+                    // Convert mode string to enum
+                    FilenameTimeFrameMode mode = FilenameTimeFrameMode::FOUND_VALUES;
+                    if (mode_str == "zero_to_max") {
+                        mode = FilenameTimeFrameMode::ZERO_TO_MAX;
+                    } else if (mode_str == "min_to_max") {
+                        mode = FilenameTimeFrameMode::MIN_TO_MAX;
+                    }
+
+                    // Create options
+                    FilenameTimeFrameOptions options;
+                    options.folder_path = folder_path;
+                    options.file_extension = file_extension;
+                    options.regex_pattern = regex_pattern;
+                    options.mode = mode;
+                    options.sort_ascending = sort_ascending;
+
+                    // Create TimeFrame from filenames
+                    auto timeframe = createTimeFrameFromFilenames(options);
+                    if (timeframe) {
+                        dm->setTime(name, timeframe, true);
+                        std::cout << "Created TimeFrame '" << name << "' from filenames in "
+                                  << folder_path << std::endl;
+                    } else {
+                        std::cerr << "Error: Failed to create TimeFrame from filenames for "
+                                  << name << std::endl;
+                    }
+                }
                 break;
             }
             default:
@@ -472,7 +522,16 @@ DM_DataType DataManager::getType(std::string const & key) const {
     auto it = _data.find(key);
     if (it != _data.end()) {
         if (std::holds_alternative<std::shared_ptr<MediaData>>(it->second)) {
-            return DM_DataType::Video;
+            //Dynamic cast to videodata or image data
+
+            auto media_data = std::get<std::shared_ptr<MediaData>>(it->second);
+            if (dynamic_cast<VideoData *>(media_data.get()) != nullptr) {
+                return DM_DataType::Video;
+            } else if (dynamic_cast<ImageData *>(media_data.get()) != nullptr) {
+                return DM_DataType::Images;
+            } else {
+                return DM_DataType::Video; //Old behavior
+            }
         } else if (std::holds_alternative<std::shared_ptr<PointData>>(it->second)) {
             return DM_DataType::Points;
         } else if (std::holds_alternative<std::shared_ptr<LineData>>(it->second)) {
@@ -563,6 +622,8 @@ std::string convert_data_type_to_string(DM_DataType type) {
     switch (type) {
         case DM_DataType::Video:
             return "video";
+        case DM_DataType::Images:
+            return "images";
         case DM_DataType::Points:
             return "points";
         case DM_DataType::Mask:
@@ -593,9 +654,9 @@ bool DataManager::createAnalogTimeSeriesWithClock(std::string const & data_key,
                                                   double sampling_rate_hz,
                                                   bool overwrite) {
     // Create the clock timeframe
-    if (!createClockTimeFrame(timeframe_key, start_tick, 
-                             static_cast<int64_t>(analog_data.size()), 
-                             sampling_rate_hz, overwrite)) {
+    if (!createClockTimeFrame(timeframe_key, start_tick,
+                              static_cast<int64_t>(analog_data.size()),
+                              sampling_rate_hz, overwrite)) {
         return false;
     }
 
@@ -645,7 +706,7 @@ bool DataManager::createAnalogTimeSeriesWithCamera(std::string const & data_key,
     // Create time vector with the actual frame indices
     std::vector<TimeFrameIndex> time_vector;
     time_vector.reserve(analog_data.size());
-    for (int64_t frame_idx : frame_indices_copy) {
+    for (int64_t frame_idx: frame_indices_copy) {
         time_vector.push_back(TimeFrameIndex(frame_idx));
     }
 
@@ -661,8 +722,8 @@ bool DataManager::createAnalogTimeSeriesWithDenseCamera(std::string const & data
                                                         int64_t start_frame,
                                                         bool overwrite) {
     // Create the dense camera timeframe
-    if (!createDenseCameraTimeFrame(timeframe_key, start_frame, 
-                                   static_cast<int64_t>(analog_data.size()), overwrite)) {
+    if (!createDenseCameraTimeFrame(timeframe_key, start_frame,
+                                    static_cast<int64_t>(analog_data.size()), overwrite)) {
         return false;
     }
 
