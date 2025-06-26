@@ -306,5 +306,21 @@ void DataManager_Widget::_createNewData(std::string key, std::string type) {
 }
 
 void DataManager_Widget::_changeScrollbar(int frame_id) {
+
+    auto active_feature = _highlighted_available_feature.toStdString();
+
+    auto video_timeframe = _data_manager->getTime("time");
+
+    auto active_feature_timeframe_key = _data_manager->getTimeFrame(active_feature);
+
+    if (!active_feature_timeframe_key.empty()) {
+        auto feature_timeframe = _data_manager->getTime(active_feature_timeframe_key);
+
+        if (video_timeframe.get() != feature_timeframe.get()) {
+            frame_id = feature_timeframe->getTimeAtIndex(TimeFrameIndex(frame_id));
+            frame_id = video_timeframe->getIndexAtTime(frame_id);
+        }
+    }
+
     _time_scrollbar->changeScrollBarValue(frame_id);
 }
