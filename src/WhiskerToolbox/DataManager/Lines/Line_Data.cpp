@@ -4,20 +4,25 @@
 #include <cmath>
 #include <iostream>
 
+LineData::LineData(std::map<int, std::vector<Line2D>> const & data)
+    : _data(data)
+{
 
-void LineData::clearLinesAtTime(int const time, bool notify) {
+}
 
-    _data[time].clear();
+void LineData::clearLinesAtTime(TimeFrameIndex const time, bool notify) {
+
+    _data[time.getValue()].clear();
 
     if (notify) {
         notifyObservers();
     }
 }
 
-void LineData::clearLineAtTime(int const time, int const line_id, bool notify) {
+void LineData::clearLineAtTime(TimeFrameIndex const time, int const line_id, bool notify) {
 
-    if (line_id < _data[time].size()) {
-        _data[time].erase(_data[time].begin() + line_id);
+    if (line_id < _data[time.getValue()].size()) {
+        _data[time.getValue()].erase(_data[time.getValue()].begin() + line_id);
     }
 
     if (notify) {
@@ -202,7 +207,7 @@ std::size_t LineData::moveTo(LineData& target, int start_time, int end_time, boo
 
     // Then, clear all the times from source
     for (int time : times_to_clear) {
-        clearLinesAtTime(time, false); // Don't notify for each operation
+        clearLinesAtTime(TimeFrameIndex(time), false); // Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested
@@ -232,7 +237,7 @@ std::size_t LineData::moveTo(LineData& target, std::vector<int> const& times, bo
 
     // Then, clear all the times from source
     for (int time : times_to_clear) {
-        clearLinesAtTime(time, false); // Don't notify for each operation
+        clearLinesAtTime(TimeFrameIndex(time), false); // Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested

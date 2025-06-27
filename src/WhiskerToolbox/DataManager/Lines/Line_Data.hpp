@@ -4,6 +4,7 @@
 #include "ImageSize/ImageSize.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "Points/points.hpp"
+#include "TimeFrame.hpp"
 #include "lines.hpp"
 
 #include <cstddef>
@@ -20,11 +21,27 @@
  */
 class LineData : public ObserverData {
 public:
+
+    // ========== Constructors ==========
+    /**
+     * @brief Default constructor
+     * 
+     * This constructor creates an empty LineData with no data
+     */
     LineData() = default;
-    explicit LineData(std::map<int, std::vector<Line2D>> const & data)
-        : _data(data){};
-    void clearLineAtTime(int time, int line_id, bool notify = true);
-    void clearLinesAtTime(int time, bool notify = true);
+
+    /**
+     * @brief Constructor with data
+     * 
+     * This constructor creates a LineData with the given data
+     * 
+     * @param data The data to initialize the LineData with
+     */
+    explicit LineData(std::map<int, std::vector<Line2D>> const & data);
+
+
+    void clearLineAtTime(TimeFrameIndex time, int line_id, bool notify = true);
+    void clearLinesAtTime(TimeFrameIndex time, bool notify = true);
     void addLineAtTime(int time, std::vector<float> const & x, std::vector<float> const & y, bool notify = true);
     void addLineAtTime(int time, std::vector<Point2D<float>> const & line, bool notify = true);
 

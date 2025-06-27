@@ -175,7 +175,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         }
         
         // Modify target data and ensure source is unaffected
-        target_data.clearLinesAtTime(10);
+        target_data.clearLinesAtTime(TimeFrameIndex(10));
         REQUIRE(source_data.getLinesAtTime(10).size() == 2); // Source unchanged
         REQUIRE(target_data.getLinesAtTime(10).size() == 0);  // Target cleared
     }

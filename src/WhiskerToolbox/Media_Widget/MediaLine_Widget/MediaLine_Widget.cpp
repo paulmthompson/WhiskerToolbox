@@ -390,7 +390,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, int current
             std::vector<Line2D> updated_lines = lines;
             updated_lines[_current_line_index] = line;
             
-            _data_manager->getData<LineData>(_active_key)->clearLinesAtTime(current_time);
+            _data_manager->getData<LineData>(_active_key)->clearLinesAtTime(TimeFrameIndex(current_time));
             for(const auto& updated_line : updated_lines) {
                 _data_manager->getData<LineData>(_active_key)->addLineAtTime(current_time, updated_line);
             }
@@ -1007,9 +1007,9 @@ void MediaLine_Widget::_moveLineToTarget(const std::string& target_key) {
             remaining_lines.push_back(lines[i]);
         }
     }
-    
+
     // Clear and rebuild source lines
-    source_line_data->clearLinesAtTime(current_time);
+    source_line_data->clearLinesAtTime(TimeFrameIndex(current_time));
     for (const auto& line : remaining_lines) {
         source_line_data->addLineAtTime(current_time, line);
     }

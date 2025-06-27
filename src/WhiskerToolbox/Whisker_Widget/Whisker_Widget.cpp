@@ -448,7 +448,7 @@ void order_whiskers_by_position(
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
         if (assigned_ids[i] != -1) {
             std::string const whisker_name = whisker_group_name + "_" + std::to_string(assigned_ids[i]);
-            dm->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
+            dm->getData<LineData>(whisker_name)->clearLinesAtTime(TimeFrameIndex(current_time));
             dm->getData<LineData>(whisker_name)->addLineAtTime(current_time, whiskers[i]);
         }
     }
@@ -470,7 +470,7 @@ void order_whiskers_by_position(
     }
     */
 
-    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
+    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(TimeFrameIndex(current_time));
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
         if (assigned_ids[i] == -1) {
             dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[i]);
@@ -517,7 +517,7 @@ void add_whiskers_to_data_manager(
         int current_time,
         float similarity_threshold) {
 
-    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
+    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(TimeFrameIndex(current_time));
 
     for (auto & w: whiskers) {
         dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, w);
