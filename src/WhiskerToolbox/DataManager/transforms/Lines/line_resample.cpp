@@ -65,7 +65,7 @@ DataTypeVariant LineResampleOperation::execute(DataTypeVariant const& dataVarian
     float target_spacing = params->target_spacing;
     std::cout << "LineResampleOperation: target_spacing = " << target_spacing << std::endl;
 
-    auto resampled_line_map = std::map<int, std::vector<Line2D>>();
+    auto resampled_line_map = std::map<TimeFrameIndex, std::vector<Line2D>>();
     int total_lines = 0;
     for (auto const& time_lines_pair : input_line_data->GetAllLinesAsRange()) {
         total_lines += time_lines_pair.lines.size();
@@ -81,7 +81,7 @@ DataTypeVariant LineResampleOperation::execute(DataTypeVariant const& dataVarian
     progressCallback(0);
 
     for (auto const& time_lines_pair : input_line_data->GetAllLinesAsRange()) {
-        int time = time_lines_pair.time;
+        TimeFrameIndex time = time_lines_pair.time;
         std::vector<Line2D> new_lines_at_time;
         new_lines_at_time.reserve(time_lines_pair.lines.size());
 

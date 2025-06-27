@@ -135,7 +135,7 @@ std::shared_ptr<LineData> clip_lines(
     result_line_data->setImageSize(line_data->getImageSize());
     
     // Get reference line from the specified frame
-    auto const & reference_lines = params->reference_line_data->getLinesAtTime(params->reference_frame);
+    auto const & reference_lines = params->reference_line_data->getLinesAtTime(TimeFrameIndex(params->reference_frame));
     if (reference_lines.empty()) {
         std::cerr << "LineClip: No reference line found at frame " << params->reference_frame << std::endl;
         progressCallback(100);
@@ -156,7 +156,7 @@ std::shared_ptr<LineData> clip_lines(
     
     size_t processed_times = 0;
     
-    for (int time : times_with_data) {
+    for (auto time : times_with_data) {
         auto const & lines_at_time = line_data->getLinesAtTime(time);
         
         for (auto const & line : lines_at_time) {

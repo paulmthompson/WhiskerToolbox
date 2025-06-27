@@ -116,7 +116,7 @@ std::shared_ptr<PointData> extract_line_point(
     progressCallback(0);
     
     size_t processed_times = 0;
-    for (int time : times_with_data) {
+    for (auto time : times_with_data) {
         auto const & lines_at_time = line_data->getLinesAtTime(time);
         
         // Process only the first line at each time point (similar to other line operations)
@@ -141,7 +141,7 @@ std::shared_ptr<PointData> extract_line_point(
                 }
                 
                 if (extracted_point.has_value()) {
-                    result_point_data->addPointAtTime(time, extracted_point.value(), false);
+                    result_point_data->addPointAtTime(time.getValue(), extracted_point.value(), false);
                 }
             }
         }

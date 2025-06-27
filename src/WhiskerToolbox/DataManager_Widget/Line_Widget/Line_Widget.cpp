@@ -138,7 +138,7 @@ void Line_Widget::_showContextMenu(QPoint const & position) {
     context_menu.exec(ui->tableView->mapToGlobal(position));
 }
 
-std::vector<int> Line_Widget::_getSelectedFrames() {
+std::vector<TimeFrameIndex> Line_Widget::_getSelectedFrames() {
     QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
     std::set<int> unique_frames;
 
@@ -151,11 +151,11 @@ std::vector<int> Line_Widget::_getSelectedFrames() {
         }
     }
 
-    return std::vector<int>(unique_frames.begin(), unique_frames.end());
+    return std::vector<TimeFrameIndex>(unique_frames.begin(), unique_frames.end());
 }
 
 void Line_Widget::_moveLineToTarget(std::string const & target_key) {
-    std::vector<int> selected_frames = _getSelectedFrames();
+   auto selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Line_Widget: No lines selected to move." << std::endl;
         return;
@@ -191,7 +191,7 @@ void Line_Widget::_moveLineToTarget(std::string const & target_key) {
 }
 
 void Line_Widget::_copyLineToTarget(std::string const & target_key) {
-    std::vector<int> selected_frames = _getSelectedFrames();
+    auto selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Line_Widget: No lines selected to copy." << std::endl;
         return;
@@ -243,7 +243,7 @@ void Line_Widget::_deleteSelectedLine() {
         return;
     }
 
-    std::vector<Line2D> const & lines_at_frame = source_line_data->getLinesAtTime(row_data.frame);
+    std::vector<Line2D> const & lines_at_frame = source_line_data->getLinesAtTime(TimeFrameIndex(row_data.frame));
     if (row_data.lineIndex < 0 || static_cast<size_t>(row_data.lineIndex) >= lines_at_frame.size()) {
         std::cerr << "Line_Widget: Line index out of bounds for deletion. Frame: " << row_data.frame
                   << ", Index: " << row_data.lineIndex << std::endl;
@@ -334,11 +334,11 @@ void Line_Widget::_initiateSaveProcess(SaverType saver_type, LineSaverOptionsVar
     }
 
     if (ui->export_media_frames_checkbox->isChecked()) {
-        auto times_with_data_int = line_data_ptr->getTimesWithData();
+        auto times_with_data = line_data_ptr->getTimesWithData();
         std::vector<size_t> frame_ids_to_export;
-        frame_ids_to_export.reserve(times_with_data_int.size());
-        for (int frame_id: times_with_data_int) {
-            frame_ids_to_export.push_back(static_cast<size_t>(frame_id));
+        frame_ids_to_export.reserve(times_with_data.size());
+        for (auto frame_id: times_with_data) {
+            frame_ids_to_export.push_back(static_cast<size_t>(frame_id.getValue()));
         }
 
         if (frame_ids_to_export.empty()) {

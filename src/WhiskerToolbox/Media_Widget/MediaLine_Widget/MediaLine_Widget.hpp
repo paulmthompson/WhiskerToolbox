@@ -3,6 +3,7 @@
 
 
 #include "DataManager/Lines/lines.hpp"
+#include "DataManager/TimeFrame.hpp"
 
 #include <QMap>
 #include <QWidget>
@@ -79,7 +80,7 @@ private:
     cv::Mat _current_frame; // Cached current frame
     
     void _setupSelectionModePages();
-    void _addPointToLine(float x_media, float y_media, int current_time);
+    void _addPointToLine(float x_media, float y_media, TimeFrameIndex current_time);
     void _applyPolynomialFit(Line2D& line, int order);
     
     void _detectEdges();

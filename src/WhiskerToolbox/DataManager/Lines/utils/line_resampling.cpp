@@ -4,7 +4,7 @@
 
 // Function definition moved from mask_to_line.cpp
 Line2D resample_line_points(
-    const Line2D& input_points,
+    Line2D const & input_points,
     float target_spacing) {
     if (input_points.empty() || target_spacing <= 1e-6) {
         return input_points; // Return original if no points or invalid spacing

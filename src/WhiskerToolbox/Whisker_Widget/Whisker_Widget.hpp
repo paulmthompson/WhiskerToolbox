@@ -4,6 +4,7 @@
 #include "ImageSize/ImageSize.hpp"// for ImageSize
 #include "Lines/lines.hpp"
 #include "Points/points.hpp"// for Point2D
+#include "DataManager/TimeFrame.hpp"
 
 #include <QMainWindow>
 #include <QPointer>
@@ -125,14 +126,18 @@ private slots:
 
 };
 
-void order_whiskers_by_position(DataManager * dm, std::string const & whisker_group_name, int num_whiskers_to_track, int current_time, float similarity_threshold);
+void order_whiskers_by_position(DataManager * dm, 
+                                std::string const & whisker_group_name, 
+                                int num_whiskers_to_track, 
+                                TimeFrameIndex current_time, 
+                                float similarity_threshold);
 
 void add_whiskers_to_data_manager(
         DataManager * dm,
         std::vector<Line2D> & whiskers,
         std::string const & whisker_group_name,
         int num_whisker_to_track,
-        int current_time,
+        TimeFrameIndex current_time,
         float similarity_threshold);
 
 void clip_whisker(Line2D & line, int clip_length);

@@ -295,7 +295,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
                                        MaskToLineParameters const * params,
                                        ProgressCallback progressCallback) {
 
-    auto line_map = std::map<int, std::vector<Line2D>>();
+    auto line_map = std::map<TimeFrameIndex, std::vector<Line2D>>();
 
     // Use default parameters if none provided
     float reference_x = params ? params->reference_x : 0.0f;
@@ -445,7 +445,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
         if (!line_points.empty()) {
             // Time map insertion
             auto insertion_start = std::chrono::high_resolution_clock::now();
-            line_map[time].push_back(std::move(line_points));
+            line_map[TimeFrameIndex(time)].push_back(std::move(line_points));
             auto insertion_end = std::chrono::high_resolution_clock::now();
             map_insertion_times.push_back(
                     std::chrono::duration_cast<std::chrono::microseconds>(

@@ -100,7 +100,7 @@ private:
      * 
      * @return Vector of unique frame numbers that are currently selected
      */
-    std::vector<int> _getSelectedFrames();
+    std::vector<TimeFrameIndex> _getSelectedFrames();
 };
 
 #endif// LINE_WIDGET_HPP

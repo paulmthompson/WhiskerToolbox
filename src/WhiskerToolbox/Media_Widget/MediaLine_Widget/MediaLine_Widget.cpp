@@ -226,7 +226,7 @@ void MediaLine_Widget::setActiveKey(std::string const& key) {
             
             auto line_data = _data_manager->getData<LineData>(_active_key);
             if (line_data) {
-                auto current_time = _data_manager->getCurrentTime();
+                auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
                 auto lines = line_data->getLinesAtTime(current_time);
                 
                 // Update the slider with the number of lines
@@ -278,7 +278,7 @@ void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
 
     auto const x_media = static_cast<float>(x_canvas);
     auto const y_media = static_cast<float>(y_canvas);
-    auto const current_time = _data_manager->getCurrentTime();
+    auto const current_time = TimeFrameIndex(_data_manager->getCurrentTime());
     auto const line_img_size = line_data->getImageSize();
 
     auto lines = line_data->getLinesAtTime(current_time);
@@ -313,7 +313,7 @@ void MediaLine_Widget::_clickedInVideo(qreal x_canvas, qreal y_canvas) {
     }
 }
 
-void MediaLine_Widget::_addPointToLine(float x_media, float y_media, int current_time) {
+void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIndex current_time) {
     auto line_data = _data_manager->getData<LineData>(_active_key);
     auto lines = line_data->getLinesAtTime(current_time);
     
@@ -390,7 +390,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, int current
             std::vector<Line2D> updated_lines = lines;
             updated_lines[_current_line_index] = line;
             
-            _data_manager->getData<LineData>(_active_key)->clearLinesAtTime(TimeFrameIndex(current_time));
+            _data_manager->getData<LineData>(_active_key)->clearLinesAtTime(current_time);
             for(const auto& updated_line : updated_lines) {
                 _data_manager->getData<LineData>(_active_key)->addLineAtTime(current_time, updated_line);
             }
@@ -517,7 +517,7 @@ void MediaLine_Widget::LoadFrame(int frame_id) {
     if (!_active_key.empty()) {
         auto line_data = _data_manager->getData<LineData>(_active_key);
         if (line_data) {
-            auto lines = line_data->getLinesAtTime(frame_id);
+            auto lines = line_data->getLinesAtTime(TimeFrameIndex(frame_id));
             
             // Update the line_select_slider's maximum value based on the number of lines
             int num_lines = static_cast<int>(lines.size());
@@ -558,7 +558,7 @@ void MediaLine_Widget::_lineSelectionChanged(int index) {
     if (!_active_key.empty()) {
         auto line_data = _data_manager->getData<LineData>(_active_key);
         if (line_data) {
-            auto current_time = _data_manager->getCurrentTime();
+            auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
             auto lines = line_data->getLinesAtTime(current_time);
             
             if (!lines.empty() && _current_line_index < static_cast<int>(lines.size())) {
@@ -875,7 +875,7 @@ int MediaLine_Widget::_findNearestLine(float x, float y) {
         return -1;
     }
     
-    auto current_time = _data_manager->getCurrentTime();
+    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
     auto lines = line_data->getLinesAtTime(current_time);
     
     if (lines.empty()) {
@@ -986,7 +986,7 @@ void MediaLine_Widget::_moveLineToTarget(const std::string& target_key) {
         return;
     }
     
-    auto current_time = _data_manager->getCurrentTime();
+    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
     auto lines = source_line_data->getLinesAtTime(current_time);
     
     if (_selected_line_index >= static_cast<int>(lines.size())) {
@@ -1033,7 +1033,7 @@ void MediaLine_Widget::_copyLineToTarget(const std::string& target_key) {
         return;
     }
     
-    auto current_time = _data_manager->getCurrentTime();
+    auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
     auto lines = source_line_data->getLinesAtTime(current_time);
     
     if (_selected_line_index >= static_cast<int>(lines.size())) {

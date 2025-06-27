@@ -180,7 +180,7 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
 
         for (std::size_t i = 0; i < frames.size(); i++) {
             if (i < x_coords.size() && i < y_coords.size()) {
-                line_data_ptr->addLineAtTime(frames[i], x_coords[i], y_coords[i]);
+                line_data_ptr->addLineAtTime(TimeFrameIndex(frames[i]), x_coords[i], y_coords[i]);
             } else {
                 std::cerr << "Warning: Missing x/y coordinates for frame " << frames[i] << " in file " << filename << std::endl;
             }
@@ -205,7 +205,7 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
 
 void Line_Loader_Widget::_handleLoadSingleFileCSVRequested(CSVSingleFileLineLoaderOptions options) {
     try {
-        std::map<int, std::vector<Line2D>> data_map = load(options);
+        std::map<TimeFrameIndex, std::vector<Line2D>> data_map = load(options);
         
         if (data_map.empty()) {
             QMessageBox::warning(this, "Load Warning", "No data found in CSV file.");
@@ -229,7 +229,7 @@ void Line_Loader_Widget::_handleLoadSingleFileCSVRequested(CSVSingleFileLineLoad
 
 void Line_Loader_Widget::_handleLoadMultiFileCSVRequested(CSVMultiFileLineLoaderOptions options) {
     try {
-        std::map<int, std::vector<Line2D>> data_map = load(options);
+        std::map<TimeFrameIndex, std::vector<Line2D>> data_map = load(options);
         
         if (data_map.empty()) {
             QMessageBox::warning(this, "Load Warning", "No data found in CSV files.");
@@ -251,7 +251,7 @@ void Line_Loader_Widget::_handleLoadMultiFileCSVRequested(CSVMultiFileLineLoader
     }
 }
 
-void Line_Loader_Widget::_loadCSVData(std::map<int, std::vector<Line2D>> const & data_map, std::string const & base_key) {
+void Line_Loader_Widget::_loadCSVData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data_map, std::string const & base_key) {
     // Get the line key from the UI, or use the base key
     auto line_key = ui->data_name_text->text().toStdString();
     if (line_key.empty()) {

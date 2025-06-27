@@ -2,6 +2,7 @@
 #define LINE_DATA_LOADER_HPP
 
 #include "Lines/lines.hpp"
+#include "TimeFrame.hpp"
 
 #include <map>
 #include <string>
@@ -178,7 +179,7 @@ void save(LineData const * line_data,
  * @param opts Options controlling the load behavior
  * @return A map of timestamps to vectors of Line2D objects
  */
-std::map<int, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & opts);
+std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & opts);
 
 /**
  * @brief Load LineData from a single CSV file containing all timestamps
@@ -190,11 +191,11 @@ std::map<int, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & op
  * @param opts Options controlling the load behavior
  * @return A map of timestamps to vectors of Line2D objects
  */
-std::map<int, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & opts);
+std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & opts);
 
 std::vector<float> parse_string_to_float_vector(std::string const & str, std::string const & delimiter = ",");
 
-std::map<int, std::vector<Line2D>> load_line_csv(std::string const & filepath);
+std::map<TimeFrameIndex, std::vector<Line2D>> load_line_csv(std::string const & filepath);
 
 Line2D load_line_from_csv(std::string const & filename);
 

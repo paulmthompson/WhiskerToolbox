@@ -159,7 +159,7 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data
     if (progressCallback) progressCallback(0);// Initial progress
 
     // Process each time that has line data
-    for (int time: line_times) {
+    for (auto time: line_times) {
         // Get lines at this time
         auto const & lines = line_data->getLinesAtTime(time);
         if (lines.empty()) {
@@ -167,7 +167,7 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data
         }
 
         // Get points at this time
-        auto const & points = point_data->getPointsAtTime(time);
+        auto const & points = point_data->getPointsAtTime(time.getValue());
         if (points.empty()) {
             continue;
         }
@@ -199,7 +199,7 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data
 
         // Convert squared distance back to actual distance by taking square root
         float min_distance = std::sqrt(min_distance_squared);
-        distances[time] = min_distance;
+        distances[time.getValue()] = min_distance;
 
         processed_time_points++;
         if (progressCallback) {

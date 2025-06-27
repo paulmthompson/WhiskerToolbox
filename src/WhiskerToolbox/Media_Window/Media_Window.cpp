@@ -570,7 +570,7 @@ void Media_Window::_plotLineData() {
         auto plot_color = plot_color_with_alpha(_line_config.get());
 
         auto line_data = _data_manager->getData<LineData>(line_key);
-        auto lineData = line_data->getLinesAtTime(current_time);
+        auto lineData = line_data->getLinesAtTime(TimeFrameIndex(current_time));
 
         // Check for line-specific image size scaling
         auto image_size = line_data->getImageSize();

@@ -82,13 +82,13 @@ void LineClip_Widget::_lineFeatureSelected(QString const & feature)
             auto line_data = std::get<std::shared_ptr<LineData>>(*line_data_variant);
             auto times_with_data = line_data->getTimesWithData();
             if (!times_with_data.empty()) {
-                int max_frame = *std::max_element(times_with_data.begin(), times_with_data.end());
-                ui->referenceFrameSpinBox->setMaximum(max_frame);
+                TimeFrameIndex max_frame = *std::max_element(times_with_data.begin(), times_with_data.end());
+                ui->referenceFrameSpinBox->setMaximum(max_frame.getValue());
                 
                 // Update the description to show available frames
                 QString description = QString("Available frames: %1 to %2. The reference frame specifies which time point from the reference line data to use for clipping.")
-                    .arg(*std::min_element(times_with_data.begin(), times_with_data.end()))
-                    .arg(max_frame);
+                    .arg(std::min_element(times_with_data.begin(), times_with_data.end())->getValue())
+                    .arg(max_frame.getValue());
                 ui->frameDescriptionLabel->setText(description);
             }
         }

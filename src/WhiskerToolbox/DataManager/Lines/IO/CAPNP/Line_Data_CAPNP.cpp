@@ -11,14 +11,14 @@ kj::Array<capnp::word> serializeLineData(LineData const * lineData) {
     capnp::MallocMessageBuilder message;
     LineDataProto::Builder lineDataProto = message.initRoot<LineDataProto>();
 
-    std::vector<int> times = lineData->getTimesWithData();
+    std::vector<TimeFrameIndex> times = lineData->getTimesWithData();
 
     auto timeLinesList = lineDataProto.initTimeLines(times.size());
 
     for (size_t i = 0; i < times.size(); i++) {
-        int const time = times[i];
+        TimeFrameIndex const time = times[i];
         auto timeLine = timeLinesList[i];
-        timeLine.setTime(time);
+        timeLine.setTime(time.getValue());
 
         std::vector<Line2D> const & lines = lineData->getLinesAtTime(time);
         auto linesList = timeLine.initLines(lines.size());
@@ -61,9 +61,9 @@ std::shared_ptr<LineData> deserializeLineData(
         lineData->setImageSize(ImageSize{static_cast<int>(width), static_cast<int>(height)});
     }
 
-    std::map<int, std::vector<Line2D>> dataMap;
+    std::map<TimeFrameIndex, std::vector<Line2D>> dataMap;
     for (auto timeLine: lineDataProto.getTimeLines()) {
-        int const time = timeLine.getTime();
+        TimeFrameIndex const time = TimeFrameIndex(timeLine.getTime());
         std::vector<Line2D> lines;
 
         for (auto line: timeLine.getLines()) {

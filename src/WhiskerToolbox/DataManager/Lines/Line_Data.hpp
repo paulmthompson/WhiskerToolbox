@@ -37,21 +37,21 @@ public:
      * 
      * @param data The data to initialize the LineData with
      */
-    explicit LineData(std::map<int, std::vector<Line2D>> const & data);
+    explicit LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data);
 
 
     void clearLineAtTime(TimeFrameIndex time, int line_id, bool notify = true);
     void clearLinesAtTime(TimeFrameIndex time, bool notify = true);
-    void addLineAtTime(int time, std::vector<float> const & x, std::vector<float> const & y, bool notify = true);
-    void addLineAtTime(int time, std::vector<Point2D<float>> const & line, bool notify = true);
+    void addLineAtTime(TimeFrameIndex time, std::vector<float> const & x, std::vector<float> const & y, bool notify = true);
+    void addLineAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & line, bool notify = true);
 
-    void addPointToLine(int time, int line_id, Point2D<float> point, bool notify = true);
+    void addPointToLine(TimeFrameIndex time, int line_id, Point2D<float> point, bool notify = true);
 
-    void addPointToLineInterpolate(int time, int line_id, Point2D<float> point, bool notify = true);
+    void addPointToLineInterpolate(TimeFrameIndex time, int line_id, Point2D<float> point, bool notify = true);
 
-    [[nodiscard]] std::vector<int> getTimesWithData() const;
+    [[nodiscard]] std::vector<TimeFrameIndex> getTimesWithData() const;
 
-    [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(int time) const;
+    [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(TimeFrameIndex time) const;
 
     /**
      * @brief Copy lines from this LineData to another LineData for a time range
@@ -66,7 +66,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of lines actually copied
      */
-    std::size_t copyTo(LineData& target, int start_time, int end_time, bool notify = true) const;
+    std::size_t copyTo(LineData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true) const;
 
     /**
      * @brief Copy lines from this LineData to another LineData for specific times
@@ -79,7 +79,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of lines actually copied
      */
-    std::size_t copyTo(LineData& target, std::vector<int> const& times, bool notify = true) const;
+    std::size_t copyTo(LineData& target, std::vector<TimeFrameIndex> const & times, bool notify = true) const;
 
     /**
      * @brief Move lines from this LineData to another LineData for a time range
@@ -94,7 +94,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of lines actually moved
      */
-    std::size_t moveTo(LineData& target, int start_time, int end_time, bool notify = true);
+    std::size_t moveTo(LineData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true);
 
     /**
      * @brief Move lines from this LineData to another LineData for specific times
@@ -108,7 +108,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of lines actually moved
      */
-    std::size_t moveTo(LineData& target, std::vector<int> const& times, bool notify = true);
+    std::size_t moveTo(LineData& target, std::vector<TimeFrameIndex> const & times, bool notify = true);
 
     /**
      * @brief Change the size of the canvas the line belongs to
@@ -133,18 +133,18 @@ public:
     */
     [[nodiscard]] auto GetAllLinesAsRange() const {
         struct TimeLinesPair {
-            int time;
+            TimeFrameIndex time;
             std::vector<Line2D> const & lines;
         };
 
         return _data | std::views::transform([](auto const & pair) {
-                   return TimeLinesPair{pair.first, pair.second};
+                   return TimeLinesPair{TimeFrameIndex(pair.first), pair.second};
                });
     }
 
 protected:
 private:
-    std::map<int, std::vector<Line2D>> _data;
+    std::map<TimeFrameIndex, std::vector<Line2D>> _data;
     std::vector<Line2D> _empty{};
     ImageSize _image_size;
 };

@@ -62,7 +62,7 @@ void save(
             if (!x_str.empty()) x_str.pop_back();
             if (!y_str.empty()) y_str.pop_back();
 
-            file << frame_and_line.time << ",\"" << x_str << "\",\"" << y_str << "\"\n";
+            file << frame_and_line.time.getValue() << ",\"" << x_str << "\",\"" << y_str << "\"\n";
         }
     }
 
@@ -94,7 +94,7 @@ void save(
         Line2D const & first_line = frame_and_line.lines[0];
         
         // Generate filename with zero-padded frame number
-        std::string const padded_frame = pad_frame_id(frame_and_line.time, opts.frame_id_padding);
+        std::string const padded_frame = pad_frame_id(frame_and_line.time.getValue(), opts.frame_id_padding);
         std::string const filename = opts.parent_dir + "/" + padded_frame + ".csv";
 
         // Check if file exists and handle according to overwrite setting
@@ -152,9 +152,9 @@ std::vector<float> parse_string_to_float_vector(std::string const & str, std::st
     return result;
 }
 
-std::map<int, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & opts) {
+std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & opts) {
     auto t1 = std::chrono::high_resolution_clock::now();
-    std::map<int, std::vector<Line2D>> data_map;
+    std::map<TimeFrameIndex, std::vector<Line2D>> data_map;
     std::ifstream file(opts.filepath);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file: " + opts.filepath);
@@ -193,11 +193,11 @@ std::map<int, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & o
             continue;
         }
 
-        if (data_map.find(frame_num) == data_map.end()) {
-            data_map[frame_num] = std::vector<Line2D>();
+        if (data_map.find(TimeFrameIndex(frame_num)) == data_map.end()) {
+            data_map[TimeFrameIndex(frame_num)] = std::vector<Line2D>();
         }
 
-        data_map[frame_num].emplace_back(create_line(x_values, y_values));
+        data_map[TimeFrameIndex(frame_num)].emplace_back(create_line(x_values, y_values));
         loaded_lines += 1;
     }
 
@@ -209,7 +209,7 @@ std::map<int, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & o
     return data_map;
 }
 
-std::map<int, std::vector<Line2D>> load_line_csv(std::string const & filepath) {
+std::map<TimeFrameIndex, std::vector<Line2D>> load_line_csv(std::string const & filepath) {
     // Wrapper function for backward compatibility
     // Uses the new options-based load function with default settings
     CSVSingleFileLineLoaderOptions opts;
@@ -244,8 +244,8 @@ Line2D load_line_from_csv(std::string const & filename) {
     return line_output;
 }
 
-std::map<int, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & opts) {
-    std::map<int, std::vector<Line2D>> data_map;
+std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & opts) {
+    std::map<TimeFrameIndex, std::vector<Line2D>> data_map;
     
     // Check if directory exists
     if (!std::filesystem::exists(opts.parent_dir)) {
@@ -334,10 +334,10 @@ std::map<int, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & op
 
         // Add the line to the data map if we have points
         if (!line_points.empty()) {
-            if (data_map.find(frame_number) == data_map.end()) {
-                data_map[frame_number] = std::vector<Line2D>();
+            if (data_map.find(TimeFrameIndex(frame_number)) == data_map.end()) {
+                data_map[TimeFrameIndex(frame_number)] = std::vector<Line2D>();
             }
-            data_map[frame_number].push_back(line_points);
+            data_map[TimeFrameIndex(frame_number)].push_back(line_points);
             files_loaded++;
         } else {
             std::cerr << "Warning: No valid points found in file: " << filename << std::endl;

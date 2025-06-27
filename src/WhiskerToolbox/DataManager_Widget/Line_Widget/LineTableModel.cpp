@@ -12,7 +12,7 @@ void LineTableModel::setLines(LineData const * lineData) {
     _line_data_source = lineData;
     if (lineData) {
         for (auto const & timeLinesPair: lineData->GetAllLinesAsRange()) {
-            int frame = timeLinesPair.time;
+            auto frame = timeLinesPair.time.getValue();
             int lineIndex = 0;
             for (auto const & line: timeLinesPair.lines) {
                 _display_data.push_back({frame, lineIndex, static_cast<int>(line.size())});

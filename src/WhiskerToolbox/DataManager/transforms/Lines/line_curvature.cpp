@@ -192,7 +192,7 @@ std::shared_ptr<AnalogTimeSeries> line_curvature(
         // else if (params->method == AnotherMethod) { ... }
 
         if (curvature_val.has_value()) {
-            curvatures_map[time_lines_pair.time] = curvature_val.value();
+            curvatures_map[time_lines_pair.time.getValue()] = curvature_val.value();
         }
         // If curvature_val is std::nullopt, this time point is simply omitted from the AnalogTimeSeries
 

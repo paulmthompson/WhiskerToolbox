@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 
-LineData::LineData(std::map<int, std::vector<Line2D>> const & data)
+LineData::LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data)
     : _data(data)
 {
 
@@ -12,7 +12,7 @@ LineData::LineData(std::map<int, std::vector<Line2D>> const & data)
 
 void LineData::clearLinesAtTime(TimeFrameIndex const time, bool notify) {
 
-    _data[time.getValue()].clear();
+    _data[time].clear();
 
     if (notify) {
         notifyObservers();
@@ -21,8 +21,8 @@ void LineData::clearLinesAtTime(TimeFrameIndex const time, bool notify) {
 
 void LineData::clearLineAtTime(TimeFrameIndex const time, int const line_id, bool notify) {
 
-    if (line_id < _data[time.getValue()].size()) {
-        _data[time.getValue()].erase(_data[time.getValue()].begin() + line_id);
+    if (line_id < _data[time].size()) {
+        _data[time].erase(_data[time].begin() + line_id);
     }
 
     if (notify) {
@@ -30,7 +30,7 @@ void LineData::clearLineAtTime(TimeFrameIndex const time, int const line_id, boo
     }
 }
 
-void LineData::addLineAtTime(int const time, std::vector<float> const & x, std::vector<float> const & y, bool notify) {
+void LineData::addLineAtTime(TimeFrameIndex const time, std::vector<float> const & x, std::vector<float> const & y, bool notify) {
 
     auto new_line = create_line(x, y);
     _data[time].push_back(new_line);
@@ -40,7 +40,7 @@ void LineData::addLineAtTime(int const time, std::vector<float> const & x, std::
     }
 }
 
-void LineData::addLineAtTime(int const time, std::vector<Point2D<float>> const & line, bool notify) {
+void LineData::addLineAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & line, bool notify) {
     _data[time].push_back(line);
 
     if (notify) {
@@ -48,7 +48,7 @@ void LineData::addLineAtTime(int const time, std::vector<Point2D<float>> const &
     }
 }
 
-void LineData::addPointToLine(int const time, int const line_id, Point2D<float> point, bool notify) {
+void LineData::addPointToLine(TimeFrameIndex const time, int const line_id, Point2D<float> point, bool notify) {
 
     if (line_id < _data[time].size()) {
         _data[time][line_id].push_back(point);
@@ -63,7 +63,7 @@ void LineData::addPointToLine(int const time, int const line_id, Point2D<float> 
     }
 }
 
-void LineData::addPointToLineInterpolate(int const time, int const line_id, Point2D<float> point, bool notify) {
+void LineData::addPointToLineInterpolate(TimeFrameIndex const time, int const line_id, Point2D<float> point, bool notify) {
 
     if (line_id >= _data[time].size()) {
         std::cerr << "LineData::addPointToLineInterpolate: line_id out of range" << std::endl;
@@ -90,7 +90,7 @@ void LineData::addPointToLineInterpolate(int const time, int const line_id, Poin
     }
 }
 
-std::vector<Line2D> const & LineData::getLinesAtTime(int const time) const {
+std::vector<Line2D> const & LineData::getLinesAtTime(TimeFrameIndex const time) const {
     // [] operator is not const because it inserts if mask is not present
     if (_data.find(time) != _data.end()) {
         return _data.at(time);
@@ -99,8 +99,8 @@ std::vector<Line2D> const & LineData::getLinesAtTime(int const time) const {
     }
 }
 
-std::vector<int> LineData::getTimesWithData() const {
-    std::vector<int> keys;
+std::vector<TimeFrameIndex> LineData::getTimesWithData() const {
+    std::vector<TimeFrameIndex> keys;
     keys.reserve(_data.size());
     for (auto const & kv: _data) {
         keys.push_back(kv.first);
@@ -135,10 +135,10 @@ void LineData::changeImageSize(ImageSize const & image_size)
 
 }
 
-std::size_t LineData::copyTo(LineData& target, int start_time, int end_time, bool notify) const {
+std::size_t LineData::copyTo(LineData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) const {
     if (start_time > end_time) {
-        std::cerr << "LineData::copyTo: start_time (" << start_time 
-                  << ") must be <= end_time (" << end_time << ")" << std::endl;
+        std::cerr << "LineData::copyTo: start_time (" << start_time.getValue() 
+                  << ") must be <= end_time (" << end_time.getValue() << ")" << std::endl;
         return 0;
     }
 
@@ -162,11 +162,11 @@ std::size_t LineData::copyTo(LineData& target, int start_time, int end_time, boo
     return total_lines_copied;
 }
 
-std::size_t LineData::copyTo(LineData& target, std::vector<int> const& times, bool notify) const {
+std::size_t LineData::copyTo(LineData& target, std::vector<TimeFrameIndex> const& times, bool notify) const {
     std::size_t total_lines_copied = 0;
 
     // Copy lines for each specified time
-    for (int time : times) {
+    for (TimeFrameIndex time : times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
             for (auto const& line : it->second) {
@@ -184,15 +184,15 @@ std::size_t LineData::copyTo(LineData& target, std::vector<int> const& times, bo
     return total_lines_copied;
 }
 
-std::size_t LineData::moveTo(LineData& target, int start_time, int end_time, bool notify) {
+std::size_t LineData::moveTo(LineData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) {
     if (start_time > end_time) {
-        std::cerr << "LineData::moveTo: start_time (" << start_time 
-                  << ") must be <= end_time (" << end_time << ")" << std::endl;
+        std::cerr << "LineData::moveTo: start_time (" << start_time.getValue() 
+                  << ") must be <= end_time (" << end_time.getValue() << ")" << std::endl;
         return 0;
     }
 
     std::size_t total_lines_moved = 0;
-    std::vector<int> times_to_clear;
+    std::vector<TimeFrameIndex> times_to_clear;
 
     // First, copy all lines in the range to target
     for (auto const & [time, lines] : _data) {
@@ -206,8 +206,8 @@ std::size_t LineData::moveTo(LineData& target, int start_time, int end_time, boo
     }
 
     // Then, clear all the times from source
-    for (int time : times_to_clear) {
-        clearLinesAtTime(TimeFrameIndex(time), false); // Don't notify for each operation
+    for (TimeFrameIndex time : times_to_clear) {
+        clearLinesAtTime(time, false); // Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested
@@ -219,12 +219,12 @@ std::size_t LineData::moveTo(LineData& target, int start_time, int end_time, boo
     return total_lines_moved;
 }
 
-std::size_t LineData::moveTo(LineData& target, std::vector<int> const& times, bool notify) {
+std::size_t LineData::moveTo(LineData& target, std::vector<TimeFrameIndex> const & times, bool notify) {
     std::size_t total_lines_moved = 0;
-    std::vector<int> times_to_clear;
+    std::vector<TimeFrameIndex> times_to_clear;
 
     // First, copy lines for each specified time to target
-    for (int time : times) {
+    for (TimeFrameIndex time : times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
             for (auto const& line : it->second) {
@@ -236,8 +236,8 @@ std::size_t LineData::moveTo(LineData& target, std::vector<int> const& times, bo
     }
 
     // Then, clear all the times from source
-    for (int time : times_to_clear) {
-        clearLinesAtTime(TimeFrameIndex(time), false); // Don't notify for each operation
+    for (TimeFrameIndex time : times_to_clear) {
+        clearLinesAtTime(time, false); // Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested

@@ -173,7 +173,7 @@ void Whisker_Widget::_traceButton() {
                     whisker_lines,
                     whisker_group_name,
                     _num_whisker_to_track,
-                    start_time + num_to_trace,
+                    TimeFrameIndex(start_time + num_to_trace),
                     _linking_tolerance);
 
             num_to_trace += 1;
@@ -211,7 +211,7 @@ void Whisker_Widget::_dlAddMemoryButton() {
         std::cout << "Whisker named " << whisker_name << " does not exist" << std::endl;
         return;
     }
-    auto whisker = _data_manager->getData<LineData>(whisker_name)->getLinesAtTime(current_time);
+    auto whisker = _data_manager->getData<LineData>(whisker_name)->getLinesAtTime(TimeFrameIndex(current_time));
 
     if (whisker.empty()) {
         std::cout << "No whisker available for " << whisker_name << std::endl;
@@ -280,7 +280,7 @@ void Whisker_Widget::_traceWhiskers(std::vector<uint8_t> image, ImageSize const 
             whisker_lines,
             whisker_group_name,
             _num_whisker_to_track,
-            _data_manager->getCurrentTime(),
+            TimeFrameIndex(_data_manager->getCurrentTime()),
             _linking_tolerance);
 
     auto t1 = timer2.elapsed();
@@ -361,7 +361,7 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
 
     for (auto & [time, whiskers_in_frame]: whiskers_from_janelia) {
         for (auto & w: whiskers_in_frame) {
-            _data_manager->getData<LineData>("unlabeled_whiskers")->addLineAtTime(time, convert_to_Line2D(w));
+            _data_manager->getData<LineData>("unlabeled_whiskers")->addLineAtTime(TimeFrameIndex(time), convert_to_Line2D(w));
         }
     }
 }
@@ -403,7 +403,7 @@ void order_whiskers_by_position(
         DataManager * dm,
         std::string const & whisker_group_name,
         int const num_whisker_to_track,
-        int current_time,
+        TimeFrameIndex current_time,
         float similarity_threshold) {
 
     std::vector<Line2D> whiskers = dm->getData<LineData>("unlabeled_whiskers")->getLinesAtTime(current_time);
@@ -414,7 +414,7 @@ void order_whiskers_by_position(
         std::string whisker_name = whisker_group_name + "_" + std::to_string(i);
 
         if (dm->getData<LineData>(whisker_name)) {
-            auto whisker = dm->getData<LineData>(whisker_name)->getLinesAtTime(current_time - 1);
+            auto whisker = dm->getData<LineData>(whisker_name)->getLinesAtTime(current_time - TimeFrameIndex(1));
             if (!whisker.empty()) {
                 if (!whisker[0].empty()) {
                     previous_whiskers[i] = whisker[0];
@@ -448,7 +448,7 @@ void order_whiskers_by_position(
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
         if (assigned_ids[i] != -1) {
             std::string const whisker_name = whisker_group_name + "_" + std::to_string(assigned_ids[i]);
-            dm->getData<LineData>(whisker_name)->clearLinesAtTime(TimeFrameIndex(current_time));
+            dm->getData<LineData>(whisker_name)->clearLinesAtTime(current_time);
             dm->getData<LineData>(whisker_name)->addLineAtTime(current_time, whiskers[i]);
         }
     }
@@ -470,7 +470,7 @@ void order_whiskers_by_position(
     }
     */
 
-    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(TimeFrameIndex(current_time));
+    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
         if (assigned_ids[i] == -1) {
             dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[i]);
@@ -514,10 +514,10 @@ void add_whiskers_to_data_manager(
         std::vector<Line2D> & whiskers,
         std::string const & whisker_group_name,
         int const num_whisker_to_track,
-        int current_time,
+        TimeFrameIndex current_time,
         float similarity_threshold) {
 
-    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(TimeFrameIndex(current_time));
+    dm->getData<LineData>("unlabeled_whiskers")->clearLinesAtTime(current_time);
 
     for (auto & w: whiskers) {
         dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, w);

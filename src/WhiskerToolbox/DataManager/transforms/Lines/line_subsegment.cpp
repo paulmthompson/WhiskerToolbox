@@ -146,7 +146,7 @@ std::shared_ptr<LineData> extract_line_subsegment(
     progressCallback(0);
     
     size_t processed_times = 0;
-    for (int time : times_with_data) {
+    for (auto time : times_with_data) {
         auto const & lines_at_time = line_data->getLinesAtTime(time);
         
         for (auto const & line : lines_at_time) {

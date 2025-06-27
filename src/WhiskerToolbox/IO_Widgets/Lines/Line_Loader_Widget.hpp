@@ -3,6 +3,7 @@
 
 #include "../Scaling_Widget/Scaling_Widget.hpp"
 #include "Lines/lines.hpp"
+#include "DataManager/TimeFrame.hpp"
 #include <QWidget>
 
 #include <memory>
@@ -35,7 +36,7 @@ private:
 
     void _loadSingleHDF5Line(std::string const & filename, std::string const & line_suffix = "");
     void _loadSingleBinaryFile(QString const & filepath);
-    void _loadCSVData(std::map<int, std::vector<Line2D>> const & data_map, std::string const & base_key);
+    void _loadCSVData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data_map, std::string const & base_key);
 
 private slots:
     void _loadSingleHdf5Line(QString filename);
