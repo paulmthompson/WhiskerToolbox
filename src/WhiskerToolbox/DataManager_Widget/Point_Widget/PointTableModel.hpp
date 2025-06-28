@@ -2,6 +2,7 @@
 #define WHISKERTOOLBOX_POINTTABLEMODEL_HPP
 
 #include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/TimeFrame.hpp"
 
 #include <QAbstractTableModel>
 
@@ -43,7 +44,7 @@ public:
         }
 
         auto it = std::next(_points.begin(), index.row());
-        int const frame = it->first;
+        int const frame = it->first.getValue();
         std::vector<Point2D<float>> const & points = it->second;
 
         if (index.column() == 0) {
@@ -80,11 +81,11 @@ public:
             return -1;// Invalid row
         }
         auto it = std::next(_points.begin(), row);
-        return it->first;// Return the frame number (the key in the map)
+        return it->first.getValue();// Return the frame number (the key in the map)
     }
 
 private:
-    std::map<int, std::vector<Point2D<float>>> _points;
+    std::map<TimeFrameIndex, std::vector<Point2D<float>>> _points;
 };
 
 

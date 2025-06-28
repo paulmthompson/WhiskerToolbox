@@ -1,4 +1,3 @@
-
 #include "mlpack_conversion.hpp"
 
 
@@ -71,7 +70,7 @@ arma::Mat<double> convertToMlpackMatrix(
 
     auto col = 0;
     for (auto t: timestamps) {
-        auto points = pointData->getPointsAtTime(static_cast<int>(t));
+        auto points = pointData->getPointsAtTime(TimeFrameIndex(static_cast<int>(t)));
 
         if (points.empty()) {
             for (std::size_t i = 0; i < numRows; ++i) {
@@ -109,7 +108,11 @@ void updatePointDataFromMlpackMatrix(
             }
         }
     }
-    auto times = std::vector<int>(timestamps.begin(), timestamps.end());
+    std::vector<TimeFrameIndex> times;
+    times.reserve(timestamps.size());
+    for (auto timestamp : timestamps) {
+        times.push_back(TimeFrameIndex(static_cast<int>(timestamp)));
+    }
     pointData->overwritePointsAtTimes(times, points);
 }
 

@@ -1,4 +1,3 @@
-
 #include "Point_Data_CSV.hpp"
 
 #include "Points/Point_Data.hpp"
@@ -17,10 +16,10 @@ bool is_number(std::string const & s) {
                                       s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
 }
 
-std::map<int, Point2D<float>> load(CSVPointLoaderOptions const & opts) {
+std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts) {
     std::string csv_line;
 
-    auto line_output = std::map<int, Point2D<float>>{};
+    auto line_output = std::map<TimeFrameIndex, Point2D<float>>{};
 
     std::fstream myfile;
     myfile.open(opts.filename, std::fstream::in);
@@ -30,7 +29,7 @@ std::map<int, Point2D<float>> load(CSVPointLoaderOptions const & opts) {
     std::string frame_str;
     std::string col_value;
 
-    std::vector<std::pair<int, Point2D<float>>> csv_vector = {};
+    std::vector<std::pair<TimeFrameIndex, Point2D<float>>> csv_vector = {};
 
     while (getline(myfile, csv_line)) {
 
@@ -49,8 +48,8 @@ std::map<int, Point2D<float>> load(CSVPointLoaderOptions const & opts) {
         }
 
         if (is_number(frame_str)) {
-            //line_output[std::stoi(frame_str)]=Point2D<float>{std::stof(x_str),std::stof(y_str)};
-            csv_vector.emplace_back(std::stoi(frame_str), Point2D<float>{std::stof(x_str), std::stof(y_str)});
+            //line_output[TimeFrameIndex(std::stoi(frame_str))]=Point2D<float>{std::stof(x_str),std::stof(y_str)};
+            csv_vector.emplace_back(TimeFrameIndex(std::stoi(frame_str)), Point2D<float>{std::stof(x_str), std::stof(y_str)});
         }
     }
     std::cout.flush();
@@ -62,7 +61,7 @@ std::map<int, Point2D<float>> load(CSVPointLoaderOptions const & opts) {
     return line_output;
 }
 
-std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int const frame_column) {
+std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int const frame_column) {
     std::fstream file;
     file.open(filename, std::fstream::in);
 
@@ -88,14 +87,14 @@ std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_c
         }
     }
 
-    std::map<std::string, std::map<int, Point2D<float>>> data;
+    std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> data;
     while (getline(file, ln)) {
         std::stringstream ss(ln);
         int col_no = 0;
-        int frame_no = -1;
+        TimeFrameIndex frame_no(0);
         while (getline(ss, ele, ',')) {
             if (col_no == frame_column) {
-                frame_no = std::stoi(extract_numbers_from_string(ele));
+                frame_no = TimeFrameIndex(std::stoi(extract_numbers_from_string(ele)));
             } else if (dims[col_no] == "x") {
                 data[bodyparts[col_no]][frame_no].x = std::stof(ele);
             } else if (dims[col_no] == "y") {
@@ -130,7 +129,7 @@ void save(PointData const * point_data, CSVPointSaverOptions const & opts)
     }
 
     for (auto const& timePointsPair : point_data->GetAllPointsAsRange()) {
-        fout << timePointsPair.time;
+        fout << timePointsPair.time.getValue();
         for (size_t i = 0; i < timePointsPair.points.size(); ++i) {
             fout << opts.delimiter << timePointsPair.points[i].x << opts.delimiter << timePointsPair.points[i].y;
         }

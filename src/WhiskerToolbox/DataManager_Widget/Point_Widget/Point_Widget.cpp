@@ -133,15 +133,15 @@ void Point_Widget::_showContextMenu(QPoint const & position) {
     context_menu.exec(ui->tableView->mapToGlobal(position));
 }
 
-std::vector<int> Point_Widget::_getSelectedFrames() {
-    std::vector<int> selected_frames;
+std::vector<TimeFrameIndex> Point_Widget::_getSelectedFrames() {
+    std::vector<TimeFrameIndex> selected_frames;
     QModelIndexList selected_rows = ui->tableView->selectionModel()->selectedRows();
 
     for (QModelIndex const & index: selected_rows) {
         if (index.isValid()) {
             int frame = _point_table_model->getFrameForRow(index.row());
             if (frame != -1) {
-                selected_frames.push_back(frame);
+                selected_frames.push_back(TimeFrameIndex(frame));
             }
         }
     }
@@ -150,7 +150,7 @@ std::vector<int> Point_Widget::_getSelectedFrames() {
 }
 
 void Point_Widget::_movePointsToTarget(std::string const & target_key) {
-    std::vector<int> selected_frames = _getSelectedFrames();
+    auto selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Point_Widget: No points selected to move." << std::endl;
         return;
@@ -186,7 +186,7 @@ void Point_Widget::_movePointsToTarget(std::string const & target_key) {
 }
 
 void Point_Widget::_copyPointsToTarget(std::string const & target_key) {
-    std::vector<int> selected_frames = _getSelectedFrames();
+    auto selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Point_Widget: No points selected to copy." << std::endl;
         return;
@@ -219,7 +219,7 @@ void Point_Widget::_copyPointsToTarget(std::string const & target_key) {
 }
 
 void Point_Widget::_deleteSelectedPoints() {
-    std::vector<int> selected_frames = _getSelectedFrames();
+    auto selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Point_Widget: No points selected to delete." << std::endl;
         return;
@@ -238,7 +238,7 @@ void Point_Widget::_deleteSelectedPoints() {
     int total_points_deleted = 0;
 
     // Count points before deletion and batch operations to minimize observer notifications
-    for (int frame: selected_frames) {
+    for (auto frame: selected_frames) {
         auto points_at_frame = point_data_ptr->getPointsAtTime(frame);
         if (!points_at_frame.empty()) {
             frames_with_points++;
@@ -312,8 +312,8 @@ void Point_Widget::_initiateSaveProcess(SaverType saver_type, PointSaverOptionsV
         auto times_with_data = point_data_ptr->getTimesWithData();
         std::vector<size_t> frame_ids_to_export;
         frame_ids_to_export.reserve(times_with_data.size());
-        for (int frame_id: times_with_data) {
-            frame_ids_to_export.push_back(static_cast<size_t>(frame_id));
+        for (auto frame_id: times_with_data) {
+            frame_ids_to_export.push_back(static_cast<size_t>(frame_id.getValue()));
         }
 
         export_media_frames(_data_manager.get(),

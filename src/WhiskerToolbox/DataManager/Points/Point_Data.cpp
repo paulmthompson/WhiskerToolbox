@@ -3,17 +3,17 @@
 #include <algorithm>
 #include <iostream>
 
-PointData::PointData(std::map<int, Point2D<float>> const & data) {
+PointData::PointData(std::map<TimeFrameIndex, Point2D<float>> const & data) {
     for (auto const & [time, point]: data) {
         _data[time].push_back(point);
     }
 }
 
-PointData::PointData(std::map<int, std::vector<Point2D<float>>> const & data) 
+PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const & data) 
     : _data(data) {
 }
 
-void PointData::clearAtTime(int const time, bool notify) {
+void PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
     auto it = _data.find(time);
     if (it != _data.end()) {
         _data.erase(it);
@@ -24,14 +24,14 @@ void PointData::clearAtTime(int const time, bool notify) {
     }
 }
 
-void PointData::overwritePointAtTime(int const time, Point2D<float> const point, bool notify) {
+void PointData::overwritePointAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
     _data[time] = {point};
     if (notify) {
         notifyObservers();
     }
 }
 
-void PointData::overwritePointsAtTime(int const time, std::vector<Point2D<float>> const & points, bool notify) {
+void PointData::overwritePointsAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & points, bool notify) {
     _data[time] = points;
     if (notify) {
         notifyObservers();
@@ -39,7 +39,7 @@ void PointData::overwritePointsAtTime(int const time, std::vector<Point2D<float>
 }
 
 void PointData::overwritePointsAtTimes(
-        std::vector<int> const & times,
+        std::vector<TimeFrameIndex> const & times,
         std::vector<std::vector<Point2D<float>>> const & points,
         bool notify) {
     if (times.size() != points.size()) {
@@ -55,7 +55,7 @@ void PointData::overwritePointsAtTimes(
     }
 }
 
-void PointData::addPointAtTime(int const time, Point2D<float> const point, bool notify) {
+void PointData::addPointAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
     _data[time].push_back(point);
 
     if (notify) {
@@ -63,7 +63,7 @@ void PointData::addPointAtTime(int const time, Point2D<float> const point, bool 
     }
 }
 
-void PointData::addPointsAtTime(int const time, std::vector<Point2D<float>> const & points, bool notify) {
+void PointData::addPointsAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & points, bool notify) {
     _data[time].insert(_data[time].end(), points.begin(), points.end());
     
     if (notify) {
@@ -71,8 +71,8 @@ void PointData::addPointsAtTime(int const time, std::vector<Point2D<float>> cons
     }
 }
 
-std::vector<int> PointData::getTimesWithData() const {
-    std::vector<int> times;
+std::vector<TimeFrameIndex> PointData::getTimesWithData() const {
+    std::vector<TimeFrameIndex> times;
     times.reserve(_data.size());
     for (auto const & [time, points] : _data) {
         times.push_back(time);
@@ -80,7 +80,7 @@ std::vector<int> PointData::getTimesWithData() const {
     return times;
 }
 
-std::vector<Point2D<float>> const & PointData::getPointsAtTime(int const time) const {
+std::vector<Point2D<float>> const & PointData::getPointsAtTime(TimeFrameIndex const time) const {
     auto it = _data.find(time);
     if (it != _data.end()) {
         return it->second;
@@ -122,10 +122,10 @@ void PointData::changeImageSize(ImageSize const & image_size) {
     _image_size = image_size;
 }
 
-std::size_t PointData::copyTo(PointData& target, int start_time, int end_time, bool notify) const {
+std::size_t PointData::copyTo(PointData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) const {
     if (start_time > end_time) {
-        std::cerr << "PointData::copyTo: start_time (" << start_time 
-                  << ") must be <= end_time (" << end_time << ")" << std::endl;
+        std::cerr << "PointData::copyTo: start_time (" << start_time.getValue() 
+                  << ") must be <= end_time (" << end_time.getValue() << ")" << std::endl;
         return 0;
     }
 
@@ -147,11 +147,11 @@ std::size_t PointData::copyTo(PointData& target, int start_time, int end_time, b
     return total_points_copied;
 }
 
-std::size_t PointData::copyTo(PointData& target, std::vector<int> const& times, bool notify) const {
+std::size_t PointData::copyTo(PointData& target, std::vector<TimeFrameIndex> const& times, bool notify) const {
     std::size_t total_points_copied = 0;
 
     // Copy points for each specified time
-    for (int time : times) {
+    for (TimeFrameIndex time : times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
             target.addPointsAtTime(time, it->second, false); // Don't notify for each operation
@@ -167,15 +167,15 @@ std::size_t PointData::copyTo(PointData& target, std::vector<int> const& times, 
     return total_points_copied;
 }
 
-std::size_t PointData::moveTo(PointData& target, int start_time, int end_time, bool notify) {
+std::size_t PointData::moveTo(PointData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) {
     if (start_time > end_time) {
-        std::cerr << "PointData::moveTo: start_time (" << start_time 
-                  << ") must be <= end_time (" << end_time << ")" << std::endl;
+        std::cerr << "PointData::moveTo: start_time (" << start_time.getValue() 
+                  << ") must be <= end_time (" << end_time.getValue() << ")" << std::endl;
         return 0;
     }
 
     std::size_t total_points_moved = 0;
-    std::vector<int> times_to_clear;
+    std::vector<TimeFrameIndex> times_to_clear;
 
     // First, copy all points in the range to target
     for (auto const & [time, points] : _data) {
@@ -187,7 +187,7 @@ std::size_t PointData::moveTo(PointData& target, int start_time, int end_time, b
     }
 
     // Then, clear all the times from source
-    for (int time : times_to_clear) {
+    for (TimeFrameIndex time : times_to_clear) {
         clearAtTime(time, false); // Don't notify for each operation
     }
 
@@ -200,12 +200,12 @@ std::size_t PointData::moveTo(PointData& target, int start_time, int end_time, b
     return total_points_moved;
 }
 
-std::size_t PointData::moveTo(PointData& target, std::vector<int> const& times, bool notify) {
+std::size_t PointData::moveTo(PointData& target, std::vector<TimeFrameIndex> const& times, bool notify) {
     std::size_t total_points_moved = 0;
-    std::vector<int> times_to_clear;
+    std::vector<TimeFrameIndex> times_to_clear;
 
     // First, copy points for each specified time to target
-    for (int time : times) {
+    for (TimeFrameIndex time : times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
             target.addPointsAtTime(time, it->second, false); // Don't notify for each operation
@@ -215,7 +215,7 @@ std::size_t PointData::moveTo(PointData& target, std::vector<int> const& times, 
     }
 
     // Then, clear all the times from source
-    for (int time : times_to_clear) {
+    for (TimeFrameIndex time : times_to_clear) {
         clearAtTime(time, false); // Don't notify for each operation
     }
 

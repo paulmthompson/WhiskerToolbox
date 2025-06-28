@@ -151,25 +151,23 @@ double applyTransformation(Interval const & interval,
                 return std::nan("");// Reference data not found
             }
 
+            double sum_x = 0.0;
+            int count = 0;
+
             // Collect all X coordinates within the interval
-            std::vector<float> x_values;
             for (int64_t t = interval.start; t <= interval.end; ++t) {
-                const auto& points = it->second->getPointsAtTime(static_cast<int>(t));
+                const auto& points = it->second->getPointsAtTime(TimeFrameIndex(t));
                 for (const auto& point : points) {
-                    x_values.push_back(point.x);
+                    sum_x += point.x;
+                    count++;
                 }
             }
 
-            if (x_values.empty()) {
+            if (count == 0) {
                 return std::nan("");// No points found in interval
             }
 
-            // Calculate mean
-            double sum = 0.0;
-            for (float x : x_values) {
-                sum += static_cast<double>(x);
-            }
-            return sum / static_cast<double>(x_values.size());
+            return sum_x / static_cast<double>(count);
         }
 
         case TransformationType::PointMeanY: {
@@ -178,25 +176,23 @@ double applyTransformation(Interval const & interval,
                 return std::nan("");// Reference data not found
             }
 
+            double sum_y = 0.0;
+            int count = 0;
+
             // Collect all Y coordinates within the interval
-            std::vector<float> y_values;
             for (int64_t t = interval.start; t <= interval.end; ++t) {
-                const auto& points = it->second->getPointsAtTime(static_cast<int>(t));
+                const auto& points = it->second->getPointsAtTime(TimeFrameIndex(static_cast<int>(t)));
                 for (const auto& point : points) {
-                    y_values.push_back(point.y);
+                    sum_y += point.y;
+                    count++;
                 }
             }
 
-            if (y_values.empty()) {
+            if (count == 0) {
                 return std::nan("");// No points found in interval
             }
 
-            // Calculate mean
-            double sum = 0.0;
-            for (float y : y_values) {
-                sum += static_cast<double>(y);
-            }
-            return sum / static_cast<double>(y_values.size());
+            return sum_y / static_cast<double>(count);
         }
 
         default:

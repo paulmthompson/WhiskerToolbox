@@ -578,15 +578,15 @@ void Whisker_Widget::_updateWhiskerPadFromSelection() {
             // Set range to include all available times
             auto min_time = *std::min_element(times_with_data.begin(), times_with_data.end());
             auto max_time = *std::max_element(times_with_data.begin(), times_with_data.end());
-            ui->whisker_pad_frame_spinbox->setMinimum(static_cast<int>(min_time));
-            ui->whisker_pad_frame_spinbox->setMaximum(static_cast<int>(max_time));
+            ui->whisker_pad_frame_spinbox->setMinimum(min_time.getValue());
+            ui->whisker_pad_frame_spinbox->setMaximum(max_time.getValue());
 
             // Set to current time if available, otherwise first available time
-            auto current_time = _data_manager->getCurrentTime();
+            auto current_time = TimeFrameIndex(_data_manager->getCurrentTime());
             if (std::find(times_with_data.begin(), times_with_data.end(), current_time) != times_with_data.end()) {
-                ui->whisker_pad_frame_spinbox->setValue(current_time);
+                ui->whisker_pad_frame_spinbox->setValue(current_time.getValue());
             } else {
-                ui->whisker_pad_frame_spinbox->setValue(static_cast<int>(min_time));
+                ui->whisker_pad_frame_spinbox->setValue(min_time.getValue());
             }
 
             ui->whisker_pad_frame_spinbox->blockSignals(false);
@@ -615,7 +615,7 @@ void Whisker_Widget::_updateWhiskerPadLabel() {
     }
 
     int frame = ui->whisker_pad_frame_spinbox->value();
-    auto points_at_frame = point_data->getPointsAtTime(static_cast<size_t>(frame));
+            auto points_at_frame = point_data->getPointsAtTime(TimeFrameIndex(frame));
 
     if (points_at_frame.empty()) {
         ui->whisker_pad_pos_label->setText("(no data)");
@@ -647,7 +647,7 @@ void Whisker_Widget::_createNewWhiskerPad() {
         std::cout << "Created new PointData: " << new_key << std::endl;
 
         // Create a new point at frame one with value 0,0
-        _data_manager->getData<PointData>(new_key)->addPointAtTime(0, {0.0f, 0.0f});
+        _data_manager->getData<PointData>(new_key)->addPointAtTime(TimeFrameIndex(0), {0.0f, 0.0f});
 
         // Repopulate the combo box to include the new entry
         _populateWhiskerPadCombo();

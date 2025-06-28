@@ -2,6 +2,7 @@
 #define POINT_DATA_CSV_HPP
 
 #include "Points/points.hpp"
+#include "TimeFrame.hpp"
 
 #include <map>
 #include <memory>
@@ -17,7 +18,7 @@ struct CSVPointLoaderOptions {
     char column_delim = ' ';
 };
 
-std::map<int, Point2D<float>> load(CSVPointLoaderOptions const & opts);
+std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts);
 
 /**
  * @struct CSVPointSaverOptions
@@ -44,7 +45,7 @@ struct CSVPointSaverOptions {
 
 void save(PointData const * point_data, CSVPointSaverOptions const & opts);
 
-std::map<std::string, std::map<int, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
+std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_multiple_points_from_csv(std::string const & filename, int frame_column);
 
 
 #endif// POINT_DATA_CSV_HPP

@@ -167,7 +167,7 @@ std::shared_ptr<AnalogTimeSeries> line_min_point_dist(LineData const * line_data
         }
 
         // Get points at this time
-        auto const & points = point_data->getPointsAtTime(time.getValue());
+        auto const & points = point_data->getPointsAtTime(time);
         if (points.empty()) {
             continue;
         }

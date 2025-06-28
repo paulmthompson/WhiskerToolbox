@@ -141,7 +141,7 @@ std::shared_ptr<PointData> extract_line_point(
                 }
                 
                 if (extracted_point.has_value()) {
-                    result_point_data->addPointAtTime(time.getValue(), extracted_point.value(), false);
+                    result_point_data->addPointAtTime(time, extracted_point.value(), false);
                 }
             }
         }

@@ -841,7 +841,7 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, Ima
 
 void Media_Window::_plotPointData() {
 
-    auto const current_time = _data_manager->getCurrentTime();
+    auto const current_time = TimeFrameIndex(_data_manager->getCurrentTime());
     auto video_timeframe = _data_manager->getTime("time");
 
     if (!video_timeframe) {
@@ -866,8 +866,8 @@ void Media_Window::_plotPointData() {
 
         auto point_time = current_time;
         if (video_timeframe.get() != point_timeframe.get()) {
-            auto video_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
-            point_time = point_timeframe->getIndexAtTime(video_time);
+            auto video_time = video_timeframe->getTimeAtIndex(current_time);
+            point_time = TimeFrameIndex(point_timeframe->getIndexAtTime(video_time));
         } 
 
         auto xAspect = getXAspect();

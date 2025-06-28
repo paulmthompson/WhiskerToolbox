@@ -4,6 +4,7 @@
 #include "ImageSize/ImageSize.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "Points/points.hpp"
+#include "TimeFrame.hpp"
 
 #include <map>
 #include <ranges>
@@ -21,23 +22,23 @@
 class PointData : public ObserverData {
 public:
     PointData() = default;
-    explicit PointData(std::map<int, Point2D<float>> const & data);
-    explicit PointData(std::map<int, std::vector<Point2D<float>>> const & data);
+    explicit PointData(std::map<TimeFrameIndex, Point2D<float>> const & data);
+    explicit PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const & data);
     
-    void clearAtTime(int time, bool notify = true);
+    void clearAtTime(TimeFrameIndex time, bool notify = true);
 
-    void addPointAtTime(int time, Point2D<float> point, bool notify = true);
-    void addPointsAtTime(int time, std::vector<Point2D<float>> const & points, bool notify = true);
+    void addPointAtTime(TimeFrameIndex time, Point2D<float> point, bool notify = true);
+    void addPointsAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & points, bool notify = true);
 
-    void overwritePointAtTime(int time, Point2D<float> point, bool notify = true);
-    void overwritePointsAtTime(int time, std::vector<Point2D<float>> const & points, bool notify = true);
+    void overwritePointAtTime(TimeFrameIndex time, Point2D<float> point, bool notify = true);
+    void overwritePointsAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & points, bool notify = true);
 
     void overwritePointsAtTimes(
-            std::vector<int> const & times,
+            std::vector<TimeFrameIndex> const & times,
             std::vector<std::vector<Point2D<float>>> const & points,
             bool notify = true);
 
-    [[nodiscard]] std::vector<int> getTimesWithData() const;
+    [[nodiscard]] std::vector<TimeFrameIndex> getTimesWithData() const;
 
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
     void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
@@ -52,7 +53,7 @@ public:
      */
     void changeImageSize(ImageSize const & image_size);
 
-    [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(int time) const;
+    [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(TimeFrameIndex time) const;
 
     [[nodiscard]] std::size_t getMaxPoints() const;
 
@@ -69,7 +70,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of points actually copied
      */
-    std::size_t copyTo(PointData& target, int start_time, int end_time, bool notify = true) const;
+    std::size_t copyTo(PointData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true) const;
 
     /**
      * @brief Copy points from this PointData to another PointData for specific times
@@ -82,7 +83,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of points actually copied
      */
-    std::size_t copyTo(PointData& target, std::vector<int> const& times, bool notify = true) const;
+    std::size_t copyTo(PointData& target, std::vector<TimeFrameIndex> const& times, bool notify = true) const;
 
     /**
      * @brief Move points from this PointData to another PointData for a time range
@@ -97,7 +98,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of points actually moved
      */
-    std::size_t moveTo(PointData& target, int start_time, int end_time, bool notify = true);
+    std::size_t moveTo(PointData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true);
 
     /**
      * @brief Move points from this PointData to another PointData for specific times
@@ -111,7 +112,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of points actually moved
      */
-    std::size_t moveTo(PointData& target, std::vector<int> const& times, bool notify = true);
+    std::size_t moveTo(PointData& target, std::vector<TimeFrameIndex> const& times, bool notify = true);
 
     /**
     * @brief Get all points with their associated times as a range
@@ -120,18 +121,18 @@ public:
     */
     [[nodiscard]] auto GetAllPointsAsRange() const {
         struct TimePointsPair {
-            int time;
+            TimeFrameIndex time;
             std::vector<Point2D<float>> const & points;
         };
 
         return _data | std::views::transform([](auto const & pair) {
-                   return TimePointsPair{pair.first, pair.second};
+                   return TimePointsPair{TimeFrameIndex(pair.first), pair.second};
                });
     }
 
 protected:
 private:
-    std::map<int, std::vector<Point2D<float>>> _data;
+    std::map<TimeFrameIndex, std::vector<Point2D<float>>> _data;
     std::vector<Point2D<float>> _empty{};
     ImageSize _image_size;
 };

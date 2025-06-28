@@ -48,7 +48,7 @@ std::shared_ptr<PointData> calculate_mask_centroid(
 
     // Process each timestamp
     for (auto const & mask_time_pair: mask_data->getAllAsRange()) {
-        int time = mask_time_pair.time;
+        auto time = mask_time_pair.time;
         auto const & masks = mask_time_pair.masks;
 
         // Calculate centroid for each mask at this timestamp
@@ -72,7 +72,7 @@ std::shared_ptr<PointData> calculate_mask_centroid(
             float centroid_y = static_cast<float>(sum_y / static_cast<double>(mask.size()));
 
             // Add centroid point to result
-            result_point_data->addPointAtTime(time, {centroid_x, centroid_y}, false);
+            result_point_data->addPointAtTime(TimeFrameIndex(time), {centroid_x, centroid_y}, false);
 
             processed_masks++;
 
