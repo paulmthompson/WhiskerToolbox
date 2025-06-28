@@ -5,6 +5,8 @@
 #include "DataManager/Points/points.hpp"  // For Line2D definition
 
 #include <QAbstractTableModel>
+
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -12,7 +14,7 @@
 class LineData;
 
 struct LineTableRow {
-    int frame;
+    int64_t frame;
     int lineIndex;// Index of the line within that frame
     int length;   // Number of points in the line
 };
