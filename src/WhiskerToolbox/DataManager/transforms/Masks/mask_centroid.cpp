@@ -51,28 +51,27 @@ std::shared_ptr<PointData> calculate_mask_centroid(
         auto time = mask_time_pair.time;
         auto const & masks = mask_time_pair.masks;
 
-        // Calculate centroid for each mask at this timestamp
+        // Process each mask at this timestamp
         for (auto const & mask: masks) {
             if (mask.empty()) {
-                processed_masks++;
                 continue;
             }
 
-            // Calculate centroid using arithmetic mean (assumes constant density)
-            double sum_x = 0.0;
-            double sum_y = 0.0;
+            float centroid_x = 0.0f;
+            float centroid_y = 0.0f;
 
+            // Calculate centroid
             for (auto const & point: mask) {
-                sum_x += static_cast<double>(point.x);
-                sum_y += static_cast<double>(point.y);
+                centroid_x += static_cast<float>(point.x);
+                centroid_y += static_cast<float>(point.y);
             }
 
-            // Calculate centroid coordinates
-            float centroid_x = static_cast<float>(sum_x / static_cast<double>(mask.size()));
-            float centroid_y = static_cast<float>(sum_y / static_cast<double>(mask.size()));
+            // Average the coordinates
+            centroid_x /= static_cast<float>(mask.size());
+            centroid_y /= static_cast<float>(mask.size());
 
             // Add centroid point to result
-            result_point_data->addPointAtTime(TimeFrameIndex(time), {centroid_x, centroid_y}, false);
+            result_point_data->addPointAtTime(time, {centroid_x, centroid_y}, false);
 
             processed_masks++;
 

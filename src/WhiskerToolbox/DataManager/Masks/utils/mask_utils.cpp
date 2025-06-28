@@ -49,7 +49,7 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
     size_t processed_masks = 0;
     
     for (auto const & mask_time_pair : mask_data->getAllAsRange()) {
-        int time = mask_time_pair.time;
+        auto time = mask_time_pair.time;
         auto const & masks = mask_time_pair.masks;
         
         for (auto const & mask : masks) {

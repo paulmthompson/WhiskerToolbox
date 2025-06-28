@@ -1,8 +1,8 @@
-
 #include "mask_area.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "TimeFrame.hpp"
 
 #include <iostream>
 #include <map>
@@ -15,7 +15,7 @@ std::shared_ptr<AnalogTimeSeries> area(MaskData const * mask_data) {
         for (auto const & mask: mask_and_time.masks) {
             area += static_cast<float>(mask.size());
         }
-        areas[mask_and_time.time] = area;
+        areas[mask_and_time.time.getValue()] = area;
     }
 
     return std::make_shared<AnalogTimeSeries>(areas);

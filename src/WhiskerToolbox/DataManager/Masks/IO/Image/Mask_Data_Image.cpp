@@ -115,7 +115,7 @@ std::shared_ptr<MaskData> load(ImageMaskLoaderOptions const & opts) {
 
         // Add mask to data if we have points
         if (!mask_points.empty()) {
-            mask_data->addAtTime(static_cast<size_t>(frame_number), std::move(mask_points), false);
+            mask_data->addAtTime(TimeFrameIndex(static_cast<size_t>(frame_number)), std::move(mask_points), false);
             files_loaded++;
         } else {
             std::cout << "Warning: No mask pixels found in image: " << filename << std::endl;
@@ -158,7 +158,7 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
 
     // Iterate through all masks with their timestamps
     for (auto const & time_mask_pair: mask_data->getAllAsRange()) {
-        int const frame_number = time_mask_pair.time;
+        auto time = time_mask_pair.time;
         std::vector<Mask2D> const & masks = time_mask_pair.masks;
 
         if (masks.empty()) {
@@ -195,7 +195,7 @@ void save(MaskData const * mask_data, ImageMaskSaverOptions const & opts) {
         }
 
         // Add zero-padded frame number
-        filename += pad_frame_id(frame_number, opts.frame_number_padding);
+        filename += pad_frame_id(time.getValue(), opts.frame_number_padding);
 
         // Add extension based on format
         std::string extension = "." + opts.image_format;

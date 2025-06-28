@@ -28,9 +28,9 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         };
         
         // Add all components to the same time
-        mask_data->addAtTime(0, large_component, false);
-        mask_data->addAtTime(0, small_component1, false);
-        mask_data->addAtTime(0, small_component2, false);
+        mask_data->addAtTime(TimeFrameIndex(0), large_component, false);
+        mask_data->addAtTime(TimeFrameIndex(0), small_component1, false);
+        mask_data->addAtTime(TimeFrameIndex(0), small_component2, false);
         
         // Set threshold to 5 - should keep the 9-pixel component, remove the 1 and 2-pixel components
         auto params = std::make_unique<MaskConnectedComponentParameters>();
@@ -43,10 +43,10 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         // Check that we have data at time 0
         auto times = result->getTimesWithData();
         REQUIRE(times.size() == 1);
-        REQUIRE(times[0] == 0);
+        REQUIRE(times[0] == TimeFrameIndex(0));
         
         // Get masks at time 0
-        auto const & result_masks = result->getAtTime(0);
+        auto const & result_masks = result->getAtTime(TimeFrameIndex(0));
         
         // Should have one mask (the large component preserved)
         REQUIRE(result_masks.size() == 1);
@@ -78,9 +78,9 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         std::vector<Point2D<uint32_t>> component2 = {{3, 3}};
         std::vector<Point2D<uint32_t>> component3 = {{0, 4}, {1, 4}};  // 2-pixel component
         
-        mask_data->addAtTime(10, component1, false);
-        mask_data->addAtTime(10, component2, false);
-        mask_data->addAtTime(10, component3, false);
+        mask_data->addAtTime(TimeFrameIndex(10), component1, false);
+        mask_data->addAtTime(TimeFrameIndex(10), component2, false);
+        mask_data->addAtTime(TimeFrameIndex(10), component3, false);
         
         auto params = std::make_unique<MaskConnectedComponentParameters>();
         params->threshold = 1;
@@ -89,7 +89,7 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         
         REQUIRE(result != nullptr);
         
-        auto const & result_masks = result->getAtTime(10);
+        auto const & result_masks = result->getAtTime(TimeFrameIndex(10));
         
         // Should preserve all 3 components
         REQUIRE(result_masks.size() == 3);
@@ -110,8 +110,8 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         std::vector<Point2D<uint32_t>> component1 = {{0, 0}, {1, 0}, {0, 1}};  // 3 pixels
         std::vector<Point2D<uint32_t>> component2 = {{5, 5}, {6, 5}};  // 2 pixels
         
-        mask_data->addAtTime(5, component1, false);
-        mask_data->addAtTime(5, component2, false);
+        mask_data->addAtTime(TimeFrameIndex(5), component1, false);
+        mask_data->addAtTime(TimeFrameIndex(5), component2, false);
         
         // Set threshold higher than any component
         auto params = std::make_unique<MaskConnectedComponentParameters>();
@@ -122,7 +122,7 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         REQUIRE(result != nullptr);
         
         // Should have no masks at time 5 (all removed)
-        auto const & result_masks = result->getAtTime(5);
+        auto const & result_masks = result->getAtTime(TimeFrameIndex(5));
         REQUIRE(result_masks.empty());
         
         // Should have no times with data
@@ -161,9 +161,9 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
             {3, 3}, {4, 3}, {3, 4}, {4, 4}, {3, 5}  // 5 pixels
         };
         
-        mask_data->addAtTime(0, large_comp, false);
-        mask_data->addAtTime(1, small_comp, false);
-        mask_data->addAtTime(2, medium_comp, false);
+        mask_data->addAtTime(TimeFrameIndex(0), large_comp, false);
+        mask_data->addAtTime(TimeFrameIndex(1), small_comp, false);
+        mask_data->addAtTime(TimeFrameIndex(2), medium_comp, false);
         
         auto params = std::make_unique<MaskConnectedComponentParameters>();
         params->threshold = 4;
@@ -177,20 +177,20 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         
         // Should preserve times 0 and 2, remove time 1
         REQUIRE(times.size() == 2);
-        REQUIRE(times[0] == 0);
-        REQUIRE(times[1] == 2);
+        REQUIRE(times[0] == TimeFrameIndex(0));
+        REQUIRE(times[1] == TimeFrameIndex(2));
         
         // Verify preserved components have correct sizes
-        auto const & masks_t0 = result->getAtTime(0);
+        auto const & masks_t0 = result->getAtTime(TimeFrameIndex(0));
         REQUIRE(masks_t0.size() == 1);
         REQUIRE(masks_t0[0].size() == 6);
         
-        auto const & masks_t2 = result->getAtTime(2);
+        auto const & masks_t2 = result->getAtTime(TimeFrameIndex(2));
         REQUIRE(masks_t2.size() == 1);
         REQUIRE(masks_t2[0].size() == 5);
         
         // Time 1 should be empty
-        auto const & masks_t1 = result->getAtTime(1);
+        auto const & masks_t1 = result->getAtTime(TimeFrameIndex(1));
         REQUIRE(masks_t1.empty());
     }
 }
@@ -240,8 +240,8 @@ TEST_CASE("MaskConnectedComponentOperation interface", "[mask_connected_componen
             {5, 5}  // 1 pixel
         };
         
-        mask_data->addAtTime(0, large_comp, false);
-        mask_data->addAtTime(0, small_comp, false);
+        mask_data->addAtTime(TimeFrameIndex(0), large_comp, false);
+        mask_data->addAtTime(TimeFrameIndex(0), small_comp, false);
         
         MaskConnectedComponentOperation op;
         DataTypeVariant input_variant = mask_data;
@@ -254,7 +254,7 @@ TEST_CASE("MaskConnectedComponentOperation interface", "[mask_connected_componen
         auto result = std::get<std::shared_ptr<MaskData>>(result_variant);
         REQUIRE(result != nullptr);
         
-        auto const & result_masks = result->getAtTime(0);
+        auto const & result_masks = result->getAtTime(TimeFrameIndex(0));
         REQUIRE(result_masks.size() == 1);  // Only large component preserved
         REQUIRE(result_masks[0].size() == 12);  // Large component has 12 pixels
     }

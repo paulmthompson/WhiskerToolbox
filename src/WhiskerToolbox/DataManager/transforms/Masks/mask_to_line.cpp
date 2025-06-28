@@ -350,7 +350,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
 
     size_t processed_masks = 0;
     for (auto const & mask_time_pair: mask_data->getAllAsRange()) {
-        int time = mask_time_pair.time;
+        auto time = mask_time_pair.time;
         auto const & masks = mask_time_pair.masks;
 
         if (masks.empty()) {
@@ -445,7 +445,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
         if (!line_points.empty()) {
             // Time map insertion
             auto insertion_start = std::chrono::high_resolution_clock::now();
-            line_map[TimeFrameIndex(time)].push_back(std::move(line_points));
+            line_map[time].push_back(std::move(line_points));
             auto insertion_end = std::chrono::high_resolution_clock::now();
             map_insertion_times.push_back(
                     std::chrono::duration_cast<std::chrono::microseconds>(

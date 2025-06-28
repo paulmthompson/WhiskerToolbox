@@ -23,7 +23,7 @@ TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
             }
         }
         
-        mask_data->addAtTime(0, hollow_rect);
+        mask_data->addAtTime(TimeFrameIndex(0), hollow_rect);
         
         MaskHoleFillingParameters params;
         auto result = fill_mask_holes(mask_data.get(), &params);
@@ -31,7 +31,7 @@ TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
         REQUIRE(result);
         REQUIRE(result->getTimesWithData().size() == 1);
         
-        auto filled_masks = result->getAtTime(0);
+        auto filled_masks = result->getAtTime(TimeFrameIndex(0));
         REQUIRE(filled_masks.size() == 1);
         
         // The hole should now be filled - should have more points than original
@@ -60,7 +60,7 @@ TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
             }
         }
         
-        mask_data->addAtTime(1, solid_square);
+        mask_data->addAtTime(TimeFrameIndex(1), solid_square);
         
         MaskHoleFillingParameters params;
         auto result = fill_mask_holes(mask_data.get(), &params);
@@ -68,7 +68,7 @@ TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
         REQUIRE(result);
         REQUIRE(result->getTimesWithData().size() == 1);
         
-        auto result_masks = result->getAtTime(1);
+        auto result_masks = result->getAtTime(TimeFrameIndex(1));
         REQUIRE(result_masks.size() == 1);
         
         // Should have same number of points (no holes to fill)
@@ -88,7 +88,7 @@ TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
                 }
             }
         }
-        mask_data->addAtTime(2, hollow_rect);
+        mask_data->addAtTime(TimeFrameIndex(2), hollow_rect);
         
         // Second mask: small solid 2x2 square
         std::vector<Point2D<uint32_t>> solid_square;
@@ -97,13 +97,13 @@ TEST_CASE("MaskHoleFilling basic functionality", "[mask_hole_filling]") {
                 solid_square.emplace_back(col, row);
             }
         }
-        mask_data->addAtTime(2, solid_square);
+        mask_data->addAtTime(TimeFrameIndex(2), solid_square);
         
         MaskHoleFillingParameters params;
         auto result = fill_mask_holes(mask_data.get(), &params);
         
         REQUIRE(result);
-        auto result_masks = result->getAtTime(2);
+        auto result_masks = result->getAtTime(TimeFrameIndex(2));
         REQUIRE(result_masks.size() == 2);
         
         // Verify we have the expected sizes
@@ -181,7 +181,7 @@ TEST_CASE("MaskHoleFillingOperation interface tests", "[mask_hole_filling][opera
                 }
             }
         }
-        mask_data->addAtTime(0, donut);
+        mask_data->addAtTime(TimeFrameIndex(0), donut);
         
         DataTypeVariant input_variant = mask_data;
         MaskHoleFillingParameters params;
@@ -193,7 +193,7 @@ TEST_CASE("MaskHoleFillingOperation interface tests", "[mask_hole_filling][opera
         auto result_mask_data = std::get<std::shared_ptr<MaskData>>(result_variant);
         REQUIRE(result_mask_data);
         
-        auto result_masks = result_mask_data->getAtTime(0);
+        auto result_masks = result_mask_data->getAtTime(TimeFrameIndex(0));
         REQUIRE(result_masks.size() == 1);
         
         // Should have filled the hole (16 points total for 4x4 square)

@@ -4,6 +4,7 @@
 #include "ImageSize/ImageSize.hpp"
 #include "Observer/Observer_Data.hpp"
 #include "Points/points.hpp"
+#include "TimeFrame.hpp"
 #include "masks.hpp"
 
 #include <cstddef>
@@ -29,7 +30,7 @@ public:
     * @param notify If true, observers will be notified of the change
     * @return True if masks existed at the specified time and were cleared, false otherwise
     */
-    bool clearAtTime(int time, bool notify = true);
+    bool clearAtTime(TimeFrameIndex time, bool notify = true);
 
     /**
      * @brief Adds a new mask at the specified time using separate x and y coordinate arrays
@@ -44,7 +45,7 @@ public:
     *
     * @note x and y vectors must be the same length, representing coordinate pairs
     */
-    void addAtTime(int time,
+    void addAtTime(TimeFrameIndex time,
                        std::vector<uint32_t> const & x,
                        std::vector<uint32_t> const & y,
                        bool notify = true);
@@ -59,7 +60,7 @@ public:
     * @param mask Vector of 2D points defining the mask
     * @param notify If true, observers will be notified of the change (default: true)
     */
-    void addAtTime(int time,
+    void addAtTime(TimeFrameIndex time,
                        std::vector<Point2D<uint32_t>> mask,
                        bool notify = true);
 
@@ -77,7 +78,7 @@ public:
     *
     * @note x and y vectors must be the same length, representing coordinate pairs
     */
-    void addAtTime(int time,
+    void addAtTime(TimeFrameIndex time,
                        std::vector<uint32_t> && x,
                        std::vector<uint32_t> && y,
                        bool notify = true);
@@ -91,7 +92,7 @@ public:
      */
     void reserveCapacity(size_t capacity);
 
-    std::vector<int> getTimesWithData() const;
+    std::vector<TimeFrameIndex> getTimesWithData() const;
 
     /**
      * @brief Change the size of the canvas the mask belongs to
@@ -112,7 +113,7 @@ public:
     * @param time The timestamp for which to retrieve masks
     * @return A const reference to a vector of masks at the given time, or an empty vector if no masks exist
     */
-    [[nodiscard]] std::vector<Mask2D> const & getAtTime(int time) const;
+    [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time) const;
 
     /**
      * @brief Copy masks from this MaskData to another MaskData for a time range
@@ -127,7 +128,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of masks actually copied
      */
-    std::size_t copyTo(MaskData& target, int start_time, int end_time, bool notify = true) const;
+    std::size_t copyTo(MaskData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true) const;
 
     /**
      * @brief Copy masks from this MaskData to another MaskData for specific times
@@ -140,7 +141,7 @@ public:
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of masks actually copied
      */
-    std::size_t copyTo(MaskData& target, std::vector<int> const& times, bool notify = true) const;
+    std::size_t copyTo(MaskData& target, std::vector<TimeFrameIndex> const& times, bool notify = true) const;
 
     /**
      * @brief Move masks from this MaskData to another MaskData for a time range
@@ -155,7 +156,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of masks actually moved
      */
-    std::size_t moveTo(MaskData& target, int start_time, int end_time, bool notify = true);
+    std::size_t moveTo(MaskData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true);
 
     /**
      * @brief Move masks from this MaskData to another MaskData for specific times
@@ -169,7 +170,7 @@ public:
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of masks actually moved
      */
-    std::size_t moveTo(MaskData& target, std::vector<int> const& times, bool notify = true);
+    std::size_t moveTo(MaskData& target, std::vector<TimeFrameIndex> const& times, bool notify = true);
 
     /**
      * @brief Get all masks with their associated times as a range
@@ -178,12 +179,12 @@ public:
      */
     [[nodiscard]] auto getAllAsRange() const {
         struct TimeMaskPair {
-            int time;
+            TimeFrameIndex time;
             std::vector<Mask2D> const & masks;
         };
 
         return _data | std::views::transform([](auto const & pair) {
-                   return TimeMaskPair{pair.first, pair.second};
+                   return TimeMaskPair{TimeFrameIndex(pair.first), pair.second};
                });
     };
 
@@ -191,7 +192,7 @@ public:
 
 protected:
 private:
-    std::map<int, std::vector<Mask2D>> _data;
+    std::map<TimeFrameIndex, std::vector<Mask2D>> _data;
     std::vector<Mask2D> _empty{};
     ImageSize _image_size;
 };

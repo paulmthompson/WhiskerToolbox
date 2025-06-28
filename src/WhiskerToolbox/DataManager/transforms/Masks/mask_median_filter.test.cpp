@@ -24,7 +24,7 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
         solid_square.emplace_back(9, 9); // Bottom-right corner
         solid_square.emplace_back(1, 8); // Isolated pixel
         
-        mask_data->addAtTime(0, solid_square);
+        mask_data->addAtTime(TimeFrameIndex(0), solid_square);
         
         MaskMedianFilterParameters params;
         params.window_size = 3;
@@ -33,7 +33,7 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
         REQUIRE(result);
         REQUIRE(result->getTimesWithData().size() == 1);
         
-        auto filtered_masks = result->getAtTime(0);
+        auto filtered_masks = result->getAtTime(TimeFrameIndex(0));
         REQUIRE(filtered_masks.size() == 1);
         
         // The solid square should mostly survive, isolated noise should be reduced
@@ -69,7 +69,7 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
         pattern.emplace_back(0, 10);
         pattern.emplace_back(10, 0);
         
-        mask_data->addAtTime(1, pattern);
+        mask_data->addAtTime(TimeFrameIndex(1), pattern);
         
         // Test different window sizes
         MaskMedianFilterParameters params_3x3;
@@ -83,8 +83,8 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
         REQUIRE(result_3x3);
         REQUIRE(result_5x5);
         
-        auto masks_3x3 = result_3x3->getAtTime(1);
-        auto masks_5x5 = result_5x5->getAtTime(1);
+        auto masks_3x3 = result_3x3->getAtTime(TimeFrameIndex(1));
+        auto masks_5x5 = result_5x5->getAtTime(TimeFrameIndex(1));
         
         REQUIRE(masks_3x3.size() == 1);
         REQUIRE(masks_5x5.size() == 1);
@@ -105,14 +105,14 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
             }
         }
         
-        mask_data->addAtTime(2, large_square);
+        mask_data->addAtTime(TimeFrameIndex(2), large_square);
         
         MaskMedianFilterParameters params;
         params.window_size = 3;
         auto result = apply_median_filter(mask_data.get(), &params);
         
         REQUIRE(result);
-        auto filtered_masks = result->getAtTime(2);
+        auto filtered_masks = result->getAtTime(TimeFrameIndex(2));
         REQUIRE(filtered_masks.size() == 1);
         
         // Large solid square should be well preserved
@@ -140,7 +140,7 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
                 square1.emplace_back(col, row);
             }
         }
-        mask_data->addAtTime(3, square1);
+        mask_data->addAtTime(TimeFrameIndex(3), square1);
         
         // Second mask: solid 3x3 square on right
         std::vector<Point2D<uint32_t>> square2;
@@ -149,21 +149,21 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
                 square2.emplace_back(col, row);
             }
         }
-        mask_data->addAtTime(3, square2);
+        mask_data->addAtTime(TimeFrameIndex(3), square2);
         
         // Third mask: noise pixels
         std::vector<Point2D<uint32_t>> noise;
         noise.emplace_back(0, 0);
         noise.emplace_back(14, 9);
         noise.emplace_back(7, 1);
-        mask_data->addAtTime(3, noise);
+        mask_data->addAtTime(TimeFrameIndex(3), noise);
         
         MaskMedianFilterParameters params;
         params.window_size = 3;
         auto result = apply_median_filter(mask_data.get(), &params);
         
         REQUIRE(result);
-        auto filtered_masks = result->getAtTime(3);
+        auto filtered_masks = result->getAtTime(TimeFrameIndex(3));
         
         // The two solid squares should survive, but the noise mask should be filtered out
         REQUIRE(filtered_masks.size() == 2);
@@ -214,7 +214,7 @@ TEST_CASE("MaskMedianFilter basic functionality", "[mask_median_filter]") {
                 square.emplace_back(col, row);
             }
         }
-        mask_data->addAtTime(0, square);
+        mask_data->addAtTime(TimeFrameIndex(0), square);
         
         // Test invalid even window size (should use default)
         MaskMedianFilterParameters params_even;
@@ -292,7 +292,7 @@ TEST_CASE("MaskMedianFilterOperation interface tests", "[mask_median_filter][ope
         pattern.emplace_back(0, 0);
         pattern.emplace_back(9, 9);
         
-        mask_data->addAtTime(0, pattern);
+        mask_data->addAtTime(TimeFrameIndex(0), pattern);
         
         DataTypeVariant input_variant = mask_data;
         MaskMedianFilterParameters params;
@@ -305,7 +305,7 @@ TEST_CASE("MaskMedianFilterOperation interface tests", "[mask_median_filter][ope
         auto result_mask_data = std::get<std::shared_ptr<MaskData>>(result_variant);
         REQUIRE(result_mask_data);
         
-        auto result_masks = result_mask_data->getAtTime(0);
+        auto result_masks = result_mask_data->getAtTime(TimeFrameIndex(0));
         REQUIRE(result_masks.size() == 1);
         
         // Should have reduced noise (fewer total pixels)
@@ -326,7 +326,7 @@ TEST_CASE("MaskMedianFilterOperation interface tests", "[mask_median_filter][ope
                 simple_mask.emplace_back(col, row);
             }
         }
-        mask_data->addAtTime(0, simple_mask);
+        mask_data->addAtTime(TimeFrameIndex(0), simple_mask);
         
         DataTypeVariant input_variant = mask_data;
         
@@ -339,7 +339,7 @@ TEST_CASE("MaskMedianFilterOperation interface tests", "[mask_median_filter][ope
         REQUIRE(result_mask_data);
         
         // Should handle gracefully and return valid result
-        auto result_masks = result_mask_data->getAtTime(0);
+        auto result_masks = result_mask_data->getAtTime(TimeFrameIndex(0));
         REQUIRE(result_masks.size() == 1);
         REQUIRE(result_masks[0].size() > 0); // Should have some content preserved
     }

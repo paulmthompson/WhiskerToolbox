@@ -722,8 +722,8 @@ void Media_Window::_plotMaskData() {
             maskData2.clear();// No time -1 data for preview
         } else {
             // Use original data
-            maskData = mask->getAtTime(current_time);
-            maskData2 = mask->getAtTime(-1);
+            maskData = mask->getAtTime(TimeFrameIndex(current_time));
+            maskData2 = mask->getAtTime(TimeFrameIndex(-1));
         }
 
         _plotSingleMaskData(maskData, image_size, plot_color);

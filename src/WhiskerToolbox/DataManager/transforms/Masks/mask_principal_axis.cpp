@@ -201,7 +201,7 @@ std::shared_ptr<LineData> calculate_mask_principal_axis(
 
     // Process each timestamp
     for (auto const & mask_time_pair: mask_data->getAllAsRange()) {
-        int time = mask_time_pair.time;
+        auto time = mask_time_pair.time;
         auto const & masks = mask_time_pair.masks;
 
         // Calculate principal axis for each mask at this timestamp
@@ -269,7 +269,7 @@ std::shared_ptr<LineData> calculate_mask_principal_axis(
 
             // Create line and add to result
             std::vector<Point2D<float>> principal_axis_line = {line_points.first, line_points.second};
-            result_line_data->addLineAtTime(TimeFrameIndex(time), principal_axis_line, false);
+            result_line_data->addLineAtTime(time, principal_axis_line, false);
 
             processed_masks++;
 

@@ -12,7 +12,7 @@ void MaskTableModel::setMasks(MaskData const * maskData) {
     _display_data.clear();
     if (maskData) {
         for (auto const & timeMaskPair: maskData->getAllAsRange()) {
-            int frame = timeMaskPair.time;
+            int frame = timeMaskPair.time.getValue();
             int totalPoints = 0;
             for (auto const & mask: timeMaskPair.masks) {
                 totalPoints += static_cast<int>(mask.size());

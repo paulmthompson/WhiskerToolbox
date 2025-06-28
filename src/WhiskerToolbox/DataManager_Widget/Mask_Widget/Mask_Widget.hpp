@@ -3,6 +3,7 @@
 
 #include "DataManager/Masks/IO/Image/Mask_Data_Image.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"// For context menu utilities
+#include "DataManager/TimeFrame.hpp"
 
 #include <QModelIndex>
 #include <QWidget>
@@ -55,7 +56,7 @@ private:
      * 
      * @return Vector of frame numbers corresponding to selected rows
      */
-    std::vector<int> _getSelectedFrames();
+    std::vector<TimeFrameIndex> _getSelectedFrames();
 
     /**
      * @brief Move selected masks to the specified target key

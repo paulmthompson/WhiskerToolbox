@@ -112,15 +112,15 @@ void Mask_Widget::_handleTableViewDoubleClicked(QModelIndex const & index) {
     }
 }
 
-std::vector<int> Mask_Widget::_getSelectedFrames() {
-    std::vector<int> selected_frames;
+std::vector<TimeFrameIndex> Mask_Widget::_getSelectedFrames() {
+    std::vector<TimeFrameIndex> selected_frames;
     QModelIndexList selected_rows = ui->tableView->selectionModel()->selectedRows();
 
     for (QModelIndex const & index: selected_rows) {
         if (index.isValid()) {
             int frame = _mask_table_model->getFrameForRow(index.row());
             if (frame != -1) {
-                selected_frames.push_back(frame);
+                selected_frames.push_back(TimeFrameIndex(frame));
             }
         }
     }
@@ -157,7 +157,7 @@ void Mask_Widget::_showContextMenu(QPoint const & position) {
 }
 
 void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
-    std::vector<int> selected_frames = _getSelectedFrames();
+    auto selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Mask_Widget: No masks selected to move." << std::endl;
         return;
@@ -198,7 +198,7 @@ void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
                   << " to " << target_size.width << "x" << target_size.height << std::endl;
 
         // Manual copy with resize, then delete from source
-        for (int frame: selected_frames) {
+        for (auto frame: selected_frames) {
             auto const & masks_at_frame = source_mask_data->getAtTime(frame);
             if (!masks_at_frame.empty()) {
                 for (auto const & mask: masks_at_frame) {
@@ -240,7 +240,7 @@ void Mask_Widget::_moveMasksToTarget(std::string const & target_key) {
 }
 
 void Mask_Widget::_copyMasksToTarget(std::string const & target_key) {
-    std::vector<int> selected_frames = _getSelectedFrames();
+    auto selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Mask_Widget: No masks selected to copy." << std::endl;
         return;
@@ -281,7 +281,7 @@ void Mask_Widget::_copyMasksToTarget(std::string const & target_key) {
                   << " to " << target_size.width << "x" << target_size.height << std::endl;
 
         // Manual copy with resize
-        for (int frame: selected_frames) {
+        for (auto frame: selected_frames) {
             auto const & masks_at_frame = source_mask_data->getAtTime(frame);
             if (!masks_at_frame.empty()) {
                 for (auto const & mask: masks_at_frame) {
@@ -317,7 +317,7 @@ void Mask_Widget::_copyMasksToTarget(std::string const & target_key) {
 }
 
 void Mask_Widget::_deleteSelectedMasks() {
-    std::vector<int> selected_frames = _getSelectedFrames();
+    auto selected_frames = _getSelectedFrames();
     if (selected_frames.empty()) {
         std::cout << "Mask_Widget: No masks selected to delete." << std::endl;
         return;
@@ -336,7 +336,7 @@ void Mask_Widget::_deleteSelectedMasks() {
     int total_masks_deleted = 0;
 
     // Count masks before deletion and batch operations to minimize observer notifications
-    for (int frame: selected_frames) {
+    for (auto frame: selected_frames) {
         auto masks_at_frame = mask_data_ptr->getAtTime(frame);
         if (!masks_at_frame.empty()) {
             frames_with_masks++;
@@ -410,7 +410,7 @@ void Mask_Widget::selectPoint(float const x, float const y) {
         return;
     }
 
-    active_mask_data->addAtTime(current_time, mask);
+    active_mask_data->addAtTime(TimeFrameIndex(current_time), mask);
 }
 
 void Mask_Widget::_loadSamModel() {
@@ -483,8 +483,8 @@ void Mask_Widget::_initiateSaveProcess(SaverType saver_type, MaskSaverOptionsVar
         auto times_with_data = mask_data_ptr->getTimesWithData();
         std::vector<size_t> frame_ids_to_export;
         frame_ids_to_export.reserve(times_with_data.size());
-        for (int frame_id: times_with_data) {
-            frame_ids_to_export.push_back(static_cast<size_t>(frame_id));
+        for (auto frame_id: times_with_data) {
+            frame_ids_to_export.push_back(static_cast<size_t>(frame_id.getValue()));
         }
 
         if (frame_ids_to_export.empty()) {
