@@ -47,10 +47,10 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         REQUIRE(retrieved_camera->getTimeAtIndex(TimeFrameIndex(99)) == 29701);
         
         // Test reverse conversion (master time to camera index)
-        REQUIRE(retrieved_camera->getIndexAtTime(1) == 0);
-        REQUIRE(retrieved_camera->getIndexAtTime(301) == 1);
-        REQUIRE(retrieved_camera->getIndexAtTime(150) == 0); // Should round to nearest
-        REQUIRE(retrieved_camera->getIndexAtTime(450) == 1); // Should round to nearest
+        REQUIRE(retrieved_camera->getIndexAtTime(1.0f) == TimeFrameIndex(0));
+        REQUIRE(retrieved_camera->getIndexAtTime(301.0f) == TimeFrameIndex(1));
+        REQUIRE(retrieved_camera->getIndexAtTime(150.0f) == TimeFrameIndex(0)); // Should round to nearest
+        REQUIRE(retrieved_camera->getIndexAtTime(450.0f) == TimeFrameIndex(1)); // Should round to nearest
     }
     
     SECTION("Create analog data on master timeframe") {
@@ -253,16 +253,16 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         auto retrieved_sparse = dm.getTime("sparse_camera");
         
         // Test boundary conditions
-        REQUIRE(retrieved_sparse->getIndexAtTime(0) == 0);     // Before first time
-        REQUIRE(retrieved_sparse->getIndexAtTime(1) == 0);     // Exact match
-        REQUIRE(retrieved_sparse->getIndexAtTime(250) == 0);   // Closer to first
-        REQUIRE(retrieved_sparse->getIndexAtTime(350) == 1);   // Closer to second
-        REQUIRE(retrieved_sparse->getIndexAtTime(6000) == 5);  // After last time
+        REQUIRE(retrieved_sparse->getIndexAtTime(0.0f) == TimeFrameIndex(0));     // Before first time
+        REQUIRE(retrieved_sparse->getIndexAtTime(1.0f) == TimeFrameIndex(0));     // Exact match
+        REQUIRE(retrieved_sparse->getIndexAtTime(250.0f) == TimeFrameIndex(0));   // Closer to first
+        REQUIRE(retrieved_sparse->getIndexAtTime(350.0f) == TimeFrameIndex(1));   // Closer to second
+        REQUIRE(retrieved_sparse->getIndexAtTime(6000.0f) == TimeFrameIndex(5));  // After last time
         
         // Test exact matches
-        REQUIRE(retrieved_sparse->getIndexAtTime(500) == 1);
-        REQUIRE(retrieved_sparse->getIndexAtTime(1200) == 2);
-        REQUIRE(retrieved_sparse->getIndexAtTime(5000) == 5);
+        REQUIRE(retrieved_sparse->getIndexAtTime(500.0f) == TimeFrameIndex(1));
+        REQUIRE(retrieved_sparse->getIndexAtTime(1200.0f) == TimeFrameIndex(2));
+        REQUIRE(retrieved_sparse->getIndexAtTime(5000.0f) == TimeFrameIndex(5));
         
         // Test time retrieval
         REQUIRE(retrieved_sparse->getTimeAtIndex(TimeFrameIndex(0)) == 1);

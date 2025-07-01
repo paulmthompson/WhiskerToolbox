@@ -230,7 +230,7 @@ public:
                 return pair.first >= interval.start && pair.first <= interval.end;
               })
             | std::views::transform([](auto const & pair) {
-                return TimePointsPair{TimeFrameIndex(pair.first), pair.second};
+                return TimePointsPair{pair.first, pair.second};
               });
     }
 
@@ -269,7 +269,7 @@ public:
         auto target_end_index = target_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
 
         // 3. Create converted interval and use the original function
-        TimeFrameInterval target_interval{TimeFrameIndex(target_start_index), TimeFrameIndex(target_end_index)};
+        TimeFrameInterval target_interval{target_start_index, target_end_index};
         return GetPointsInRange(target_interval);
     }
 

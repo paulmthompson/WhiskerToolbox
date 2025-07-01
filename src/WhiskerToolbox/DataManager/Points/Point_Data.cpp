@@ -107,7 +107,7 @@ std::vector<Point2D<float>> const & PointData::getPointsAtTime(TimeFrameIndex ti
     // 2. Convert that time value to an index in the target timeframe  
     auto target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
     
-    return getPointsAtTime(TimeFrameIndex(target_index));
+    return getPointsAtTime(target_index);
 }
 
 std::size_t PointData::getMaxPoints() const {
