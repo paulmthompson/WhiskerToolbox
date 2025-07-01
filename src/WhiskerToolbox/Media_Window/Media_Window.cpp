@@ -864,12 +864,6 @@ void Media_Window::_plotPointData() {
 
         auto point_timeframe = _data_manager->getTime(point_timeframe_key);
 
-        auto point_time = current_time;
-        if (video_timeframe.get() != point_timeframe.get()) {
-            auto video_time = video_timeframe->getTimeAtIndex(current_time);
-            point_time = TimeFrameIndex(point_timeframe->getIndexAtTime(video_time));
-        } 
-
         auto xAspect = getXAspect();
         auto yAspect = getYAspect();
 
@@ -885,7 +879,7 @@ void Media_Window::_plotPointData() {
             xAspect = static_cast<float>(_canvasWidth) / mask_width;
         }
 
-        auto pointData = point->getPointsAtTime(point_time);
+        auto pointData = point->getPointsAtTime(current_time, video_timeframe, point_timeframe);
 
         // Get configurable point size
         float const point_size = static_cast<float>(_point_config.get()->point_size);
