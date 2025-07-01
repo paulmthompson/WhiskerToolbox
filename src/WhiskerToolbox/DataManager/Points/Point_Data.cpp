@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <ranges>
 
 // ========== Constructors ==========
 
@@ -76,15 +77,6 @@ void PointData::addPointsAtTime(TimeFrameIndex const time, std::vector<Point2D<f
 }
 
 // ========== Getters ==========
-
-std::vector<TimeFrameIndex> PointData::getTimesWithData() const {
-    std::vector<TimeFrameIndex> times;
-    times.reserve(_data.size());
-    for (auto const & [time, points] : _data) {
-        times.push_back(time);
-    }
-    return times;
-}
 
 std::vector<Point2D<float>> const & PointData::getPointsAtTime(TimeFrameIndex const time) const {
     auto it = _data.find(time);

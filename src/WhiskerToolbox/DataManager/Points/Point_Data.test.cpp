@@ -121,8 +121,12 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         auto times = point_data.getTimesWithData();
 
         REQUIRE(times.size() == 2);
-        REQUIRE(times[0].getValue() == 10);
-        REQUIRE(times[1].getValue() == 20);
+        
+        // Convert to vector for easier testing or use iterators
+        auto it = times.begin();
+        REQUIRE(*it == TimeFrameIndex(10));
+        ++it;
+        REQUIRE(*it == TimeFrameIndex(20));
     }
 
     SECTION("Getting max points") {

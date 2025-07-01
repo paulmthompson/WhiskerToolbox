@@ -25,7 +25,7 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
 
         auto const & times = result->getTimesWithData();
         REQUIRE(times.size() == 1);
-        REQUIRE(times[0] == TimeFrameIndex(10));
+        REQUIRE(*times.begin() == TimeFrameIndex(10));
 
         auto const & points = result->getPointsAtTime(TimeFrameIndex(10));
         REQUIRE(points.size() == 1);
@@ -50,7 +50,7 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
 
         auto const & times = result->getTimesWithData();
         REQUIRE(times.size() == 1);
-        REQUIRE(times[0] == TimeFrameIndex(20));
+        REQUIRE(*times.begin() == TimeFrameIndex(20));
 
         auto const & points = result->getPointsAtTime(TimeFrameIndex(20));
         REQUIRE(points.size() == 2);// Two masks = two centroids
@@ -152,7 +152,7 @@ TEST_CASE("Mask centroid calculation - Edge cases and error handling", "[mask][c
 
         auto const & times = result->getTimesWithData();
         REQUIRE(times.size() == 1);
-        REQUIRE(times[0] == TimeFrameIndex(20));
+        REQUIRE(*times.begin() == TimeFrameIndex(20));
 
         auto const & points = result->getPointsAtTime(TimeFrameIndex(20));
         REQUIRE(points.size() == 1);// Only counts the non-empty mask

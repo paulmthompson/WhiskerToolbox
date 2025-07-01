@@ -153,11 +153,13 @@ public:
     /**
      * @brief Get all times with data
      * 
-     * TODO: This could return std::ranges::views::keys for zero copy
+     * Returns a view over the keys of the data map for zero-copy iteration.
      * 
-     * @return A vector of TimeFrameIndex
+     * @return A view of TimeFrameIndex keys
      */
-    [[nodiscard]] std::vector<TimeFrameIndex> getTimesWithData() const;
+    [[nodiscard]] auto getTimesWithData() const {
+        return _data | std::views::keys;
+    }
 
     /**
      * @brief Get the points at a specific time
