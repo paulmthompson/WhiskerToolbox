@@ -5,6 +5,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "Points/points.hpp"
 #include "TimeFrame.hpp"
+#include "DigitalTimeSeries/interval_data.hpp"
 
 #include <map>
 #include <ranges>
@@ -211,23 +212,22 @@ public:
     }
 
     /**
-    * @brief Get points with their associated times as a range within a time range
+    * @brief Get points with their associated times as a range within a TimeFrameInterval
     *
-    * Returns a filtered view of time-points pairs for times within the specified range [start_time, end_time] (inclusive).
+    * Returns a filtered view of time-points pairs for times within the specified interval [start, end] (inclusive).
     *
-    * @param start_time The starting time (inclusive)
-    * @param end_time The ending time (inclusive)
-    * @return A view of time-points pairs for times within the specified range
+    * @param interval The TimeFrameInterval specifying the range [start, end] (inclusive)
+    * @return A view of time-points pairs for times within the specified interval
     */
-    [[nodiscard]] auto GetPointsInRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
+    [[nodiscard]] auto GetPointsInRange(TimeFrameInterval const & interval) const {
         struct TimePointsPair {
             TimeFrameIndex time;
             std::vector<Point2D<float>> const & points;
         };
 
         return _data 
-            | std::views::filter([start_time, end_time](auto const & pair) {
-                return pair.first >= start_time && pair.first <= end_time;
+            | std::views::filter([interval](auto const & pair) {
+                return pair.first >= interval.start && pair.first <= interval.end;
               })
             | std::views::transform([](auto const & pair) {
                 return TimePointsPair{TimeFrameIndex(pair.first), pair.second};
@@ -235,60 +235,59 @@ public:
     }
 
     /**
-    * @brief Get points with their associated times as a range within a time range with timeframe conversion
+    * @brief Get points with their associated times as a range within a TimeFrameInterval with timeframe conversion
     *
     * Converts the time range from the source timeframe to the target timeframe (this point data's timeframe)
-    * and returns a filtered view of time-points pairs for times within the converted range [start_time, end_time] (inclusive).
+    * and returns a filtered view of time-points pairs for times within the converted interval range.
     * If the timeframes are the same, no conversion is performed.
     *
-    * @param start_time The starting time in the source timeframe (inclusive)
-    * @param end_time The ending time in the source timeframe (inclusive)
-    * @param source_timeframe The timeframe that the time indices are expressed in
+    * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
+    * @param source_timeframe The timeframe that the interval is expressed in
     * @param target_timeframe The timeframe that this point data uses
-    * @return A view of time-points pairs for times within the converted time range
+    * @return A view of time-points pairs for times within the converted interval range
     */
-    [[nodiscard]] auto GetPointsInRange(TimeFrameIndex start_time, TimeFrameIndex end_time,
+    [[nodiscard]] auto GetPointsInRange(TimeFrameInterval const & interval,
                                         std::shared_ptr<TimeFrame> source_timeframe,
                                         std::shared_ptr<TimeFrame> target_timeframe) const {
         // If the timeframes are the same object, no conversion is needed
         if (source_timeframe.get() == target_timeframe.get()) {
-            return GetPointsInRange(start_time, end_time);
+            return GetPointsInRange(interval);
         }
 
         // If either timeframe is null, fall back to original behavior
         if (!source_timeframe || !target_timeframe) {
-            return GetPointsInRange(start_time, end_time);
+            return GetPointsInRange(interval);
         }
 
         // Convert the time range from source timeframe to target timeframe
         // 1. Get the time values from the source timeframe
-        auto start_time_value = source_timeframe->getTimeAtIndex(start_time);
-        auto end_time_value = source_timeframe->getTimeAtIndex(end_time);
+        auto start_time_value = source_timeframe->getTimeAtIndex(interval.start);
+        auto end_time_value = source_timeframe->getTimeAtIndex(interval.end);
 
         // 2. Convert those time values to indices in the target timeframe
         auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
         auto target_end_index = target_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
 
-        // 3. Call the original function with the converted times
-        return GetPointsInRange(TimeFrameIndex(target_start_index), TimeFrameIndex(target_end_index));
+        // 3. Create converted interval and use the original function
+        TimeFrameInterval target_interval{TimeFrameIndex(target_start_index), TimeFrameIndex(target_end_index)};
+        return GetPointsInRange(target_interval);
     }
 
     // ======= Move and Copy ==========
 
     /**
-     * @brief Copy points from this PointData to another PointData for a time range
+     * @brief Copy points from this PointData to another PointData for a time interval
      * 
-     * Copies all points within the specified time range [start_time, end_time] (inclusive)
+     * Copies all points within the specified time interval [start, end] (inclusive)
      * to the target PointData. If points already exist at target times, the copied points
      * are added to the existing points.
      * 
      * @param target The target PointData to copy points to
-     * @param start_time The starting time (inclusive)
-     * @param end_time The ending time (inclusive)
+     * @param interval The time interval to copy points from (inclusive)
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of points actually copied
      */
-    std::size_t copyTo(PointData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true) const;
+    std::size_t copyTo(PointData& target, TimeFrameInterval const & interval, bool notify = true) const;
 
     /**
      * @brief Copy points from this PointData to another PointData for specific times
@@ -304,19 +303,18 @@ public:
     std::size_t copyTo(PointData& target, std::vector<TimeFrameIndex> const& times, bool notify = true) const;
 
     /**
-     * @brief Move points from this PointData to another PointData for a time range
+     * @brief Move points from this PointData to another PointData for a time interval
      * 
-     * Moves all points within the specified time range [start_time, end_time] (inclusive)
+     * Moves all points within the specified time interval [start, end] (inclusive)
      * to the target PointData. Points are copied to target then removed from source.
      * If points already exist at target times, the moved points are added to the existing points.
      * 
      * @param target The target PointData to move points to
-     * @param start_time The starting time (inclusive)
-     * @param end_time The ending time (inclusive)
+     * @param interval The time interval to move points from (inclusive)
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of points actually moved
      */
-    std::size_t moveTo(PointData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true);
+    std::size_t moveTo(PointData& target, TimeFrameInterval const & interval, bool notify = true);
 
     /**
      * @brief Move points from this PointData to another PointData for specific times

@@ -1,4 +1,5 @@
 #include "Points/Point_Data.hpp"
+#include "DigitalTimeSeries/interval_data.hpp"
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 
@@ -101,8 +102,9 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         point_data.addPointsAtTime(TimeFrameIndex(25), points);      // 2 points
 
         SECTION("Range includes some data") {
+            TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(10), TimeFrameIndex(20))) {
+            for (const auto& pair : point_data.GetPointsInRange(interval)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 10);
                     REQUIRE(pair.points.size() == 2);
@@ -119,24 +121,27 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         }
 
         SECTION("Range includes all data") {
+            TimeFrameInterval interval{TimeFrameIndex(0), TimeFrameIndex(30)};
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(0), TimeFrameIndex(30))) {
+            for (const auto& pair : point_data.GetPointsInRange(interval)) {
                 count++;
             }
             REQUIRE(count == 5); // Should include all 5 time points
         }
 
         SECTION("Range includes no data") {
+            TimeFrameInterval interval{TimeFrameIndex(100), TimeFrameIndex(200)};
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(100), TimeFrameIndex(200))) {
+            for (const auto& pair : point_data.GetPointsInRange(interval)) {
                 count++;
             }
             REQUIRE(count == 0); // Should be empty
         }
 
         SECTION("Range with single time point") {
+            TimeFrameInterval interval{TimeFrameIndex(15), TimeFrameIndex(15)};
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(15), TimeFrameIndex(15))) {
+            for (const auto& pair : point_data.GetPointsInRange(interval)) {
                 REQUIRE(pair.time.getValue() == 15);
                 REQUIRE(pair.points.size() == 1);
                 count++;
@@ -145,8 +150,9 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         }
 
         SECTION("Range with start > end") {
+            TimeFrameInterval interval{TimeFrameIndex(20), TimeFrameIndex(10)};
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(20), TimeFrameIndex(10))) {
+            for (const auto& pair : point_data.GetPointsInRange(interval)) {
                 count++;
             }
             REQUIRE(count == 0); // Should be empty when start > end
@@ -157,8 +163,9 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
             std::vector<int> times = {5, 10, 15, 20, 25};
             auto timeframe = std::make_shared<TimeFrame>(times);
             
+            TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(10), TimeFrameIndex(20), timeframe, timeframe)) {
+            for (const auto& pair : point_data.GetPointsInRange(interval, timeframe, timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 10);
                     REQUIRE(pair.points.size() == 2);
@@ -192,8 +199,67 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
             timeframe_test_data.addPointsAtTime(TimeFrameIndex(4), points);  // At data timeframe index 4 (time=20)
             
             // Query video frames 1-2 (times 10-20) which should map to data indices 2-4 (times 10-20)
+            TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
             size_t count = 0;
-            for (const auto& pair : timeframe_test_data.GetPointsInRange(TimeFrameIndex(1), TimeFrameIndex(2), video_timeframe, data_timeframe)) {
+            for (const auto& pair : timeframe_test_data.GetPointsInRange(video_interval, video_timeframe, data_timeframe)) {
+                if (count == 0) {
+                    REQUIRE(pair.time.getValue() == 2);
+                    REQUIRE(pair.points.size() == 2);
+                } else if (count == 1) {
+                    REQUIRE(pair.time.getValue() == 3);
+                    REQUIRE(pair.points.size() == 1);
+                } else if (count == 2) {
+                    REQUIRE(pair.time.getValue() == 4);
+                    REQUIRE(pair.points.size() == 2);
+                }
+                count++;
+            }
+            REQUIRE(count == 3); // Should include converted times 2, 3, 4
+        }
+
+        SECTION("TimeFrameInterval overloads") {
+            // Test the TimeFrameInterval convenience overload
+            TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
+            
+            size_t count = 0;
+            for (const auto& pair : point_data.GetPointsInRange(interval)) {
+                if (count == 0) {
+                    REQUIRE(pair.time.getValue() == 10);
+                    REQUIRE(pair.points.size() == 2);
+                } else if (count == 1) {
+                    REQUIRE(pair.time.getValue() == 15);
+                    REQUIRE(pair.points.size() == 1);
+                } else if (count == 2) {
+                    REQUIRE(pair.time.getValue() == 20);
+                    REQUIRE(pair.points.size() == 1);
+                }
+                count++;
+            }
+            REQUIRE(count == 3); // Should include times 10, 15, 20
+        }
+
+        SECTION("TimeFrameInterval with timeframe conversion") {
+            // Create a separate point data instance for timeframe conversion test
+            PointData timeframe_test_data;
+            
+            // Create source timeframe (video frames)
+            std::vector<int> video_times = {0, 10, 20, 30, 40};  
+            auto video_timeframe = std::make_shared<TimeFrame>(video_times);
+            
+            // Create target timeframe (data sampling)
+            std::vector<int> data_times = {0, 5, 10, 15, 20, 25, 30, 35, 40}; 
+            auto data_timeframe = std::make_shared<TimeFrame>(data_times);
+            
+            // Add data at target timeframe indices
+            timeframe_test_data.addPointsAtTime(TimeFrameIndex(2), points);  // At data timeframe index 2 (time=10)
+            timeframe_test_data.addPointsAtTime(TimeFrameIndex(3), more_points);  // At data timeframe index 3 (time=15)
+            timeframe_test_data.addPointsAtTime(TimeFrameIndex(4), points);  // At data timeframe index 4 (time=20)
+            
+            // Create interval in video timeframe (frames 1-2 covering times 10-20)
+            TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
+            
+            size_t count = 0;
+            for (const auto& pair : timeframe_test_data.GetPointsInRange(video_interval, video_timeframe, data_timeframe)) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 2);
                     REQUIRE(pair.points.size() == 2);
@@ -377,7 +443,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
 
     SECTION("copyTo - time range operations") {
         SECTION("Copy entire range") {
-            std::size_t copied = source_data.copyTo(target_data, TimeFrameIndex(10), TimeFrameIndex(25));
+            TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(25)};
+            std::size_t copied = source_data.copyTo(target_data, interval);
             
             REQUIRE(copied == 7); // 2 + 1 + 3 + 1 = 7 points total
             
@@ -393,7 +460,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
         }
 
         SECTION("Copy partial range") {
-            std::size_t copied = source_data.copyTo(target_data, TimeFrameIndex(15), TimeFrameIndex(20));
+            TimeFrameInterval interval{TimeFrameIndex(15), TimeFrameIndex(20)};
+            std::size_t copied = source_data.copyTo(target_data, interval);
             
             REQUIRE(copied == 4); // 1 + 3 = 4 points
             
@@ -405,7 +473,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
         }
 
         SECTION("Copy single time point") {
-            std::size_t copied = source_data.copyTo(target_data, TimeFrameIndex(20), TimeFrameIndex(20));
+            TimeFrameInterval interval{TimeFrameIndex(20), TimeFrameIndex(20)};
+            std::size_t copied = source_data.copyTo(target_data, interval);
             
             REQUIRE(copied == 3);
             REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
@@ -413,14 +482,16 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
         }
 
         SECTION("Copy non-existent range") {
-            std::size_t copied = source_data.copyTo(target_data, TimeFrameIndex(100), TimeFrameIndex(200));
+            TimeFrameInterval interval{TimeFrameIndex(100), TimeFrameIndex(200)};
+            std::size_t copied = source_data.copyTo(target_data, interval);
             
             REQUIRE(copied == 0);
             REQUIRE(target_data.getTimesWithData().empty());
         }
 
         SECTION("Copy with invalid range (start > end)") {
-            std::size_t copied = source_data.copyTo(target_data, TimeFrameIndex(25), TimeFrameIndex(10));
+            TimeFrameInterval interval{TimeFrameIndex(25), TimeFrameIndex(10)};
+            std::size_t copied = source_data.copyTo(target_data, interval);
             
             REQUIRE(copied == 0);
             REQUIRE(target_data.getTimesWithData().empty());
@@ -479,7 +550,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
 
     SECTION("moveTo - time range operations") {
         SECTION("Move entire range") {
-            std::size_t moved = source_data.moveTo(target_data, TimeFrameIndex(10), TimeFrameIndex(25));
+            TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(25)};
+            std::size_t moved = source_data.moveTo(target_data, interval);
             
             REQUIRE(moved == 7); // 2 + 1 + 3 + 1 = 7 points total
             
@@ -494,7 +566,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
         }
 
         SECTION("Move partial range") {
-            std::size_t moved = source_data.moveTo(target_data, TimeFrameIndex(15), TimeFrameIndex(20));
+            TimeFrameInterval interval{TimeFrameIndex(15), TimeFrameIndex(20)};
+            std::size_t moved = source_data.moveTo(target_data, interval);
             
             REQUIRE(moved == 4); // 1 + 3 = 4 points
             
@@ -510,7 +583,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
         }
 
         SECTION("Move single time point") {
-            std::size_t moved = source_data.moveTo(target_data, TimeFrameIndex(20), TimeFrameIndex(20));
+            TimeFrameInterval interval{TimeFrameIndex(20), TimeFrameIndex(20)};
+            std::size_t moved = source_data.moveTo(target_data, interval);
             
             REQUIRE(moved == 3);
             REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
@@ -561,7 +635,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
         target_data.addPointsAtTime(TimeFrameIndex(10), existing_points);
 
         SECTION("Copy to existing time adds points") {
-            std::size_t copied = source_data.copyTo(target_data, TimeFrameIndex(10), TimeFrameIndex(10));
+            TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(10)};
+            std::size_t copied = source_data.copyTo(target_data, interval);
             
             REQUIRE(copied == 2);
             // Should have existing point plus copied points
@@ -569,7 +644,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
         }
 
         SECTION("Move to existing time adds points") {
-            std::size_t moved = source_data.moveTo(target_data, TimeFrameIndex(10), TimeFrameIndex(10));
+            TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(10)};
+            std::size_t moved = source_data.moveTo(target_data, interval);
             
             REQUIRE(moved == 2);
             // Should have existing point plus moved points

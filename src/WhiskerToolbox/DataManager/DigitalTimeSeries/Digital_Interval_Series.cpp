@@ -31,7 +31,7 @@ std::vector<Interval> const & DigitalIntervalSeries::getDigitalIntervalSeries() 
 bool DigitalIntervalSeries::isEventAtTime(int const time) const {
 
     auto Contained = [time](auto const & event) {
-        return is_contained(event, time);
+        return is_contained(event, static_cast<int64_t>(time));
     };
 
     if (std::ranges::any_of(_data, Contained)) return true;
@@ -86,7 +86,7 @@ void DigitalIntervalSeries::removeEventAtTime(int const time) {
 
 void DigitalIntervalSeries::_removeEventAtTime(int const time) {
     for (auto it = _data.begin(); it != _data.end(); ++it) {
-        if (is_contained(*it, time)) {
+        if (is_contained(*it, static_cast<int64_t>(time))) {
             if (time == it->start && time == it->end) {
                 _data.erase(it);
             } else if (time == it->start) {

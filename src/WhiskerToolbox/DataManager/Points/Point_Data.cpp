@@ -147,18 +147,18 @@ void PointData::changeImageSize(ImageSize const & image_size) {
 
 // ========== Copy and Move ==========
 
-std::size_t PointData::copyTo(PointData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) const {
-    if (start_time > end_time) {
-        std::cerr << "PointData::copyTo: start_time (" << start_time.getValue() 
-                  << ") must be <= end_time (" << end_time.getValue() << ")" << std::endl;
+std::size_t PointData::copyTo(PointData& target, TimeFrameInterval const & interval, bool notify) const {
+    if (interval.start > interval.end) {
+        std::cerr << "PointData::copyTo: interval start (" << interval.start.getValue() 
+                  << ") must be <= interval end (" << interval.end.getValue() << ")" << std::endl;
         return 0;
     }
 
     std::size_t total_points_copied = 0;
 
-    // Iterate through all times in the source data within the range
+    // Iterate through all times in the source data within the interval
     for (auto const & [time, points] : _data) {
-        if (time >= start_time && time <= end_time && !points.empty()) {
+        if (time >= interval.start && time <= interval.end && !points.empty()) {
             target.addPointsAtTime(time, points, false); // Don't notify for each operation
             total_points_copied += points.size();
         }
@@ -192,19 +192,19 @@ std::size_t PointData::copyTo(PointData& target, std::vector<TimeFrameIndex> con
     return total_points_copied;
 }
 
-std::size_t PointData::moveTo(PointData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) {
-    if (start_time > end_time) {
-        std::cerr << "PointData::moveTo: start_time (" << start_time.getValue() 
-                  << ") must be <= end_time (" << end_time.getValue() << ")" << std::endl;
+std::size_t PointData::moveTo(PointData& target, TimeFrameInterval const & interval, bool notify) {
+    if (interval.start > interval.end) {
+        std::cerr << "PointData::moveTo: interval start (" << interval.start.getValue() 
+                  << ") must be <= interval end (" << interval.end.getValue() << ")" << std::endl;
         return 0;
     }
 
     std::size_t total_points_moved = 0;
     std::vector<TimeFrameIndex> times_to_clear;
 
-    // First, copy all points in the range to target
+    // First, copy all points in the interval to target
     for (auto const & [time, points] : _data) {
-        if (time >= start_time && time <= end_time && !points.empty()) {
+        if (time >= interval.start && time <= interval.end && !points.empty()) {
             target.addPointsAtTime(time, points, false); // Don't notify for each operation
             total_points_moved += points.size();
             times_to_clear.push_back(time);
