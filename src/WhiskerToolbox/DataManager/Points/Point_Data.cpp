@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <iostream>
 
+// ========== Constructors ==========
+
 PointData::PointData(std::map<TimeFrameIndex, Point2D<float>> const & data) {
     for (auto const & [time, point]: data) {
         _data[time].push_back(point);
@@ -12,6 +14,8 @@ PointData::PointData(std::map<TimeFrameIndex, Point2D<float>> const & data) {
 PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const & data) 
     : _data(data) {
 }
+
+// ========== Setters ==========
 
 void PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
     auto it = _data.find(time);
@@ -71,6 +75,8 @@ void PointData::addPointsAtTime(TimeFrameIndex const time, std::vector<Point2D<f
     }
 }
 
+// ========== Getters ==========
+
 std::vector<TimeFrameIndex> PointData::getTimesWithData() const {
     std::vector<TimeFrameIndex> times;
     times.reserve(_data.size());
@@ -97,6 +103,8 @@ std::size_t PointData::getMaxPoints() const {
     return max_points;
 }
 
+// ========== Image Size ==========
+
 void PointData::changeImageSize(ImageSize const & image_size) {
     if (_image_size.width == -1 || _image_size.height == -1) {
         std::cout << "No size set for current image. "
@@ -121,6 +129,8 @@ void PointData::changeImageSize(ImageSize const & image_size) {
     }
     _image_size = image_size;
 }
+
+// ========== Copy and Move ==========
 
 std::size_t PointData::copyTo(PointData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) const {
     if (start_time > end_time) {

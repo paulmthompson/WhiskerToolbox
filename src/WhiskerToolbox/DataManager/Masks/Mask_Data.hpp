@@ -21,7 +21,10 @@
  */
 class MaskData : public ObserverData {
 public:
+    // ========== Constructors ==========
     MaskData() = default;
+
+    // ========== Setters ==========
 
     /**
     * @brief Removes all masks at the specified time
@@ -92,8 +95,42 @@ public:
      */
     void reserveCapacity(size_t capacity);
 
+    // ========== Getters ==========
+
+    /**
+     * @brief Get all times with data
+     * 
+     * @return A vector of TimeFrameIndex
+     */
     std::vector<TimeFrameIndex> getTimesWithData() const;
 
+    /**
+     * @brief Get the masks at a specific time
+     * 
+     * @param time The time to get the masks at
+     * @return A vector of Mask2D
+     */
+    [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time) const;
+
+        /**
+     * @brief Get all masks with their associated times as a range
+     *
+     * @return A view of time-mask pairs for all times
+     */
+    [[nodiscard]] auto getAllAsRange() const {
+        struct TimeMaskPair {
+            TimeFrameIndex time;
+            std::vector<Mask2D> const & masks;
+        };
+
+        return _data | std::views::transform([](auto const & pair) {
+                   return TimeMaskPair{TimeFrameIndex(pair.first), pair.second};
+               });
+    };
+
+    [[nodiscard]] size_t size() const {return _data.size();};
+
+    // ========== Image Size ==========
     /**
      * @brief Change the size of the canvas the mask belongs to
      *
@@ -104,16 +141,19 @@ public:
      */
     void changeImageSize(ImageSize const & image_size);
 
+    /**
+     * @brief Get the image size
+     * 
+     * @return The image size
+     */
     [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
-    void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
 
     /**
-    * @brief Retrieves all masks stored at the specified time
-    *
-    * @param time The timestamp for which to retrieve masks
-    * @return A const reference to a vector of masks at the given time, or an empty vector if no masks exist
-    */
-    [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time) const;
+     * @brief Set the image size
+     */
+    void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
+
+    // ========== Copy and Move ==========
 
     /**
      * @brief Copy masks from this MaskData to another MaskData for a time range
@@ -171,24 +211,6 @@ public:
      * @return The number of masks actually moved
      */
     std::size_t moveTo(MaskData& target, std::vector<TimeFrameIndex> const& times, bool notify = true);
-
-    /**
-     * @brief Get all masks with their associated times as a range
-     *
-     * @return A view of time-mask pairs for all times
-     */
-    [[nodiscard]] auto getAllAsRange() const {
-        struct TimeMaskPair {
-            TimeFrameIndex time;
-            std::vector<Mask2D> const & masks;
-        };
-
-        return _data | std::views::transform([](auto const & pair) {
-                   return TimeMaskPair{TimeFrameIndex(pair.first), pair.second};
-               });
-    };
-
-    [[nodiscard]] size_t size() const {return _data.size();};
 
 protected:
 private:

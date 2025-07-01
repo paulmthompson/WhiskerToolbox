@@ -4,6 +4,10 @@
 #include <cmath>
 #include <iostream>
 
+// ========== Constructors ==========
+
+// ========== Setters ==========
+
 bool MaskData::clearAtTime(TimeFrameIndex const time, bool notify) {
     auto it = _data.find(time);
     if (it != _data.end()) {
@@ -60,6 +64,15 @@ void MaskData::addAtTime(TimeFrameIndex const time,
     }
 }
 
+void MaskData::reserveCapacity(size_t capacity) {
+
+    static_cast<void>(capacity);
+    // Note: std::map doesn't have a reserve function, but this is kept for API compatibility
+    // The map will allocate nodes as needed
+}
+
+// ========== Getters ==========
+
 std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const {
     auto it = _data.find(time);
     if (it != _data.end()) {
@@ -77,6 +90,8 @@ std::vector<TimeFrameIndex> MaskData::getTimesWithData() const {
     }
     return times;
 }
+
+// ========== Image Size ==========
 
 void MaskData::changeImageSize(ImageSize const & image_size) {
     if (_image_size.width == -1 || _image_size.height == -1) {
@@ -103,12 +118,7 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
     _image_size = image_size;
 }
 
-void MaskData::reserveCapacity(size_t capacity) {
-
-    static_cast<void>(capacity);
-    // Note: std::map doesn't have a reserve function, but this is kept for API compatibility
-    // The map will allocate nodes as needed
-}
+// ========== Copy and Move ==========
 
 std::size_t MaskData::copyTo(MaskData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) const {
     if (start_time > end_time) {
