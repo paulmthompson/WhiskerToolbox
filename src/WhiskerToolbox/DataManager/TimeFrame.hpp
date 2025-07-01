@@ -73,7 +73,7 @@ public:
 
     [[nodiscard]] int getTimeAtIndex(TimeFrameIndex index) const;
 
-    [[nodiscard]] int getIndexAtTime(float time) const;
+    [[nodiscard]] TimeFrameIndex getIndexAtTime(float time) const;
 
     [[nodiscard]] int checkFrameInbounds(int frame_id) const;
 
@@ -98,7 +98,7 @@ private:
  * @return The original `time_value_in_source_frame` if frames are the same object instance,
  *         or the corresponding index in `destination_time_frame` if frames are different.
  */
-int64_t getTimeIndexForSeries(TimeFrameIndex source_index,
+TimeFrameIndex getTimeIndexForSeries(TimeFrameIndex source_index,
                               TimeFrame const * source_time_frame,
                               TimeFrame const * destination_time_frame);
 

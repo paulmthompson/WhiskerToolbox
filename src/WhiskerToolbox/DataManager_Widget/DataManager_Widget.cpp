@@ -326,7 +326,7 @@ void DataManager_Widget::_changeScrollbar(int frame_id) {
 
         if (video_timeframe.get() != feature_timeframe.get()) {
             frame_id = feature_timeframe->getTimeAtIndex(TimeFrameIndex(frame_id));
-            frame_id = video_timeframe->getIndexAtTime(frame_id);
+            frame_id = video_timeframe->getIndexAtTime(frame_id).getValue();
         }
     }
 

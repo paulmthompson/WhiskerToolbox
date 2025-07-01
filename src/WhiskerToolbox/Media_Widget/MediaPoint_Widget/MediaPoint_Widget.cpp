@@ -104,7 +104,7 @@ void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
 
         if (video_timeframe.get() != point_timeframe.get()) {
             current_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
-            current_time = point_timeframe->getIndexAtTime(current_time);
+            current_time = point_timeframe->getIndexAtTime(current_time).getValue();
         }
     }
 

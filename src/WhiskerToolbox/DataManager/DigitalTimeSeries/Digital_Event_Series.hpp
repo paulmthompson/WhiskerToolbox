@@ -57,7 +57,7 @@ public:
 
         auto start_time_idx = getTimeIndexForSeries(start_index, source_time_frame, destination_time_frame);
         auto end_time_idx = getTimeIndexForSeries(stop_index, source_time_frame, destination_time_frame);
-        return getEventsInRange(start_time_idx, end_time_idx);
+        return getEventsInRange(start_time_idx.getValue(), end_time_idx.getValue());
     };
 
     std::vector<float> getEventsAsVector(float start_time, float stop_time) const {

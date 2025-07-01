@@ -1226,7 +1226,7 @@ std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std:
         query_time_index = static_cast<int64_t>(std::round(time_coord));
     } else {
         // Different time frame - convert master time to series time frame index
-        query_time_index = static_cast<int64_t>(time_frame->getIndexAtTime(time_coord));
+        query_time_index = time_frame->getIndexAtTime(time_coord).getValue();
     }
 
     // Find all intervals that contain this time point in the series' time frame
@@ -1344,7 +1344,7 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
         current_time_series_index = static_cast<int64_t>(std::round(current_time_master));
     } else {
         // Different time frame - convert master time to series time frame index
-        current_time_series_index = static_cast<int64_t>(time_frame->getIndexAtTime(current_time_master));
+        current_time_series_index = time_frame->getIndexAtTime(current_time_master).getValue();
     }
 
     // Convert original interval bounds to series time frame for constraints
@@ -1355,8 +1355,8 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
         original_end_series = _original_end_time;
     } else {
         // Convert master time coordinates to series time frame indices
-        original_start_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_original_start_time)));
-        original_end_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_original_end_time)));
+        original_start_series = time_frame->getIndexAtTime(static_cast<float>(_original_start_time)).getValue();
+        original_end_series = time_frame->getIndexAtTime(static_cast<float>(_original_end_time)).getValue();
     }
 
     // Perform dragging logic in series time frame
@@ -1461,10 +1461,10 @@ void OpenGLWidget::finishIntervalDrag() {
             new_end_series = _dragged_end_time;
         } else {
             // Convert master time coordinates to series time frame indices
-            original_start_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_original_start_time)));
-            original_end_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_original_end_time)));
-            new_start_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_dragged_start_time)));
-            new_end_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_dragged_end_time)));
+            original_start_series = time_frame->getIndexAtTime(static_cast<float>(_original_start_time)).getValue();
+            original_end_series = time_frame->getIndexAtTime(static_cast<float>(_original_end_time)).getValue();
+            new_start_series = time_frame->getIndexAtTime(static_cast<float>(_dragged_start_time)).getValue();
+            new_end_series = time_frame->getIndexAtTime(static_cast<float>(_dragged_end_time)).getValue();
         }
 
         // Validate converted coordinates
@@ -1696,8 +1696,8 @@ void OpenGLWidget::updateNewIntervalCreation(QPoint const & current_pos) {
         current_time_series = current_time_coord;
     } else {
         // Convert master time coordinates to series time frame indices
-        click_time_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_new_interval_click_time)));
-        current_time_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(current_time_coord)));
+        click_time_series = time_frame->getIndexAtTime(static_cast<float>(_new_interval_click_time)).getValue();
+        current_time_series = time_frame->getIndexAtTime(static_cast<float>(current_time_coord)).getValue();
     }
 
     // Determine interval bounds (always ensure start < end)
@@ -1787,8 +1787,8 @@ void OpenGLWidget::finishNewIntervalCreation() {
             new_end_series = _new_interval_end_time;
         } else {
             // Convert master time coordinates to series time frame indices
-            new_start_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_new_interval_start_time)));
-            new_end_series = static_cast<int64_t>(time_frame->getIndexAtTime(static_cast<float>(_new_interval_end_time)));
+            new_start_series = time_frame->getIndexAtTime(static_cast<float>(_new_interval_start_time)).getValue();
+            new_end_series = time_frame->getIndexAtTime(static_cast<float>(_new_interval_end_time)).getValue();
         }
 
         // Validate converted coordinates
