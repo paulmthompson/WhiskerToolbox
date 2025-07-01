@@ -92,6 +92,67 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         REQUIRE(second_time == 20);
     }
 
+    SECTION("GetPointsInRangeAsRange functionality") {
+        // Setup data at multiple time points
+        point_data.addPointsAtTime(TimeFrameIndex(5), points);       // 2 points
+        point_data.addPointsAtTime(TimeFrameIndex(10), points);      // 2 points  
+        point_data.addPointsAtTime(TimeFrameIndex(15), more_points); // 1 point
+        point_data.addPointsAtTime(TimeFrameIndex(20), more_points); // 1 point
+        point_data.addPointsAtTime(TimeFrameIndex(25), points);      // 2 points
+
+        SECTION("Range includes some data") {
+            size_t count = 0;
+            for (const auto& pair : point_data.GetPointsInRangeAsRange(TimeFrameIndex(10), TimeFrameIndex(20))) {
+                if (count == 0) {
+                    REQUIRE(pair.time.getValue() == 10);
+                    REQUIRE(pair.points.size() == 2);
+                } else if (count == 1) {
+                    REQUIRE(pair.time.getValue() == 15);
+                    REQUIRE(pair.points.size() == 1);
+                } else if (count == 2) {
+                    REQUIRE(pair.time.getValue() == 20);
+                    REQUIRE(pair.points.size() == 1);
+                }
+                count++;
+            }
+            REQUIRE(count == 3); // Should include times 10, 15, 20
+        }
+
+        SECTION("Range includes all data") {
+            size_t count = 0;
+            for (const auto& pair : point_data.GetPointsInRangeAsRange(TimeFrameIndex(0), TimeFrameIndex(30))) {
+                count++;
+            }
+            REQUIRE(count == 5); // Should include all 5 time points
+        }
+
+        SECTION("Range includes no data") {
+            size_t count = 0;
+            for (const auto& pair : point_data.GetPointsInRangeAsRange(TimeFrameIndex(100), TimeFrameIndex(200))) {
+                count++;
+            }
+            REQUIRE(count == 0); // Should be empty
+        }
+
+        SECTION("Range with single time point") {
+            size_t count = 0;
+            for (const auto& pair : point_data.GetPointsInRangeAsRange(TimeFrameIndex(15), TimeFrameIndex(15))) {
+                REQUIRE(pair.time.getValue() == 15);
+                REQUIRE(pair.points.size() == 1);
+                count++;
+            }
+            REQUIRE(count == 1); // Should include only time 15
+        }
+
+        SECTION("Range with start > end") {
+            size_t count = 0;
+            for (const auto& pair : point_data.GetPointsInRangeAsRange(TimeFrameIndex(20), TimeFrameIndex(10))) {
+                count++;
+            }
+            REQUIRE(count == 0); // Should be empty when start > end
+        }
+    }
+
     SECTION("Setting and getting image size") {
         ImageSize size{640, 480};
         point_data.setImageSize(size);

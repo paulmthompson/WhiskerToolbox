@@ -194,6 +194,30 @@ public:
                });
     }
 
+    /**
+    * @brief Get points with their associated times as a range within a time range
+    *
+    * Returns a filtered view of time-points pairs for times within the specified range [start_time, end_time] (inclusive).
+    *
+    * @param start_time The starting time (inclusive)
+    * @param end_time The ending time (inclusive)
+    * @return A view of time-points pairs for times within the specified range
+    */
+    [[nodiscard]] auto GetPointsInRangeAsRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
+        struct TimePointsPair {
+            TimeFrameIndex time;
+            std::vector<Point2D<float>> const & points;
+        };
+
+        return _data 
+            | std::views::filter([start_time, end_time](auto const & pair) {
+                return pair.first >= start_time && pair.first <= end_time;
+              })
+            | std::views::transform([](auto const & pair) {
+                return TimePointsPair{TimeFrameIndex(pair.first), pair.second};
+              });
+    }
+
     // ======= Move and Copy ==========
 
     /**
