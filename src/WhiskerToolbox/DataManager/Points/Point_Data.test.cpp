@@ -92,7 +92,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         REQUIRE(second_time == 20);
     }
 
-    SECTION("GetPointsInRangeAsRange functionality") {
+    SECTION("GetPointsInRange functionality") {
         // Setup data at multiple time points
         point_data.addPointsAtTime(TimeFrameIndex(5), points);       // 2 points
         point_data.addPointsAtTime(TimeFrameIndex(10), points);      // 2 points  
@@ -102,7 +102,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
 
         SECTION("Range includes some data") {
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRangeAsRange(TimeFrameIndex(10), TimeFrameIndex(20))) {
+            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(10), TimeFrameIndex(20))) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 10);
                     REQUIRE(pair.points.size() == 2);
@@ -120,7 +120,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
 
         SECTION("Range includes all data") {
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRangeAsRange(TimeFrameIndex(0), TimeFrameIndex(30))) {
+            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(0), TimeFrameIndex(30))) {
                 count++;
             }
             REQUIRE(count == 5); // Should include all 5 time points
@@ -128,7 +128,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
 
         SECTION("Range includes no data") {
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRangeAsRange(TimeFrameIndex(100), TimeFrameIndex(200))) {
+            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(100), TimeFrameIndex(200))) {
                 count++;
             }
             REQUIRE(count == 0); // Should be empty
@@ -136,7 +136,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
 
         SECTION("Range with single time point") {
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRangeAsRange(TimeFrameIndex(15), TimeFrameIndex(15))) {
+            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(15), TimeFrameIndex(15))) {
                 REQUIRE(pair.time.getValue() == 15);
                 REQUIRE(pair.points.size() == 1);
                 count++;
@@ -146,10 +146,67 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
 
         SECTION("Range with start > end") {
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRangeAsRange(TimeFrameIndex(20), TimeFrameIndex(10))) {
+            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(20), TimeFrameIndex(10))) {
                 count++;
             }
             REQUIRE(count == 0); // Should be empty when start > end
+        }
+
+        SECTION("Range with timeframe conversion - same timeframes") {
+            // Test with same source and target timeframes
+            std::vector<int> times = {5, 10, 15, 20, 25};
+            auto timeframe = std::make_shared<TimeFrame>(times);
+            
+            size_t count = 0;
+            for (const auto& pair : point_data.GetPointsInRange(TimeFrameIndex(10), TimeFrameIndex(20), timeframe, timeframe)) {
+                if (count == 0) {
+                    REQUIRE(pair.time.getValue() == 10);
+                    REQUIRE(pair.points.size() == 2);
+                } else if (count == 1) {
+                    REQUIRE(pair.time.getValue() == 15);
+                    REQUIRE(pair.points.size() == 1);
+                } else if (count == 2) {
+                    REQUIRE(pair.time.getValue() == 20);
+                    REQUIRE(pair.points.size() == 1);
+                }
+                count++;
+            }
+            REQUIRE(count == 3); // Should include times 10, 15, 20
+        }
+
+        SECTION("Range with timeframe conversion - different timeframes") {
+            // Create a separate point data instance for timeframe conversion test
+            PointData timeframe_test_data;
+            
+            // Create source timeframe (video frames)
+            std::vector<int> video_times = {0, 10, 20, 30, 40};  
+            auto video_timeframe = std::make_shared<TimeFrame>(video_times);
+            
+            // Create target timeframe (data sampling)
+            std::vector<int> data_times = {0, 5, 10, 15, 20, 25, 30, 35, 40}; 
+            auto data_timeframe = std::make_shared<TimeFrame>(data_times);
+            
+            // Add data at target timeframe indices
+            timeframe_test_data.addPointsAtTime(TimeFrameIndex(2), points);  // At data timeframe index 2 (time=10)
+            timeframe_test_data.addPointsAtTime(TimeFrameIndex(3), more_points);  // At data timeframe index 3 (time=15)
+            timeframe_test_data.addPointsAtTime(TimeFrameIndex(4), points);  // At data timeframe index 4 (time=20)
+            
+            // Query video frames 1-2 (times 10-20) which should map to data indices 2-4 (times 10-20)
+            size_t count = 0;
+            for (const auto& pair : timeframe_test_data.GetPointsInRange(TimeFrameIndex(1), TimeFrameIndex(2), video_timeframe, data_timeframe)) {
+                if (count == 0) {
+                    REQUIRE(pair.time.getValue() == 2);
+                    REQUIRE(pair.points.size() == 2);
+                } else if (count == 1) {
+                    REQUIRE(pair.time.getValue() == 3);
+                    REQUIRE(pair.points.size() == 1);
+                } else if (count == 2) {
+                    REQUIRE(pair.time.getValue() == 4);
+                    REQUIRE(pair.points.size() == 2);
+                }
+                count++;
+            }
+            REQUIRE(count == 3); // Should include converted times 2, 3, 4
         }
     }
 

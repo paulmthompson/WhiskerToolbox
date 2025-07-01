@@ -219,7 +219,7 @@ public:
     * @param end_time The ending time (inclusive)
     * @return A view of time-points pairs for times within the specified range
     */
-    [[nodiscard]] auto GetPointsInRangeAsRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
+    [[nodiscard]] auto GetPointsInRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const {
         struct TimePointsPair {
             TimeFrameIndex time;
             std::vector<Point2D<float>> const & points;
@@ -232,6 +232,45 @@ public:
             | std::views::transform([](auto const & pair) {
                 return TimePointsPair{TimeFrameIndex(pair.first), pair.second};
               });
+    }
+
+    /**
+    * @brief Get points with their associated times as a range within a time range with timeframe conversion
+    *
+    * Converts the time range from the source timeframe to the target timeframe (this point data's timeframe)
+    * and returns a filtered view of time-points pairs for times within the converted range [start_time, end_time] (inclusive).
+    * If the timeframes are the same, no conversion is performed.
+    *
+    * @param start_time The starting time in the source timeframe (inclusive)
+    * @param end_time The ending time in the source timeframe (inclusive)
+    * @param source_timeframe The timeframe that the time indices are expressed in
+    * @param target_timeframe The timeframe that this point data uses
+    * @return A view of time-points pairs for times within the converted time range
+    */
+    [[nodiscard]] auto GetPointsInRange(TimeFrameIndex start_time, TimeFrameIndex end_time,
+                                        std::shared_ptr<TimeFrame> source_timeframe,
+                                        std::shared_ptr<TimeFrame> target_timeframe) const {
+        // If the timeframes are the same object, no conversion is needed
+        if (source_timeframe.get() == target_timeframe.get()) {
+            return GetPointsInRange(start_time, end_time);
+        }
+
+        // If either timeframe is null, fall back to original behavior
+        if (!source_timeframe || !target_timeframe) {
+            return GetPointsInRange(start_time, end_time);
+        }
+
+        // Convert the time range from source timeframe to target timeframe
+        // 1. Get the time values from the source timeframe
+        auto start_time_value = source_timeframe->getTimeAtIndex(start_time);
+        auto end_time_value = source_timeframe->getTimeAtIndex(end_time);
+
+        // 2. Convert those time values to indices in the target timeframe
+        auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
+        auto target_end_index = target_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
+
+        // 3. Call the original function with the converted times
+        return GetPointsInRange(TimeFrameIndex(target_start_index), TimeFrameIndex(target_end_index));
     }
 
     // ======= Move and Copy ==========
