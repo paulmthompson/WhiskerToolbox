@@ -5,6 +5,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "Points/points.hpp"
 #include "TimeFrame.hpp"
+#include "DigitalTimeSeries/interval_data.hpp"
 #include "masks.hpp"
 
 #include <cstddef>
@@ -124,9 +125,71 @@ public:
         };
 
         return _data | std::views::transform([](auto const & pair) {
-                   return TimeMaskPair{TimeFrameIndex(pair.first), pair.second};
+                   return TimeMaskPair{pair.first, pair.second};
                });
     };
+
+    /**
+    * @brief Get masks with their associated times as a range within a TimeFrameInterval
+    *
+    * Returns a filtered view of time-mask pairs for times within the specified interval [start, end] (inclusive).
+    *
+    * @param interval The TimeFrameInterval specifying the range [start, end] (inclusive)
+    * @return A view of time-mask pairs for times within the specified interval
+    */
+    [[nodiscard]] auto GetMasksInRange(TimeFrameInterval const & interval) const {
+        struct TimeMaskPair {
+            TimeFrameIndex time;
+            std::vector<Mask2D> const & masks;
+        };
+
+        return _data 
+            | std::views::filter([interval](auto const & pair) {
+                return pair.first >= interval.start && pair.first <= interval.end;
+              })
+            | std::views::transform([](auto const & pair) {
+                return TimeMaskPair{pair.first, pair.second};
+              });
+    }
+
+    /**
+    * @brief Get masks with their associated times as a range within a TimeFrameInterval with timeframe conversion
+    *
+    * Converts the time range from the source timeframe to the target timeframe (this mask data's timeframe)
+    * and returns a filtered view of time-mask pairs for times within the converted interval range.
+    * If the timeframes are the same, no conversion is performed.
+    *
+    * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
+    * @param source_timeframe The timeframe that the interval is expressed in
+    * @param target_timeframe The timeframe that this mask data uses
+    * @return A view of time-mask pairs for times within the converted interval range
+    */
+    [[nodiscard]] auto GetMasksInRange(TimeFrameInterval const & interval,
+                                       std::shared_ptr<TimeFrame> source_timeframe,
+                                       std::shared_ptr<TimeFrame> target_timeframe) const {
+        // If the timeframes are the same object, no conversion is needed
+        if (source_timeframe.get() == target_timeframe.get()) {
+            return GetMasksInRange(interval);
+        }
+
+        // If either timeframe is null, fall back to original behavior
+        if (!source_timeframe || !target_timeframe) {
+            return GetMasksInRange(interval);
+        }
+
+        // Convert the time range from source timeframe to target timeframe
+        // 1. Get the time values from the source timeframe
+        auto start_time_value = source_timeframe->getTimeAtIndex(interval.start);
+        auto end_time_value = source_timeframe->getTimeAtIndex(interval.end);
+
+        // 2. Convert those time values to indices in the target timeframe
+        auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
+        auto target_end_index = target_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
+
+        // 3. Create converted interval and use the original function
+        TimeFrameInterval target_interval{target_start_index, target_end_index};
+        return GetMasksInRange(target_interval);
+    }
 
     [[nodiscard]] size_t size() const {return _data.size();};
 
@@ -156,19 +219,18 @@ public:
     // ========== Copy and Move ==========
 
     /**
-     * @brief Copy masks from this MaskData to another MaskData for a time range
+     * @brief Copy masks from this MaskData to another MaskData for a time interval
      * 
-     * Copies all masks within the specified time range [start_time, end_time] (inclusive)
+     * Copies all masks within the specified time interval [start, end] (inclusive)
      * to the target MaskData. If masks already exist at target times, the copied masks
      * are added to the existing masks.
      * 
      * @param target The target MaskData to copy masks to
-     * @param start_time The starting time (inclusive)
-     * @param end_time The ending time (inclusive)
+     * @param interval The time interval to copy masks from (inclusive)
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of masks actually copied
      */
-    std::size_t copyTo(MaskData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true) const;
+    std::size_t copyTo(MaskData& target, TimeFrameInterval const & interval, bool notify = true) const;
 
     /**
      * @brief Copy masks from this MaskData to another MaskData for specific times
@@ -184,19 +246,18 @@ public:
     std::size_t copyTo(MaskData& target, std::vector<TimeFrameIndex> const& times, bool notify = true) const;
 
     /**
-     * @brief Move masks from this MaskData to another MaskData for a time range
+     * @brief Move masks from this MaskData to another MaskData for a time interval
      * 
-     * Moves all masks within the specified time range [start_time, end_time] (inclusive)
+     * Moves all masks within the specified time interval [start, end] (inclusive)
      * to the target MaskData. Masks are copied to target then removed from source.
      * If masks already exist at target times, the moved masks are added to the existing masks.
      * 
      * @param target The target MaskData to move masks to
-     * @param start_time The starting time (inclusive)
-     * @param end_time The ending time (inclusive)
+     * @param interval The time interval to move masks from (inclusive)
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of masks actually moved
      */
-    std::size_t moveTo(MaskData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true);
+    std::size_t moveTo(MaskData& target, TimeFrameInterval const & interval, bool notify = true);
 
     /**
      * @brief Move masks from this MaskData to another MaskData for specific times

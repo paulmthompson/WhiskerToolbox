@@ -120,10 +120,10 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
 
 // ========== Copy and Move ==========
 
-std::size_t MaskData::copyTo(MaskData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) const {
-    if (start_time > end_time) {
-        std::cerr << "MaskData::copyTo: start_time (" << start_time.getValue() 
-                  << ") must be <= end_time (" << end_time.getValue() << ")" << std::endl;
+std::size_t MaskData::copyTo(MaskData& target, TimeFrameInterval const & interval, bool notify) const {
+    if (interval.start > interval.end) {
+        std::cerr << "MaskData::copyTo: interval start (" << interval.start.getValue() 
+                  << ") must be <= interval end (" << interval.end.getValue() << ")" << std::endl;
         return 0;
     }
 
@@ -135,9 +135,9 @@ std::size_t MaskData::copyTo(MaskData& target, TimeFrameIndex start_time, TimeFr
 
     std::size_t total_masks_copied = 0;
 
-    // Iterate through all times in the source data within the range
+    // Iterate through all times in the source data within the interval
     for (auto const & [time, masks] : _data) {
-        if (time >= start_time && time <= end_time && !masks.empty()) {
+        if (time >= interval.start && time <= interval.end && !masks.empty()) {
             for (auto const& mask : masks) {
                 target.addAtTime(time, mask, false); // Don't notify for each operation
                 total_masks_copied++;
@@ -175,19 +175,19 @@ std::size_t MaskData::copyTo(MaskData& target, std::vector<TimeFrameIndex> const
     return total_masks_copied;
 }
 
-std::size_t MaskData::moveTo(MaskData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) {
-    if (start_time > end_time) {
-        std::cerr << "MaskData::moveTo: start_time (" << start_time.getValue() 
-                  << ") must be <= end_time (" << end_time.getValue() << ")" << std::endl;
+std::size_t MaskData::moveTo(MaskData& target, TimeFrameInterval const & interval, bool notify) {
+    if (interval.start > interval.end) {
+        std::cerr << "MaskData::moveTo: interval start (" << interval.start.getValue() 
+                  << ") must be <= interval end (" << interval.end.getValue() << ")" << std::endl;
         return 0;
     }
 
     std::size_t total_masks_moved = 0;
     std::vector<TimeFrameIndex> times_to_clear;
 
-    // First, copy all masks in the range to target
+    // First, copy all masks in the interval to target
     for (auto const & [time, masks] : _data) {
-        if (time >= start_time && time <= end_time && !masks.empty()) {
+        if (time >= interval.start && time <= interval.end && !masks.empty()) {
             for (auto const& mask : masks) {
                 target.addAtTime(time, mask, false); // Don't notify for each operation
                 total_masks_moved++;
