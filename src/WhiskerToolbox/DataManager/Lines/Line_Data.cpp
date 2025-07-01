@@ -4,11 +4,15 @@
 #include <cmath>
 #include <iostream>
 
+// ========== Constructors ==========
+
 LineData::LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data)
     : _data(data)
 {
 
 }
+
+// ========== Setters ==========
 
 void LineData::clearLinesAtTime(TimeFrameIndex const time, bool notify) {
 
@@ -90,6 +94,8 @@ void LineData::addPointToLineInterpolate(TimeFrameIndex const time, int const li
     }
 }
 
+// ========== Getters ==========
+
 std::vector<Line2D> const & LineData::getLinesAtTime(TimeFrameIndex const time) const {
     // [] operator is not const because it inserts if mask is not present
     if (_data.find(time) != _data.end()) {
@@ -107,6 +113,8 @@ std::vector<TimeFrameIndex> LineData::getTimesWithData() const {
     }
     return keys;
 }
+
+// ========== Image Size ==========
 
 void LineData::changeImageSize(ImageSize const & image_size)
 {
@@ -134,6 +142,8 @@ void LineData::changeImageSize(ImageSize const & image_size)
     _image_size = image_size;
 
 }
+
+// ========== Copy and Move ==========
 
 std::size_t LineData::copyTo(LineData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) const {
     if (start_time > end_time) {

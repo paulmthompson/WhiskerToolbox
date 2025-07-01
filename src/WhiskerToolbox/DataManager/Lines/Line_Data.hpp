@@ -39,19 +39,108 @@ public:
      */
     explicit LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data);
 
+    // ========== Setters ==========
 
+    /**
+     * @brief Clear a line at a specific time
+     * 
+     * @param time The time to clear the line at
+     * @param line_id The id of the line to clear
+     * @param notify If true, the observers will be notified
+     */
     void clearLineAtTime(TimeFrameIndex time, int line_id, bool notify = true);
+
+    /**
+     * @brief Clear all lines at a specific time
+     * 
+     * @param time The time to clear the lines at
+     * @param notify If true, the observers will be notified
+     */
     void clearLinesAtTime(TimeFrameIndex time, bool notify = true);
+
+    /**
+     * @brief Add a line at a specific time
+     * 
+     * The line is defined by the x and y coordinates.
+     * 
+     * @param time The time to add the line at
+     * @param x The x coordinates of the line
+     * @param y The y coordinates of the line
+     * @param notify If true, the observers will be notified
+     */
     void addLineAtTime(TimeFrameIndex time, std::vector<float> const & x, std::vector<float> const & y, bool notify = true);
+
+    /**
+     * @brief Add a line at a specific time
+     * 
+     * The line is defined by the points.
+     * 
+     * @param time The time to add the line at
+     * @param line The line to add
+     * @param notify If true, the observers will be notified
+     */
     void addLineAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & line, bool notify = true);
 
+    /**
+     * @brief Add a point to a line at a specific time
+     * 
+     * The point is appended to the line.
+     * 
+     * @param time The time to add the point to the line at
+     * @param line_id The id of the line to add the point to
+     * @param point The point to add
+     * @param notify If true, the observers will be notified
+     */
     void addPointToLine(TimeFrameIndex time, int line_id, Point2D<float> point, bool notify = true);
 
+    /**
+     * @brief Add a point to a line at a specific time
+     * 
+     * @param time The time to add the point to the line at
+     * @param line_id The id of the line to add the point to
+     * @param point The point to add
+     * @param notify If true, the observers will be notified
+     */
     void addPointToLineInterpolate(TimeFrameIndex time, int line_id, Point2D<float> point, bool notify = true);
+
+    // ========== Image Size ==========
+
+    /**
+     * @brief Change the size of the canvas the line belongs to
+     *
+     * This will scale all lines in the data structure by the ratio of the
+     * new size to the old size.
+     *
+     * @param image_size
+     */
+    void changeImageSize(ImageSize const & image_size);
+
+    [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
+    void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
+    
+    // ========== Getters ==========
 
     [[nodiscard]] std::vector<TimeFrameIndex> getTimesWithData() const;
 
     [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(TimeFrameIndex time) const;
+
+     /**
+    * @brief Get all lines with their associated times as a range
+    *
+    * @return A view of time-lines pairs for all times
+    */
+    [[nodiscard]] auto GetAllLinesAsRange() const {
+        struct TimeLinesPair {
+            TimeFrameIndex time;
+            std::vector<Line2D> const & lines;
+        };
+
+        return _data | std::views::transform([](auto const & pair) {
+                   return TimeLinesPair{TimeFrameIndex(pair.first), pair.second};
+               });
+    }
+
+    // ========== Copy and Move ==========
 
     /**
      * @brief Copy lines from this LineData to another LineData for a time range
@@ -109,38 +198,6 @@ public:
      * @return The number of lines actually moved
      */
     std::size_t moveTo(LineData& target, std::vector<TimeFrameIndex> const & times, bool notify = true);
-
-    /**
-     * @brief Change the size of the canvas the line belongs to
-     *
-     * This will scale all lines in the data structure by the ratio of the
-     * new size to the old size.
-     *
-     * @param image_size
-     */
-    void changeImageSize(ImageSize const & image_size);
-
-    [[nodiscard]] ImageSize getImageSize() const { return _image_size; }
-    void setImageSize(ImageSize const & image_size) { _image_size = image_size; }
-
-
-
-
-    /**
-    * @brief Get all lines with their associated times as a range
-    *
-    * @return A view of time-lines pairs for all times
-    */
-    [[nodiscard]] auto GetAllLinesAsRange() const {
-        struct TimeLinesPair {
-            TimeFrameIndex time;
-            std::vector<Line2D> const & lines;
-        };
-
-        return _data | std::views::transform([](auto const & pair) {
-                   return TimeLinesPair{TimeFrameIndex(pair.first), pair.second};
-               });
-    }
 
 protected:
 private:
