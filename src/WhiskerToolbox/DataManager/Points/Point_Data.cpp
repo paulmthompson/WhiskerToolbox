@@ -87,6 +87,29 @@ std::vector<Point2D<float>> const & PointData::getPointsAtTime(TimeFrameIndex co
     }
 }
 
+std::vector<Point2D<float>> const & PointData::getPointsAtTime(TimeFrameIndex time, 
+                                                               std::shared_ptr<TimeFrame> source_timeframe,
+                                                               std::shared_ptr<TimeFrame> target_timeframe) const {
+    // If the timeframes are the same object, no conversion is needed
+    if (source_timeframe.get() == target_timeframe.get()) {
+        return getPointsAtTime(time);
+    }
+    
+    // If either timeframe is null, fall back to original behavior
+    if (!source_timeframe || !target_timeframe) {
+        return getPointsAtTime(time);
+    }
+    
+    // Convert the time index from source timeframe to target timeframe
+    // 1. Get the time value from the source timeframe
+    auto time_value = source_timeframe->getTimeAtIndex(time);
+    
+    // 2. Convert that time value to an index in the target timeframe  
+    auto target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
+    
+    return getPointsAtTime(TimeFrameIndex(target_index));
+}
+
 std::size_t PointData::getMaxPoints() const {
     std::size_t max_points = 0;
     for (auto const & [time, points] : _data) {

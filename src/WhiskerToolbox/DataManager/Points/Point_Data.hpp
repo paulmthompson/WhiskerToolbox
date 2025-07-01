@@ -172,6 +172,22 @@ public:
     [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(TimeFrameIndex time) const;
 
     /**
+     * @brief Get the points at a specific time with timeframe conversion
+     * 
+     * Converts the time index from the source timeframe to the target timeframe (this point data's timeframe)
+     * and returns the points at the converted time. If the timeframes are the same, no conversion is performed.
+     * If the converted time does not exist, an empty vector will be returned.
+     * 
+     * @param time The time index in the source timeframe
+     * @param source_timeframe The timeframe that the time index is expressed in
+     * @param target_timeframe The timeframe that this point data uses
+     * @return A vector of Point2D<float> at the converted time
+     */
+    [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(TimeFrameIndex time, 
+                                                                       std::shared_ptr<TimeFrame> source_timeframe,
+                                                                       std::shared_ptr<TimeFrame> target_timeframe) const;
+
+    /**
      * @brief Get the maximum number of points at any time
      * 
      * @return The maximum number of points

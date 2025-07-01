@@ -583,3 +583,83 @@ TEST_CASE("PointData - Image scaling", "[points][data][scaling]") {
         REQUIRE(unchanged_points[0].y == Catch::Approx(200.0f));
     }
 }
+
+TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
+    PointData point_data;
+    
+    // Setup test data
+    std::vector<Point2D<float>> points = {{100.0f, 200.0f}, {300.0f, 400.0f}};
+    point_data.addPointsAtTime(TimeFrameIndex(10), points);
+    point_data.addPointsAtTime(TimeFrameIndex(20), points);
+    
+    SECTION("Same timeframe returns original data") {
+        // Create a single timeframe
+        std::vector<int> times = {5, 10, 15, 20, 25};
+        auto timeframe = std::make_shared<TimeFrame>(times);
+        
+        // Query with same source and target timeframe
+        auto result = point_data.getPointsAtTime(TimeFrameIndex(10), timeframe, timeframe);
+        
+        REQUIRE(result.size() == 2);
+        REQUIRE(result[0].x == Catch::Approx(100.0f));
+        REQUIRE(result[0].y == Catch::Approx(200.0f));
+    }
+    
+    SECTION("Different timeframes with conversion") {
+        // Create source timeframe (e.g., video frames)
+        std::vector<int> video_times = {0, 10, 20, 30, 40};  // Video at 1 Hz
+        auto video_timeframe = std::make_shared<TimeFrame>(video_times);
+        
+        // Create target timeframe (e.g., data sampling at higher rate)
+        std::vector<int> data_times = {0, 5, 10, 15, 20, 25, 30, 35, 40}; // Data at 2 Hz
+        auto data_timeframe = std::make_shared<TimeFrame>(data_times);
+        
+        // Clear existing data and add data at the correct indices for the target timeframe
+        PointData test_point_data;
+        
+        // Video frame 1 (time=10) should map to data_timeframe index 2 (time=10)
+        // Video frame 2 (time=20) should map to data_timeframe index 4 (time=20)
+        test_point_data.addPointsAtTime(TimeFrameIndex(2), points);  // At data timeframe index 2 (time=10)
+        test_point_data.addPointsAtTime(TimeFrameIndex(4), points);  // At data timeframe index 4 (time=20)
+        
+        // Query video frame 1 (time=10) which should map to data index 2 (time=10)
+        auto result = test_point_data.getPointsAtTime(TimeFrameIndex(1), video_timeframe, data_timeframe);
+        
+        REQUIRE(result.size() == 2);
+        REQUIRE(result[0].x == Catch::Approx(100.0f));
+        REQUIRE(result[0].y == Catch::Approx(200.0f));
+    }
+    
+    SECTION("Timeframe conversion with no matching data") {
+        // Create timeframes where conversion maps to non-existent data
+        std::vector<int> video_times = {0, 5, 10};
+        auto video_timeframe = std::make_shared<TimeFrame>(video_times);
+        
+        std::vector<int> data_times = {0, 3, 7, 15, 25};
+        auto data_timeframe = std::make_shared<TimeFrame>(data_times);
+        
+        // Create a separate point data instance for this test
+        PointData test_point_data;
+        test_point_data.addPointsAtTime(TimeFrameIndex(3), points);  // At data timeframe index 3 (time=15)
+        
+        // Query video frame 1 (time=5) which should map to data timeframe index 1 (time=3, closest to 5)
+        // Since we only have data at index 3, this should return empty
+        auto result = test_point_data.getPointsAtTime(TimeFrameIndex(1), video_timeframe, data_timeframe);
+        
+        // Should return empty since we don't have data at the converted index
+        REQUIRE(result.empty());
+    }
+    
+    SECTION("Null timeframe handling") {
+        std::vector<int> times = {5, 10, 15, 20, 25};
+        auto valid_timeframe = std::make_shared<TimeFrame>(times);
+        
+        // This should still work since the function should handle null pointers gracefully
+        // by falling back to the original behavior
+        auto result = point_data.getPointsAtTime(TimeFrameIndex(10), nullptr, valid_timeframe);
+        
+        // The behavior when timeframes are null might depend on getTimeIndexForSeries implementation
+        // For now, let's check that it doesn't crash and returns some result
+        // The exact behavior would depend on the TimeFrame implementation
+    }
+}
