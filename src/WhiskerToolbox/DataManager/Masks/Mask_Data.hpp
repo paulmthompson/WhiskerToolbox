@@ -96,14 +96,6 @@ public:
                        std::vector<uint32_t> && y,
                        bool notify = true);
 
-    /**
-     * @brief Reserve capacity for the internal data structures
-     *
-     * This can help avoid reallocations when loading large datasets.
-     *
-     * @param capacity The number of timestamps to reserve space for
-     */
-    void reserveCapacity(size_t capacity);
 
     // ========== Getters ==========
 

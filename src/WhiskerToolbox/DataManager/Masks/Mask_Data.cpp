@@ -72,13 +72,6 @@ void MaskData::addAtTime(TimeFrameIndex const time,
     }
 }
 
-void MaskData::reserveCapacity(size_t capacity) {
-
-    static_cast<void>(capacity);
-    // Note: std::map doesn't have a reserve function, but this is kept for API compatibility
-    // The map will allocate nodes as needed
-}
-
 // ========== Getters ==========
 
 std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const {
