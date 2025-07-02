@@ -132,7 +132,31 @@ public:
         return _data | std::views::keys;
     }
 
+    /**
+     * @brief Get the lines at a specific time
+     * 
+     * If the time does not exist, an empty vector will be returned.
+     * 
+     * @param time The time to get the lines at
+     * @return A vector of lines
+     */
     [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(TimeFrameIndex time) const;
+
+    /**
+     * @brief Get the lines at a specific time with timeframe conversion
+     * 
+     * Converts the time index from the source timeframe to the target timeframe (this line data's timeframe)
+     * and returns the lines at the converted time. If the timeframes are the same, no conversion is performed.
+     * If the converted time does not exist, an empty vector will be returned.
+     * 
+     * @param time The time index in the source timeframe
+     * @param source_timeframe The timeframe that the time index is expressed in
+     * @param target_timeframe The timeframe that this line data uses
+     * @return A vector of lines at the converted time
+     */
+    [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(TimeFrameIndex time, 
+                                                            std::shared_ptr<TimeFrame> source_timeframe,
+                                                            std::shared_ptr<TimeFrame> target_timeframe) const;
 
      /**
     * @brief Get all lines with their associated times as a range

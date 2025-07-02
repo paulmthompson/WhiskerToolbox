@@ -106,6 +106,30 @@ std::vector<Line2D> const & LineData::getLinesAtTime(TimeFrameIndex const time) 
     }
 }
 
+std::vector<Line2D> const & LineData::getLinesAtTime(TimeFrameIndex const time, 
+                                                      std::shared_ptr<TimeFrame> const source_timeframe,
+                                                      std::shared_ptr<TimeFrame> const target_timeframe) const {
+
+    // If the timeframes are the same object, no conversion is needed
+    if (source_timeframe.get() == target_timeframe.get()) {
+        return getLinesAtTime(time);
+    }
+    
+    // If either timeframe is null, fall back to original behavior
+    if (!source_timeframe || !target_timeframe) {
+        return getLinesAtTime(time);
+    }
+
+    // Convert the time index from source timeframe to target timeframe
+    // 1. Get the time value from the source timeframe
+    auto time_value = source_timeframe->getTimeAtIndex(time);
+    
+    // 2. Convert that time value to an index in the target timeframe  
+    auto target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
+    
+    return getLinesAtTime(target_index);
+}
+
 // ========== Image Size ==========
 
 void LineData::changeImageSize(ImageSize const & image_size)
