@@ -98,11 +98,11 @@ std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const ti
     }
 }
 
-std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex time, 
-                                                               std::shared_ptr<TimeFrame> source_timeframe,
-                                                               std::shared_ptr<TimeFrame> target_timeframe) const {
+std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const time, 
+                                                        TimeFrame const * source_timeframe,
+                                                        TimeFrame const * target_timeframe) const {
     // If the timeframes are the same object, no conversion is needed
-    if (source_timeframe.get() == target_timeframe.get()) {
+    if (source_timeframe == target_timeframe) {
         return getAtTime(time);
     }
     

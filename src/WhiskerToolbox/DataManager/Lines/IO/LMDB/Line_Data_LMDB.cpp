@@ -185,7 +185,7 @@ std::map<int, std::vector<Line2D>> getLineDataTimeFrames(std::string const & dbP
     for (int const time: times) {
         if (std::find(lineData->getTimesWithLines().begin(),
                       lineData->getTimesWithLines().end(), time) != lineData->getTimesWithLines().end()) {
-            result[time] = lineData->getLinesAtTime(time);
+            result[time] = lineData->getAtTime(time);
         }
     }
 

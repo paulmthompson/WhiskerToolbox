@@ -117,7 +117,7 @@ std::shared_ptr<PointData> extract_line_point(
     
     size_t processed_times = 0;
     for (auto time : times_with_data) {
-        auto const & lines_at_time = line_data->getLinesAtTime(time);
+        auto const & lines_at_time = line_data->getAtTime(time);
         
         // Process only the first line at each time point (similar to other line operations)
         if (!lines_at_time.empty()) {

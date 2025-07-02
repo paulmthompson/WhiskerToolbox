@@ -91,11 +91,11 @@ std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const
 }
 
 std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time, 
-                                                std::shared_ptr<TimeFrame> const source_timeframe,
-                                                std::shared_ptr<TimeFrame> const target_timeframe) const {
+                                                TimeFrame const * source_timeframe,
+                                                TimeFrame const * target_timeframe) const {
 
     // If the timeframes are the same object, no conversion is needed
-    if (source_timeframe.get() == target_timeframe.get()) {
+    if (source_timeframe == target_timeframe) {
         return getAtTime(time);
     }
     

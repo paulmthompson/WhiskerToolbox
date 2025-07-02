@@ -33,17 +33,17 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         REQUIRE(lines_copied == 3); // 2 lines at time 10 + 1 line at time 20
         
         // Verify source data is unchanged
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(10)).size() == 2);
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(20)).size() == 1);
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(30)).size() == 1);
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(20)).size() == 1);
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(30)).size() == 1);
         
         // Verify target has copied data
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(10)).size() == 2);
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(20)).size() == 1);
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(30)).size() == 0); // Not in range
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 1);
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(30)).size() == 0); // Not in range
         
         // Verify line content
-        auto target_lines_10 = target_data.getLinesAtTime(TimeFrameIndex(10));
+        auto target_lines_10 = target_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(target_lines_10[0].size() == 4); // First line has 4 points
         REQUIRE(target_lines_10[1].size() == 3); // Second line has 3 points
         REQUIRE(target_lines_10[0][0].x == 1.0f);
@@ -57,9 +57,9 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         REQUIRE(lines_copied == 3); // 2 lines at time 10 + 1 line at time 30
         
         // Verify correct times were copied
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(10)).size() == 2);
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(20)).size() == 0); // Not copied
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(30)).size() == 1);
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 0); // Not copied
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(30)).size() == 1);
     }
 
     SECTION("Copy to target with existing data") {
@@ -70,7 +70,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         std::size_t lines_copied = source_data.copyTo(target_data, interval);
         
         REQUIRE(lines_copied == 2); // 2 lines from source
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(10)).size() == 3); // 1 existing + 2 copied
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 3); // 1 existing + 2 copied
     }
 
     SECTION("Move time range - basic functionality") {
@@ -80,14 +80,14 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         REQUIRE(lines_moved == 3); // 2 lines at time 10 + 1 line at time 20
         
         // Verify source data is cleared for moved times
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(10)).size() == 0);
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(20)).size() == 0);
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(30)).size() == 1); // Not moved
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).size() == 0);
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(20)).size() == 0);
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(30)).size() == 1); // Not moved
         
         // Verify target has moved data
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(10)).size() == 2);
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(20)).size() == 1);
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(30)).size() == 0);
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 1);
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(30)).size() == 0);
     }
 
     SECTION("Move specific times") {
@@ -97,14 +97,14 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         REQUIRE(lines_moved == 2); // 1 line at time 20 + 1 line at time 30
         
         // Verify source data
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(10)).size() == 2); // Not moved
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(20)).size() == 0); // Moved
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(30)).size() == 0); // Moved
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).size() == 2); // Not moved
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(20)).size() == 0); // Moved
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(30)).size() == 0); // Moved
         
         // Verify target data
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(10)).size() == 0); // Not moved
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(20)).size() == 1); // Moved
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(30)).size() == 1); // Moved
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 0); // Not moved
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 1); // Moved
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(30)).size() == 1); // Moved
     }
 
     SECTION("Copy empty time range") {
@@ -130,9 +130,9 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         REQUIRE(lines_moved == 0);
         
         // Source should be unchanged
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(10)).size() == 2);
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(20)).size() == 1);
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(30)).size() == 1);
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(20)).size() == 1);
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(30)).size() == 1);
     }
 
     SECTION("Copy and move with notification disabled") {
@@ -173,8 +173,8 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(10)};
         source_data.copyTo(target_data, interval);
         
-        auto source_lines = source_data.getLinesAtTime(TimeFrameIndex(10));
-        auto target_lines = target_data.getLinesAtTime(TimeFrameIndex(10));
+        auto source_lines = source_data.getAtTime(TimeFrameIndex(10));
+        auto target_lines = target_data.getAtTime(TimeFrameIndex(10));
         
         REQUIRE(source_lines.size() == target_lines.size());
         
@@ -188,8 +188,8 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         
         // Modify target data and ensure source is unaffected
         target_data.clearAtTime(TimeFrameIndex(10));
-        REQUIRE(source_data.getLinesAtTime(TimeFrameIndex(10)).size() == 2); // Source unchanged
-        REQUIRE(target_data.getLinesAtTime(TimeFrameIndex(10)).size() == 0);  // Target cleared
+        REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).size() == 2); // Source unchanged
+        REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 0);  // Target cleared
     }
 }
 

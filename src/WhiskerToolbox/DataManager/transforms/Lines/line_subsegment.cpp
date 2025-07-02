@@ -147,7 +147,7 @@ std::shared_ptr<LineData> extract_line_subsegment(
     
     size_t processed_times = 0;
     for (auto time : times_with_data) {
-        auto const & lines_at_time = line_data->getLinesAtTime(time);
+        auto const & lines_at_time = line_data->getAtTime(time);
         
         for (auto const & line : lines_at_time) {
             if (line.empty()) {

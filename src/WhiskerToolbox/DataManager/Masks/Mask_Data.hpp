@@ -135,8 +135,8 @@ public:
      * @return A vector of Mask2D at the converted time
      */
     [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time, 
-                                                        std::shared_ptr<TimeFrame> const source_timeframe,
-                                                        std::shared_ptr<TimeFrame> const target_timeframe) const;
+                                                        TimeFrame const * source_timeframe,
+                                                        TimeFrame const * target_timeframe) const;
 
         /**
      * @brief Get all masks with their associated times as a range

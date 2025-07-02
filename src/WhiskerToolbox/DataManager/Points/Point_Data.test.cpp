@@ -731,7 +731,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         auto timeframe = std::make_shared<TimeFrame>(times);
         
         // Query with same source and target timeframe
-        auto result = point_data.getAtTime(TimeFrameIndex(10), timeframe, timeframe);
+        auto result = point_data.getAtTime(TimeFrameIndex(10), timeframe.get(), timeframe.get());
         
         REQUIRE(result.size() == 2);
         REQUIRE(result[0].x == Catch::Approx(100.0f));
@@ -756,7 +756,9 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         test_point_data.addPointsAtTime(TimeFrameIndex(4), points);  // At data timeframe index 4 (time=20)
         
         // Query video frame 1 (time=10) which should map to data index 2 (time=10)
-        auto result = test_point_data.getAtTime(TimeFrameIndex(1), video_timeframe, data_timeframe);
+        auto result = test_point_data.getAtTime(TimeFrameIndex(1), 
+                                                video_timeframe.get(), 
+                                                data_timeframe.get());
         
         REQUIRE(result.size() == 2);
         REQUIRE(result[0].x == Catch::Approx(100.0f));
@@ -777,7 +779,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         
         // Query video frame 1 (time=5) which should map to data timeframe index 1 (time=3, closest to 5)
         // Since we only have data at index 3, this should return empty
-        auto result = test_point_data.getAtTime(TimeFrameIndex(1), video_timeframe, data_timeframe);
+        auto result = test_point_data.getAtTime(TimeFrameIndex(1), video_timeframe.get(), data_timeframe.get());
         
         // Should return empty since we don't have data at the converted index
         REQUIRE(result.empty());
@@ -789,7 +791,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         
         // This should still work since the function should handle null pointers gracefully
         // by falling back to the original behavior
-        auto result = point_data.getAtTime(TimeFrameIndex(10), nullptr, valid_timeframe);
+        auto result = point_data.getAtTime(TimeFrameIndex(10), nullptr, valid_timeframe.get());
         
         // The behavior when timeframes are null might depend on getTimeIndexForSeries implementation
         // For now, let's check that it doesn't crash and returns some result

@@ -101,7 +101,7 @@ void LineData::addPointToLineInterpolate(TimeFrameIndex const time, int const li
 
 // ========== Getters ==========
 
-std::vector<Line2D> const & LineData::getLinesAtTime(TimeFrameIndex const time) const {
+std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time) const {
     // [] operator is not const because it inserts if mask is not present
     if (_data.find(time) != _data.end()) {
         return _data.at(time);
@@ -110,18 +110,18 @@ std::vector<Line2D> const & LineData::getLinesAtTime(TimeFrameIndex const time) 
     }
 }
 
-std::vector<Line2D> const & LineData::getLinesAtTime(TimeFrameIndex const time, 
-                                                      std::shared_ptr<TimeFrame> const source_timeframe,
-                                                      std::shared_ptr<TimeFrame> const target_timeframe) const {
+std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time, 
+                                                TimeFrame const * source_timeframe,
+                                                TimeFrame const * target_timeframe) const {
 
     // If the timeframes are the same object, no conversion is needed
-    if (source_timeframe.get() == target_timeframe.get()) {
-        return getLinesAtTime(time);
+    if (source_timeframe == target_timeframe) {
+        return getAtTime(time);
     }
     
     // If either timeframe is null, fall back to original behavior
     if (!source_timeframe || !target_timeframe) {
-        return getLinesAtTime(time);
+        return getAtTime(time);
     }
 
     // Convert the time index from source timeframe to target timeframe
@@ -131,7 +131,7 @@ std::vector<Line2D> const & LineData::getLinesAtTime(TimeFrameIndex const time,
     // 2. Convert that time value to an index in the target timeframe  
     auto target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
     
-    return getLinesAtTime(target_index);
+    return getAtTime(target_index);
 }
 
 // ========== Image Size ==========

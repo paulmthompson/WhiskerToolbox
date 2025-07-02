@@ -570,7 +570,7 @@ void Media_Window::_plotLineData() {
         auto plot_color = plot_color_with_alpha(_line_config.get());
 
         auto line_data = _data_manager->getData<LineData>(line_key);
-        auto lineData = line_data->getLinesAtTime(TimeFrameIndex(current_time));
+        auto lineData = line_data->getAtTime(TimeFrameIndex(current_time));
 
         // Check for line-specific image size scaling
         auto image_size = line_data->getImageSize();
@@ -879,7 +879,7 @@ void Media_Window::_plotPointData() {
             xAspect = static_cast<float>(_canvasWidth) / mask_width;
         }
 
-        auto pointData = point->getAtTime(current_time, video_timeframe, point_timeframe);
+        auto pointData = point->getAtTime(current_time, video_timeframe.get(), point_timeframe.get());
 
         // Get configurable point size
         float const point_size = static_cast<float>(_point_config.get()->point_size);

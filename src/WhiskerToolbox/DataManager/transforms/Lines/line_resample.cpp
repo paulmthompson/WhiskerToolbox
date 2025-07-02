@@ -96,11 +96,11 @@ DataTypeVariant LineResampleOperation::execute(DataTypeVariant const& dataVarian
                  progressCallback(static_cast<int>((static_cast<double>(processed_lines) / total_lines) * 100.0));
             }
         }
-        if (!new_lines_at_time.empty() || input_line_data->getLinesAtTime(time).empty()) {
+        if (!new_lines_at_time.empty() || input_line_data->getAtTime(time).empty()) {
              // Add to map if there are new lines OR if the original time had lines (even if all became empty)
              // This ensures that times that previously had data but now have all empty lines are still represented.
              // However, if a time originally had no lines, we don't add an empty entry for it.
-            if (!input_line_data->getLinesAtTime(time).empty() || !new_lines_at_time.empty()) {
+            if (!input_line_data->getAtTime(time).empty() || !new_lines_at_time.empty()) {
                  resampled_line_map[time] = std::move(new_lines_at_time);
             }
         }

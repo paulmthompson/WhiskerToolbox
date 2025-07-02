@@ -196,8 +196,8 @@ public:
      * @return A vector of Point2D<float> at the converted time
      */
     [[nodiscard]] std::vector<Point2D<float>> const & getAtTime(TimeFrameIndex time, 
-                                                                       std::shared_ptr<TimeFrame> source_timeframe,
-                                                                       std::shared_ptr<TimeFrame> target_timeframe) const;
+                                                                TimeFrame const * source_timeframe,
+                                                                TimeFrame const * target_timeframe) const;
 
     /**
      * @brief Get the maximum number of points at any time

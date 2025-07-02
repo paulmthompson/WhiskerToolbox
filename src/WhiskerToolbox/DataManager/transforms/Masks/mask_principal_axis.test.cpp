@@ -43,7 +43,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
         REQUIRE(times.size() == 1);
         REQUIRE(*times.begin() == TimeFrameIndex(20));
 
-        auto const & lines = result->getLinesAtTime(TimeFrameIndex(20));
+        auto const & lines = result->getAtTime(TimeFrameIndex(20));
         REQUIRE(lines.size() == 1);
         REQUIRE(lines[0].size() == 2);// Line should have 2 points
 
@@ -68,7 +68,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
 
         auto result = calculate_mask_principal_axis(mask_data.get(), params.get());
 
-        auto const & lines = result->getLinesAtTime(TimeFrameIndex(30));
+        auto const & lines = result->getAtTime(TimeFrameIndex(30));
         REQUIRE(lines.size() == 1);
 
         // For a vertical line, major axis should be roughly vertical
@@ -92,7 +92,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
 
         auto result = calculate_mask_principal_axis(mask_data.get(), params.get());
 
-        auto const & lines = result->getLinesAtTime(TimeFrameIndex(40));
+        auto const & lines = result->getAtTime(TimeFrameIndex(40));
         REQUIRE(lines.size() == 1);
 
         // For a 45-degree line, major axis should be roughly at 45 degrees
@@ -127,8 +127,8 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
         minor_params->axis_type = PrincipalAxisType::Minor;
         auto minor_result = calculate_mask_principal_axis(mask_data.get(), minor_params.get());
 
-        auto const & major_lines = major_result->getLinesAtTime(TimeFrameIndex(50));
-        auto const & minor_lines = minor_result->getLinesAtTime(TimeFrameIndex(50));
+        auto const & major_lines = major_result->getAtTime(TimeFrameIndex(50));
+        auto const & minor_lines = minor_result->getAtTime(TimeFrameIndex(50));
 
         REQUIRE(major_lines.size() == 1);
         REQUIRE(minor_lines.size() == 1);
@@ -164,7 +164,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
 
         auto result = calculate_mask_principal_axis(mask_data.get());
 
-        auto const & lines = result->getLinesAtTime(TimeFrameIndex(60));
+        auto const & lines = result->getAtTime(TimeFrameIndex(60));
         REQUIRE(lines.size() == 2);// Two masks = two principal axis lines
     }
 
@@ -200,7 +200,7 @@ TEST_CASE("Mask principal axis calculation - Edge cases", "[mask][principal_axis
         // Should still produce a result, even if axis direction is arbitrary
         auto const & times = result->getTimesWithData();
         if (!times.empty()) {
-            auto const & lines = result->getLinesAtTime(TimeFrameIndex(10));
+            auto const & lines = result->getAtTime(TimeFrameIndex(10));
             REQUIRE(lines.size() <= 1);// Should produce at most one line
         }
     }
@@ -222,7 +222,7 @@ TEST_CASE("Mask principal axis calculation - Edge cases", "[mask][principal_axis
 
         auto result = calculate_mask_principal_axis(mask_data.get());
 
-        auto const & lines = result->getLinesAtTime(TimeFrameIndex(20));
+        auto const & lines = result->getAtTime(TimeFrameIndex(20));
         REQUIRE(lines.size() == 1);
 
         // For a circle, major and minor axes should be similar in magnitude
@@ -238,7 +238,7 @@ TEST_CASE("Mask principal axis calculation - Edge cases", "[mask][principal_axis
 
         auto result = calculate_mask_principal_axis(mask_data.get());
 
-        auto const & lines = result->getLinesAtTime(TimeFrameIndex(30));
+        auto const & lines = result->getAtTime(TimeFrameIndex(30));
         REQUIRE(lines.size() == 1);
         REQUIRE(lines[0].size() == 2);
     }
@@ -301,7 +301,7 @@ TEST_CASE("MaskPrincipalAxisOperation - Operation interface", "[mask][principal_
         auto result = std::get<std::shared_ptr<LineData>>(result_variant);
         REQUIRE(result != nullptr);
 
-        auto const & lines = result->getLinesAtTime(TimeFrameIndex(50));
+        auto const & lines = result->getAtTime(TimeFrameIndex(50));
         REQUIRE(lines.size() == 1);
         REQUIRE(lines[0].size() == 2);
     }
@@ -326,7 +326,7 @@ TEST_CASE("MaskPrincipalAxisOperation - Operation interface", "[mask][principal_
         auto result = std::get<std::shared_ptr<LineData>>(result_variant);
         REQUIRE(result != nullptr);
 
-        auto const & lines = result->getLinesAtTime(TimeFrameIndex(60));
+        auto const & lines = result->getAtTime(TimeFrameIndex(60));
         REQUIRE(lines.size() == 1);
         REQUIRE(lines[0].size() == 2);
     }
