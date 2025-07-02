@@ -251,7 +251,7 @@ void Line_Widget::_deleteSelectedLine() {
         return;
     }
 
-    source_line_data->clearLineAtTime(TimeFrameIndex(row_data.frame), row_data.lineIndex);
+    source_line_data->clearAtTime(TimeFrameIndex(row_data.frame), row_data.lineIndex);
 
     updateTable();
 

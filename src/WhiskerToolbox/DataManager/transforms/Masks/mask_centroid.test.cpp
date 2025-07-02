@@ -27,7 +27,7 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
         REQUIRE(times.size() == 1);
         REQUIRE(*times.begin() == TimeFrameIndex(10));
 
-        auto const & points = result->getPointsAtTime(TimeFrameIndex(10));
+        auto const & points = result->getAtTime(TimeFrameIndex(10));
         REQUIRE(points.size() == 1);
 
         // Centroid of triangle with vertices (0,0), (3,0), (0,3) should be (1,1)
@@ -52,7 +52,7 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
         REQUIRE(times.size() == 1);
         REQUIRE(*times.begin() == TimeFrameIndex(20));
 
-        auto const & points = result->getPointsAtTime(TimeFrameIndex(20));
+        auto const & points = result->getAtTime(TimeFrameIndex(20));
         REQUIRE(points.size() == 2);// Two masks = two centroids
 
         // Sort points by x coordinate for consistent testing
@@ -86,13 +86,13 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
         REQUIRE(times.size() == 2);
 
         // Check timestamp 30 centroid: (0+2+4)/3 = 2, (0+0+0)/3 = 0
-        auto const & points30 = result->getPointsAtTime(TimeFrameIndex(30));
+        auto const & points30 = result->getAtTime(TimeFrameIndex(30));
         REQUIRE(points30.size() == 1);
         REQUIRE_THAT(points30[0].x, Catch::Matchers::WithinAbs(2.0f, 0.001f));
         REQUIRE_THAT(points30[0].y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
 
         // Check timestamp 40 centroid: (1+1+1)/3 = 1, (0+3+6)/3 = 3
-        auto const & points40 = result->getPointsAtTime(TimeFrameIndex(40));
+        auto const & points40 = result->getAtTime(TimeFrameIndex(40));
         REQUIRE(points40.size() == 1);
         REQUIRE_THAT(points40[0].x, Catch::Matchers::WithinAbs(1.0f, 0.001f));
         REQUIRE_THAT(points40[0].y, Catch::Matchers::WithinAbs(3.0f, 0.001f));
@@ -115,7 +115,7 @@ TEST_CASE("Mask centroid calculation - Core functionality", "[mask][centroid][tr
         REQUIRE(result->getImageSize().height == test_size.height);
 
         // Verify calculation is correct: (100+200+300)/3 = 200, (100+150+200)/3 = 150
-        auto const & points = result->getPointsAtTime(TimeFrameIndex(100));
+        auto const & points = result->getAtTime(TimeFrameIndex(100));
         REQUIRE(points.size() == 1);
         REQUIRE_THAT(points[0].x, Catch::Matchers::WithinAbs(200.0f, 0.001f));
         REQUIRE_THAT(points[0].y, Catch::Matchers::WithinAbs(150.0f, 0.001f));
@@ -154,7 +154,7 @@ TEST_CASE("Mask centroid calculation - Edge cases and error handling", "[mask][c
         REQUIRE(times.size() == 1);
         REQUIRE(*times.begin() == TimeFrameIndex(20));
 
-        auto const & points = result->getPointsAtTime(TimeFrameIndex(20));
+        auto const & points = result->getAtTime(TimeFrameIndex(20));
         REQUIRE(points.size() == 1);// Only counts the non-empty mask
 
         // Centroid: (2+4)/2 = 3, (1+3)/2 = 2
@@ -174,7 +174,7 @@ TEST_CASE("Mask centroid calculation - Edge cases and error handling", "[mask][c
 
         auto result = calculate_mask_centroid(mask_data.get());
 
-        auto const & points = result->getPointsAtTime(TimeFrameIndex(30));
+        auto const & points = result->getAtTime(TimeFrameIndex(30));
         REQUIRE(points.size() == 2);
 
         // Sort points by x coordinate for consistent testing
@@ -199,7 +199,7 @@ TEST_CASE("Mask centroid calculation - Edge cases and error handling", "[mask][c
 
         auto result = calculate_mask_centroid(mask_data.get());
 
-        auto const & points = result->getPointsAtTime(TimeFrameIndex(40));
+        auto const & points = result->getAtTime(TimeFrameIndex(40));
         REQUIRE(points.size() == 1);
 
         // Centroid: (1000000+1000001+1000002)/3 = 1000001, (2000000+2000001+2000002)/3 = 2000001
@@ -260,7 +260,7 @@ TEST_CASE("MaskCentroidOperation - Operation interface", "[mask][centroid][opera
         auto result = std::get<std::shared_ptr<PointData>>(result_variant);
         REQUIRE(result != nullptr);
 
-        auto const & points = result->getPointsAtTime(TimeFrameIndex(50));
+        auto const & points = result->getAtTime(TimeFrameIndex(50));
         REQUIRE(points.size() == 1);
         REQUIRE_THAT(points[0].x, Catch::Matchers::WithinAbs(2.0f, 0.001f));
         REQUIRE_THAT(points[0].y, Catch::Matchers::WithinAbs(0.0f, 0.001f));

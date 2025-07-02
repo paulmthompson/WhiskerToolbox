@@ -1,5 +1,7 @@
 #include "Point_Data.hpp"
 
+#include "utils/map_timeseries.hpp"
+
 #include <algorithm>
 #include <iostream>
 #include <ranges>
@@ -18,15 +20,24 @@ PointData::PointData(std::map<TimeFrameIndex, std::vector<Point2D<float>>> const
 
 // ========== Setters ==========
 
-void PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
-    auto it = _data.find(time);
-    if (it != _data.end()) {
-        _data.erase(it);
+bool PointData::clearAtTime(TimeFrameIndex const time, bool notify) {
+    if (clear_at_time(time, _data)) {
+        if (notify) {
+            notifyObservers();
+        }
+        return true;
     }
+    return false;
+}
 
-    if (notify) {
-        notifyObservers();
+bool PointData::clearAtTime(TimeFrameIndex const time, size_t const index, bool notify) {
+    if (clear_at_time(time, index, _data)) {
+        if (notify) {
+            notifyObservers();
+        }
+        return true;
     }
+    return false;
 }
 
 void PointData::overwritePointAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
@@ -78,7 +89,7 @@ void PointData::addPointsAtTime(TimeFrameIndex const time, std::vector<Point2D<f
 
 // ========== Getters ==========
 
-std::vector<Point2D<float>> const & PointData::getPointsAtTime(TimeFrameIndex const time) const {
+std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const time) const {
     auto it = _data.find(time);
     if (it != _data.end()) {
         return it->second;
@@ -87,17 +98,17 @@ std::vector<Point2D<float>> const & PointData::getPointsAtTime(TimeFrameIndex co
     }
 }
 
-std::vector<Point2D<float>> const & PointData::getPointsAtTime(TimeFrameIndex time, 
+std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex time, 
                                                                std::shared_ptr<TimeFrame> source_timeframe,
                                                                std::shared_ptr<TimeFrame> target_timeframe) const {
     // If the timeframes are the same object, no conversion is needed
     if (source_timeframe.get() == target_timeframe.get()) {
-        return getPointsAtTime(time);
+        return getAtTime(time);
     }
     
     // If either timeframe is null, fall back to original behavior
     if (!source_timeframe || !target_timeframe) {
-        return getPointsAtTime(time);
+        return getAtTime(time);
     }
     
     // Convert the time index from source timeframe to target timeframe
@@ -107,7 +118,7 @@ std::vector<Point2D<float>> const & PointData::getPointsAtTime(TimeFrameIndex ti
     // 2. Convert that time value to an index in the target timeframe  
     auto target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
     
-    return getPointsAtTime(target_index);
+    return getAtTime(target_index);
 }
 
 std::size_t PointData::getMaxPoints() const {

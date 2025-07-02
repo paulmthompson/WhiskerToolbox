@@ -156,7 +156,7 @@ double applyTransformation(Interval const & interval,
 
             // Collect all X coordinates within the interval
             for (int64_t t = interval.start; t <= interval.end; ++t) {
-                const auto& points = it->second->getPointsAtTime(TimeFrameIndex(t));
+                const auto& points = it->second->getAtTime(TimeFrameIndex(t));
                 for (const auto& point : points) {
                     sum_x += point.x;
                     count++;
@@ -181,7 +181,7 @@ double applyTransformation(Interval const & interval,
 
             // Collect all Y coordinates within the interval
             for (int64_t t = interval.start; t <= interval.end; ++t) {
-                const auto& points = it->second->getPointsAtTime(TimeFrameIndex(static_cast<int>(t)));
+                const auto& points = it->second->getAtTime(TimeFrameIndex(static_cast<int>(t)));
                 for (const auto& point : points) {
                     sum_y += point.y;
                     count++;

@@ -1,5 +1,7 @@
 #include "Mask_Data.hpp"
 
+#include "utils/map_timeseries.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -9,16 +11,22 @@
 // ========== Setters ==========
 
 bool MaskData::clearAtTime(TimeFrameIndex const time, bool notify) {
-    auto it = _data.find(time);
-    if (it != _data.end()) {
-        _data.erase(it);
+    if (clear_at_time(time, _data)) {
         if (notify) {
             notifyObservers();
         }
         return true;
     }
+    return false;
+}
 
-    // No masks exist at this time, nothing to clear
+bool MaskData::clearAtTime(TimeFrameIndex const time, size_t const index, bool notify) {
+    if (clear_at_time(time, index, _data)) {
+        if (notify) {
+            notifyObservers();
+        }
+        return true;
+    }
     return false;
 }
 
@@ -80,6 +88,30 @@ std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const
     } else {
         return _empty;
     }
+}
+
+std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time, 
+                                                std::shared_ptr<TimeFrame> const source_timeframe,
+                                                std::shared_ptr<TimeFrame> const target_timeframe) const {
+
+    // If the timeframes are the same object, no conversion is needed
+    if (source_timeframe.get() == target_timeframe.get()) {
+        return getAtTime(time);
+    }
+    
+    // If either timeframe is null, fall back to original behavior
+    if (!source_timeframe || !target_timeframe) {
+        return getAtTime(time);
+    }
+    
+    // Convert the time index from source timeframe to target timeframe
+    // 1. Get the time value from the source timeframe
+    auto time_value = source_timeframe->getTimeAtIndex(time);
+    
+    // 2. Convert that time value to an index in the target timeframe  
+    auto target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
+    
+    return getAtTime(target_index);
 }
 
 // ========== Image Size ==========

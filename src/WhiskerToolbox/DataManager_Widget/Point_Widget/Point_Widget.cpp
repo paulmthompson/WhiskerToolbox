@@ -239,7 +239,7 @@ void Point_Widget::_deleteSelectedPoints() {
 
     // Count points before deletion and batch operations to minimize observer notifications
     for (auto frame: selected_frames) {
-        auto points_at_frame = point_data_ptr->getPointsAtTime(frame);
+        auto points_at_frame = point_data_ptr->getAtTime(frame);
         if (!points_at_frame.empty()) {
             frames_with_points++;
             total_points_deleted += static_cast<int>(points_at_frame.size());

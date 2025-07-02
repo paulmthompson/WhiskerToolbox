@@ -34,7 +34,16 @@ public:
     * @param notify If true, observers will be notified of the change
     * @return True if masks existed at the specified time and were cleared, false otherwise
     */
-    bool clearAtTime(TimeFrameIndex time, bool notify = true);
+    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
+
+    /**
+     * @brief Removes a mask at the specified time and index
+     * 
+     * @param time The timestamp at which to clear the mask
+     * @param index The index of the mask to clear
+     * @param notify If true, observers will be notified of the change
+     */
+    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, size_t index, bool notify = true);
 
     /**
      * @brief Adds a new mask at the specified time using separate x and y coordinate arrays
@@ -116,6 +125,18 @@ public:
      * @return A vector of Mask2D
      */
     [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time) const;
+
+    /**
+     * @brief Get the masks at a specific time with timeframe conversion
+     * 
+     * @param time The time to get the masks at
+     * @param source_timeframe The timeframe that the time index is expressed in
+     * @param target_timeframe The timeframe that this mask data uses
+     * @return A vector of Mask2D at the converted time
+     */
+    [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time, 
+                                                        std::shared_ptr<TimeFrame> const source_timeframe,
+                                                        std::shared_ptr<TimeFrame> const target_timeframe) const;
 
         /**
      * @brief Get all masks with their associated times as a range

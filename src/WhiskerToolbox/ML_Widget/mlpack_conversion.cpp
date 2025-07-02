@@ -70,7 +70,7 @@ arma::Mat<double> convertToMlpackMatrix(
 
     auto col = 0;
     for (auto t: timestamps) {
-        auto points = pointData->getPointsAtTime(TimeFrameIndex(static_cast<int>(t)));
+        auto points = pointData->getAtTime(TimeFrameIndex(static_cast<int>(t)));
 
         if (points.empty()) {
             for (std::size_t i = 0; i < numRows; ++i) {

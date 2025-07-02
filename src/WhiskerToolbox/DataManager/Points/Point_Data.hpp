@@ -52,8 +52,19 @@ public:
      * 
      * @param time The time to clear the points at
      * @param notify If true, the observers will be notified
+     * @return True if the points were cleared, false if the time did not exist
      */
-    void clearAtTime(TimeFrameIndex time, bool notify = true);
+    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
+
+    /**
+     * @brief Clear the points at a specific time and index
+     * 
+     * @param time The time to clear the points at
+     * @param index The index of the point to clear
+     * @param notify If true, the observers will be notified
+     * @return True if the point was cleared, false if the time or index did not exist
+     */
+    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, size_t index, bool notify = true);
 
     /**
      * @brief Add a point at a specific time
@@ -170,7 +181,7 @@ public:
      * @param time The time to get the points at
      * @return A vector of Point2D<float>
      */
-    [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(TimeFrameIndex time) const;
+    [[nodiscard]] std::vector<Point2D<float>> const & getAtTime(TimeFrameIndex time) const;
 
     /**
      * @brief Get the points at a specific time with timeframe conversion
@@ -184,7 +195,7 @@ public:
      * @param target_timeframe The timeframe that this point data uses
      * @return A vector of Point2D<float> at the converted time
      */
-    [[nodiscard]] std::vector<Point2D<float>> const & getPointsAtTime(TimeFrameIndex time, 
+    [[nodiscard]] std::vector<Point2D<float>> const & getAtTime(TimeFrameIndex time, 
                                                                        std::shared_ptr<TimeFrame> source_timeframe,
                                                                        std::shared_ptr<TimeFrame> target_timeframe) const;
 

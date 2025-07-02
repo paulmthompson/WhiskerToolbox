@@ -1,5 +1,7 @@
 #include "Line_Data.hpp"
+
 #include "Points/points.hpp"
+#include "utils/map_timeseries.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -15,24 +17,26 @@ LineData::LineData(std::map<TimeFrameIndex, std::vector<Line2D>> const & data)
 
 // ========== Setters ==========
 
-void LineData::clearLinesAtTime(TimeFrameIndex const time, bool notify) {
+bool LineData::clearAtTime(TimeFrameIndex const time, bool notify) {
 
-    _data[time].clear();
-
-    if (notify) {
-        notifyObservers();
+    if (clear_at_time(time, _data)) {
+        if (notify) {
+            notifyObservers();
+        }
+        return true;
     }
+    return false;   
 }
 
-void LineData::clearLineAtTime(TimeFrameIndex const time, int const line_id, bool notify) {
+bool LineData::clearAtTime(TimeFrameIndex const time, int const line_id, bool notify) {
 
-    if (line_id < _data[time].size()) {
-        _data[time].erase(_data[time].begin() + line_id);
+    if (clear_at_time(time, line_id, _data)) {
+        if (notify) {
+            notifyObservers();
+        }
+        return true;
     }
-
-    if (notify) {
-        notifyObservers();
-    }
+    return false;
 }
 
 void LineData::addLineAtTime(TimeFrameIndex const time, std::vector<float> const & x, std::vector<float> const & y, bool notify) {
@@ -233,7 +237,7 @@ std::size_t LineData::moveTo(LineData& target, TimeFrameInterval const & interva
 
     // Then, clear all the times from source
     for (TimeFrameIndex time : times_to_clear) {
-        clearLinesAtTime(time, false); // Don't notify for each operation
+        clearAtTime(time, false); // Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested
@@ -263,7 +267,7 @@ std::size_t LineData::moveTo(LineData& target, std::vector<TimeFrameIndex> const
 
     // Then, clear all the times from source
     for (TimeFrameIndex time : times_to_clear) {
-        clearLinesAtTime(time, false); // Don't notify for each operation
+        clearAtTime(time, false); // Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested

@@ -17,21 +17,21 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         // Add a single point at time 10
         point_data.addPointAtTime(TimeFrameIndex(10), p1);
 
-        auto points_at_10 = point_data.getPointsAtTime(TimeFrameIndex(10));
+        auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 1);
         REQUIRE(points_at_10[0].x == Catch::Approx(1.0f));
         REQUIRE(points_at_10[0].y == Catch::Approx(2.0f));
 
         // Add another point at the same time
         point_data.addPointAtTime(TimeFrameIndex(10), p2);
-        points_at_10 = point_data.getPointsAtTime(TimeFrameIndex(10));
+        points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 2);
         REQUIRE(points_at_10[1].x == Catch::Approx(3.0f));
         REQUIRE(points_at_10[1].y == Catch::Approx(4.0f));
 
         // Add points at a different time
         point_data.addPointsAtTime(TimeFrameIndex(20), more_points);
-        auto points_at_20 = point_data.getPointsAtTime(TimeFrameIndex(20));
+        auto points_at_20 = point_data.getAtTime(TimeFrameIndex(20));
         REQUIRE(points_at_20.size() == 1);
         REQUIRE(points_at_20[0].x == Catch::Approx(5.0f));
         REQUIRE(points_at_20[0].y == Catch::Approx(6.0f));
@@ -43,14 +43,14 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
 
         // Overwrite with a single point
         point_data.overwritePointAtTime(TimeFrameIndex(10), p3);
-        auto points_at_10 = point_data.getPointsAtTime(TimeFrameIndex(10));
+        auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 1);
         REQUIRE(points_at_10[0].x == Catch::Approx(5.0f));
         REQUIRE(points_at_10[0].y == Catch::Approx(6.0f));
 
         // Overwrite with multiple points
         point_data.overwritePointsAtTime(TimeFrameIndex(10), points);
-        points_at_10 = point_data.getPointsAtTime(TimeFrameIndex(10));
+        points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 2);
         REQUIRE(points_at_10[0].x == Catch::Approx(1.0f));
         REQUIRE(points_at_10[0].y == Catch::Approx(2.0f));
@@ -62,8 +62,8 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
 
         point_data.clearAtTime(TimeFrameIndex(10));
 
-        auto points_at_10 = point_data.getPointsAtTime(TimeFrameIndex(10));
-        auto points_at_20 = point_data.getPointsAtTime(TimeFrameIndex(20));
+        auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
+        auto points_at_20 = point_data.getAtTime(TimeFrameIndex(20));
 
         REQUIRE(points_at_10.empty());
         REQUIRE(points_at_20.size() == 1);
@@ -291,8 +291,8 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
 
         point_data.overwritePointsAtTimes(times, points_vec);
 
-        auto points_at_10 = point_data.getPointsAtTime(TimeFrameIndex(10));
-        auto points_at_20 = point_data.getPointsAtTime(TimeFrameIndex(20));
+        auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
+        auto points_at_20 = point_data.getAtTime(TimeFrameIndex(20));
 
         REQUIRE(points_at_10.size() == 2);
         REQUIRE(points_at_20.size() == 1);
@@ -326,13 +326,13 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
     PointData point_data;
 
     SECTION("Getting points at non-existent time") {
-        auto points = point_data.getPointsAtTime(TimeFrameIndex(999));
+        auto points = point_data.getAtTime(TimeFrameIndex(999));
         REQUIRE(points.empty());
     }
 
     SECTION("Clearing points at non-existent time") {
         point_data.clearAtTime(TimeFrameIndex(42));
-        auto points = point_data.getPointsAtTime(TimeFrameIndex(42));
+        auto points = point_data.getAtTime(TimeFrameIndex(42));
         REQUIRE(points.empty());
 
         // Verify the time was NOT created
@@ -361,7 +361,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
         std::vector<Point2D<float>> empty_points;
         point_data.addPointsAtTime(TimeFrameIndex(10), empty_points);
 
-        auto points = point_data.getPointsAtTime(TimeFrameIndex(10));
+        auto points = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points.empty());
 
         // Verify the time was created
@@ -403,7 +403,7 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
         point_data.clearAtTime(TimeFrameIndex(5));
         point_data.addPointAtTime(TimeFrameIndex(5), p1);
 
-        auto points = point_data.getPointsAtTime(TimeFrameIndex(5));
+        auto points = point_data.getAtTime(TimeFrameIndex(5));
         REQUIRE(points.size() == 1);
         REQUIRE(points[0].x == Catch::Approx(1.0f));
     }
@@ -416,8 +416,8 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
 
         PointData point_data_from_map(map_data);
 
-        auto points_at_10 = point_data_from_map.getPointsAtTime(TimeFrameIndex(10));
-        auto points_at_20 = point_data_from_map.getPointsAtTime(TimeFrameIndex(20));
+        auto points_at_10 = point_data_from_map.getAtTime(TimeFrameIndex(10));
+        auto points_at_20 = point_data_from_map.getAtTime(TimeFrameIndex(20));
 
         REQUIRE(points_at_10.size() == 2);
         REQUIRE(points_at_20.size() == 1);
@@ -449,14 +449,14 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             REQUIRE(copied == 7); // 2 + 1 + 3 + 1 = 7 points total
             
             // Verify all points were copied
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).size() == 2);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(15)).size() == 1);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(25)).size() == 1);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(15)).size() == 1);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(25)).size() == 1);
             
             // Verify source data is unchanged
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(10)).size() == 2);
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(20)).size() == 3);
         }
 
         SECTION("Copy partial range") {
@@ -466,10 +466,10 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             REQUIRE(copied == 4); // 1 + 3 = 4 points
             
             // Verify only points in range were copied
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).empty());
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(15)).size() == 1);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(25)).empty());
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).empty());
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(15)).size() == 1);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(25)).empty());
         }
 
         SECTION("Copy single time point") {
@@ -477,8 +477,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             std::size_t copied = source_data.copyTo(target_data, interval);
             
             REQUIRE(copied == 3);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).empty());
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).empty());
         }
 
         SECTION("Copy non-existent range") {
@@ -504,10 +504,10 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             std::size_t copied = source_data.copyTo(target_data, times);
             
             REQUIRE(copied == 5); // 2 + 3 = 5 points
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).size() == 2);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(15)).empty());
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(25)).empty());
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(15)).empty());
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(25)).empty());
         }
 
         SECTION("Copy times in non-sequential order") {
@@ -515,9 +515,9 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             std::size_t copied = source_data.copyTo(target_data, times);
             
             REQUIRE(copied == 4); // 1 + 2 + 1 = 4 points
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).size() == 2);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(15)).size() == 1);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(25)).size() == 1);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(15)).size() == 1);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(25)).size() == 1);
         }
 
         SECTION("Copy with duplicate times in vector") {
@@ -526,8 +526,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             
             // Should copy 10 twice and 20 once
             REQUIRE(copied == 7); // 2 + 2 + 3 = 7 points (10 copied twice)
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).size() == 4); // 2 + 2 = 4 (added twice)
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 4); // 2 + 2 = 4 (added twice)
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 3);
         }
 
         SECTION("Copy non-existent times") {
@@ -543,8 +543,8 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             std::size_t copied = source_data.copyTo(target_data, times);
             
             REQUIRE(copied == 5); // Only times 10 and 20 exist
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).size() == 2);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 3);
         }
     }
 
@@ -556,10 +556,10 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             REQUIRE(moved == 7); // 2 + 1 + 3 + 1 = 7 points total
             
             // Verify all points were moved to target
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).size() == 2);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(15)).size() == 1);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(25)).size() == 1);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(15)).size() == 1);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(25)).size() == 1);
             
             // Verify source data is now empty
             REQUIRE(source_data.getTimesWithData().empty());
@@ -572,14 +572,14 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             REQUIRE(moved == 4); // 1 + 3 = 4 points
             
             // Verify only points in range were moved
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(15)).size() == 1);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(15)).size() == 1);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 3);
             
             // Verify source still has data outside the range
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(10)).size() == 2);
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(25)).size() == 1);
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(15)).empty());
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(20)).empty());
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(25)).size() == 1);
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(15)).empty());
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(20)).empty());
         }
 
         SECTION("Move single time point") {
@@ -587,13 +587,13 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             std::size_t moved = source_data.moveTo(target_data, interval);
             
             REQUIRE(moved == 3);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 3);
             
             // Verify only time 20 was removed from source
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(10)).size() == 2);
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(15)).size() == 1);
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(20)).empty());
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(25)).size() == 1);
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(15)).size() == 1);
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(20)).empty());
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(25)).size() == 1);
         }
     }
 
@@ -603,15 +603,15 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             std::size_t moved = source_data.moveTo(target_data, times);
             
             REQUIRE(moved == 5); // 2 + 3 = 5 points
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).size() == 2);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(20)).size() == 3);
             
             // Verify moved times are cleared from source
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(10)).empty());
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(20)).empty());
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).empty());
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(20)).empty());
             // But other times remain
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(15)).size() == 1);
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(25)).size() == 1);
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(15)).size() == 1);
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(25)).size() == 1);
         }
 
         SECTION("Move times in non-sequential order") {
@@ -619,13 +619,13 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             std::size_t moved = source_data.moveTo(target_data, times);
             
             REQUIRE(moved == 4); // 1 + 2 + 1 = 4 points
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).size() == 2);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(15)).size() == 1);
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(25)).size() == 1);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 2);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(15)).size() == 1);
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(25)).size() == 1);
             
             // Only time 20 should remain in source
             REQUIRE(source_data.getTimesWithData().size() == 1);
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(20)).size() == 3);
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(20)).size() == 3);
         }
     }
 
@@ -640,7 +640,7 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             
             REQUIRE(copied == 2);
             // Should have existing point plus copied points
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).size() == 3); // 1 existing + 2 copied
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 3); // 1 existing + 2 copied
         }
 
         SECTION("Move to existing time adds points") {
@@ -649,10 +649,10 @@ TEST_CASE("PointData - Copy and Move operations", "[points][data][copy][move]") 
             
             REQUIRE(moved == 2);
             // Should have existing point plus moved points
-            REQUIRE(target_data.getPointsAtTime(TimeFrameIndex(10)).size() == 3); // 1 existing + 2 moved
+            REQUIRE(target_data.getAtTime(TimeFrameIndex(10)).size() == 3); // 1 existing + 2 moved
             
             // Source should no longer have points at time 10
-            REQUIRE(source_data.getPointsAtTime(TimeFrameIndex(10)).empty());
+            REQUIRE(source_data.getAtTime(TimeFrameIndex(10)).empty());
         }
     }
 }
@@ -673,7 +673,7 @@ TEST_CASE("PointData - Image scaling", "[points][data][scaling]") {
         ImageSize new_size{1280, 960};
         point_data.changeImageSize(new_size);
         
-        auto scaled_points = point_data.getPointsAtTime(TimeFrameIndex(10));
+        auto scaled_points = point_data.getAtTime(TimeFrameIndex(10));
         
         // Points should be scaled by factor of 2
         REQUIRE(scaled_points[0].x == Catch::Approx(200.0f));
@@ -693,7 +693,7 @@ TEST_CASE("PointData - Image scaling", "[points][data][scaling]") {
         point_data.changeImageSize(new_size);
         
         // Points should remain unchanged since no initial size was set
-        auto unchanged_points = point_data.getPointsAtTime(TimeFrameIndex(10));
+        auto unchanged_points = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(unchanged_points[0].x == Catch::Approx(100.0f));
         REQUIRE(unchanged_points[0].y == Catch::Approx(200.0f));
         
@@ -711,7 +711,7 @@ TEST_CASE("PointData - Image scaling", "[points][data][scaling]") {
         point_data.changeImageSize(size);
         
         // Points should remain unchanged
-        auto unchanged_points = point_data.getPointsAtTime(TimeFrameIndex(10));
+        auto unchanged_points = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(unchanged_points[0].x == Catch::Approx(100.0f));
         REQUIRE(unchanged_points[0].y == Catch::Approx(200.0f));
     }
@@ -731,7 +731,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         auto timeframe = std::make_shared<TimeFrame>(times);
         
         // Query with same source and target timeframe
-        auto result = point_data.getPointsAtTime(TimeFrameIndex(10), timeframe, timeframe);
+        auto result = point_data.getAtTime(TimeFrameIndex(10), timeframe, timeframe);
         
         REQUIRE(result.size() == 2);
         REQUIRE(result[0].x == Catch::Approx(100.0f));
@@ -756,7 +756,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         test_point_data.addPointsAtTime(TimeFrameIndex(4), points);  // At data timeframe index 4 (time=20)
         
         // Query video frame 1 (time=10) which should map to data index 2 (time=10)
-        auto result = test_point_data.getPointsAtTime(TimeFrameIndex(1), video_timeframe, data_timeframe);
+        auto result = test_point_data.getAtTime(TimeFrameIndex(1), video_timeframe, data_timeframe);
         
         REQUIRE(result.size() == 2);
         REQUIRE(result[0].x == Catch::Approx(100.0f));
@@ -777,7 +777,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         
         // Query video frame 1 (time=5) which should map to data timeframe index 1 (time=3, closest to 5)
         // Since we only have data at index 3, this should return empty
-        auto result = test_point_data.getPointsAtTime(TimeFrameIndex(1), video_timeframe, data_timeframe);
+        auto result = test_point_data.getAtTime(TimeFrameIndex(1), video_timeframe, data_timeframe);
         
         // Should return empty since we don't have data at the converted index
         REQUIRE(result.empty());
@@ -789,7 +789,7 @@ TEST_CASE("PointData - Timeframe conversion", "[points][data][timeframe]") {
         
         // This should still work since the function should handle null pointers gracefully
         // by falling back to the original behavior
-        auto result = point_data.getPointsAtTime(TimeFrameIndex(10), nullptr, valid_timeframe);
+        auto result = point_data.getAtTime(TimeFrameIndex(10), nullptr, valid_timeframe);
         
         // The behavior when timeframes are null might depend on getTimeIndexForSeries implementation
         // For now, let's check that it doesn't crash and returns some result

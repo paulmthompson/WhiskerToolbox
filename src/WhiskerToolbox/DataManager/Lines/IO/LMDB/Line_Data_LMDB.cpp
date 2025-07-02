@@ -157,7 +157,7 @@ bool updateLineDataTimeFrames(std::string const & dbPath,
     // Update the time frames
     for (auto const & [time, lines]: timeFrames) {
         // Clear existing lines at this time
-        lineData->clearLinesAtTime(time);
+        lineData->clearAtTime(time);
 
         // Add the updated lines
         for (auto const & line: lines) {

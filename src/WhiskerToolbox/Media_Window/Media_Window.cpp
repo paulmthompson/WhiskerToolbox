@@ -879,7 +879,7 @@ void Media_Window::_plotPointData() {
             xAspect = static_cast<float>(_canvasWidth) / mask_width;
         }
 
-        auto pointData = point->getPointsAtTime(current_time, video_timeframe, point_timeframe);
+        auto pointData = point->getAtTime(current_time, video_timeframe, point_timeframe);
 
         // Get configurable point size
         float const point_size = static_cast<float>(_point_config.get()->point_size);

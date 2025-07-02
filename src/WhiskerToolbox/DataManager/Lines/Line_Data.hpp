@@ -43,21 +43,21 @@ public:
     // ========== Setters ==========
 
     /**
+     * @brief Clear all lines at a specific time
+     * 
+     * @param time The time to clear the lines at
+     * @param notify If true, the observers will be notified
+     */
+    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
+
+    /**
      * @brief Clear a line at a specific time
      * 
      * @param time The time to clear the line at
      * @param line_id The id of the line to clear
      * @param notify If true, the observers will be notified
      */
-    void clearLineAtTime(TimeFrameIndex time, int line_id, bool notify = true);
-
-    /**
-     * @brief Clear all lines at a specific time
-     * 
-     * @param time The time to clear the lines at
-     * @param notify If true, the observers will be notified
-     */
-    void clearLinesAtTime(TimeFrameIndex time, bool notify = true);
+    [[nodiscard]] bool clearAtTime(TimeFrameIndex time, int line_id, bool notify = true);
 
     /**
      * @brief Add a line at a specific time
