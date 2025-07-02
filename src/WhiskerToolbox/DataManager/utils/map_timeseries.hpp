@@ -73,5 +73,4 @@ template<typename T, typename M>
 }
 
 
-
 #endif // MAP_TIMESERIES_HPP

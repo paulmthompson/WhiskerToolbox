@@ -17,18 +17,17 @@ std::shared_ptr<DigitalIntervalSeries> group_intervals(
         DigitalIntervalSeries const * digital_interval_series,
         GroupParams const & groupParams,
         ProgressCallback progressCallback) {
-    auto result_series = std::make_shared<DigitalIntervalSeries>();
 
     // Input validation
     if (!digital_interval_series) {
         std::cerr << "group_intervals: Input DigitalIntervalSeries is null" << std::endl;
-        return result_series;
+        return std::make_shared<DigitalIntervalSeries>();;
     }
 
     auto const & intervals = digital_interval_series->getDigitalIntervalSeries();
 
     if (intervals.empty()) {
-        return result_series;
+        return std::make_shared<DigitalIntervalSeries>();;
     }
 
     if (progressCallback) {
@@ -78,16 +77,11 @@ std::shared_ptr<DigitalIntervalSeries> group_intervals(
     }
 
     if (progressCallback) {
-        progressCallback(90);
-    }
-
-    result_series->setData(grouped_intervals);
-
-    if (progressCallback) {
         progressCallback(100);
     }
 
-    return result_series;
+    return std::make_shared<DigitalIntervalSeries>(grouped_intervals);
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////

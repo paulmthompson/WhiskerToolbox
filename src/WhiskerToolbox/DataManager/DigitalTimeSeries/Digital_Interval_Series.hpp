@@ -26,19 +26,25 @@ inline constexpr bool always_false_v = false;
  */
 class DigitalIntervalSeries : public ObserverData {
 public:
+
+    // ========== Constructors ==========
+    /**
+     * @brief Default constructor
+     * 
+     * This constructor creates an empty DigitalIntervalSeries
+     */
     DigitalIntervalSeries() = default;
+
+    /**
+     * @brief Constructor for DigitalIntervalSeries from a vector of intervals
+     * 
+     * @param digital_vector Vector of intervals
+     */
     explicit DigitalIntervalSeries(std::vector<Interval> digital_vector);
 
-    // Defines how to handle intervals that overlap with range boundaries
-    enum class RangeMode {
-        CONTAINED,  // Only intervals fully contained within range
-        OVERLAPPING,// Any interval that overlaps with range
-        CLIP        // Clip intervals at range boundaries
-    };
+    explicit DigitalIntervalSeries(std::vector<std::pair<float, float>> const & digital_vector);
 
-    void setData(std::vector<Interval> digital_vector);
-
-    void setData(std::vector<std::pair<float, float>> const & digital_vector);
+    // ========== Setters ==========
 
     void addEvent(Interval new_interval);
 
@@ -52,10 +58,9 @@ public:
 
         addEvent(Interval{static_cast<int64_t>(start), static_cast<int64_t>(end)});
     }
-    [[nodiscard]] std::vector<Interval> const & getDigitalIntervalSeries() const;
 
-    [[nodiscard]] bool isEventAtTime(int time) const;
     void setEventAtTime(int time, bool event);
+
     void removeEventAtTime(int time);
 
     template<typename T, typename B>
@@ -87,7 +92,21 @@ public:
         notifyObservers();
     }
 
+    // ========== Getters ==========
+
+    [[nodiscard]] std::vector<Interval> const & getDigitalIntervalSeries() const;
+
+    [[nodiscard]] bool isEventAtTime(int time) const;
+
     [[nodiscard]] size_t size() const { return _data.size(); };
+
+    
+    // Defines how to handle intervals that overlap with range boundaries
+    enum class RangeMode {
+        CONTAINED,  // Only intervals fully contained within range
+        OVERLAPPING,// Any interval that overlaps with range
+        CLIP        // Clip intervals at range boundaries
+    };
 
     template<RangeMode mode = RangeMode::CONTAINED, typename TransformFunc = std::identity>
     auto getIntervalsInRange(

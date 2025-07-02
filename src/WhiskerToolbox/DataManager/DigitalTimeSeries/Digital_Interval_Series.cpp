@@ -4,25 +4,24 @@
 #include <utility>
 #include <vector>
 
+// ========== Constructors ==========
+
 DigitalIntervalSeries::DigitalIntervalSeries(std::vector<Interval> digital_vector) {
     _data = std::move(digital_vector);
     _sortData();
 }
 
-void DigitalIntervalSeries::setData(std::vector<Interval> digital_vector) {
-    _data = std::move(digital_vector);
-    _sortData();
-    notifyObservers();
-}
-
-void DigitalIntervalSeries::setData(std::vector<std::pair<float, float>> const & digital_vector) {
+DigitalIntervalSeries::DigitalIntervalSeries(std::vector<std::pair<float, float>> const & digital_vector) {
     std::vector<Interval> intervals;
     intervals.reserve(digital_vector.size());
     for (auto & interval: digital_vector) {
         intervals.emplace_back(Interval{static_cast<int64_t>(interval.first), static_cast<int64_t>(interval.second)});
     }
-    setData(intervals);
+    _data = std::move(intervals);
+    _sortData();
 }
+
+// ========== Getters ==========
 
 std::vector<Interval> const & DigitalIntervalSeries::getDigitalIntervalSeries() const {
     return _data;

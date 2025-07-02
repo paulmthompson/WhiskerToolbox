@@ -20,12 +20,11 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
         AnalogTimeSeries const * analog_time_series,
         IntervalThresholdParams const & thresholdParams,
         ProgressCallback progressCallback) {
-    auto interval_series = std::make_shared<DigitalIntervalSeries>();
 
     // Input validation
     if (!analog_time_series) {
         std::cerr << "interval_threshold: Input AnalogTimeSeries is null" << std::endl;
-        return interval_series;
+        return std::make_shared<DigitalIntervalSeries>();
     }
 
     auto const & timestamps = analog_time_series->getTimeSeries();
@@ -33,7 +32,7 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
 
     if (timestamps.empty()) {
         std::cerr << "interval_threshold: Input time series is empty" << std::endl;
-        return interval_series;
+        return std::make_shared<DigitalIntervalSeries>();
     }
 
     if (progressCallback) {
@@ -172,16 +171,10 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
     }
 
     if (progressCallback) {
-        progressCallback(90);
-    }
-
-    interval_series->setData(intervals);
-
-    if (progressCallback) {
         progressCallback(100);
     }
 
-    return interval_series;
+    return std::make_shared<DigitalIntervalSeries>(intervals);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

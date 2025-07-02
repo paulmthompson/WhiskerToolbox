@@ -56,8 +56,8 @@ void Digital_Interval_Loader_Widget::_handleCSVLoadRequested(CSVIntervalLoaderOp
         auto intervals = load(options);
         std::cout << "Loaded " << intervals.size() << " intervals from " << options.filepath << std::endl;
 
-        _data_manager->setData<DigitalIntervalSeries>(interval_key);
-        _data_manager->getData<DigitalIntervalSeries>(interval_key)->setData(intervals);
+        auto digital_interval_series = std::make_shared<DigitalIntervalSeries>(intervals);
+        _data_manager->setData<DigitalIntervalSeries>(interval_key, digital_interval_series);
     } catch (std::exception const& e) {
         std::cerr << "Error loading CSV file " << options.filepath << ": " << e.what() << std::endl;
     }
@@ -74,8 +74,8 @@ void Digital_Interval_Loader_Widget::_handleBinaryLoadRequested(BinaryIntervalLo
         auto intervals = load(options);
         std::cout << "Loaded " << intervals.size() << " intervals from " << options.filepath << std::endl;
 
-        _data_manager->setData<DigitalIntervalSeries>(interval_key);
-        _data_manager->getData<DigitalIntervalSeries>(interval_key)->setData(intervals);
+        auto digital_interval_series = std::make_shared<DigitalIntervalSeries>(intervals);
+        _data_manager->setData<DigitalIntervalSeries>(interval_key, digital_interval_series);
     } catch (std::exception const& e) {
         std::cerr << "Error loading binary file " << options.filepath << ": " << e.what() << std::endl;
     }

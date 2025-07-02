@@ -114,14 +114,13 @@ std::vector<Interval> load(BinaryIntervalLoaderOptions const & options) {
 
 std::shared_ptr<DigitalIntervalSeries> loadIntoDigitalIntervalSeries(BinaryIntervalLoaderOptions const & options) {
     auto intervals = load(options);
-    auto digital_interval_series = std::make_shared<DigitalIntervalSeries>();
     
     if (!intervals.empty()) {
-        digital_interval_series->setData(intervals);
+        return std::make_shared<DigitalIntervalSeries>(intervals);
         std::cout << "Successfully loaded " << intervals.size() << " intervals into DigitalIntervalSeries" << std::endl;
     } else {
         std::cout << "Warning: No intervals loaded from binary file" << std::endl;
     }
     
-    return digital_interval_series;
+    return std::make_shared<DigitalIntervalSeries>();
 } 
