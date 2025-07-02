@@ -41,7 +41,7 @@ TEST_CASE("Mask principal axis calculation - Core functionality", "[mask][princi
 
         auto const & times = result->getTimesWithData();
         REQUIRE(times.size() == 1);
-        REQUIRE(times[0] == TimeFrameIndex(20));
+        REQUIRE(*times.begin() == TimeFrameIndex(20));
 
         auto const & lines = result->getLinesAtTime(TimeFrameIndex(20));
         REQUIRE(lines.size() == 1);

@@ -5,6 +5,7 @@
 #include "Observer/Observer_Data.hpp"
 #include "Points/points.hpp"
 #include "TimeFrame.hpp"
+#include "DigitalTimeSeries/interval_data.hpp"
 #include "lines.hpp"
 
 #include <cstddef>
@@ -120,7 +121,16 @@ public:
     
     // ========== Getters ==========
 
-    [[nodiscard]] std::vector<TimeFrameIndex> getTimesWithData() const;
+    /**
+     * @brief Get all times with data
+     * 
+     * Returns a view over the keys of the data map for zero-copy iteration.
+     * 
+     * @return A view of TimeFrameIndex keys
+     */
+    [[nodiscard]] auto getTimesWithData() const {
+        return _data | std::views::keys;
+    }
 
     [[nodiscard]] std::vector<Line2D> const & getLinesAtTime(TimeFrameIndex time) const;
 
@@ -140,22 +150,83 @@ public:
                });
     }
 
+    /**
+    * @brief Get lines with their associated times as a range within a TimeFrameInterval
+    *
+    * Returns a filtered view of time-lines pairs for times within the specified interval [start, end] (inclusive).
+    *
+    * @param interval The TimeFrameInterval specifying the range [start, end] (inclusive)
+    * @return A view of time-lines pairs for times within the specified interval
+    */
+    [[nodiscard]] auto GetLinesInRange(TimeFrameInterval const & interval) const {
+        struct TimeLinesPair {
+            TimeFrameIndex time;
+            std::vector<Line2D> const & lines;
+        };
+
+        return _data 
+            | std::views::filter([interval](auto const & pair) {
+                return pair.first >= interval.start && pair.first <= interval.end;
+              })
+            | std::views::transform([](auto const & pair) {
+                return TimeLinesPair{pair.first, pair.second};
+              });
+    }
+
+    /**
+    * @brief Get lines with their associated times as a range within a TimeFrameInterval with timeframe conversion
+    *
+    * Converts the time range from the source timeframe to the target timeframe (this line data's timeframe)
+    * and returns a filtered view of time-lines pairs for times within the converted interval range.
+    * If the timeframes are the same, no conversion is performed.
+    *
+    * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
+    * @param source_timeframe The timeframe that the interval is expressed in
+    * @param target_timeframe The timeframe that this line data uses
+    * @return A view of time-lines pairs for times within the converted interval range
+    */
+    [[nodiscard]] auto GetLinesInRange(TimeFrameInterval const & interval,
+                                       std::shared_ptr<TimeFrame> source_timeframe,
+                                       std::shared_ptr<TimeFrame> target_timeframe) const {
+        // If the timeframes are the same object, no conversion is needed
+        if (source_timeframe.get() == target_timeframe.get()) {
+            return GetLinesInRange(interval);
+        }
+
+        // If either timeframe is null, fall back to original behavior
+        if (!source_timeframe || !target_timeframe) {
+            return GetLinesInRange(interval);
+        }
+
+        // Convert the time range from source timeframe to target timeframe
+        // 1. Get the time values from the source timeframe
+        auto start_time_value = source_timeframe->getTimeAtIndex(interval.start);
+        auto end_time_value = source_timeframe->getTimeAtIndex(interval.end);
+
+        // 2. Convert those time values to indices in the target timeframe
+        auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
+        auto target_end_index = target_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
+
+        // 3. Create converted interval and use the original function
+        TimeFrameInterval target_interval{target_start_index, target_end_index};
+        return GetLinesInRange(target_interval);
+    }
+
     // ========== Copy and Move ==========
 
     /**
-     * @brief Copy lines from this LineData to another LineData for a time range
+     * @brief Copy lines from this LineData to another LineData for a time interval
      * 
-     * Copies all lines within the specified time range [start_time, end_time] (inclusive)
+     * Copies all lines within the specified time interval [start, end] (inclusive)
      * to the target LineData. If lines already exist at target times, the copied lines
      * are added to the existing lines.
      * 
      * @param target The target LineData to copy lines to
-     * @param start_time The starting time (inclusive)
-     * @param end_time The ending time (inclusive)
+     * @param interval The time interval to copy lines from (inclusive)
      * @param notify If true, the target will notify its observers after the operation
      * @return The number of lines actually copied
      */
-    std::size_t copyTo(LineData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true) const;
+    std::size_t copyTo(LineData& target, TimeFrameInterval const & interval, bool notify = true) const;
 
     /**
      * @brief Copy lines from this LineData to another LineData for specific times
@@ -171,19 +242,18 @@ public:
     std::size_t copyTo(LineData& target, std::vector<TimeFrameIndex> const & times, bool notify = true) const;
 
     /**
-     * @brief Move lines from this LineData to another LineData for a time range
+     * @brief Move lines from this LineData to another LineData for a time interval
      * 
-     * Moves all lines within the specified time range [start_time, end_time] (inclusive)
+     * Moves all lines within the specified time interval [start, end] (inclusive)
      * to the target LineData. Lines are copied to target then removed from source.
      * If lines already exist at target times, the moved lines are added to the existing lines.
      * 
      * @param target The target LineData to move lines to
-     * @param start_time The starting time (inclusive)
-     * @param end_time The ending time (inclusive)
+     * @param interval The time interval to move lines from (inclusive)
      * @param notify If true, both source and target will notify their observers after the operation
      * @return The number of lines actually moved
      */
-    std::size_t moveTo(LineData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify = true);
+    std::size_t moveTo(LineData& target, TimeFrameInterval const & interval, bool notify = true);
 
     /**
      * @brief Move lines from this LineData to another LineData for specific times

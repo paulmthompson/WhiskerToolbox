@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <ranges>
 
 // ========== Constructors ==========
 
@@ -105,15 +106,6 @@ std::vector<Line2D> const & LineData::getLinesAtTime(TimeFrameIndex const time) 
     }
 }
 
-std::vector<TimeFrameIndex> LineData::getTimesWithData() const {
-    std::vector<TimeFrameIndex> keys;
-    keys.reserve(_data.size());
-    for (auto const & kv: _data) {
-        keys.push_back(kv.first);
-    }
-    return keys;
-}
-
 // ========== Image Size ==========
 
 void LineData::changeImageSize(ImageSize const & image_size)
@@ -145,18 +137,18 @@ void LineData::changeImageSize(ImageSize const & image_size)
 
 // ========== Copy and Move ==========
 
-std::size_t LineData::copyTo(LineData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) const {
-    if (start_time > end_time) {
-        std::cerr << "LineData::copyTo: start_time (" << start_time.getValue() 
-                  << ") must be <= end_time (" << end_time.getValue() << ")" << std::endl;
+std::size_t LineData::copyTo(LineData& target, TimeFrameInterval const & interval, bool notify) const {
+    if (interval.start > interval.end) {
+        std::cerr << "LineData::copyTo: interval start (" << interval.start.getValue() 
+                  << ") must be <= interval end (" << interval.end.getValue() << ")" << std::endl;
         return 0;
     }
 
     std::size_t total_lines_copied = 0;
 
-    // Iterate through all times in the source data within the range
+    // Iterate through all times in the source data within the interval
     for (auto const & [time, lines] : _data) {
-        if (time >= start_time && time <= end_time && !lines.empty()) {
+        if (time >= interval.start && time <= interval.end && !lines.empty()) {
             for (auto const& line : lines) {
                 target.addLineAtTime(time, line, false); // Don't notify for each operation
                 total_lines_copied++;
@@ -194,19 +186,19 @@ std::size_t LineData::copyTo(LineData& target, std::vector<TimeFrameIndex> const
     return total_lines_copied;
 }
 
-std::size_t LineData::moveTo(LineData& target, TimeFrameIndex start_time, TimeFrameIndex end_time, bool notify) {
-    if (start_time > end_time) {
-        std::cerr << "LineData::moveTo: start_time (" << start_time.getValue() 
-                  << ") must be <= end_time (" << end_time.getValue() << ")" << std::endl;
+std::size_t LineData::moveTo(LineData& target, TimeFrameInterval const & interval, bool notify) {
+    if (interval.start > interval.end) {
+        std::cerr << "LineData::moveTo: interval start (" << interval.start.getValue() 
+                  << ") must be <= interval end (" << interval.end.getValue() << ")" << std::endl;
         return 0;
     }
 
     std::size_t total_lines_moved = 0;
     std::vector<TimeFrameIndex> times_to_clear;
 
-    // First, copy all lines in the range to target
+    // First, copy all lines in the interval to target
     for (auto const & [time, lines] : _data) {
-        if (time >= start_time && time <= end_time && !lines.empty()) {
+        if (time >= interval.start && time <= interval.end && !lines.empty()) {
             for (auto const& line : lines) {
                 target.addLineAtTime(time, line, false); // Don't notify for each operation
                 total_lines_moved++;
