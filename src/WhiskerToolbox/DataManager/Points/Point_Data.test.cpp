@@ -15,7 +15,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
 
     SECTION("Adding and retrieving points at time") {
         // Add a single point at time 10
-        point_data.addPointAtTime(TimeFrameIndex(10), p1);
+        point_data.addAtTime(TimeFrameIndex(10), p1);
 
         auto points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 1);
@@ -23,7 +23,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
         REQUIRE(points_at_10[0].y == Catch::Approx(2.0f));
 
         // Add another point at the same time
-        point_data.addPointAtTime(TimeFrameIndex(10), p2);
+        point_data.addAtTime(TimeFrameIndex(10), p2);
         points_at_10 = point_data.getAtTime(TimeFrameIndex(10));
         REQUIRE(points_at_10.size() == 2);
         REQUIRE(points_at_10[1].x == Catch::Approx(3.0f));
@@ -399,9 +399,9 @@ TEST_CASE("PointData - Edge cases and error handling", "[points][data][error]") 
         Point2D<float> p1{1.0f, 2.0f};
 
         // Add, clear, add again to test internal state consistency
-        point_data.addPointAtTime(TimeFrameIndex(5), p1);
+        point_data.addAtTime(TimeFrameIndex(5), p1);
         point_data.clearAtTime(TimeFrameIndex(5));
-        point_data.addPointAtTime(TimeFrameIndex(5), p1);
+        point_data.addAtTime(TimeFrameIndex(5), p1);
 
         auto points = point_data.getAtTime(TimeFrameIndex(5));
         REQUIRE(points.size() == 1);

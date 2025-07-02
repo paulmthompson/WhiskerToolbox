@@ -71,8 +71,8 @@ void PointData::overwritePointsAtTimes(
     }
 }
 
-void PointData::addPointAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
-    _data[time].push_back(point);
+void PointData::addAtTime(TimeFrameIndex const time, Point2D<float> const point, bool notify) {
+    add_at_time(time, point, _data);
 
     if (notify) {
         notifyObservers();

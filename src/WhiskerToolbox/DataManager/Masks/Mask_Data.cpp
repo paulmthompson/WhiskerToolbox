@@ -35,7 +35,7 @@ void MaskData::addAtTime(TimeFrameIndex const time,
                              std::vector<uint32_t> const & y,
                              bool notify) {
     auto new_mask = create_mask(x, y);
-    _data[time].push_back(new_mask);
+    add_at_time(time, std::move(new_mask), _data);
     
     if (notify) {
         notifyObservers();
@@ -45,7 +45,7 @@ void MaskData::addAtTime(TimeFrameIndex const time,
 void MaskData::addAtTime(TimeFrameIndex const time,
                              std::vector<Point2D<uint32_t>> mask,
                              bool notify) {
-    _data[time].push_back(std::move(mask));
+    add_at_time(time, std::move(mask), _data);
     
     if (notify) {
         notifyObservers();

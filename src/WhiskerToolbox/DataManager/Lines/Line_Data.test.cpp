@@ -21,10 +21,10 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
     std::vector<float> y3 = {10.0f, 11.0f, 10.0f, 11.0f};
 
     // Add test lines to source data
-    source_data.addLineAtTime(TimeFrameIndex(10), x1, y1);
-    source_data.addLineAtTime(TimeFrameIndex(10), x2, y2); // Two lines at same time
-    source_data.addLineAtTime(TimeFrameIndex(20), x3, y3);
-    source_data.addLineAtTime(TimeFrameIndex(30), x1, y1); // Reuse line at different time
+    source_data.addAtTime(TimeFrameIndex(10), x1, y1);
+    source_data.addAtTime(TimeFrameIndex(10), x2, y2); // Two lines at same time
+    source_data.addAtTime(TimeFrameIndex(20), x3, y3);
+    source_data.addAtTime(TimeFrameIndex(30), x1, y1); // Reuse line at different time
 
     SECTION("Copy time range - basic functionality") {
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
@@ -64,7 +64,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
 
     SECTION("Copy to target with existing data") {
         // Add some data to target first
-        target_data.addLineAtTime(TimeFrameIndex(10), x3, y3);
+        target_data.addAtTime(TimeFrameIndex(10), x3, y3);
         
         TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(10)};
         std::size_t lines_copied = source_data.copyTo(target_data, interval);
@@ -160,7 +160,7 @@ TEST_CASE("LineData - Copy and Move operations", "[line][data][copy][move]") {
         
         // Move with notification enabled (should notify both source and target)
         LineData new_source;
-        new_source.addLineAtTime(TimeFrameIndex(40), x1, y1);
+        new_source.addAtTime(TimeFrameIndex(40), x1, y1);
         new_source.addObserver([&move_notifications]() { move_notifications++; });
         
         TimeFrameInterval interval4{TimeFrameIndex(40), TimeFrameIndex(40)};
@@ -208,12 +208,12 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
 
     SECTION("GetLinesInRange functionality") {
         // Setup data at multiple time points
-        line_data.addLineAtTime(TimeFrameIndex(5), x1, y1);       // 1 line
-        line_data.addLineAtTime(TimeFrameIndex(10), x1, y1);      // 1 line  
-        line_data.addLineAtTime(TimeFrameIndex(10), x2, y2);      // 2nd line at same time
-        line_data.addLineAtTime(TimeFrameIndex(15), x3, y3);      // 1 line
-        line_data.addLineAtTime(TimeFrameIndex(20), x1, y1);      // 1 line
-        line_data.addLineAtTime(TimeFrameIndex(25), x2, y2);      // 1 line
+        line_data.addAtTime(TimeFrameIndex(5), x1, y1);       // 1 line
+        line_data.addAtTime(TimeFrameIndex(10), x1, y1);      // 1 line  
+        line_data.addAtTime(TimeFrameIndex(10), x2, y2);      // 2nd line at same time
+        line_data.addAtTime(TimeFrameIndex(15), x3, y3);      // 1 line
+        line_data.addAtTime(TimeFrameIndex(20), x1, y1);      // 1 line
+        line_data.addAtTime(TimeFrameIndex(25), x2, y2);      // 1 line
 
         SECTION("Range includes some data") {
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
@@ -308,9 +308,9 @@ TEST_CASE("LineData - Range-based access", "[line][data][range]") {
             auto data_timeframe = std::make_shared<TimeFrame>(data_times);
             
             // Add data at target timeframe indices
-            timeframe_test_data.addLineAtTime(TimeFrameIndex(2), x1, y1);  // At data timeframe index 2 (time=10)
-            timeframe_test_data.addLineAtTime(TimeFrameIndex(3), x2, y2);  // At data timeframe index 3 (time=15)
-            timeframe_test_data.addLineAtTime(TimeFrameIndex(4), x3, y3);  // At data timeframe index 4 (time=20)
+            timeframe_test_data.addAtTime(TimeFrameIndex(2), x1, y1);  // At data timeframe index 2 (time=10)
+            timeframe_test_data.addAtTime(TimeFrameIndex(3), x2, y2);  // At data timeframe index 3 (time=15)
+            timeframe_test_data.addAtTime(TimeFrameIndex(4), x3, y3);  // At data timeframe index 4 (time=20)
             
             // Query video frames 1-2 (times 10-20) which should map to data indices 2-4 (times 10-20)
             TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};

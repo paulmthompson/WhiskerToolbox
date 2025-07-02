@@ -31,6 +31,11 @@ template<typename T>
     return false;
 }
 
+template<typename T, typename M> 
+void add_at_time(TimeFrameIndex const time, T const & data, M & data_map) {
+    data_map[time].push_back(data);
+}
+
 template<typename T, typename M>
 [[nodiscard]] std::vector<T> const & get_at_time(TimeFrameIndex const time, M & data, std::vector<T> const & empty) {
     auto it = data.find(time);

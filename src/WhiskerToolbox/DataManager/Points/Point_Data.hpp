@@ -79,7 +79,7 @@ public:
      * @param point The point to add
      * @param notify If true, the observers will be notified
      */
-    void addPointAtTime(TimeFrameIndex time, Point2D<float> point, bool notify = true);
+    void addAtTime(TimeFrameIndex time, Point2D<float> point, bool notify = true);
 
     /**
      * @brief Add multiple points at a specific time

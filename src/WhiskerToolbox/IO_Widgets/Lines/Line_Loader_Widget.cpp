@@ -180,7 +180,7 @@ void Line_Loader_Widget::_loadSingleHDF5Line(std::string const & filename, std::
 
         for (std::size_t i = 0; i < frames.size(); i++) {
             if (i < x_coords.size() && i < y_coords.size()) {
-                line_data_ptr->addLineAtTime(TimeFrameIndex(frames[i]), x_coords[i], y_coords[i]);
+                line_data_ptr->addAtTime(TimeFrameIndex(frames[i]), x_coords[i], y_coords[i]);
             } else {
                 std::cerr << "Warning: Missing x/y coordinates for frame " << frames[i] << " in file " << filename << std::endl;
             }
@@ -266,7 +266,7 @@ void Line_Loader_Widget::_loadCSVData(std::map<TimeFrameIndex, std::vector<Line2
     int total_lines = 0;
     for (auto const & [time, lines] : data_map) {
         for (auto const & line : lines) {
-            line_data_ptr->addLineAtTime(time, line, false); // Don't notify for each line
+            line_data_ptr->addAtTime(time, line, false); // Don't notify for each line
             total_lines++;
         }
     }

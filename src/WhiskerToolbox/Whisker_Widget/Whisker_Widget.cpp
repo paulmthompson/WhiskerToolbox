@@ -361,7 +361,7 @@ void Whisker_Widget::_loadJaneliaWhiskers() {
 
     for (auto & [time, whiskers_in_frame]: whiskers_from_janelia) {
         for (auto & w: whiskers_in_frame) {
-            _data_manager->getData<LineData>("unlabeled_whiskers")->addLineAtTime(TimeFrameIndex(time), convert_to_Line2D(w));
+            _data_manager->getData<LineData>("unlabeled_whiskers")->addAtTime(TimeFrameIndex(time), convert_to_Line2D(w));
         }
     }
 }
@@ -449,7 +449,7 @@ void order_whiskers_by_position(
         if (assigned_ids[i] != -1) {
             std::string const whisker_name = whisker_group_name + "_" + std::to_string(assigned_ids[i]);
             dm->getData<LineData>(whisker_name)->clearAtTime(current_time);
-            dm->getData<LineData>(whisker_name)->addLineAtTime(current_time, whiskers[i]);
+            dm->getData<LineData>(whisker_name)->addAtTime(current_time, whiskers[i]);
         }
     }
     /*
@@ -473,7 +473,7 @@ void order_whiskers_by_position(
     dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_time);
     for (std::size_t i = 0; i < whiskers.size(); ++i) {
         if (assigned_ids[i] == -1) {
-            dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, whiskers[i]);
+            dm->getData<LineData>("unlabeled_whiskers")->addAtTime(current_time, whiskers[i]);
         }
     }
 
@@ -520,7 +520,7 @@ void add_whiskers_to_data_manager(
     dm->getData<LineData>("unlabeled_whiskers")->clearAtTime(current_time);
 
     for (auto & w: whiskers) {
-        dm->getData<LineData>("unlabeled_whiskers")->addLineAtTime(current_time, w);
+        dm->getData<LineData>("unlabeled_whiskers")->addAtTime(current_time, w);
     }
 
     if (num_whisker_to_track > 0) {
@@ -647,7 +647,7 @@ void Whisker_Widget::_createNewWhiskerPad() {
         std::cout << "Created new PointData: " << new_key << std::endl;
 
         // Create a new point at frame one with value 0,0
-        _data_manager->getData<PointData>(new_key)->addPointAtTime(TimeFrameIndex(0), {0.0f, 0.0f});
+        _data_manager->getData<PointData>(new_key)->addAtTime(TimeFrameIndex(0), {0.0f, 0.0f});
 
         // Repopulate the combo box to include the new entry
         _populateWhiskerPadCombo();

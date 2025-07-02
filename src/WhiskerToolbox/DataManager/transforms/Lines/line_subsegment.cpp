@@ -174,7 +174,7 @@ std::shared_ptr<LineData> extract_line_subsegment(
             }
             
             if (!subsegment.empty()) {
-                result_line_data->addLineAtTime(time, subsegment, false);
+                result_line_data->addAtTime(time, subsegment, false);
             }
         }
         

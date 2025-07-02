@@ -69,7 +69,7 @@ public:
      * @param y The y coordinates of the line
      * @param notify If true, the observers will be notified
      */
-    void addLineAtTime(TimeFrameIndex time, std::vector<float> const & x, std::vector<float> const & y, bool notify = true);
+    void addAtTime(TimeFrameIndex time, std::vector<float> const & x, std::vector<float> const & y, bool notify = true);
 
     /**
      * @brief Add a line at a specific time
@@ -80,7 +80,7 @@ public:
      * @param line The line to add
      * @param notify If true, the observers will be notified
      */
-    void addLineAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & line, bool notify = true);
+    void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & line, bool notify = true);
 
     /**
      * @brief Add a point to a line at a specific time

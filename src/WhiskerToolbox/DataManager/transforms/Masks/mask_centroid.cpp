@@ -71,7 +71,7 @@ std::shared_ptr<PointData> calculate_mask_centroid(
             centroid_y /= static_cast<float>(mask.size());
 
             // Add centroid point to result
-            result_point_data->addPointAtTime(time, {centroid_x, centroid_y}, false);
+            result_point_data->addAtTime(time, {centroid_x, centroid_y}, false);
 
             processed_masks++;
 

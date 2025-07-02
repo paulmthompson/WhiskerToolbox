@@ -269,7 +269,7 @@ std::shared_ptr<LineData> calculate_mask_principal_axis(
 
             // Create line and add to result
             std::vector<Point2D<float>> principal_axis_line = {line_points.first, line_points.second};
-            result_line_data->addLineAtTime(time, principal_axis_line, false);
+            result_line_data->addAtTime(time, principal_axis_line, false);
 
             processed_masks++;
 

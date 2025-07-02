@@ -16,7 +16,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
         int timestamp = 10;
-        line_data->addLineAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create a point at (5, 5) - should be 5 units away from the line
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
@@ -36,7 +36,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         std::vector<float> line_x = {5.0f, 5.0f};
         std::vector<float> line_y = {0.0f, 10.0f};
         int timestamp = 20;
-        line_data->addLineAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create multiple points at different distances from the line
         std::vector<Point2D<float>> points = {
@@ -61,12 +61,12 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         // Timestamp 30: Line from (0,0) to (10,0)
         std::vector<float> line_x1 = {0.0f, 10.0f};
         std::vector<float> line_y1 = {0.0f, 0.0f};
-        line_data->addLineAtTime(TimeFrameIndex(30), line_x1, line_y1);
+        line_data->addAtTime(TimeFrameIndex(30), line_x1, line_y1);
 
         // Timestamp 40: Line from (0,0) to (0,10)
         std::vector<float> line_x2 = {0.0f, 0.0f};
         std::vector<float> line_y2 = {0.0f, 10.0f};
-        line_data->addLineAtTime(TimeFrameIndex(40), line_x2, line_y2);
+        line_data->addAtTime(TimeFrameIndex(40), line_x2, line_y2);
 
         // Create points at different timestamps
         // Timestamp 30: Point at (5,2) - should be 2 units away
@@ -111,7 +111,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         std::vector<float> line_x = {0.0f, 100.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
         int timestamp = 60;
-        line_data->addLineAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create a point at (25, 10) in the point's coordinate space
         // After scaling to line coordinates, this should be at (50, 20)
@@ -132,7 +132,7 @@ TEST_CASE("Line to point minimum distance calculation - Core functionality", "[l
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 10.0f};
         int timestamp = 70;
-        line_data->addLineAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create a point at (5, 5) - exactly on the line
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
@@ -167,7 +167,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         // Create only line data
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
-        line_data->addLineAtTime(TimeFrameIndex(10), line_x, line_y);
+        line_data->addAtTime(TimeFrameIndex(10), line_x, line_y);
 
         // Calculate the minimum distance with no point data
         auto result = line_min_point_dist(line_data.get(), point_data.get());
@@ -180,7 +180,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         // Line at timestamp 20
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
-        line_data->addLineAtTime(TimeFrameIndex(20), line_x, line_y);
+        line_data->addAtTime(TimeFrameIndex(20), line_x, line_y);
 
         // Point at timestamp 30 (different from line)
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
@@ -198,7 +198,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         std::vector<float> line_x = {5.0f};
         std::vector<float> line_y = {5.0f};
         int timestamp = 40;
-        line_data->addLineAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create a point
         std::vector<Point2D<float>> points = {Point2D<float>{10.0f, 10.0f}};
@@ -220,7 +220,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
         int timestamp = 50;
-        line_data->addLineAtTime(TimeFrameIndex(timestamp), line_x, line_y);
+        line_data->addAtTime(TimeFrameIndex(timestamp), line_x, line_y);
 
         // Create a point
         std::vector<Point2D<float>> points = {Point2D<float>{5.0f, 5.0f}};
@@ -238,7 +238,7 @@ TEST_CASE("Line to point minimum distance calculation - Edge cases and error han
         // Create a line
         std::vector<float> line_x = {0.0f, 10.0f};
         std::vector<float> line_y = {0.0f, 0.0f};
-        line_data->addLineAtTime(TimeFrameIndex(60), line_x, line_y);
+        line_data->addAtTime(TimeFrameIndex(60), line_x, line_y);
 
         // Setup the operation and parameters
         LineMinPointDistOperation operation;

@@ -161,7 +161,7 @@ bool updateLineDataTimeFrames(std::string const & dbPath,
 
         // Add the updated lines
         for (auto const & line: lines) {
-            lineData->addLineAtTime(time, line);
+            lineData->addAtTime(time, line);
         }
     }
 

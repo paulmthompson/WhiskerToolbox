@@ -337,7 +337,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
     
     if (lines.empty()) {
         // If no lines exist, create a new one with the single point
-        _data_manager->getData<LineData>(_active_key)->addLineAtTime(current_time, {{x_media, y_media}});
+        _data_manager->getData<LineData>(_active_key)->addAtTime(current_time, {{x_media, y_media}});
         // After adding a new line, it's line index 0
         _current_line_index = 0;
         ui->line_select_slider->setValue(0);
@@ -392,7 +392,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
             
             _data_manager->getData<LineData>(_active_key)->clearAtTime(current_time);
             for(const auto& updated_line : updated_lines) {
-                _data_manager->getData<LineData>(_active_key)->addLineAtTime(current_time, updated_line);
+                _data_manager->getData<LineData>(_active_key)->addAtTime(current_time, updated_line);
             }
         }
     }
@@ -998,7 +998,7 @@ void MediaLine_Widget::_moveLineToTarget(const std::string& target_key) {
     Line2D selected_line = lines[_selected_line_index];
     
     // Add to target
-    target_line_data->addLineAtTime(current_time, selected_line);
+    target_line_data->addAtTime(current_time, selected_line);
     
     // Remove from source by rebuilding the vector without the selected line
     std::vector<Line2D> remaining_lines;
@@ -1011,7 +1011,7 @@ void MediaLine_Widget::_moveLineToTarget(const std::string& target_key) {
     // Clear and rebuild source lines
     source_line_data->clearAtTime(TimeFrameIndex(current_time));
     for (const auto& line : remaining_lines) {
-        source_line_data->addLineAtTime(current_time, line);
+        source_line_data->addAtTime(current_time, line);
     }
     
     // Clear selection since the line was moved
@@ -1043,7 +1043,7 @@ void MediaLine_Widget::_copyLineToTarget(const std::string& target_key) {
     
     // Get the selected line and copy it to target
     Line2D selected_line = lines[_selected_line_index];
-    target_line_data->addLineAtTime(current_time, selected_line);
+    target_line_data->addAtTime(current_time, selected_line);
     
     std::cout << "Copied line from " << _active_key << " to " << target_key << std::endl;
 }
