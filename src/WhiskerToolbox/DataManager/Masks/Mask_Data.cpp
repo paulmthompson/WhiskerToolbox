@@ -82,15 +82,6 @@ std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const
     }
 }
 
-std::vector<TimeFrameIndex> MaskData::getTimesWithData() const {
-    std::vector<TimeFrameIndex> times;
-    times.reserve(_data.size());
-    for (auto const & [time, masks] : _data) {
-        times.push_back(time);
-    }
-    return times;
-}
-
 // ========== Image Size ==========
 
 void MaskData::changeImageSize(ImageSize const & image_size) {

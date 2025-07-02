@@ -43,7 +43,7 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         // Check that we have data at time 0
         auto times = result->getTimesWithData();
         REQUIRE(times.size() == 1);
-        REQUIRE(times[0] == TimeFrameIndex(0));
+        REQUIRE(*times.begin() == TimeFrameIndex(0));
         
         // Get masks at time 0
         auto const & result_masks = result->getAtTime(TimeFrameIndex(0));
@@ -173,12 +173,13 @@ TEST_CASE("MaskConnectedComponent basic functionality", "[mask_connected_compone
         REQUIRE(result != nullptr);
         
         auto times = result->getTimesWithData();
-        std::sort(times.begin(), times.end());
         
         // Should preserve times 0 and 2, remove time 1
         REQUIRE(times.size() == 2);
-        REQUIRE(times[0] == TimeFrameIndex(0));
-        REQUIRE(times[1] == TimeFrameIndex(2));
+        REQUIRE(*times.begin() == TimeFrameIndex(0));
+        auto it = times.begin();
+        std::advance(it, 1);
+        REQUIRE(*it == TimeFrameIndex(2));
         
         // Verify preserved components have correct sizes
         auto const & masks_t0 = result->getAtTime(TimeFrameIndex(0));

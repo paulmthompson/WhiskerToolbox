@@ -101,9 +101,13 @@ public:
     /**
      * @brief Get all times with data
      * 
-     * @return A vector of TimeFrameIndex
+     * Returns a view over the keys of the data map for zero-copy iteration.
+     * 
+     * @return A view of TimeFrameIndex keys
      */
-    std::vector<TimeFrameIndex> getTimesWithData() const;
+    [[nodiscard]] auto getTimesWithData() const {
+        return _data | std::views::keys;
+    }
 
     /**
      * @brief Get the masks at a specific time
