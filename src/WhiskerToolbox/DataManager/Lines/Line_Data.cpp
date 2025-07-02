@@ -102,36 +102,14 @@ void LineData::addPointToLineInterpolate(TimeFrameIndex const time, int const li
 // ========== Getters ==========
 
 std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time) const {
-    // [] operator is not const because it inserts if mask is not present
-    if (_data.find(time) != _data.end()) {
-        return _data.at(time);
-    } else {
-        return _empty;
-    }
+    return get_at_time(time, _data, _empty);
 }
 
 std::vector<Line2D> const & LineData::getAtTime(TimeFrameIndex const time, 
                                                 TimeFrame const * source_timeframe,
                                                 TimeFrame const * target_timeframe) const {
 
-    // If the timeframes are the same object, no conversion is needed
-    if (source_timeframe == target_timeframe) {
-        return getAtTime(time);
-    }
-    
-    // If either timeframe is null, fall back to original behavior
-    if (!source_timeframe || !target_timeframe) {
-        return getAtTime(time);
-    }
-
-    // Convert the time index from source timeframe to target timeframe
-    // 1. Get the time value from the source timeframe
-    auto time_value = source_timeframe->getTimeAtIndex(time);
-    
-    // 2. Convert that time value to an index in the target timeframe  
-    auto target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
-    
-    return getAtTime(target_index);
+    return get_at_time(time, _data, _empty, source_timeframe, target_timeframe);
 }
 
 // ========== Image Size ==========

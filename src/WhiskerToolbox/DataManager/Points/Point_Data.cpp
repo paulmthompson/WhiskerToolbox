@@ -90,35 +90,13 @@ void PointData::addPointsAtTime(TimeFrameIndex const time, std::vector<Point2D<f
 // ========== Getters ==========
 
 std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const time) const {
-    auto it = _data.find(time);
-    if (it != _data.end()) {
-        return it->second;
-    } else {
-        return _empty;
-    }
+    return get_at_time(time, _data, _empty);
 }
 
 std::vector<Point2D<float>> const & PointData::getAtTime(TimeFrameIndex const time, 
                                                         TimeFrame const * source_timeframe,
                                                         TimeFrame const * target_timeframe) const {
-    // If the timeframes are the same object, no conversion is needed
-    if (source_timeframe == target_timeframe) {
-        return getAtTime(time);
-    }
-    
-    // If either timeframe is null, fall back to original behavior
-    if (!source_timeframe || !target_timeframe) {
-        return getAtTime(time);
-    }
-    
-    // Convert the time index from source timeframe to target timeframe
-    // 1. Get the time value from the source timeframe
-    auto time_value = source_timeframe->getTimeAtIndex(time);
-    
-    // 2. Convert that time value to an index in the target timeframe  
-    auto target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
-    
-    return getAtTime(target_index);
+    return get_at_time(time, _data, _empty, source_timeframe, target_timeframe);
 }
 
 std::size_t PointData::getMaxPoints() const {
