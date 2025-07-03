@@ -459,6 +459,10 @@ set(PROJECT_SOURCES
 
         utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.hpp
         utils/Deep_Learning/Models/EfficientSAM/EfficientSAM.cpp
+
+        Terminal_Widget/TerminalWidget.hpp
+        Terminal_Widget/TerminalWidget.cpp
+        Terminal_Widget/TerminalWidget.ui
 )
 
 if (WIN32)

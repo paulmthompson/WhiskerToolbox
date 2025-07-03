@@ -28,6 +28,7 @@
 #include "TimeFrame.hpp"
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
+#include "Terminal_Widget/TerminalWidget.hpp"
 
 #include <QFileDialog>
 #include <QImage>
@@ -121,6 +122,7 @@ void MainWindow::_createActions() {
     connect(ui->actionExport_Video, &QAction::triggered, this, &MainWindow::openVideoExportWidget);
     connect(ui->actionExport_Spreadsheet, &QAction::triggered, this, &MainWindow::openSpreadsheetExportWidget);
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
+    connect(ui->actionTerminal_Output, &QAction::triggered, this, &MainWindow::openTerminalWidget);
 }
 
 /*
@@ -568,6 +570,23 @@ void MainWindow::openDataTransforms() {
     }
 
     auto ptr = dynamic_cast<DataTransform_Widget *>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openTerminalWidget() {
+    std::string const key = "Terminal_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto terminal_widget = std::make_unique<TerminalWidget>(this);
+
+        terminal_widget->setObjectName(key);
+        registerDockWidget(key, terminal_widget.get(), ads::BottomDockWidgetArea);
+        _widgets[key] = std::move(terminal_widget);
+    }
+
+    auto ptr = dynamic_cast<TerminalWidget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);

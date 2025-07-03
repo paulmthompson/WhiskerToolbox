@@ -94,9 +94,10 @@
     <addaction name="actionData_Manager"/>
     <addaction name="actionWhisker_Tracking"/>
     <addaction name="actionTongue_Tracking"/>
-    <addaction name="actionMachine_Learning"/>
-    <addaction name="actionData_Viewer"/>
-    <addaction name="actionData_Transforms"/>
+         <addaction name="actionMachine_Learning"/>
+     <addaction name="actionData_Viewer"/>
+     <addaction name="actionData_Transforms"/>
+     <addaction name="actionTerminal_Output"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -227,6 +228,11 @@
   <action name="actionExport_Spreadsheet">
    <property name="text">
     <string>Export Spreadsheet</string>
+   </property>
+  </action>
+  <action name="actionTerminal_Output">
+   <property name="text">
+    <string>Terminal Output</string>
    </property>
   </action>
  </widget>

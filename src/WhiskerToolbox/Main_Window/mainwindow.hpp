@@ -83,5 +83,6 @@ private slots:
     void openVideoExportWidget();
     void openSpreadsheetExportWidget();
     void openDataTransforms();
+    void openTerminalWidget();
 };
 #endif// MAINWINDOW_HPP
