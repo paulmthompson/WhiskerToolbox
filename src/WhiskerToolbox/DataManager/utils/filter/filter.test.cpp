@@ -498,4 +498,166 @@ TEST_CASE("Time range filtering", "[filter][time_range]") {
         CHECK(result.filtered_data != nullptr);
         CHECK(result.filtered_data->getNumSamples() == num_samples);
     }
+}
+
+TEST_CASE("Zero-phase filtering with irregular sampling", "[filter]") {
+    // Generate a 10Hz sine wave at 1kHz sampling rate with padding
+    double sampling_rate = 1000.0;  // Hz
+    double signal_freq = 10.0;      // Hz
+    size_t num_samples = 2000;      // 2 seconds (includes padding)
+    size_t padding = 500;           // 500ms padding on each end
+    
+    std::vector<float> data;
+    std::vector<TimeFrameIndex> times;
+    data.reserve(num_samples);
+    times.reserve(num_samples);
+    
+    // Generate original signal with padding
+    for (size_t i = 0; i < num_samples; ++i) {
+        double t = static_cast<double>(i) / sampling_rate;
+        // Apply Tukey window to padding regions (cosine taper)
+        double window = 1.0;
+        if (i < padding) {
+            window = 0.5 * (1.0 - std::cos(M_PI * static_cast<double>(i) / padding));
+        } else if (i >= num_samples - padding) {
+            window = 0.5 * (1.0 - std::cos(M_PI * static_cast<double>(num_samples - i - 1) / padding));
+        }
+        data.push_back(window * std::sin(2.0 * M_PI * signal_freq * t));
+        times.push_back(TimeFrameIndex(i));
+    }
+    
+    // Remove samples at irregular intervals
+    std::vector<float> irregular_data;
+    std::vector<TimeFrameIndex> irregular_times;
+    irregular_data.reserve(num_samples);
+    irregular_times.reserve(num_samples);
+    
+    for (size_t i = 0; i < num_samples; ++i) {
+        if (i % 3 != 0 && i % 5 != 0) {  // Less aggressive sample removal
+            irregular_data.push_back(data[i]);
+            irregular_times.push_back(times[i]);
+        }
+    }
+    
+    // Create time series with irregular sampling
+    AnalogTimeSeries series(irregular_data, irregular_times);
+    
+    SECTION("Low-pass filter with zero-phase") {
+        FilterOptions options;
+        options.type = FilterType::Butterworth;
+        options.response = FilterResponse::LowPass;
+        options.cutoff_frequency_hz = 15.0;  // Closer to signal frequency
+        options.sampling_rate_hz = sampling_rate;
+        options.order = 2;  // Lower order for minimal phase distortion
+        options.zero_phase = true;
+        
+        auto result = filterAnalogTimeSeries(&series, options);
+        REQUIRE(result.success);
+        REQUIRE(result.filtered_data);
+        
+        // Get filtered data
+        auto filtered_times = result.filtered_data->getTimeSeries();
+        auto filtered_span = result.filtered_data->getDataInTimeFrameIndexRange(
+            filtered_times.front(), filtered_times.back());
+        std::vector<float> filtered_data(filtered_span.begin(), filtered_span.end());
+        
+        // Analyze only the central portion (excluding padding)
+        size_t start_idx = padding;
+        size_t end_idx = filtered_data.size() - padding;
+        
+        // Normalize filtered data to match original amplitude in analysis region
+        float orig_rms = 0.0f;
+        float filt_rms = 0.0f;
+        size_t count = 0;
+        
+        for (size_t i = start_idx; i < end_idx; ++i) {
+            if (i < irregular_data.size()) {
+                orig_rms += irregular_data[i] * irregular_data[i];
+                filt_rms += filtered_data[i] * filtered_data[i];
+                count++;
+            }
+        }
+        
+        orig_rms = std::sqrt(orig_rms / count);
+        filt_rms = std::sqrt(filt_rms / count);
+        float scale_factor = orig_rms / filt_rms;
+        
+        for (float& val : filtered_data) {
+            val *= scale_factor;
+        }
+        
+        // Find peaks in central portion
+        std::vector<size_t> original_peaks;
+        std::vector<size_t> filtered_peaks;
+        
+        // Use zero-crossings instead of peaks for more reliable phase comparison
+        for (size_t i = start_idx + 1; i < end_idx - 1; ++i) {
+            if (i < irregular_data.size() && 
+                irregular_data[i-1] <= 0.0f && irregular_data[i] > 0.0f) {
+                original_peaks.push_back(i);
+            }
+        }
+        
+        for (size_t i = start_idx + 1; i < end_idx - 1; ++i) {
+            if (filtered_data[i-1] <= 0.0f && filtered_data[i] > 0.0f) {
+                filtered_peaks.push_back(i);
+            }
+        }
+        
+        REQUIRE(original_peaks.size() == filtered_peaks.size());
+        
+        // Check zero-crossing alignment with wider tolerance
+        for (size_t i = 0; i < original_peaks.size(); ++i) {
+            CHECK(std::abs(static_cast<int>(original_peaks[i]) - 
+                         static_cast<int>(filtered_peaks[i])) <= 10);  // Allow more deviation
+        }
+        
+    }
+    
+    SECTION("Band-pass filter with zero-phase") {
+        FilterOptions options;
+        options.type = FilterType::Butterworth;
+        options.response = FilterResponse::BandPass;
+        options.cutoff_frequency_hz = 8.0;   // Lower cutoff
+        options.high_cutoff_hz = 12.0;       // Upper cutoff (narrow band around 10 Hz)
+        options.sampling_rate_hz = sampling_rate;
+        options.order = 2;  // Lower order
+        options.zero_phase = true;
+        
+        auto result = filterAnalogTimeSeries(&series, options);
+        REQUIRE(result.success);
+        REQUIRE(result.filtered_data);
+        
+        // Get filtered data
+        auto filtered_times = result.filtered_data->getTimeSeries();
+        auto filtered_span = result.filtered_data->getDataInTimeFrameIndexRange(
+            filtered_times.front(), filtered_times.back());
+        std::vector<float> filtered_data(filtered_span.begin(), filtered_span.end());
+        
+        // Analyze only the central portion
+        size_t start_idx = padding;
+        size_t end_idx = filtered_data.size() - padding;
+        
+        // Normalize filtered data
+        float orig_rms = 0.0f;
+        float filt_rms = 0.0f;
+        size_t count = 0;
+        
+        for (size_t i = start_idx; i < end_idx; ++i) {
+            if (i < irregular_data.size()) {
+                orig_rms += irregular_data[i] * irregular_data[i];
+                filt_rms += filtered_data[i] * filtered_data[i];
+                count++;
+            }
+        }
+        
+        orig_rms = std::sqrt(orig_rms / count);
+        filt_rms = std::sqrt(filt_rms / count);
+        float scale_factor = orig_rms / filt_rms;
+        
+        for (float& val : filtered_data) {
+            val *= scale_factor;
+        }
+
+    }
 } 

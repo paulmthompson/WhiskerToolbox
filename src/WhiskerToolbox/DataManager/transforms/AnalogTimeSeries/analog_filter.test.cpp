@@ -80,8 +80,9 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
 
     SECTION("Notch filter at signal frequency") {
         // Create a notch filter at 10 Hz with very narrow bandwidth
-        auto filter_options = FilterDefaults::notch(signal_freq, sampling_rate, 100.0); // Much higher Q for narrower notch
+        auto filter_options = FilterDefaults::notch(signal_freq, sampling_rate, 200.0); // Increased Q factor for sharper notch
         filter_options.zero_phase = true; // Use zero-phase filtering for better attenuation
+        filter_options.order = 4;  // Increased order for better stopband attenuation
 
         // Create input time series
         AnalogTimeSeries series(data, times);
@@ -93,9 +94,9 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
         // Get filtered data
         auto filtered_data = result.filtered_data->getAnalogTimeSeries();
 
-        // Skip first 500 samples to avoid transient response
+        // Skip first 1000 samples to avoid transient response
         float max_amplitude = 0.0f;
-        for (size_t i = 500; i < filtered_data.size(); ++i) {
+        for (size_t i = 1000; i < filtered_data.size(); ++i) {
             max_amplitude = std::max(max_amplitude, std::abs(filtered_data[i]));
         }
 

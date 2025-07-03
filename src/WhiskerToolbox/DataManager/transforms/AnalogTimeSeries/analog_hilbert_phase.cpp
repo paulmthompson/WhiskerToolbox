@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <complex>
 #include <iostream>
+#include <numbers>
 #include <numeric>//std::iota
 #include <vector>
 
@@ -59,13 +60,13 @@ std::vector<DataChunk> detectChunks(AnalogTimeSeries const * analog_time_series,
                 chunk_times.push_back(timestamps[j.getValue()]);
             }
 
-
+            // End chunk at last valid time + 1 (exclusive)
             DataChunk chunk {.start_idx = chunk_start,
-                             .end_idx = i,
-                             .output_start = timestamps[chunk_start.getValue()],
-                             .output_end = last_time + TimeFrameIndex(1),
-                             .values = std::move(chunk_values),
-                             .times = std::move(chunk_times)};
+                           .end_idx = i,
+                           .output_start = timestamps[chunk_start.getValue()],
+                           .output_end = last_time + TimeFrameIndex(1),
+                           .values = std::move(chunk_values),
+                           .times = std::move(chunk_times)};
 
             chunks.push_back(std::move(chunk));
             chunk_start = i;
@@ -73,6 +74,7 @@ std::vector<DataChunk> detectChunks(AnalogTimeSeries const * analog_time_series,
         last_time = current_time;
     }
 
+    // Add final chunk
     std::vector<float> final_chunk_values;
     std::vector<TimeFrameIndex> final_chunk_times;
     final_chunk_values.reserve(timestamps.size() - chunk_start.getValue());
@@ -82,13 +84,12 @@ std::vector<DataChunk> detectChunks(AnalogTimeSeries const * analog_time_series,
         final_chunk_times.push_back(timestamps[j.getValue()]);
     }
 
-    // Add final chunk
     DataChunk final_chunk {.start_idx = chunk_start,
-                           .end_idx = DataArrayIndex(timestamps.size()),
-                           .output_start = timestamps[chunk_start.getValue()],
-                           .output_end = timestamps.back() + TimeFrameIndex(1),
-                           .values = std::move(final_chunk_values),
-                           .times = std::move(final_chunk_times)};
+                         .end_idx = DataArrayIndex(timestamps.size()),
+                         .output_start = timestamps[chunk_start.getValue()],
+                         .output_end = timestamps.back() + TimeFrameIndex(1),
+                         .values = std::move(final_chunk_values),
+                         .times = std::move(final_chunk_times)};
 
     chunks.push_back(std::move(final_chunk));
 
@@ -185,10 +186,11 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
     // Convert back to standard vector
     std::vector<float> phase_values = arma::conv_to<std::vector<float>>::from(phase);
 
-    // Create output vector with same size as the time range
-    std::vector<float> output_phase(chunk.output_end.getValue() - chunk.output_start.getValue(), 0.0f);
+    // Create output vector for this chunk only
+    size_t chunk_size = chunk.output_end.getValue() - chunk.output_start.getValue();
+    std::vector<float> output_phase(chunk_size, 0.0f);
 
-    // First, fill in the original points (excluding NaN values)
+    // Fill in the original points (excluding NaN values)
     for (size_t i = 0; i < clean_times.size(); ++i) {
         size_t output_idx = clean_times[i].getValue() - chunk.output_start.getValue();
         if (output_idx < output_phase.size()) {
@@ -196,7 +198,7 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
         }
     }
 
-    // Then interpolate small gaps
+    // Interpolate small gaps within this chunk only
     for (size_t i = 1; i < clean_times.size(); ++i) {
         int64_t gap = clean_times[i].getValue() - clean_times[i-1].getValue();
         if (gap > 1 && static_cast<size_t>(gap) <= phaseParams.discontinuityThreshold) {
@@ -205,10 +207,10 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
             float phase_end = phase_values[i];
             
             // Handle phase wrapping
-            if (phase_end - phase_start > M_PI) {
-                phase_start += 2.0f * M_PI;
-            } else if (phase_start - phase_end > M_PI) {
-                phase_end += 2.0f * M_PI;
+            if (phase_end - phase_start > std::numbers::pi) {
+                phase_start += 2.0f * std::numbers::pi;
+            } else if (phase_start - phase_end > std::numbers::pi) {
+                phase_end += 2.0f * std::numbers::pi;
             }
 
             for (int64_t j = 1; j < gap; ++j) {
@@ -216,8 +218,8 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
                 float interpolated_phase = phase_start + t * (phase_end - phase_start);
                 
                 // Wrap back to [-π, π]
-                while (interpolated_phase > M_PI) interpolated_phase -= 2.0f * M_PI;
-                while (interpolated_phase <= -M_PI) interpolated_phase += 2.0f * M_PI;
+                while (interpolated_phase > std::numbers::pi) interpolated_phase -= 2.0f * std::numbers::pi;
+                while (interpolated_phase <= -std::numbers::pi) interpolated_phase += 2.0f * std::numbers::pi;
                 
                 size_t output_idx = (clean_times[i-1].getValue() + j) - chunk.output_start.getValue();
                 if (output_idx < output_phase.size()) {

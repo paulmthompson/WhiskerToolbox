@@ -647,14 +647,18 @@ FilterResult filterAnalogTimeSeries(
                 }
 
                 // Backward pass
+                // First reverse the forward-filtered data
+                std::reverse(forward_output.begin(), forward_output.end());
+                
                 filter.reset();
                 segment_output.resize(segment.data.size());
-
-                for (int i = static_cast<int>(forward_output.size()) - 1; i >= 0; --i) {
+                
+                // Apply filter to reversed data
+                for (size_t i = 0; i < forward_output.size(); ++i) {
                     segment_output[i] = filter.filter(forward_output[i]);
                 }
-
-                // Reverse the result to correct time order
+                
+                // Reverse the result to get correct time ordering
                 std::reverse(segment_output.begin(), segment_output.end());
             } else {
                 // Single forward pass
@@ -755,6 +759,7 @@ FilterOptions notch(double center_freq_hz, double sampling_rate_hz, double q_fac
     options.type = FilterType::RBJ;
     options.response = FilterResponse::BandStop;
     options.cutoff_frequency_hz = center_freq_hz;
+    options.high_cutoff_hz = center_freq_hz;  // Set equal to center frequency to force Q-factor path
     options.sampling_rate_hz = sampling_rate_hz;
     options.q_factor = q_factor;
     options.order = 2;  // RBJ filters are always 2nd order
