@@ -49,32 +49,21 @@ enum class InterpolationMethod {
  * @brief Comprehensive filter options structure
  */
 struct FilterOptions {
-    // Basic filter parameters
     FilterType type = FilterType::Butterworth;
     FilterResponse response = FilterResponse::LowPass;
-    int order = 4;// Filter order (1 to max_filter_order)
-
-    // Frequency parameters
+    double cutoff_frequency_hz = 100.0;
+    double high_cutoff_hz = 200.0;  // For band-pass and band-stop filters
     double sampling_rate_hz = 1000.0;  // Sampling rate in Hz
-    double cutoff_frequency_hz = 100.0;// Primary cutoff frequency
-    double high_cutoff_hz = 200.0;     // Secondary cutoff for bandpass/bandstop
+    int order = 4;
+    double q_factor = 10.0;  // For RBJ filters
+    double passband_ripple_db = 1.0;  // For Chebyshev Type I filters
+    double stopband_ripple_db = 20.0;  // For Chebyshev Type II filters
+    bool zero_phase = true;  // Whether to apply forward-backward filtering
+    InterpolationMethod interpolation = InterpolationMethod::None;  // Method for handling irregular sampling
+    size_t max_gap_samples = 100;  // Maximum gap size before splitting into segments
 
-    // Filter-specific parameters
-    double passband_ripple_db = 1.0; // For Chebyshev I (dB)
-    double stopband_ripple_db = 20.0;// For Chebyshev II (dB)
-    double q_factor = 1.0;           // For RBJ filters
-    double shelf_gain_db = 6.0;      // For shelf filters (dB)
-
-    // Processing options
-    bool zero_phase = false;// Use filtfilt (forward-backward filtering)
-
-    // Irregular sampling handling
-    InterpolationMethod interpolation = InterpolationMethod::None;
-    size_t max_gap_samples = 1000;// Max gap before starting new filter segment
-
-    // Validation
-    bool isValid() const;
-    std::string getValidationError() const;
+    [[nodiscard]] bool isValid() const;
+    [[nodiscard]] std::string getValidationError() const;
 };
 
 /**

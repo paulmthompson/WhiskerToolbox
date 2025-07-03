@@ -27,16 +27,17 @@ std::string FilterOptions::getValidationError() const {
         return "Cutoff frequency must be positive";
     }
 
-    if (cutoff_frequency_hz >= sampling_rate_hz / 2.0) {
+    double nyquist = sampling_rate_hz / 2.0;
+    if (cutoff_frequency_hz >= nyquist) {
         return "Cutoff frequency must be less than Nyquist frequency (" +
-               std::to_string(sampling_rate_hz / 2.0) + " Hz)";
+               std::to_string(nyquist) + " Hz)";
     }
 
     // Additional validation for band filters
     if (response == FilterResponse::BandPass || response == FilterResponse::BandStop) {
         // For RBJ filters, we use cutoff_frequency_hz as center frequency and q_factor
         if (type == FilterType::RBJ) {
-            if (cutoff_frequency_hz >= sampling_rate_hz / 2.0) {
+            if (cutoff_frequency_hz >= nyquist) {
                 return "Center frequency must be less than Nyquist frequency";
             }
             if (q_factor <= 0.0) {
@@ -47,7 +48,7 @@ std::string FilterOptions::getValidationError() const {
             if (high_cutoff_hz <= cutoff_frequency_hz) {
                 return "High cutoff frequency must be greater than low cutoff frequency";
             }
-            if (high_cutoff_hz >= sampling_rate_hz / 2.0) {
+            if (high_cutoff_hz >= nyquist) {
                 return "High cutoff frequency must be less than Nyquist frequency";
             }
         }
@@ -722,9 +723,9 @@ FilterOptions lowpass(double cutoff_hz, double sampling_rate_hz, int order) {
     FilterOptions options;
     options.type = FilterType::Butterworth;
     options.response = FilterResponse::LowPass;
-    options.order = order;
-    options.sampling_rate_hz = sampling_rate_hz;
     options.cutoff_frequency_hz = cutoff_hz;
+    options.sampling_rate_hz = sampling_rate_hz;
+    options.order = order;
     return options;
 }
 
@@ -732,32 +733,31 @@ FilterOptions highpass(double cutoff_hz, double sampling_rate_hz, int order) {
     FilterOptions options;
     options.type = FilterType::Butterworth;
     options.response = FilterResponse::HighPass;
-    options.order = order;
-    options.sampling_rate_hz = sampling_rate_hz;
     options.cutoff_frequency_hz = cutoff_hz;
+    options.sampling_rate_hz = sampling_rate_hz;
+    options.order = order;
     return options;
 }
 
-FilterOptions bandpass(double low_hz, double high_hz, double sampling_rate_hz, int order) {
+FilterOptions bandpass(double low_cutoff_hz, double high_cutoff_hz, double sampling_rate_hz, int order) {
     FilterOptions options;
     options.type = FilterType::Butterworth;
     options.response = FilterResponse::BandPass;
-    options.order = order;
+    options.cutoff_frequency_hz = low_cutoff_hz;
+    options.high_cutoff_hz = high_cutoff_hz;
     options.sampling_rate_hz = sampling_rate_hz;
-    options.cutoff_frequency_hz = low_hz;
-    options.high_cutoff_hz = high_hz;
+    options.order = order;
     return options;
 }
 
-FilterOptions notch(double center_hz, double sampling_rate_hz, double q_factor) {
+FilterOptions notch(double center_freq_hz, double sampling_rate_hz, double q_factor) {
     FilterOptions options;
     options.type = FilterType::RBJ;
     options.response = FilterResponse::BandStop;
-    options.order = 2;// RBJ filters are always 2nd order
+    options.cutoff_frequency_hz = center_freq_hz;
     options.sampling_rate_hz = sampling_rate_hz;
-    options.cutoff_frequency_hz = center_hz;
-    options.high_cutoff_hz = 0.0; // Explicitly set to 0 to ensure we use Q-factor based notch setup
     options.q_factor = q_factor;
+    options.order = 2;  // RBJ filters are always 2nd order
     return options;
 }
 

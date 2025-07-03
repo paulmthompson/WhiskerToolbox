@@ -21,6 +21,8 @@ void AnalogFilter_Widget::_setupConnections() {
             this, &AnalogFilter_Widget::_onResponseChanged);
 
     // Connect all parameter changes to validation
+    connect(ui->sampling_rate_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &AnalogFilter_Widget::_validateParameters);
     connect(ui->cutoff_frequency_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &AnalogFilter_Widget::_validateParameters);
     connect(ui->high_cutoff_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
@@ -81,14 +83,22 @@ void AnalogFilter_Widget::_validateParameters() {
     bool valid = true;
     QString error_message;
 
+    double sampling_rate = ui->sampling_rate_spinbox->value();
     double cutoff = ui->cutoff_frequency_spinbox->value();
     double high_cutoff = ui->high_cutoff_spinbox->value();
     bool is_band_filter = ui->response_combobox->currentText().contains("Band");
 
-    // Basic validation
-    if (cutoff <= 0.0) {
+    // Validate sampling rate
+    if (sampling_rate <= 0.0) {
         valid = false;
-        error_message = "Cutoff frequency must be positive";
+        error_message = "Sampling rate must be positive";
+    }
+
+    // Validate cutoff frequencies against Nyquist
+    double nyquist = sampling_rate / 2.0;
+    if (cutoff >= nyquist) {
+        valid = false;
+        error_message = QString("Cutoff frequency must be less than Nyquist frequency (%1 Hz)").arg(nyquist);
     }
 
     // For band filters, validate high cutoff
@@ -96,6 +106,10 @@ void AnalogFilter_Widget::_validateParameters() {
         if (high_cutoff <= cutoff) {
             valid = false;
             error_message = "High cutoff must be greater than low cutoff";
+        }
+        if (high_cutoff >= nyquist) {
+            valid = false;
+            error_message = QString("High cutoff must be less than Nyquist frequency (%1 Hz)").arg(nyquist);
         }
     }
 
@@ -132,7 +146,8 @@ std::unique_ptr<TransformParametersBase> AnalogFilter_Widget::getParameters() co
         params->filter_options.response = FilterResponse::BandStop;
     }
 
-    // Set frequencies and other parameters
+    // Set sampling rate and frequencies
+    params->filter_options.sampling_rate_hz = ui->sampling_rate_spinbox->value();
     params->filter_options.cutoff_frequency_hz = ui->cutoff_frequency_spinbox->value();
     params->filter_options.high_cutoff_hz = ui->high_cutoff_spinbox->value();
     params->filter_options.order = ui->order_spinbox->value();
