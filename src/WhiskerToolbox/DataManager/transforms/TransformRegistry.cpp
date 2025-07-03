@@ -4,6 +4,7 @@
 #include "transforms/AnalogTimeSeries/analog_hilbert_phase.hpp"
 #include "transforms/AnalogTimeSeries/analog_interval_threshold.hpp"
 #include "transforms/AnalogTimeSeries/analog_scaling.hpp"
+#include "transforms/AnalogTimeSeries/analog_filter.hpp"
 #include "transforms/DigitalIntervalSeries/digital_interval_group.hpp"
 #include "transforms/Lines/line_angle.hpp"
 #include "transforms/Lines/line_clip.hpp"
@@ -54,6 +55,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<LinePointExtractionOperation>());
     _registerOperation(std::make_unique<LineClipOperation>());
     _registerOperation(std::make_unique<GroupOperation>());
+    _registerOperation(std::make_unique<AnalogFilterOperation>());
 
     _computeApplicableOperations();
     std::cout << "Operation Registry Initialized." << std::endl;

@@ -756,6 +756,7 @@ FilterOptions notch(double center_hz, double sampling_rate_hz, double q_factor) 
     options.order = 2;// RBJ filters are always 2nd order
     options.sampling_rate_hz = sampling_rate_hz;
     options.cutoff_frequency_hz = center_hz;
+    options.high_cutoff_hz = 0.0; // Explicitly set to 0 to ensure we use Q-factor based notch setup
     options.q_factor = q_factor;
     return options;
 }

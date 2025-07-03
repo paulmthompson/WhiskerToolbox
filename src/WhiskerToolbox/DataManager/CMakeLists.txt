@@ -92,6 +92,8 @@ set(DATAMANAGER_SOURCES
         transforms/TransformRegistry.cpp
         transforms/AnalogTimeSeries/analog_event_threshold.cpp
         transforms/AnalogTimeSeries/analog_event_threshold.hpp
+        transforms/AnalogTimeSeries/analog_filter.cpp 
+        transforms/AnalogTimeSeries/analog_filter.hpp
         transforms/AnalogTimeSeries/analog_interval_threshold.cpp
         transforms/AnalogTimeSeries/analog_interval_threshold.hpp
         transforms/AnalogTimeSeries/analog_hilbert_phase.hpp
