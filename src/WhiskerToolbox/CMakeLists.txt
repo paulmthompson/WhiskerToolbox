@@ -57,6 +57,12 @@ set(PROJECT_SOURCES
         DataManager_Widget/Line_Widget/LineTableModel.cpp
         DataManager_Widget/Line_Widget/LineTableModel.hpp
 
+        DataManager_Widget/Image_Widget/Image_Widget.hpp
+        DataManager_Widget/Image_Widget/Image_Widget.cpp
+        DataManager_Widget/Image_Widget/Image_Widget.ui
+        DataManager_Widget/Image_Widget/ImageTableModel.hpp
+        DataManager_Widget/Image_Widget/ImageTableModel.cpp
+
         DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp
         DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.cpp
         DataManager_Widget/AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.ui

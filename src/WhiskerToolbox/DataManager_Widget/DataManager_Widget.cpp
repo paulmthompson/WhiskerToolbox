@@ -20,6 +20,7 @@
 #include "AnalogTimeSeries_Widget/AnalogTimeSeries_Widget.hpp"
 #include "DigitalEventSeries_Widget/DigitalEventSeries_Widget.hpp"
 #include "DigitalIntervalSeries_Widget/DigitalIntervalSeries_Widget.hpp"
+#include "Image_Widget/Image_Widget.hpp"
 #include "Line_Widget/Line_Widget.hpp"
 #include "Mask_Widget/Mask_Widget.hpp"
 #include "NewDataWidget/NewDataWidget.hpp"
@@ -45,6 +46,7 @@ DataManager_Widget::DataManager_Widget(
     ui->feature_table_widget->setDataManager(_data_manager);
 
     ui->stackedWidget->addWidget(new Point_Widget(_data_manager));
+    ui->stackedWidget->addWidget(new Image_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Mask_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Line_Widget(_data_manager));
     ui->stackedWidget->addWidget(new AnalogTimeSeries_Widget(_data_manager));
@@ -126,9 +128,20 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             connect(point_widget, &Point_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             break;
         }
-        case DM_DataType::Mask: {
+        case DM_DataType::Images: {
 
             int const stacked_widget_index = 2;
+
+            ui->stackedWidget->setCurrentIndex(stacked_widget_index);
+            auto image_widget = dynamic_cast<Image_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            image_widget->setActiveKey(key);
+
+            connect(image_widget, &Image_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+            break;
+        }
+        case DM_DataType::Mask: {
+
+            int const stacked_widget_index = 3;
             ui->stackedWidget->setCurrentIndex(stacked_widget_index);
             auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             mask_widget->setActiveKey(key);
@@ -137,7 +150,7 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             break;
         }
         case DM_DataType::Line: {
-            int const stacked_widget_index = 3;
+            int const stacked_widget_index = 4;
             ui->stackedWidget->setCurrentIndex(stacked_widget_index);
             auto line_widget = dynamic_cast<Line_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             if (line_widget) {
@@ -148,7 +161,7 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
         }
         case DM_DataType::Analog: {
 
-            int const stacked_widget_index = 4;
+            int const stacked_widget_index = 5;
             ui->stackedWidget->setCurrentIndex(stacked_widget_index);
             auto analog_widget = dynamic_cast<AnalogTimeSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             analog_widget->setActiveKey(key);
@@ -156,7 +169,7 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
         }
         case DM_DataType::DigitalInterval: {
 
-            int const stacked_widget_index = 5;
+            int const stacked_widget_index = 6;
             ui->stackedWidget->setCurrentIndex(stacked_widget_index);
             auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             interval_widget->setActiveKey(key);
@@ -168,7 +181,7 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
         case DM_DataType::DigitalEvent: {
 
 
-            int const stacked_widget_index = 6;
+            int const stacked_widget_index = 7;
             ui->stackedWidget->setCurrentIndex(stacked_widget_index);
             auto event_widget = dynamic_cast<DigitalEventSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             event_widget->setActiveKey(key);
@@ -178,8 +191,8 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
         }
         case DM_DataType::Tensor: {
 
-            ui->stackedWidget->setCurrentIndex(7);
-            dynamic_cast<Tensor_Widget *>(ui->stackedWidget->widget(7))->setActiveKey(key);
+            ui->stackedWidget->setCurrentIndex(8);
+            dynamic_cast<Tensor_Widget *>(ui->stackedWidget->widget(8))->setActiveKey(key);
             break;
         }
         case DM_DataType::Unknown: {
@@ -216,9 +229,20 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
             }
             break;
         }
-        case DM_DataType::Mask: {
+        case DM_DataType::Images: {
 
             int const stacked_widget_index = 2;
+
+            auto image_widget = dynamic_cast<Image_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
+            if (image_widget) {
+                disconnect(image_widget, &Image_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
+                image_widget->removeCallbacks();
+            }
+            break;
+        }
+        case DM_DataType::Mask: {
+
+            int const stacked_widget_index = 3;
             auto mask_widget = dynamic_cast<Mask_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             if (mask_widget) {
                 disconnect(mask_widget, &Mask_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
@@ -227,7 +251,7 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
             break;
         }
         case DM_DataType::Line: {
-            int const stacked_widget_index = 3;
+            int const stacked_widget_index = 4;
             auto line_widget = dynamic_cast<Line_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             if (line_widget) {
                 disconnect(line_widget, &Line_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
@@ -236,12 +260,12 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
             break;
         }
         case DM_DataType::Analog: {
-            int const stacked_widget_index = 4;
+            int const stacked_widget_index = 5;
             break;
         }
         case DM_DataType::DigitalInterval: {
 
-            int const stacked_widget_index = 5;
+            int const stacked_widget_index = 6;
             auto interval_widget = dynamic_cast<DigitalIntervalSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             disconnect(interval_widget, &DigitalIntervalSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             interval_widget->removeCallbacks();
@@ -249,14 +273,14 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
         }
         case DM_DataType::DigitalEvent: {
 
-            int const stacked_widget_index = 6;
+            int const stacked_widget_index = 7;
             auto event_widget = dynamic_cast<DigitalEventSeries_Widget *>(ui->stackedWidget->widget(stacked_widget_index));
             disconnect(event_widget, &DigitalEventSeries_Widget::frameSelected, this, &DataManager_Widget::_changeScrollbar);
             event_widget->removeCallbacks();
             break;
         }
         case DM_DataType::Tensor: {
-            int const stacked_widget_index = 7;
+            int const stacked_widget_index = 8;
             break;
         }
         case DM_DataType::Unknown: {
