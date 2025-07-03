@@ -2,7 +2,7 @@
 # Preamble
 #=============================
 cmake_minimum_required(VERSION 3.25)
-project(BehaviorToolbox VERSION 0.3.3 LANGUAGES CXX)
+project(BehaviorToolbox VERSION 0.3.4 LANGUAGES CXX)
 
 include(CTest)
 
