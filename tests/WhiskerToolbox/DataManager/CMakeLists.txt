@@ -32,6 +32,8 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/DataAggregation/DataAggregation.test.cpp
 
+        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/filter/filter.test.cpp
+
         ${DATAMANAGER_TEST_SOURCES_TEMP}
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/transforms/AnalogTimeSeries/analog_event_threshold.test.cpp

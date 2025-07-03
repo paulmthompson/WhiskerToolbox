@@ -35,6 +35,12 @@ FetchContent_Declare(
   GIT_TAG v1.0.1
 )
 
+FetchContent_Declare(
+    iir 
+    GIT_REPOSITORY https://github.com/berndporr/iir1/
+    GIT_TAG 1.9.5
+)
+
 set(CUDA OFF)
 
 if (LINUX)
@@ -70,7 +76,7 @@ elseif (WIN32)
 endif()
 
 #We should use make avaiable
-FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking Torch npy)
+FetchContent_MakeAvailable(ffmpeg_wrapper Whisker-Analysis qt6advanceddocking Torch npy iir)
 
 set_target_properties(ffmpeg_wrapper PROPERTIES EXCLUDE_FROM_ALL TRUE)
 set_target_properties(Whisker-Analysis PROPERTIES EXCLUDE_FROM_ALL TRUE)
@@ -83,3 +89,4 @@ set_target_properties(qt6advanceddocking PROPERTIES
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${torch_SOURCE_DIR}/share/cmake/Torch" PARENT_SCOPE)
 
 set(npy_SOURCE_DIR ${npy_SOURCE_DIR} PARENT_SCOPE)
+set(iir_SOURCE_DIR ${iir_SOURCE_DIR} PARENT_SCOPE)

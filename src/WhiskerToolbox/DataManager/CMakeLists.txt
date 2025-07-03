@@ -83,6 +83,8 @@ set(DATAMANAGER_SOURCES
         utils/string_manip.hpp
         utils/DataAggregation/DataAggregation.hpp
         utils/DataAggregation/DataAggregation.cpp
+        utils/filter/filter.hpp
+        utils/filter/filter.cpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
@@ -148,6 +150,7 @@ target_include_directories(DataManager PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
         "${npy_SOURCE_DIR}/include"
+        "${iir_SOURCE_DIR}"
     )
 
 
@@ -170,6 +173,8 @@ target_link_libraries(DataManager PUBLIC nlohmann_json::nlohmann_json)
 #target_link_libraries(DataManager PRIVATE unofficial::lmdb::lmdb)
 target_link_libraries(DataManager PRIVATE CapnProto::capnp)
 #target_link_libraries(DataManager PRIVATE RocksDB::rocksdb RocksDB::rocksdb-shared)
+
+target_link_libraries(DataManager PUBLIC iir::iir)
 
 target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
 
