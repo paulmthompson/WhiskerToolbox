@@ -44,7 +44,7 @@ std::string AnalogFilterOperation::getName() const {
 }
 
 std::type_index AnalogFilterOperation::getTargetInputTypeIndex() const {
-    return typeid(AnalogTimeSeries);
+    return typeid(std::shared_ptr<AnalogTimeSeries>);
 }
 
 std::unique_ptr<TransformParametersBase> AnalogFilterOperation::getDefaultParameters() const {

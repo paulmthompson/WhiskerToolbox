@@ -26,6 +26,7 @@
 #include "DataTransform_Widget/Masks/MaskPrincipalAxis_Widget/MaskPrincipalAxis_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskSkeletonize_Widget/MaskSkeletonize_Widget.hpp"
 #include "DataTransform_Widget/Masks/MaskToLine_Widget/MaskToLine_Widget.hpp"
+#include "AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.hpp"
 
 #include <QApplication>
 
@@ -147,6 +148,10 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Group Intervals"] = [](QWidget * parent) -> TransformParameter_Widget * {
         return new GroupIntervals_Widget(parent);
+    };
+
+    _parameterWidgetFactories["Filter"] = [](QWidget * parent)  -> TransformParameter_Widget * {
+        return new AnalogFilter_Widget(parent);
     };
 }
 
