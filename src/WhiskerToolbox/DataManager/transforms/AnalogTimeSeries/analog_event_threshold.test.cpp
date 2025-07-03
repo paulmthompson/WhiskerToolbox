@@ -13,7 +13,7 @@
 
 // Using Catch::Matchers::Equals for vectors of floats.
 
-TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]") {
+TEST_CASE("Data Transform: Analog Event Threshold - Happy Path", "[transforms][analog_event_threshold]") {
     std::vector<float> values;
     std::vector<TimeFrameIndex> times;
     std::shared_ptr<AnalogTimeSeries> ats;
@@ -178,7 +178,7 @@ TEST_CASE("Event Thresholding Happy Path", "[transforms][analog_event_threshold]
     }
 }
 
-TEST_CASE("Event Thresholding Error and Edge Cases", "[transforms][analog_event_threshold]") {
+TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases", "[transforms][analog_event_threshold]") {
     std::shared_ptr<AnalogTimeSeries> ats;
     std::shared_ptr<DigitalEventSeries> result_events;
     ThresholdParams params;

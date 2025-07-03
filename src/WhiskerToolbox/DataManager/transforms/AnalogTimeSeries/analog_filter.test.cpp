@@ -5,7 +5,7 @@
 #include <catch2/catch_approx.hpp>
 #include <iostream>
 
-TEST_CASE("Filter Analog Time Series", "[transforms][analog_filter]") {
+TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filter]") {
     // Create test data: sine wave at 10 Hz sampled at 1000 Hz
     std::vector<float> data;
     std::vector<TimeFrameIndex> times;
@@ -104,12 +104,12 @@ TEST_CASE("Filter Analog Time Series", "[transforms][analog_filter]") {
     }
 }
 
-TEST_CASE("AnalogFilterOperation Class Tests", "[transforms][analog_filter][operation]") {
+TEST_CASE("Data Transform: Filter Analog Time Series - Operation Class Tests", "[transforms][analog_filter][operation]") {
     AnalogFilterOperation operation;
 
     SECTION("Basic operation properties") {
         REQUIRE(operation.getName() == "Filter");
-        REQUIRE(operation.getTargetInputTypeIndex() == typeid(AnalogTimeSeries));
+        REQUIRE(operation.getTargetInputTypeIndex() == typeid(std::shared_ptr<AnalogTimeSeries>));
     }
 
     SECTION("Default parameters") {

@@ -1,4 +1,3 @@
-
 #include "analog_hilbert_phase.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -109,23 +108,41 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
 
     std::cout << "Processing chunk with " << chunk.values.size() << " values" << std::endl;
 
-    // Create continuous output timestamps for this chunk
-    std::vector<TimeFrameIndex> output_timestamps;
-    for (TimeFrameIndex i = chunk.output_start; i < chunk.output_end; ++i) {
-        output_timestamps.push_back(i);
+    // First check for NaN values and remove them
+    std::vector<float> clean_values;
+    std::vector<TimeFrameIndex> clean_times;
+    clean_values.reserve(chunk.values.size());
+    clean_times.reserve(chunk.times.size());
+    
+    for (size_t i = 0; i < chunk.values.size(); ++i) {
+        if (!std::isnan(chunk.values[i])) {
+            clean_values.push_back(chunk.values[i]);
+            clean_times.push_back(chunk.times[i]);
+        }
+    }
+
+    // If all values were NaN, return empty vector
+    if (clean_values.empty()) {
+        return std::vector<float>(chunk.output_end.getValue() - chunk.output_start.getValue(), 0.0f);
     }
 
     // Convert to arma::vec for processing
-    arma::vec signal(chunk.values.size());
-    std::copy(chunk.values.begin(), chunk.values.end(), signal.begin());
+    arma::vec signal(clean_values.size());
+    std::copy(clean_values.begin(), clean_values.end(), signal.begin());
 
     // Calculate sampling rate from timestamps
-    double dt = 1.0;// Default to 1 if we can't calculate
-    if (chunk.times.size() > 1) {
-        dt = static_cast<double>(chunk.times.back().getValue() - chunk.times[0].getValue()) /
-             static_cast<double>(chunk.times.size() - 1);
-        if (dt <= 0) {
-            dt = 1.0;// Fallback to default
+    double dt = 1.0 / 1000.0;  // Default to 1kHz if we can't calculate
+    if (clean_times.size() > 1) {
+        // Find minimum time difference between consecutive samples
+        double min_dt = std::numeric_limits<double>::max();
+        for (size_t i = 1; i < clean_times.size(); ++i) {
+            double diff = static_cast<double>(clean_times[i].getValue() - clean_times[i-1].getValue());
+            if (diff > 0) {
+                min_dt = std::min(min_dt, diff);
+            }
+        }
+        if (min_dt != std::numeric_limits<double>::max()) {
+            dt = min_dt / 1000.0;  // Convert from TimeFrameIndex units to seconds
         }
     }
     double const Fs = 1.0 / dt;
@@ -166,7 +183,51 @@ std::vector<float> processChunk(DataChunk const & chunk, HilbertPhaseParams cons
     arma::vec const phase = arma::arg(analytic_signal);
 
     // Convert back to standard vector
-    return arma::conv_to<std::vector<float>>::from(phase);
+    std::vector<float> phase_values = arma::conv_to<std::vector<float>>::from(phase);
+
+    // Create output vector with same size as the time range
+    std::vector<float> output_phase(chunk.output_end.getValue() - chunk.output_start.getValue(), 0.0f);
+
+    // First, fill in the original points (excluding NaN values)
+    for (size_t i = 0; i < clean_times.size(); ++i) {
+        size_t output_idx = clean_times[i].getValue() - chunk.output_start.getValue();
+        if (output_idx < output_phase.size()) {
+            output_phase[output_idx] = phase_values[i];
+        }
+    }
+
+    // Then interpolate small gaps
+    for (size_t i = 1; i < clean_times.size(); ++i) {
+        int64_t gap = clean_times[i].getValue() - clean_times[i-1].getValue();
+        if (gap > 1 && static_cast<size_t>(gap) <= phaseParams.discontinuityThreshold) {
+            // Linear interpolation for points in between
+            float phase_start = phase_values[i-1];
+            float phase_end = phase_values[i];
+            
+            // Handle phase wrapping
+            if (phase_end - phase_start > M_PI) {
+                phase_start += 2.0f * M_PI;
+            } else if (phase_start - phase_end > M_PI) {
+                phase_end += 2.0f * M_PI;
+            }
+
+            for (int64_t j = 1; j < gap; ++j) {
+                float t = static_cast<float>(j) / static_cast<float>(gap);
+                float interpolated_phase = phase_start + t * (phase_end - phase_start);
+                
+                // Wrap back to [-π, π]
+                while (interpolated_phase > M_PI) interpolated_phase -= 2.0f * M_PI;
+                while (interpolated_phase <= -M_PI) interpolated_phase += 2.0f * M_PI;
+                
+                size_t output_idx = (clean_times[i-1].getValue() + j) - chunk.output_start.getValue();
+                if (output_idx < output_phase.size()) {
+                    output_phase[output_idx] = interpolated_phase;
+                }
+            }
+        }
+    }
+
+    return output_phase;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -200,51 +261,60 @@ std::shared_ptr<AnalogTimeSeries> hilbert_phase(
 
     // Detect discontinuous chunks
     auto chunks = detectChunks(analog_time_series, phaseParams.discontinuityThreshold);
-
-    if (progressCallback) {
-        progressCallback(10);
+    if (chunks.empty()) {
+        std::cerr << "hilbert_phase: No valid chunks detected" << std::endl;
+        return std::make_shared<AnalogTimeSeries>();
     }
 
-    // Create output timestamps (continuous from 0 to last timestamp)
-    std::vector<TimeFrameIndex> output_timestamps;
-    for (TimeFrameIndex i = TimeFrameIndex(0); i <= timestamps.back(); ++i) {
-        output_timestamps.push_back(i);
+    // Determine total output size based on last chunk's end
+    auto const & last_chunk = chunks.back();
+    size_t total_size = last_chunk.output_end.getValue();
+
+    // Create output vectors with proper size
+    std::vector<float> output_data(total_size, 0.0f);
+    std::vector<TimeFrameIndex> output_times;
+    output_times.reserve(total_size);
+    for (size_t i = 0; i < total_size; ++i) {
+        output_times.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
     }
 
-    // Initialize output phase vector with zeros
-    std::vector<float> phase_output(output_timestamps.size(), 0.0f);
+    // Process each chunk
+    size_t total_chunks = chunks.size();
+    for (size_t i = 0; i < chunks.size(); ++i) {
+        auto const & chunk = chunks[i];
+        
+        // Process chunk
+        auto chunk_phase = processChunk(chunk, phaseParams);
+        
+        // Copy chunk results to output
+        if (!chunk_phase.empty()) {
+            size_t start_idx = chunk.output_start.getValue();
+            size_t end_idx = std::min(start_idx + chunk_phase.size(), output_data.size());
+            std::copy(chunk_phase.begin(), 
+                     chunk_phase.begin() + (end_idx - start_idx),
+                     output_data.begin() + start_idx);
+        }
 
-    if (progressCallback) {
-        progressCallback(15);
-    }
-
-    // Process each chunk separately
-    size_t chunks_processed = 0;
-    for (auto const & chunk: chunks) {
+        // Update progress
         if (progressCallback) {
-            int progress = 15 + static_cast<int>((chunks_processed * 70) / chunks.size());
+            int progress = 5 + static_cast<int>((90.0f * (i + 1)) / total_chunks);
             progressCallback(progress);
         }
+    }
 
-        auto chunk_phase = processChunk(chunk, phaseParams);
+    // Create result
+    auto result = std::make_shared<AnalogTimeSeries>(std::move(output_data), std::move(output_times));
 
-        // Copy chunk results to appropriate positions in output
-        if (!chunk_phase.empty() && chunk.output_start < TimeFrameIndex(phase_output.size())) {
-            size_t copy_size = std::min(chunk_phase.size(),
-                                        static_cast<size_t>(phase_output.size() - chunk.output_start.getValue()));
-            std::copy(chunk_phase.begin(),
-                      chunk_phase.begin() + copy_size,
-                      phase_output.begin() + chunk.output_start.getValue());
-        }
-
-        ++chunks_processed;
+    // Copy TimeFrameV2 if present
+    if (analog_time_series->hasTimeFrameV2()) {
+        result->setTimeFrameV2(analog_time_series->getTimeFrameV2().value());
     }
 
     if (progressCallback) {
         progressCallback(100);
     }
 
-    return std::make_shared<AnalogTimeSeries>(phase_output, output_timestamps);
+    return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

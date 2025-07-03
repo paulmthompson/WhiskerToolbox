@@ -47,7 +47,7 @@ auto validateIntervalsAboveThreshold = [](
     return true;// All values in all intervals meet threshold
 };
 
-TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_threshold]") {
+TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analog_interval_threshold]") {
     std::vector<float> values;
     std::vector<TimeFrameIndex> times;
     std::shared_ptr<AnalogTimeSeries> ats;
@@ -352,7 +352,7 @@ TEST_CASE("Interval Threshold Happy Path", "[transforms][analog_interval_thresho
     }
 }
 
-TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interval_threshold]") {
+TEST_CASE("Data Transform: Interval Threshold - Error and Edge Cases", "[transforms][analog_interval_threshold]") {
     std::shared_ptr<AnalogTimeSeries> ats;
     std::shared_ptr<DigitalIntervalSeries> result_intervals;
     IntervalThresholdParams params;
@@ -579,7 +579,7 @@ TEST_CASE("Interval Threshold Error and Edge Cases", "[transforms][analog_interv
     }
 }
 
-TEST_CASE("Single Sample Above Threshold Zero Lockout", "[transforms][analog_interval_threshold]") {
+TEST_CASE("Data Transform: Interval Threshold - Single Sample Above Threshold Zero Lockout", "[transforms][analog_interval_threshold]") {
     SECTION("Single sample above threshold followed by below threshold") {
         // Test case for the specific scenario: single sample above threshold
         // with lockout period of zero. The interval should start and end at
@@ -653,7 +653,7 @@ TEST_CASE("Single Sample Above Threshold Zero Lockout", "[transforms][analog_int
     }
 }
 
-TEST_CASE("IntervalThresholdOperation Class Tests", "[transforms][analog_interval_threshold][operation]") {
+TEST_CASE("Data Transform: Interval Threshold - Operation Class Tests", "[transforms][analog_interval_threshold][operation]") {
     IntervalThresholdOperation operation;
     DataTypeVariant variant;
     IntervalThresholdParams params;
@@ -808,7 +808,7 @@ TEST_CASE("IntervalThresholdOperation Class Tests", "[transforms][analog_interva
     }
 }
 
-TEST_CASE("Missing Data Handling", "[transforms][analog_interval_threshold]") {
+TEST_CASE("Data Transform: Interval Threshold - Missing Data Handling", "[transforms][analog_interval_threshold]") {
     std::vector<float> values;
     std::vector<TimeFrameIndex> times;
     std::shared_ptr<AnalogTimeSeries> ats;
