@@ -1,5 +1,7 @@
 #include "analog_filter.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "utils/filter/new_filter_bridge.hpp"
+#include "utils/filter/FilterFactory.hpp"
 
 #include <stdexcept>
 
@@ -18,25 +20,73 @@ std::shared_ptr<AnalogTimeSeries> filter_analog(
     }
 
     // Validate filter parameters
-    if (!filterParams.filter_options.isValid()) {
-        throw std::invalid_argument("Invalid filter parameters: " + 
-                                  filterParams.filter_options.getValidationError());
+    if (!filterParams.isValid()) {
+        throw std::invalid_argument("Invalid filter parameters");
     }
 
     // Report initial progress
     progressCallback(0);
 
-    // Apply the filter
-    auto result = filterAnalogTimeSeries(analog_time_series, filterParams.filter_options);
+    // Handle different parameter types
+    if (filterParams.filter_instance) {
+        // Use pre-created filter instance
+        auto result = filterWithInstance(analog_time_series, filterParams.filter_instance);
+        progressCallback(100);
+        return result;
+    } else if (filterParams.filter_factory) {
+        // Create filter from factory
+        auto filter = filterParams.filter_factory();
+        auto result = filterWithInstance(analog_time_series, std::move(filter));
+        progressCallback(100);
+        return result;
+    } else if (filterParams.legacy_options.has_value()) {
+        // Fall back to legacy FilterOptions
+        auto result = filterAnalogTimeSeriesNew(analog_time_series, filterParams.legacy_options.value());
+        if (!result.success) {
+            throw std::runtime_error("Filtering failed: " + result.error_message);
+        }
+        progressCallback(100);
+        return result.filtered_data;
+    } else {
+        throw std::invalid_argument("No valid filter configuration provided");
+    }
+}
 
-    if (!result.success) {
-        throw std::runtime_error("Filtering failed: " + result.error_message);
+// Helper function to filter with a direct filter instance
+std::shared_ptr<AnalogTimeSeries> filterWithInstance(
+        AnalogTimeSeries const * analog_time_series,
+        std::shared_ptr<IFilter> filter) {
+    if (!analog_time_series || !filter) {
+        throw std::invalid_argument("Input analog time series or filter is null");
     }
 
-    // Report completion
-    progressCallback(100);
+    // Get all data from the time series
+    auto & data_span = analog_time_series->getAnalogTimeSeries();
+    auto time_series = analog_time_series->getTimeSeries();
 
-    return result.filtered_data;
+    if (data_span.empty()) {
+        throw std::invalid_argument("No data found in time series");
+    }
+
+    // Convert to mutable vector for processing
+    std::vector<float> filtered_data(data_span.begin(), data_span.end());
+    std::vector<TimeFrameIndex> filtered_times(time_series.begin(), time_series.end());
+
+    // Apply filter
+    std::span<float> data_span_mutable(filtered_data);
+    filter->process(data_span_mutable);
+
+    // Create new AnalogTimeSeries with filtered data
+    return std::make_shared<AnalogTimeSeries>(
+        std::move(filtered_data),
+        std::move(filtered_times));
+}
+
+// Helper function to filter with a unique_ptr filter instance
+std::shared_ptr<AnalogTimeSeries> filterWithInstance(
+        AnalogTimeSeries const * analog_time_series,
+        std::unique_ptr<IFilter> filter) {
+    return filterWithInstance(analog_time_series, std::shared_ptr<IFilter>(std::move(filter)));
 }
 
 std::string AnalogFilterOperation::getName() const {
@@ -50,8 +100,8 @@ std::type_index AnalogFilterOperation::getTargetInputTypeIndex() const {
 std::unique_ptr<TransformParametersBase> AnalogFilterOperation::getDefaultParameters() const {
     auto params = std::make_unique<AnalogFilterParams>();
     
-    // Set default filter options (4th order Butterworth lowpass at 100 Hz)
-    params->filter_options = FilterDefaults::lowpass(100.0, 1000.0, 4);
+    // Set default filter using legacy options for compatibility (4th order Butterworth lowpass at 100 Hz)
+    params->legacy_options = FilterDefaults::lowpass(100.0, 1000.0, 4);
     
     return params;
 }

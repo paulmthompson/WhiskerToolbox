@@ -1,5 +1,6 @@
 #include "analog_filter.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "utils/filter/FilterFactory.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
@@ -22,9 +23,9 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
     auto series = std::make_shared<AnalogTimeSeries>(data, times);
 
     SECTION("Low-pass filter") {
-        AnalogFilterParams params;
-        // More aggressive lowpass: 4th order, lower cutoff
-        params.filter_options = FilterDefaults::lowpass(3.0, sampling_rate, 4);
+        // Use the new filter interface with Butterworth lowpass
+        auto filter = FilterFactory::createButterworthLowpass<4>(3.0, sampling_rate, false);
+        auto params = AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(filter)));
 
         auto filtered = filter_analog(series.get(), params);
         REQUIRE(filtered);
@@ -41,9 +42,9 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
     }
 
     SECTION("High-pass filter") {
-        AnalogFilterParams params;
-        // More aggressive highpass: 4th order, higher cutoff
-        params.filter_options = FilterDefaults::highpass(20.0, sampling_rate, 4);
+        // Use the new filter interface with Butterworth highpass
+        auto filter = FilterFactory::createButterworthHighpass<4>(20.0, sampling_rate, false);
+        auto params = AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(filter)));
 
         auto filtered = filter_analog(series.get(), params);
         REQUIRE(filtered);
@@ -60,9 +61,9 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
     }
 
     SECTION("Band-pass filter around signal frequency") {
-        AnalogFilterParams params;
-        // Narrower bandpass, higher order
-        params.filter_options = FilterDefaults::bandpass(9.0, 11.0, sampling_rate, 4);
+        // Use the new filter interface with Butterworth bandpass
+        auto filter = FilterFactory::createButterworthBandpass<4>(9.0, 11.0, sampling_rate, false);
+        auto params = AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(filter)));
 
         auto filtered = filter_analog(series.get(), params);
         REQUIRE(filtered);
@@ -79,20 +80,15 @@ TEST_CASE("Data Transform: Filter Analog Time Series", "[transforms][analog_filt
     }
 
     SECTION("Notch filter at signal frequency") {
-        // Create a notch filter at 10 Hz with very narrow bandwidth
-        auto filter_options = FilterDefaults::notch(signal_freq, sampling_rate, 200.0); // Increased Q factor for sharper notch
-        filter_options.zero_phase = true; // Use zero-phase filtering for better attenuation
-        filter_options.order = 4;  // Increased order for better stopband attenuation
+        // Create a notch filter at 10 Hz with very narrow bandwidth using RBJ
+        auto filter = FilterFactory::createRBJBandstop(signal_freq, sampling_rate, 200.0, true); // Zero-phase for better attenuation
+        auto params = AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(filter)));
 
-        // Create input time series
-        AnalogTimeSeries series(data, times);
-
-        // Apply filter
-        auto result = filterAnalogTimeSeries(&series, filter_options);
-        REQUIRE(result.success);
+        auto filtered = filter_analog(series.get(), params);
+        REQUIRE(filtered);
 
         // Get filtered data
-        auto filtered_data = result.filtered_data->getAnalogTimeSeries();
+        auto& filtered_data = filtered->getAnalogTimeSeries();
 
         // Skip first 1000 samples to avoid transient response
         float max_amplitude = 0.0f;
@@ -118,8 +114,10 @@ TEST_CASE("Data Transform: Filter Analog Time Series - Operation Class Tests", "
         REQUIRE(params);
         auto* filterParams = dynamic_cast<AnalogFilterParams*>(params.get());
         REQUIRE(filterParams);
-        REQUIRE(filterParams->filter_options.type == FilterType::Butterworth);
-        REQUIRE(filterParams->filter_options.response == FilterResponse::LowPass);
+        // Check that default params use legacy options for backward compatibility
+        REQUIRE(filterParams->legacy_options.has_value());
+        REQUIRE(filterParams->legacy_options->type == FilterType::Butterworth);
+        REQUIRE(filterParams->legacy_options->response == FilterResponse::LowPass);
     }
 
     SECTION("Can apply to correct type") {
@@ -138,9 +136,10 @@ TEST_CASE("Data Transform: Filter Analog Time Series - Operation Class Tests", "
         auto series = std::make_shared<AnalogTimeSeries>(data, times);
         DataTypeVariant input(series);
 
-        // Create parameters
-        auto params = std::make_unique<AnalogFilterParams>();
-        params->filter_options = FilterDefaults::lowpass(10.0, 100.0, 4);
+        // Create parameters using new filter interface
+        auto filter = FilterFactory::createButterworthLowpass<4>(10.0, 100.0, false);
+        auto params = std::make_unique<AnalogFilterParams>(
+            AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(filter))));
 
         bool progress_called = false;
         auto result = operation.execute(input, params.get(), 
@@ -153,5 +152,84 @@ TEST_CASE("Data Transform: Filter Analog Time Series - Operation Class Tests", "
         auto filtered = std::get<std::shared_ptr<AnalogTimeSeries>>(result);
         REQUIRE(filtered);
         REQUIRE(filtered->getNumSamples() == 1000);
+    }
+}
+
+TEST_CASE("Data Transform: Filter Analog Time Series - New Interface Features", "[transforms][analog_filter][new_interface]") {
+    // Create test data
+    std::vector<float> data;
+    std::vector<TimeFrameIndex> times;
+    const size_t num_samples = 1000;
+    const double sampling_rate = 1000.0;
+
+    for (size_t i = 0; i < num_samples; ++i) {
+        data.push_back(static_cast<float>(i % 10)); // Simple pattern
+        times.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
+    }
+
+    auto series = std::make_shared<AnalogTimeSeries>(data, times);
+
+    SECTION("Filter factory function approach") {
+        // Create parameters using factory function
+        auto params = AnalogFilterParams::withFactory([]() {
+            return FilterFactory::createButterworthLowpass<2>(50.0, 1000.0, false);
+        });
+
+        auto filtered = filter_analog(series.get(), params);
+        REQUIRE(filtered);
+        REQUIRE(filtered->getNumSamples() == num_samples);
+    }
+
+    SECTION("Direct filter instance approach") {
+        // Create filter instance directly
+        auto filter = FilterFactory::createChebyshevILowpass<3>(100.0, 1000.0, 1.0, true);
+        auto params = AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(filter)));
+
+        auto filtered = filter_analog(series.get(), params);
+        REQUIRE(filtered);
+        REQUIRE(filtered->getNumSamples() == num_samples);
+        
+        // Check that filter name is available
+        REQUIRE_FALSE(params.getFilterName().empty());
+        REQUIRE(params.getFilterName().find("Chebyshev I") != std::string::npos);
+    }
+
+    SECTION("Legacy options backward compatibility") {
+        // Use legacy FilterOptions for backward compatibility
+        auto legacy_options = FilterDefaults::lowpass(75.0, 1000.0, 4);
+        auto params = AnalogFilterParams::withLegacyOptions(legacy_options);
+
+        auto filtered = filter_analog(series.get(), params);
+        REQUIRE(filtered);
+        REQUIRE(filtered->getNumSamples() == num_samples);
+    }
+
+    SECTION("Different filter types comparison") {
+        // Compare different filter types on the same data
+        auto butterworth = FilterFactory::createButterworthLowpass<4>(50.0, sampling_rate, false);
+        auto chebyshev1 = FilterFactory::createChebyshevILowpass<4>(50.0, sampling_rate, 1.0, false);
+        auto chebyshev2 = FilterFactory::createChebyshevIILowpass<4>(50.0, sampling_rate, 20.0, false);
+        auto rbj = FilterFactory::createRBJLowpass(50.0, sampling_rate, 0.707, false);
+
+        auto params_butter = AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(butterworth)));
+        auto params_cheby1 = AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(chebyshev1)));
+        auto params_cheby2 = AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(chebyshev2)));
+        auto params_rbj = AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(rbj)));
+
+        auto filtered_butter = filter_analog(series.get(), params_butter);
+        auto filtered_cheby1 = filter_analog(series.get(), params_cheby1);
+        auto filtered_cheby2 = filter_analog(series.get(), params_cheby2);
+        auto filtered_rbj = filter_analog(series.get(), params_rbj);
+
+        REQUIRE(filtered_butter);
+        REQUIRE(filtered_cheby1);
+        REQUIRE(filtered_cheby2);
+        REQUIRE(filtered_rbj);
+
+        // All should have same number of samples
+        REQUIRE(filtered_butter->getNumSamples() == num_samples);
+        REQUIRE(filtered_cheby1->getNumSamples() == num_samples);
+        REQUIRE(filtered_cheby2->getNumSamples() == num_samples);
+        REQUIRE(filtered_rbj->getNumSamples() == num_samples);
     }
 } 
