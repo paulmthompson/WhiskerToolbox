@@ -114,10 +114,6 @@ TEST_CASE("Data Transform: Filter Analog Time Series - Operation Class Tests", "
         REQUIRE(params);
         auto* filterParams = dynamic_cast<AnalogFilterParams*>(params.get());
         REQUIRE(filterParams);
-        // Check that default params use legacy options for backward compatibility
-        REQUIRE(filterParams->legacy_options.has_value());
-        REQUIRE(filterParams->legacy_options->type == FilterType::Butterworth);
-        REQUIRE(filterParams->legacy_options->response == FilterResponse::LowPass);
     }
 
     SECTION("Can apply to correct type") {

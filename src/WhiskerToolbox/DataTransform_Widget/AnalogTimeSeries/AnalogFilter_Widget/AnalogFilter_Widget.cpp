@@ -122,48 +122,58 @@ void AnalogFilter_Widget::_validateParameters() {
 }
 
 std::unique_ptr<TransformParametersBase> AnalogFilter_Widget::getParameters() const {
-    // Create FilterOptions for the current UI state
-    FilterOptions options;
+    // Use the modern filter interface by delegating to getModernParameters()
+    try {
+        return getModernParameters();
+    } catch (const std::exception& e) {
+        // If modern filter creation fails, fall back to legacy options
+        QMessageBox::warning(const_cast<AnalogFilter_Widget*>(this), 
+                           "Filter Creation Error", 
+                           QString("Failed to create modern filter: %1\nFalling back to legacy options.").arg(e.what()));
+        
+        // Create FilterOptions for the current UI state as fallback
+        FilterOptions options;
 
-    // Set filter type
-    QString type_str = ui->filter_type_combobox->currentText();
-    if (type_str == "Butterworth") {
-        options.type = FilterType::Butterworth;
-    } else if (type_str == "Chebyshev I") {
-        options.type = FilterType::ChebyshevI;
-    } else if (type_str == "Chebyshev II") {
-        options.type = FilterType::ChebyshevII;
-    } else if (type_str == "RBJ") {
-        options.type = FilterType::RBJ;
+        // Set filter type
+        QString type_str = ui->filter_type_combobox->currentText();
+        if (type_str == "Butterworth") {
+            options.type = FilterType::Butterworth;
+        } else if (type_str == "Chebyshev I") {
+            options.type = FilterType::ChebyshevI;
+        } else if (type_str == "Chebyshev II") {
+            options.type = FilterType::ChebyshevII;
+        } else if (type_str == "RBJ") {
+            options.type = FilterType::RBJ;
+        }
+
+        // Set response type
+        QString response_str = ui->response_combobox->currentText();
+        if (response_str == "Low Pass") {
+            options.response = FilterResponse::LowPass;
+        } else if (response_str == "High Pass") {
+            options.response = FilterResponse::HighPass;
+        } else if (response_str == "Band Pass") {
+            options.response = FilterResponse::BandPass;
+        } else if (response_str == "Band Stop (Notch)") {
+            options.response = FilterResponse::BandStop;
+        }
+
+        // Set sampling rate and frequencies
+        options.sampling_rate_hz = ui->sampling_rate_spinbox->value();
+        options.cutoff_frequency_hz = ui->cutoff_frequency_spinbox->value();
+        options.high_cutoff_hz = ui->high_cutoff_spinbox->value();
+        options.order = ui->order_spinbox->value();
+        options.q_factor = ui->q_factor_spinbox->value();
+        options.passband_ripple_db = ui->ripple_spinbox->value();
+        options.stopband_ripple_db = ui->ripple_spinbox->value(); // Use same value for both ripple types
+        options.zero_phase = ui->zero_phase_checkbox->isChecked();
+
+        // Create AnalogFilterParams using the legacy options as fallback
+        auto params = std::make_unique<AnalogFilterParams>(
+            AnalogFilterParams::withLegacyOptions(options));
+
+        return params;
     }
-
-    // Set response type
-    QString response_str = ui->response_combobox->currentText();
-    if (response_str == "Low Pass") {
-        options.response = FilterResponse::LowPass;
-    } else if (response_str == "High Pass") {
-        options.response = FilterResponse::HighPass;
-    } else if (response_str == "Band Pass") {
-        options.response = FilterResponse::BandPass;
-    } else if (response_str == "Band Stop (Notch)") {
-        options.response = FilterResponse::BandStop;
-    }
-
-    // Set sampling rate and frequencies
-    options.sampling_rate_hz = ui->sampling_rate_spinbox->value();
-    options.cutoff_frequency_hz = ui->cutoff_frequency_spinbox->value();
-    options.high_cutoff_hz = ui->high_cutoff_spinbox->value();
-    options.order = ui->order_spinbox->value();
-    options.q_factor = ui->q_factor_spinbox->value();
-    options.passband_ripple_db = ui->ripple_spinbox->value();
-    options.stopband_ripple_db = ui->ripple_spinbox->value(); // Use same value for both ripple types
-    options.zero_phase = ui->zero_phase_checkbox->isChecked();
-
-    // Create AnalogFilterParams using the new structure with legacy options
-    auto params = std::make_unique<AnalogFilterParams>(
-        AnalogFilterParams::withLegacyOptions(options));
-
-    return params;
 }
 
 std::unique_ptr<AnalogFilterParams> AnalogFilter_Widget::getModernParameters() const {

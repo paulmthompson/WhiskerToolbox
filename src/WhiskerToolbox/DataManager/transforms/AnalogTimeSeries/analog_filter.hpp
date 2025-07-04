@@ -58,14 +58,37 @@ struct AnalogFilterParams : public TransformParametersBase {
     }
     
     /**
+     * @brief Create default filter parameters (4th order Butterworth lowpass, 10 Hz, 1000 Hz sampling)
+     */
+    static AnalogFilterParams createDefault() {
+        return AnalogFilterParams(); // Uses the default constructor
+    }
+    
+    /**
+     * @brief Create default filter parameters with custom sampling rate
+     */
+    static AnalogFilterParams createDefault(double sampling_rate_hz, double cutoff_hz = 10.0) {
+        AnalogFilterParams params;
+        params.filter_factory = [=]() {
+            return FilterFactory::createButterworthLowpass<4>(cutoff_hz, sampling_rate_hz, false);
+        };
+        return params;
+    }
+    
+    /**
      * @brief Legacy constructor for backward compatibility
      */
     AnalogFilterParams(FilterOptions const& options) : legacy_options(options) {}
     
     /**
-     * @brief Default constructor
+     * @brief Default constructor - creates a default 4th order Butterworth lowpass filter
      */
-    AnalogFilterParams() = default;
+    AnalogFilterParams() {
+        // Create default filter: 4th order Butterworth lowpass at 10 Hz, 1000 Hz sampling rate
+        filter_factory = []() {
+            return FilterFactory::createButterworthLowpass<4>(10.0, 1000.0, false);
+        };
+    }
     
     /**
      * @brief Check if parameters are valid
@@ -82,10 +105,16 @@ struct AnalogFilterParams : public TransformParametersBase {
     [[nodiscard]] std::string getFilterName() const {
         if (filter_instance) {
             return filter_instance->getName();
+        } else if (filter_factory) {
+            // For factory functions, we can try to create a temporary instance to get the name
+            try {
+                auto temp_filter = filter_factory();
+                return temp_filter ? temp_filter->getName() : "Factory-created filter";
+            } catch (...) {
+                return "Custom filter factory";
+            }
         } else if (legacy_options.has_value()) {
             return "Legacy filter configuration";
-        } else if (filter_factory) {
-            return "Custom filter factory";
         }
         return "No filter configured";
     }
