@@ -1,6 +1,5 @@
 #include "analog_filter.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "utils/filter/new_filter_bridge.hpp"
 #include "utils/filter/FilterFactory.hpp"
 
 #include <stdexcept>
@@ -39,15 +38,6 @@ std::shared_ptr<AnalogTimeSeries> filter_analog(
         auto result = filterWithInstance(analog_time_series, std::move(filter));
         progressCallback(100);
         return result;
-    //} 
-    /*else if (filterParams.legacy_options.has_value()) {
-        // Fall back to legacy FilterOptions
-        //auto result = filterAnalogTimeSeriesNew(analog_time_series, filterParams.legacy_options.value());
-        if (!result.success) {
-            throw std::runtime_error("Filtering failed: " + result.error_message);
-        }
-        progressCallback(100);
-        return result.filtered_data;*/
     } else {
         throw std::invalid_argument("No valid filter configuration provided");
     }

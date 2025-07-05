@@ -2,13 +2,11 @@
 #define ANALOG_FILTER_HPP
 
 #include "transforms/data_transforms.hpp"
-#include "utils/filter/filter.hpp"
 #include "utils/filter/IFilter.hpp"
 #include "utils/filter/FilterFactory.hpp"
 
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
 #include <typeindex>
 
@@ -17,8 +15,8 @@ class AnalogTimeSeries;
 /**
  * @brief Modern parameters for filtering analog time series data
  * 
- * This structure supports both the new filter interface and legacy FilterOptions
- * for backward compatibility during the transition period.
+ * This structure uses the new modular filter interface for efficient
+ * and flexible filter configuration.
  */
 struct AnalogFilterParams : public TransformParametersBase {
     // Primary approach: Use a pre-created filter instance
@@ -26,9 +24,6 @@ struct AnalogFilterParams : public TransformParametersBase {
     
     // Alternative: Use a factory function to create the filter when needed
     std::function<std::unique_ptr<IFilter>()> filter_factory;
-    
-    // Legacy fallback: Use FilterOptions (will be converted internally)
-    std::optional<FilterOptions> legacy_options;
     
     /**
      * @brief Create parameters with a pre-created filter instance
@@ -45,15 +40,6 @@ struct AnalogFilterParams : public TransformParametersBase {
     static AnalogFilterParams withFactory(std::function<std::unique_ptr<IFilter>()> factory) {
         AnalogFilterParams params;
         params.filter_factory = std::move(factory);
-        return params;
-    }
-    
-    /**
-     * @brief Create parameters from legacy FilterOptions (backward compatibility)
-     */
-    static AnalogFilterParams withLegacyOptions(FilterOptions options) {
-        AnalogFilterParams params;
-        params.legacy_options = std::move(options);
         return params;
     }
     
@@ -76,11 +62,6 @@ struct AnalogFilterParams : public TransformParametersBase {
     }
     
     /**
-     * @brief Legacy constructor for backward compatibility
-     */
-    AnalogFilterParams(FilterOptions const& options) : legacy_options(options) {}
-    
-    /**
      * @brief Default constructor - creates a default 4th order Butterworth lowpass filter
      */
     AnalogFilterParams() {
@@ -94,9 +75,7 @@ struct AnalogFilterParams : public TransformParametersBase {
      * @brief Check if parameters are valid
      */
     [[nodiscard]] bool isValid() const {
-        return filter_instance != nullptr || 
-               filter_factory != nullptr || 
-               (legacy_options.has_value() && legacy_options->isValid());
+        return filter_instance != nullptr || filter_factory != nullptr;
     }
     
     /**
@@ -113,8 +92,6 @@ struct AnalogFilterParams : public TransformParametersBase {
             } catch (...) {
                 return "Custom filter factory";
             }
-        } else if (legacy_options.has_value()) {
-            return "Legacy filter configuration";
         }
         return "No filter configured";
     }

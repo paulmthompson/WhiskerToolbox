@@ -190,11 +190,22 @@ TEST_CASE("Data Transform: Filter Analog Time Series - New Interface Features", 
         REQUIRE(params.getFilterName().find("Chebyshev I") != std::string::npos);
     }
 
-    SECTION("Legacy options backward compatibility") {
-        // Use legacy FilterOptions for backward compatibility
-        auto legacy_options = FilterDefaults::lowpass(75.0, 1000.0, 4);
-        auto params = AnalogFilterParams::withLegacyOptions(legacy_options);
+    SECTION("Default parameters test") {
+        // Test that default parameters work correctly
+        auto params = AnalogFilterParams::createDefault(1000.0, 75.0);
 
+        auto filtered = filter_analog(series.get(), params);
+        REQUIRE(filtered);
+        REQUIRE(filtered->getNumSamples() == num_samples);
+    }
+
+    SECTION("Default constructor test") {
+        // Test that default constructor creates a working filter
+        auto params = AnalogFilterParams();  // Should use default constructor
+
+        REQUIRE(params.isValid());
+        REQUIRE_FALSE(params.getFilterName().empty());
+        
         auto filtered = filter_analog(series.get(), params);
         REQUIRE(filtered);
         REQUIRE(filtered->getNumSamples() == num_samples);
@@ -228,4 +239,4 @@ TEST_CASE("Data Transform: Filter Analog Time Series - New Interface Features", 
         REQUIRE(filtered_cheby2->getNumSamples() == num_samples);
         REQUIRE(filtered_rbj->getNumSamples() == num_samples);
     }
-} 
+}

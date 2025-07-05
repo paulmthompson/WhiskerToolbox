@@ -19,12 +19,6 @@ public:
     ~AnalogFilter_Widget() override;
 
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getParameters() const override;
-    
-    /**
-     * @brief Get parameters using the new filter interface (for better performance)
-     * @return Modern filter parameters with pre-created filter instance
-     */
-    [[nodiscard]] std::unique_ptr<AnalogFilterParams> getModernParameters() const;
 
 private slots:
     void _onFilterTypeChanged(int index);

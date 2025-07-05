@@ -122,61 +122,6 @@ void AnalogFilter_Widget::_validateParameters() {
 }
 
 std::unique_ptr<TransformParametersBase> AnalogFilter_Widget::getParameters() const {
-    // Use the modern filter interface by delegating to getModernParameters()
-    try {
-        return getModernParameters();
-    } catch (const std::exception& e) {
-        // If modern filter creation fails, fall back to legacy options
-        QMessageBox::warning(const_cast<AnalogFilter_Widget*>(this), 
-                           "Filter Creation Error", 
-                           QString("Failed to create modern filter: %1\nFalling back to legacy options.").arg(e.what()));
-        
-        // Create FilterOptions for the current UI state as fallback
-        FilterOptions options;
-
-        // Set filter type
-        QString type_str = ui->filter_type_combobox->currentText();
-        if (type_str == "Butterworth") {
-            options.type = FilterType::Butterworth;
-        } else if (type_str == "Chebyshev I") {
-            options.type = FilterType::ChebyshevI;
-        } else if (type_str == "Chebyshev II") {
-            options.type = FilterType::ChebyshevII;
-        } else if (type_str == "RBJ") {
-            options.type = FilterType::RBJ;
-        }
-
-        // Set response type
-        QString response_str = ui->response_combobox->currentText();
-        if (response_str == "Low Pass") {
-            options.response = FilterResponse::LowPass;
-        } else if (response_str == "High Pass") {
-            options.response = FilterResponse::HighPass;
-        } else if (response_str == "Band Pass") {
-            options.response = FilterResponse::BandPass;
-        } else if (response_str == "Band Stop (Notch)") {
-            options.response = FilterResponse::BandStop;
-        }
-
-        // Set sampling rate and frequencies
-        options.sampling_rate_hz = ui->sampling_rate_spinbox->value();
-        options.cutoff_frequency_hz = ui->cutoff_frequency_spinbox->value();
-        options.high_cutoff_hz = ui->high_cutoff_spinbox->value();
-        options.order = ui->order_spinbox->value();
-        options.q_factor = ui->q_factor_spinbox->value();
-        options.passband_ripple_db = ui->ripple_spinbox->value();
-        options.stopband_ripple_db = ui->ripple_spinbox->value(); // Use same value for both ripple types
-        options.zero_phase = ui->zero_phase_checkbox->isChecked();
-
-        // Create AnalogFilterParams using the legacy options as fallback
-        auto params = std::make_unique<AnalogFilterParams>(
-            AnalogFilterParams::withLegacyOptions(options));
-
-        return params;
-    }
-}
-
-std::unique_ptr<AnalogFilterParams> AnalogFilter_Widget::getModernParameters() const {
     // Get current UI values
     double sampling_rate = ui->sampling_rate_spinbox->value();
     double cutoff_freq = ui->cutoff_frequency_spinbox->value();
@@ -189,11 +134,9 @@ std::unique_ptr<AnalogFilterParams> AnalogFilter_Widget::getModernParameters() c
     QString type_str = ui->filter_type_combobox->currentText();
     QString response_str = ui->response_combobox->currentText();
     
-    // Create filter directly using the new interface
-    try {
-        std::unique_ptr<IFilter> filter;
+    std::unique_ptr<IFilter> filter;
         
-        if (type_str == "Butterworth") {
+    if (type_str == "Butterworth") {
             if (response_str == "Low Pass") {
                 filter = createButterworthLowpassByOrder(order, cutoff_freq, sampling_rate, zero_phase);
             } else if (response_str == "High Pass") {
@@ -236,21 +179,14 @@ std::unique_ptr<AnalogFilterParams> AnalogFilter_Widget::getModernParameters() c
             }
         }
         
-        if (filter) {
-            // Create parameters with the filter instance
-            return std::make_unique<AnalogFilterParams>(
-                AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(filter))));
-        }
-    } catch (const std::exception& e) {
-        // If filter creation fails, fall back to legacy options
-        QMessageBox::warning(const_cast<AnalogFilter_Widget*>(this), 
-                           "Filter Creation Error", 
-                           QString("Failed to create filter: %1\nFalling back to legacy options.").arg(e.what()));
+    if (filter) {
+         // Create parameters with the filter instance
+        return std::make_unique<AnalogFilterParams>(
+            AnalogFilterParams::withFilter(std::shared_ptr<IFilter>(std::move(filter))));
+    } else {
+        // If no filter was created, return empty parameters
+        return std::make_unique<AnalogFilterParams>();
     }
-    
-    // Fallback to legacy options if filter creation fails
-    return std::unique_ptr<AnalogFilterParams>(
-        static_cast<AnalogFilterParams*>(getParameters().release()));
 }
 
 // Helper functions to create filters with runtime order selection
