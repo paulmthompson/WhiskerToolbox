@@ -2,6 +2,7 @@
 #define TENSOR_DATA_HPP
 
 #include "Observer/Observer_Data.hpp"
+#include "TimeFrame.hpp"
 
 #include <torch/torch.h>
 
@@ -10,23 +11,32 @@
 
 class TensorData : public ObserverData {
 public:
+
+    // ========== Constructors ==========
     TensorData() = default;
 
     template<typename T>
-    TensorData(std::map<int, torch::Tensor> data, std::vector<T> shape)
+    TensorData(std::map<TimeFrameIndex, torch::Tensor> data, std::vector<T> shape)
         : _data(std::move(data)) {
         for (auto s: shape) {
             _feature_shape.push_back(static_cast<std::size_t>(s));
         }
     }
 
-    void addTensorAtTime(int time, torch::Tensor const & tensor);
-    void overwriteTensorAtTime(int time, torch::Tensor const & tensor);
-    [[nodiscard]] torch::Tensor getTensorAtTime(int time) const;
-    [[nodiscard]] std::vector<int> getTimesWithTensors() const;
-    [[nodiscard]] std::vector<float> getChannelSlice(int time, int channel) const;
+    // ========== Setters ==========
 
-    [[nodiscard]] std::map<int, torch::Tensor> const & getData() const { return _data; }
+    void addTensorAtTime(TimeFrameIndex time, torch::Tensor const & tensor);
+
+
+    void overwriteTensorAtTime(TimeFrameIndex time, torch::Tensor const & tensor);
+
+    // ========== Getters ==========
+
+    [[nodiscard]] torch::Tensor getTensorAtTime(TimeFrameIndex time) const;
+    [[nodiscard]] std::vector<TimeFrameIndex> getTimesWithTensors() const;
+    [[nodiscard]] std::vector<float> getChannelSlice(TimeFrameIndex time, int channel) const;
+
+    [[nodiscard]] std::map<TimeFrameIndex, torch::Tensor> const & getData() const { return _data; }
 
     [[nodiscard]] std::size_t size() const { return _data.size(); }
 
@@ -35,7 +45,7 @@ public:
     }
 
 private:
-    std::map<int, torch::Tensor> _data;
+    std::map<TimeFrameIndex, torch::Tensor> _data;
     std::vector<size_t> _feature_shape;
 };
 

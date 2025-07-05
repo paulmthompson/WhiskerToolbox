@@ -4,6 +4,7 @@
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Tensors/Tensor_Data.hpp"
+#include "DataManager/TimeFrame.hpp"
 
 /**
  * Convert a DigitalIntervalSeries to an mlpack row vector
@@ -70,7 +71,7 @@ arma::Mat<double> convertToMlpackMatrix(
 
     auto col = 0;
     for (auto t: timestamps) {
-        auto points = pointData->getAtTime(TimeFrameIndex(static_cast<int>(t)));
+        auto points = pointData->getAtTime(TimeFrameIndex(t));
 
         if (points.empty()) {
             for (std::size_t i = 0; i < numRows; ++i) {
@@ -144,7 +145,7 @@ arma::Mat<double> convertTensorDataToMlpackMatrix(
 
     // Fill the matrix with the tensor data
     for (std::size_t col = 0; col < numCols; ++col) {
-        auto tensor = tensor_data->getTensorAtTime(static_cast<int>(timestamps[col]));
+        auto tensor = tensor_data->getTensorAtTime(TimeFrameIndex(timestamps[col]));
 
         if (tensor.numel() == 0) {
             for (std::size_t row = 0; row < numRows; ++row) {
@@ -180,7 +181,7 @@ inline void updateTensorDataFromMlpackMatrix(
     for (std::size_t i = 0; i < timestamps.size(); ++i) {
         auto col = copyMatrixRowToVector<double>(matrix.col(i));
         torch::Tensor const tensor = torch::from_blob(col.data(), shape, torch::kDouble).clone();
-        tensor_data.overwriteTensorAtTime(static_cast<int>(timestamps[i]), tensor);
+        tensor_data.overwriteTensorAtTime(TimeFrameIndex(timestamps[i]), tensor);
     }
 }
 

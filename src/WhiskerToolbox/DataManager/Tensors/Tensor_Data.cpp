@@ -5,25 +5,29 @@
 
 #include <filesystem>
 
-void TensorData::addTensorAtTime(int time, const torch::Tensor& tensor) {
+// ========== Setters ==========
+
+void TensorData::addTensorAtTime(TimeFrameIndex time, torch::Tensor const & tensor) {
     _data[time] = tensor;
     notifyObservers();
 }
 
-void TensorData::overwriteTensorAtTime(int time, const torch::Tensor& tensor) {
+void TensorData::overwriteTensorAtTime(TimeFrameIndex time, torch::Tensor const & tensor) {
     _data[time] = tensor;
     notifyObservers();
 }
 
-torch::Tensor TensorData::getTensorAtTime(int time) const {
+// ========== Getters ==========
+
+torch::Tensor TensorData::getTensorAtTime(TimeFrameIndex time) const {
     if (_data.find(time) != _data.end()) {
         return _data.at(time);
     }
     return torch::Tensor{};
 }
 
-std::vector<int> TensorData::getTimesWithTensors() const {
-    std::vector<int> times;
+std::vector<TimeFrameIndex> TensorData::getTimesWithTensors() const {
+    std::vector<TimeFrameIndex> times;
     times.reserve(_data.size());
     for (const auto& [time, tensor] : _data) {
         times.push_back(time);
@@ -31,7 +35,7 @@ std::vector<int> TensorData::getTimesWithTensors() const {
     return times;
 }
 
-std::vector<float> TensorData::getChannelSlice(int time, int channel) const
+std::vector<float> TensorData::getChannelSlice(TimeFrameIndex time, int channel) const
 {
 
     torch::Tensor const tensor = getTensorAtTime(time);
@@ -87,11 +91,11 @@ void loadNpyToTensorData(const std::string& filepath, TensorData& tensor_data) {
         torch::Tensor const tensor = torch::from_blob(&npy_data.data[0], {shape}, options);
 
         // Assuming the tensor is a 2D tensor where the first dimension is time
-        int const time_steps = static_cast<int>(tensor.size(0));
+        auto const time_steps = tensor.size(0);
 
-        std::map<int, torch::Tensor> data;
-        for (int t = 0; t < time_steps; ++t) {
-            data[t] = tensor[t].clone();
+        std::map<TimeFrameIndex, torch::Tensor> data;
+        for (size_t t = 0; t < time_steps; ++t) {
+            data[TimeFrameIndex(t)] = tensor[t].clone();
         }
 
         std::cout << "Loaded " << data.size() << " timestamps of tensors" << std::endl;

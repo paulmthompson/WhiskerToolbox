@@ -1,6 +1,8 @@
 #ifndef TENSORTABLEMODEL_HPP
 #define TENSORTABLEMODEL_HPP
 
+#include "DataManager/TimeFrame.hpp"
+
 #include <QAbstractTableModel>
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
@@ -17,7 +19,7 @@ public:
     explicit TensorTableModel(QObject * parent = nullptr)
         : QAbstractTableModel(parent) {}
 
-    void setTensors(std::map<int, torch::Tensor> const & tensors) {
+    void setTensors(std::map<TimeFrameIndex, torch::Tensor> const & tensors) {
         beginResetModel();
         _tensors = tensors;
         endResetModel();
@@ -39,7 +41,7 @@ public:
         }
 
         auto it = std::next(_tensors.begin(), index.row());
-        int const frame = it->first;
+        auto const frame = it->first.getValue();
         torch::Tensor const & tensor = it->second;
 
         if (index.column() == 0) {
@@ -74,7 +76,7 @@ public:
     }
 
 private:
-    std::map<int, torch::Tensor> _tensors;
+    std::map<TimeFrameIndex, torch::Tensor> _tensors;
 };
 
 #endif// TENSORTABLEMODEL_HPP

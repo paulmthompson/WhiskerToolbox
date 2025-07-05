@@ -1158,7 +1158,7 @@ void Media_Window::_plotTensorData() {
 
         auto tensor_shape = tensor_data->getFeatureShape();
 
-        auto tensor_slice = tensor_data->getChannelSlice(current_time, config->display_channel);
+        auto tensor_slice = tensor_data->getChannelSlice(TimeFrameIndex(current_time), config->display_channel);
 
         // Create a QImage from the tensor data
         QImage tensor_image(static_cast<int>(tensor_shape[1]), static_cast<int>(tensor_shape[0]), QImage::Format::Format_ARGB32);
