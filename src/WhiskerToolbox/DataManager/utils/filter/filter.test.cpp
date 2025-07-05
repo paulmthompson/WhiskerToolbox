@@ -136,48 +136,6 @@ TEST_CASE("FilterDefaults factory functions", "[filter][defaults]") {
     }
 }
 
-TEST_CASE("Sampling rate estimation", "[filter][sampling_rate]") {
-    SECTION("Regular sampling with known rate") {
-        size_t const num_samples = 100;
-        double const expected_rate = 1000.0;
-
-        std::vector<float> data(num_samples, 1.0f);
-        std::vector<TimeFrameIndex> times;
-        times.reserve(num_samples);
-
-        // Create regularly spaced time indices
-        for (size_t i = 0; i < num_samples; ++i) {
-            times.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
-        }
-
-        AnalogTimeSeries series(std::move(data), std::move(times));
-        double estimated_rate = estimateSamplingRate(&series);
-
-        // Since time indices are spaced by 1, estimated rate should be 1.0
-        CHECK(estimated_rate == 1.0);
-    }
-
-    SECTION("Empty time series") {
-        AnalogTimeSeries empty_series;
-        double estimated_rate = estimateSamplingRate(&empty_series);
-        CHECK(estimated_rate == 0.0);
-    }
-
-    SECTION("Single sample") {
-        std::vector<float> data = {1.0f};
-        std::vector<TimeFrameIndex> times = {TimeFrameIndex(0)};
-
-        AnalogTimeSeries series(std::move(data), std::move(times));
-        double estimated_rate = estimateSamplingRate(&series);
-        CHECK(estimated_rate == 0.0);
-    }
-
-    SECTION("Null pointer handling") {
-        double estimated_rate = estimateSamplingRate(nullptr);
-        CHECK(estimated_rate == 0.0);
-    }
-}
-
 TEST_CASE("Basic filtering functionality", "[filter][basic]") {
     // Create test data: sine wave with noise
     size_t const num_samples = 100;

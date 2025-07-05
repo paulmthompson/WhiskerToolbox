@@ -110,22 +110,6 @@ FilterResult filterAnalogTimeSeries(
         FilterOptions const & options);
 
 /**
- * @brief Get recommended sampling rate for AnalogTimeSeries
- * 
- * Analyzes the time spacing in an AnalogTimeSeries to estimate the sampling rate.
- * Useful for automatically determining appropriate filter parameters.
- * 
- * @param analog_time_series Input AnalogTimeSeries to analyze
- * @param start_time Start of time range to analyze (optional)
- * @param end_time End of time range to analyze (optional)
- * @return Estimated sampling rate in Hz, or 0.0 if estimation fails
- */
-double estimateSamplingRate(
-        AnalogTimeSeries const * analog_time_series,
-        std::optional<TimeFrameIndex> start_time = std::nullopt,
-        std::optional<TimeFrameIndex> end_time = std::nullopt);
-
-/**
  * @brief Create default filter options for common use cases
  */
 namespace FilterDefaults {
