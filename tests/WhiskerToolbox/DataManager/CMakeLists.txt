@@ -32,7 +32,6 @@ add_executable(test_data_manager
 
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/DataAggregation/DataAggregation.test.cpp
 
-        ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/filter/filter.test.cpp
         ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager/utils/filter/NewFilterInterface.test.cpp
 
         ${DATAMANAGER_TEST_SOURCES_TEMP}

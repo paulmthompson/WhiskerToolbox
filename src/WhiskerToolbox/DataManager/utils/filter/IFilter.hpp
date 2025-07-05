@@ -2,6 +2,7 @@
 #define IFILTER_HPP
 
 #include "TimeFrame.hpp"
+
 #include <span>
 #include <vector>
 

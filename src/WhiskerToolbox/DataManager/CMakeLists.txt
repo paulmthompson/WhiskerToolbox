@@ -83,15 +83,11 @@ set(DATAMANAGER_SOURCES
         utils/string_manip.hpp
         utils/DataAggregation/DataAggregation.hpp
         utils/DataAggregation/DataAggregation.cpp
-        utils/filter/filter.hpp
-        utils/filter/filter.cpp
         utils/filter/FilterFactory.hpp
         utils/filter/FilterFactory.cpp
         utils/filter/FilterImplementations.hpp
         utils/filter/IFilter.hpp
         utils/filter/ZeroPhaseDecorator.hpp
-        utils/filter/new_filter_bridge.hpp
-        utils/filter/new_filter_bridge.cpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp

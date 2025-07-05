@@ -1,8 +1,7 @@
 #include "FilterFactory.hpp"
 #include "IFilter.hpp"
 #include "ZeroPhaseDecorator.hpp"
-#include "new_filter_bridge.hpp"
-#include "filter.hpp" 
+
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -133,106 +132,6 @@ TEST_CASE("New Filter Interface: Filter Processing", "[filter][new_interface][pr
     }
 }
 
-TEST_CASE("New Filter Interface: FilterOptions Compatibility", "[filter][new_interface][compatibility]") {
-    SECTION("Create from FilterOptions - Lowpass") {
-        FilterOptions options;
-        options.type = FilterType::Butterworth;
-        options.response = FilterResponse::LowPass;
-        options.cutoff_frequency_hz = 100.0;
-        options.sampling_rate_hz = 1000.0;
-        options.order = 4;
-        options.zero_phase = false;
-        
-        auto filter = FilterFactory::createFromOptions(options);
-        REQUIRE(filter);
-        CHECK(filter->getName().find("Butterworth Lowpass Order 4") != std::string::npos);
-    }
-
-    SECTION("Create from FilterOptions - Zero Phase") {
-        FilterOptions options;
-        options.type = FilterType::Butterworth;
-        options.response = FilterResponse::LowPass;
-        options.cutoff_frequency_hz = 100.0;
-        options.sampling_rate_hz = 1000.0;
-        options.order = 4;
-        options.zero_phase = true;
-        
-        auto filter = FilterFactory::createFromOptions(options);
-        REQUIRE(filter);
-        CHECK(filter->getName().find("ZeroPhase") != std::string::npos);
-    }
-
-    SECTION("Unsupported filter response throws exception") {
-        FilterOptions options;
-        options.type = FilterType::Butterworth;
-        options.response = FilterResponse::LowShelf;  // Shelf filters not yet supported
-        options.cutoff_frequency_hz = 100.0;
-        options.sampling_rate_hz = 1000.0;
-        options.order = 4;
-        
-        REQUIRE_THROWS_AS(FilterFactory::createFromOptions(options), std::invalid_argument);
-    }
-}
-
-TEST_CASE("New Filter Interface: Bridge Function Comparison", "[filter][new_interface][bridge]") {
-    // Create test data: sine wave at 10 Hz sampled at 1000 Hz
-    std::vector<float> data;
-    std::vector<TimeFrameIndex> times;
-    const size_t num_samples = 500;
-    const double sampling_rate = 1000.0;
-    const double signal_freq = 5.0; // Low frequency that should pass through lowpass filter
-
-    for (size_t i = 0; i < num_samples; ++i) {
-        double t = static_cast<double>(i) / sampling_rate;
-        data.push_back(static_cast<float>(std::sin(2.0 * M_PI * signal_freq * t)));
-        times.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
-    }
-
-    auto series = std::make_shared<AnalogTimeSeries>(data, times);
-
-    SECTION("Compare lowpass filter results") {
-        FilterOptions options = FilterDefaults::lowpass(50.0, sampling_rate, 4);
-        options.zero_phase = false; // Disable zero-phase for simpler comparison
-
-        // Test old implementation
-        auto result_old = filterAnalogTimeSeries(series.get(), options);
-        
-        // Test new implementation
-        auto result_new = filterAnalogTimeSeriesNew(series.get(), options);
-
-        REQUIRE(result_old.success);
-        REQUIRE(result_new.success);
-        REQUIRE(result_old.filtered_data);
-        REQUIRE(result_new.filtered_data);
-
-        auto& old_data = result_old.filtered_data->getAnalogTimeSeries();
-        auto& new_data = result_new.filtered_data->getAnalogTimeSeries();
-
-        REQUIRE(old_data.size() == new_data.size());
-
-        // Results should be very similar (allowing for small numerical differences)
-        // Skip initial transient period
-        for (size_t i = 100; i < old_data.size(); ++i) {
-            REQUIRE(old_data[i] == Catch::Approx(new_data[i]).epsilon(0.01));
-        }
-    }
-
-    SECTION("Bridge function error handling") {
-        FilterOptions invalid_options;
-        invalid_options.sampling_rate_hz = -1.0; // Invalid
-
-        auto result = filterAnalogTimeSeriesNew(series.get(), invalid_options);
-        REQUIRE_FALSE(result.success);
-        REQUIRE_FALSE(result.error_message.empty());
-    }
-
-    SECTION("Bridge function null input") {
-        FilterOptions options = FilterDefaults::lowpass(100.0, 1000.0, 4);
-        auto result = filterAnalogTimeSeriesNew(nullptr, options);
-        REQUIRE_FALSE(result.success);
-        REQUIRE(result.error_message.find("null") != std::string::npos);
-    }
-}
 
 TEST_CASE("New Filter Interface: Advanced Functionality", "[filter][new_interface][advanced]") {
     const size_t num_samples = 1000;
@@ -281,60 +180,6 @@ TEST_CASE("New Filter Interface: Advanced Functionality", "[filter][new_interfac
         REQUIRE_NOTHROW(lowpass->process(std::span<float>(lp_data)));
         REQUIRE_NOTHROW(highpass->process(std::span<float>(hp_data)));
         REQUIRE_NOTHROW(bandpass->process(std::span<float>(bp_data)));
-    }
-}
-
-TEST_CASE("New Filter Interface vs Bridge Comparison", "[filter][comparison]") {
-    const size_t num_samples = 1000;
-    const double sampling_rate = 1000.0;
-    const double signal_freq = 10.0;
-    
-    // Create test data: sine wave
-    std::vector<float> test_data;
-    std::vector<TimeFrameIndex> test_times;
-    test_data.reserve(num_samples);
-    test_times.reserve(num_samples);
-    
-    for (size_t i = 0; i < num_samples; ++i) {
-        double t = static_cast<double>(i) / sampling_rate;
-        test_data.push_back(static_cast<float>(std::sin(2.0 * M_PI * signal_freq * t)));
-        test_times.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
-    }
-    
-    auto analog_series = std::make_shared<AnalogTimeSeries>(test_data, test_times);
-
-    SECTION("Compare new interface with bridge") {
-        FilterOptions options = FilterDefaults::lowpass(100.0, sampling_rate, 4);
-        
-        // Test with new bridge
-        auto new_result = filterAnalogTimeSeriesNew(analog_series.get(), options);
-        REQUIRE(new_result.success);
-        REQUIRE(new_result.filtered_data);
-        REQUIRE(new_result.filtered_data->getNumSamples() == num_samples);
-        
-        // Verify the new interface produces reasonable results
-        auto& new_data = new_result.filtered_data->getAnalogTimeSeries();
-        REQUIRE(new_data.size() == num_samples);
-        
-        // Check that filtering actually modified the data
-        bool data_modified = false;
-        for (size_t i = 0; i < num_samples; ++i) {
-            if (std::abs(new_data[i] - test_data[i]) > 0.001f) {
-                data_modified = true;
-                break;
-            }
-        }
-        REQUIRE(data_modified);
-    }
-
-    SECTION("Test zero-phase filtering through bridge") {
-        FilterOptions options = FilterDefaults::lowpass(100.0, sampling_rate, 4);
-        options.zero_phase = true;
-        
-        auto result = filterAnalogTimeSeriesNew(analog_series.get(), options);
-        REQUIRE(result.success);
-        REQUIRE(result.filtered_data);
-        REQUIRE(result.filtered_data->getNumSamples() == num_samples);
     }
 }
 
@@ -413,51 +258,6 @@ TEST_CASE("New Filter Interface: Chebyshev Processing", "[filter][new_interface]
             }
         }
         REQUIRE(filters_differ);
-    }
-}
-
-TEST_CASE("New Filter Interface: Chebyshev FilterOptions Compatibility", "[filter][new_interface][chebyshev][compatibility]") {
-    SECTION("Create Chebyshev I from FilterOptions") {
-        FilterOptions options;
-        options.type = FilterType::ChebyshevI;
-        options.response = FilterResponse::LowPass;
-        options.cutoff_frequency_hz = 100.0;
-        options.sampling_rate_hz = 1000.0;
-        options.order = 4;
-        options.passband_ripple_db = 1.5;
-        options.zero_phase = false;
-        
-        auto filter = FilterFactory::createFromOptions(options);
-        REQUIRE(filter);
-        CHECK(filter->getName().find("Chebyshev I Lowpass Order 4") != std::string::npos);
-        CHECK(filter->getName().find("ripple=1.5") != std::string::npos);
-    }
-
-    SECTION("Chebyshev I with zero phase") {
-        FilterOptions options;
-        options.type = FilterType::ChebyshevI;
-        options.response = FilterResponse::HighPass;
-        options.cutoff_frequency_hz = 50.0;
-        options.sampling_rate_hz = 1000.0;
-        options.order = 2;
-        options.passband_ripple_db = 0.5;
-        options.zero_phase = true;
-        
-        auto filter = FilterFactory::createFromOptions(options);
-        REQUIRE(filter);
-        CHECK(filter->getName().find("ZeroPhase") != std::string::npos);
-        CHECK(filter->getName().find("Chebyshev I Highpass") != std::string::npos);
-    }
-
-    SECTION("Unsupported Chebyshev shelf filter throws exception") {
-        FilterOptions options;
-        options.type = FilterType::ChebyshevI;
-        options.response = FilterResponse::LowShelf;  // Not supported
-        options.cutoff_frequency_hz = 50.0;
-        options.sampling_rate_hz = 1000.0;
-        options.order = 4;
-        
-        REQUIRE_THROWS_AS(FilterFactory::createFromOptions(options), std::invalid_argument);
     }
 }
 
@@ -545,67 +345,5 @@ TEST_CASE("New Filter Interface: Complete Filter Library", "[filter][new_interfa
         CHECK(highpass->getName().find("RBJ") != std::string::npos);
         CHECK(bandpass->getName().find("RBJ") != std::string::npos);
         CHECK(bandstop->getName().find("RBJ") != std::string::npos);
-    }
-}
-
-TEST_CASE("New Filter Interface: FilterOptions Compatibility - All Types", "[filter][new_interface][compatibility_complete]") {
-    SECTION("Butterworth filters from FilterOptions") {
-        FilterOptions options;
-        options.type = FilterType::Butterworth;
-        options.response = FilterResponse::BandStop;
-        options.cutoff_frequency_hz = 8.0;
-        options.high_cutoff_hz = 12.0;
-        options.sampling_rate_hz = 1000.0;
-        options.order = 4;
-        options.zero_phase = true;
-        
-        auto filter = FilterFactory::createFromOptions(options);
-        REQUIRE(filter);
-        CHECK(filter->getName().find("ZeroPhase") != std::string::npos);
-        CHECK(filter->getName().find("Butterworth Bandstop") != std::string::npos);
-    }
-
-    SECTION("Chebyshev I filters from FilterOptions") {
-        FilterOptions options;
-        options.type = FilterType::ChebyshevI;
-        options.response = FilterResponse::BandPass;
-        options.cutoff_frequency_hz = 8.0;
-        options.high_cutoff_hz = 12.0;
-        options.sampling_rate_hz = 1000.0;
-        options.order = 4;
-        options.passband_ripple_db = 1.0;
-        options.zero_phase = false;
-        
-        auto filter = FilterFactory::createFromOptions(options);
-        REQUIRE(filter);
-        CHECK(filter->getName().find("Chebyshev I Bandpass") != std::string::npos);
-    }
-
-    SECTION("Chebyshev II filters from FilterOptions") {
-        FilterOptions options;
-        options.type = FilterType::ChebyshevII;
-        options.response = FilterResponse::LowPass;
-        options.cutoff_frequency_hz = 100.0;
-        options.sampling_rate_hz = 1000.0;
-        options.order = 4;
-        options.stopband_ripple_db = 20.0;
-        
-        auto filter = FilterFactory::createFromOptions(options);
-        REQUIRE(filter);
-        CHECK(filter->getName().find("Chebyshev II") != std::string::npos);
-    }
-
-    SECTION("RBJ filters from FilterOptions") {
-        FilterOptions options;
-        options.type = FilterType::RBJ;
-        options.response = FilterResponse::LowPass;
-        options.cutoff_frequency_hz = 100.0;
-        options.sampling_rate_hz = 1000.0;
-        options.order = 2;  // RBJ filters are always 2nd order
-        options.q_factor = 0.707;
-        
-        auto filter = FilterFactory::createFromOptions(options);
-        REQUIRE(filter);
-        CHECK(filter->getName().find("RBJ") != std::string::npos);
     }
 }

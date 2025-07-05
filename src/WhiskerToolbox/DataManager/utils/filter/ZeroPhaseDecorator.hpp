@@ -2,6 +2,7 @@
 #define ZERO_PHASE_DECORATOR_HPP
 
 #include "IFilter.hpp"
+
 #include <memory>
 #include <algorithm>
 #include <vector>

@@ -4,7 +4,7 @@
 #include "IFilter.hpp"
 #include "FilterImplementations.hpp"
 #include "ZeroPhaseDecorator.hpp"
-#include "filter.hpp" // For FilterOptions compatibility
+
 #include <memory>
 #include <stdexcept>
 
@@ -444,17 +444,6 @@ public:
         
         return filter;
     }
-
-    /**
-     * @brief Create a filter from FilterOptions (for backward compatibility)
-     * 
-     * This method provides compatibility with the existing FilterOptions structure.
-     * Currently only supports Butterworth filters as an example.
-     * 
-     * @param options Filter configuration options
-     * @return Unique pointer to the created filter
-     */
-    static std::unique_ptr<IFilter> createFromOptions(FilterOptions const& options);
 
 private:
     // Helper template to dispatch filter creation based on runtime order
