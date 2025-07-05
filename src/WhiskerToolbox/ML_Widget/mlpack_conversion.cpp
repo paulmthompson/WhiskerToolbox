@@ -12,14 +12,14 @@
  * @return arma::Row<double> The mlpack row vector
  */
 arma::Row<double> convertToMlpackArray(
-        std::shared_ptr<DigitalIntervalSeries> const & series,
+        DigitalIntervalSeries const * series,
         std::vector<std::size_t> timestamps) {
 
     auto length = timestamps.size();
     arma::Row<double> result(length, arma::fill::zeros);
 
     for (std::size_t i = 0; i < length; ++i) {
-        if (series->isEventAtTime(static_cast<int>(timestamps[i]))) {
+        if (series->isEventAtTime(TimeFrameIndex(timestamps[i]))) {
             result[i] = 1.0;
         }
     }
@@ -60,7 +60,7 @@ void updateDigitalIntervalSeriesFromMlpackArray(
  * @return arma::Mat<double> The mlpack matrix
  */
 arma::Mat<double> convertToMlpackMatrix(
-        std::shared_ptr<PointData> const & pointData,
+        PointData const * pointData,
         std::vector<std::size_t> const & timestamps) {
 
     size_t const numCols = timestamps.size();
@@ -127,12 +127,12 @@ void updatePointDataFromMlpackMatrix(
  * @return arma::Mat<double> The mlpack matrix
  */
 arma::Mat<double> convertTensorDataToMlpackMatrix(
-        TensorData const & tensor_data,
+        TensorData const * tensor_data,
         std::vector<std::size_t> const & timestamps) {
     // Determine the number of rows and columns for the Armadillo matrix
     std::size_t const numCols = timestamps.size();
 
-    auto feature_shape = tensor_data.getFeatureShape();
+    auto feature_shape = tensor_data->getFeatureShape();
     std::size_t const numRows = std::accumulate(
             feature_shape.begin(),
             feature_shape.end(),
@@ -144,7 +144,7 @@ arma::Mat<double> convertTensorDataToMlpackMatrix(
 
     // Fill the matrix with the tensor data
     for (std::size_t col = 0; col < numCols; ++col) {
-        auto tensor = tensor_data.getTensorAtTime(static_cast<int>(timestamps[col]));
+        auto tensor = tensor_data->getTensorAtTime(static_cast<int>(timestamps[col]));
 
         if (tensor.numel() == 0) {
             for (std::size_t row = 0; row < numRows; ++row) {

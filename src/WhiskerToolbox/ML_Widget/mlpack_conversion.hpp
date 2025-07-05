@@ -1,6 +1,7 @@
 #ifndef WHISKERTOOLBOX_MLPACK_CONVERSION_HPP
 #define WHISKERTOOLBOX_MLPACK_CONVERSION_HPP
 
+//#include "DataManager/TimeFrame.hpp"
 
 #include <armadillo>
 
@@ -21,7 +22,7 @@ class TensorData;
  * @return arma::Row<double> The mlpack row vector
  */
 arma::Row<double> convertToMlpackArray(
-        std::shared_ptr<DigitalIntervalSeries> const & series,
+        DigitalIntervalSeries const * series,
         std::vector<std::size_t> timestamps);
 
 /**
@@ -48,7 +49,7 @@ void updateDigitalIntervalSeriesFromMlpackArray(
  * @return arma::Mat<double> The mlpack matrix
  */
 arma::Mat<double> convertToMlpackMatrix(
-        std::shared_ptr<PointData> const & pointData,
+        PointData const * pointData,
         std::vector<std::size_t> const & timestamps);
 
 void updatePointDataFromMlpackMatrix(
@@ -67,7 +68,7 @@ void updatePointDataFromMlpackMatrix(
  * @return arma::Mat<double> The mlpack matrix
  */
 arma::Mat<double> convertTensorDataToMlpackMatrix(
-        TensorData const & tensor_data,
+        TensorData const * tensor_data,
         std::vector<std::size_t> const & timestamps);
 
 template<typename T>

@@ -49,15 +49,14 @@ public:
 
     void addEvent(Interval new_interval);
 
-    template<typename T>
-    void addEvent(T start, T end) {
+    void addEvent(TimeFrameIndex start, TimeFrameIndex end) {
 
         if (start > end) {
             std::cout << "Start time is greater than end time" << std::endl;
             return;
         }
 
-        addEvent(Interval{static_cast<int64_t>(start), static_cast<int64_t>(end)});
+        addEvent(Interval{start.getValue(), end.getValue()});
     }
 
     void setEventAtTime(TimeFrameIndex time, bool event);
@@ -97,7 +96,7 @@ public:
 
     [[nodiscard]] std::vector<Interval> const & getDigitalIntervalSeries() const;
 
-    [[nodiscard]] bool isEventAtTime(int time) const;
+    [[nodiscard]] bool isEventAtTime(TimeFrameIndex time) const;
 
     [[nodiscard]] size_t size() const { return _data.size(); };
 
@@ -198,6 +197,6 @@ private:
     }
 };
 
-int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time);
+int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time);
 
 #endif// DIGITAL_INTERVAL_SERIES_HPP

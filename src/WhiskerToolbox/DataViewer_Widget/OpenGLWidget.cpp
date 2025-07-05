@@ -1480,7 +1480,7 @@ void OpenGLWidget::finishIntervalDrag() {
         }
 
         // Add the new interval
-        series->addEvent(static_cast<int>(new_start_series), static_cast<int>(new_end_series));
+        series->addEvent(TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
 
         // Update the selection to the new interval (stored in master time frame coordinates)
         setSelectedInterval(_dragging_series_key, _dragged_start_time, _dragged_end_time);
@@ -1797,7 +1797,7 @@ void OpenGLWidget::finishNewIntervalCreation() {
         }
 
         // Add the new interval to the series
-        series->addEvent(static_cast<int>(new_start_series), static_cast<int>(new_end_series));
+        series->addEvent(TimeFrameIndex(new_start_series), TimeFrameIndex(new_end_series));
 
         // Set the new interval as selected (stored in master time frame coordinates)
         setSelectedInterval(_new_interval_series_key, _new_interval_start_time, _new_interval_end_time);

@@ -34,17 +34,17 @@ arma::Mat<double> TransformationBase::fetchBaseData(
     } else if (data_type == DM_DataType::DigitalInterval) {
         auto digital_series = dm->getData<DigitalIntervalSeries>(base_key);
         if (digital_series) {
-            base_data_matrix = convertToMlpackArray(digital_series, timestamps);
+            base_data_matrix = convertToMlpackArray(digital_series.get(), timestamps);
         }
     } else if (data_type == DM_DataType::Points) {
         auto point_data = dm->getData<PointData>(base_key);
         if (point_data) {
-            base_data_matrix = convertToMlpackMatrix(point_data, timestamps);
+            base_data_matrix = convertToMlpackMatrix(point_data.get(), timestamps);
         }
     } else if (data_type == DM_DataType::Tensor) {
         auto tensor_data = dm->getData<TensorData>(base_key);
         if (tensor_data) {
-            base_data_matrix = convertTensorDataToMlpackMatrix(*tensor_data, timestamps);
+            base_data_matrix = convertTensorDataToMlpackMatrix(tensor_data.get(), timestamps);
         }
     } else {
         error_message += "Unsupported data type '" + convert_data_type_to_string(data_type) + "' for feature '" + base_key + "'.\n";

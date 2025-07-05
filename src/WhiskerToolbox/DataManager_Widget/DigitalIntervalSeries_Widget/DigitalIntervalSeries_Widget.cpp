@@ -132,7 +132,7 @@ void DigitalIntervalSeries_Widget::_createIntervalButton() {
         int64_t start = std::min(_interval_start, _interval_end);
         int64_t end = std::max(_interval_start, _interval_end);
 
-        contactIntervals->addEvent(start, end);
+        contactIntervals->addEvent(TimeFrameIndex(start), TimeFrameIndex(end));
 
         // Reset UI state
         ui->create_interval_button->setText("Create Interval");
@@ -176,7 +176,7 @@ void DigitalIntervalSeries_Widget::_flipIntervalButton() {
     auto intervals = _data_manager->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 
-    if (intervals->isEventAtTime(current_time)) {
+    if (intervals->isEventAtTime(TimeFrameIndex(current_time))) {
         intervals->setEventAtTime(TimeFrameIndex(current_time), false);
     } else {
         intervals->setEventAtTime(TimeFrameIndex(current_time), true);

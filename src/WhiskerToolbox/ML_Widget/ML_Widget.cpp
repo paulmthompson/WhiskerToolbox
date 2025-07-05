@@ -851,13 +851,13 @@ arma::Mat<double> create_arrays(
             if (analog_series) current_array_component = convertAnalogTimeSeriesToMlpackArray(analog_series.get(), timestamps).t();
         } else if (data_type == DM_DataType::DigitalInterval) {
             auto digital_series = data_manager->getData<DigitalIntervalSeries>(key);
-            if (digital_series) current_array_component = convertToMlpackArray(digital_series, timestamps).t();
+            if (digital_series) current_array_component = convertToMlpackArray(digital_series.get(), timestamps).t();
         } else if (data_type == DM_DataType::Points) {
             auto point_data = data_manager->getData<PointData>(key);
-            if (point_data) current_array_component = convertToMlpackMatrix(point_data, timestamps);
+            if (point_data) current_array_component = convertToMlpackMatrix(point_data.get(), timestamps);
         } else if (data_type == DM_DataType::Tensor) {
             auto tensor_data = data_manager->getData<TensorData>(key);
-            if (tensor_data) current_array_component = convertTensorDataToMlpackMatrix(*tensor_data, timestamps);
+            if (tensor_data) current_array_component = convertTensorDataToMlpackMatrix(tensor_data.get(), timestamps);
         } else {
             std::cerr << "Unsupported data type for key '" << key << "': " << convert_data_type_to_string(data_type) << std::endl;
             continue;

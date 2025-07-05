@@ -27,10 +27,10 @@ std::vector<Interval> const & DigitalIntervalSeries::getDigitalIntervalSeries() 
     return _data;
 }
 
-bool DigitalIntervalSeries::isEventAtTime(int const time) const {
+bool DigitalIntervalSeries::isEventAtTime(TimeFrameIndex const time) const {
 
     auto Contained = [time](auto const & event) {
-        return is_contained(event, static_cast<int64_t>(time));
+        return is_contained(event, time.getValue());
     };
 
     if (std::ranges::any_of(_data, Contained)) return true;
@@ -110,7 +110,7 @@ void DigitalIntervalSeries::_sortData() {
     std::sort(_data.begin(), _data.end());
 }
 
-int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int time) {
+int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time) {
     auto const & events = digital_series->getDigitalIntervalSeries();
 
     // Check if sorted
@@ -121,9 +121,9 @@ int find_closest_preceding_event(DigitalIntervalSeries * digital_series, int tim
     }
     int closest_index = -1;
     for (int i = 0; i < events.size(); ++i) {
-        if (events[i].start <= time) {
+        if (events[i].start <= time.getValue()) {
             closest_index = i;
-            if (time <= events[i].end) {
+            if (time.getValue() <= events[i].end) {
                 return i;
             }
         } else {

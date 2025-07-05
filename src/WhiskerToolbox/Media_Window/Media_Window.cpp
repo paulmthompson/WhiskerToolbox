@@ -1054,7 +1054,7 @@ void Media_Window::_plotDigitalIntervalSeries() {
                 query_time = interval_timeframe->getIndexAtTime(static_cast<float>(video_time_value)).getValue();
             }
 
-            bool const event_present = interval_series->isEventAtTime(query_time);
+            bool const event_present = interval_series->isEventAtTime(TimeFrameIndex(query_time));
 
             auto color = event_present ? plot_color : QColor(255, 255, 255, 10);// Transparent if no event
 
@@ -1110,11 +1110,11 @@ void Media_Window::_plotDigitalIntervalBorders() {
         if (needs_conversion) {
             // Convert current video time to interval timeframe
             auto video_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(current_time));
-            auto interval_index = interval_timeframe->getIndexAtTime(video_time).getValue();
+            auto interval_index = interval_timeframe->getIndexAtTime(video_time);
             interval_present = interval_series->isEventAtTime(interval_index);
         } else {
             // Direct comparison (no timeframe conversion needed)
-            interval_present = interval_series->isEventAtTime(current_time);
+            interval_present = interval_series->isEventAtTime(TimeFrameIndex(current_time));
         }
 
         // If an interval is present, draw a border around the entire image
