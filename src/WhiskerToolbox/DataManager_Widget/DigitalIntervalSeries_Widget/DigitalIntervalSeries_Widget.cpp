@@ -160,8 +160,8 @@ void DigitalIntervalSeries_Widget::_removeIntervalButton() {
     if (_interval_epoch) {
         _interval_epoch = false;
         ui->remove_interval_button->setText("Remove Interval");
-        for (int i = _interval_start; i < current_time; i++) {
-            intervals->setEventAtTime(i, false);
+        for (int64_t i = _interval_start; i < current_time; i++) {
+            intervals->setEventAtTime(TimeFrameIndex(i), false);
         }
     } else {
         _interval_start = current_time;
@@ -177,9 +177,9 @@ void DigitalIntervalSeries_Widget::_flipIntervalButton() {
     if (!intervals) return;
 
     if (intervals->isEventAtTime(current_time)) {
-        intervals->setEventAtTime(current_time, false);
+        intervals->setEventAtTime(TimeFrameIndex(current_time), false);
     } else {
-        intervals->setEventAtTime(current_time, true);
+        intervals->setEventAtTime(TimeFrameIndex(current_time), true);
     }
 }
 
@@ -355,7 +355,7 @@ void DigitalIntervalSeries_Widget::_moveIntervalsToTarget(std::string const & ta
     for (Interval const & interval: selected_intervals) {
         // Remove each time point in the interval from source
         for (int64_t time = interval.start; time <= interval.end; ++time) {
-            source_interval_data->setEventAtTime(static_cast<int>(time), false);
+            source_interval_data->setEventAtTime(TimeFrameIndex(time), false);
         }
     }
 
@@ -411,7 +411,7 @@ void DigitalIntervalSeries_Widget::_mergeIntervalsButton() {
     // Remove all selected intervals first
     for (Interval const & interval: selected_intervals) {
         for (int64_t time = interval.start; time <= interval.end; ++time) {
-            interval_data->setEventAtTime(static_cast<int>(time), false);
+            interval_data->setEventAtTime(TimeFrameIndex(time), false);
         }
     }
 

@@ -3,6 +3,7 @@
 
 #include "Observer/Observer_Data.hpp"
 #include "interval_data.hpp"
+#include "TimeFrame.hpp"
 
 #include <cstdint>
 #include <iostream>
@@ -59,14 +60,14 @@ public:
         addEvent(Interval{static_cast<int64_t>(start), static_cast<int64_t>(end)});
     }
 
-    void setEventAtTime(int time, bool event);
+    void setEventAtTime(TimeFrameIndex time, bool event);
 
-    void removeEventAtTime(int time);
+    void removeEventAtTime(TimeFrameIndex time);
 
     template<typename T, typename B>
     void setEventsAtTimes(std::vector<T> times, std::vector<B> events) {
-        for (int i = 0; i < times.size(); ++i) {
-            _setEventAtTime(times[i], events[i]);
+        for (int64_t i = 0; i < times.size(); ++i) {
+            _setEventAtTime(TimeFrameIndex(times[i]), events[i]);
         }
         notifyObservers();
     }
@@ -150,8 +151,8 @@ private:
     std::vector<Interval> _data{};
 
     void _addEvent(Interval new_interval);
-    void _setEventAtTime(int time, bool event);
-    void _removeEventAtTime(int time);
+    void _setEventAtTime(TimeFrameIndex time, bool event);
+    void _removeEventAtTime(TimeFrameIndex time);
 
     void _sortData();
 

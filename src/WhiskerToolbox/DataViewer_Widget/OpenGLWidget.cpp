@@ -1476,7 +1476,7 @@ void OpenGLWidget::finishIntervalDrag() {
         // Update the interval data in the series' native time frame
         // First, remove the original interval completely
         for (int64_t time = original_start_series; time <= original_end_series; ++time) {
-            series->setEventAtTime(static_cast<int>(time), false);
+            series->setEventAtTime(TimeFrameIndex(time), false);
         }
 
         // Add the new interval
