@@ -13,8 +13,19 @@ class TensorData : public ObserverData {
 public:
 
     // ========== Constructors ==========
+    /**
+     * @brief Default constructor
+     *
+     * This constructor creates an empty TensorData with no data
+     */
     TensorData() = default;
 
+    /**
+     * @brief Constructor for TensorData from a map of TimeFrameIndex to torch::Tensor
+     *
+     * @param data Map of TimeFrameIndex to torch::Tensor
+     * @param shape Vector of integers representing the shape of the tensors
+     */
     template<typename T>
     TensorData(std::map<TimeFrameIndex, torch::Tensor> data, std::vector<T> shape)
         : _data(std::move(data)) {
@@ -25,6 +36,18 @@ public:
 
     // ========== Setters ==========
 
+    /**
+     * @brief Add a tensor at a specific time
+     *
+     * This will add a single tensor at a specific time.
+     *
+     * If the time does not exist, it will be created.
+     *
+     * If the time already exists, the tensor will be overwritten with the new tensor.
+     *
+     * @param time The time to add the tensor at
+     * @param tensor The tensor to add
+     */
     void addTensorAtTime(TimeFrameIndex time, torch::Tensor const & tensor);
 
 
@@ -49,6 +72,7 @@ private:
     std::vector<size_t> _feature_shape;
 };
 
-void loadNpyToTensorData(std::string const & filepath, TensorData & tensor_data);
+
+
 
 #endif// TENSOR_DATA_HPP

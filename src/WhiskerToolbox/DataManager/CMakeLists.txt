@@ -53,6 +53,8 @@ set(DATAMANAGER_SOURCES
 
         Tensors/Tensor_Data.hpp
         Tensors/Tensor_Data.cpp
+        Tensors/IO/numpy/Tensor_Data_numpy.cpp
+        Tensors/IO/numpy/Tensor_Data_numpy.hpp
 
         TimeFrame/StrongTimeTypes.hpp
         TimeFrame/TimeFrameV2.hpp

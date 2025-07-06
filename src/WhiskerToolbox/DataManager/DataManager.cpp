@@ -18,6 +18,7 @@
 #include "Masks/IO/JSON/Mask_Data_JSON.hpp"
 #include "Media/Video_Data_Loader.hpp"
 #include "Points/IO/JSON/Point_Data_JSON.hpp"
+#include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
 
 #include "loaders/binary_loaders.hpp"
 #include "transforms/Masks/mask_area.hpp"
