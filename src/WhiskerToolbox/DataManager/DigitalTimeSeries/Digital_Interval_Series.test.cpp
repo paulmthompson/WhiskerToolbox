@@ -6,8 +6,8 @@
 TEST_CASE("Digital Interval Overlap Left", "[DataManager]") {
 
     DigitalIntervalSeries dis;
-    dis.addEvent(0, 10);
-    dis.addEvent(5, 15);
+    dis.addEvent(TimeFrameIndex(0), TimeFrameIndex(10));
+    dis.addEvent(TimeFrameIndex(5), TimeFrameIndex(15));
 
     auto data = dis.getDigitalIntervalSeries();
 
@@ -18,9 +18,9 @@ TEST_CASE("Digital Interval Overlap Left", "[DataManager]") {
 
 TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
     DigitalIntervalSeries dis;
-    dis.addEvent(0, 10); // Interval from 0 to 10
-    dis.addEvent(15, 25);// Interval from 15 to 25
-    dis.addEvent(30, 40);// Interval from 30 to 40
+    dis.addEvent(TimeFrameIndex(0), TimeFrameIndex(10)); // Interval from 0 to 10
+    dis.addEvent(TimeFrameIndex(15), TimeFrameIndex(25));// Interval from 15 to 25
+    dis.addEvent(TimeFrameIndex(30), TimeFrameIndex(40));// Interval from 30 to 40
 
     SECTION("CONTAINED mode") {
         // Test contained mode with various ranges
@@ -107,7 +107,7 @@ TEST_CASE("DigitalIntervalSeries - Empty and edge cases", "[DataManager]") {
         REQUIRE(intervals.empty());
     }
 
-    dis.addEvent(10, 20);
+    dis.addEvent(TimeFrameIndex(10), TimeFrameIndex(20));
 
     SECTION("Range before all intervals") {
         auto intervals = dis.getIntervalsAsVector(0, 5);

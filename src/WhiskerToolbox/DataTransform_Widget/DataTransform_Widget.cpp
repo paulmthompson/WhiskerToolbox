@@ -335,7 +335,15 @@ void DataTransform_Widget::_doTransform() {
 
     _data_manager->setData(new_data_key, result_any);
 
-    // Ensure progress bar shows completion
+    // Make sure new data is in the same temporal coordinate system as the input
+    auto input_time_key = _data_manager->getTimeFrame(_highlighted_available_feature.toStdString());
+    if (!input_time_key.empty()) {
+        auto success = _data_manager->setTimeFrame(new_data_key, input_time_key);
+        std::cout << "Time key set for new data: " << (success ? "Success" : "Failed") << std::endl;
+    } else {
+        std::cout << "No time key found for input feature: " << _highlighted_available_feature.toStdString() << std::endl;
+    }   
+
     ui->transform_progress_bar->setValue(100);
     ui->do_transform_button->setEnabled(true);
 }
