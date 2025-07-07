@@ -61,6 +61,22 @@ public:
 
     void setEventAtTime(TimeFrameIndex time, bool event);
 
+    /**
+     * @brief Remove an interval from the series
+     * 
+     * @param interval The interval to remove
+     * @return True if the interval was found and removed, false otherwise
+     */
+    bool removeInterval(Interval const & interval);
+
+    /**
+     * @brief Remove multiple intervals from the series
+     * 
+     * @param intervals The intervals to remove
+     * @return The number of intervals that were successfully removed
+     */
+    size_t removeIntervals(std::vector<Interval> const & intervals);
+
     template<typename T, typename B>
     void setEventsAtTimes(std::vector<T> times, std::vector<B> events) {
         for (int64_t i = 0; i < times.size(); ++i) {

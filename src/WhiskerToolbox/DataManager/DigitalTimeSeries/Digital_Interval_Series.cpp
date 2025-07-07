@@ -70,6 +70,35 @@ void DigitalIntervalSeries::setEventAtTime(TimeFrameIndex time, bool const event
     notifyObservers();
 }
 
+bool DigitalIntervalSeries::removeInterval(Interval const & interval) {
+    auto it = std::find(_data.begin(), _data.end(), interval);
+    if (it != _data.end()) {
+        _data.erase(it);
+        notifyObservers();
+        return true;
+    }
+    return false;
+}
+
+size_t DigitalIntervalSeries::removeIntervals(std::vector<Interval> const & intervals) {
+    size_t removed_count = 0;
+    
+    for (auto const & interval : intervals) {
+        auto it = std::find(_data.begin(), _data.end(), interval);
+        if (it != _data.end()) {
+            _data.erase(it);
+            removed_count++;
+        }
+    }
+    
+    if (removed_count > 0) {
+        _sortData();  // Re-sort after removals
+        notifyObservers();
+    }
+    
+    return removed_count;
+}
+
 void DigitalIntervalSeries::_setEventAtTime(TimeFrameIndex time, bool const event) {
     if (!event) {
         _removeEventAtTime(time);

@@ -9,6 +9,9 @@ template<typename T>
 struct IntervalT {
     T start;
     T end;
+    bool operator==(IntervalT const & other) const {
+        return start == other.start && end == other.end;
+    }
 };
 
 // Type aliases for backwards compatibility and common types

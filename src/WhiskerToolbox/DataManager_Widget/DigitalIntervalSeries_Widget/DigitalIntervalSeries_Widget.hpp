@@ -103,6 +103,11 @@ private:
      */
     void _copyIntervalsToTarget(std::string const & target_key);
 
+    /**
+     * @brief Delete selected intervals from the current data
+     */
+    void _deleteSelectedIntervals();
+
 private slots:
 
     void _createIntervalButton();

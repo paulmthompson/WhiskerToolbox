@@ -325,8 +325,10 @@ void DigitalIntervalSeries_Widget::_showContextMenu(QPoint const & position) {
     // Add separator and existing operations
     context_menu.addSeparator();
     QAction * merge_action = context_menu.addAction("Merge Selected Intervals");
+    QAction * delete_action = context_menu.addAction("Delete Selected Intervals");
 
     connect(merge_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_mergeIntervalsButton);
+    connect(delete_action, &QAction::triggered, this, &DigitalIntervalSeries_Widget::_deleteSelectedIntervals);
 
     context_menu.exec(ui->tableView->mapToGlobal(position));
 }
@@ -505,4 +507,32 @@ std::string DigitalIntervalSeries_Widget::_generateFilename() const {
 void DigitalIntervalSeries_Widget::_updateFilename() {
     std::string filename = _generateFilename();
     ui->filename_edit->setText(QString::fromStdString(filename));
+}
+
+void DigitalIntervalSeries_Widget::_deleteSelectedIntervals() {
+    std::vector<Interval> selected_intervals = _getSelectedIntervals();
+    if (selected_intervals.empty()) {
+        std::cout << "DigitalIntervalSeries_Widget: No intervals selected to delete." << std::endl;
+        return;
+    }
+
+    auto interval_data_ptr = _data_manager->getData<DigitalIntervalSeries>(_active_key);
+    if (!interval_data_ptr) {
+        std::cerr << "DigitalIntervalSeries_Widget: DigitalIntervalSeries object ('" << _active_key << "') not found." << std::endl;
+        return;
+    }
+
+    std::cout << "DigitalIntervalSeries_Widget: Deleting " << selected_intervals.size() 
+              << " intervals from '" << _active_key << "'..." << std::endl;
+
+    // Delete the selected intervals
+    size_t deleted_count = interval_data_ptr->removeIntervals(selected_intervals);
+
+    if (deleted_count > 0) {
+        std::cout << "DigitalIntervalSeries_Widget: Successfully deleted " << deleted_count 
+                  << " intervals." << std::endl;
+        // The table will be automatically updated through the observer pattern
+    } else {
+        std::cout << "DigitalIntervalSeries_Widget: No intervals were deleted." << std::endl;
+    }
 }

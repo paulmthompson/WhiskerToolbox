@@ -99,7 +99,7 @@ private slots:
     void _onExportTypeChanged(int index);
     void _handleSaveCSVRequested(CSVPointSaverOptions options);
     void _onExportMediaFramesCheckboxToggled(bool checked);
-    void _deleteSelectedPoints();// New slot for delete operation
+    void _deleteSelectedPoints();
 };
 
 #endif// POINT_WIDGET_HPP
