@@ -78,11 +78,6 @@ void DigitalIntervalSeries::_setEventAtTime(TimeFrameIndex time, bool const even
     }
 }
 
-void DigitalIntervalSeries::removeEventAtTime(TimeFrameIndex const time) {
-    _removeEventAtTime(time);
-    notifyObservers();
-}
-
 void DigitalIntervalSeries::_removeEventAtTime(TimeFrameIndex const time) {
     for (auto it = _data.begin(); it != _data.end(); ++it) {
         if (is_contained(*it, time.getValue())) {

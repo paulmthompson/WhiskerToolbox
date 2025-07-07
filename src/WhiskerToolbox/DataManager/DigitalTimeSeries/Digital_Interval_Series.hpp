@@ -61,8 +61,6 @@ public:
 
     void setEventAtTime(TimeFrameIndex time, bool event);
 
-    void removeEventAtTime(TimeFrameIndex time);
-
     template<typename T, typename B>
     void setEventsAtTimes(std::vector<T> times, std::vector<B> events) {
         for (int64_t i = 0; i < times.size(); ++i) {
