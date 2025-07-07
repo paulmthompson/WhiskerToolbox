@@ -661,8 +661,8 @@ void OpenGLWidget::drawAnalogSeries() {
 
         m_vertices.clear();
 
-        auto series_start_index = TimeFrameIndex(getTimeIndexForSeries(start_time, _master_time_frame.get(), time_frame.get()));
-        auto series_end_index = TimeFrameIndex(getTimeIndexForSeries(end_time, _master_time_frame.get(), time_frame.get()));
+        auto series_start_index = getTimeIndexForSeries(start_time, _master_time_frame.get(), time_frame.get());
+        auto series_end_index = getTimeIndexForSeries(end_time, _master_time_frame.get(), time_frame.get());
 
         // === MVP MATRIX SETUP ===
 
