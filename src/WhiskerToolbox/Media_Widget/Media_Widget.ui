@@ -23,7 +23,7 @@
    <item>
     <widget class="QSplitter" name="splitter">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="childrenCollapsible">
       <bool>false</bool>
@@ -47,19 +47,19 @@
         <height>16777215</height>
        </size>
       </property>
-      <property name="widgetResizable">
-       <bool>true</bool>
-      </property>
       <property name="horizontalScrollBarPolicy">
        <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="widgetResizable">
+       <bool>true</bool>
       </property>
       <widget class="QWidget" name="scrollAreaWidgetContents">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>148</width>
-         <height>559</height>
+         <width>158</width>
+         <height>541</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">

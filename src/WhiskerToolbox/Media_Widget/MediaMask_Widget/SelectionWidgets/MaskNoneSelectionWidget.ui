@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>226</width>
     <height>100</height>
    </rect>
   </property>
@@ -19,11 +19,11 @@
      <property name="text">
       <string>No selection mode active. Click in the video to navigate.</string>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
      <property name="wordWrap">
       <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
      </property>
     </widget>
    </item>
@@ -31,4 +31,4 @@
  </widget>
  <resources/>
  <connections/>
-</ui> 
+</ui>

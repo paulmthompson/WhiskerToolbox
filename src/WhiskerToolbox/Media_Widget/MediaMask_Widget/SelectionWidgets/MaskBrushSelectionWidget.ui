@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>365</width>
     <height>180</height>
    </rect>
   </property>
@@ -46,10 +46,10 @@ Left click to add to the mask, right click to erase from it.</string>
         <number>15</number>
        </property>
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="tickPosition">
-        <enum>QSlider::TicksBelow</enum>
+        <enum>QSlider::TickPosition::TicksBelow</enum>
        </property>
        <property name="tickInterval">
         <number>5</number>
@@ -83,11 +83,11 @@ Left click to add to the mask, right click to erase from it.</string>
    </item>
    <item>
     <widget class="QCheckBox" name="allowEmptyMaskCheckbox">
-     <property name="text">
-      <string>Allow empty masks (preserve mask when all pixels are erased)</string>
-     </property>
      <property name="toolTip">
       <string>When enabled, masks will be preserved even when all pixels are erased, useful for creating negative labels for semantic segmentation</string>
+     </property>
+     <property name="text">
+      <string>Allow empty masks (preserve mask when all pixels are erased)</string>
      </property>
      <property name="checked">
       <bool>false</bool>
@@ -96,24 +96,24 @@ Left click to add to the mask, right click to erase from it.</string>
    </item>
    <item>
     <widget class="QLabel" name="infoLabel">
+     <property name="styleSheet">
+      <string>font-style: italic; color: #666;</string>
+     </property>
      <property name="text">
       <string>Note: The same brush size applies to both adding and erasing operations.</string>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
      <property name="wordWrap">
       <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="styleSheet">
-      <string>font-style: italic; color: #666;</string>
      </property>
     </widget>
    </item>
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
-      <enum>Qt::Vertical</enum>
+      <enum>Qt::Orientation::Vertical</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
@@ -127,4 +127,4 @@ Left click to add to the mask, right click to erase from it.</string>
  </widget>
  <resources/>
  <connections/>
-</ui> 
+</ui>
