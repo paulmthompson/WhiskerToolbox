@@ -19,6 +19,7 @@ format: html
 -   Prefer standard library algorithms where possible
 -   Public member functions and free function declarations should include doxygen comments above them. Private member function definitions should include doxygen comments above them.
 -   Prefer forward declarations in header files
+-   Document pre-conditions and post-conditions in doxygen comments uses the @pre and @post tags.
 -   This is a C++20 project. Prefer standard library algorithms and std::ranges where possible.
 
 ## Before You Submit a Pull Request

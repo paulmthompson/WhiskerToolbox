@@ -59,3 +59,133 @@ The EventViewer_Widget provides: - **Display Mode**: Combo box to switch between
 -   State is preserved when switching between data series
 -   Integration with existing TreeWidgetStateManager for persistence
 -   Optimized rendering with proper OpenGL line thickness and positioning
+
+### Time Frame Synchronization
+
+The DataViewer Widget properly handles multi-rate data synchronization:
+
+-   **Master Time Frame**: OpenGLWidget maintains a reference to the master time frame ("master" or "time") used for X-axis coordinates
+-   **Time Frame Conversion**: When data series use different time frames from the master, proper coordinate conversion ensures synchronized display
+-   **Cross-Rate Compatibility**: Supports simultaneous visualization of data collected at different sampling rates (e.g., 30kHz electrophysiology with 500Hz video)
+-   **Consistent X-Axis**: All data types (analog time series, digital events, digital intervals) are rendered with consistent X-axis positioning regardless of their native time frame
+-   **Range Query Optimization**: Data range queries are optimized for each time frame to ensure efficient rendering of large datasets
+
+## Interactive Interval Editing
+
+The DataViewer Widget supports interactive editing of digital interval series through a mouse-based dragging interface that handles multi-timeframe data seamlessly.
+
+### Interval Selection and Highlighting
+
+-   **Click-to-Select**: Users can click on digital intervals to select them for editing
+-   **Visual Feedback**: Selected intervals are highlighted with enhanced borders for clear identification
+-   **Per-Series Selection**: Each digital interval series maintains its own independent selection state
+
+### Interval Edge Dragging
+
+The widget provides precise interval boundary editing through a sophisticated dragging system:
+
+#### Core Functionality
+
+-   **Edge Detection**: Mouse hover near interval boundaries (within 10 pixels) changes cursor to resize indicator
+-   **Drag Initiation**: Click and drag on interval edges to modify interval start or end times
+-   **Real-time Preview**: During dragging, both original (dimmed) and new (semi-transparent) interval positions are shown
+-   **Collision Prevention**: Automatic constraint enforcement prevents intervals from overlapping with existing intervals
+
+#### Multi-Timeframe Support
+
+The interval dragging system automatically handles time frame conversion for data collected at different sampling rates:
+
+-   **Coordinate Conversion**: Mouse coordinates (in master time frame) are automatically converted to the series' native time frame indices
+-   **Precision Handling**: Dragged positions are rounded to the nearest valid index in the target time frame, accommodating different sampling resolutions
+-   **Constraint Enforcement**: Collision detection and boundary constraints are performed in the series' native time frame for accuracy
+-   **Display Consistency**: Visual feedback remains in master time frame coordinates for consistent user experience
+
+#### Error Handling and Robustness
+
+-   **Graceful Degradation**: Failed time frame conversions abort the drag operation while preserving original data
+-   **Data Integrity**: Invalid interval bounds (e.g., start ≥ end) are rejected without modifying existing data
+-   **State Management**: Drag operations can be cancelled (ESC key) to restore original interval boundaries
+
+#### Example Use Cases
+
+1.  **Behavioral Annotation**: Researchers can precisely adjust behavioral event boundaries recorded at video frame rates (30-120 Hz) while viewing synchronized neural data at higher sampling rates (20-30 kHz)
+2.  **Event Refinement**: Fine-tune automatically detected events by dragging boundaries to match observed signal characteristics across different data modalities
+3.  **Cross-Modal Synchronization**: Align interval boundaries across different measurement systems with varying temporal resolutions
+
+### Technical Implementation
+
+The interval editing system leverages the existing TimeFrame infrastructure:
+
+-   **TimeFrame.getIndexAtTime()**: Converts master time coordinates to series-specific indices
+-   **TimeFrame.getTimeAtIndex()**: Converts series indices back to master time coordinates for display
+-   **Automatic Snapping**: Ensures all interval boundaries align with valid time points in the target series
+-   **Thread Safety**: All operations maintain data consistency during concurrent access
+
+This functionality enables precise temporal analysis workflows while abstracting away the complexity of multi-rate data synchronization from the end user.
+
+## Vertical Space Coordination
+
+The DataViewer_Widget includes a sophisticated vertical space management system that prevents overlap between different data types and ensures optimal use of screen real estate.
+
+### VerticalSpaceManager
+
+The `VerticalSpaceManager` class handles automatic positioning and scaling for all data series:
+
+-   **Order-preserving**: New data positioned below existing data
+-   **Type-aware spacing**: Different configurations for analog (larger heights), digital events (compact), and intervals (moderate)
+-   **Auto-redistribution**: Adding new series triggers recalculation to prevent overlap
+-   **Canvas-independent**: Uses normalized coordinates for flexibility
+
+### MVP Matrix Architecture
+
+The rendering system uses a systematic Model-View-Projection (MVP) matrix approach for consistent positioning and scaling across all data types:
+
+#### **Model Matrix** - Series-Specific Transforms
+
+Handles individual series positioning and scaling:
+
+``` cpp
+// For VerticalSpaceManager-positioned series:
+Model = glm::translate(Model, glm::vec3(0, series_center_y, 0));  // Position
+Model = glm::scale(Model, glm::vec3(1, series_height * 0.5f, 1)); // Scale
+
+// For analog series, additional amplitude scaling:
+float amplitude_scale = 1.0f / (stdDev * scale_factor);
+Model = glm::scale(Model, glm::vec3(1, amplitude_scale, 1));
+```
+
+#### **View Matrix** - Global Operations
+
+Handles operations applied to all series equally:
+
+``` cpp
+View = glm::translate(View, glm::vec3(0, _verticalPanOffset, 0)); // Global panning
+```
+
+#### **Projection Matrix** - Coordinate System Mapping
+
+Maps world coordinates to screen coordinates:
+
+``` cpp
+// X axis: time range [start_time, end_time] → screen width
+// Y axis: world coordinates [min_y, max_y] → screen height
+Projection = glm::ortho(start_time, end_time, min_y, max_y);
+```
+
+#### Vertex Coordinate Systems
+
+**VerticalSpaceManager Mode** (recommended): - Vertices use normalized coordinates (-1 to +1 in local space) - Model matrix handles all positioning and scaling - Consistent across all data types
+
+**Legacy Mode** (backward compatibility): - Vertices use world coordinates directly - Positioning handled by coordinate calculations - Index-based spacing for events
+
+#### Detection of Positioning Mode
+
+The system automatically detects which positioning mode to use:
+
+-   **Digital Events**: `vertical_spacing == 0.0f` signals VerticalSpaceManager mode
+-   **Analog Series**: `y_offset != 0.0f` signals VerticalSpaceManager mode\
+-   **Digital Intervals**: `y_offset != 0.0f` signals VerticalSpaceManager mode
+
+This ensures backward compatibility while enabling the new systematic approach.
+
+## Interval Editing System

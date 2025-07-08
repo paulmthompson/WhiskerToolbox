@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Data Manager – Neuralyzer</title>
+<title>Data Transform Widget – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -71,7 +71,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="nav-sidebar docked nav-fixed">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -144,119 +144,19 @@ ul.task-list li input[type="checkbox"] {
 </div>
       </div> <!-- /container-fluid -->
     </nav>
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/data_manager.html">Data Manager</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-    </div>
-  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Developer Documentation</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Contributing Code</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Data Manager</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">File IO</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Image Processing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Media Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Viewer Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a href="../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Features</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Collapsible Widget</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-    </ul>
-    </div>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#time-frame-structure-for-multi-rate-data-visualization" id="toc-time-frame-structure-for-multi-rate-data-visualization" class="nav-link active" data-scroll-target="#time-frame-structure-for-multi-rate-data-visualization">Time Frame Structure for Multi-Rate Data Visualization</a>
-  <ul class="collapse">
-  <li><a href="#illustrative-example-electrophysiology-and-video-data" id="toc-illustrative-example-electrophysiology-and-video-data" class="nav-link" data-scroll-target="#illustrative-example-electrophysiology-and-video-data">Illustrative Example: Electrophysiology and Video Data</a></li>
-  <li><a href="#default-time-frame-and-customization" id="toc-default-time-frame-and-customization" class="nav-link" data-scroll-target="#default-time-frame-and-customization">Default Time Frame and Customization</a></li>
-  <li><a href="#data-indexing-within-time-frames" id="toc-data-indexing-within-time-frames" class="nav-link" data-scroll-target="#data-indexing-within-time-frames">Data Indexing within Time Frames</a></li>
-  <li><a href="#widget-considerations-for-data-synchronization" id="toc-widget-considerations-for-data-synchronization" class="nav-link" data-scroll-target="#widget-considerations-for-data-synchronization">Widget Considerations for Data Synchronization</a></li>
-  <li><a href="#performance-notes" id="toc-performance-notes" class="nav-link" data-scroll-target="#performance-notes">Performance Notes</a></li>
-  </ul></li>
-  <li><a href="#observer-framework" id="toc-observer-framework" class="nav-link" data-scroll-target="#observer-framework">Observer Framework</a></li>
-  <li><a href="#data-types" id="toc-data-types" class="nav-link" data-scroll-target="#data-types">Data Types</a>
-  <ul class="collapse">
-  <li><a href="#point" id="toc-point" class="nav-link" data-scroll-target="#point">Point</a></li>
-  <li><a href="#line" id="toc-line" class="nav-link" data-scroll-target="#line">Line</a></li>
-  <li><a href="#mask" id="toc-mask" class="nav-link" data-scroll-target="#mask">Mask</a></li>
-  <li><a href="#tensors" id="toc-tensors" class="nav-link" data-scroll-target="#tensors">Tensors</a></li>
-  <li><a href="#analog-time-series" id="toc-analog-time-series" class="nav-link" data-scroll-target="#analog-time-series">Analog Time Series</a></li>
-  <li><a href="#digital-event-series" id="toc-digital-event-series" class="nav-link" data-scroll-target="#digital-event-series">Digital Event Series</a></li>
-  <li><a href="#digital-interval-series" id="toc-digital-interval-series" class="nav-link" data-scroll-target="#digital-interval-series">Digital Interval Series</a></li>
-  <li><a href="#media" id="toc-media" class="nav-link" data-scroll-target="#media">Media</a></li>
-  <li><a href="#time-frame" id="toc-time-frame" class="nav-link" data-scroll-target="#time-frame">Time Frame</a></li>
-  </ul></li>
+  <li><a href="#core-components-and-workflow" id="toc-core-components-and-workflow" class="nav-link active" data-scroll-target="#core-components-and-workflow">Core Components and Workflow</a></li>
+  <li><a href="#features" id="toc-features" class="nav-link" data-scroll-target="#features">Features</a></li>
+  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section"></a></li>
   </ul>
 </nav>
     </div>
@@ -265,7 +165,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Data Manager</h1>
+<h1 class="title">Data Transform Widget</h1>
 </div>
 
 
@@ -282,247 +182,35 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>The DataManager has 3 core functionalities</p>
+<p>The data transform interface is used for processing different data types. The core idea is to define various data processing operations that can be dynamically discovered and applied to different types of data, with parameters configurable through the UI. The system employs several design patterns, most notably the <strong>Strategy pattern</strong> for individual transformations and a <strong>Registry pattern</strong> for managing them, along with <strong>Factory Method</strong> for creating UI components.</p>
+<section id="core-components-and-workflow" class="level2">
+<h2 class="anchored" data-anchor-id="core-components-and-workflow">Core Components and Workflow</h2>
+<p>The system revolves around a few key components:</p>
+<ol type="1">
+<li><p><strong><code>TransformOperation</code> (Strategy Pattern)</strong>: This is an abstract base class that defines the interface for all data transformation operations. Each concrete operation (e.g., <code>EventThresholdOperation</code>, <code>MaskAreaOperation</code>) inherits from <code>TransformOperation</code> and implements methods like <code>getName()</code>, <code>getTargetInputTypeIndex()</code>, <code>canApply()</code>, and <code>execute()</code>. This allows different algorithms (strategies) for data transformation to be used interchangeably.</p></li>
+<li><p><strong><code>TransformParametersBase</code> and derived structs (e.g., <code>ThresholdParams</code>)</strong>: These structures hold the parameters for specific transformations. <code>TransformParametersBase</code> is a base class, and each operation can define its own derived struct (like <code>ThresholdParams</code> for thresholding operations) to store specific settings.</p></li>
+<li><p><strong><code>TransformRegistry</code> (Registry Pattern)</strong>: This class acts as a central repository for all available <code>TransformOperation</code> instances. On initialization, it registers various concrete operation objects (e.g., <code>MaskAreaOperation</code>, <code>EventThresholdOperation</code>). It provides methods to find operations by name and to get a list of applicable operations for a given data type.</p></li>
+<li><p><strong><code>TransformParameter_Widget</code> (UI Abstraction)</strong>: This is an abstract base class for UI widgets that allow users to set parameters for a <code>TransformOperation</code>. Concrete classes like <code>AnalogEventThreshold_Widget</code> inherit from it and provide the specific UI controls (e.g., spinboxes, comboboxes) for an operation.</p></li>
+<li><p><strong><code>DataTransform_Widget</code> (Main UI Controller)</strong>: This Qt widget orchestrates the user interaction for data transformations.</p>
 <ul>
-<li><p>Assigns TimeFrames, or temporal coordinate systems to different datatypes. It keeps track of these relationships</p></li>
-<li><p>Operates a callback system that allows observers to know when data has been added to or removed from the datamanager.</p></li>
-<li><p>Checks in and serves data of different types to the user</p></li>
-</ul>
-<section id="time-frame-structure-for-multi-rate-data-visualization" class="level2">
-<h2 class="anchored" data-anchor-id="time-frame-structure-for-multi-rate-data-visualization">Time Frame Structure for Multi-Rate Data Visualization</h2>
-<p>An important feature of the program is being able to simultaneously visualize data that was collected at different sampling rates. The time frame structure is designed to indicate when time events occur at a particular sampling frequency. The data manager is responsible for keeping track of which data is located in what time frame. Multiple data objects can belong to one time frame, but one data object can only belong to a single time frame. However, if the relationship between time frame objects is specified, then data requested in one coordinate system can be converted to another.</p>
-<section id="illustrative-example-electrophysiology-and-video-data" class="level3">
-<h3 class="anchored" data-anchor-id="illustrative-example-electrophysiology-and-video-data">Illustrative Example: Electrophysiology and Video Data</h3>
-<p>Consider the following example: an NI-DAQ box samples at 30000&nbsp;Hz for electrophysiology. This results in analog data with 30000&nbsp;samples&nbsp;per&nbsp;second as well as event data for sorted spikes at 30000&nbsp;Hz resolution. The experiment may have also had a high-speed video camera collecting frames at 500&nbsp;Hz. A digital event for each frame was recorded with the same NI-DAQ. The user may have processed the video frames to categorize behavior, which would also be at the 500&nbsp;Hz resolution and be interval data.</p>
+<li><p>It uses a <code>Feature_Table_Widget</code> to display available data items (features) from a <code>DataManager</code>.</p></li>
+<li><p>When a feature is selected, it queries the <code>TransformRegistry</code> to find applicable operations for that feature’s data type.</p></li>
+<li><p>It populates a <code>QComboBox</code> with the names of these operations.</p></li>
+<li><p>When an operation is selected, it uses a map of factory functions (<code>_parameterWidgetFactories</code>) to create and display the appropriate <code>TransformParameter_Widget</code> (e.g., <code>AnalogEventThreshold_Widget</code>) for that operation. This is an example of the <strong>Factory Method pattern</strong>.</p></li>
+<li><p>It has a “Do Transform” button that, when clicked, retrieves the parameters from the current <code>TransformParameter_Widget</code>, gets the selected <code>TransformOperation</code> from the <code>TransformRegistry</code>, and executes the operation on the selected data.</p></li>
+</ul></li>
+</ol>
 </section>
-<section id="default-time-frame-and-customization" class="level3">
-<h3 class="anchored" data-anchor-id="default-time-frame-and-customization">Default Time Frame and Customization</h3>
-<p>The default time frame is simply called “time” and defaults to numbers between 1 and the number of frames in a loaded video. The scroll bar operates in this time frame and consequently sends signals in this time frame. The user can override this default time frame and replace it with an event structure with the same number of samples but where each event corresponds to the 30000&nbsp;Hz resolution digitized camera frame exposures. The user can then create a new clock called “master” that again counts from 1,2,3,… up to the total number of samples collected by the NI-DAQ.</p>
+<section id="features" class="level2">
+<h2 class="anchored" data-anchor-id="features">Features</h2>
+<ol type="1">
+<li>The <code>ProgressCallback</code> mechanism allows the <code>TransformOperation</code> to notify the <code>DataTransform_Widget</code> about its progress, which then updates the UI. This is a simple form of the Observer pattern.</li>
+</ol>
 </section>
-<section id="data-indexing-within-time-frames" class="level3">
-<h3 class="anchored" data-anchor-id="data-indexing-within-time-frames">Data Indexing within Time Frames</h3>
-<p>All data manager data types have a notion of “index,” and these correspond to the time frame they are associated with. This index property is important because data may be sparsely labeled and not have the same number of samples as their time frame.</p>
-</section>
-<section id="widget-considerations-for-data-synchronization" class="level3">
-<h3 class="anchored" data-anchor-id="widget-considerations-for-data-synchronization">Widget Considerations for Data Synchronization</h3>
-<p>Widgets that represent different data simultaneously must be aware of accounting for these differences.</p>
-</section>
-<section id="performance-notes" class="level3">
-<h3 class="anchored" data-anchor-id="performance-notes">Performance Notes</h3>
-<p>The user should also be aware that pointer indirections sample by sample for large vectors will be quite inefficient. If the user needs to find a series of values in a range in a different coordinate system it is most likely important to.</p>
-</section>
-</section>
-<section id="observer-framework" class="level2">
-<h2 class="anchored" data-anchor-id="observer-framework">Observer Framework</h2>
-</section>
-<section id="data-types" class="level2">
-<h2 class="anchored" data-anchor-id="data-types">Data Types</h2>
-<section id="point" class="level3">
-<h3 class="anchored" data-anchor-id="point">Point</h3>
-<p>A Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The <code>PointData</code> structure can hold multiple points per unit time.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Point Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="line" class="level3">
-<h3 class="anchored" data-anchor-id="line">Line</h3>
-<p>A Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is <strong>ordered</strong>, meaning that each point is positioned relative to its neighbors. The <code>LineData</code> structure can hold multiple lines per unit time.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Line Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>Currently, lines are represented by a raw list of points. One could imagine lines being parameterized in different ways, such as the coefficients of a polynomial fit. For many calculations, the parameterized version of a line may be less memory intensive and more efficient.</p>
-</section>
-<section id="mask" class="level3">
-<h3 class="anchored" data-anchor-id="mask">Mask</h3>
-<p>A mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not <strong>ordered</strong>. These would correspond to something like a binary segmentation mask over an image. The <code>MaskData</code> structure can hold multiple masks per unit time.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Mask Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Binary Semantic Segmentation Labels</td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>A mask may just be thought as a raw pixel, by pixel definition of a <strong>shape</strong>. Shapes could be defined as bounding boxes, circles, polygons, etc. It may one day be useful to describe shapes in other ways compared to the raw pixel-by-pixel definition.</p>
-</section>
-<section id="tensors" class="level3">
-<h3 class="anchored" data-anchor-id="tensors">Tensors</h3>
-<p>Tensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Tensor Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="analog-time-series" class="level3">
-<h3 class="anchored" data-anchor-id="analog-time-series">Analog Time Series</h3>
-<p>An analog time series has values that can vary continuously</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Analog Time Series Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Voltage traces from electrode recordings</td>
-</tr>
-<tr class="even">
-<td>Fluorescence intensity traces from Calcium imaging</td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="digital-event-series" class="level3">
-<h3 class="anchored" data-anchor-id="digital-event-series">Digital Event Series</h3>
-<p>A digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Event Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="digital-interval-series" class="level3">
-<h3 class="anchored" data-anchor-id="digital-interval-series">Digital Interval Series</h3>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Interval Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="media" class="level3">
-<h3 class="anchored" data-anchor-id="media">Media</h3>
-<p>Media is a sequence of images.</p>
-<section id="image" class="level4">
-<h4 class="anchored" data-anchor-id="image">Image</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Image Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Image sequence from two photon calcium imaging experiment</td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="video" class="level4">
-<h4 class="anchored" data-anchor-id="video">Video</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Video Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>MP4 video from high speed scientific camera of behavior</td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-</section>
-<section id="time-frame" class="level3">
-<h3 class="anchored" data-anchor-id="time-frame">Time Frame</h3>
+<section id="section" class="level2">
+<h2 class="anchored" data-anchor-id="section"></h2>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

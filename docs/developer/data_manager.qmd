@@ -10,11 +10,11 @@ The DataManager has 3 core functionalities
 
 -   Checks in and serves data of different types to the user
 
-## Time Frame Structure for Multi-Rate Data Visualization 
+## Time Frame Structure for Multi-Rate Data Visualization
 
 An important feature of the program is being able to simultaneously visualize data that was collected at different sampling rates. The time frame structure is designed to indicate when time events occur at a particular sampling frequency. The data manager is responsible for keeping track of which data is located in what time frame. Multiple data objects can belong to one time frame, but one data object can only belong to a single time frame. However, if the relationship between time frame objects is specified, then data requested in one coordinate system can be converted to another.
 
-### Illustrative Example: Electrophysiology and Video Data 
+### Illustrative Example: Electrophysiology and Video Data
 
 Consider the following example: an NI-DAQ box samples at 30000 Hz for electrophysiology. This results in analog data with 30000 samples per second as well as event data for sorted spikes at 30000 Hz resolution. The experiment may have also had a high-speed video camera collecting frames at 500 Hz. A digital event for each frame was recorded with the same NI-DAQ. The user may have processed the video frames to categorize behavior, which would also be at the 500 Hz resolution and be interval data.
 
@@ -22,15 +22,15 @@ Consider the following example: an NI-DAQ box samples at 30000 Hz for electroph
 
 The default time frame is simply called "time" and defaults to numbers between 1 and the number of frames in a loaded video. The scroll bar operates in this time frame and consequently sends signals in this time frame. The user can override this default time frame and replace it with an event structure with the same number of samples but where each event corresponds to the 30000 Hz resolution digitized camera frame exposures. The user can then create a new clock called "master" that again counts from 1,2,3,… up to the total number of samples collected by the NI-DAQ.
 
-### Data Indexing within Time Frames 
+### Data Indexing within Time Frames
 
 All data manager data types have a notion of “index,” and these correspond to the time frame they are associated with. This index property is important because data may be sparsely labeled and not have the same number of samples as their time frame.
 
-### Widget Considerations for Data Synchronization 
+### Widget Considerations for Data Synchronization
 
 Widgets that represent different data simultaneously must be aware of accounting for these differences.
 
-### Performance Notes 
+### Performance Notes
 
 The user should also be aware that pointer indirections sample by sample for large vectors will be quite inefficient. If the user needs to find a series of values in a range in a different coordinate system it is most likely important to.
 

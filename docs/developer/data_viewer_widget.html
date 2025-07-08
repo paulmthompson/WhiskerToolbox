@@ -20,6 +20,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -239,7 +273,29 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#data-viewer-widget-overview" id="toc-data-viewer-widget-overview" class="nav-link active" data-scroll-target="#data-viewer-widget-overview">Data Viewer Widget Overview</a></li>
   <li><a href="#visualization-capabilities" id="toc-visualization-capabilities" class="nav-link" data-scroll-target="#visualization-capabilities">Visualization Capabilities</a></li>
   <li><a href="#handling-grouped-data-and-custom-arrangement" id="toc-handling-grouped-data-and-custom-arrangement" class="nav-link" data-scroll-target="#handling-grouped-data-and-custom-arrangement">Handling Grouped Data and Custom Arrangement</a></li>
-  <li><a href="#interactive-analysis-and-pre-processing" id="toc-interactive-analysis-and-pre-processing" class="nav-link" data-scroll-target="#interactive-analysis-and-pre-processing">Interactive Analysis and Pre-processing</a></li>
+  <li><a href="#interactive-analysis-and-pre-processing" id="toc-interactive-analysis-and-pre-processing" class="nav-link" data-scroll-target="#interactive-analysis-and-pre-processing">Interactive Analysis and Pre-processing</a>
+  <ul class="collapse">
+  <li><a href="#event-viewer-features" id="toc-event-viewer-features" class="nav-link" data-scroll-target="#event-viewer-features">Event Viewer Features</a>
+  <ul class="collapse">
+  <li><a href="#display-modes" id="toc-display-modes" class="nav-link" data-scroll-target="#display-modes">Display Modes</a></li>
+  <li><a href="#auto-spacing-for-event-groups" id="toc-auto-spacing-for-event-groups" class="nav-link" data-scroll-target="#auto-spacing-for-event-groups">Auto-Spacing for Event Groups</a></li>
+  <li><a href="#user-controls" id="toc-user-controls" class="nav-link" data-scroll-target="#user-controls">User Controls</a></li>
+  <li><a href="#implementation-details" id="toc-implementation-details" class="nav-link" data-scroll-target="#implementation-details">Implementation Details</a></li>
+  <li><a href="#time-frame-synchronization" id="toc-time-frame-synchronization" class="nav-link" data-scroll-target="#time-frame-synchronization">Time Frame Synchronization</a></li>
+  </ul></li>
+  <li><a href="#interactive-interval-editing" id="toc-interactive-interval-editing" class="nav-link" data-scroll-target="#interactive-interval-editing">Interactive Interval Editing</a>
+  <ul class="collapse">
+  <li><a href="#interval-selection-and-highlighting" id="toc-interval-selection-and-highlighting" class="nav-link" data-scroll-target="#interval-selection-and-highlighting">Interval Selection and Highlighting</a></li>
+  <li><a href="#interval-edge-dragging" id="toc-interval-edge-dragging" class="nav-link" data-scroll-target="#interval-edge-dragging">Interval Edge Dragging</a></li>
+  <li><a href="#technical-implementation" id="toc-technical-implementation" class="nav-link" data-scroll-target="#technical-implementation">Technical Implementation</a></li>
+  </ul></li>
+  <li><a href="#vertical-space-coordination" id="toc-vertical-space-coordination" class="nav-link" data-scroll-target="#vertical-space-coordination">Vertical Space Coordination</a>
+  <ul class="collapse">
+  <li><a href="#verticalspacemanager" id="toc-verticalspacemanager" class="nav-link" data-scroll-target="#verticalspacemanager">VerticalSpaceManager</a></li>
+  <li><a href="#mvp-matrix-architecture" id="toc-mvp-matrix-architecture" class="nav-link" data-scroll-target="#mvp-matrix-architecture">MVP Matrix Architecture</a></li>
+  </ul></li>
+  <li><a href="#interval-editing-system" id="toc-interval-editing-system" class="nav-link" data-scroll-target="#interval-editing-system">Interval Editing System</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -283,8 +339,185 @@ ul.task-list li input[type="checkbox"] {
 <h1>Interactive Analysis and Pre-processing</h1>
 <p>This representation may provide the user with information useful for certain data pre-processing tasks. For instance, the user may be able to determine a numerical threshold for event detection in a particular channel. Alternatively, in this view, the user may wish to determine the temporal range where it appears some behavior is taking place based on an analog signal change. For example, viewing the whisker angle versus time when zoomed out may be useful to identify times when the animal is whisking versus when it is stationary.</p>
 <p>The user may even wish to <strong>interactively define events or intervals</strong> within this viewer window based on the temporal representation of data that would not be so easy to see in other widgets. Consequently, the data viewer is not just passive in its relationship with the data it is displaying but rather facilitates <strong>active engagement</strong>.</p>
+<section id="event-viewer-features" class="level2">
+<h2 class="anchored" data-anchor-id="event-viewer-features">Event Viewer Features</h2>
+<p>The EventViewer_Widget provides controls for digital event series visualization with two main display modes:</p>
+<section id="display-modes" class="level3">
+<h3 class="anchored" data-anchor-id="display-modes">Display Modes</h3>
+<ol type="1">
+<li><strong>Stacked Mode (Default)</strong>: Events are positioned in separate horizontal lanes with configurable spacing
+<ul>
+<li>Each event series gets its own horizontal “lane”</li>
+<li>Configurable vertical spacing between lanes</li>
+<li>Configurable event line height</li>
+<li>Auto-calculation of optimal spacing when event groups are loaded</li>
+</ul></li>
+<li><strong>Full Canvas Mode</strong>: Events stretch from top to bottom of the entire canvas
+<ul>
+<li>Original behavior maintained for compatibility</li>
+<li>All events span the full height of the display area</li>
+</ul></li>
+</ol>
+</section>
+<section id="auto-spacing-for-event-groups" class="level3">
+<h3 class="anchored" data-anchor-id="auto-spacing-for-event-groups">Auto-Spacing for Event Groups</h3>
+<p>When a tree of digital event series is selected and enabled, the system automatically calculates optimal spacing to fit all events on the canvas:</p>
+<ul>
+<li>If 40 events are enabled on a 400-pixel tall canvas, each event gets approximately 10 pixels of space</li>
+<li>Spacing and height are calculated to ensure visual separation between different event series</li>
+<li>Uses 80% of available canvas height, leaving margins at top and bottom</li>
+<li>Event height is set to 60% of calculated spacing to prevent overlap</li>
+</ul>
+</section>
+<section id="user-controls" class="level3">
+<h3 class="anchored" data-anchor-id="user-controls">User Controls</h3>
+<p>The EventViewer_Widget provides: - <strong>Display Mode</strong>: Combo box to switch between Stacked and Full Canvas modes - <strong>Vertical Spacing</strong>: Adjustable spacing between stacked event series (0.01-1.0 normalized units) - <strong>Event Height</strong>: Adjustable height of individual event lines (0.01-0.5 normalized units) - <strong>Color Controls</strong>: Standard color picker for event line colors and transparency</p>
+</section>
+<section id="implementation-details" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-details">Implementation Details</h3>
+<ul>
+<li>Event stacking uses normalized coordinates for consistent spacing across different canvas sizes</li>
+<li>State is preserved when switching between data series</li>
+<li>Integration with existing TreeWidgetStateManager for persistence</li>
+<li>Optimized rendering with proper OpenGL line thickness and positioning</li>
+</ul>
+</section>
+<section id="time-frame-synchronization" class="level3">
+<h3 class="anchored" data-anchor-id="time-frame-synchronization">Time Frame Synchronization</h3>
+<p>The DataViewer Widget properly handles multi-rate data synchronization:</p>
+<ul>
+<li><strong>Master Time Frame</strong>: OpenGLWidget maintains a reference to the master time frame (“master” or “time”) used for X-axis coordinates</li>
+<li><strong>Time Frame Conversion</strong>: When data series use different time frames from the master, proper coordinate conversion ensures synchronized display</li>
+<li><strong>Cross-Rate Compatibility</strong>: Supports simultaneous visualization of data collected at different sampling rates (e.g., 30kHz electrophysiology with 500Hz video)</li>
+<li><strong>Consistent X-Axis</strong>: All data types (analog time series, digital events, digital intervals) are rendered with consistent X-axis positioning regardless of their native time frame</li>
+<li><strong>Range Query Optimization</strong>: Data range queries are optimized for each time frame to ensure efficient rendering of large datasets</li>
+</ul>
+</section>
+</section>
+<section id="interactive-interval-editing" class="level2">
+<h2 class="anchored" data-anchor-id="interactive-interval-editing">Interactive Interval Editing</h2>
+<p>The DataViewer Widget supports interactive editing of digital interval series through a mouse-based dragging interface that handles multi-timeframe data seamlessly.</p>
+<section id="interval-selection-and-highlighting" class="level3">
+<h3 class="anchored" data-anchor-id="interval-selection-and-highlighting">Interval Selection and Highlighting</h3>
+<ul>
+<li><strong>Click-to-Select</strong>: Users can click on digital intervals to select them for editing</li>
+<li><strong>Visual Feedback</strong>: Selected intervals are highlighted with enhanced borders for clear identification</li>
+<li><strong>Per-Series Selection</strong>: Each digital interval series maintains its own independent selection state</li>
+</ul>
+</section>
+<section id="interval-edge-dragging" class="level3">
+<h3 class="anchored" data-anchor-id="interval-edge-dragging">Interval Edge Dragging</h3>
+<p>The widget provides precise interval boundary editing through a sophisticated dragging system:</p>
+<section id="core-functionality" class="level4">
+<h4 class="anchored" data-anchor-id="core-functionality">Core Functionality</h4>
+<ul>
+<li><strong>Edge Detection</strong>: Mouse hover near interval boundaries (within 10 pixels) changes cursor to resize indicator</li>
+<li><strong>Drag Initiation</strong>: Click and drag on interval edges to modify interval start or end times</li>
+<li><strong>Real-time Preview</strong>: During dragging, both original (dimmed) and new (semi-transparent) interval positions are shown</li>
+<li><strong>Collision Prevention</strong>: Automatic constraint enforcement prevents intervals from overlapping with existing intervals</li>
+</ul>
+</section>
+<section id="multi-timeframe-support" class="level4">
+<h4 class="anchored" data-anchor-id="multi-timeframe-support">Multi-Timeframe Support</h4>
+<p>The interval dragging system automatically handles time frame conversion for data collected at different sampling rates:</p>
+<ul>
+<li><strong>Coordinate Conversion</strong>: Mouse coordinates (in master time frame) are automatically converted to the series’ native time frame indices</li>
+<li><strong>Precision Handling</strong>: Dragged positions are rounded to the nearest valid index in the target time frame, accommodating different sampling resolutions</li>
+<li><strong>Constraint Enforcement</strong>: Collision detection and boundary constraints are performed in the series’ native time frame for accuracy</li>
+<li><strong>Display Consistency</strong>: Visual feedback remains in master time frame coordinates for consistent user experience</li>
+</ul>
+</section>
+<section id="error-handling-and-robustness" class="level4">
+<h4 class="anchored" data-anchor-id="error-handling-and-robustness">Error Handling and Robustness</h4>
+<ul>
+<li><strong>Graceful Degradation</strong>: Failed time frame conversions abort the drag operation while preserving original data</li>
+<li><strong>Data Integrity</strong>: Invalid interval bounds (e.g., start ≥ end) are rejected without modifying existing data</li>
+<li><strong>State Management</strong>: Drag operations can be cancelled (ESC key) to restore original interval boundaries</li>
+</ul>
+</section>
+<section id="example-use-cases" class="level4">
+<h4 class="anchored" data-anchor-id="example-use-cases">Example Use Cases</h4>
+<ol type="1">
+<li><strong>Behavioral Annotation</strong>: Researchers can precisely adjust behavioral event boundaries recorded at video frame rates (30-120 Hz) while viewing synchronized neural data at higher sampling rates (20-30 kHz)</li>
+<li><strong>Event Refinement</strong>: Fine-tune automatically detected events by dragging boundaries to match observed signal characteristics across different data modalities</li>
+<li><strong>Cross-Modal Synchronization</strong>: Align interval boundaries across different measurement systems with varying temporal resolutions</li>
+</ol>
+</section>
+</section>
+<section id="technical-implementation" class="level3">
+<h3 class="anchored" data-anchor-id="technical-implementation">Technical Implementation</h3>
+<p>The interval editing system leverages the existing TimeFrame infrastructure:</p>
+<ul>
+<li><strong>TimeFrame.getIndexAtTime()</strong>: Converts master time coordinates to series-specific indices</li>
+<li><strong>TimeFrame.getTimeAtIndex()</strong>: Converts series indices back to master time coordinates for display</li>
+<li><strong>Automatic Snapping</strong>: Ensures all interval boundaries align with valid time points in the target series</li>
+<li><strong>Thread Safety</strong>: All operations maintain data consistency during concurrent access</li>
+</ul>
+<p>This functionality enables precise temporal analysis workflows while abstracting away the complexity of multi-rate data synchronization from the end user.</p>
+</section>
+</section>
+<section id="vertical-space-coordination" class="level2">
+<h2 class="anchored" data-anchor-id="vertical-space-coordination">Vertical Space Coordination</h2>
+<p>The DataViewer_Widget includes a sophisticated vertical space management system that prevents overlap between different data types and ensures optimal use of screen real estate.</p>
+<section id="verticalspacemanager" class="level3">
+<h3 class="anchored" data-anchor-id="verticalspacemanager">VerticalSpaceManager</h3>
+<p>The <code>VerticalSpaceManager</code> class handles automatic positioning and scaling for all data series:</p>
+<ul>
+<li><strong>Order-preserving</strong>: New data positioned below existing data</li>
+<li><strong>Type-aware spacing</strong>: Different configurations for analog (larger heights), digital events (compact), and intervals (moderate)</li>
+<li><strong>Auto-redistribution</strong>: Adding new series triggers recalculation to prevent overlap</li>
+<li><strong>Canvas-independent</strong>: Uses normalized coordinates for flexibility</li>
+</ul>
+</section>
+<section id="mvp-matrix-architecture" class="level3">
+<h3 class="anchored" data-anchor-id="mvp-matrix-architecture">MVP Matrix Architecture</h3>
+<p>The rendering system uses a systematic Model-View-Projection (MVP) matrix approach for consistent positioning and scaling across all data types:</p>
+<section id="model-matrix---series-specific-transforms" class="level4">
+<h4 class="anchored" data-anchor-id="model-matrix---series-specific-transforms"><strong>Model Matrix</strong> - Series-Specific Transforms</h4>
+<p>Handles individual series positioning and scaling:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// For VerticalSpaceManager-positioned series:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>Model <span class="op">=</span> glm<span class="op">::</span>translate<span class="op">(</span>Model<span class="op">,</span> glm<span class="op">::</span>vec3<span class="op">(</span><span class="dv">0</span><span class="op">,</span> series_center_y<span class="op">,</span> <span class="dv">0</span><span class="op">));</span>  <span class="co">// Position</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>Model <span class="op">=</span> glm<span class="op">::</span>scale<span class="op">(</span>Model<span class="op">,</span> glm<span class="op">::</span>vec3<span class="op">(</span><span class="dv">1</span><span class="op">,</span> series_height <span class="op">*</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">,</span> <span class="dv">1</span><span class="op">));</span> <span class="co">// Scale</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">// For analog series, additional amplitude scaling:</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> amplitude_scale <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span> <span class="op">/</span> <span class="op">(</span>stdDev <span class="op">*</span> scale_factor<span class="op">);</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>Model <span class="op">=</span> glm<span class="op">::</span>scale<span class="op">(</span>Model<span class="op">,</span> glm<span class="op">::</span>vec3<span class="op">(</span><span class="dv">1</span><span class="op">,</span> amplitude_scale<span class="op">,</span> <span class="dv">1</span><span class="op">));</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="view-matrix---global-operations" class="level4">
+<h4 class="anchored" data-anchor-id="view-matrix---global-operations"><strong>View Matrix</strong> - Global Operations</h4>
+<p>Handles operations applied to all series equally:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>View <span class="op">=</span> glm<span class="op">::</span>translate<span class="op">(</span>View<span class="op">,</span> glm<span class="op">::</span>vec3<span class="op">(</span><span class="dv">0</span><span class="op">,</span> _verticalPanOffset<span class="op">,</span> <span class="dv">0</span><span class="op">));</span> <span class="co">// Global panning</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="projection-matrix---coordinate-system-mapping" class="level4">
+<h4 class="anchored" data-anchor-id="projection-matrix---coordinate-system-mapping"><strong>Projection Matrix</strong> - Coordinate System Mapping</h4>
+<p>Maps world coordinates to screen coordinates:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// X axis: time range [start_time, end_time] → screen width</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Y axis: world coordinates [min_y, max_y] → screen height</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>Projection <span class="op">=</span> glm<span class="op">::</span>ortho<span class="op">(</span>start_time<span class="op">,</span> end_time<span class="op">,</span> min_y<span class="op">,</span> max_y<span class="op">);</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="vertex-coordinate-systems" class="level4">
+<h4 class="anchored" data-anchor-id="vertex-coordinate-systems">Vertex Coordinate Systems</h4>
+<p><strong>VerticalSpaceManager Mode</strong> (recommended): - Vertices use normalized coordinates (-1 to +1 in local space) - Model matrix handles all positioning and scaling - Consistent across all data types</p>
+<p><strong>Legacy Mode</strong> (backward compatibility): - Vertices use world coordinates directly - Positioning handled by coordinate calculations - Index-based spacing for events</p>
+</section>
+<section id="detection-of-positioning-mode" class="level4">
+<h4 class="anchored" data-anchor-id="detection-of-positioning-mode">Detection of Positioning Mode</h4>
+<p>The system automatically detects which positioning mode to use:</p>
+<ul>
+<li><strong>Digital Events</strong>: <code>vertical_spacing == 0.0f</code> signals VerticalSpaceManager mode</li>
+<li><strong>Analog Series</strong>: <code>y_offset != 0.0f</code> signals VerticalSpaceManager mode<br>
+</li>
+<li><strong>Digital Intervals</strong>: <code>y_offset != 0.0f</code> signals VerticalSpaceManager mode</li>
+</ul>
+<p>This ensures backward compatibility while enabling the new systematic approach.</p>
+</section>
+</section>
+</section>
+<section id="interval-editing-system" class="level2">
+<h2 class="anchored" data-anchor-id="interval-editing-system">Interval Editing System</h2>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

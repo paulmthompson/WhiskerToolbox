@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Data Manager – Neuralyzer</title>
+<title>point_display_options – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -19,6 +19,40 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -71,7 +105,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="nav-sidebar docked nav-fixed">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -144,384 +178,182 @@ ul.task-list li input[type="checkbox"] {
 </div>
       </div> <!-- /container-fluid -->
     </nav>
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/data_manager.html">Data Manager</a></li></ol></nav>
-        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-    </div>
-  </nav>
 </header>
 <!-- content -->
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Developer Documentation</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Contributing Code</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Data Manager</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">File IO</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/image_processing.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Image Processing</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/media_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Media Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_manager_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Manager Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Data Viewer Widget</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a href="../developer/Features/overview.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Features</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="../developer/Features/Collapsible_Widget.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Collapsible Widget</span></a>
-  </div>
-</li>
-      </ul>
-  </li>
-    </ul>
-    </div>
-</nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#time-frame-structure-for-multi-rate-data-visualization" id="toc-time-frame-structure-for-multi-rate-data-visualization" class="nav-link active" data-scroll-target="#time-frame-structure-for-multi-rate-data-visualization">Time Frame Structure for Multi-Rate Data Visualization</a>
+  <li><a href="#display-options-for-media-widgets" id="toc-display-options-for-media-widgets" class="nav-link active" data-scroll-target="#display-options-for-media-widgets">Display Options for Media Widgets</a>
   <ul class="collapse">
-  <li><a href="#illustrative-example-electrophysiology-and-video-data" id="toc-illustrative-example-electrophysiology-and-video-data" class="nav-link" data-scroll-target="#illustrative-example-electrophysiology-and-video-data">Illustrative Example: Electrophysiology and Video Data</a></li>
-  <li><a href="#default-time-frame-and-customization" id="toc-default-time-frame-and-customization" class="nav-link" data-scroll-target="#default-time-frame-and-customization">Default Time Frame and Customization</a></li>
-  <li><a href="#data-indexing-within-time-frames" id="toc-data-indexing-within-time-frames" class="nav-link" data-scroll-target="#data-indexing-within-time-frames">Data Indexing within Time Frames</a></li>
-  <li><a href="#widget-considerations-for-data-synchronization" id="toc-widget-considerations-for-data-synchronization" class="nav-link" data-scroll-target="#widget-considerations-for-data-synchronization">Widget Considerations for Data Synchronization</a></li>
-  <li><a href="#performance-notes" id="toc-performance-notes" class="nav-link" data-scroll-target="#performance-notes">Performance Notes</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#point-display-options" id="toc-point-display-options" class="nav-link" data-scroll-target="#point-display-options">Point Display Options</a>
+  <ul class="collapse">
+  <li><a href="#point-size-control" id="toc-point-size-control" class="nav-link" data-scroll-target="#point-size-control">Point Size Control</a></li>
+  <li><a href="#marker-shape-options" id="toc-marker-shape-options" class="nav-link" data-scroll-target="#marker-shape-options">Marker Shape Options</a></li>
+  <li><a href="#implementation-details" id="toc-implementation-details" class="nav-link" data-scroll-target="#implementation-details">Implementation Details</a></li>
   </ul></li>
-  <li><a href="#observer-framework" id="toc-observer-framework" class="nav-link" data-scroll-target="#observer-framework">Observer Framework</a></li>
-  <li><a href="#data-types" id="toc-data-types" class="nav-link" data-scroll-target="#data-types">Data Types</a>
+  <li><a href="#line-display-options" id="toc-line-display-options" class="nav-link" data-scroll-target="#line-display-options">Line Display Options</a>
   <ul class="collapse">
-  <li><a href="#point" id="toc-point" class="nav-link" data-scroll-target="#point">Point</a></li>
-  <li><a href="#line" id="toc-line" class="nav-link" data-scroll-target="#line">Line</a></li>
-  <li><a href="#mask" id="toc-mask" class="nav-link" data-scroll-target="#mask">Mask</a></li>
-  <li><a href="#tensors" id="toc-tensors" class="nav-link" data-scroll-target="#tensors">Tensors</a></li>
-  <li><a href="#analog-time-series" id="toc-analog-time-series" class="nav-link" data-scroll-target="#analog-time-series">Analog Time Series</a></li>
-  <li><a href="#digital-event-series" id="toc-digital-event-series" class="nav-link" data-scroll-target="#digital-event-series">Digital Event Series</a></li>
-  <li><a href="#digital-interval-series" id="toc-digital-interval-series" class="nav-link" data-scroll-target="#digital-interval-series">Digital Interval Series</a></li>
-  <li><a href="#media" id="toc-media" class="nav-link" data-scroll-target="#media">Media</a></li>
-  <li><a href="#time-frame" id="toc-time-frame" class="nav-link" data-scroll-target="#time-frame">Time Frame</a></li>
+  <li><a href="#line-thickness-control" id="toc-line-thickness-control" class="nav-link" data-scroll-target="#line-thickness-control">Line Thickness Control</a></li>
+  <li><a href="#additional-line-features" id="toc-additional-line-features" class="nav-link" data-scroll-target="#additional-line-features">Additional Line Features</a></li>
+  <li><a href="#implementation-details-1" id="toc-implementation-details-1" class="nav-link" data-scroll-target="#implementation-details-1">Implementation Details</a></li>
+  </ul></li>
+  <li><a href="#technical-architecture" id="toc-technical-architecture" class="nav-link" data-scroll-target="#technical-architecture">Technical Architecture</a>
+  <ul class="collapse">
+  <li><a href="#display-options-structure" id="toc-display-options-structure" class="nav-link" data-scroll-target="#display-options-structure">Display Options Structure</a></li>
+  <li><a href="#widget-integration" id="toc-widget-integration" class="nav-link" data-scroll-target="#widget-integration">Widget Integration</a></li>
+  <li><a href="#rendering-system" id="toc-rendering-system" class="nav-link" data-scroll-target="#rendering-system">Rendering System</a></li>
+  </ul></li>
+  <li><a href="#usage-guidelines" id="toc-usage-guidelines" class="nav-link" data-scroll-target="#usage-guidelines">Usage Guidelines</a>
+  <ul class="collapse">
+  <li><a href="#for-users" id="toc-for-users" class="nav-link" data-scroll-target="#for-users">For Users</a></li>
+  <li><a href="#for-developers" id="toc-for-developers" class="nav-link" data-scroll-target="#for-developers">For Developers</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
-
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Data Manager</h1>
-</div>
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
 
 
 
-<div class="quarto-title-meta">
 
-    
-  
-    
-  </div>
-  
-
-
-</header>
-
-
-<p>The DataManager has 3 core functionalities</p>
+<section id="display-options-for-media-widgets" class="level1">
+<h1>Display Options for Media Widgets</h1>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>The display system in WhiskerToolbox allows users to customize the visual appearance of various data types including points and lines through configurable display options.</p>
+</section>
+<section id="point-display-options" class="level2">
+<h2 class="anchored" data-anchor-id="point-display-options">Point Display Options</h2>
+<section id="point-size-control" class="level3">
+<h3 class="anchored" data-anchor-id="point-size-control">Point Size Control</h3>
 <ul>
-<li><p>Assigns TimeFrames, or temporal coordinate systems to different datatypes. It keeps track of these relationships</p></li>
-<li><p>Operates a callback system that allows observers to know when data has been added to or removed from the datamanager.</p></li>
-<li><p>Checks in and serves data of different types to the user</p></li>
+<li><strong>Range</strong>: 1-50 pixels</li>
+<li><strong>UI Controls</strong>:
+<ul>
+<li>Horizontal slider for quick adjustments</li>
+<li>Spin box for precise numeric input</li>
+<li>Synchronized controls (changing one updates the other)</li>
+</ul></li>
+<li><strong>Default Value</strong>: 5 pixels</li>
 </ul>
-<section id="time-frame-structure-for-multi-rate-data-visualization" class="level2">
-<h2 class="anchored" data-anchor-id="time-frame-structure-for-multi-rate-data-visualization">Time Frame Structure for Multi-Rate Data Visualization</h2>
-<p>An important feature of the program is being able to simultaneously visualize data that was collected at different sampling rates. The time frame structure is designed to indicate when time events occur at a particular sampling frequency. The data manager is responsible for keeping track of which data is located in what time frame. Multiple data objects can belong to one time frame, but one data object can only belong to a single time frame. However, if the relationship between time frame objects is specified, then data requested in one coordinate system can be converted to another.</p>
-<section id="illustrative-example-electrophysiology-and-video-data" class="level3">
-<h3 class="anchored" data-anchor-id="illustrative-example-electrophysiology-and-video-data">Illustrative Example: Electrophysiology and Video Data</h3>
-<p>Consider the following example: an NI-DAQ box samples at 30000&nbsp;Hz for electrophysiology. This results in analog data with 30000&nbsp;samples&nbsp;per&nbsp;second as well as event data for sorted spikes at 30000&nbsp;Hz resolution. The experiment may have also had a high-speed video camera collecting frames at 500&nbsp;Hz. A digital event for each frame was recorded with the same NI-DAQ. The user may have processed the video frames to categorize behavior, which would also be at the 500&nbsp;Hz resolution and be interval data.</p>
 </section>
-<section id="default-time-frame-and-customization" class="level3">
-<h3 class="anchored" data-anchor-id="default-time-frame-and-customization">Default Time Frame and Customization</h3>
-<p>The default time frame is simply called “time” and defaults to numbers between 1 and the number of frames in a loaded video. The scroll bar operates in this time frame and consequently sends signals in this time frame. The user can override this default time frame and replace it with an event structure with the same number of samples but where each event corresponds to the 30000&nbsp;Hz resolution digitized camera frame exposures. The user can then create a new clock called “master” that again counts from 1,2,3,… up to the total number of samples collected by the NI-DAQ.</p>
+<section id="marker-shape-options" class="level3">
+<h3 class="anchored" data-anchor-id="marker-shape-options">Marker Shape Options</h3>
+<p>The system supports six different marker shapes:</p>
+<ol type="1">
+<li><strong>Circle</strong> (default) - Filled circular marker</li>
+<li><strong>Square</strong> - Filled rectangular marker<br>
+</li>
+<li><strong>Triangle</strong> - Filled triangular marker pointing upward</li>
+<li><strong>Cross</strong> - Plus sign (+) shaped marker</li>
+<li><strong>X</strong> - X-shaped marker (×)</li>
+<li><strong>Diamond</strong> - Diamond shaped marker (rotated square)</li>
+</ol>
 </section>
-<section id="data-indexing-within-time-frames" class="level3">
-<h3 class="anchored" data-anchor-id="data-indexing-within-time-frames">Data Indexing within Time Frames</h3>
-<p>All data manager data types have a notion of “index,” and these correspond to the time frame they are associated with. This index property is important because data may be sparsely labeled and not have the same number of samples as their time frame.</p>
-</section>
-<section id="widget-considerations-for-data-synchronization" class="level3">
-<h3 class="anchored" data-anchor-id="widget-considerations-for-data-synchronization">Widget Considerations for Data Synchronization</h3>
-<p>Widgets that represent different data simultaneously must be aware of accounting for these differences.</p>
-</section>
-<section id="performance-notes" class="level3">
-<h3 class="anchored" data-anchor-id="performance-notes">Performance Notes</h3>
-<p>The user should also be aware that pointer indirections sample by sample for large vectors will be quite inefficient. If the user needs to find a series of values in a range in a different coordinate system it is most likely important to.</p>
-</section>
-</section>
-<section id="observer-framework" class="level2">
-<h2 class="anchored" data-anchor-id="observer-framework">Observer Framework</h2>
-</section>
-<section id="data-types" class="level2">
-<h2 class="anchored" data-anchor-id="data-types">Data Types</h2>
-<section id="point" class="level3">
-<h3 class="anchored" data-anchor-id="point">Point</h3>
-<p>A Point represents a 2 dimensional (x, y) coordinate, which may vary in time. The <code>PointData</code> structure can hold multiple points per unit time.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Point Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="line" class="level3">
-<h3 class="anchored" data-anchor-id="line">Line</h3>
-<p>A Line represents a 2 dimensional (x,y) collection of points, which may vary with time. The collection of points is <strong>ordered</strong>, meaning that each point is positioned relative to its neighbors. The <code>LineData</code> structure can hold multiple lines per unit time.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Line Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>Currently, lines are represented by a raw list of points. One could imagine lines being parameterized in different ways, such as the coefficients of a polynomial fit. For many calculations, the parameterized version of a line may be less memory intensive and more efficient.</p>
-</section>
-<section id="mask" class="level3">
-<h3 class="anchored" data-anchor-id="mask">Mask</h3>
-<p>A mask represents a 2 dimensional collection of points, which may vary with time. Compared to a Line, the points in a Mask are not <strong>ordered</strong>. These would correspond to something like a binary segmentation mask over an image. The <code>MaskData</code> structure can hold multiple masks per unit time.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Mask Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Binary Semantic Segmentation Labels</td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>A mask may just be thought as a raw pixel, by pixel definition of a <strong>shape</strong>. Shapes could be defined as bounding boxes, circles, polygons, etc. It may one day be useful to describe shapes in other ways compared to the raw pixel-by-pixel definition.</p>
-</section>
-<section id="tensors" class="level3">
-<h3 class="anchored" data-anchor-id="tensors">Tensors</h3>
-<p>Tensors are N-Dimensional data structures, and consequently very flexible containers for complex data. A concrete use would be to store a Height x Width x Channel array for different timepoints during an experiment. These may be the features output from an encoder neural network that processes a video.</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Tensor Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="analog-time-series" class="level3">
-<h3 class="anchored" data-anchor-id="analog-time-series">Analog Time Series</h3>
-<p>An analog time series has values that can vary continuously</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Analog Time Series Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Voltage traces from electrode recordings</td>
-</tr>
-<tr class="even">
-<td>Fluorescence intensity traces from Calcium imaging</td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="digital-event-series" class="level3">
-<h3 class="anchored" data-anchor-id="digital-event-series">Digital Event Series</h3>
-<p>A digital event represents an ordered sequence of events, where each event is represented as a single instance in time. For instance, spike times from electrophysiology</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Event Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="digital-interval-series" class="level3">
-<h3 class="anchored" data-anchor-id="digital-interval-series">Digital Interval Series</h3>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Interval Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="media" class="level3">
-<h3 class="anchored" data-anchor-id="media">Media</h3>
-<p>Media is a sequence of images.</p>
-<section id="image" class="level4">
-<h4 class="anchored" data-anchor-id="image">Image</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Image Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Image sequence from two photon calcium imaging experiment</td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="video" class="level4">
-<h4 class="anchored" data-anchor-id="video">Video</h4>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Examples of Video Data</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>MP4 video from high speed scientific camera of behavior</td>
-</tr>
-<tr class="even">
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
+<section id="implementation-details" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-details">Implementation Details</h3>
+<ul>
+<li>Point configuration is stored in the <code>PointDisplayOptions</code> structure</li>
+<li>UI controls are synchronized to prevent conflicts</li>
+<li>Real-time updates are supported via Qt signals/slots</li>
+<li>Different marker shapes are rendered using appropriate Qt drawing primitives</li>
+</ul>
 </section>
 </section>
-<section id="time-frame" class="level3">
-<h3 class="anchored" data-anchor-id="time-frame">Time Frame</h3>
+<section id="line-display-options" class="level2">
+<h2 class="anchored" data-anchor-id="line-display-options">Line Display Options</h2>
+<section id="line-thickness-control" class="level3">
+<h3 class="anchored" data-anchor-id="line-thickness-control">Line Thickness Control</h3>
+<ul>
+<li><strong>Range</strong>: 1-20 pixels</li>
+<li><strong>UI Controls</strong>:
+<ul>
+<li>Horizontal slider for quick adjustments</li>
+<li>Spin box for precise numeric input</li>
+<li>Synchronized controls (changing one updates the other)</li>
+</ul></li>
+<li><strong>Default Value</strong>: 2 pixels</li>
+</ul>
+</section>
+<section id="additional-line-features" class="level3">
+<h3 class="anchored" data-anchor-id="additional-line-features">Additional Line Features</h3>
+<ul>
+<li><strong>Show Points</strong>: Option to display open circles at each data point along the line</li>
+<li><strong>Edge Snapping</strong>: Enable automatic snapping to detected edges when adding points</li>
+<li><strong>Color and Alpha</strong>: Configurable line color and transparency</li>
+</ul>
+</section>
+<section id="implementation-details-1" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-details-1">Implementation Details</h3>
+<ul>
+<li>Line configuration is stored in the <code>LineDisplayOptions</code> structure<br>
+</li>
+<li>Line thickness is applied via <code>QPen::setWidth()</code> during rendering</li>
+<li>UI controls follow the same synchronization pattern as point controls</li>
+<li>Real-time updates are supported via Qt signals/slots</li>
+</ul>
+</section>
+</section>
+<section id="technical-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="technical-architecture">Technical Architecture</h2>
+<section id="display-options-structure" class="level3">
+<h3 class="anchored" data-anchor-id="display-options-structure">Display Options Structure</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PointDisplayOptions <span class="op">:</span> <span class="kw">public</span> BaseDisplayOptions <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> point_size<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>POINT_SIZE<span class="op">};</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    PointMarkerShape marker_shape<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>POINT_MARKER_SHAPE<span class="op">};</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LineDisplayOptions <span class="op">:</span> <span class="kw">public</span> BaseDisplayOptions <span class="op">{</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> line_thickness<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>LINE_THICKNESS<span class="op">};</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_points<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>SHOW_POINTS<span class="op">};</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> edge_snapping<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="widget-integration" class="level3">
+<h3 class="anchored" data-anchor-id="widget-integration">Widget Integration</h3>
+<ul>
+<li>MediaPoint_Widget handles point-specific controls</li>
+<li>MediaLine_Widget handles line-specific controls</li>
+<li>Media_Window applies the configurations during rendering</li>
+<li>Synchronized UI controls prevent user confusion</li>
+</ul>
+</section>
+<section id="rendering-system" class="level3">
+<h3 class="anchored" data-anchor-id="rendering-system">Rendering System</h3>
+<p>The rendering system in Media_Window applies the display options during the plotting phase: - Point markers are drawn using the configured size and shape - Lines are drawn using the configured thickness via QPen - All configurations support real-time updates without data loss</p>
+</section>
+</section>
+<section id="usage-guidelines" class="level2">
+<h2 class="anchored" data-anchor-id="usage-guidelines">Usage Guidelines</h2>
+<section id="for-users" class="level3">
+<h3 class="anchored" data-anchor-id="for-users">For Users</h3>
+<ol type="1">
+<li>Select the data item from the feature table</li>
+<li>Adjust display options in the widget panel</li>
+<li>Changes are applied immediately to the visualization</li>
+<li>Use sliders for quick adjustments or spinboxes for precise values</li>
+</ol>
+</section>
+<section id="for-developers" class="level3">
+<h3 class="anchored" data-anchor-id="for-developers">For Developers</h3>
+<ol type="1">
+<li>All display options inherit from <code>BaseDisplayOptions</code></li>
+<li>UI controls should use blockSignals() to prevent recursive updates</li>
+<li>Follow the established naming convention for slot functions</li>
+<li>Add corresponding test cases for new display options</li>
+<li>Document new features in this file</li>
+</ol>
 
 
+</section>
 </section>
 </section>
 
