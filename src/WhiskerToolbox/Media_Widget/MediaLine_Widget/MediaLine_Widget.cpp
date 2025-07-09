@@ -432,7 +432,7 @@ void MediaLine_Widget::_applyPolynomialFit(Line2D& line, int order) {
     
     // Generate smooth curve with more points
     int const num_points = std::max(100, static_cast<int>(line.size()) * 2);
-    Line2D smooth_line;
+    std::vector<Point2D<float>> smooth_line;
     smooth_line.reserve(num_points);
     
     for (int i = 0; i < num_points; ++i) {
@@ -446,7 +446,7 @@ void MediaLine_Widget::_applyPolynomialFit(Line2D& line, int order) {
     }
     
     // Replace the original line with the smooth one
-    line = std::move(smooth_line);
+    line = Line2D(smooth_line);
 }
 
 void MediaLine_Widget::_setSmoothingMode(int index) {

@@ -4,6 +4,7 @@
 #include "transforms/data_transforms.hpp"
 
 #include "Points/points.hpp"
+#include "Lines/lines.hpp"
 
 #include <memory>
 #include <string>
@@ -34,7 +35,7 @@ struct MaskToLineParameters : public TransformParametersBase {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-std::vector<double> fit_polynomial_to_points(std::vector<Point2D<float>> const & points, int order);
+std::vector<double> fit_polynomial_to_points(Line2D const & points, int order);
 
 struct ParametricCoefficients {
     std::vector<double> x_coeffs;
@@ -42,25 +43,25 @@ struct ParametricCoefficients {
     bool success = false;
 };
 
-ParametricCoefficients fit_parametric_polynomials(std::vector<Point2D<float>> const & points, int order);
+ParametricCoefficients fit_parametric_polynomials(Line2D const & points, int order);
 
-std::vector<Point2D<float>> generate_smoothed_line(
-        std::vector<Point2D<float>> const & original_points,// Used to estimate total length
+Line2D generate_smoothed_line(
+        Line2D const & original_points,// Used to estimate total length
         std::vector<double> const & x_coeffs,
         std::vector<double> const & y_coeffs,
         int order,
         float target_spacing);
 
-std::vector<float> calculate_fitting_errors(std::vector<Point2D<float>> const & points,
+std::vector<float> calculate_fitting_errors(Line2D const & points,
                                             std::vector<double> const & x_coeffs,
                                             std::vector<double> const & y_coeffs);
 
-std::vector<Point2D<float>> remove_outliers_recursive(std::vector<Point2D<float>> const & points,
+Line2D remove_outliers_recursive(Line2D const & points,
                                                       float error_threshold_squared,
                                                       int polynomial_order,
                                                       int max_iterations = 10);
 
-std::vector<Point2D<float>> remove_outliers(std::vector<Point2D<float>> const & points,
+Line2D remove_outliers(Line2D const & points,
                                             float error_threshold,
                                             int polynomial_order);
 

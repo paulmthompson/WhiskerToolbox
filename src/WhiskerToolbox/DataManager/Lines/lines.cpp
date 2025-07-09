@@ -7,10 +7,10 @@
 
 
 Line2D create_line(std::vector<float> const & x, std::vector<float> const & y) {
-    auto new_line = Line2D{x.size()};
+    auto new_line = Line2D();
 
     for (std::size_t i = 0; i < x.size(); i++) {
-        new_line[i] = Point2D<float>{x[i], y[i]};
+        new_line.push_back(Point2D<float>{x[i], y[i]});
     }
 
     return new_line;

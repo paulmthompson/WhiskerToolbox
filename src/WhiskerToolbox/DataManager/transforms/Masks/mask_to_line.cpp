@@ -19,7 +19,7 @@
 
 
 // Helper function to fit a polynomial to the given data
-std::vector<double> fit_polynomial_to_points(std::vector<Point2D<float>> const & points, int order) {
+std::vector<double> fit_polynomial_to_points(Line2D const & points, int order) {
     if (points.size() <= static_cast<size_t>(order)) {
         return {};// Not enough data points
     }
@@ -66,7 +66,7 @@ std::vector<double> fit_polynomial_to_points(std::vector<Point2D<float>> const &
     return result;
 }
 
-ParametricCoefficients fit_parametric_polynomials(std::vector<Point2D<float>> const & points, int order) {
+ParametricCoefficients fit_parametric_polynomials(Line2D const & points, int order) {
     if (points.size() <= static_cast<size_t>(order)) {
         return {{}, {}, false};// Not enough points
     }
@@ -97,8 +97,8 @@ ParametricCoefficients fit_parametric_polynomials(std::vector<Point2D<float>> co
 }
 
 // Helper function to generate a smoothed line from parametric polynomial coefficients
-std::vector<Point2D<float>> generate_smoothed_line(
-        std::vector<Point2D<float>> const & original_points,// Used to estimate total length
+Line2D generate_smoothed_line(
+        Line2D const & original_points,// Used to estimate total length
         std::vector<double> const & x_coeffs,
         std::vector<double> const & y_coeffs,
         int order,
@@ -127,9 +127,9 @@ std::vector<Point2D<float>> generate_smoothed_line(
             if (!x_coeffs.empty() && !y_coeffs.empty()) {
                 float x = static_cast<float>(evaluate_polynomial(x_coeffs, 0.0));
                 float y = static_cast<float>(evaluate_polynomial(y_coeffs, 0.0));
-                return {{x, y}};
+                return Line2D({{x, y}});
             } else {
-                return {original_points[0]};// Fallback
+                return Line2D({original_points[0]});
             }
         } else {
             return {};
@@ -182,10 +182,10 @@ std::vector<float> calculate_fitting_errors(std::vector<Point2D<float>> const & 
 }
 
 // Recursive helper function for removing outliers
-std::vector<Point2D<float>> remove_outliers_recursive(std::vector<Point2D<float>> const & points,
-                                                      float error_threshold_squared,
-                                                      int polynomial_order,
-                                                      int max_iterations) {
+Line2D remove_outliers_recursive(Line2D const & points,
+                                 float error_threshold_squared,
+                                 int polynomial_order,
+                                 int max_iterations) {
     if (points.size() < static_cast<size_t>(polynomial_order + 2) || max_iterations <= 0) {
         return points;// Base case: not enough points or max iterations reached
     }
@@ -270,9 +270,9 @@ std::vector<Point2D<float>> remove_outliers_recursive(std::vector<Point2D<float>
 }
 
 // Main outlier removal function using recursion
-std::vector<Point2D<float>> remove_outliers(std::vector<Point2D<float>> const & points,
-                                            float error_threshold,
-                                            int polynomial_order) {
+Line2D remove_outliers(Line2D const & points,
+                       float error_threshold,
+                       int polynomial_order) {
     if (points.size() < static_cast<size_t>(polynomial_order + 2)) {
         return points;// Not enough points to fit and filter
     }
@@ -364,7 +364,7 @@ std::shared_ptr<LineData> mask_to_line(MaskData const * mask_data,
             continue;
         }
 
-        std::vector<Point2D<float>> line_points;
+        Line2D line_points;
 
         if (method == LinePointSelectionMethod::Skeletonize) {
             // Zero out the binary image

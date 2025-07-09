@@ -17,17 +17,17 @@ TEST_CASE("get_position_at_percentage - Basic functionality", "[get_position_at_
     }
 
     SECTION("Single point line") {
-        Line2D single_point = {Point2D<float>{5.0f, 10.0f}};
+        auto single_point = Line2D(std::vector<Point2D<float>>{{5.0f, 10.0f}});
         auto result = get_position_at_percentage(single_point, 0.5f);
         REQUIRE(result.x == 5.0f);
         REQUIRE(result.y == 10.0f);
     }
 
     SECTION("Two point line") {
-        Line2D two_points = {
-                Point2D<float>{0.0f, 0.0f},
-                Point2D<float>{10.0f, 0.0f}
-        };
+        auto two_points = Line2D(std::vector<Point2D<float>>{
+                {0.0f, 0.0f},
+                {10.0f, 0.0f}
+        });
 
         // Test at 0% (start)
         auto result_start = get_position_at_percentage(two_points, 0.0f);
@@ -49,11 +49,11 @@ TEST_CASE("get_position_at_percentage - Basic functionality", "[get_position_at_
 TEST_CASE("get_position_at_percentage - Complex line", "[get_position_at_percentage]") {
     // Create a right triangle: (0,0) -> (3,0) -> (3,4)
     // Total length = 3 + 4 = 7
-    Line2D triangle = {
-            Point2D<float>{0.0f, 0.0f},  // Start
-            Point2D<float>{3.0f, 0.0f},  // Corner
-            Point2D<float>{3.0f, 4.0f}   // End
-    };
+    auto triangle = Line2D({
+            {0.0f, 0.0f},  // Start
+            {3.0f, 0.0f},  // Corner
+            {3.0f, 4.0f}   // End
+    });
 
     SECTION("At 0% - should be at start") {
         auto result = get_position_at_percentage(triangle, 0.0f);
@@ -75,10 +75,10 @@ TEST_CASE("get_position_at_percentage - Complex line", "[get_position_at_percent
 }
 
 TEST_CASE("get_position_at_percentage - Edge cases", "[get_position_at_percentage]") {
-    Line2D line = {
+    auto line = Line2D({
             Point2D<float>{0.0f, 0.0f},
             Point2D<float>{10.0f, 10.0f}
-    };
+    });
 
     SECTION("Percentage below 0 should clamp to 0") {
         auto result = get_position_at_percentage(line, -0.5f);
@@ -97,7 +97,7 @@ TEST_CASE("Line segment extraction functionality", "[lines][segment]") {
 
     SECTION("Basic segment extraction") {
         // Create a simple horizontal line
-        Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}, {20.0f, 0.0f}, {30.0f, 0.0f}};
+        auto line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}, {20.0f, 0.0f}, {30.0f, 0.0f}});
 
         // Extract middle 50% (25% to 75%)
         auto segment = get_segment_between_percentages(line, 0.25f, 0.75f);
@@ -115,7 +115,7 @@ TEST_CASE("Line segment extraction functionality", "[lines][segment]") {
     }
 
     SECTION("Full line segment (0% to 100%)") {
-        Line2D line = {{0.0f, 0.0f}, {10.0f, 10.0f}, {20.0f, 0.0f}};
+        Line2D line = Line2D({{0.0f, 0.0f}, {10.0f, 10.0f}, {20.0f, 0.0f}});
 
         auto segment = get_segment_between_percentages(line, 0.0f, 1.0f);
 
@@ -129,7 +129,7 @@ TEST_CASE("Line segment extraction functionality", "[lines][segment]") {
     SECTION("Complex multi-segment line") {
         // Create an L-shaped line: horizontal then vertical
         // 10 + 10 = 20 total length
-        Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}, {10.0f, 10.0f}};
+        auto line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}, {10.0f, 10.0f}});
 
         // Extract from 25% to 75% (should span the corner)
         // 25% of 20 = 5, 75% of 20 = 15
@@ -158,13 +158,13 @@ TEST_CASE("Line segment extraction edge cases", "[lines][segment][edge-cases]") 
     }
 
     SECTION("Single point line") {
-        Line2D single_point = {{5.0f, 5.0f}};
+        auto single_point = Line2D({{5.0f, 5.0f}});
         auto segment = get_segment_between_percentages(single_point, 0.25f, 0.75f);
         REQUIRE(segment.empty());
     }
 
     SECTION("Two point line") {
-        Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}};
+        auto line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}});
 
         auto segment = get_segment_between_percentages(line, 0.25f, 0.75f);
 
@@ -174,7 +174,7 @@ TEST_CASE("Line segment extraction edge cases", "[lines][segment][edge-cases]") 
     }
 
     SECTION("Invalid percentage ranges") {
-        Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}, {20.0f, 0.0f}};
+        auto line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}, {20.0f, 0.0f}});
 
         // Start >= End
         auto segment1 = get_segment_between_percentages(line, 0.75f, 0.25f);
@@ -186,7 +186,7 @@ TEST_CASE("Line segment extraction edge cases", "[lines][segment][edge-cases]") 
     }
 
     SECTION("Out of range percentages are clamped") {
-        Line2D line = {{0.0f, 0.0f}, {10.0f, 0.0f}};
+        auto line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}});
 
         // Negative start percentage should be clamped to 0
         auto segment1 = get_segment_between_percentages(line, -0.5f, 0.5f);
@@ -201,7 +201,7 @@ TEST_CASE("Line segment extraction edge cases", "[lines][segment][edge-cases]") 
 
     SECTION("Zero-length segments") {
         // Line where all points are the same (zero total distance)
-        Line2D line = {{5.0f, 5.0f}, {5.0f, 5.0f}, {5.0f, 5.0f}};
+        auto line = Line2D({{5.0f, 5.0f}, {5.0f, 5.0f}, {5.0f, 5.0f}});
         auto segment = get_segment_between_percentages(line, 0.25f, 0.75f);
         REQUIRE(segment.empty());
     }

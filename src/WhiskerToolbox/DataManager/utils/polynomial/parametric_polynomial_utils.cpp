@@ -1,40 +1,38 @@
 #include "parametric_polynomial_utils.hpp"
 
-#include "Points/points.hpp" // For Point2D
-
 #include "armadillo" // For arma::mat, arma::vec, arma::solve, arma::conv_to
 
 #include <vector>
 #include <cmath> // For std::sqrt, std::pow
 
 // Helper function to compute t-values based on cumulative distance
-std::vector<double> compute_t_values(const std::vector<Point2D<float>>& points) {
-    if (points.empty()) {
+std::vector<double> compute_t_values(Line2D const & line) {
+    if (line.empty()) {
         return {};
     }
     
     std::vector<double> distances;
-    distances.reserve(points.size());
+    distances.reserve(line.size());
     distances.push_back(0.0);  // First point has distance 0
     
     double total_distance = 0.0;
-    for (size_t i = 1; i < points.size(); ++i) {
-        double dx = points[i].x - points[i-1].x;
-        double dy = points[i].y - points[i-1].y;
+    for (size_t i = 1; i < line.size(); ++i) {
+        double dx = line[i].x - line[i-1].x;
+        double dy = line[i].y - line[i-1].y;
         double segment_distance = std::sqrt(dx*dx + dy*dy);
         total_distance += segment_distance;
         distances.push_back(total_distance);
     }
     
     std::vector<double> t_values;
-    t_values.reserve(points.size());
+    t_values.reserve(line.size());
     if (total_distance > 0.0) {
         for (double d : distances) {
             t_values.push_back(d / total_distance);
         }
     } else {
-        for (size_t i = 0; i < points.size(); ++i) {
-            t_values.push_back(static_cast<double>(i) / static_cast<double>(points.size() > 1 ? points.size() - 1 : 1));
+        for (size_t i = 0; i < line.size(); ++i) {
+            t_values.push_back(static_cast<double>(i) / static_cast<double>(line.size() > 1 ? line.size() - 1 : 1));
         }
     }
     

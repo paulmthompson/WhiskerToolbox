@@ -83,6 +83,17 @@ public:
     void addAtTime(TimeFrameIndex time, std::vector<Point2D<float>> const & line, bool notify = true);
 
     /**
+     * @brief Add a line at a specific time
+     * 
+     * The line is defined by the Line2D object.
+     * 
+     * @param time The time to add the line at
+     * @param line The line to add
+     * @param notify If true, the observers will be notified
+     */
+    void addAtTime(TimeFrameIndex time, Line2D const & line, bool notify = true);
+
+    /**
      * @brief Add a point to a line at a specific time
      * 
      * The point is appended to the line.

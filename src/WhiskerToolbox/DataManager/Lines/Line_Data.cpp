@@ -50,7 +50,11 @@ void LineData::addAtTime(TimeFrameIndex const time, std::vector<float> const & x
 }
 
 void LineData::addAtTime(TimeFrameIndex const time, std::vector<Point2D<float>> const & line, bool notify) {
-    add_at_time(time, std::move(line), _data);
+    addAtTime(time, std::move(Line2D(line)), notify);
+}
+
+void LineData::addAtTime(TimeFrameIndex const time, Line2D const & line, bool notify) {
+    add_at_time(time, line, _data);
 
     if (notify) {
         notifyObservers();

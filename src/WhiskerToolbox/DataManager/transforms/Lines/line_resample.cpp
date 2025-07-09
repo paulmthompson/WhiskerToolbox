@@ -87,7 +87,7 @@ DataTypeVariant LineResampleOperation::execute(DataTypeVariant const& dataVarian
 
         for (const auto& single_line : time_lines_pair.lines) {
             if (single_line.empty()) {
-                new_lines_at_time.push_back({}); // Keep empty lines as empty
+                new_lines_at_time.push_back(Line2D()); // Keep empty lines as empty
             } else {
                 new_lines_at_time.push_back(resample_line_points(single_line, target_spacing));
             }
