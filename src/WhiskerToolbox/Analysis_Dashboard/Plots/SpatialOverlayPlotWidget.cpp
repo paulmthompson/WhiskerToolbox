@@ -78,9 +78,23 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
     // Ensure view matrices are updated with current widget size
     updateViewMatrices();
     
-    // Force immediate repaint
-    update();
-    repaint();
+    // Ensure OpenGL context is current before forcing repaint
+    if (context() && context()->isValid()) {
+        makeCurrent();
+        qDebug() << "SpatialOverlayOpenGLWidget: OpenGL context made current";
+        
+        // Force immediate repaint
+        update();
+        repaint();
+        
+        // Process any pending events to ensure immediate rendering
+        QApplication::processEvents();
+        
+        doneCurrent();
+    } else {
+        qDebug() << "SpatialOverlayOpenGLWidget: Warning - invalid OpenGL context, scheduling update";
+        update();
+    }
     
     qDebug() << "SpatialOverlayOpenGLWidget: setPointData completed, widget size:" << width() << "x" << height();
 }
@@ -228,10 +242,17 @@ void SpatialOverlayOpenGLWidget::handleTooltipTimer() {
 }
 
 void SpatialOverlayOpenGLWidget::updateSpatialIndex() {
+    qDebug() << "SpatialOverlayOpenGLWidget: updateSpatialIndex called with" << _all_points.size() << "points";
+    
     if (_all_points.empty() || !_data_bounds_valid) {
         _spatial_index.reset();
+        qDebug() << "SpatialOverlayOpenGLWidget: Spatial index reset (no points or invalid bounds)";
         return;
     }
+
+    // Temporarily disable mouse tracking during spatial index rebuild
+    bool was_tracking = hasMouseTracking();
+    setMouseTracking(false);
 
     // Create spatial index with data bounds
     BoundingBox bounds(_data_min_x, _data_min_y, _data_max_x, _data_max_y);
@@ -242,6 +263,11 @@ void SpatialOverlayOpenGLWidget::updateSpatialIndex() {
         auto const & point = _all_points[i];
         _spatial_index->insert(point.x, point.y, i);
     }
+    
+    // Re-enable mouse tracking
+    setMouseTracking(was_tracking);
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Spatial index rebuilt with" << _all_points.size() << "points";
 }
 
 void SpatialOverlayOpenGLWidget::calculateDataBounds() {
@@ -340,7 +366,14 @@ QPoint SpatialOverlayOpenGLWidget::worldToScreen(float world_x, float world_y) c
 }
 
 SpatialPointData const * SpatialOverlayOpenGLWidget::findPointNear(int screen_x, int screen_y, float tolerance_pixels) const {
-    if (!_spatial_index || !_data_bounds_valid) {
+    // Add extra safety checks to prevent crashes during resizing
+    if (!_spatial_index || !_data_bounds_valid || _all_points.empty()) {
+        return nullptr;
+    }
+
+    // Create a local copy of the points size to avoid race conditions
+    size_t points_size = _all_points.size();
+    if (points_size == 0) {
         return nullptr;
     }
 
@@ -349,18 +382,26 @@ SpatialPointData const * SpatialOverlayOpenGLWidget::findPointNear(int screen_x,
     QVector2D world_pos_offset = screenToWorld(screen_x + static_cast<int>(tolerance_pixels), screen_y);
     float world_tolerance = std::abs(world_pos_offset.x() - world_pos.x());
 
-    // Find nearest point using spatial index
-    auto const * nearest_point_index = _spatial_index->findNearest(
-            world_pos.x(), world_pos.y(), world_tolerance);
+    // Find nearest point using spatial index with extra error checking
+    try {
+        auto const * nearest_point_index = _spatial_index->findNearest(
+                world_pos.x(), world_pos.y(), world_tolerance);
 
-    if (nearest_point_index) {
-        // Add bounds checking to prevent crash
-        size_t index = nearest_point_index->data;
-        if (index < _all_points.size()) {
-            return &_all_points[index];
-        } else {
-            qDebug() << "SpatialOverlayOpenGLWidget: findPointNear - invalid index" << index << "size:" << _all_points.size();
+        if (nearest_point_index) {
+            // Add bounds checking to prevent crash
+            size_t index = nearest_point_index->data;
+            if (index < points_size && index < _all_points.size()) {
+                return &_all_points[index];
+            } else {
+                qDebug() << "SpatialOverlayOpenGLWidget: findPointNear - invalid index" << index 
+                         << "points_size:" << points_size << "_all_points.size():" << _all_points.size();
+                // Rebuild spatial index if corrupted
+                const_cast<SpatialOverlayOpenGLWidget*>(this)->updateSpatialIndex();
+            }
         }
+    } catch (...) {
+        qDebug() << "SpatialOverlayOpenGLWidget: findPointNear - exception caught, rebuilding spatial index";
+        const_cast<SpatialOverlayOpenGLWidget*>(this)->updateSpatialIndex();
     }
 
     return nullptr;
@@ -571,6 +612,11 @@ void SpatialOverlayPlotWidget::updateVisualization() {
     }
 
     loadPointData();
+    
+    // Request render update through signal
+    update();
+    emit renderUpdateRequested(getPlotId());
+    qDebug() << "SpatialOverlayPlotWidget: Emitted renderUpdateRequested signal";
 }
 
 void SpatialOverlayPlotWidget::handleFrameJumpRequest(int64_t time_frame_index) {

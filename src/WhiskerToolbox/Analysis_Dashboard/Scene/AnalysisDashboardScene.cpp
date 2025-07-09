@@ -41,6 +41,9 @@ void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget* plot_widget, cons
     connect(plot_widget, &AbstractPlotWidget::plotSelected,
             this, &AnalysisDashboardScene::handlePlotSelected);
     
+    connect(plot_widget, &AbstractPlotWidget::renderUpdateRequested,
+            this, &AnalysisDashboardScene::handleRenderUpdateRequested);
+    
     // Add to scene and position
     addItem(plot_widget);
     plot_widget->setPos(position);
@@ -125,6 +128,20 @@ void AnalysisDashboardScene::handlePlotSelected(const QString& plot_id) {
     }
     
     emit plotSelected(plot_id);
+}
+
+void AnalysisDashboardScene::handleRenderUpdateRequested(const QString& plot_id) {
+    qDebug() << "AnalysisDashboardScene: Received render update request from plot:" << plot_id;
+    
+    // Update the scene to ensure proper rendering
+    update();
+    
+    // Optionally update only the specific plot's area for better performance
+    AbstractPlotWidget* plot = getPlotWidget(plot_id);
+    if (plot) {
+        update(plot->sceneBoundingRect());
+        qDebug() << "AnalysisDashboardScene: Updated scene area for plot:" << plot_id;
+    }
 }
 
 AbstractPlotWidget* AnalysisDashboardScene::createPlotFromMimeData(const QMimeData* mime_data) {

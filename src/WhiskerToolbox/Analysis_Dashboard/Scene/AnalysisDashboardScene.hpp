@@ -99,6 +99,12 @@ private slots:
      */
     void handlePlotSelected(const QString& plot_id);
 
+    /**
+     * @brief Handle render update requests from plot widgets
+     * @param plot_id The ID of the plot requesting update
+     */
+    void handleRenderUpdateRequested(const QString& plot_id);
+
 private:
     std::shared_ptr<DataManager> _data_manager;
     QMap<QString, AbstractPlotWidget*> _plot_widgets;

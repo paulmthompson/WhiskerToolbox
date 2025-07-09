@@ -66,6 +66,12 @@ signals:
      */
     void propertiesChanged(const QString& plot_id);
 
+    /**
+     * @brief Emitted when this plot needs to be re-rendered/updated
+     * @param plot_id The unique ID of this plot
+     */
+    void renderUpdateRequested(const QString& plot_id);
+
 protected:
     /**
      * @brief Handle mouse press events for selection
