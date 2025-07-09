@@ -1,6 +1,7 @@
 #ifndef QUADTREE_HPP
 #define QUADTREE_HPP
 
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -60,6 +61,14 @@ public:
 
     explicit QuadTree(BoundingBox const & bounds, int depth = 0);
     ~QuadTree() = default;
+    
+    // Move constructor and assignment operator
+    QuadTree(QuadTree&& other) noexcept;
+    QuadTree& operator=(QuadTree&& other) noexcept;
+    
+    // Disable copy constructor and assignment operator
+    QuadTree(const QuadTree&) = delete;
+    QuadTree& operator=(const QuadTree&) = delete;
 
     /**
      * @brief Insert a point with associated data into the quadtree
@@ -131,6 +140,15 @@ private:
      * @brief Calculate squared distance between two points
      */
     float distanceSquared(float x1, float y1, float x2, float y2) const;
+
+    /**
+     * @brief Helper method for findNearest that returns pointer to actual stored data
+     * @param x X coordinate to search near
+     * @param y Y coordinate to search near
+     * @param max_distance_sq Maximum distance squared to search
+     * @return Pointer to the nearest point, or nullptr if none found
+     */
+    QuadTreePoint<T> const * findNearestHelper(float x, float y, float max_distance_sq) const;
 };
 
 // Template implementation
@@ -139,6 +157,29 @@ QuadTree<T>::QuadTree(BoundingBox const & bounds, int depth)
     : _bounds(bounds),
       _depth(depth) {
     _points.reserve(MAX_POINTS_PER_NODE);
+}
+
+template<typename T>
+QuadTree<T>::QuadTree(QuadTree&& other) noexcept
+    : _bounds(std::move(other._bounds)),
+      _depth(other._depth),
+      _points(std::move(other._points)) {
+    for (int i = 0; i < 4; ++i) {
+        _children[i] = std::move(other._children[i]);
+    }
+}
+
+template<typename T>
+QuadTree<T>& QuadTree<T>::operator=(QuadTree&& other) noexcept {
+    if (this != &other) {
+        _bounds = std::move(other._bounds);
+        _depth = other._depth;
+        _points = std::move(other._points);
+        for (int i = 0; i < 4; ++i) {
+            _children[i] = std::move(other._children[i]);
+        }
+    }
+    return *this;
 }
 
 template<typename T>
@@ -181,20 +222,44 @@ void QuadTree<T>::query(BoundingBox const & query_bounds, std::vector<QuadTreePo
 
 template<typename T>
 QuadTreePoint<T> const * QuadTree<T>::findNearest(float x, float y, float max_distance) const {
+    return findNearestHelper(x, y, max_distance * max_distance);
+}
+
+template<typename T>
+QuadTreePoint<T> const * QuadTree<T>::findNearestHelper(float x, float y, float max_distance_sq) const {
+    // Create bounding box for search
+    float max_distance = std::sqrt(max_distance_sq);
     BoundingBox search_bounds(x - max_distance, y - max_distance,
                               x + max_distance, y + max_distance);
 
-    std::vector<QuadTreePoint<T>> candidates;
-    query(search_bounds, candidates);
+    // If this node doesn't intersect the search bounds, return nullptr
+    if (!_bounds.intersects(search_bounds)) {
+        return nullptr;
+    }
 
     QuadTreePoint<T> const * nearest = nullptr;
-    float min_distance_sq = max_distance * max_distance;
+    float min_distance_sq = max_distance_sq;
 
-    for (auto const & point: candidates) {
+    // Check points in this node
+    for (auto const & point: _points) {
         float dist_sq = distanceSquared(x, y, point.x, point.y);
         if (dist_sq < min_distance_sq) {
             min_distance_sq = dist_sq;
-            nearest = &point;
+            nearest = &point;  // Safe because we're pointing to stored data
+        }
+    }
+
+    // If not a leaf, check children
+    if (!isLeaf()) {
+        for (int i = 0; i < 4; ++i) {
+            auto child_nearest = _children[i]->findNearestHelper(x, y, min_distance_sq);
+            if (child_nearest) {
+                float dist_sq = distanceSquared(x, y, child_nearest->x, child_nearest->y);
+                if (dist_sq < min_distance_sq) {
+                    min_distance_sq = dist_sq;
+                    nearest = child_nearest;
+                }
+            }
         }
     }
 

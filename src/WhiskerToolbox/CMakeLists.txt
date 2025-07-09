@@ -21,6 +21,7 @@ qt_standard_project_setup()
 
 add_subdirectory(DataManager)
 add_subdirectory(DataViewer)
+add_subdirectory(SpatialIndex)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -38,7 +39,6 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Plots/ScatterPlotWidget.cpp
         Analysis_Dashboard/Plots/SpatialOverlayPlotWidget.hpp
         Analysis_Dashboard/Plots/SpatialOverlayPlotWidget.cpp
-        Analysis_Dashboard/Plots/SpatialIndex/QuadTree.hpp
 
         Analysis_Dashboard/Scene/AnalysisDashboardScene.hpp
         Analysis_Dashboard/Scene/AnalysisDashboardScene.cpp
@@ -507,9 +507,6 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
-        Analysis_Dashboard/Analysis_Dashboard.hpp
-        Analysis_Dashboard/Analysis_Dashboard.cpp
-        Analysis_Dashboard/Analysis_Dashboard.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)
@@ -545,6 +542,7 @@ target_include_directories(WhiskerToolbox PRIVATE
 
 target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer)
+target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 
