@@ -9,6 +9,7 @@
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QDebug>
 
 PropertiesPanel::PropertiesPanel(QWidget* parent)
     : QWidget(parent),
@@ -53,7 +54,10 @@ void PropertiesPanel::initializePropertiesPanel() {
 }
 
 void PropertiesPanel::showPlotProperties(const QString& plot_id, AbstractPlotWidget* plot_widget) {
+    qDebug() << "PropertiesPanel: showPlotProperties called for plot_id:" << plot_id;
+    
     if (!plot_widget) {
+        qDebug() << "PropertiesPanel: No plot widget provided, showing global properties";
         showGlobalProperties();
         return;
     }
@@ -63,23 +67,30 @@ void PropertiesPanel::showPlotProperties(const QString& plot_id, AbstractPlotWid
     
     // Get the properties widget for this plot type
     QString plot_type = plot_widget->getPlotType();
+    qDebug() << "PropertiesPanel: Showing properties for plot type:" << plot_type;
     AbstractPlotPropertiesWidget* properties_widget = getPropertiesWidgetForPlotType(plot_type);
     
     if (properties_widget) {
+        qDebug() << "PropertiesPanel: Found properties widget for" << plot_type;
+        qDebug() << "PropertiesPanel: Setting DataManager and plot widget";
+        
         // Configure the properties widget for this specific plot
         properties_widget->setDataManager(_data_manager);
         properties_widget->setPlotWidget(plot_widget);
         properties_widget->updateFromPlot();
         
+        qDebug() << "PropertiesPanel: Switching to properties widget";
         // Show the properties widget
         _stacked_widget->setCurrentWidget(properties_widget);
     } else {
+        qDebug() << "PropertiesPanel: No properties widget found for" << plot_type << "- showing global properties";
         // Fall back to global properties if no specific widget is available
         showGlobalProperties();
     }
 }
 
 void PropertiesPanel::showGlobalProperties() {
+    qDebug() << "PropertiesPanel: showGlobalProperties called";
     _current_plot_id.clear();
     _current_plot_widget = nullptr;
     _stacked_widget->setCurrentWidget(_global_properties);
@@ -113,9 +124,13 @@ void PropertiesPanel::registerBuiltInPropertiesWidgets() {
         spatial_properties->setDataManager(_data_manager);
     }
     registerPlotPropertiesWidget("Spatial Overlay Plot", spatial_properties);
+    qDebug() << "PropertiesPanel: Registered properties widget for 'Spatial Overlay Plot'";
 }
 
 AbstractPlotPropertiesWidget* PropertiesPanel::getPropertiesWidgetForPlotType(const QString& plot_type) {
+    qDebug() << "PropertiesPanel: Looking for properties widget for plot type:" << plot_type;
+    qDebug() << "PropertiesPanel: Available plot types:" << _plot_properties_widgets.keys();
+    
     auto it = _plot_properties_widgets.find(plot_type);
     if (it != _plot_properties_widgets.end()) {
         return it.value();

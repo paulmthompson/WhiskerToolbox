@@ -2,6 +2,7 @@
 
 #include "DataManager/DataManager.hpp"
 
+#include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 
 // Static member initialization
@@ -40,6 +41,7 @@ void AbstractPlotWidget::setPlotTitle(const QString& title) {
 }
 
 void AbstractPlotWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    qDebug() << "AbstractPlotWidget: setDataManager called for plot" << _plot_id << "with DataManager:" << (data_manager != nullptr);
     _data_manager = std::move(data_manager);
 }
 

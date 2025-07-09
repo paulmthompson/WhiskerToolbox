@@ -5,6 +5,7 @@
 #include "DataManager/Points/Point_Data.hpp"
 
 #include <QCheckBox>
+#include <QDebug>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QHBoxLayout>
@@ -24,14 +25,18 @@ SpatialOverlayPlotPropertiesWidget::SpatialOverlayPlotPropertiesWidget(QWidget *
 }
 
 void SpatialOverlayPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: setDataManager called with DataManager:" << (data_manager != nullptr);
     _data_manager = std::move(data_manager);
 }
 
 void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: setPlotWidget called with plot widget:" << (plot_widget != nullptr);
 
     _spatial_plot_widget = qobject_cast<SpatialOverlayPlotWidget *>(plot_widget);
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: Cast to SpatialOverlayPlotWidget:" << (_spatial_plot_widget != nullptr);
 
-        if (_spatial_plot_widget) {
+    if (_spatial_plot_widget) {
+        qDebug() << "SpatialOverlayPlotPropertiesWidget: Updating available data sources and UI";
         // Update available data sources
         updateAvailableDataSources();
         
@@ -41,9 +46,11 @@ void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot
 }
 
 void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot called";
     if (_spatial_plot_widget) {
         // Update UI from current plot state
         QStringList current_keys = _spatial_plot_widget->getPointDataKeys();
+        qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot - current keys from plot:" << current_keys;
         setSelectedDataSources(current_keys);
         
         // Update zoom level from current widget state
@@ -51,6 +58,8 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
             float current_zoom = _spatial_plot_widget->getOpenGLWidget()->getZoomLevel();
             _zoom_level_spinbox->setValue(static_cast<double>(current_zoom));
         }
+    } else {
+        qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot - no spatial plot widget available";
     }
 }
 
@@ -63,7 +72,8 @@ void SpatialOverlayPlotPropertiesWidget::updateAvailableDataSources() {
 }
 
 void SpatialOverlayPlotPropertiesWidget::onDataSourceItemChanged(QListWidgetItem * item) {
-    Q_UNUSED(item)
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: onDataSourceItemChanged called for item:" << item->text() 
+             << "checked:" << (item->checkState() == Qt::Checked);
     updatePlotWidget();
 }
 
@@ -173,6 +183,8 @@ void SpatialOverlayPlotPropertiesWidget::initializeUI() {
 }
 
 void SpatialOverlayPlotPropertiesWidget::setupConnections() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: setupConnections called";
+    
     // Data source selection
     connect(_data_sources_list, &QListWidget::itemChanged,
             this, &SpatialOverlayPlotPropertiesWidget::onDataSourceItemChanged);
@@ -192,19 +204,24 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
 
     connect(_reset_view_button, &QPushButton::clicked,
             this, &SpatialOverlayPlotPropertiesWidget::onResetViewClicked);
+    
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: setupConnections completed";
 }
 
 void SpatialOverlayPlotPropertiesWidget::refreshDataSourcesList() {
     _data_sources_list->clear();
 
     if (!_data_manager) {
+        qDebug() << "SpatialOverlayPlotPropertiesWidget: No data manager available";
         return;
     }
 
     // Get all PointData objects from DataManager
     auto point_data_keys = _data_manager->getKeys<PointData>();
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: Found" << point_data_keys.size() << "PointData keys";
 
     for (auto const & key: point_data_keys) {
+        qDebug() << "SpatialOverlayPlotPropertiesWidget: Adding data source:" << QString::fromStdString(key);
         QListWidgetItem * item = new QListWidgetItem(QString::fromStdString(key), _data_sources_list);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setCheckState(Qt::Unchecked);
@@ -226,23 +243,37 @@ QStringList SpatialOverlayPlotPropertiesWidget::getSelectedDataSources() const {
 }
 
 void SpatialOverlayPlotPropertiesWidget::setSelectedDataSources(QStringList const & selected_keys) {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: setSelectedDataSources called with keys:" << selected_keys;
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: List widget has" << _data_sources_list->count() << "items";
+    
+    // Block signals to prevent recursion when setting checkbox states
+    _data_sources_list->blockSignals(true);
+    
     for (int i = 0; i < _data_sources_list->count(); ++i) {
         QListWidgetItem * item = _data_sources_list->item(i);
-        if (selected_keys.contains(item->text())) {
+        bool should_be_checked = selected_keys.contains(item->text());
+        qDebug() << "SpatialOverlayPlotPropertiesWidget: Setting item" << item->text() << "to checked:" << should_be_checked;
+        
+        if (should_be_checked) {
             item->setCheckState(Qt::Checked);
         } else {
             item->setCheckState(Qt::Unchecked);
         }
     }
+    
+    // Re-enable signals
+    _data_sources_list->blockSignals(false);
 }
 
 void SpatialOverlayPlotPropertiesWidget::updatePlotWidget() {
     if (!_spatial_plot_widget) {
+        qDebug() << "SpatialOverlayPlotPropertiesWidget: No spatial plot widget available";
         return;
     }
 
     // Update selected data sources
     QStringList selected_keys = getSelectedDataSources();
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: Updating plot with selected keys:" << selected_keys;
     _spatial_plot_widget->setPointDataKeys(selected_keys);
 
     // Update visualization settings
