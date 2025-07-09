@@ -598,7 +598,9 @@ void MainWindow::openAnalysisDashboard() {
     std::string const key = "Analysis_Dashboard_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
-        auto analysis_dashboard_widget = std::make_unique<Analysis_Dashboard>(this);
+        auto analysis_dashboard_widget = std::make_unique<Analysis_Dashboard>(
+                _data_manager,
+                this);
 
         analysis_dashboard_widget->setObjectName(key);
         registerDockWidget(key, analysis_dashboard_widget.get(), ads::RightDockWidgetArea);

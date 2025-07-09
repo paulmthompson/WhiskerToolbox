@@ -32,6 +32,29 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Analysis_Dashboard.cpp
         Analysis_Dashboard/Analysis_Dashboard.ui
 
+        Analysis_Dashboard/Plots/AbstractPlotWidget.hpp
+        Analysis_Dashboard/Plots/AbstractPlotWidget.cpp
+        Analysis_Dashboard/Plots/ScatterPlotWidget.hpp
+        Analysis_Dashboard/Plots/ScatterPlotWidget.cpp
+
+        Analysis_Dashboard/Scene/AnalysisDashboardScene.hpp
+        Analysis_Dashboard/Scene/AnalysisDashboardScene.cpp
+
+        Analysis_Dashboard/Toolbox/ToolboxPanel.hpp
+        Analysis_Dashboard/Toolbox/ToolboxPanel.cpp
+        Analysis_Dashboard/Toolbox/ToolboxPanel.ui
+        Analysis_Dashboard/Toolbox/DraggableListWidget.hpp
+        Analysis_Dashboard/Toolbox/DraggableListWidget.cpp
+
+        Analysis_Dashboard/Properties/PropertiesPanel.hpp
+        Analysis_Dashboard/Properties/PropertiesPanel.cpp
+        Analysis_Dashboard/Properties/PropertiesPanel.ui
+        Analysis_Dashboard/Properties/AbstractPlotPropertiesWidget.hpp
+        Analysis_Dashboard/Properties/AbstractPlotPropertiesWidget.cpp
+        Analysis_Dashboard/Properties/GlobalPropertiesWidget.hpp
+        Analysis_Dashboard/Properties/GlobalPropertiesWidget.cpp
+        Analysis_Dashboard/Properties/GlobalPropertiesWidget.ui
+
         ColorPicker_Widget/ColorPicker_Widget.hpp
         ColorPicker_Widget/ColorPicker_Widget.cpp
         ColorPicker_Widget/ColorPicker_Widget.ui
