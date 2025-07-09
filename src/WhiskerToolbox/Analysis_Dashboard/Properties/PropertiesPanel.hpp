@@ -10,6 +10,8 @@ class AbstractPlotWidget;
 class GlobalPropertiesWidget;
 class AbstractPlotPropertiesWidget;
 
+class DataManager;
+
 namespace Ui {
 class PropertiesPanel;
 }
@@ -26,6 +28,12 @@ class PropertiesPanel : public QWidget {
 public:
     explicit PropertiesPanel(QWidget* parent = nullptr);
     ~PropertiesPanel() override;
+
+    /**
+     * @brief Set the data manager that this properties panel uses
+     * @param data_manager Pointer to the data manager
+     */
+    void setDataManager(std::shared_ptr<DataManager> data_manager);
 
     /**
      * @brief Show properties for the selected plot
@@ -54,7 +62,8 @@ private slots:
 
 private:
     Ui::PropertiesPanel* ui;
-    
+
+    std::shared_ptr<DataManager> _data_manager;
     GlobalPropertiesWidget* _global_properties;
     QStackedWidget* _stacked_widget;
     QScrollArea* _scroll_area;
@@ -69,6 +78,11 @@ private:
      * @brief Initialize the properties panel
      */
     void initializePropertiesPanel();
+    
+    /**
+     * @brief Register built-in properties widgets for standard plot types
+     */
+    void registerBuiltInPropertiesWidgets();
     
     /**
      * @brief Get or create properties widget for a plot type

@@ -44,6 +44,7 @@ void ToolboxPanel::handleItemDoubleClicked(QListWidgetItem* item) {
 void ToolboxPanel::initializeToolbox() {
     // Add available plot types
     addPlotType("scatter_plot", "Scatter Plot", ":/icons/scatter_plot.png");
+    addPlotType("spatial_overlay_plot", "Spatial Overlay Plot", ":/icons/spatial_overlay.png");
     
     // Placeholder for future plot types
     // addPlotType("line_plot", "Line Plot", ":/icons/line_plot.png");

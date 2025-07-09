@@ -36,6 +36,9 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Plots/AbstractPlotWidget.cpp
         Analysis_Dashboard/Plots/ScatterPlotWidget.hpp
         Analysis_Dashboard/Plots/ScatterPlotWidget.cpp
+        Analysis_Dashboard/Plots/SpatialOverlayPlotWidget.hpp
+        Analysis_Dashboard/Plots/SpatialOverlayPlotWidget.cpp
+        Analysis_Dashboard/Plots/SpatialIndex/QuadTree.hpp
 
         Analysis_Dashboard/Scene/AnalysisDashboardScene.hpp
         Analysis_Dashboard/Scene/AnalysisDashboardScene.cpp
@@ -54,6 +57,8 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.hpp
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.cpp
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.ui
+        Analysis_Dashboard/Properties/SpatialOverlayPlotPropertiesWidget.hpp
+        Analysis_Dashboard/Properties/SpatialOverlayPlotPropertiesWidget.cpp
 
         ColorPicker_Widget/ColorPicker_Widget.hpp
         ColorPicker_Widget/ColorPicker_Widget.cpp

@@ -54,6 +54,7 @@ void Analysis_Dashboard::initializeDashboard() {
     // Set data manager for the scene
     if (_data_manager) {
         _dashboard_scene->setDataManager(_data_manager);
+        _properties_panel->setDataManager(_data_manager);
     }
     
     setupLayout();

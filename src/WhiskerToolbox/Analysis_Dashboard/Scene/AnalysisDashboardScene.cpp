@@ -2,6 +2,7 @@
 
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 #include "Analysis_Dashboard/Plots/ScatterPlotWidget.hpp"
+#include "Analysis_Dashboard/Plots/SpatialOverlayPlotWidget.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include <QGraphicsSceneDragDropEvent>
@@ -136,6 +137,9 @@ AbstractPlotWidget* AnalysisDashboardScene::createPlotFromMimeData(const QMimeDa
     // Factory pattern for creating different plot types
     if (plot_type == "scatter_plot") {
         return new ScatterPlotWidget();
+    }
+    else if (plot_type == "spatial_overlay_plot") {
+        return new SpatialOverlayPlotWidget();
     }
     
     // Add more plot types here as they are implemented
