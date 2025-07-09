@@ -28,6 +28,10 @@ set(PROJECT_SOURCES
         my_stylesheet.qss
         color_scheme.hpp
 
+        Analysis_Dashboard/Analysis_Dashboard.hpp
+        Analysis_Dashboard/Analysis_Dashboard.cpp
+        Analysis_Dashboard/Analysis_Dashboard.ui
+
         ColorPicker_Widget/ColorPicker_Widget.hpp
         ColorPicker_Widget/ColorPicker_Widget.cpp
         ColorPicker_Widget/ColorPicker_Widget.ui
@@ -475,6 +479,9 @@ endif()
 
 qt_add_executable(WhiskerToolbox
         ${PROJECT_SOURCES}
+        Analysis_Dashboard/Analysis_Dashboard.hpp
+        Analysis_Dashboard/Analysis_Dashboard.cpp
+        Analysis_Dashboard/Analysis_Dashboard.ui
 )
 
 target_link_libraries(WhiskerToolbox PRIVATE Qt6::Widgets Qt6::PrintSupport Qt6::Xml Qt6::OpenGLWidgets Qt6::OpenGL)

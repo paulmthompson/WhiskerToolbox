@@ -9,6 +9,7 @@
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Media/Video_Data.hpp"
 
+#include "Analysis_Dashboard/Analysis_Dashboard.hpp"
 #include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataTransform_Widget/DataTransform_Widget.hpp"
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
@@ -123,6 +124,7 @@ void MainWindow::_createActions() {
     connect(ui->actionExport_Spreadsheet, &QAction::triggered, this, &MainWindow::openSpreadsheetExportWidget);
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
     connect(ui->actionTerminal_Output, &QAction::triggered, this, &MainWindow::openTerminalWidget);
+    connect(ui->actionAnalysis_Dashboard, &QAction::triggered, this, &MainWindow::openAnalysisDashboard);
 }
 
 /*
@@ -587,6 +589,23 @@ void MainWindow::openTerminalWidget() {
     }
 
     auto ptr = dynamic_cast<TerminalWidget *>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openAnalysisDashboard() {
+    std::string const key = "Analysis_Dashboard_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto analysis_dashboard_widget = std::make_unique<Analysis_Dashboard>(this);
+
+        analysis_dashboard_widget->setObjectName(key);
+        registerDockWidget(key, analysis_dashboard_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(analysis_dashboard_widget);
+    }
+
+    auto ptr = dynamic_cast<Analysis_Dashboard *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);
