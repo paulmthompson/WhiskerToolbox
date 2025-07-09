@@ -144,8 +144,8 @@ void Whisker_Widget::_traceButton() {
     auto const current_time = _data_manager->getCurrentTime();
 
     if (ui->num_frames_to_trace->value() <= 1) {
-       // _traceWhiskers(media->getProcessedData(current_time), media->getImageSize());
-        _traceWhiskers(media->getRawData(current_time), media->getImageSize());
+        _traceWhiskers(media->getProcessedData(current_time), media->getImageSize());
+        //_traceWhiskers(media->getRawData(current_time), media->getImageSize());
     } else {
 
         auto height = media->getHeight();

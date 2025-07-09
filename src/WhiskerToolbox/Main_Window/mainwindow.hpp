@@ -12,11 +12,11 @@
 class DataManager;
 class Media_Window;
 
-QT_BEGIN_NAMESPACE
+
 namespace Ui {
 class MainWindow;
 }
-QT_END_NAMESPACE
+
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -84,5 +84,6 @@ private slots:
     void openSpreadsheetExportWidget();
     void openDataTransforms();
     void openTerminalWidget();
+    void openAnalysisDashboard();
 };
 #endif// MAINWINDOW_HPP
