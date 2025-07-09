@@ -12,10 +12,15 @@ AbstractPlotWidget::AbstractPlotWidget(QGraphicsItem* parent)
       _plot_title("Untitled Plot") {
     generateUniqueId();
     
-    // Make the widget selectable and movable
+    // Make the widget selectable, movable, and resizable
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+    setFlag(QGraphicsItem::ItemSendsScenePositionChanges, true);
+    
+    // Enable resize handles
+    setWindowFlags(Qt::Window);
+    setWindowFrameMargins(4, 4, 4, 4);
     
     // Set default size
     setPreferredSize(200, 150);

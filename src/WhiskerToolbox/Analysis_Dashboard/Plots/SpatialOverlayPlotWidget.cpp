@@ -110,6 +110,11 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         _is_panning = true;
         _last_mouse_pos = event->pos();
+        event->accept();
+    } else {
+        // Let other mouse buttons propagate to parent widget
+        event->ignore();
+        return;
     }
     _tooltip_timer->stop();
     QToolTip::hideText();
@@ -128,10 +133,24 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
         setPanOffset(_pan_offset_x + dx, _pan_offset_y + dy);
         _last_mouse_pos = event->pos();
+        event->accept();
     } else {
+        // Stop panning if button was released
+        _is_panning = false;
+        
         // Start tooltip timer for hover
         _tooltip_timer->stop();
         _tooltip_timer->start();
+        event->accept();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
+    if (event->button() == Qt::LeftButton) {
+        _is_panning = false;
+        event->accept();
+    } else {
+        event->ignore();
     }
 }
 
@@ -401,6 +420,23 @@ void SpatialOverlayPlotWidget::paint(QPainter * painter, QStyleOptionGraphicsIte
     painter->drawText(title_rect, Qt::AlignCenter, getPlotTitle());
 }
 
+void SpatialOverlayPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
+    // Check if the click is in the title area (top 25 pixels)
+    QRectF title_area = boundingRect().adjusted(0, 0, 0, -boundingRect().height() + 25);
+    
+    if (title_area.contains(event->pos())) {
+        // Click in title area - handle selection and allow movement
+        emit plotSelected(getPlotId());
+        AbstractPlotWidget::mousePressEvent(event);
+    } else {
+        // Click in content area - let the OpenGL widget handle it
+        // But still emit selection signal
+        emit plotSelected(getPlotId());
+        // Don't call parent implementation to avoid interfering with OpenGL panning
+        event->accept();
+    }
+}
+
 void SpatialOverlayPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
     AbstractPlotWidget::resizeEvent(event);
 
@@ -440,6 +476,10 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     _opengl_widget = new SpatialOverlayOpenGLWidget();
     _proxy_widget = new QGraphicsProxyWidget(this);
     _proxy_widget->setWidget(_opengl_widget);
+    
+    // Configure the proxy widget to not interfere with parent interactions
+    _proxy_widget->setFlag(QGraphicsItem::ItemIsMovable, false);
+    _proxy_widget->setFlag(QGraphicsItem::ItemIsSelectable, false);
 
     // Set initial size and position
     QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);

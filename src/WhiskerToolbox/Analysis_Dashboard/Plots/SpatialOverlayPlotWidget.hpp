@@ -4,6 +4,7 @@
 #include "AbstractPlotWidget.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 
+#include <QGraphicsSceneMouseEvent>
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
@@ -86,6 +87,7 @@ protected:
 
     void mousePressEvent(QMouseEvent * event) override;
     void mouseMoveEvent(QMouseEvent * event) override;
+    void mouseReleaseEvent(QMouseEvent * event) override;
     void mouseDoubleClickEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
 
@@ -209,6 +211,7 @@ signals:
 protected:
     void paint(QPainter * painter, QStyleOptionGraphicsItem const * option, QWidget * widget = nullptr) override;
     void resizeEvent(QGraphicsSceneResizeEvent * event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
 
 private slots:
     /**
