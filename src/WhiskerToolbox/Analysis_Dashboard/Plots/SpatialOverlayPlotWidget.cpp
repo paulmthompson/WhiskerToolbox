@@ -78,8 +78,6 @@ SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
 void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map) {
     _all_points.clear();
 
-    qDebug() << "SpatialOverlayOpenGLWidget: Setting point data with" << point_data_map.size() << "datasets";
-
     // Collect all points from all PointData objects
     for (auto const & [key, point_data]: point_data_map) {
         if (!point_data) {
@@ -87,7 +85,6 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
             continue;
         }
 
-        qDebug() << "SpatialOverlayOpenGLWidget: Processing point data for key:" << key;
         size_t points_added = 0;
 
         // Iterate through all time indices in the point data
@@ -100,11 +97,7 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
                 points_added++;
             }
         }
-
-        qDebug() << "SpatialOverlayOpenGLWidget: Added" << points_added << "points for key:" << key;
     }
-
-    qDebug() << "SpatialOverlayOpenGLWidget: Total points loaded:" << _all_points.size();
 
     calculateDataBounds();
     updateSpatialIndex();
@@ -120,7 +113,6 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
     // Ensure OpenGL context is current before forcing repaint
     if (context() && context()->isValid()) {
         makeCurrent();
-        qDebug() << "SpatialOverlayOpenGLWidget: OpenGL context made current";
         
         // Force immediate repaint
         update();
@@ -131,11 +123,8 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
         
         doneCurrent();
     } else {
-        qDebug() << "SpatialOverlayOpenGLWidget: Warning - invalid OpenGL context, scheduling update";
         update();
     }
-    
-    qDebug() << "SpatialOverlayOpenGLWidget: setPointData completed, widget size:" << width() << "x" << height();
 }
 
 void SpatialOverlayOpenGLWidget::setZoomLevel(float zoom_level) {
@@ -186,13 +175,8 @@ void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
 
 void SpatialOverlayOpenGLWidget::initializeGL() {
     if (!initializeOpenGLFunctions()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to initialize OpenGL functions";
         return;
     }
-
-    auto fmt = format();
-    qDebug() << "SpatialOverlayOpenGLWidget: OpenGL version" << fmt.majorVersion() << "." << fmt.minorVersion();
-    qDebug() << "SpatialOverlayOpenGLWidget: OpenGL profile:" << (fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
 
     // Set clear color
     glClearColor(0.95f, 0.95f, 0.95f, 1.0f);
@@ -200,6 +184,8 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
     // Enable blending for transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    auto fmt = format();
     
     // Enable multisampling if available
     if (fmt.samples() > 1) {
@@ -212,7 +198,6 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
     // Check OpenGL capabilities
     GLint max_point_size;
     glGetIntegerv(GL_POINT_SIZE_RANGE, &max_point_size);
-    qDebug() << "SpatialOverlayOpenGLWidget: Maximum point size:" << max_point_size;
 
     // Initialize OpenGL resources
     initializeOpenGLResources();
@@ -326,10 +311,22 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 
 void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Double-click detected at" << event->pos();
+        
         SpatialPointData const * point = findPointNear(event->pos().x(), event->pos().y());
         if (point) {
+            qDebug() << "SpatialOverlayOpenGLWidget: Double-click on point at (" 
+                     << point->x << "," << point->y << ") frame:" << point->time_frame_index 
+                     << "data:" << point->point_data_key;
+            
             emit frameJumpRequested(point->time_frame_index);
+            event->accept();
+        } else {
+            qDebug() << "SpatialOverlayOpenGLWidget: Double-click but no point found near cursor";
+            event->ignore();
         }
+    } else {
+        event->ignore();
     }
 }
 
@@ -433,13 +430,10 @@ void SpatialOverlayOpenGLWidget::updateSpatialIndex() {
     
     // Re-enable mouse tracking
     setMouseTracking(was_tracking);
-    
-    qDebug() << "SpatialOverlayOpenGLWidget: Spatial index rebuilt with" << _all_points.size() << "points";
 }
 
 void SpatialOverlayOpenGLWidget::calculateDataBounds() {
     if (_all_points.empty()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: calculateDataBounds - no points, setting invalid bounds";
         _data_bounds_valid = false;
         return;
     }
@@ -464,10 +458,6 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
     _data_max_y += padding_y;
 
     _data_bounds_valid = true;
-    
-    qDebug() << "SpatialOverlayOpenGLWidget: Data bounds calculated:"
-             << "X:" << _data_min_x << "to" << _data_max_x
-             << "Y:" << _data_min_y << "to" << _data_max_y;
 }
 
 QVector2D SpatialOverlayOpenGLWidget::screenToWorld(int screen_x, int screen_y) const {
@@ -522,10 +512,6 @@ SpatialPointData const * SpatialOverlayOpenGLWidget::findPointNear(int screen_x,
     float world_tolerance_y = std::abs(world_pos_y_offset.y() - world_pos.y());
     float world_tolerance = std::max(world_tolerance_x, world_tolerance_y);
     
-    qDebug() << "SpatialOverlayOpenGLWidget: findPointNear screen(" << screen_x << "," << screen_y 
-             << ") -> world(" << world_pos.x() << "," << world_pos.y() 
-             << ") tolerance:" << world_tolerance;
-
     // Find nearest point using spatial index with extra error checking
     try {
         auto const * nearest_point_index = _spatial_index->findNearest(
@@ -541,10 +527,6 @@ SpatialPointData const * SpatialOverlayOpenGLWidget::findPointNear(int screen_x,
                 QPoint point_screen = worldToScreen(found_point->x, found_point->y);
                 float screen_distance = std::sqrt(std::pow(point_screen.x() - screen_x, 2) + 
                                                  std::pow(point_screen.y() - screen_y, 2));
-                
-                qDebug() << "SpatialOverlayOpenGLWidget: Found point at world(" << found_point->x << "," << found_point->y 
-                         << ") screen(" << point_screen.x() << "," << point_screen.y() 
-                         << ") distance:" << screen_distance << "tolerance:" << tolerance_pixels;
                 
                 if (screen_distance <= tolerance_pixels) {
                     return found_point;
@@ -731,9 +713,7 @@ void SpatialOverlayOpenGLWidget::renderHighlightedPoint() {
     _highlight_vertex_buffer.release();
     _highlight_vertex_array_object.release();
     
-    qDebug() << "SpatialOverlayOpenGLWidget: Highlight point rendered at index" << hover_point_index 
-             << "position (" << _current_hover_point->x << "," << _current_hover_point->y << ")";
-}
+ }
 
 void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     qDebug() << "SpatialOverlayOpenGLWidget: Initializing OpenGL resources";
@@ -830,7 +810,6 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     _highlight_vertex_buffer.release();
 
     _opengl_resources_initialized = true;
-    qDebug() << "SpatialOverlayOpenGLWidget: OpenGL resources initialized successfully";
 }
 
 void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
@@ -859,8 +838,6 @@ void SpatialOverlayOpenGLWidget::updateVertexBuffer() {
         return;
     }
 
-    qDebug() << "SpatialOverlayOpenGLWidget: Updating vertex buffer with" << _all_points.size() << "points";
-
     // Prepare vertex data (just x, y coordinates)
     std::vector<float> vertex_data;
     vertex_data.reserve(_all_points.size() * 2);
@@ -878,7 +855,6 @@ void SpatialOverlayOpenGLWidget::updateVertexBuffer() {
     // Verify buffer was allocated
     GLint buffer_size = 0;
     glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
-    qDebug() << "SpatialOverlayOpenGLWidget: Buffer allocated with size:" << buffer_size << "bytes";
     
     // Ensure vertex attributes are properly set
     glEnableVertexAttribArray(0);
@@ -887,8 +863,6 @@ void SpatialOverlayOpenGLWidget::updateVertexBuffer() {
     // Unbind in proper order
     _vertex_buffer.release();
     _vertex_array_object.release();
-    
-    qDebug() << "SpatialOverlayOpenGLWidget: Vertex buffer updated with" << vertex_data.size() / 2 << "points";
 }
 
 void SpatialOverlayOpenGLWidget::calculateProjectionBounds(float &left, float &right, float &bottom, float &top) const {
@@ -945,7 +919,6 @@ QString SpatialOverlayPlotWidget::getPlotType() const {
 }
 
 void SpatialOverlayPlotWidget::setPointDataKeys(QStringList const & point_data_keys) {
-    qDebug() << "SpatialOverlayPlotWidget: setPointDataKeys called with:" << point_data_keys;
     _point_data_keys = point_data_keys;
     updateVisualization();
 }
@@ -1004,7 +977,6 @@ void SpatialOverlayPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
 
     if (_opengl_widget && _proxy_widget) {
         QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);
-        qDebug() << "SpatialOverlayPlotWidget: Resizing OpenGL widget to:" << content_rect.size();
         _opengl_widget->resize(content_rect.size().toSize());
         _proxy_widget->setGeometry(content_rect);
         
@@ -1014,12 +986,8 @@ void SpatialOverlayPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
 }
 
 void SpatialOverlayPlotWidget::updateVisualization() {
-    qDebug() << "SpatialOverlayPlotWidget: updateVisualization called";
-    qDebug() << "SpatialOverlayPlotWidget: DataManager available:" << (_data_manager != nullptr);
-    qDebug() << "SpatialOverlayPlotWidget: OpenGL widget available:" << (_opengl_widget != nullptr);
-    
+   
     if (!_data_manager || !_opengl_widget) {
-        qDebug() << "SpatialOverlayPlotWidget: Missing DataManager or OpenGL widget, aborting";
         return;
     }
 
@@ -1028,30 +996,22 @@ void SpatialOverlayPlotWidget::updateVisualization() {
     // Request render update through signal
     update();
     emit renderUpdateRequested(getPlotId());
-    qDebug() << "SpatialOverlayPlotWidget: Emitted renderUpdateRequested signal";
 }
 
 void SpatialOverlayPlotWidget::handleFrameJumpRequest(int64_t time_frame_index) {
+    qDebug() << "SpatialOverlayPlotWidget: Frame jump requested to frame:" << time_frame_index;
     emit frameJumpRequested(time_frame_index);
 }
 
 void SpatialOverlayPlotWidget::loadPointData() {
     std::unordered_map<QString, std::shared_ptr<PointData>> point_data_map;
 
-    qDebug() << "SpatialOverlayPlotWidget: loadPointData called with keys:" << _point_data_keys;
-    qDebug() << "SpatialOverlayPlotWidget: DataManager available:" << (_data_manager != nullptr);
-
     for (QString const & key: _point_data_keys) {
         auto point_data = _data_manager->getData<PointData>(key.toStdString());
         if (point_data) {
-            qDebug() << "SpatialOverlayPlotWidget: Found point data for key:" << key;
             point_data_map[key] = point_data;
-        } else {
-            qDebug() << "SpatialOverlayPlotWidget: No point data found for key:" << key;
         }
     }
-
-    qDebug() << "SpatialOverlayPlotWidget: Passing" << point_data_map.size() << "datasets to OpenGL widget";
     _opengl_widget->setPointData(point_data_map);
 }
 
