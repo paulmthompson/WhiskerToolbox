@@ -24,6 +24,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
       _shader_program(nullptr),
       _vertex_buffer(QOpenGLBuffer::VertexBuffer),
+      _highlight_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _opengl_resources_initialized(false),
       _zoom_level(1.0f),
       _pan_offset_x(0.0f),
@@ -32,6 +33,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _is_panning(false),
       _data_bounds_valid(false),
       _tooltips_enabled(true),
+      _pending_update(false),
       _current_hover_point(nullptr) {
 
     setMouseTracking(true);
@@ -48,6 +50,22 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     _tooltip_timer->setSingleShot(true);
     _tooltip_timer->setInterval(500);// 500ms delay for tooltip
     connect(_tooltip_timer, &QTimer::timeout, this, &SpatialOverlayOpenGLWidget::handleTooltipTimer);
+
+    _tooltip_refresh_timer = new QTimer(this);
+    _tooltip_refresh_timer->setInterval(100); // Refresh every 100ms to keep tooltip visible
+    connect(_tooltip_refresh_timer, &QTimer::timeout, this, &SpatialOverlayOpenGLWidget::handleTooltipRefresh);
+
+    // FPS limiter timer (30 FPS = ~33ms interval)
+    _fps_limiter_timer = new QTimer(this);
+    _fps_limiter_timer->setSingleShot(true);
+    _fps_limiter_timer->setInterval(33); // ~30 FPS
+    connect(_fps_limiter_timer, &QTimer::timeout, this, [this]() {
+        if (_pending_update) {
+            _pending_update = false;
+            update();
+            emit highlightStateChanged();
+        }
+    });
 
     // Initialize data bounds
     _data_min_x = _data_max_x = _data_min_y = _data_max_y = 0.0f;
@@ -126,7 +144,7 @@ void SpatialOverlayOpenGLWidget::setZoomLevel(float zoom_level) {
         _zoom_level = new_zoom_level;
         emit zoomLevelChanged(_zoom_level);
         updateViewMatrices();
-        update();
+        requestThrottledUpdate();
     }
 }
 
@@ -136,7 +154,7 @@ void SpatialOverlayOpenGLWidget::setPanOffset(float offset_x, float offset_y) {
         _pan_offset_y = offset_y;
         emit panOffsetChanged(_pan_offset_x, _pan_offset_y);
         updateViewMatrices();
-        update();
+        requestThrottledUpdate();
     }
 }
 
@@ -145,7 +163,9 @@ void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
     if (new_point_size != _point_size) {
         _point_size = new_point_size;
         emit pointSizeChanged(_point_size);
-        update(); // Trigger a repaint to apply the new point size
+        
+        // Use throttled update for better performance
+        requestThrottledUpdate();
     }
 }
 
@@ -157,6 +177,7 @@ void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
         // Hide any currently visible tooltip when disabling
         if (!_tooltips_enabled) {
             _tooltip_timer->stop();
+            _tooltip_refresh_timer->stop();
             QToolTip::hideText();
             _current_hover_point = nullptr;
         }
@@ -212,10 +233,8 @@ void SpatialOverlayOpenGLWidget::resizeGL(int w, int h) {
     glViewport(0, 0, w, h);
     updateViewMatrices();
     
-    // Update vertex buffer after resize to ensure proper rendering
-    if (_opengl_resources_initialized) {
-        updateVertexBuffer();
-    }
+    // No need to update vertex buffer during resize - the data is already on GPU
+    // Just update the viewport and projection matrix
 }
 
 void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
@@ -229,8 +248,12 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         return;
     }
     _tooltip_timer->stop();
+    _tooltip_refresh_timer->stop();
     QToolTip::hideText();
     _current_hover_point = nullptr;
+    
+    // Trigger repaint to clear highlight
+    update();
 }
 
 void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
@@ -257,8 +280,19 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
             
             if (point != _current_hover_point) {
                 // We're hovering over a different point (or no point)
+                if (point) {
+                    qDebug() << "SpatialOverlayOpenGLWidget: Hovering over new point at" 
+                             << point->x << "," << point->y << "frame:" << point->time_frame_index;
+                } else {
+                    qDebug() << "SpatialOverlayOpenGLWidget: No longer hovering over a point";
+                }
+                
                 _current_hover_point = point;
                 _tooltip_timer->stop();
+                _tooltip_refresh_timer->stop();
+                
+                // Use throttled update to prevent excessive redraws
+                requestThrottledUpdate();
                 
                 if (point) {
                     // Start timer for new point
@@ -268,8 +302,7 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
                     QToolTip::hideText();
                 }
             } else if (point) {
-                // Still hovering over the same point, keep tooltip visible
-                // Update tooltip position to follow mouse
+                // Still hovering over the same point, update tooltip position
                 QString tooltip_text = QString("Frame: %1\nData: %2\nPosition: (%3, %4)")
                                                .arg(point->time_frame_index)
                                                .arg(point->point_data_key)
@@ -310,8 +343,12 @@ void SpatialOverlayOpenGLWidget::wheelEvent(QWheelEvent * event) {
 void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
     // Hide tooltips when mouse leaves the widget
     _tooltip_timer->stop();
+    _tooltip_refresh_timer->stop();
     QToolTip::hideText();
     _current_hover_point = nullptr;
+    
+    // Use throttled update
+    requestThrottledUpdate();
     
     QOpenGLWidget::leaveEvent(event);
 }
@@ -328,6 +365,46 @@ void SpatialOverlayOpenGLWidget::handleTooltipTimer() {
                                        .arg(point->y, 0, 'f', 2);
 
         QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
+        
+        // Start refresh timer to keep tooltip visible
+        _tooltip_refresh_timer->start();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::requestThrottledUpdate() {
+    if (!_fps_limiter_timer->isActive()) {
+        // If timer is not running, update immediately and start timer
+        update();
+        emit highlightStateChanged();
+        _fps_limiter_timer->start();
+    } else {
+        // Timer is running, just mark that we have a pending update
+        _pending_update = true;
+    }
+}
+
+void SpatialOverlayOpenGLWidget::handleTooltipRefresh() {
+    if (!_data_bounds_valid || !_tooltips_enabled || !_current_hover_point) {
+        _tooltip_refresh_timer->stop();
+        return;
+    }
+
+    // Check if we're still hovering over the same point
+    SpatialPointData const * point = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
+    if (point == _current_hover_point) {
+        // Refresh the tooltip to keep it visible
+        QString tooltip_text = QString("Frame: %1\nData: %2\nPosition: (%3, %4)")
+                                       .arg(point->time_frame_index)
+                                       .arg(point->point_data_key)
+                                       .arg(point->x, 0, 'f', 2)
+                                       .arg(point->y, 0, 'f', 2);
+
+        QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
+    } else {
+        // No longer hovering over the same point, stop refresh timer
+        _tooltip_refresh_timer->stop();
+        QToolTip::hideText();
+        _current_hover_point = nullptr;
     }
 }
 
@@ -560,24 +637,42 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
     QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
     _shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
     
-    // Set point color and size
-    _shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f)); // Red
-    _shader_program->setUniformValue("u_point_size", _point_size); // Use dynamic point size
-
-    // Bind vertex array object
+    // === DRAW CALL 1: Render all regular points ===
     _vertex_array_object.bind();
-
-    // Check if vertex buffer has data
-    GLint buffer_size = 0;
     _vertex_buffer.bind();
-    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
     
+    // Verify vertex buffer has data
+    GLint buffer_size = 0;
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
     if (buffer_size == 0) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Vertex buffer is empty, updating";
         updateVertexBuffer();
+        _vertex_buffer.bind(); // Re-bind after update
     }
+    
+    // Set vertex attributes for regular points
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    // Draw points
+    // Enable blending for regular points
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    // Set uniforms for regular points
+    _shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f)); // Solid red
+    _shader_program->setUniformValue("u_point_size", _point_size);
+    
+    // Draw all regular points
     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_all_points.size()));
+    
+    // Unbind regular point resources
+    _vertex_buffer.release();
+    _vertex_array_object.release();
+
+    // === DRAW CALL 2: Render highlighted point ===
+    if (_current_hover_point) {
+        renderHighlightedPoint();
+    }
 
     // Check for OpenGL errors
     GLenum error = glGetError();
@@ -585,13 +680,94 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
         qDebug() << "SpatialOverlayOpenGLWidget: OpenGL error during rendering:" << error;
     }
 
-    // Unbind
-    _vertex_array_object.release();
     _shader_program->release();
 }
 
-void SpatialOverlayOpenGLWidget::setupPointRendering() {
-    // This method is now deprecated - initialization handled in initializeOpenGLResources
+void SpatialOverlayOpenGLWidget::renderHighlightedPoint() {
+    if (!_current_hover_point) return;
+    
+    // Find the index of the current hover point in the main vertex buffer
+    size_t hover_point_index = 0;
+    bool found = false;
+    for (size_t i = 0; i < _all_points.size(); ++i) {
+        if (&_all_points[i] == _current_hover_point) {
+            hover_point_index = i;
+            found = true;
+            break;
+        }
+    }
+    
+    if (!found) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Hover point not found in main point list";
+        return;
+    }
+    
+    // Bind highlight VAO and VBO
+    _highlight_vertex_array_object.bind();
+    _highlight_vertex_buffer.bind();
+    
+    // Use glBufferSubData to copy the highlighted point data from main VBO
+    // First, ensure the highlight buffer is allocated (2 floats for x,y)
+    GLint highlight_buffer_size = 0;
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &highlight_buffer_size);
+    
+    if (highlight_buffer_size < static_cast<GLint>(2 * sizeof(float))) {
+        // Allocate buffer if not already allocated or too small
+        glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+    }
+    
+    // Copy data from main vertex buffer at the specific point index
+    // Calculate offset in the main buffer (each point is 2 floats)
+    GLintptr source_offset = static_cast<GLintptr>(hover_point_index * 2 * sizeof(float));
+    
+    // Map the main vertex buffer to read the data
+    _vertex_buffer.bind();
+    float* main_buffer_data = static_cast<float*>(glMapBufferRange(
+        GL_ARRAY_BUFFER, 
+        source_offset, 
+        2 * sizeof(float), 
+        GL_MAP_READ_BIT
+    ));
+    
+    if (main_buffer_data) {
+        // Switch back to highlight buffer and update it
+        _highlight_vertex_buffer.bind();
+        glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(float), main_buffer_data);
+        
+        // Unmap the main buffer
+        _vertex_buffer.bind();
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+        _highlight_vertex_buffer.bind();
+    } else {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to map main vertex buffer";
+        // Fallback: directly set the highlight point data
+        float highlight_data[2] = {_current_hover_point->x, _current_hover_point->y};
+        glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(float), highlight_data);
+    }
+    
+    // Set vertex attributes for highlight point
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    
+    // Disable blending for highlight point (solid color, no transparency)
+    glDisable(GL_BLEND);
+    
+    // Set uniforms for highlight rendering
+    _shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f)); // Black
+    _shader_program->setUniformValue("u_point_size", _point_size * 2.5f); // Larger size
+    
+    // Draw the highlighted point
+    glDrawArrays(GL_POINTS, 0, 1);
+    
+    // Re-enable blending for subsequent rendering
+    glEnable(GL_BLEND);
+    
+    // Unbind highlight resources
+    _highlight_vertex_buffer.release();
+    _highlight_vertex_array_object.release();
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Highlight point rendered at index" << hover_point_index 
+             << "position (" << _current_hover_point->x << "," << _current_hover_point->y << ")";
 }
 
 void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
@@ -624,8 +800,18 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
         out vec4 FragColor;
         
         void main() {
-            // Simple solid color - no fancy circular points for now
-            FragColor = u_color;
+            // Create circular points
+            vec2 coord = gl_PointCoord - vec2(0.5, 0.5);
+            float distance = length(coord);
+            
+            // Discard fragments outside the circle
+            if (distance > 0.5) {
+                discard;
+            }
+            
+            // Smooth anti-aliased edge
+            float alpha = 1.0 - smoothstep(0.4, 0.5, distance);
+            FragColor = vec4(u_color.rgb, u_color.a * alpha);
         }
     )";
     
@@ -660,6 +846,24 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     _vertex_array_object.release();
     _vertex_buffer.release();
 
+    // Create highlight vertex array object and buffer
+    _highlight_vertex_array_object.create();
+    _highlight_vertex_array_object.bind();
+
+    _highlight_vertex_buffer.create();
+    _highlight_vertex_buffer.bind();
+    _highlight_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    
+    // Pre-allocate highlight buffer for one point (2 floats)
+    glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+    
+    // Set up vertex attributes for highlight
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+
+    _highlight_vertex_array_object.release();
+    _highlight_vertex_buffer.release();
+
     _opengl_resources_initialized = true;
     qDebug() << "SpatialOverlayOpenGLWidget: OpenGL resources initialized successfully";
 }
@@ -673,6 +877,9 @@ void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
         
         _vertex_buffer.destroy();
         _vertex_array_object.destroy();
+        
+        _highlight_vertex_buffer.destroy();
+        _highlight_vertex_array_object.destroy();
         
         _opengl_resources_initialized = false;
         
@@ -698,12 +905,6 @@ void SpatialOverlayOpenGLWidget::updateVertexBuffer() {
         vertex_data.push_back(point.y);
     }
 
-    // Debug first few points
-    qDebug() << "SpatialOverlayOpenGLWidget: First few vertex data points:";
-    for (int i = 0; i < std::min(6, static_cast<int>(vertex_data.size())); i += 2) {
-        qDebug() << "  Point" << i/2 << ":" << vertex_data[i] << "," << vertex_data[i+1];
-    }
-
     // Bind VAO and update buffer
     _vertex_array_object.bind();
     _vertex_buffer.bind();
@@ -714,10 +915,11 @@ void SpatialOverlayOpenGLWidget::updateVertexBuffer() {
     glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
     qDebug() << "SpatialOverlayOpenGLWidget: Buffer allocated with size:" << buffer_size << "bytes";
     
-    // Re-setup vertex attributes to be safe
+    // Ensure vertex attributes are properly set
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     
+    // Unbind in proper order
     _vertex_buffer.release();
     _vertex_array_object.release();
     
@@ -895,5 +1097,12 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::tooltipsEnabledChanged,
             this, [this](bool) { 
                 emit renderingPropertiesChanged();
+            });
+    
+    // Connect highlight state changes to trigger scene graph updates
+    connect(_opengl_widget, &SpatialOverlayOpenGLWidget::highlightStateChanged,
+            this, [this]() {
+                update(); // Trigger graphics item update
+                emit renderUpdateRequested(getPlotId());
             });
 }

@@ -130,6 +130,10 @@ signals:
      */
     void tooltipsEnabledChanged(bool enabled);
 
+    /**
+     * @brief Emitted when the highlight state changes, requiring scene graph update
+     */
+    void highlightStateChanged();
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -148,6 +152,17 @@ private slots:
      */
     void handleTooltipTimer();
 
+    /**
+     * @brief Handle tooltip refresh timer timeout
+     */
+    void handleTooltipRefresh();
+
+private slots:
+    /**
+     * @brief Throttled update method to limit FPS
+     */
+    void requestThrottledUpdate();
+
 private:
     // Rendering data
     std::vector<SpatialPointData> _all_points;
@@ -157,6 +172,11 @@ private:
     QOpenGLShaderProgram * _shader_program;
     QOpenGLBuffer _vertex_buffer;
     QOpenGLVertexArrayObject _vertex_array_object;
+    
+    // Highlight rendering resources
+    QOpenGLBuffer _highlight_vertex_buffer;
+    QOpenGLVertexArrayObject _highlight_vertex_array_object;
+    
     bool _opengl_resources_initialized;
 
     // View parameters
@@ -172,7 +192,10 @@ private:
     QPoint _last_mouse_pos;
     QPoint _current_mouse_pos;
     QTimer * _tooltip_timer;
+    QTimer * _tooltip_refresh_timer;
+    QTimer * _fps_limiter_timer;
     bool _tooltips_enabled;
+    bool _pending_update;
     SpatialPointData const * _current_hover_point;
 
     // Data bounds
@@ -225,9 +248,9 @@ private:
     void renderPoints();
 
     /**
-     * @brief Setup OpenGL for point rendering
+     * @brief Render highlighted point with hollow circle
      */
-    void setupPointRendering();
+    void renderHighlightedPoint();
 
     /**
      * @brief Initialize OpenGL shaders and resources
