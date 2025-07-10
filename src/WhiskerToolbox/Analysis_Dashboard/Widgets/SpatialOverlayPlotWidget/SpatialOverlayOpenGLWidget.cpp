@@ -1002,8 +1002,6 @@ void SpatialOverlayOpenGLWidget::startPolygonSelection(int screen_x, int screen_
     // Update polygon buffers
     updatePolygonBuffers();
     
-    // Force immediate repaint to show the new vertex
-    repaint();
     requestThrottledUpdate();
 }
 
@@ -1020,8 +1018,6 @@ void SpatialOverlayOpenGLWidget::addPolygonVertex(int screen_x, int screen_y) {
     // Update polygon buffers
     updatePolygonBuffers();
     
-    // Force immediate repaint to show new polygon edge
-    repaint();
     requestThrottledUpdate();
 }
 
@@ -1047,8 +1043,6 @@ void SpatialOverlayOpenGLWidget::completePolygonSelection() {
     _polygon_vertices.clear();
     _polygon_screen_points.clear();
     
-    // Update display
-    repaint();
     requestThrottledUpdate();
 }
 
@@ -1070,8 +1064,6 @@ void SpatialOverlayOpenGLWidget::cancelPolygonSelection() {
         _polygon_line_buffer.release();
     }
     
-    // Update display to remove polygon overlay
-    repaint();
     requestThrottledUpdate();
 }
 
