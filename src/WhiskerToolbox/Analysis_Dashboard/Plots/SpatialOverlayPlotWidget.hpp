@@ -6,7 +6,10 @@
 
 #include <QGraphicsSceneMouseEvent>
 #include <QMatrix4x4>
-#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_4_1_Core>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLBuffer>
+#include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 #include <QTimer>
 #include <QToolTip>
@@ -37,12 +40,12 @@ struct SpatialPointData {
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
  */
-class SpatialOverlayOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
+class SpatialOverlayOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_1_Core {
     Q_OBJECT
 
 public:
     explicit SpatialOverlayOpenGLWidget(QWidget * parent = nullptr);
-    ~SpatialOverlayOpenGLWidget() override = default;
+    ~SpatialOverlayOpenGLWidget() override;
 
     /**
      * @brief Set the point data to display
@@ -102,11 +105,18 @@ private:
     std::vector<SpatialPointData> _all_points;
     std::unique_ptr<QuadTree<size_t>> _spatial_index;// Index into _all_points
 
+    // Modern OpenGL rendering resources
+    QOpenGLShaderProgram * _shader_program;
+    QOpenGLBuffer _vertex_buffer;
+    QOpenGLVertexArrayObject _vertex_array_object;
+    bool _opengl_resources_initialized;
+
     // View parameters
     float _zoom_level;
     float _pan_offset_x, _pan_offset_y;
     QMatrix4x4 _projection_matrix;
     QMatrix4x4 _view_matrix;
+    QMatrix4x4 _model_matrix;
 
     // Interaction state
     bool _is_panning;
@@ -167,6 +177,21 @@ private:
      * @brief Setup OpenGL for point rendering
      */
     void setupPointRendering();
+
+    /**
+     * @brief Initialize OpenGL shaders and resources
+     */
+    void initializeOpenGLResources();
+
+    /**
+     * @brief Clean up OpenGL resources
+     */
+    void cleanupOpenGLResources();
+
+    /**
+     * @brief Update vertex buffer with current point data
+     */
+    void updateVertexBuffer();
 };
 
 /**

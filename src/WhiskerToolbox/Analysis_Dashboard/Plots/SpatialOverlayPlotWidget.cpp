@@ -16,13 +16,15 @@
 #include <QToolTip>
 #include <QWheelEvent>
 
-#include <GL/gl.h>
 #include <cmath>
 
 // SpatialOverlayOpenGLWidget implementation
 
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
+      _shader_program(nullptr),
+      _vertex_buffer(QOpenGLBuffer::VertexBuffer),
+      _opengl_resources_initialized(false),
       _zoom_level(1.0f),
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
@@ -32,6 +34,13 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
 
+    // Request OpenGL 4.1 Core Profile
+    QSurfaceFormat format;
+    format.setVersion(4, 1);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setSamples(4); // Enable multisampling for smooth points
+    setFormat(format);
+
     _tooltip_timer = new QTimer(this);
     _tooltip_timer->setSingleShot(true);
     _tooltip_timer->setInterval(500);// 500ms delay for tooltip
@@ -39,6 +48,10 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
 
     // Initialize data bounds
     _data_min_x = _data_max_x = _data_min_y = _data_max_y = 0.0f;
+}
+
+SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
+    cleanupOpenGLResources();
 }
 
 void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map) {
@@ -74,6 +87,11 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
 
     calculateDataBounds();
     updateSpatialIndex();
+    
+    // Update vertex buffer with new data
+    if (_opengl_resources_initialized) {
+        updateVertexBuffer();
+    }
     
     // Ensure view matrices are updated with current widget size
     updateViewMatrices();
@@ -113,15 +131,37 @@ void SpatialOverlayOpenGLWidget::setPanOffset(float offset_x, float offset_y) {
 }
 
 void SpatialOverlayOpenGLWidget::initializeGL() {
-    initializeOpenGLFunctions();
+    if (!initializeOpenGLFunctions()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to initialize OpenGL functions";
+        return;
+    }
 
+    auto fmt = format();
+    qDebug() << "SpatialOverlayOpenGLWidget: OpenGL version" << fmt.majorVersion() << "." << fmt.minorVersion();
+    qDebug() << "SpatialOverlayOpenGLWidget: OpenGL profile:" << (fmt.profile() == QSurfaceFormat::CoreProfile ? "Core" : "Compatibility");
+
+    // Set clear color
     glClearColor(0.95f, 0.95f, 0.95f, 1.0f);
+    
+    // Enable blending for transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_POINT_SMOOTH);
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+    
+    // Enable multisampling if available
+    if (fmt.samples() > 1) {
+        glEnable(GL_MULTISAMPLE);
+    }
 
-    setupPointRendering();
+    // Enable programmable point size
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    
+    // Check OpenGL capabilities
+    GLint max_point_size;
+    glGetIntegerv(GL_POINT_SIZE_RANGE, &max_point_size);
+    qDebug() << "SpatialOverlayOpenGLWidget: Maximum point size:" << max_point_size;
+
+    // Initialize OpenGL resources
+    initializeOpenGLResources();
     updateViewMatrices();
 }
 
@@ -139,20 +179,11 @@ void SpatialOverlayOpenGLWidget::paintGL() {
     
     qDebug() << "SpatialOverlayOpenGLWidget: Points:" << _all_points.size() << "bounds valid:" << _data_bounds_valid;
 
-    if (_all_points.empty() || !_data_bounds_valid) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Skipping rendering - empty points or invalid bounds";
+    if (_all_points.empty() || !_data_bounds_valid || !_opengl_resources_initialized) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Skipping rendering - empty points, invalid bounds, or uninitialized resources";
         return;
     }
 
-    // Test rendering - draw a simple triangle first to verify OpenGL is working
-    qDebug() << "SpatialOverlayOpenGLWidget: Drawing test triangle";
-    glColor4f(0.0f, 1.0f, 0.0f, 1.0f); // Green triangle
-    glBegin(GL_TRIANGLES);
-    glVertex2f(-0.5f, -0.5f);
-    glVertex2f(0.5f, -0.5f);
-    glVertex2f(0.0f, 0.5f);
-    glEnd();
-    
     qDebug() << "SpatialOverlayOpenGLWidget: Calling renderPoints()";
     renderPoints();
 }
@@ -160,6 +191,11 @@ void SpatialOverlayOpenGLWidget::paintGL() {
 void SpatialOverlayOpenGLWidget::resizeGL(int w, int h) {
     glViewport(0, 0, w, h);
     updateViewMatrices();
+    
+    // Update vertex buffer after resize to ensure proper rendering
+    if (_opengl_resources_initialized) {
+        updateVertexBuffer();
+    }
 }
 
 void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
@@ -410,109 +446,315 @@ SpatialPointData const * SpatialOverlayOpenGLWidget::findPointNear(int screen_x,
 void SpatialOverlayOpenGLWidget::updateViewMatrices() {
     // Update projection matrix for current aspect ratio
     _projection_matrix.setToIdentity();
-    float aspect_ratio = static_cast<float>(width()) / height();
-    if (aspect_ratio > 1.0f) {
-        _projection_matrix.ortho(-aspect_ratio, aspect_ratio, -1.0f, 1.0f, -1.0f, 1.0f);
-    } else {
-        _projection_matrix.ortho(-1.0f, 1.0f, -1.0f / aspect_ratio, 1.0f / aspect_ratio, -1.0f, 1.0f);
-    }
-
-    // Update view matrix with zoom and pan
-    _view_matrix.setToIdentity();
-    _view_matrix.scale(_zoom_level);
-    _view_matrix.translate(_pan_offset_x, _pan_offset_y);
-}
-
-void SpatialOverlayOpenGLWidget::renderPoints() {
-    if (!_data_bounds_valid || _all_points.empty()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: renderPoints - skipping, bounds valid:" << _data_bounds_valid << "points:" << _all_points.size();
+    
+    if (!_data_bounds_valid || width() <= 0 || height() <= 0) {
+        qDebug() << "SpatialOverlayOpenGLWidget: updateViewMatrices - invalid conditions, bounds valid:" 
+                 << _data_bounds_valid << "size:" << width() << "x" << height();
         return;
     }
-
-    qDebug() << "SpatialOverlayOpenGLWidget: renderPoints - starting with" << _all_points.size() << "points";
-    qDebug() << "SpatialOverlayOpenGLWidget: Data bounds: X[" << _data_min_x << "," << _data_max_x << "] Y[" << _data_min_y << "," << _data_max_y << "]";
-    qDebug() << "SpatialOverlayOpenGLWidget: Zoom level:" << _zoom_level << "Pan offset:" << _pan_offset_x << "," << _pan_offset_y;
-
-    // Check for OpenGL errors before rendering
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        qDebug() << "SpatialOverlayOpenGLWidget: OpenGL error before rendering:" << error;
-    }
-
-    glPointSize(8.0f); // Increase point size to make sure they're visible
-    glColor4f(1.0f, 0.0f, 0.0f, 1.0f); // Bright red, fully opaque
-
-    // Set up simple orthographic projection directly with manual OpenGL commands
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
     
-    // Simple orthographic projection that maps data bounds to [-1,1]
+    // Calculate orthographic projection bounds
     float data_width = _data_max_x - _data_min_x;
     float data_height = _data_max_y - _data_min_y;
     float center_x = (_data_min_x + _data_max_x) * 0.5f;
     float center_y = (_data_min_y + _data_max_y) * 0.5f;
-
-    qDebug() << "SpatialOverlayOpenGLWidget: Data center:" << center_x << "," << center_y;
-    qDebug() << "SpatialOverlayOpenGLWidget: Data size:" << data_width << "x" << data_height;
-
-    // Set orthographic projection to show the data bounds with some padding
+    
+    // Add padding and apply zoom
     float padding = 1.1f; // 10% padding
-    float left = center_x - (data_width * padding) / 2.0f;
-    float right = center_x + (data_width * padding) / 2.0f;
-    float bottom = center_y - (data_height * padding) / 2.0f;
-    float top = center_y + (data_height * padding) / 2.0f;
+    float zoom_factor = 1.0f / _zoom_level;
+    float half_width = (data_width * padding * zoom_factor) / 2.0f;
+    float half_height = (data_height * padding * zoom_factor) / 2.0f;
     
-    qDebug() << "SpatialOverlayOpenGLWidget: Projection bounds: left" << left << "right" << right << "bottom" << bottom << "top" << top;
+    // Apply aspect ratio correction
+    float aspect_ratio = static_cast<float>(width()) / height();
+    if (aspect_ratio > 1.0f) {
+        half_width *= aspect_ratio;
+    } else {
+        half_height /= aspect_ratio;
+    }
     
-    glOrtho(left, right, bottom, top, -1.0f, 1.0f);
+    // Apply pan offset
+    float pan_x = _pan_offset_x * data_width * zoom_factor;
+    float pan_y = _pan_offset_y * data_height * zoom_factor;
+    
+    float left = center_x - half_width + pan_x;
+    float right = center_x + half_width + pan_x;
+    float bottom = center_y - half_height + pan_y;
+    float top = center_y + half_height + pan_y;
+    
+    _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
-    // Apply zoom and pan
-    glScalef(_zoom_level, _zoom_level, 1.0f);
-    glTranslatef(_pan_offset_x, _pan_offset_y, 0.0f);
+    // Debug projection matrix
+    qDebug() << "SpatialOverlayOpenGLWidget: Projection bounds: left=" << left << "right=" << right 
+             << "bottom=" << bottom << "top=" << top;
+    qDebug() << "SpatialOverlayOpenGLWidget: Data bounds: X[" << _data_min_x << "," << _data_max_x 
+             << "] Y[" << _data_min_y << "," << _data_max_y << "]";
+    qDebug() << "SpatialOverlayOpenGLWidget: Zoom=" << _zoom_level << "Pan=" << _pan_offset_x << "," << _pan_offset_y;
 
-    // Check for OpenGL errors after matrix setup
-    error = glGetError();
-    if (error != GL_NO_ERROR) {
-        qDebug() << "SpatialOverlayOpenGLWidget: OpenGL error after matrix setup:" << error;
+    // Update view matrix (identity for now, transformations handled in projection)
+    _view_matrix.setToIdentity();
+    
+    // Update model matrix (identity for now)
+    _model_matrix.setToIdentity();
+}
+
+void SpatialOverlayOpenGLWidget::renderPoints() {
+    if (!_data_bounds_valid || _all_points.empty() || !_opengl_resources_initialized) {
+        qDebug() << "SpatialOverlayOpenGLWidget: renderPoints - skipping, bounds valid:" << _data_bounds_valid 
+                 << "points:" << _all_points.size() << "resources initialized:" << _opengl_resources_initialized;
+        return;
     }
 
-    qDebug() << "SpatialOverlayOpenGLWidget: About to render" << _all_points.size() << "points";
+    qDebug() << "SpatialOverlayOpenGLWidget: renderPoints - starting with" << _all_points.size() << "points";
+
+    // Use shader program
+    if (!_shader_program->bind()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to bind shader program";
+        return;
+    }
+
+    // Set uniform matrices
+    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
+    _shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
     
-    glBegin(GL_POINTS);
-    int points_rendered = 0;
-    for (auto const & point: _all_points) {
-        glColor4f(1.0f, 0.0f, 0.0f, 1.0f); // Keep it simple - bright red
-        glVertex2f(point.x, point.y);
-        points_rendered++;
-        
-        // Debug first few points
-        if (points_rendered <= 5) {
-            qDebug() << "SpatialOverlayOpenGLWidget: Point" << points_rendered << "at" << point.x << "," << point.y;
+    // Debug MVP matrix
+    qDebug() << "SpatialOverlayOpenGLWidget: MVP matrix:";
+    for (int i = 0; i < 4; ++i) {
+        QVector4D row = mvp_matrix.row(i);
+        qDebug() << "  " << row.x() << row.y() << row.z() << row.w();
+    }
+    
+    // Debug first few points after transformation
+    if (!_all_points.empty()) {
+        for (int i = 0; i < std::min(3, static_cast<int>(_all_points.size())); ++i) {
+            QVector4D point_world(static_cast<float>(_all_points[i].x), static_cast<float>(_all_points[i].y), 0.0f, 1.0f);
+            QVector4D point_screen = mvp_matrix * point_world;
+            qDebug() << "SpatialOverlayOpenGLWidget: Point" << i << "world:" << point_world.x() << point_world.y() 
+                     << "screen:" << point_screen.x() << point_screen.y() << point_screen.z() << point_screen.w();
         }
     }
-    glEnd();
+    
+    // Set point color and size
+    _shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f)); // Red
+    _shader_program->setUniformValue("u_point_size", 20.0f); // Increased size for visibility
 
-    qDebug() << "SpatialOverlayOpenGLWidget: Rendered" << points_rendered << "points";
+    // Bind vertex array object
+    _vertex_array_object.bind();
 
-    // Check for OpenGL errors after rendering
-    error = glGetError();
-    if (error != GL_NO_ERROR) {
-        qDebug() << "SpatialOverlayOpenGLWidget: OpenGL error after rendering:" << error;
+    // Check if vertex buffer has data
+    GLint buffer_size = 0;
+    _vertex_buffer.bind();
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
+    qDebug() << "SpatialOverlayOpenGLWidget: Vertex buffer size:" << buffer_size << "bytes";
+    
+    if (buffer_size == 0) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Vertex buffer is empty, updating now";
+        updateVertexBuffer();
+        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
+        qDebug() << "SpatialOverlayOpenGLWidget: Vertex buffer size after update:" << buffer_size << "bytes";
     }
-    
-    // Force a flush to make sure OpenGL commands are executed
-    glFlush();
-    
+
+    // Draw points
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_all_points.size()));
+
+    // Check for OpenGL errors
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        qDebug() << "SpatialOverlayOpenGLWidget: OpenGL error during rendering:" << error;
+    }
+
+    // Unbind
+    _vertex_array_object.release();
+    _shader_program->release();
+
+    // Simple fallback test: Draw a triangle using immediate mode if points don't render
+    // This helps verify if the OpenGL context is working at all
+    if (_all_points.size() < 10) { // Only for small datasets to avoid spam
+        qDebug() << "SpatialOverlayOpenGLWidget: Drawing test triangle as fallback";
+        
+        // Create a simple shader program for testing
+        QOpenGLShaderProgram test_shader;
+        test_shader.addShaderFromSourceCode(QOpenGLShader::Vertex, R"(
+            #version 410 core
+            layout(location = 0) in vec2 a_position;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+        )");
+        test_shader.addShaderFromSourceCode(QOpenGLShader::Fragment, R"(
+            #version 410 core
+            out vec4 FragColor;
+            void main() {
+                FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green
+            }
+        )");
+        test_shader.link();
+        
+        if (test_shader.bind()) {
+            // Create a simple triangle
+            float triangle_vertices[] = {
+                -0.5f, -0.5f,
+                 0.5f, -0.5f,
+                 0.0f,  0.5f
+            };
+            
+            QOpenGLBuffer test_buffer;
+            test_buffer.create();
+            test_buffer.bind();
+            test_buffer.allocate(triangle_vertices, sizeof(triangle_vertices));
+            
+            QOpenGLVertexArrayObject test_vao;
+            test_vao.create();
+            test_vao.bind();
+            
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+            
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+            
+            test_vao.release();
+            test_buffer.release();
+            test_shader.release();
+            
+            qDebug() << "SpatialOverlayOpenGLWidget: Test triangle rendered";
+        }
+    }
+
     qDebug() << "SpatialOverlayOpenGLWidget: renderPoints completed";
 }
 
 void SpatialOverlayOpenGLWidget::setupPointRendering() {
-    // Basic OpenGL setup for point rendering
-    glEnable(GL_POINT_SMOOTH);
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+    // This method is now deprecated - initialization handled in initializeOpenGLResources
+}
+
+void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
+    qDebug() << "SpatialOverlayOpenGLWidget: Initializing OpenGL resources";
+
+    // Create and compile shader program
+    _shader_program = new QOpenGLShaderProgram(this);
+    
+    // Vertex shader
+    QString vertex_shader_source = R"(
+        #version 410 core
+        
+        layout(location = 0) in vec2 a_position;
+        
+        uniform mat4 u_mvp_matrix;
+        uniform float u_point_size;
+        
+        void main() {
+            gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
+            gl_PointSize = u_point_size;
+        }
+    )";
+    
+    // Fragment shader
+    QString fragment_shader_source = R"(
+        #version 410 core
+        
+        uniform vec4 u_color;
+        
+        out vec4 FragColor;
+        
+        void main() {
+            // Simple solid color - no fancy circular points for now
+            FragColor = u_color;
+        }
+    )";
+    
+    if (!_shader_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertex_shader_source)) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile vertex shader:" << _shader_program->log();
+        return;
+    }
+    
+    if (!_shader_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragment_shader_source)) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile fragment shader:" << _shader_program->log();
+        return;
+    }
+    
+    if (!_shader_program->link()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to link shader program:" << _shader_program->log();
+        return;
+    }
+
+    // Create vertex array object
+    _vertex_array_object.create();
+    _vertex_array_object.bind();
+
+    // Create vertex buffer
+    _vertex_buffer.create();
+    _vertex_buffer.bind();
+    _vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+
+    // Set up vertex attributes
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+
+    _vertex_array_object.release();
+    _vertex_buffer.release();
+
+    _opengl_resources_initialized = true;
+    qDebug() << "SpatialOverlayOpenGLWidget: OpenGL resources initialized successfully";
+}
+
+void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
+    if (_opengl_resources_initialized) {
+        makeCurrent();
+        
+        delete _shader_program;
+        _shader_program = nullptr;
+        
+        _vertex_buffer.destroy();
+        _vertex_array_object.destroy();
+        
+        _opengl_resources_initialized = false;
+        
+        doneCurrent();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::updateVertexBuffer() {
+    if (!_opengl_resources_initialized || _all_points.empty()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: updateVertexBuffer - skipping, resources initialized:" 
+                 << _opengl_resources_initialized << "points:" << _all_points.size();
+        return;
+    }
+
+    qDebug() << "SpatialOverlayOpenGLWidget: Updating vertex buffer with" << _all_points.size() << "points";
+
+    // Prepare vertex data (just x, y coordinates)
+    std::vector<float> vertex_data;
+    vertex_data.reserve(_all_points.size() * 2);
+    
+    for (auto const & point : _all_points) {
+        vertex_data.push_back(point.x);
+        vertex_data.push_back(point.y);
+    }
+
+    // Debug first few points
+    qDebug() << "SpatialOverlayOpenGLWidget: First few vertex data points:";
+    for (int i = 0; i < std::min(6, static_cast<int>(vertex_data.size())); i += 2) {
+        qDebug() << "  Point" << i/2 << ":" << vertex_data[i] << "," << vertex_data[i+1];
+    }
+
+    // Bind VAO and update buffer
+    _vertex_array_object.bind();
+    _vertex_buffer.bind();
+    _vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
+    
+    // Verify buffer was allocated
+    GLint buffer_size = 0;
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
+    qDebug() << "SpatialOverlayOpenGLWidget: Buffer allocated with size:" << buffer_size << "bytes";
+    
+    // Re-setup vertex attributes to be safe
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    
+    _vertex_buffer.release();
+    _vertex_array_object.release();
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Vertex buffer updated with" << vertex_data.size() / 2 << "points";
 }
 
 // SpatialOverlayPlotWidget implementation
