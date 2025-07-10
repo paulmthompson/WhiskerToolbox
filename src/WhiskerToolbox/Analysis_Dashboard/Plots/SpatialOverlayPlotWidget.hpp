@@ -18,10 +18,65 @@
 #include <memory>
 #include <set>
 #include <unordered_map>
+#include <vector>
 
 class PointData;
 class QGraphicsProxyWidget;
 class TimeFrameIndex;
+
+/**
+ * @brief Selection modes for spatial selection
+ */
+enum class SelectionMode {
+    None,           ///< No selection mode active
+    PointSelection, ///< Individual point selection (Ctrl+click)
+    PolygonSelection ///< Polygon area selection (click and drag)
+};
+
+/**
+ * @brief Abstract base class for selection regions that can be applied to different data types
+ */
+class SelectionRegion {
+public:
+    virtual ~SelectionRegion() = default;
+    
+    /**
+     * @brief Check if a 2D point is inside this selection region
+     * @param x X coordinate in world space
+     * @param y Y coordinate in world space
+     * @return True if point is inside the selection region
+     */
+    virtual bool containsPoint(float x, float y) const = 0;
+    
+    /**
+     * @brief Get the bounding box of this selection region for optimization
+     * @param min_x Output: minimum X coordinate
+     * @param min_y Output: minimum Y coordinate  
+     * @param max_x Output: maximum X coordinate
+     * @param max_y Output: maximum Y coordinate
+     */
+    virtual void getBoundingBox(float& min_x, float& min_y, float& max_x, float& max_y) const = 0;
+};
+
+/**
+ * @brief Polygon selection region for area-based selection
+ */
+class PolygonSelectionRegion : public SelectionRegion {
+public:
+    explicit PolygonSelectionRegion(std::vector<QVector2D> const& vertices);
+    
+    bool containsPoint(float x, float y) const override;
+    void getBoundingBox(float& min_x, float& min_y, float& max_x, float& max_y) const override;
+    
+    /**
+     * @brief Get the polygon vertices in world coordinates
+     */
+    std::vector<QVector2D> const& getVertices() const { return _vertices; }
+    
+private:
+    std::vector<QVector2D> _vertices;
+    float _min_x, _min_y, _max_x, _max_y; // Cached bounding box
+};
 
 /**
  * @brief Data structure for storing point information with time frame
@@ -117,6 +172,17 @@ public:
     void clearSelection();
 
     /**
+     * @brief Set the current selection mode
+     * @param mode The selection mode to activate
+     */
+    void setSelectionMode(SelectionMode mode);
+    
+    /**
+     * @brief Get the current selection mode
+     */
+    SelectionMode getSelectionMode() const { return _selection_mode; }
+
+    /**
      * @brief Get the spatial point data for all selected points
      * @return Vector of pointers to selected point data
      */
@@ -173,12 +239,19 @@ signals:
     void selectionChanged(size_t selected_count, std::set<size_t> const & selected_indices);
 
     /**
+     * @brief Emitted when the selection mode changes
+     * @param mode The new selection mode
+     */
+    void selectionModeChanged(SelectionMode mode);
+
+    /**
      * @brief Emitted when the highlight state changes, requiring scene graph update
      */
     void highlightStateChanged();
 protected:
     void initializeGL() override;
     void paintGL() override;
+    void paintEvent(QPaintEvent * event) override;
     void resizeGL(int w, int h) override;
 
     void mousePressEvent(QMouseEvent * event) override;
@@ -187,6 +260,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
     void leaveEvent(QEvent * event) override;
+    void keyPressEvent(QKeyEvent * event) override;
 
 private slots:
     /**
@@ -212,6 +286,7 @@ private:
 
     // Modern OpenGL rendering resources
     QOpenGLShaderProgram * _shader_program;
+    QOpenGLShaderProgram * _line_shader_program;
     QOpenGLBuffer _vertex_buffer;
     QOpenGLVertexArrayObject _vertex_array_object;
     
@@ -222,6 +297,12 @@ private:
     // Selection rendering resources
     QOpenGLBuffer _selection_vertex_buffer;
     QOpenGLVertexArrayObject _selection_vertex_array_object;
+    
+    // Polygon rendering resources
+    QOpenGLBuffer _polygon_vertex_buffer;
+    QOpenGLVertexArrayObject _polygon_vertex_array_object;
+    QOpenGLBuffer _polygon_line_buffer;
+    QOpenGLVertexArrayObject _polygon_line_array_object;
     
     bool _opengl_resources_initialized;
 
@@ -247,6 +328,13 @@ private:
     // Selection state
     std::set<size_t> _selected_point_indices;  // Set of selected point indices
     std::vector<float> _selection_vertex_data; // Cached vertex data for selected points
+    SelectionMode _selection_mode;             // Current selection mode
+    
+    // Polygon selection state
+    bool _is_polygon_selecting;                // True when actively drawing polygon
+    std::vector<QVector2D> _polygon_vertices;  // Current polygon vertices in world coordinates
+    std::vector<QPoint> _polygon_screen_points; // Polygon vertices in screen coordinates for rendering
+    std::unique_ptr<SelectionRegion> _active_selection_region; // Current selection region
 
     // Data bounds
     float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
@@ -319,6 +407,47 @@ private:
     void updateSelectionVertexBuffer();
 
     /**
+     * @brief Apply a selection region to find all points within it
+     * @param region The selection region to apply
+     * @param add_to_selection If true, add to existing selection; if false, replace selection
+     */
+    void applySelectionRegion(SelectionRegion const& region, bool add_to_selection = false);
+
+    /**
+     * @brief Start polygon selection at given screen coordinates
+     * @param screen_x Screen X coordinate
+     * @param screen_y Screen Y coordinate
+     */
+    void startPolygonSelection(int screen_x, int screen_y);
+
+    /**
+     * @brief Add point to current polygon selection
+     * @param screen_x Screen X coordinate
+     * @param screen_y Screen Y coordinate
+     */
+    void addPolygonVertex(int screen_x, int screen_y);
+
+    /**
+     * @brief Complete polygon selection and select enclosed points
+     */
+    void completePolygonSelection();
+
+    /**
+     * @brief Cancel current polygon selection
+     */
+    void cancelPolygonSelection();
+
+    /**
+     * @brief Render polygon selection overlay using OpenGL
+     */
+    void renderPolygonOverlay();
+    
+    /**
+     * @brief Update polygon vertex and line buffers
+     */
+    void updatePolygonBuffers();
+
+    /**
      * @brief Initialize OpenGL shaders and resources
      */
     void initializeOpenGLResources();
@@ -376,11 +505,34 @@ public:
      */
     SpatialOverlayOpenGLWidget * getOpenGLWidget() const { return _opengl_widget; }
 
+    /**
+     * @brief Set the selection mode for the plot
+     * @param mode The selection mode to activate
+     */
+    void setSelectionMode(SelectionMode mode);
+
+    /**
+     * @brief Get the current selection mode
+     */
+    SelectionMode getSelectionMode() const;
+
 signals:
     /**
      * @brief Emitted when rendering properties change (point size, zoom, pan)
      */
     void renderingPropertiesChanged();
+
+    /**
+     * @brief Emitted when the selection changes
+     * @param selected_count Number of currently selected points
+     */
+    void selectionChanged(size_t selected_count);
+
+    /**
+     * @brief Emitted when the selection mode changes
+     * @param mode The new selection mode
+     */
+    void selectionModeChanged(SelectionMode mode);
 
 protected:
     void paint(QPainter * painter, QStyleOptionGraphicsItem const * option, QWidget * widget = nullptr) override;

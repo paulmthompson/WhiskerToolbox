@@ -7,6 +7,8 @@
 
 class DataManager;
 class QCheckBox;
+class QComboBox;
+class QLabel;
 class QListWidget;
 class QListWidgetItem;
 class QDoubleSpinBox;
@@ -75,6 +77,17 @@ private slots:
     void onTooltipsEnabledChanged(bool enabled);
 
     /**
+     * @brief Handle selection mode changes
+     * @param index Index of selected mode in combo box
+     */
+    void onSelectionModeChanged(int index);
+
+    /**
+     * @brief Clear all selected points
+     */
+    void onClearSelectionClicked();
+
+    /**
      * @brief Select all data sources
      */
     void onSelectAllClicked();
@@ -99,6 +112,12 @@ private:
     QDoubleSpinBox * _zoom_level_spinbox;
     QPushButton * _reset_view_button;
     QCheckBox * _tooltips_checkbox;
+
+    // Selection settings
+    QGroupBox * _selection_group;
+    QComboBox * _selection_mode_combo;
+    QLabel * _selection_instructions_label;
+    QPushButton * _clear_selection_button;
 
     std::shared_ptr<DataManager> _data_manager;
 
@@ -133,6 +152,11 @@ private:
      * @brief Update the plot widget with current settings
      */
     void updatePlotWidget();
+
+    /**
+     * @brief Update the instruction text based on current selection mode
+     */
+    void updateSelectionInstructions();
 };
 
 #endif// SPATIALOVERLAYPLOTPROPERTIESWIDGET_HPP

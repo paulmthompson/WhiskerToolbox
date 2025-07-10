@@ -5,6 +5,7 @@
 #include "DataManager/Points/Point_Data.hpp"
 
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDebug>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
@@ -37,6 +38,29 @@ void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot
 
     if (_spatial_plot_widget) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: Updating available data sources and UI";
+        
+        // Connect to plot widget signals
+        connect(_spatial_plot_widget, &SpatialOverlayPlotWidget::selectionChanged,
+                this, [this](size_t selectedCount) {
+            qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection changed, count:" << selectedCount;
+            // Could update UI to show selection count if desired
+        });
+        
+        connect(_spatial_plot_widget, &SpatialOverlayPlotWidget::selectionModeChanged,
+                this, [this](SelectionMode mode) {
+            qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection mode changed to:" << static_cast<int>(mode);
+            // Update combo box if changed externally
+            for (int i = 0; i < _selection_mode_combo->count(); ++i) {
+                if (static_cast<SelectionMode>(_selection_mode_combo->itemData(i).toInt()) == mode) {
+                    _selection_mode_combo->blockSignals(true);
+                    _selection_mode_combo->setCurrentIndex(i);
+                    _selection_mode_combo->blockSignals(false);
+                    _clear_selection_button->setEnabled(mode != SelectionMode::None);
+                    break;
+                }
+            }
+        });
+        
         // Update available data sources
         updateAvailableDataSources();
         
@@ -58,20 +82,34 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
             float current_zoom = _spatial_plot_widget->getOpenGLWidget()->getZoomLevel();
             float current_point_size = _spatial_plot_widget->getOpenGLWidget()->getPointSize();
             bool tooltips_enabled = _spatial_plot_widget->getOpenGLWidget()->getTooltipsEnabled();
+            SelectionMode current_selection_mode = _spatial_plot_widget->getSelectionMode();
             
             // Block signals to prevent recursive updates
             _zoom_level_spinbox->blockSignals(true);
             _point_size_spinbox->blockSignals(true);
             _tooltips_checkbox->blockSignals(true);
+            _selection_mode_combo->blockSignals(true);
             
             _zoom_level_spinbox->setValue(static_cast<double>(current_zoom));
             _point_size_spinbox->setValue(static_cast<double>(current_point_size));
             _tooltips_checkbox->setChecked(tooltips_enabled);
             
+            // Set selection mode combo box
+            for (int i = 0; i < _selection_mode_combo->count(); ++i) {
+                if (static_cast<SelectionMode>(_selection_mode_combo->itemData(i).toInt()) == current_selection_mode) {
+                    _selection_mode_combo->setCurrentIndex(i);
+                    break;
+                }
+            }
+            
+            // Update clear selection button state
+            _clear_selection_button->setEnabled(current_selection_mode != SelectionMode::None);
+            
             // Re-enable signals
             _zoom_level_spinbox->blockSignals(false);
             _point_size_spinbox->blockSignals(false);
             _tooltips_checkbox->blockSignals(false);
+            _selection_mode_combo->blockSignals(false);
         }
     } else {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot - no spatial plot widget available";
@@ -206,8 +244,48 @@ void SpatialOverlayPlotPropertiesWidget::initializeUI() {
 
     main_layout->addWidget(_visualization_group);
 
+    // Selection Settings Group
+    _selection_group = new QGroupBox("Selection Settings", this);
+    QVBoxLayout * selection_layout = new QVBoxLayout(_selection_group);
+
+    // Selection mode combo box
+    QHBoxLayout * selection_mode_layout = new QHBoxLayout();
+    selection_mode_layout->addWidget(new QLabel("Selection Mode:", this));
+    _selection_mode_combo = new QComboBox(this);
+    _selection_mode_combo->addItem("None", static_cast<int>(SelectionMode::None));
+    _selection_mode_combo->addItem("Point Selection (Ctrl+Click)", static_cast<int>(SelectionMode::PointSelection));
+    _selection_mode_combo->addItem("Polygon Selection", static_cast<int>(SelectionMode::PolygonSelection));
+    _selection_mode_combo->setCurrentIndex(1); // Default to PointSelection
+    selection_mode_layout->addWidget(_selection_mode_combo);
+    selection_mode_layout->addStretch();
+    selection_layout->addLayout(selection_mode_layout);
+
+    // Instructions label
+    _selection_instructions_label = new QLabel(this);
+    _selection_instructions_label->setWordWrap(true);
+    _selection_instructions_label->setStyleSheet("QLabel { "
+                                                  "color: #555; "
+                                                  "font-size: 11px; "
+                                                  "padding: 8px; "
+                                                  "background-color: #f0f0f0; "
+                                                  "border: 1px solid #ccc; "
+                                                  "border-radius: 4px; "
+                                                  "}");
+    _selection_instructions_label->setMinimumHeight(60);
+    selection_layout->addWidget(_selection_instructions_label);
+
+    // Clear selection button
+    _clear_selection_button = new QPushButton("Clear Selection", this);
+    _clear_selection_button->setMaximumWidth(120);
+    selection_layout->addWidget(_clear_selection_button);
+
+    main_layout->addWidget(_selection_group);
+
     // Add stretch to push everything to the top
     main_layout->addStretch();
+    
+    // Initialize selection instructions
+    updateSelectionInstructions();
 }
 
 void SpatialOverlayPlotPropertiesWidget::setupConnections() {
@@ -236,6 +314,13 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
     // Tooltips checkbox
     connect(_tooltips_checkbox, &QCheckBox::toggled,
             this, &SpatialOverlayPlotPropertiesWidget::onTooltipsEnabledChanged);
+
+    // Selection settings
+    connect(_selection_mode_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &SpatialOverlayPlotPropertiesWidget::onSelectionModeChanged);
+
+    connect(_clear_selection_button, &QPushButton::clicked,
+            this, &SpatialOverlayPlotPropertiesWidget::onClearSelectionClicked);
     
     qDebug() << "SpatialOverlayPlotPropertiesWidget: setupConnections completed";
 }
@@ -311,4 +396,66 @@ void SpatialOverlayPlotPropertiesWidget::updatePlotWidget() {
     // Update visualization settings
     // Note: We'll need to add public interfaces to SpatialOverlayPlotWidget for these
     // For now, the basic data source update is working
+}
+
+void SpatialOverlayPlotPropertiesWidget::onSelectionModeChanged(int index) {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: onSelectionModeChanged called with index:" << index;
+    
+    // Update instruction text first
+    updateSelectionInstructions();
+    
+    if (_spatial_plot_widget) {
+        // Get the SelectionMode from the combo box data
+        SelectionMode mode = static_cast<SelectionMode>(_selection_mode_combo->itemData(index).toInt());
+        qDebug() << "SpatialOverlayPlotPropertiesWidget: Setting selection mode to:" << static_cast<int>(mode);
+        
+        _spatial_plot_widget->setSelectionMode(mode);
+        
+        // Update clear selection button enabled state
+        _clear_selection_button->setEnabled(mode != SelectionMode::None);
+    }
+}
+
+void SpatialOverlayPlotPropertiesWidget::onClearSelectionClicked() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: onClearSelectionClicked called";
+    
+    if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
+        _spatial_plot_widget->getOpenGLWidget()->clearSelection();
+        qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection cleared";
+    }
+}
+
+void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
+    if (!_selection_instructions_label || !_selection_mode_combo) {
+        return;
+    }
+    
+    int current_index = _selection_mode_combo->currentIndex();
+    SelectionMode mode = static_cast<SelectionMode>(_selection_mode_combo->itemData(current_index).toInt());
+    
+    QString instructions;
+    
+    switch (mode) {
+        case SelectionMode::None:
+            instructions = "📍 Selection Disabled\n"
+                          "No point selection available in this mode.";
+            break;
+            
+        case SelectionMode::PointSelection:
+            instructions = "🖱️ Point Selection Mode\n"
+                          "• Hold Ctrl + Left Click on individual points to select/deselect\n"
+                          "• Selected points appear in black\n"
+                          "• Double-click points to jump to that frame";
+            break;
+            
+        case SelectionMode::PolygonSelection:
+            instructions = "📐 Polygon Selection Mode\n"
+                          "• Left Click to add vertices to polygon\n"
+                          "• Right Click to complete polygon and select enclosed points\n"
+                          "• Press Escape to cancel current polygon\n"
+                          "• Red dots show vertices, blue lines show edges";
+            break;
+    }
+    
+    _selection_instructions_label->setText(instructions);
 }

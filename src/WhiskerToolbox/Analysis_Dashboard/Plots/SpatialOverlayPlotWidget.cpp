@@ -8,24 +8,86 @@
 #include <QDebug>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsSceneResizeEvent>
+#include <QKeyEvent>
 #include <QMouseEvent>
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
 #include <QPainter>
+#include <QPaintEvent>
 #include <QPen>
 #include <QToolTip>
 #include <QWheelEvent>
 
 #include <cmath>
 
+// PolygonSelectionRegion implementation
+
+PolygonSelectionRegion::PolygonSelectionRegion(std::vector<QVector2D> const& vertices) 
+    : _vertices(vertices) {
+    
+    if (_vertices.empty()) {
+        _min_x = _min_y = _max_x = _max_y = 0.0f;
+        return;
+    }
+    
+    // Calculate bounding box
+    _min_x = _max_x = _vertices[0].x();
+    _min_y = _max_y = _vertices[0].y();
+    
+    for (auto const& vertex : _vertices) {
+        _min_x = std::min(_min_x, vertex.x());
+        _max_x = std::max(_max_x, vertex.x());
+        _min_y = std::min(_min_y, vertex.y());
+        _max_y = std::max(_max_y, vertex.y());
+    }
+}
+
+bool PolygonSelectionRegion::containsPoint(float x, float y) const {
+    if (_vertices.size() < 3) return false;
+    
+    // Quick bounding box check first
+    if (x < _min_x || x > _max_x || y < _min_y || y > _max_y) {
+        return false;
+    }
+    
+    // Ray casting algorithm for point-in-polygon test
+    bool inside = false;
+    size_t j = _vertices.size() - 1;
+    
+    for (size_t i = 0; i < _vertices.size(); ++i) {
+        float xi = _vertices[i].x();
+        float yi = _vertices[i].y();
+        float xj = _vertices[j].x();
+        float yj = _vertices[j].y();
+        
+        if (((yi > y) != (yj > y)) && 
+            (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+            inside = !inside;
+        }
+        j = i;
+    }
+    
+    return inside;
+}
+
+void PolygonSelectionRegion::getBoundingBox(float& min_x, float& min_y, float& max_x, float& max_y) const {
+    min_x = _min_x;
+    min_y = _min_y;
+    max_x = _max_x;
+    max_y = _max_y;
+}
+
 // SpatialOverlayOpenGLWidget implementation
 
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
       _shader_program(nullptr),
+      _line_shader_program(nullptr),
       _vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _highlight_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
+      _polygon_vertex_buffer(QOpenGLBuffer::VertexBuffer),
+      _polygon_line_buffer(QOpenGLBuffer::VertexBuffer),
       _opengl_resources_initialized(false),
       _zoom_level(1.0f),
       _pan_offset_x(0.0f),
@@ -35,7 +97,9 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _data_bounds_valid(false),
       _tooltips_enabled(true),
       _pending_update(false),
-      _current_hover_point(nullptr) {
+      _current_hover_point(nullptr),
+      _selection_mode(SelectionMode::PointSelection),
+      _is_polygon_selecting(false) {
 
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
@@ -177,6 +241,27 @@ void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
     }
 }
 
+void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
+    if (mode != _selection_mode) {
+        // Cancel any active polygon selection when switching modes
+        if (_is_polygon_selecting) {
+            cancelPolygonSelection();
+        }
+        
+        _selection_mode = mode;
+        emit selectionModeChanged(_selection_mode);
+        
+        // Update cursor based on selection mode
+        if (_selection_mode == SelectionMode::PolygonSelection) {
+            setCursor(Qt::CrossCursor);
+        } else {
+            setCursor(Qt::ArrowCursor);
+        }
+        
+        qDebug() << "SpatialOverlayOpenGLWidget: Selection mode changed to" << static_cast<int>(_selection_mode);
+    }
+}
+
 void SpatialOverlayOpenGLWidget::initializeGL() {
     if (!initializeOpenGLFunctions()) {
         return;
@@ -216,6 +301,16 @@ void SpatialOverlayOpenGLWidget::paintGL() {
     }
 
     renderPoints();
+    
+    // Render polygon overlay in OpenGL
+    if (_is_polygon_selecting) {
+        renderPolygonOverlay();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::paintEvent(QPaintEvent * event) {
+    // Just use standard OpenGL rendering - no mixed QPainter/OpenGL
+    QOpenGLWidget::paintEvent(event);
 }
 
 void SpatialOverlayOpenGLWidget::resizeGL(int w, int h) {
@@ -228,8 +323,21 @@ void SpatialOverlayOpenGLWidget::resizeGL(int w, int h) {
 
 void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
-        // Check if Ctrl is pressed for point selection
-        if (event->modifiers() & Qt::ControlModifier) {
+        // Handle different selection modes
+        if (_selection_mode == SelectionMode::PolygonSelection) {
+            if (!_is_polygon_selecting) {
+                // Start new polygon selection
+                startPolygonSelection(event->pos().x(), event->pos().y());
+            } else {
+                // Add vertex to current polygon
+                addPolygonVertex(event->pos().x(), event->pos().y());
+            }
+            event->accept();
+            return;
+        }
+        
+        // Point selection mode (original behavior)
+        if (_selection_mode == SelectionMode::PointSelection && (event->modifiers() & Qt::ControlModifier)) {
             SpatialPointData const * point = findPointNear(event->pos().x(), event->pos().y());
             if (point) {
                 // Find the index of this point
@@ -246,15 +354,28 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
             }
         }
         
-        // Regular left click - start panning
-        _is_panning = true;
-        _last_mouse_pos = event->pos();
+        // Regular left click - start panning (if not in polygon selection mode)
+        if (_selection_mode != SelectionMode::PolygonSelection) {
+            _is_panning = true;
+            _last_mouse_pos = event->pos();
+        }
         event->accept();
+    } else if (event->button() == Qt::RightButton) {
+        // Right click - complete polygon selection or clear selection
+        if (_is_polygon_selecting) {
+            completePolygonSelection();
+            event->accept();
+            return;
+        } else {
+            // Context menu could go here in the future
+            event->ignore();
+        }
     } else {
         // Let other mouse buttons propagate to parent widget
         event->ignore();
         return;
     }
+    
     _tooltip_timer->stop();
     _tooltip_refresh_timer->stop();
     QToolTip::hideText();
@@ -371,6 +492,25 @@ void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
     requestThrottledUpdate();
     
     QOpenGLWidget::leaveEvent(event);
+}
+
+void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
+    if (event->key() == Qt::Key_Escape) {
+        if (_is_polygon_selecting) {
+            cancelPolygonSelection();
+            event->accept();
+            return;
+        }
+    } else if (event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace) {
+        if (!_selected_point_indices.empty()) {
+            clearSelection();
+            event->accept();
+            return;
+        }
+    }
+    
+    // Let parent handle other keys
+    QOpenGLWidget::keyPressEvent(event);
 }
 
 void SpatialOverlayOpenGLWidget::handleTooltipTimer() {
@@ -879,13 +1019,279 @@ void SpatialOverlayOpenGLWidget::updateSelectionVertexBuffer() {
     _selection_vertex_array_object.release();
 }
 
+void SpatialOverlayOpenGLWidget::applySelectionRegion(SelectionRegion const& region, bool add_to_selection) {
+    if (!add_to_selection) {
+        _selected_point_indices.clear();
+    }
+    
+    // Get bounding box for optimization
+    float min_x, min_y, max_x, max_y;
+    region.getBoundingBox(min_x, min_y, max_x, max_y);
+    
+    size_t points_added = 0;
+    
+    // Check all points against the selection region
+    for (size_t i = 0; i < _all_points.size(); ++i) {
+        auto const& point = _all_points[i];
+        
+        // Quick bounding box check first
+        if (point.x >= min_x && point.x <= max_x && 
+            point.y >= min_y && point.y <= max_y) {
+            
+            // Precise containment check
+            if (region.containsPoint(point.x, point.y)) {
+                _selected_point_indices.insert(i);
+                points_added++;
+            }
+        }
+    }
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Selection region applied," << points_added 
+             << "points added, total selected:" << _selected_point_indices.size();
+    
+    // Update vertex buffer and emit signal
+    updateSelectionVertexBuffer();
+    emit selectionChanged(_selected_point_indices.size(), _selected_point_indices);
+    requestThrottledUpdate();
+}
+
+void SpatialOverlayOpenGLWidget::startPolygonSelection(int screen_x, int screen_y) {
+    qDebug() << "SpatialOverlayOpenGLWidget: Starting polygon selection at" << screen_x << "," << screen_y;
+    
+    _is_polygon_selecting = true;
+    _polygon_vertices.clear();
+    _polygon_screen_points.clear();
+    
+    // Add first vertex
+    QVector2D world_pos = screenToWorld(screen_x, screen_y);
+    _polygon_vertices.push_back(world_pos);
+    _polygon_screen_points.push_back(QPoint(screen_x, screen_y));
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Added first polygon vertex at world:" << world_pos.x() << "," << world_pos.y() 
+             << "screen:" << screen_x << "," << screen_y;
+    
+    // Update polygon buffers
+    updatePolygonBuffers();
+    
+    // Force immediate repaint to show the new vertex
+    repaint();
+    requestThrottledUpdate();
+}
+
+void SpatialOverlayOpenGLWidget::addPolygonVertex(int screen_x, int screen_y) {
+    if (!_is_polygon_selecting) return;
+    
+    QVector2D world_pos = screenToWorld(screen_x, screen_y);
+    _polygon_vertices.push_back(world_pos);
+    _polygon_screen_points.push_back(QPoint(screen_x, screen_y));
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Added polygon vertex" << _polygon_vertices.size() 
+             << "at" << world_pos.x() << "," << world_pos.y();
+    
+    // Update polygon buffers
+    updatePolygonBuffers();
+    
+    // Force immediate repaint to show new polygon edge
+    repaint();
+    requestThrottledUpdate();
+}
+
+void SpatialOverlayOpenGLWidget::completePolygonSelection() {
+    if (!_is_polygon_selecting || _polygon_vertices.size() < 3) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Cannot complete polygon selection - insufficient vertices";
+        cancelPolygonSelection();
+        return;
+    }
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Completing polygon selection with" 
+             << _polygon_vertices.size() << "vertices";
+    
+    // Create selection region and apply it
+    auto polygon_region = std::make_unique<PolygonSelectionRegion>(_polygon_vertices);
+    applySelectionRegion(*polygon_region, false); // Replace existing selection
+    
+    // Store the active region for future use if needed
+    _active_selection_region = std::move(polygon_region);
+    
+    // Clean up polygon selection state
+    _is_polygon_selecting = false;
+    _polygon_vertices.clear();
+    _polygon_screen_points.clear();
+    
+    // Update display
+    repaint();
+    requestThrottledUpdate();
+}
+
+void SpatialOverlayOpenGLWidget::cancelPolygonSelection() {
+    qDebug() << "SpatialOverlayOpenGLWidget: Cancelling polygon selection";
+    
+    _is_polygon_selecting = false;
+    _polygon_vertices.clear();
+    _polygon_screen_points.clear();
+    
+    // Clear polygon buffers
+    if (_opengl_resources_initialized) {
+        _polygon_vertex_buffer.bind();
+        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+        _polygon_vertex_buffer.release();
+        
+        _polygon_line_buffer.bind();
+        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+        _polygon_line_buffer.release();
+    }
+    
+    // Update display to remove polygon overlay
+    repaint();
+    requestThrottledUpdate();
+}
+
+void SpatialOverlayOpenGLWidget::renderPolygonOverlay() {
+    if (!_is_polygon_selecting || _polygon_vertices.empty() || !_line_shader_program) {
+        return;
+    }
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Rendering polygon overlay with" << _polygon_vertices.size() << "vertices";
+    
+    // Use line shader program
+    if (!_line_shader_program->bind()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to bind line shader program";
+        return;
+    }
+    
+    // Set uniform matrices
+    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
+    _line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
+    
+    // Enable line smoothing
+    glEnable(GL_LINE_SMOOTH);
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    
+    // Set line width
+    glLineWidth(2.0f);
+    
+    // === DRAW CALL 1: Render polygon vertices as points ===
+    _polygon_vertex_array_object.bind();
+    _polygon_vertex_buffer.bind();
+    
+    // Set vertex attributes
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    
+    // Set uniforms for vertices (red points)
+    _line_shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f)); // Red
+    _line_shader_program->setUniformValue("u_point_size", 8.0f);
+    
+    // Draw vertices as points
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_polygon_vertices.size()));
+    
+    _polygon_vertex_buffer.release();
+    _polygon_vertex_array_object.release();
+    
+    // === DRAW CALL 2: Render polygon lines ===
+    if (_polygon_vertices.size() >= 2) {
+        _polygon_line_array_object.bind();
+        _polygon_line_buffer.bind();
+        
+        // Set vertex attributes
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+        
+        // Set uniforms for lines (blue dashed appearance)
+        _line_shader_program->setUniformValue("u_color", QVector4D(0.2f, 0.6f, 1.0f, 1.0f)); // Blue
+        
+        // Draw lines
+        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>((_polygon_vertices.size() - 1) * 2));
+        
+        // Draw closure line if we have 3+ vertices
+        if (_polygon_vertices.size() >= 3) {
+            // Draw closure line with different color
+            _line_shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.6f, 0.2f, 1.0f)); // Orange
+            glDrawArrays(GL_LINES, static_cast<GLint>((_polygon_vertices.size() - 1) * 2), 2);
+        }
+        
+        _polygon_line_buffer.release();
+        _polygon_line_array_object.release();
+    }
+    
+    // Reset line width
+    glLineWidth(1.0f);
+    glDisable(GL_LINE_SMOOTH);
+    
+    _line_shader_program->release();
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Finished rendering polygon overlay";
+}
+
+void SpatialOverlayOpenGLWidget::updatePolygonBuffers() {
+    if (!_opengl_resources_initialized || _polygon_vertices.empty()) {
+        return;
+    }
+    
+    // Update vertex buffer (for drawing vertices as points)
+    std::vector<float> vertex_data;
+    vertex_data.reserve(_polygon_vertices.size() * 2);
+    
+    for (auto const& vertex : _polygon_vertices) {
+        vertex_data.push_back(vertex.x());
+        vertex_data.push_back(vertex.y());
+    }
+    
+    _polygon_vertex_array_object.bind();
+    _polygon_vertex_buffer.bind();
+    _polygon_vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
+    
+    // Set vertex attributes
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    
+    _polygon_vertex_buffer.release();
+    _polygon_vertex_array_object.release();
+    
+    // Update line buffer (for drawing lines between vertices)
+    if (_polygon_vertices.size() >= 2) {
+        std::vector<float> line_data;
+        line_data.reserve((_polygon_vertices.size() * 2 + 2) * 2); // Extra space for closure line
+        
+        // Add lines between consecutive vertices
+        for (size_t i = 1; i < _polygon_vertices.size(); ++i) {
+            // Line from previous vertex to current vertex
+            line_data.push_back(_polygon_vertices[i-1].x());
+            line_data.push_back(_polygon_vertices[i-1].y());
+            line_data.push_back(_polygon_vertices[i].x());
+            line_data.push_back(_polygon_vertices[i].y());
+        }
+        
+        // Add closure line if we have 3+ vertices
+        if (_polygon_vertices.size() >= 3) {
+            line_data.push_back(_polygon_vertices.back().x());
+            line_data.push_back(_polygon_vertices.back().y());
+            line_data.push_back(_polygon_vertices.front().x());
+            line_data.push_back(_polygon_vertices.front().y());
+        }
+        
+        _polygon_line_array_object.bind();
+        _polygon_line_buffer.bind();
+        _polygon_line_buffer.allocate(line_data.data(), static_cast<int>(line_data.size() * sizeof(float)));
+        
+        // Set vertex attributes
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+        
+        _polygon_line_buffer.release();
+        _polygon_line_array_object.release();
+    }
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Updated polygon buffers with" << _polygon_vertices.size() << "vertices";
+}
+
 void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     qDebug() << "SpatialOverlayOpenGLWidget: Initializing OpenGL resources";
 
-    // Create and compile shader program
+    // Create and compile point shader program
     _shader_program = new QOpenGLShaderProgram(this);
     
-    // Vertex shader
+    // Vertex shader for points
     QString vertex_shader_source = R"(
         #version 410 core
         
@@ -900,7 +1306,7 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
         }
     )";
     
-    // Fragment shader
+    // Fragment shader for points
     QString fragment_shader_source = R"(
         #version 410 core
         
@@ -939,16 +1345,62 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
         return;
     }
 
-    // Create vertex array object
+    // Create and compile line shader program
+    _line_shader_program = new QOpenGLShaderProgram(this);
+    
+    // Vertex shader for lines (same as points but without point size)
+    QString line_vertex_shader_source = R"(
+        #version 410 core
+        
+        layout(location = 0) in vec2 a_position;
+        
+        uniform mat4 u_mvp_matrix;
+        uniform float u_point_size;
+        
+        void main() {
+            gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
+            gl_PointSize = u_point_size;
+        }
+    )";
+    
+    // Fragment shader for lines (flat color)
+    QString line_fragment_shader_source = R"(
+        #version 410 core
+        
+        uniform vec4 u_color;
+        
+        out vec4 FragColor;
+        
+        void main() {
+            FragColor = u_color;
+        }
+    )";
+    
+    if (!_line_shader_program->addShaderFromSourceCode(QOpenGLShader::Vertex, line_vertex_shader_source)) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile line vertex shader:" << _line_shader_program->log();
+        return;
+    }
+    
+    if (!_line_shader_program->addShaderFromSourceCode(QOpenGLShader::Fragment, line_fragment_shader_source)) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile line fragment shader:" << _line_shader_program->log();
+        return;
+    }
+    
+    if (!_line_shader_program->link()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to link line shader program:" << _line_shader_program->log();
+        return;
+    }
+
+    // Create vertex array object for points
     _vertex_array_object.create();
     _vertex_array_object.bind();
 
-    // Create vertex buffer
+    // Create vertex buffer for points
     _vertex_buffer.create();
     _vertex_buffer.bind();
     _vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
 
-    // Set up vertex attributes
+    // Set up vertex attributes for points
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
@@ -991,7 +1443,44 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     _selection_vertex_array_object.release();
     _selection_vertex_buffer.release();
 
+    // Create polygon vertex array object and buffer
+    _polygon_vertex_array_object.create();
+    _polygon_vertex_array_object.bind();
+
+    _polygon_vertex_buffer.create();
+    _polygon_vertex_buffer.bind();
+    _polygon_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    
+    // Pre-allocate polygon vertex buffer (initially empty)
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+    
+    // Set up vertex attributes for polygon vertices
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+
+    _polygon_vertex_array_object.release();
+    _polygon_vertex_buffer.release();
+
+    // Create polygon line array object and buffer
+    _polygon_line_array_object.create();
+    _polygon_line_array_object.bind();
+
+    _polygon_line_buffer.create();
+    _polygon_line_buffer.bind();
+    _polygon_line_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    
+    // Pre-allocate polygon line buffer (initially empty)
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+    
+    // Set up vertex attributes for polygon lines
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+
+    _polygon_line_array_object.release();
+    _polygon_line_buffer.release();
+
     _opengl_resources_initialized = true;
+    qDebug() << "SpatialOverlayOpenGLWidget: OpenGL resources initialized successfully";
 }
 
 void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
@@ -1001,6 +1490,9 @@ void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
         delete _shader_program;
         _shader_program = nullptr;
         
+        delete _line_shader_program;
+        _line_shader_program = nullptr;
+        
         _vertex_buffer.destroy();
         _vertex_array_object.destroy();
         
@@ -1009,6 +1501,12 @@ void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
         
         _selection_vertex_buffer.destroy();
         _selection_vertex_array_object.destroy();
+        
+        _polygon_vertex_buffer.destroy();
+        _polygon_vertex_array_object.destroy();
+        
+        _polygon_line_buffer.destroy();
+        _polygon_line_array_object.destroy();
         
         _opengl_resources_initialized = false;
         
@@ -1253,4 +1751,31 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
                 update(); // Trigger graphics item update
                 emit renderUpdateRequested(getPlotId());
             });
+    
+    // Connect selection change signals
+    connect(_opengl_widget, &SpatialOverlayOpenGLWidget::selectionChanged,
+            this, [this](size_t selected_count, std::set<size_t> const&) {
+                emit selectionChanged(selected_count);
+                update(); // Trigger graphics item update
+                emit renderUpdateRequested(getPlotId());
+            });
+    
+    // Connect selection mode change signals
+    connect(_opengl_widget, &SpatialOverlayOpenGLWidget::selectionModeChanged,
+            this, [this](SelectionMode mode) {
+                emit selectionModeChanged(mode);
+            });
+}
+
+void SpatialOverlayPlotWidget::setSelectionMode(SelectionMode mode) {
+    if (_opengl_widget) {
+        _opengl_widget->setSelectionMode(mode);
+    }
+}
+
+SelectionMode SpatialOverlayPlotWidget::getSelectionMode() const {
+    if (_opengl_widget) {
+        return _opengl_widget->getSelectionMode();
+    }
+    return SelectionMode::None;
 }
