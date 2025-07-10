@@ -67,6 +67,12 @@ public:
     void setPanOffset(float offset_x, float offset_y);
 
     /**
+     * @brief Set the point size for rendering
+     * @param point_size Point size in pixels
+     */
+    void setPointSize(float point_size);
+
+    /**
      * @brief Get current zoom level
      */
     float getZoomLevel() const { return _zoom_level; }
@@ -76,12 +82,53 @@ public:
      */
     QVector2D getPanOffset() const { return QVector2D(_pan_offset_x, _pan_offset_y); }
 
+    /**
+     * @brief Get current point size
+     */
+    float getPointSize() const { return _point_size; }
+
+    /**
+     * @brief Enable or disable tooltips
+     * @param enabled Whether tooltips should be enabled
+     */
+    void setTooltipsEnabled(bool enabled);
+
+    /**
+     * @brief Get current tooltip enabled state
+     */
+    bool getTooltipsEnabled() const { return _tooltips_enabled; }
+
 signals:
     /**
      * @brief Emitted when user double-clicks on a point to jump to that frame
      * @param time_frame_index The time frame index to jump to
      */
     void frameJumpRequested(int64_t time_frame_index);
+
+    /**
+     * @brief Emitted when point size changes
+     * @param point_size The new point size in pixels
+     */
+    void pointSizeChanged(float point_size);
+
+    /**
+     * @brief Emitted when zoom level changes
+     * @param zoom_level The new zoom level
+     */
+    void zoomLevelChanged(float zoom_level);
+
+    /**
+     * @brief Emitted when pan offset changes
+     * @param offset_x The new X pan offset
+     * @param offset_y The new Y pan offset
+     */
+    void panOffsetChanged(float offset_x, float offset_y);
+
+    /**
+     * @brief Emitted when tooltip enabled state changes
+     * @param enabled Whether tooltips are enabled
+     */
+    void tooltipsEnabledChanged(bool enabled);
 
 protected:
     void initializeGL() override;
@@ -93,6 +140,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent * event) override;
     void mouseDoubleClickEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
+    void leaveEvent(QEvent * event) override;
 
 private slots:
     /**
@@ -114,6 +162,7 @@ private:
     // View parameters
     float _zoom_level;
     float _pan_offset_x, _pan_offset_y;
+    float _point_size;
     QMatrix4x4 _projection_matrix;
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _model_matrix;
@@ -123,6 +172,8 @@ private:
     QPoint _last_mouse_pos;
     QPoint _current_mouse_pos;
     QTimer * _tooltip_timer;
+    bool _tooltips_enabled;
+    SpatialPointData const * _current_hover_point;
 
     // Data bounds
     float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
@@ -232,6 +283,11 @@ signals:
      * @param time_frame_index The time frame index to jump to
      */
     void frameJumpRequested(int64_t time_frame_index);
+
+    /**
+     * @brief Emitted when rendering properties change (point size, zoom, pan)
+     */
+    void renderingPropertiesChanged();
 
 protected:
     void paint(QPainter * painter, QStyleOptionGraphicsItem const * option, QWidget * widget = nullptr) override;

@@ -69,6 +69,12 @@ private slots:
     void onResetViewClicked();
 
     /**
+     * @brief Handle tooltip enable/disable changes
+     * @param enabled Whether tooltips should be enabled
+     */
+    void onTooltipsEnabledChanged(bool enabled);
+
+    /**
      * @brief Select all data sources
      */
     void onSelectAllClicked();
@@ -92,6 +98,7 @@ private:
     QDoubleSpinBox * _point_size_spinbox;
     QDoubleSpinBox * _zoom_level_spinbox;
     QPushButton * _reset_view_button;
+    QCheckBox * _tooltips_checkbox;
 
     std::shared_ptr<DataManager> _data_manager;
 

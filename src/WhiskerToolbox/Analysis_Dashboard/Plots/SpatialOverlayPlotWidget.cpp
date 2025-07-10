@@ -28,8 +28,11 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _zoom_level(1.0f),
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
+      _point_size(8.0f),
       _is_panning(false),
-      _data_bounds_valid(false) {
+      _data_bounds_valid(false),
+      _tooltips_enabled(true),
+      _current_hover_point(nullptr) {
 
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
@@ -118,16 +121,46 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
 }
 
 void SpatialOverlayOpenGLWidget::setZoomLevel(float zoom_level) {
-    _zoom_level = std::max(0.1f, std::min(10.0f, zoom_level));
-    updateViewMatrices();
-    update();
+    float new_zoom_level = std::max(0.1f, std::min(10.0f, zoom_level));
+    if (new_zoom_level != _zoom_level) {
+        _zoom_level = new_zoom_level;
+        emit zoomLevelChanged(_zoom_level);
+        updateViewMatrices();
+        update();
+    }
 }
 
 void SpatialOverlayOpenGLWidget::setPanOffset(float offset_x, float offset_y) {
-    _pan_offset_x = offset_x;
-    _pan_offset_y = offset_y;
-    updateViewMatrices();
-    update();
+    if (offset_x != _pan_offset_x || offset_y != _pan_offset_y) {
+        _pan_offset_x = offset_x;
+        _pan_offset_y = offset_y;
+        emit panOffsetChanged(_pan_offset_x, _pan_offset_y);
+        updateViewMatrices();
+        update();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
+    float new_point_size = std::max(1.0f, std::min(50.0f, point_size)); // Clamp between 1 and 50 pixels
+    if (new_point_size != _point_size) {
+        _point_size = new_point_size;
+        emit pointSizeChanged(_point_size);
+        update(); // Trigger a repaint to apply the new point size
+    }
+}
+
+void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
+    if (enabled != _tooltips_enabled) {
+        _tooltips_enabled = enabled;
+        emit tooltipsEnabledChanged(_tooltips_enabled);
+        
+        // Hide any currently visible tooltip when disabling
+        if (!_tooltips_enabled) {
+            _tooltip_timer->stop();
+            QToolTip::hideText();
+            _current_hover_point = nullptr;
+        }
+    }
 }
 
 void SpatialOverlayOpenGLWidget::initializeGL() {
@@ -168,23 +201,10 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
 void SpatialOverlayOpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Debug widget and viewport information
-    qDebug() << "SpatialOverlayOpenGLWidget: paintGL called";
-    qDebug() << "SpatialOverlayOpenGLWidget: Widget size:" << width() << "x" << height();
-    
-    // Get viewport information
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    qDebug() << "SpatialOverlayOpenGLWidget: OpenGL viewport:" << viewport[0] << viewport[1] << viewport[2] << viewport[3];
-    
-    qDebug() << "SpatialOverlayOpenGLWidget: Points:" << _all_points.size() << "bounds valid:" << _data_bounds_valid;
-
     if (_all_points.empty() || !_data_bounds_valid || !_opengl_resources_initialized) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Skipping rendering - empty points, invalid bounds, or uninitialized resources";
         return;
     }
 
-    qDebug() << "SpatialOverlayOpenGLWidget: Calling renderPoints()";
     renderPoints();
 }
 
@@ -210,6 +230,7 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     }
     _tooltip_timer->stop();
     QToolTip::hideText();
+    _current_hover_point = nullptr;
 }
 
 void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
@@ -230,9 +251,33 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         // Stop panning if button was released
         _is_panning = false;
         
-        // Start tooltip timer for hover
-        _tooltip_timer->stop();
-        _tooltip_timer->start();
+        // Handle tooltip logic if tooltips are enabled
+        if (_tooltips_enabled) {
+            SpatialPointData const * point = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
+            
+            if (point != _current_hover_point) {
+                // We're hovering over a different point (or no point)
+                _current_hover_point = point;
+                _tooltip_timer->stop();
+                
+                if (point) {
+                    // Start timer for new point
+                    _tooltip_timer->start();
+                } else {
+                    // No point under cursor, hide tooltip
+                    QToolTip::hideText();
+                }
+            } else if (point) {
+                // Still hovering over the same point, keep tooltip visible
+                // Update tooltip position to follow mouse
+                QString tooltip_text = QString("Frame: %1\nData: %2\nPosition: (%3, %4)")
+                                               .arg(point->time_frame_index)
+                                               .arg(point->point_data_key)
+                                               .arg(point->x, 0, 'f', 2)
+                                               .arg(point->y, 0, 'f', 2);
+                QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
+            }
+        }
         event->accept();
     }
 }
@@ -262,11 +307,20 @@ void SpatialOverlayOpenGLWidget::wheelEvent(QWheelEvent * event) {
     event->accept();
 }
 
+void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
+    // Hide tooltips when mouse leaves the widget
+    _tooltip_timer->stop();
+    QToolTip::hideText();
+    _current_hover_point = nullptr;
+    
+    QOpenGLWidget::leaveEvent(event);
+}
+
 void SpatialOverlayOpenGLWidget::handleTooltipTimer() {
-    if (!_data_bounds_valid) return;
+    if (!_data_bounds_valid || !_tooltips_enabled) return;
 
     SpatialPointData const * point = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
-    if (point) {
+    if (point && point == _current_hover_point) {
         QString tooltip_text = QString("Frame: %1\nData: %2\nPosition: (%3, %4)")
                                        .arg(point->time_frame_index)
                                        .arg(point->point_data_key)
@@ -484,13 +538,6 @@ void SpatialOverlayOpenGLWidget::updateViewMatrices() {
     
     _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
 
-    // Debug projection matrix
-    qDebug() << "SpatialOverlayOpenGLWidget: Projection bounds: left=" << left << "right=" << right 
-             << "bottom=" << bottom << "top=" << top;
-    qDebug() << "SpatialOverlayOpenGLWidget: Data bounds: X[" << _data_min_x << "," << _data_max_x 
-             << "] Y[" << _data_min_y << "," << _data_max_y << "]";
-    qDebug() << "SpatialOverlayOpenGLWidget: Zoom=" << _zoom_level << "Pan=" << _pan_offset_x << "," << _pan_offset_y;
-
     // Update view matrix (identity for now, transformations handled in projection)
     _view_matrix.setToIdentity();
     
@@ -500,12 +547,8 @@ void SpatialOverlayOpenGLWidget::updateViewMatrices() {
 
 void SpatialOverlayOpenGLWidget::renderPoints() {
     if (!_data_bounds_valid || _all_points.empty() || !_opengl_resources_initialized) {
-        qDebug() << "SpatialOverlayOpenGLWidget: renderPoints - skipping, bounds valid:" << _data_bounds_valid 
-                 << "points:" << _all_points.size() << "resources initialized:" << _opengl_resources_initialized;
         return;
     }
-
-    qDebug() << "SpatialOverlayOpenGLWidget: renderPoints - starting with" << _all_points.size() << "points";
 
     // Use shader program
     if (!_shader_program->bind()) {
@@ -517,26 +560,9 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
     QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
     _shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
     
-    // Debug MVP matrix
-    qDebug() << "SpatialOverlayOpenGLWidget: MVP matrix:";
-    for (int i = 0; i < 4; ++i) {
-        QVector4D row = mvp_matrix.row(i);
-        qDebug() << "  " << row.x() << row.y() << row.z() << row.w();
-    }
-    
-    // Debug first few points after transformation
-    if (!_all_points.empty()) {
-        for (int i = 0; i < std::min(3, static_cast<int>(_all_points.size())); ++i) {
-            QVector4D point_world(static_cast<float>(_all_points[i].x), static_cast<float>(_all_points[i].y), 0.0f, 1.0f);
-            QVector4D point_screen = mvp_matrix * point_world;
-            qDebug() << "SpatialOverlayOpenGLWidget: Point" << i << "world:" << point_world.x() << point_world.y() 
-                     << "screen:" << point_screen.x() << point_screen.y() << point_screen.z() << point_screen.w();
-        }
-    }
-    
     // Set point color and size
     _shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f)); // Red
-    _shader_program->setUniformValue("u_point_size", 20.0f); // Increased size for visibility
+    _shader_program->setUniformValue("u_point_size", _point_size); // Use dynamic point size
 
     // Bind vertex array object
     _vertex_array_object.bind();
@@ -545,13 +571,9 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
     GLint buffer_size = 0;
     _vertex_buffer.bind();
     glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
-    qDebug() << "SpatialOverlayOpenGLWidget: Vertex buffer size:" << buffer_size << "bytes";
     
     if (buffer_size == 0) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Vertex buffer is empty, updating now";
         updateVertexBuffer();
-        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
-        qDebug() << "SpatialOverlayOpenGLWidget: Vertex buffer size after update:" << buffer_size << "bytes";
     }
 
     // Draw points
@@ -566,61 +588,6 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
     // Unbind
     _vertex_array_object.release();
     _shader_program->release();
-
-    // Simple fallback test: Draw a triangle using immediate mode if points don't render
-    // This helps verify if the OpenGL context is working at all
-    if (_all_points.size() < 10) { // Only for small datasets to avoid spam
-        qDebug() << "SpatialOverlayOpenGLWidget: Drawing test triangle as fallback";
-        
-        // Create a simple shader program for testing
-        QOpenGLShaderProgram test_shader;
-        test_shader.addShaderFromSourceCode(QOpenGLShader::Vertex, R"(
-            #version 410 core
-            layout(location = 0) in vec2 a_position;
-            void main() {
-                gl_Position = vec4(a_position, 0.0, 1.0);
-            }
-        )");
-        test_shader.addShaderFromSourceCode(QOpenGLShader::Fragment, R"(
-            #version 410 core
-            out vec4 FragColor;
-            void main() {
-                FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green
-            }
-        )");
-        test_shader.link();
-        
-        if (test_shader.bind()) {
-            // Create a simple triangle
-            float triangle_vertices[] = {
-                -0.5f, -0.5f,
-                 0.5f, -0.5f,
-                 0.0f,  0.5f
-            };
-            
-            QOpenGLBuffer test_buffer;
-            test_buffer.create();
-            test_buffer.bind();
-            test_buffer.allocate(triangle_vertices, sizeof(triangle_vertices));
-            
-            QOpenGLVertexArrayObject test_vao;
-            test_vao.create();
-            test_vao.bind();
-            
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-            
-            glDrawArrays(GL_TRIANGLES, 0, 3);
-            
-            test_vao.release();
-            test_buffer.release();
-            test_shader.release();
-            
-            qDebug() << "SpatialOverlayOpenGLWidget: Test triangle rendered";
-        }
-    }
-
-    qDebug() << "SpatialOverlayOpenGLWidget: renderPoints completed";
 }
 
 void SpatialOverlayOpenGLWidget::setupPointRendering() {
@@ -902,4 +869,31 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     // Connect signals
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::frameJumpRequested,
             this, &SpatialOverlayPlotWidget::handleFrameJumpRequest);
+    
+    // Connect property change signals to trigger updates
+    connect(_opengl_widget, &SpatialOverlayOpenGLWidget::pointSizeChanged,
+            this, [this](float) { 
+                update(); // Trigger graphics item update
+                emit renderUpdateRequested(getPlotId());
+                emit renderingPropertiesChanged();
+            });
+    
+    connect(_opengl_widget, &SpatialOverlayOpenGLWidget::zoomLevelChanged,
+            this, [this](float) { 
+                update(); // Trigger graphics item update
+                emit renderUpdateRequested(getPlotId());
+                emit renderingPropertiesChanged();
+            });
+    
+    connect(_opengl_widget, &SpatialOverlayOpenGLWidget::panOffsetChanged,
+            this, [this](float, float) { 
+                update(); // Trigger graphics item update
+                emit renderUpdateRequested(getPlotId());
+                emit renderingPropertiesChanged();
+            });
+    
+    connect(_opengl_widget, &SpatialOverlayOpenGLWidget::tooltipsEnabledChanged,
+            this, [this](bool) { 
+                emit renderingPropertiesChanged();
+            });
 }

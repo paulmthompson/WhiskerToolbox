@@ -53,10 +53,25 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot - current keys from plot:" << current_keys;
         setSelectedDataSources(current_keys);
         
-        // Update zoom level from current widget state
+        // Update zoom level and point size from current widget state
         if (_spatial_plot_widget->getOpenGLWidget()) {
             float current_zoom = _spatial_plot_widget->getOpenGLWidget()->getZoomLevel();
+            float current_point_size = _spatial_plot_widget->getOpenGLWidget()->getPointSize();
+            bool tooltips_enabled = _spatial_plot_widget->getOpenGLWidget()->getTooltipsEnabled();
+            
+            // Block signals to prevent recursive updates
+            _zoom_level_spinbox->blockSignals(true);
+            _point_size_spinbox->blockSignals(true);
+            _tooltips_checkbox->blockSignals(true);
+            
             _zoom_level_spinbox->setValue(static_cast<double>(current_zoom));
+            _point_size_spinbox->setValue(static_cast<double>(current_point_size));
+            _tooltips_checkbox->setChecked(tooltips_enabled);
+            
+            // Re-enable signals
+            _zoom_level_spinbox->blockSignals(false);
+            _point_size_spinbox->blockSignals(false);
+            _tooltips_checkbox->blockSignals(false);
         }
     } else {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot - no spatial plot widget available";
@@ -78,9 +93,10 @@ void SpatialOverlayPlotPropertiesWidget::onDataSourceItemChanged(QListWidgetItem
 }
 
 void SpatialOverlayPlotPropertiesWidget::onPointSizeChanged(double value) {
-    Q_UNUSED(value)
-    // Point size will be handled in future enhancements
-    updatePlotWidget();
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: onPointSizeChanged called with value:" << value;
+    if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
+        _spatial_plot_widget->getOpenGLWidget()->setPointSize(static_cast<float>(value));
+    }
 }
 
 void SpatialOverlayPlotPropertiesWidget::onZoomLevelChanged(double value) {
@@ -95,6 +111,13 @@ void SpatialOverlayPlotPropertiesWidget::onResetViewClicked() {
         _spatial_plot_widget->getOpenGLWidget()->setZoomLevel(1.0f);
         _spatial_plot_widget->getOpenGLWidget()->setPanOffset(0.0f, 0.0f);
         _zoom_level_spinbox->setValue(1.0);
+    }
+}
+
+void SpatialOverlayPlotPropertiesWidget::onTooltipsEnabledChanged(bool enabled) {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: onTooltipsEnabledChanged called with enabled:" << enabled;
+    if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
+        _spatial_plot_widget->getOpenGLWidget()->setTooltipsEnabled(enabled);
     }
 }
 
@@ -151,9 +174,9 @@ void SpatialOverlayPlotPropertiesWidget::initializeUI() {
     QHBoxLayout * point_size_layout = new QHBoxLayout();
     point_size_layout->addWidget(new QLabel("Point Size:", this));
     _point_size_spinbox = new QDoubleSpinBox(this);
-    _point_size_spinbox->setRange(1.0, 20.0);
+    _point_size_spinbox->setRange(1.0, 50.0);
     _point_size_spinbox->setSingleStep(0.5);
-    _point_size_spinbox->setValue(4.0);
+    _point_size_spinbox->setValue(8.0); // Match default in OpenGL widget
     _point_size_spinbox->setSuffix(" px");
     point_size_layout->addWidget(_point_size_spinbox);
     point_size_layout->addStretch();
@@ -175,6 +198,11 @@ void SpatialOverlayPlotPropertiesWidget::initializeUI() {
     _reset_view_button = new QPushButton("Reset View", this);
     _reset_view_button->setMaximumWidth(100);
     vis_layout->addWidget(_reset_view_button);
+
+    // Tooltips checkbox
+    _tooltips_checkbox = new QCheckBox("Show Tooltips", this);
+    _tooltips_checkbox->setChecked(true); // Default to enabled
+    vis_layout->addWidget(_tooltips_checkbox);
 
     main_layout->addWidget(_visualization_group);
 
@@ -204,6 +232,10 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
 
     connect(_reset_view_button, &QPushButton::clicked,
             this, &SpatialOverlayPlotPropertiesWidget::onResetViewClicked);
+
+    // Tooltips checkbox
+    connect(_tooltips_checkbox, &QCheckBox::toggled,
+            this, &SpatialOverlayPlotPropertiesWidget::onTooltipsEnabledChanged);
     
     qDebug() << "SpatialOverlayPlotPropertiesWidget: setupConnections completed";
 }
