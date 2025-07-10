@@ -16,6 +16,7 @@
 #include <QVector3D>
 
 #include <memory>
+#include <set>
 #include <unordered_map>
 
 class PointData;
@@ -98,6 +99,40 @@ public:
      */
     bool getTooltipsEnabled() const { return _tooltips_enabled; }
 
+    /**
+     * @brief Get the currently selected point indices
+     * @return Set of selected point indices
+     */
+    std::set<size_t> const & getSelectedPointIndices() const { return _selected_point_indices; }
+
+    /**
+     * @brief Get the number of currently selected points
+     * @return Number of selected points
+     */
+    size_t getSelectedPointCount() const { return _selected_point_indices.size(); }
+
+    /**
+     * @brief Programmatically clear all selected points
+     */
+    void clearSelection();
+
+    /**
+     * @brief Get the spatial point data for all selected points
+     * @return Vector of pointers to selected point data
+     */
+    std::vector<SpatialPointData const *> getSelectedPointData() const {
+        std::vector<SpatialPointData const *> selected_points;
+        selected_points.reserve(_selected_point_indices.size());
+        
+        for (size_t index : _selected_point_indices) {
+            if (index < _all_points.size()) {
+                selected_points.push_back(&_all_points[index]);
+            }
+        }
+        
+        return selected_points;
+    }
+
 signals:
     /**
      * @brief Emitted when user double-clicks on a point to jump to that frame
@@ -129,6 +164,13 @@ signals:
      * @param enabled Whether tooltips are enabled
      */
     void tooltipsEnabledChanged(bool enabled);
+
+    /**
+     * @brief Emitted when the selection changes
+     * @param selected_count Number of currently selected points
+     * @param selected_indices Set of selected point indices
+     */
+    void selectionChanged(size_t selected_count, std::set<size_t> const & selected_indices);
 
     /**
      * @brief Emitted when the highlight state changes, requiring scene graph update
@@ -177,6 +219,10 @@ private:
     QOpenGLBuffer _highlight_vertex_buffer;
     QOpenGLVertexArrayObject _highlight_vertex_array_object;
     
+    // Selection rendering resources
+    QOpenGLBuffer _selection_vertex_buffer;
+    QOpenGLVertexArrayObject _selection_vertex_array_object;
+    
     bool _opengl_resources_initialized;
 
     // View parameters
@@ -197,6 +243,10 @@ private:
     bool _tooltips_enabled;
     bool _pending_update;
     SpatialPointData const * _current_hover_point;
+
+    // Selection state
+    std::set<size_t> _selected_point_indices;  // Set of selected point indices
+    std::vector<float> _selection_vertex_data; // Cached vertex data for selected points
 
     // Data bounds
     float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
@@ -251,6 +301,22 @@ private:
      * @brief Render highlighted point with hollow circle
      */
     void renderHighlightedPoint();
+
+    /**
+     * @brief Render selected points
+     */
+    void renderSelectedPoints();
+
+    /**
+     * @brief Toggle selection of a point by index
+     * @param point_index Index of point in _all_points vector
+     */
+    void togglePointSelection(size_t point_index);
+
+    /**
+     * @brief Update selection vertex buffer with current selection
+     */
+    void updateSelectionVertexBuffer();
 
     /**
      * @brief Initialize OpenGL shaders and resources

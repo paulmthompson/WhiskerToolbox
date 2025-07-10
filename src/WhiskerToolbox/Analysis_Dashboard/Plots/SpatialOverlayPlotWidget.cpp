@@ -25,6 +25,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _shader_program(nullptr),
       _vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _highlight_vertex_buffer(QOpenGLBuffer::VertexBuffer),
+      _selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _opengl_resources_initialized(false),
       _zoom_level(1.0f),
       _pan_offset_x(0.0f),
@@ -77,6 +78,9 @@ SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
 
 void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map) {
     _all_points.clear();
+    
+    // Clear selection when loading new data to avoid invalid indices
+    clearSelection();
 
     // Collect all points from all PointData objects
     for (auto const & [key, point_data]: point_data_map) {
@@ -224,6 +228,25 @@ void SpatialOverlayOpenGLWidget::resizeGL(int w, int h) {
 
 void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
+        // Check if Ctrl is pressed for point selection
+        if (event->modifiers() & Qt::ControlModifier) {
+            SpatialPointData const * point = findPointNear(event->pos().x(), event->pos().y());
+            if (point) {
+                // Find the index of this point
+                for (size_t i = 0; i < _all_points.size(); ++i) {
+                    if (&_all_points[i] == point) {
+                        qDebug() << "SpatialOverlayOpenGLWidget: Ctrl+click on point" << i 
+                                 << "at (" << point->x << "," << point->y << ")";
+                        togglePointSelection(i);
+                        break;
+                    }
+                }
+                event->accept();
+                return;
+            }
+        }
+        
+        // Regular left click - start panning
         _is_panning = true;
         _last_mouse_pos = event->pos();
         event->accept();
@@ -621,6 +644,9 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
         renderHighlightedPoint();
     }
 
+    // === DRAW CALL 3: Render selected points ===
+    renderSelectedPoints();
+
     // Check for OpenGL errors
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -712,8 +738,146 @@ void SpatialOverlayOpenGLWidget::renderHighlightedPoint() {
     // Unbind highlight resources
     _highlight_vertex_buffer.release();
     _highlight_vertex_array_object.release();
-    
  }
+
+void SpatialOverlayOpenGLWidget::renderSelectedPoints() {
+    if (_selected_point_indices.empty()) return;
+    
+    // Bind selection VAO and VBO
+    _selection_vertex_array_object.bind();
+    _selection_vertex_buffer.bind();
+    
+    // Verify buffer has data
+    GLint buffer_size = 0;
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
+    
+    if (buffer_size == 0 || _selection_vertex_data.empty()) {
+        // Update selection buffer if empty
+        updateSelectionVertexBuffer();
+        _selection_vertex_buffer.bind();
+    }
+    
+    // Set vertex attributes for selected points
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    
+    // Disable blending for selected points (solid color, no transparency)
+    glDisable(GL_BLEND);
+    
+    // Set uniforms for selection rendering
+    _shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f)); // Black
+    _shader_program->setUniformValue("u_point_size", _point_size * 1.5f); // Slightly larger than regular points
+    
+    // Draw the selected points
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_selected_point_indices.size()));
+    
+    // Re-enable blending for subsequent rendering
+    glEnable(GL_BLEND);
+    
+    // Unbind selection resources
+    _selection_vertex_buffer.release();
+    _selection_vertex_array_object.release();
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Rendered" << _selected_point_indices.size() << "selected points";
+}
+
+void SpatialOverlayOpenGLWidget::togglePointSelection(size_t point_index) {
+    if (point_index >= _all_points.size()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Invalid point index" << point_index;
+        return;
+    }
+    
+    auto it = _selected_point_indices.find(point_index);
+    if (it != _selected_point_indices.end()) {
+        // Point is already selected, remove it
+        _selected_point_indices.erase(it);
+        qDebug() << "SpatialOverlayOpenGLWidget: Deselected point" << point_index 
+                 << "(" << _selected_point_indices.size() << "points selected)";
+    } else {
+        // Point is not selected, add it
+        _selected_point_indices.insert(point_index);
+        qDebug() << "SpatialOverlayOpenGLWidget: Selected point" << point_index 
+                 << "(" << _selected_point_indices.size() << "points selected)";
+    }
+    
+    // Update the selection vertex buffer
+    updateSelectionVertexBuffer();
+    
+    // Emit selection changed signal
+    emit selectionChanged(_selected_point_indices.size(), _selected_point_indices);
+    
+    // Trigger update
+    requestThrottledUpdate();
+}
+
+void SpatialOverlayOpenGLWidget::clearSelection() {
+    if (!_selected_point_indices.empty()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Clearing selection of" << _selected_point_indices.size() << "points";
+        _selected_point_indices.clear();
+        _selection_vertex_data.clear();
+        
+        // Clear the buffer
+        if (_opengl_resources_initialized) {
+            _selection_vertex_buffer.bind();
+            glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+            _selection_vertex_buffer.release();
+        }
+        
+        // Emit selection changed signal
+        emit selectionChanged(0, _selected_point_indices);
+        
+        // Trigger update
+        requestThrottledUpdate();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::updateSelectionVertexBuffer() {
+    if (!_opengl_resources_initialized) {
+        qDebug() << "SpatialOverlayOpenGLWidget: updateSelectionVertexBuffer - OpenGL not initialized";
+        return;
+    }
+    
+    _selection_vertex_data.clear();
+    
+    if (_selected_point_indices.empty()) {
+        // Clear the buffer if no selection
+        _selection_vertex_buffer.bind();
+        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+        _selection_vertex_buffer.release();
+        return;
+    }
+    
+    // Prepare vertex data for selected points
+    _selection_vertex_data.reserve(_selected_point_indices.size() * 2);
+    
+    for (size_t index : _selected_point_indices) {
+        if (index < _all_points.size()) {
+            auto const & point = _all_points[index];
+            _selection_vertex_data.push_back(point.x);
+            _selection_vertex_data.push_back(point.y);
+        }
+    }
+    
+    // Update the buffer
+    _selection_vertex_array_object.bind();
+    _selection_vertex_buffer.bind();
+    _selection_vertex_buffer.allocate(_selection_vertex_data.data(), 
+                                      static_cast<int>(_selection_vertex_data.size() * sizeof(float)));
+    
+    // Verify buffer was allocated
+    GLint buffer_size = 0;
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
+    qDebug() << "SpatialOverlayOpenGLWidget: Selection buffer updated with" 
+             << _selection_vertex_data.size() / 2 << "points, size:" << buffer_size << "bytes";
+    
+    // Set up vertex attributes
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    
+    // Unbind
+    _selection_vertex_buffer.release();
+    _selection_vertex_array_object.release();
+}
 
 void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     qDebug() << "SpatialOverlayOpenGLWidget: Initializing OpenGL resources";
@@ -809,6 +973,24 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     _highlight_vertex_array_object.release();
     _highlight_vertex_buffer.release();
 
+    // Create selection vertex array object and buffer
+    _selection_vertex_array_object.create();
+    _selection_vertex_array_object.bind();
+
+    _selection_vertex_buffer.create();
+    _selection_vertex_buffer.bind();
+    _selection_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    
+    // Pre-allocate selection buffer (initially empty)
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+    
+    // Set up vertex attributes for selection
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+
+    _selection_vertex_array_object.release();
+    _selection_vertex_buffer.release();
+
     _opengl_resources_initialized = true;
 }
 
@@ -824,6 +1006,9 @@ void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
         
         _highlight_vertex_buffer.destroy();
         _highlight_vertex_array_object.destroy();
+        
+        _selection_vertex_buffer.destroy();
+        _selection_vertex_array_object.destroy();
         
         _opengl_resources_initialized = false;
         
