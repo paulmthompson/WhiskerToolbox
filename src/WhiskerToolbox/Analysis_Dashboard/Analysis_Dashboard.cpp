@@ -3,10 +3,11 @@
 #include "ui_Analysis_Dashboard.h"
 
 #include "DataManager/DataManager.hpp"
-#include "Toolbox/ToolboxPanel.hpp"
+#include "Plots/AbstractPlotWidget.hpp"
 #include "Properties/PropertiesPanel.hpp"
 #include "Scene/AnalysisDashboardScene.hpp"
-#include "Plots/AbstractPlotWidget.hpp"
+#include "TimeScrollBar/TimeScrollBar.hpp"
+#include "Toolbox/ToolboxPanel.hpp"
 
 #include <QGraphicsView>
 #include <QSplitter>
@@ -15,10 +16,13 @@
 #include <QDebug>
 #include <QPainter>
 
-Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager, QWidget* parent)
+Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager, 
+    TimeScrollBar * time_scrollbar,
+    QWidget* parent)
     : QMainWindow(parent),
       ui(new Ui::Analysis_Dashboard),
       _data_manager(std::move(data_manager)),
+      _time_scrollbar(time_scrollbar),
       _toolbox_panel(nullptr),
       _properties_panel(nullptr),
       _dashboard_scene(nullptr),
@@ -97,6 +101,9 @@ void Analysis_Dashboard::connectSignals() {
     
     connect(_dashboard_scene, &AnalysisDashboardScene::plotRemoved,
             this, &Analysis_Dashboard::handlePlotRemoved);
+
+    connect(_dashboard_scene, &AnalysisDashboardScene::frameJumpRequested,
+            this, &Analysis_Dashboard::_changeScrollbar);
 }
 
 void Analysis_Dashboard::handlePlotSelected(const QString& plot_id) {
@@ -128,4 +135,24 @@ void Analysis_Dashboard::handlePlotRemoved(const QString& plot_id) {
     // Update status bar
     QString status_text = QString("Plot removed: %1").arg(plot_id);
     ui->statusbar->showMessage(status_text, 3000);
+}
+
+void Analysis_Dashboard::_changeScrollbar(int64_t time_frame_index, std::string const & active_feature) {
+
+    //auto active_feature = _highlighted_available_feature.toStdString();
+
+    auto video_timeframe = _data_manager->getTime("time");
+
+    auto active_feature_timeframe_key = _data_manager->getTimeFrame(active_feature);
+
+    if (!active_feature_timeframe_key.empty()) {
+        auto feature_timeframe = _data_manager->getTime(active_feature_timeframe_key);
+
+        if (video_timeframe.get() != feature_timeframe.get()) {
+            time_frame_index = feature_timeframe->getTimeAtIndex(TimeFrameIndex(time_frame_index));
+            time_frame_index = video_timeframe->getIndexAtTime(time_frame_index).getValue();
+        }
+    }
+
+    _time_scrollbar->changeScrollBarValue(time_frame_index);
 }

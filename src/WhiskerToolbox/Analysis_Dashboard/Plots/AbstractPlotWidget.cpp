@@ -60,3 +60,4 @@ void AbstractPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 void AbstractPlotWidget::generateUniqueId() {
     _plot_id = QString("plot_%1").arg(_next_plot_id++);
 } 
+

@@ -72,6 +72,12 @@ signals:
      */
     void renderUpdateRequested(const QString& plot_id);
 
+        /**
+     * @brief Emitted when user requests to jump to a specific frame
+     * @param time_frame_index The time frame index to jump to
+     */
+    void frameJumpRequested(int64_t time_frame_index, std::string const & data_key);
+
 protected:
     /**
      * @brief Handle mouse press events for selection

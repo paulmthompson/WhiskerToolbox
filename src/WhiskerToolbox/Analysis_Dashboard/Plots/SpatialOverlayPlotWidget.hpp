@@ -103,7 +103,7 @@ signals:
      * @brief Emitted when user double-clicks on a point to jump to that frame
      * @param time_frame_index The time frame index to jump to
      */
-    void frameJumpRequested(int64_t time_frame_index);
+    void frameJumpRequested(int64_t time_frame_index, std::string const & data_key);
 
     /**
      * @brief Emitted when point size changes
@@ -312,12 +312,6 @@ public:
 
 signals:
     /**
-     * @brief Emitted when user requests to jump to a specific frame
-     * @param time_frame_index The time frame index to jump to
-     */
-    void frameJumpRequested(int64_t time_frame_index);
-
-    /**
      * @brief Emitted when rendering properties change (point size, zoom, pan)
      */
     void renderingPropertiesChanged();
@@ -337,7 +331,7 @@ private slots:
      * @brief Handle frame jump request from OpenGL widget
      * @param time_frame_index The time frame index to jump to
      */
-    void handleFrameJumpRequest(int64_t time_frame_index);
+    void handleFrameJumpRequest(int64_t time_frame_index, std::string const & data_key);
 
 private:
     SpatialOverlayOpenGLWidget * _opengl_widget;

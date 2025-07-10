@@ -5,12 +5,13 @@
 
 #include <memory>
 
-class DataManager;
-class ToolboxPanel;
-class PropertiesPanel;
 class AnalysisDashboardScene;
+class DataManager;
 class QGraphicsView;
 class QSplitter;
+class TimeScrollBar;
+class ToolboxPanel;
+class PropertiesPanel;
 
 namespace Ui {
 class Analysis_Dashboard;
@@ -28,7 +29,9 @@ class Analysis_Dashboard : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit Analysis_Dashboard(std::shared_ptr<DataManager> data_manager, QWidget* parent = nullptr);
+    explicit Analysis_Dashboard(std::shared_ptr<DataManager> data_manager,
+                                TimeScrollBar * time_scrollbar,
+                                QWidget* parent = nullptr);
     ~Analysis_Dashboard() override;
 
     /**
@@ -55,10 +58,14 @@ private slots:
      */
     void handlePlotRemoved(const QString& plot_id);
 
+    void _changeScrollbar(int64_t time_frame_index, std::string const & active_feature);
+
+
 private:
     Ui::Analysis_Dashboard* ui;
     
     std::shared_ptr<DataManager> _data_manager;
+    TimeScrollBar* _time_scrollbar;
     
     // Main panels
     ToolboxPanel* _toolbox_panel;

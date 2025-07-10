@@ -43,6 +43,9 @@ void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget* plot_widget, cons
     
     connect(plot_widget, &AbstractPlotWidget::renderUpdateRequested,
             this, &AnalysisDashboardScene::handleRenderUpdateRequested);
+
+    connect(plot_widget, &AbstractPlotWidget::frameJumpRequested,
+            this, &AnalysisDashboardScene::frameJumpRequested);
     
     // Add to scene and position
     addItem(plot_widget);
@@ -61,6 +64,14 @@ void AnalysisDashboardScene::removePlotWidget(const QString& plot_id) {
     auto it = _plot_widgets.find(plot_id);
     if (it != _plot_widgets.end()) {
         AbstractPlotWidget* plot = it.value();
+
+        disconnect(plot, &AbstractPlotWidget::plotSelected,
+                   this, &AnalysisDashboardScene::handlePlotSelected);
+        disconnect(plot, &AbstractPlotWidget::renderUpdateRequested,
+                   this, &AnalysisDashboardScene::handleRenderUpdateRequested);
+        disconnect(plot, &AbstractPlotWidget::frameJumpRequested,
+                   this, &AnalysisDashboardScene::frameJumpRequested);
+
         _plot_widgets.erase(it);
         
         // Remove from scene
@@ -167,3 +178,4 @@ AbstractPlotWidget* AnalysisDashboardScene::createPlotFromMimeData(const QMimeDa
     qDebug() << "Unknown plot type:" << plot_type;
     return nullptr;
 } 
+

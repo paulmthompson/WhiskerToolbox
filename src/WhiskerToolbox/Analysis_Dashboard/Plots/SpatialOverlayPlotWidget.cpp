@@ -318,8 +318,8 @@ void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
             qDebug() << "SpatialOverlayOpenGLWidget: Double-click on point at (" 
                      << point->x << "," << point->y << ") frame:" << point->time_frame_index 
                      << "data:" << point->point_data_key;
-            
-            emit frameJumpRequested(point->time_frame_index);
+
+            emit frameJumpRequested(point->time_frame_index, point->point_data_key.toStdString());
             event->accept();
         } else {
             qDebug() << "SpatialOverlayOpenGLWidget: Double-click but no point found near cursor";
@@ -998,9 +998,11 @@ void SpatialOverlayPlotWidget::updateVisualization() {
     emit renderUpdateRequested(getPlotId());
 }
 
-void SpatialOverlayPlotWidget::handleFrameJumpRequest(int64_t time_frame_index) {
-    qDebug() << "SpatialOverlayPlotWidget: Frame jump requested to frame:" << time_frame_index;
-    emit frameJumpRequested(time_frame_index);
+void SpatialOverlayPlotWidget::handleFrameJumpRequest(int64_t time_frame_index, std::string const & data_key) {
+    qDebug() << "SpatialOverlayPlotWidget: Frame jump requested to frame:" 
+             << time_frame_index << "for data key:" 
+             << data_key;
+    emit frameJumpRequested(time_frame_index, data_key);
 }
 
 void SpatialOverlayPlotWidget::loadPointData() {

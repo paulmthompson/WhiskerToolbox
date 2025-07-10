@@ -76,6 +76,8 @@ signals:
      */
     void plotRemoved(const QString& plot_id);
 
+    void frameJumpRequested(int64_t time_frame_index, std::string const & data_key);
+
 protected:
     /**
      * @brief Handle drag enter events for drag and drop
