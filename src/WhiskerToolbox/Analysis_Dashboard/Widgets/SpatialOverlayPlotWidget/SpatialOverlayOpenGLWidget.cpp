@@ -43,7 +43,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     _tooltip_timer = new QTimer(this);
     _tooltip_timer->setSingleShot(true);
     _tooltip_timer->setInterval(500);// 500ms delay for tooltip
-    connect(_tooltip_timer, &QTimer::timeout, this, &SpatialOverlayOpenGLWidget::handleTooltipTimer);
+    connect(_tooltip_timer, &QTimer::timeout, this, &SpatialOverlayOpenGLWidget::_handleTooltipTimer);
 
     _tooltip_refresh_timer = new QTimer(this);
     _tooltip_refresh_timer->setInterval(100); // Refresh every 100ms to keep tooltip visible
@@ -442,7 +442,7 @@ void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
     QOpenGLWidget::keyPressEvent(event);
 }
 
-void SpatialOverlayOpenGLWidget::handleTooltipTimer() {
+void SpatialOverlayOpenGLWidget::_handleTooltipTimer() {
     if (!_data_bounds_valid || !_tooltips_enabled) return;
 
     SpatialPointData const * point = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());

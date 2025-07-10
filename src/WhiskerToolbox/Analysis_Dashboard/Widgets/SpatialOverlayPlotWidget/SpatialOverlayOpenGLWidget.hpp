@@ -31,16 +31,15 @@ public:
     ~SpatialOverlayOpenGLWidget() override;
 
     /**
-     * @brief Set the point data to display
-     * @param point_data_map Map of data key to PointData objects
-     */
-    void setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map);
-
-    /**
      * @brief Set zoom level (1.0 = default, >1.0 = zoomed in, <1.0 = zoomed out)
      * @param zoom_level The zoom level
      */
     void setZoomLevel(float zoom_level);
+
+    /**
+     * @brief Get current zoom level
+     */
+    float getZoomLevel() const { return _zoom_level; }
 
     /**
      * @brief Set pan offset
@@ -50,25 +49,20 @@ public:
     void setPanOffset(float offset_x, float offset_y);
 
     /**
-     * @brief Set the point size for rendering
-     * @param point_size Point size in pixels
-     */
-    void setPointSize(float point_size);
-
-    /**
-     * @brief Get current zoom level
-     */
-    float getZoomLevel() const { return _zoom_level; }
-
-    /**
      * @brief Get current pan offset
      */
     QVector2D getPanOffset() const { return QVector2D(_pan_offset_x, _pan_offset_y); }
 
     /**
-     * @brief Get current point size
+     * @brief Set the current selection mode
+     * @param mode The selection mode to activate
      */
-    float getPointSize() const { return _point_size; }
+    void setSelectionMode(SelectionMode mode);
+    
+    /**
+     * @brief Get the current selection mode
+     */
+    SelectionMode getSelectionMode() const { return _selection_mode; }
 
     /**
      * @brief Enable or disable tooltips
@@ -80,6 +74,25 @@ public:
      * @brief Get current tooltip enabled state
      */
     bool getTooltipsEnabled() const { return _tooltips_enabled; }
+
+    // ========== Point Data ==========
+
+    /**
+     * @brief Set the point data to display
+     * @param point_data_map Map of data key to PointData objects
+     */
+    void setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map);
+
+    /**
+     * @brief Set the point size for rendering
+     * @param point_size Point size in pixels
+     */
+    void setPointSize(float point_size);
+
+    /**
+     * @brief Get current point size
+     */
+    float getPointSize() const { return _point_size; }
 
     /**
      * @brief Get the currently selected point indices
@@ -97,17 +110,6 @@ public:
      * @brief Programmatically clear all selected points
      */
     void clearSelection();
-
-    /**
-     * @brief Set the current selection mode
-     * @param mode The selection mode to activate
-     */
-    void setSelectionMode(SelectionMode mode);
-    
-    /**
-     * @brief Get the current selection mode
-     */
-    SelectionMode getSelectionMode() const { return _selection_mode; }
 
     /**
      * @brief Get the spatial point data for all selected points
@@ -193,7 +195,7 @@ private slots:
     /**
      * @brief Handle tooltip timer timeout
      */
-    void handleTooltipTimer();
+    void _handleTooltipTimer();
 
     /**
      * @brief Handle tooltip refresh timer timeout
@@ -268,14 +270,14 @@ private:
     bool _data_bounds_valid;
 
     /**
-     * @brief Update the spatial index with current point data
+     * @brief Initialize OpenGL shaders and resources
      */
-    void updateSpatialIndex();
+    void initializeOpenGLResources();
 
     /**
-     * @brief Calculate data bounds from all points
+     * @brief Clean up OpenGL resources
      */
-    void calculateDataBounds();
+    void cleanupOpenGLResources();
 
     /**
      * @brief Convert screen coordinates to world coordinates
@@ -294,6 +296,30 @@ private:
     QPoint worldToScreen(float world_x, float world_y) const;
 
     /**
+     * @brief Calculate the current orthographic projection bounds (helper for coordinate transformations)
+     * @param left Output: left bound
+     * @param right Output: right bound  
+     * @param bottom Output: bottom bound
+     * @param top Output: top bound
+     */
+    void calculateProjectionBounds(float &left, float &right, float &bottom, float &top) const;
+
+    /**
+     * @brief Update view matrices based on current zoom and pan
+     */
+    void updateViewMatrices();
+
+    /**
+     * @brief Update the spatial index with current point data
+     */
+    void updateSpatialIndex();
+
+    /**
+     * @brief Calculate data bounds from all points
+     */
+    void calculateDataBounds();
+
+    /**
      * @brief Find point near screen coordinates
      * @param screen_x Screen X coordinate
      * @param screen_y Screen Y coordinate
@@ -301,11 +327,6 @@ private:
      * @return Pointer to point data, or nullptr if none found
      */
     SpatialPointData const * findPointNear(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
-
-    /**
-     * @brief Update view matrices based on current zoom and pan
-     */
-    void updateViewMatrices();
 
     /**
      * @brief Render all points using OpenGL
@@ -375,29 +396,10 @@ private:
     void updatePolygonBuffers();
 
     /**
-     * @brief Initialize OpenGL shaders and resources
-     */
-    void initializeOpenGLResources();
-
-    /**
-     * @brief Clean up OpenGL resources
-     */
-    void cleanupOpenGLResources();
-
-    /**
      * @brief Update vertex buffer with current point data
      */
     void updateVertexBuffer();
 
-private:
-    /**
-     * @brief Calculate the current orthographic projection bounds (helper for coordinate transformations)
-     * @param left Output: left bound
-     * @param right Output: right bound  
-     * @param bottom Output: bottom bound
-     * @param top Output: top bound
-     */
-    void calculateProjectionBounds(float &left, float &right, float &bottom, float &top) const;
 };
 
 #endif // SPATIALOVERLAYOPENGLWIDGET_HPP
