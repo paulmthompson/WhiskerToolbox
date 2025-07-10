@@ -1,5 +1,8 @@
 #include "SpatialOverlayPlotPropertiesWidget.hpp"
-#include "../Plots/SpatialOverlayPlotWidget.hpp"
+
+#include "SpatialOverlayOpenGLWidget.hpp"
+#include "SpatialOverlayPlotWidget.hpp"
+
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"

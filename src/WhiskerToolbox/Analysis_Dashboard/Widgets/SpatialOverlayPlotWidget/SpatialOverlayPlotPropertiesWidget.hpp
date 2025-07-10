@@ -1,7 +1,7 @@
 #ifndef SPATIALOVERLAYPLOTPROPERTIESWIDGET_HPP
 #define SPATIALOVERLAYPLOTPROPERTIESWIDGET_HPP
 
-#include "AbstractPlotPropertiesWidget.hpp"
+#include "Analysis_Dashboard/Properties/AbstractPlotPropertiesWidget.hpp"
 
 #include <QStringList>
 

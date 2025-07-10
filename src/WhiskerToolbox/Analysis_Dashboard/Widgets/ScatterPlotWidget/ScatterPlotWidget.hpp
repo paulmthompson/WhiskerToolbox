@@ -1,7 +1,7 @@
 #ifndef SCATTERPLOTWIDGET_HPP
 #define SCATTERPLOTWIDGET_HPP
 
-#include "AbstractPlotWidget.hpp"
+#include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 
 #include <QPainter>
 

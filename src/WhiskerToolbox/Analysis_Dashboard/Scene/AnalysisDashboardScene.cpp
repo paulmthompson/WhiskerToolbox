@@ -1,8 +1,8 @@
 #include "AnalysisDashboardScene.hpp"
 
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
-#include "Analysis_Dashboard/Plots/ScatterPlotWidget.hpp"
-#include "Analysis_Dashboard/Plots/SpatialOverlayPlotWidget.hpp"
+#include "Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include <QGraphicsSceneDragDropEvent>

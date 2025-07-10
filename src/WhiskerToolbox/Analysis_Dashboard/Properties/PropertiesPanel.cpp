@@ -2,7 +2,7 @@
 #include "ui_PropertiesPanel.h"
 #include "GlobalPropertiesWidget.hpp"
 #include "AbstractPlotPropertiesWidget.hpp"
-#include "SpatialOverlayPlotPropertiesWidget.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp"
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 
 #include <QStackedWidget>

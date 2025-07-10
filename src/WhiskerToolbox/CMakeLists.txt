@@ -35,10 +35,6 @@ set(PROJECT_SOURCES
 
         Analysis_Dashboard/Plots/AbstractPlotWidget.hpp
         Analysis_Dashboard/Plots/AbstractPlotWidget.cpp
-        Analysis_Dashboard/Plots/ScatterPlotWidget.hpp
-        Analysis_Dashboard/Plots/ScatterPlotWidget.cpp
-        Analysis_Dashboard/Plots/SpatialOverlayPlotWidget.hpp
-        Analysis_Dashboard/Plots/SpatialOverlayPlotWidget.cpp
 
         Analysis_Dashboard/Scene/AnalysisDashboardScene.hpp
         Analysis_Dashboard/Scene/AnalysisDashboardScene.cpp
@@ -49,6 +45,17 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Toolbox/DraggableListWidget.hpp
         Analysis_Dashboard/Toolbox/DraggableListWidget.cpp
 
+        Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
+        Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SelectionModes.hpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SelectionModes.cpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.cpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.cpp
+
         Analysis_Dashboard/Properties/PropertiesPanel.hpp
         Analysis_Dashboard/Properties/PropertiesPanel.cpp
         Analysis_Dashboard/Properties/PropertiesPanel.ui
@@ -57,8 +64,6 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.hpp
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.cpp
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.ui
-        Analysis_Dashboard/Properties/SpatialOverlayPlotPropertiesWidget.hpp
-        Analysis_Dashboard/Properties/SpatialOverlayPlotPropertiesWidget.cpp
 
         ColorPicker_Widget/ColorPicker_Widget.hpp
         ColorPicker_Widget/ColorPicker_Widget.cpp
