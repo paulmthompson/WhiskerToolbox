@@ -471,64 +471,32 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
 }
 
 QVector2D SpatialOverlayOpenGLWidget::screenToWorld(int screen_x, int screen_y) const {
-    if (!_data_bounds_valid) return QVector2D(0, 0);
-
-    // Convert screen coordinates to normalized device coordinates (-1 to 1)
-    float ndc_x = (2.0f * screen_x / width()) - 1.0f;
-    float ndc_y = 1.0f - (2.0f * screen_y / height());// Flip Y axis
-
-    // Apply inverse transformations
-    float world_scale = 1.0f / _zoom_level;
-    float world_x = (ndc_x * world_scale) - _pan_offset_x;
-    float world_y = (ndc_y * world_scale) - _pan_offset_y;
-
-    // Scale to data coordinates
-    float data_width = _data_max_x - _data_min_x;
-    float data_height = _data_max_y - _data_min_y;
-    float aspect_ratio = static_cast<float>(width()) / height();
-
-    if (aspect_ratio > 1.0f) {
-        world_x *= data_width * aspect_ratio * 0.5f;
-        world_y *= data_height * 0.5f;
-    } else {
-        world_x *= data_width * 0.5f;
-        world_y *= data_height / aspect_ratio * 0.5f;
+    float left, right, bottom, top;
+    calculateProjectionBounds(left, right, bottom, top);
+    
+    if (left == right || bottom == top) {
+        return QVector2D(0, 0);
     }
-
-    world_x += (_data_min_x + _data_max_x) * 0.5f;
-    world_y += (_data_min_y + _data_max_y) * 0.5f;
-
+    
+    // Convert screen coordinates to world coordinates using the projection bounds
+    float world_x = left + (static_cast<float>(screen_x) / width()) * (right - left);
+    float world_y = top - (static_cast<float>(screen_y) / height()) * (top - bottom); // Y is flipped in screen coordinates
+    
     return QVector2D(world_x, world_y);
 }
 
 QPoint SpatialOverlayOpenGLWidget::worldToScreen(float world_x, float world_y) const {
-    if (!_data_bounds_valid) return QPoint(0, 0);
-
-    // Transform world coordinates to screen
-    float data_width = _data_max_x - _data_min_x;
-    float data_height = _data_max_y - _data_min_y;
-    float aspect_ratio = static_cast<float>(width()) / height();
-
-    // Center and normalize
-    float norm_x = (world_x - (_data_min_x + _data_max_x) * 0.5f);
-    float norm_y = (world_y - (_data_min_y + _data_max_y) * 0.5f);
-
-    if (aspect_ratio > 1.0f) {
-        norm_x /= data_width * aspect_ratio * 0.5f;
-        norm_y /= data_height * 0.5f;
-    } else {
-        norm_x /= data_width * 0.5f;
-        norm_y /= data_height / aspect_ratio * 0.5f;
+    float left, right, bottom, top;
+    calculateProjectionBounds(left, right, bottom, top);
+    
+    if (left == right || bottom == top) {
+        return QPoint(0, 0);
     }
-
-    // Apply transformations
-    norm_x = (norm_x + _pan_offset_x) * _zoom_level;
-    norm_y = (norm_y + _pan_offset_y) * _zoom_level;
-
-    // Convert to screen coordinates
-    int screen_x = static_cast<int>((norm_x + 1.0f) * width() * 0.5f);
-    int screen_y = static_cast<int>((1.0f - norm_y) * height() * 0.5f);
-
+    
+    // Convert world coordinates to screen coordinates using the projection bounds
+    int screen_x = static_cast<int>(((world_x - left) / (right - left)) * width());
+    int screen_y = static_cast<int>(((top - world_y) / (top - bottom)) * height()); // Y is flipped in screen coordinates
+    
     return QPoint(screen_x, screen_y);
 }
 
@@ -544,10 +512,19 @@ SpatialPointData const * SpatialOverlayOpenGLWidget::findPointNear(int screen_x,
         return nullptr;
     }
 
-    // Convert screen tolerance to world tolerance
+    // Convert screen tolerance to world tolerance more accurately
     QVector2D world_pos = screenToWorld(screen_x, screen_y);
-    QVector2D world_pos_offset = screenToWorld(screen_x + static_cast<int>(tolerance_pixels), screen_y);
-    float world_tolerance = std::abs(world_pos_offset.x() - world_pos.x());
+    QVector2D world_pos_x_offset = screenToWorld(screen_x + static_cast<int>(tolerance_pixels), screen_y);
+    QVector2D world_pos_y_offset = screenToWorld(screen_x, screen_y + static_cast<int>(tolerance_pixels));
+    
+    // Use the maximum of X and Y tolerance for circular tolerance
+    float world_tolerance_x = std::abs(world_pos_x_offset.x() - world_pos.x());
+    float world_tolerance_y = std::abs(world_pos_y_offset.y() - world_pos.y());
+    float world_tolerance = std::max(world_tolerance_x, world_tolerance_y);
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: findPointNear screen(" << screen_x << "," << screen_y 
+             << ") -> world(" << world_pos.x() << "," << world_pos.y() 
+             << ") tolerance:" << world_tolerance;
 
     // Find nearest point using spatial index with extra error checking
     try {
@@ -558,7 +535,22 @@ SpatialPointData const * SpatialOverlayOpenGLWidget::findPointNear(int screen_x,
             // Add bounds checking to prevent crash
             size_t index = nearest_point_index->data;
             if (index < points_size && index < _all_points.size()) {
-                return &_all_points[index];
+                SpatialPointData const * found_point = &_all_points[index];
+                
+                // Verify the point is actually within our tolerance by converting back to screen
+                QPoint point_screen = worldToScreen(found_point->x, found_point->y);
+                float screen_distance = std::sqrt(std::pow(point_screen.x() - screen_x, 2) + 
+                                                 std::pow(point_screen.y() - screen_y, 2));
+                
+                qDebug() << "SpatialOverlayOpenGLWidget: Found point at world(" << found_point->x << "," << found_point->y 
+                         << ") screen(" << point_screen.x() << "," << point_screen.y() 
+                         << ") distance:" << screen_distance << "tolerance:" << tolerance_pixels;
+                
+                if (screen_distance <= tolerance_pixels) {
+                    return found_point;
+                } else {
+                    qDebug() << "SpatialOverlayOpenGLWidget: Point outside screen tolerance, rejecting";
+                }
             } else {
                 qDebug() << "SpatialOverlayOpenGLWidget: findPointNear - invalid index" << index 
                          << "points_size:" << points_size << "_all_points.size():" << _all_points.size();
@@ -578,40 +570,13 @@ void SpatialOverlayOpenGLWidget::updateViewMatrices() {
     // Update projection matrix for current aspect ratio
     _projection_matrix.setToIdentity();
     
-    if (!_data_bounds_valid || width() <= 0 || height() <= 0) {
-        qDebug() << "SpatialOverlayOpenGLWidget: updateViewMatrices - invalid conditions, bounds valid:" 
-                 << _data_bounds_valid << "size:" << width() << "x" << height();
+    float left, right, bottom, top;
+    calculateProjectionBounds(left, right, bottom, top);
+    
+    if (left == right || bottom == top) {
+        qDebug() << "SpatialOverlayOpenGLWidget: updateViewMatrices - invalid projection bounds";
         return;
     }
-    
-    // Calculate orthographic projection bounds
-    float data_width = _data_max_x - _data_min_x;
-    float data_height = _data_max_y - _data_min_y;
-    float center_x = (_data_min_x + _data_max_x) * 0.5f;
-    float center_y = (_data_min_y + _data_max_y) * 0.5f;
-    
-    // Add padding and apply zoom
-    float padding = 1.1f; // 10% padding
-    float zoom_factor = 1.0f / _zoom_level;
-    float half_width = (data_width * padding * zoom_factor) / 2.0f;
-    float half_height = (data_height * padding * zoom_factor) / 2.0f;
-    
-    // Apply aspect ratio correction
-    float aspect_ratio = static_cast<float>(width()) / height();
-    if (aspect_ratio > 1.0f) {
-        half_width *= aspect_ratio;
-    } else {
-        half_height /= aspect_ratio;
-    }
-    
-    // Apply pan offset
-    float pan_x = _pan_offset_x * data_width * zoom_factor;
-    float pan_y = _pan_offset_y * data_height * zoom_factor;
-    
-    float left = center_x - half_width + pan_x;
-    float right = center_x + half_width + pan_x;
-    float bottom = center_y - half_height + pan_y;
-    float top = center_y + half_height + pan_y;
     
     _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
 
@@ -924,6 +889,42 @@ void SpatialOverlayOpenGLWidget::updateVertexBuffer() {
     _vertex_array_object.release();
     
     qDebug() << "SpatialOverlayOpenGLWidget: Vertex buffer updated with" << vertex_data.size() / 2 << "points";
+}
+
+void SpatialOverlayOpenGLWidget::calculateProjectionBounds(float &left, float &right, float &bottom, float &top) const {
+    if (!_data_bounds_valid || width() <= 0 || height() <= 0) {
+        left = right = bottom = top = 0.0f;
+        return;
+    }
+    
+    // Calculate orthographic projection bounds (same logic as updateViewMatrices)
+    float data_width = _data_max_x - _data_min_x;
+    float data_height = _data_max_y - _data_min_y;
+    float center_x = (_data_min_x + _data_max_x) * 0.5f;
+    float center_y = (_data_min_y + _data_max_y) * 0.5f;
+    
+    // Add padding and apply zoom
+    float padding = 1.1f; // 10% padding
+    float zoom_factor = 1.0f / _zoom_level;
+    float half_width = (data_width * padding * zoom_factor) / 2.0f;
+    float half_height = (data_height * padding * zoom_factor) / 2.0f;
+    
+    // Apply aspect ratio correction
+    float aspect_ratio = static_cast<float>(width()) / height();
+    if (aspect_ratio > 1.0f) {
+        half_width *= aspect_ratio;
+    } else {
+        half_height /= aspect_ratio;
+    }
+    
+    // Apply pan offset
+    float pan_x = _pan_offset_x * data_width * zoom_factor;
+    float pan_y = _pan_offset_y * data_height * zoom_factor;
+    
+    left = center_x - half_width + pan_x;
+    right = center_x + half_width + pan_x;
+    bottom = center_y - half_height + pan_y;
+    top = center_y + half_height + pan_y;
 }
 
 // SpatialOverlayPlotWidget implementation

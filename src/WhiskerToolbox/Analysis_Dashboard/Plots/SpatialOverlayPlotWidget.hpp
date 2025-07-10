@@ -266,6 +266,16 @@ private:
      * @brief Update vertex buffer with current point data
      */
     void updateVertexBuffer();
+
+private:
+    /**
+     * @brief Calculate the current orthographic projection bounds (helper for coordinate transformations)
+     * @param left Output: left bound
+     * @param right Output: right bound  
+     * @param bottom Output: bottom bound
+     * @param top Output: top bound
+     */
+    void calculateProjectionBounds(float &left, float &right, float &bottom, float &top) const;
 };
 
 /**
