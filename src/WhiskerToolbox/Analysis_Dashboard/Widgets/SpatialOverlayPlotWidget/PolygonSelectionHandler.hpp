@@ -3,11 +3,11 @@
 
 #include "SelectionModes.hpp"
 
+#include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
-#include <QMatrix4x4>
 #include <QPoint>
 #include <QVector2D>
 
@@ -26,13 +26,12 @@ public:
     // Callback function types
     using RequestUpdateCallback = std::function<void()>;
     using ScreenToWorldCallback = std::function<QVector2D(int, int)>;
-    using ApplySelectionRegionCallback = std::function<void(SelectionRegion const&, bool)>;
+    using ApplySelectionRegionCallback = std::function<void(SelectionRegion const &, bool)>;
 
     explicit PolygonSelectionHandler(
-        RequestUpdateCallback request_update_callback = nullptr,
-        ScreenToWorldCallback screen_to_world_callback = nullptr,
-        ApplySelectionRegionCallback apply_selection_region_callback = nullptr
-    );
+            RequestUpdateCallback request_update_callback = nullptr,
+            ScreenToWorldCallback screen_to_world_callback = nullptr,
+            ApplySelectionRegionCallback apply_selection_region_callback = nullptr);
     ~PolygonSelectionHandler();
 
     /**
@@ -42,10 +41,9 @@ public:
      * @param apply_selection_region_callback Callback for applying selection regions
      */
     void setCallbacks(
-        RequestUpdateCallback request_update_callback,
-        ScreenToWorldCallback screen_to_world_callback,
-        ApplySelectionRegionCallback apply_selection_region_callback
-    );
+            RequestUpdateCallback request_update_callback,
+            ScreenToWorldCallback screen_to_world_callback,
+            ApplySelectionRegionCallback apply_selection_region_callback);
 
     /**
      * @brief Initialize OpenGL resources
@@ -100,32 +98,32 @@ public:
      * @param line_shader_program Shader program for line rendering
      * @param mvp_matrix Model-View-Projection matrix
      */
-    void renderPolygonOverlay(QOpenGLShaderProgram* line_shader_program, QMatrix4x4 const& mvp_matrix);
+    void renderPolygonOverlay(QOpenGLShaderProgram * line_shader_program, QMatrix4x4 const & mvp_matrix);
 
     /**
      * @brief Get the current active selection region (if any)
      * @return Pointer to selection region, or nullptr if none active
      */
-    std::unique_ptr<SelectionRegion> const& getActiveSelectionRegion() const { return _active_selection_region; }
+    std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { return _active_selection_region; }
 
 private:
     // Callback functions
     RequestUpdateCallback _request_update_callback;
     ScreenToWorldCallback _screen_to_world_callback;
     ApplySelectionRegionCallback _apply_selection_region_callback;
-    
+
     // OpenGL rendering resources
     QOpenGLBuffer _polygon_vertex_buffer;
     QOpenGLVertexArrayObject _polygon_vertex_array_object;
     QOpenGLBuffer _polygon_line_buffer;
     QOpenGLVertexArrayObject _polygon_line_array_object;
     bool _opengl_resources_initialized;
-    
+
     // Polygon selection state
     bool _is_polygon_selecting;
-    std::vector<QVector2D> _polygon_vertices;  // Current polygon vertices in world coordinates
-    std::vector<QPoint> _polygon_screen_points; // Polygon vertices in screen coordinates for rendering
-    std::unique_ptr<SelectionRegion> _active_selection_region; // Current selection region
+    std::vector<QVector2D> _polygon_vertices;                 // Current polygon vertices in world coordinates
+    std::vector<QPoint> _polygon_screen_points;               // Polygon vertices in screen coordinates for rendering
+    std::unique_ptr<SelectionRegion> _active_selection_region;// Current selection region
 
     /**
      * @brief Update polygon vertex and line buffers
@@ -133,4 +131,4 @@ private:
     void updatePolygonBuffers();
 };
 
-#endif // POLYGONSELECTIONHANDLER_HPP
+#endif// POLYGONSELECTIONHANDLER_HPP

@@ -61,14 +61,14 @@ public:
 
     explicit QuadTree(BoundingBox const & bounds, int depth = 0);
     ~QuadTree() = default;
-    
+
     // Move constructor and assignment operator
-    QuadTree(QuadTree&& other) noexcept;
-    QuadTree& operator=(QuadTree&& other) noexcept;
-    
+    QuadTree(QuadTree && other) noexcept;
+    QuadTree & operator=(QuadTree && other) noexcept;
+
     // Disable copy constructor and assignment operator
-    QuadTree(const QuadTree&) = delete;
-    QuadTree& operator=(const QuadTree&) = delete;
+    QuadTree(QuadTree const &) = delete;
+    QuadTree & operator=(QuadTree const &) = delete;
 
     /**
      * @brief Insert a point with associated data into the quadtree
@@ -85,6 +85,13 @@ public:
      * @param results Vector to store found points
      */
     void query(BoundingBox const & query_bounds, std::vector<QuadTreePoint<T>> & results) const;
+
+    /**
+     * @brief Query points within a bounding box, returning pointers to stored points
+     * @param query_bounds The bounding box to search within
+     * @param results Vector to store pointers to found points
+     */
+    void queryPointers(BoundingBox const & query_bounds, std::vector<QuadTreePoint<T> const *> & results) const;
 
     /**
      * @brief Find the nearest point to the given coordinates within a maximum distance
@@ -160,7 +167,7 @@ QuadTree<T>::QuadTree(BoundingBox const & bounds, int depth)
 }
 
 template<typename T>
-QuadTree<T>::QuadTree(QuadTree&& other) noexcept
+QuadTree<T>::QuadTree(QuadTree && other) noexcept
     : _bounds(std::move(other._bounds)),
       _depth(other._depth),
       _points(std::move(other._points)) {
@@ -170,7 +177,7 @@ QuadTree<T>::QuadTree(QuadTree&& other) noexcept
 }
 
 template<typename T>
-QuadTree<T>& QuadTree<T>::operator=(QuadTree&& other) noexcept {
+QuadTree<T> & QuadTree<T>::operator=(QuadTree && other) noexcept {
     if (this != &other) {
         _bounds = std::move(other._bounds);
         _depth = other._depth;
@@ -221,6 +228,25 @@ void QuadTree<T>::query(BoundingBox const & query_bounds, std::vector<QuadTreePo
 }
 
 template<typename T>
+void QuadTree<T>::queryPointers(BoundingBox const & query_bounds, std::vector<QuadTreePoint<T> const *> & results) const {
+    if (!_bounds.intersects(query_bounds)) {
+        return;
+    }
+
+    for (auto const & point: _points) {
+        if (query_bounds.contains(point.x, point.y)) {
+            results.push_back(&point);// Store pointer to actual stored point
+        }
+    }
+
+    if (!isLeaf()) {
+        for (int i = 0; i < 4; ++i) {
+            _children[i]->queryPointers(query_bounds, results);
+        }
+    }
+}
+
+template<typename T>
 QuadTreePoint<T> const * QuadTree<T>::findNearest(float x, float y, float max_distance) const {
     return findNearestHelper(x, y, max_distance * max_distance);
 }
@@ -245,7 +271,7 @@ QuadTreePoint<T> const * QuadTree<T>::findNearestHelper(float x, float y, float 
         float dist_sq = distanceSquared(x, y, point.x, point.y);
         if (dist_sq < min_distance_sq) {
             min_distance_sq = dist_sq;
-            nearest = &point;  // Safe because we're pointing to stored data
+            nearest = &point;// Safe because we're pointing to stored data
         }
     }
 

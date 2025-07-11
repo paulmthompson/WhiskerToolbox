@@ -1,14 +1,14 @@
 #ifndef SPATIALOVERLAYOPENGLWIDGET_HPP
 #define SPATIALOVERLAYOPENGLWIDGET_HPP
 
+#include "PolygonSelectionHandler.hpp"
 #include "SelectionModes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
-#include "PolygonSelectionHandler.hpp"
 
 #include <QMatrix4x4>
+#include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLShaderProgram>
-#include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 #include <QString>
@@ -28,9 +28,10 @@ class PointData;
 struct QuadTreePointData {
     int64_t time_frame_index;
     std::string point_data_key;
-    
+
     QuadTreePointData(int64_t frame_index, std::string const & key)
-        : time_frame_index(frame_index), point_data_key(key) {}
+        : time_frame_index(frame_index),
+          point_data_key(key) {}
 };
 
 /**
@@ -71,7 +72,7 @@ public:
      * @param mode The selection mode to activate
      */
     void setSelectionMode(SelectionMode mode);
-    
+
     /**
      * @brief Get the current selection mode
      */
@@ -187,6 +188,7 @@ signals:
      * @brief Emitted when the highlight state changes, requiring scene graph update
      */
     void highlightStateChanged();
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -220,23 +222,23 @@ private slots:
 
 private:
     // Rendering data
-    std::vector<float> _vertex_data; // Flattened vertex data for OpenGL (x,y pairs)
-    std::unique_ptr<QuadTree<QuadTreePointData>> _spatial_index; // Contains frame ID and data key
+    std::vector<float> _vertex_data;                            // Flattened vertex data for OpenGL (x,y pairs)
+    std::unique_ptr<QuadTree<QuadTreePointData>> _spatial_index;// Contains frame ID and data key
 
     // Modern OpenGL rendering resources
     QOpenGLShaderProgram * _shader_program;
     QOpenGLShaderProgram * _line_shader_program;
     QOpenGLBuffer _vertex_buffer;
     QOpenGLVertexArrayObject _vertex_array_object;
-    
+
     // Highlight rendering resources
     QOpenGLBuffer _highlight_vertex_buffer;
     QOpenGLVertexArrayObject _highlight_vertex_array_object;
-    
+
     // Selection rendering resources
     QOpenGLBuffer _selection_vertex_buffer;
     QOpenGLVertexArrayObject _selection_vertex_array_object;
-    
+
     bool _opengl_resources_initialized;
 
     // View parameters
@@ -253,16 +255,16 @@ private:
     QPoint _current_mouse_pos;
     QTimer * _tooltip_timer;
     QTimer * _tooltip_refresh_timer;
-    QTimer * _fps_limiter_timer; // fps limiting
+    QTimer * _fps_limiter_timer;// fps limiting
     bool _tooltips_enabled;
-    bool _pending_update; //fps limiting
+    bool _pending_update;//fps limiting
     QuadTreePoint<QuadTreePointData> const * _current_hover_point;
 
     // Selection state
-    std::unordered_set<QuadTreePoint<QuadTreePointData> const *> _selected_points; // Pointers to selected points in QuadTree
-    std::vector<float> _selection_vertex_data; // Cached vertex data for selected points
-    SelectionMode _selection_mode;             // Current selection mode
-    
+    std::unordered_set<QuadTreePoint<QuadTreePointData> const *> _selected_points;// Pointers to selected points in QuadTree
+    std::vector<float> _selection_vertex_data;                                    // Cached vertex data for selected points
+    SelectionMode _selection_mode;                                                // Current selection mode
+
     // Polygon selection handler
     std::unique_ptr<PolygonSelectionHandler> _polygon_selection_handler;
 
@@ -295,7 +297,7 @@ private:
      * @param bottom Output: bottom bound
      * @param top Output: top bound
      */
-    void calculateProjectionBounds(float &left, float &right, float &bottom, float &top) const;
+    void calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const;
 
     /**
      * @brief Update view matrices based on current zoom and pan
@@ -353,15 +355,14 @@ private:
      * @param region The selection region to apply
      * @param add_to_selection If true, add to existing selection; if false, replace selection
      */
-    void applySelectionRegion(SelectionRegion const& region, bool add_to_selection = false);
+    void applySelectionRegion(SelectionRegion const & region, bool add_to_selection = false);
 
     /**
      * @brief Update vertex buffer with current point data
      */
     void updateVertexBuffer();
-
 };
 
 QString create_tooltipText(QuadTreePoint<QuadTreePointData> const * point);
 
-#endif // SPATIALOVERLAYOPENGLWIDGET_HPP
+#endif// SPATIALOVERLAYOPENGLWIDGET_HPP
