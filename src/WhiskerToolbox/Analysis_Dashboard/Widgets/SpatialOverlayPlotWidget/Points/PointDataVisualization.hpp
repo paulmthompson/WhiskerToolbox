@@ -15,6 +15,7 @@
 #include <unordered_set>
 #include <vector>
 
+class PointData;
 class QOpenGLShaderProgram;
 
 /**
@@ -38,7 +39,7 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     // Hover state for this PointData
     QuadTreePoint<int64_t> const * current_hover_point = nullptr;
 
-    PointDataVisualization(QString const & data_key);
+    PointDataVisualization(QString const & data_key, std::shared_ptr<PointData> const & point_data);
     ~PointDataVisualization();
 
     /**
@@ -85,6 +86,13 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
                           float point_size,
                           QOpenGLBuffer & highlight_buffer, 
                           QOpenGLVertexArrayObject & highlight_vao);
+
+    /**
+     * @brief Calculate bounding box for a PointData object
+     * @param point_data The PointData to calculate bounds for
+     * @return BoundingBox for the PointData
+     */
+    BoundingBox calculateBoundsForPointData(PointData const * point_data) const;
 };
 
 

@@ -318,13 +318,6 @@ private:
     float calculateWorldTolerance(float screen_tolerance) const;
 
     /**
-     * @brief Calculate bounding box for a PointData object
-     * @param point_data The PointData to calculate bounds for
-     * @return BoundingBox for the PointData
-     */
-    BoundingBox calculateBoundsForPointData(std::shared_ptr<PointData> const & point_data) const;
-
-    /**
      * @brief Render all points using OpenGL
      */
     void renderPoints();

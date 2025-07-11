@@ -97,25 +97,9 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
             continue;
         }
         
-        auto viz = std::make_unique<PointDataVisualization>(key);
+        auto viz = std::make_unique<PointDataVisualization>(key, point_data);
         viz->color = colors[color_index % colors.size()];
         color_index++;
-        
-        // Calculate bounding box for this PointData
-        BoundingBox bounds = calculateBoundsForPointData(point_data);
-        viz->spatial_index = std::make_unique<QuadTree<int64_t>>(bounds);
-        
-        // Collect vertex data and populate QuadTree
-        for (auto const & time_points_pair : point_data->GetAllPointsAsRange()) {
-            for (auto const & point : time_points_pair.points) {
-                // Add vertex data for OpenGL (x, y coordinates)
-                viz->vertex_data.push_back(point.x);
-                viz->vertex_data.push_back(point.y);
-                
-                // Insert into this PointData's QuadTree with just frame ID
-                viz->spatial_index->insert(point.x, point.y, time_points_pair.time.getValue());
-            }
-        }
         
         // Initialize OpenGL resources for this PointData
         if (_opengl_resources_initialized) {
@@ -569,39 +553,6 @@ float SpatialOverlayOpenGLWidget::calculateWorldTolerance(float screen_tolerance
     return std::abs(world_pos_offset.x() - world_pos.x());
 }
 
-BoundingBox SpatialOverlayOpenGLWidget::calculateBoundsForPointData(std::shared_ptr<PointData> const& point_data) const {
-    if (!point_data) {
-        return BoundingBox(0, 0, 0, 0);
-    }
-    
-    float min_x = std::numeric_limits<float>::max();
-    float max_x = std::numeric_limits<float>::lowest();
-    float min_y = std::numeric_limits<float>::max();
-    float max_y = std::numeric_limits<float>::lowest();
-    
-    bool has_points = false;
-    
-    for (auto const& time_points_pair : point_data->GetAllPointsAsRange()) {
-        for (auto const& point : time_points_pair.points) {
-            min_x = std::min(min_x, point.x);
-            max_x = std::max(max_x, point.x);
-            min_y = std::min(min_y, point.y);
-            max_y = std::max(max_y, point.y);
-            has_points = true;
-        }
-    }
-    
-    if (!has_points) {
-        return BoundingBox(0, 0, 0, 0);
-    }
-    
-    // Add some padding
-    float padding_x = (max_x - min_x) * 0.1f;
-    float padding_y = (max_y - min_y) * 0.1f;
-    
-    return BoundingBox(min_x - padding_x, min_y - padding_y, 
-                      max_x + padding_x, max_y + padding_y);
-}
 
 void SpatialOverlayOpenGLWidget::calculateDataBounds() {
     if (_point_data_visualizations.empty()) {
