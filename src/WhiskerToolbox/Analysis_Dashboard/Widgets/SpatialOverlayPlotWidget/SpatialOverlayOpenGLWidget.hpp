@@ -23,15 +23,71 @@
 class PointData;
 
 /**
- * @brief Data structure for storing frame and key information in the QuadTree
+ * @brief Visualization data for a single PointData object
  */
-struct QuadTreePointData {
-    int64_t time_frame_index;
-    std::string point_data_key;
+struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
+    std::unique_ptr<QuadTree<int64_t>> spatial_index;
+    std::vector<float> vertex_data;
+    QOpenGLBuffer vertex_buffer;
+    QOpenGLVertexArrayObject vertex_array_object;
+    QString key;
+    QVector4D color;
+    bool visible = true;
 
-    QuadTreePointData(int64_t frame_index, std::string const & key)
-        : time_frame_index(frame_index),
-          point_data_key(key) {}
+    // Selection state for this PointData
+    std::unordered_set<QuadTreePoint<int64_t> const *> selected_points;
+    std::vector<float> selection_vertex_data;
+    QOpenGLBuffer selection_vertex_buffer;
+    QOpenGLVertexArrayObject selection_vertex_array_object;
+
+    // Hover state for this PointData
+    QuadTreePoint<int64_t> const * current_hover_point = nullptr;
+
+    PointDataVisualization(QString const & data_key);
+    ~PointDataVisualization();
+
+    /**
+     * @brief Initialize OpenGL resources for this visualization
+     */
+    void initializeOpenGLResources();
+
+    /**
+     * @brief Clean up OpenGL resources for this visualization
+     */
+    void cleanupOpenGLResources();
+
+    /**
+     * @brief Update selection vertex buffer with current selection
+     */
+    void updateSelectionVertexBuffer();
+
+    /**
+     * @brief Clear all selected points
+     */
+    void clearSelection();
+
+    /**
+     * @brief Toggle selection of a point
+     * @param point_ptr Pointer to the point to toggle
+     * @return True if point was selected, false if deselected
+     */
+    bool togglePointSelection(QuadTreePoint<int64_t> const * point_ptr);
+
+    /**
+     * @brief Render points for this PointData
+     */
+    void renderPoints(QOpenGLShaderProgram * shader_program, float point_size);
+
+    /**
+     * @brief Render selected points for this PointData
+     */
+    void renderSelectedPoints(QOpenGLShaderProgram * shader_program, float point_size);
+
+    /**
+     * @brief Render hover point for this PointData
+     */
+    void renderHoverPoint(QOpenGLShaderProgram * shader_program, float point_size,
+                          QOpenGLBuffer & highlight_buffer, QOpenGLVertexArrayObject & highlight_vao);
 };
 
 /**
@@ -109,27 +165,21 @@ public:
     float getPointSize() const { return _point_size; }
 
     /**
-     * @brief Get the currently selected points
-     * @return Set of pointers to selected points
+     * @brief Get the currently selected points from all PointData objects
+     * @return Vector of pairs containing data key and selected points
      */
-    std::unordered_set<QuadTreePoint<QuadTreePointData> const *> const & getSelectedPoints() const { return _selected_points; }
+    std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const *>>> getSelectedPointData() const;
 
     /**
-     * @brief Get the number of currently selected points
-     * @return Number of selected points
+     * @brief Get the total number of selected points across all PointData objects
+     * @return Total number of selected points
      */
-    size_t getSelectedPointCount() const { return _selected_points.size(); }
+    size_t getSelectedPointCount() const;
 
     /**
      * @brief Programmatically clear all selected points
      */
     void clearSelection();
-
-    /**
-     * @brief Get the selected point data for all selected points
-     * @return Vector of pointers to selected QuadTreePoint objects
-     */
-    std::vector<QuadTreePoint<QuadTreePointData> const *> getSelectedPointData() const;
 
     /**
      * @brief Convert screen coordinates to world coordinates
@@ -143,8 +193,9 @@ signals:
     /**
      * @brief Emitted when user double-clicks on a point to jump to that frame
      * @param time_frame_index The time frame index to jump to
+     * @param data_key The data key of the point
      */
-    void frameJumpRequested(int64_t time_frame_index, std::string const & data_key);
+    void frameJumpRequested(int64_t time_frame_index, QString const & data_key);
 
     /**
      * @brief Emitted when point size changes
@@ -173,10 +224,11 @@ signals:
 
     /**
      * @brief Emitted when the selection changes
-     * @param selected_count Number of currently selected points
-     * @param selected_points Set of pointers to selected points
+     * @param total_count Total number of selected points across all datasets
+     * @param data_key The data key of the most recently modified dataset
+     * @param data_specific_count Number of selected points in the specific dataset
      */
-    void selectionChanged(size_t selected_count, std::unordered_set<QuadTreePoint<QuadTreePointData> const *> const & selected_points);
+    void selectionChanged(size_t total_count, QString const & data_key, size_t data_specific_count);
 
     /**
      * @brief Emitted when the selection mode changes
@@ -221,23 +273,16 @@ private slots:
     void requestThrottledUpdate();
 
 private:
-    // Rendering data
-    std::vector<float> _vertex_data;                            // Flattened vertex data for OpenGL (x,y pairs)
-    std::unique_ptr<QuadTree<QuadTreePointData>> _spatial_index;// Contains frame ID and data key
+    // PointData visualizations - each PointData has its own QuadTree and OpenGL resources
+    std::unordered_map<QString, std::unique_ptr<PointDataVisualization>> _point_data_visualizations;
 
     // Modern OpenGL rendering resources
     QOpenGLShaderProgram * _shader_program;
     QOpenGLShaderProgram * _line_shader_program;
-    QOpenGLBuffer _vertex_buffer;
-    QOpenGLVertexArrayObject _vertex_array_object;
 
-    // Highlight rendering resources
+    // Global highlight rendering resources (shared across all PointData)
     QOpenGLBuffer _highlight_vertex_buffer;
     QOpenGLVertexArrayObject _highlight_vertex_array_object;
-
-    // Selection rendering resources
-    QOpenGLBuffer _selection_vertex_buffer;
-    QOpenGLVertexArrayObject _selection_vertex_array_object;
 
     bool _opengl_resources_initialized;
 
@@ -257,13 +302,8 @@ private:
     QTimer * _tooltip_refresh_timer;
     QTimer * _fps_limiter_timer;// fps limiting
     bool _tooltips_enabled;
-    bool _pending_update;//fps limiting
-    QuadTreePoint<QuadTreePointData> const * _current_hover_point;
-
-    // Selection state
-    std::unordered_set<QuadTreePoint<QuadTreePointData> const *> _selected_points;// Pointers to selected points in QuadTree
-    std::vector<float> _selection_vertex_data;                                    // Cached vertex data for selected points
-    SelectionMode _selection_mode;                                                // Current selection mode
+    bool _pending_update;         //fps limiting
+    SelectionMode _selection_mode;// Current selection mode
 
     // Polygon selection handler
     std::unique_ptr<PolygonSelectionHandler> _polygon_selection_handler;
@@ -305,24 +345,50 @@ private:
     void updateViewMatrices();
 
     /**
-     * @brief Update the spatial index with current point data
-     * @param point_data_map Map of data key to PointData objects
-     */
-    void updateSpatialIndex(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map);
-
-    /**
-     * @brief Calculate data bounds from all points
+     * @brief Calculate data bounds from all PointData visualizations
      */
     void calculateDataBounds();
 
     /**
-     * @brief Find point near screen coordinates
+     * @brief Find point near screen coordinates across all PointData visualizations
      * @param screen_x Screen X coordinate
      * @param screen_y Screen Y coordinate
      * @param tolerance_pixels Tolerance in pixels
-     * @return Pointer to point data, or nullptr if none found
+     * @return Pair of PointDataVisualization and point, or {nullptr, nullptr} if none found
      */
-    QuadTreePoint<QuadTreePointData> const * findPointNear(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
+    std::pair<PointDataVisualization *, QuadTreePoint<int64_t> const *> findPointNear(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
+
+    /**
+     * @brief Get the PointDataVisualization that currently has a hover point
+     * @return Pointer to visualization with hover point, or nullptr
+     */
+    PointDataVisualization * getCurrentHoverVisualization() const;
+
+    /**
+     * @brief Get total number of selected points across all PointData visualizations
+     * @return Total selected point count
+     */
+    size_t getTotalSelectedPoints() const;
+
+    /**
+     * @brief Initialize OpenGL resources for a specific PointDataVisualization
+     * @param viz The visualization to initialize
+     */
+    void initializePointDataVisualization(PointDataVisualization & viz);
+
+    /**
+     * @brief Calculate world tolerance from screen tolerance
+     * @param screen_tolerance Tolerance in screen pixels
+     * @return World tolerance
+     */
+    float calculateWorldTolerance(float screen_tolerance) const;
+
+    /**
+     * @brief Calculate bounding box for a PointData object
+     * @param point_data The PointData to calculate bounds for
+     * @return BoundingBox for the PointData
+     */
+    BoundingBox calculateBoundsForPointData(std::shared_ptr<PointData> const & point_data) const;
 
     /**
      * @brief Render all points using OpenGL
@@ -330,39 +396,13 @@ private:
     void renderPoints();
 
     /**
-     * @brief Render highlighted point with hollow circle
-     */
-    void renderHighlightedPoint();
-
-    /**
-     * @brief Render selected points
-     */
-    void renderSelectedPoints();
-
-    /**
-     * @brief Toggle selection of a point
-     * @param point The point to toggle selection for
-     */
-    void togglePointSelection(QuadTreePoint<QuadTreePointData> const & point);
-
-    /**
-     * @brief Update selection vertex buffer with current selection
-     */
-    void updateSelectionVertexBuffer();
-
-    /**
      * @brief Apply a selection region to find all points within it
      * @param region The selection region to apply
      * @param add_to_selection If true, add to existing selection; if false, replace selection
      */
     void applySelectionRegion(SelectionRegion const & region, bool add_to_selection = false);
-
-    /**
-     * @brief Update vertex buffer with current point data
-     */
-    void updateVertexBuffer();
 };
 
-QString create_tooltipText(QuadTreePoint<QuadTreePointData> const * point);
+QString create_tooltipText(QuadTreePoint<int64_t> const * point, QString const & data_key);
 
 #endif// SPATIALOVERLAYOPENGLWIDGET_HPP

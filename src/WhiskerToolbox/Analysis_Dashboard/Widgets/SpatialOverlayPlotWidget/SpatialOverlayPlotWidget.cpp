@@ -116,11 +116,11 @@ void SpatialOverlayPlotWidget::updateVisualization() {
     emit renderUpdateRequested(getPlotId());
 }
 
-void SpatialOverlayPlotWidget::handleFrameJumpRequest(int64_t time_frame_index, std::string const & data_key) {
+void SpatialOverlayPlotWidget::handleFrameJumpRequest(int64_t time_frame_index, QString const & data_key) {
     qDebug() << "SpatialOverlayPlotWidget: Frame jump requested to frame:" 
              << time_frame_index << "for data key:" 
              << data_key;
-    emit frameJumpRequested(time_frame_index, data_key);
+    emit frameJumpRequested(time_frame_index, data_key.toStdString());
 }
 
 void SpatialOverlayPlotWidget::loadPointData() {

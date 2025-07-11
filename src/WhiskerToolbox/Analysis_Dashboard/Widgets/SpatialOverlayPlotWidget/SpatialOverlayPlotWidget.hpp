@@ -94,7 +94,7 @@ private slots:
      * @brief Handle frame jump request from OpenGL widget
      * @param time_frame_index The time frame index to jump to
      */
-    void handleFrameJumpRequest(int64_t time_frame_index, std::string const & data_key);
+    void handleFrameJumpRequest(int64_t time_frame_index, QString const & data_key);
 
 private:
     SpatialOverlayOpenGLWidget * _opengl_widget;
