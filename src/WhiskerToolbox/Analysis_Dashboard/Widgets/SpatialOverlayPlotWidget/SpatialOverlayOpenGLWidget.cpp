@@ -8,6 +8,9 @@
 #include <QToolTip>
 #include <QWheelEvent>
 
+#include <algorithm>
+#include <unordered_set>
+
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
       _shader_program(nullptr),
@@ -74,10 +77,13 @@ SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
 }
 
 void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map) {
-    _all_points.clear();
+    _vertex_data.clear();
     
-    // Clear selection when loading new data to avoid invalid indices
+    // Clear selection when loading new data
     clearSelection();
+
+    // Clear existing spatial index
+    _spatial_index.reset();
 
     // Collect all points from all PointData objects
     for (auto const & [key, point_data]: point_data_map) {
@@ -91,17 +97,16 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
         // Iterate through all time indices in the point data
         for (auto const & time_points_pair: point_data->GetAllPointsAsRange()) {
             for (auto const & point: time_points_pair.points) {
-                _all_points.emplace_back(
-                        point.x, point.y,
-                        time_points_pair.time.getValue(),
-                        key);
+                // Add vertex data for OpenGL (x, y coordinates)
+                _vertex_data.push_back(point.x);
+                _vertex_data.push_back(point.y);
                 points_added++;
             }
         }
     }
 
     calculateDataBounds();
-    updateSpatialIndex();
+    updateSpatialIndex(point_data_map);
     
     // Update vertex buffer with new data
     if (_opengl_resources_initialized) {
@@ -229,7 +234,7 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
 void SpatialOverlayOpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (_all_points.empty() || !_data_bounds_valid || !_opengl_resources_initialized) {
+    if (!_data_bounds_valid || !_opengl_resources_initialized) {
         return;
     }
 
@@ -243,7 +248,6 @@ void SpatialOverlayOpenGLWidget::paintGL() {
 }
 
 void SpatialOverlayOpenGLWidget::paintEvent(QPaintEvent * event) {
-    // Just use standard OpenGL rendering - no mixed QPainter/OpenGL
     QOpenGLWidget::paintEvent(event);
 }
 
@@ -272,17 +276,11 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         
         // Point selection mode (original behavior)
         if (_selection_mode == SelectionMode::PointSelection && (event->modifiers() & Qt::ControlModifier)) {
-            SpatialPointData const * point = findPointNear(event->pos().x(), event->pos().y());
+            QuadTreePoint<QuadTreePointData> const * point = findPointNear(event->pos().x(), event->pos().y());
             if (point) {
-                // Find the index of this point
-                for (size_t i = 0; i < _all_points.size(); ++i) {
-                    if (&_all_points[i] == point) {
-                        qDebug() << "SpatialOverlayOpenGLWidget: Ctrl+click on point" << i 
-                                 << "at (" << point->x << "," << point->y << ")";
-                        togglePointSelection(i);
-                        break;
-                    }
-                }
+                qDebug() << "SpatialOverlayOpenGLWidget: Ctrl+click on point" 
+                         << "at (" << point->x << "," << point->y << ")";
+                togglePointSelection(*point);
                 event->accept();
                 return;
             }
@@ -339,13 +337,14 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         
         // Handle tooltip logic if tooltips are enabled
         if (_tooltips_enabled) {
-            SpatialPointData const * point = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
+            QuadTreePoint<QuadTreePointData> const * point = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
             
             if (point != _current_hover_point) {
                 // We're hovering over a different point (or no point)
                 if (point) {
                     qDebug() << "SpatialOverlayOpenGLWidget: Hovering over new point at" 
-                             << point->x << "," << point->y << "frame:" << point->time_frame_index;
+                             << point->x << "," << point->y 
+                             << "frame:" << point->data.time_frame_index;
                 } else {
                     qDebug() << "SpatialOverlayOpenGLWidget: No longer hovering over a point";
                 }
@@ -365,12 +364,8 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
                     QToolTip::hideText();
                 }
             } else if (point) {
-                // Still hovering over the same point, update tooltip position
-                QString tooltip_text = QString("Frame: %1\nData: %2\nPosition: (%3, %4)")
-                                               .arg(point->time_frame_index)
-                                               .arg(point->point_data_key)
-                                               .arg(point->x, 0, 'f', 2)
-                                               .arg(point->y, 0, 'f', 2);
+
+                QString tooltip_text = create_tooltipText(point);
                 QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
             }
         }
@@ -391,13 +386,13 @@ void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         qDebug() << "SpatialOverlayOpenGLWidget: Double-click detected at" << event->pos();
         
-        SpatialPointData const * point = findPointNear(event->pos().x(), event->pos().y());
+        QuadTreePoint<QuadTreePointData> const * point = findPointNear(event->pos().x(), event->pos().y());
         if (point) {
             qDebug() << "SpatialOverlayOpenGLWidget: Double-click on point at (" 
-                     << point->x << "," << point->y << ") frame:" << point->time_frame_index 
-                     << "data:" << point->point_data_key;
+                     << point->x << "," << point->y << ") frame:" << point->data.time_frame_index 
+                     << "data:" << point->data.point_data_key;
 
-            emit frameJumpRequested(point->time_frame_index, point->point_data_key.toStdString());
+            emit frameJumpRequested(point->data.time_frame_index, point->data.point_data_key);
             event->accept();
         } else {
             qDebug() << "SpatialOverlayOpenGLWidget: Double-click but no point found near cursor";
@@ -436,7 +431,7 @@ void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
             return;
         }
     } else if (event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace) {
-        if (!_selected_point_indices.empty()) {
+        if (!_selected_points.empty()) {
             clearSelection();
             event->accept();
             return;
@@ -450,13 +445,9 @@ void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
 void SpatialOverlayOpenGLWidget::_handleTooltipTimer() {
     if (!_data_bounds_valid || !_tooltips_enabled) return;
 
-    SpatialPointData const * point = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
+    QuadTreePoint<QuadTreePointData> const * point = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
     if (point && point == _current_hover_point) {
-        QString tooltip_text = QString("Frame: %1\nData: %2\nPosition: (%3, %4)")
-                                       .arg(point->time_frame_index)
-                                       .arg(point->point_data_key)
-                                       .arg(point->x, 0, 'f', 2)
-                                       .arg(point->y, 0, 'f', 2);
+        QString tooltip_text = create_tooltipText(point);
 
         QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
         
@@ -484,14 +475,10 @@ void SpatialOverlayOpenGLWidget::handleTooltipRefresh() {
     }
 
     // Check if we're still hovering over the same point
-    SpatialPointData const * point = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
+    QuadTreePoint<QuadTreePointData> const * point = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
     if (point == _current_hover_point) {
-        // Refresh the tooltip to keep it visible
-        QString tooltip_text = QString("Frame: %1\nData: %2\nPosition: (%3, %4)")
-                                       .arg(point->time_frame_index)
-                                       .arg(point->point_data_key)
-                                       .arg(point->x, 0, 'f', 2)
-                                       .arg(point->y, 0, 'f', 2);
+
+        QString tooltip_text = create_tooltipText(point);
 
         QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
     } else {
@@ -502,10 +489,11 @@ void SpatialOverlayOpenGLWidget::handleTooltipRefresh() {
     }
 }
 
-void SpatialOverlayOpenGLWidget::updateSpatialIndex() {
-    qDebug() << "SpatialOverlayOpenGLWidget: updateSpatialIndex called with" << _all_points.size() << "points";
+void SpatialOverlayOpenGLWidget::updateSpatialIndex(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map) {
+    size_t total_points = _vertex_data.size() / 2; // Each point is 2 floats (x, y)
+    qDebug() << "SpatialOverlayOpenGLWidget: updateSpatialIndex called with" << total_points << "points";
     
-    if (_all_points.empty() || !_data_bounds_valid) {
+    if (_vertex_data.empty() || !_data_bounds_valid) {
         _spatial_index.reset();
         qDebug() << "SpatialOverlayOpenGLWidget: Spatial index reset (no points or invalid bounds)";
         return;
@@ -517,12 +505,26 @@ void SpatialOverlayOpenGLWidget::updateSpatialIndex() {
 
     // Create spatial index with data bounds
     BoundingBox bounds(_data_min_x, _data_min_y, _data_max_x, _data_max_y);
-    _spatial_index = std::make_unique<QuadTree<size_t>>(bounds);
+    _spatial_index = std::make_unique<QuadTree<QuadTreePointData>>(bounds);
 
-    // Insert all points with their index as data
-    for (size_t i = 0; i < _all_points.size(); ++i) {
-        auto const & point = _all_points[i];
-        _spatial_index->insert(point.x, point.y, i);
+    // Insert all points with their frame ID and data key
+    size_t point_index = 0;
+    for (auto const & [key, point_data]: point_data_map) {
+        if (!point_data) continue;
+
+        // Iterate through all time indices in the point data
+        for (auto const & time_points_pair: point_data->GetAllPointsAsRange()) {
+            for (auto const & point: time_points_pair.points) {
+                if (point_index * 2 + 1 < _vertex_data.size()) {
+                    float x = _vertex_data[point_index * 2];
+                    float y = _vertex_data[point_index * 2 + 1];
+                    
+                    QuadTreePointData data(time_points_pair.time.getValue(), key.toStdString());
+                    _spatial_index->insert(x, y, std::move(data));
+                }
+                point_index++;
+            }
+        }
     }
     
     // Re-enable mouse tracking
@@ -530,19 +532,23 @@ void SpatialOverlayOpenGLWidget::updateSpatialIndex() {
 }
 
 void SpatialOverlayOpenGLWidget::calculateDataBounds() {
-    if (_all_points.empty()) {
+    if (_vertex_data.empty()) {
         _data_bounds_valid = false;
         return;
     }
 
-    _data_min_x = _data_max_x = _all_points[0].x;
-    _data_min_y = _data_max_y = _all_points[0].y;
+    _data_min_x = _data_max_x = _vertex_data[0]; // First x coordinate
+    _data_min_y = _data_max_y = _vertex_data[1]; // First y coordinate
 
-    for (auto const & point: _all_points) {
-        _data_min_x = std::min(_data_min_x, point.x);
-        _data_max_x = std::max(_data_max_x, point.x);
-        _data_min_y = std::min(_data_min_y, point.y);
-        _data_max_y = std::max(_data_max_y, point.y);
+    // Iterate through vertex data (x, y pairs)
+    for (size_t i = 0; i < _vertex_data.size(); i += 2) {
+        float x = _vertex_data[i];
+        float y = _vertex_data[i + 1];
+        
+        _data_min_x = std::min(_data_min_x, x);
+        _data_max_x = std::max(_data_max_x, x);
+        _data_min_y = std::min(_data_min_y, y);
+        _data_max_y = std::max(_data_max_y, y);
     }
 
     // Add some padding
@@ -587,15 +593,15 @@ QPoint SpatialOverlayOpenGLWidget::worldToScreen(float world_x, float world_y) c
     return QPoint(screen_x, screen_y);
 }
 
-SpatialPointData const * SpatialOverlayOpenGLWidget::findPointNear(int screen_x, int screen_y, float tolerance_pixels) const {
+QuadTreePoint<QuadTreePointData> const * SpatialOverlayOpenGLWidget::findPointNear(int screen_x, int screen_y, float tolerance_pixels) const {
     // Add extra safety checks to prevent crashes during resizing
-    if (!_spatial_index || !_data_bounds_valid || _all_points.empty()) {
+    if (!_spatial_index || !_data_bounds_valid || _vertex_data.empty()) {
         return nullptr;
     }
 
-    // Create a local copy of the points size to avoid race conditions
-    size_t points_size = _all_points.size();
-    if (points_size == 0) {
+    // Create a local copy of the vertex data size to avoid race conditions
+    size_t vertex_data_size = _vertex_data.size();
+    if (vertex_data_size == 0) {
         return nullptr;
     }
 
@@ -611,35 +617,24 @@ SpatialPointData const * SpatialOverlayOpenGLWidget::findPointNear(int screen_x,
     
     // Find nearest point using spatial index with extra error checking
     try {
-        auto const * nearest_point_index = _spatial_index->findNearest(
+        auto const * nearest_point = _spatial_index->findNearest(
                 world_pos.x(), world_pos.y(), world_tolerance);
 
-        if (nearest_point_index) {
-            // Add bounds checking to prevent crash
-            size_t index = nearest_point_index->data;
-            if (index < points_size && index < _all_points.size()) {
-                SpatialPointData const * found_point = &_all_points[index];
-                
-                // Verify the point is actually within our tolerance by converting back to screen
-                QPoint point_screen = worldToScreen(found_point->x, found_point->y);
-                float screen_distance = std::sqrt(std::pow(point_screen.x() - screen_x, 2) + 
-                                                 std::pow(point_screen.y() - screen_y, 2));
-                
-                if (screen_distance <= tolerance_pixels) {
-                    return found_point;
-                } else {
-                    qDebug() << "SpatialOverlayOpenGLWidget: Point outside screen tolerance, rejecting";
-                }
+        if (nearest_point) {
+            // Verify the point is actually within our tolerance by converting back to screen
+            QPoint point_screen = worldToScreen(nearest_point->x, nearest_point->y);
+            float screen_distance = std::sqrt(std::pow(point_screen.x() - screen_x, 2) + 
+                                             std::pow(point_screen.y() - screen_y, 2));
+            
+            if (screen_distance <= tolerance_pixels) {
+                return nearest_point;
             } else {
-                qDebug() << "SpatialOverlayOpenGLWidget: findPointNear - invalid index" << index 
-                         << "points_size:" << points_size << "_all_points.size():" << _all_points.size();
-                // Rebuild spatial index if corrupted
-                const_cast<SpatialOverlayOpenGLWidget*>(this)->updateSpatialIndex();
+                qDebug() << "SpatialOverlayOpenGLWidget: Point outside screen tolerance, rejecting";
             }
         }
     } catch (...) {
         qDebug() << "SpatialOverlayOpenGLWidget: findPointNear - exception caught, rebuilding spatial index";
-        const_cast<SpatialOverlayOpenGLWidget*>(this)->updateSpatialIndex();
+        // Note: Cannot rebuild spatial index in const method, would need external trigger
     }
 
     return nullptr;
@@ -667,7 +662,7 @@ void SpatialOverlayOpenGLWidget::updateViewMatrices() {
 }
 
 void SpatialOverlayOpenGLWidget::renderPoints() {
-    if (!_data_bounds_valid || _all_points.empty() || !_opengl_resources_initialized) {
+    if (!_data_bounds_valid || _vertex_data.empty() || !_opengl_resources_initialized) {
         return;
     }
 
@@ -707,7 +702,7 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
     _shader_program->setUniformValue("u_point_size", _point_size);
     
     // Draw all regular points
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_all_points.size()));
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_vertex_data.size() / 2));
     
     // Unbind regular point resources
     _vertex_buffer.release();
@@ -733,27 +728,11 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
 void SpatialOverlayOpenGLWidget::renderHighlightedPoint() {
     if (!_current_hover_point) return;
     
-    // Find the index of the current hover point in the main vertex buffer
-    size_t hover_point_index = 0;
-    bool found = false;
-    for (size_t i = 0; i < _all_points.size(); ++i) {
-        if (&_all_points[i] == _current_hover_point) {
-            hover_point_index = i;
-            found = true;
-            break;
-        }
-    }
-    
-    if (!found) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Hover point not found in main point list";
-        return;
-    }
-    
     // Bind highlight VAO and VBO
     _highlight_vertex_array_object.bind();
     _highlight_vertex_buffer.bind();
     
-    // Use glBufferSubData to copy the highlighted point data from main VBO
+    // Use glBufferSubData to set the highlighted point data
     // First, ensure the highlight buffer is allocated (2 floats for x,y)
     GLint highlight_buffer_size = 0;
     glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &highlight_buffer_size);
@@ -763,34 +742,9 @@ void SpatialOverlayOpenGLWidget::renderHighlightedPoint() {
         glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
     }
     
-    // Copy data from main vertex buffer at the specific point index
-    // Calculate offset in the main buffer (each point is 2 floats)
-    GLintptr source_offset = static_cast<GLintptr>(hover_point_index * 2 * sizeof(float));
-    
-    // Map the main vertex buffer to read the data
-    _vertex_buffer.bind();
-    float* main_buffer_data = static_cast<float*>(glMapBufferRange(
-        GL_ARRAY_BUFFER, 
-        source_offset, 
-        2 * sizeof(float), 
-        GL_MAP_READ_BIT
-    ));
-    
-    if (main_buffer_data) {
-        // Switch back to highlight buffer and update it
-        _highlight_vertex_buffer.bind();
-        glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(float), main_buffer_data);
-        
-        // Unmap the main buffer
-        _vertex_buffer.bind();
-        glUnmapBuffer(GL_ARRAY_BUFFER);
-        _highlight_vertex_buffer.bind();
-    } else {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to map main vertex buffer";
-        // Fallback: directly set the highlight point data
-        float highlight_data[2] = {_current_hover_point->x, _current_hover_point->y};
-        glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(float), highlight_data);
-    }
+    // Set the highlight point data directly from the QuadTreePoint
+    float highlight_data[2] = {_current_hover_point->x, _current_hover_point->y};
+    glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(float), highlight_data);
     
     // Set vertex attributes for highlight point
     glEnableVertexAttribArray(0);
@@ -815,7 +769,7 @@ void SpatialOverlayOpenGLWidget::renderHighlightedPoint() {
  }
 
 void SpatialOverlayOpenGLWidget::renderSelectedPoints() {
-    if (_selected_point_indices.empty()) return;
+    if (_selected_points.empty()) return;
     
     // Bind selection VAO and VBO
     _selection_vertex_array_object.bind();
@@ -843,7 +797,7 @@ void SpatialOverlayOpenGLWidget::renderSelectedPoints() {
     _shader_program->setUniformValue("u_point_size", _point_size * 1.5f); // Slightly larger than regular points
     
     // Draw the selected points
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_selected_point_indices.size()));
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_selected_points.size()));
     
     // Re-enable blending for subsequent rendering
     glEnable(GL_BLEND);
@@ -852,42 +806,42 @@ void SpatialOverlayOpenGLWidget::renderSelectedPoints() {
     _selection_vertex_buffer.release();
     _selection_vertex_array_object.release();
     
-    qDebug() << "SpatialOverlayOpenGLWidget: Rendered" << _selected_point_indices.size() << "selected points";
+    qDebug() << "SpatialOverlayOpenGLWidget: Rendered" << _selected_points.size() << "selected points";
 }
 
-void SpatialOverlayOpenGLWidget::togglePointSelection(size_t point_index) {
-    if (point_index >= _all_points.size()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Invalid point index" << point_index;
-        return;
-    }
+void SpatialOverlayOpenGLWidget::togglePointSelection(QuadTreePoint<QuadTreePointData> const & point) {
+    // Get pointer to the actual stored point in the QuadTree
+    QuadTreePoint<QuadTreePointData> const * point_ptr = &point;
     
-    auto it = _selected_point_indices.find(point_index);
-    if (it != _selected_point_indices.end()) {
-        // Point is already selected, remove it
-        _selected_point_indices.erase(it);
-        qDebug() << "SpatialOverlayOpenGLWidget: Deselected point" << point_index 
-                 << "(" << _selected_point_indices.size() << "points selected)";
+    // Check if point is already selected using pointer-based set (O(1) lookup)
+    auto it = _selected_points.find(point_ptr);
+    
+    if (it != _selected_points.end()) {
+        // Point is selected, remove it
+        _selected_points.erase(it);
+        qDebug() << "SpatialOverlayOpenGLWidget: Deselected point at (" << point.x << ", " << point.y << ")"
+                 << "(" << _selected_points.size() << "points selected)";
     } else {
         // Point is not selected, add it
-        _selected_point_indices.insert(point_index);
-        qDebug() << "SpatialOverlayOpenGLWidget: Selected point" << point_index 
-                 << "(" << _selected_point_indices.size() << "points selected)";
+        _selected_points.insert(point_ptr);
+        qDebug() << "SpatialOverlayOpenGLWidget: Selected point at (" << point.x << ", " << point.y << ")"
+                 << "(" << _selected_points.size() << "points selected)";
     }
     
     // Update the selection vertex buffer
     updateSelectionVertexBuffer();
     
     // Emit selection changed signal
-    emit selectionChanged(_selected_point_indices.size(), _selected_point_indices);
+    emit selectionChanged(_selected_points.size(), _selected_points);
     
     // Trigger update
     requestThrottledUpdate();
 }
 
 void SpatialOverlayOpenGLWidget::clearSelection() {
-    if (!_selected_point_indices.empty()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Clearing selection of" << _selected_point_indices.size() << "points";
-        _selected_point_indices.clear();
+    if (!_selected_points.empty()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Clearing selection of" << _selected_points.size() << "points";
+        _selected_points.clear();
         _selection_vertex_data.clear();
         
         // Clear the buffer
@@ -898,7 +852,7 @@ void SpatialOverlayOpenGLWidget::clearSelection() {
         }
         
         // Emit selection changed signal
-        emit selectionChanged(0, _selected_point_indices);
+        emit selectionChanged(0, _selected_points);
         
         // Trigger update
         requestThrottledUpdate();
@@ -913,7 +867,7 @@ void SpatialOverlayOpenGLWidget::updateSelectionVertexBuffer() {
     
     _selection_vertex_data.clear();
     
-    if (_selected_point_indices.empty()) {
+    if (_selected_points.empty()) {
         // Clear the buffer if no selection
         _selection_vertex_buffer.bind();
         glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
@@ -921,15 +875,12 @@ void SpatialOverlayOpenGLWidget::updateSelectionVertexBuffer() {
         return;
     }
     
-    // Prepare vertex data for selected points
-    _selection_vertex_data.reserve(_selected_point_indices.size() * 2);
+    // Prepare vertex data for selected points - just extract x,y from stored points
+    _selection_vertex_data.reserve(_selected_points.size() * 2);
     
-    for (size_t index : _selected_point_indices) {
-        if (index < _all_points.size()) {
-            auto const & point = _all_points[index];
-            _selection_vertex_data.push_back(point.x);
-            _selection_vertex_data.push_back(point.y);
-        }
+    for (auto const * point_ptr : _selected_points) {
+        _selection_vertex_data.push_back(point_ptr->x);
+        _selection_vertex_data.push_back(point_ptr->y);
     }
     
     // Update the buffer
@@ -955,7 +906,7 @@ void SpatialOverlayOpenGLWidget::updateSelectionVertexBuffer() {
 
 void SpatialOverlayOpenGLWidget::applySelectionRegion(SelectionRegion const& region, bool add_to_selection) {
     if (!add_to_selection) {
-        _selected_point_indices.clear();
+        _selected_points.clear();
     }
     
     // Get bounding box for optimization
@@ -964,28 +915,40 @@ void SpatialOverlayOpenGLWidget::applySelectionRegion(SelectionRegion const& reg
     
     size_t points_added = 0;
     
-    // Check all points against the selection region
-    for (size_t i = 0; i < _all_points.size(); ++i) {
-        auto const& point = _all_points[i];
-        
-        // Quick bounding box check first
-        if (point.x >= min_x && point.x <= max_x && 
-            point.y >= min_y && point.y <= max_y) {
+    if (!_spatial_index) {
+        qDebug() << "SpatialOverlayOpenGLWidget: No spatial index available for selection";
+        return;
+    }
+    
+    // Query spatial index for points within the bounding box
+    BoundingBox query_bounds(min_x, min_y, max_x, max_y);
+    std::vector<QuadTreePoint<QuadTreePointData>> candidate_points;
+    _spatial_index->query(query_bounds, candidate_points);
+    
+    // Check each candidate point against the precise selection region
+    for (auto const& point : candidate_points) {
+        // Precise containment check
+        if (region.containsPoint(Point2D<float>(point.x, point.y))) {
+            // We need to find the pointer to the actual stored point in the QuadTree
+            // Since query returns copies, we need to use findNearest to get the pointer
+            auto const * stored_point = _spatial_index->findNearest(point.x, point.y, 0.001f);
             
-            // Precise containment check
-            if (region.containsPoint(point.x, point.y)) {
-                _selected_point_indices.insert(i);
-                points_added++;
+            if (stored_point) {
+                // Check if point is already selected using pointer-based set (O(1) lookup)
+                if (_selected_points.find(stored_point) == _selected_points.end()) {
+                    _selected_points.insert(stored_point);
+                    points_added++;
+                }
             }
         }
     }
     
     qDebug() << "SpatialOverlayOpenGLWidget: Selection region applied," << points_added 
-             << "points added, total selected:" << _selected_point_indices.size();
+             << "points added, total selected:" << _selected_points.size();
     
     // Update vertex buffer and emit signal
     updateSelectionVertexBuffer();
-    emit selectionChanged(_selected_point_indices.size(), _selected_point_indices);
+    emit selectionChanged(_selected_points.size(), _selected_points);
     requestThrottledUpdate();
 }
 
@@ -1183,25 +1146,16 @@ void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
 }
 
 void SpatialOverlayOpenGLWidget::updateVertexBuffer() {
-    if (!_opengl_resources_initialized || _all_points.empty()) {
+    if (!_opengl_resources_initialized || _vertex_data.empty()) {
         qDebug() << "SpatialOverlayOpenGLWidget: updateVertexBuffer - skipping, resources initialized:" 
-                 << _opengl_resources_initialized << "points:" << _all_points.size();
+                 << _opengl_resources_initialized << "vertex_data size:" << _vertex_data.size();
         return;
-    }
-
-    // Prepare vertex data (just x, y coordinates)
-    std::vector<float> vertex_data;
-    vertex_data.reserve(_all_points.size() * 2);
-    
-    for (auto const & point : _all_points) {
-        vertex_data.push_back(point.x);
-        vertex_data.push_back(point.y);
     }
 
     // Bind VAO and update buffer
     _vertex_array_object.bind();
     _vertex_buffer.bind();
-    _vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
+    _vertex_buffer.allocate(_vertex_data.data(), static_cast<int>(_vertex_data.size() * sizeof(float)));
     
     // Verify buffer was allocated
     GLint buffer_size = 0;
@@ -1252,3 +1206,24 @@ void SpatialOverlayOpenGLWidget::calculateProjectionBounds(float &left, float &r
     top = center_y + half_height + pan_y;
 }
 
+QString create_tooltipText(QuadTreePoint<QuadTreePointData> const * point) {
+    if (!point) return QString();
+
+    return QString("Frame: %1\nData: %2\nPosition: (%3, %4)")
+            .arg(point->data.time_frame_index)
+            .arg(QString::fromStdString(point->data.point_data_key))
+            .arg(point->x, 0, 'f', 2)
+            .arg(point->y, 0, 'f', 2);
+}
+
+std::vector<QuadTreePoint<QuadTreePointData> const *> SpatialOverlayOpenGLWidget::getSelectedPointData() const {
+    std::vector<QuadTreePoint<QuadTreePointData> const *> selected_data;
+    selected_data.reserve(_selected_points.size());
+    
+    // Just copy the pointers - no need to reconstruct anything
+    for (auto const * point_ptr : _selected_points) {
+        selected_data.push_back(point_ptr);
+    }
+    
+    return selected_data;
+}

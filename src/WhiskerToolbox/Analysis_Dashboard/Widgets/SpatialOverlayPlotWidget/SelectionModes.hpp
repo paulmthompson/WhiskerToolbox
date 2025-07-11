@@ -1,10 +1,12 @@
 #ifndef SPATIALOVERLAY_SELECTION_MODES_HPP
 #define SPATIALOVERLAY_SELECTION_MODES_HPP
 
-#include <QString>
+#include "DataManager/Points/points.hpp"
+
 #include <QVector2D>
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 /**
@@ -13,7 +15,7 @@
 enum class SelectionMode {
     None,           ///< No selection mode active
     PointSelection, ///< Individual point selection (Ctrl+click)
-    PolygonSelection ///< Polygon area selection (click and drag)
+    PolygonSelection///< Polygon area selection (click and drag)
 };
 
 /**
@@ -22,15 +24,14 @@ enum class SelectionMode {
 class SelectionRegion {
 public:
     virtual ~SelectionRegion() = default;
-    
+
     /**
      * @brief Check if a 2D point is inside this selection region
-     * @param x X coordinate in world space
-     * @param y Y coordinate in world space
+     * @param point The point to check
      * @return True if point is inside the selection region
      */
-    virtual bool containsPoint(float x, float y) const = 0;
-    
+    virtual bool containsPoint(Point2D<float> point) const = 0;
+
     /**
      * @brief Get the bounding box of this selection region for optimization
      * @param min_x Output: minimum X coordinate
@@ -38,7 +39,7 @@ public:
      * @param max_x Output: maximum X coordinate
      * @param max_y Output: maximum Y coordinate
      */
-    virtual void getBoundingBox(float& min_x, float& min_y, float& max_x, float& max_y) const = 0;
+    virtual void getBoundingBox(float & min_x, float & min_y, float & max_x, float & max_y) const = 0;
 };
 
 /**
@@ -46,19 +47,19 @@ public:
  */
 class PolygonSelectionRegion : public SelectionRegion {
 public:
-    explicit PolygonSelectionRegion(std::vector<QVector2D> const& vertices);
-    
-    bool containsPoint(float x, float y) const override;
-    void getBoundingBox(float& min_x, float& min_y, float& max_x, float& max_y) const override;
-    
+    explicit PolygonSelectionRegion(std::vector<QVector2D> const & vertices);
+
+    bool containsPoint(Point2D<float> point) const override;
+    void getBoundingBox(float & min_x, float & min_y, float & max_x, float & max_y) const override;
+
     /**
      * @brief Get the polygon vertices in world coordinates
      */
-    std::vector<QVector2D> const& getVertices() const { return _vertices; }
-    
+    std::vector<QVector2D> const & getVertices() const { return _vertices; }
+
 private:
     std::vector<QVector2D> _vertices;
-    float _min_x, _min_y, _max_x, _max_y; // Cached bounding box
+    float _min_x, _min_y, _max_x, _max_y;// Cached bounding box
 };
 
 /**
@@ -67,9 +68,9 @@ private:
 struct SpatialPointData {
     float x, y;
     int64_t time_frame_index;
-    QString point_data_key;
+    std::string point_data_key;
 
-    SpatialPointData(float x, float y, int64_t time_frame_index, QString const & key)
+    SpatialPointData(float x, float y, int64_t time_frame_index, std::string const & key)
         : x(x),
           y(y),
           time_frame_index(time_frame_index),
@@ -77,4 +78,4 @@ struct SpatialPointData {
 };
 
 
-#endif // SPATIALOVERLAY_SELECTION_MODES_HPP
+#endif// SPATIALOVERLAY_SELECTION_MODES_HPP

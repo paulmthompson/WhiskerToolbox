@@ -189,7 +189,7 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     
     // Connect selection change signals
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::selectionChanged,
-            this, [this](size_t selected_count, std::set<size_t> const&) {
+            this, [this](size_t selected_count) {
                 emit selectionChanged(selected_count);
                 update(); // Trigger graphics item update
                 emit renderUpdateRequested(getPlotId());

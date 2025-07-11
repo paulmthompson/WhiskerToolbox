@@ -17,9 +17,21 @@
 #include <memory>
 #include <set>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 class PointData;
+
+/**
+ * @brief Data structure for storing frame and key information in the QuadTree
+ */
+struct QuadTreePointData {
+    int64_t time_frame_index;
+    std::string point_data_key;
+    
+    QuadTreePointData(int64_t frame_index, std::string const & key)
+        : time_frame_index(frame_index), point_data_key(key) {}
+};
 
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
@@ -96,16 +108,16 @@ public:
     float getPointSize() const { return _point_size; }
 
     /**
-     * @brief Get the currently selected point indices
-     * @return Set of selected point indices
+     * @brief Get the currently selected points
+     * @return Set of pointers to selected points
      */
-    std::set<size_t> const & getSelectedPointIndices() const { return _selected_point_indices; }
+    std::unordered_set<QuadTreePoint<QuadTreePointData> const *> const & getSelectedPoints() const { return _selected_points; }
 
     /**
      * @brief Get the number of currently selected points
      * @return Number of selected points
      */
-    size_t getSelectedPointCount() const { return _selected_point_indices.size(); }
+    size_t getSelectedPointCount() const { return _selected_points.size(); }
 
     /**
      * @brief Programmatically clear all selected points
@@ -113,21 +125,10 @@ public:
     void clearSelection();
 
     /**
-     * @brief Get the spatial point data for all selected points
-     * @return Vector of pointers to selected point data
+     * @brief Get the selected point data for all selected points
+     * @return Vector of pointers to selected QuadTreePoint objects
      */
-    std::vector<SpatialPointData const *> getSelectedPointData() const {
-        std::vector<SpatialPointData const *> selected_points;
-        selected_points.reserve(_selected_point_indices.size());
-        
-        for (size_t index : _selected_point_indices) {
-            if (index < _all_points.size()) {
-                selected_points.push_back(&_all_points[index]);
-            }
-        }
-        
-        return selected_points;
-    }
+    std::vector<QuadTreePoint<QuadTreePointData> const *> getSelectedPointData() const;
 
     /**
      * @brief Convert screen coordinates to world coordinates
@@ -172,9 +173,9 @@ signals:
     /**
      * @brief Emitted when the selection changes
      * @param selected_count Number of currently selected points
-     * @param selected_indices Set of selected point indices
+     * @param selected_points Set of pointers to selected points
      */
-    void selectionChanged(size_t selected_count, std::set<size_t> const & selected_indices);
+    void selectionChanged(size_t selected_count, std::unordered_set<QuadTreePoint<QuadTreePointData> const *> const & selected_points);
 
     /**
      * @brief Emitted when the selection mode changes
@@ -219,8 +220,8 @@ private slots:
 
 private:
     // Rendering data
-    std::vector<SpatialPointData> _all_points;
-    std::unique_ptr<QuadTree<size_t>> _spatial_index;// Index into _all_points
+    std::vector<float> _vertex_data; // Flattened vertex data for OpenGL (x,y pairs)
+    std::unique_ptr<QuadTree<QuadTreePointData>> _spatial_index; // Contains frame ID and data key
 
     // Modern OpenGL rendering resources
     QOpenGLShaderProgram * _shader_program;
@@ -252,13 +253,13 @@ private:
     QPoint _current_mouse_pos;
     QTimer * _tooltip_timer;
     QTimer * _tooltip_refresh_timer;
-    QTimer * _fps_limiter_timer;
+    QTimer * _fps_limiter_timer; // fps limiting
     bool _tooltips_enabled;
-    bool _pending_update;
-    SpatialPointData const * _current_hover_point;
+    bool _pending_update; //fps limiting
+    QuadTreePoint<QuadTreePointData> const * _current_hover_point;
 
     // Selection state
-    std::set<size_t> _selected_point_indices;  // Set of selected point indices
+    std::unordered_set<QuadTreePoint<QuadTreePointData> const *> _selected_points; // Pointers to selected points in QuadTree
     std::vector<float> _selection_vertex_data; // Cached vertex data for selected points
     SelectionMode _selection_mode;             // Current selection mode
     
@@ -303,8 +304,9 @@ private:
 
     /**
      * @brief Update the spatial index with current point data
+     * @param point_data_map Map of data key to PointData objects
      */
-    void updateSpatialIndex();
+    void updateSpatialIndex(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map);
 
     /**
      * @brief Calculate data bounds from all points
@@ -318,7 +320,7 @@ private:
      * @param tolerance_pixels Tolerance in pixels
      * @return Pointer to point data, or nullptr if none found
      */
-    SpatialPointData const * findPointNear(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
+    QuadTreePoint<QuadTreePointData> const * findPointNear(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
 
     /**
      * @brief Render all points using OpenGL
@@ -336,10 +338,10 @@ private:
     void renderSelectedPoints();
 
     /**
-     * @brief Toggle selection of a point by index
-     * @param point_index Index of point in _all_points vector
+     * @brief Toggle selection of a point
+     * @param point The point to toggle selection for
      */
-    void togglePointSelection(size_t point_index);
+    void togglePointSelection(QuadTreePoint<QuadTreePointData> const & point);
 
     /**
      * @brief Update selection vertex buffer with current selection
@@ -359,5 +361,7 @@ private:
     void updateVertexBuffer();
 
 };
+
+QString create_tooltipText(QuadTreePoint<QuadTreePointData> const * point);
 
 #endif // SPATIALOVERLAYOPENGLWIDGET_HPP
