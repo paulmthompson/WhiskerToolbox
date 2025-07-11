@@ -75,6 +75,8 @@ SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
     cleanupOpenGLResources();
 }
 
+//========== Point Data ==========
+
 void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map) {
     // Clear existing visualizations
     _point_data_visualizations.clear();
@@ -127,6 +129,140 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
     }
 }
 
+void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
+    float new_point_size = std::max(1.0f, std::min(50.0f, point_size));// Clamp between 1 and 50 pixels
+    if (new_point_size != _point_size) {
+        _point_size = new_point_size;
+        emit pointSizeChanged(_point_size);
+
+        // Use throttled update for better performance
+        requestThrottledUpdate();
+    }
+}
+
+
+std::pair<PointDataVisualization*, QuadTreePoint<int64_t> const*> SpatialOverlayOpenGLWidget::findPointNear(int screen_x, int screen_y, float tolerance_pixels) const {
+    if (_point_data_visualizations.empty()) {
+        return {nullptr, nullptr};
+    }
+    
+    QVector2D world_pos = screenToWorld(screen_x, screen_y);
+    float world_tolerance = calculateWorldTolerance(tolerance_pixels);
+    
+    QuadTreePoint<int64_t> const* nearest_point = nullptr;
+    PointDataVisualization* nearest_viz = nullptr;
+    float nearest_distance = std::numeric_limits<float>::max();
+    
+    // Query all PointData QuadTrees
+    for (auto const& [key, viz] : _point_data_visualizations) {
+        if (!viz->visible || !viz->spatial_index) continue;
+        
+        auto const* candidate = viz->spatial_index->findNearest(
+            world_pos.x(), world_pos.y(), world_tolerance);
+            
+        if (candidate) {
+            float distance = std::sqrt(std::pow(candidate->x - world_pos.x(), 2) + 
+                                     std::pow(candidate->y - world_pos.y(), 2));
+            if (distance < nearest_distance) {
+                nearest_distance = distance;
+                nearest_point = candidate;
+                nearest_viz = viz.get();
+            }
+        }
+    }
+    
+    return {nearest_viz, nearest_point};
+}
+
+PointDataVisualization* SpatialOverlayOpenGLWidget::getCurrentHoverVisualization() const {
+    for (auto const& [key, viz] : _point_data_visualizations) {
+        if (viz->current_hover_point) {
+            return viz.get();
+        }
+    }
+    return nullptr;
+}
+
+size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
+    size_t total = 0;
+    for (auto const& [key, viz] : _point_data_visualizations) {
+        total += viz->selected_points.size();
+    }
+    return total;
+}
+
+void SpatialOverlayOpenGLWidget::initializePointDataVisualization(PointDataVisualization& viz) {
+    viz.initializeOpenGLResources();
+}
+
+
+void SpatialOverlayOpenGLWidget::calculateDataBounds() {
+    if (_point_data_visualizations.empty()) {
+        _data_bounds_valid = false;
+        return;
+    }
+    
+    float min_x = std::numeric_limits<float>::max();
+    float max_x = std::numeric_limits<float>::lowest();
+    float min_y = std::numeric_limits<float>::max();
+    float max_y = std::numeric_limits<float>::lowest();
+    
+    bool has_points = false;
+    
+    for (auto const& [key, viz] : _point_data_visualizations) {
+        if (!viz->visible || viz->vertex_data.empty()) continue;
+        
+        // Iterate through vertex data (x, y pairs)
+        for (size_t i = 0; i < viz->vertex_data.size(); i += 2) {
+            float x = viz->vertex_data[i];
+            float y = viz->vertex_data[i + 1];
+            
+            min_x = std::min(min_x, x);
+            max_x = std::max(max_x, x);
+            min_y = std::min(min_y, y);
+            max_y = std::max(max_y, y);
+            has_points = true;
+        }
+    }
+    
+    if (!has_points) {
+        _data_bounds_valid = false;
+        return;
+    }
+    
+    // Add some padding
+    float padding_x = (max_x - min_x) * 0.1f;
+    float padding_y = (max_y - min_y) * 0.1f;
+    
+    _data_min_x = min_x - padding_x;
+    _data_max_x = max_x + padding_x;
+    _data_min_y = min_y - padding_y;
+    _data_max_y = max_y + padding_y;
+    
+    _data_bounds_valid = true;
+}
+
+std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const*>>> SpatialOverlayOpenGLWidget::getSelectedPointData() const {
+    std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const*>>> result;
+    
+    for (auto const& [key, viz] : _point_data_visualizations) {
+        if (!viz->selected_points.empty()) {
+            std::vector<QuadTreePoint<int64_t> const*> points;
+            points.reserve(viz->selected_points.size());
+            
+            for (auto const* point : viz->selected_points) {
+                points.push_back(point);
+            }
+            
+            result.emplace_back(key, std::move(points));
+        }
+    }
+    
+    return result;
+}
+
+//========== View and Interaction ==========
+
 void SpatialOverlayOpenGLWidget::setZoomLevel(float zoom_level) {
     float new_zoom_level = std::max(0.1f, std::min(10.0f, zoom_level));
     if (new_zoom_level != _zoom_level) {
@@ -143,17 +279,6 @@ void SpatialOverlayOpenGLWidget::setPanOffset(float offset_x, float offset_y) {
         _pan_offset_y = offset_y;
         emit panOffsetChanged(_pan_offset_x, _pan_offset_y);
         updateViewMatrices();
-        requestThrottledUpdate();
-    }
-}
-
-void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
-    float new_point_size = std::max(1.0f, std::min(50.0f, point_size));// Clamp between 1 and 50 pixels
-    if (new_point_size != _point_size) {
-        _point_size = new_point_size;
-        emit pointSizeChanged(_point_size);
-
-        // Use throttled update for better performance
         requestThrottledUpdate();
     }
 }
@@ -493,111 +618,10 @@ void SpatialOverlayOpenGLWidget::handleTooltipRefresh() {
     }
 }
 
-std::pair<PointDataVisualization*, QuadTreePoint<int64_t> const*> SpatialOverlayOpenGLWidget::findPointNear(int screen_x, int screen_y, float tolerance_pixels) const {
-    if (_point_data_visualizations.empty()) {
-        return {nullptr, nullptr};
-    }
-    
-    QVector2D world_pos = screenToWorld(screen_x, screen_y);
-    float world_tolerance = calculateWorldTolerance(tolerance_pixels);
-    
-    QuadTreePoint<int64_t> const* nearest_point = nullptr;
-    PointDataVisualization* nearest_viz = nullptr;
-    float nearest_distance = std::numeric_limits<float>::max();
-    
-    // Query all PointData QuadTrees
-    for (auto const& [key, viz] : _point_data_visualizations) {
-        if (!viz->visible || !viz->spatial_index) continue;
-        
-        auto const* candidate = viz->spatial_index->findNearest(
-            world_pos.x(), world_pos.y(), world_tolerance);
-            
-        if (candidate) {
-            float distance = std::sqrt(std::pow(candidate->x - world_pos.x(), 2) + 
-                                     std::pow(candidate->y - world_pos.y(), 2));
-            if (distance < nearest_distance) {
-                nearest_distance = distance;
-                nearest_point = candidate;
-                nearest_viz = viz.get();
-            }
-        }
-    }
-    
-    return {nearest_viz, nearest_point};
-}
-
-PointDataVisualization* SpatialOverlayOpenGLWidget::getCurrentHoverVisualization() const {
-    for (auto const& [key, viz] : _point_data_visualizations) {
-        if (viz->current_hover_point) {
-            return viz.get();
-        }
-    }
-    return nullptr;
-}
-
-size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
-    size_t total = 0;
-    for (auto const& [key, viz] : _point_data_visualizations) {
-        total += viz->selected_points.size();
-    }
-    return total;
-}
-
-void SpatialOverlayOpenGLWidget::initializePointDataVisualization(PointDataVisualization& viz) {
-    viz.initializeOpenGLResources();
-}
-
 float SpatialOverlayOpenGLWidget::calculateWorldTolerance(float screen_tolerance) const {
     QVector2D world_pos = screenToWorld(0, 0);
     QVector2D world_pos_offset = screenToWorld(static_cast<int>(screen_tolerance), 0);
     return std::abs(world_pos_offset.x() - world_pos.x());
-}
-
-
-void SpatialOverlayOpenGLWidget::calculateDataBounds() {
-    if (_point_data_visualizations.empty()) {
-        _data_bounds_valid = false;
-        return;
-    }
-    
-    float min_x = std::numeric_limits<float>::max();
-    float max_x = std::numeric_limits<float>::lowest();
-    float min_y = std::numeric_limits<float>::max();
-    float max_y = std::numeric_limits<float>::lowest();
-    
-    bool has_points = false;
-    
-    for (auto const& [key, viz] : _point_data_visualizations) {
-        if (!viz->visible || viz->vertex_data.empty()) continue;
-        
-        // Iterate through vertex data (x, y pairs)
-        for (size_t i = 0; i < viz->vertex_data.size(); i += 2) {
-            float x = viz->vertex_data[i];
-            float y = viz->vertex_data[i + 1];
-            
-            min_x = std::min(min_x, x);
-            max_x = std::max(max_x, x);
-            min_y = std::min(min_y, y);
-            max_y = std::max(max_y, y);
-            has_points = true;
-        }
-    }
-    
-    if (!has_points) {
-        _data_bounds_valid = false;
-        return;
-    }
-    
-    // Add some padding
-    float padding_x = (max_x - min_x) * 0.1f;
-    float padding_y = (max_y - min_y) * 0.1f;
-    
-    _data_min_x = min_x - padding_x;
-    _data_max_x = max_x + padding_x;
-    _data_min_y = min_y - padding_y;
-    _data_max_y = max_y + padding_y;
-    
-    _data_bounds_valid = true;
 }
 
 void SpatialOverlayOpenGLWidget::clearSelection() {
@@ -660,29 +684,6 @@ void SpatialOverlayOpenGLWidget::applySelectionRegion(SelectionRegion const & re
         emit selectionChanged(getTotalSelectedPoints(), last_modified_key, total_points_added);
         requestThrottledUpdate();
     }
-}
-
-std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const*>>> SpatialOverlayOpenGLWidget::getSelectedPointData() const {
-    std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const*>>> result;
-    
-    for (auto const& [key, viz] : _point_data_visualizations) {
-        if (!viz->selected_points.empty()) {
-            std::vector<QuadTreePoint<int64_t> const*> points;
-            points.reserve(viz->selected_points.size());
-            
-            for (auto const* point : viz->selected_points) {
-                points.push_back(point);
-            }
-            
-            result.emplace_back(key, std::move(points));
-        }
-    }
-    
-    return result;
-}
-
-size_t SpatialOverlayOpenGLWidget::getSelectedPointCount() const {
-    return getTotalSelectedPoints();
 }
 
 QVector2D SpatialOverlayOpenGLWidget::screenToWorld(int screen_x, int screen_y) const {

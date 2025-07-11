@@ -105,10 +105,10 @@ public:
     std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const *>>> getSelectedPointData() const;
 
     /**
-     * @brief Get the total number of selected points across all PointData objects
-     * @return Total number of selected points
+     * @brief Get total number of selected points across all PointData visualizations
+     * @return Total selected point count
      */
-    size_t getSelectedPointCount() const;
+    size_t getTotalSelectedPoints() const;
 
     /**
      * @brief Programmatically clear all selected points
@@ -297,12 +297,6 @@ private:
      * @return Pointer to visualization with hover point, or nullptr
      */
     PointDataVisualization * getCurrentHoverVisualization() const;
-
-    /**
-     * @brief Get total number of selected points across all PointData visualizations
-     * @return Total selected point count
-     */
-    size_t getTotalSelectedPoints() const;
 
     /**
      * @brief Initialize OpenGL resources for a specific PointDataVisualization
