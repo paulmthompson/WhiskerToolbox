@@ -21,7 +21,7 @@ struct QuadTreePoint {
 };
 
 /**
- * @brief Axis-aligned bounding box for spatial queries
+ * @brief Axis-aligned bounding box for  queries
  */
 struct BoundingBox {
     float min_x, min_y, max_x, max_y;

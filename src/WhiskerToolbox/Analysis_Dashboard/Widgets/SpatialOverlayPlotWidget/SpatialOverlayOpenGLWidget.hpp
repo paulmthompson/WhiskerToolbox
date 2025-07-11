@@ -3,6 +3,7 @@
 
 #include "SelectionModes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
+#include "PolygonSelectionHandler.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLFunctions_4_1_Core>
@@ -128,6 +129,14 @@ public:
         return selected_points;
     }
 
+    /**
+     * @brief Convert screen coordinates to world coordinates
+     * @param screen_x Screen X coordinate
+     * @param screen_y Screen Y coordinate
+     * @return World coordinates
+     */
+    QVector2D screenToWorld(int screen_x, int screen_y) const;
+
 signals:
     /**
      * @brief Emitted when user double-clicks on a point to jump to that frame
@@ -227,12 +236,6 @@ private:
     QOpenGLBuffer _selection_vertex_buffer;
     QOpenGLVertexArrayObject _selection_vertex_array_object;
     
-    // Polygon rendering resources
-    QOpenGLBuffer _polygon_vertex_buffer;
-    QOpenGLVertexArrayObject _polygon_vertex_array_object;
-    QOpenGLBuffer _polygon_line_buffer;
-    QOpenGLVertexArrayObject _polygon_line_array_object;
-    
     bool _opengl_resources_initialized;
 
     // View parameters
@@ -259,11 +262,8 @@ private:
     std::vector<float> _selection_vertex_data; // Cached vertex data for selected points
     SelectionMode _selection_mode;             // Current selection mode
     
-    // Polygon selection state
-    bool _is_polygon_selecting;                // True when actively drawing polygon
-    std::vector<QVector2D> _polygon_vertices;  // Current polygon vertices in world coordinates
-    std::vector<QPoint> _polygon_screen_points; // Polygon vertices in screen coordinates for rendering
-    std::unique_ptr<SelectionRegion> _active_selection_region; // Current selection region
+    // Polygon selection handler
+    std::unique_ptr<PolygonSelectionHandler> _polygon_selection_handler;
 
     // Data bounds
     float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
@@ -278,14 +278,6 @@ private:
      * @brief Clean up OpenGL resources
      */
     void cleanupOpenGLResources();
-
-    /**
-     * @brief Convert screen coordinates to world coordinates
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
-     * @return World coordinates
-     */
-    QVector2D screenToWorld(int screen_x, int screen_y) const;
 
     /**
      * @brief Convert world coordinates to screen coordinates
@@ -360,40 +352,6 @@ private:
      * @param add_to_selection If true, add to existing selection; if false, replace selection
      */
     void applySelectionRegion(SelectionRegion const& region, bool add_to_selection = false);
-
-    /**
-     * @brief Start polygon selection at given screen coordinates
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
-     */
-    void startPolygonSelection(int screen_x, int screen_y);
-
-    /**
-     * @brief Add point to current polygon selection
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
-     */
-    void addPolygonVertex(int screen_x, int screen_y);
-
-    /**
-     * @brief Complete polygon selection and select enclosed points
-     */
-    void completePolygonSelection();
-
-    /**
-     * @brief Cancel current polygon selection
-     */
-    void cancelPolygonSelection();
-
-    /**
-     * @brief Render polygon selection overlay using OpenGL
-     */
-    void renderPolygonOverlay();
-    
-    /**
-     * @brief Update polygon vertex and line buffers
-     */
-    void updatePolygonBuffers();
 
     /**
      * @brief Update vertex buffer with current point data
