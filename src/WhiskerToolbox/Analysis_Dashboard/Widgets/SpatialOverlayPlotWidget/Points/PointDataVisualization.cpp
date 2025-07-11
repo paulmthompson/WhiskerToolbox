@@ -24,6 +24,8 @@ PointDataVisualization::PointDataVisualization(QString const & data_key,
             spatial_index->insert(point.x, point.y, time_points_pair.time.getValue());
         }
     }
+
+    initializeOpenGLResources();
 }
 
 PointDataVisualization::~PointDataVisualization() {

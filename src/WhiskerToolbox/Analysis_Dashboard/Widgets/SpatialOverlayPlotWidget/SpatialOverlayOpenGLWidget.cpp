@@ -103,11 +103,6 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
         viz->color = colors[color_index % colors.size()];
         color_index++;
         
-        // Initialize OpenGL resources for this PointData
-        if (_opengl_resources_initialized) {
-            initializePointDataVisualization(*viz);
-        }
-        
         qDebug() << "SpatialOverlayOpenGLWidget: Created visualization for" << key 
                  << "with" << viz->vertex_data.size() / 2 << "points";
         
@@ -190,11 +185,6 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
     }
     return total;
 }
-
-void SpatialOverlayOpenGLWidget::initializePointDataVisualization(PointDataVisualization& viz) {
-    viz.initializeOpenGLResources();
-}
-
 
 void SpatialOverlayOpenGLWidget::calculateDataBounds() {
     if (_point_data_visualizations.empty()) {
@@ -904,11 +894,6 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
 
     _highlight_vertex_array_object.release();
     _highlight_vertex_buffer.release();
-
-    // Initialize OpenGL resources for all existing PointData visualizations
-    for (auto const& [key, viz] : _point_data_visualizations) {
-        initializePointDataVisualization(*viz);
-    }
 
     // Initialize polygon selection handler OpenGL resources
     _polygon_selection_handler->initializeOpenGLResources();

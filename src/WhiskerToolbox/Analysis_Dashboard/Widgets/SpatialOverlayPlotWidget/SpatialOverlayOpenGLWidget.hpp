@@ -299,12 +299,6 @@ private:
     PointDataVisualization * getCurrentHoverVisualization() const;
 
     /**
-     * @brief Initialize OpenGL resources for a specific PointDataVisualization
-     * @param viz The visualization to initialize
-     */
-    void initializePointDataVisualization(PointDataVisualization & viz);
-
-    /**
      * @brief Calculate world tolerance from screen tolerance
      * @param screen_tolerance Tolerance in screen pixels
      * @return World tolerance
