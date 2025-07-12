@@ -2,12 +2,12 @@
 #define SPATIALOVERLAYPLOTPROPERTIESWIDGET_HPP
 
 #include "Analysis_Dashboard/Properties/AbstractPlotPropertiesWidget.hpp"
+#include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 
 #include <QStringList>
 
 class DataManager;
 class SpatialOverlayPlotWidget;
-class QListWidgetItem;
 
 namespace Ui {
 class SpatialOverlayPlotPropertiesWidget;
@@ -44,10 +44,22 @@ public slots:
 
 private slots:
     /**
-     * @brief Handle changes in data source selection
-     * @param item The item that was changed
+     * @brief Handle feature selection from the feature table
+     * @param feature The selected feature name
      */
-    void onDataSourceItemChanged(QListWidgetItem * item);
+    void onFeatureSelected(QString const & feature);
+
+    /**
+     * @brief Handle feature addition from the feature table
+     * @param feature The feature to add
+     */
+    void onFeatureAdded(QString const & feature);
+
+    /**
+     * @brief Handle feature removal from the feature table
+     * @param feature The feature to remove
+     */
+    void onFeatureRemoved(QString const & feature);
 
     //=========== Point Data Visualization Settings ============
 
@@ -85,20 +97,13 @@ private slots:
      */
     void onClearSelectionClicked();
 
-    /**
-     * @brief Select all data sources
-     */
-    void onSelectAllClicked();
 
-    /**
-     * @brief Deselect all data sources
-     */
-    void onDeselectAllClicked();
 
 private:
     Ui::SpatialOverlayPlotPropertiesWidget * ui;
     SpatialOverlayPlotWidget * _spatial_plot_widget;
     std::shared_ptr<DataManager> _data_manager;
+    QStringList _selected_features; // Track selected features from the feature table
 
     /**
      * @brief Setup connections between UI elements and handlers
@@ -106,9 +111,9 @@ private:
     void setupConnections();
 
     /**
-     * @brief Update the data sources list from DataManager
+     * @brief Setup the feature table widget for PointData selection
      */
-    void refreshDataSourcesList();
+    void setupFeatureTable();
 
     /**
      * @brief Get currently selected data source keys

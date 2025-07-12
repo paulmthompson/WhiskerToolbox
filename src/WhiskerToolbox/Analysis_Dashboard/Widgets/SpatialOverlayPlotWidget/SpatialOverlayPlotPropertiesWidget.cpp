@@ -4,9 +4,9 @@
 #include "SpatialOverlayOpenGLWidget.hpp"
 #include "SpatialOverlayPlotWidget.hpp"
 
-
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
+#include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -15,8 +15,6 @@
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QListWidget>
-#include <QListWidgetItem>
 #include <QPushButton>
 #include <QSplitter>
 #include <QVBoxLayout>
@@ -28,6 +26,7 @@ SpatialOverlayPlotPropertiesWidget::SpatialOverlayPlotPropertiesWidget(QWidget *
       _spatial_plot_widget(nullptr) {
     ui->setupUi(this);
     
+    setupFeatureTable();
     setupConnections();
 }
 
@@ -37,6 +36,11 @@ SpatialOverlayPlotPropertiesWidget::~SpatialOverlayPlotPropertiesWidget() {
 
 void SpatialOverlayPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = std::move(data_manager);
+    
+    if (_data_manager && ui->feature_table_widget) {
+        ui->feature_table_widget->setDataManager(_data_manager);
+        ui->feature_table_widget->populateTable();
+    }
 }
 
 void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) {
@@ -130,13 +134,44 @@ void SpatialOverlayPlotPropertiesWidget::applyToPlot() {
     updatePlotWidget();
 }
 
-void SpatialOverlayPlotPropertiesWidget::updateAvailableDataSources() {
-    refreshDataSourcesList();
+void SpatialOverlayPlotPropertiesWidget::setupFeatureTable() {
+    if (ui->feature_table_widget) {
+        // Configure the feature table to only show PointData
+        ui->feature_table_widget->setColumns({"Feature", "Type", "Enabled"});
+        ui->feature_table_widget->setTypeFilter({DM_DataType::Points});
+        
+        // Connect signals from the feature table
+        connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected,
+                this, &SpatialOverlayPlotPropertiesWidget::onFeatureSelected);
+        connect(ui->feature_table_widget, &Feature_Table_Widget::addFeature,
+                this, &SpatialOverlayPlotPropertiesWidget::onFeatureAdded);
+        connect(ui->feature_table_widget, &Feature_Table_Widget::removeFeature,
+                this, &SpatialOverlayPlotPropertiesWidget::onFeatureRemoved);
+    }
 }
 
-void SpatialOverlayPlotPropertiesWidget::onDataSourceItemChanged(QListWidgetItem * item) {
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: onDataSourceItemChanged called for item:" << item->text() 
-             << "checked:" << (item->checkState() == Qt::Checked);
+void SpatialOverlayPlotPropertiesWidget::updateAvailableDataSources() {
+    if (ui->feature_table_widget) {
+        ui->feature_table_widget->populateTable();
+    }
+}
+
+void SpatialOverlayPlotPropertiesWidget::onFeatureSelected(QString const & feature) {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: onFeatureSelected called for feature:" << feature;
+    // Feature selection is handled by the feature table widget itself
+}
+
+void SpatialOverlayPlotPropertiesWidget::onFeatureAdded(QString const & feature) {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: onFeatureAdded called for feature:" << feature;
+    if (!_selected_features.contains(feature)) {
+        _selected_features.append(feature);
+    }
+    updatePlotWidget();
+}
+
+void SpatialOverlayPlotPropertiesWidget::onFeatureRemoved(QString const & feature) {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: onFeatureRemoved called for feature:" << feature;
+    _selected_features.removeAll(feature);
     updatePlotWidget();
 }
 
@@ -169,34 +204,10 @@ void SpatialOverlayPlotPropertiesWidget::onTooltipsEnabledChanged(bool enabled) 
     }
 }
 
-void SpatialOverlayPlotPropertiesWidget::onSelectAllClicked() {
-    for (int i = 0; i < ui->data_sources_list->count(); ++i) {
-        QListWidgetItem * item = ui->data_sources_list->item(i);
-        item->setCheckState(Qt::Checked);
-    }
-    updatePlotWidget();
-}
 
-void SpatialOverlayPlotPropertiesWidget::onDeselectAllClicked() {
-    for (int i = 0; i < ui->data_sources_list->count(); ++i) {
-        QListWidgetItem * item = ui->data_sources_list->item(i);
-        item->setCheckState(Qt::Unchecked);
-    }
-    updatePlotWidget();
-}
 
 void SpatialOverlayPlotPropertiesWidget::setupConnections() {
-       
-    // Data source selection
-    connect(ui->data_sources_list, &QListWidget::itemChanged,
-            this, &SpatialOverlayPlotPropertiesWidget::onDataSourceItemChanged);
-
-    connect(ui->select_all_button, &QPushButton::clicked,
-            this, &SpatialOverlayPlotPropertiesWidget::onSelectAllClicked);
-
-    connect(ui->deselect_all_button, &QPushButton::clicked,
-            this, &SpatialOverlayPlotPropertiesWidget::onDeselectAllClicked);
-
+    
     // Visualization settings
     connect(ui->point_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &SpatialOverlayPlotPropertiesWidget::onPointSizeChanged);
@@ -220,61 +231,20 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
     
 }
 
-void SpatialOverlayPlotPropertiesWidget::refreshDataSourcesList() {
-    ui->data_sources_list->clear();
 
-    if (!_data_manager) {
-        qDebug() << "SpatialOverlayPlotPropertiesWidget: No data manager available";
-        return;
-    }
-
-    // Get all PointData objects from DataManager
-    auto point_data_keys = _data_manager->getKeys<PointData>();
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: Found" << point_data_keys.size() << "PointData keys";
-
-    for (auto const & key: point_data_keys) {
-        qDebug() << "SpatialOverlayPlotPropertiesWidget: Adding data source:" << QString::fromStdString(key);
-        QListWidgetItem * item = new QListWidgetItem(QString::fromStdString(key), ui->data_sources_list);
-        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-        item->setCheckState(Qt::Unchecked);
-        ui->data_sources_list->addItem(item);
-    }
-}
 
 QStringList SpatialOverlayPlotPropertiesWidget::getSelectedDataSources() const {
-    QStringList selected_keys;
-
-    for (int i = 0; i < ui->data_sources_list->count(); ++i) {
-        QListWidgetItem * item = ui->data_sources_list->item(i);
-        if (item->checkState() == Qt::Checked) {
-            selected_keys.append(item->text());
-        }
-    }
-
-    return selected_keys;
+    return _selected_features;
 }
 
 void SpatialOverlayPlotPropertiesWidget::setSelectedDataSources(QStringList const & selected_keys) {
     qDebug() << "SpatialOverlayPlotPropertiesWidget: setSelectedDataSources called with keys:" << selected_keys;
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: List widget has" << ui->data_sources_list->count() << "items";
     
-    // Block signals to prevent recursion when setting checkbox states
-    ui->data_sources_list->blockSignals(true);
+    _selected_features = selected_keys;
     
-    for (int i = 0; i < ui->data_sources_list->count(); ++i) {
-        QListWidgetItem * item = ui->data_sources_list->item(i);
-        bool should_be_checked = selected_keys.contains(item->text());
-        qDebug() << "SpatialOverlayPlotPropertiesWidget: Setting item" << item->text() << "to checked:" << should_be_checked;
-        
-        if (should_be_checked) {
-            item->setCheckState(Qt::Checked);
-        } else {
-            item->setCheckState(Qt::Unchecked);
-        }
-    }
-    
-    // Re-enable signals
-    ui->data_sources_list->blockSignals(false);
+    // TODO: Update the feature table UI to reflect the selected state
+    // This would require the Feature_Table_Widget to provide methods to
+    // programmatically set checkbox states
 }
 
 void SpatialOverlayPlotPropertiesWidget::updatePlotWidget() {

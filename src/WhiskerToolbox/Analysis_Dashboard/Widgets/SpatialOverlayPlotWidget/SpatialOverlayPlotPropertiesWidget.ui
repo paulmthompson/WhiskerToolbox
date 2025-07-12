@@ -36,46 +36,9 @@
      </property>
      <layout class="QVBoxLayout" name="sources_layout">
       <item>
-       <layout class="QHBoxLayout" name="selection_buttons_layout">
-        <item>
-         <widget class="QPushButton" name="select_all_button">
-          <property name="text">
-           <string>Select All</string>
-          </property>
-          <property name="maximumWidth">
-           <number>80</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="deselect_all_button">
-          <property name="text">
-           <string>Deselect All</string>
-          </property>
-          <property name="maximumWidth">
-           <number>80</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QListWidget" name="data_sources_list">
+       <widget class="Feature_Table_Widget" name="feature_table_widget">
         <property name="maximumHeight">
-         <number>150</number>
+         <number>200</number>
         </property>
        </widget>
       </item>
@@ -309,6 +272,14 @@ border-radius: 4px;
    </item>
   </layout>
  </widget>
- <resources/>
+ <customwidgets>
+  <customwidget>
+   <class>Feature_Table_Widget</class>
+   <extends>QWidget</extends>
+   <header>Feature_Table_Widget/Feature_Table_Widget.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+  <resources/>
  <connections/>
 </ui>
