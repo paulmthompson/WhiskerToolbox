@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <cmath>
 
 MaskDataVisualization::MaskDataVisualization(QString const & data_key,
                                              std::shared_ptr<MaskData> const & mask_data)
@@ -405,17 +406,25 @@ void MaskDataVisualization::createBinaryImageTexture() {
 
     qDebug() << "MaskDataVisualization: Binary image texture created with" << binary_image_data.size() << "pixels";
 
-    // Normalize the values to [0, 1] range
+    // Apply non-linear scaling to improve visibility of sparse regions
     if (!binary_image_data.empty()) {
         float max_value = *std::max_element(binary_image_data.begin(), binary_image_data.end());
+        qDebug() << "MaskDataVisualization: Max mask density:" << max_value;
+        
         if (max_value > 0.0f) {
+            // Use logarithmic scaling to compress the dynamic range
+            // This makes sparse areas more visible while preserving dense areas
             for (auto & value : binary_image_data) {
-                value /= max_value;
+                if (value > 0.0f) {
+                    // Apply log scaling: log(1 + value) / log(1 + max_value)
+                    // This ensures that even single masks (value=1) are visible
+                    value = std::log(1.0f + value) / std::log(1.0f + max_value);
+                }
             }
         }
     }
 
-    qDebug() << "MaskDataVisualization: Binary image texture normalized with" << binary_image_data.size() << "pixels";
+    qDebug() << "MaskDataVisualization: Binary image texture scaled with logarithmic normalization";
 }
 
 void MaskDataVisualization::populateRTree() {

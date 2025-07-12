@@ -1153,7 +1153,21 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
         
         void main() {
             float intensity = texture(u_texture, v_texCoord).r;
-            FragColor = vec4(u_color.rgb, u_color.a * intensity);
+            
+            // Only render pixels where masks exist
+            if (intensity <= 0.0) {
+                discard;
+            }
+            
+            // Apply gamma correction to improve visibility of mid-range values
+            float gamma_corrected = pow(intensity, 0.6);
+            
+            // Maintain consistent hue by only modulating alpha and brightness
+            // This prevents color shifts from red to green
+            vec3 final_color = u_color.rgb * (0.3 + 0.7 * gamma_corrected);
+            float final_alpha = u_color.a * gamma_corrected;
+            
+            FragColor = vec4(final_color, final_alpha);
         }
     )";
 
