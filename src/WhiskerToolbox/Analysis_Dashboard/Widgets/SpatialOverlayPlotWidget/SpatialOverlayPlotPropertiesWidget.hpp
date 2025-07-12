@@ -6,16 +6,12 @@
 #include <QStringList>
 
 class DataManager;
-class QCheckBox;
-class QComboBox;
-class QLabel;
-class QListWidget;
-class QListWidgetItem;
-class QDoubleSpinBox;
-class QSpinBox;
-class QPushButton;
-class QGroupBox;
 class SpatialOverlayPlotWidget;
+class QListWidgetItem;
+
+namespace Ui {
+class SpatialOverlayPlotPropertiesWidget;
+}
 
 /**
  * @brief Properties widget for configuring SpatialOverlayPlot settings
@@ -30,7 +26,7 @@ class SpatialOverlayPlotPropertiesWidget : public AbstractPlotPropertiesWidget {
 
 public:
     explicit SpatialOverlayPlotPropertiesWidget(QWidget * parent = nullptr);
-    ~SpatialOverlayPlotPropertiesWidget() override = default;
+    ~SpatialOverlayPlotPropertiesWidget() override;
 
     void setDataManager(std::shared_ptr<DataManager> data_manager) override;
 
@@ -52,6 +48,8 @@ private slots:
      * @param item The item that was changed
      */
     void onDataSourceItemChanged(QListWidgetItem * item);
+
+    //=========== Point Data Visualization Settings ============
 
     /**
      * @brief Handle point size changes
@@ -98,33 +96,9 @@ private slots:
     void onDeselectAllClicked();
 
 private:
+    Ui::SpatialOverlayPlotPropertiesWidget * ui;
     SpatialOverlayPlotWidget * _spatial_plot_widget;
-
-    // Data source selection
-    QGroupBox * _data_sources_group;
-    QListWidget * _data_sources_list;
-    QPushButton * _select_all_button;
-    QPushButton * _deselect_all_button;
-
-    // Visualization settings
-    QGroupBox * _visualization_group;
-    QDoubleSpinBox * _point_size_spinbox;
-    QDoubleSpinBox * _zoom_level_spinbox;
-    QPushButton * _reset_view_button;
-    QCheckBox * _tooltips_checkbox;
-
-    // Selection settings
-    QGroupBox * _selection_group;
-    QComboBox * _selection_mode_combo;
-    QLabel * _selection_instructions_label;
-    QPushButton * _clear_selection_button;
-
     std::shared_ptr<DataManager> _data_manager;
-
-    /**
-     * @brief Initialize the UI components
-     */
-    void initializeUI();
 
     /**
      * @brief Setup connections between UI elements and handlers

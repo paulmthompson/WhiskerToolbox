@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SpatialOverlayPlotPropertiesWidget</class>
+ <widget class="QWidget" name="SpatialOverlayPlotPropertiesWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>300</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Spatial Overlay Plot Properties</string>
+  </property>
+  <layout class="QVBoxLayout" name="main_layout">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <property name="leftMargin">
+    <number>5</number>
+   </property>
+   <property name="topMargin">
+    <number>5</number>
+   </property>
+   <property name="rightMargin">
+    <number>5</number>
+   </property>
+   <property name="bottomMargin">
+    <number>5</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="data_sources_group">
+     <property name="title">
+      <string>Point Data Sources</string>
+     </property>
+     <layout class="QVBoxLayout" name="sources_layout">
+      <item>
+       <layout class="QHBoxLayout" name="selection_buttons_layout">
+        <item>
+         <widget class="QPushButton" name="select_all_button">
+          <property name="text">
+           <string>Select All</string>
+          </property>
+          <property name="maximumWidth">
+           <number>80</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="deselect_all_button">
+          <property name="text">
+           <string>Deselect All</string>
+          </property>
+          <property name="maximumWidth">
+           <number>80</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QListWidget" name="data_sources_list">
+        <property name="maximumHeight">
+         <number>150</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="visualization_group">
+     <property name="title">
+      <string>Visualization Settings</string>
+     </property>
+     <layout class="QVBoxLayout" name="vis_layout">
+      <item>
+       <layout class="QHBoxLayout" name="point_size_layout">
+        <item>
+         <widget class="QLabel" name="point_size_label">
+          <property name="text">
+           <string>Point Size:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="point_size_spinbox">
+          <property name="suffix">
+           <string> px</string>
+          </property>
+          <property name="minimum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>50.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.500000000000000</double>
+          </property>
+          <property name="value">
+           <double>8.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="zoom_layout">
+        <item>
+         <widget class="QLabel" name="zoom_label">
+          <property name="text">
+           <string>Zoom Level:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="zoom_level_spinbox">
+          <property name="suffix">
+           <string>x</string>
+          </property>
+          <property name="minimum">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QPushButton" name="reset_view_button">
+        <property name="text">
+         <string>Reset View</string>
+        </property>
+        <property name="maximumWidth">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="tooltips_checkbox">
+        <property name="text">
+         <string>Show Tooltips</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="selection_group">
+     <property name="title">
+      <string>Selection Settings</string>
+     </property>
+     <layout class="QVBoxLayout" name="selection_layout">
+      <item>
+       <layout class="QHBoxLayout" name="selection_mode_layout">
+        <item>
+         <widget class="QLabel" name="selection_mode_label">
+          <property name="text">
+           <string>Selection Mode:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="selection_mode_combo">
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <item>
+           <property name="text">
+            <string>None</string>
+           </property>
+           <property name="data">
+            <number>0</number>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Point Selection (Ctrl+Click)</string>
+           </property>
+           <property name="data">
+            <number>1</number>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Polygon Selection</string>
+           </property>
+           <property name="data">
+            <number>2</number>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="selection_instructions_label">
+        <property name="minimumHeight">
+         <number>60</number>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel { 
+color: #555; 
+font-size: 11px; 
+padding: 8px; 
+background-color: #f0f0f0; 
+border: 1px solid #ccc; 
+border-radius: 4px; 
+}</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="clear_selection_button">
+        <property name="text">
+         <string>Clear Selection</string>
+        </property>
+        <property name="maximumWidth">
+         <number>120</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

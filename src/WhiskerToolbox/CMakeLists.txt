@@ -61,6 +61,7 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.cpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.cpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.ui
 
         Analysis_Dashboard/Properties/PropertiesPanel.hpp
         Analysis_Dashboard/Properties/PropertiesPanel.cpp
