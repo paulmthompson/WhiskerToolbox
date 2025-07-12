@@ -140,7 +140,9 @@ void SpatialOverlayPlotWidget::loadPointData() {
             point_data_map[key] = point_data;
         }
     }
-    _opengl_widget->setPointData(point_data_map);
+    if (!point_data_map.empty()) {
+        _opengl_widget->setPointData(point_data_map);
+    }
 }
 
 void SpatialOverlayPlotWidget::loadMaskData() {
@@ -152,7 +154,9 @@ void SpatialOverlayPlotWidget::loadMaskData() {
             mask_data_map[key] = mask_data;
         }
     }
-    _opengl_widget->setMaskData(mask_data_map);
+    if (!mask_data_map.empty()) {
+        _opengl_widget->setMaskData(mask_data_map);
+    }
 }
 
 void SpatialOverlayPlotWidget::setupOpenGLWidget() {

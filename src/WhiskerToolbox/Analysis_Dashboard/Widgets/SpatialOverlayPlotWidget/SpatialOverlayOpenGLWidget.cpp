@@ -132,11 +132,13 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
 void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map) {
     // Clear existing visualizations
     _mask_data_visualizations.clear();
+
+    qDebug() << "SpatialOverlayOpenGLWidget: Setting mask data with" << mask_data_map.size() << "keys";
     
     // Set different colors for different datasets
     static std::vector<QVector4D> colors = {
-        QVector4D(0.0f, 1.0f, 0.0f, 0.5f), // Green with transparency
         QVector4D(1.0f, 0.0f, 0.0f, 0.5f), // Red with transparency
+        QVector4D(0.0f, 1.0f, 0.0f, 0.5f), // Green with transparency
         QVector4D(0.0f, 0.0f, 1.0f, 0.5f), // Blue with transparency
         QVector4D(1.0f, 1.0f, 0.0f, 0.5f), // Yellow with transparency
         QVector4D(1.0f, 0.0f, 1.0f, 0.5f), // Magenta with transparency
@@ -612,6 +614,13 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         // Stop panning if button was released
         _is_panning = false;
 
+        if (_last_mouse_pos == _current_mouse_pos) {
+            return;
+        } else {
+            qDebug() << "SpatialOverlayOpenGLWidget: Mouse moved from" 
+                     << _last_mouse_pos << "to" << _current_mouse_pos;
+        }
+
         // Handle tooltip logic if tooltips are enabled
         if (_tooltips_enabled) {
             auto [viz, point] = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
@@ -641,10 +650,12 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
                 }
             } else if (!mask_results.empty()) {
                 // Set mask hover states
+                /*
                 QVector2D world_pos = screenToWorld(_current_mouse_pos.x(), _current_mouse_pos.y());
                 for (auto const& [mask_viz, mask_id] : mask_results) {
                     mask_viz->setHoverMasks(world_pos.x(), world_pos.y());
                 }
+                */
                 
                 _tooltip_timer->stop();
                 _tooltip_refresh_timer->stop();
@@ -661,8 +672,10 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
                 QToolTip::hideText();
             }
             
+
             requestThrottledUpdate();
         }
+        _last_mouse_pos = _current_mouse_pos;
         event->accept();
     }
 }

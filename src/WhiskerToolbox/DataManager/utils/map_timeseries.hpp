@@ -37,7 +37,7 @@ void add_at_time(TimeFrameIndex const time, T const & data, M & data_map) {
 }
 
 template<typename T, typename M>
-[[nodiscard]] std::vector<T> const & get_at_time(TimeFrameIndex const time, M & data, std::vector<T> const & empty) {
+[[nodiscard]] std::vector<T> const & get_at_time(TimeFrameIndex const time, M const & data, std::vector<T> const & empty) {
     auto it = data.find(time);
     if (it != data.end()) {
         return it->second;
@@ -47,7 +47,7 @@ template<typename T, typename M>
 
 template<typename T, typename M>
 [[nodiscard]] std::vector<T> const & get_at_time(TimeFrameIndex const time, 
-                                                M & data, 
+                                                M const & data, 
                                                 std::vector<T> const & empty, 
                                                 TimeFrame const * source_timeframe, 
                                                 TimeFrame const * target_timeframe) {

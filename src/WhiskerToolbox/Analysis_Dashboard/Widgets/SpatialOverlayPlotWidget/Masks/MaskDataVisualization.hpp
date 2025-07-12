@@ -210,12 +210,17 @@ private:
 
     /**
      * @brief Check if a mask contains a world coordinate point
+     * 
+     * This is an exact method that searches through all of the points in the mask
+     * to see if the point is there. Compare to fast rTree indexing that only
+     * considers the bounding box
+     * 
      * @param mask_id Identifier of the mask to check
-     * @param world_x World X coordinate
-     * @param world_y World Y coordinate
+     * @param pixel_x Pixel X coordinate
+     * @param pixel_y Pixel Y coordinate
      * @return True if the mask contains the point
      */
-    bool maskContainsPoint(MaskIdentifier const & mask_id, float world_x, float world_y) const;
+    bool maskContainsPoint(MaskIdentifier const & mask_id, uint32_t pixel_x, uint32_t pixel_y) const;
 
     /**
      * @brief Convert world coordinates to texture coordinates

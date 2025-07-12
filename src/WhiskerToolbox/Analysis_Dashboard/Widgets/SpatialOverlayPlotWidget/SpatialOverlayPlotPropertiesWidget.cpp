@@ -136,9 +136,9 @@ void SpatialOverlayPlotPropertiesWidget::applyToPlot() {
 
 void SpatialOverlayPlotPropertiesWidget::setupFeatureTable() {
     if (ui->feature_table_widget) {
-        // Configure the feature table to only show PointData
+
         ui->feature_table_widget->setColumns({"Feature", "Type", "Enabled"});
-        ui->feature_table_widget->setTypeFilter({DM_DataType::Points});
+        ui->feature_table_widget->setTypeFilter({DM_DataType::Points, DM_DataType::Mask});
         
         // Connect signals from the feature table
         connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected,

@@ -90,6 +90,7 @@ void MaskDataVisualization::initializeOpenGLResources() {
     outline_vertex_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     
     if (!outline_vertex_data.empty()) {
+        qDebug() << "MaskDataVisualization: Allocating outline vertex data with" << outline_vertex_data.size() << "vertices";
         outline_vertex_buffer.allocate(outline_vertex_data.data(), 
                                       static_cast<int>(outline_vertex_data.size() * sizeof(float)));
     }
@@ -180,6 +181,7 @@ void MaskDataVisualization::cleanupOpenGLResources() {
 }
 
 void MaskDataVisualization::updateSelectionOutlineBuffer() {
+    /*
     selection_outline_data = generateOutlineDataForMasks(selected_masks);
 
     selection_outline_array_object.bind();
@@ -197,9 +199,11 @@ void MaskDataVisualization::updateSelectionOutlineBuffer() {
 
     selection_outline_buffer.release();
     selection_outline_array_object.release();
+    */
 }
 
 void MaskDataVisualization::updateHoverOutlineBuffer() {
+    /*
     hover_outline_data = generateOutlineDataForMasks(current_hover_masks);
 
     hover_outline_array_object.bind();
@@ -217,6 +221,7 @@ void MaskDataVisualization::updateHoverOutlineBuffer() {
 
     hover_outline_buffer.release();
     hover_outline_array_object.release();
+    */
 }
 
 void MaskDataVisualization::clearSelection() {
@@ -262,16 +267,24 @@ std::vector<MaskIdentifier> MaskDataVisualization::findMasksContainingPoint(floa
     if (!spatial_index) return result;
     
     // Use R-tree to find candidate masks
+    qDebug() << "MaskDataVisualization: Finding masks containing point" << world_x << world_y;
     BoundingBox point_bbox(world_x, world_y, world_x, world_y);
     std::vector<RTreeEntry<MaskIdentifier>> candidates;
     spatial_index->query(point_bbox, candidates);
+
+    qDebug() << "MaskDataVisualization: Found" << candidates.size() << "candidates from R-tree";
     
     // Check each candidate mask for actual point containment
+    uint32_t pixel_x = static_cast<uint32_t>(std::round(world_x));
+    uint32_t pixel_y = static_cast<uint32_t>(std::round(world_y));
+
     for (auto const & candidate : candidates) {
-        if (maskContainsPoint(candidate.data, world_x, world_y)) {
+        if (maskContainsPoint(candidate.data, pixel_x, pixel_y)) {
             result.push_back(candidate.data);
         }
     }
+
+    qDebug() << "MaskDataVisualization: Found" << result.size() << "masks containing point";
     
     return result;
 }
@@ -373,6 +386,8 @@ void MaskDataVisualization::setOutlineThickness(float thickness) {
 void MaskDataVisualization::createBinaryImageTexture() {
     if (!mask_data) return;
 
+    qDebug() << "MaskDataVisualization: Creating binary image texture with" << mask_data->size() << "time frames";
+
     auto image_size = mask_data->getImageSize();
     binary_image_data.resize(image_size.width * image_size.height, 0.0f);
 
@@ -388,6 +403,8 @@ void MaskDataVisualization::createBinaryImageTexture() {
         }
     }
 
+    qDebug() << "MaskDataVisualization: Binary image texture created with" << binary_image_data.size() << "pixels";
+
     // Normalize the values to [0, 1] range
     if (!binary_image_data.empty()) {
         float max_value = *std::max_element(binary_image_data.begin(), binary_image_data.end());
@@ -397,10 +414,14 @@ void MaskDataVisualization::createBinaryImageTexture() {
             }
         }
     }
+
+    qDebug() << "MaskDataVisualization: Binary image texture normalized with" << binary_image_data.size() << "pixels";
 }
 
 void MaskDataVisualization::populateRTree() {
     if (!mask_data || !spatial_index) return;
+
+    qDebug() << "MaskDataVisualization: Populating R-tree with" << mask_data->size() << "time frames";
 
     for (auto const & time_masks_pair : mask_data->getAllAsRange()) {
         for (size_t mask_index = 0; mask_index < time_masks_pair.masks.size(); ++mask_index) {
@@ -416,8 +437,11 @@ void MaskDataVisualization::populateRTree() {
             
             MaskIdentifier mask_id(time_masks_pair.time.getValue(), mask_index);
             spatial_index->insert(bbox, mask_id);
+
         }
     }
+
+    qDebug() << "MaskDataVisualization: R-tree populated with" << spatial_index->size() << "masks";
 }
 
 void MaskDataVisualization::generateOutlineVertexData() {
@@ -425,6 +449,9 @@ void MaskDataVisualization::generateOutlineVertexData() {
 
     outline_vertex_data.clear();
 
+    qDebug() << "MaskDataVisualization: Generating outline vertex data with" << mask_data->size() << "time frames";
+
+    /*
     for (auto const & time_masks_pair : mask_data->getAllAsRange()) {
         for (size_t mask_index = 0; mask_index < time_masks_pair.masks.size(); ++mask_index) {
             auto const & mask = time_masks_pair.masks[mask_index];
@@ -444,8 +471,14 @@ void MaskDataVisualization::generateOutlineVertexData() {
                 outline_vertex_data.push_back(static_cast<float>(outline[next_i].x));
                 outline_vertex_data.push_back(static_cast<float>(outline[next_i].y));
             }
+
+            qDebug() << "MaskDataVisualization: Outline vertex data generated for mask" 
+                     << time_masks_pair.time.getValue() << "with" 
+                     << outline_vertex_data.size() << "vertices";
         }
     }
+    */
+    qDebug() << "MaskDataVisualization: Outline vertex data generated with" << outline_vertex_data.size() << "vertices";
 }
 
 std::vector<float> MaskDataVisualization::generateOutlineDataForMasks(
@@ -492,30 +525,25 @@ std::vector<float> MaskDataVisualization::generateOutlineDataForMasks(
     return outline_data;
 }
 
-bool MaskDataVisualization::maskContainsPoint(MaskIdentifier const & mask_id, float world_x, float world_y) const {
+bool MaskDataVisualization::maskContainsPoint(MaskIdentifier const & mask_id, uint32_t pixel_x, uint32_t pixel_y) const {
     if (!mask_data) return false;
+
+    //return true;
     
-    // Convert world coordinates to pixel coordinates
-    uint32_t pixel_x = static_cast<uint32_t>(std::round(world_x));
-    uint32_t pixel_y = static_cast<uint32_t>(std::round(world_y));
-    
-    // Find the mask in the data
-    for (auto const & time_masks_pair : mask_data->getAllAsRange()) {
-        if (time_masks_pair.time.getValue() == mask_id.timeframe) {
-            if (mask_id.mask_index < time_masks_pair.masks.size()) {
-                auto const & mask = time_masks_pair.masks[mask_id.mask_index];
-                
-                // Check if the pixel is in the mask
-                for (auto const & point : mask) {
-                    if (point.x == pixel_x && point.y == pixel_y) {
-                        return true;
-                    }
-                }
-                break;
-            }
+    auto const & masks = mask_data->getAtTime(TimeFrameIndex(mask_id.timeframe));
+
+    if (masks.empty()) return false;
+
+    auto const & mask = masks[mask_id.mask_index];
+
+    for (auto const & point : mask) {
+        if (point.x == pixel_x && point.y == pixel_y) {
+            return true;
+        } else {
+            return false;
         }
     }
-    
+
     return false;
 }
 
