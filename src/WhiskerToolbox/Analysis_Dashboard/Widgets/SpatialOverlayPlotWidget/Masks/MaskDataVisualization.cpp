@@ -200,14 +200,28 @@ void MaskDataVisualization::cleanupOpenGLResources() {
         glDeleteTextures(1, &binary_image_texture);
         binary_image_texture = 0;
     }
+    if (selection_binary_image_texture != 0) {
+        glDeleteTextures(1, &selection_binary_image_texture);
+        selection_binary_image_texture = 0;
+    }
 }
 
 void MaskDataVisualization::clearSelection() {
-    return;
+    if (!selected_masks.empty()) {
+        selected_masks.clear();
+        updateSelectionBinaryImageTexture();
+    }
 }
 
-bool MaskDataVisualization::toggleMaskSelection(MaskIdentifier const & mask_id) {
-    return true;
+void MaskDataVisualization::selectMasks(std::vector<MaskIdentifier> const & mask_ids) {
+    qDebug() << "MaskDataVisualization: Selecting" << mask_ids.size() << "masks";
+    
+    for (auto const & mask_id : mask_ids) {
+        selected_masks.insert(mask_id);
+    }
+    
+    updateSelectionBinaryImageTexture();
+    qDebug() << "MaskDataVisualization: Total selected masks:" << selected_masks.size();
 }
 
 void MaskDataVisualization::setHoverEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) {
@@ -249,6 +263,28 @@ std::vector<MaskIdentifier> MaskDataVisualization::findMasksContainingPoint(floa
     }
 
     qDebug() << "MaskDataVisualization: Found" << result.size() << "masks containing point";
+    
+    return result;
+}
+
+std::vector<MaskIdentifier> MaskDataVisualization::refineMasksContainingPoint(std::vector<RTreeEntry<MaskIdentifier>> const & entries, float world_x, float world_y) const {
+    std::vector<MaskIdentifier> result;
+    
+    if (!mask_data) return result;
+    
+    qDebug() << "MaskDataVisualization: Refining" << entries.size() << "R-tree entries using precise point checking";
+    
+    // Check each candidate mask for actual point containment
+    uint32_t pixel_x = static_cast<uint32_t>(std::round(world_x));
+    uint32_t pixel_y = static_cast<uint32_t>(std::round(world_y));
+
+    for (auto const & entry : entries) {
+        if (maskContainsPoint(entry.data, pixel_x, pixel_y)) {
+            result.push_back(entry.data);
+        }
+    }
+
+    qDebug() << "MaskDataVisualization: Refined to" << result.size() << "masks containing point after precise checking";
     
     return result;
 }
@@ -332,6 +368,52 @@ void MaskDataVisualization::createBinaryImageTexture() {
     }
 
     qDebug() << "MaskDataVisualization: Binary image texture scaled with logarithmic normalization";
+}
+
+void MaskDataVisualization::updateSelectionBinaryImageTexture() {
+    if (!mask_data) return;
+
+    qDebug() << "MaskDataVisualization: Updating selection binary image texture with" << selected_masks.size() << "selected masks";
+
+    auto image_size = mask_data->getImageSize();
+    selection_binary_image_data.clear();
+    selection_binary_image_data.resize(image_size.width * image_size.height, 0.0f);
+
+    // Only include selected masks in the selection binary image
+    for (auto const & mask_id : selected_masks) {
+        auto const & masks = mask_data->getAtTime(TimeFrameIndex(mask_id.timeframe));
+        if (mask_id.mask_index < masks.size()) {
+            auto const & mask = masks[mask_id.mask_index];
+            
+            for (auto const & point : mask) {
+                if (point.x < image_size.width && point.y < image_size.height) {
+                    size_t index = point.y * image_size.width + point.x;
+                    selection_binary_image_data[index] = 1.0f; // Uniform opacity for selected masks
+                }
+            }
+        }
+    }
+
+    // Update the OpenGL texture if it exists
+    if (selection_binary_image_texture != 0) {
+        glBindTexture(GL_TEXTURE_2D, selection_binary_image_texture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_size.width, image_size.height,
+                        GL_RED, GL_FLOAT, selection_binary_image_data.data());
+        glBindTexture(GL_TEXTURE_2D, 0);
+    } else {
+        // Create the texture if it doesn't exist
+        glGenTextures(1, &selection_binary_image_texture);
+        glBindTexture(GL_TEXTURE_2D, selection_binary_image_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, image_size.width, image_size.height, 0,
+                     GL_RED, GL_FLOAT, selection_binary_image_data.data());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+    qDebug() << "MaskDataVisualization: Selection binary image texture updated";
 }
 
 void MaskDataVisualization::populateRTree() {
@@ -445,6 +527,36 @@ void MaskDataVisualization::renderHoverMaskBoundingBoxes(QOpenGLShaderProgram * 
 
     hover_bbox_buffer.release();
     hover_bbox_array_object.release();
+}
+
+void MaskDataVisualization::renderSelectedMasks(QOpenGLShaderProgram * shader_program) {
+    if (!visible || selection_binary_image_texture == 0 || selected_masks.empty()) return;
+
+    quad_vertex_array_object.bind();
+    quad_vertex_buffer.bind();
+
+    // Bind selection texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, selection_binary_image_texture);
+    shader_program->setUniformValue("u_texture", 0);
+    
+    // Set different color for selected masks (e.g., yellow with some transparency)
+    QVector4D selection_color = QVector4D(1.0f, 1.0f, 0.0f, 0.7f); // Yellow with 70% opacity
+    shader_program->setUniformValue("u_color", selection_color);
+
+    // Enable blending for transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Draw quad
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    // Disable blending
+    glDisable(GL_BLEND);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    quad_vertex_buffer.release();
+    quad_vertex_array_object.release();
 }
 
 void MaskDataVisualization::updateHoverBoundingBoxBuffer() {

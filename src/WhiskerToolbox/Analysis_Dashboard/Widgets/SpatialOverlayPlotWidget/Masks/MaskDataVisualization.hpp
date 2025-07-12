@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <set>
 #include <unordered_set>
 #include <vector>
 
@@ -30,6 +31,11 @@ struct MaskIdentifier {
     
     bool operator==(const MaskIdentifier& other) const {
         return timeframe == other.timeframe && mask_index == other.mask_index;
+    }
+
+    bool operator<(const MaskIdentifier& other) const {
+        return (timeframe < other.timeframe) || 
+               (timeframe == other.timeframe && mask_index < other.mask_index);
     }
 };
 
@@ -52,7 +58,9 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QOpenGLVertexArrayObject outline_vertex_array_object;
     
     // Selection and hover data
-    std::vector<RTreeEntry<MaskIdentifier>> selected_masks;
+    std::set<MaskIdentifier> selected_masks;
+    std::vector<float> selection_binary_image_data;
+    GLuint selection_binary_image_texture = 0;
     std::vector<float> selection_outline_data;
     QOpenGLBuffer selection_outline_buffer;
     QOpenGLVertexArrayObject selection_outline_array_object;
@@ -119,13 +127,6 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void clearSelection();
 
     /**
-     * @brief Toggle selection of a mask
-     * @param mask_id Identifier of the mask to toggle
-     * @return True if mask was selected, false if deselected
-     */
-    bool toggleMaskSelection(MaskIdentifier const & mask_id);
-
-    /**
      * @brief Set hover masks using R-tree entries directly
      * @param entries Vector of R-tree entries containing masks and their bounding boxes
      */
@@ -145,6 +146,15 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     std::vector<MaskIdentifier> findMasksContainingPoint(float world_x, float world_y) const;
 
     /**
+     * @brief Refine R-tree entries to only those that contain the given point using precise pixel checking
+     * @param entries Vector of R-tree entries to refine
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
+     * @return Vector of mask identifiers from entries that contain the point
+     */
+    std::vector<MaskIdentifier> refineMasksContainingPoint(std::vector<RTreeEntry<MaskIdentifier>> const & entries, float world_x, float world_y) const;
+
+    /**
      * @brief Render the binary image texture
      * @param shader_program The shader program to use for rendering
      */
@@ -157,6 +167,12 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void renderHoverMaskBoundingBoxes(QOpenGLShaderProgram * shader_program);
 
     /**
+     * @brief Render selected masks as a binary image with different color/opacity
+     * @param shader_program The shader program to use for rendering
+     */
+    void renderSelectedMasks(QOpenGLShaderProgram * shader_program);
+
+    /**
      * @brief Calculate bounding box for the entire MaskData
      * @return BoundingBox encompassing all masks
      */
@@ -166,6 +182,8 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @brief Update hover bounding box buffer with current hover masks
      */
     void updateHoverBoundingBoxBuffer();
+
+    void selectMasks(std::vector<MaskIdentifier> const & mask_ids);
 
 private:
     /**
@@ -182,6 +200,11 @@ private:
      * @brief Generate outline vertex data for all masks
      */
     void generateOutlineVertexData();
+
+    /**
+     * @brief Update the selection binary image texture based on currently selected masks
+     */
+    void updateSelectionBinaryImageTexture();
 
     /**
      * @brief Generate bounding box line data from R-tree entries

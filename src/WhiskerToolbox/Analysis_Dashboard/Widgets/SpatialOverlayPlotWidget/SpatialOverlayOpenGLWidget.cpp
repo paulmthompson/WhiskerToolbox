@@ -526,33 +526,34 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
                 event->accept();
                 return;
             }
+        }
+
+        // Point selection mode - mask selection with left click (no modifiers)
+        if (_selection_mode == SelectionMode::PointSelection && !(event->modifiers() & Qt::ControlModifier)) {
+            auto [world_x, world_y] = screenToWorld(event->pos().x(), event->pos().y());
             
-            // Try mask selection if no point was found
+            // Find hover masks (R-tree candidates)
             auto mask_results = findMasksNear(event->pos().x(), event->pos().y());
+            
             if (!mask_results.empty()) {
-                size_t total_masks_toggled = 0;
-                QString last_modified_key;
-                
                 for (auto const& [mask_viz, entries] : mask_results) {
-                    for (auto const& entry : entries) {
-                        bool was_selected = mask_viz->toggleMaskSelection(entry.data);
-                        if (was_selected) {
-                            total_masks_toggled++;
-                            last_modified_key = mask_viz->key;
-                        }
+                    // Refine using precise point checking
+                    auto refined_masks = mask_viz->refineMasksContainingPoint(entries, world_x, world_y);
+                    
+                    if (!refined_masks.empty()) {
+                        qDebug() << "SpatialOverlayOpenGLWidget: Selecting" << refined_masks.size() 
+                                 << "masks under point click in" << mask_viz->key;
                         
-                        qDebug() << "SpatialOverlayOpenGLWidget: Mask" << (was_selected ? "selected" : "deselected")
-                                 << "in" << mask_viz->key << "timeframe:" << entry.data.timeframe 
-                                 << "index:" << entry.data.mask_index;
+                        // Select all masks under the point
+                        mask_viz->selectMasks(refined_masks);
+                        
+                        // Emit selection changed signal
+                        emit selectionChanged(getTotalSelectedMasks(), mask_viz->key, refined_masks.size());
+                        requestThrottledUpdate();
+                        event->accept();
+                        return;
                     }
                 }
-                
-                if (total_masks_toggled > 0) {
-                    emit selectionChanged(getTotalSelectedMasks(), last_modified_key, total_masks_toggled);
-                }
-                requestThrottledUpdate();
-                event->accept();
-                return;
             }
         }
 
@@ -1027,8 +1028,14 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
         
         _texture_shader_program->release();
     }
+
+    // === DRAW CALL 2: Render selected masks for each MaskData ===
+    glDisable(GL_BLEND); // Solid color for selections
+    for (auto const& [key, viz] : _mask_data_visualizations) {
+        viz->renderSelectedMasks(_line_shader_program);
+    }
     
-    // === DRAW CALL 2: Render mask outlines ===
+    // === DRAW CALL 3: Render mask outlines ===
     if (_line_shader_program && _line_shader_program->bind()) {
         QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
         _line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
