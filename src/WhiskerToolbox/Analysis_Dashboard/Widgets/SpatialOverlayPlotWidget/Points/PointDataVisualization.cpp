@@ -1,4 +1,3 @@
-
 #include "PointDataVisualization.hpp"
 
 #include "DataManager/Points/Point_Data.hpp"
@@ -138,6 +137,19 @@ bool PointDataVisualization::togglePointSelection(QuadTreePoint<int64_t> const *
         updateSelectionVertexBuffer();
         return true;// Point was selected
     }
+}
+
+bool PointDataVisualization::removePointFromSelection(QuadTreePoint<int64_t> const * point_ptr) {
+    auto it = selected_points.find(point_ptr);
+    
+    if (it != selected_points.end()) {
+        // Point is selected, remove it
+        selected_points.erase(it);
+        updateSelectionVertexBuffer();
+        return true; // Point was removed
+    }
+    
+    return false; // Point wasn't selected
 }
 
 void PointDataVisualization::renderPoints(QOpenGLShaderProgram * shader_program, float point_size) {

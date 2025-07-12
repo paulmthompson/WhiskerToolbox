@@ -205,7 +205,7 @@ std::vector<std::pair<QString, std::vector<MaskIdentifier>>> SpatialOverlayOpenG
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
     size_t total = 0;
     for (auto const& [key, viz] : _mask_data_visualizations) {
-        //total += viz->selected_masks.size();
+        total += viz->selected_masks.size();
     }
     return total;
 }
@@ -511,7 +511,7 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
             return;
         }
 
-        // Point and mask selection mode - requires Ctrl+Click
+        // Point and mask selection mode - requires Ctrl+Click for toggle, Shift+Click for removal
         if (_selection_mode == SelectionMode::PointSelection && (event->modifiers() & Qt::ControlModifier)) {
             // First try to find points near the click
             auto [viz, point] = findPointNear(event->pos().x(), event->pos().y());
@@ -551,6 +551,53 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
                         requestThrottledUpdate();
                         event->accept();
                         return;
+                    }
+                }
+            }
+        }
+
+        // Point and mask removal mode - Shift+Click to remove from selection
+        if (_selection_mode == SelectionMode::PointSelection && (event->modifiers() & Qt::ShiftModifier)) {
+            // First try to find points near the click
+            auto [viz, point] = findPointNear(event->pos().x(), event->pos().y());
+            if (viz && point) {
+                bool was_removed = viz->removePointFromSelection(point);
+                
+                if (was_removed) {
+                    qDebug() << "SpatialOverlayOpenGLWidget: Point removed from selection"
+                             << "in" << viz->key << "at (" << point->x << "," << point->y << ")";
+                    
+                    // Emit selection changed signal
+                    emit selectionChanged(getTotalSelectedPoints(), viz->key, viz->selected_points.size());
+                    requestThrottledUpdate();
+                    event->accept();
+                    return;
+                }
+            }
+
+            // If no points found, try to find masks near the click
+            auto [world_x, world_y] = screenToWorld(event->pos().x(), event->pos().y());
+            auto mask_results = findMasksNear(event->pos().x(), event->pos().y());
+            
+            if (!mask_results.empty()) {
+                for (auto const& [mask_viz, entries] : mask_results) {
+                    // Refine using precise point checking
+                    auto refined_masks = mask_viz->refineMasksContainingPoint(entries, world_x, world_y);
+                    
+                    if (!refined_masks.empty()) {
+                        // Remove all intersecting masks between current selection and new masks
+                        size_t removed_count = mask_viz->removeIntersectingMasks(refined_masks);
+                        
+                        if (removed_count > 0) {
+                            qDebug() << "SpatialOverlayOpenGLWidget: Removed" << removed_count 
+                                     << "intersecting masks from selection in" << mask_viz->key;
+                            
+                            // Emit selection changed signal
+                            emit selectionChanged(getTotalSelectedMasks(), mask_viz->key, mask_viz->selected_masks.size());
+                            requestThrottledUpdate();
+                            event->accept();
+                            return;
+                        }
                     }
                 }
             }

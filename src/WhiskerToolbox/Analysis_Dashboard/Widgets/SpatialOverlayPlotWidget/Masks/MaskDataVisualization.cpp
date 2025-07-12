@@ -244,6 +244,45 @@ bool MaskDataVisualization::toggleMaskSelection(MaskIdentifier const & mask_id) 
     }
 }
 
+bool MaskDataVisualization::removeMaskFromSelection(MaskIdentifier const & mask_id) {
+    auto it = selected_masks.find(mask_id);
+    
+    if (it != selected_masks.end()) {
+        // Mask is selected, remove it
+        selected_masks.erase(it);
+        updateSelectionBinaryImageTexture();
+        qDebug() << "MaskDataVisualization: Removed mask" << mask_id.timeframe << "," << mask_id.mask_index
+                 << "from selection - Total selected:" << selected_masks.size();
+        return true; // Mask was removed
+    }
+    
+    return false; // Mask wasn't selected
+}
+
+size_t MaskDataVisualization::removeIntersectingMasks(std::vector<MaskIdentifier> const & mask_ids) {
+    size_t removed_count = 0;
+    
+    // Find intersection between current selection and provided mask_ids
+    for (auto const & mask_id : mask_ids) {
+        auto it = selected_masks.find(mask_id);
+        if (it != selected_masks.end()) {
+            // This mask is in both sets - remove it from selection
+            selected_masks.erase(it);
+            removed_count++;
+            qDebug() << "MaskDataVisualization: Removed intersecting mask" 
+                     << mask_id.timeframe << "," << mask_id.mask_index;
+        }
+    }
+    
+    if (removed_count > 0) {
+        updateSelectionBinaryImageTexture();
+        qDebug() << "MaskDataVisualization: Removed" << removed_count 
+                 << "intersecting masks - Total selected:" << selected_masks.size();
+    }
+    
+    return removed_count;
+}
+
 void MaskDataVisualization::setHoverEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) {
     current_hover_entries = entries;
     updateHoverBoundingBoxBuffer();

@@ -70,6 +70,13 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     bool togglePointSelection(QuadTreePoint<int64_t> const * point_ptr);
 
     /**
+     * @brief Remove a specific point from selection if it's currently selected
+     * @param point_ptr Pointer to the point to remove from selection
+     * @return True if point was removed from selection, false if it wasn't selected
+     */
+    bool removePointFromSelection(QuadTreePoint<int64_t> const * point_ptr);
+
+    /**
      * @brief Render points for this PointData
      */
     void renderPoints(QOpenGLShaderProgram * shader_program, float point_size);

@@ -196,6 +196,20 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      */
     bool toggleMaskSelection(MaskIdentifier const & mask_id);
 
+    /**
+     * @brief Remove a specific mask from selection if it's currently selected
+     * @param mask_id Identifier of the mask to remove from selection
+     * @return True if mask was removed from selection, false if it wasn't selected
+     */
+    bool removeMaskFromSelection(MaskIdentifier const & mask_id);
+
+    /**
+     * @brief Remove multiple masks from selection (intersection removal)
+     * @param mask_ids Vector of mask identifiers to potentially remove
+     * @return Number of masks actually removed from the current selection
+     */
+    size_t removeIntersectingMasks(std::vector<MaskIdentifier> const & mask_ids);
+
 private:
     /**
      * @brief Create the binary image texture from all masks

@@ -361,6 +361,9 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
             instructions = "🖱️ Point & Mask Selection Mode\n"
                           "• Hold Ctrl + Left Click on points or masks to select/deselect\n"
                           "• Each Ctrl+Click toggles selection (adds if not selected, removes if selected)\n"
+                          "• Hold Shift + Left Click to remove from selection:\n"
+                          "  - Points: Removes individual point if selected\n"
+                          "  - Masks: Removes all intersecting masks between current selection and clicked area\n"
                           "• Selected points appear in black, selected masks have enhanced visibility\n"
                           "• Use 'Clear Selection' button to remove all selections\n"
                           "• Double-click points to jump to that frame";
