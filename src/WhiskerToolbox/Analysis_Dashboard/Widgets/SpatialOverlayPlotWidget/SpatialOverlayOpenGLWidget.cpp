@@ -1014,8 +1014,10 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
         return;
     }
     
-    // === DRAW CALL 1: Render binary image textures ===
+
     if (_texture_shader_program && _texture_shader_program->bind()) {
+
+        // === DRAW CALL 1: Render binary image textures ===
         QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
         _texture_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
         
@@ -1025,17 +1027,17 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
         for (auto const& [key, viz] : _mask_data_visualizations) {
             viz->renderBinaryImage(_texture_shader_program);
         }
+
+        // Render selected masks with textures
+        glDisable(GL_BLEND); // Solid color for selections
+        for (auto const& [key, viz] : _mask_data_visualizations) {
+            viz->renderSelectedMasks(_texture_shader_program);
+        }
         
         _texture_shader_program->release();
     }
-
-    // === DRAW CALL 2: Render selected masks for each MaskData ===
-    glDisable(GL_BLEND); // Solid color for selections
-    for (auto const& [key, viz] : _mask_data_visualizations) {
-        viz->renderSelectedMasks(_line_shader_program);
-    }
     
-    // === DRAW CALL 3: Render mask outlines ===
+    // === DRAW CALL 2: Render mask bounding boxes ===
     if (_line_shader_program && _line_shader_program->bind()) {
         QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
         _line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
