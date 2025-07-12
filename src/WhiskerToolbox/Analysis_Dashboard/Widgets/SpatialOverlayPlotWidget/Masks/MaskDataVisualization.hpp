@@ -34,16 +34,6 @@ struct MaskIdentifier {
 };
 
 /**
- * @brief Hash function for MaskIdentifier to use in unordered_set
- */
-struct MaskIdentifierHash {
-    size_t operator()(const MaskIdentifier& id) const {
-        return std::hash<int64_t>()(id.timeframe) ^ 
-               (std::hash<size_t>()(id.mask_index) << 1);
-    }
-};
-
-/**
  * @brief Visualization data for a single MaskData object
  */
 struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
@@ -62,7 +52,7 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QOpenGLVertexArrayObject outline_vertex_array_object;
     
     // Selection and hover data
-    std::unordered_set<MaskIdentifier, MaskIdentifierHash> selected_masks;
+    std::vector<RTreeEntry<MaskIdentifier>> selected_masks;
     std::vector<float> selection_outline_data;
     QOpenGLBuffer selection_outline_buffer;
     QOpenGLVertexArrayObject selection_outline_array_object;
@@ -161,24 +151,6 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void renderBinaryImage(QOpenGLShaderProgram * shader_program);
 
     /**
-     * @brief Render mask outlines
-     * @param shader_program The shader program to use for rendering
-     */
-    void renderMaskOutlines(QOpenGLShaderProgram * shader_program);
-
-    /**
-     * @brief Render selected mask outlines
-     * @param shader_program The shader program to use for rendering
-     */
-    void renderSelectedMaskOutlines(QOpenGLShaderProgram * shader_program);
-
-    /**
-     * @brief Render hover mask outlines
-     * @param shader_program The shader program to use for rendering
-     */
-    void renderHoverMaskOutlines(QOpenGLShaderProgram * shader_program);
-
-    /**
      * @brief Render hover mask bounding boxes
      * @param shader_program The shader program to use for rendering
      */
@@ -210,13 +182,6 @@ private:
      * @brief Generate outline vertex data for all masks
      */
     void generateOutlineVertexData();
-
-    /**
-     * @brief Generate outline data for a specific set of masks
-     * @param mask_ids Set of mask identifiers to generate outlines for
-     * @return Vector of vertex data for the outlines
-     */
-    std::vector<float> generateOutlineDataForMasks(std::unordered_set<MaskIdentifier, MaskIdentifierHash> const & mask_ids) const;
 
     /**
      * @brief Generate bounding box line data from R-tree entries

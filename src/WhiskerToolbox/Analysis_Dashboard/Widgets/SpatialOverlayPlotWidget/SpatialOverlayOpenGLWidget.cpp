@@ -198,18 +198,6 @@ void SpatialOverlayOpenGLWidget::setMaskOutlineThickness(float thickness) {
 std::vector<std::pair<QString, std::vector<MaskIdentifier>>> SpatialOverlayOpenGLWidget::getSelectedMaskData() const {
     std::vector<std::pair<QString, std::vector<MaskIdentifier>>> result;
     
-    for (auto const& [key, viz] : _mask_data_visualizations) {
-        if (!viz->selected_masks.empty()) {
-            std::vector<MaskIdentifier> masks;
-            masks.reserve(viz->selected_masks.size());
-            
-            for (auto const& mask_id : viz->selected_masks) {
-                masks.push_back(mask_id);
-            }
-            
-            result.emplace_back(key, std::move(masks));
-        }
-    }
     
     return result;
 }
@@ -217,7 +205,7 @@ std::vector<std::pair<QString, std::vector<MaskIdentifier>>> SpatialOverlayOpenG
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
     size_t total = 0;
     for (auto const& [key, viz] : _mask_data_visualizations) {
-        total += viz->selected_masks.size();
+        //total += viz->selected_masks.size();
     }
     return total;
 }
@@ -1047,16 +1035,6 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
         
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        
-        // Render regular mask outlines
-        for (auto const& [key, viz] : _mask_data_visualizations) {
-            viz->renderMaskOutlines(_line_shader_program);
-        }
-        
-        // Render selected mask outlines (on top)
-        for (auto const& [key, viz] : _mask_data_visualizations) {
-            viz->renderSelectedMaskOutlines(_line_shader_program);
-        }
         
         // Render hover mask bounding boxes (on top of everything else)
         for (auto const& [key, viz] : _mask_data_visualizations) {

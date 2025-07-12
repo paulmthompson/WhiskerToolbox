@@ -202,47 +202,12 @@ void MaskDataVisualization::cleanupOpenGLResources() {
     }
 }
 
-void MaskDataVisualization::updateSelectionOutlineBuffer() {
-    selection_outline_data = generateOutlineDataForMasks(selected_masks);
-
-    selection_outline_array_object.bind();
-    selection_outline_buffer.bind();
-    
-    if (selection_outline_data.empty()) {
-        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-    } else {
-        selection_outline_buffer.allocate(selection_outline_data.data(),
-                                         static_cast<int>(selection_outline_data.size() * sizeof(float)));
-    }
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    selection_outline_buffer.release();
-    selection_outline_array_object.release();
-}
-
 void MaskDataVisualization::clearSelection() {
-    if (!selected_masks.empty()) {
-        selected_masks.clear();
-        updateSelectionOutlineBuffer();
-    }
+    return;
 }
 
 bool MaskDataVisualization::toggleMaskSelection(MaskIdentifier const & mask_id) {
-    auto it = selected_masks.find(mask_id);
-
-    if (it != selected_masks.end()) {
-        // Mask is selected, remove it
-        selected_masks.erase(it);
-        updateSelectionOutlineBuffer();
-        return false; // Mask was deselected
-    } else {
-        // Mask is not selected, add it
-        selected_masks.insert(mask_id);
-        updateSelectionOutlineBuffer();
-        return true; // Mask was selected
-    }
+    return true;
 }
 
 void MaskDataVisualization::setHoverEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) {
@@ -306,67 +271,6 @@ void MaskDataVisualization::renderBinaryImage(QOpenGLShaderProgram * shader_prog
     glBindTexture(GL_TEXTURE_2D, 0);
     quad_vertex_buffer.release();
     quad_vertex_array_object.release();
-}
-
-void MaskDataVisualization::renderMaskOutlines(QOpenGLShaderProgram * shader_program) {
-    if (!visible || outline_vertex_data.empty()) return;
-
-    outline_vertex_array_object.bind();
-    outline_vertex_buffer.bind();
-
-    // Set color and line width
-    QVector4D outline_color = color;
-    outline_color.setW(outline_color.w() * 0.8f); // Slightly more transparent
-    shader_program->setUniformValue("u_color", outline_color);
-    
-    glLineWidth(outline_thickness);
-
-    // Draw lines
-    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(outline_vertex_data.size() / 2));
-
-    outline_vertex_buffer.release();
-    outline_vertex_array_object.release();
-}
-
-void MaskDataVisualization::renderSelectedMaskOutlines(QOpenGLShaderProgram * shader_program) {
-    if (selected_masks.empty() || selection_outline_data.empty()) return;
-
-    selection_outline_array_object.bind();
-    selection_outline_buffer.bind();
-
-    // Set uniforms for selection rendering (darker/more opaque)
-    QVector4D selection_color = color;
-    selection_color.setW(1.0f); // Fully opaque
-    selection_color = selection_color * 0.5f; // Darker
-    selection_color.setW(1.0f);
-    shader_program->setUniformValue("u_color", selection_color);
-    
-    glLineWidth(outline_thickness * 1.5f); // Thicker lines for selected
-
-    // Draw the selected mask outlines
-    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(selection_outline_data.size() / 2));
-
-    selection_outline_buffer.release();
-    selection_outline_array_object.release();
-}
-
-void MaskDataVisualization::renderHoverMaskOutlines(QOpenGLShaderProgram * shader_program) {
-    if (current_hover_entries.empty() || hover_outline_data.empty()) return;
-
-    hover_outline_array_object.bind();
-    hover_outline_buffer.bind();
-
-    // Set uniforms for hover rendering (bright/highlighted)
-    QVector4D hover_color = QVector4D(1.0f, 1.0f, 0.0f, 1.0f); // Bright yellow
-    shader_program->setUniformValue("u_color", hover_color);
-    
-    glLineWidth(outline_thickness * 2.0f); // Thickest lines for hover
-
-    // Draw the hover mask outlines
-    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(hover_outline_data.size() / 2));
-
-    hover_outline_buffer.release();
-    hover_outline_array_object.release();
 }
 
 BoundingBox MaskDataVisualization::calculateBounds() const {
@@ -491,50 +395,6 @@ void MaskDataVisualization::generateOutlineVertexData() {
     }
     */
     qDebug() << "MaskDataVisualization: Outline vertex data generated with" << outline_vertex_data.size() << "vertices";
-}
-
-std::vector<float> MaskDataVisualization::generateOutlineDataForMasks(
-    std::unordered_set<MaskIdentifier, MaskIdentifierHash> const & mask_ids) const {
-    
-    std::vector<float> outline_data;
-    
-    if (!mask_data) return outline_data;
-    
-    for (auto const & mask_id : mask_ids) {
-        // Find the mask in the data
-        bool found = false;
-        for (auto const & time_masks_pair : mask_data->getAllAsRange()) {
-            if (time_masks_pair.time.getValue() == mask_id.timeframe) {
-                if (mask_id.mask_index < time_masks_pair.masks.size()) {
-                    auto const & mask = time_masks_pair.masks[mask_id.mask_index];
-                    
-                    if (!mask.empty()) {
-                        // Get outline for this mask
-                        auto outline = get_mask_outline(mask);
-                        
-                        // Convert outline to vertex data (lines)
-                        for (size_t i = 0; i < outline.size(); ++i) {
-                            size_t next_i = (i + 1) % outline.size();
-                            
-                            // Add line segment
-                            outline_data.push_back(static_cast<float>(outline[i].x));
-                            outline_data.push_back(static_cast<float>(outline[i].y));
-                            outline_data.push_back(static_cast<float>(outline[next_i].x));
-                            outline_data.push_back(static_cast<float>(outline[next_i].y));
-                        }
-                    }
-                    found = true;
-                    break;
-                }
-            }
-        }
-        
-        if (!found) {
-            qDebug() << "MaskDataVisualization: Could not find mask" << mask_id.timeframe << mask_id.mask_index;
-        }
-    }
-    
-    return outline_data;
 }
 
 bool MaskDataVisualization::maskContainsPoint(MaskIdentifier const & mask_id, uint32_t pixel_x, uint32_t pixel_y) const {
