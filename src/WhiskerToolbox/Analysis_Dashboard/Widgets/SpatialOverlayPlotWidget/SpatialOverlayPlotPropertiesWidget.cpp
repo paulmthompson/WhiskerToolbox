@@ -27,39 +27,6 @@ SpatialOverlayPlotPropertiesWidget::SpatialOverlayPlotPropertiesWidget(QWidget *
       ui(new Ui::SpatialOverlayPlotPropertiesWidget),
       _spatial_plot_widget(nullptr) {
     ui->setupUi(this);
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: Constructor - UI setup completed";
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: Constructor - Selection combo count:" << ui->selection_mode_combo->count();
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: Constructor - Selection instructions label:" << (ui->selection_instructions_label != nullptr);
-    
-    // Test signal connection directly
-    connect(ui->selection_mode_combo, &QComboBox::currentIndexChanged,
-            this, [this](int index) {
-        qDebug() << "SpatialOverlayPlotPropertiesWidget: Direct signal test - index changed to:" << index;
-    });
-    
-    // Test manual signal emission
-    QTimer::singleShot(1000, this, [this]() {
-        qDebug() << "SpatialOverlayPlotPropertiesWidget: Testing manual signal emission";
-        ui->selection_mode_combo->setCurrentIndex(1);
-    });
-    
-    // Test if label is accessible
-    if (ui->selection_instructions_label) {
-        ui->selection_instructions_label->setText("Test: Label is accessible");
-        qDebug() << "SpatialOverlayPlotPropertiesWidget: Label test successful";
-    } else {
-        qDebug() << "SpatialOverlayPlotPropertiesWidget: Label test failed - label is null";
-    }
-    
-    // Test if combo box is accessible
-    if (ui->selection_mode_combo) {
-        qDebug() << "SpatialOverlayPlotPropertiesWidget: Combo box is accessible, count:" << ui->selection_mode_combo->count();
-        for (int i = 0; i < ui->selection_mode_combo->count(); ++i) {
-            qDebug() << "SpatialOverlayPlotPropertiesWidget: Combo item" << i << ":" << ui->selection_mode_combo->itemText(i);
-        }
-    } else {
-        qDebug() << "SpatialOverlayPlotPropertiesWidget: Combo box test failed - combo is null";
-    }
     
     setupConnections();
 }
@@ -69,7 +36,6 @@ SpatialOverlayPlotPropertiesWidget::~SpatialOverlayPlotPropertiesWidget() {
 }
 
 void SpatialOverlayPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: setDataManager called with DataManager:" << (data_manager != nullptr);
     _data_manager = std::move(data_manager);
 }
 
@@ -126,40 +92,34 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
         
         // Update zoom level and point size from current widget state
         if (_spatial_plot_widget->getOpenGLWidget()) {
+
             float current_zoom = _spatial_plot_widget->getOpenGLWidget()->getZoomLevel();
-            float current_point_size = _spatial_plot_widget->getOpenGLWidget()->getPointSize();
-            bool tooltips_enabled = _spatial_plot_widget->getOpenGLWidget()->getTooltipsEnabled();
-            SelectionMode current_selection_mode = _spatial_plot_widget->getSelectionMode();
-            
-            // Block signals to prevent recursive updates
             ui->zoom_level_spinbox->blockSignals(true);
-            ui->point_size_spinbox->blockSignals(true);
-            ui->tooltips_checkbox->blockSignals(true);
-            ui->selection_mode_combo->blockSignals(true);
-            
             ui->zoom_level_spinbox->setValue(static_cast<double>(current_zoom));
+            ui->zoom_level_spinbox->blockSignals(false);
+
+            float current_point_size = _spatial_plot_widget->getOpenGLWidget()->getPointSize();
+            ui->point_size_spinbox->blockSignals(true);
             ui->point_size_spinbox->setValue(static_cast<double>(current_point_size));
+            ui->point_size_spinbox->blockSignals(false);
+
+            bool tooltips_enabled = _spatial_plot_widget->getOpenGLWidget()->getTooltipsEnabled();
+            ui->tooltips_checkbox->blockSignals(true);
             ui->tooltips_checkbox->setChecked(tooltips_enabled);
-            
-            // Set selection mode combo box
+            ui->tooltips_checkbox->blockSignals(false);
+
+            SelectionMode current_selection_mode = _spatial_plot_widget->getSelectionMode();     
+            ui->selection_mode_combo->blockSignals(true);
             for (int i = 0; i < ui->selection_mode_combo->count(); ++i) {
                 if (static_cast<SelectionMode>(ui->selection_mode_combo->itemData(i).toInt()) == current_selection_mode) {
                     ui->selection_mode_combo->setCurrentIndex(i);
                     break;
                 }
             }
-            
-            // Update clear selection button state
             ui->clear_selection_button->setEnabled(current_selection_mode != SelectionMode::None);
-            
-            // Re-enable signals
-            ui->zoom_level_spinbox->blockSignals(false);
-            ui->point_size_spinbox->blockSignals(false);
-            ui->tooltips_checkbox->blockSignals(false);
             ui->selection_mode_combo->blockSignals(false);
-            
-            // Update selection instructions after setting the combo box
             updateSelectionInstructions();
+
         }
     } else {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot - no spatial plot widget available";
@@ -226,13 +186,7 @@ void SpatialOverlayPlotPropertiesWidget::onDeselectAllClicked() {
 }
 
 void SpatialOverlayPlotPropertiesWidget::setupConnections() {
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: setupConnections called";
-    
-    // Debug UI elements
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: setupConnections - selection_mode_combo:" << (ui->selection_mode_combo != nullptr);
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: setupConnections - selection_instructions_label:" << (ui->selection_instructions_label != nullptr);
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: setupConnections - clear_selection_button:" << (ui->clear_selection_button != nullptr);
-    
+       
     // Data source selection
     connect(ui->data_sources_list, &QListWidget::itemChanged,
             this, &SpatialOverlayPlotPropertiesWidget::onDataSourceItemChanged);
@@ -264,7 +218,6 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
     connect(ui->clear_selection_button, &QPushButton::clicked,
             this, &SpatialOverlayPlotPropertiesWidget::onClearSelectionClicked);
     
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: setupConnections completed";
 }
 
 void SpatialOverlayPlotPropertiesWidget::refreshDataSourcesList() {
