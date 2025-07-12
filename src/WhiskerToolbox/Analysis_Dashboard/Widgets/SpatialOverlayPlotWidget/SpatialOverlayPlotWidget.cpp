@@ -41,6 +41,13 @@ void SpatialOverlayPlotWidget::setPointDataKeys(QStringList const & point_data_k
     updateVisualization();
 }
 
+void SpatialOverlayPlotWidget::setMaskDataKeys(QStringList const & mask_data_keys) {
+    _mask_data_keys = mask_data_keys;
+    updateVisualization();
+}
+
+
+
 void SpatialOverlayPlotWidget::paint(QPainter * painter, QStyleOptionGraphicsItem const * option, QWidget * widget) {
     Q_UNUSED(option)
     Q_UNUSED(widget)
@@ -110,6 +117,7 @@ void SpatialOverlayPlotWidget::updateVisualization() {
     }
 
     loadPointData();
+    loadMaskData();
     
     // Request render update through signal
     update();
@@ -133,6 +141,18 @@ void SpatialOverlayPlotWidget::loadPointData() {
         }
     }
     _opengl_widget->setPointData(point_data_map);
+}
+
+void SpatialOverlayPlotWidget::loadMaskData() {
+    std::unordered_map<QString, std::shared_ptr<MaskData>> mask_data_map;
+
+    for (QString const & key: _mask_data_keys) {
+        auto mask_data = _data_manager->getData<MaskData>(key.toStdString());
+        if (mask_data) {
+            mask_data_map[key] = mask_data;
+        }
+    }
+    _opengl_widget->setMaskData(mask_data_map);
 }
 
 void SpatialOverlayPlotWidget::setupOpenGLWidget() {

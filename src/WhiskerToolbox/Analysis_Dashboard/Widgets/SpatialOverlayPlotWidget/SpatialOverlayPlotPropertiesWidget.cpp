@@ -255,8 +255,27 @@ void SpatialOverlayPlotPropertiesWidget::updatePlotWidget() {
 
     // Update selected data sources
     QStringList selected_keys = getSelectedDataSources();
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: Updating plot with selected keys:" << selected_keys;
-    _spatial_plot_widget->setPointDataKeys(selected_keys);
+    QStringList point_data_keys;
+    QStringList mask_data_keys;
+    QStringList line_data_keys;
+
+    for (auto const & key: selected_keys) {
+        if (_data_manager->getType(key.toStdString()) == DM_DataType::Points) {
+            point_data_keys.append(key);
+        } else if (_data_manager->getType(key.toStdString()) == DM_DataType::Mask) {
+            mask_data_keys.append(key);
+        } else if (_data_manager->getType(key.toStdString()) == DM_DataType::Line) {
+            line_data_keys.append(key);
+        }
+    }
+
+    if (!point_data_keys.empty()) { 
+        _spatial_plot_widget->setPointDataKeys(point_data_keys);
+    }
+    if (!mask_data_keys.empty()) {
+        _spatial_plot_widget->setMaskDataKeys(mask_data_keys);
+    }
+    //_spatial_plot_widget->setLineDataKeys(line_data_keys);
 
     // Update visualization settings
     // Note: We'll need to add public interfaces to SpatialOverlayPlotWidget for these

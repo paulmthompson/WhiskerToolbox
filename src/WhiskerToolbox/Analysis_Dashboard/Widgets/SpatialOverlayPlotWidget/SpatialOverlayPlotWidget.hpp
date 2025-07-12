@@ -45,6 +45,18 @@ public:
     QStringList getPointDataKeys() const { return _point_data_keys; }
 
     /**
+     * @brief Set which MaskData keys to display
+     * @param mask_data_keys List of MaskData keys to visualize
+     */
+    void setMaskDataKeys(QStringList const & mask_data_keys);
+
+    /**
+     * @brief Get currently displayed MaskData keys
+     */
+    QStringList getMaskDataKeys() const { return _mask_data_keys; }
+
+
+    /**
      * @brief Get access to the OpenGL widget for advanced configuration
      * @return Pointer to the OpenGL widget
      */
@@ -100,11 +112,17 @@ private:
     SpatialOverlayOpenGLWidget * _opengl_widget;
     QGraphicsProxyWidget * _proxy_widget;
     QStringList _point_data_keys;
-
+    QStringList _mask_data_keys;
+    QStringList _line_data_keys;
     /**
      * @brief Load point data from DataManager
      */
     void loadPointData();
+
+    /**
+     * @brief Load mask data from DataManager
+     */
+    void loadMaskData();
 
     /**
      * @brief Setup the OpenGL widget and proxy
