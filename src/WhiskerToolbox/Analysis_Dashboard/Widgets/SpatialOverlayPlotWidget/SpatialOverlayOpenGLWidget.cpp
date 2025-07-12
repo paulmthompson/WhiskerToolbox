@@ -138,11 +138,11 @@ void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::sh
     // Set different colors for different datasets
     static std::vector<QVector4D> colors = {
         QVector4D(1.0f, 0.0f, 0.0f, 0.5f), // Red with transparency
-        QVector4D(0.0f, 1.0f, 0.0f, 0.5f), // Green with transparency
-        QVector4D(0.0f, 0.0f, 1.0f, 0.5f), // Blue with transparency
-        QVector4D(1.0f, 1.0f, 0.0f, 0.5f), // Yellow with transparency
-        QVector4D(1.0f, 0.0f, 1.0f, 0.5f), // Magenta with transparency
-        QVector4D(0.0f, 1.0f, 1.0f, 0.5f), // Cyan with transparency
+        QVector4D(1.0f, 0.0f, 0.0f, 0.5f), // Red with transparency
+        QVector4D(1.0f, 0.0f, 0.0f, 0.5f), // Red with transparency
+        QVector4D(1.0f, 0.0f, 0.0f, 0.5f), // Red with transparency
+        QVector4D(1.0f, 0.0f, 0.0f, 0.5f), // Red with transparency
+        QVector4D(1.0f, 0.0f, 0.0f, 0.5f), // Red with transparency
     };
     
     // Create visualization for each MaskData
@@ -159,7 +159,8 @@ void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::sh
         color_index++;
         
         qDebug() << "SpatialOverlayOpenGLWidget: Created mask visualization for" << key 
-                 << "with" << mask_data->size() << "time frames";
+                 << "with" << mask_data->size() << "time frames"
+                 << "color:" << viz->color.x() << viz->color.y() << viz->color.z() << viz->color.w();
         
         _mask_data_visualizations[key] = std::move(viz);
     }
@@ -451,9 +452,9 @@ void SpatialOverlayOpenGLWidget::initializeGL() {
     // Set clear color
     glClearColor(0.95f, 0.95f, 0.95f, 1.0f);
 
-    // Enable blending for transparency
+    // Enable blending for transparency with premultiplied alpha
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     auto fmt = format();
 
@@ -481,7 +482,7 @@ void SpatialOverlayOpenGLWidget::paintGL() {
         return;
     }
 
-    renderPoints();
+    renderPoints(); // Temporarily disabled to isolate blue color source
     renderMasks();
 
     // Render polygon overlay using the polygon selection handler
@@ -489,6 +490,7 @@ void SpatialOverlayOpenGLWidget::paintGL() {
         QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
         _polygon_selection_handler->renderPolygonOverlay(_line_shader_program, mvp_matrix);
     }
+    
 }
 
 void SpatialOverlayOpenGLWidget::paintEvent(QPaintEvent * event) {
@@ -649,13 +651,25 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
                              << "at" << point->x << "," << point->y << "frame:" << point->data;
                 }
             } else if (!mask_results.empty()) {
-                // Set mask hover states
-                /*
-                QVector2D world_pos = screenToWorld(_current_mouse_pos.x(), _current_mouse_pos.y());
-                for (auto const& [mask_viz, mask_id] : mask_results) {
-                    mask_viz->setHoverMasks(world_pos.x(), world_pos.y());
+                // Set mask hover states using the results from findMasksNear (no redundant R-tree search)
+                
+                // Clear all mask hover states first
+                for (auto const& [key, mask_viz] : _mask_data_visualizations) {
+                    mask_viz->current_hover_masks.clear();
                 }
-                */
+                
+                // Set hover masks based on findMasksNear results
+                for (auto const& [mask_viz, mask_id] : mask_results) {
+                    mask_viz->current_hover_masks.insert(mask_id);
+                }
+                
+                // Update buffers for all visualizations that have hover masks
+                for (auto const& [key, mask_viz] : _mask_data_visualizations) {
+                    if (!mask_viz->current_hover_masks.empty()) {
+                        // Only update bounding box buffer, not outline buffer
+                        mask_viz->updateHoverBoundingBoxBuffer();
+                    }
+                }
                 
                 _tooltip_timer->stop();
                 _tooltip_refresh_timer->stop();
@@ -765,6 +779,25 @@ void SpatialOverlayOpenGLWidget::_handleTooltipTimer() {
         QString tooltip_text = create_tooltipText(point, viz->key);
         QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
         _tooltip_refresh_timer->start();
+    } else {
+        // Check for mask tooltips
+        size_t total_hover_masks = 0;
+        QStringList mask_info;
+        
+        for (auto const& [key, mask_viz] : _mask_data_visualizations) {
+            if (!mask_viz->current_hover_masks.empty()) {
+                total_hover_masks += mask_viz->current_hover_masks.size();
+                mask_info << QString("%1: %2 masks").arg(key).arg(mask_viz->current_hover_masks.size());
+            }
+        }
+        
+        if (total_hover_masks > 0) {
+            QString tooltip_text = QString("Masks under cursor: %1\n%2")
+                                   .arg(total_hover_masks)
+                                   .arg(mask_info.join("\n"));
+            QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
+            _tooltip_refresh_timer->start();
+        }
     }
 }
 
@@ -792,9 +825,27 @@ void SpatialOverlayOpenGLWidget::handleTooltipRefresh() {
         QString tooltip_text = create_tooltipText(point, viz->key);
         QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
     } else {
-        // No longer hovering over the same point, stop refresh timer
-        _tooltip_refresh_timer->stop();
-        QToolTip::hideText();
+        // Check for mask tooltips
+        size_t total_hover_masks = 0;
+        QStringList mask_info;
+        
+        for (auto const& [key, mask_viz] : _mask_data_visualizations) {
+            if (!mask_viz->current_hover_masks.empty()) {
+                total_hover_masks += mask_viz->current_hover_masks.size();
+                mask_info << QString("%1: %2 masks").arg(key).arg(mask_viz->current_hover_masks.size());
+            }
+        }
+        
+        if (total_hover_masks > 0) {
+            QString tooltip_text = QString("Masks under cursor: %1\n%2")
+                                   .arg(total_hover_masks)
+                                   .arg(mask_info.join("\n"));
+            QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
+        } else {
+            // No longer hovering over point or masks, stop refresh timer
+            _tooltip_refresh_timer->stop();
+            QToolTip::hideText();
+        }
     }
 }
 
@@ -1006,9 +1057,9 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
             viz->renderSelectedMaskOutlines(_line_shader_program);
         }
         
-        // Render hover mask outlines (on top of everything)
+        // Render hover mask bounding boxes (on top of everything else)
         for (auto const& [key, viz] : _mask_data_visualizations) {
-            viz->renderHoverMaskOutlines(_line_shader_program);
+            viz->renderHoverMaskBoundingBoxes(_line_shader_program);
         }
         
         _line_shader_program->release();
@@ -1159,15 +1210,12 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
                 discard;
             }
             
-            // Apply gamma correction to improve visibility of mid-range values
-            float gamma_corrected = pow(intensity, 0.6);
+            // Proper density visualization with premultiplied alpha output
+            vec3 final_color = u_color.rgb;  // Keep color pure (red for masks)
+            float final_alpha = u_color.a * intensity;  // Density affects transparency
             
-            // Maintain consistent hue by only modulating alpha and brightness
-            // This prevents color shifts from red to green
-            vec3 final_color = u_color.rgb * (0.3 + 0.7 * gamma_corrected);
-            float final_alpha = u_color.a * gamma_corrected;
-            
-            FragColor = vec4(final_color, final_alpha);
+            // Output premultiplied alpha to work correctly with GL_ONE, GL_ONE_MINUS_SRC_ALPHA
+            FragColor = vec4(final_color * final_alpha, final_alpha);
         }
     )";
 

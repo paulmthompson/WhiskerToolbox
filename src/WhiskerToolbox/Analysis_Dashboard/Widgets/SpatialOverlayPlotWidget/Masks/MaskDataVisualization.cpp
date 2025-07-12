@@ -132,6 +132,21 @@ void MaskDataVisualization::initializeOpenGLResources() {
     hover_outline_buffer.release();
     hover_outline_array_object.release();
 
+    // Create hover bounding box buffer
+    hover_bbox_array_object.create();
+    hover_bbox_array_object.bind();
+
+    hover_bbox_buffer.create();
+    hover_bbox_buffer.bind();
+    hover_bbox_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+
+    hover_bbox_buffer.release();
+    hover_bbox_array_object.release();
+
     // Create binary image texture
     glGenTextures(1, &binary_image_texture);
     glBindTexture(GL_TEXTURE_2D, binary_image_texture);
@@ -142,8 +157,8 @@ void MaskDataVisualization::initializeOpenGLResources() {
                      GL_RED, GL_FLOAT, binary_image_data.data());
     }
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -175,6 +190,12 @@ void MaskDataVisualization::cleanupOpenGLResources() {
     if (hover_outline_array_object.isCreated()) {
         hover_outline_array_object.destroy();
     }
+    if (hover_bbox_buffer.isCreated()) {
+        hover_bbox_buffer.destroy();
+    }
+    if (hover_bbox_array_object.isCreated()) {
+        hover_bbox_array_object.destroy();
+    }
     if (binary_image_texture != 0) {
         glDeleteTextures(1, &binary_image_texture);
         binary_image_texture = 0;
@@ -182,7 +203,6 @@ void MaskDataVisualization::cleanupOpenGLResources() {
 }
 
 void MaskDataVisualization::updateSelectionOutlineBuffer() {
-    /*
     selection_outline_data = generateOutlineDataForMasks(selected_masks);
 
     selection_outline_array_object.bind();
@@ -200,11 +220,9 @@ void MaskDataVisualization::updateSelectionOutlineBuffer() {
 
     selection_outline_buffer.release();
     selection_outline_array_object.release();
-    */
 }
 
 void MaskDataVisualization::updateHoverOutlineBuffer() {
-    /*
     hover_outline_data = generateOutlineDataForMasks(current_hover_masks);
 
     hover_outline_array_object.bind();
@@ -222,7 +240,6 @@ void MaskDataVisualization::updateHoverOutlineBuffer() {
 
     hover_outline_buffer.release();
     hover_outline_array_object.release();
-    */
 }
 
 void MaskDataVisualization::clearSelection() {
@@ -249,16 +266,28 @@ bool MaskDataVisualization::toggleMaskSelection(MaskIdentifier const & mask_id) 
 }
 
 void MaskDataVisualization::setHoverMasks(float world_x, float world_y) {
-    std::vector<MaskIdentifier> masks = findMasksContainingPoint(world_x, world_y);
+    // This method is now unused since we use the results from findMasksNear directly
+    // Use R-tree to find candidate masks (much faster than pixel-perfect checking)
+    BoundingBox point_bbox(world_x, world_y, world_x, world_y);
+    std::vector<RTreeEntry<MaskIdentifier>> candidates;
+    if (spatial_index) {
+        spatial_index->query(point_bbox, candidates);
+    }
+    
     current_hover_masks.clear();
-    current_hover_masks.insert(masks.begin(), masks.end());
-    updateHoverOutlineBuffer();
+    for (auto const & candidate : candidates) {
+        current_hover_masks.insert(candidate.data);
+    }
+    
+    // Only update bounding box buffer, not outline buffer
+    updateHoverBoundingBoxBuffer();
 }
 
 void MaskDataVisualization::clearHover() {
     if (!current_hover_masks.empty()) {
         current_hover_masks.clear();
-        updateHoverOutlineBuffer();
+        // Only update bounding box buffer, not outline buffer
+        updateHoverBoundingBoxBuffer();
     }
 }
 
@@ -280,9 +309,12 @@ std::vector<MaskIdentifier> MaskDataVisualization::findMasksContainingPoint(floa
     uint32_t pixel_y = static_cast<uint32_t>(std::round(world_y));
 
     for (auto const & candidate : candidates) {
+        /*
         if (maskContainsPoint(candidate.data, pixel_x, pixel_y)) {
             result.push_back(candidate.data);
         }
+        */
+       result.push_back(candidate.data); // Use faster RTreeEntry data directly for now
     }
 
     qDebug() << "MaskDataVisualization: Found" << result.size() << "masks containing point";
@@ -421,6 +453,11 @@ void MaskDataVisualization::createBinaryImageTexture() {
                     value = std::log(1.0f + value) / std::log(1.0f + max_value);
                 }
             }
+            
+            // Debug: Check scaled values
+            float min_scaled = *std::min_element(binary_image_data.begin(), binary_image_data.end());
+            float max_scaled = *std::max_element(binary_image_data.begin(), binary_image_data.end());
+            qDebug() << "MaskDataVisualization: Scaled texture range: min=" << min_scaled << "max=" << max_scaled;
         }
     }
 
@@ -548,9 +585,7 @@ bool MaskDataVisualization::maskContainsPoint(MaskIdentifier const & mask_id, ui
     for (auto const & point : mask) {
         if (point.x == pixel_x && point.y == pixel_y) {
             return true;
-        } else {
-            return false;
-        }
+        } 
     }
 
     return false;
@@ -565,4 +600,117 @@ std::pair<float, float> MaskDataVisualization::worldToTexture(float world_x, flo
     float v = (world_y - world_min_y) / (world_max_y - world_min_y);
     
     return {u, v};
+}
+
+void MaskDataVisualization::renderHoverMaskBoundingBoxes(QOpenGLShaderProgram * shader_program) {
+    if (current_hover_masks.empty() || hover_bbox_data.empty()) return;
+
+    hover_bbox_array_object.bind();
+    hover_bbox_buffer.bind();
+
+    // Set uniforms for bounding box rendering (black)
+    QVector4D bbox_color = QVector4D(0.0f, 0.0f, 0.0f, 1.0f); // Black
+    shader_program->setUniformValue("u_color", bbox_color);
+    
+    glLineWidth(2.0f); // Thick lines for visibility
+
+    // Draw the bounding boxes
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(hover_bbox_data.size() / 2));
+
+    hover_bbox_buffer.release();
+    hover_bbox_array_object.release();
+}
+
+void MaskDataVisualization::updateHoverBoundingBoxBuffer() {
+    hover_bbox_data = generateBoundingBoxDataForMasks(current_hover_masks);
+
+    hover_bbox_array_object.bind();
+    hover_bbox_buffer.bind();
+    
+    if (hover_bbox_data.empty()) {
+        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+    } else {
+        hover_bbox_buffer.allocate(hover_bbox_data.data(),
+                                  static_cast<int>(hover_bbox_data.size() * sizeof(float)));
+    }
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+
+    hover_bbox_buffer.release();
+    hover_bbox_array_object.release();
+}
+
+std::vector<float> MaskDataVisualization::generateBoundingBoxDataForMasks(
+    std::unordered_set<MaskIdentifier, MaskIdentifierHash> const & mask_ids) const {
+    
+    std::vector<float> bbox_data;
+    
+    if (!spatial_index) return bbox_data;
+    
+    for (auto const & mask_id : mask_ids) {
+        // Find the bounding box from R-tree entries
+        // We need to search through the R-tree to find the bounding box for this mask
+        BoundingBox world_bbox(0, 0, static_cast<float>(mask_data->getImageSize().width), 
+                              static_cast<float>(mask_data->getImageSize().height));
+        std::vector<RTreeEntry<MaskIdentifier>> all_entries;
+        spatial_index->query(world_bbox, all_entries);
+        
+        for (auto const & entry : all_entries) {
+            if (entry.data.timeframe == mask_id.timeframe && 
+                entry.data.mask_index == mask_id.mask_index) {
+                
+                // Found the bounding box for this mask
+                float min_x = entry.min_x;
+                float min_y = entry.min_y;
+                float max_x = entry.max_x;
+                float max_y = entry.max_y;
+
+                // Generate line segments for the bounding box rectangle
+                // Bottom edge
+                bbox_data.push_back(min_x); bbox_data.push_back(min_y);
+                bbox_data.push_back(max_x); bbox_data.push_back(min_y);
+                
+                // Right edge
+                bbox_data.push_back(max_x); bbox_data.push_back(min_y);
+                bbox_data.push_back(max_x); bbox_data.push_back(max_y);
+                
+                // Top edge
+                bbox_data.push_back(max_x); bbox_data.push_back(max_y);
+                bbox_data.push_back(min_x); bbox_data.push_back(max_y);
+                
+                // Left edge
+                bbox_data.push_back(min_x); bbox_data.push_back(max_y);
+                bbox_data.push_back(min_x); bbox_data.push_back(min_y);
+                
+                break; // Found the mask, move to next
+            }
+        }
+    }
+    
+    return bbox_data;
+}
+
+std::vector<BoundingBox> MaskDataVisualization::getHoverMaskBoundingBoxes() const {
+    std::vector<BoundingBox> result;
+    
+    if (!spatial_index) return result;
+    
+    for (auto const & mask_id : current_hover_masks) {
+        // Find the bounding box from R-tree entries
+        BoundingBox world_bbox(0, 0, static_cast<float>(mask_data->getImageSize().width), 
+                              static_cast<float>(mask_data->getImageSize().height));
+        std::vector<RTreeEntry<MaskIdentifier>> all_entries;
+        spatial_index->query(world_bbox, all_entries);
+        
+        for (auto const & entry : all_entries) {
+            if (entry.data.timeframe == mask_id.timeframe && 
+                entry.data.mask_index == mask_id.mask_index) {
+                result.push_back(BoundingBox(entry.min_x, entry.min_y, entry.max_x, entry.max_y));
+                break;
+            }
+        }
+    }
+    
+    return result;
 }

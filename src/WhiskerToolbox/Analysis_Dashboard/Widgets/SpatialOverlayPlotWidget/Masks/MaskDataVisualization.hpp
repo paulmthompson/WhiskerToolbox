@@ -73,6 +73,11 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QOpenGLBuffer hover_outline_buffer;
     QOpenGLVertexArrayObject hover_outline_array_object;
     
+    // Hover bounding box rendering
+    std::vector<float> hover_bbox_data;
+    QOpenGLBuffer hover_bbox_buffer;
+    QOpenGLVertexArrayObject hover_bbox_array_object;
+    
     // Visualization properties
     QString key;
     QVector4D color;
@@ -180,10 +185,27 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void renderHoverMaskOutlines(QOpenGLShaderProgram * shader_program);
 
     /**
+     * @brief Render hover mask bounding boxes
+     * @param shader_program The shader program to use for rendering
+     */
+    void renderHoverMaskBoundingBoxes(QOpenGLShaderProgram * shader_program);
+
+    /**
+     * @brief Get the bounding boxes of currently hovered masks
+     * @return Vector of bounding boxes for hover masks
+     */
+    std::vector<BoundingBox> getHoverMaskBoundingBoxes() const;
+
+    /**
      * @brief Calculate bounding box for the entire MaskData
      * @return BoundingBox encompassing all masks
      */
     BoundingBox calculateBounds() const;
+
+    /**
+     * @brief Update hover bounding box buffer with current hover masks
+     */
+    void updateHoverBoundingBoxBuffer();
 
 private:
     /**
@@ -207,6 +229,13 @@ private:
      * @return Vector of vertex data for the outlines
      */
     std::vector<float> generateOutlineDataForMasks(std::unordered_set<MaskIdentifier, MaskIdentifierHash> const & mask_ids) const;
+
+    /**
+     * @brief Generate bounding box line data for a specific set of masks
+     * @param mask_ids Set of mask identifiers to generate bounding boxes for
+     * @return Vector of vertex data for the bounding box lines
+     */
+    std::vector<float> generateBoundingBoxDataForMasks(std::unordered_set<MaskIdentifier, MaskIdentifierHash> const & mask_ids) const;
 
     /**
      * @brief Check if a mask contains a world coordinate point
