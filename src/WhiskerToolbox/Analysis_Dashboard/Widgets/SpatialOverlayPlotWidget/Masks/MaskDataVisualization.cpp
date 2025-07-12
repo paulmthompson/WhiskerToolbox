@@ -224,6 +224,26 @@ void MaskDataVisualization::selectMasks(std::vector<MaskIdentifier> const & mask
     qDebug() << "MaskDataVisualization: Total selected masks:" << selected_masks.size();
 }
 
+bool MaskDataVisualization::toggleMaskSelection(MaskIdentifier const & mask_id) {
+    auto it = selected_masks.find(mask_id);
+    
+    if (it != selected_masks.end()) {
+        // Mask is selected, remove it
+        selected_masks.erase(it);
+        updateSelectionBinaryImageTexture();
+        qDebug() << "MaskDataVisualization: Deselected mask" << mask_id.timeframe << "," << mask_id.mask_index 
+                 << "- Total selected:" << selected_masks.size();
+        return false; // Mask was deselected
+    } else {
+        // Mask is not selected, add it
+        selected_masks.insert(mask_id);
+        updateSelectionBinaryImageTexture();
+        qDebug() << "MaskDataVisualization: Selected mask" << mask_id.timeframe << "," << mask_id.mask_index
+                 << "- Total selected:" << selected_masks.size();
+        return true; // Mask was selected
+    }
+}
+
 void MaskDataVisualization::setHoverEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) {
     current_hover_entries = entries;
     updateHoverBoundingBoxBuffer();

@@ -32,7 +32,7 @@
    <item>
     <widget class="QGroupBox" name="data_sources_group">
      <property name="title">
-      <string>Point Data Sources</string>
+      <string>Data Sources</string>
      </property>
      <layout class="QVBoxLayout" name="sources_layout">
       <item>
@@ -190,7 +190,7 @@
           </item>
           <item>
            <property name="text">
-            <string>Point Selection (Ctrl+Click)</string>
+            <string>Point &amp; Mask Selection (Ctrl+Click)</string>
            </property>
            <property name="data">
             <number>1</number>

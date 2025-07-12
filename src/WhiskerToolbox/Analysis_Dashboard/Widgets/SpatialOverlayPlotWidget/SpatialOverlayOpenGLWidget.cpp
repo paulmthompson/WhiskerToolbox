@@ -511,8 +511,9 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
             return;
         }
 
-        // Point selection mode
+        // Point and mask selection mode - requires Ctrl+Click
         if (_selection_mode == SelectionMode::PointSelection && (event->modifiers() & Qt::ControlModifier)) {
+            // First try to find points near the click
             auto [viz, point] = findPointNear(event->pos().x(), event->pos().y());
             if (viz && point) {
                 bool was_selected = viz->togglePointSelection(point);
@@ -526,13 +527,9 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
                 event->accept();
                 return;
             }
-        }
 
-        // Point selection mode - mask selection with left click (no modifiers)
-        if (_selection_mode == SelectionMode::PointSelection && !(event->modifiers() & Qt::ControlModifier)) {
+            // If no points found, try to find masks near the click
             auto [world_x, world_y] = screenToWorld(event->pos().x(), event->pos().y());
-            
-            // Find hover masks (R-tree candidates)
             auto mask_results = findMasksNear(event->pos().x(), event->pos().y());
             
             if (!mask_results.empty()) {
@@ -541,14 +538,16 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
                     auto refined_masks = mask_viz->refineMasksContainingPoint(entries, world_x, world_y);
                     
                     if (!refined_masks.empty()) {
-                        qDebug() << "SpatialOverlayOpenGLWidget: Selecting" << refined_masks.size() 
-                                 << "masks under point click in" << mask_viz->key;
+                        // Toggle the first mask found (most common use case)
+                        auto const & first_mask = refined_masks[0];
+                        bool was_selected = mask_viz->toggleMaskSelection(first_mask);
                         
-                        // Select all masks under the point
-                        mask_viz->selectMasks(refined_masks);
+                        qDebug() << "SpatialOverlayOpenGLWidget: Mask" << (was_selected ? "selected" : "deselected")
+                                 << "in" << mask_viz->key << "at timeframe" << first_mask.timeframe 
+                                 << "index" << first_mask.mask_index;
                         
                         // Emit selection changed signal
-                        emit selectionChanged(getTotalSelectedMasks(), mask_viz->key, refined_masks.size());
+                        emit selectionChanged(getTotalSelectedMasks(), mask_viz->key, mask_viz->selected_masks.size());
                         requestThrottledUpdate();
                         event->accept();
                         return;

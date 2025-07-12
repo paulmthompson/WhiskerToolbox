@@ -183,7 +183,18 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      */
     void updateHoverBoundingBoxBuffer();
 
+    /**
+     * @brief Select multiple masks at once
+     * @param mask_ids Vector of mask identifiers to select
+     */
     void selectMasks(std::vector<MaskIdentifier> const & mask_ids);
+
+    /**
+     * @brief Toggle selection state of a single mask
+     * @param mask_id Identifier of the mask to toggle
+     * @return True if mask was selected, false if deselected
+     */
+    bool toggleMaskSelection(MaskIdentifier const & mask_id);
 
 private:
     /**
