@@ -1,7 +1,8 @@
 
 # Test executable for SpatialIndex
 add_executable(SpatialIndexTests
-    QuadTree.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/SpatialIndex/QuadTree.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/SpatialIndex/RTree.test.cpp
 )
 
 # Link against our SpatialIndex library and Catch2

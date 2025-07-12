@@ -6,7 +6,9 @@ add_library(SpatialIndex INTERFACE)
 # Add the interface headers
 target_sources(SpatialIndex INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/QuadTree.hpp>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/RTree.hpp>
     $<INSTALL_INTERFACE:SpatialIndex/QuadTree.hpp>
+    $<INSTALL_INTERFACE:SpatialIndex/RTree.hpp>
 )
 
 # Specify include directories
