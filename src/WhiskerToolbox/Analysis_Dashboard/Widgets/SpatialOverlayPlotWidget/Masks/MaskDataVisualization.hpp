@@ -10,30 +10,83 @@
 #include <QVector4D>
 
 #include <cstdint>
+#include <memory>
+#include <unordered_set>
+#include <vector>
 
 class MaskData;
 class QOpenGLShaderProgram;
 
 /**
+ * @brief Identifier for a specific mask within the dataset
+ */
+struct MaskIdentifier {
+    int64_t timeframe;
+    size_t mask_index;
+
+    MaskIdentifier() : timeframe(0), mask_index(0) {}
+    
+    MaskIdentifier(int64_t t, size_t idx) : timeframe(t), mask_index(idx) {}
+    
+    bool operator==(const MaskIdentifier& other) const {
+        return timeframe == other.timeframe && mask_index == other.mask_index;
+    }
+};
+
+/**
+ * @brief Hash function for MaskIdentifier to use in unordered_set
+ */
+struct MaskIdentifierHash {
+    size_t operator()(const MaskIdentifier& id) const {
+        return std::hash<int64_t>()(id.timeframe) ^ 
+               (std::hash<size_t>()(id.mask_index) << 1);
+    }
+};
+
+/**
  * @brief Visualization data for a single MaskData object
  */
-struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core  {
-    std::unique_ptr<RTree<int64_t>> spatial_index;
-    std::vector<float> vertex_data;
-    QOpenGLBuffer vertex_buffer;
-    QOpenGLVertexArrayObject vertex_array_object;
+struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
+    // R-tree for spatial indexing of mask bounding boxes
+    std::unique_ptr<RTree<MaskIdentifier>> spatial_index;
+    
+    // Binary image texture data and OpenGL objects
+    std::vector<float> binary_image_data;
+    GLuint binary_image_texture = 0;
+    QOpenGLBuffer quad_vertex_buffer;
+    QOpenGLVertexArrayObject quad_vertex_array_object;
+    
+    // Mask outline rendering data
+    std::vector<float> outline_vertex_data;
+    QOpenGLBuffer outline_vertex_buffer;
+    QOpenGLVertexArrayObject outline_vertex_array_object;
+    
+    // Selection and hover data
+    std::unordered_set<MaskIdentifier, MaskIdentifierHash> selected_masks;
+    std::vector<float> selection_outline_data;
+    QOpenGLBuffer selection_outline_buffer;
+    QOpenGLVertexArrayObject selection_outline_array_object;
+    
+    // Hover state
+    std::unordered_set<MaskIdentifier, MaskIdentifierHash> current_hover_masks;
+    std::vector<float> hover_outline_data;
+    QOpenGLBuffer hover_outline_buffer;
+    QOpenGLVertexArrayObject hover_outline_array_object;
+    
+    // Visualization properties
     QString key;
     QVector4D color;
     bool visible = true;
-
-    // Selection state for this MaskData
-    std::unordered_set<RTreeEntry<int64_t> const *> selected_masks;
-    std::vector<float> selection_vertex_data;
-    QOpenGLBuffer selection_vertex_buffer;
-    QOpenGLVertexArrayObject selection_vertex_array_object;
-
-    // Hover state for this MaskData
-    RTreeEntry<int64_t> const * current_hover_mask = nullptr;
+    float outline_thickness = 2.0f;
+    
+    // World bounds based on image size
+    float world_min_x = 0.0f;
+    float world_max_x = 1.0f;
+    float world_min_y = 0.0f;
+    float world_max_y = 1.0f;
+    
+    // Reference to original data (not owned)
+    std::shared_ptr<MaskData> mask_data;
 
     MaskDataVisualization(QString const & data_key, std::shared_ptr<MaskData> const & mask_data);
     ~MaskDataVisualization();
@@ -49,9 +102,26 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     void cleanupOpenGLResources();
 
     /**
-     * @brief Update selection vertex buffer with current selection
+     * @brief Set outline thickness for mask rendering
+     * @param thickness Thickness in pixels
      */
-    void updateSelectionVertexBuffer();
+    void setOutlineThickness(float thickness);
+
+    /**
+     * @brief Get current outline thickness
+     * @return Thickness in pixels
+     */
+    float getOutlineThickness() const { return outline_thickness; }
+
+    /**
+     * @brief Update selection outline buffer with current selection
+     */
+    void updateSelectionOutlineBuffer();
+
+    /**
+     * @brief Update hover outline buffer with current hover masks
+     */
+    void updateHoverOutlineBuffer();
 
     /**
      * @brief Clear all selected masks
@@ -60,52 +130,100 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core  {
 
     /**
      * @brief Toggle selection of a mask
-     * @param mask_ptr Pointer to the mask to toggle
+     * @param mask_id Identifier of the mask to toggle
      * @return True if mask was selected, false if deselected
      */
-    bool toggleMaskSelection(RTreeEntry<int64_t> const * mask_ptr);
+    bool toggleMaskSelection(MaskIdentifier const & mask_id);
 
     /**
-     * @brief Render masks for this MaskData
-     * 
-     * Masks should appear as a homogenous solid shape with an outline of the same
-     * color but darker.
-     * 
+     * @brief Set hover masks for the given point
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
+     */
+    void setHoverMasks(float world_x, float world_y);
+
+    /**
+     * @brief Clear hover state
+     */
+    void clearHover();
+
+    /**
+     * @brief Find all masks that contain the given point
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
+     * @return Vector of mask identifiers that contain the point
+     */
+    std::vector<MaskIdentifier> findMasksContainingPoint(float world_x, float world_y) const;
+
+    /**
+     * @brief Render the binary image texture
      * @param shader_program The shader program to use for rendering
      */
-    void renderMasks(QOpenGLShaderProgram * shader_program);
+    void renderBinaryImage(QOpenGLShaderProgram * shader_program);
 
     /**
-     * @brief Render selected masks for this MaskData
-     * 
-     * Selected masks should appear as a homogenous solid shape with an outline of the same
-     * color but darker. Selected masks should be a different color than the unselected masks.
-     * 
+     * @brief Render mask outlines
      * @param shader_program The shader program to use for rendering
      */
-    void renderSelectedMasks(QOpenGLShaderProgram * shader_program);
+    void renderMaskOutlines(QOpenGLShaderProgram * shader_program);
 
     /**
-     * @brief Render hover mask for this MaskData
-     * 
-     * Hover masks should appear as a homogenous solid shape with an outline of the same
-     * color but darker.
-     * 
+     * @brief Render selected mask outlines
      * @param shader_program The shader program to use for rendering
-     * @param highlight_buffer The buffer to use for highlighting
-     * @param highlight_vao The vertex array object to use for highlighting
      */
-    void renderHoverMask(QOpenGLShaderProgram * shader_program, 
-                          QOpenGLBuffer & highlight_buffer, 
-                          QOpenGLVertexArrayObject & highlight_vao);
+    void renderSelectedMaskOutlines(QOpenGLShaderProgram * shader_program);
 
     /**
-     * @brief Calculate bounding box for a MaskData object
-     * @param mask_data The MaskData to calculate bounds for
-     * @return BoundingBox for the MaskData
+     * @brief Render hover mask outlines
+     * @param shader_program The shader program to use for rendering
      */
-    BoundingBox calculateBoundsForMaskData(MaskData const * mask_data) const;
+    void renderHoverMaskOutlines(QOpenGLShaderProgram * shader_program);
+
+    /**
+     * @brief Calculate bounding box for the entire MaskData
+     * @return BoundingBox encompassing all masks
+     */
+    BoundingBox calculateBounds() const;
+
+private:
+    /**
+     * @brief Create the binary image texture from all masks
+     */
+    void createBinaryImageTexture();
+
+    /**
+     * @brief Populate the R-tree with mask bounding boxes
+     */
+    void populateRTree();
+
+    /**
+     * @brief Generate outline vertex data for all masks
+     */
+    void generateOutlineVertexData();
+
+    /**
+     * @brief Generate outline data for a specific set of masks
+     * @param mask_ids Set of mask identifiers to generate outlines for
+     * @return Vector of vertex data for the outlines
+     */
+    std::vector<float> generateOutlineDataForMasks(std::unordered_set<MaskIdentifier, MaskIdentifierHash> const & mask_ids) const;
+
+    /**
+     * @brief Check if a mask contains a world coordinate point
+     * @param mask_id Identifier of the mask to check
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
+     * @return True if the mask contains the point
+     */
+    bool maskContainsPoint(MaskIdentifier const & mask_id, float world_x, float world_y) const;
+
+    /**
+     * @brief Convert world coordinates to texture coordinates
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
+     * @return Pair of texture coordinates (u, v)
+     */
+    std::pair<float, float> worldToTexture(float world_x, float world_y) const;
 };
-
 
 #endif // MASKDATAVISUALIZATION_HPP

@@ -1,7 +1,9 @@
 #include "SpatialOverlayOpenGLWidget.hpp"
 
 #include "DataManager/Points/Point_Data.hpp"
+#include "DataManager/Masks/Mask_Data.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.hpp"
 
 #include <QApplication>
 #include <QDebug>
@@ -23,6 +25,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
       _point_size(8.0f),
+      _mask_outline_thickness(2.0f),
       _is_panning(false),
       _data_bounds_valid(false),
       _tooltips_enabled(true),
@@ -124,6 +127,119 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
     }
 }
 
+//========== Mask Data ==========
+
+void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map) {
+    // Clear existing visualizations
+    _mask_data_visualizations.clear();
+    
+    // Set different colors for different datasets
+    static std::vector<QVector4D> colors = {
+        QVector4D(0.0f, 1.0f, 0.0f, 0.5f), // Green with transparency
+        QVector4D(1.0f, 0.0f, 0.0f, 0.5f), // Red with transparency
+        QVector4D(0.0f, 0.0f, 1.0f, 0.5f), // Blue with transparency
+        QVector4D(1.0f, 1.0f, 0.0f, 0.5f), // Yellow with transparency
+        QVector4D(1.0f, 0.0f, 1.0f, 0.5f), // Magenta with transparency
+        QVector4D(0.0f, 1.0f, 1.0f, 0.5f), // Cyan with transparency
+    };
+    
+    // Create visualization for each MaskData
+    size_t color_index = 0;
+    for (auto const & [key, mask_data] : mask_data_map) {
+        if (!mask_data) {
+            qDebug() << "SpatialOverlayOpenGLWidget: Null mask data for key:" << key;
+            continue;
+        }
+        
+        auto viz = std::make_unique<MaskDataVisualization>(key, mask_data);
+        viz->color = colors[color_index % colors.size()];
+        viz->setOutlineThickness(_mask_outline_thickness);
+        color_index++;
+        
+        qDebug() << "SpatialOverlayOpenGLWidget: Created mask visualization for" << key 
+                 << "with" << mask_data->size() << "time frames";
+        
+        _mask_data_visualizations[key] = std::move(viz);
+    }
+    
+    calculateDataBounds();
+    updateViewMatrices();
+    
+    // Ensure OpenGL context is current before forcing repaint
+    if (context() && context()->isValid()) {
+        makeCurrent();
+        update();
+        repaint();
+        QApplication::processEvents();
+        doneCurrent();
+    } else {
+        update();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::setMaskOutlineThickness(float thickness) {
+    float new_thickness = std::max(0.5f, std::min(10.0f, thickness));
+    if (new_thickness != _mask_outline_thickness) {
+        _mask_outline_thickness = new_thickness;
+        
+        // Update all mask visualizations
+        for (auto const& [key, viz] : _mask_data_visualizations) {
+            viz->setOutlineThickness(_mask_outline_thickness);
+        }
+        
+        emit maskOutlineThicknessChanged(_mask_outline_thickness);
+        requestThrottledUpdate();
+    }
+}
+
+std::vector<std::pair<QString, std::vector<MaskIdentifier>>> SpatialOverlayOpenGLWidget::getSelectedMaskData() const {
+    std::vector<std::pair<QString, std::vector<MaskIdentifier>>> result;
+    
+    for (auto const& [key, viz] : _mask_data_visualizations) {
+        if (!viz->selected_masks.empty()) {
+            std::vector<MaskIdentifier> masks;
+            masks.reserve(viz->selected_masks.size());
+            
+            for (auto const& mask_id : viz->selected_masks) {
+                masks.push_back(mask_id);
+            }
+            
+            result.emplace_back(key, std::move(masks));
+        }
+    }
+    
+    return result;
+}
+
+size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
+    size_t total = 0;
+    for (auto const& [key, viz] : _mask_data_visualizations) {
+        total += viz->selected_masks.size();
+    }
+    return total;
+}
+
+std::vector<std::pair<MaskDataVisualization *, MaskIdentifier>> SpatialOverlayOpenGLWidget::findMasksNear(int screen_x, int screen_y) const {
+    std::vector<std::pair<MaskDataVisualization *, MaskIdentifier>> result;
+    
+    if (_mask_data_visualizations.empty()) {
+        return result;
+    }
+    
+    QVector2D world_pos = screenToWorld(screen_x, screen_y);
+    
+    for (auto const& [key, viz] : _mask_data_visualizations) {
+        if (!viz->visible) continue;
+        
+        auto mask_ids = viz->findMasksContainingPoint(world_pos.x(), world_pos.y());
+        for (auto const& mask_id : mask_ids) {
+            result.emplace_back(viz.get(), mask_id);
+        }
+    }
+    
+    return result;
+}
+
 void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
     float new_point_size = std::max(1.0f, std::min(50.0f, point_size));// Clamp between 1 and 50 pixels
     if (new_point_size != _point_size) {
@@ -187,7 +303,7 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
 }
 
 void SpatialOverlayOpenGLWidget::calculateDataBounds() {
-    if (_point_data_visualizations.empty()) {
+    if (_point_data_visualizations.empty() && _mask_data_visualizations.empty()) {
         _data_bounds_valid = false;
         return;
     }
@@ -199,6 +315,7 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
     
     bool has_points = false;
     
+    // Calculate bounds from point data
     for (auto const& [key, viz] : _point_data_visualizations) {
         if (!viz->visible || viz->vertex_data.empty()) continue;
         
@@ -213,6 +330,17 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
             max_y = std::max(max_y, y);
             has_points = true;
         }
+    }
+    
+    // Calculate bounds from mask data
+    for (auto const& [key, viz] : _mask_data_visualizations) {
+        if (!viz->visible) continue;
+        
+        min_x = std::min(min_x, viz->world_min_x);
+        max_x = std::max(max_x, viz->world_max_x);
+        min_y = std::min(min_y, viz->world_min_y);
+        max_y = std::max(max_y, viz->world_max_y);
+        has_points = true;
     }
     
     if (!has_points) {
@@ -352,6 +480,7 @@ void SpatialOverlayOpenGLWidget::paintGL() {
     }
 
     renderPoints();
+    renderMasks();
 
     // Render polygon overlay using the polygon selection handler
     if (_polygon_selection_handler && _polygon_selection_handler->isPolygonSelecting()) {
@@ -398,6 +527,32 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
                 
                 // Emit selection changed signal with data-specific information
                 emit selectionChanged(getTotalSelectedPoints(), viz->key, viz->selected_points.size());
+                requestThrottledUpdate();
+                event->accept();
+                return;
+            }
+            
+            // Try mask selection if no point was found
+            auto mask_results = findMasksNear(event->pos().x(), event->pos().y());
+            if (!mask_results.empty()) {
+                size_t total_masks_toggled = 0;
+                QString last_modified_key;
+                
+                for (auto const& [mask_viz, mask_id] : mask_results) {
+                    bool was_selected = mask_viz->toggleMaskSelection(mask_id);
+                    if (was_selected) {
+                        total_masks_toggled++;
+                        last_modified_key = mask_viz->key;
+                    }
+                    
+                    qDebug() << "SpatialOverlayOpenGLWidget: Mask" << (was_selected ? "selected" : "deselected")
+                             << "in" << mask_viz->key << "timeframe:" << mask_id.timeframe 
+                             << "index:" << mask_id.mask_index;
+                }
+                
+                if (total_masks_toggled > 0) {
+                    emit selectionChanged(getTotalSelectedMasks(), last_modified_key, total_masks_toggled);
+                }
                 requestThrottledUpdate();
                 event->accept();
                 return;
@@ -460,11 +615,17 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         // Handle tooltip logic if tooltips are enabled
         if (_tooltips_enabled) {
             auto [viz, point] = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
+            auto mask_results = findMasksNear(_current_mouse_pos.x(), _current_mouse_pos.y());
             
             // Clear old hover states
             PointDataVisualization* old_hover_viz = getCurrentHoverVisualization();
             if (old_hover_viz && old_hover_viz != viz) {
                 old_hover_viz->current_hover_point = nullptr;
+            }
+            
+            // Clear old mask hover states
+            for (auto const& [key, mask_viz] : _mask_data_visualizations) {
+                mask_viz->clearHover();
             }
             
             // Set new hover state
@@ -478,8 +639,20 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
                     qDebug() << "SpatialOverlayOpenGLWidget: Hovering over point in" << viz->key
                              << "at" << point->x << "," << point->y << "frame:" << point->data;
                 }
+            } else if (!mask_results.empty()) {
+                // Set mask hover states
+                QVector2D world_pos = screenToWorld(_current_mouse_pos.x(), _current_mouse_pos.y());
+                for (auto const& [mask_viz, mask_id] : mask_results) {
+                    mask_viz->setHoverMasks(world_pos.x(), world_pos.y());
+                }
+                
+                _tooltip_timer->stop();
+                _tooltip_refresh_timer->stop();
+                _tooltip_timer->start();
+                
+                qDebug() << "SpatialOverlayOpenGLWidget: Hovering over" << mask_results.size() << "masks";
             } else {
-                // No point under cursor
+                // No point or mask under cursor
                 if (old_hover_viz) {
                     old_hover_viz->current_hover_point = nullptr;
                 }
@@ -540,6 +713,10 @@ void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
     // Clear all hover states
     for (auto const& [key, viz] : _point_data_visualizations) {
         viz->current_hover_point = nullptr;
+    }
+    
+    for (auto const& [key, viz] : _mask_data_visualizations) {
+        viz->clearHover();
     }
 
     // Use throttled update
@@ -619,6 +796,13 @@ void SpatialOverlayOpenGLWidget::clearSelection() {
     
     for (auto const& [key, viz] : _point_data_visualizations) {
         if (!viz->selected_points.empty()) {
+            viz->clearSelection();
+            had_selection = true;
+        }
+    }
+    
+    for (auto const& [key, viz] : _mask_data_visualizations) {
+        if (!viz->selected_masks.empty()) {
             viz->clearSelection();
             had_selection = true;
         }
@@ -771,6 +955,53 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
     _shader_program->release();
 }
 
+void SpatialOverlayOpenGLWidget::renderMasks() {
+    if (_mask_data_visualizations.empty() || !_opengl_resources_initialized) {
+        return;
+    }
+    
+    // === DRAW CALL 1: Render binary image textures ===
+    if (_texture_shader_program && _texture_shader_program->bind()) {
+        QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
+        _texture_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
+        
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
+        for (auto const& [key, viz] : _mask_data_visualizations) {
+            viz->renderBinaryImage(_texture_shader_program);
+        }
+        
+        _texture_shader_program->release();
+    }
+    
+    // === DRAW CALL 2: Render mask outlines ===
+    if (_line_shader_program && _line_shader_program->bind()) {
+        QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
+        _line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
+        
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
+        // Render regular mask outlines
+        for (auto const& [key, viz] : _mask_data_visualizations) {
+            viz->renderMaskOutlines(_line_shader_program);
+        }
+        
+        // Render selected mask outlines (on top)
+        for (auto const& [key, viz] : _mask_data_visualizations) {
+            viz->renderSelectedMaskOutlines(_line_shader_program);
+        }
+        
+        // Render hover mask outlines (on top of everything)
+        for (auto const& [key, viz] : _mask_data_visualizations) {
+            viz->renderHoverMaskOutlines(_line_shader_program);
+        }
+        
+        _line_shader_program->release();
+    }
+}
+
 void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     qDebug() << "SpatialOverlayOpenGLWidget: Initializing OpenGL resources";
 
@@ -877,6 +1108,57 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
         return;
     }
 
+    // Create and compile texture shader program
+    _texture_shader_program = new QOpenGLShaderProgram(this);
+
+    // Vertex shader for texture rendering
+    QString texture_vertex_shader_source = R"(
+        #version 410 core
+        
+        layout(location = 0) in vec2 a_position;
+        layout(location = 1) in vec2 a_texCoord;
+        
+        uniform mat4 u_mvp_matrix;
+        
+        out vec2 v_texCoord;
+        
+        void main() {
+            gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
+            v_texCoord = a_texCoord;
+        }
+    )";
+
+    // Fragment shader for texture rendering
+    QString texture_fragment_shader_source = R"(
+        #version 410 core
+        
+        in vec2 v_texCoord;
+        uniform sampler2D u_texture;
+        uniform vec4 u_color;
+        
+        out vec4 FragColor;
+        
+        void main() {
+            float intensity = texture(u_texture, v_texCoord).r;
+            FragColor = vec4(u_color.rgb, u_color.a * intensity);
+        }
+    )";
+
+    if (!_texture_shader_program->addShaderFromSourceCode(QOpenGLShader::Vertex, texture_vertex_shader_source)) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile texture vertex shader:" << _texture_shader_program->log();
+        return;
+    }
+
+    if (!_texture_shader_program->addShaderFromSourceCode(QOpenGLShader::Fragment, texture_fragment_shader_source)) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile texture fragment shader:" << _texture_shader_program->log();
+        return;
+    }
+
+    if (!_texture_shader_program->link()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to link texture shader program:" << _texture_shader_program->log();
+        return;
+    }
+
     // Create highlight vertex array object and buffer
     _highlight_vertex_array_object.create();
     _highlight_vertex_array_object.bind();
@@ -912,11 +1194,19 @@ void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
         delete _line_shader_program;
         _line_shader_program = nullptr;
 
+        delete _texture_shader_program;
+        _texture_shader_program = nullptr;
+
         _highlight_vertex_buffer.destroy();
         _highlight_vertex_array_object.destroy();
 
         // Clean up all PointData visualizations
         for (auto const& [key, viz] : _point_data_visualizations) {
+            viz->cleanupOpenGLResources();
+        }
+
+        // Clean up all MaskData visualizations
+        for (auto const& [key, viz] : _mask_data_visualizations) {
             viz->cleanupOpenGLResources();
         }
 

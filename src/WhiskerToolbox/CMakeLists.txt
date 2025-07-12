@@ -47,6 +47,8 @@ set(PROJECT_SOURCES
 
         Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
         Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.hpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.cpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.cpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/PolygonSelectionHandler.hpp

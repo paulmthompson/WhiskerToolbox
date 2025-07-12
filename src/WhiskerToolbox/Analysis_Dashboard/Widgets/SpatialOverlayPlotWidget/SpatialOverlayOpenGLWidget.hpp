@@ -4,6 +4,7 @@
 #include "PolygonSelectionHandler.hpp"
 #include "SelectionModes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
+#include "Masks/MaskDataVisualization.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -22,6 +23,8 @@
 
 class PointData;
 class PointDataVisualization;
+class MaskData;
+class MaskDataVisualization;
 
 
 /**
@@ -87,6 +90,26 @@ public:
      */
     void setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map);
 
+    // ========== Mask Data ==========
+
+    /**
+     * @brief Set the mask data to display
+     * @param mask_data_map Map of data key to MaskData objects
+     */
+    void setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map);
+
+    /**
+     * @brief Set the mask outline thickness for rendering
+     * @param thickness Outline thickness in pixels
+     */
+    void setMaskOutlineThickness(float thickness);
+
+    /**
+     * @brief Get current mask outline thickness
+     * @return Outline thickness in pixels
+     */
+    float getMaskOutlineThickness() const { return _mask_outline_thickness; }
+
     /**
      * @brief Set the point size for rendering
      * @param point_size Point size in pixels
@@ -109,6 +132,18 @@ public:
      * @return Total selected point count
      */
     size_t getTotalSelectedPoints() const;
+
+    /**
+     * @brief Get the currently selected masks from all MaskData objects
+     * @return Vector of pairs containing data key and selected mask identifiers
+     */
+    std::vector<std::pair<QString, std::vector<MaskIdentifier>>> getSelectedMaskData() const;
+
+    /**
+     * @brief Get total number of selected masks across all MaskData visualizations
+     * @return Total selected mask count
+     */
+    size_t getTotalSelectedMasks() const;
 
     /**
      * @brief Programmatically clear all selected points
@@ -136,6 +171,12 @@ signals:
      * @param point_size The new point size in pixels
      */
     void pointSizeChanged(float point_size);
+
+    /**
+     * @brief Emitted when mask outline thickness changes
+     * @param thickness The new outline thickness in pixels
+     */
+    void maskOutlineThicknessChanged(float thickness);
 
     /**
      * @brief Emitted when zoom level changes
@@ -209,10 +250,14 @@ private slots:
 private:
     // PointData visualizations - each PointData has its own QuadTree and OpenGL resources
     std::unordered_map<QString, std::unique_ptr<PointDataVisualization>> _point_data_visualizations;
+    
+    // MaskData visualizations - each MaskData has its own RTree and OpenGL resources
+    std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
 
     // Modern OpenGL rendering resources
     QOpenGLShaderProgram * _shader_program;
     QOpenGLShaderProgram * _line_shader_program;
+    QOpenGLShaderProgram * _texture_shader_program;
 
     // Global highlight rendering resources (shared across all PointData)
     QOpenGLBuffer _highlight_vertex_buffer;
@@ -224,6 +269,7 @@ private:
     float _zoom_level;
     float _pan_offset_x, _pan_offset_y;
     float _point_size;
+    float _mask_outline_thickness = 2.0f;
     QMatrix4x4 _projection_matrix;
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _model_matrix;
@@ -293,6 +339,14 @@ private:
     std::pair<PointDataVisualization *, QuadTreePoint<int64_t> const *> findPointNear(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
 
     /**
+     * @brief Find masks near screen coordinates across all MaskData visualizations
+     * @param screen_x Screen X coordinate
+     * @param screen_y Screen Y coordinate
+     * @return Vector of pairs containing MaskDataVisualization and mask identifiers
+     */
+    std::vector<std::pair<MaskDataVisualization *, MaskIdentifier>> findMasksNear(int screen_x, int screen_y) const;
+
+    /**
      * @brief Get the PointDataVisualization that currently has a hover point
      * @return Pointer to visualization with hover point, or nullptr
      */
@@ -309,6 +363,11 @@ private:
      * @brief Render all points using OpenGL
      */
     void renderPoints();
+
+    /**
+     * @brief Render all masks using OpenGL
+     */
+    void renderMasks();
 
     /**
      * @brief Apply a selection region to find all points within it
