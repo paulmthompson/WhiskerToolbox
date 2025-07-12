@@ -68,7 +68,7 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QOpenGLVertexArrayObject selection_outline_array_object;
     
     // Hover state
-    std::unordered_set<MaskIdentifier, MaskIdentifierHash> current_hover_masks;
+    std::vector<RTreeEntry<MaskIdentifier>> current_hover_entries;
     std::vector<float> hover_outline_data;
     QOpenGLBuffer hover_outline_buffer;
     QOpenGLVertexArrayObject hover_outline_array_object;
@@ -124,11 +124,6 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void updateSelectionOutlineBuffer();
 
     /**
-     * @brief Update hover outline buffer with current hover masks
-     */
-    void updateHoverOutlineBuffer();
-
-    /**
      * @brief Clear all selected masks
      */
     void clearSelection();
@@ -141,11 +136,10 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     bool toggleMaskSelection(MaskIdentifier const & mask_id);
 
     /**
-     * @brief Set hover masks for the given point
-     * @param world_x World X coordinate
-     * @param world_y World Y coordinate
+     * @brief Set hover masks using R-tree entries directly
+     * @param entries Vector of R-tree entries containing masks and their bounding boxes
      */
-    void setHoverMasks(float world_x, float world_y);
+    void setHoverEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries);
 
     /**
      * @brief Clear hover state
@@ -191,12 +185,6 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void renderHoverMaskBoundingBoxes(QOpenGLShaderProgram * shader_program);
 
     /**
-     * @brief Get the bounding boxes of currently hovered masks
-     * @return Vector of bounding boxes for hover masks
-     */
-    std::vector<BoundingBox> getHoverMaskBoundingBoxes() const;
-
-    /**
      * @brief Calculate bounding box for the entire MaskData
      * @return BoundingBox encompassing all masks
      */
@@ -231,11 +219,11 @@ private:
     std::vector<float> generateOutlineDataForMasks(std::unordered_set<MaskIdentifier, MaskIdentifierHash> const & mask_ids) const;
 
     /**
-     * @brief Generate bounding box line data for a specific set of masks
-     * @param mask_ids Set of mask identifiers to generate bounding boxes for
+     * @brief Generate bounding box line data from R-tree entries
+     * @param entries Vector of R-tree entries containing masks and their bounding boxes
      * @return Vector of vertex data for the bounding box lines
      */
-    std::vector<float> generateBoundingBoxDataForMasks(std::unordered_set<MaskIdentifier, MaskIdentifierHash> const & mask_ids) const;
+    std::vector<float> generateBoundingBoxDataFromEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) const;
 
     /**
      * @brief Check if a mask contains a world coordinate point

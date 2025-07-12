@@ -342,9 +342,9 @@ private:
      * @brief Find masks near screen coordinates across all MaskData visualizations
      * @param screen_x Screen X coordinate
      * @param screen_y Screen Y coordinate
-     * @return Vector of pairs containing MaskDataVisualization and mask identifiers
+     * @return Vector of pairs containing MaskDataVisualization and R-tree entries with bounding boxes
      */
-    std::vector<std::pair<MaskDataVisualization *, MaskIdentifier>> findMasksNear(int screen_x, int screen_y) const;
+    std::vector<std::pair<MaskDataVisualization *, std::vector<RTreeEntry<MaskIdentifier>>>> findMasksNear(int screen_x, int screen_y) const;
 
     /**
      * @brief Get the PointDataVisualization that currently has a hover point

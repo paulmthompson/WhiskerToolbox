@@ -222,26 +222,6 @@ void MaskDataVisualization::updateSelectionOutlineBuffer() {
     selection_outline_array_object.release();
 }
 
-void MaskDataVisualization::updateHoverOutlineBuffer() {
-    hover_outline_data = generateOutlineDataForMasks(current_hover_masks);
-
-    hover_outline_array_object.bind();
-    hover_outline_buffer.bind();
-    
-    if (hover_outline_data.empty()) {
-        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-    } else {
-        hover_outline_buffer.allocate(hover_outline_data.data(),
-                                     static_cast<int>(hover_outline_data.size() * sizeof(float)));
-    }
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    hover_outline_buffer.release();
-    hover_outline_array_object.release();
-}
-
 void MaskDataVisualization::clearSelection() {
     if (!selected_masks.empty()) {
         selected_masks.clear();
@@ -265,28 +245,14 @@ bool MaskDataVisualization::toggleMaskSelection(MaskIdentifier const & mask_id) 
     }
 }
 
-void MaskDataVisualization::setHoverMasks(float world_x, float world_y) {
-    // This method is now unused since we use the results from findMasksNear directly
-    // Use R-tree to find candidate masks (much faster than pixel-perfect checking)
-    BoundingBox point_bbox(world_x, world_y, world_x, world_y);
-    std::vector<RTreeEntry<MaskIdentifier>> candidates;
-    if (spatial_index) {
-        spatial_index->query(point_bbox, candidates);
-    }
-    
-    current_hover_masks.clear();
-    for (auto const & candidate : candidates) {
-        current_hover_masks.insert(candidate.data);
-    }
-    
-    // Only update bounding box buffer, not outline buffer
+void MaskDataVisualization::setHoverEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) {
+    current_hover_entries = entries;
     updateHoverBoundingBoxBuffer();
 }
 
 void MaskDataVisualization::clearHover() {
-    if (!current_hover_masks.empty()) {
-        current_hover_masks.clear();
-        // Only update bounding box buffer, not outline buffer
+    if (!current_hover_entries.empty()) {
+        current_hover_entries.clear();
         updateHoverBoundingBoxBuffer();
     }
 }
@@ -385,7 +351,7 @@ void MaskDataVisualization::renderSelectedMaskOutlines(QOpenGLShaderProgram * sh
 }
 
 void MaskDataVisualization::renderHoverMaskOutlines(QOpenGLShaderProgram * shader_program) {
-    if (current_hover_masks.empty() || hover_outline_data.empty()) return;
+    if (current_hover_entries.empty() || hover_outline_data.empty()) return;
 
     hover_outline_array_object.bind();
     hover_outline_buffer.bind();
@@ -603,7 +569,7 @@ std::pair<float, float> MaskDataVisualization::worldToTexture(float world_x, flo
 }
 
 void MaskDataVisualization::renderHoverMaskBoundingBoxes(QOpenGLShaderProgram * shader_program) {
-    if (current_hover_masks.empty() || hover_bbox_data.empty()) return;
+    if (current_hover_entries.empty() || hover_bbox_data.empty()) return;
 
     hover_bbox_array_object.bind();
     hover_bbox_buffer.bind();
@@ -622,7 +588,7 @@ void MaskDataVisualization::renderHoverMaskBoundingBoxes(QOpenGLShaderProgram * 
 }
 
 void MaskDataVisualization::updateHoverBoundingBoxBuffer() {
-    hover_bbox_data = generateBoundingBoxDataForMasks(current_hover_masks);
+    hover_bbox_data = generateBoundingBoxDataFromEntries(current_hover_entries);
 
     hover_bbox_array_object.bind();
     hover_bbox_buffer.bind();
@@ -641,76 +607,35 @@ void MaskDataVisualization::updateHoverBoundingBoxBuffer() {
     hover_bbox_array_object.release();
 }
 
-std::vector<float> MaskDataVisualization::generateBoundingBoxDataForMasks(
-    std::unordered_set<MaskIdentifier, MaskIdentifierHash> const & mask_ids) const {
+std::vector<float> MaskDataVisualization::generateBoundingBoxDataFromEntries(
+    std::vector<RTreeEntry<MaskIdentifier>> const & entries) const {
     
     std::vector<float> bbox_data;
     
-    if (!spatial_index) return bbox_data;
-    
-    for (auto const & mask_id : mask_ids) {
-        // Find the bounding box from R-tree entries
-        // We need to search through the R-tree to find the bounding box for this mask
-        BoundingBox world_bbox(0, 0, static_cast<float>(mask_data->getImageSize().width), 
-                              static_cast<float>(mask_data->getImageSize().height));
-        std::vector<RTreeEntry<MaskIdentifier>> all_entries;
-        spatial_index->query(world_bbox, all_entries);
-        
-        for (auto const & entry : all_entries) {
-            if (entry.data.timeframe == mask_id.timeframe && 
-                entry.data.mask_index == mask_id.mask_index) {
-                
-                // Found the bounding box for this mask
-                float min_x = entry.min_x;
-                float min_y = entry.min_y;
-                float max_x = entry.max_x;
-                float max_y = entry.max_y;
+    for (auto const & entry : entries) {
+        // Use the bounding box data directly from the R-tree entry
+        float min_x = entry.min_x;
+        float min_y = entry.min_y;
+        float max_x = entry.max_x;
+        float max_y = entry.max_y;
 
-                // Generate line segments for the bounding box rectangle
-                // Bottom edge
-                bbox_data.push_back(min_x); bbox_data.push_back(min_y);
-                bbox_data.push_back(max_x); bbox_data.push_back(min_y);
-                
-                // Right edge
-                bbox_data.push_back(max_x); bbox_data.push_back(min_y);
-                bbox_data.push_back(max_x); bbox_data.push_back(max_y);
-                
-                // Top edge
-                bbox_data.push_back(max_x); bbox_data.push_back(max_y);
-                bbox_data.push_back(min_x); bbox_data.push_back(max_y);
-                
-                // Left edge
-                bbox_data.push_back(min_x); bbox_data.push_back(max_y);
-                bbox_data.push_back(min_x); bbox_data.push_back(min_y);
-                
-                break; // Found the mask, move to next
-            }
-        }
+        // Generate line segments for the bounding box rectangle
+        // Bottom edge
+        bbox_data.push_back(min_x); bbox_data.push_back(min_y);
+        bbox_data.push_back(max_x); bbox_data.push_back(min_y);
+        
+        // Right edge
+        bbox_data.push_back(max_x); bbox_data.push_back(min_y);
+        bbox_data.push_back(max_x); bbox_data.push_back(max_y);
+        
+        // Top edge
+        bbox_data.push_back(max_x); bbox_data.push_back(max_y);
+        bbox_data.push_back(min_x); bbox_data.push_back(max_y);
+        
+        // Left edge
+        bbox_data.push_back(min_x); bbox_data.push_back(max_y);
+        bbox_data.push_back(min_x); bbox_data.push_back(min_y);
     }
     
     return bbox_data;
-}
-
-std::vector<BoundingBox> MaskDataVisualization::getHoverMaskBoundingBoxes() const {
-    std::vector<BoundingBox> result;
-    
-    if (!spatial_index) return result;
-    
-    for (auto const & mask_id : current_hover_masks) {
-        // Find the bounding box from R-tree entries
-        BoundingBox world_bbox(0, 0, static_cast<float>(mask_data->getImageSize().width), 
-                              static_cast<float>(mask_data->getImageSize().height));
-        std::vector<RTreeEntry<MaskIdentifier>> all_entries;
-        spatial_index->query(world_bbox, all_entries);
-        
-        for (auto const & entry : all_entries) {
-            if (entry.data.timeframe == mask_id.timeframe && 
-                entry.data.mask_index == mask_id.mask_index) {
-                result.push_back(BoundingBox(entry.min_x, entry.min_y, entry.max_x, entry.max_y));
-                break;
-            }
-        }
-    }
-    
-    return result;
 }

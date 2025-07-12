@@ -222,21 +222,24 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
     return total;
 }
 
-std::vector<std::pair<MaskDataVisualization *, MaskIdentifier>> SpatialOverlayOpenGLWidget::findMasksNear(int screen_x, int screen_y) const {
-    std::vector<std::pair<MaskDataVisualization *, MaskIdentifier>> result;
+std::vector<std::pair<MaskDataVisualization *, std::vector<RTreeEntry<MaskIdentifier>>>> SpatialOverlayOpenGLWidget::findMasksNear(int screen_x, int screen_y) const {
+    std::vector<std::pair<MaskDataVisualization *, std::vector<RTreeEntry<MaskIdentifier>>>> result;
     
     if (_mask_data_visualizations.empty()) {
         return result;
     }
     
     QVector2D world_pos = screenToWorld(screen_x, screen_y);
+    BoundingBox point_bbox(world_pos.x(), world_pos.y(), world_pos.x(), world_pos.y());
     
     for (auto const& [key, viz] : _mask_data_visualizations) {
-        if (!viz->visible) continue;
+        if (!viz->visible || !viz->spatial_index) continue;
         
-        auto mask_ids = viz->findMasksContainingPoint(world_pos.x(), world_pos.y());
-        for (auto const& mask_id : mask_ids) {
-            result.emplace_back(viz.get(), mask_id);
+        std::vector<RTreeEntry<MaskIdentifier>> entries;
+        viz->spatial_index->query(point_bbox, entries);
+        
+        if (!entries.empty()) {
+            result.emplace_back(viz.get(), std::move(entries));
         }
     }
     
@@ -542,16 +545,18 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
                 size_t total_masks_toggled = 0;
                 QString last_modified_key;
                 
-                for (auto const& [mask_viz, mask_id] : mask_results) {
-                    bool was_selected = mask_viz->toggleMaskSelection(mask_id);
-                    if (was_selected) {
-                        total_masks_toggled++;
-                        last_modified_key = mask_viz->key;
+                for (auto const& [mask_viz, entries] : mask_results) {
+                    for (auto const& entry : entries) {
+                        bool was_selected = mask_viz->toggleMaskSelection(entry.data);
+                        if (was_selected) {
+                            total_masks_toggled++;
+                            last_modified_key = mask_viz->key;
+                        }
+                        
+                        qDebug() << "SpatialOverlayOpenGLWidget: Mask" << (was_selected ? "selected" : "deselected")
+                                 << "in" << mask_viz->key << "timeframe:" << entry.data.timeframe 
+                                 << "index:" << entry.data.mask_index;
                     }
-                    
-                    qDebug() << "SpatialOverlayOpenGLWidget: Mask" << (was_selected ? "selected" : "deselected")
-                             << "in" << mask_viz->key << "timeframe:" << mask_id.timeframe 
-                             << "index:" << mask_id.mask_index;
                 }
                 
                 if (total_masks_toggled > 0) {
@@ -655,27 +660,23 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
                 
                 // Clear all mask hover states first
                 for (auto const& [key, mask_viz] : _mask_data_visualizations) {
-                    mask_viz->current_hover_masks.clear();
+                    mask_viz->clearHover();
                 }
                 
-                // Set hover masks based on findMasksNear results
-                for (auto const& [mask_viz, mask_id] : mask_results) {
-                    mask_viz->current_hover_masks.insert(mask_id);
-                }
-                
-                // Update buffers for all visualizations that have hover masks
-                for (auto const& [key, mask_viz] : _mask_data_visualizations) {
-                    if (!mask_viz->current_hover_masks.empty()) {
-                        // Only update bounding box buffer, not outline buffer
-                        mask_viz->updateHoverBoundingBoxBuffer();
-                    }
+                // Set hover entries based on findMasksNear results
+                for (auto const& [mask_viz, entries] : mask_results) {
+                    mask_viz->setHoverEntries(entries);
                 }
                 
                 _tooltip_timer->stop();
                 _tooltip_refresh_timer->stop();
                 _tooltip_timer->start();
                 
-                qDebug() << "SpatialOverlayOpenGLWidget: Hovering over" << mask_results.size() << "masks";
+                size_t total_masks = 0;
+                for (auto const& [mask_viz, entries] : mask_results) {
+                    total_masks += entries.size();
+                }
+                qDebug() << "SpatialOverlayOpenGLWidget: Hovering over" << total_masks << "masks";
             } else {
                 // No point or mask under cursor
                 if (old_hover_viz) {
@@ -785,9 +786,9 @@ void SpatialOverlayOpenGLWidget::_handleTooltipTimer() {
         QStringList mask_info;
         
         for (auto const& [key, mask_viz] : _mask_data_visualizations) {
-            if (!mask_viz->current_hover_masks.empty()) {
-                total_hover_masks += mask_viz->current_hover_masks.size();
-                mask_info << QString("%1: %2 masks").arg(key).arg(mask_viz->current_hover_masks.size());
+            if (!mask_viz->current_hover_entries.empty()) {
+                total_hover_masks += mask_viz->current_hover_entries.size();
+                mask_info << QString("%1: %2 masks").arg(key).arg(mask_viz->current_hover_entries.size());
             }
         }
         
@@ -830,9 +831,9 @@ void SpatialOverlayOpenGLWidget::handleTooltipRefresh() {
         QStringList mask_info;
         
         for (auto const& [key, mask_viz] : _mask_data_visualizations) {
-            if (!mask_viz->current_hover_masks.empty()) {
-                total_hover_masks += mask_viz->current_hover_masks.size();
-                mask_info << QString("%1: %2 masks").arg(key).arg(mask_viz->current_hover_masks.size());
+            if (!mask_viz->current_hover_entries.empty()) {
+                total_hover_masks += mask_viz->current_hover_entries.size();
+                mask_info << QString("%1: %2 masks").arg(key).arg(mask_viz->current_hover_entries.size());
             }
         }
         
