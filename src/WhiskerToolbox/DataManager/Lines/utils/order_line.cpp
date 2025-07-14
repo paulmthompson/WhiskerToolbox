@@ -1,6 +1,6 @@
 #include "order_line.hpp"
 
-#include "Masks/masks.hpp"
+#include "CoreGeometry/masks.hpp"
 
 #include <algorithm>
 #include <cmath>

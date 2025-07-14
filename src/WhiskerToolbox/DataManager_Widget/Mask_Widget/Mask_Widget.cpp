@@ -1,11 +1,12 @@
 #include "Mask_Widget.hpp"
 #include "ui_Mask_Widget.h"
 
+#include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Masks/masks.hpp"
+#include "DataManager/Masks/utils/mask_utils.hpp"
 #include "DataManager/Media/Media_Data.hpp"
-#include "DataManager/Points/points.hpp"
+#include "CoreGeometry/points.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "MaskTableModel.hpp"
 

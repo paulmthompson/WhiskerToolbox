@@ -1,7 +1,7 @@
 #ifndef LOADING_UTILS_HPP
 #define LOADING_UTILS_HPP
 
-#include "ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 
 #include "nlohmann/json.hpp"
 

@@ -1,7 +1,7 @@
 #ifndef DATAMANAGER_LINES_HPP
 #define DATAMANAGER_LINES_HPP
 
-#include "Points/points.hpp"
+#include "CoreGeometry/points.hpp"
 
 #include <cstdint>
 #include <vector>

@@ -1,12 +1,13 @@
 #ifndef MASK_DATA_HPP
 #define MASK_DATA_HPP
 
-#include "ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
+#include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/points.hpp"
 #include "Observer/Observer_Data.hpp"
-#include "Points/points.hpp"
 #include "TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
-#include "masks.hpp"
+
 
 #include <cstddef>
 #include <map>

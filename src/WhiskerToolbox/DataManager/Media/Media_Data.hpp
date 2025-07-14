@@ -1,7 +1,7 @@
 #ifndef WHISKERTOOLBOX_MEDIA_DATA_HPP
 #define WHISKERTOOLBOX_MEDIA_DATA_HPP
 
-#include "ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 #include "Observer/Observer_Data.hpp"
 
 #include <cstdint>

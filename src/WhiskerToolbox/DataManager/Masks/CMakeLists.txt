@@ -1,7 +1,5 @@
 
 set(mask_sources
-    masks.hpp
-    masks.cpp
     Mask_Data.hpp
     Mask_Data.cpp
     IO/HDF5/Mask_Data_HDF5.hpp
@@ -24,7 +22,6 @@ set(mask_sources
     utils/skeletonize.hpp)
 
 set(mask_test_sources
-    masks.test.cpp
     Mask_Data.test.cpp
     utils/connected_component.test.cpp
     utils/hole_filling.test.cpp

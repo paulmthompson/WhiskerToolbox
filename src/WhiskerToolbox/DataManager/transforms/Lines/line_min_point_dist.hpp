@@ -3,8 +3,8 @@
 
 #include "transforms/data_transforms.hpp"
 
-#include "Points/points.hpp"
-#include "ImageSize/ImageSize.hpp"
+#include "CoreGeometry/points.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 
 #include <memory>       // std::shared_ptr
 #include <string>       // std::string

@@ -2,7 +2,7 @@
 #define WHISKERTOOLBOX_LINETABLEMODEL_HPP
 
 #include "DataManager/Lines/Line_Data.hpp"// Assuming Line_Data.hpp is the correct path
-#include "DataManager/Points/points.hpp"  // For Line2D definition
+#include "Geometry/points.hpp"  // For Line2D definition
 
 #include <QAbstractTableModel>
 

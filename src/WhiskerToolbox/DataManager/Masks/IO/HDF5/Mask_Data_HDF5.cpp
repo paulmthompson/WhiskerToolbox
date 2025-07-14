@@ -1,6 +1,6 @@
 #include "Mask_Data_HDF5.hpp"
 
-#include "ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 #include "loaders/hdf5_loaders.hpp"
 #include "Masks/Mask_Data.hpp"
 

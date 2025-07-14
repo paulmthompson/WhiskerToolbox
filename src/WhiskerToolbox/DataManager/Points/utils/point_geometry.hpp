@@ -1,7 +1,7 @@
 #ifndef POINT_GEOMETRY_HPP
 #define POINT_GEOMETRY_HPP
 
-#include "Points/points.hpp"
+#include "CoreGeometry/points.hpp"
 
 #include <cmath>
 

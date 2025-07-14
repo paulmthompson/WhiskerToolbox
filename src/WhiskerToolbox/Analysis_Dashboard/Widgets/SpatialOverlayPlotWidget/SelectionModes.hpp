@@ -1,13 +1,15 @@
 #ifndef SPATIALOVERLAY_SELECTION_MODES_HPP
 #define SPATIALOVERLAY_SELECTION_MODES_HPP
 
-#include "DataManager/Points/points.hpp"
+#include "CoreGeometry/points.hpp"
 
 #include <QVector2D>
 
 #include <cstdint>
 #include <string>
 #include <vector>
+
+
 
 /**
  * @brief Selection modes for spatial selection
@@ -30,7 +32,7 @@ public:
      * @param point The point to check
      * @return True if point is inside the selection region
      */
-    virtual bool containsPoint(Point2D<float> point) const = 0;
+    virtual bool containsPoint(::Point2D<float> point) const = 0;
 
     /**
      * @brief Get the bounding box of this selection region for optimization

@@ -1,7 +1,7 @@
 #include "MaskDataVisualization.hpp"
 
+#include "CoreGeometry/masks.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Masks/masks.hpp"
 
 #include <QOpenGLShaderProgram>
 #include <QDebug>

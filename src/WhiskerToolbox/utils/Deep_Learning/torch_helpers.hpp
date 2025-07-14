@@ -1,7 +1,7 @@
 #ifndef TORCH_HELPERS_HPP
 #define TORCH_HELPERS_HPP
 
-#include "DataManager/ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 
 #include <torch/torch.h>
 #include <torch/script.h>

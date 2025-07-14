@@ -1,12 +1,12 @@
 #include "Media_Window.hpp"
 
+#include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Lines/lines.hpp"
 #include "DataManager/Lines/utils/line_geometry.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Masks/masks.hpp"
 #include "DataManager/Media/Media_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"

@@ -2,7 +2,7 @@
 #define SKELETONIZE_HPP
 
 #include "Image.hpp"
-#include "ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 
 #include <cstdint>
 #include <vector>

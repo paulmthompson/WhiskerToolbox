@@ -1,9 +1,9 @@
 #ifndef LINE_DATA_HPP
 #define LINE_DATA_HPP
 
-#include "ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 #include "Observer/Observer_Data.hpp"
-#include "Points/points.hpp"
+#include "CoreGeometry/points.hpp"
 #include "TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
 #include "lines.hpp"

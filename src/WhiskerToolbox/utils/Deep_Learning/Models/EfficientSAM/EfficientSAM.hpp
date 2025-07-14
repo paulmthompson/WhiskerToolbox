@@ -1,7 +1,7 @@
 #ifndef EFFICIENTSAM_HPP
 #define EFFICIENTSAM_HPP
 
-#include "DataManager/ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 
 #include <memory>
 #include <string>

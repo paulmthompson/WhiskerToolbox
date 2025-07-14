@@ -1,8 +1,9 @@
 #include "mask_principal_axis.hpp"
 
+#include "CoreGeometry/masks.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
-#include "Masks/masks.hpp"
+
 
 #include <algorithm>
 #include <cmath>

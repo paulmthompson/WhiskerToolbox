@@ -1,7 +1,5 @@
 
 set(points_sources
-    points.hpp
-    points.cpp
     Point_Data.hpp
     Point_Data.cpp
     IO/CSV/Point_Data_CSV.hpp

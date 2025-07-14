@@ -1,8 +1,8 @@
 #ifndef OPENCV_UTILITY_HPP
 #define OPENCV_UTILITY_HPP
 
-#include "ImageSize/ImageSize.hpp"
-#include "Points/points.hpp"
+#include "CoreGeometry/ImageSize.hpp"
+#include "CoreGeometry/points.hpp"
 #include "ProcessingOptions.hpp"
 
 #include <opencv2/opencv.hpp>

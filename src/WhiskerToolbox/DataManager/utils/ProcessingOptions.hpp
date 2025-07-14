@@ -1,7 +1,7 @@
 #ifndef PROCESSING_OPTIONS_HPP
 #define PROCESSING_OPTIONS_HPP
 
-#include "ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 
 #include <cstdint>
 #include <vector>

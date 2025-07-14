@@ -1,8 +1,8 @@
 #ifndef UTILS_ORDER_LINE_HPP
 #define UTILS_ORDER_LINE_HPP
 
-#include "ImageSize/ImageSize.hpp"
-#include "Points/points.hpp"
+#include "CoreGeometry/ImageSize.hpp"
+#include "CoreGeometry/points.hpp"
 #include "Lines/lines.hpp"
 
 #include <cstdint>

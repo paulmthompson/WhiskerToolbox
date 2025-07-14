@@ -1,7 +1,7 @@
 #ifndef POINT_DATA_CSV_HPP
 #define POINT_DATA_CSV_HPP
 
-#include "Points/points.hpp"
+#include "CoreGeometry/points.hpp"
 #include "TimeFrame.hpp"
 
 #include <map>

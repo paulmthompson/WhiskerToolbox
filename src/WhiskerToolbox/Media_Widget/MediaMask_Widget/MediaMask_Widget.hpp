@@ -1,7 +1,7 @@
 #ifndef MEDIAMASK_WIDGET_HPP
 #define MEDIAMASK_WIDGET_HPP
 
-#include "DataManager/Points/points.hpp"
+#include "CoreGeometry/points.hpp"
 #include "DataManager/utils/ProcessingOptions.hpp"
 #include "Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 

@@ -3,8 +3,9 @@
 
 #include "transforms/data_transforms.hpp"
 
+#include "CoreGeometry/points.hpp"
 #include "Lines/lines.hpp"
-#include "Points/points.hpp"
+
 
 #include <memory>   // std::shared_ptr
 #include <optional> // std::optional

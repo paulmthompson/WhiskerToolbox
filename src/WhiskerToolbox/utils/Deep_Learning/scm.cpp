@@ -1,7 +1,7 @@
 
 #include "scm.hpp"
 
-#include "DataManager/Masks/masks.hpp"
+#include "CoreGeometry/masks.hpp"
 
 #include "torch_helpers.hpp"
 #include <torch/torch.h>

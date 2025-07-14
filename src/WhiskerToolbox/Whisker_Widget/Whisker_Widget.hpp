@@ -1,9 +1,10 @@
 #ifndef WHISKER_WIDGET_HPP
 #define WHISKER_WIDGET_HPP
 
-#include "ImageSize/ImageSize.hpp"// for ImageSize
+#include "CoreGeometry/ImageSize.hpp"// for ImageSize
+#include "CoreGeometry/points.hpp"// for Point2D
 #include "Lines/lines.hpp"
-#include "Points/points.hpp"// for Point2D
+
 #include "DataManager/TimeFrame.hpp"
 
 #include <QMainWindow>

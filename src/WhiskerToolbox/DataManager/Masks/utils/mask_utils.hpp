@@ -2,8 +2,9 @@
 #define MASK_UTILS_HPP
 
 #include "Image.hpp"
-#include "ImageSize/ImageSize.hpp"
-#include "Points/points.hpp"
+#include "CoreGeometry/ImageSize.hpp"
+#include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/points.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -50,5 +51,22 @@ Image mask_to_binary_image(std::vector<Point2D<uint32_t>> const & mask, ImageSiz
  * @return std::vector<Point2D<uint32_t>> Vector of points where image value > 0
  */
 std::vector<Point2D<uint32_t>> binary_image_to_mask(Image const & binary_image);
+
+/**
+ * @brief Resize a mask from one image size to another using nearest interpolation
+ *
+ * Converts mask coordinates from source image dimensions to destination image dimensions
+ * using OpenCV's nearest neighbor interpolation. This ensures the mask remains homogeneous
+ * (binary) after resizing.
+ *
+ * @param mask The input mask to resize
+ * @param source_size The original image size that the mask coordinates correspond to
+ * @param dest_size The target image size to resize the mask to
+ * @return New mask with coordinates scaled to the destination image size
+ *
+ * @note If source or destination dimensions are invalid (<=0), returns empty mask
+ * @note Uses OpenCV's INTER_NEAREST interpolation to maintain binary mask properties
+ */
+Mask2D resize_mask(Mask2D const & mask, ImageSize const & source_size, ImageSize const & dest_size);
 
 #endif // MASK_UTILS_HPP 

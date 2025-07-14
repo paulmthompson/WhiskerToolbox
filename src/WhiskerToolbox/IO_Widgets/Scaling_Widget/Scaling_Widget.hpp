@@ -1,7 +1,7 @@
 #ifndef SCALING_WIDGET_HPP
 #define SCALING_WIDGET_HPP
 
-#include "../../DataManager/ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 
 #include <QWidget>
 

@@ -2,9 +2,9 @@
 #include "ui_MediaMask_Widget.h"
 
 #include "Collapsible_Widget/Section.hpp"
+#include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
-#include "DataManager/Masks/masks.hpp"
 #include "DataManager/utils/opencv_utility.hpp"
 #include "MaskDilationWidget/MaskDilationWidget.hpp"
 #include "Media_Window/Media_Window.hpp"

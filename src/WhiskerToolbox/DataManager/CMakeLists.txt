@@ -23,7 +23,6 @@ set(DATAMANAGER_SOURCES
         DataManagerTypes.hpp
         TimeFrame.hpp
         TimeFrame.cpp
-        ImageSize/ImageSize.hpp
 
         Media/Image_Data.cpp
         Media/Image_Data.hpp
@@ -187,6 +186,7 @@ target_link_libraries(DataManager PRIVATE "${TORCH_LIBRARIES}")
 
 # Link to the ObserverData library
 target_link_libraries(DataManager PUBLIC WhiskerToolbox::ObserverData)
+target_link_libraries(DataManager PUBLIC NEURALYZER_GEOMETRY)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManager PRIVATE ${CLANG_OPTIONS})

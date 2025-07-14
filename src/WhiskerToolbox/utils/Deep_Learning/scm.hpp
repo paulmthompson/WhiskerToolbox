@@ -1,9 +1,10 @@
 #ifndef SCM_HPP
 #define SCM_HPP
 
-#include "DataManager/Points/points.hpp"
-#include "DataManager/Masks/masks.hpp"
-#include "DataManager/ImageSize/ImageSize.hpp"
+
+#include "CoreGeometry/ImageSize.hpp"
+#include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/points.hpp"
 
 #include <map>
 #include <memory>

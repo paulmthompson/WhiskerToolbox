@@ -1,6 +1,5 @@
 #include "SelectionModes.hpp"
 
-
 // PolygonSelectionRegion implementation
 
 PolygonSelectionRegion::PolygonSelectionRegion(std::vector<QVector2D> const & vertices)

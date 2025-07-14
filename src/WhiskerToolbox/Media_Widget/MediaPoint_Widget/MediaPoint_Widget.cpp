@@ -111,9 +111,8 @@ void MediaPoint_Widget::_assignPoint(qreal x_media, qreal y_media) {
     auto point = _data_manager->getData<PointData>(_active_key);
     if (point) {
 
-        point->overwritePointAtTime(TimeFrameIndex(current_time), {.x = static_cast<float>(x_media),
-                                               .y = static_cast<float>(y_media)
-                                              });
+        point->overwritePointAtTime(TimeFrameIndex(current_time), 
+                                    Point2D<float>(static_cast<float>(x_media), static_cast<float>(y_media)));
 
         _scene->UpdateCanvas();
     }

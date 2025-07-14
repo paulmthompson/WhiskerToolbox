@@ -1,7 +1,6 @@
 
 #include "Media/Media_Data.hpp"
 
-#include "ImageSize/ImageSize.hpp"
 #include "utils/opencv_utility.hpp"
 
 #include <opencv2/core/mat.hpp>

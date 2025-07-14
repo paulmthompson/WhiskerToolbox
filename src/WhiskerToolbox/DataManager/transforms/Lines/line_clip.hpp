@@ -2,7 +2,7 @@
 #define LINE_CLIP_HPP
 
 #include "transforms/data_transforms.hpp"
-#include "Points/points.hpp"
+#include "CoreGeometry/points.hpp"
 #include "Lines/lines.hpp"
 
 #include <memory>

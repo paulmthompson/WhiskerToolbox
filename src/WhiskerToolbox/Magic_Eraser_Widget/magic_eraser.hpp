@@ -1,7 +1,7 @@
 #ifndef MAGIC_ERASER_HPP
 #define MAGIC_ERASER_HPP
 
-#include "DataManager/ImageSize/ImageSize.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 
 #include <cstdint>
 #include <vector>

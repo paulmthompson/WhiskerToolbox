@@ -1,6 +1,6 @@
 #include "Line_Data.hpp"
 
-#include "Points/points.hpp"
+#include "CoreGeometry/points.hpp"
 #include "utils/map_timeseries.hpp"
 
 #include <cmath>
