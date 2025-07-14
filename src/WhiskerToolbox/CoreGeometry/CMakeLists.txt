@@ -8,18 +8,38 @@ set(NEURALYZER_GEOMETRY_INCLUDES
     include/CoreGeometry/masks.hpp
     include/CoreGeometry/points.hpp
     include/CoreGeometry/polygon.hpp
+    include/CoreGeometry/polygon_adapter.hpp
+    include/CoreGeometry/bop12/bbox_2.h
+    include/CoreGeometry/bop12/booleanop.h
+    include/CoreGeometry/bop12/point_2.h 
+    include/CoreGeometry/bop12/polygon.h 
+    include/CoreGeometry/bop12/segment_2.h 
+    include/CoreGeometry/bop12/utilities.h 
 )
 
 set(NEURALYZER_GEOMETRY_SOURCES
    src/masks.cpp
    src/points.cpp
    src/polygon.cpp
+   src/polygon_adapter.cpp
+   src/bop12/booleanop.cpp
+   src/bop12/polygon.cpp 
+   src/bop12/utilities.cpp
 )
 
-set_property(GLOBAL PROPERTY CORE_GEOMETRY_TEST_SOURCES 
+set_property(GLOBAL PROPERTY CORE_GEOMETRY_TEST_SOURCES )
+
+set(core_geometry_test_sources
     src/masks.test.cpp
     src/polygon.test.cpp
 )
+
+set(CORE_GEOMETRY_TEST_SOURCES ${core_geometry_test_sources} PARENT_SCOPE)
+
+add_tests_to_global(core_geometry_test_sources
+                    "${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/CoreGeometry"
+                    CORE_GEOMETRY_TEST_SOURCES)
+
 
 add_library(NEURALYZER_GEOMETRY SHARED ${NEURALYZER_GEOMETRY_SOURCES})
 

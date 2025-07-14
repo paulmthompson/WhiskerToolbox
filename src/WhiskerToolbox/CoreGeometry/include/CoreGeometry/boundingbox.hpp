@@ -1,6 +1,7 @@
 #ifndef BOUNDINGBOX_HPP
 #define BOUNDINGBOX_HPP
 
+#include "points.hpp"
 
 struct BoundingBox {
     float min_x, min_y, max_x, max_y;
@@ -24,6 +25,8 @@ struct BoundingBox {
     float height() const { return max_y - min_y; }
     float center_x() const { return (min_x + max_x) * 0.5f; }
     float center_y() const { return (min_y + max_y) * 0.5f; }
+    Point2D<float> min() const { return {min_x, min_y}; }
+    Point2D<float> max() const { return {max_x, max_y}; }
 };
 
 #endif // BOUNDINGBOX_HPP

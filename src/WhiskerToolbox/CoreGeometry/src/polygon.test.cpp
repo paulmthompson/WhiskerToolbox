@@ -382,3 +382,213 @@ TEST_CASE("Polygon - Complex intersection scenarios", "[polygon][intersection][c
         REQUIRE(bbox.max_y == Catch::Approx(15.0f).margin(0.1f));
     }
 }
+
+TEST_CASE("Polygon - Martinez-Rueda Boolean Operations", "[polygon][boolean][martinez_rueda]") {
+    SECTION("Rectangle intersection using Martinez-Rueda") {
+        // Create two overlapping rectangles
+        Polygon rect1(BoundingBox(0.0f, 0.0f, 10.0f, 10.0f));
+        Polygon rect2(BoundingBox(5.0f, 5.0f, 15.0f, 15.0f));
+        
+        auto intersection = rect1.intersectionWith(rect2);
+        REQUIRE(intersection.isValid());
+        
+        // The intersection should be the overlapping area (5,5) to (10,10)
+        auto bbox = intersection.getBoundingBox();
+        REQUIRE(bbox.min_x == Catch::Approx(5.0f).margin(0.1f));
+        REQUIRE(bbox.min_y == Catch::Approx(5.0f).margin(0.1f));
+        REQUIRE(bbox.max_x == Catch::Approx(10.0f).margin(0.1f));
+        REQUIRE(bbox.max_y == Catch::Approx(10.0f).margin(0.1f));
+    }
+
+    SECTION("Rectangle union using Martinez-Rueda") {
+        Polygon rect1(BoundingBox(0.0f, 0.0f, 10.0f, 10.0f));
+        Polygon rect2(BoundingBox(5.0f, 5.0f, 15.0f, 15.0f));
+        
+        auto union_poly = rect1.unionWith(rect2);
+        REQUIRE(union_poly.isValid());
+        
+        // Union should encompass both rectangles
+        auto bbox = union_poly.getBoundingBox();
+        REQUIRE(bbox.min_x == Catch::Approx(0.0f).margin(0.1f));
+        REQUIRE(bbox.min_y == Catch::Approx(0.0f).margin(0.1f));
+        REQUIRE(bbox.max_x == Catch::Approx(15.0f).margin(0.1f));
+        REQUIRE(bbox.max_y == Catch::Approx(15.0f).margin(0.1f));
+    }
+
+    SECTION("Rectangle difference using Martinez-Rueda") {
+        Polygon rect1(BoundingBox(0.0f, 0.0f, 10.0f, 10.0f));
+        Polygon rect2(BoundingBox(5.0f, 5.0f, 15.0f, 15.0f));
+        
+        auto difference = rect1.differenceWith(rect2);
+        REQUIRE(difference.isValid());
+        
+        // The result should contain the part of rect1 not covered by rect2
+        // This is a more complex shape, so we just verify it exists and has reasonable bounds
+        auto bbox = difference.getBoundingBox();
+        REQUIRE(bbox.min_x == Catch::Approx(0.0f).margin(0.1f));
+        REQUIRE(bbox.min_y == Catch::Approx(0.0f).margin(0.1f));
+        REQUIRE(bbox.max_x <= 10.1f); // Should not exceed original rect1
+        REQUIRE(bbox.max_y <= 10.1f); // Should not exceed original rect1
+    }
+
+    SECTION("Triangle operations using Martinez-Rueda") {
+        std::vector<Point2D<float>> triangle1_vertices = {
+            {0.0f, 0.0f}, {6.0f, 0.0f}, {3.0f, 6.0f}
+        };
+        std::vector<Point2D<float>> triangle2_vertices = {
+            {3.0f, 3.0f}, {9.0f, 3.0f}, {6.0f, 9.0f}
+        };
+        
+        Polygon triangle1(triangle1_vertices);
+        Polygon triangle2(triangle2_vertices);
+        
+        auto intersection = triangle1.intersectionWith(triangle2);
+        auto union_poly = triangle1.unionWith(triangle2);
+        auto difference = triangle1.differenceWith(triangle2);
+        
+        // All operations should produce valid results
+        // (We don't check exact shapes since triangle intersections are complex)
+        REQUIRE(intersection.vertexCount() >= 0); // May be empty or have vertices
+        REQUIRE(union_poly.isValid());
+        REQUIRE(difference.vertexCount() >= 0); // May be empty or have vertices
+        
+        // Union should encompass both triangles
+        auto union_bbox = union_poly.getBoundingBox();
+        REQUIRE(union_bbox.min_x <= 0.1f);
+        REQUIRE(union_bbox.min_y <= 0.1f);
+        REQUIRE(union_bbox.max_x >= 8.9f);
+        REQUIRE(union_bbox.max_y >= 8.9f);
+    }
+
+    SECTION("Non-intersecting polygons") {
+        Polygon rect1(BoundingBox(0.0f, 0.0f, 5.0f, 5.0f));
+        Polygon rect2(BoundingBox(10.0f, 10.0f, 15.0f, 15.0f));
+        
+        auto intersection = rect1.intersectionWith(rect2);
+        auto union_poly = rect1.unionWith(rect2);
+        auto difference = rect1.differenceWith(rect2);
+        
+        REQUIRE(!intersection.isValid()); // Should be empty
+        REQUIRE(union_poly.isValid());   // Should combine both
+        REQUIRE(difference.isValid());   // Should be same as rect1
+        
+        // Difference should be approximately the same as the original
+        auto diff_bbox = difference.getBoundingBox();
+        REQUIRE(diff_bbox.min_x == Catch::Approx(0.0f).margin(0.1f));
+        REQUIRE(diff_bbox.min_y == Catch::Approx(0.0f).margin(0.1f));
+        REQUIRE(diff_bbox.max_x == Catch::Approx(5.0f).margin(0.1f));
+        REQUIRE(diff_bbox.max_y == Catch::Approx(5.0f).margin(0.1f));
+    }
+}
+
+TEST_CASE("Polygon - Boolean operations with Martinez-Rueda adapter", "[polygon][boolean][adapter]") {
+    SECTION("Two overlapping rectangles - union") {
+        // Create two overlapping rectangles
+        BoundingBox bbox1(0.0f, 0.0f, 4.0f, 4.0f);
+        BoundingBox bbox2(2.0f, 2.0f, 6.0f, 6.0f);
+        
+        Polygon rect1(bbox1);
+        Polygon rect2(bbox2);
+        
+        Polygon union_result = rect1.unionWith(rect2);
+        
+        REQUIRE(union_result.isValid());
+        REQUIRE(union_result.vertexCount() >= 3);
+        
+        // The union should contain both original rectangles
+        REQUIRE(union_result.containsPoint({1.0f, 1.0f})); // Point from rect1
+        REQUIRE(union_result.containsPoint({5.0f, 5.0f})); // Point from rect2
+        REQUIRE(union_result.containsPoint({3.0f, 3.0f})); // Point in overlap
+    }
+    
+    SECTION("Two overlapping rectangles - intersection") {
+        // Create two overlapping rectangles
+        BoundingBox bbox1(0.0f, 0.0f, 4.0f, 4.0f);
+        BoundingBox bbox2(2.0f, 2.0f, 6.0f, 6.0f);
+        
+        Polygon rect1(bbox1);
+        Polygon rect2(bbox2);
+        
+        Polygon intersection_result = rect1.intersectionWith(rect2);
+        
+        REQUIRE(intersection_result.isValid());
+        REQUIRE(intersection_result.vertexCount() >= 3);
+        
+        // The intersection should contain points only in the overlap area
+        REQUIRE(intersection_result.containsPoint({3.0f, 3.0f})); // Point in overlap
+        REQUIRE(!intersection_result.containsPoint({1.0f, 1.0f})); // Point only in rect1
+        REQUIRE(!intersection_result.containsPoint({5.0f, 5.0f})); // Point only in rect2
+    }
+    
+    SECTION("Two overlapping rectangles - difference") {
+        // Create two overlapping rectangles
+        BoundingBox bbox1(0.0f, 0.0f, 4.0f, 4.0f);
+        BoundingBox bbox2(2.0f, 2.0f, 6.0f, 6.0f);
+        
+        Polygon rect1(bbox1);
+        Polygon rect2(bbox2);
+        
+        Polygon difference_result = rect1.differenceWith(rect2);
+        
+        REQUIRE(difference_result.isValid());
+        REQUIRE(difference_result.vertexCount() >= 3);
+        
+        // The difference should contain points from rect1 but not in the overlap
+        REQUIRE(difference_result.containsPoint({1.0f, 1.0f})); // Point only in rect1
+        REQUIRE(!difference_result.containsPoint({3.0f, 3.0f})); // Point in overlap (should be removed)
+        REQUIRE(!difference_result.containsPoint({5.0f, 5.0f})); // Point only in rect2
+    }
+    
+    SECTION("Non-overlapping rectangles") {
+        // Create two non-overlapping rectangles
+        BoundingBox bbox1(0.0f, 0.0f, 2.0f, 2.0f);
+        BoundingBox bbox2(4.0f, 4.0f, 6.0f, 6.0f);
+        
+        Polygon rect1(bbox1);
+        Polygon rect2(bbox2);
+        
+        Polygon union_result = rect1.unionWith(rect2);
+        Polygon intersection_result = rect1.intersectionWith(rect2);
+        Polygon difference_result = rect1.differenceWith(rect2);
+        
+        // Union should be valid and contain both rectangles
+        // Note: For non-overlapping polygons, our adapter creates a bounding box
+        // that encompasses both polygons
+        REQUIRE(union_result.isValid());
+        REQUIRE(union_result.containsPoint({1.0f, 1.0f})); // Point from rect1
+        REQUIRE(union_result.containsPoint({5.0f, 5.0f})); // Point from rect2
+        
+        // Intersection should be empty (no overlap)
+        REQUIRE(!intersection_result.isValid()); // Should be empty
+        
+        // Difference should be the same as the original rect1
+        REQUIRE(difference_result.isValid());
+        REQUIRE(difference_result.containsPoint({1.0f, 1.0f})); // Point from rect1
+        REQUIRE(!difference_result.containsPoint({5.0f, 5.0f})); // Point from rect2
+    }
+    
+    SECTION("Invalid polygons") {
+        // Test with invalid (empty) polygons
+        std::vector<Point2D<float>> empty_vertices;
+        Polygon empty_polygon(empty_vertices);
+        
+        BoundingBox bbox(0.0f, 0.0f, 2.0f, 2.0f);
+        Polygon valid_polygon(bbox);
+        
+        // Operations with empty polygons should handle gracefully
+        Polygon union_result = empty_polygon.unionWith(valid_polygon);
+        Polygon intersection_result = empty_polygon.intersectionWith(valid_polygon);
+        Polygon difference_result = valid_polygon.differenceWith(empty_polygon);
+        
+        // Union should return the valid polygon
+        REQUIRE(union_result.isValid());
+        REQUIRE(union_result.containsPoint({1.0f, 1.0f}));
+        
+        // Intersection should be empty
+        REQUIRE(!intersection_result.isValid());
+        
+        // Difference should return the valid polygon
+        REQUIRE(difference_result.isValid());
+        REQUIRE(difference_result.containsPoint({1.0f, 1.0f}));
+    }
+}

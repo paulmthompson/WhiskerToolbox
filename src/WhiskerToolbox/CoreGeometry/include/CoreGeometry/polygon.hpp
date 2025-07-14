@@ -93,6 +93,13 @@ public:
      */
     bool intersects(Polygon const & other) const;
 
+    /**
+     * @brief Compute the difference of this polygon with another polygon (this - other)
+     * @param other The other polygon to subtract from this polygon
+     * @return A new polygon representing the difference
+     */
+    Polygon differenceWith(Polygon const & other) const;
+
 private:
     std::vector<Point2D<float>> _vertices;
     BoundingBox _bounding_box;

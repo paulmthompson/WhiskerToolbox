@@ -20,10 +20,10 @@ add_executable(test_core_geometry
         ${CORE_GEOMETRY_TEST_SOURCES_TEMP}
 )
 
-target_link_libraries(test_core_geometry PRIVATE Catch2::Catch2WithMain CoreGeometry)
+target_link_libraries(test_core_geometry PRIVATE Catch2::Catch2WithMain NEURALYZER_GEOMETRY)
 
 target_include_directories(test_core_geometry PRIVATE
-        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/CoreGeometry>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/CoreGeometry/include>"
 )
 
 if (APPLE)

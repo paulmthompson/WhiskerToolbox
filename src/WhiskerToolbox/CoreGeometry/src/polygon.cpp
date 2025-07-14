@@ -1,4 +1,5 @@
 #include "CoreGeometry/polygon.hpp"
+#include "CoreGeometry/polygon_adapter.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -126,62 +127,6 @@ static std::vector<Point2D<float>> clipPolygonByEdge(std::vector<Point2D<float>>
     
     return output_list;
 }
-
-Polygon Polygon::intersectionWith(Polygon const & other) const {
-    if (!isValid() || !other.isValid()) {
-        return Polygon(std::vector<Point2D<float>>{}); // Return empty polygon
-    }
-    
-    // Quick bounding box intersection check
-    if (!_bounding_box.intersects(other._bounding_box)) {
-        return Polygon(std::vector<Point2D<float>>{}); // Return empty polygon
-    }
-    
-    // Use Sutherland-Hodgman clipping algorithm
-    std::vector<Point2D<float>> subject_polygon = _vertices;
-    auto const & clip_vertices = other._vertices;
-    
-    // Clip against each edge of the clipping polygon
-    for (size_t i = 0; i < clip_vertices.size(); ++i) {
-        size_t next_i = (i + 1) % clip_vertices.size();
-        subject_polygon = clipPolygonByEdge(subject_polygon, clip_vertices[i], clip_vertices[next_i]);
-        
-        if (subject_polygon.empty()) {
-            break; // No intersection
-        }
-    }
-    
-    return Polygon(subject_polygon);
-}
-
-Polygon Polygon::unionWith(Polygon const & other) const {
-    if (!isValid()) {
-        return other;
-    }
-    if (!other.isValid()) {
-        return *this;
-    }
-    
-    // For a simple implementation, we'll create a union by combining bounding boxes
-    // This is a simplified approach - a full polygon union requires more complex algorithms
-    
-    // Calculate union bounding box
-    float min_x = std::min(_bounding_box.min_x, other._bounding_box.min_x);
-    float min_y = std::min(_bounding_box.min_y, other._bounding_box.min_y);
-    float max_x = std::max(_bounding_box.max_x, other._bounding_box.max_x);
-    float max_y = std::max(_bounding_box.max_y, other._bounding_box.max_y);
-    
-    // For simple cases where polygons don't intersect, create a bounding box union
-    if (!intersects(other)) {
-        return Polygon(BoundingBox(min_x, min_y, max_x, max_y));
-    }
-    
-    // For intersecting polygons, this is a complex operation
-    // A full implementation would use algorithms like Weiler-Atherton or Martinez-Rueda
-    // For now, return the bounding box union as an approximation
-    return Polygon(BoundingBox(min_x, min_y, max_x, max_y));
-}
-
 bool Polygon::intersects(Polygon const & other) const {
     if (!isValid() || !other.isValid()) {
         return false;
@@ -234,4 +179,16 @@ bool Polygon::intersects(Polygon const & other) const {
     }
     
     return false;
+}
+
+Polygon Polygon::unionWith(Polygon const & other) const {
+    return PolygonAdapter::performUnion(*this, other);
+}
+
+Polygon Polygon::intersectionWith(Polygon const & other) const {
+    return PolygonAdapter::performIntersection(*this, other);
+}
+
+Polygon Polygon::differenceWith(Polygon const & other) const {
+    return PolygonAdapter::performDifference(*this, other);
 }
