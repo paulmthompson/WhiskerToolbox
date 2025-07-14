@@ -3,13 +3,9 @@
 
 #include "CoreGeometry/points.hpp"
 
-#include <QVector2D>
-
 #include <cstdint>
 #include <string>
 #include <vector>
-
-
 
 /**
  * @brief Selection modes for spatial selection
@@ -49,7 +45,7 @@ public:
  */
 class PolygonSelectionRegion : public SelectionRegion {
 public:
-    explicit PolygonSelectionRegion(std::vector<QVector2D> const & vertices);
+    explicit PolygonSelectionRegion(std::vector<Point2D<float>> const & vertices);
 
     bool containsPoint(Point2D<float> point) const override;
     void getBoundingBox(float & min_x, float & min_y, float & max_x, float & max_y) const override;
@@ -57,27 +53,11 @@ public:
     /**
      * @brief Get the polygon vertices in world coordinates
      */
-    std::vector<QVector2D> const & getVertices() const { return _vertices; }
+    std::vector<Point2D<float>> const & getVertices() const { return _vertices; }
 
 private:
-    std::vector<QVector2D> _vertices;
+    std::vector<Point2D<float>> _vertices;
     float _min_x, _min_y, _max_x, _max_y;// Cached bounding box
 };
-
-/**
- * @brief Data structure for storing point information with time frame
- */
-struct SpatialPointData {
-    float x, y;
-    int64_t time_frame_index;
-    std::string point_data_key;
-
-    SpatialPointData(float x, float y, int64_t time_frame_index, std::string const & key)
-        : x(x),
-          y(y),
-          time_frame_index(time_frame_index),
-          point_data_key(key) {}
-};
-
 
 #endif// SPATIALOVERLAY_SELECTION_MODES_HPP

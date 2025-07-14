@@ -18,6 +18,7 @@
 class PointData;
 class QOpenGLShaderProgram;
 
+
 /**
  * @brief Visualization data for a single PointData object
  */

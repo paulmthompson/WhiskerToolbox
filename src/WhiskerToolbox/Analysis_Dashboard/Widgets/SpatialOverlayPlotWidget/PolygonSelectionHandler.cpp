@@ -106,7 +106,7 @@ void PolygonSelectionHandler::startPolygonSelection(int screen_x, int screen_y) 
 
     // Add first vertex
     QVector2D world_pos = _screen_to_world_callback(screen_x, screen_y);
-    _polygon_vertices.push_back(world_pos);
+    _polygon_vertices.push_back(Point2D<float>(world_pos.x(), world_pos.y()));
     _polygon_screen_points.push_back(QPoint(screen_x, screen_y));
 
     qDebug() << "PolygonSelectionHandler: Added first polygon vertex at world:" << world_pos.x() << "," << world_pos.y()
@@ -126,7 +126,7 @@ void PolygonSelectionHandler::addPolygonVertex(int screen_x, int screen_y) {
     }
 
     QVector2D world_pos = _screen_to_world_callback(screen_x, screen_y);
-    _polygon_vertices.push_back(world_pos);
+    _polygon_vertices.push_back(Point2D<float>(world_pos.x(), world_pos.y()));
     _polygon_screen_points.push_back(QPoint(screen_x, screen_y));
 
     qDebug() << "PolygonSelectionHandler: Added polygon vertex" << _polygon_vertices.size()
@@ -281,8 +281,8 @@ void PolygonSelectionHandler::updatePolygonBuffers() {
     vertex_data.reserve(_polygon_vertices.size() * 2);
 
     for (auto const & vertex: _polygon_vertices) {
-        vertex_data.push_back(vertex.x());
-        vertex_data.push_back(vertex.y());
+        vertex_data.push_back(vertex.x);
+        vertex_data.push_back(vertex.y);
     }
 
     _polygon_vertex_array_object.bind();
@@ -304,18 +304,18 @@ void PolygonSelectionHandler::updatePolygonBuffers() {
         // Add lines between consecutive vertices
         for (size_t i = 1; i < _polygon_vertices.size(); ++i) {
             // Line from previous vertex to current vertex
-            line_data.push_back(_polygon_vertices[i - 1].x());
-            line_data.push_back(_polygon_vertices[i - 1].y());
-            line_data.push_back(_polygon_vertices[i].x());
-            line_data.push_back(_polygon_vertices[i].y());
+            line_data.push_back(_polygon_vertices[i - 1].x);
+            line_data.push_back(_polygon_vertices[i - 1].y);
+            line_data.push_back(_polygon_vertices[i].x);
+            line_data.push_back(_polygon_vertices[i].y);
         }
 
         // Add closure line if we have 3+ vertices
         if (_polygon_vertices.size() >= 3) {
-            line_data.push_back(_polygon_vertices.back().x());
-            line_data.push_back(_polygon_vertices.back().y());
-            line_data.push_back(_polygon_vertices.front().x());
-            line_data.push_back(_polygon_vertices.front().y());
+            line_data.push_back(_polygon_vertices.back().x);
+            line_data.push_back(_polygon_vertices.back().y);
+            line_data.push_back(_polygon_vertices.front().x);
+            line_data.push_back(_polygon_vertices.front().y);
         }
 
         _polygon_line_array_object.bind();

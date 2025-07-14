@@ -2,6 +2,7 @@
 #define POLYGONSELECTIONHANDLER_HPP
 
 #include "SelectionModes.hpp"
+#include "CoreGeometry/points.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -121,7 +122,7 @@ private:
 
     // Polygon selection state
     bool _is_polygon_selecting;
-    std::vector<QVector2D> _polygon_vertices;                 // Current polygon vertices in world coordinates
+    std::vector<Point2D<float>> _polygon_vertices;                 // Current polygon vertices in world coordinates
     std::vector<QPoint> _polygon_screen_points;               // Polygon vertices in screen coordinates for rendering
     std::unique_ptr<SelectionRegion> _active_selection_region;// Current selection region
 

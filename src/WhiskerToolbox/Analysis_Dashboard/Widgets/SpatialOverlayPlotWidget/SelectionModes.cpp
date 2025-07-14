@@ -2,7 +2,7 @@
 
 // PolygonSelectionRegion implementation
 
-PolygonSelectionRegion::PolygonSelectionRegion(std::vector<QVector2D> const & vertices)
+PolygonSelectionRegion::PolygonSelectionRegion(std::vector<Point2D<float>> const & vertices)
     : _vertices(vertices) {
 
     if (_vertices.empty()) {
@@ -11,14 +11,14 @@ PolygonSelectionRegion::PolygonSelectionRegion(std::vector<QVector2D> const & ve
     }
 
     // Calculate bounding box
-    _min_x = _max_x = _vertices[0].x();
-    _min_y = _max_y = _vertices[0].y();
+    _min_x = _max_x = _vertices[0].x;
+    _min_y = _max_y = _vertices[0].y;
 
     for (auto const & vertex: _vertices) {
-        _min_x = std::min(_min_x, vertex.x());
-        _max_x = std::max(_max_x, vertex.x());
-        _min_y = std::min(_min_y, vertex.y());
-        _max_y = std::max(_max_y, vertex.y());
+        _min_x = std::min(_min_x, vertex.x);
+        _max_x = std::max(_max_x, vertex.x);
+        _min_y = std::min(_min_y, vertex.y);
+        _max_y = std::max(_max_y, vertex.y);
     }
 }
 
@@ -35,10 +35,10 @@ bool PolygonSelectionRegion::containsPoint(Point2D<float> point) const {
     size_t j = _vertices.size() - 1;
 
     for (size_t i = 0; i < _vertices.size(); ++i) {
-        float xi = _vertices[i].x();
-        float yi = _vertices[i].y();
-        float xj = _vertices[j].x();
-        float yj = _vertices[j].y();
+        float xi = _vertices[i].x;
+        float yi = _vertices[i].y;
+        float xj = _vertices[j].x;
+        float yj = _vertices[j].y;
 
         if (((yi > point.y) != (yj > point.y)) &&
             (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi)) {
