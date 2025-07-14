@@ -239,38 +239,6 @@ private:
      */
     std::pair<float, float> worldToTexture(float world_x, float world_y) const;
 
-private:
-
-    /**
-     * @brief Check if two bounding boxes can be unioned using simple rectangular union
-     * @param bbox1 First bounding box
-     * @param bbox2 Second bounding box
-     * @return True if they can be unioned as a simple rectangle
-     */
-    bool canUseSimpleRectangularUnion(BoundingBox const & bbox1, BoundingBox const & bbox2) const;
-
-    /**
-     * @brief Get the simple rectangular union of two bounding boxes
-     * @param bbox1 First bounding box
-     * @param bbox2 Second bounding box
-     * @return Union bounding box
-     */
-    BoundingBox getSimpleRectangularUnion(BoundingBox const & bbox1, BoundingBox const & bbox2) const;
-
-    /**
-     * @brief Get the overall bounding box that encompasses all input bounding boxes
-     * @param boxes Vector of bounding boxes
-     * @return Overall bounding box
-     */
-    BoundingBox getOverallBoundingBox(std::vector<BoundingBox> const & boxes) const;
-
-    /**
-     * @brief Check if all bounding boxes form a dense cluster that can be represented as a single rectangle
-     * @param boxes Vector of bounding boxes to check
-     * @return True if they can be efficiently represented as a single rectangle
-     */
-    bool areAllBoxesRectangularlyUnifiable(std::vector<BoundingBox> const & boxes) const;
-
     
 };
 
