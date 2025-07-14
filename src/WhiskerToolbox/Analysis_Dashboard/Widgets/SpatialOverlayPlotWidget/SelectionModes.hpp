@@ -1,6 +1,7 @@
 #ifndef SPATIALOVERLAY_SELECTION_MODES_HPP
 #define SPATIALOVERLAY_SELECTION_MODES_HPP
 
+#include "CoreGeometry/polygon.hpp"
 #include "CoreGeometry/points.hpp"
 
 #include <cstdint>
@@ -53,11 +54,10 @@ public:
     /**
      * @brief Get the polygon vertices in world coordinates
      */
-    std::vector<Point2D<float>> const & getVertices() const { return _vertices; }
+    std::vector<Point2D<float>> const & getVertices() const { return _polygon.getVertices(); }
 
 private:
-    std::vector<Point2D<float>> _vertices;
-    float _min_x, _min_y, _max_x, _max_y;// Cached bounding box
+    Polygon _polygon;
 };
 
 #endif// SPATIALOVERLAY_SELECTION_MODES_HPP

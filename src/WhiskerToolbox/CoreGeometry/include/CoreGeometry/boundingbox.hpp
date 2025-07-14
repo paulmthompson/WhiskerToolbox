@@ -1,9 +1,7 @@
 #ifndef BOUNDINGBOX_HPP
 #define BOUNDINGBOX_HPP
 
-/**
- * @brief Axis-aligned bounding box for  queries
- */
+
 struct BoundingBox {
     float min_x, min_y, max_x, max_y;
 

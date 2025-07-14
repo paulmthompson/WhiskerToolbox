@@ -7,15 +7,18 @@ set(NEURALYZER_GEOMETRY_INCLUDES
     include/CoreGeometry/ImageSize.hpp
     include/CoreGeometry/masks.hpp
     include/CoreGeometry/points.hpp
+    include/CoreGeometry/polygon.hpp
 )
 
 set(NEURALYZER_GEOMETRY_SOURCES
    src/masks.cpp
    src/points.cpp
+   src/polygon.cpp
 )
 
 set_property(GLOBAL PROPERTY CORE_GEOMETRY_TEST_SOURCES 
     src/masks.test.cpp
+    src/polygon.test.cpp
 )
 
 add_library(NEURALYZER_GEOMETRY SHARED ${NEURALYZER_GEOMETRY_SOURCES})
