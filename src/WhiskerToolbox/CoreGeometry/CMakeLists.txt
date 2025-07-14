@@ -49,7 +49,22 @@ target_include_directories(NEURALYZER_GEOMETRY PUBLIC
     "$<INSTALL_INTERFACE:include>"
 )
 
-install(TARGETS NEURALYZER_GEOMETRY)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(NEURALYZER_GEOMETRY PRIVATE ${CLANG_OPTIONS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(NEURALYZER_GEOMETRY PRIVATE ${GCC_WARNINGS})
+endif()
+
+if (MSVC)
+    target_compile_options(NEURALYZER_GEOMETRY PRIVATE ${MSVC_WARNINGS})
+endif()
+
+set_target_properties(NEURALYZER_GEOMETRY PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # Set up export target
 install(TARGETS NEURALYZER_GEOMETRY
