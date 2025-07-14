@@ -60,11 +60,12 @@ void MaskDataVisualization::initializeOpenGLResources() {
     quad_vertex_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
 
     // Quad vertices covering the world bounds
+    // Note: Texture coordinates are flipped vertically to correct Y-axis orientation
     float quad_vertices[] = {
-        world_min_x, world_min_y, 0.0f, 0.0f,  // Bottom-left
-        world_max_x, world_min_y, 1.0f, 0.0f,  // Bottom-right
-        world_max_x, world_max_y, 1.0f, 1.0f,  // Top-right
-        world_min_x, world_max_y, 0.0f, 1.0f   // Top-left
+        world_min_x, world_min_y, 0.0f, 1.0f,  // Bottom-left -> Top-left in texture
+        world_max_x, world_min_y, 1.0f, 1.0f,  // Bottom-right -> Top-right in texture
+        world_max_x, world_max_y, 1.0f, 0.0f,  // Top-right -> Bottom-right in texture
+        world_min_x, world_max_y, 0.0f, 0.0f   // Top-left -> Bottom-left in texture
     };
 
     quad_vertex_buffer.allocate(quad_vertices, sizeof(quad_vertices));
@@ -553,7 +554,7 @@ std::vector<float> MaskDataVisualization::generatePolygonVertexData(Polygon cons
     
     for (const auto& vertex : vertices) {
         vertex_data.push_back(vertex.x);
-        vertex_data.push_back(vertex.y);
+        vertex_data.push_back(flipY(vertex.y));  // Flip Y coordinate for OpenGL rendering
     }
     
     return vertex_data;

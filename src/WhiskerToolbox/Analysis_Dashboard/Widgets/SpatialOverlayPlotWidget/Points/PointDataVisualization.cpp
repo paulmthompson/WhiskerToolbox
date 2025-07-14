@@ -11,16 +11,20 @@ PointDataVisualization::PointDataVisualization(QString const & data_key,
       selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       color(1.0f, 0.0f, 0.0f, 1.0f) 
 {
-            
+    // Calculate bounds for QuadTree initialization
     BoundingBox bounds = calculateBoundsForPointData(point_data.get());
+            
     spatial_index = std::make_unique<QuadTree<int64_t>>(bounds);
     vertex_data.reserve(point_data->GetAllPointsAsRange().size() * 2); // Reserve space for x and y coordinates
+    
     for (auto const & time_points_pair : point_data->GetAllPointsAsRange()) {
         for (auto const & point : time_points_pair.points) {
+            // Store original coordinates in QuadTree (preserve data structure)
+            spatial_index->insert(point.x, point.y, time_points_pair.time.getValue());
+            
+            // Store original coordinates in vertex data for OpenGL rendering
             vertex_data.push_back(point.x);
             vertex_data.push_back(point.y);
-
-            spatial_index->insert(point.x, point.y, time_points_pair.time.getValue());
         }
     }
 
@@ -98,6 +102,7 @@ void PointDataVisualization::updateSelectionVertexBuffer() {
     selection_vertex_data.reserve(selected_points.size() * 2);
 
     for (auto const * point_ptr: selected_points) {
+        // Store original coordinates in selection vertex data
         selection_vertex_data.push_back(point_ptr->x);
         selection_vertex_data.push_back(point_ptr->y);
     }
@@ -195,7 +200,7 @@ void PointDataVisualization::renderHoverPoint(QOpenGLShaderProgram * shader_prog
     highlight_vao.bind();
     highlight_buffer.bind();
 
-    // Set the highlight point data
+    // Store original coordinates in hover point data
     float highlight_data[2] = {current_hover_point->x, current_hover_point->y};
     glBufferSubData(GL_ARRAY_BUFFER, 0, 2 * sizeof(float), highlight_data);
 

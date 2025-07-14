@@ -239,6 +239,15 @@ private:
      */
     std::pair<float, float> worldToTexture(float world_x, float world_y) const;
 
+    /**
+     * @brief Flip Y coordinate to account for different coordinate systems
+     * @param y Original Y coordinate
+     * @return Flipped Y coordinate
+     */
+    float flipY(float y) const {
+        return world_max_y - y;
+    }
+
     
 };
 
