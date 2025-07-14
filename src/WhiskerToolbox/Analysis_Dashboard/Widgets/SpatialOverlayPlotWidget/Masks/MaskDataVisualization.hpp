@@ -52,24 +52,15 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QOpenGLBuffer quad_vertex_buffer;
     QOpenGLVertexArrayObject quad_vertex_array_object;
     
-    // Mask outline rendering data
-    std::vector<float> outline_vertex_data;
-    QOpenGLBuffer outline_vertex_buffer;
-    QOpenGLVertexArrayObject outline_vertex_array_object;
+
     
     // Selection and hover data
     std::set<MaskIdentifier> selected_masks;
     std::vector<float> selection_binary_image_data;
     GLuint selection_binary_image_texture = 0;
-    std::vector<float> selection_outline_data;
-    QOpenGLBuffer selection_outline_buffer;
-    QOpenGLVertexArrayObject selection_outline_array_object;
     
     // Hover state
     std::vector<RTreeEntry<MaskIdentifier>> current_hover_entries;
-    std::vector<float> hover_outline_data;
-    QOpenGLBuffer hover_outline_buffer;
-    QOpenGLVertexArrayObject hover_outline_array_object;
     
     // Hover bounding box rendering
     std::vector<float> hover_bbox_data;
@@ -80,7 +71,6 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QString key;
     QVector4D color;
     bool visible = true;
-    float outline_thickness = 2.0f;
     
     // World bounds based on image size
     float world_min_x = 0.0f;
@@ -104,22 +94,6 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      */
     void cleanupOpenGLResources();
 
-    /**
-     * @brief Set outline thickness for mask rendering
-     * @param thickness Thickness in pixels
-     */
-    void setOutlineThickness(float thickness);
-
-    /**
-     * @brief Get current outline thickness
-     * @return Thickness in pixels
-     */
-    float getOutlineThickness() const { return outline_thickness; }
-
-    /**
-     * @brief Update selection outline buffer with current selection
-     */
-    void updateSelectionOutlineBuffer();
 
     /**
      * @brief Clear all selected masks
@@ -221,10 +195,6 @@ private:
      */
     void populateRTree();
 
-    /**
-     * @brief Generate outline vertex data for all masks
-     */
-    void generateOutlineVertexData();
 
     /**
      * @brief Update the selection binary image texture based on currently selected masks

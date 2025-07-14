@@ -19,8 +19,6 @@
 
 #include <cmath>
 
-// SpatialOverlayPlotWidget implementation
-
 SpatialOverlayPlotWidget::SpatialOverlayPlotWidget(QGraphicsItem * parent)
     : AbstractPlotWidget(parent),
       _opengl_widget(nullptr),
@@ -46,7 +44,10 @@ void SpatialOverlayPlotWidget::setMaskDataKeys(QStringList const & mask_data_key
     updateVisualization();
 }
 
-
+void SpatialOverlayPlotWidget::setLineDataKeys(QStringList const & line_data_keys) {
+    _line_data_keys = line_data_keys;
+    updateVisualization();
+}
 
 void SpatialOverlayPlotWidget::paint(QPainter * painter, QStyleOptionGraphicsItem const * option, QWidget * widget) {
     Q_UNUSED(option)
@@ -118,6 +119,7 @@ void SpatialOverlayPlotWidget::updateVisualization() {
 
     loadPointData();
     loadMaskData();
+    loadLineData();
     
     // Request render update through signal
     update();
@@ -156,6 +158,20 @@ void SpatialOverlayPlotWidget::loadMaskData() {
     }
     if (!mask_data_map.empty()) {
         _opengl_widget->setMaskData(mask_data_map);
+    }
+}
+
+void SpatialOverlayPlotWidget::loadLineData() {
+    std::unordered_map<QString, std::shared_ptr<LineData>> line_data_map;
+
+    for (QString const & key: _line_data_keys) {
+        auto line_data = _data_manager->getData<LineData>(key.toStdString());
+        if (line_data) {
+            line_data_map[key] = line_data;
+        }
+    }
+    if (!line_data_map.empty()) {
+        _opengl_widget->setLineData(line_data_map);
     }
 }
 

@@ -15,9 +15,6 @@ MaskDataVisualization::MaskDataVisualization(QString const & data_key,
     : key(data_key),
       mask_data(mask_data),
       quad_vertex_buffer(QOpenGLBuffer::VertexBuffer),
-      outline_vertex_buffer(QOpenGLBuffer::VertexBuffer),
-      selection_outline_buffer(QOpenGLBuffer::VertexBuffer),
-      hover_outline_buffer(QOpenGLBuffer::VertexBuffer),
       color(1.0f, 0.0f, 0.0f, 1.0f) {
       
     if (!mask_data) {
@@ -37,7 +34,6 @@ MaskDataVisualization::MaskDataVisualization(QString const & data_key,
     // Precompute all visualization data
     populateRTree();
     createBinaryImageTexture();
-    generateOutlineVertexData();
     
     initializeOpenGLResources();
 }
@@ -82,55 +78,6 @@ void MaskDataVisualization::initializeOpenGLResources() {
     quad_vertex_buffer.release();
     quad_vertex_array_object.release();
 
-    // Create outline vertex buffer
-    outline_vertex_array_object.create();
-    outline_vertex_array_object.bind();
-
-    outline_vertex_buffer.create();
-    outline_vertex_buffer.bind();
-    outline_vertex_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    
-    if (!outline_vertex_data.empty()) {
-        qDebug() << "MaskDataVisualization: Allocating outline vertex data with" << outline_vertex_data.size() << "vertices";
-        outline_vertex_buffer.allocate(outline_vertex_data.data(), 
-                                      static_cast<int>(outline_vertex_data.size() * sizeof(float)));
-    }
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    outline_vertex_buffer.release();
-    outline_vertex_array_object.release();
-
-    // Create selection outline buffer
-    selection_outline_array_object.create();
-    selection_outline_array_object.bind();
-
-    selection_outline_buffer.create();
-    selection_outline_buffer.bind();
-    selection_outline_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    selection_outline_buffer.release();
-    selection_outline_array_object.release();
-
-    // Create hover outline buffer
-    hover_outline_array_object.create();
-    hover_outline_array_object.bind();
-
-    hover_outline_buffer.create();
-    hover_outline_buffer.bind();
-    hover_outline_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    hover_outline_buffer.release();
-    hover_outline_array_object.release();
 
     // Create hover bounding box buffer
     hover_bbox_array_object.create();
@@ -172,24 +119,7 @@ void MaskDataVisualization::cleanupOpenGLResources() {
     if (quad_vertex_array_object.isCreated()) {
         quad_vertex_array_object.destroy();
     }
-    if (outline_vertex_buffer.isCreated()) {
-        outline_vertex_buffer.destroy();
-    }
-    if (outline_vertex_array_object.isCreated()) {
-        outline_vertex_array_object.destroy();
-    }
-    if (selection_outline_buffer.isCreated()) {
-        selection_outline_buffer.destroy();
-    }
-    if (selection_outline_array_object.isCreated()) {
-        selection_outline_array_object.destroy();
-    }
-    if (hover_outline_buffer.isCreated()) {
-        hover_outline_buffer.destroy();
-    }
-    if (hover_outline_array_object.isCreated()) {
-        hover_outline_array_object.destroy();
-    }
+
     if (hover_bbox_buffer.isCreated()) {
         hover_bbox_buffer.destroy();
     }
@@ -377,10 +307,6 @@ BoundingBox MaskDataVisualization::calculateBounds() const {
     return BoundingBox(0, 0, static_cast<float>(image_size.width), static_cast<float>(image_size.height));
 }
 
-void MaskDataVisualization::setOutlineThickness(float thickness) {
-    outline_thickness = std::max(0.5f, thickness);
-}
-
 void MaskDataVisualization::createBinaryImageTexture() {
     if (!mask_data) return;
 
@@ -499,43 +425,6 @@ void MaskDataVisualization::populateRTree() {
     }
 
     qDebug() << "MaskDataVisualization: R-tree populated with" << spatial_index->size() << "masks";
-}
-
-void MaskDataVisualization::generateOutlineVertexData() {
-    if (!mask_data) return;
-
-    outline_vertex_data.clear();
-
-    qDebug() << "MaskDataVisualization: Generating outline vertex data with" << mask_data->size() << "time frames";
-
-    /*
-    for (auto const & time_masks_pair : mask_data->getAllAsRange()) {
-        for (size_t mask_index = 0; mask_index < time_masks_pair.masks.size(); ++mask_index) {
-            auto const & mask = time_masks_pair.masks[mask_index];
-            
-            if (mask.empty()) continue;
-
-            // Get outline for this mask
-            auto outline = get_mask_outline(mask);
-            
-            // Convert outline to vertex data (lines)
-            for (size_t i = 0; i < outline.size(); ++i) {
-                size_t next_i = (i + 1) % outline.size();
-                
-                // Add line segment
-                outline_vertex_data.push_back(static_cast<float>(outline[i].x));
-                outline_vertex_data.push_back(static_cast<float>(outline[i].y));
-                outline_vertex_data.push_back(static_cast<float>(outline[next_i].x));
-                outline_vertex_data.push_back(static_cast<float>(outline[next_i].y));
-            }
-
-            qDebug() << "MaskDataVisualization: Outline vertex data generated for mask" 
-                     << time_masks_pair.time.getValue() << "with" 
-                     << outline_vertex_data.size() << "vertices";
-        }
-    }
-    */
-    qDebug() << "MaskDataVisualization: Outline vertex data generated with" << outline_vertex_data.size() << "vertices";
 }
 
 bool MaskDataVisualization::maskContainsPoint(MaskIdentifier const & mask_id, uint32_t pixel_x, uint32_t pixel_y) const {

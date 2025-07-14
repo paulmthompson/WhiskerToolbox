@@ -25,7 +25,6 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
       _point_size(8.0f),
-      _mask_outline_thickness(2.0f),
       _is_panning(false),
       _data_bounds_valid(false),
       _tooltips_enabled(true),
@@ -155,7 +154,6 @@ void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::sh
         
         auto viz = std::make_unique<MaskDataVisualization>(key, mask_data);
         viz->color = colors[color_index % colors.size()];
-        viz->setOutlineThickness(_mask_outline_thickness);
         color_index++;
         
         qDebug() << "SpatialOverlayOpenGLWidget: Created mask visualization for" << key 
@@ -177,21 +175,6 @@ void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::sh
         doneCurrent();
     } else {
         update();
-    }
-}
-
-void SpatialOverlayOpenGLWidget::setMaskOutlineThickness(float thickness) {
-    float new_thickness = std::max(0.5f, std::min(10.0f, thickness));
-    if (new_thickness != _mask_outline_thickness) {
-        _mask_outline_thickness = new_thickness;
-        
-        // Update all mask visualizations
-        for (auto const& [key, viz] : _mask_data_visualizations) {
-            viz->setOutlineThickness(_mask_outline_thickness);
-        }
-        
-        emit maskOutlineThicknessChanged(_mask_outline_thickness);
-        requestThrottledUpdate();
     }
 }
 
@@ -372,6 +355,14 @@ std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const*>>> Spat
     
     return result;
 }
+
+//========== Line Data ==========
+
+void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map) {
+    // Clear existing visualizations
+    //_line_data_visualizations.clear();
+}
+
 
 //========== View and Interaction ==========
 

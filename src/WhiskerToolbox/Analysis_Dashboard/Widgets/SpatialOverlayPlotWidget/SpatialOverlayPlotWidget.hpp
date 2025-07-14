@@ -55,6 +55,16 @@ public:
      */
     QStringList getMaskDataKeys() const { return _mask_data_keys; }
 
+    /**
+     * @brief Set which LineData keys to display
+     * @param line_data_keys List of LineData keys to visualize
+     */
+    void setLineDataKeys(QStringList const & line_data_keys);
+
+    /**
+     * @brief Get currently displayed LineData keys
+     */
+    QStringList getLineDataKeys() const { return _line_data_keys; }
 
     /**
      * @brief Get access to the OpenGL widget for advanced configuration
@@ -123,6 +133,11 @@ private:
      * @brief Load mask data from DataManager
      */
     void loadMaskData();
+
+    /**
+     * @brief Load mask data from DataManager
+     */
+    void loadLineData();
 
     /**
      * @brief Setup the OpenGL widget and proxy

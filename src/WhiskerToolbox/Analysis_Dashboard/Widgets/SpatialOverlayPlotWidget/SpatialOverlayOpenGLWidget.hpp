@@ -25,7 +25,8 @@ class PointData;
 class PointDataVisualization;
 class MaskData;
 class MaskDataVisualization;
-
+class LineData;
+class LineDataVisualization;
 
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
@@ -81,6 +82,18 @@ public:
      * @brief Get current tooltip enabled state
      */
     bool getTooltipsEnabled() const { return _tooltips_enabled; }
+        /**
+     * @brief Programmatically clear all selected points
+     */
+    void clearSelection();
+
+    /**
+     * @brief Convert screen coordinates to world coordinates
+     * @param screen_x Screen X coordinate
+     * @param screen_y Screen Y coordinate
+     * @return World coordinates
+     */
+    QVector2D screenToWorld(int screen_x, int screen_y) const;
 
     // ========== Point Data ==========
 
@@ -90,27 +103,7 @@ public:
      */
     void setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map);
 
-    // ========== Mask Data ==========
-
-    /**
-     * @brief Set the mask data to display
-     * @param mask_data_map Map of data key to MaskData objects
-     */
-    void setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map);
-
-    /**
-     * @brief Set the mask outline thickness for rendering
-     * @param thickness Outline thickness in pixels
-     */
-    void setMaskOutlineThickness(float thickness);
-
-    /**
-     * @brief Get current mask outline thickness
-     * @return Outline thickness in pixels
-     */
-    float getMaskOutlineThickness() const { return _mask_outline_thickness; }
-
-    /**
+        /**
      * @brief Set the point size for rendering
      * @param point_size Point size in pixels
      */
@@ -121,7 +114,7 @@ public:
      */
     float getPointSize() const { return _point_size; }
 
-    /**
+        /**
      * @brief Get the currently selected points from all PointData objects
      * @return Vector of pairs containing data key and selected points
      */
@@ -132,6 +125,15 @@ public:
      * @return Total selected point count
      */
     size_t getTotalSelectedPoints() const;
+
+    // ========== Mask Data ==========
+
+    /**
+     * @brief Set the mask data to display
+     * @param mask_data_map Map of data key to MaskData objects
+     */
+    void setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map);
+
 
     /**
      * @brief Get the currently selected masks from all MaskData objects
@@ -145,18 +147,13 @@ public:
      */
     size_t getTotalSelectedMasks() const;
 
-    /**
-     * @brief Programmatically clear all selected points
-     */
-    void clearSelection();
+    // ========== Line Data ==========
 
     /**
-     * @brief Convert screen coordinates to world coordinates
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
-     * @return World coordinates
+     * @brief Set the line data to display
+     * @param line_data_map Map of data key to LineData objects
      */
-    QVector2D screenToWorld(int screen_x, int screen_y) const;
+    void setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map);
 
 signals:
     /**
@@ -171,12 +168,6 @@ signals:
      * @param point_size The new point size in pixels
      */
     void pointSizeChanged(float point_size);
-
-    /**
-     * @brief Emitted when mask outline thickness changes
-     * @param thickness The new outline thickness in pixels
-     */
-    void maskOutlineThicknessChanged(float thickness);
 
     /**
      * @brief Emitted when zoom level changes
@@ -254,6 +245,9 @@ private:
     // MaskData visualizations - each MaskData has its own RTree and OpenGL resources
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
 
+    // LineData visualizations - each LineData has its own OpenGL resources
+    //std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
+
     // Modern OpenGL rendering resources
     QOpenGLShaderProgram * _shader_program;
     QOpenGLShaderProgram * _line_shader_program;
@@ -269,7 +263,6 @@ private:
     float _zoom_level;
     float _pan_offset_x, _pan_offset_y;
     float _point_size;
-    float _mask_outline_thickness = 2.0f;
     QMatrix4x4 _projection_matrix;
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _model_matrix;
