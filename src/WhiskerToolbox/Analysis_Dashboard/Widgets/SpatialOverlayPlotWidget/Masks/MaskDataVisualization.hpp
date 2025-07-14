@@ -2,6 +2,7 @@
 #define MASKDATAVISUALIZATION_HPP
 
 #include "SpatialIndex/RTree.hpp"
+#include "CoreGeometry/polygon.hpp"
 
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_1_Core>
@@ -62,10 +63,11 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     // Hover state
     std::vector<RTreeEntry<MaskIdentifier>> current_hover_entries;
     
-    // Hover bounding box rendering
-    std::vector<float> hover_bbox_data;
-    QOpenGLBuffer hover_bbox_buffer;
-    QOpenGLVertexArrayObject hover_bbox_array_object;
+    // Hover union polygon rendering
+    Polygon hover_union_polygon;
+    std::vector<float> hover_polygon_data;
+    QOpenGLBuffer hover_polygon_buffer;
+    QOpenGLVertexArrayObject hover_polygon_array_object;
     
     // Visualization properties
     QString key;
@@ -135,10 +137,10 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void renderBinaryImage(QOpenGLShaderProgram * shader_program);
 
     /**
-     * @brief Render hover mask bounding boxes
+     * @brief Render hover mask union polygon
      * @param shader_program The shader program to use for rendering
      */
-    void renderHoverMaskBoundingBoxes(QOpenGLShaderProgram * shader_program);
+    void renderHoverMaskUnionPolygon(QOpenGLShaderProgram * shader_program);
 
     /**
      * @brief Render selected masks as a binary image with different color/opacity
@@ -153,9 +155,9 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     BoundingBox calculateBounds() const;
 
     /**
-     * @brief Update hover bounding box buffer with current hover masks
+     * @brief Update hover union polygon from current hover entries
      */
-    void updateHoverBoundingBoxBuffer();
+    void updateHoverUnionPolygon();
 
     /**
      * @brief Select multiple masks at once
@@ -202,11 +204,18 @@ private:
     void updateSelectionBinaryImageTexture();
 
     /**
-     * @brief Generate bounding box line data from R-tree entries
+     * @brief Compute the union polygon from R-tree entries
      * @param entries Vector of R-tree entries containing masks and their bounding boxes
-     * @return Vector of vertex data for the bounding box lines
+     * @return Union polygon encompassing all bounding boxes
      */
-    std::vector<float> generateBoundingBoxDataFromEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) const;
+    Polygon computeUnionPolygonFromEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) const;
+
+    /**
+     * @brief Generate polygon vertex data for OpenGL rendering
+     * @param polygon The polygon to convert to vertex data
+     * @return Vector of vertex data for line strip rendering
+     */
+    std::vector<float> generatePolygonVertexData(Polygon const & polygon) const;
 
     /**
      * @brief Check if a mask contains a world coordinate point
@@ -229,6 +238,38 @@ private:
      * @return Pair of texture coordinates (u, v)
      */
     std::pair<float, float> worldToTexture(float world_x, float world_y) const;
+
+private:
+
+    /**
+     * @brief Check if two bounding boxes can be unioned using simple rectangular union
+     * @param bbox1 First bounding box
+     * @param bbox2 Second bounding box
+     * @return True if they can be unioned as a simple rectangle
+     */
+    bool canUseSimpleRectangularUnion(BoundingBox const & bbox1, BoundingBox const & bbox2) const;
+
+    /**
+     * @brief Get the simple rectangular union of two bounding boxes
+     * @param bbox1 First bounding box
+     * @param bbox2 Second bounding box
+     * @return Union bounding box
+     */
+    BoundingBox getSimpleRectangularUnion(BoundingBox const & bbox1, BoundingBox const & bbox2) const;
+
+    /**
+     * @brief Get the overall bounding box that encompasses all input bounding boxes
+     * @param boxes Vector of bounding boxes
+     * @return Overall bounding box
+     */
+    BoundingBox getOverallBoundingBox(std::vector<BoundingBox> const & boxes) const;
+
+    /**
+     * @brief Check if all bounding boxes form a dense cluster that can be represented as a single rectangle
+     * @param boxes Vector of bounding boxes to check
+     * @return True if they can be efficiently represented as a single rectangle
+     */
+    bool areAllBoxesRectangularlyUnifiable(std::vector<BoundingBox> const & boxes) const;
 };
 
 #endif // MASKDATAVISUALIZATION_HPP

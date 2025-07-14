@@ -29,4 +29,15 @@ struct BoundingBox {
     Point2D<float> max() const { return {max_x, max_y}; }
 };
 
+/**
+     * @brief Check if one bounding box is completely contained within another
+     * @param inner The potentially contained bounding box
+     * @param outer The potentially containing bounding box
+     * @return True if inner is completely contained within outer
+     */
+inline bool isCompletelyContained(BoundingBox const & inner, BoundingBox const & outer) {
+    return (inner.min_x >= outer.min_x && inner.min_y >= outer.min_y &&
+            inner.max_x <= outer.max_x && inner.max_y <= outer.max_y);
+}
+
 #endif // BOUNDINGBOX_HPP

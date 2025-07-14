@@ -1084,7 +1084,7 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
         
         // Render hover mask bounding boxes (on top of everything else)
         for (auto const& [key, viz] : _mask_data_visualizations) {
-            viz->renderHoverMaskBoundingBoxes(_line_shader_program);
+            viz->renderHoverMaskUnionPolygon(_line_shader_program);
         }
         
         _line_shader_program->release();

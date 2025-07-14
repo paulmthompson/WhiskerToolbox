@@ -1,6 +1,7 @@
 #include "MaskDataVisualization.hpp"
 
 #include "CoreGeometry/masks.hpp"
+#include "CoreGeometry/polygon_adapter.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 
 #include <QOpenGLShaderProgram>
@@ -15,7 +16,8 @@ MaskDataVisualization::MaskDataVisualization(QString const & data_key,
     : key(data_key),
       mask_data(mask_data),
       quad_vertex_buffer(QOpenGLBuffer::VertexBuffer),
-      color(1.0f, 0.0f, 0.0f, 1.0f) {
+      color(1.0f, 0.0f, 0.0f, 1.0f),
+      hover_union_polygon(std::vector<Point2D<float>>()) {
       
     if (!mask_data) {
         qDebug() << "MaskDataVisualization: Null mask data provided";
@@ -79,20 +81,20 @@ void MaskDataVisualization::initializeOpenGLResources() {
     quad_vertex_array_object.release();
 
 
-    // Create hover bounding box buffer
-    hover_bbox_array_object.create();
-    hover_bbox_array_object.bind();
+    // Create hover union polygon buffer
+    hover_polygon_array_object.create();
+    hover_polygon_array_object.bind();
 
-    hover_bbox_buffer.create();
-    hover_bbox_buffer.bind();
-    hover_bbox_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    hover_polygon_buffer.create();
+    hover_polygon_buffer.bind();
+    hover_polygon_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
     glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    hover_bbox_buffer.release();
-    hover_bbox_array_object.release();
+    hover_polygon_buffer.release();
+    hover_polygon_array_object.release();
 
     // Create binary image texture
     glGenTextures(1, &binary_image_texture);
@@ -120,11 +122,11 @@ void MaskDataVisualization::cleanupOpenGLResources() {
         quad_vertex_array_object.destroy();
     }
 
-    if (hover_bbox_buffer.isCreated()) {
-        hover_bbox_buffer.destroy();
+    if (hover_polygon_buffer.isCreated()) {
+        hover_polygon_buffer.destroy();
     }
-    if (hover_bbox_array_object.isCreated()) {
-        hover_bbox_array_object.destroy();
+    if (hover_polygon_array_object.isCreated()) {
+        hover_polygon_array_object.destroy();
     }
     if (binary_image_texture != 0) {
         glDeleteTextures(1, &binary_image_texture);
@@ -215,13 +217,13 @@ size_t MaskDataVisualization::removeIntersectingMasks(std::vector<MaskIdentifier
 
 void MaskDataVisualization::setHoverEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) {
     current_hover_entries = entries;
-    updateHoverBoundingBoxBuffer();
+    updateHoverUnionPolygon();
 }
 
 void MaskDataVisualization::clearHover() {
     if (!current_hover_entries.empty()) {
         current_hover_entries.clear();
-        updateHoverBoundingBoxBuffer();
+        updateHoverUnionPolygon();
     }
 }
 
@@ -458,23 +460,23 @@ std::pair<float, float> MaskDataVisualization::worldToTexture(float world_x, flo
     return {u, v};
 }
 
-void MaskDataVisualization::renderHoverMaskBoundingBoxes(QOpenGLShaderProgram * shader_program) {
-    if (current_hover_entries.empty() || hover_bbox_data.empty()) return;
+void MaskDataVisualization::renderHoverMaskUnionPolygon(QOpenGLShaderProgram * shader_program) {
+    if (current_hover_entries.empty() || hover_polygon_data.empty()) return;
 
-    hover_bbox_array_object.bind();
-    hover_bbox_buffer.bind();
+    hover_polygon_array_object.bind();
+    hover_polygon_buffer.bind();
 
-    // Set uniforms for bounding box rendering (black)
-    QVector4D bbox_color = QVector4D(0.0f, 0.0f, 0.0f, 1.0f); // Black
-    shader_program->setUniformValue("u_color", bbox_color);
+    // Set uniforms for polygon rendering (black outline)
+    QVector4D polygon_color = QVector4D(0.0f, 0.0f, 0.0f, 1.0f); // Black
+    shader_program->setUniformValue("u_color", polygon_color);
     
-    glLineWidth(2.0f); // Thick lines for visibility
+    glLineWidth(3.0f); // Thick lines for visibility
 
-    // Draw the bounding boxes
-    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(hover_bbox_data.size() / 2));
+    // Draw the union polygon as a line loop
+    glDrawArrays(GL_LINE_LOOP, 0, static_cast<GLsizei>(hover_polygon_data.size() / 2));
 
-    hover_bbox_buffer.release();
-    hover_bbox_array_object.release();
+    hover_polygon_buffer.release();
+    hover_polygon_array_object.release();
 }
 
 void MaskDataVisualization::renderSelectedMasks(QOpenGLShaderProgram * shader_program) {
@@ -507,55 +509,228 @@ void MaskDataVisualization::renderSelectedMasks(QOpenGLShaderProgram * shader_pr
     quad_vertex_array_object.release();
 }
 
-void MaskDataVisualization::updateHoverBoundingBoxBuffer() {
-    hover_bbox_data = generateBoundingBoxDataFromEntries(current_hover_entries);
+void MaskDataVisualization::updateHoverUnionPolygon() {
+    if (current_hover_entries.empty()) {
+        hover_union_polygon = Polygon(std::vector<Point2D<float>>{});
+        hover_polygon_data.clear();
+    } else {
+        hover_union_polygon = computeUnionPolygonFromEntries(current_hover_entries);
+        hover_polygon_data = generatePolygonVertexData(hover_union_polygon);
+    }
 
-    hover_bbox_array_object.bind();
-    hover_bbox_buffer.bind();
+    hover_polygon_array_object.bind();
+    hover_polygon_buffer.bind();
     
-    if (hover_bbox_data.empty()) {
+    if (hover_polygon_data.empty()) {
         glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
     } else {
-        hover_bbox_buffer.allocate(hover_bbox_data.data(),
-                                  static_cast<int>(hover_bbox_data.size() * sizeof(float)));
+        hover_polygon_buffer.allocate(hover_polygon_data.data(),
+                                    static_cast<int>(hover_polygon_data.size() * sizeof(float)));
     }
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    hover_bbox_buffer.release();
-    hover_bbox_array_object.release();
+    hover_polygon_buffer.release();
+    hover_polygon_array_object.release();
 }
 
-std::vector<float> MaskDataVisualization::generateBoundingBoxDataFromEntries(
-    std::vector<RTreeEntry<MaskIdentifier>> const & entries) const {
-    
-    std::vector<float> bbox_data;
-    
-    for (auto const & entry : entries) {
-        // Use the bounding box data directly from the R-tree entry
-        float min_x = entry.min_x;
-        float min_y = entry.min_y;
-        float max_x = entry.max_x;
-        float max_y = entry.max_y;
-
-        // Generate line segments for the bounding box rectangle
-        // Bottom edge
-        bbox_data.push_back(min_x); bbox_data.push_back(min_y);
-        bbox_data.push_back(max_x); bbox_data.push_back(min_y);
-        
-        // Right edge
-        bbox_data.push_back(max_x); bbox_data.push_back(min_y);
-        bbox_data.push_back(max_x); bbox_data.push_back(max_y);
-        
-        // Top edge
-        bbox_data.push_back(max_x); bbox_data.push_back(max_y);
-        bbox_data.push_back(min_x); bbox_data.push_back(max_y);
-        
-        // Left edge
-        bbox_data.push_back(min_x); bbox_data.push_back(max_y);
-        bbox_data.push_back(min_x); bbox_data.push_back(min_y);
+Polygon MaskDataVisualization::computeUnionPolygonFromEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) const {
+    if (entries.empty()) {
+        return Polygon(std::vector<Point2D<float>>{});
     }
     
-    return bbox_data;
+    if (entries.size() == 1) {
+        // Single bounding box - just convert to polygon
+        BoundingBox bbox(entries[0].min_x, entries[0].min_y, entries[0].max_x, entries[0].max_y);
+        return Polygon(bbox);
+    }
+    
+    qDebug() << "MaskDataVisualization: Computing efficient union of" << entries.size() << "bounding boxes";
+    
+    // Convert entries to BoundingBox objects with their areas
+    std::vector<std::pair<BoundingBox, float>> bbox_with_areas;
+    bbox_with_areas.reserve(entries.size());
+    
+    for (const auto& entry : entries) {
+        BoundingBox bbox(entry.min_x, entry.min_y, entry.max_x, entry.max_y);
+        float area = bbox.width() * bbox.height();
+        bbox_with_areas.emplace_back(bbox, area);
+    }
+    
+    // Sort by area (largest first) for optimal processing
+    std::sort(bbox_with_areas.begin(), bbox_with_areas.end(),
+              [](const auto& a, const auto& b) { return a.second > b.second; });
+    
+    // Start with the largest bounding box
+    std::vector<BoundingBox> essential_boxes;
+    essential_boxes.push_back(bbox_with_areas[0].first);
+    
+    qDebug() << "MaskDataVisualization: Starting with largest box, area:" << bbox_with_areas[0].second;
+    
+    // Process remaining boxes, eliminating those that are completely contained
+    for (size_t i = 1; i < bbox_with_areas.size(); ++i) {
+        const BoundingBox& candidate = bbox_with_areas[i].first;
+        
+        bool is_contained = false;
+        // Check if this box is completely contained within any existing box
+        for (const auto& existing : essential_boxes) {
+            if (isCompletelyContained(candidate, existing)) {
+                is_contained = true;
+                break;
+            }
+        }
+        
+        if (!is_contained) {
+            // Check if this box completely contains any existing boxes (and remove them)
+            essential_boxes.erase(
+                std::remove_if(essential_boxes.begin(), essential_boxes.end(),
+                              [&candidate](const BoundingBox& existing) {
+                                  return isCompletelyContained(existing, candidate);
+                              }),
+                essential_boxes.end());
+            
+            essential_boxes.push_back(candidate);
+        }
+    }
+    
+    qDebug() << "MaskDataVisualization: Reduced from" << entries.size() << "to" << essential_boxes.size() << "essential boxes";
+    
+    if (essential_boxes.size() == 1) {
+        // Only one essential box left - just convert to polygon
+        return Polygon(essential_boxes[0]);
+    }
+    
+    // Check if all boxes can be represented as a single rectangle (common case for dense clusters)
+    if (areAllBoxesRectangularlyUnifiable(essential_boxes)) {
+        qDebug() << "MaskDataVisualization: Using overall bounding box for rectangular cluster";
+        BoundingBox overall_bbox = getOverallBoundingBox(essential_boxes);
+        return Polygon(overall_bbox);
+    }
+    
+    // Try to further optimize by checking for simple rectangular unions
+    if (essential_boxes.size() == 2 && canUseSimpleRectangularUnion(essential_boxes[0], essential_boxes[1])) {
+        qDebug() << "MaskDataVisualization: Using simple rectangular union";
+        BoundingBox union_bbox = getSimpleRectangularUnion(essential_boxes[0], essential_boxes[1]);
+        return Polygon(union_bbox);
+    }
+    
+    // Fall back to polygon union for complex cases
+    qDebug() << "MaskDataVisualization: Using polygon union for complex case with" << essential_boxes.size() << "boxes";
+    
+    Polygon union_polygon(essential_boxes[0]);
+    
+    for (size_t i = 1; i < essential_boxes.size(); ++i) {
+        Polygon bbox_polygon(essential_boxes[i]);
+        union_polygon = union_polygon.unionWith(bbox_polygon);
+        
+        if (!union_polygon.isValid()) {
+            qDebug() << "MaskDataVisualization: Union operation failed at box" << i << ", using bounding box approximation";
+            // Fall back to overall bounding box if union fails
+            return Polygon(getOverallBoundingBox(essential_boxes));
+        }
+    }
+    
+    qDebug() << "MaskDataVisualization: Final union polygon has" << union_polygon.vertexCount() << "vertices";
+    return union_polygon;
+}
+
+std::vector<float> MaskDataVisualization::generatePolygonVertexData(Polygon const & polygon) const {
+    std::vector<float> vertex_data;
+    
+    if (!polygon.isValid()) {
+        return vertex_data;
+    }
+    
+    const auto& vertices = polygon.getVertices();
+    vertex_data.reserve(vertices.size() * 2);
+    
+    for (const auto& vertex : vertices) {
+        vertex_data.push_back(vertex.x);
+        vertex_data.push_back(vertex.y);
+    }
+    
+    return vertex_data;
+}
+
+bool MaskDataVisualization::canUseSimpleRectangularUnion(BoundingBox const & bbox1, BoundingBox const & bbox2) const {
+    // Check if they share an edge or are aligned for simple rectangular union
+    // This is true if they are:
+    // 1. Horizontally aligned (same Y range) and touching/overlapping on X axis
+    // 2. Vertically aligned (same X range) and touching/overlapping on Y axis
+    // 3. One contains the other (already handled by isCompletelyContained)
+    
+    const float epsilon = 1e-6f;
+    
+    // Check horizontal alignment (same Y extents)
+    bool horizontally_aligned = (std::abs(bbox1.min_y - bbox2.min_y) < epsilon && 
+                               std::abs(bbox1.max_y - bbox2.max_y) < epsilon);
+    
+    // Check vertical alignment (same X extents)  
+    bool vertically_aligned = (std::abs(bbox1.min_x - bbox2.min_x) < epsilon && 
+                             std::abs(bbox1.max_x - bbox2.max_x) < epsilon);
+    
+    if (horizontally_aligned) {
+        // Check if they touch or overlap on X axis
+        return (bbox1.max_x >= bbox2.min_x - epsilon && bbox1.min_x <= bbox2.max_x + epsilon);
+    }
+    
+    if (vertically_aligned) {
+        // Check if they touch or overlap on Y axis
+        return (bbox1.max_y >= bbox2.min_y - epsilon && bbox1.min_y <= bbox2.max_y + epsilon);
+    }
+    
+    return false;
+}
+
+BoundingBox MaskDataVisualization::getSimpleRectangularUnion(BoundingBox const & bbox1, BoundingBox const & bbox2) const {
+    return BoundingBox(
+        std::min(bbox1.min_x, bbox2.min_x),
+        std::min(bbox1.min_y, bbox2.min_y),
+        std::max(bbox1.max_x, bbox2.max_x),
+        std::max(bbox1.max_y, bbox2.max_y)
+    );
+}
+
+BoundingBox MaskDataVisualization::getOverallBoundingBox(std::vector<BoundingBox> const & boxes) const {
+    if (boxes.empty()) {
+        return BoundingBox(0, 0, 0, 0);
+    }
+    
+    BoundingBox overall = boxes[0];
+    for (size_t i = 1; i < boxes.size(); ++i) {
+        overall = getSimpleRectangularUnion(overall, boxes[i]);
+    }
+    
+    return overall;
+}
+
+bool MaskDataVisualization::areAllBoxesRectangularlyUnifiable(std::vector<BoundingBox> const & boxes) const {
+    if (boxes.size() <= 2) {
+        return true; // Small number of boxes can always be handled efficiently
+    }
+    
+    // Calculate the overall bounding box
+    BoundingBox overall = getOverallBoundingBox(boxes);
+    
+    // Calculate total area of individual boxes
+    float total_individual_area = 0.0f;
+    for (const auto& box : boxes) {
+        total_individual_area += box.width() * box.height();
+    }
+    
+    // Calculate area of overall bounding box
+    float overall_area = overall.width() * overall.height();
+    
+    // If the overall bounding box area is not much larger than the sum of individual areas,
+    // then using the overall bounding box is efficient (boxes are densely packed)
+    const float efficiency_threshold = 1.5f; // Allow 50% overhead
+    bool is_efficient = (overall_area <= total_individual_area * efficiency_threshold);
+    
+    if (is_efficient) {
+        qDebug() << "MaskDataVisualization: Boxes are densely packed (efficiency ratio:" 
+                 << (overall_area / total_individual_area) << ")";
+    }
+    
+    return is_efficient;
 }

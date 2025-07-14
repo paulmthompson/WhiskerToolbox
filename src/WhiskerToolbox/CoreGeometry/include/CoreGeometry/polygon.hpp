@@ -16,6 +16,7 @@
  */
 class Polygon {
 public:
+
     /**
      * @brief Construct a polygon from a list of vertices
      * @param vertices The vertices defining the polygon boundary
