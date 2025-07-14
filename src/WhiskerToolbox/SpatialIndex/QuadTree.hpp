@@ -1,6 +1,8 @@
 #ifndef QUADTREE_HPP
 #define QUADTREE_HPP
 
+#include "CoreGeometry/boundingbox.hpp"
+
 #include <cmath>
 #include <functional>
 #include <memory>
@@ -20,32 +22,6 @@ struct QuadTreePoint {
           data(std::move(data)) {}
 };
 
-/**
- * @brief Axis-aligned bounding box for  queries
- */
-struct BoundingBox {
-    float min_x, min_y, max_x, max_y;
-
-    BoundingBox(float min_x, float min_y, float max_x, float max_y)
-        : min_x(min_x),
-          min_y(min_y),
-          max_x(max_x),
-          max_y(max_y) {}
-
-    bool contains(float x, float y) const {
-        return x >= min_x && x <= max_x && y >= min_y && y <= max_y;
-    }
-
-    bool intersects(BoundingBox const & other) const {
-        return !(other.min_x > max_x || other.max_x < min_x ||
-                 other.min_y > max_y || other.max_y < min_y);
-    }
-
-    float width() const { return max_x - min_x; }
-    float height() const { return max_y - min_y; }
-    float center_x() const { return (min_x + max_x) * 0.5f; }
-    float center_y() const { return (min_y + max_y) * 0.5f; }
-};
 
 /**
  * @brief QuadTree for efficient 2D spatial indexing and querying

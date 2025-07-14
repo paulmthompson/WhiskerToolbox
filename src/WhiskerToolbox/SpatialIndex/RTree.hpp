@@ -1,7 +1,7 @@
 #ifndef RTREE_HPP
 #define RTREE_HPP
 
-#include "QuadTree.hpp"
+#include "CoreGeometry/boundingbox.hpp"
 
 #include <cmath>
 #include <functional>

@@ -17,6 +17,8 @@ target_include_directories(SpatialIndex INTERFACE
     $<INSTALL_INTERFACE:include/SpatialIndex>
 )
 
+target_link_libraries(SpatialIndex INTERFACE NEURALYZER_GEOMETRY)
+
 # Set up export target
 install(TARGETS SpatialIndex
     EXPORT SpatialIndexTargets
@@ -27,7 +29,7 @@ install(TARGETS SpatialIndex
 )
 
 # Install headers
-install(FILES QuadTree.hpp
+install(FILES QuadTree.hpp RTree.hpp
     DESTINATION include/SpatialIndex
 )
 

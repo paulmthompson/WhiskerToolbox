@@ -9,6 +9,7 @@ add_executable(SpatialIndexTests
 target_link_libraries(SpatialIndexTests 
     PRIVATE 
     SpatialIndex
+    NEURALYZER_GEOMETRY
     Catch2::Catch2WithMain
 )
 
