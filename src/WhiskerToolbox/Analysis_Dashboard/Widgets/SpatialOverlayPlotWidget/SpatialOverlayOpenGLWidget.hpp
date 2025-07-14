@@ -232,6 +232,11 @@ private slots:
      */
     void handleTooltipRefresh();
 
+    /**
+     * @brief Handle hover debounce timer timeout - processes expensive hover operations
+     */
+    void processHoverDebounce();
+
 private slots:
     /**
      * @brief Throttled update method to limit FPS
@@ -274,8 +279,11 @@ private:
     QTimer * _tooltip_timer;
     QTimer * _tooltip_refresh_timer;
     QTimer * _fps_limiter_timer;// fps limiting
+    QTimer * _hover_debounce_timer;// Debounce timer for hover processing
     bool _tooltips_enabled;
     bool _pending_update;         //fps limiting
+    bool _hover_processing_active;// Flag to track if hover processing is active
+    QPoint _pending_hover_pos;    // Store the latest hover position for processing
     SelectionMode _selection_mode;// Current selection mode
 
     // Polygon selection handler

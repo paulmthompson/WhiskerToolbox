@@ -270,6 +270,11 @@ private:
      * @return True if they can be efficiently represented as a single rectangle
      */
     bool areAllBoxesRectangularlyUnifiable(std::vector<BoundingBox> const & boxes) const;
+
+    
 };
+
+static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<MaskIdentifier>> const & entries);
+   
 
 #endif // MASKDATAVISUALIZATION_HPP

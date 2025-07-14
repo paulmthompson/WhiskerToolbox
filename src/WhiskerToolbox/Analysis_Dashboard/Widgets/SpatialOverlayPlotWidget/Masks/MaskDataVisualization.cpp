@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <limits>
 #include <cmath>
+#include <iostream>
 
 MaskDataVisualization::MaskDataVisualization(QString const & data_key,
                                              std::shared_ptr<MaskData> const & mask_data)
@@ -536,6 +537,11 @@ void MaskDataVisualization::updateHoverUnionPolygon() {
 }
 
 Polygon MaskDataVisualization::computeUnionPolygonFromEntries(std::vector<RTreeEntry<MaskIdentifier>> const & entries) const {
+    // Use the new polygon containment-based algorithm
+    return computeUnionPolygonUsingContainment(entries);
+    
+    /*
+    // OLD ALGORITHM - COMMENTED OUT FOR COMPARISON
     if (entries.empty()) {
         return Polygon(std::vector<Point2D<float>>{});
     }
@@ -633,6 +639,7 @@ Polygon MaskDataVisualization::computeUnionPolygonFromEntries(std::vector<RTreeE
     
     qDebug() << "MaskDataVisualization: Final union polygon has" << union_polygon.vertexCount() << "vertices";
     return union_polygon;
+    */
 }
 
 std::vector<float> MaskDataVisualization::generatePolygonVertexData(Polygon const & polygon) const {
@@ -733,4 +740,101 @@ bool MaskDataVisualization::areAllBoxesRectangularlyUnifiable(std::vector<Boundi
     }
     
     return is_efficient;
+}
+
+
+// Helper function to check if all 4 corners of a bounding box are contained in a polygon
+static bool isBoundingBoxContainedInPolygon(const BoundingBox& bbox, const Polygon& polygon) {
+    return polygon.containsPoint({bbox.min_x, bbox.min_y}) &&
+           polygon.containsPoint({bbox.max_x, bbox.min_y}) &&
+           polygon.containsPoint({bbox.max_x, bbox.max_y}) &&
+           polygon.containsPoint({bbox.min_x, bbox.max_y});
+}
+
+/**
+ * @brief Compute union polygon using polygon containment checking with raycasting
+ * 
+ * Algorithm:
+ * 1. Sort bounding boxes by area (largest first)
+ * 2. Start with largest box as "comparison polygon"
+ * 3. Process smaller boxes from largest to smallest
+ * 4. For each box, check if all 4 corners are contained in comparison polygon
+ * 5. If contained, skip the box
+ * 6. If not contained, union the box with comparison polygon and update comparison polygon
+ * 7. Track number of union operations performed
+ */
+static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<MaskIdentifier>> const & entries) {
+    if (entries.empty()) {
+        return Polygon(std::vector<Point2D<float>>{});
+    }
+    
+    if (entries.size() == 1) {
+        BoundingBox bbox(entries[0].min_x, entries[0].min_y, entries[0].max_x, entries[0].max_y);
+        return Polygon(bbox);
+    }
+    
+    std::cout << "MaskDataVisualization: Computing union using polygon containment with " << entries.size() << " bounding boxes" << std::endl;
+    
+    // Convert entries to BoundingBox objects with their areas
+    std::vector<std::pair<BoundingBox, float>> bbox_with_areas;
+    bbox_with_areas.reserve(entries.size());
+    
+    for (const auto& entry : entries) {
+        BoundingBox bbox(entry.min_x, entry.min_y, entry.max_x, entry.max_y);
+        float area = bbox.width() * bbox.height();
+        bbox_with_areas.emplace_back(bbox, area);
+    }
+    
+    // Sort by area (largest first)
+    std::sort(bbox_with_areas.begin(), bbox_with_areas.end(),
+              [](const auto& a, const auto& b) { return a.second > b.second; });
+
+    Polygon comparison_polygon(bbox_with_areas[0].first);
+        
+    size_t union_operations = 0;
+
+    // Process remaining boxes from largest to smallest
+    for (size_t i = 1; i < bbox_with_areas.size(); ++i) {
+        const BoundingBox& test_bbox = bbox_with_areas[i].first;
+        
+        // Check if all 4 corners of test_bbox are contained in comparison_polygon
+        if (isBoundingBoxContainedInPolygon(test_bbox, comparison_polygon)) {
+            // Test box is completely contained - skip it
+            continue;
+        }
+        
+        
+        Polygon test_polygon(test_bbox);
+        Polygon new_comparison = comparison_polygon.unionWith(test_polygon);
+        
+        if (!new_comparison.isValid()) {
+            std::cout << "MaskDataVisualization: Union operation failed! Falling back to bounding box approximation" << std::endl;
+            // Fall back to overall bounding box if union fails
+            std::vector<BoundingBox> remaining_boxes;
+            for (size_t j = 0; j <= i; ++j) {
+                remaining_boxes.push_back(bbox_with_areas[j].first);
+            }
+            BoundingBox overall_bbox(
+                std::min_element(remaining_boxes.begin(), remaining_boxes.end(),
+                    [](const BoundingBox& a, const BoundingBox& b) { return a.min_x < b.min_x; })->min_x,
+                std::min_element(remaining_boxes.begin(), remaining_boxes.end(),
+                    [](const BoundingBox& a, const BoundingBox& b) { return a.min_y < b.min_y; })->min_y,
+                std::max_element(remaining_boxes.begin(), remaining_boxes.end(),
+                    [](const BoundingBox& a, const BoundingBox& b) { return a.max_x < b.max_x; })->max_x,
+                std::max_element(remaining_boxes.begin(), remaining_boxes.end(),
+                    [](const BoundingBox& a, const BoundingBox& b) { return a.max_y < b.max_y; })->max_y
+            );
+            return Polygon(overall_bbox);
+        }
+        
+        comparison_polygon = new_comparison;
+        union_operations++;
+        
+    }
+    
+    std::cout << "MaskDataVisualization: Algorithm completed. Total union operations: " << union_operations 
+              << " out of " << (entries.size() - 1) << " possible operations" << std::endl;
+    std::cout << "MaskDataVisualization: Final polygon has " << comparison_polygon.vertexCount() << " vertices" << std::endl;
+    
+    return comparison_polygon;
 }

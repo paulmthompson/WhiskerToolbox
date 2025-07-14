@@ -29,6 +29,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _data_bounds_valid(false),
       _tooltips_enabled(true),
       _pending_update(false),
+      _hover_processing_active(false),
       _selection_mode(SelectionMode::PointSelection) {
 
     setMouseTracking(true);
@@ -56,6 +57,12 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     _tooltip_refresh_timer = new QTimer(this);
     _tooltip_refresh_timer->setInterval(100);// Refresh every 100ms to keep tooltip visible
     connect(_tooltip_refresh_timer, &QTimer::timeout, this, &SpatialOverlayOpenGLWidget::handleTooltipRefresh);
+
+    // Hover debounce timer - delays expensive polygon union calculations
+    _hover_debounce_timer = new QTimer(this);
+    _hover_debounce_timer->setSingleShot(true);
+    _hover_debounce_timer->setInterval(50);// 50ms delay for hover processing
+    connect(_hover_debounce_timer, &QTimer::timeout, this, &SpatialOverlayOpenGLWidget::processHoverDebounce);
 
     // FPS limiter timer (30 FPS = ~33ms interval)
     _fps_limiter_timer = new QTimer(this);
@@ -616,9 +623,11 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         return;
     }
 
-    // Clear tooltips during interaction
+    // Clear tooltips and hover processing during interaction
     _tooltip_timer->stop();
     _tooltip_refresh_timer->stop();
+    _hover_debounce_timer->stop();
+    _hover_processing_active = false;
     QToolTip::hideText();
     
     // Clear hover states
@@ -656,65 +665,20 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
         // Handle tooltip logic if tooltips are enabled
         if (_tooltips_enabled) {
-            auto [viz, point] = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
-            auto mask_results = findMasksNear(_current_mouse_pos.x(), _current_mouse_pos.y());
+            // Store the current mouse position for debounced processing
+            _pending_hover_pos = _current_mouse_pos;
             
-            // Clear old hover states
-            PointDataVisualization* old_hover_viz = getCurrentHoverVisualization();
-            if (old_hover_viz && old_hover_viz != viz) {
-                old_hover_viz->current_hover_point = nullptr;
+            // If hover processing is currently active, skip this event
+            if (_hover_processing_active) {
+                qDebug() << "SpatialOverlayOpenGLWidget: Skipping hover processing - already active";
+                return;
             }
             
-            // Clear old mask hover states
-            for (auto const& [key, mask_viz] : _mask_data_visualizations) {
-                mask_viz->clearHover();
-            }
+            // Start or restart the debounce timer
+            _hover_debounce_timer->stop();
+            _hover_debounce_timer->start();
             
-            // Set new hover state
-            if (viz && point) {
-                if (viz->current_hover_point != point) {
-                    viz->current_hover_point = point;
-                    _tooltip_timer->stop();
-                    _tooltip_refresh_timer->stop();
-                    _tooltip_timer->start();
-                    
-                    qDebug() << "SpatialOverlayOpenGLWidget: Hovering over point in" << viz->key
-                             << "at" << point->x << "," << point->y << "frame:" << point->data;
-                }
-            } else if (!mask_results.empty()) {
-                // Set mask hover states using the results from findMasksNear (no redundant R-tree search)
-                
-                // Clear all mask hover states first
-                for (auto const& [key, mask_viz] : _mask_data_visualizations) {
-                    mask_viz->clearHover();
-                }
-                
-                // Set hover entries based on findMasksNear results
-                for (auto const& [mask_viz, entries] : mask_results) {
-                    mask_viz->setHoverEntries(entries);
-                }
-                
-                _tooltip_timer->stop();
-                _tooltip_refresh_timer->stop();
-                _tooltip_timer->start();
-                
-                size_t total_masks = 0;
-                for (auto const& [mask_viz, entries] : mask_results) {
-                    total_masks += entries.size();
-                }
-                qDebug() << "SpatialOverlayOpenGLWidget: Hovering over" << total_masks << "masks";
-            } else {
-                // No point or mask under cursor
-                if (old_hover_viz) {
-                    old_hover_viz->current_hover_point = nullptr;
-                }
-                _tooltip_timer->stop();
-                _tooltip_refresh_timer->stop();
-                QToolTip::hideText();
-            }
-            
-
-            requestThrottledUpdate();
+            qDebug() << "SpatialOverlayOpenGLWidget: Starting hover debounce timer for position" << _pending_hover_pos;
         }
         _last_mouse_pos = _current_mouse_pos;
         event->accept();
@@ -762,7 +726,11 @@ void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
     // Hide tooltips when mouse leaves the widget
     _tooltip_timer->stop();
     _tooltip_refresh_timer->stop();
+    _hover_debounce_timer->stop();
     QToolTip::hideText();
+    
+    // Clear hover processing state
+    _hover_processing_active = false;
     
     // Clear all hover states
     for (auto const& [key, viz] : _point_data_visualizations) {
@@ -1363,5 +1331,73 @@ QString create_tooltipText(QuadTreePoint<int64_t> const * point, QString const &
             .arg(point->data)
             .arg(point->x, 0, 'f', 2)
             .arg(point->y, 0, 'f', 2);
+}
+
+void SpatialOverlayOpenGLWidget::processHoverDebounce() {
+    if (!_data_bounds_valid || !_tooltips_enabled || _hover_processing_active) {
+        // Skip processing if data is invalid, tooltips are disabled, or we're already processing
+        return;
+    }
+
+    // Set processing flag to prevent new hover calculations
+    _hover_processing_active = true;
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Processing debounced hover at" << _pending_hover_pos;
+
+    // Find points and masks near the stored hover position
+    auto [viz, point] = findPointNear(_pending_hover_pos.x(), _pending_hover_pos.y());
+    auto mask_results = findMasksNear(_pending_hover_pos.x(), _pending_hover_pos.y());
+    
+    // Clear old hover states
+    PointDataVisualization* old_hover_viz = getCurrentHoverVisualization();
+    if (old_hover_viz && old_hover_viz != viz) {
+        old_hover_viz->current_hover_point = nullptr;
+    }
+    
+    // Clear old mask hover states
+    for (auto const& [key, mask_viz] : _mask_data_visualizations) {
+        mask_viz->clearHover();
+    }
+    
+    // Set new hover state
+    if (viz && point) {
+        if (viz->current_hover_point != point) {
+            viz->current_hover_point = point;
+            _tooltip_timer->stop();
+            _tooltip_refresh_timer->stop();
+            _tooltip_timer->start();
+            
+            qDebug() << "SpatialOverlayOpenGLWidget: Hovering over point in" << viz->key
+                     << "at" << point->x << "," << point->y << "frame:" << point->data;
+        }
+    } else if (!mask_results.empty()) {
+        // Set mask hover states - this is where the expensive polygon union happens
+        for (auto const& [mask_viz, entries] : mask_results) {
+            mask_viz->setHoverEntries(entries);
+        }
+        
+        _tooltip_timer->stop();
+        _tooltip_refresh_timer->stop();
+        _tooltip_timer->start();
+        
+        size_t total_masks = 0;
+        for (auto const& [mask_viz, entries] : mask_results) {
+            total_masks += entries.size();
+        }
+        qDebug() << "SpatialOverlayOpenGLWidget: Hovering over" << total_masks << "masks (processed after debounce)";
+    } else {
+        // No point or mask under cursor
+        if (old_hover_viz) {
+            old_hover_viz->current_hover_point = nullptr;
+        }
+        _tooltip_timer->stop();
+        _tooltip_refresh_timer->stop();
+        QToolTip::hideText();
+    }
+    
+    requestThrottledUpdate();
+    
+    // Clear processing flag to allow new hover calculations
+    _hover_processing_active = false;
 }
 
