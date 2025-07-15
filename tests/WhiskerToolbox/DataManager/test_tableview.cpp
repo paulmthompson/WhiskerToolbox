@@ -8,6 +8,7 @@
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/computers/IntervalReductionComputer.h"
 #include "utils/TableView/computers/AnalogSliceGathererComputer.h"
+#include "utils/TableView/computers/StandardizeComputer.h"
 #include "Points/Point_Data.hpp"
 #include "TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"

@@ -453,3 +453,91 @@ void waveform_gathering_example(DataManager& dataManager, const std::vector<Inte
         std::cout << "First LFP snippet has " << lfp_waveforms[0].size() << " samples." << std::endl;
     }
 }
+
+Addendum 3: Support for Statistical Standardization
+Date: July 15, 2025
+
+This addendum addresses the requirement to create a column by standardizing another numerical column (Z-scoring).
+
+A7. Problem Statement
+A frequent need in statistical analysis is to normalize data by centering it on its mean and scaling it by its standard deviation. This operation requires a full-column transformation: the statistics (mean, stddev) must be computed for the entire source column before the element-wise transformation can be applied.
+
+A8. Proposed Design Changes
+The revised IColumnComputer interface using ComputeContext is perfectly suited for this task. We only need to add a new "computer" strategy.
+
+1. StandardizeComputer (New Column Computer):
+This computer takes a single column name as a dependency. Its compute method uses the ComputeContext to fetch the materialized data of its dependency, calculates the necessary statistics, and then performs the transformation.
+
+// This computer takes a numerical column and produces a double column.
+template<typename T>
+class StandardizeComputer : public IColumnComputer<double> {
+public:
+    StandardizeComputer(std::string dependency_col_name) 
+        : m_dependency(std::move(dependency_col_name)) {}
+
+    std::vector<std::string> getDependencies() const override {
+        return {m_dependency};
+    }
+
+    std::vector<double> compute(const ComputeContext& context) const override {
+        // 1. Get the materialized data of the dependency column.
+        const auto& source_values = context.getDependencyValues<T>(m_dependency);
+
+        if (source_values.empty()) {
+            return {};
+        }
+
+        // 2. Calculate mean and standard deviation.
+        double sum = std::accumulate(source_values.begin(), source_values.end(), 0.0);
+        double mean = sum / source_values.size();
+        
+        double sq_sum = std::inner_product(source_values.begin(), source_values.end(), source_values.begin(), 0.0);
+        double stddev = std::sqrt(sq_sum / source_values.size() - mean * mean);
+
+        // Handle case of zero standard deviation to avoid division by zero.
+        if (stddev < 1e-9) {
+            return std::vector<double>(source_values.size(), 0.0);
+        }
+
+        // 3. Apply the standardization formula to each element.
+        std::vector<double> results;
+        results.reserve(source_values.size());
+        for (const auto& val : source_values) {
+            results.push_back((val - mean) / stddev);
+        }
+
+        return results;
+    }
+
+private:
+    std::string m_dependency;
+};
+
+A9. Updated Usage Example
+This example shows how to create a standardized version of the "LFP_Mean" column.
+
+void standardize_example(DataManager& dataManager, const std::vector<Interval>& intervals) {
+    TableViewBuilder builder;
+    builder.setRowSource(std::make_unique<IntervalSelector>(intervals));
+
+    auto lfp_source = dataManager.getAnalogSource("LFP");
+
+    // 1. Add the base column we want to standardize.
+    builder.addColumn<double>("LFP_Mean", 
+        std::make_unique<IntervalReductionComputer<double>>(lfp_source, Reduction::Mean));
+
+    // 2. Add the transformed column that depends on "LFP_Mean".
+    builder.addColumn<double>("LFP_Mean_ZScore",
+        std::make_unique<StandardizeComputer<double>>("LFP_Mean"));
+
+    TableView table = builder.build();
+
+    // Retrieve the standardized data.
+    // This will first trigger the computation of "LFP_Mean", then use those
+    // results to compute "LFP_Mean_ZScore".
+    const auto& z_scores = table.getColumnValues<double>("LFP_Mean_ZScore");
+
+    if (!z_scores.empty()) {
+        std::cout << "First Z-scored value: " << z_scores[0] << std::endl;
+    }
+}

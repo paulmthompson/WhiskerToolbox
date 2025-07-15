@@ -119,6 +119,7 @@ set(DATAMANAGER_SOURCES
         utils/TableView/computers/EventInIntervalComputer.h
         utils/TableView/computers/EventInIntervalComputer.cpp
         utils/TableView/computers/AnalogSliceGathererComputer.h
+        utils/TableView/computers/StandardizeComputer.h
 
 
         transforms/data_transforms.cpp
