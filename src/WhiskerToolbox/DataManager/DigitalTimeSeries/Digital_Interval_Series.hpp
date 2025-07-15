@@ -114,6 +114,8 @@ public:
 
     [[nodiscard]] size_t size() const { return _data.size(); };
 
+
+
     
     // Defines how to handle intervals that overlap with range boundaries
     enum class RangeMode {
@@ -147,17 +149,6 @@ public:
             static_assert(always_false_v<TransformFunc>, "Unhandled IntervalQueryMode");
             return std::views::empty<Interval>;
         }
-    }
-
-    // Get vector of intervals in range (for backward compatibility)
-    template<RangeMode mode = RangeMode::CONTAINED>
-    [[nodiscard]] std::vector<Interval> getIntervalsAsVector(int64_t start_time, int64_t stop_time) const {
-        if constexpr (mode == RangeMode::CLIP) {
-            return _getIntervalsAsVectorClipped(start_time, stop_time);
-        }
-
-        auto range = getIntervalsInRange<mode>(start_time, stop_time);
-        return {std::ranges::begin(range), std::ranges::end(range)};
     }
 
 private:

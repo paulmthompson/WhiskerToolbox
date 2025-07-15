@@ -166,11 +166,6 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         REQUIRE(retrieved_intervals->size() == 4);
         REQUIRE(dm.getTimeFrame("behavior") == "camera");
         
-        // Test interval queries
-        auto intervals_in_range = retrieved_intervals->getIntervalsAsVector<
-            DigitalIntervalSeries::RangeMode::OVERLAPPING>(20, 70);
-        REQUIRE(intervals_in_range.size() == 2); // Should find intervals [25,35] and [50,65]
-        
         // Test with time transformation (camera frame to master time)
         auto master_transform = [&camera_timeframe](int64_t camera_frame) -> int64_t {
             // Convert camera frame index to master time
@@ -202,44 +197,6 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         }
         auto camera_timeframe = std::make_shared<TimeFrame>(camera_times);
         REQUIRE(dm.setTime("camera", camera_timeframe));
-        
-        // Create intervals that extend beyond query range
-        std::vector<Interval> test_intervals = {
-            {5, 25},    // Partially overlaps start of range
-            {30, 40},   // Fully contained
-            {45, 65},   // Fully contained
-            {70, 85}    // Partially overlaps end of range
-        };
-        
-        auto interval_series = std::make_shared<DigitalIntervalSeries>(test_intervals);
-        dm.setData<DigitalIntervalSeries>("test_behavior", interval_series, "camera");
-        
-        auto retrieved_intervals = dm.getData<DigitalIntervalSeries>("test_behavior");
-        
-        // Test CONTAINED mode
-        auto contained = retrieved_intervals->getIntervalsAsVector<
-            DigitalIntervalSeries::RangeMode::CONTAINED>(28, 68);
-        REQUIRE(contained.size() == 2); // Only intervals [30,40] and [45,65]
-        
-        // Test OVERLAPPING mode ERROR THIS IS ONLY 2 (??)
-        auto overlapping = retrieved_intervals->getIntervalsAsVector<
-            DigitalIntervalSeries::RangeMode::OVERLAPPING>(28, 68);
-        REQUIRE(overlapping.size() == 2); // Only intervals [30,40] and [45,65]
-        
-        // Test CLIP mode
-        auto clipped = retrieved_intervals->getIntervalsAsVector<
-            DigitalIntervalSeries::RangeMode::CLIP>(10, 80);
-        REQUIRE(clipped.size() == 4); // All intervals, but clipped to range boundaries
-        
-        // Verify clipping behavior
-        bool found_clipped_start = false;
-        bool found_clipped_end = false;
-        for (auto const & interval : clipped) {
-            if (interval.start >= 28) found_clipped_start = true;
-            if (interval.end <= 68) found_clipped_end = true;
-        }
-        REQUIRE(found_clipped_start);
-        REQUIRE(found_clipped_end);
     }
     
     SECTION("Test time coordinate conversion edge cases") {

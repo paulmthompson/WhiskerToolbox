@@ -1230,11 +1230,11 @@ std::optional<std::pair<int64_t, int64_t>> OpenGLWidget::findIntervalAtTime(std:
     }
 
     // Find all intervals that contain this time point in the series' time frame
-    auto intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(query_time_index, query_time_index);
+    auto intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(query_time_index, query_time_index);
 
     if (!intervals.empty()) {
         // Return the first interval found, converted to master time frame coordinates
-        auto const & interval = intervals[0];
+        auto const & interval = intervals.front();
         int64_t interval_start_master, interval_end_master;
 
         if (time_frame.get() == _master_time_frame.get()) {
@@ -1368,7 +1368,7 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
         new_end_series = original_end_series;
 
         // Check for collision with other intervals in series time frame
-        auto overlapping_intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
+        auto overlapping_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
                 new_start_series, new_start_series);
 
         for (auto const & interval: overlapping_intervals) {
@@ -1389,7 +1389,7 @@ void OpenGLWidget::updateIntervalDrag(QPoint const & current_pos) {
         new_end_series = std::max(current_time_series_index, original_start_series + 1);
 
         // Check for collision with other intervals in series time frame
-        auto overlapping_intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
+        auto overlapping_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
                 new_end_series, new_end_series);
 
         for (auto const & interval: overlapping_intervals) {
@@ -1714,7 +1714,7 @@ void OpenGLWidget::updateNewIntervalCreation(QPoint const & current_pos) {
     }
 
     // Check for collision with existing intervals in series time frame
-    auto overlapping_intervals = series->getIntervalsAsVector<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
+    auto overlapping_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
             new_start_series, new_end_series);
 
     // If there are overlapping intervals, constrain the new interval
