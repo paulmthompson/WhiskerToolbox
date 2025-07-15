@@ -89,6 +89,19 @@ set(DATAMANAGER_SOURCES
         utils/filter/FilterImplementations.hpp
         utils/filter/IFilter.hpp
         utils/filter/ZeroPhaseDecorator.hpp
+        utils/TableView/ExecutionPlan.h 
+        utils/TableView/ExecutionPlan.cpp
+        utils/TableView/IAnalogSource.h 
+        utils/TableView/IRowSelector.h 
+        utils/TableView/IColumnComputer.h
+        utils/TableView/PointComponentAdapter.h
+        utils/TableView/PointComponentAdapter.cpp
+        utils/TableView/AnalogDataAdapter.h
+        utils/TableView/AnalogDataAdapter.cpp
+        utils/TableView/DataManagerExtension.h
+        utils/TableView/DataManagerExtension.cpp
+        utils/TableView/IntervalReductionComputer.h
+        utils/TableView/IntervalReductionComputer.cpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
