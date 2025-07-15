@@ -50,9 +50,20 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         // Create DataManagerExtension for TableView
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
         
-        // Create a simple IndexSelector for all time frames
-        std::vector<size_t> indices = {0, 1, 2, 3};
-        auto rowSelector = std::make_unique<IndexSelector>(indices);
+        // Create intervals for each time frame
+        // Since PointComponentAdapter flattens all points from all time frames into a single array,
+        // we need to create intervals that correspond to the array indices, not time frame indices
+        // Frame 0: points at array indices 0, 1, 2
+        // Frame 1: points at array indices 3, 4, 5  
+        // Frame 2: points at array indices 6, 7, 8
+        // Frame 3: points at array indices 9, 10, 11
+        std::vector<TimeFrameInterval> intervals = {
+            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)),  // Frame 0: indices 0-2
+            TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(5)),  // Frame 1: indices 3-5
+            TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)),  // Frame 2: indices 6-8
+            TimeFrameInterval(TimeFrameIndex(9), TimeFrameIndex(11))  // Frame 3: indices 9-11
+        };
+        auto rowSelector = std::make_unique<IntervalSelector>(intervals);
         
         // Create TableView builder
         TableViewBuilder builder(dataManagerExtension);
@@ -85,12 +96,16 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         auto yValues = table.getColumnSpan("Y_Values");
         
         // Verify the extracted values match the original data
-        // Since we're using IndexSelector with single indices, each "interval" contains one point
-        // and we're taking the mean, so we should get the exact values
+        // Since we're using IntervalSelector with single time indices, each "interval" contains all points
+        // at that time index, and we're taking the mean, so we should get the mean of all points at each time
         
-        // Expected values: first point from each frame
-        std::vector<double> expectedX = {1.0, 7.0, 13.0, 19.0};
-        std::vector<double> expectedY = {2.0, 8.0, 14.0, 20.0};
+        // Expected values: mean of all points at each time index
+        // Frame 0: (1.0 + 3.0 + 5.0) / 3 = 3.0, (2.0 + 4.0 + 6.0) / 3 = 4.0
+        // Frame 1: (7.0 + 9.0 + 11.0) / 3 = 9.0, (8.0 + 10.0 + 12.0) / 3 = 10.0
+        // Frame 2: (13.0 + 15.0 + 17.0) / 3 = 15.0, (14.0 + 16.0 + 18.0) / 3 = 16.0
+        // Frame 3: (19.0 + 21.0 + 23.0) / 3 = 21.0, (20.0 + 22.0 + 24.0) / 3 = 22.0
+        std::vector<double> expectedX = {3.0, 9.0, 15.0, 21.0};
+        std::vector<double> expectedY = {4.0, 10.0, 16.0, 22.0};
         
         REQUIRE(xValues.size() == 4);
         REQUIRE(yValues.size() == 4);
@@ -135,10 +150,13 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
         
         // Create intervals that span each frame
+        // Frame 0: points at array indices 0, 1, 2
+        // Frame 1: points at array indices 3, 4, 5
+        // Frame 2: points at array indices 6, 7, 8
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(0), TimeFrameIndex(0)},
-            {TimeFrameIndex(1), TimeFrameIndex(1)},
-            {TimeFrameIndex(2), TimeFrameIndex(2)}
+            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)),  // Frame 0: indices 0-2
+            TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(5)),  // Frame 1: indices 3-5
+            TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8))   // Frame 2: indices 6-8
         };
         auto rowSelector = std::make_unique<IntervalSelector>(intervals);
         
@@ -179,8 +197,12 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         auto yMax = table.getColumnSpan("Y_Max");
         
         // Verify the computed means
+        // Frame 0: (1.0 + 3.0 + 5.0) / 3 = 3.0, (2.0 + 4.0 + 6.0) / 3 = 4.0
+        // Frame 1: (7.0 + 9.0 + 11.0) / 3 = 9.0, (8.0 + 10.0 + 12.0) / 3 = 10.0
+        // Frame 2: (13.0 + 15.0 + 17.0) / 3 = 15.0, (14.0 + 16.0 + 18.0) / 3 = 16.0
         std::vector<double> expectedXMean = {3.0, 9.0, 15.0};
         std::vector<double> expectedYMean = {4.0, 10.0, 16.0};
+        // Max values from each frame
         std::vector<double> expectedXMax = {5.0, 11.0, 17.0};
         std::vector<double> expectedYMax = {6.0, 12.0, 18.0};
         
@@ -225,8 +247,12 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         
         // Create TableView
         TableViewBuilder builder(dataManagerExtension);
-        std::vector<size_t> indices = {0, 1};
-        builder.setRowSelector(std::make_unique<IndexSelector>(indices));
+        // For 2 points, they will be at array indices 0 and 1
+        std::vector<TimeFrameInterval> intervals = {
+            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(0)),  // Single point at index 0
+            TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(1))   // Single point at index 1
+        };
+        builder.setRowSelector(std::make_unique<IntervalSelector>(intervals));
         
         auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
         builder.addColumn("X_Values", 
