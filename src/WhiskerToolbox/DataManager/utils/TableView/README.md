@@ -18,16 +18,28 @@ This directory contains the foundational components for the TableView system's d
 - **IColumnComputer.h** - Abstract interface for column computation strategies
 - **IntervalReductionComputer.h/cpp** - Computer for reduction operations over intervals
 
+### Core TableView System
+- **Column.h/cpp** - Individual column with lazy evaluation and caching
+- **TableView.h/cpp** - Main orchestrator with dependency management
+- **TableViewBuilder.h/cpp** - Fluent builder pattern for table construction
+
 ### Example Usage
 - **example_usage.cpp** - Demonstrates how to use the data access layer
 - **interval_reduction_example.cpp** - Demonstrates interval reduction computations
+- **tableview_example.cpp** - Comprehensive demonstration of the complete TableView system
 
-### IntervalReductionComputer
-- Performs reduction operations (mean, max, min, stddev, sum, count) over intervals
-- Uses ExecutionPlan intervals to define computation ranges
-- Efficient span-based data access for performance
-- Robust error handling for edge cases (empty intervals, out-of-bounds)
-- Supports all common statistical reductions
+### TableView System
+- **Lazy Evaluation**: Columns are only computed when first accessed
+- **Intelligent Caching**: Both column data and execution plans are cached
+- **Dependency Management**: Handles column dependencies and prevents circular references
+- **Builder Pattern**: Fluent API for table construction
+- **ExecutionPlan Optimization**: Expensive time-to-index conversions are cached and reused
+
+### Column Management
+- **State Tracking**: Uses std::variant to track materialized vs unmaterialized state
+- **Automatic Materialization**: Triggers computation on first access
+- **Dependency Resolution**: Ensures dependent columns are materialized first
+- **Cache Invalidation**: Supports clearing cache for recomputation
 
 ## Key Features
 
@@ -69,6 +81,33 @@ auto xValues = spikesX->getDataSpan();
 // Get Y component of point data  
 auto spikesY = dmExtension.getAnalogSource("Spikes.y");
 auto yValues = spikesY->getDataSpan();
+```
+
+### Complete TableView Usage
+```cpp
+// Create data manager and builder
+DataManager dataManager;
+auto dmExtension = std::make_shared<DataManagerExtension>(dataManager);
+TableViewBuilder builder(dmExtension);
+
+// Define rows using intervals
+std::vector<TimeFrameInterval> intervals = {
+    {TimeFrameIndex(0), TimeFrameIndex(10)},
+    {TimeFrameIndex(20), TimeFrameIndex(30)}
+};
+builder.setRowSelector(std::make_unique<IntervalSelector>(intervals));
+
+// Add columns with different strategies
+auto source = dmExtension->getAnalogSource("LFP");
+builder.addColumn("LFP_Mean", 
+    std::make_unique<IntervalReductionComputer>(source, ReductionType::Mean, "LFP"));
+builder.addColumn("LFP_Max", 
+    std::make_unique<IntervalReductionComputer>(source, ReductionType::Max, "LFP"));
+
+// Build and use the table
+TableView table = builder.build();
+auto meanData = table.getColumnSpan("LFP_Mean");  // Triggers lazy computation
+auto maxData = table.getColumnSpan("LFP_Max");    // Reuses cached ExecutionPlan
 ```
 
 ### Interval Reduction Operations

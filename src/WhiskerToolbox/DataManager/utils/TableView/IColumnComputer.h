@@ -24,10 +24,6 @@ public:
     IColumnComputer(IColumnComputer&&) = delete;
     IColumnComputer& operator=(IColumnComputer&&) = delete;
 
-protected:
-    // Protected constructor to allow derived classes to construct
-    IColumnComputer() = default;
-
     /**
      * @brief The core batch computation method.
      * 
@@ -61,6 +57,10 @@ protected:
      * @return The name of the required data source.
      */
     [[nodiscard]] virtual auto getSourceDependency() const -> std::string = 0;
+
+protected:
+    // Protected constructor to allow derived classes to construct
+    IColumnComputer() = default;
 };
 
 #endif // ICOLUMN_COMPUTER_H

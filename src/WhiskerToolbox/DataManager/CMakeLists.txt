@@ -93,6 +93,7 @@ set(DATAMANAGER_SOURCES
         utils/TableView/ExecutionPlan.cpp
         utils/TableView/IAnalogSource.h 
         utils/TableView/IRowSelector.h 
+        utils/TableView/IRowSelector.cpp
         utils/TableView/IColumnComputer.h
         utils/TableView/PointComponentAdapter.h
         utils/TableView/PointComponentAdapter.cpp
@@ -102,6 +103,12 @@ set(DATAMANAGER_SOURCES
         utils/TableView/DataManagerExtension.cpp
         utils/TableView/IntervalReductionComputer.h
         utils/TableView/IntervalReductionComputer.cpp
+        utils/TableView/Column.h
+        utils/TableView/Column.cpp
+        utils/TableView/TableView.h
+        utils/TableView/TableView.cpp
+        utils/TableView/TableViewBuilder.h
+        utils/TableView/TableViewBuilder.cpp
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
