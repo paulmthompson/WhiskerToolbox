@@ -7,6 +7,7 @@
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/computers/IntervalReductionComputer.h"
+#include "utils/TableView/computers/AnalogSliceGathererComputer.h"
 #include "Points/Point_Data.hpp"
 #include "TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"
@@ -287,6 +288,216 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         // Test with invalid component
         auto invalidSource = dataManagerExtension->getAnalogSource("TestPoints.z");
         REQUIRE(invalidSource == nullptr);
+    }
+}
+
+TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSliceGathererComputer]") {
+    
+    SECTION("Test analog slice gathering from point data") {
+        // Create a DataManager instance
+        DataManager dataManager;
+        
+        // Create sample point data with known values
+        std::vector<Point2D<float>> points = {
+            {1.0f, 10.0f},   // Index 0
+            {2.0f, 20.0f},   // Index 1
+            {3.0f, 30.0f},   // Index 2
+            {4.0f, 40.0f},   // Index 3
+            {5.0f, 50.0f},   // Index 4
+            {6.0f, 60.0f}    // Index 5
+        };
+        
+        // Create TimeFrame
+        std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dataManager.setTime("test_time", timeFrame);
+        
+        // Create PointData and add points
+        auto pointData = std::make_shared<PointData>();
+        for (size_t i = 0; i < points.size(); ++i) {
+            TimeFrameIndex timeIndex(static_cast<int64_t>(i));
+            pointData->addAtTime(timeIndex, points[i]);
+        }
+        
+        dataManager.setData<PointData>("TestPoints", pointData);
+        dataManager.setTimeFrame("TestPoints", "test_time");
+        
+        // Create DataManagerExtension
+        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
+        
+        // Create intervals for gathering slices
+        std::vector<TimeFrameInterval> intervals = {
+            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)),  // Gather indices 0-2
+            TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(4)),  // Gather indices 2-4
+            TimeFrameInterval(TimeFrameIndex(4), TimeFrameIndex(5))   // Gather indices 4-5
+        };
+        
+        // Create TableView builder
+        TableViewBuilder builder(dataManagerExtension);
+        builder.setRowSelector(std::make_unique<IntervalSelector>(intervals));
+        
+        // Get analog sources for X and Y components
+        auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
+        auto ySource = dataManagerExtension->getAnalogSource("TestPoints.y");
+        
+        REQUIRE(xSource != nullptr);
+        REQUIRE(ySource != nullptr);
+        
+        // Add columns for gathering X and Y slices
+        builder.addColumn<std::vector<double>>("X_Slices", 
+            std::make_unique<AnalogSliceGathererComputer<double>>(xSource));
+        builder.addColumn<std::vector<double>>("Y_Slices", 
+            std::make_unique<AnalogSliceGathererComputer<double>>(ySource));
+        
+        // Build the table
+        TableView table = builder.build();
+        
+        // Verify table structure
+        REQUIRE(table.getRowCount() == 3);
+        REQUIRE(table.getColumnCount() == 2);
+        REQUIRE(table.hasColumn("X_Slices"));
+        REQUIRE(table.hasColumn("Y_Slices"));
+        
+        // Get the column data using the heterogeneous interface
+        const auto& xSlices = table.getColumnValues<std::vector<double>>("X_Slices");
+        const auto& ySlices = table.getColumnValues<std::vector<double>>("Y_Slices");
+        
+        // Verify the number of intervals
+        REQUIRE(xSlices.size() == 3);
+        REQUIRE(ySlices.size() == 3);
+        
+        // Verify first interval (indices 0-2): X values {1.0, 2.0, 3.0}
+        REQUIRE(xSlices[0].size() == 3);
+        REQUIRE(xSlices[0][0] == Catch::Approx(1.0).epsilon(0.001));
+        REQUIRE(xSlices[0][1] == Catch::Approx(2.0).epsilon(0.001));
+        REQUIRE(xSlices[0][2] == Catch::Approx(3.0).epsilon(0.001));
+        
+        // Verify first interval Y values {10.0, 20.0, 30.0}
+        REQUIRE(ySlices[0].size() == 3);
+        REQUIRE(ySlices[0][0] == Catch::Approx(10.0).epsilon(0.001));
+        REQUIRE(ySlices[0][1] == Catch::Approx(20.0).epsilon(0.001));
+        REQUIRE(ySlices[0][2] == Catch::Approx(30.0).epsilon(0.001));
+        
+        // Verify second interval (indices 2-4): X values {3.0, 4.0, 5.0}
+        REQUIRE(xSlices[1].size() == 3);
+        REQUIRE(xSlices[1][0] == Catch::Approx(3.0).epsilon(0.001));
+        REQUIRE(xSlices[1][1] == Catch::Approx(4.0).epsilon(0.001));
+        REQUIRE(xSlices[1][2] == Catch::Approx(5.0).epsilon(0.001));
+        
+        // Verify second interval Y values {30.0, 40.0, 50.0}
+        REQUIRE(ySlices[1].size() == 3);
+        REQUIRE(ySlices[1][0] == Catch::Approx(30.0).epsilon(0.001));
+        REQUIRE(ySlices[1][1] == Catch::Approx(40.0).epsilon(0.001));
+        REQUIRE(ySlices[1][2] == Catch::Approx(50.0).epsilon(0.001));
+        
+        // Verify third interval (indices 4-5): X values {5.0, 6.0}
+        REQUIRE(xSlices[2].size() == 2);
+        REQUIRE(xSlices[2][0] == Catch::Approx(5.0).epsilon(0.001));
+        REQUIRE(xSlices[2][1] == Catch::Approx(6.0).epsilon(0.001));
+        
+        // Verify third interval Y values {50.0, 60.0}
+        REQUIRE(ySlices[2].size() == 2);
+        REQUIRE(ySlices[2][0] == Catch::Approx(50.0).epsilon(0.001));
+        REQUIRE(ySlices[2][1] == Catch::Approx(60.0).epsilon(0.001));
+    }
+    
+    SECTION("Test single-point intervals") {
+        // Create a DataManager instance
+        DataManager dataManager;
+        
+        // Create sample point data
+        std::vector<Point2D<float>> points = {
+            {1.5f, 2.5f},   // Index 0
+            {3.5f, 4.5f},   // Index 1
+            {5.5f, 6.5f}    // Index 2
+        };
+        
+        // Create TimeFrame
+        std::vector<int> timeValues = {0, 1, 2};
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dataManager.setTime("test_time", timeFrame);
+        
+        // Create PointData and add points
+        auto pointData = std::make_shared<PointData>();
+        for (size_t i = 0; i < points.size(); ++i) {
+            TimeFrameIndex timeIndex(static_cast<int64_t>(i));
+            pointData->addAtTime(timeIndex, points[i]);
+        }
+        
+        dataManager.setData<PointData>("TestPoints", pointData);
+        dataManager.setTimeFrame("TestPoints", "test_time");
+        
+        // Create DataManagerExtension
+        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
+        
+        // Create single-point intervals
+        std::vector<TimeFrameInterval> intervals = {
+            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(0)),  // Single point at index 0
+            TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(1)),  // Single point at index 1
+            TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(2))   // Single point at index 2
+        };
+        
+        // Create TableView builder
+        TableViewBuilder builder(dataManagerExtension);
+        builder.setRowSelector(std::make_unique<IntervalSelector>(intervals));
+        
+        // Get analog source for X component
+        auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
+        REQUIRE(xSource != nullptr);
+        
+        // Add column for gathering X slices
+        builder.addColumn<std::vector<double>>("X_Slices", 
+            std::make_unique<AnalogSliceGathererComputer<double>>(xSource));
+        
+        // Build the table
+        TableView table = builder.build();
+        
+        // Get the column data
+        const auto& xSlices = table.getColumnValues<std::vector<double>>("X_Slices");
+        
+        // Verify the results
+        REQUIRE(xSlices.size() == 3);
+        
+        // Each slice should contain exactly one point
+        REQUIRE(xSlices[0].size() == 1);
+        REQUIRE(xSlices[0][0] == Catch::Approx(1.5).epsilon(0.001));
+        
+        REQUIRE(xSlices[1].size() == 1);
+        REQUIRE(xSlices[1][0] == Catch::Approx(3.5).epsilon(0.001));
+        
+        REQUIRE(xSlices[2].size() == 1);
+        REQUIRE(xSlices[2][0] == Catch::Approx(5.5).epsilon(0.001));
+    }
+    
+    SECTION("Test error handling") {
+        // Create a DataManager instance
+        DataManager dataManager;
+        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
+        
+        // Test with null source
+        REQUIRE_THROWS_AS(AnalogSliceGathererComputer<double>(nullptr), std::invalid_argument);
+        
+        // Test with valid source but invalid ExecutionPlan (no intervals)
+        std::vector<Point2D<float>> points = {{1.0f, 2.0f}};
+        std::vector<int> timeValues = {0};
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dataManager.setTime("test_time", timeFrame);
+        
+        auto pointData = std::make_shared<PointData>();
+        pointData->addAtTime(TimeFrameIndex(0), points[0]);
+        dataManager.setData<PointData>("TestPoints", pointData);
+        dataManager.setTimeFrame("TestPoints", "test_time");
+        
+        auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
+        REQUIRE(xSource != nullptr);
+        
+        auto computer = std::make_unique<AnalogSliceGathererComputer<double>>(xSource);
+        
+        // Create an ExecutionPlan with indices instead of intervals
+        ExecutionPlan planWithIndices(std::vector<TimeFrameIndex>{TimeFrameIndex(0)});
+        
+        // This should throw because the computer expects intervals
+        REQUIRE_THROWS_AS(computer->compute(planWithIndices), std::invalid_argument);
     }
 }
 

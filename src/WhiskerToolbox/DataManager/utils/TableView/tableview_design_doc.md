@@ -373,3 +373,83 @@ void new_usage_example(DataManager& dataManager, const std::vector<Interval>& in
 }
 
 This addendum makes the TableView system significantly more powerful, allowing it to truly manage heterogeneous data while maintaining its core principles of lazy evaluation and efficiency.
+
+Addendum 2: Support for Gathering Analog Data Slices
+Date: July 15, 2025
+
+This addendum addresses the requirement to create columns where each cell contains a window of an analog time series, corresponding to a row's interval.
+
+A4. Problem Statement
+A common analysis task is to collect snippets of a continuous signal (e.g., LFP or EEG) around specific events or within defined intervals. The desired output is a column where each cell is a std::vector<float> or std::vector<double>. The existing architecture, as modified by Addendum 1, supports the storage of such a column (Column<std::vector<double>>). What is missing is the specific "computer" strategy to perform this gathering operation.
+
+A5. Proposed Design Changes
+No changes are needed for the core architecture (IColumn, TableView, etc.). We only need to define a new, specialized IColumnComputer.
+
+1. AnalogSliceGathererComputer (New Column Computer):
+This new computer strategy is responsible for iterating through an ExecutionPlan of interval index pairs and, for each pair, copying the corresponding slice of data from an IAnalogSource into a new vector.
+
+// This computer's output type is a vector of vectors.
+// The inner vector can be float or double.
+template<typename T = double>
+class AnalogSliceGathererComputer : public IColumnComputer<std::vector<T>> {
+public:
+    AnalogSliceGathererComputer(std::shared_ptr<IAnalogSource> source) 
+        : m_source(std::move(source)) {}
+
+    // The core computation method.
+    std::vector<std::vector<T>> compute(const ComputeContext& context) const override {
+        // Get a view over the entire raw data source once.
+        std::span<const double> raw_data = m_source->getDataSpan();
+        
+        // Get the list of [start, end] index pairs from the shared plan.
+        const auto& index_pairs = context.getPlan().getIndexPairs();
+
+        // This is our final result: a vector of vectors.
+        std::vector<std::vector<T>> results;
+        results.reserve(index_pairs.size());
+
+        for (const auto& pair : index_pairs) {
+            size_t start_index = pair.first;
+            size_t count = pair.second - pair.first;
+
+            // Create a view of the slice from the raw data.
+            auto slice_view = raw_data.subspan(start_index, count);
+
+            // Copy the data from the slice view into a new vector of type T.
+            // This constructs the vector for the cell.
+            results.emplace_back(slice_view.begin(), slice_view.end());
+        }
+
+        return results;
+    }
+
+private:
+    std::shared_ptr<IAnalogSource> m_source;
+};
+
+A6. Updated Usage Example
+This example shows how to create a column of LFP snippets.
+
+void waveform_gathering_example(DataManager& dataManager, const std::vector<Interval>& intervals) {
+    TableViewBuilder builder;
+    builder.setRowSource(std::make_unique<IntervalSelector>(intervals));
+
+    // Get the source for the LFP data.
+    auto lfp_source = dataManager.getAnalogSource("LFP");
+
+    // Add a column to gather the LFP data within each interval.
+    // The column's type will be std::vector<double>.
+    builder.addColumn<std::vector<double>>("LFP_Snippets",
+        std::make_unique<AnalogSliceGathererComputer<double>>(lfp_source));
+
+    TableView table = builder.build();
+
+    // Retrieve the materialized column data.
+    // `lfp_waveforms` is a const reference to a std::vector<std::vector<double>>.
+    const auto& lfp_waveforms = table.getColumnValues<std::vector<double>>("LFP_Snippets");
+
+    // We can now work with the gathered data.
+    if (!lfp_waveforms.empty()) {
+        std::cout << "First LFP snippet has " << lfp_waveforms[0].size() << " samples." << std::endl;
+    }
+}

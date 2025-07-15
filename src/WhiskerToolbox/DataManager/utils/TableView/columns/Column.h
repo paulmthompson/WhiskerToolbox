@@ -35,6 +35,8 @@ public:
      */
     [[nodiscard]] auto getValues(TableView* table) -> const std::vector<T>&;
 
+    void materialize(TableView* table) override;
+
     // IColumn interface implementation
     [[nodiscard]] auto getName() const -> const std::string& override { 
         return m_name; 
@@ -43,8 +45,6 @@ public:
     [[nodiscard]] auto getType() const -> const std::type_info& override { 
         return typeid(T); 
     }
-
-    void materialize(TableView* table) override;
 
     [[nodiscard]] auto getSourceDependency() const -> std::string override {
         return m_computer->getSourceDependency();
@@ -78,8 +78,5 @@ private:
     std::variant<std::monostate, std::vector<T>> m_cache;
 };
 
-
-// Template method implementations are in Column.inl to avoid circular dependency
-#include "Column.inl"
 
 #endif // COLUMN_TEMPLATED_H
