@@ -19,10 +19,12 @@ public:
      * @brief Constructs an AnalogDataAdapter.
      * @param analogData Shared pointer to the AnalogTimeSeries source.
      * @param timeFrameId The TimeFrame ID this data belongs to.
+     * @param name The name of this data source.
      */
-    AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData, int timeFrameId);
+    AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData, int timeFrameId, std::string name);
 
     // IAnalogSource interface implementation
+    [[nodiscard]] auto getName() const -> const std::string& override;
     [[nodiscard]] auto getTimeFrameId() const -> int override;
     [[nodiscard]] auto size() const -> size_t override;
     auto getDataSpan() -> std::span<const double> override;
@@ -38,6 +40,7 @@ private:
 
     std::shared_ptr<AnalogTimeSeries> m_analogData;
     int m_timeFrameId;
+    std::string m_name;
     std::vector<double> m_materializedData;
     bool m_isMaterialized = false;
 };

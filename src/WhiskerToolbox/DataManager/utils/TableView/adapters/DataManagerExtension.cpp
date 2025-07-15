@@ -48,7 +48,7 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(con
         // In a real implementation, this would be derived from the data or DataManager
         int timeFrameId = 0;
         
-        return std::make_shared<AnalogDataAdapter>(analogData, timeFrameId);
+        return std::make_shared<AnalogDataAdapter>(analogData, timeFrameId, name);
     } catch (const std::exception& e) {
         std::cerr << "Error creating AnalogDataAdapter for '" << name << "': " << e.what() << std::endl;
         return nullptr;
@@ -69,7 +69,10 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createPointComponentAdapter
         // In a real implementation, this would be derived from the data or DataManager
         int timeFrameId = 0;
         
-        return std::make_shared<PointComponentAdapter>(pointData, component, timeFrameId);
+        // Create the full name for the virtual source
+        std::string fullName = pointDataName + (component == PointComponentAdapter::Component::X ? ".x" : ".y");
+        
+        return std::make_shared<PointComponentAdapter>(pointData, component, timeFrameId, fullName);
     } catch (const std::exception& e) {
         std::cerr << "Error creating PointComponentAdapter for '" << pointDataName 
                   << "' component: " << e.what() << std::endl;

@@ -2,13 +2,18 @@
 
 #include <stdexcept>
 
-AnalogDataAdapter::AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData, int timeFrameId)
+AnalogDataAdapter::AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData, int timeFrameId, std::string name)
     : m_analogData(std::move(analogData))
     , m_timeFrameId(timeFrameId)
+    , m_name(std::move(name))
 {
     if (!m_analogData) {
         throw std::invalid_argument("AnalogTimeSeries cannot be null");
     }
+}
+
+const std::string& AnalogDataAdapter::getName() const {
+    return m_name;
 }
 
 int AnalogDataAdapter::getTimeFrameId() const {

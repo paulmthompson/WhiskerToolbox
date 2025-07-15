@@ -5,14 +5,20 @@
 
 PointComponentAdapter::PointComponentAdapter(std::shared_ptr<PointData> pointData, 
                                            Component component, 
-                                           int timeFrameId)
+                                           int timeFrameId,
+                                           std::string name)
     : m_pointData(std::move(pointData))
     , m_component(component)
     , m_timeFrameId(timeFrameId)
+    , m_name(std::move(name))
 {
     if (!m_pointData) {
         throw std::invalid_argument("PointData cannot be null");
     }
+}
+
+const std::string& PointComponentAdapter::getName() const {
+    return m_name;
 }
 
 int PointComponentAdapter::getTimeFrameId() const {

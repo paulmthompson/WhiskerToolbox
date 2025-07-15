@@ -1,0 +1,311 @@
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
+
+#include "DataManager.hpp"
+#include "utils/TableView/core/TableView.h"
+#include "utils/TableView/core/TableViewBuilder.h"
+#include "utils/TableView/adapters/DataManagerExtension.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
+#include "utils/TableView/computers/IntervalReductionComputer.h"
+#include "Points/Point_Data.hpp"
+#include "TimeFrame.hpp"
+#include "CoreGeometry/points.hpp"
+
+#include <memory>
+#include <vector>
+
+TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
+    
+    SECTION("Extract X and Y components from Point Data") {
+        // Create a DataManager instance
+        DataManager dataManager;
+        
+        // Create sample point data for multiple time frames
+        std::vector<std::vector<Point2D<float>>> pointFrames = {
+            {{1.0f, 2.0f}, {3.0f, 4.0f}, {5.0f, 6.0f}},     // Frame 0
+            {{7.0f, 8.0f}, {9.0f, 10.0f}, {11.0f, 12.0f}},  // Frame 1
+            {{13.0f, 14.0f}, {15.0f, 16.0f}, {17.0f, 18.0f}}, // Frame 2
+            {{19.0f, 20.0f}, {21.0f, 22.0f}, {23.0f, 24.0f}}  // Frame 3
+        };
+        
+        // Create a TimeFrame for the point data
+        std::vector<int> timeValues = {0, 1, 2, 3};
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dataManager.setTime("test_time", timeFrame);
+        
+        // Create PointData and add points
+        auto pointData = std::make_shared<PointData>();
+
+        for (size_t frameIdx = 0; frameIdx < pointFrames.size(); ++frameIdx) {
+            TimeFrameIndex timeIndex(static_cast<int64_t>(frameIdx));
+            for (const auto& point : pointFrames[frameIdx]) {
+                pointData->addAtTime(timeIndex,point);
+            }
+        }
+        
+        // Add the point data to the DataManager
+        dataManager.setData<PointData>("TestPoints", pointData);
+        dataManager.setTimeFrame("TestPoints", "test_time");
+        
+        // Create DataManagerExtension for TableView
+        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
+        
+        // Create a simple IndexSelector for all time frames
+        std::vector<size_t> indices = {0, 1, 2, 3};
+        auto rowSelector = std::make_unique<IndexSelector>(indices);
+        
+        // Create TableView builder
+        TableViewBuilder builder(dataManagerExtension);
+        builder.setRowSelector(std::move(rowSelector));
+        
+        // Get analog sources for X and Y components
+        auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
+        auto ySource = dataManagerExtension->getAnalogSource("TestPoints.y");
+        
+        REQUIRE(xSource != nullptr);
+        REQUIRE(ySource != nullptr);
+        
+        // Add columns for X and Y components using direct access
+        builder.addColumn("X_Values", 
+            std::make_unique<IntervalReductionComputer>(xSource, ReductionType::Mean));
+        builder.addColumn("Y_Values", 
+            std::make_unique<IntervalReductionComputer>(ySource, ReductionType::Mean));
+        
+        // Build the table
+        TableView table = builder.build();
+        
+        // Verify table structure
+        REQUIRE(table.getRowCount() == 4);
+        REQUIRE(table.getColumnCount() == 2);
+        REQUIRE(table.hasColumn("X_Values"));
+        REQUIRE(table.hasColumn("Y_Values"));
+        
+        // Get the column data
+        auto xValues = table.getColumnSpan("X_Values");
+        auto yValues = table.getColumnSpan("Y_Values");
+        
+        // Verify the extracted values match the original data
+        // Since we're using IndexSelector with single indices, each "interval" contains one point
+        // and we're taking the mean, so we should get the exact values
+        
+        // Expected values: first point from each frame
+        std::vector<double> expectedX = {1.0, 7.0, 13.0, 19.0};
+        std::vector<double> expectedY = {2.0, 8.0, 14.0, 20.0};
+        
+        REQUIRE(xValues.size() == 4);
+        REQUIRE(yValues.size() == 4);
+        
+        for (size_t i = 0; i < 4; ++i) {
+            REQUIRE(xValues[i] == Catch::Approx(expectedX[i]).epsilon(0.001));
+            REQUIRE(yValues[i] == Catch::Approx(expectedY[i]).epsilon(0.001));
+        }
+    }
+    
+    SECTION("Extract X and Y components using interval reduction") {
+        // Create a DataManager instance
+        DataManager dataManager;
+        
+        // Create sample point data with more points per frame
+        std::vector<std::vector<Point2D<float>>> pointFrames = {
+            {{1.0f, 2.0f}, {3.0f, 4.0f}, {5.0f, 6.0f}},     // Frame 0: mean X=3.0, Y=4.0
+            {{7.0f, 8.0f}, {9.0f, 10.0f}, {11.0f, 12.0f}},  // Frame 1: mean X=9.0, Y=10.0
+            {{13.0f, 14.0f}, {15.0f, 16.0f}, {17.0f, 18.0f}}, // Frame 2: mean X=15.0, Y=16.0
+        };
+        
+        // Create a TimeFrame
+        std::vector<int> timeValues = {0, 1, 2};
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dataManager.setTime("test_time", timeFrame);
+        
+        // Create PointData and add points
+        auto pointData = std::make_shared<PointData>();
+
+        for (size_t frameIdx = 0; frameIdx < pointFrames.size(); ++frameIdx) {
+            TimeFrameIndex timeIndex(static_cast<int64_t>(frameIdx));
+            for (const auto& point : pointFrames[frameIdx]) {
+                pointData->addAtTime(timeIndex, point);
+            }
+        }
+        
+        // Add the point data to the DataManager
+        dataManager.setData<PointData>("TestPoints", pointData);
+        dataManager.setTimeFrame("TestPoints", "test_time");
+        
+        // Create DataManagerExtension for TableView
+        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
+        
+        // Create intervals that span each frame
+        std::vector<TimeFrameInterval> intervals = {
+            {TimeFrameIndex(0), TimeFrameIndex(0)},
+            {TimeFrameIndex(1), TimeFrameIndex(1)},
+            {TimeFrameIndex(2), TimeFrameIndex(2)}
+        };
+        auto rowSelector = std::make_unique<IntervalSelector>(intervals);
+        
+        // Create TableView builder
+        TableViewBuilder builder(dataManagerExtension);
+        builder.setRowSelector(std::move(rowSelector));
+        
+        // Get analog sources for X and Y components
+        auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
+        auto ySource = dataManagerExtension->getAnalogSource("TestPoints.y");
+        
+        REQUIRE(xSource != nullptr);
+        REQUIRE(ySource != nullptr);
+        
+        // Add columns for X and Y components using mean reduction
+        builder.addColumn("X_Mean", 
+            std::make_unique<IntervalReductionComputer>(xSource, ReductionType::Mean));
+        builder.addColumn("Y_Mean", 
+            std::make_unique<IntervalReductionComputer>(ySource, ReductionType::Mean));
+        
+        // Add columns for X and Y components using max reduction
+        builder.addColumn("X_Max", 
+            std::make_unique<IntervalReductionComputer>(xSource, ReductionType::Max));
+        builder.addColumn("Y_Max", 
+            std::make_unique<IntervalReductionComputer>(ySource, ReductionType::Max));
+        
+        // Build the table
+        TableView table = builder.build();
+        
+        // Verify table structure
+        REQUIRE(table.getRowCount() == 3);
+        REQUIRE(table.getColumnCount() == 4);
+        
+        // Get the column data
+        auto xMean = table.getColumnSpan("X_Mean");
+        auto yMean = table.getColumnSpan("Y_Mean");
+        auto xMax = table.getColumnSpan("X_Max");
+        auto yMax = table.getColumnSpan("Y_Max");
+        
+        // Verify the computed means
+        std::vector<double> expectedXMean = {3.0, 9.0, 15.0};
+        std::vector<double> expectedYMean = {4.0, 10.0, 16.0};
+        std::vector<double> expectedXMax = {5.0, 11.0, 17.0};
+        std::vector<double> expectedYMax = {6.0, 12.0, 18.0};
+        
+        REQUIRE(xMean.size() == 3);
+        REQUIRE(yMean.size() == 3);
+        REQUIRE(xMax.size() == 3);
+        REQUIRE(yMax.size() == 3);
+        
+        for (size_t i = 0; i < 3; ++i) {
+            REQUIRE(xMean[i] == Catch::Approx(expectedXMean[i]).epsilon(0.001));
+            REQUIRE(yMean[i] == Catch::Approx(expectedYMean[i]).epsilon(0.001));
+            REQUIRE(xMax[i] == Catch::Approx(expectedXMax[i]).epsilon(0.001));
+            REQUIRE(yMax[i] == Catch::Approx(expectedYMax[i]).epsilon(0.001));
+        }
+    }
+    
+    SECTION("Test lazy evaluation and caching") {
+        // Create a DataManager instance
+        DataManager dataManager;
+        
+        // Create simple point data
+        std::vector<Point2D<float>> points = {{1.0f, 2.0f}, {3.0f, 4.0f}};
+        
+        // Create TimeFrame
+        std::vector<int> timeValues = {0, 1};
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dataManager.setTime("test_time", timeFrame);
+        
+        // Create PointData
+        auto pointData = std::make_shared<PointData>();
+
+        for (size_t i = 0; i < points.size(); ++i) {
+            TimeFrameIndex timeIndex(static_cast<int64_t>(i));
+            pointData->addAtTime(timeIndex, points[i]);
+        }
+        
+        dataManager.setData<PointData>("TestPoints", pointData);
+        dataManager.setTimeFrame("TestPoints", "test_time");
+        
+        // Create DataManagerExtension
+        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
+        
+        // Create TableView
+        TableViewBuilder builder(dataManagerExtension);
+        std::vector<size_t> indices = {0, 1};
+        builder.setRowSelector(std::make_unique<IndexSelector>(indices));
+        
+        auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
+        builder.addColumn("X_Values", 
+            std::make_unique<IntervalReductionComputer>(xSource, ReductionType::Mean));
+        
+        TableView table = builder.build();
+        
+        // First access should trigger computation
+        auto xValues1 = table.getColumnSpan("X_Values");
+        REQUIRE(xValues1.size() == 2);
+        REQUIRE(xValues1[0] == Catch::Approx(1.0).epsilon(0.001));
+        REQUIRE(xValues1[1] == Catch::Approx(3.0).epsilon(0.001));
+        
+        // Second access should use cached data (same values)
+        auto xValues2 = table.getColumnSpan("X_Values");
+        REQUIRE(xValues2.size() == 2);
+        REQUIRE(xValues2[0] == Catch::Approx(1.0).epsilon(0.001));
+        REQUIRE(xValues2[1] == Catch::Approx(3.0).epsilon(0.001));
+        
+        // The spans should point to the same cached data
+        REQUIRE(xValues1.data() == xValues2.data());
+    }
+    
+    SECTION("Test error handling") {
+        DataManager dataManager;
+        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
+        
+        // Test with non-existent point data
+        auto nonExistentSource = dataManagerExtension->getAnalogSource("NonExistent.x");
+        REQUIRE(nonExistentSource == nullptr);
+        
+        // Test with invalid component
+        auto invalidSource = dataManagerExtension->getAnalogSource("TestPoints.z");
+        REQUIRE(invalidSource == nullptr);
+    }
+}
+
+TEST_CASE("TableView PointComponentAdapter Unit Test", "[TableView][PointComponentAdapter]") {
+    
+    /*
+    SECTION("Test PointComponentAdapter direct usage") {
+        // Create point data
+        std::vector<Point2D<float>> points = {
+            {1.5f, 2.5f}, {3.5f, 4.5f}, {5.5f, 6.5f}
+        };
+        
+        // Create TimeFrame
+        std::vector<int> timeValues = {0, 1, 2};
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        
+        // Create PointData
+        auto pointData = std::make_shared<PointData>();
+        
+        for (size_t i = 0; i < points.size(); ++i) {
+            TimeFrameIndex timeIndex(static_cast<int64_t>(i));
+            pointData->addAtTime(timeIndex, points[i]);
+        }
+        
+        // Test X component adapter
+        auto xAdapter = std::make_shared<PointComponentAdapter>(pointData, PointComponentAdapter::Component::X);
+        REQUIRE(xAdapter->getTimeFrameId() == timeFrame->getId());
+        REQUIRE(xAdapter->size() == 3);
+        
+        auto xData = xAdapter->getDataSpan();
+        REQUIRE(xData.size() == 3);
+        REQUIRE(xData[0] == Catch::Approx(1.5).epsilon(0.001));
+        REQUIRE(xData[1] == Catch::Approx(3.5).epsilon(0.001));
+        REQUIRE(xData[2] == Catch::Approx(5.5).epsilon(0.001));
+        
+        // Test Y component adapter
+        auto yAdapter = std::make_shared<PointComponentAdapter>(pointData, PointComponentAdapter::Component::Y);
+        REQUIRE(yAdapter->getTimeFrameId() == timeFrame->getId());
+        REQUIRE(yAdapter->size() == 3);
+        
+        auto yData = yAdapter->getDataSpan();
+        REQUIRE(yData.size() == 3);
+        REQUIRE(yData[0] == Catch::Approx(2.5).epsilon(0.001));
+        REQUIRE(yData[1] == Catch::Approx(4.5).epsilon(0.001));
+        REQUIRE(yData[2] == Catch::Approx(6.5).epsilon(0.001));
+    }
+        */
+}

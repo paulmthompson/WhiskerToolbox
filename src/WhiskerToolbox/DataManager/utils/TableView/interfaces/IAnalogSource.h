@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <span>
+#include <string>
 
 /**
  * @brief Interface for any data source that can be viewed as an analog signal.
@@ -14,6 +15,16 @@
 class IAnalogSource {
 public:
     virtual ~IAnalogSource() = default;
+
+    /**
+     * @brief Gets the name of this data source.
+     * 
+     * This name is used for dependency tracking and ExecutionPlan caching
+     * in the TableView system.
+     * 
+     * @return The name of the data source.
+     */
+    virtual const std::string& getName() const = 0;
 
     /**
      * @brief Gets the ID of the TimeFrame the data belongs to.

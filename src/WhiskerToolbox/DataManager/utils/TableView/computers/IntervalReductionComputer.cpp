@@ -11,7 +11,7 @@ IntervalReductionComputer::IntervalReductionComputer(std::shared_ptr<IAnalogSour
     : IColumnComputer()
     , m_source(std::move(source))
     , m_reduction(reduction)
-    , m_sourceName("default_source")
+    , m_sourceName(m_source ? m_source->getName() : "null_source")
 {
     if (!m_source) {
         throw std::invalid_argument("IAnalogSource cannot be null");

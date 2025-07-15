@@ -31,12 +31,15 @@ public:
      * @param pointData Shared pointer to the PointData source.
      * @param component The component (X or Y) to extract.
      * @param timeFrameId The TimeFrame ID this data belongs to.
+     * @param name The name of this data source.
      */
     PointComponentAdapter(std::shared_ptr<PointData> pointData, 
                          Component component, 
-                         int timeFrameId);
+                         int timeFrameId,
+                         std::string name);
 
     // IAnalogSource interface implementation
+    [[nodiscard]] auto getName() const -> const std::string& override;
     [[nodiscard]] auto getTimeFrameId() const -> int override;
     [[nodiscard]] auto size() const -> size_t override;
     auto getDataSpan() -> std::span<const double> override;
@@ -54,6 +57,7 @@ private:
     std::shared_ptr<PointData> m_pointData;
     Component m_component;
     int m_timeFrameId;
+    std::string m_name;
     std::vector<double> m_materializedData;
     bool m_isMaterialized = false;
 };
