@@ -89,26 +89,36 @@ set(DATAMANAGER_SOURCES
         utils/filter/FilterImplementations.hpp
         utils/filter/IFilter.hpp
         utils/filter/ZeroPhaseDecorator.hpp
-        utils/TableView/ExecutionPlan.h 
-        utils/TableView/ExecutionPlan.cpp
-        utils/TableView/IAnalogSource.h 
-        utils/TableView/IRowSelector.h 
-        utils/TableView/IRowSelector.cpp
-        utils/TableView/IColumnComputer.h
-        utils/TableView/PointComponentAdapter.h
-        utils/TableView/PointComponentAdapter.cpp
-        utils/TableView/AnalogDataAdapter.h
-        utils/TableView/AnalogDataAdapter.cpp
-        utils/TableView/DataManagerExtension.h
-        utils/TableView/DataManagerExtension.cpp
-        utils/TableView/IntervalReductionComputer.h
-        utils/TableView/IntervalReductionComputer.cpp
-        utils/TableView/Column.h
-        utils/TableView/Column.cpp
-        utils/TableView/TableView.h
-        utils/TableView/TableView.cpp
-        utils/TableView/TableViewBuilder.h
-        utils/TableView/TableViewBuilder.cpp
+
+        utils/TableView/core/ExecutionPlan.h 
+        utils/TableView/core/ExecutionPlan.cpp
+        utils/TableView/core/TableView.h
+        utils/TableView/core/TableView.cpp
+        utils/TableView/core/TableViewBuilder.h
+        utils/TableView/core/TableViewBuilder.cpp
+
+        utils/TableView/columns/IColumn.h
+        utils/TableView/columns/Column.h
+        utils/TableView/columns/Column.cpp
+
+        utils/TableView/interfaces/IAnalogSource.h
+        utils/TableView/interfaces/IEventSource.h
+        utils/TableView/interfaces/IRowSelector.h
+        utils/TableView/interfaces/IRowSelector.cpp
+        utils/TableView/interfaces/IColumnComputer.h
+
+        utils/TableView/adapters/AnalogDataAdapter.h
+        utils/TableView/adapters/AnalogDataAdapter.cpp
+        utils/TableView/adapters/PointComponentAdapter.h
+        utils/TableView/adapters/PointComponentAdapter.cpp
+        utils/TableView/adapters/DataManagerExtension.h
+        utils/TableView/adapters/DataManagerExtension.cpp
+
+        utils/TableView/computers/IntervalReductionComputer.h
+        utils/TableView/computers/IntervalReductionComputer.cpp
+        utils/TableView/computers/EventInIntervalComputer.h
+        utils/TableView/computers/EventInIntervalComputer.cpp
+
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp

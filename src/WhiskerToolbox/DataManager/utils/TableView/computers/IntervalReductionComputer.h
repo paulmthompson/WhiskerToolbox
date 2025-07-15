@@ -1,8 +1,8 @@
 #ifndef INTERVAL_REDUCTION_COMPUTER_H
 #define INTERVAL_REDUCTION_COMPUTER_H
 
-#include "IColumnComputer.h"
-#include "IAnalogSource.h"
+#include "utils/TableView/interfaces/IColumnComputer.h"
+#include "utils/TableView/interfaces/IAnalogSource.h"
 
 #include <cstdint>
 #include <memory>
@@ -28,7 +28,7 @@ enum class ReductionType : std::uint8_t {
  * ExecutionPlan to get interval pairs and computes the reduction for each
  * interval using efficient span-based data access.
  */
-class IntervalReductionComputer : public IColumnComputer {
+class IntervalReductionComputer : public IColumnComputer<double> {
 public:
     /**
      * @brief Constructs an IntervalReductionComputer.

@@ -1,9 +1,10 @@
 #ifndef DATA_MANAGER_EXTENSION_H
 #define DATA_MANAGER_EXTENSION_H
 
-#include "IAnalogSource.h"
-#include "AnalogDataAdapter.h"
-#include "PointComponentAdapter.h"
+#include "utils/TableView/interfaces/IAnalogSource.h"
+#include "utils/TableView/interfaces/IEventSource.h"
+#include "utils/TableView/adapters/AnalogDataAdapter.h"
+#include "utils/TableView/adapters/PointComponentAdapter.h"
 #include "DataManager.hpp"
 
 #include <map>
@@ -48,6 +49,17 @@ public:
      */
     void clearCache();
 
+    /**
+     * @brief Gets an event source by name.
+     * 
+     * This method provides access to IEventSource implementations for
+     * discrete event data such as digital event series.
+     * 
+     * @param name The name of the event source.
+     * @return Shared pointer to IEventSource, or nullptr if not found.
+     */
+    auto getEventSource(const std::string& name) -> std::shared_ptr<IEventSource>;
+
 private:
     /**
      * @brief Creates an AnalogDataAdapter for the given name.
@@ -76,6 +88,7 @@ private:
     
     // Cache for adapter objects to ensure reuse and correct lifetime
     mutable std::map<std::string, std::shared_ptr<IAnalogSource>> m_dataSourceCache;
+    mutable std::map<std::string, std::shared_ptr<IEventSource>> m_eventSourceCache;
     
     // Regex for parsing virtual source names
     static const std::regex s_virtualSourceRegex;

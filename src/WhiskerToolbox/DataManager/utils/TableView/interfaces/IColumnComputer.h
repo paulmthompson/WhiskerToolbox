@@ -1,19 +1,21 @@
 #ifndef ICOLUMN_COMPUTER_H
 #define ICOLUMN_COMPUTER_H
 
-#include "ExecutionPlan.h"
+#include "utils/TableView/core/ExecutionPlan.h"
 
 #include <string>
 #include <vector>
 
 /**
- * @brief Interface for computing column values in a batch operation.
+ * @brief Templated interface for computing column values in a batch operation.
  * 
  * This interface defines the strategy for computing all values in a column
  * in a single batch operation. Different implementations can provide
  * different computation strategies (direct access, interval reductions,
- * transformations, etc.).
+ * transformations, etc.). The template parameter T allows for heterogeneous
+ * column types.
  */
+template<typename T>
 class IColumnComputer {
 public:
     virtual ~IColumnComputer() = default;
@@ -34,7 +36,7 @@ public:
      * @param plan The execution plan containing cached access patterns.
      * @return Vector of computed values for the entire column.
      */
-    [[nodiscard]] virtual auto compute(const ExecutionPlan& plan) const -> std::vector<double> = 0;
+    [[nodiscard]] virtual auto compute(const ExecutionPlan& plan) const -> std::vector<T> = 0;
 
     /**
      * @brief Declares dependencies on other columns.

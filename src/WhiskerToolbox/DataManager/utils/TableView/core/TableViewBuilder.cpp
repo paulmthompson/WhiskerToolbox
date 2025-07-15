@@ -18,7 +18,7 @@ TableViewBuilder& TableViewBuilder::setRowSelector(std::unique_ptr<IRowSelector>
     return *this;
 }
 
-TableViewBuilder& TableViewBuilder::addColumn(const std::string& name, std::unique_ptr<IColumnComputer> computer) {
+TableViewBuilder& TableViewBuilder::addColumn(const std::string& name, std::unique_ptr<IColumnComputer<double>> computer) {
     if (name.empty()) {
         throw std::invalid_argument("Column name cannot be empty");
     }
@@ -27,13 +27,16 @@ TableViewBuilder& TableViewBuilder::addColumn(const std::string& name, std::uniq
     }
 
     // Check for duplicate names
-    for (const auto& [existingName, existingComputer] : m_columns) {
-        if (existingName == name) {
+    for (const auto& column : m_columns) {
+        if (column->getName() == name) {
             throw std::runtime_error("Column '" + name + "' already exists");
         }
     }
 
-    m_columns.emplace_back(name, std::move(computer));
+    // Create the double column
+    auto column = std::shared_ptr<IColumn>(new Column<double>(name, std::move(computer)));
+    m_columns.push_back(std::move(column));
+    
     return *this;
 }
 
@@ -50,8 +53,7 @@ TableView TableViewBuilder::build() {
     TableView tableView(std::move(m_rowSelector), m_dataManager);
 
     // Add columns to the table view
-    for (auto& [name, computer] : m_columns) {
-        auto column = std::shared_ptr<Column>(new Column(std::move(name), std::move(computer)));
+    for (auto& column : m_columns) {
         tableView.addColumn(std::move(column));
     }
 

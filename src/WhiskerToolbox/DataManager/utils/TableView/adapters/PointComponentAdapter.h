@@ -1,7 +1,7 @@
 #ifndef POINT_COMPONENT_ADAPTER_H
 #define POINT_COMPONENT_ADAPTER_H
 
-#include "IAnalogSource.h"
+#include "utils/TableView/interfaces/IAnalogSource.h"
 #include "Points/Point_Data.hpp"
 
 #include <cstdint>

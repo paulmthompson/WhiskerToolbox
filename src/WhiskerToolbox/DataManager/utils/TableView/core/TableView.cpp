@@ -26,25 +26,8 @@ size_t TableView::getColumnCount() const {
 }
 
 std::span<const double> TableView::getColumnSpan(const std::string& name) {
-    auto it = m_colNameToIndex.find(name);
-    if (it == m_colNameToIndex.end()) {
-        throw std::runtime_error("Column '" + name + "' not found");
-    }
-
-    size_t columnIndex = it->second;
-    auto& column = m_columns[columnIndex];
-
-    // Handle dependencies first
-    const auto dependencies = column->getDependencies();
-    for (const auto& dependency : dependencies) {
-        // Ensure dependent columns are materialized first
-        if (hasColumn(dependency)) {
-            std::set<std::string> materializing;
-            materializeColumn(dependency, materializing);
-        }
-    }
-
-    return column->getSpan(this);
+    // This method is maintained for backward compatibility with double columns
+    return std::span<const double>(getColumnValues<double>(name));
 }
 
 std::vector<std::string> TableView::getColumnNames() const {
@@ -101,7 +84,7 @@ const ExecutionPlan& TableView::getExecutionPlanFor(const std::string& sourceNam
     return insertedIt->second;
 }
 
-void TableView::addColumn(std::shared_ptr<Column> column) {
+void TableView::addColumn(std::shared_ptr<IColumn> column) {
     if (!column) {
         throw std::invalid_argument("Column cannot be null");
     }
@@ -149,7 +132,7 @@ void TableView::materializeColumn(const std::string& columnName, std::set<std::s
     }
 
     // Materialize this column
-    column->getSpan(this); // This will trigger materialization
+    column->materialize(this); // Use the IColumn interface method
 
     // Remove from materializing set
     materializing.erase(columnName);

@@ -2,10 +2,11 @@
 #define TABLE_VIEW_BUILDER_H
 
 #include "TableView.h"
-#include "Column.h"
-#include "IRowSelector.h"
-#include "IColumnComputer.h"
-#include "DataManagerExtension.h"
+#include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/columns/Column.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
+#include "utils/TableView/interfaces/IColumnComputer.h"
+#include "utils/TableView/adapters/DataManagerExtension.h"
 
 #include <memory>
 #include <string>
@@ -38,7 +39,17 @@ public:
      * @param computer Unique pointer to the column computer.
      * @return Reference to this builder for method chaining.
      */
-    auto addColumn(const std::string& name, std::unique_ptr<IColumnComputer> computer) -> TableViewBuilder&;
+    auto addColumn(const std::string& name, std::unique_ptr<IColumnComputer<double>> computer) -> TableViewBuilder&;
+
+    /**
+     * @brief Adds a templated column to the table being built.
+     * @tparam T The type of the column data.
+     * @param name The name of the column.
+     * @param computer Unique pointer to the templated column computer.
+     * @return Reference to this builder for method chaining.
+     */
+    template<typename T>
+    auto addColumn(const std::string& name, std::unique_ptr<IColumnComputer<T>> computer) -> TableViewBuilder&;
 
     /**
      * @brief Builds the final TableView object.
@@ -55,7 +66,21 @@ public:
 private:
     std::shared_ptr<DataManagerExtension> m_dataManager;
     std::unique_ptr<IRowSelector> m_rowSelector;
-    std::vector<std::pair<std::string, std::unique_ptr<IColumnComputer>>> m_columns;
+    std::vector<std::shared_ptr<IColumn>> m_columns;
 };
+
+// Template method implementation
+template<typename T>
+auto TableViewBuilder::addColumn(const std::string& name, std::unique_ptr<IColumnComputer<T>> computer) -> TableViewBuilder& {
+    if (!computer) {
+        throw std::invalid_argument("Column computer cannot be null");
+    }
+
+    // Create the templated column
+    auto column = std::shared_ptr<IColumn>(new Column<T>(name, std::move(computer)));
+    m_columns.push_back(std::move(column));
+    
+    return *this;
+}
 
 #endif // TABLE_VIEW_BUILDER_H

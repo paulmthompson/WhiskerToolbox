@@ -1,7 +1,7 @@
 #ifndef ANALOG_DATA_ADAPTER_H
 #define ANALOG_DATA_ADAPTER_H
 
-#include "IAnalogSource.h"
+#include "utils/TableView/interfaces/IAnalogSource.h"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 
 #include <memory>

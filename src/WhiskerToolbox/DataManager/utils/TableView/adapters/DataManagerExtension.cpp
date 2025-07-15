@@ -93,3 +93,15 @@ DataManagerExtension::parseVirtualSourceName(const std::string& name) {
 
     return {dataName, component};
 }
+
+std::shared_ptr<IEventSource> DataManagerExtension::getEventSource(const std::string& name) {
+    // Check cache first
+    auto it = m_eventSourceCache.find(name);
+    if (it != m_eventSourceCache.end()) {
+        return it->second;
+    }
+
+    // For now, return nullptr as we don't have concrete event source implementations yet
+    // This method can be extended when DigitalEventSeries is implemented
+    return nullptr;
+}

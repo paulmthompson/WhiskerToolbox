@@ -1,10 +1,11 @@
 #ifndef TABLE_VIEW_H
 #define TABLE_VIEW_H
 
-#include "Column.h"
-#include "ExecutionPlan.h"
-#include "IRowSelector.h"
-#include "DataManagerExtension.h"
+#include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/columns/Column.h"
+#include "utils/TableView/core/ExecutionPlan.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
+#include "utils/TableView/adapters/DataManagerExtension.h"
 
 #include <map>
 #include <memory>
@@ -12,6 +13,7 @@
 #include <span>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 // Forward declaration
 class TableViewBuilder;
@@ -19,10 +21,10 @@ class TableViewBuilder;
 /**
  * @brief The main orchestrator for tabular data views with lazy evaluation.
  * 
- * TableView manages a collection of columns and provides unified access to
- * tabular data. It implements lazy evaluation with caching for both individual
- * columns and ExecutionPlans. The TableView handles dependency resolution
- * and ensures columns are computed in the correct order.
+ * TableView manages a collection of heterogeneous columns and provides unified 
+ * access to tabular data. It implements lazy evaluation with caching for both 
+ * individual columns and ExecutionPlans. The TableView handles dependency 
+ * resolution and ensures columns are computed in the correct order.
  */
 class TableView {
 public:
@@ -39,14 +41,29 @@ public:
     [[nodiscard]] auto getColumnCount() const -> size_t;
 
     /**
-     * @brief Gets a span over the specified column's data.
+     * @brief Gets the values of a column with the specified type.
      * 
-     * This method delegates to the appropriate Column object and triggers
+     * This method provides type-safe access to column data. It performs a
+     * dynamic_cast to ensure the column is of the correct type, and triggers
      * computation if the column is not yet materialized.
+     * 
+     * @tparam T The expected type of the column data.
+     * @param name The name of the column to retrieve.
+     * @return Reference to the column's data vector.
+     * @throws std::runtime_error if the column is not found or type mismatch.
+     */
+    template<typename T>
+    [[nodiscard]] auto getColumnValues(const std::string& name) -> const std::vector<T>&;
+
+    /**
+     * @brief Gets a span over the specified column's data (for double columns only).
+     * 
+     * This method is maintained for backward compatibility and specifically
+     * works with double columns. For other types, use getColumnValues<T>().
      * 
      * @param name The name of the column to retrieve.
      * @return Span over the column's data.
-     * @throws std::runtime_error if the column is not found.
+     * @throws std::runtime_error if the column is not found or not double type.
      */
     [[nodiscard]] auto getColumnSpan(const std::string& name) -> std::span<const double>;
 
@@ -78,7 +95,8 @@ public:
 
 private:
     friend class TableViewBuilder;
-    friend class Column; // Allows Column to access the plan cache
+    // Grant friend access to the templated Column class
+    template<typename T> friend class Column;
 
     /**
      * @brief Private constructor for TableViewBuilder.
@@ -105,7 +123,7 @@ private:
      * @param column Shared pointer to the column to add.
      * @throws std::runtime_error if a column with the same name already exists.
      */
-    void addColumn(std::shared_ptr<Column> column);
+    void addColumn(std::shared_ptr<IColumn> column);
 
     /**
      * @brief Materializes a column and its dependencies.
@@ -131,11 +149,33 @@ private:
 
     std::unique_ptr<IRowSelector> m_rowSelector;
     std::shared_ptr<DataManagerExtension> m_dataManager;
-    std::vector<std::shared_ptr<Column>> m_columns;
+    std::vector<std::shared_ptr<IColumn>> m_columns;
     std::map<std::string, size_t> m_colNameToIndex;
     
     // Caches ExecutionPlans, keyed by data source name
     std::map<std::string, ExecutionPlan> m_planCache;
 };
+
+// Template method implementation for getColumnValues
+template<typename T>
+auto TableView::getColumnValues(const std::string& name) -> const std::vector<T>& {
+    // 1. Find the IColumn pointer by name
+    auto it = m_colNameToIndex.find(name);
+    if (it == m_colNameToIndex.end()) {
+        throw std::runtime_error("Column '" + name + "' not found in table");
+    }
+    
+    // 2. Get the column and attempt dynamic_cast to Column<T>
+    auto& column = m_columns[it->second];
+    auto* typedColumn = dynamic_cast<Column<T>*>(column.get());
+    
+    // 3. If cast fails, throw exception for type mismatch
+    if (!typedColumn) {
+        throw std::runtime_error("Column '" + name + "' is not of the requested type");
+    }
+    
+    // 4. Call getValues on the typed column
+    return typedColumn->getValues(this);
+}
 
 #endif // TABLE_VIEW_H

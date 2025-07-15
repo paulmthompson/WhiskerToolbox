@@ -227,3 +227,149 @@ Multi-threading: The computation of independent columns is highly parallelizable
 Heterogeneous Column Types: While this design focuses on double, the Column's cache (std::variant) and IColumnComputer could be templated to support other types like int, std::string, etc.
 
 Write-back: The current design is read-only. A mechanism for writing data from a TableView back to a DataManager source could be considered.
+
+A2. Proposed Design Changes
+A2.1. Heterogeneous Columns via Type Erasure
+To support multiple data types, we will introduce templates and a non-templated base class to erase the type information at the TableView level.
+
+1. IColumn (New Base Interface):
+A non-templated base interface that TableView will use to manage all columns polymorphically.
+
+class IColumn {
+public:
+    virtual ~IColumn() = default;
+    virtual const std::string& getName() const = 0;
+    virtual const std::type_info& getType() const = 0;
+    // A method to trigger computation without exposing the type.
+    virtual void materialize(TableView* table) = 0;
+};
+
+2. Column<T> (Templated Class):
+The original Column class will be converted to a template and will inherit from IColumn.
+
+template<typename T>
+class Column : public IColumn {
+public:
+    // Returns a span for contiguous types, or a direct reference for complex types.
+    const std::vector<T>& getValues(TableView* table);
+
+    // IColumn overrides
+    const std::string& getName() const override { return m_name; }
+    const std::type_info& getType() const override { return typeid(T); }
+    void materialize(TableView* table) override;
+
+private:
+    std::string m_name;
+    std::unique_ptr<IColumnComputer<T>> m_computer;
+    std::variant<std::monostate, std::vector<T>> m_cache;
+};
+
+3. IColumnComputer<T> (Templated Interface):
+The computer interface must also be templated to return vectors of the correct type.
+
+template<typename T>
+class IColumnComputer {
+public:
+    virtual ~IColumnComputer() = default;
+    virtual std::vector<T> compute(const ExecutionPlan& plan) const = 0;
+    // ... other methods remain the same
+};
+
+4. TableView Modifications:
+The TableView will now hold std::vector<std::shared_ptr<IColumn>>. The getColumnSpan method will be replaced with a templated getColumnValues method that performs a dynamic_cast to retrieve the correctly typed column.
+
+class TableView {
+public:
+    template<typename T>
+    const std::vector<T>& getColumnValues(const std::string& name);
+private:
+    std::vector<std::shared_ptr<IColumn>> m_columns;
+    // ... rest of TableView
+};
+
+template<typename T>
+const std::vector<T>& TableView::getColumnValues(const std::string& name) {
+    // 1. Find the IColumn pointer by name.
+    // 2. dynamic_cast the IColumn* to a Column<T>*.
+    // 3. If cast succeeds, call getValues() on the typed column.
+    // 4. If cast fails, throw an exception for type mismatch.
+}
+
+A2.2. Event-Based Data Source and Computer
+To handle DigitalEventSeries, we introduce a new data source interface and a corresponding computer.
+
+1. IEventSource (New Data Source Interface):
+An interface for data that consists of a sorted list of timestamps or indices.
+
+class IEventSource {
+public:
+    virtual ~IEventSource() = default;
+    virtual int getTimeFrameId() const = 0;
+    // Returns a span over the sorted event indices/timestamps.
+    virtual std::span<const TimeFrameIndex> getEvents() const = 0;
+};
+
+2. DigitalEventSeries (New Data Type):
+A concrete class holding event data and implementing the IEventSource interface.
+
+3. DataManager Extension:
+The DataManager will be extended with a getEventSource(const std::string& name) method.
+
+4. EventInIntervalComputer<T> (New Column Computer):
+A new, versatile computer that works with an IEventSource. It can be configured to perform different operations.
+
+enum class EventOperation { Presence, Count, Gather };
+
+template<typename T>
+class EventInIntervalComputer : public IColumnComputer<T> {
+public:
+    EventInIntervalComputer(std::shared_ptr<IEventSource> source, EventOperation op);
+    
+    std::vector<T> compute(const ExecutionPlan& plan) const override {
+        // Get event list from the IEventSource
+        auto all_events = m_source->getEvents();
+        // Get interval index pairs from the ExecutionPlan
+        auto intervals = plan.getIndexPairs();
+        
+        std::vector<T> results;
+        // For each interval, perform an efficient search (e.g., binary search)
+        // on the event list to find events within the interval's bounds.
+        // Based on m_operation, push back a bool, int, or vector<TimeFrameIndex>
+        // into the results vector. This requires template specialization for the logic.
+        
+        return results;
+    }
+private:
+    std::shared_ptr<IEventSource> m_source;
+    EventOperation m_operation;
+};
+
+The implementation of compute will use if constexpr or template specialization to handle the different return types (bool, int, std::vector<TimeFrameIndex>) required by the EventOperation.
+
+A3. Updated Usage Example
+void new_usage_example(DataManager& dataManager, const std::vector<Interval>& intervals) {
+    TableViewBuilder builder;
+    builder.setRowSource(std::make_unique<IntervalSelector>(intervals));
+
+    auto event_source = dataManager.getEventSource("MyEvents");
+
+    // Add columns with different types and computers.
+    builder.addColumn<bool>("EventPresence", 
+        std::make_unique<EventInIntervalComputer<bool>>(event_source, EventOperation::Presence));
+        
+    builder.addColumn<int>("EventCount", 
+        std::make_unique<EventInIntervalComputer<int>>(event_source, EventOperation::Count));
+
+    builder.addColumn<std::vector<TimeFrameIndex>>("GatheredEvents",
+        std::make_unique<EventInIntervalComputer<std::vector<TimeFrameIndex>>>(event_source, EventOperation::Gather));
+
+    TableView table = builder.build();
+
+    // Retrieve data with type-safe accessors.
+    const auto& counts = table.getColumnValues<int>("EventCount");
+    const auto& gathered = table.getColumnValues<std::vector<TimeFrameIndex>>("GatheredEvents");
+
+    std::cout << "Count for first interval: " << counts[0] << std::endl;
+}
+
+This addendum makes the TableView system significantly more powerful, allowing it to truly manage heterogeneous data while maintaining its core principles of lazy evaluation and efficiency.
