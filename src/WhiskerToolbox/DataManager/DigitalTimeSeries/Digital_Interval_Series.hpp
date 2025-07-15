@@ -124,32 +124,54 @@ public:
         CLIP        // Clip intervals at range boundaries
     };
 
-    template<RangeMode mode = RangeMode::CONTAINED, typename TransformFunc = std::identity>
+    template<RangeMode mode = RangeMode::CONTAINED>
     auto getIntervalsInRange(
             int64_t start_time,
-            int64_t stop_time,
-            TransformFunc && time_transform = {}) const {
+            int64_t stop_time) const {
 
         if constexpr (mode == RangeMode::CONTAINED) {
-            return _data | std::views::filter([start_time, stop_time, time_transform](Interval const & interval) {
-                       auto transformed_start = time_transform(interval.start);
-                       auto transformed_end = time_transform(interval.end);
-                       return transformed_start >= start_time && transformed_end <= stop_time;
+            return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
+                       return interval.start >= start_time && interval.end <= stop_time;
                    });
         } else if constexpr (mode == RangeMode::OVERLAPPING) {
-            return _data | std::views::filter([start_time, stop_time, time_transform](Interval const & interval) {
-                       auto transformed_start = time_transform(interval.start);
-                       auto transformed_end = time_transform(interval.end);
-                       return transformed_start <= stop_time && transformed_end >= start_time;
+            return _data | std::views::filter([start_time, stop_time](Interval const & interval) {
+                       return interval.start <= stop_time && interval.end >= start_time;
                    });
         } else if constexpr (mode == RangeMode::CLIP) {
             // For CLIP mode, we return a vector since we need to modify intervals
-            return _getIntervalsAsVectorClipped(start_time, stop_time, time_transform);
+            return _getIntervalsAsVectorClipped(start_time, stop_time);
         } else {
-            static_assert(always_false_v<TransformFunc>, "Unhandled IntervalQueryMode");
             return std::views::empty<Interval>;
         }
     }
+
+    template<RangeMode mode = RangeMode::CONTAINED>
+    auto getIntervalsInRange(
+            TimeFrameIndex start_time,
+            TimeFrameIndex stop_time,
+            TimeFrame const * source_timeframe,
+            TimeFrame const * target_timeframe
+        ) const {
+             if (source_timeframe == target_timeframe) {
+                 return getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
+            }
+
+            // If either timeframe is null, fall back to original behavior
+            if (!source_timeframe || !target_timeframe) {
+                return getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
+            }
+
+            // Convert the time index from source timeframe to target timeframe
+            // 1. Get the time value from the source timeframe
+            auto start_time_value = source_timeframe->getTimeAtIndex(start_time);
+            auto stop_time_value = source_timeframe->getTimeAtIndex(stop_time);
+
+            // 2. Convert that time value to an index in the target timeframe
+            auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
+            auto target_stop_index = target_timeframe->getIndexAtTime(static_cast<float>(stop_time_value));
+
+            return getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
+        };
 
 private:
     std::vector<Interval> _data{};
@@ -161,37 +183,32 @@ private:
     void _sortData();
 
     // Helper method to handle clipping intervals at range boundaries
-    template<typename TransformFunc = std::identity>
     std::vector<Interval> _getIntervalsAsVectorClipped(
             int64_t start_time,
-            int64_t stop_time,
-            TransformFunc && time_transform = {}) const {
+            int64_t stop_time) const {
 
         std::vector<Interval> result;
 
         for (auto const & interval: _data) {
 
-            auto transformed_start = time_transform(interval.start);
-            auto transformed_end = time_transform(interval.end);
-
             // Skip if not overlapping
-            if (transformed_end < start_time || transformed_start > stop_time)
+            if (interval.end < start_time || interval.start > stop_time)
                 continue;
 
             // Create a new clipped interval based on original interval values
             // but clipped at the transformed boundaries
             int64_t clipped_start = interval.start;
-            if (transformed_start < start_time) {
+            if (clipped_start < start_time) {
                 // Binary search or interpolation to find the original value
                 // that transforms to start_time would be ideal here
                 // For now, use a simple approach:
-                while (time_transform(clipped_start) < start_time && clipped_start < interval.end)
+                while (clipped_start < start_time && clipped_start < interval.end)
                     clipped_start++;
             }
 
             int64_t clipped_end = interval.end;
-            if (transformed_end > stop_time) {
-                while (time_transform(clipped_end) > stop_time && clipped_end > interval.start)
+            if (clipped_end > stop_time) {
+                while (clipped_end > interval.start && clipped_end > stop_time)
                     clipped_end--;
             }
 

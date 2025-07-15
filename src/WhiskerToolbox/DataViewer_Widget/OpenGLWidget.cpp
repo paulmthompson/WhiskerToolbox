@@ -458,11 +458,10 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
 
         // Get only the intervals that overlap with the visible range
         auto visible_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-                static_cast<int64_t>(start_time),
-                static_cast<int64_t>(end_time),
-                [&time_frame](int64_t idx) {
-                    return static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(idx)));
-                });
+                TimeFrameIndex(static_cast<int64_t>(start_time)),
+                TimeFrameIndex(static_cast<int64_t>(end_time)),
+                time_frame.get(),
+                _master_time_frame.get());
 
         hexToRGB(display_options->hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;

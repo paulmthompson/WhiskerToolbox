@@ -166,25 +166,6 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         REQUIRE(retrieved_intervals->size() == 4);
         REQUIRE(dm.getTimeFrame("behavior") == "camera");
         
-        // Test with time transformation (camera frame to master time)
-        auto master_transform = [&camera_timeframe](int64_t camera_frame) -> int64_t {
-            // Convert camera frame index to master time
-            return camera_timeframe->getTimeAtIndex(TimeFrameIndex(static_cast<int>(camera_frame)));
-        };
-        
-        // Query intervals in master time coordinates
-        auto intervals_master_coords = retrieved_intervals->getIntervalsInRange<
-            DigitalIntervalSeries::RangeMode::OVERLAPPING>(
-            1501, 20000, master_transform); // Master times 1501-20000
-        
-        // Convert to vector for testing
-        std::vector<Interval> master_intervals{
-            std::ranges::begin(intervals_master_coords), 
-            std::ranges::end(intervals_master_coords)
-        };
-        
-        // Should find intervals that overlap with this master time range
-        REQUIRE(master_intervals.size() >= 1);
     }
     
     SECTION("Test interval data range queries with clipping") {
