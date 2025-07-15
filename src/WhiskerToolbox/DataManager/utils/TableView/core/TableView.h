@@ -4,6 +4,7 @@
 #include "utils/TableView/columns/IColumn.h"
 #include "utils/TableView/columns/Column.h"
 #include "utils/TableView/core/ExecutionPlan.h"
+#include "utils/TableView/core/RowDescriptor.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 
@@ -92,6 +93,19 @@ public:
      * @brief Clears all cached data, forcing recomputation on next access.
      */
     void clearCache();
+
+    /**
+     * @brief Gets a descriptor containing the source information for a given row index.
+     * 
+     * This method provides reverse lookup capability, allowing clients to trace
+     * a row back to its original source definition (e.g., timestamp, interval).
+     * This is particularly useful for interactive applications like plotting libraries
+     * that need to display tooltips or navigate back to source data.
+     * 
+     * @param row_index The index of the row to get the descriptor for.
+     * @return RowDescriptor containing the source information for the row.
+     */
+    [[nodiscard]] auto getRowDescriptor(size_t row_index) const -> RowDescriptor;
 
 private:
     friend class TableViewBuilder;

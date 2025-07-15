@@ -3,6 +3,7 @@
 
 #include "TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
+#include "utils/TableView/core/RowDescriptor.h"
 
 #include <cstddef>
 #include <vector>
@@ -22,6 +23,17 @@ public:
      * @return The number of rows.
      */
     virtual size_t getRowCount() const = 0;
+    
+    /**
+     * @brief Gets a descriptor containing the source information for a given row index.
+     * 
+     * This method provides reverse lookup capability, allowing clients to trace
+     * a row back to its original source definition (e.g., timestamp, interval).
+     * 
+     * @param row_index The index of the row to get the descriptor for.
+     * @return RowDescriptor containing the source information for the row.
+     */
+    virtual RowDescriptor getDescriptor(size_t row_index) const = 0;
 };
 
 /**
@@ -42,6 +54,13 @@ public:
      * @return The number of rows (size of indices vector).
      */
     size_t getRowCount() const override;
+    
+    /**
+     * @brief Gets a descriptor for the specified row index.
+     * @param row_index The index of the row to get the descriptor for.
+     * @return RowDescriptor containing the source index for the row.
+     */
+    RowDescriptor getDescriptor(size_t row_index) const override;
     
     /**
      * @brief Gets the indices used for row selection.
@@ -73,6 +92,13 @@ public:
     size_t getRowCount() const override;
     
     /**
+     * @brief Gets a descriptor for the specified row index.
+     * @param row_index The index of the row to get the descriptor for.
+     * @return RowDescriptor containing the source timestamp for the row.
+     */
+    RowDescriptor getDescriptor(size_t row_index) const override;
+    
+    /**
      * @brief Gets the timestamps used for row selection.
      * @return Const reference to the timestamps vector.
      */
@@ -100,6 +126,13 @@ public:
      * @return The number of rows (size of intervals vector).
      */
     size_t getRowCount() const override;
+    
+    /**
+     * @brief Gets a descriptor for the specified row index.
+     * @param row_index The index of the row to get the descriptor for.
+     * @return RowDescriptor containing the source interval for the row.
+     */
+    RowDescriptor getDescriptor(size_t row_index) const override;
     
     /**
      * @brief Gets the intervals used for row selection.

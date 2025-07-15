@@ -186,3 +186,10 @@ ExecutionPlan TableView::generateExecutionPlan(const std::string& sourceName) {
     
     throw std::runtime_error("Unsupported row selector type for source: " + sourceName);
 }
+
+RowDescriptor TableView::getRowDescriptor(size_t row_index) const {
+    if (m_rowSelector) {
+        return m_rowSelector->getDescriptor(row_index);
+    }
+    return std::monostate{};
+}

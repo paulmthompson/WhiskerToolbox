@@ -14,6 +14,13 @@ const std::vector<size_t>& IndexSelector::getIndices() const {
     return m_indices;
 }
 
+RowDescriptor IndexSelector::getDescriptor(size_t row_index) const {
+    if (row_index < m_indices.size()) {
+        return m_indices[row_index];
+    }
+    return std::monostate{};
+}
+
 // TimestampSelector implementation
 TimestampSelector::TimestampSelector(std::vector<double> timestamps)
     : m_timestamps(std::move(timestamps))
@@ -28,6 +35,13 @@ const std::vector<double>& TimestampSelector::getTimestamps() const {
     return m_timestamps;
 }
 
+RowDescriptor TimestampSelector::getDescriptor(size_t row_index) const {
+    if (row_index < m_timestamps.size()) {
+        return m_timestamps[row_index];
+    }
+    return std::monostate{};
+}
+
 // IntervalSelector implementation
 IntervalSelector::IntervalSelector(std::vector<TimeFrameInterval> intervals)
     : m_intervals(std::move(intervals))
@@ -40,4 +54,11 @@ size_t IntervalSelector::getRowCount() const {
 
 const std::vector<TimeFrameInterval>& IntervalSelector::getIntervals() const {
     return m_intervals;
+}
+
+RowDescriptor IntervalSelector::getDescriptor(size_t row_index) const {
+    if (row_index < m_intervals.size()) {
+        return m_intervals[row_index];
+    }
+    return std::monostate{};
 }

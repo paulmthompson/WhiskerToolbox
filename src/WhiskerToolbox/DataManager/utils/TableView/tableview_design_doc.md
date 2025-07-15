@@ -541,3 +541,88 @@ void standardize_example(DataManager& dataManager, const std::vector<Interval>& 
         std::cout << "First Z-scored value: " << z_scores[0] << std::endl;
     }
 }
+
+Addendum 4: Support for Reverse Lookup (Trace-back to Source)
+Date: July 15, 2025
+
+This addendum addresses the critical requirement for interactive plotting: tracing a data point in a TableView row back to its original source definition (e.g., the specific timestamp or interval).
+
+A10. Problem Statement
+The TableView contains all the information necessary for a reverse lookup, but it is not exposed through a clean, type-safe public API. Client code, such as a plotting library, should not need to know the internal details of the IRowSelector or perform dynamic_cast operations to get the source of a given row.
+
+A11. Proposed Design Changes
+We will introduce a RowDescriptor variant type and a new public method on TableView to provide this functionality in a clean, encapsulated way.
+
+1. RowDescriptor (New Type Definition):
+A std::variant that can hold any of the possible source types that can define a row. This makes it easily extensible.
+
+// Assuming Interval and TimeFrameIndex are defined elsewhere
+using RowDescriptor = std::variant<
+    std::monostate,         // For cases where there's no descriptor
+    size_t,                 // For IndexSelector
+    double,                 // For TimestampSelector
+    Interval                // For IntervalSelector
+>;
+
+2. IRowSelector Extension:
+The IRowSelector interface will be extended with a virtual method to retrieve a descriptor for a specific row.
+
+class IRowSelector {
+public:
+    // ... existing methods ...
+    virtual RowDescriptor getDescriptor(size_t row_index) const = 0;
+};
+
+// Example implementation in IntervalSelector:
+RowDescriptor IntervalSelector::getDescriptor(size_t row_index) const {
+    if (row_index < m_intervals.size()) {
+        return m_intervals[row_index];
+    }
+    return std::monostate{};
+}
+
+3. TableView API Extension:
+A new public method is added to TableView to provide the main access point for this feature.
+
+class TableView {
+public:
+    // ... existing methods ...
+    
+    // Gets a descriptor containing the source information for a given row index.
+    RowDescriptor getRowDescriptor(size_t row_index) const;
+};
+
+// Implementation:
+RowDescriptor TableView::getRowDescriptor(size_t row_index) const {
+    if (m_rowSelector) {
+        return m_rowSelector->getDescriptor(row_index);
+    }
+    return std::monostate{};
+}
+
+A12. Updated Usage Example (Tooltip Scenario)
+This example shows how a plotting library would use the new API to create a tooltip.
+
+// This function would be called by the plotting library on mouse hover.
+void on_plot_hover(const TableView& table, size_t hovered_row_index) {
+    // 1. Get the generic descriptor for the hovered row.
+    RowDescriptor desc = table.getRowDescriptor(hovered_row_index);
+
+    // 2. Use std::visit with a lambda to process the descriptor type-safely.
+    std::string tooltip_text = std::visit([](auto&& arg) -> std::string {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, size_t>) {
+            return "Source Index: " + std::to_string(arg);
+        } else if constexpr (std::is_same_v<T, double>) {
+            return "Source Timestamp: " + std::to_string(arg);
+        } else if constexpr (std::is_same_v<T, Interval>) {
+            return "Source Interval: [" + std::to_string(arg.start) + ", " + std::to_string(arg.end) + "]";
+        } else {
+            return "Source: N/A";
+        }
+    }, desc);
+
+    // 3. Display the generated tooltip text to the user.
+    show_tooltip(tooltip_text);
+}
+

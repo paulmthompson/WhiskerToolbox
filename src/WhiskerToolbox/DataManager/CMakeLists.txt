@@ -88,10 +88,9 @@ set(DATAMANAGER_SOURCES
         utils/filter/FilterFactory.cpp
         utils/filter/FilterImplementations.hpp
         utils/filter/IFilter.hpp
-        utils/filter/ZeroPhaseDecorator.hpp
-
-        utils/TableView/core/ExecutionPlan.h 
+        utils/filter/ZeroPhaseDecorator.hpp        utils/TableView/core/ExecutionPlan.h
         utils/TableView/core/ExecutionPlan.cpp
+        utils/TableView/core/RowDescriptor.h
         utils/TableView/core/TableView.h
         utils/TableView/core/TableView.cpp
         utils/TableView/core/TableViewBuilder.h
