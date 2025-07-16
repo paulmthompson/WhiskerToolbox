@@ -42,9 +42,6 @@ std::vector<double> AnalogDataAdapter::getDataInRange(TimeFrameIndex start,
 
     // Get the data span
     auto dataSpan = std::span<const double>(m_materializedData);
-
-    // TODO: Implement time frame conversion logic
-    return std::vector<double>(dataSpan.begin(), dataSpan.end());
 }
 
 void AnalogDataAdapter::materializeData() {

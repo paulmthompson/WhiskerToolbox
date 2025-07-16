@@ -150,6 +150,34 @@ std::span<const float> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
 }
 
 
+[[nodiscard]] std::span<const float> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameIndex start_time, 
+                                                                                    TimeFrameIndex end_time,
+                                                                                    TimeFrame const * source_timeFrame,
+                                                                                    TimeFrame const * target_timeFrame) const
+{
+    if (source_timeFrame == target_timeFrame) {
+        return getDataInTimeFrameIndexRange(start_time, end_time);
+    }
+
+    // If either timeframe is null, fall back to original behavior
+    if (!source_timeFrame || !target_timeFrame) {
+        return getDataInTimeFrameIndexRange(start_time, end_time);
+    }
+
+    // Convert the time index from source timeframe to target timeframe
+    // 1. Get the time value from the source timeframe
+    auto start_time_value = source_timeFrame->getTimeAtIndex(start_time);
+    auto end_time_value = source_timeFrame->getTimeAtIndex(end_time);
+
+    // 2. Convert that time value to an index in the target timeframe
+    auto target_start_index = target_timeFrame->getIndexAtTime(static_cast<float>(start_time_value));
+    auto target_end_index = target_timeFrame->getIndexAtTime(static_cast<float>(end_time_value));
+
+    // 3. Use the converted indices to get the data in the target timeframe
+    return getDataInTimeFrameIndexRange(target_start_index, target_end_index);
+}
+
+
 // ========== TimeFrame Support ==========
 
 std::optional<DataArrayIndex> AnalogTimeSeries::findDataArrayIndexForTimeFrameIndex(TimeFrameIndex time_index) const {

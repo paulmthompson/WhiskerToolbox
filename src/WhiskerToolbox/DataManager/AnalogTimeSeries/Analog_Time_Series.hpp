@@ -150,7 +150,13 @@ public:
      * @see findDataArrayIndexGreaterOrEqual() and findDataArrayIndexLessOrEqual() for the underlying boundary logic
      */
     [[nodiscard]] std::span<const float> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
-    
+
+    [[nodiscard]] std::span<const float> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, 
+                                                                      TimeFrameIndex end_time,
+                                                                      TimeFrame const * source_timeFrame,
+                                                                      TimeFrame const * target_timeFrame) const;
+
+
     // ========== TimeFrameV2 Support ==========
 
     /**
