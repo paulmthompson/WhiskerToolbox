@@ -27,19 +27,17 @@ auto EventInIntervalComputer<bool>::compute(const ExecutionPlan& plan) const -> 
         throw std::runtime_error("EventInIntervalComputer<bool> can only be used with EventOperation::Presence");
     }
     
-    auto events = m_source->getEvents();
     auto intervals = plan.getIntervals();
-    
+    auto destinationTimeFrame = plan.getTimeFrame();
+
     std::vector<bool> results;
     results.reserve(intervals.size());
     
     for (const auto& interval : intervals) {
-        // Use binary search to check if any events exist in the interval
-        auto startIt = std::lower_bound(events.begin(), events.end(), interval.start);
-        auto endIt = std::upper_bound(events.begin(), events.end(), interval.end);
-        
-        // If startIt != endIt, there are events in the interval
-        results.push_back(startIt != endIt);
+
+        auto events = m_source->getDataInRange(interval.start, interval.end, destinationTimeFrame.get());
+
+        results.push_back(!events.empty());
     }
     
     return results;
@@ -52,40 +50,42 @@ auto EventInIntervalComputer<int>::compute(const ExecutionPlan& plan) const -> s
         throw std::runtime_error("EventInIntervalComputer<int> can only be used with EventOperation::Count");
     }
     
-    auto events = m_source->getEvents();
     auto intervals = plan.getIntervals();
-    
+    auto destinationTimeFrame = plan.getTimeFrame();
+
     std::vector<int> results;
     results.reserve(intervals.size());
     
     for (const auto& interval : intervals) {
-        // Use binary search to count events in the interval
-        auto startIt = std::lower_bound(events.begin(), events.end(), interval.start);
-        auto endIt = std::upper_bound(events.begin(), events.end(), interval.end);
-        
-        results.push_back(static_cast<int>(std::distance(startIt, endIt)));
+
+        auto events = m_source->getDataInRange(interval.start, interval.end, destinationTimeFrame.get());
+
+        results.push_back(static_cast<int>(events.size()));
     }
-    
+
     return results;
 }
 
 // Template specialization for std::vector<TimeFrameIndex> (Gather operation)
 template<>
-auto EventInIntervalComputer<std::vector<TimeFrameIndex>>::compute(const ExecutionPlan& plan) const -> std::vector<std::vector<TimeFrameIndex>> {
+auto EventInIntervalComputer<std::vector<float>>::compute(const ExecutionPlan& plan) const -> std::vector<std::vector<float>> {
     if (m_operation != EventOperation::Gather) {
         throw std::runtime_error("EventInIntervalComputer<std::vector<TimeFrameIndex>> can only be used with EventOperation::Gather");
     }
     
-    auto events = m_source->getEvents();
     auto intervals = plan.getIntervals();
-    
-    std::vector<std::vector<TimeFrameIndex>> results;
+    auto destinationTimeFrame = plan.getTimeFrame();
+
+    std::vector<std::vector<float>> results;
     results.reserve(intervals.size());
     
     for (const auto& interval : intervals) {
-        results.push_back(findEventsInInterval(events,
-                                               interval.start, interval.end));
+
+        auto events = m_source->getDataInRange(interval.start, interval.end, destinationTimeFrame.get());
+
+        results.push_back(std::move(events));
     }
-    
+
     return results;
 }
+

@@ -27,6 +27,8 @@ void Column<T>::materialize(TableView * table) {
 
 // Explicit instantiation for commonly used types
 template class Column<double>;
+template class Column<float>;
+template class Column<std::vector<float>>;
 template class Column<bool>;
 template class Column<int>;
 template class Column<std::vector<double>>;

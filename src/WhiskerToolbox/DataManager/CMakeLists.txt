@@ -108,6 +108,8 @@ set(DATAMANAGER_SOURCES
 
         utils/TableView/adapters/AnalogDataAdapter.h
         utils/TableView/adapters/AnalogDataAdapter.cpp
+        utils/TableView/adapters/DigitalEventDataAdapter.h
+        utils/TableView/adapters/DigitalEventDataAdapter.cpp
         utils/TableView/adapters/PointComponentAdapter.h
         utils/TableView/adapters/PointComponentAdapter.cpp
         utils/TableView/adapters/DataManagerExtension.h

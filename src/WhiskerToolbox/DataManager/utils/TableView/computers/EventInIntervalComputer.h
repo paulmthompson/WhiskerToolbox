@@ -80,6 +80,6 @@ template<>
 [[nodiscard]] auto EventInIntervalComputer<int>::compute(const ExecutionPlan& plan) const -> std::vector<int>;
 
 template<>
-[[nodiscard]] auto EventInIntervalComputer<std::vector<TimeFrameIndex>>::compute(const ExecutionPlan& plan) const -> std::vector<std::vector<TimeFrameIndex>>;
+[[nodiscard]] auto EventInIntervalComputer<std::vector<float>>::compute(const ExecutionPlan& plan) const -> std::vector<std::vector<float>>;
 
 #endif // EVENT_IN_INTERVAL_COMPUTER_H

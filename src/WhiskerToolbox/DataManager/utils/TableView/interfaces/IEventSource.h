@@ -23,22 +23,42 @@ public:
     IEventSource(IEventSource&&) = delete;
     IEventSource& operator=(IEventSource&&) = delete;
 
-    /**
-     * @brief Gets the ID of the TimeFrame the events belong to.
-     * @return The TimeFrame ID.
+    /** 
+     *@brief Gets the name of this data source.
+     * 
+     * This name is used for dependency tracking and ExecutionPlan caching
+     * in the TableView system.
+     * 
+     * @return The name of the data source.
      */
-    [[nodiscard]] virtual auto getTimeFrameId() const -> int = 0;
+    virtual auto getName() const -> std::string const & = 0;
 
     /**
-     * @brief Returns a span over the sorted event indices/timestamps.
-     * 
-     * The returned span contains all events in ascending order. This allows
-     * for efficient binary search operations when looking for events within
-     * specific time intervals.
-     * 
-     * @return Span over the sorted event indices/timestamps.
+     * @brief Gets the total number of events in the source.
+     * @return The number of events.
      */
-    [[nodiscard]] virtual auto getEvents() const -> std::span<const TimeFrameIndex> = 0;
+    virtual auto size() const -> size_t = 0;
+
+    
+    /**
+     * @brief Gets the TimeFrame the data belongs to.
+     * @return A shared pointer to the TimeFrame.
+     */
+    virtual std::shared_ptr<TimeFrame> getTimeFrame() const = 0;
+
+    /**
+     * @brief Gets the data within a specific time range.
+     * 
+     * This gets the data in the range [start, end] (inclusive) from the source timeframe
+     * 
+     * @param start The start index of the time range.
+     * @param end The end index of the time range.
+     * @param target_timeFrame The target time frame (from the caller) for the data.
+     * @return A vector of floats representing the data in the specified range.
+     */
+    virtual std::vector<float> getDataInRange(TimeFrameIndex start,
+                                              TimeFrameIndex end,
+                                              TimeFrame const * target_timeFrame) = 0;
 
 protected:
     // Protected constructor to prevent direct instantiation
