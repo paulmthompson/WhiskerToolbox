@@ -57,18 +57,6 @@ public:
     [[nodiscard]] auto getColumnValues(const std::string& name) -> const std::vector<T>&;
 
     /**
-     * @brief Gets a span over the specified column's data (for double columns only).
-     * 
-     * This method is maintained for backward compatibility and specifically
-     * works with double columns. For other types, use getColumnValues<T>().
-     * 
-     * @param name The name of the column to retrieve.
-     * @return Span over the column's data.
-     * @throws std::runtime_error if the column is not found or not double type.
-     */
-    [[nodiscard]] auto getColumnSpan(const std::string& name) -> std::span<const double>;
-
-    /**
      * @brief Gets the names of all columns in the table.
      * @return Vector of column names.
      */

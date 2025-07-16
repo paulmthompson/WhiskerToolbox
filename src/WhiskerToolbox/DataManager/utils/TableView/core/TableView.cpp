@@ -24,11 +24,6 @@ size_t TableView::getColumnCount() const {
     return m_columns.size();
 }
 
-std::span<double const> TableView::getColumnSpan(std::string const & name) {
-    // This method is maintained for backward compatibility with double columns
-    return std::span<double const>(getColumnValues<double>(name));
-}
-
 std::vector<std::string> TableView::getColumnNames() const {
     std::vector<std::string> names;
     names.reserve(m_columns.size());
