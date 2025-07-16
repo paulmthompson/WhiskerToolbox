@@ -4,6 +4,7 @@
 #include "DataManager.hpp"
 #include "utils/TableView/adapters/AnalogDataAdapter.h"
 #include "utils/TableView/adapters/PointComponentAdapter.h"
+#include "utils/TableView/adapters/DigitalEventDataAdapter.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/interfaces/IEventSource.h"
 
@@ -67,6 +68,13 @@ private:
      * @return Shared pointer to the adapter, or nullptr if not found.
      */
     auto createAnalogDataAdapter(std::string const & name) -> std::shared_ptr<IAnalogSource>;
+
+    /**
+     * @brief Creates a DigitalEventDataAdapter for the given name.
+     * @param name The name of the DigitalEventSeries data.
+     * @return Shared pointer to the adapter, or nullptr if not found.
+     */
+    auto createDigitalEventDataAdapter(std::string const & name) -> std::shared_ptr<IEventSource>;
 
     /**
      * @brief Creates a PointComponentAdapter for the given name and component.

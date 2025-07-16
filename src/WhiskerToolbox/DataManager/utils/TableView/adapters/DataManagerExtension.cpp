@@ -53,6 +53,23 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(std
     }
 }
 
+std::shared_ptr<IEventSource> DataManagerExtension::createDigitalEventDataAdapter(std::string const & name) {
+    try {
+        auto digitalEventSeries = m_dataManager.getData<DigitalEventSeries>(name);
+        if (!digitalEventSeries) {
+            return nullptr;
+        }
+
+        auto timeFrame_key = m_dataManager.getTimeFrame(name);
+        auto timeFrame = m_dataManager.getTime(timeFrame_key);
+
+        return std::make_shared<DigitalEventDataAdapter>(digitalEventSeries, timeFrame, name);
+    } catch (std::exception const & e) {
+        std::cerr << "Error creating DigitalEventDataAdapter for '" << name << "': " << e.what() << std::endl;
+        return nullptr;
+    }
+}
+
 std::shared_ptr<IAnalogSource> DataManagerExtension::createPointComponentAdapter(
         std::string const & pointDataName,
         PointComponentAdapter::Component component) {
