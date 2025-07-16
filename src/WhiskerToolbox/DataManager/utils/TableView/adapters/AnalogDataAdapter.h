@@ -1,8 +1,8 @@
 #ifndef ANALOG_DATA_ADAPTER_H
 #define ANALOG_DATA_ADAPTER_H
 
-#include "utils/TableView/interfaces/IAnalogSource.h"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "utils/TableView/interfaces/IAnalogSource.h"
 
 #include <memory>
 #include <vector>
@@ -21,19 +21,47 @@ public:
      * @param timeFrame Shared pointer to the TimeFrame this data belongs to.
      * @param name The name of this data source.
      */
-    AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData, 
-                      std::shared_ptr<TimeFrame> timeFrame, 
+    AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData,
+                      std::shared_ptr<TimeFrame> timeFrame,
                       std::string name);
 
     // IAnalogSource interface implementation
-    [[nodiscard]] auto getName() const -> const std::string& override;
-    [[nodiscard]] auto getTimeFrame() const -> std::shared_ptr<TimeFrame> override;
-    [[nodiscard]] auto size() const -> size_t override;
-    auto getDataSpan() -> std::span<const double> override;
 
+    /**
+     * @brief Gets the name of this data source.
+     * 
+     * This name is used for dependency tracking and ExecutionPlan caching
+     * in the TableView system.
+     * 
+     * @return The name of the data source.
+     */
+    [[nodiscard]] auto getName() const -> std::string const & override;
+
+    /**
+     * @brief Gets the TimeFrame the data belongs to.
+     * @return A shared pointer to the TimeFrame.
+     */
+    [[nodiscard]] auto getTimeFrame() const -> std::shared_ptr<TimeFrame> override;
+
+    /**
+     * @brief Gets the total number of samples in the source.
+     * @return The number of samples.
+     */
+    [[nodiscard]] auto size() const -> size_t override;
+
+    /**
+     * @brief Gets the data within a specific time range.
+     * 
+     * This gets the data in the range [start, end] (inclusive) from the source timeframe
+     * 
+     * @param start The start index of the time range.
+     * @param end The end index of the time range.
+     * @param target_timeFrame The target time frame (from the caller) for the data.
+     * @return A vector of floats representing the data in the specified range.
+     */
     std::vector<float> getDataInRange(TimeFrameIndex start,
-                                       TimeFrameIndex end,
-                                       TimeFrame const * target_timeFrame) override;
+                                      TimeFrameIndex end,
+                                      TimeFrame const * target_timeFrame) override;
 
 private:
     /**
@@ -51,4 +79,4 @@ private:
     bool m_isMaterialized = false;
 };
 
-#endif // ANALOG_DATA_ADAPTER_H
+#endif// ANALOG_DATA_ADAPTER_H

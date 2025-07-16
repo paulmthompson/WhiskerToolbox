@@ -3,14 +3,13 @@
 #include <iostream>
 
 // Define the static regex
-const std::regex DataManagerExtension::s_virtualSourceRegex(R"(^(\w+)\.(x|y)$)");
+std::regex const DataManagerExtension::s_virtualSourceRegex(R"(^(\w+)\.(x|y)$)");
 
-DataManagerExtension::DataManagerExtension(DataManager& dataManager)
-    : m_dataManager(dataManager)
-{
+DataManagerExtension::DataManagerExtension(DataManager & dataManager)
+    : m_dataManager(dataManager) {
 }
 
-std::shared_ptr<IAnalogSource> DataManagerExtension::getAnalogSource(const std::string& name) {
+std::shared_ptr<IAnalogSource> DataManagerExtension::getAnalogSource(std::string const & name) {
     // Check cache first
     auto cacheIt = m_dataSourceCache.find(name);
     if (cacheIt != m_dataSourceCache.end()) {
@@ -37,7 +36,7 @@ void DataManagerExtension::clearCache() {
     m_dataSourceCache.clear();
 }
 
-std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(const std::string& name) {
+std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(std::string const & name) {
     try {
         auto analogData = m_dataManager.getData<AnalogTimeSeries>(name);
         if (!analogData) {
@@ -46,18 +45,18 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(con
 
         auto timeFrame_key = m_dataManager.getTimeFrame(name);
         auto timeFrame = m_dataManager.getTime(timeFrame_key);
-        
+
         return std::make_shared<AnalogDataAdapter>(analogData, timeFrame, name);
-    } catch (const std::exception& e) {
+    } catch (std::exception const & e) {
         std::cerr << "Error creating AnalogDataAdapter for '" << name << "': " << e.what() << std::endl;
         return nullptr;
     }
 }
 
 std::shared_ptr<IAnalogSource> DataManagerExtension::createPointComponentAdapter(
-    const std::string& pointDataName, 
-    PointComponentAdapter::Component component) {
-    
+        std::string const & pointDataName,
+        PointComponentAdapter::Component component) {
+
     try {
         auto pointData = m_dataManager.getData<PointData>(pointDataName);
         if (!pointData) {
@@ -69,33 +68,31 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createPointComponentAdapter
 
         // Create the full name for the virtual source
         std::string fullName = pointDataName + (component == PointComponentAdapter::Component::X ? ".x" : ".y");
-        
+
         return std::make_shared<PointComponentAdapter>(pointData, component, timeFrame, fullName);
-    } catch (const std::exception& e) {
-        std::cerr << "Error creating PointComponentAdapter for '" << pointDataName 
+    } catch (std::exception const & e) {
+        std::cerr << "Error creating PointComponentAdapter for '" << pointDataName
                   << "' component: " << e.what() << std::endl;
         return nullptr;
     }
 }
 
-std::pair<std::string, PointComponentAdapter::Component> 
-DataManagerExtension::parseVirtualSourceName(const std::string& name) {
+std::pair<std::string, PointComponentAdapter::Component>
+DataManagerExtension::parseVirtualSourceName(std::string const & name) {
     std::smatch match;
     if (!std::regex_match(name, match, s_virtualSourceRegex)) {
-        return {"", PointComponentAdapter::Component::X}; // Invalid format
+        return {"", PointComponentAdapter::Component::X};// Invalid format
     }
 
     std::string dataName = match[1].str();
     std::string componentStr = match[2].str();
 
-    PointComponentAdapter::Component component = (componentStr == "x") ? 
-        PointComponentAdapter::Component::X : 
-        PointComponentAdapter::Component::Y;
+    PointComponentAdapter::Component component = (componentStr == "x") ? PointComponentAdapter::Component::X : PointComponentAdapter::Component::Y;
 
     return {dataName, component};
 }
 
-std::shared_ptr<IEventSource> DataManagerExtension::getEventSource(const std::string& name) {
+std::shared_ptr<IEventSource> DataManagerExtension::getEventSource(std::string const & name) {
     // Check cache first
     auto it = m_eventSourceCache.find(name);
     if (it != m_eventSourceCache.end()) {

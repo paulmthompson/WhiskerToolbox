@@ -26,7 +26,7 @@ public:
      * 
      * @return The name of the data source.
      */
-    virtual const std::string& getName() const = 0;
+    virtual std::string const & getName() const = 0;
 
     /**
      * @brief Gets the TimeFrame the data belongs to.
@@ -41,18 +41,18 @@ public:
     virtual size_t size() const = 0;
 
     /**
-     * @brief Provides a view over the data.
+     * @brief Gets the data within a specific time range.
      * 
-     * This may trigger a one-time lazy materialization for non-contiguous sources.
-     * @return A span over the data as const doubles.
+     * This gets the data in the range [start, end] (inclusive) from the source timeframe
+     * 
+     * @param start The start index of the time range.
+     * @param end The end index of the time range.
+     * @param target_timeFrame The target time frame (from the caller) for the data.
+     * @return A vector of floats representing the data in the specified range.
      */
-    virtual std::span<const double> getDataSpan() = 0;
-
-    
     virtual std::vector<float> getDataInRange(TimeFrameIndex start,
-                                               TimeFrameIndex end,
-                                               TimeFrame const * target_timeFrame) = 0;
-
+                                              TimeFrameIndex end,
+                                              TimeFrame const * target_timeFrame) = 0;
 };
 
-#endif // IANALOG_SOURCE_H
+#endif// IANALOG_SOURCE_H

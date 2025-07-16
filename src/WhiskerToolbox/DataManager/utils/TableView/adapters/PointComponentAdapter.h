@@ -1,8 +1,8 @@
 #ifndef POINT_COMPONENT_ADAPTER_H
 #define POINT_COMPONENT_ADAPTER_H
 
-#include "utils/TableView/interfaces/IAnalogSource.h"
 #include "Points/Point_Data.hpp"
+#include "utils/TableView/interfaces/IAnalogSource.h"
 
 #include <cstdint>
 #include <memory>
@@ -22,8 +22,8 @@ public:
      * @brief Component type enumeration.
      */
     enum class Component : std::uint8_t {
-        X,  ///< X component of points
-        Y   ///< Y component of points
+        X,///< X component of points
+        Y ///< Y component of points
     };
 
     /**
@@ -33,16 +33,34 @@ public:
      * @param timeFrameId The TimeFrame ID this data belongs to.
      * @param name The name of this data source.
      */
-    PointComponentAdapter(std::shared_ptr<PointData> pointData, 
-                         Component component, 
-                         std::shared_ptr<TimeFrame> timeFrame,
-                         std::string name);
+    PointComponentAdapter(std::shared_ptr<PointData> pointData,
+                          Component component,
+                          std::shared_ptr<TimeFrame> timeFrame,
+                          std::string name);
 
     // IAnalogSource interface implementation
-    [[nodiscard]] auto getName() const -> const std::string& override;
+
+    /**
+     * @brief Gets the name of this data source.
+     * 
+     * This name is used for dependency tracking and ExecutionPlan caching
+     * in the TableView system.
+     * 
+     * @return The name of the data source.
+     */
+    [[nodiscard]] auto getName() const -> std::string const & override;
+
+    /**
+     * @brief Gets the TimeFrame the data belongs to.
+     * @return A shared pointer to the TimeFrame.
+     */
     [[nodiscard]] auto getTimeFrame() const -> std::shared_ptr<TimeFrame> override;
+
+    /**
+     * @brief Gets the total number of samples in the source.
+     * @return The number of samples.
+     */
     [[nodiscard]] auto size() const -> size_t override;
-    auto getDataSpan() -> std::span<const double> override;
 
     /**
      * @brief Gets the data in a specified range.
@@ -52,12 +70,12 @@ public:
      * 
      * @param start The start index of the time range.
      * @param end The end index of the time range.
-     * @param source_timeFrame The TimeFrame to which the data belongs.
+     * @param target_timeFrame The target time frame (from the caller) for the data.
      * @return A vector of floats containing the component data in the specified range.
      */
     std::vector<float> getDataInRange(TimeFrameIndex start,
-                                       TimeFrameIndex end,
-                                       TimeFrame const * source_timeFrame) override;
+                                      TimeFrameIndex end,
+                                      TimeFrame const * target_timeFrame) override;
 
 private:
     /**
@@ -77,4 +95,4 @@ private:
     bool m_isMaterialized = false;
 };
 
-#endif // POINT_COMPONENT_ADAPTER_H
+#endif// POINT_COMPONENT_ADAPTER_H
