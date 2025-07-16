@@ -64,6 +64,8 @@ public:
         auto rawData = m_source->getDataSpan();
         
         // Get the list of intervals from the execution plan
+        // This should also return the TimeFrame the intervals belong to
+        // They way they can be converted.
         const auto& intervals = plan.getIntervals();
 
         // This is our final result: a vector of vectors

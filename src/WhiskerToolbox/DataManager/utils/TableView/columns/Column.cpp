@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 template<typename T>
-auto Column<T>::getValues(TableView* table) -> const std::vector<T>& {
+auto Column<T>::getValues(TableView * table) -> std::vector<T> const & {
     if (!isMaterialized()) {
         materialize(table);
     }
@@ -12,21 +12,19 @@ auto Column<T>::getValues(TableView* table) -> const std::vector<T>& {
 }
 
 template<typename T>
-void Column<T>::materialize(TableView* table) {
+void Column<T>::materialize(TableView * table) {
     if (isMaterialized()) {
         return;
     }
 
-    // Get the execution plan for this column's data source
-    const auto& plan = table->getExecutionPlanFor(getSourceDependency());
-    
+    ExecutionPlan const & plan = table->getExecutionPlanFor(getSourceDependency());
+
     // Compute the column values using the computer
     auto computed = m_computer->compute(plan);
-    
+
     // Store the computed values in the cache
     m_cache = std::move(computed);
 }
-
 
 
 // Explicit instantiation for commonly used types

@@ -82,8 +82,9 @@ public:
     /**
      * @brief Constructs a TimestampSelector with the given timestamps.
      * @param timestamps Vector of timestamps to use for row selection.
+     * @param timeFrame Shared pointer to the TimeFrame object that provides the mapping between timestamps and indices.
      */
-    explicit TimestampSelector(std::vector<double> timestamps);
+    explicit TimestampSelector(std::vector<TimeFrameIndex> timestamps, std::shared_ptr<TimeFrame> timeFrame);
     
     /**
      * @brief Gets the total number of rows in the table.
@@ -102,10 +103,19 @@ public:
      * @brief Gets the timestamps used for row selection.
      * @return Const reference to the timestamps vector.
      */
-    const std::vector<double>& getTimestamps() const;
+    const std::vector<TimeFrameIndex>& getTimestamps() const;
+
+    /**
+     * @brief Gets the TimeFrame key used for this selector.
+     * @return Shared pointer to the TimeFrame object.
+     */
+    std::shared_ptr<TimeFrame> getTimeFrame() const {
+        return m_timeFrame;
+    }
 
 private:
-    std::vector<double> m_timestamps;
+    std::vector<TimeFrameIndex> m_timestamps;
+    std::shared_ptr<TimeFrame> m_timeFrame;
 };
 
 /**
@@ -118,9 +128,10 @@ public:
     /**
      * @brief Constructs an IntervalSelector with the given intervals.
      * @param intervals Vector of TimeFrameInterval objects to use for row selection.
+     * @param timeFrame Shared pointer to the TimeFrame object that provides the mapping between intervals and indices.
      */
-    explicit IntervalSelector(std::vector<TimeFrameInterval> intervals);
-    
+    explicit IntervalSelector(std::vector<TimeFrameInterval> intervals, std::shared_ptr<TimeFrame> timeFrame);
+
     /**
      * @brief Gets the total number of rows in the table.
      * @return The number of rows (size of intervals vector).
@@ -140,8 +151,17 @@ public:
      */
     const std::vector<TimeFrameInterval>& getIntervals() const;
 
+    /**
+     * @brief Gets the TimeFrame key used for this selector.
+     * @return Shared pointer to the TimeFrame object.
+     */
+    std::shared_ptr<TimeFrame> getTimeFrame() const {
+        return m_timeFrame;
+    }
+
 private:
     std::vector<TimeFrameInterval> m_intervals;
+    std::shared_ptr<TimeFrame> m_timeFrame;
 };
 
 #endif // IROW_SELECTOR_H

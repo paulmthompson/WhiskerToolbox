@@ -30,6 +30,9 @@ public:
      * This method returns a reference to the column's data vector, triggering
      * computation if the data is not yet materialized.
      * 
+     * Each index in this vector corresponds to a row in the TableView,
+     * and the values are computed based on the current row selection.
+     * 
      * @param table Pointer to the TableView that owns this column.
      * @return Reference to the column's data vector.
      */

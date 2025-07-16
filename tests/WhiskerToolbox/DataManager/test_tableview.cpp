@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "DataManager.hpp"
 #include "utils/TableView/core/TableView.h"
@@ -10,11 +11,16 @@
 #include "utils/TableView/computers/AnalogSliceGathererComputer.h"
 #include "utils/TableView/computers/StandardizeComputer.h"
 #include "Points/Point_Data.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame.hpp"
 #include "CoreGeometry/points.hpp"
 
 #include <memory>
 #include <vector>
+#include <random>
+
 
 TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
     
@@ -65,7 +71,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
             TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)),  // Frame 2: indices 6-8
             TimeFrameInterval(TimeFrameIndex(9), TimeFrameIndex(11))  // Frame 3: indices 9-11
         };
-        auto rowSelector = std::make_unique<IntervalSelector>(intervals);
+        auto rowSelector = std::make_unique<IntervalSelector>(intervals, timeFrame);
         
         // Create TableView builder
         TableViewBuilder builder(dataManagerExtension);
@@ -160,7 +166,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
             TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(5)),  // Frame 1: indices 3-5
             TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8))   // Frame 2: indices 6-8
         };
-        auto rowSelector = std::make_unique<IntervalSelector>(intervals);
+        auto rowSelector = std::make_unique<IntervalSelector>(intervals, timeFrame);
         
         // Create TableView builder
         TableViewBuilder builder(dataManagerExtension);
@@ -254,7 +260,7 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
             TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(0)),  // Single point at index 0
             TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(1))   // Single point at index 1
         };
-        builder.setRowSelector(std::make_unique<IntervalSelector>(intervals));
+        builder.setRowSelector(std::make_unique<IntervalSelector>(intervals, timeFrame));
         
         auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
         builder.addColumn("X_Values", 
@@ -335,8 +341,8 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         
         // Create TableView builder
         TableViewBuilder builder(dataManagerExtension);
-        builder.setRowSelector(std::make_unique<IntervalSelector>(intervals));
-        
+        builder.setRowSelector(std::make_unique<IntervalSelector>(intervals, timeFrame));
+
         // Get analog sources for X and Y components
         auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
         auto ySource = dataManagerExtension->getAnalogSource("TestPoints.y");
@@ -440,7 +446,7 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         
         // Create TableView builder
         TableViewBuilder builder(dataManagerExtension);
-        builder.setRowSelector(std::make_unique<IntervalSelector>(intervals));
+        builder.setRowSelector(std::make_unique<IntervalSelector>(intervals, timeFrame));
         
         // Get analog source for X component
         auto xSource = dataManagerExtension->getAnalogSource("TestPoints.x");
@@ -495,10 +501,103 @@ TEST_CASE("TableView AnalogSliceGathererComputer Test", "[TableView][AnalogSlice
         auto computer = std::make_unique<AnalogSliceGathererComputer<double>>(xSource);
         
         // Create an ExecutionPlan with indices instead of intervals
-        ExecutionPlan planWithIndices(std::vector<TimeFrameIndex>{TimeFrameIndex(0)});
-        
+        ExecutionPlan planWithIndices(std::vector<TimeFrameIndex>{TimeFrameIndex(0)}, nullptr);
+
         // This should throw because the computer expects intervals
         REQUIRE_THROWS_AS(computer->compute(planWithIndices), std::invalid_argument);
     }
 }
 
+TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
+    
+    SECTION("Test TableView with different time frames") {
+
+        // Create a DataManager instance
+        DataManager dataManager;
+        
+        // Create a simple TimeFrame
+        std::vector<int> timeValues = {0, 1, 2, 3};
+        auto timeFrame = std::make_shared<TimeFrame>(timeValues);
+        dataManager.setTime("test_time", timeFrame);
+
+        std::vector<int> timeValues2 = {1, 3};
+        auto timeFrame2 = std::make_shared<TimeFrame>(timeValues2);
+        dataManager.setTime("test_time2", timeFrame2);
+
+        // Create PointData with multiple time frames
+        auto pointData = std::make_shared<PointData>();
+        pointData->addAtTime(TimeFrameIndex(0), Point2D<float>(1.0f, 2.0f));
+        pointData->addAtTime(TimeFrameIndex(1), Point2D<float>(3.0f, 4.0f));
+        pointData->addAtTime(TimeFrameIndex(2), Point2D<float>(5.0f, 6.0f));
+        pointData->addAtTime(TimeFrameIndex(3), Point2D<float>(7.0f, 8.0f));
+
+        // Add the point data to the DataManager
+        dataManager.setData<PointData>("TestPoints", pointData);
+        dataManager.setTimeFrame("TestPoints", "test_time");
+
+        // Add another PointData with a different time frame
+        auto pointData2 = std::make_shared<PointData>();
+        pointData2->addAtTime(TimeFrameIndex(0), Point2D<float>(9.0f, 10.0f));
+        pointData2->addAtTime(TimeFrameIndex(1), Point2D<float>(11.0f, 12.0f));
+        dataManager.setData<PointData>("TestPoints2", pointData2);
+        dataManager.setTimeFrame("TestPoints2", "test_time2");
+
+        // Create DataManagerExtension
+        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
+        
+        // Create intervals with the TimeFrame key
+        std::vector<TimeFrameInterval> intervals = {
+            TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1)),
+            TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(3))
+        };
+        
+        // Create an IntervalSelector with the TimeFrame key
+        auto rowSelector = std::make_unique<IntervalSelector>(intervals, timeFrame);
+
+        //std::cout << "✓ IntervalSelector created successfully with TimeFrame key: " 
+        //          << rowSelector->getTimeFrameKey() << std::endl;
+        
+        // Create TableView builder
+        TableViewBuilder builder(dataManagerExtension);
+        builder.setRowSelector(std::move(rowSelector));
+
+        // Add a simple column using IntervalReductionComputer
+        auto source = dataManagerExtension->getAnalogSource("TestPoints.x");
+        REQUIRE(source != nullptr);
+
+        auto source2 = dataManagerExtension->getAnalogSource("TestPoints2.x");
+        REQUIRE(source2 != nullptr);
+
+        builder.addColumn("Time_Values", 
+            std::make_unique<IntervalReductionComputer>(source, ReductionType::Mean));
+
+        builder.addColumn("Mean_TestPoints2.x", 
+            std::make_unique<IntervalReductionComputer>(source2, ReductionType::Mean));
+        
+        // Try to build the table
+        TableView table = builder.build();
+        
+        REQUIRE(table.getRowCount() == 2);
+
+        REQUIRE(table.getColumnCount() == 2);
+        REQUIRE(table.hasColumn("Time_Values"));
+
+        // Get the column data
+        auto timeValuesColumn = table.getColumnSpan("Time_Values");
+        REQUIRE(!timeValuesColumn.empty());
+        REQUIRE(timeValuesColumn.size() == 2);
+        REQUIRE(timeValuesColumn[0] == Catch::Approx(2.0).epsilon(0.001)); // Mean of 1.0 and 3.0
+        REQUIRE(timeValuesColumn[1] == Catch::Approx(6.0).epsilon(0.001)); // Mean of 5.0 and 7.0
+
+        // Verify that the second time frame data is not included
+        auto timeValues2Column = table.getColumnSpan("Mean_TestPoints2.x");
+        REQUIRE(!timeValues2Column.empty());
+        REQUIRE(timeValues2Column.size() == 2);
+        REQUIRE(timeValues2Column[0] == Catch::Approx(9.0).epsilon(0.001)); // Mean of 9.0 and NaN
+        REQUIRE(timeValues2Column[1] == Catch::Approx(11.0).epsilon(0.001)); // Mean of NaN and 11.0
+
+    
+
+    }
+
+}

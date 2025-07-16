@@ -16,7 +16,7 @@
 using RowDescriptor = std::variant<
     std::monostate,         // For cases where there's no descriptor
     size_t,                 // For IndexSelector
-    double,                 // For TimestampSelector
+    TimeFrameIndex,         // For TimestampSelector
     TimeFrameInterval       // For IntervalSelector
 >;
 

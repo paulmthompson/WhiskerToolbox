@@ -2,15 +2,14 @@
 
 // IndexSelector implementation
 IndexSelector::IndexSelector(std::vector<size_t> indices)
-    : m_indices(std::move(indices))
-{
+    : m_indices(std::move(indices)) {
 }
 
 size_t IndexSelector::getRowCount() const {
     return m_indices.size();
 }
 
-const std::vector<size_t>& IndexSelector::getIndices() const {
+std::vector<size_t> const & IndexSelector::getIndices() const {
     return m_indices;
 }
 
@@ -22,16 +21,16 @@ RowDescriptor IndexSelector::getDescriptor(size_t row_index) const {
 }
 
 // TimestampSelector implementation
-TimestampSelector::TimestampSelector(std::vector<double> timestamps)
-    : m_timestamps(std::move(timestamps))
-{
+TimestampSelector::TimestampSelector(std::vector<TimeFrameIndex> timestamps, std::shared_ptr<TimeFrame> timeFrame)
+    : m_timestamps(std::move(timestamps)),
+      m_timeFrame(std::move(timeFrame)) {
 }
 
 size_t TimestampSelector::getRowCount() const {
     return m_timestamps.size();
 }
 
-const std::vector<double>& TimestampSelector::getTimestamps() const {
+std::vector<TimeFrameIndex> const & TimestampSelector::getTimestamps() const {
     return m_timestamps;
 }
 
@@ -43,16 +42,16 @@ RowDescriptor TimestampSelector::getDescriptor(size_t row_index) const {
 }
 
 // IntervalSelector implementation
-IntervalSelector::IntervalSelector(std::vector<TimeFrameInterval> intervals)
-    : m_intervals(std::move(intervals))
-{
+IntervalSelector::IntervalSelector(std::vector<TimeFrameInterval> intervals, std::shared_ptr<TimeFrame> timeFrame)
+    : m_intervals(std::move(intervals)),
+      m_timeFrame(std::move(timeFrame)) {
 }
 
 size_t IntervalSelector::getRowCount() const {
     return m_intervals.size();
 }
 
-const std::vector<TimeFrameInterval>& IntervalSelector::getIntervals() const {
+std::vector<TimeFrameInterval> const & IntervalSelector::getIntervals() const {
     return m_intervals;
 }
 
