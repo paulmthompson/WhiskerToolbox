@@ -49,7 +49,7 @@ public:
     virtual std::span<const double> getDataSpan() = 0;
 
     
-    virtual std::vector<double> getDataInRange(TimeFrameIndex start,
+    virtual std::vector<float> getDataInRange(TimeFrameIndex start,
                                                TimeFrameIndex end,
                                                TimeFrame const & source_timeFrame,
                                                TimeFrame const & target_timeFrame) = 0;

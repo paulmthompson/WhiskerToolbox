@@ -31,17 +31,13 @@ std::span<const double> AnalogDataAdapter::getDataSpan() {
     return std::span<const double>(m_materializedData);
 }
 
-std::vector<double> AnalogDataAdapter::getDataInRange(TimeFrameIndex start,
+std::vector<float> AnalogDataAdapter::getDataInRange(TimeFrameIndex start,
                                        TimeFrameIndex end,
                                        TimeFrame const & source_timeFrame,
                                        TimeFrame const & target_timeFrame) 
 {
-    if (!m_isMaterialized) {
-        materializeData();
-    }
-
-    // Get the data span
-    auto dataSpan = std::span<const double>(m_materializedData);
+    auto data_span = m_analogData->getDataInTimeFrameIndexRange(start, end, &source_timeFrame, &target_timeFrame);
+    return std::vector<float>(data_span.begin(), data_span.end());
 }
 
 void AnalogDataAdapter::materializeData() {

@@ -44,20 +44,24 @@ std::span<const double> PointComponentAdapter::getDataSpan() {
     return std::span<const double>(m_materializedData);
 }
 
-std::vector<double> PointComponentAdapter::getDataInRange(TimeFrameIndex start,
+std::vector<float> PointComponentAdapter::getDataInRange(TimeFrameIndex start,
                                                            TimeFrameIndex end,
                                                            TimeFrame const & source_timeFrame,
                                                            TimeFrame const & target_timeFrame) 
 {
-    if (!m_isMaterialized) {
-        materializeData();
+    auto point_range = m_pointData->GetPointsInRange(TimeFrameInterval(start, end), 
+                                                     &source_timeFrame, 
+                                                     &target_timeFrame);
+    if (point_range.empty()) {
+        return {};
     }
+    std::vector<float> componentValues;
 
-    // Get the data span
-    auto dataSpan = std::span<const double>(m_materializedData);
-
-    // TODO: Implement time frame conversion logic
-    return std::vector<double>(dataSpan.begin(), dataSpan.end());
+    for (const auto& time_point_pair : point_range) {
+        float componentValue = (m_component == Component::X) ? time_point_pair.points[0].x : time_point_pair.points[0].y;
+        componentValues.push_back(componentValue);
+    }
+    return componentValues;
 }
 
 void PointComponentAdapter::materializeData() {

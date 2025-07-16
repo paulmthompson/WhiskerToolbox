@@ -165,7 +165,7 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
             
             TimeFrameInterval interval{TimeFrameIndex(10), TimeFrameIndex(20)};
             size_t count = 0;
-            for (const auto& pair : point_data.GetPointsInRange(interval, timeframe, timeframe)) {
+            for (const auto& pair : point_data.GetPointsInRange(interval, timeframe.get(), timeframe.get())) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 10);
                     REQUIRE(pair.points.size() == 2);
@@ -201,7 +201,9 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
             // Query video frames 1-2 (times 10-20) which should map to data indices 2-4 (times 10-20)
             TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
             size_t count = 0;
-            for (const auto& pair : timeframe_test_data.GetPointsInRange(video_interval, video_timeframe, data_timeframe)) {
+            for (const auto& pair : timeframe_test_data.GetPointsInRange(video_interval,
+                                                                         video_timeframe.get(), 
+                                                                         data_timeframe.get())) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 2);
                     REQUIRE(pair.points.size() == 2);
@@ -259,7 +261,9 @@ TEST_CASE("PointData - Core functionality", "[points][data][core]") {
             TimeFrameInterval video_interval{TimeFrameIndex(1), TimeFrameIndex(2)};
             
             size_t count = 0;
-            for (const auto& pair : timeframe_test_data.GetPointsInRange(video_interval, video_timeframe, data_timeframe)) {
+            for (const auto& pair : timeframe_test_data.GetPointsInRange(video_interval,
+                                                                         video_timeframe.get(), 
+                                                                         data_timeframe.get())) {
                 if (count == 0) {
                     REQUIRE(pair.time.getValue() == 2);
                     REQUIRE(pair.points.size() == 2);

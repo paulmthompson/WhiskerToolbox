@@ -258,10 +258,10 @@ public:
     * @return A view of time-points pairs for times within the converted interval range
     */
     [[nodiscard]] auto GetPointsInRange(TimeFrameInterval const & interval,
-                                        std::shared_ptr<TimeFrame> source_timeframe,
-                                        std::shared_ptr<TimeFrame> target_timeframe) const {
+                                        TimeFrame const * source_timeframe,
+                                        TimeFrame const * target_timeframe) const {
         // If the timeframes are the same object, no conversion is needed
-        if (source_timeframe.get() == target_timeframe.get()) {
+        if (source_timeframe == target_timeframe) {
             return GetPointsInRange(interval);
         }
 
