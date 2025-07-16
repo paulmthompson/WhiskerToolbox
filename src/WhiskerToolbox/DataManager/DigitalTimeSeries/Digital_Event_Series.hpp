@@ -42,11 +42,9 @@ public:
                });
     }
 
-    template<typename TransformFunc>
-    auto getEventsInRange(float start_time, float stop_time, TransformFunc time_transform) const {
-        return _data | std::views::filter([start_time, stop_time, time_transform](float time) {
-                   auto transformed_time = time_transform(time);
-                   return transformed_time >= start_time && transformed_time <= stop_time;
+    [[nodiscard]] auto getEventsInRange(TimeFrameIndex start_time, TimeFrameIndex stop_time) const {
+        return _data | std::views::filter([start_time, stop_time](float time) {
+                   return time >= start_time.getValue() && time <= stop_time.getValue();
                });
     }
 
@@ -54,11 +52,32 @@ public:
                                         TimeFrameIndex stop_index,
                                         TimeFrame const * source_time_frame,
                                         TimeFrame const * destination_time_frame) const {
+        if (source_time_frame == destination_time_frame) {
+            return getEventsInRange(start_index, stop_index);
+        }
 
-        auto start_time_idx = getTimeIndexForSeries(start_index, source_time_frame, destination_time_frame);
-        auto end_time_idx = getTimeIndexForSeries(stop_index, source_time_frame, destination_time_frame);
-        return getEventsInRange(start_time_idx.getValue(), end_time_idx.getValue());
+        // If either timeframe is null, fall back to original behavior
+        if (!source_time_frame || !destination_time_frame) {
+            return getEventsInRange(start_index, stop_index);
+        }
+
+        // Convert the time index from source timeframe to target timeframe
+        // 1. Get the time value from the source timeframe
+        auto start_time_value = source_time_frame->getTimeAtIndex(start_index);
+        auto stop_time_value = source_time_frame->getTimeAtIndex(stop_index);
+        auto target_start_index = destination_time_frame->getIndexAtTime(static_cast<float>(start_time_value));
+        auto target_stop_index = destination_time_frame->getIndexAtTime(static_cast<float>(stop_time_value));
+
+        return getEventsInRange(target_start_index, target_stop_index);
     };
+
+    template<typename TransformFunc>
+    auto getEventsInRange(float start_time, float stop_time, TransformFunc time_transform) const {
+        return _data | std::views::filter([start_time, stop_time, time_transform](float time) {
+                   auto transformed_time = time_transform(time);
+                   return transformed_time >= start_time && transformed_time <= stop_time;
+               });
+    }
 
     std::vector<float> getEventsAsVector(float start_time, float stop_time) const {
         std::vector<float> result;
