@@ -70,6 +70,23 @@ std::shared_ptr<IEventSource> DataManagerExtension::createDigitalEventDataAdapte
     }
 }
 
+std::shared_ptr<IIntervalSource> DataManagerExtension::createDigitalIntervalDataAdapter(std::string const & name) {
+    try {
+        auto digitalIntervalSeries = m_dataManager.getData<DigitalIntervalSeries>(name);
+        if (!digitalIntervalSeries) {
+            return nullptr;
+        }
+
+        auto timeFrame_key = m_dataManager.getTimeFrame(name);
+        auto timeFrame = m_dataManager.getTime(timeFrame_key);
+
+        return std::make_shared<DigitalIntervalDataAdapter>(digitalIntervalSeries, timeFrame, name);
+    } catch (std::exception const & e) {
+        std::cerr << "Error creating DigitalIntervalDataAdapter for '" << name << "': " << e.what() << std::endl;
+        return nullptr;
+    }
+}
+
 std::shared_ptr<IAnalogSource> DataManagerExtension::createPointComponentAdapter(
         std::string const & pointDataName,
         PointComponentAdapter::Component component) {
@@ -116,7 +133,27 @@ std::shared_ptr<IEventSource> DataManagerExtension::getEventSource(std::string c
         return it->second;
     }
 
-    // For now, return nullptr as we don't have concrete event source implementations yet
-    // This method can be extended when DigitalEventSeries is implemented
-    return nullptr;
+    // Create a new event source adapter
+    auto eventSource = createDigitalEventDataAdapter(name);
+    if (eventSource) {
+        m_eventSourceCache[name] = eventSource;
+    } else {
+        std::cerr << "Event source '" << name << "' not found." << std::endl;
+    }
+    return eventSource;
+}
+
+std::shared_ptr<IIntervalSource> DataManagerExtension::getIntervalSource(std::string const & name) {
+    // Check cache first
+    auto it = m_intervalSourceCache.find(name);
+    if (it != m_intervalSourceCache.end()) {
+        return it->second;
+    }
+
+    // Create a new interval source adapter
+    auto intervalSource = createDigitalIntervalDataAdapter(name);
+    if (intervalSource) {
+        m_intervalSourceCache[name] = intervalSource;
+    }
+    return intervalSource;
 }

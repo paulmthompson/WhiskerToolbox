@@ -5,8 +5,10 @@
 #include "utils/TableView/adapters/AnalogDataAdapter.h"
 #include "utils/TableView/adapters/PointComponentAdapter.h"
 #include "utils/TableView/adapters/DigitalEventDataAdapter.h"
+#include "utils/TableView/adapters/DigitalIntervalDataAdapter.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/interfaces/IEventSource.h"
+#include "utils/TableView/interfaces/IIntervalSource.h"
 
 #include <map>
 #include <memory>
@@ -61,6 +63,17 @@ public:
      */
     auto getEventSource(std::string const & name) -> std::shared_ptr<IEventSource>;
 
+    /**
+     * @brief Gets an interval source by name.
+     * 
+     * This method provides access to IIntervalSource implementations for
+     * interval data such as digital interval series.
+     * 
+     * @param name The name of the interval source.
+     * @return Shared pointer to IIntervalSource, or nullptr if not found.
+     */
+    auto getIntervalSource(std::string const & name) -> std::shared_ptr<IIntervalSource>;
+
 private:
     /**
      * @brief Creates an AnalogDataAdapter for the given name.
@@ -75,6 +88,13 @@ private:
      * @return Shared pointer to the adapter, or nullptr if not found.
      */
     auto createDigitalEventDataAdapter(std::string const & name) -> std::shared_ptr<IEventSource>;
+
+    /**
+     * @brief Creates a DigitalIntervalDataAdapter for the given name.
+     * @param name The name of the DigitalIntervalSeries data.
+     * @return Shared pointer to the adapter, or nullptr if not found.
+     */
+    auto createDigitalIntervalDataAdapter(std::string const & name) -> std::shared_ptr<IIntervalSource>;
 
     /**
      * @brief Creates a PointComponentAdapter for the given name and component.
@@ -97,6 +117,7 @@ private:
     // Cache for adapter objects to ensure reuse and correct lifetime
     mutable std::map<std::string, std::shared_ptr<IAnalogSource>> m_dataSourceCache;
     mutable std::map<std::string, std::shared_ptr<IEventSource>> m_eventSourceCache;
+    mutable std::map<std::string, std::shared_ptr<IIntervalSource>> m_intervalSourceCache;
 
     // Regex for parsing virtual source names
     static std::regex const s_virtualSourceRegex;
