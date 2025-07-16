@@ -5,11 +5,11 @@
 
 PointComponentAdapter::PointComponentAdapter(std::shared_ptr<PointData> pointData, 
                                            Component component, 
-                                           int timeFrameId,
+                                           std::shared_ptr<TimeFrame> timeFrame,
                                            std::string name)
     : m_pointData(std::move(pointData))
     , m_component(component)
-    , m_timeFrameId(timeFrameId)
+    , m_timeFrame(std::move(timeFrame))
     , m_name(std::move(name))
 {
     if (!m_pointData) {
@@ -21,8 +21,8 @@ const std::string& PointComponentAdapter::getName() const {
     return m_name;
 }
 
-int PointComponentAdapter::getTimeFrameId() const {
-    return m_timeFrameId;
+std::shared_ptr<TimeFrame> PointComponentAdapter::getTimeFrame() const {
+    return m_timeFrame;
 }
 
 size_t PointComponentAdapter::size() const {
@@ -46,12 +46,11 @@ std::span<const double> PointComponentAdapter::getDataSpan() {
 
 std::vector<float> PointComponentAdapter::getDataInRange(TimeFrameIndex start,
                                                            TimeFrameIndex end,
-                                                           TimeFrame const & source_timeFrame,
-                                                           TimeFrame const & target_timeFrame) 
+                                                           TimeFrame const * source_timeFrame) 
 {
     auto point_range = m_pointData->GetPointsInRange(TimeFrameInterval(start, end), 
-                                                     &source_timeFrame, 
-                                                     &target_timeFrame);
+                                                     source_timeFrame,
+                                                     m_timeFrame.get());
     if (point_range.empty()) {
         return {};
     }

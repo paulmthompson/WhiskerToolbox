@@ -124,12 +124,12 @@ public:
      * 
      * @param time The time to get the masks at
      * @param source_timeframe The timeframe that the time index is expressed in
-     * @param target_timeframe The timeframe that this mask data uses
+     * @param mask_timeframe The timeframe that this mask data uses
      * @return A vector of Mask2D at the converted time
      */
     [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time, 
                                                         TimeFrame const * source_timeframe,
-                                                        TimeFrame const * target_timeframe) const;
+                                                        TimeFrame const * mask_timeframe) const;
 
         /**
      * @brief Get all masks with their associated times as a range

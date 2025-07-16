@@ -18,21 +18,22 @@ public:
     /**
      * @brief Constructs an AnalogDataAdapter.
      * @param analogData Shared pointer to the AnalogTimeSeries source.
-     * @param timeFrameId The TimeFrame ID this data belongs to.
+     * @param timeFrame Shared pointer to the TimeFrame this data belongs to.
      * @param name The name of this data source.
      */
-    AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData, int timeFrameId, std::string name);
+    AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData, 
+                      std::shared_ptr<TimeFrame> timeFrame, 
+                      std::string name);
 
     // IAnalogSource interface implementation
     [[nodiscard]] auto getName() const -> const std::string& override;
-    [[nodiscard]] auto getTimeFrameId() const -> int override;
+    [[nodiscard]] auto getTimeFrame() const -> std::shared_ptr<TimeFrame> override;
     [[nodiscard]] auto size() const -> size_t override;
     auto getDataSpan() -> std::span<const double> override;
 
     std::vector<float> getDataInRange(TimeFrameIndex start,
                                        TimeFrameIndex end,
-                                       TimeFrame const & source_timeFrame,
-                                       TimeFrame const & target_timeFrame) override;
+                                       TimeFrame const * target_timeFrame) override;
 
 private:
     /**
@@ -44,7 +45,7 @@ private:
     void materializeData();
 
     std::shared_ptr<AnalogTimeSeries> m_analogData;
-    int m_timeFrameId;
+    std::shared_ptr<TimeFrame> m_timeFrame;
     std::string m_name;
     std::vector<double> m_materializedData;
     bool m_isMaterialized = false;

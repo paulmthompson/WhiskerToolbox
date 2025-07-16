@@ -29,11 +29,11 @@ public:
     virtual const std::string& getName() const = 0;
 
     /**
-     * @brief Gets the ID of the TimeFrame the data belongs to.
-     * @return The TimeFrame ID as an integer.
+     * @brief Gets the TimeFrame the data belongs to.
+     * @return A shared pointer to the TimeFrame.
      */
-    virtual int getTimeFrameId() const = 0;
-    
+    virtual std::shared_ptr<TimeFrame> getTimeFrame() const = 0;
+
     /**
      * @brief Gets the total number of samples in the source.
      * @return The number of samples.
@@ -51,8 +51,7 @@ public:
     
     virtual std::vector<float> getDataInRange(TimeFrameIndex start,
                                                TimeFrameIndex end,
-                                               TimeFrame const & source_timeFrame,
-                                               TimeFrame const & target_timeFrame) = 0;
+                                               TimeFrame const * target_timeFrame) = 0;
 
 };
 

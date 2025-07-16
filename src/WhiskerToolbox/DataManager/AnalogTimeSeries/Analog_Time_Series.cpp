@@ -153,14 +153,14 @@ std::span<const float> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
 [[nodiscard]] std::span<const float> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameIndex start_time, 
                                                                                     TimeFrameIndex end_time,
                                                                                     TimeFrame const * source_timeFrame,
-                                                                                    TimeFrame const * target_timeFrame) const
+                                                                                    TimeFrame const * analog_timeFrame) const
 {
-    if (source_timeFrame == target_timeFrame) {
+    if (source_timeFrame == analog_timeFrame) {
         return getDataInTimeFrameIndexRange(start_time, end_time);
     }
 
     // If either timeframe is null, fall back to original behavior
-    if (!source_timeFrame || !target_timeFrame) {
+    if (!source_timeFrame || !analog_timeFrame) {
         return getDataInTimeFrameIndexRange(start_time, end_time);
     }
 
@@ -169,9 +169,9 @@ std::span<const float> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
     auto start_time_value = source_timeFrame->getTimeAtIndex(start_time);
     auto end_time_value = source_timeFrame->getTimeAtIndex(end_time);
 
-    // 2. Convert that time value to an index in the target timeframe
-    auto target_start_index = target_timeFrame->getIndexAtTime(static_cast<float>(start_time_value));
-    auto target_end_index = target_timeFrame->getIndexAtTime(static_cast<float>(end_time_value));
+    // 2. Convert that time value to an index in the analog timeframe
+    auto target_start_index = analog_timeFrame->getIndexAtTime(static_cast<float>(start_time_value), false);
+    auto target_end_index = analog_timeFrame->getIndexAtTime(static_cast<float>(end_time_value));
 
     // 3. Use the converted indices to get the data in the target timeframe
     return getDataInTimeFrameIndexRange(target_start_index, target_end_index);

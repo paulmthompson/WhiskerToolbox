@@ -69,6 +69,14 @@ public:
      */
     void setIntervals(std::vector<TimeFrameInterval> intervals);
 
+    /**
+     * @brief Gets the TimeFrame associated with this execution plan.
+     * @return Shared pointer to the TimeFrame.
+     */
+    std::shared_ptr<TimeFrame> getTimeFrame() const {
+        return m_timeFrame;
+    }
+
 private:
     std::vector<TimeFrameIndex> m_indices;
     std::vector<TimeFrameInterval> m_intervals;

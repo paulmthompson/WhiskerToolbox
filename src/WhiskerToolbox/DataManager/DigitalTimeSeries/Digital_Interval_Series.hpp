@@ -150,14 +150,14 @@ public:
             TimeFrameIndex start_time,
             TimeFrameIndex stop_time,
             TimeFrame const * source_timeframe,
-            TimeFrame const * target_timeframe
+            TimeFrame const * interval_timeframe
         ) const {
-             if (source_timeframe == target_timeframe) {
+             if (source_timeframe == interval_timeframe) {
                  return getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
             }
 
             // If either timeframe is null, fall back to original behavior
-            if (!source_timeframe || !target_timeframe) {
+            if (!source_timeframe || !interval_timeframe) {
                 return getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
             }
 
@@ -167,8 +167,8 @@ public:
             auto stop_time_value = source_timeframe->getTimeAtIndex(stop_time);
 
             // 2. Convert that time value to an index in the target timeframe
-            auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
-            auto target_stop_index = target_timeframe->getIndexAtTime(static_cast<float>(stop_time_value));
+            auto target_start_index = interval_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
+            auto target_stop_index = interval_timeframe->getIndexAtTime(static_cast<float>(stop_time_value));
 
             return getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
         };

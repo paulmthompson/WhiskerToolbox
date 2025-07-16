@@ -61,7 +61,7 @@ private:
      * @param data Span over the data for the interval.
      * @return The computed reduction value.
      */
-    [[nodiscard]] auto computeReduction(std::span<const double> data) const -> double;
+    [[nodiscard]] auto computeReduction(std::span<const float> data) const -> float;
 
     /**
      * @brief Computes the mean of the data span.
@@ -69,7 +69,7 @@ private:
      * @param data Span over the data.
      * @return The mean value.
      */
-    [[nodiscard]] auto computeMean(std::span<const double> data) const -> double;
+    [[nodiscard]] auto computeMean(std::span<const float> data) const -> float;
 
     /**
      * @brief Computes the maximum of the data span.
@@ -77,7 +77,7 @@ private:
      * @param data Span over the data.
      * @return The maximum value.
      */
-    [[nodiscard]] auto computeMax(std::span<const double> data) const -> double;
+    [[nodiscard]] auto computeMax(std::span<const float> data) const -> float;
 
     /**
      * @brief Computes the minimum of the data span.
@@ -85,7 +85,7 @@ private:
      * @param data Span over the data.
      * @return The minimum value.
      */
-    [[nodiscard]] auto computeMin(std::span<const double> data) const -> double;
+    [[nodiscard]] auto computeMin(std::span<const float> data) const -> float;
 
     /**
      * @brief Computes the standard deviation of the data span.
@@ -93,7 +93,7 @@ private:
      * @param data Span over the data.
      * @return The standard deviation value.
      */
-    [[nodiscard]] auto computeStdDev(std::span<const double> data) const -> double;
+    [[nodiscard]] auto computeStdDev(std::span<const float> data) const -> float;
 
     /**
      * @brief Computes the sum of the data span.
@@ -101,15 +101,15 @@ private:
      * @param data Span over the data.
      * @return The sum value.
      */
-    [[nodiscard]] auto computeSum(std::span<const double> data) const -> double;
+    [[nodiscard]] auto computeSum(std::span<const float> data) const -> float;
 
     /**
      * @brief Returns the count of values in the data span.
      * 
      * @param data Span over the data.
-     * @return The count as a double.
+     * @return The count as a float.
      */
-    [[nodiscard]] auto computeCount(std::span<const double> data) const -> double;
+    [[nodiscard]] auto computeCount(std::span<const float> data) const -> float;
 
     std::shared_ptr<IAnalogSource> m_source;
     ReductionType m_reduction;

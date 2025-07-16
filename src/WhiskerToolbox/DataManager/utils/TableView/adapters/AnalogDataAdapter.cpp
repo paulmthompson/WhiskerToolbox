@@ -2,9 +2,11 @@
 
 #include <stdexcept>
 
-AnalogDataAdapter::AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData, int timeFrameId, std::string name)
+AnalogDataAdapter::AnalogDataAdapter(std::shared_ptr<AnalogTimeSeries> analogData, 
+                                     std::shared_ptr<TimeFrame> timeFrame,
+                                     std::string name)
     : m_analogData(std::move(analogData))
-    , m_timeFrameId(timeFrameId)
+    , m_timeFrame(std::move(timeFrame))
     , m_name(std::move(name))
 {
     if (!m_analogData) {
@@ -16,8 +18,8 @@ const std::string& AnalogDataAdapter::getName() const {
     return m_name;
 }
 
-int AnalogDataAdapter::getTimeFrameId() const {
-    return m_timeFrameId;
+std::shared_ptr<TimeFrame> AnalogDataAdapter::getTimeFrame() const {
+    return m_timeFrame;
 }
 
 size_t AnalogDataAdapter::size() const {
@@ -33,10 +35,10 @@ std::span<const double> AnalogDataAdapter::getDataSpan() {
 
 std::vector<float> AnalogDataAdapter::getDataInRange(TimeFrameIndex start,
                                        TimeFrameIndex end,
-                                       TimeFrame const & source_timeFrame,
-                                       TimeFrame const & target_timeFrame) 
+                                       TimeFrame const * target_timeFrame) 
 {
-    auto data_span = m_analogData->getDataInTimeFrameIndexRange(start, end, &source_timeFrame, &target_timeFrame);
+    auto const * timeFrame = m_timeFrame.get();
+    auto data_span = m_analogData->getDataInTimeFrameIndexRange(start, end, target_timeFrame, timeFrame);
     return std::vector<float>(data_span.begin(), data_span.end());
 }
 

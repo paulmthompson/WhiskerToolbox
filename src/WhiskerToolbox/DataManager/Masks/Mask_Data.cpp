@@ -80,9 +80,9 @@ std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const
 
 std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time, 
                                                 TimeFrame const * source_timeframe,
-                                                TimeFrame const * target_timeframe) const {
+                                                TimeFrame const * mask_timeframe) const {
 
-    return get_at_time(time, _data, _empty, source_timeframe, target_timeframe);
+    return get_at_time(time, _data, _empty, source_timeframe, mask_timeframe);
 }
 
 // ========== Image Size ==========

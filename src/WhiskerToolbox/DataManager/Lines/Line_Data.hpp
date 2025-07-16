@@ -162,12 +162,12 @@ public:
      * 
      * @param time The time index in the source timeframe
      * @param source_timeframe The timeframe that the time index is expressed in
-     * @param target_timeframe The timeframe that this line data uses
+     * @param line_timeframe The timeframe that this line data uses
      * @return A vector of lines at the converted time
      */
     [[nodiscard]] std::vector<Line2D> const & getAtTime(TimeFrameIndex time, 
                                                         TimeFrame const * source_timeframe,
-                                                        TimeFrame const * target_timeframe) const;
+                                                        TimeFrame const * line_timeframe) const;
 
      /**
     * @brief Get all lines with their associated times as a range

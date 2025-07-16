@@ -16,7 +16,7 @@ int TimeFrame::getTimeAtIndex(TimeFrameIndex index) const {
     return _times[static_cast<size_t>(index.getValue())];
 }
 
-TimeFrameIndex TimeFrame::getIndexAtTime(float time) const {
+TimeFrameIndex TimeFrame::getIndexAtTime(float time, bool preceding) const {
     // Binary search to find the index closest to the given time
     auto it = std::lower_bound(_times.begin(), _times.end(), time);
 
@@ -35,11 +35,17 @@ TimeFrameIndex TimeFrame::getIndexAtTime(float time) const {
         return TimeFrameIndex(0);
     }
 
-    // Find the closest time point
-    auto prev = it - 1;
-    if (std::abs(static_cast<float>(*prev) - time) <= std::abs(static_cast<float>(*it) - time)) {
-        return TimeFrameIndex(static_cast<int64_t>(std::distance(_times.begin(), prev)));
+    // Find the closest time point, preceding by default
+    // If preceding is false, we would return the next time point
+    if (preceding) {
+        auto prev = it - 1;
+        if (std::abs(static_cast<float>(*prev) - time) <= std::abs(static_cast<float>(*it) - time)) {
+            return TimeFrameIndex(static_cast<int64_t>(std::distance(_times.begin(), prev)));
+        } else {
+            return TimeFrameIndex(static_cast<int64_t>(std::distance(_times.begin(), it)));
+        }
     } else {
+        // If not preceding, return the next time point
         return TimeFrameIndex(static_cast<int64_t>(std::distance(_times.begin(), it)));
     }
 }

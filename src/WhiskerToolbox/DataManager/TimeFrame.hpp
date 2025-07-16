@@ -73,7 +73,7 @@ public:
 
     [[nodiscard]] int getTimeAtIndex(TimeFrameIndex index) const;
 
-    [[nodiscard]] TimeFrameIndex getIndexAtTime(float time) const;
+    [[nodiscard]] TimeFrameIndex getIndexAtTime(float time, bool preceding=true) const;
 
     [[nodiscard]] int checkFrameInbounds(int frame_id) const;
 

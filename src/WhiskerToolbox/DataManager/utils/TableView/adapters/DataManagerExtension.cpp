@@ -44,11 +44,10 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createAnalogDataAdapter(con
             return nullptr;
         }
 
-        // Use a default timeframe ID of 0 for now
-        // In a real implementation, this would be derived from the data or DataManager
-        int timeFrameId = 0;
+        auto timeFrame_key = m_dataManager.getTimeFrame(name);
+        auto timeFrame = m_dataManager.getTime(timeFrame_key);
         
-        return std::make_shared<AnalogDataAdapter>(analogData, timeFrameId, name);
+        return std::make_shared<AnalogDataAdapter>(analogData, timeFrame, name);
     } catch (const std::exception& e) {
         std::cerr << "Error creating AnalogDataAdapter for '" << name << "': " << e.what() << std::endl;
         return nullptr;
@@ -65,14 +64,13 @@ std::shared_ptr<IAnalogSource> DataManagerExtension::createPointComponentAdapter
             return nullptr;
         }
 
-        // Use a default timeframe ID of 0 for now
-        // In a real implementation, this would be derived from the data or DataManager
-        int timeFrameId = 0;
-        
+        auto timeFrame_key = m_dataManager.getTimeFrame(pointDataName);
+        auto timeFrame = m_dataManager.getTime(timeFrame_key);
+
         // Create the full name for the virtual source
         std::string fullName = pointDataName + (component == PointComponentAdapter::Component::X ? ".x" : ".y");
         
-        return std::make_shared<PointComponentAdapter>(pointData, component, timeFrameId, fullName);
+        return std::make_shared<PointComponentAdapter>(pointData, component, timeFrame, fullName);
     } catch (const std::exception& e) {
         std::cerr << "Error creating PointComponentAdapter for '" << pointDataName 
                   << "' component: " << e.what() << std::endl;

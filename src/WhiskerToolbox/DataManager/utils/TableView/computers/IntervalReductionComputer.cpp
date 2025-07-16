@@ -36,52 +36,39 @@ std::vector<double> IntervalReductionComputer::compute(const ExecutionPlan& plan
         throw std::invalid_argument("ExecutionPlan must contain intervals for IntervalReductionComputer");
     }
 
-    const auto& intervals = plan.getIntervals();
+    // Get the list of intervals from the execution plan
+    // This should also return the TimeFrame the intervals belong to
+    // They way they can be converted.
+    auto const & intervals = plan.getIntervals();
+    auto destinationTimeFrame = plan.getTimeFrame();
+
     std::vector<double> results;
     results.reserve(intervals.size());
 
-    // Get the full data span once for efficiency
-    auto fullDataSpan = m_source->getDataSpan();
+    for (auto const & interval: intervals) {
+            
+        auto sliceView = m_source->getDataInRange(
+            interval.start, 
+            interval.end, 
+            destinationTimeFrame.get()
+        );
 
-    for (const auto& interval : intervals) {
-        // Convert TimeFrameIndex to array indices
-        auto startIdx = static_cast<size_t>(interval.start.getValue());
-        auto endIdx = static_cast<size_t>(interval.end.getValue());
+         const float result = computeReduction(sliceView);
 
-        // Bounds checking
-        if (startIdx >= fullDataSpan.size() || endIdx >= fullDataSpan.size()) {
-            // Handle out-of-bounds by using available data or NaN
-            if (startIdx >= fullDataSpan.size()) {
-                results.push_back(std::numeric_limits<double>::quiet_NaN());
-                continue;
-            }
-            endIdx = fullDataSpan.size() - 1;
-        }
-
-        // Ensure start <= end
-        if (startIdx > endIdx) {
-            results.push_back(std::numeric_limits<double>::quiet_NaN());
-            continue;
-        }
-
-        // Create span for this interval (inclusive range)
-        auto intervalSpan = fullDataSpan.subspan(startIdx, endIdx - startIdx + 1);
-        
-        // Compute the reduction for this interval
-        const double result = computeReduction(intervalSpan);
-        results.push_back(result);
+        results.emplace_back(result);
     }
 
     return results;
+
 }
 
 std::string IntervalReductionComputer::getSourceDependency() const {
     return m_sourceName;
 }
 
-double IntervalReductionComputer::computeReduction(std::span<const double> data) const {
+float IntervalReductionComputer::computeReduction(std::span<const float> data) const {
     if (data.empty()) {
-        return std::numeric_limits<double>::quiet_NaN();
+        return std::numeric_limits<float>::quiet_NaN();
     }
 
     switch (m_reduction) {
@@ -102,53 +89,53 @@ double IntervalReductionComputer::computeReduction(std::span<const double> data)
     }
 }
 
-double IntervalReductionComputer::computeMean(std::span<const double> data) const {
+float IntervalReductionComputer::computeMean(std::span<const float> data) const {
     if (data.empty()) {
-        return std::numeric_limits<double>::quiet_NaN();
+        return std::numeric_limits<float>::quiet_NaN();
     }
 
-    const double sum = std::accumulate(data.begin(), data.end(), 0.0);
-    return sum / static_cast<double>(data.size());
+    const float sum = std::accumulate(data.begin(), data.end(), 0.0);
+    return sum / static_cast<float>(data.size());
 }
 
-double IntervalReductionComputer::computeMax(std::span<const double> data) const {
+float IntervalReductionComputer::computeMax(std::span<const float> data) const {
     if (data.empty()) {
-        return std::numeric_limits<double>::quiet_NaN();
+        return std::numeric_limits<float>::quiet_NaN();
     }
 
     return *std::max_element(data.begin(), data.end());
 }
 
-double IntervalReductionComputer::computeMin(std::span<const double> data) const {
+float IntervalReductionComputer::computeMin(std::span<const float> data) const {
     if (data.empty()) {
-        return std::numeric_limits<double>::quiet_NaN();
+        return std::numeric_limits<float>::quiet_NaN();
     }
 
     return *std::min_element(data.begin(), data.end());
 }
 
-double IntervalReductionComputer::computeStdDev(std::span<const double> data) const {
+float IntervalReductionComputer::computeStdDev(std::span<const float> data) const {
     if (data.empty()) {
-        return std::numeric_limits<double>::quiet_NaN();
+        return std::numeric_limits<float>::quiet_NaN();
     }
 
     if (data.size() == 1) {
         return 0.0;
     }
 
-    const double mean = computeMean(data);
-    double variance = 0.0;
+    const float mean = computeMean(data);
+    float variance = 0.0;
 
-    for (const double value : data) {
-        const double diff = value - mean;
+    for (const float value : data) {
+        const float diff = value - mean;
         variance += diff * diff;
     }
 
-    variance /= static_cast<double>(data.size() - 1); // Sample standard deviation
+    variance /= static_cast<float>(data.size() - 1); // Sample standard deviation
     return std::sqrt(variance);
 }
 
-double IntervalReductionComputer::computeSum(std::span<const double> data) const {
+float IntervalReductionComputer::computeSum(std::span<const float> data) const {
     if (data.empty()) {
         return 0.0;
     }
@@ -156,6 +143,6 @@ double IntervalReductionComputer::computeSum(std::span<const double> data) const
     return std::accumulate(data.begin(), data.end(), 0.0);
 }
 
-double IntervalReductionComputer::computeCount(std::span<const double> data) const {
-    return static_cast<double>(data.size());
+float IntervalReductionComputer::computeCount(std::span<const float> data) const {
+    return static_cast<float>(data.size());
 }

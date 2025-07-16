@@ -51,13 +51,13 @@ public:
     [[nodiscard]] auto getEventsInRange(TimeFrameIndex start_index,
                                         TimeFrameIndex stop_index,
                                         TimeFrame const * source_time_frame,
-                                        TimeFrame const * destination_time_frame) const {
-        if (source_time_frame == destination_time_frame) {
+                                        TimeFrame const * event_time_frame) const {
+        if (source_time_frame == event_time_frame) {
             return getEventsInRange(start_index, stop_index);
         }
 
         // If either timeframe is null, fall back to original behavior
-        if (!source_time_frame || !destination_time_frame) {
+        if (!source_time_frame || !event_time_frame) {
             return getEventsInRange(start_index, stop_index);
         }
 
@@ -65,8 +65,9 @@ public:
         // 1. Get the time value from the source timeframe
         auto start_time_value = source_time_frame->getTimeAtIndex(start_index);
         auto stop_time_value = source_time_frame->getTimeAtIndex(stop_index);
-        auto target_start_index = destination_time_frame->getIndexAtTime(static_cast<float>(start_time_value));
-        auto target_stop_index = destination_time_frame->getIndexAtTime(static_cast<float>(stop_time_value));
+
+        auto target_start_index = event_time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
+        auto target_stop_index = event_time_frame->getIndexAtTime(static_cast<float>(stop_time_value));
 
         return getEventsInRange(target_start_index, target_stop_index);
     };

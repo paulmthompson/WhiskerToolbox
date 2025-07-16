@@ -151,10 +151,31 @@ public:
      */
     [[nodiscard]] std::span<const float> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, TimeFrameIndex end_time) const;
 
+    /**
+     * @brief Get a span (view) of data values within a TimeFrameIndex range, with timeframe conversion
+     *
+     * This function returns a std::span over the data array for all points where
+     * TimeFrameIndex >= start_time and TimeFrameIndex <= end_time. The span provides
+     * a zero-copy view into the underlying data.
+     *
+     * If the exact start_time or end_time don't exist in the series, it finds the closest available times:
+     * - For start: finds the smallest TimeFrameIndex >= start_time
+     * - For end: finds the largest TimeFrameIndex <= end_time
+     *
+     * @param start_time The start time (inclusive boundary)
+     * @param end_time The end time (inclusive boundary)
+     * @param source_timeFrame The timeframe that the start and end times are expressed in
+     * @param analog_timeFrame The timeframe that this data series uses
+     * @return std::span<const float> view over the data in the specified range
+     *
+     * @note Returns an empty span if no data points fall within the specified range
+     * @note The span is valid as long as the AnalogTimeSeries object exists and is not modified
+     * @see findDataArrayIndexGreaterOrEqual() and findDataArrayIndexLessOrEqual() for the underlying boundary logic
+     */
     [[nodiscard]] std::span<const float> getDataInTimeFrameIndexRange(TimeFrameIndex start_time, 
                                                                       TimeFrameIndex end_time,
                                                                       TimeFrame const * source_timeFrame,
-                                                                      TimeFrame const * target_timeFrame) const;
+                                                                      TimeFrame const * analog_timeFrame) const;
 
 
     // ========== TimeFrameV2 Support ==========

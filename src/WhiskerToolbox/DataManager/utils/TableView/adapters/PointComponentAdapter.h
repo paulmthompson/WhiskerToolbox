@@ -35,19 +35,29 @@ public:
      */
     PointComponentAdapter(std::shared_ptr<PointData> pointData, 
                          Component component, 
-                         int timeFrameId,
+                         std::shared_ptr<TimeFrame> timeFrame,
                          std::string name);
 
     // IAnalogSource interface implementation
     [[nodiscard]] auto getName() const -> const std::string& override;
-    [[nodiscard]] auto getTimeFrameId() const -> int override;
+    [[nodiscard]] auto getTimeFrame() const -> std::shared_ptr<TimeFrame> override;
     [[nodiscard]] auto size() const -> size_t override;
     auto getDataSpan() -> std::span<const double> override;
 
+    /**
+     * @brief Gets the data in a specified range.
+     * 
+     * This method retrieves the component data for the specified time range
+     * and returns it as a vector of floats.
+     * 
+     * @param start The start index of the time range.
+     * @param end The end index of the time range.
+     * @param source_timeFrame The TimeFrame to which the data belongs.
+     * @return A vector of floats containing the component data in the specified range.
+     */
     std::vector<float> getDataInRange(TimeFrameIndex start,
                                        TimeFrameIndex end,
-                                       TimeFrame const & source_timeFrame,
-                                       TimeFrame const & target_timeFrame) override;
+                                       TimeFrame const * source_timeFrame) override;
 
 private:
     /**
@@ -61,7 +71,7 @@ private:
 
     std::shared_ptr<PointData> m_pointData;
     Component m_component;
-    int m_timeFrameId;
+    std::shared_ptr<TimeFrame> m_timeFrame;
     std::string m_name;
     std::vector<double> m_materializedData;
     bool m_isMaterialized = false;

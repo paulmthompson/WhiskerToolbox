@@ -254,19 +254,19 @@ public:
     *
     * @param interval The TimeFrameInterval in the source timeframe specifying the range [start, end] (inclusive)
     * @param source_timeframe The timeframe that the interval is expressed in
-    * @param target_timeframe The timeframe that this point data uses
+    * @param point_timeframe The timeframe that this point data uses
     * @return A view of time-points pairs for times within the converted interval range
     */
     [[nodiscard]] auto GetPointsInRange(TimeFrameInterval const & interval,
                                         TimeFrame const * source_timeframe,
-                                        TimeFrame const * target_timeframe) const {
+                                        TimeFrame const * point_timeframe) const {
         // If the timeframes are the same object, no conversion is needed
-        if (source_timeframe == target_timeframe) {
+        if (source_timeframe == point_timeframe) {
             return GetPointsInRange(interval);
         }
 
         // If either timeframe is null, fall back to original behavior
-        if (!source_timeframe || !target_timeframe) {
+        if (!source_timeframe || !point_timeframe) {
             return GetPointsInRange(interval);
         }
 
@@ -275,9 +275,9 @@ public:
         auto start_time_value = source_timeframe->getTimeAtIndex(interval.start);
         auto end_time_value = source_timeframe->getTimeAtIndex(interval.end);
 
-        // 2. Convert those time values to indices in the target timeframe
-        auto target_start_index = target_timeframe->getIndexAtTime(static_cast<float>(start_time_value));
-        auto target_end_index = target_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
+        // 2. Convert those time values to indices in the point timeframe
+        auto target_start_index = point_timeframe->getIndexAtTime(static_cast<float>(start_time_value), false);
+        auto target_end_index = point_timeframe->getIndexAtTime(static_cast<float>(end_time_value));
 
         // 3. Create converted interval and use the original function
         TimeFrameInterval target_interval{target_start_index, target_end_index};

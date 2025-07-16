@@ -61,43 +61,27 @@ public:
             throw std::invalid_argument("ExecutionPlan must contain intervals for AnalogSliceGathererComputer");
         }
 
-        // Get a view over the entire raw data source once
-        auto rawData = m_source->getDataSpan();
-
         // Get the list of intervals from the execution plan
         // This should also return the TimeFrame the intervals belong to
         // They way they can be converted.
         auto const & intervals = plan.getIntervals();
+        auto destinationTimeFrame = plan.getTimeFrame();
 
         // This is our final result: a vector of vectors
         std::vector<std::vector<T>> results;
         results.reserve(intervals.size());
 
         for (auto const & interval: intervals) {
-            // Convert TimeFrameIndex to array indices
-            auto startIdx = static_cast<size_t>(interval.start.getValue());
-            auto endIdx = static_cast<size_t>(interval.end.getValue());
+            
+            auto sliceView = m_source->getDataInRange(
+                interval.start, 
+                interval.end, 
+                destinationTimeFrame.get()
+            );
 
-            // Validate indices
-            if (startIdx >= rawData.size() || endIdx >= rawData.size()) {
-                throw std::out_of_range("Interval indices exceed data source size");
-            }
-
-            if (startIdx > endIdx) {
-                throw std::invalid_argument("Interval start index must be <= end index");
-            }
-
-            // Calculate the number of samples in this interval
-            size_t count = endIdx - startIdx + 1;// +1 because intervals are inclusive
-
-            // Create a view of the slice from the raw data
-            auto sliceView = rawData.subspan(startIdx, count);
-
-            // Copy the data from the slice view into a new vector of type T
             // This constructs the vector for the cell
             results.emplace_back(sliceView.begin(), sliceView.end());
         }
-
         return results;
     }
 
