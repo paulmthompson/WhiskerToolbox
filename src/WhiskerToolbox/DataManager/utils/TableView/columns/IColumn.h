@@ -18,24 +18,24 @@ class TableView;
 class IColumn {
 public:
     virtual ~IColumn() = default;
-    
+
     // Make this class non-copyable and non-movable since it's a pure interface
-    IColumn(const IColumn&) = delete;
-    IColumn& operator=(const IColumn&) = delete;
-    IColumn(IColumn&&) = delete;
-    IColumn& operator=(IColumn&&) = delete;
+    IColumn(IColumn const &) = delete;
+    IColumn & operator=(IColumn const &) = delete;
+    IColumn(IColumn &&) = delete;
+    IColumn & operator=(IColumn &&) = delete;
 
     /**
      * @brief Gets the name of this column.
      * @return The column name.
      */
-    [[nodiscard]] virtual auto getName() const -> const std::string& = 0;
+    [[nodiscard]] virtual auto getName() const -> std::string const & = 0;
 
     /**
      * @brief Gets the type information for this column.
      * @return The std::type_info for the column's data type.
      */
-    [[nodiscard]] virtual auto getType() const -> const std::type_info& = 0;
+    [[nodiscard]] virtual auto getType() const -> std::type_info const & = 0;
 
     /**
      * @brief Triggers computation of the column data without exposing the type.
@@ -45,7 +45,7 @@ public:
      * 
      * @param table Pointer to the TableView that owns this column.
      */
-    virtual void materialize(TableView* table) = 0;
+    virtual void materialize(TableView * table) = 0;
 
     /**
      * @brief Gets the source dependency for this column.
@@ -75,4 +75,4 @@ protected:
     IColumn() = default;
 };
 
-#endif // ICOLUMN_H
+#endif// ICOLUMN_H

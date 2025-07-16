@@ -2,8 +2,8 @@
 #define COLUMN_H
 
 #include "IColumn.h"
-#include "utils/TableView/interfaces/IColumnComputer.h"
 #include "utils/TableView/interfaces/IAnalogSource.h"
+#include "utils/TableView/interfaces/IColumnComputer.h"
 
 #include <memory>
 #include <string>
@@ -36,31 +36,61 @@ public:
      * @param table Pointer to the TableView that owns this column.
      * @return Reference to the column's data vector.
      */
-    [[nodiscard]] auto getValues(TableView* table) -> const std::vector<T>&;
+    [[nodiscard]] auto getValues(TableView * table) -> std::vector<T> const &;
 
-    void materialize(TableView* table) override;
+    /**
+     * @brief Triggers computation of the column data without exposing the type.
+     * 
+     * This method is used by the TableView to materialize columns during
+     * dependency resolution without needing to know the specific type.
+     * 
+     * @param table Pointer to the TableView that owns this column.
+     */
+    void materialize(TableView * table) override;
 
-    // IColumn interface implementation
-    [[nodiscard]] auto getName() const -> const std::string& override { 
-        return m_name; 
+    /**
+     * @brief Gets the name of this column.
+     * @return The column name.
+     */
+    [[nodiscard]] auto getName() const -> std::string const & override {
+        return m_name;
     }
 
-    [[nodiscard]] auto getType() const -> const std::type_info& override { 
-        return typeid(T); 
+    /**
+     * @brief Gets the type information for this column.
+     * @return The std::type_info for the column's data type.
+     */
+    [[nodiscard]] auto getType() const -> std::type_info const & override {
+        return typeid(T);
     }
 
+    /**
+     * @brief Gets the source dependency for this column.
+     * @return The name of the required data source.
+     */
     [[nodiscard]] auto getSourceDependency() const -> std::string override {
         return m_computer->getSourceDependency();
     }
 
+    /**
+     * @brief Gets the column dependencies for this column.
+     * @return Vector of column names this column depends on.
+     */
     [[nodiscard]] auto getDependencies() const -> std::vector<std::string> override {
         return m_computer->getDependencies();
     }
 
+    /**
+     * @brief Checks if the column data has been materialized.
+     * @return True if data is cached, false otherwise.
+     */
     [[nodiscard]] auto isMaterialized() const -> bool override {
         return std::holds_alternative<std::vector<T>>(m_cache);
     }
 
+    /**
+     * @brief Clears the cached data, forcing recomputation on next access.
+     */
     void clearCache() override {
         m_cache = std::monostate{};
     }
@@ -74,7 +104,8 @@ private:
      * @param computer The computation strategy for this column.
      */
     Column(std::string name, std::unique_ptr<IColumnComputer<T>> computer)
-        : m_name(std::move(name)), m_computer(std::move(computer)) {}
+        : m_name(std::move(name)),
+          m_computer(std::move(computer)) {}
 
     std::string m_name;
     std::unique_ptr<IColumnComputer<T>> m_computer;
@@ -82,4 +113,4 @@ private:
 };
 
 
-#endif // COLUMN_TEMPLATED_H
+#endif// COLUMN_TEMPLATED_H

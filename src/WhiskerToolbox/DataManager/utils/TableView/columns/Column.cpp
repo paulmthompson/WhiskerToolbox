@@ -1,8 +1,6 @@
 #include "Column.h"
 #include "utils/TableView/core/TableView.h"
 
-#include <stdexcept>
-
 template<typename T>
 auto Column<T>::getValues(TableView * table) -> std::vector<T> const & {
     if (!isMaterialized()) {
