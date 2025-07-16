@@ -3,14 +3,13 @@
 #include <stdexcept>
 
 TableViewBuilder::TableViewBuilder(std::shared_ptr<DataManagerExtension> dataManager)
-    : m_dataManager(std::move(dataManager))
-{
+    : m_dataManager(std::move(dataManager)) {
     if (!m_dataManager) {
         throw std::invalid_argument("DataManagerExtension cannot be null");
     }
 }
 
-TableViewBuilder& TableViewBuilder::setRowSelector(std::unique_ptr<IRowSelector> rowSelector) {
+TableViewBuilder & TableViewBuilder::setRowSelector(std::unique_ptr<IRowSelector> rowSelector) {
     if (!rowSelector) {
         throw std::invalid_argument("IRowSelector cannot be null");
     }
@@ -18,7 +17,7 @@ TableViewBuilder& TableViewBuilder::setRowSelector(std::unique_ptr<IRowSelector>
     return *this;
 }
 
-TableViewBuilder& TableViewBuilder::addColumn(const std::string& name, std::unique_ptr<IColumnComputer<double>> computer) {
+TableViewBuilder & TableViewBuilder::addColumn(std::string const & name, std::unique_ptr<IColumnComputer<double>> computer) {
     if (name.empty()) {
         throw std::invalid_argument("Column name cannot be empty");
     }
@@ -27,7 +26,7 @@ TableViewBuilder& TableViewBuilder::addColumn(const std::string& name, std::uniq
     }
 
     // Check for duplicate names
-    for (const auto& column : m_columns) {
+    for (auto const & column: m_columns) {
         if (column->getName() == name) {
             throw std::runtime_error("Column '" + name + "' already exists");
         }
@@ -36,7 +35,7 @@ TableViewBuilder& TableViewBuilder::addColumn(const std::string& name, std::uniq
     // Create the double column
     auto column = std::shared_ptr<IColumn>(new Column<double>(name, std::move(computer)));
     m_columns.push_back(std::move(column));
-    
+
     return *this;
 }
 
@@ -53,7 +52,7 @@ TableView TableViewBuilder::build() {
     TableView tableView(std::move(m_rowSelector), m_dataManager);
 
     // Add columns to the table view
-    for (auto& column : m_columns) {
+    for (auto & column: m_columns) {
         tableView.addColumn(std::move(column));
     }
 

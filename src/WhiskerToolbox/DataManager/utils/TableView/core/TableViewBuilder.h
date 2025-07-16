@@ -2,11 +2,11 @@
 #define TABLE_VIEW_BUILDER_H
 
 #include "TableView.h"
-#include "utils/TableView/columns/IColumn.h"
-#include "utils/TableView/columns/Column.h"
-#include "utils/TableView/interfaces/IRowSelector.h"
-#include "utils/TableView/interfaces/IColumnComputer.h"
 #include "utils/TableView/adapters/DataManagerExtension.h"
+#include "utils/TableView/columns/Column.h"
+#include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/interfaces/IColumnComputer.h"
+#include "utils/TableView/interfaces/IRowSelector.h"
 
 #include <memory>
 #include <string>
@@ -31,7 +31,7 @@ public:
      * @param rowSelector Unique pointer to the row selector.
      * @return Reference to this builder for method chaining.
      */
-    auto setRowSelector(std::unique_ptr<IRowSelector> rowSelector) -> TableViewBuilder&;
+    auto setRowSelector(std::unique_ptr<IRowSelector> rowSelector) -> TableViewBuilder &;
 
     /**
      * @brief Adds a column to the table being built.
@@ -39,7 +39,7 @@ public:
      * @param computer Unique pointer to the column computer.
      * @return Reference to this builder for method chaining.
      */
-    auto addColumn(const std::string& name, std::unique_ptr<IColumnComputer<double>> computer) -> TableViewBuilder&;
+    auto addColumn(std::string const & name, std::unique_ptr<IColumnComputer<double>> computer) -> TableViewBuilder &;
 
     /**
      * @brief Adds a templated column to the table being built.
@@ -49,7 +49,7 @@ public:
      * @return Reference to this builder for method chaining.
      */
     template<typename T>
-    auto addColumn(const std::string& name, std::unique_ptr<IColumnComputer<T>> computer) -> TableViewBuilder&;
+    auto addColumn(std::string const & name, std::unique_ptr<IColumnComputer<T>> computer) -> TableViewBuilder &;
 
     /**
      * @brief Builds the final TableView object.
@@ -71,7 +71,7 @@ private:
 
 // Template method implementation
 template<typename T>
-auto TableViewBuilder::addColumn(const std::string& name, std::unique_ptr<IColumnComputer<T>> computer) -> TableViewBuilder& {
+auto TableViewBuilder::addColumn(std::string const & name, std::unique_ptr<IColumnComputer<T>> computer) -> TableViewBuilder & {
     if (!computer) {
         throw std::invalid_argument("Column computer cannot be null");
     }
@@ -79,8 +79,8 @@ auto TableViewBuilder::addColumn(const std::string& name, std::unique_ptr<IColum
     // Create the templated column
     auto column = std::shared_ptr<IColumn>(new Column<T>(name, std::move(computer)));
     m_columns.push_back(std::move(column));
-    
+
     return *this;
 }
 
-#endif // TABLE_VIEW_BUILDER_H
+#endif// TABLE_VIEW_BUILDER_H

@@ -24,12 +24,14 @@ public:
     /**
      * @brief Constructs an ExecutionPlan with indices.
      * @param indices Vector of TimeFrameIndex objects for direct access.
+     * @param timeFrame Shared pointer to the TimeFrame associated with TimeFrameIndexes.
      */
     explicit ExecutionPlan(std::vector<TimeFrameIndex> indices, std::shared_ptr<TimeFrame> timeFrame);
 
     /**
      * @brief Constructs an ExecutionPlan with interval pairs.
      * @param intervals Vector of TimeFrameInterval objects for interval operations.
+     * @param timeFrame Shared pointer to the TimeFrame associated with intervals.
      */
     explicit ExecutionPlan(std::vector<TimeFrameInterval> intervals, std::shared_ptr<TimeFrame> timeFrame);
 

@@ -4,8 +4,9 @@
 #include "TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
 
-#include <variant>
 #include <cstddef>
+#include <variant>
+
 
 /**
  * @brief A variant type that can hold any of the possible source types that can define a row.

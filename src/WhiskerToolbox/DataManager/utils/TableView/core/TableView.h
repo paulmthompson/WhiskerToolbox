@@ -1,22 +1,22 @@
 #ifndef TABLE_VIEW_H
 #define TABLE_VIEW_H
 
-#include "utils/TableView/columns/IColumn.h"
+#include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/columns/Column.h"
+#include "utils/TableView/columns/IColumn.h"
 #include "utils/TableView/core/ExecutionPlan.h"
 #include "utils/TableView/core/RowDescriptor.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
-#include "utils/TableView/adapters/DataManagerExtension.h"
 
 #include <map>
 #include <memory>
 #include <set>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
 
-// Forward declaration
+
 class TableViewBuilder;
 
 /**
@@ -54,7 +54,7 @@ public:
      * @throws std::runtime_error if the column is not found or type mismatch.
      */
     template<typename T>
-    [[nodiscard]] auto getColumnValues(const std::string& name) -> const std::vector<T>&;
+    [[nodiscard]] auto getColumnValues(std::string const & name) -> std::vector<T> const &;
 
     /**
      * @brief Gets the names of all columns in the table.
@@ -67,7 +67,7 @@ public:
      * @param name The column name to check.
      * @return True if the column exists, false otherwise.
      */
-    [[nodiscard]] auto hasColumn(const std::string& name) const -> bool;
+    [[nodiscard]] auto hasColumn(std::string const & name) const -> bool;
 
     /**
      * @brief Materializes all columns in the table.
@@ -98,14 +98,15 @@ public:
 private:
     friend class TableViewBuilder;
     // Grant friend access to the templated Column class
-    template<typename T> friend class Column;
+    template<typename T>
+    friend class Column;
 
     /**
      * @brief Private constructor for TableViewBuilder.
      * @param rowSelector The row selector defining table rows.
      * @param dataManager The data manager for accessing data sources.
      */
-    TableView(std::unique_ptr<IRowSelector> rowSelector, 
+    TableView(std::unique_ptr<IRowSelector> rowSelector,
               std::shared_ptr<DataManagerExtension> dataManager);
 
     /**
@@ -118,7 +119,7 @@ private:
      * @param sourceName The name of the data source (e.g., "LFP", "Spikes.x").
      * @return Reference to the ExecutionPlan for the source.
      */
-    [[nodiscard]] auto getExecutionPlanFor(const std::string& sourceName) -> const ExecutionPlan&;
+    [[nodiscard]] auto getExecutionPlanFor(std::string const & sourceName) -> ExecutionPlan const &;
 
     /**
      * @brief Adds a column to the table.
@@ -136,7 +137,7 @@ private:
      * @param columnName The name of the column to materialize.
      * @param materializing Set of columns currently being materialized (for cycle detection).
      */
-    void materializeColumn(const std::string& columnName, std::set<std::string>& materializing);
+    void materializeColumn(std::string const & columnName, std::set<std::string> & materializing);
 
     /**
      * @brief Generates an ExecutionPlan for a specific data source.
@@ -147,37 +148,37 @@ private:
      * @param sourceName The name of the data source.
      * @return The generated ExecutionPlan.
      */
-    [[nodiscard]] auto generateExecutionPlan(const std::string& sourceName) -> ExecutionPlan;
+    [[nodiscard]] auto generateExecutionPlan(std::string const & sourceName) -> ExecutionPlan;
 
     std::unique_ptr<IRowSelector> m_rowSelector;
     std::shared_ptr<DataManagerExtension> m_dataManager;
     std::vector<std::shared_ptr<IColumn>> m_columns;
     std::map<std::string, size_t> m_colNameToIndex;
-    
+
     // Caches ExecutionPlans, keyed by data source name
     std::map<std::string, ExecutionPlan> m_planCache;
 };
 
 // Template method implementation for getColumnValues
 template<typename T>
-auto TableView::getColumnValues(const std::string& name) -> const std::vector<T>& {
+auto TableView::getColumnValues(std::string const & name) -> std::vector<T> const & {
     // 1. Find the IColumn pointer by name
     auto it = m_colNameToIndex.find(name);
     if (it == m_colNameToIndex.end()) {
         throw std::runtime_error("Column '" + name + "' not found in table");
     }
-    
+
     // 2. Get the column and attempt dynamic_cast to Column<T>
-    auto& column = m_columns[it->second];
-    auto* typedColumn = dynamic_cast<Column<T>*>(column.get());
-    
+    auto & column = m_columns[it->second];
+    auto * typedColumn = dynamic_cast<Column<T> *>(column.get());
+
     // 3. If cast fails, throw exception for type mismatch
     if (!typedColumn) {
         throw std::runtime_error("Column '" + name + "' is not of the requested type");
     }
-    
+
     // 4. Call getValues on the typed column
     return typedColumn->getValues(this);
 }
 
-#endif // TABLE_VIEW_H
+#endif// TABLE_VIEW_H
