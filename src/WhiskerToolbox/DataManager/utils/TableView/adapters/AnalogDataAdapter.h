@@ -29,6 +29,11 @@ public:
     [[nodiscard]] auto size() const -> size_t override;
     auto getDataSpan() -> std::span<const double> override;
 
+    std::vector<double> getDataInRange(TimeFrameIndex start,
+                                       TimeFrameIndex end,
+                                       TimeFrame const & source_timeFrame,
+                                       TimeFrame const & target_timeFrame) override;
+
 private:
     /**
      * @brief Materializes the analog data if not already done.

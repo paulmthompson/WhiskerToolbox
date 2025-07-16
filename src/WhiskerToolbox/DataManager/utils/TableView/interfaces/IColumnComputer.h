@@ -19,12 +19,12 @@ template<typename T>
 class IColumnComputer {
 public:
     virtual ~IColumnComputer() = default;
-    
+
     // Make this class non-copyable and non-movable since it's a pure interface
-    IColumnComputer(const IColumnComputer&) = delete;
-    IColumnComputer& operator=(const IColumnComputer&) = delete;
-    IColumnComputer(IColumnComputer&&) = delete;
-    IColumnComputer& operator=(IColumnComputer&&) = delete;
+    IColumnComputer(IColumnComputer const &) = delete;
+    IColumnComputer & operator=(IColumnComputer const &) = delete;
+    IColumnComputer(IColumnComputer &&) = delete;
+    IColumnComputer & operator=(IColumnComputer &&) = delete;
 
     /**
      * @brief The core batch computation method.
@@ -36,7 +36,7 @@ public:
      * @param plan The execution plan containing cached access patterns.
      * @return Vector of computed values for the entire column.
      */
-    [[nodiscard]] virtual auto compute(const ExecutionPlan& plan) const -> std::vector<T> = 0;
+    [[nodiscard]] virtual auto compute(ExecutionPlan const & plan) const -> std::vector<T> = 0;
 
     /**
      * @brief Declares dependencies on other columns.
@@ -46,10 +46,10 @@ public:
      * 
      * @return Vector of column names this computer depends on.
      */
-    [[nodiscard]] virtual auto getDependencies() const -> std::vector<std::string> { 
-        return {}; 
+    [[nodiscard]] virtual auto getDependencies() const -> std::vector<std::string> {
+        return {};
     }
-    
+
     /**
      * @brief Declares the required data source.
      * 
@@ -65,4 +65,4 @@ protected:
     IColumnComputer() = default;
 };
 
-#endif // ICOLUMN_COMPUTER_H
+#endif// ICOLUMN_COMPUTER_H

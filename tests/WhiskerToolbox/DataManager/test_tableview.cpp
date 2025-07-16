@@ -100,8 +100,8 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         REQUIRE(table.hasColumn("Y_Values"));
         
         // Get the column data
-        auto xValues = table.getColumnSpan("X_Values");
-        auto yValues = table.getColumnSpan("Y_Values");
+        auto xValues = table.getColumnValues<double>("X_Values");
+        auto yValues = table.getColumnValues<double>("Y_Values");
         
         // Verify the extracted values match the original data
         // Since we're using IntervalSelector with single time indices, each "interval" contains all points
@@ -199,10 +199,10 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         REQUIRE(table.getColumnCount() == 4);
         
         // Get the column data
-        auto xMean = table.getColumnSpan("X_Mean");
-        auto yMean = table.getColumnSpan("Y_Mean");
-        auto xMax = table.getColumnSpan("X_Max");
-        auto yMax = table.getColumnSpan("Y_Max");
+        auto xMean = table.getColumnValues<double>("X_Mean");
+        auto yMean = table.getColumnValues<double>("Y_Mean");
+        auto xMax = table.getColumnValues<double>("X_Max");
+        auto yMax = table.getColumnValues<double>("Y_Max");
         
         // Verify the computed means
         // Frame 0: (1.0 + 3.0 + 5.0) / 3 = 3.0, (2.0 + 4.0 + 6.0) / 3 = 4.0
@@ -269,13 +269,13 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         TableView table = builder.build();
         
         // First access should trigger computation
-        auto xValues1 = table.getColumnSpan("X_Values");
+        auto xValues1 = table.getColumnValues<double>("X_Values");
         REQUIRE(xValues1.size() == 2);
         REQUIRE(xValues1[0] == Catch::Approx(1.0).epsilon(0.001));
         REQUIRE(xValues1[1] == Catch::Approx(3.0).epsilon(0.001));
         
         // Second access should use cached data (same values)
-        auto xValues2 = table.getColumnSpan("X_Values");
+        auto xValues2 = table.getColumnValues<double>("X_Values");
         REQUIRE(xValues2.size() == 2);
         REQUIRE(xValues2[0] == Catch::Approx(1.0).epsilon(0.001));
         REQUIRE(xValues2[1] == Catch::Approx(3.0).epsilon(0.001));
@@ -583,14 +583,14 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         REQUIRE(table.hasColumn("Time_Values"));
 
         // Get the column data
-        auto timeValuesColumn = table.getColumnSpan("Time_Values");
+        auto timeValuesColumn = table.getColumnValues<double>("Time_Values");
         REQUIRE(!timeValuesColumn.empty());
         REQUIRE(timeValuesColumn.size() == 2);
         REQUIRE(timeValuesColumn[0] == Catch::Approx(2.0).epsilon(0.001)); // Mean of 1.0 and 3.0
         REQUIRE(timeValuesColumn[1] == Catch::Approx(6.0).epsilon(0.001)); // Mean of 5.0 and 7.0
 
         // Verify that the second time frame data is not included
-        auto timeValues2Column = table.getColumnSpan("Mean_TestPoints2.x");
+        auto timeValues2Column = table.getColumnValues<double>("Mean_TestPoints2.x");
         REQUIRE(!timeValues2Column.empty());
         REQUIRE(timeValues2Column.size() == 2);
         REQUIRE(timeValues2Column[0] == Catch::Approx(9.0).epsilon(0.001)); // Mean of 9.0 and NaN

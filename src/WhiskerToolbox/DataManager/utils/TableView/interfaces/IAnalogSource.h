@@ -1,6 +1,8 @@
 #ifndef IANALOG_SOURCE_H
 #define IANALOG_SOURCE_H
 
+#include "TimeFrame.hpp"
+
 #include <cstddef>
 #include <span>
 #include <string>
@@ -45,6 +47,13 @@ public:
      * @return A span over the data as const doubles.
      */
     virtual std::span<const double> getDataSpan() = 0;
+
+    
+    virtual std::vector<double> getDataInRange(TimeFrameIndex start,
+                                               TimeFrameIndex end,
+                                               TimeFrame const & source_timeFrame,
+                                               TimeFrame const & target_timeFrame) = 0;
+
 };
 
 #endif // IANALOG_SOURCE_H

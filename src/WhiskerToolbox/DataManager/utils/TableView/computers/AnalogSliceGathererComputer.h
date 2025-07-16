@@ -2,8 +2,8 @@
 #define ANALOG_SLICE_GATHERER_COMPUTER_H
 
 #include "utils/TableView/columns/IColumn.h"
-#include "utils/TableView/interfaces/IAnalogSource.h"
 #include "utils/TableView/core/ExecutionPlan.h"
+#include "utils/TableView/interfaces/IAnalogSource.h"
 
 #include <memory>
 #include <span>
@@ -40,7 +40,8 @@ public:
      * @param sourceName Custom name for the source dependency.
      */
     AnalogSliceGathererComputer(std::shared_ptr<IAnalogSource> source, std::string sourceName)
-        : m_source(std::move(source)), m_sourceName(std::move(sourceName)) {
+        : m_source(std::move(source)),
+          m_sourceName(std::move(sourceName)) {
         if (!m_source) {
             throw std::invalid_argument("IAnalogSource cannot be null");
         }
@@ -55,39 +56,39 @@ public:
      * @param plan The execution plan containing interval boundaries.
      * @return Vector of vectors, where each inner vector contains the data slice for one interval.
      */
-    [[nodiscard]] auto compute(const ExecutionPlan& plan) const -> std::vector<std::vector<T>> override {
+    [[nodiscard]] auto compute(ExecutionPlan const & plan) const -> std::vector<std::vector<T>> override {
         if (!plan.hasIntervals()) {
             throw std::invalid_argument("ExecutionPlan must contain intervals for AnalogSliceGathererComputer");
         }
 
         // Get a view over the entire raw data source once
         auto rawData = m_source->getDataSpan();
-        
+
         // Get the list of intervals from the execution plan
         // This should also return the TimeFrame the intervals belong to
         // They way they can be converted.
-        const auto& intervals = plan.getIntervals();
+        auto const & intervals = plan.getIntervals();
 
         // This is our final result: a vector of vectors
         std::vector<std::vector<T>> results;
         results.reserve(intervals.size());
 
-        for (const auto& interval : intervals) {
+        for (auto const & interval: intervals) {
             // Convert TimeFrameIndex to array indices
             auto startIdx = static_cast<size_t>(interval.start.getValue());
             auto endIdx = static_cast<size_t>(interval.end.getValue());
-            
+
             // Validate indices
             if (startIdx >= rawData.size() || endIdx >= rawData.size()) {
                 throw std::out_of_range("Interval indices exceed data source size");
             }
-            
+
             if (startIdx > endIdx) {
                 throw std::invalid_argument("Interval start index must be <= end index");
             }
 
             // Calculate the number of samples in this interval
-            size_t count = endIdx - startIdx + 1;  // +1 because intervals are inclusive
+            size_t count = endIdx - startIdx + 1;// +1 because intervals are inclusive
 
             // Create a view of the slice from the raw data
             auto sliceView = rawData.subspan(startIdx, count);
@@ -106,7 +107,7 @@ public:
 
 private:
     std::shared_ptr<IAnalogSource> m_source;
-    std::string m_sourceName;  // Optional custom source name
+    std::string m_sourceName;// Optional custom source name
 };
 
-#endif // ANALOG_SLICE_GATHERER_COMPUTER_H
+#endif// ANALOG_SLICE_GATHERER_COMPUTER_H
