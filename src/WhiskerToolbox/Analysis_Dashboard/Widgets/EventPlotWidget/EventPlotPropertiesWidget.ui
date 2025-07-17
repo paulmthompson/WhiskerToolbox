@@ -30,18 +30,72 @@
     <number>5</number>
    </property>
    <item>
-    <widget class="QGroupBox" name="data_sources_group">
+    <widget class="QGroupBox" name="x_axis_group">
      <property name="title">
-      <string>Event Data Sources</string>
+      <string>X-Axis Data</string>
      </property>
-     <layout class="QVBoxLayout" name="sources_layout">
+     <layout class="QVBoxLayout" name="x_axis_layout">
       <item>
-       <widget class="QListWidget" name="event_data_sources_list">
-        <property name="maximumHeight">
-         <number>150</number>
+       <layout class="QHBoxLayout" name="x_axis_selection_layout">
+        <item>
+         <widget class="QLabel" name="x_axis_label">
+          <property name="text">
+           <string>Data Source:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="x_axis_combo">
+          <property name="minimumWidth">
+           <number>150</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="x_axis_info_label">
+        <property name="text">
+         <string>Select a data source for the X-axis</string>
         </property>
-        <property name="selectionMode">
-         <enum>QAbstractItemView::MultiSelection</enum>
+        <property name="styleSheet">
+         <string notr="true">QLabel { 
+color: #555; 
+font-size: 11px; 
+padding: 8px; 
+background-color: #f0f0f0; 
+border: 1px solid #ccc; 
+border-radius: 4px; 
+}</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="interval_settings_group">
+     <property name="title">
+      <string>Interval Settings</string>
+     </property>
+     <layout class="QVBoxLayout" name="interval_layout">
+      <item>
+       <widget class="QRadioButton" name="interval_beginning_radio">
+        <property name="text">
+         <string>Show Beginning of Interval</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="interval_end_radio">
+        <property name="text">
+         <string>Show End of Interval</string>
         </property>
        </widget>
       </item>

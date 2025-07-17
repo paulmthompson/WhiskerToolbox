@@ -40,9 +40,14 @@ public slots:
 
 private slots:
     /**
-     * @brief Handle event data source selection changes
+     * @brief Handle X-axis data source selection changes
      */
-    void onEventDataSourcesChanged();
+    void onXAxisDataSourceChanged();
+
+    /**
+     * @brief Handle interval beginning/end selection changes
+     */
+    void onIntervalSettingChanged();
 
     /**
      * @brief Handle zoom level changes
@@ -72,21 +77,32 @@ private:
     void setupConnections();
 
     /**
-     * @brief Get currently selected event data source keys
-     * @return List of selected event data source keys
+     * @brief Get currently selected X-axis data source
+     * @return Selected X-axis data source key
      */
-    QStringList getSelectedEventDataSources() const;
+    QString getSelectedXAxisDataSource() const;
 
     /**
-     * @brief Set which event data sources are selected
-     * @param selected_keys List of keys to select
+     * @brief Set which X-axis data source is selected
+     * @param data_key The key to select
      */
-    void setSelectedEventDataSources(QStringList const & selected_keys);
+    void setSelectedXAxisDataSource(QString const & data_key);
+
+    /**
+     * @brief Check if interval beginning is selected
+     * @return True if beginning is selected, false if end is selected
+     */
+    bool isIntervalBeginningSelected() const;
 
     /**
      * @brief Update the plot widget with current settings
      */
     void updatePlotWidget();
+
+    /**
+     * @brief Update the X-axis info label
+     */
+    void updateXAxisInfoLabel();
 };
 
 #endif// EVENTPLOTPROPERTIESWIDGET_HPP
