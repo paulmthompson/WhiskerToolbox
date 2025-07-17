@@ -50,6 +50,24 @@ private slots:
     void onIntervalSettingChanged();
 
     /**
+     * @brief Handle Y-axis feature selection
+     * @param feature The selected feature name
+     */
+    void onYAxisFeatureSelected(QString const & feature);
+
+    /**
+     * @brief Handle Y-axis feature addition
+     * @param feature The feature to add
+     */
+    void onYAxisFeatureAdded(QString const & feature);
+
+    /**
+     * @brief Handle Y-axis feature removal
+     * @param feature The feature to remove
+     */
+    void onYAxisFeatureRemoved(QString const & feature);
+
+    /**
      * @brief Handle zoom level changes
      * @param value New zoom level value
      */
@@ -98,6 +116,17 @@ private:
      * @brief Update the plot widget with current settings
      */
     void updatePlotWidget();
+
+    /**
+     * @brief Setup the Y-axis feature table
+     */
+    void setupYAxisFeatureTable();
+
+    /**
+     * @brief Get currently selected Y-axis features
+     * @return List of selected Y-axis feature keys
+     */
+    QStringList getSelectedYAxisFeatures() const;
 
     /**
      * @brief Update the X-axis info label

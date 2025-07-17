@@ -2,8 +2,8 @@
 #include "EventPlotOpenGLWidget.hpp"
 #include "EventPlotWidget.hpp"
 
-#include "DataManager/DataManagerTypes.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataManager/DataManagerTypes.hpp"
 #include "ui_EventPlotPropertiesWidget.h"
 
 #include <QCheckBox>
@@ -19,6 +19,7 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(QWidget * parent)
       _event_plot_widget(nullptr) {
     ui->setupUi(this);
     setupConnections();
+    setupYAxisFeatureTable();
 }
 
 EventPlotPropertiesWidget::~EventPlotPropertiesWidget() {
@@ -28,6 +29,11 @@ EventPlotPropertiesWidget::~EventPlotPropertiesWidget() {
 void EventPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = data_manager;
     updateAvailableDataSources();
+
+    // Set up Y-axis feature table with data manager
+    if (ui->y_axis_feature_table) {
+        ui->y_axis_feature_table->setDataManager(_data_manager);
+    }
 }
 
 void EventPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) {
@@ -113,6 +119,21 @@ void EventPlotPropertiesWidget::onIntervalSettingChanged() {
     updatePlotWidget();
 }
 
+void EventPlotPropertiesWidget::onYAxisFeatureSelected(QString const & feature) {
+    // Feature selection is handled by the feature table widget itself
+    Q_UNUSED(feature)
+}
+
+void EventPlotPropertiesWidget::onYAxisFeatureAdded(QString const & feature) {
+    // Update plot widget when Y-axis features are added
+    updatePlotWidget();
+}
+
+void EventPlotPropertiesWidget::onYAxisFeatureRemoved(QString const & feature) {
+    // Update plot widget when Y-axis features are removed
+    updatePlotWidget();
+}
+
 void EventPlotPropertiesWidget::onZoomLevelChanged(double value) {
     if (_event_plot_widget && _event_plot_widget->getOpenGLWidget()) {
         _event_plot_widget->getOpenGLWidget()->setZoomLevel(static_cast<float>(value));
@@ -165,6 +186,24 @@ void EventPlotPropertiesWidget::setupConnections() {
     }
 }
 
+void EventPlotPropertiesWidget::setupYAxisFeatureTable() {
+    if (ui->y_axis_feature_table) {
+        // Set up columns for the Y-axis feature table
+        ui->y_axis_feature_table->setColumns({"Feature", "Type", "Enabled"});
+
+        // Filter to only show DigitalEventSeries and DigitalIntervalSeries
+        ui->y_axis_feature_table->setTypeFilter({DM_DataType::DigitalEvent, DM_DataType::DigitalInterval});
+
+        // Connect signals from the feature table
+        connect(ui->y_axis_feature_table, &Feature_Table_Widget::featureSelected,
+                this, &EventPlotPropertiesWidget::onYAxisFeatureSelected);
+        connect(ui->y_axis_feature_table, &Feature_Table_Widget::addFeature,
+                this, &EventPlotPropertiesWidget::onYAxisFeatureAdded);
+        connect(ui->y_axis_feature_table, &Feature_Table_Widget::removeFeature,
+                this, &EventPlotPropertiesWidget::onYAxisFeatureRemoved);
+    }
+}
+
 QString EventPlotPropertiesWidget::getSelectedXAxisDataSource() const {
     if (ui->x_axis_combo) {
         return ui->x_axis_combo->currentData().toString();
@@ -186,6 +225,14 @@ bool EventPlotPropertiesWidget::isIntervalBeginningSelected() const {
         return ui->interval_beginning_radio->isChecked();
     }
     return true;// Default to beginning
+}
+
+QStringList EventPlotPropertiesWidget::getSelectedYAxisFeatures() const {
+    // TODO: Implement getting selected Y-axis features from the feature table
+    // This would require tracking the selected features or querying the table
+    // For now, return empty list - this will be implemented when we add
+    // proper tracking of selected features in the EventPlotWidget
+    return QStringList();
 }
 
 void EventPlotPropertiesWidget::updateXAxisInfoLabel() {
@@ -238,6 +285,10 @@ void EventPlotPropertiesWidget::updatePlotWidget() {
     }
 
     _event_plot_widget->setEventDataKeys(selected_sources);
+
+    // TODO: Update Y-axis features when EventPlotWidget supports them
+    // QStringList y_axis_features = getSelectedYAxisFeatures();
+    // _event_plot_widget->setYAxisDataKeys(y_axis_features);
 
     // Emit properties changed signal
     emit propertiesChanged();
