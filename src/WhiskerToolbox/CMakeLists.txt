@@ -48,6 +48,15 @@ set(PROJECT_SOURCES
 
         Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
         Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
+
+        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotWidget.hpp
+        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotWidget.cpp
+        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp
+        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotPropertiesWidget.cpp
+        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotPropertiesWidget.ui
+        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotOpenGLWidget.hpp
+        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotOpenGLWidget.cpp
+
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.hpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.cpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp
