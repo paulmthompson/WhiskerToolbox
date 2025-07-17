@@ -88,7 +88,8 @@ set(DATAMANAGER_SOURCES
         utils/filter/FilterFactory.cpp
         utils/filter/FilterImplementations.hpp
         utils/filter/IFilter.hpp
-        utils/filter/ZeroPhaseDecorator.hpp        utils/TableView/core/ExecutionPlan.h
+        utils/filter/ZeroPhaseDecorator.hpp        
+        utils/TableView/core/ExecutionPlan.h
         utils/TableView/core/ExecutionPlan.cpp
         utils/TableView/core/RowDescriptor.h
         utils/TableView/core/TableView.h
@@ -120,6 +121,8 @@ set(DATAMANAGER_SOURCES
 
         utils/TableView/computers/IntervalReductionComputer.h
         utils/TableView/computers/IntervalReductionComputer.cpp
+        utils/TableView/computers/IntervalPropertyComputer.h 
+        utils/TableView/computers/IntervalPropertyComputer.cpp
         utils/TableView/computers/EventInIntervalComputer.h
         utils/TableView/computers/EventInIntervalComputer.cpp
         utils/TableView/computers/AnalogSliceGathererComputer.h
