@@ -121,6 +121,8 @@ set(DATAMANAGER_SOURCES
 
         utils/TableView/computers/IntervalReductionComputer.h
         utils/TableView/computers/IntervalReductionComputer.cpp
+        utils/TableView/computers/IntervalOverlapComputer.h
+        utils/TableView/computers/IntervalOverlapComputer.cpp
         utils/TableView/computers/IntervalPropertyComputer.h 
         utils/TableView/computers/IntervalPropertyComputer.cpp
         utils/TableView/computers/EventInIntervalComputer.h
