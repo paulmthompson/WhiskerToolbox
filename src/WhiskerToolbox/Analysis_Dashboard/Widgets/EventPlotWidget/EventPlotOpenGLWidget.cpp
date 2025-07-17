@@ -14,7 +14,9 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
       _mouse_pressed(false),
       _tooltips_enabled(true),
       _widget_width(1),
-      _widget_height(1) {
+      _widget_height(1),
+      _negative_range(30000),
+      _positive_range(30000) {
     // Set widget attributes for OpenGL
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
@@ -237,9 +239,14 @@ void EventPlotOpenGLWidget::updateMatrices() {
     _view_matrix.scale(_zoom_level, _zoom_level, 1.0f);
 
     // Update projection matrix (orthographic)
+    // Use X-axis range to set the horizontal bounds
+    // Events are normalized to 0, so range is from -negative_range to +positive_range
     _projection_matrix.setToIdentity();
-    float aspect_ratio = static_cast<float>(_widget_width) / _widget_height;
-    _projection_matrix.ortho(-aspect_ratio, aspect_ratio, -1.0f, 1.0f, -1.0f, 1.0f);
+    float left = -static_cast<float>(_negative_range);
+    float right = static_cast<float>(_positive_range);
+    float bottom = -1.0f;
+    float top = 1.0f;
+    _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
 }
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
@@ -259,4 +266,18 @@ void EventPlotOpenGLWidget::handleZooming(int delta_y) {
     new_zoom = qBound(0.1f, new_zoom, 10.0f);
 
     setZoomLevel(new_zoom);
+}
+
+void EventPlotOpenGLWidget::setXAxisRange(int negative_range, int positive_range) {
+    if (_negative_range != negative_range || _positive_range != positive_range) {
+        _negative_range = negative_range;
+        _positive_range = positive_range;
+        updateMatrices();
+        update();
+    }
+}
+
+void EventPlotOpenGLWidget::getXAxisRange(int & negative_range, int & positive_range) const {
+    negative_range = _negative_range;
+    positive_range = _positive_range;
 }

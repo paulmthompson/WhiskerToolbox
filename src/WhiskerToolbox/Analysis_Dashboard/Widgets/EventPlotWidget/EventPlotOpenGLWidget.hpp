@@ -59,6 +59,20 @@ public:
     bool getTooltipsEnabled() const { return _tooltips_enabled; }
 
     /**
+     * @brief Set the X-axis range for the plot
+     * @param negative_range Negative range in milliseconds (from -negative_range to -1)
+     * @param positive_range Positive range in milliseconds (from 1 to positive_range)
+     */
+    void setXAxisRange(int negative_range, int positive_range);
+
+    /**
+     * @brief Get the current X-axis range
+     * @param negative_range Output parameter for negative range
+     * @param positive_range Output parameter for positive range
+     */
+    void getXAxisRange(int & negative_range, int & positive_range) const;
+
+    /**
      * @brief Convert screen coordinates to world coordinates
      * @param screen_x Screen X coordinate
      * @param screen_y Screen Y coordinate
@@ -124,6 +138,10 @@ private:
     // Widget dimensions
     int _widget_width;
     int _widget_height;
+
+    // X-axis range settings
+    int _negative_range;
+    int _positive_range;
 
     /**
      * @brief Initialize OpenGL shaders

@@ -7,6 +7,9 @@
 #include <QGraphicsSceneMouseEvent>
 
 class EventPlotOpenGLWidget;
+class TableView;
+
+#include <memory>
 
 /**
  * @brief Event plot widget for visualizing event data
@@ -30,6 +33,12 @@ public:
     void setEventDataKeys(QStringList const & event_data_keys);
 
     /**
+     * @brief Set which Y-axis data keys to display
+     * @param y_axis_data_keys List of Y-axis data keys to visualize
+     */
+    void setYAxisDataKeys(QStringList const & y_axis_data_keys);
+
+    /**
      * @brief Get currently displayed event data keys
      */
     QStringList getEventDataKeys() const { return _event_data_keys; }
@@ -39,6 +48,20 @@ public:
      * @return Pointer to the OpenGL widget
      */
     EventPlotOpenGLWidget * getOpenGLWidget() const { return _opengl_widget; }
+
+    /**
+     * @brief Set the X-axis range for the plot
+     * @param negative_range Negative range in milliseconds (from -negative_range to -1)
+     * @param positive_range Positive range in milliseconds (from 1 to positive_range)
+     */
+    void setXAxisRange(int negative_range, int positive_range);
+
+    /**
+     * @brief Get the current X-axis range
+     * @param negative_range Output parameter for negative range
+     * @param positive_range Output parameter for positive range
+     */
+    void getXAxisRange(int & negative_range, int & positive_range) const;
 
 signals:
     /**
@@ -67,6 +90,8 @@ private:
     EventPlotOpenGLWidget * _opengl_widget;
     QGraphicsProxyWidget * _proxy_widget;
     QStringList _event_data_keys;
+    QStringList _y_axis_data_keys;
+    TableView * _table_view;
 
     /**
      * @brief Load event data from DataManager

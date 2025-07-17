@@ -5,6 +5,8 @@
 
 #include <QStringList>
 
+#include <set>
+
 class DataManager;
 class EventPlotWidget;
 
@@ -84,10 +86,23 @@ private slots:
      */
     void onTooltipsEnabledChanged(bool enabled);
 
+    /**
+     * @brief Handle negative range changes
+     * @param value New negative range value in milliseconds
+     */
+    void onNegativeRangeChanged(int value);
+
+    /**
+     * @brief Handle positive range changes
+     * @param value New positive range value in milliseconds
+     */
+    void onPositiveRangeChanged(int value);
+
 private:
     Ui::EventPlotPropertiesWidget * ui;
     EventPlotWidget * _event_plot_widget;
     std::shared_ptr<DataManager> _data_manager;
+    std::set<QString> _selected_y_axis_features;
 
     /**
      * @brief Setup connections between UI elements and handlers
@@ -137,6 +152,30 @@ private:
      * @brief Update the visibility of interval settings based on selected data type
      */
     void updateIntervalSettingsVisibility();
+
+    /**
+     * @brief Get the negative range value in milliseconds
+     * @return Negative range value
+     */
+    int getNegativeRange() const;
+
+    /**
+     * @brief Get the positive range value in milliseconds
+     * @return Positive range value
+     */
+    int getPositiveRange() const;
+
+    /**
+     * @brief Set the negative range value in milliseconds
+     * @param value Negative range value
+     */
+    void setNegativeRange(int value);
+
+    /**
+     * @brief Set the positive range value in milliseconds
+     * @param value Positive range value
+     */
+    void setPositiveRange(int value);
 };
 
 #endif// EVENTPLOTPROPERTIESWIDGET_HPP

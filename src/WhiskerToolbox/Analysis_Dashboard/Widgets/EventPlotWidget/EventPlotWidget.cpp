@@ -1,16 +1,27 @@
 #include "EventPlotWidget.hpp"
 #include "EventPlotOpenGLWidget.hpp"
 
+#include "DataManager/DataManager.hpp"
+#include "DataManager/utils/TableView/core/TableView.h"
+#include "DataManager/utils/TableView/core/TableViewBuilder.h"
+#include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
+
 #include <QGraphicsProxyWidget>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 
+
+
 EventPlotWidget::EventPlotWidget(QGraphicsItem * parent)
     : AbstractPlotWidget(parent),
       _opengl_widget(nullptr),
-      _proxy_widget(nullptr) {
+      _proxy_widget(nullptr),
+      _table_view(nullptr) {
     qDebug() << "EventPlotWidget::EventPlotWidget constructor called";
+
+
+
     setPlotTitle("Event Plot");
     setupOpenGLWidget();
     qDebug() << "EventPlotWidget::EventPlotWidget constructor done";
@@ -22,7 +33,16 @@ QString EventPlotWidget::getPlotType() const {
 
 void EventPlotWidget::setEventDataKeys(QStringList const & event_data_keys) {
     _event_data_keys = event_data_keys;
-    loadEventData();
+    if (_event_data_keys.size() > 0 && _y_axis_data_keys.size() > 0) {
+        loadEventData();
+    }
+}
+
+void EventPlotWidget::setYAxisDataKeys(QStringList const & y_axis_data_keys) {
+    _y_axis_data_keys = y_axis_data_keys;
+    if (_event_data_keys.size() > 0 && _y_axis_data_keys.size() > 0) {
+        loadEventData();
+    }
 }
 
 void EventPlotWidget::paint(QPainter * painter, QStyleOptionGraphicsItem const * option, QWidget * widget) {
@@ -84,8 +104,18 @@ void EventPlotWidget::handleFrameJumpRequest(int64_t time_frame_index, QString c
 }
 
 void EventPlotWidget::loadEventData() {
-    // TODO: Implement event data loading from DataManager
-    // This will be implemented in subsequent steps
+    qDebug() << "EventPlotWidget::loadEventData";
+    qDebug() << "EventPlotWidget::loadEventData _event_data_keys: " << _event_data_keys;
+    qDebug() << "EventPlotWidget::loadEventData _y_axis_data_keys: " << _y_axis_data_keys;
+
+    // We will use builder to create a table view
+
+
+    auto dataManagerExtension = std::make_shared<DataManagerExtension>(*_data_manager);
+    TableViewBuilder builder(dataManagerExtension);
+
+
+    qDebug() << "EventPlotWidget::loadEventData done";
 }
 
 void EventPlotWidget::setupOpenGLWidget() {
@@ -103,4 +133,19 @@ void EventPlotWidget::setupOpenGLWidget() {
     // Connect signals from OpenGL widget
     connect(_opengl_widget, &EventPlotOpenGLWidget::frameJumpRequested,
             this, &EventPlotWidget::handleFrameJumpRequest);
+}
+
+void EventPlotWidget::setXAxisRange(int negative_range, int positive_range) {
+    if (_opengl_widget) {
+        _opengl_widget->setXAxisRange(negative_range, positive_range);
+    }
+}
+
+void EventPlotWidget::getXAxisRange(int & negative_range, int & positive_range) const {
+    if (_opengl_widget) {
+        _opengl_widget->getXAxisRange(negative_range, positive_range);
+    } else {
+        negative_range = 30000;
+        positive_range = 30000;
+    }
 }

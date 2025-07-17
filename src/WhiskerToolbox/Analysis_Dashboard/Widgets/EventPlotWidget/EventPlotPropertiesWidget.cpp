@@ -13,6 +13,7 @@
 #include <QPushButton>
 #include <QRadioButton>
 
+
 EventPlotPropertiesWidget::EventPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
       ui(new Ui::EventPlotPropertiesWidget),
@@ -59,6 +60,12 @@ void EventPlotPropertiesWidget::updateFromPlot() {
 
     // Update interval settings visibility
     updateIntervalSettingsVisibility();
+
+    // Update X-axis range
+    int negative_range, positive_range;
+    _event_plot_widget->getXAxisRange(negative_range, positive_range);
+    setNegativeRange(negative_range);
+    setPositiveRange(positive_range);
 
     // Update zoom level
     if (_event_plot_widget->getOpenGLWidget()) {
@@ -130,12 +137,13 @@ void EventPlotPropertiesWidget::onYAxisFeatureSelected(QString const & feature) 
 }
 
 void EventPlotPropertiesWidget::onYAxisFeatureAdded(QString const & feature) {
-    // Update plot widget when Y-axis features are added
+    _selected_y_axis_features.insert(feature);
+
     updatePlotWidget();
 }
 
 void EventPlotPropertiesWidget::onYAxisFeatureRemoved(QString const & feature) {
-    // Update plot widget when Y-axis features are removed
+    _selected_y_axis_features.erase(feature);
     updatePlotWidget();
 }
 
@@ -189,6 +197,16 @@ void EventPlotPropertiesWidget::setupConnections() {
         connect(ui->tooltips_checkbox, &QCheckBox::toggled,
                 this, &EventPlotPropertiesWidget::onTooltipsEnabledChanged);
     }
+
+    if (ui->negative_range_spinbox) {
+        connect(ui->negative_range_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+                this, &EventPlotPropertiesWidget::onNegativeRangeChanged);
+    }
+
+    if (ui->positive_range_spinbox) {
+        connect(ui->positive_range_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+                this, &EventPlotPropertiesWidget::onPositiveRangeChanged);
+    }
 }
 
 void EventPlotPropertiesWidget::setupYAxisFeatureTable() {
@@ -233,11 +251,7 @@ bool EventPlotPropertiesWidget::isIntervalBeginningSelected() const {
 }
 
 QStringList EventPlotPropertiesWidget::getSelectedYAxisFeatures() const {
-    // TODO: Implement getting selected Y-axis features from the feature table
-    // This would require tracking the selected features or querying the table
-    // For now, return empty list - this will be implemented when we add
-    // proper tracking of selected features in the EventPlotWidget
-    return QStringList();
+    return QStringList(_selected_y_axis_features.begin(), _selected_y_axis_features.end());
 }
 
 void EventPlotPropertiesWidget::updateIntervalSettingsVisibility() {
@@ -312,10 +326,54 @@ void EventPlotPropertiesWidget::updatePlotWidget() {
 
     _event_plot_widget->setEventDataKeys(selected_sources);
 
-    // TODO: Update Y-axis features when EventPlotWidget supports them
-    // QStringList y_axis_features = getSelectedYAxisFeatures();
-    // _event_plot_widget->setYAxisDataKeys(y_axis_features);
+    // Update X-axis range
+    int negative_range = getNegativeRange();
+    int positive_range = getPositiveRange();
+    _event_plot_widget->setXAxisRange(negative_range, positive_range);
+
+    QStringList y_axis_features = getSelectedYAxisFeatures();
+    _event_plot_widget->setYAxisDataKeys(y_axis_features);
 
     // Emit properties changed signal
     emit propertiesChanged();
+}
+
+void EventPlotPropertiesWidget::onNegativeRangeChanged(int value) {
+    Q_UNUSED(value)
+    updatePlotWidget();
+}
+
+void EventPlotPropertiesWidget::onPositiveRangeChanged(int value) {
+    Q_UNUSED(value)
+    updatePlotWidget();
+}
+
+int EventPlotPropertiesWidget::getNegativeRange() const {
+    if (ui->negative_range_spinbox) {
+        return ui->negative_range_spinbox->value();
+    }
+    return 30000;// Default value
+}
+
+int EventPlotPropertiesWidget::getPositiveRange() const {
+    if (ui->positive_range_spinbox) {
+        return ui->positive_range_spinbox->value();
+    }
+    return 30000;// Default value
+}
+
+void EventPlotPropertiesWidget::setNegativeRange(int value) {
+    if (ui->negative_range_spinbox) {
+        ui->negative_range_spinbox->blockSignals(true);
+        ui->negative_range_spinbox->setValue(value);
+        ui->negative_range_spinbox->blockSignals(false);
+    }
+}
+
+void EventPlotPropertiesWidget::setPositiveRange(int value) {
+    if (ui->positive_range_spinbox) {
+        ui->positive_range_spinbox->blockSignals(true);
+        ui->positive_range_spinbox->setValue(value);
+        ui->positive_range_spinbox->blockSignals(false);
+    }
 }
