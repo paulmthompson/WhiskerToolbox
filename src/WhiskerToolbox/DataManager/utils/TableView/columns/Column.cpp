@@ -31,6 +31,7 @@ template class Column<float>;
 template class Column<std::vector<float>>;
 template class Column<bool>;
 template class Column<int>;
+template class Column<int64_t>;
 template class Column<std::vector<double>>;
 template class Column<std::vector<int>>;
 template class Column<std::vector<TimeFrameIndex>>;

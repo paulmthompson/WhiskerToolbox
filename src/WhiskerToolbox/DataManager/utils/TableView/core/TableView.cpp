@@ -133,47 +133,95 @@ void TableView::materializeColumn(std::string const & columnName, std::set<std::
 }
 
 ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
-    // Get the data source to understand its structure
-    auto dataSource = m_dataManager->getAnalogSource(sourceName);
-    if (!dataSource) {
-        throw std::runtime_error("Data source '" + sourceName + "' not found");
-    }
-
-    // Generate plan based on row selector type
-    // For now, we'll use a simple approach based on the row selector type
-
-    // Check if we have an IntervalSelector
-    if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
-        // Convert intervals to TimeFrameInterval format
-        auto const & intervals = intervalSelector->getIntervals();
-        auto timeFrame = intervalSelector->getTimeFrame();
-        return ExecutionPlan(intervals, timeFrame);
-    }
-
-    // Check if we have a TimestampSelector
-    if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
-        // Convert timestamps to TimeFrameIndex format
-        auto const & indices = timestampSelector->getTimestamps();
-        auto timeFrame = timestampSelector->getTimeFrame();
-
-        return ExecutionPlan(indices, timeFrame);
-    }
-
-    // Check if we have an IndexSelector
-    if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
-        // Convert size_t indices to TimeFrameIndex format
-        auto const & indices = indexSelector->getIndices();
-        std::vector<TimeFrameIndex> timeFrameIndices;
-        timeFrameIndices.reserve(indices.size());
-
-        for (size_t index: indices) {
-            timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+    // Try to get the data source to understand its structure
+    // First try as analog source
+    auto analogSource = m_dataManager->getAnalogSource(sourceName);
+    if (analogSource) {
+        // Generate plan based on row selector type for analog data
+        if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
+            auto const & intervals = intervalSelector->getIntervals();
+            auto timeFrame = intervalSelector->getTimeFrame();
+            return ExecutionPlan(intervals, timeFrame);
         }
 
-        return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+        if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
+            auto const & indices = timestampSelector->getTimestamps();
+            auto timeFrame = timestampSelector->getTimeFrame();
+            return ExecutionPlan(indices, timeFrame);
+        }
+
+        if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
+            auto const & indices = indexSelector->getIndices();
+            std::vector<TimeFrameIndex> timeFrameIndices;
+            timeFrameIndices.reserve(indices.size());
+
+            for (size_t index: indices) {
+                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+            }
+
+            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+        }
     }
 
-    throw std::runtime_error("Unsupported row selector type for source: " + sourceName);
+    // Try as interval source
+    auto intervalSource = m_dataManager->getIntervalSource(sourceName);
+    if (intervalSource) {
+        // Generate plan based on row selector type for interval data
+        if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
+            auto const & intervals = intervalSelector->getIntervals();
+            auto timeFrame = intervalSelector->getTimeFrame();
+            return ExecutionPlan(intervals, timeFrame);
+        }
+
+        if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
+            auto const & indices = timestampSelector->getTimestamps();
+            auto timeFrame = timestampSelector->getTimeFrame();
+            return ExecutionPlan(indices, timeFrame);
+        }
+
+        if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
+            auto const & indices = indexSelector->getIndices();
+            std::vector<TimeFrameIndex> timeFrameIndices;
+            timeFrameIndices.reserve(indices.size());
+
+            for (size_t index: indices) {
+                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+            }
+
+            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+        }
+    }
+
+    // Try as event source
+    auto eventSource = m_dataManager->getEventSource(sourceName);
+    if (eventSource) {
+        // Generate plan based on row selector type for event data
+        if (auto intervalSelector = dynamic_cast<IntervalSelector *>(m_rowSelector.get())) {
+            auto const & intervals = intervalSelector->getIntervals();
+            auto timeFrame = intervalSelector->getTimeFrame();
+            return ExecutionPlan(intervals, timeFrame);
+        }
+
+        if (auto timestampSelector = dynamic_cast<TimestampSelector *>(m_rowSelector.get())) {
+            auto const & indices = timestampSelector->getTimestamps();
+            auto timeFrame = timestampSelector->getTimeFrame();
+            return ExecutionPlan(indices, timeFrame);
+        }
+
+        if (auto indexSelector = dynamic_cast<IndexSelector *>(m_rowSelector.get())) {
+            auto const & indices = indexSelector->getIndices();
+            std::vector<TimeFrameIndex> timeFrameIndices;
+            timeFrameIndices.reserve(indices.size());
+
+            for (size_t index: indices) {
+                timeFrameIndices.emplace_back(static_cast<int64_t>(index));
+            }
+
+            return ExecutionPlan(std::move(timeFrameIndices), nullptr);
+        }
+    }
+
+    throw std::runtime_error("Data source '" + sourceName + "' not found as analog, interval, or event source");
 }
 
 RowDescriptor TableView::getRowDescriptor(size_t row_index) const {

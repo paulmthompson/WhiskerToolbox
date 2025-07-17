@@ -154,6 +154,8 @@ std::shared_ptr<IIntervalSource> DataManagerExtension::getIntervalSource(std::st
     auto intervalSource = createDigitalIntervalDataAdapter(name);
     if (intervalSource) {
         m_intervalSourceCache[name] = intervalSource;
+    } else {
+        std::cerr << "Interval source '" << name << "' not found." << std::endl;
     }
     return intervalSource;
 }

@@ -91,10 +91,11 @@ public:
 
         // Get all column intervals from the source
         // We need to get the full range of column intervals
-        // For now, we'll get all intervals from the source
+        // Use the actual size of the destination timeframe
+        auto destinationSize = destinationTimeFrame->getTotalFrameCount();
         auto columnIntervals = m_source->getIntervalsInRange(
-                TimeFrameIndex(std::numeric_limits<T>::min()),
-                TimeFrameIndex(std::numeric_limits<T>::max()),
+                TimeFrameIndex(0),
+                TimeFrameIndex(destinationSize - 1), // Use the actual size
                 destinationTimeFrame.get());
 
         for (auto const & rowInterval: rowIntervals) {
