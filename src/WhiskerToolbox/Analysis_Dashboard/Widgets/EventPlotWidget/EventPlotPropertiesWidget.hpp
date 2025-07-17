@@ -132,6 +132,11 @@ private:
      * @brief Update the X-axis info label
      */
     void updateXAxisInfoLabel();
+
+    /**
+     * @brief Update the visibility of interval settings based on selected data type
+     */
+    void updateIntervalSettingsVisibility();
 };
 
 #endif// EVENTPLOTPROPERTIESWIDGET_HPP

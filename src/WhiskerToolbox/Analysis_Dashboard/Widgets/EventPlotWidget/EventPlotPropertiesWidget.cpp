@@ -29,6 +29,7 @@ EventPlotPropertiesWidget::~EventPlotPropertiesWidget() {
 void EventPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = data_manager;
     updateAvailableDataSources();
+    updateIntervalSettingsVisibility();
 
     // Set up Y-axis feature table with data manager
     if (ui->y_axis_feature_table) {
@@ -55,6 +56,9 @@ void EventPlotPropertiesWidget::updateFromPlot() {
     if (!current_keys.isEmpty()) {
         setSelectedXAxisDataSource(current_keys.first());
     }
+
+    // Update interval settings visibility
+    updateIntervalSettingsVisibility();
 
     // Update zoom level
     if (_event_plot_widget->getOpenGLWidget()) {
@@ -112,6 +116,7 @@ void EventPlotPropertiesWidget::updateAvailableDataSources() {
 
 void EventPlotPropertiesWidget::onXAxisDataSourceChanged() {
     updateXAxisInfoLabel();
+    updateIntervalSettingsVisibility();
     updatePlotWidget();
 }
 
@@ -233,6 +238,27 @@ QStringList EventPlotPropertiesWidget::getSelectedYAxisFeatures() const {
     // For now, return empty list - this will be implemented when we add
     // proper tracking of selected features in the EventPlotWidget
     return QStringList();
+}
+
+void EventPlotPropertiesWidget::updateIntervalSettingsVisibility() {
+    if (!ui->interval_settings_group) {
+        return;
+    }
+
+    QString selected_key = getSelectedXAxisDataSource();
+    if (selected_key.isEmpty()) {
+        ui->interval_settings_group->setVisible(false);
+        return;
+    }
+
+    if (!_data_manager) {
+        ui->interval_settings_group->setVisible(false);
+        return;
+    }
+
+    DM_DataType data_type = _data_manager->getType(selected_key.toStdString());
+    bool is_interval = (data_type == DM_DataType::DigitalInterval);
+    ui->interval_settings_group->setVisible(is_interval);
 }
 
 void EventPlotPropertiesWidget::updateXAxisInfoLabel() {
