@@ -40,44 +40,6 @@ int64_t countOverlappingIntervals(const TimeFrameInterval& rowInterval,
     return count;
 }
 
-// Template specialization for int64_t
-template<>
-auto IntervalOverlapComputer<int64_t>::compute(const ExecutionPlan& plan) const -> std::vector<int64_t> {
-    if (!plan.hasIntervals()) {
-        throw std::runtime_error("IntervalOverlapComputer requires an ExecutionPlan with intervals");
-    }
-    
-    auto rowIntervals = plan.getIntervals();
-    auto destinationTimeFrame = plan.getTimeFrame();
-    
-    std::vector<int64_t> results;
-    results.reserve(rowIntervals.size());
-    
-    // Get all column intervals from the source
-    // We need to get the full range of column intervals
-    // For now, we'll get all intervals from the source
-    auto columnIntervals = m_source->getIntervalsInRange(
-        TimeFrameIndex(std::numeric_limits<int64_t>::min()),
-        TimeFrameIndex(std::numeric_limits<int64_t>::max()),
-        destinationTimeFrame.get()
-    );
-    
-    for (const auto& rowInterval : rowIntervals) {
-        switch (m_operation) {
-            case IntervalOverlapOperation::AssignID:
-                results.push_back(findContainingInterval(rowInterval, columnIntervals));
-                break;
-            case IntervalOverlapOperation::CountOverlaps:
-                results.push_back(countOverlappingIntervals(rowInterval, columnIntervals));
-                break;
-            default:
-                throw std::runtime_error("Unknown IntervalOverlapOperation");
-        }
-    }
-    
-    return results;
-}
-
 // Template specialization for size_t
 template<>
 auto IntervalOverlapComputer<size_t>::compute(const ExecutionPlan& plan) const -> std::vector<size_t> {
@@ -109,3 +71,8 @@ auto IntervalOverlapComputer<size_t>::compute(const ExecutionPlan& plan) const -
     
     return results;
 }
+
+// Template specializations for different data types
+template std::vector<int64_t> IntervalOverlapComputer<int64_t>::compute(ExecutionPlan const & plan) const;
+template std::vector<size_t> IntervalOverlapComputer<size_t>::compute(ExecutionPlan const & plan) const;
+template std::vector<double> IntervalOverlapComputer<double>::compute(ExecutionPlan const & plan) const;

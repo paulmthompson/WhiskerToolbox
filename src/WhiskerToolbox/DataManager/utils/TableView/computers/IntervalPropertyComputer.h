@@ -48,7 +48,35 @@ public:
      * @param plan The execution plan containing interval boundaries.
      * @return Vector of computed results for each interval.
      */
-    [[nodiscard]] auto compute(const ExecutionPlan& plan) const -> std::vector<T> override;
+    [[nodiscard]] auto compute(const ExecutionPlan& plan) const -> std::vector<T> override {
+        if (!plan.hasIntervals()) {
+            throw std::runtime_error("IntervalPropertyComputer requires an ExecutionPlan with intervals");
+        }
+        
+        auto intervals = plan.getIntervals();
+        auto destinationTimeFrame = plan.getTimeFrame();
+        
+        std::vector<T> results;
+        results.reserve(intervals.size());
+        
+        for (const auto& interval : intervals) {
+            switch (m_property) {
+                case IntervalProperty::Start:
+                    results.push_back(interval.start.getValue());
+                    break;
+                case IntervalProperty::End:
+                    results.push_back(interval.end.getValue());
+                    break;
+                case IntervalProperty::Duration:
+                    results.push_back(interval.end.getValue() - interval.start.getValue());
+                    break;
+                default:
+                    throw std::runtime_error("Unknown IntervalProperty");
+            }
+        }
+        
+        return results;
+    }
 
     [[nodiscard]] auto getSourceDependency() const -> std::string override {
         return m_sourceName;
@@ -60,14 +88,6 @@ private:
     std::string m_sourceName;
 };
 
-// Template specializations for different data types
-template<>
-[[nodiscard]] auto IntervalPropertyComputer<int64_t>::compute(const ExecutionPlan& plan) const -> std::vector<int64_t>;
 
-template<>
-[[nodiscard]] auto IntervalPropertyComputer<float>::compute(const ExecutionPlan& plan) const -> std::vector<float>;
-
-template<>
-[[nodiscard]] auto IntervalPropertyComputer<double>::compute(const ExecutionPlan& plan) const -> std::vector<double>;
 
 #endif // INTERVAL_PROPERTY_COMPUTER_H
