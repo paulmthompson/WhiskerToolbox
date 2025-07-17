@@ -61,13 +61,15 @@ private:
     IntervalOverlapOperation m_operation;
     std::string m_sourceName;
 
-    /**
+};
+
+/**
      * @brief Checks if two intervals overlap.
      * @param a First interval.
      * @param b Second interval.
      * @return True if intervals overlap, false otherwise.
      */
-    [[nodiscard]] bool intervalsOverlap(const TimeFrameInterval& a, const TimeFrameInterval& b) const;
+    [[nodiscard]] bool intervalsOverlap(const TimeFrameInterval& a, const TimeFrameInterval& b);
 
     /**
      * @brief Finds the index of the column interval that contains the given row interval.
@@ -76,7 +78,7 @@ private:
      * @return Index of the containing column interval, or -1 if none found.
      */
     [[nodiscard]] int64_t findContainingInterval(const TimeFrameInterval& rowInterval,
-                                                 const std::vector<Interval>& columnIntervals) const;
+                                                 const std::vector<Interval>& columnIntervals);
 
     /**
      * @brief Counts the number of column intervals that overlap with the given row interval.
@@ -85,8 +87,7 @@ private:
      * @return Number of overlapping column intervals.
      */
     [[nodiscard]] int64_t countOverlappingIntervals(const TimeFrameInterval& rowInterval,
-                                                    const std::vector<Interval>& columnIntervals) const;
-};
+                                                    const std::vector<Interval>& columnIntervals);
 
 // Template specializations for different data types
 template<>

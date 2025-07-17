@@ -4,15 +4,14 @@
 #include <limits>
 #include <stdexcept>
 
-template<typename T>
-bool IntervalOverlapComputer<T>::intervalsOverlap(const TimeFrameInterval& a, const TimeFrameInterval& b) const {
+
+bool intervalsOverlap(const TimeFrameInterval& a, const TimeFrameInterval& b) {
     // Two intervals overlap if: a.start <= b.end && b.start <= a.end
     return a.start.getValue() <= b.end.getValue() && b.start.getValue() <= a.end.getValue();
 }
 
-template<typename T>
-int64_t IntervalOverlapComputer<T>::findContainingInterval(const TimeFrameInterval& rowInterval,
-                                                          const std::vector<Interval>& columnIntervals) const {
+int64_t findContainingInterval(const TimeFrameInterval& rowInterval,
+                              const std::vector<Interval>& columnIntervals) {
     for (size_t i = 0; i < columnIntervals.size(); ++i) {
         const auto& colInterval = columnIntervals[i];
         
@@ -25,9 +24,8 @@ int64_t IntervalOverlapComputer<T>::findContainingInterval(const TimeFrameInterv
     return -1; // No containing interval found
 }
 
-template<typename T>
-int64_t IntervalOverlapComputer<T>::countOverlappingIntervals(const TimeFrameInterval& rowInterval,
-                                                             const std::vector<Interval>& columnIntervals) const {
+int64_t countOverlappingIntervals(const TimeFrameInterval& rowInterval,
+                                 const std::vector<Interval>& columnIntervals) {
     int64_t count = 0;
     
     for (const auto& colInterval : columnIntervals) {
