@@ -1,6 +1,7 @@
 #include "AnalysisDashboardScene.hpp"
 
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
+#include "Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotWidget.hpp"
 #include "Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
 #include "DataManager/DataManager.hpp"
@@ -167,7 +168,12 @@ AbstractPlotWidget* AnalysisDashboardScene::createPlotFromMimeData(const QMimeDa
         return new ScatterPlotWidget();
     }
     else if (plot_type == "spatial_overlay_plot") {
+        qDebug() << "Creating spatial overlay plot widget";
         return new SpatialOverlayPlotWidget();
+    }
+    else if (plot_type == "event_plot") {
+        qDebug() << "Creating event plot widget";
+        return new EventPlotWidget();
     }
     
     // Add more plot types here as they are implemented

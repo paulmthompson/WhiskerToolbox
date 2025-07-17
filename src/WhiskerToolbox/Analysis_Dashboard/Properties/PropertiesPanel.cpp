@@ -3,6 +3,7 @@
 #include "GlobalPropertiesWidget.hpp"
 #include "AbstractPlotPropertiesWidget.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp"
+#include "Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp"
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 
 #include <QStackedWidget>
@@ -125,6 +126,14 @@ void PropertiesPanel::registerBuiltInPropertiesWidgets() {
     }
     registerPlotPropertiesWidget("Spatial Overlay Plot", spatial_properties);
     qDebug() << "PropertiesPanel: Registered properties widget for 'Spatial Overlay Plot'";
+
+    // Event Plot
+    EventPlotPropertiesWidget* event_properties = new EventPlotPropertiesWidget(this);
+    if (_data_manager) {
+        event_properties->setDataManager(_data_manager);
+    }
+    registerPlotPropertiesWidget("Event Plot", event_properties);
+    qDebug() << "PropertiesPanel: Registered properties widget for 'Event Plot'";
 }
 
 AbstractPlotPropertiesWidget* PropertiesPanel::getPropertiesWidgetForPlotType(const QString& plot_type) {
