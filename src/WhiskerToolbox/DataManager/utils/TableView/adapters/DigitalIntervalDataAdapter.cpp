@@ -25,6 +25,10 @@ size_t DigitalIntervalDataAdapter::size() const {
     return m_digitalIntervalSeries->size();
 }
 
+std::vector<Interval> DigitalIntervalDataAdapter::getIntervals() {
+    return m_digitalIntervalSeries->getDigitalIntervalSeries();
+}
+
 std::vector<Interval> DigitalIntervalDataAdapter::getIntervalsInRange(TimeFrameIndex start,
                                                                       TimeFrameIndex end,
                                                                       TimeFrame const * target_timeFrame) {

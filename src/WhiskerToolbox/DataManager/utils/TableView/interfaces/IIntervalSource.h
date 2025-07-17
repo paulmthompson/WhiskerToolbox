@@ -47,6 +47,8 @@ public:
      */
     virtual size_t size() const = 0;
 
+    virtual std::vector<Interval> getIntervals() = 0;
+
     /**
      * @brief Gets the intervals within a specific time range.
      * 

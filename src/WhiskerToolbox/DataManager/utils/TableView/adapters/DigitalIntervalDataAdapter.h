@@ -50,6 +50,12 @@ public:
     [[nodiscard]] auto size() const -> size_t override;
 
     /**
+     * @brief Gets all intervals in the source.
+     * @return A vector of Intervals representing all intervals in the source.
+     */
+    std::vector<Interval> getIntervals() override;
+
+    /**
      * @brief Gets the intervals within a specific time range.
      * 
      * This gets the intervals in the range [start, end] (inclusive) from the source timeframe

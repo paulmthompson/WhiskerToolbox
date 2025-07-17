@@ -92,11 +92,16 @@ public:
         // Get all column intervals from the source
         // We need to get the full range of column intervals
         // Use the actual size of the destination timeframe
-        auto destinationSize = destinationTimeFrame->getTotalFrameCount();
-        auto columnIntervals = m_source->getIntervalsInRange(
+        std::vector<Interval> columnIntervals;
+        if (destinationTimeFrame) {
+            auto destinationSize = destinationTimeFrame->getTotalFrameCount();
+            columnIntervals = m_source->getIntervalsInRange(
                 TimeFrameIndex(0),
                 TimeFrameIndex(destinationSize - 1), // Use the actual size
-                destinationTimeFrame.get());
+                    destinationTimeFrame.get());
+        } else {
+            columnIntervals = m_source->getIntervals();
+        }
 
         for (auto const & rowInterval: rowIntervals) {
             switch (m_operation) {

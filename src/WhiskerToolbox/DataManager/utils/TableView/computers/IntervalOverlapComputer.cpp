@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
+#include <iostream> // Added for debug output
 
 
 bool intervalsOverlap(const TimeFrameInterval& a, const TimeFrameInterval& b) {
