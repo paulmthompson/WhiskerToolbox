@@ -5,6 +5,7 @@
 #include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/utils/TableView/core/TableViewBuilder.h"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
+#include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"
 
 #include <QGraphicsProxyWidget>
 #include <QGraphicsSceneMouseEvent>
@@ -24,7 +25,16 @@ EventPlotWidget::EventPlotWidget(QGraphicsItem * parent)
 
     setPlotTitle("Event Plot");
     setupOpenGLWidget();
+
     qDebug() << "EventPlotWidget::EventPlotWidget constructor done";
+}
+
+EventPlotWidget::~EventPlotWidget() {
+    qDebug() << "EventPlotWidget::~EventPlotWidget destructor called";
+
+    if (_table_view) {
+        _table_view.reset();
+    }
 }
 
 QString EventPlotWidget::getPlotType() const {
@@ -109,11 +119,55 @@ void EventPlotWidget::loadEventData() {
     qDebug() << "EventPlotWidget::loadEventData _y_axis_data_keys: " << _y_axis_data_keys;
 
     // We will use builder to create a table view
-
-
     auto dataManagerExtension = std::make_shared<DataManagerExtension>(*_data_manager);
     TableViewBuilder builder(dataManagerExtension);
 
+    auto rowIntervalSeries = _data_manager->getData<DigitalIntervalSeries>(_event_data_keys[0].toStdString());
+    if (!rowIntervalSeries) {
+        qDebug() << "EventPlotWidget::loadEventData rowIntervalSeries is nullptr";
+        return;
+    }
+
+    auto rowIntervals = rowIntervalSeries->getDigitalIntervalSeries();
+    std::vector<TimeFrameInterval> timeFrameIntervals;
+    for (auto const & interval : rowIntervals) {
+        timeFrameIntervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+    }
+
+    auto row_timeframe_key = _data_manager->getTimeFrame(_event_data_keys[0].toStdString());
+    auto row_timeframe = _data_manager->getTime(row_timeframe_key);
+
+    if (!row_timeframe) {
+        qDebug() << "EventPlotWidget::loadEventData row_timeframe is nullptr";
+        return;
+    }
+
+    auto rowSelector = std::make_unique<IntervalSelector>(timeFrameIntervals, row_timeframe);
+        
+    builder.setRowSelector(std::move(rowSelector));
+
+    // Add y-axis data
+    auto eventSource = dataManagerExtension->getEventSource(_y_axis_data_keys[0].toStdString());
+    if (!eventSource) {
+        qDebug() << "EventPlotWidget::loadEventData eventSource is nullptr";
+        return;
+    }
+
+    builder.addColumn<std::vector<float>>(_y_axis_data_keys[0].toStdString(), 
+        std::make_unique<EventInIntervalComputer<std::vector<float>>>(eventSource, 
+            EventOperation::Gather,
+            _y_axis_data_keys[0].toStdString()));
+
+    _table_view = std::make_unique<TableView>(builder.build());
+
+    // Get the data from the table view
+    if (_table_view) {
+        auto event_data = _table_view->getColumnValues<std::vector<float>>(_y_axis_data_keys[0].toStdString());
+
+        qDebug() << "EventPlotWidget::loadEventData event_data size: " << event_data.size();
+    } else {
+        qDebug() << "EventPlotWidget::loadEventData _table_view is nullptr";
+    }
 
     qDebug() << "EventPlotWidget::loadEventData done";
 }

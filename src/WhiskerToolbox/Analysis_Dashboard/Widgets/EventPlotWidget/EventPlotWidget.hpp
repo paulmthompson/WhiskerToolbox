@@ -22,7 +22,7 @@ class EventPlotWidget : public AbstractPlotWidget {
 
 public:
     explicit EventPlotWidget(QGraphicsItem * parent = nullptr);
-    ~EventPlotWidget() override = default;
+    ~EventPlotWidget() override;
 
     QString getPlotType() const override;
 
@@ -91,7 +91,7 @@ private:
     QGraphicsProxyWidget * _proxy_widget;
     QStringList _event_data_keys;
     QStringList _y_axis_data_keys;
-    TableView * _table_view;
+    std::unique_ptr<TableView> _table_view;
 
     /**
      * @brief Load event data from DataManager

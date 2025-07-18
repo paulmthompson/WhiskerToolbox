@@ -29,6 +29,13 @@ class TableViewBuilder;
  */
 class TableView {
 public:
+
+    // Movable but not copyable
+    TableView(TableView && other) noexcept;
+    TableView & operator=(TableView && other) noexcept;
+    TableView(const TableView & other) = delete;
+    TableView & operator=(const TableView & other) = delete;
+
     /**
      * @brief Gets the number of rows in the table.
      * @return The row count as determined by the row selector.

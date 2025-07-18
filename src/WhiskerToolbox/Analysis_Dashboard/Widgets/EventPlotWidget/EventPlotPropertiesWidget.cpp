@@ -35,6 +35,7 @@ void EventPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data
     // Set up Y-axis feature table with data manager
     if (ui->y_axis_feature_table) {
         ui->y_axis_feature_table->setDataManager(_data_manager);
+        ui->y_axis_feature_table->populateTable();
     }
 }
 

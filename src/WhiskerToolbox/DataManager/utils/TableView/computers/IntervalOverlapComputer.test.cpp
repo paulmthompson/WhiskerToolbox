@@ -409,6 +409,18 @@ TEST_CASE("IntervalOverlapComputer Complex Scenarios", "[IntervalOverlapComputer
         for (auto result : countResults) {
             REQUIRE(result >= 0);
         }
+
+        IntervalOverlapComputer<size_t> countComputer_size_t(intervalSource, 
+                                                      IntervalOverlapOperation::CountOverlaps,
+                                                      "ComplexIntervals");
+
+        auto countResults_size_t = countComputer_size_t.compute(plan);
+
+        REQUIRE(countResults_size_t.size() == 3);
+        // All results should be non-negative
+        for (auto result : countResults_size_t) {
+            REQUIRE(result >= 0);
+        }
     }
 }
 

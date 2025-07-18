@@ -16,6 +16,23 @@ TableView::TableView(std::unique_ptr<IRowSelector> rowSelector,
     }
 }
 
+TableView::TableView(TableView && other) noexcept
+    : m_rowSelector(std::move(other.m_rowSelector)),
+      m_dataManager(std::move(other.m_dataManager)),
+      m_columns(std::move(other.m_columns)),
+      m_colNameToIndex(std::move(other.m_colNameToIndex)),
+      m_planCache(std::move(other.m_planCache)) {}
+
+TableView & TableView::operator=(TableView && other) noexcept {
+    if (this != &other) {
+        m_rowSelector = std::move(other.m_rowSelector);
+        m_dataManager = std::move(other.m_dataManager);
+        m_columns = std::move(other.m_columns);
+        m_colNameToIndex = std::move(other.m_colNameToIndex);
+        m_planCache = std::move(other.m_planCache);
+    }
+}
+
 size_t TableView::getRowCount() const {
     return m_rowSelector->getRowCount();
 }
