@@ -17,7 +17,8 @@
 enum class EventOperation : std::uint8_t {
     Presence,  ///< Returns bool: true if any events exist in the interval
     Count,     ///< Returns int: number of events in the interval
-    Gather     ///< Returns std::vector<TimeFrameIndex>: all events in the interval
+    Gather,     ///< Returns std::vector<TimeFrameIndex>: all events in the interval
+    Gather_Center
 };
 
 /**

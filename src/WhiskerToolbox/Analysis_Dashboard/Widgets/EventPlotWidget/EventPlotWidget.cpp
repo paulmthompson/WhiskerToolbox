@@ -155,7 +155,7 @@ void EventPlotWidget::loadEventData() {
 
     builder.addColumn<std::vector<float>>(_y_axis_data_keys[0].toStdString(), 
         std::make_unique<EventInIntervalComputer<std::vector<float>>>(eventSource, 
-            EventOperation::Gather,
+            EventOperation::Gather_Center,
             _y_axis_data_keys[0].toStdString()));
 
     _table_view = std::make_unique<TableView>(builder.build());
@@ -165,6 +165,15 @@ void EventPlotWidget::loadEventData() {
         auto event_data = _table_view->getColumnValues<std::vector<float>>(_y_axis_data_keys[0].toStdString());
 
         qDebug() << "EventPlotWidget::loadEventData event_data size: " << event_data.size();
+        
+        // Pass the event data to the OpenGL widget
+        if (_opengl_widget) {
+            _opengl_widget->setEventData(event_data);
+        }
+        
+        for (auto const & event : event_data) {
+            qDebug() << "EventPlotWidget::loadEventData event: " << event;
+        }   
     } else {
         qDebug() << "EventPlotWidget::loadEventData _table_view is nullptr";
     }

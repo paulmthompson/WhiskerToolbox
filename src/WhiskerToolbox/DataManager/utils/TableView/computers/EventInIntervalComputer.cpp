@@ -69,12 +69,13 @@ auto EventInIntervalComputer<int>::compute(const ExecutionPlan& plan) const -> s
 // Template specialization for std::vector<TimeFrameIndex> (Gather operation)
 template<>
 auto EventInIntervalComputer<std::vector<float>>::compute(const ExecutionPlan& plan) const -> std::vector<std::vector<float>> {
-    if (m_operation != EventOperation::Gather) {
+    if (m_operation != EventOperation::Gather && m_operation != EventOperation::Gather_Center) {
         throw std::runtime_error("EventInIntervalComputer<std::vector<TimeFrameIndex>> can only be used with EventOperation::Gather");
     }
     
     auto intervals = plan.getIntervals();
     auto destinationTimeFrame = plan.getTimeFrame();
+    auto sourceTimeFrame = m_source->getTimeFrame();
 
     std::vector<std::vector<float>> results;
     results.reserve(intervals.size());
@@ -82,6 +83,15 @@ auto EventInIntervalComputer<std::vector<float>>::compute(const ExecutionPlan& p
     for (const auto& interval : intervals) {
 
         auto events = m_source->getDataInRange(interval.start, interval.end, destinationTimeFrame.get());
+
+        if (m_operation == EventOperation::Gather_Center) {
+            auto center = (interval.start + interval.end).getValue() / 2;
+            auto center_time_value = destinationTimeFrame->getTimeAtIndex(TimeFrameIndex(center));
+            auto source_time_index = sourceTimeFrame->getIndexAtTime(center_time_value);
+            for (auto & event : events) {
+                event = event - static_cast<float>(source_time_index.getValue());
+            }
+        }
 
         results.push_back(std::move(events));
     }

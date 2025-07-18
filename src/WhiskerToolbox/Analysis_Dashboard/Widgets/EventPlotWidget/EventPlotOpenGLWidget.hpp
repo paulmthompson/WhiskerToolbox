@@ -11,6 +11,7 @@
 #include <QTimer>
 
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -80,6 +81,12 @@ public:
      */
     QVector2D screenToWorld(int screen_x, int screen_y) const;
 
+    /**
+     * @brief Set the event data to display
+     * @param event_data Vector of trials, each containing vector of event times
+     */
+    void setEventData(std::vector<std::vector<float>> const & event_data);
+
 signals:
     /**
      * @brief Emitted when user double-clicks on an event to jump to that frame
@@ -116,12 +123,21 @@ protected:
     void mouseMoveEvent(QMouseEvent * event) override;
     void mouseReleaseEvent(QMouseEvent * event) override;
     void wheelEvent(QWheelEvent * event) override;
+    void leaveEvent(QEvent * event) override;
+
+private slots:
+    /**
+     * @brief Handle tooltip timer timeout
+     */
+    void handleTooltipTimer();
 
 private:
     // OpenGL resources
     QOpenGLShaderProgram * _shader_program;
     QOpenGLBuffer _vertex_buffer;
     QOpenGLVertexArrayObject _vertex_array_object;
+    QOpenGLBuffer _highlight_vertex_buffer;
+    QOpenGLVertexArrayObject _highlight_vertex_array_object;
 
     // View transformation
     QMatrix4x4 _view_matrix;
@@ -134,6 +150,7 @@ private:
     bool _mouse_pressed;
     QPoint _last_mouse_pos;
     bool _tooltips_enabled;
+    QTimer * _tooltip_timer;
 
     // Widget dimensions
     int _widget_width;
@@ -142,6 +159,20 @@ private:
     // X-axis range settings
     int _negative_range;
     int _positive_range;
+
+    // Event data
+    std::vector<std::vector<float>> _event_data;
+    std::vector<float> _vertex_data;
+    size_t _total_events;
+
+    // Hover state
+    struct HoveredEvent {
+        int trial_index;
+        int event_index;
+        float x;
+        float y;
+    };
+    std::optional<HoveredEvent> _hovered_event;
 
     /**
      * @brief Initialize OpenGL shaders
@@ -170,6 +201,37 @@ private:
      * @param delta_y Mouse wheel delta
      */
     void handleZooming(int delta_y);
+
+    /**
+     * @brief Update vertex data from event data
+     */
+    void updateVertexData();
+
+    /**
+     * @brief Find event near screen coordinates
+     * @param screen_x Screen X coordinate
+     * @param screen_y Screen Y coordinate
+     * @param tolerance_pixels Tolerance in pixels
+     * @return Optional hovered event
+     */
+    std::optional<HoveredEvent> findEventNear(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
+
+    /**
+     * @brief Calculate world tolerance from screen tolerance
+     * @param screen_tolerance Tolerance in screen pixels
+     * @return World tolerance
+     */
+    float calculateWorldTolerance(float screen_tolerance) const;
+
+    /**
+     * @brief Render all events using OpenGL
+     */
+    void renderEvents();
+
+    /**
+     * @brief Render hovered event with larger size
+     */
+    void renderHoveredEvent();
 };
 
 #endif// EVENTPLOTOPENGLWIDGET_HPP
