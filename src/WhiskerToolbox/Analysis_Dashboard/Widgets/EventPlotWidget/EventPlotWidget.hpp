@@ -63,6 +63,17 @@ public:
      */
     void getXAxisRange(int & negative_range, int & positive_range) const;
 
+    /**
+     * @brief Set the Y-axis zoom level (trial spacing)
+     * @param y_zoom_level The Y-axis zoom level (1.0 = default)
+     */
+    void setYZoomLevel(float y_zoom_level);
+
+    /**
+     * @brief Get the current Y-axis zoom level
+     */
+    float getYZoomLevel() const;
+
 signals:
     /**
      * @brief Emitted when rendering properties change

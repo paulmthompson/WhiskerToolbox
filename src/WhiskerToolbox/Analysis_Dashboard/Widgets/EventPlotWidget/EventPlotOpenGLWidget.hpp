@@ -37,6 +37,17 @@ public:
     float getZoomLevel() const { return _zoom_level; }
 
     /**
+     * @brief Set Y-axis zoom level (1.0 = default, >1.0 = zoomed in, <1.0 = zoomed out)
+     * @param y_zoom_level The Y-axis zoom level
+     */
+    void setYZoomLevel(float y_zoom_level);
+
+    /**
+     * @brief Get current Y-axis zoom level
+     */
+    float getYZoomLevel() const { return _y_zoom_level; }
+
+    /**
      * @brief Set pan offset
      * @param offset_x X offset in normalized coordinates
      * @param offset_y Y offset in normalized coordinates
@@ -144,7 +155,8 @@ private:
     // View transformation
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _projection_matrix;
-    float _zoom_level;
+    float _zoom_level;      // Overall zoom level (kept for compatibility)
+    float _y_zoom_level;    // Y-axis zoom level (for trial spacing)
     float _pan_offset_x;
     float _pan_offset_y;
 

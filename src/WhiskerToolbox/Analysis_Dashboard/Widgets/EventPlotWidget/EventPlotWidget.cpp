@@ -193,6 +193,7 @@ void EventPlotWidget::loadEventData() {
         // Pass the event data to the OpenGL widget
         if (_opengl_widget) {
             _opengl_widget->setEventData(event_data);
+            emit renderUpdateRequested(getPlotId());
         }
          
     } else {
@@ -251,5 +252,19 @@ void EventPlotWidget::getXAxisRange(int & negative_range, int & positive_range) 
     } else {
         negative_range = 30000;
         positive_range = 30000;
+    }
+}
+
+void EventPlotWidget::setYZoomLevel(float y_zoom_level) {
+    if (_opengl_widget) {
+        _opengl_widget->setYZoomLevel(y_zoom_level);
+    }
+}
+
+float EventPlotWidget::getYZoomLevel() const {
+    if (_opengl_widget) {
+        return _opengl_widget->getYZoomLevel();
+    } else {
+        return 1.0f;
     }
 }

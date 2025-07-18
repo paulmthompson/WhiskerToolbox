@@ -3,7 +3,6 @@
 #include <QDebug>
 #include <QMouseEvent>
 #include <QToolTip>
-#include <QVector2D>
 #include <QVector3D>
 #include <QWheelEvent>
 
@@ -11,6 +10,7 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
       _shader_program(nullptr),
       _zoom_level(1.0f),
+      _y_zoom_level(1.0f),
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
       _mouse_pressed(false),
@@ -44,13 +44,10 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     _tooltip_timer->setInterval(500);// 500ms delay
     connect(_tooltip_timer, &QTimer::timeout, this, &EventPlotOpenGLWidget::handleTooltipTimer);
     
-    // Initialize with default data bounds to enable rendering
-    _data_min_x = -1000.0f;
-    _data_max_x = 1000.0f;
-    _data_min_y = -1.0f;
-    _data_max_y = 1.0f;
-    _data_bounds_valid = true;  // Allow rendering even without data
+    // Calculate initial bounds based on default range
+    calculateDataBounds();
 }
+
 
 EventPlotOpenGLWidget::~EventPlotOpenGLWidget() {
     // OpenGL context must be current for cleanup
@@ -79,6 +76,15 @@ void EventPlotOpenGLWidget::setZoomLevel(float zoom_level) {
     }
 }
 
+void EventPlotOpenGLWidget::setYZoomLevel(float y_zoom_level) {
+    if (_y_zoom_level != y_zoom_level) {
+        _y_zoom_level = y_zoom_level;
+        updateMatrices();
+        update();
+        emit zoomLevelChanged(_y_zoom_level);
+    }
+}
+
 void EventPlotOpenGLWidget::setPanOffset(float offset_x, float offset_y) {
     if (_pan_offset_x != offset_x || _pan_offset_y != offset_y) {
         _pan_offset_x = offset_x;
@@ -101,12 +107,6 @@ void EventPlotOpenGLWidget::setEventData(std::vector<std::vector<float>> const &
     qDebug() << "EventPlotOpenGLWidget::setEventData called with" << event_data.size() << "trials";
     for (size_t i = 0; i < event_data.size(); ++i) {
         qDebug() << "Trial" << i << "has" << event_data[i].size() << "events";
-    }
-    
-    // TEMPORARY: Add a test event if no events exist
-    if (_event_data.empty()) {
-        qDebug() << "EventPlotOpenGLWidget::setEventData - adding test data";
-        _event_data = {{100.0f, -50.0f, 200.0f}, {-100.0f, 0.0f, 150.0f}}; // Test events at known positions
     }
     
     calculateDataBounds();  // Calculate bounds before updating vertex data
@@ -197,7 +197,7 @@ void EventPlotOpenGLWidget::paintGL() {
     renderCenterLine();
 
     // Render events if we have data
-    if (_data_bounds_valid && !_vertex_data.empty()) {
+    if (!_vertex_data.empty()) {
         renderEvents();
     }
 
@@ -404,8 +404,8 @@ void EventPlotOpenGLWidget::initializeBuffers() {
     _center_line_buffer.bind();
     _center_line_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     
-    // Create a vertical line at x=0 spanning the full Y range
-    float center_line_data[4] = {0.0f, -1.0f, 0.0f, 1.0f}; // Two points: (0,-1) and (0,1)
+    // Create a vertical line at x=0 spanning a large Y range to ensure visibility
+    float center_line_data[4] = {0.0f, -100.0f, 0.0f, 100.0f}; // Two points: (0,-100) and (0,100)
     _center_line_buffer.allocate(center_line_data, 4 * sizeof(float));
     _center_line_buffer.release();
 
@@ -417,16 +417,16 @@ void EventPlotOpenGLWidget::initializeBuffers() {
     _center_line_buffer.release();
     _center_line_vertex_array_object.release();
     
-    qDebug() << "EventPlotOpenGLWidget::initializeBuffers - center line buffer created";
+    qDebug() << "EventPlotOpenGLWidget::initializeBuffers - center line buffer created with extended range";
 }
 
 void EventPlotOpenGLWidget::updateMatrices() {
-    // Update view matrix (pan and zoom)
+    // Update view matrix (pan and Y zoom only)
     _view_matrix.setToIdentity();
     _view_matrix.translate(_pan_offset_x, _pan_offset_y, 0.0f);
-    _view_matrix.scale(_zoom_level, _zoom_level, 1.0f);
+    _view_matrix.scale(1.0f, _y_zoom_level, 1.0f);  // Only scale Y axis
 
-    // Update projection matrix (orthographic) - use same approach as SpatialOverlayOpenGLWidget
+    // Update projection matrix (orthographic)
     _projection_matrix.setToIdentity();
     
     float left, right, bottom, top;
@@ -434,8 +434,8 @@ void EventPlotOpenGLWidget::updateMatrices() {
     
     // Always ensure valid bounds
     if (left >= right) {
-        left = -1000.0f;
-        right = 1000.0f;
+        left = -static_cast<float>(_negative_range);
+        right = static_cast<float>(_positive_range);
     }
     if (bottom >= top) {
         bottom = -1.0f;
@@ -446,7 +446,8 @@ void EventPlotOpenGLWidget::updateMatrices() {
     
     qDebug() << "EventPlotOpenGLWidget::updateMatrices - projection bounds:" 
              << "left:" << left << "right:" << right 
-             << "bottom:" << bottom << "top:" << top;
+             << "bottom:" << bottom << "top:" << top
+             << "y_zoom:" << _y_zoom_level;
 }
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
@@ -460,20 +461,30 @@ void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
 void EventPlotOpenGLWidget::handleZooming(int delta_y) {
     float zoom_sensitivity = 0.001f;
     float zoom_factor = 1.0f + delta_y * zoom_sensitivity;
-    float new_zoom = _zoom_level * zoom_factor;
+    float new_y_zoom = _y_zoom_level * zoom_factor;
 
-    // Clamp zoom level
-    new_zoom = qBound(0.1f, new_zoom, 10.0f);
+    // Clamp Y zoom level
+    new_y_zoom = qBound(0.1f, new_y_zoom, 10.0f);
 
-    setZoomLevel(new_zoom);
+    if (_y_zoom_level != new_y_zoom) {
+        _y_zoom_level = new_y_zoom;
+        updateMatrices();
+        update();
+        emit zoomLevelChanged(_y_zoom_level);  // Emit Y zoom level change
+    }
 }
 
 void EventPlotOpenGLWidget::setXAxisRange(int negative_range, int positive_range) {
     if (_negative_range != negative_range || _positive_range != positive_range) {
         _negative_range = negative_range;
         _positive_range = positive_range;
+        
+        // Recalculate bounds and matrices with new range
+        calculateDataBounds();
         updateMatrices();
         update();
+        
+        qDebug() << "EventPlotOpenGLWidget::setXAxisRange - updated to:" << -negative_range << "to" << positive_range;
     }
 }
 
@@ -540,36 +551,20 @@ void EventPlotOpenGLWidget::updateVertexData() {
 }
 
 void EventPlotOpenGLWidget::calculateDataBounds() {
-    if (_event_data.empty()) {
-        _data_min_x = -1000.0f;  // Set reasonable default bounds
-        _data_max_x = 1000.0f;
-        _data_min_y = -1.0f;
-        _data_max_y = 1.0f;
-        _data_bounds_valid = false;
-        qDebug() << "EventPlotOpenGLWidget::calculateDataBounds - no data, using defaults";
-        return;
-    }
-
-    _data_min_x = std::numeric_limits<float>::max();
-    _data_max_x = std::numeric_limits<float>::min();
-    _data_min_y = std::numeric_limits<float>::max();
-    _data_max_y = std::numeric_limits<float>::min();
-
-    for (auto const & trial: _event_data) {
-        for (float event_time: trial) {
-            _data_min_x = std::min(_data_min_x, event_time);
-            _data_max_x = std::max(_data_max_x, event_time);
-        }
-    }
-
-    _data_min_y = -1.0f; // Y-axis is normalized to [-1, 1]
+    // Since we're using user-specified X-axis range, we don't need data-dependent bounds
+    // Just set fixed bounds for consistency
+    _data_min_x = -static_cast<float>(_negative_range);
+    _data_max_x = static_cast<float>(_positive_range);
+    _data_min_y = -1.0f; // Y-axis is always normalized to [-1, 1]
     _data_max_y = 1.0f;
-
+    
+    // Always mark bounds as valid since we're using fixed ranges
     _data_bounds_valid = true;
     
-    qDebug() << "EventPlotOpenGLWidget::calculateDataBounds - bounds:" 
+    qDebug() << "EventPlotOpenGLWidget::calculateDataBounds - using fixed bounds:" 
              << "X[" << _data_min_x << "," << _data_max_x << "]" 
-             << "Y[" << _data_min_y << "," << _data_max_y << "]";
+             << "Y[" << _data_min_y << "," << _data_max_y << "]"
+             << "from ranges: -" << _negative_range << "to +" << _positive_range;
 }
 
 std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEventNear(int screen_x, int screen_y, float tolerance_pixels) const {
@@ -677,56 +672,50 @@ void EventPlotOpenGLWidget::renderCenterLine() {
     }
     
     _center_line_vertex_array_object.bind();
-    _center_line_buffer.bind();
 
-    // Set uniforms for center line rendering
-    _shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black
-    _shader_program->setUniformValue("u_point_size", 2.0f); // Thin line (not used for lines)
+    // Set uniforms for center line rendering (make it more visible)
+    _shader_program->setUniformValue("u_color", QVector4D(0.8f, 0.2f, 0.2f, 1.0f)); // Red color to make it more visible
+    _shader_program->setUniformValue("u_point_size", 1.0f); // Not used for lines
 
     // Draw the center line as GL_LINES
-    glLineWidth(2.0f);  // Make the line thicker for visibility
     glDrawArrays(GL_LINES, 0, 2);
 
-    _center_line_buffer.release();
     _center_line_vertex_array_object.release();
     
     // Check for OpenGL errors
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
         qDebug() << "EventPlotOpenGLWidget::renderCenterLine - OpenGL error:" << error;
+    } else {
+        qDebug() << "EventPlotOpenGLWidget::renderCenterLine completed successfully";
     }
 }
 
 void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const {
-    if (!_data_bounds_valid || _widget_width <= 0 || _widget_height <= 0) {
+    if (_widget_width <= 0 || _widget_height <= 0) {
         // Use safe default bounds
-        left = -1000.0f;
-        right = 1000.0f;
+        left = -static_cast<float>(_negative_range);
+        right = static_cast<float>(_positive_range);
         bottom = -1.0f;
         top = 1.0f;
-        qDebug() << "EventPlotOpenGLWidget::calculateProjectionBounds - using default bounds";
+        qDebug() << "EventPlotOpenGLWidget::calculateProjectionBounds - using default bounds with ranges";
         return;
     }
 
-    // Calculate orthographic projection bounds (same logic as SpatialOverlayOpenGLWidget)
-    float data_width = _data_max_x - _data_min_x;
-    float data_height = _data_max_y - _data_min_y;
-    float center_x = (_data_min_x + _data_max_x) * 0.5f;
-    float center_y = (_data_min_y + _data_max_y) * 0.5f;
+    // Use the user-specified X-axis range (no X zoom, controlled by spinboxes)
+    float x_range_width = static_cast<float>(_negative_range + _positive_range);
+    float center_x = 0.0f;  // Always center at 0
+    
+    // Y-axis is always normalized to [-1, 1] for trials, but apply Y zoom
+    float y_range_height = 2.0f;
+    float center_y = 0.0f;
 
-    // Ensure minimum width/height to avoid degenerate cases
-    if (data_width < 1.0f) {
-        data_width = 1000.0f;  // Reasonable default for time axis
-    }
-    if (data_height < 0.1f) {
-        data_height = 2.0f;    // Reasonable default for normalized Y axis
-    }
-
-    // Add padding and apply zoom
-    float padding = 1.1f;// 10% padding
-    float zoom_factor = 1.0f / _zoom_level;
-    float half_width = (data_width * padding * zoom_factor) / 2.0f;
-    float half_height = (data_height * padding * zoom_factor) / 2.0f;
+    // Apply zoom: X uses no zoom (controlled by spinboxes), Y uses Y zoom
+    float x_zoom_factor = 1.0f;  // No X zoom
+    float y_zoom_factor = 1.0f / _y_zoom_level;  // Y zoom only
+    
+    float half_width = (x_range_width * x_zoom_factor) / 2.0f;
+    float half_height = (y_range_height * y_zoom_factor) / 2.0f;
 
     // Apply aspect ratio correction
     float aspect_ratio = static_cast<float>(_widget_width) / _widget_height;
@@ -736,16 +725,18 @@ void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & righ
         half_height /= aspect_ratio;
     }
 
-    // Apply pan offset
-    float pan_x = _pan_offset_x * data_width * zoom_factor;
-    float pan_y = _pan_offset_y * data_height * zoom_factor;
+    // Apply pan offset (scale by the range for intuitive panning)
+    float pan_x = _pan_offset_x * x_range_width * x_zoom_factor;
+    float pan_y = _pan_offset_y * y_range_height * y_zoom_factor;
 
     left = center_x - half_width + pan_x;
     right = center_x + half_width + pan_x;
     bottom = center_y - half_height + pan_y;
     top = center_y + half_height + pan_y;
     
-    qDebug() << "EventPlotOpenGLWidget::calculateProjectionBounds - bounds:" 
+    qDebug() << "EventPlotOpenGLWidget::calculateProjectionBounds - user-specified bounds:" 
              << "left:" << left << "right:" << right 
-             << "bottom:" << bottom << "top:" << top;
+             << "bottom:" << bottom << "top:" << top
+             << "ranges: -" << _negative_range << "to +" << _positive_range
+             << "y_zoom:" << _y_zoom_level;
 }
