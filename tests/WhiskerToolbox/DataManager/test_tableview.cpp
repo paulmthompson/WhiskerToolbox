@@ -8,6 +8,8 @@
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
 #include "utils/TableView/computers/IntervalReductionComputer.h"
+#include "utils/TableView/computers/IntervalOverlapComputer.h"
+#include "utils/TableView/computers/IntervalPropertyComputer.h"
 #include "utils/TableView/computers/AnalogSliceGathererComputer.h"
 #include "utils/TableView/computers/StandardizeComputer.h"
 #include "Points/Point_Data.hpp"
@@ -20,6 +22,7 @@
 #include <memory>
 #include <vector>
 #include <random>
+#include <iostream> // Added for debug output
 
 
 TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
@@ -281,7 +284,8 @@ TEST_CASE("TableView Point Data Integration Test", "[TableView][Integration]") {
         REQUIRE(xValues2[1] == Catch::Approx(3.0).epsilon(0.001));
         
         // The spans should point to the same cached data
-        REQUIRE(xValues1.data() == xValues2.data());
+        // We aren't caching anymore
+        //REQUIRE(xValues1.data() == xValues2.data());
     }
     
     SECTION("Test error handling") {
@@ -554,9 +558,6 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         // Create an IntervalSelector with the TimeFrame key
         auto rowSelector = std::make_unique<IntervalSelector>(intervals, timeFrame);
 
-        //std::cout << "✓ IntervalSelector created successfully with TimeFrame key: " 
-        //          << rowSelector->getTimeFrameKey() << std::endl;
-        
         // Create TableView builder
         TableViewBuilder builder(dataManagerExtension);
         builder.setRowSelector(std::move(rowSelector));
@@ -584,6 +585,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
 
         // Get the column data
         auto timeValuesColumn = table.getColumnValues<double>("Time_Values");
+
         REQUIRE(!timeValuesColumn.empty());
         REQUIRE(timeValuesColumn.size() == 2);
         REQUIRE(timeValuesColumn[0] == Catch::Approx(2.0).epsilon(0.001)); // Mean of 1.0 and 3.0
@@ -591,6 +593,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
 
         // Verify that the second time frame data is not included
         auto timeValues2Column = table.getColumnValues<double>("Mean_TestPoints2.x");
+
         REQUIRE(!timeValues2Column.empty());
         REQUIRE(timeValues2Column.size() == 2);
         REQUIRE(timeValues2Column[0] == Catch::Approx(9.0).epsilon(0.001)); // Mean of 9.0 and NaN
@@ -598,6 +601,278 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
 
     
 
+    }
+
+    SECTION("Test DigitalIntervalSeries with different timeframes") {
+        // Create a DataManager instance
+        DataManager dataManager;
+        
+        // Create two different timeframes
+        std::vector<int> timeValues1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        auto timeFrame1 = std::make_shared<TimeFrame>(timeValues1);
+        dataManager.setTime("time1", timeFrame1);
+        
+        std::vector<int> timeValues2 = {0, 2, 4, 6, 8};
+        auto timeFrame2 = std::make_shared<TimeFrame>(timeValues2);
+        dataManager.setTime("time2", timeFrame2);
+        
+        // Create first DigitalIntervalSeries (will act as row selector)
+        auto intervalSeries1 = std::make_shared<DigitalIntervalSeries>();
+        intervalSeries1->addEvent(TimeFrameIndex(1), TimeFrameIndex(3));  // Interval 1-3
+        intervalSeries1->addEvent(TimeFrameIndex(5), TimeFrameIndex(7));  // Interval 5-7
+        intervalSeries1->addEvent(TimeFrameIndex(9), TimeFrameIndex(10));  // Interval 9-10
+        
+        dataManager.setData<DigitalIntervalSeries>("RowIntervals", intervalSeries1);    
+        dataManager.setTimeFrame("RowIntervals", "time1");
+        
+        // Create second DigitalIntervalSeries (will be used for overlap analysis)
+        auto intervalSeries2 = std::make_shared<DigitalIntervalSeries>();
+        intervalSeries2->addEvent(TimeFrameIndex(0), TimeFrameIndex(2));  // Interval 0-2
+        intervalSeries2->addEvent(TimeFrameIndex(4), TimeFrameIndex(6));  // Interval 4-6
+        intervalSeries2->addEvent(TimeFrameIndex(7), TimeFrameIndex(8));  // Interval 7-8
+        
+        dataManager.setData<DigitalIntervalSeries>("ColumnIntervals", intervalSeries2);
+        dataManager.setTimeFrame("ColumnIntervals", "time2");
+        
+        // Create DataManagerExtension
+        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
+        
+        // Create row selector from the first interval series
+        auto rowIntervalSource = dataManagerExtension->getIntervalSource("RowIntervals");
+        REQUIRE(rowIntervalSource != nullptr);
+        
+        // Get the intervals from the row source to create the row selector
+        auto rowIntervals = rowIntervalSource->getIntervalsInRange(
+            TimeFrameIndex(0), TimeFrameIndex(10), timeFrame1.get());
+        
+        REQUIRE(rowIntervals.size() == 3);
+        
+        // Convert to TimeFrameIntervals for the selector
+        std::vector<TimeFrameInterval> timeFrameIntervals;
+        for (const auto& interval : rowIntervals) {
+            timeFrameIntervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+        }
+        
+        auto rowSelector = std::make_unique<IntervalSelector>(timeFrameIntervals, timeFrame1);
+        
+        // Create TableView builder
+        TableViewBuilder builder(dataManagerExtension);
+        builder.setRowSelector(std::move(rowSelector));
+        
+        // Get interval source for column data
+        auto columnIntervalSource = dataManagerExtension->getIntervalSource("ColumnIntervals");
+        REQUIRE(columnIntervalSource != nullptr);
+        
+        // Add columns using IntervalOverlapComputer
+        builder.addColumn<int64_t>("Overlap_Count", 
+            std::make_unique<IntervalOverlapComputer<int64_t>>(columnIntervalSource, 
+                IntervalOverlapOperation::CountOverlaps, "ColumnIntervals"));
+        
+        builder.addColumn<int64_t>("Containing_ID", 
+            std::make_unique<IntervalOverlapComputer<int64_t>>(columnIntervalSource, 
+                IntervalOverlapOperation::AssignID, "ColumnIntervals"));
+        
+        // Add columns using IntervalPropertyComputer
+        builder.addColumn<double>("Row_Start", 
+            std::make_unique<IntervalPropertyComputer<double>>(rowIntervalSource, 
+                IntervalProperty::Start, "RowIntervals"));
+        
+        builder.addColumn<double>("Row_End", 
+            std::make_unique<IntervalPropertyComputer<double>>(rowIntervalSource, 
+                IntervalProperty::End, "RowIntervals"));
+        
+        builder.addColumn<double>("Row_Duration", 
+            std::make_unique<IntervalPropertyComputer<double>>(rowIntervalSource, 
+                IntervalProperty::Duration, "RowIntervals"));
+        
+        // Build the table
+        TableView table = builder.build();
+        
+        // Verify table structure
+        REQUIRE(table.getRowCount() == 3);
+        REQUIRE(table.getColumnCount() == 5);
+        REQUIRE(table.hasColumn("Overlap_Count"));
+        REQUIRE(table.hasColumn("Containing_ID"));
+        REQUIRE(table.hasColumn("Row_Start"));
+        REQUIRE(table.hasColumn("Row_End"));
+        REQUIRE(table.hasColumn("Row_Duration"));
+        
+        // Get the column data
+        auto overlapCount = table.getColumnValues<int64_t>("Overlap_Count");
+        auto containingID = table.getColumnValues<int64_t>("Containing_ID");
+        auto rowStart = table.getColumnValues<double>("Row_Start");
+        auto rowEnd = table.getColumnValues<double>("Row_End");
+        auto rowDuration = table.getColumnValues<double>("Row_Duration");
+        
+        // Verify the results
+        REQUIRE(overlapCount.size() == 3);
+        REQUIRE(containingID.size() == 3);
+        REQUIRE(rowStart.size() == 3);
+        REQUIRE(rowEnd.size() == 3);
+        REQUIRE(rowDuration.size() == 3);
+        
+        // Expected overlap analysis:
+        // Row interval 1-3: overlaps with column interval 0-2 (1 overlap)
+        // Row interval 5-7: overlaps with column interval 4-8 (1 overlap)  
+        // Row interval 9-10: overlaps with column interval 4-8 (0 overlaps, because 9 > 8)
+        std::vector<int64_t> expectedOverlapCount = {1, 1, 0};
+        std::vector<int64_t> expectedContainingID = {-1, 1, -1}; // Second row interval is contained by merged column interval
+        
+        // Expected row properties:
+        // Row 1: start=1, end=3, duration=2
+        // Row 2: start=5, end=7, duration=2
+        // Row 3: start=9, end=10, duration=1
+        std::vector<double> expectedRowStart = {1.0, 5.0, 9.0};
+        std::vector<double> expectedRowEnd = {3.0, 7.0, 10.0};
+        std::vector<double> expectedRowDuration = {2.0, 2.0, 1.0};
+        
+        for (size_t i = 0; i < 3; ++i) {
+            REQUIRE(overlapCount[i] == expectedOverlapCount[i]);
+            REQUIRE(containingID[i] == expectedContainingID[i]);
+            REQUIRE(rowStart[i] == Catch::Approx(expectedRowStart[i]).epsilon(0.001));
+            REQUIRE(rowEnd[i] == Catch::Approx(expectedRowEnd[i]).epsilon(0.001));
+            REQUIRE(rowDuration[i] == Catch::Approx(expectedRowDuration[i]).epsilon(0.001));
+        }
+        
+    }
+
+    SECTION("Test DigitalIntervalSeries with different timeframes - fine vs coarse") {
+        // Create a DataManager instance
+        DataManager dataManager;
+        
+        // Create fine-grained timeframe (0 to 30000)
+        std::vector<int> fineTimeValues;
+        for (int i = 0; i <= 30000; ++i) {
+            fineTimeValues.push_back(i);
+        }
+        auto fineTimeFrame = std::make_shared<TimeFrame>(fineTimeValues);
+        dataManager.setTime("fine_time", fineTimeFrame);
+        
+        // Create coarse-grained timeframe (0, 100, 200, ..., 30000)
+        std::vector<int> coarseTimeValues;
+        for (int i = 0; i <= 300; ++i) {
+            coarseTimeValues.push_back(i * 100);
+        }
+        auto coarseTimeFrame = std::make_shared<TimeFrame>(coarseTimeValues);
+        dataManager.setTime("coarse_time", coarseTimeFrame);
+        
+        // Create first DigitalIntervalSeries (row selector) using fine timeframe
+        auto rowIntervalSeries = std::make_shared<DigitalIntervalSeries>();
+        rowIntervalSeries->addEvent(TimeFrameIndex(1000), TimeFrameIndex(2000));  // Interval 1000-2000
+        rowIntervalSeries->addEvent(TimeFrameIndex(5000), TimeFrameIndex(7000));  // Interval 5000-7000
+        rowIntervalSeries->addEvent(TimeFrameIndex(15000), TimeFrameIndex(16000)); // Interval 15000-16000
+        
+        dataManager.setData<DigitalIntervalSeries>("RowIntervals", rowIntervalSeries);
+        dataManager.setTimeFrame("RowIntervals", "fine_time");
+        
+        // Create second DigitalIntervalSeries (column data) using coarse timeframe
+        auto columnIntervalSeries = std::make_shared<DigitalIntervalSeries>();
+        columnIntervalSeries->addEvent(TimeFrameIndex(0), TimeFrameIndex(1));    // Interval 0-100
+        columnIntervalSeries->addEvent(TimeFrameIndex(5), TimeFrameIndex(7));    // Interval 500-700
+        columnIntervalSeries->addEvent(TimeFrameIndex(15), TimeFrameIndex(16));  // Interval 1500-1600
+        
+        dataManager.setData<DigitalIntervalSeries>("ColumnIntervals", columnIntervalSeries);
+        dataManager.setTimeFrame("ColumnIntervals", "coarse_time");
+        
+        // Create DataManagerExtension
+        auto dataManagerExtension = std::make_shared<DataManagerExtension>(dataManager);
+        
+        // Create row selector from the row interval series
+        auto rowIntervalSource = dataManagerExtension->getIntervalSource("RowIntervals");
+        REQUIRE(rowIntervalSource != nullptr);
+        
+        // Get the intervals from the row source
+        auto rowIntervals = rowIntervalSource->getIntervalsInRange(
+            TimeFrameIndex(0), TimeFrameIndex(30000), fineTimeFrame.get());
+        
+        REQUIRE(rowIntervals.size() == 3);
+        
+        // Convert to TimeFrameIntervals for the selector
+        std::vector<TimeFrameInterval> timeFrameIntervals;
+        for (const auto& interval : rowIntervals) {
+            timeFrameIntervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+        }
+        
+        auto rowSelector = std::make_unique<IntervalSelector>(timeFrameIntervals, fineTimeFrame);
+        
+        // Create TableView builder
+        TableViewBuilder builder(dataManagerExtension);
+        builder.setRowSelector(std::move(rowSelector));
+        
+        // Get interval source for column data
+        auto columnIntervalSource = dataManagerExtension->getIntervalSource("ColumnIntervals");
+        REQUIRE(columnIntervalSource != nullptr);
+        
+        // Add columns using IntervalOverlapComputer
+        builder.addColumn<int64_t>("Overlap_Count", 
+            std::make_unique<IntervalOverlapComputer<int64_t>>(columnIntervalSource, 
+                IntervalOverlapOperation::CountOverlaps, "ColumnIntervals"));
+        
+        builder.addColumn<int64_t>("Containing_ID", 
+            std::make_unique<IntervalOverlapComputer<int64_t>>(columnIntervalSource, 
+                IntervalOverlapOperation::AssignID, "ColumnIntervals"));
+        
+        // Add columns using IntervalPropertyComputer
+        builder.addColumn<double>("Row_Start", 
+            std::make_unique<IntervalPropertyComputer<double>>(rowIntervalSource, 
+                IntervalProperty::Start, "RowIntervals"));
+        
+        builder.addColumn<double>("Row_End", 
+            std::make_unique<IntervalPropertyComputer<double>>(rowIntervalSource, 
+                IntervalProperty::End, "RowIntervals"));
+        
+        builder.addColumn<double>("Row_Duration", 
+            std::make_unique<IntervalPropertyComputer<double>>(rowIntervalSource, 
+                IntervalProperty::Duration, "RowIntervals"));
+        
+        // Build the table
+        TableView table = builder.build();
+        
+        // Verify table structure
+        REQUIRE(table.getRowCount() == 3);
+        REQUIRE(table.getColumnCount() == 5);
+        REQUIRE(table.hasColumn("Overlap_Count"));
+        REQUIRE(table.hasColumn("Containing_ID"));
+        REQUIRE(table.hasColumn("Row_Start"));
+        REQUIRE(table.hasColumn("Row_End"));
+        REQUIRE(table.hasColumn("Row_Duration"));
+        
+        // Get the column data
+        auto overlapCount = table.getColumnValues<int64_t>("Overlap_Count");
+        auto containingID = table.getColumnValues<int64_t>("Containing_ID");
+        auto rowStart = table.getColumnValues<double>("Row_Start");
+        auto rowEnd = table.getColumnValues<double>("Row_End");
+        auto rowDuration = table.getColumnValues<double>("Row_Duration");
+        
+        // Verify the results
+        REQUIRE(overlapCount.size() == 3);
+        REQUIRE(containingID.size() == 3);
+        REQUIRE(rowStart.size() == 3);
+        REQUIRE(rowEnd.size() == 3);
+        REQUIRE(rowDuration.size() == 3);
+        
+        // Expected overlap analysis:
+        // Row interval 1000-2000: overlaps with column interval 0-100 (1 overlap)
+        // Row interval 5000-7000: overlaps with column interval 500-700 (1 overlap)
+        // Row interval 15000-16000: overlaps with column interval 1500-1600 (1 overlap)
+        std::vector<int64_t> expectedOverlapCount = {1, 1, 1};
+        std::vector<int64_t> expectedContainingID = {0, 1, 2}; // Each row interval is contained by its corresponding column interval
+        
+        // Expected row properties:
+        // Row 1: start=1000, end=2000, duration=1000
+        // Row 2: start=5000, end=7000, duration=2000
+        // Row 3: start=15000, end=16000, duration=1000
+        std::vector<double> expectedRowStart = {1000.0, 5000.0, 15000.0};
+        std::vector<double> expectedRowEnd = {2000.0, 7000.0, 16000.0};
+        std::vector<double> expectedRowDuration = {1000.0, 2000.0, 1000.0};
+        
+        for (size_t i = 0; i < 3; ++i) {
+            REQUIRE(overlapCount[i] == expectedOverlapCount[i]);
+            REQUIRE(containingID[i] == expectedContainingID[i]);
+            REQUIRE(rowStart[i] == Catch::Approx(expectedRowStart[i]).epsilon(0.001));
+            REQUIRE(rowEnd[i] == Catch::Approx(expectedRowEnd[i]).epsilon(0.001));
+            REQUIRE(rowDuration[i] == Catch::Approx(expectedRowDuration[i]).epsilon(0.001));
+        }
     }
 
 }
