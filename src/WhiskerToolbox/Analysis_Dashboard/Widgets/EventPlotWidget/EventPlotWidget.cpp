@@ -243,6 +243,7 @@ void EventPlotWidget::setupOpenGLWidget() {
 void EventPlotWidget::setXAxisRange(int negative_range, int positive_range) {
     if (_opengl_widget) {
         _opengl_widget->setXAxisRange(negative_range, positive_range);
+        emit renderUpdateRequested(getPlotId());
     }
 }
 

@@ -485,6 +485,7 @@ void EventPlotOpenGLWidget::setXAxisRange(int negative_range, int positive_range
         update();
         
         qDebug() << "EventPlotOpenGLWidget::setXAxisRange - updated to:" << -negative_range << "to" << positive_range;
+    
     }
 }
 
