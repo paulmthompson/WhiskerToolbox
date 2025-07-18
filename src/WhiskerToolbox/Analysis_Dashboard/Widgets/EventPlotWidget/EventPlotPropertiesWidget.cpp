@@ -45,6 +45,12 @@ void EventPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) 
 
     if (_event_plot_widget) {
         updateFromPlot();
+        
+        // Connect to pan offset changes to update view bounds labels
+        if (_event_plot_widget->getOpenGLWidget()) {
+            connect(_event_plot_widget->getOpenGLWidget(), &EventPlotOpenGLWidget::panOffsetChanged,
+                    this, &EventPlotPropertiesWidget::onViewBoundsChanged);
+        }
     }
 }
 
@@ -62,11 +68,15 @@ void EventPlotPropertiesWidget::updateFromPlot() {
     // Update interval settings visibility
     updateIntervalSettingsVisibility();
 
-    // Update X-axis range
+    // Update capture range from current X-axis range
     int negative_range, positive_range;
     _event_plot_widget->getXAxisRange(negative_range, positive_range);
-    setNegativeRange(negative_range);
-    setPositiveRange(positive_range);
+    if (negative_range == positive_range) {
+        setCaptureRange(negative_range);
+    }
+
+    // Update view bounds labels
+    updateViewBoundsLabels();
 
     // Update zoom level
     if (_event_plot_widget->getOpenGLWidget()) {
@@ -199,14 +209,9 @@ void EventPlotPropertiesWidget::setupConnections() {
                 this, &EventPlotPropertiesWidget::onTooltipsEnabledChanged);
     }
 
-    if (ui->negative_range_spinbox) {
-        connect(ui->negative_range_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
-                this, &EventPlotPropertiesWidget::onNegativeRangeChanged);
-    }
-
-    if (ui->positive_range_spinbox) {
-        connect(ui->positive_range_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
-                this, &EventPlotPropertiesWidget::onPositiveRangeChanged);
+    if (ui->capture_range_spinbox) {
+        connect(ui->capture_range_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+                this, &EventPlotPropertiesWidget::onCaptureRangeChanged);
     }
 }
 
@@ -327,10 +332,12 @@ void EventPlotPropertiesWidget::updatePlotWidget() {
 
     _event_plot_widget->setEventDataKeys(selected_sources);
 
-    // Update X-axis range
-    int negative_range = getNegativeRange();
-    int positive_range = getPositiveRange();
-    _event_plot_widget->setXAxisRange(negative_range, positive_range);
+    // Update X-axis range using capture range (±N samples)
+    int capture_range = getCaptureRange();
+    _event_plot_widget->setXAxisRange(capture_range, capture_range);
+
+    // Update view bounds labels after setting the range
+    updateViewBoundsLabels();
 
     QStringList y_axis_features = getSelectedYAxisFeatures();
     _event_plot_widget->setYAxisDataKeys(y_axis_features);
@@ -339,42 +346,44 @@ void EventPlotPropertiesWidget::updatePlotWidget() {
     emit propertiesChanged();
 }
 
-void EventPlotPropertiesWidget::onNegativeRangeChanged(int value) {
+void EventPlotPropertiesWidget::onCaptureRangeChanged(int value) {
     Q_UNUSED(value)
     updatePlotWidget();
 }
 
-void EventPlotPropertiesWidget::onPositiveRangeChanged(int value) {
-    Q_UNUSED(value)
-    updatePlotWidget();
+void EventPlotPropertiesWidget::onViewBoundsChanged() {
+    updateViewBoundsLabels();
 }
 
-int EventPlotPropertiesWidget::getNegativeRange() const {
-    if (ui->negative_range_spinbox) {
-        return ui->negative_range_spinbox->value();
+int EventPlotPropertiesWidget::getCaptureRange() const {
+    if (ui->capture_range_spinbox) {
+        return ui->capture_range_spinbox->value();
     }
     return 30000;// Default value
 }
 
-int EventPlotPropertiesWidget::getPositiveRange() const {
-    if (ui->positive_range_spinbox) {
-        return ui->positive_range_spinbox->value();
-    }
-    return 30000;// Default value
-}
-
-void EventPlotPropertiesWidget::setNegativeRange(int value) {
-    if (ui->negative_range_spinbox) {
-        ui->negative_range_spinbox->blockSignals(true);
-        ui->negative_range_spinbox->setValue(value);
-        ui->negative_range_spinbox->blockSignals(false);
+void EventPlotPropertiesWidget::setCaptureRange(int value) {
+    if (ui->capture_range_spinbox) {
+        ui->capture_range_spinbox->blockSignals(true);
+        ui->capture_range_spinbox->setValue(value);
+        ui->capture_range_spinbox->blockSignals(false);
     }
 }
 
-void EventPlotPropertiesWidget::setPositiveRange(int value) {
-    if (ui->positive_range_spinbox) {
-        ui->positive_range_spinbox->blockSignals(true);
-        ui->positive_range_spinbox->setValue(value);
-        ui->positive_range_spinbox->blockSignals(false);
+void EventPlotPropertiesWidget::updateViewBoundsLabels() {
+    if (!_event_plot_widget || !_event_plot_widget->getOpenGLWidget()) {
+        return;
+    }
+
+    // Get current visible bounds from the OpenGL widget (includes pan offset)
+    float left_bound, right_bound;
+    _event_plot_widget->getOpenGLWidget()->getVisibleBounds(left_bound, right_bound);
+
+    // Update the labels with current visible bounds
+    if (ui->left_bound_label) {
+        ui->left_bound_label->setText(QString::number(static_cast<int>(left_bound)));
+    }
+    if (ui->right_bound_label) {
+        ui->right_bound_label->setText(QString::number(static_cast<int>(right_bound)));
     }
 }

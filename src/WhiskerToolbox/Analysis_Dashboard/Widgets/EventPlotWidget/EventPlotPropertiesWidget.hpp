@@ -87,16 +87,15 @@ private slots:
     void onTooltipsEnabledChanged(bool enabled);
 
     /**
-     * @brief Handle negative range changes
-     * @param value New negative range value in milliseconds
+     * @brief Handle capture range changes
+     * @param value New capture range value in samples
      */
-    void onNegativeRangeChanged(int value);
+    void onCaptureRangeChanged(int value);
 
     /**
-     * @brief Handle positive range changes
-     * @param value New positive range value in milliseconds
+     * @brief Handle view bounds update (when panning changes the visible area)
      */
-    void onPositiveRangeChanged(int value);
+    void onViewBoundsChanged();
 
 private:
     Ui::EventPlotPropertiesWidget * ui;
@@ -154,28 +153,21 @@ private:
     void updateIntervalSettingsVisibility();
 
     /**
-     * @brief Get the negative range value in milliseconds
-     * @return Negative range value
+     * @brief Get the capture range value in samples
+     * @return Capture range value
      */
-    int getNegativeRange() const;
+    int getCaptureRange() const;
 
     /**
-     * @brief Get the positive range value in milliseconds
-     * @return Positive range value
+     * @brief Set the capture range value in samples
+     * @param value Capture range value
      */
-    int getPositiveRange() const;
+    void setCaptureRange(int value);
 
     /**
-     * @brief Set the negative range value in milliseconds
-     * @param value Negative range value
+     * @brief Update the view bounds labels based on current view
      */
-    void setNegativeRange(int value);
-
-    /**
-     * @brief Set the positive range value in milliseconds
-     * @param value Positive range value
-     */
-    void setPositiveRange(int value);
+    void updateViewBoundsLabels();
 };
 
 #endif// EVENTPLOTPROPERTIESWIDGET_HPP

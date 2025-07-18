@@ -85,6 +85,13 @@ public:
     void getXAxisRange(int & negative_range, int & positive_range) const;
 
     /**
+     * @brief Get the current visible bounds (including pan offset)
+     * @param left_bound Output parameter for left visible bound
+     * @param right_bound Output parameter for right visible bound
+     */
+    void getVisibleBounds(float & left_bound, float & right_bound) const;
+
+    /**
      * @brief Convert screen coordinates to world coordinates
      * @param screen_x Screen X coordinate
      * @param screen_y Screen Y coordinate

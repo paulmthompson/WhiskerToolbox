@@ -54,6 +54,52 @@
        </layout>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="capture_range_layout">
+        <item>
+         <widget class="QLabel" name="capture_range_label">
+          <property name="text">
+           <string>Capture Range:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="capture_range_spinbox">
+          <property name="prefix">
+           <string>±</string>
+          </property>
+          <property name="suffix">
+           <string> samples</string>
+          </property>
+          <property name="minimum">
+           <number>100</number>
+          </property>
+          <property name="maximum">
+           <number>100000</number>
+          </property>
+          <property name="singleStep">
+           <number>100</number>
+          </property>
+          <property name="value">
+           <number>30000</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_capture">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
        <widget class="QLabel" name="x_axis_info_label">
         <property name="text">
          <string>Select a data source for the X-axis</string>
@@ -141,35 +187,59 @@ color: #333;
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="negative_range_layout">
+       <layout class="QHBoxLayout" name="view_bounds_layout">
         <item>
-         <widget class="QLabel" name="negative_range_label">
+         <widget class="QLabel" name="view_bounds_label">
           <property name="text">
-           <string>Negative Range:</string>
+           <string>Current View Bounds:</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QSpinBox" name="negative_range_spinbox">
-          <property name="suffix">
-           <string>ms</string>
+         <widget class="QLabel" name="left_bound_label">
+          <property name="text">
+           <string>-30000</string>
           </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>30000</number>
-          </property>
-          <property name="singleStep">
-           <number>100</number>
-          </property>
-          <property name="value">
-           <number>30000</number>
+          <property name="styleSheet">
+           <string notr="true">QLabel { 
+font-family: monospace; 
+font-weight: bold; 
+color: #333; 
+background-color: #f8f8f8; 
+border: 1px solid #ddd; 
+padding: 4px 8px; 
+border-radius: 3px; 
+}</string>
           </property>
          </widget>
         </item>
         <item>
-         <spacer name="horizontalSpacer_2">
+         <widget class="QLabel" name="bounds_separator">
+          <property name="text">
+           <string>to</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="right_bound_label">
+          <property name="text">
+           <string>+30000</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLabel { 
+font-family: monospace; 
+font-weight: bold; 
+color: #333; 
+background-color: #f8f8f8; 
+border: 1px solid #ddd; 
+padding: 4px 8px; 
+border-radius: 3px; 
+}</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_bounds">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -184,47 +254,22 @@ color: #333;
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="positive_range_layout">
-        <item>
-         <widget class="QLabel" name="positive_range_label">
-          <property name="text">
-           <string>Positive Range:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSpinBox" name="positive_range_spinbox">
-          <property name="suffix">
-           <string>ms</string>
-          </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>30000</number>
-          </property>
-          <property name="singleStep">
-           <number>100</number>
-          </property>
-          <property name="value">
-           <number>30000</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
+       <widget class="QLabel" name="pan_hint_label">
+        <property name="text">
+         <string>Use click and drag to pan the view horizontally</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel { 
+color: #666; 
+font-size: 10px; 
+font-style: italic; 
+padding: 4px; 
+}</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
       </item>
       <item>
        <layout class="QHBoxLayout" name="zoom_layout">

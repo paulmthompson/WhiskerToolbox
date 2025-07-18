@@ -554,6 +554,15 @@ void EventPlotOpenGLWidget::getXAxisRange(int & negative_range, int & positive_r
     positive_range = _positive_range;
 }
 
+void EventPlotOpenGLWidget::getVisibleBounds(float & left_bound, float & right_bound) const {
+    // Calculate the actual visible bounds including pan offset
+    float left, right, bottom, top;
+    calculateProjectionBounds(left, right, bottom, top);
+    
+    left_bound = left;
+    right_bound = right;
+}
+
 void EventPlotOpenGLWidget::updateVertexData() {
     _vertex_data.clear();
     _total_events = 0;
