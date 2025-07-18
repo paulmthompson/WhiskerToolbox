@@ -145,6 +145,7 @@ private slots:
 private:
     // OpenGL resources
     QOpenGLShaderProgram * _shader_program;
+    QOpenGLShaderProgram * _line_shader_program;  // Separate shader for line rendering
     QOpenGLBuffer _vertex_buffer;
     QOpenGLVertexArrayObject _vertex_array_object;
     QOpenGLBuffer _highlight_vertex_buffer;

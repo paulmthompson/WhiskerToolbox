@@ -9,6 +9,7 @@
 EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
       _shader_program(nullptr),
+      _line_shader_program(nullptr),
       _zoom_level(1.0f),
       _y_zoom_level(1.0f),
       _pan_offset_x(0.0f),
@@ -55,6 +56,10 @@ EventPlotOpenGLWidget::~EventPlotOpenGLWidget() {
 
     if (_shader_program) {
         delete _shader_program;
+    }
+
+    if (_line_shader_program) {
+        delete _line_shader_program;
     }
 
     _vertex_buffer.destroy();
@@ -104,10 +109,6 @@ void EventPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
 
 void EventPlotOpenGLWidget::setEventData(std::vector<std::vector<float>> const & event_data) {
     _event_data = event_data;
-    qDebug() << "EventPlotOpenGLWidget::setEventData called with" << event_data.size() << "trials";
-    for (size_t i = 0; i < event_data.size(); ++i) {
-        qDebug() << "Trial" << i << "has" << event_data[i].size() << "events";
-    }
     
     calculateDataBounds();  // Calculate bounds before updating vertex data
     updateVertexData();
@@ -186,15 +187,15 @@ void EventPlotOpenGLWidget::paintGL() {
         return;
     }
 
-    // Bind shader program
+    // Always render center line first (uses its own shader)
+    renderCenterLine();
+
+    // Bind point shader program for events
     _shader_program->bind();
 
-    // Set transformation matrices
+    // Set transformation matrices for point rendering
     _shader_program->setUniformValue("view_matrix", _view_matrix);
     _shader_program->setUniformValue("projection_matrix", _projection_matrix);
-
-    // Always render center line (should be visible even without data)
-    renderCenterLine();
 
     // Render events if we have data
     if (!_vertex_data.empty()) {
@@ -206,7 +207,7 @@ void EventPlotOpenGLWidget::paintGL() {
         renderHoveredEvent();
     }
 
-    // Unbind
+    // Unbind point shader
     _shader_program->release();
     
     qDebug() << "EventPlotOpenGLWidget::paintGL completed";
@@ -305,10 +306,10 @@ void EventPlotOpenGLWidget::handleTooltipTimer() {
 }
 
 void EventPlotOpenGLWidget::initializeShaders() {
-    // Create shader program
+    // Create shader program for points (events)
     _shader_program = new QOpenGLShaderProgram();
 
-    // Vertex shader
+    // Vertex shader for points
     char const * vertex_shader_source = R"(
         #version 410 core
         layout(location = 0) in vec2 position;
@@ -327,7 +328,7 @@ void EventPlotOpenGLWidget::initializeShaders() {
         }
     )";
 
-    // Fragment shader
+    // Fragment shader for points
     char const * fragment_shader_source = R"(
         #version 410 core
         in vec4 frag_color;
@@ -344,7 +345,7 @@ void EventPlotOpenGLWidget::initializeShaders() {
         }
     )";
 
-    // Compile and link shaders
+    // Compile and link point shaders
     if (!_shader_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertex_shader_source)) {
         qWarning("Failed to compile vertex shader");
         qDebug() << "Vertex shader compilation error:" << _shader_program->log();
@@ -363,7 +364,62 @@ void EventPlotOpenGLWidget::initializeShaders() {
         return;
     }
     
-    qDebug() << "EventPlotOpenGLWidget::initializeShaders - shader program linked successfully";
+    qDebug() << "EventPlotOpenGLWidget::initializeShaders - point shader program linked successfully";
+
+    // Create separate shader program for lines (center line)
+    _line_shader_program = new QOpenGLShaderProgram();
+
+    // Vertex shader for lines
+    char const * line_vertex_shader_source = R"(
+        #version 410 core
+        layout(location = 0) in vec2 position;
+        
+        uniform vec4 u_color;
+        uniform float u_world_x;  // World X coordinate for the line
+        uniform mat4 view_matrix;
+        uniform mat4 projection_matrix;
+        
+        out vec4 frag_color;
+        
+        void main() {
+            // Use the world X coordinate and the canvas Y coordinate
+            vec4 world_pos = vec4(u_world_x, position.y, 0.0, 1.0);
+            gl_Position = projection_matrix * view_matrix * world_pos;
+            frag_color = u_color;
+        }
+    )";
+
+    // Fragment shader for lines
+    char const * line_fragment_shader_source = R"(
+        #version 410 core
+        in vec4 frag_color;
+        out vec4 final_color;
+        
+        void main() {
+            final_color = frag_color;
+        }
+    )";
+
+    // Compile and link line shaders
+    if (!_line_shader_program->addShaderFromSourceCode(QOpenGLShader::Vertex, line_vertex_shader_source)) {
+        qWarning("Failed to compile line vertex shader");
+        qDebug() << "Line vertex shader compilation error:" << _line_shader_program->log();
+        return;
+    }
+
+    if (!_line_shader_program->addShaderFromSourceCode(QOpenGLShader::Fragment, line_fragment_shader_source)) {
+        qWarning("Failed to compile line fragment shader");
+        qDebug() << "Line fragment shader compilation error:" << _line_shader_program->log();
+        return;
+    }
+
+    if (!_line_shader_program->link()) {
+        qWarning("Failed to link line shader program");
+        qDebug() << "Line shader program linking error:" << _line_shader_program->log();
+        return;
+    }
+    
+    qDebug() << "EventPlotOpenGLWidget::initializeShaders - line shader program linked successfully";
 }
 
 void EventPlotOpenGLWidget::initializeBuffers() {
@@ -402,11 +458,15 @@ void EventPlotOpenGLWidget::initializeBuffers() {
     // Create center line buffer and vertex array object
     _center_line_buffer.create();
     _center_line_buffer.bind();
-    _center_line_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    _center_line_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);  // Static since we'll just use full canvas height
     
-    // Create a vertical line at x=0 spanning a large Y range to ensure visibility
-    float center_line_data[4] = {0.0f, -100.0f, 0.0f, 100.0f}; // Two points: (0,-100) and (0,100)
-    _center_line_buffer.allocate(center_line_data, 4 * sizeof(float));
+    // Initialize with line data that spans from bottom to top of canvas
+    // We'll use the line shader to position this at world X=0
+    std::vector<float> center_line_data = {
+        0.0f, -1.0f,  // Bottom of canvas
+        0.0f,  1.0f   // Top of canvas
+    };
+    _center_line_buffer.allocate(center_line_data.data(), static_cast<int>(center_line_data.size() * sizeof(float)));
     _center_line_buffer.release();
 
     _center_line_vertex_array_object.create();
@@ -417,7 +477,7 @@ void EventPlotOpenGLWidget::initializeBuffers() {
     _center_line_buffer.release();
     _center_line_vertex_array_object.release();
     
-    qDebug() << "EventPlotOpenGLWidget::initializeBuffers - center line buffer created with extended range";
+    qDebug() << "EventPlotOpenGLWidget::initializeBuffers - center line buffer created (static line)";
 }
 
 void EventPlotOpenGLWidget::updateMatrices() {
@@ -522,19 +582,6 @@ void EventPlotOpenGLWidget::updateVertexData() {
             // event_time is already normalized to center (0 = center)
             _vertex_data.push_back(event_time);
             _vertex_data.push_back(y);
-            
-                // Debug: print first few events
-    if (_vertex_data.size() <= 10) {
-        qDebug() << "Event" << _vertex_data.size()/2 << "at position:" << event_time << "," << y;
-    }
-    
-    // Debug: print some sample events from different trials
-    if (trial_index < 3 && !_event_data[trial_index].empty()) {
-        qDebug() << "Trial" << trial_index << "sample events:";
-        for (size_t i = 0; i < std::min(size_t(3), _event_data[trial_index].size()); ++i) {
-            qDebug() << "  Event" << i << "time:" << _event_data[trial_index][i];
-        }
-    }
         }
     }
 
@@ -672,23 +719,39 @@ void EventPlotOpenGLWidget::renderCenterLine() {
         return;
     }
     
+    if (!_line_shader_program || !_line_shader_program->isLinked()) {
+        qDebug() << "EventPlotOpenGLWidget::renderCenterLine - line shader program not ready";
+        return;
+    }
+    
+    // Use the line shader program for rendering the center line
+    _line_shader_program->bind();
+
+    // Set transformation matrices
+    _line_shader_program->setUniformValue("view_matrix", _view_matrix);
+    _line_shader_program->setUniformValue("projection_matrix", _projection_matrix);
+    
+    // Set the world X coordinate for the center line (always at X=0)
+    _line_shader_program->setUniformValue("u_world_x", 0.0f);
+    
+    // Set line color (red)
+    _line_shader_program->setUniformValue("u_color", QVector4D(0.8f, 0.2f, 0.2f, 1.0f));
+    
+    // Bind vertex array object
     _center_line_vertex_array_object.bind();
 
-    // Set uniforms for center line rendering (make it more visible)
-    _shader_program->setUniformValue("u_color", QVector4D(0.8f, 0.2f, 0.2f, 1.0f)); // Red color to make it more visible
-    _shader_program->setUniformValue("u_point_size", 1.0f); // Not used for lines
-
-    // Draw the center line as GL_LINES
+    // Draw the center line as GL_LINES (2 vertices: bottom to top)
     glDrawArrays(GL_LINES, 0, 2);
 
     _center_line_vertex_array_object.release();
+    _line_shader_program->release();
     
     // Check for OpenGL errors
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
         qDebug() << "EventPlotOpenGLWidget::renderCenterLine - OpenGL error:" << error;
     } else {
-        qDebug() << "EventPlotOpenGLWidget::renderCenterLine completed successfully";
+        qDebug() << "EventPlotOpenGLWidget::renderCenterLine completed successfully with line from canvas bottom to top";
     }
 }
 
