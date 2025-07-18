@@ -2,7 +2,13 @@
 #define DATA_AGGREGATION_EXPORTER_WIDGET_HPP
 
 #include "DataManager/DataManagerTypes.hpp"
-#include "DataManager/utils/DataAggregation/DataAggregation.hpp"
+#include "DataManager/utils/TableView/core/TableView.h"
+#include "DataManager/utils/TableView/core/TableViewBuilder.h"
+#include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
+#include "DataManager/utils/TableView/computers/IntervalReductionComputer.h"
+#include "DataManager/utils/TableView/computers/IntervalPropertyComputer.h"
+#include "DataManager/utils/TableView/computers/IntervalOverlapComputer.h"
+#include "DataManager/utils/TableView/computers/AnalogSliceGathererComputer.h"
 
 #include <QWidget>
 #include <QString>
@@ -22,29 +28,25 @@ namespace Ui {
 class DataAggregationExporter_Widget;
 }
 
-// Use the TransformationType from DataAggregation module
-using TransformationType = DataAggregation::TransformationType;
-using TransformationConfig = DataAggregation::TransformationConfig;
-
 /**
  * @brief Structure representing an export column configuration for the UI
  */
 struct ExportColumn {
     std::string data_key;                    // Key in DataManager
     DM_DataType data_type;                   // Type of the data  
-    TransformationType transformation;        // Transformation to apply
+    std::string transformation_type;          // Type of transformation (e.g., "mean", "max", "start", etc.)
     std::string column_name;                 // Name for CSV column
     std::string reference_data_key;          // For transformations that need reference data
 };
 
 /**
- * @brief Widget for exporting aggregated data across time intervals to CSV
+ * @brief Widget for exporting aggregated data across time intervals to CSV using TableView
  * 
  * This widget allows users to:
  * 1. Select a DigitalIntervalSeries as the basis for aggregation
  * 2. Choose data keys and transformations to apply within each interval
  * 3. Configure CSV export options
- * 4. Export the aggregated data to a CSV file
+ * 4. Export the aggregated data to a CSV file using the TableView system
  */
 class DataAggregationExporter_Widget : public QWidget {
     Q_OBJECT
@@ -71,6 +73,7 @@ private slots:
 private:
     Ui::DataAggregationExporter_Widget *ui;
     std::shared_ptr<DataManager> _data_manager;
+    std::shared_ptr<DataManagerExtension> _data_manager_extension;
     std::vector<ExportColumn> _export_columns;
 
     // UI setup and population methods
@@ -81,11 +84,11 @@ private:
     void _updateExportListTable();
     
     // Transformation and naming methods
-    std::vector<TransformationType> _getAvailableTransformations(DM_DataType data_type, 
-                                                               const std::string& selected_key,
-                                                               const std::string& interval_source) const;
-    QString _getTransformationDisplayName(TransformationType transformation) const;
-    QString _generateDefaultColumnName(const std::string& data_key, TransformationType transformation) const;
+    std::vector<std::string> _getAvailableTransformations(DM_DataType data_type, 
+                                                         const std::string& selected_key,
+                                                         const std::string& interval_source) const;
+    QString _getTransformationDisplayName(const std::string& transformation) const;
+    QString _generateDefaultColumnName(const std::string& data_key, const std::string& transformation) const;
     
     // Data processing methods
     std::string _getSelectedDataKey() const;
@@ -99,11 +102,11 @@ private:
     bool _shouldIncludeHeader() const;
     int _getPrecision() const;
     
-    // Helper methods for building reference data maps
-    std::map<std::string, std::vector<Interval>> _buildReferenceIntervals() const;
-    std::map<std::string, std::shared_ptr<AnalogTimeSeries>> _buildReferenceAnalog() const;
-    std::map<std::string, std::shared_ptr<PointData>> _buildReferencePoints() const;
-    std::vector<TransformationConfig> _buildTransformationConfigs() const;
+    // TableView construction methods
+    TableView _buildTableView() const;
+    std::unique_ptr<IRowSelector> _createRowSelector() const;
+    void _addColumnsToBuilder(TableViewBuilder& builder) const;
+    std::unique_ptr<IColumnComputer<double>> _createComputer(const ExportColumn& column) const;
 };
 
 #endif // DATA_AGGREGATION_EXPORTER_WIDGET_HPP 

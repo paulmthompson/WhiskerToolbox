@@ -59,13 +59,18 @@ auto IntervalOverlapComputer<size_t>::compute(const ExecutionPlan& plan) const -
     results.reserve(rowIntervals.size());
     
     // Get all column intervals from the source
-    // Use the actual size of the destination timeframe
-    auto destinationSize = destinationTimeFrame->getTotalFrameCount();
+    // Use a reasonable range that covers the entire time frame
     auto columnIntervals = m_source->getIntervalsInRange(
         TimeFrameIndex(0),
-        TimeFrameIndex(destinationSize - 1), // Use the actual size
+        TimeFrameIndex(1000000), // Use a large but reasonable upper bound
         destinationTimeFrame.get()
     );
+    
+    std::cout << "DEBUG: Retrieved " << columnIntervals.size() << " column intervals" << std::endl;
+    for (size_t i = 0; i < columnIntervals.size(); ++i) {
+        const auto& interval = columnIntervals[i];
+        std::cout << "DEBUG: Column interval " << i << ": [" << interval.start << ", " << interval.end << "]" << std::endl;
+    }
     
     for (const auto& rowInterval : rowIntervals) {
         int64_t count = countOverlappingIntervals(rowInterval, columnIntervals);

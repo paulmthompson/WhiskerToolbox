@@ -5,7 +5,15 @@
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "DataManager/utils/DataAggregation/DataAggregation.hpp"
+#include "DataManager/utils/TableView/core/TableView.h"
+#include "DataManager/utils/TableView/core/TableViewBuilder.h"
+#include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
+#include "DataManager/utils/TableView/computers/IntervalReductionComputer.h"
+#include "DataManager/utils/TableView/computers/IntervalPropertyComputer.h"
+#include "DataManager/utils/TableView/computers/IntervalOverlapComputer.h"
+#include "DataManager/utils/TableView/computers/AnalogSliceGathererComputer.h"
+#include "DataManager/utils/TableView/interfaces/IRowSelector.h"
+#include "DataManager/utils/TableView/interfaces/IColumnComputer.h"
 
 #include <QTableWidget>
 #include <QTableWidgetItem>
@@ -58,8 +66,11 @@ void DataAggregationExporter_Widget::setDataManager(std::shared_ptr<DataManager>
 {
     _data_manager = std::move(data_manager);
     
-    // Add observer to DataManager for updates
+    // Create DataManagerExtension for TableView access
     if (_data_manager) {
+        _data_manager_extension = std::make_shared<DataManagerExtension>(*_data_manager);
+        
+        // Add observer to DataManager for updates
         _data_manager->addObserver([this]() {
             _onDataManagerUpdated();
         });
@@ -161,9 +172,9 @@ void DataAggregationExporter_Widget::_populateTransformationCombo()
     
     auto transformations = _getAvailableTransformations(data_type, selected_key, interval_source);
     
-    for (auto transformation : transformations) {
+    for (const auto& transformation : transformations) {
         QString display_name = _getTransformationDisplayName(transformation);
-        ui->transformation_combo->addItem(display_name, static_cast<int>(transformation));
+        ui->transformation_combo->addItem(display_name, QString::fromStdString(transformation));
     }
 }
 
@@ -175,9 +186,13 @@ void DataAggregationExporter_Widget::_onTransformationChanged()
         return;
     }
     
-    int transformation_index = ui->transformation_combo->currentData().toInt();
-    TransformationType transformation = static_cast<TransformationType>(transformation_index);
+    QString transformation_data = ui->transformation_combo->currentData().toString();
+    if (transformation_data.isEmpty()) {
+        ui->column_name_edit->clear();
+        return;
+    }
     
+    std::string transformation = transformation_data.toStdString();
     QString default_name = _generateDefaultColumnName(selected_key, transformation);
     ui->column_name_edit->setText(default_name);
 }
@@ -214,12 +229,12 @@ void DataAggregationExporter_Widget::_onAddExportButtonClicked()
     ExportColumn column;
     column.data_key = selected_key;
     column.data_type = _getSelectedDataType();
-    column.transformation = static_cast<TransformationType>(ui->transformation_combo->currentData().toInt());
+    column.transformation_type = ui->transformation_combo->currentData().toString().toStdString();
     column.column_name = column_name.toStdString();
     
     // For transformations that need reference data, store the data key
-    if (column.transformation == TransformationType::IntervalID || 
-        column.transformation == TransformationType::IntervalCount) {
+    if (column.transformation_type == "interval_id" || 
+        column.transformation_type == "interval_count") {
         column.reference_data_key = selected_key;
     }
     
@@ -254,37 +269,33 @@ void DataAggregationExporter_Widget::_updateExportListTable()
         ui->export_list_table->setItem(static_cast<int>(i), 1, 
                                       new QTableWidgetItem(QString::fromStdString(convert_data_type_to_string(column.data_type))));
         ui->export_list_table->setItem(static_cast<int>(i), 2, 
-                                      new QTableWidgetItem(_getTransformationDisplayName(column.transformation)));
+                                      new QTableWidgetItem(_getTransformationDisplayName(column.transformation_type)));
         ui->export_list_table->setItem(static_cast<int>(i), 3, 
                                       new QTableWidgetItem(QString::fromStdString(column.column_name)));
     }
 }
 
-std::vector<TransformationType> DataAggregationExporter_Widget::_getAvailableTransformations(DM_DataType data_type, 
-                                                                                        const std::string& selected_key,
-                                                                                        const std::string& interval_source) const
+std::vector<std::string> DataAggregationExporter_Widget::_getAvailableTransformations(DM_DataType data_type, 
+                                                                                    const std::string& selected_key,
+                                                                                    const std::string& interval_source) const
 {
-    std::vector<TransformationType> transformations;
+    std::vector<std::string> transformations;
     
     switch (data_type) {
         case DM_DataType::Analog:
-            transformations = {TransformationType::AnalogMean, TransformationType::AnalogMin, 
-                             TransformationType::AnalogMax, TransformationType::AnalogStdDev};
+            transformations = {"mean", "min", "max", "std_dev"};
             break;
         case DM_DataType::Points:
-            transformations = {TransformationType::PointMeanX, TransformationType::PointMeanY};
+            transformations = {"mean_x", "mean_y"};
             break;
         case DM_DataType::DigitalInterval:
             // Check if this is the same interval as the source or a different one
             if (selected_key == interval_source) {
                 // Same interval: offer metadata transformations
-                transformations = {TransformationType::IntervalStart, 
-                                 TransformationType::IntervalEnd,
-                                 TransformationType::IntervalDuration};
+                transformations = {"start", "end", "duration"};
             } else {
                 // Different interval: offer relational transformations
-                transformations = {TransformationType::IntervalCount,
-                                 TransformationType::IntervalID};
+                transformations = {"interval_count", "interval_id"};
             }
             break;
         default:
@@ -294,43 +305,39 @@ std::vector<TransformationType> DataAggregationExporter_Widget::_getAvailableTra
     return transformations;
 }
 
-QString DataAggregationExporter_Widget::_getTransformationDisplayName(TransformationType transformation) const
+QString DataAggregationExporter_Widget::_getTransformationDisplayName(const std::string& transformation) const
 {
-    switch (transformation) {
-        case TransformationType::AnalogMean: return "Mean";
-        case TransformationType::AnalogMin: return "Minimum";
-        case TransformationType::AnalogMax: return "Maximum";
-        case TransformationType::AnalogStdDev: return "Standard Deviation";
-        case TransformationType::PointMeanX: return "Point Mean X";
-        case TransformationType::PointMeanY: return "Point Mean Y";
-        case TransformationType::IntervalCount: return "Interval Count";
-        case TransformationType::IntervalID: return "Interval ID";
-        case TransformationType::IntervalStart: return "Interval Start";
-        case TransformationType::IntervalEnd: return "Interval End";
-        case TransformationType::IntervalDuration: return "Interval Duration";
-        default: return "Unknown";
-    }
+    if (transformation == "mean") return "Mean";
+    if (transformation == "min") return "Minimum";
+    if (transformation == "max") return "Maximum";
+    if (transformation == "std_dev") return "Standard Deviation";
+    if (transformation == "mean_x") return "Point Mean X";
+    if (transformation == "mean_y") return "Point Mean Y";
+    if (transformation == "interval_count") return "Interval Count";
+    if (transformation == "interval_id") return "Interval ID";
+    if (transformation == "start") return "Interval Start";
+    if (transformation == "end") return "Interval End";
+    if (transformation == "duration") return "Interval Duration";
+    return "Unknown";
 }
 
-QString DataAggregationExporter_Widget::_generateDefaultColumnName(const std::string& data_key, TransformationType transformation) const
+QString DataAggregationExporter_Widget::_generateDefaultColumnName(const std::string& data_key, const std::string& transformation) const
 {
     QString base_name = QString::fromStdString(data_key);
     QString suffix;
     
-    switch (transformation) {
-        case TransformationType::AnalogMean: suffix = "_mean"; break;
-        case TransformationType::AnalogMin: suffix = "_min"; break;
-        case TransformationType::AnalogMax: suffix = "_max"; break;
-        case TransformationType::AnalogStdDev: suffix = "_std"; break;
-        case TransformationType::PointMeanX: suffix = "_x_mean"; break;
-        case TransformationType::PointMeanY: suffix = "_y_mean"; break;
-        case TransformationType::IntervalCount: suffix = "_count"; break;
-        case TransformationType::IntervalID: suffix = "_id"; break;
-        case TransformationType::IntervalStart: return "interval_start";
-        case TransformationType::IntervalEnd: return "interval_end";
-        case TransformationType::IntervalDuration: return "interval_duration";
-        default: suffix = "_unknown"; break;
-    }
+    if (transformation == "mean") suffix = "_mean";
+    else if (transformation == "min") suffix = "_min";
+    else if (transformation == "max") suffix = "_max";
+    else if (transformation == "std_dev") suffix = "_std";
+    else if (transformation == "mean_x") suffix = "_x_mean";
+    else if (transformation == "mean_y") suffix = "_y_mean";
+    else if (transformation == "interval_count") suffix = "_count";
+    else if (transformation == "interval_id") suffix = "_id";
+    else if (transformation == "start") return "interval_start";
+    else if (transformation == "end") return "interval_end";
+    else if (transformation == "duration") return "interval_duration";
+    else suffix = "_unknown";
     
     return base_name + suffix;
 }
@@ -395,30 +402,12 @@ void DataAggregationExporter_Widget::_onExportCsvButtonClicked()
 
 void DataAggregationExporter_Widget::_exportToCsv(const QString& filename)
 {
-    if (!_data_manager) {
+    if (!_data_manager || !_data_manager_extension) {
         throw std::runtime_error("No DataManager available");
     }
     
-    std::string interval_source = _getSelectedIntervalSource();
-    auto interval_data = _data_manager->getData<DigitalIntervalSeries>(interval_source);
-    if (!interval_data) {
-        throw std::runtime_error("Could not retrieve interval data for key: " + interval_source);
-    }
-    
-    // Get row intervals from the selected interval source
-    const auto& intervals = interval_data->getDigitalIntervalSeries();
-    
-    // Build reference data maps
-    auto reference_intervals = _buildReferenceIntervals();
-    auto reference_analog = _buildReferenceAnalog();
-    auto reference_points = _buildReferencePoints();
-    
-    // Build transformation configurations
-    auto transformation_configs = _buildTransformationConfigs();
-    
-    // Use DataAggregation module to compute results
-    auto result = DataAggregation::aggregateData(intervals, transformation_configs, 
-                                               reference_intervals, reference_analog, reference_points);
+    // Build the TableView using the new system
+    TableView table = _buildTableView();
     
     // Write results to CSV
     std::ofstream file(filename.toStdString());
@@ -442,15 +431,162 @@ void DataAggregationExporter_Widget::_exportToCsv(const QString& filename)
     }
     
     // Write data rows
-    for (const auto& row : result) {
-        for (size_t i = 0; i < row.size(); ++i) {
-            if (i > 0) file << delimiter;
-            file << row[i];
+    for (size_t row = 0; row < table.getRowCount(); ++row) {
+        for (size_t col = 0; col < _export_columns.size(); ++col) {
+            if (col > 0) file << delimiter;
+            
+            const auto& column_name = _export_columns[col].column_name;
+            try {
+                const auto& values = table.getColumnValues<double>(column_name);
+                if (row < values.size()) {
+                    file << values[row];
+                } else {
+                    file << "NaN";
+                }
+            } catch (const std::exception& e) {
+                file << "NaN";
+            }
         }
         file << line_ending;
     }
     
     file.close();
+}
+
+TableView DataAggregationExporter_Widget::_buildTableView() const
+{
+    if (!_data_manager_extension) {
+        throw std::runtime_error("DataManagerExtension not available");
+    }
+    
+    // Create TableView builder
+    TableViewBuilder builder(_data_manager_extension);
+    
+    // Set row selector
+    builder.setRowSelector(_createRowSelector());
+    
+    // Add columns
+    _addColumnsToBuilder(builder);
+    
+    // Build and return the table
+    return builder.build();
+}
+
+std::unique_ptr<IRowSelector> DataAggregationExporter_Widget::_createRowSelector() const
+{
+    std::string interval_source = _getSelectedIntervalSource();
+    if (interval_source.empty()) {
+        throw std::runtime_error("No interval source selected");
+    }
+    
+    // Get the interval data from DataManager
+    auto interval_data = _data_manager->getData<DigitalIntervalSeries>(interval_source);
+    if (!interval_data) {
+        throw std::runtime_error("Could not retrieve interval data for key: " + interval_source);
+    }
+    
+    // Get the intervals and time frame
+    const auto& intervals = interval_data->getDigitalIntervalSeries();
+    auto interval_time_frame_key = _data_manager->getTimeFrame(interval_source);
+    auto time_frame = _data_manager->getTime(interval_time_frame_key);
+    if (!time_frame) {
+        throw std::runtime_error("Could not retrieve time frame for key: " + interval_source);
+    }
+    // Convert to TimeFrameIntervals
+    std::vector<TimeFrameInterval> time_frame_intervals;
+    time_frame_intervals.reserve(intervals.size());
+    
+    for (const auto& interval : intervals) {
+        time_frame_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+    }
+    
+    // Create IntervalSelector
+    return std::make_unique<IntervalSelector>(time_frame_intervals, time_frame);
+}
+
+void DataAggregationExporter_Widget::_addColumnsToBuilder(TableViewBuilder& builder) const
+{
+    for (const auto& column : _export_columns) {
+        auto computer = _createComputer(column);
+        if (computer) {
+            builder.addColumn(column.column_name, std::move(computer));
+        }
+    }
+}
+
+std::unique_ptr<IColumnComputer<double>> DataAggregationExporter_Widget::_createComputer(const ExportColumn& column) const
+{
+
+    auto time_frame_key = _data_manager->getTimeFrame(column.data_key);
+    auto source_time_frame = _data_manager->getTime(time_frame_key);
+
+    if (column.transformation_type == "mean" || 
+        column.transformation_type == "min" || 
+        column.transformation_type == "max" || 
+        column.transformation_type == "std_dev") {
+        
+        // Get analog source
+        auto source = _data_manager_extension->getAnalogSource(column.data_key);
+        if (!source) {
+            throw std::runtime_error("Could not get analog source for: " + column.data_key);
+        }
+        
+        // Map transformation to ReductionType
+        ReductionType reduction;
+        if (column.transformation_type == "mean") reduction = ReductionType::Mean;
+        else if (column.transformation_type == "min") reduction = ReductionType::Min;
+        else if (column.transformation_type == "max") reduction = ReductionType::Max;
+        else if (column.transformation_type == "std_dev") reduction = ReductionType::StdDev;
+        else throw std::runtime_error("Unknown reduction type: " + column.transformation_type);
+        
+        return std::make_unique<IntervalReductionComputer>(source, reduction, column.data_key);
+    }
+    else if (column.transformation_type == "mean_x" || column.transformation_type == "mean_y") {
+        // For point data, we need to get the component source
+        std::string component_key = column.data_key + "." + (column.transformation_type == "mean_x" ? "x" : "y");
+        auto source = _data_manager_extension->getAnalogSource(component_key);
+        if (!source) {
+            throw std::runtime_error("Could not get point component source for: " + component_key);
+        }
+        
+        return std::make_unique<IntervalReductionComputer>(source, ReductionType::Mean, component_key);
+    }
+    else if (column.transformation_type == "start" || 
+             column.transformation_type == "end" || 
+             column.transformation_type == "duration") {
+        
+        // Get interval source
+        auto source = _data_manager_extension->getIntervalSource(column.data_key);
+        if (!source) {
+            throw std::runtime_error("Could not get interval source for: " + column.data_key);
+        }
+        
+        // Map transformation to IntervalProperty
+        IntervalProperty property;
+        if (column.transformation_type == "start") property = IntervalProperty::Start;
+        else if (column.transformation_type == "end") property = IntervalProperty::End;
+        else if (column.transformation_type == "duration") property = IntervalProperty::Duration;
+        else throw std::runtime_error("Unknown interval property: " + column.transformation_type);
+        
+        return std::make_unique<IntervalPropertyComputer<double>>(source, property, column.data_key);
+    }
+    else if (column.transformation_type == "interval_count" || column.transformation_type == "interval_id") {
+        // Get interval source for reference data
+        auto source = _data_manager_extension->getIntervalSource(column.reference_data_key);
+        if (!source) {
+            throw std::runtime_error("Could not get interval source for: " + column.reference_data_key);
+        }
+        
+        // Map transformation to IntervalOverlapOperation
+        IntervalOverlapOperation operation;
+        if (column.transformation_type == "interval_count") operation = IntervalOverlapOperation::CountOverlaps;
+        else if (column.transformation_type == "interval_id") operation = IntervalOverlapOperation::AssignID;
+        else throw std::runtime_error("Unknown overlap operation: " + column.transformation_type);
+        
+        return std::make_unique<IntervalOverlapComputer<double>>(source, operation, column.reference_data_key);
+    }
+    
+    throw std::runtime_error("Unknown transformation type: " + column.transformation_type);
 }
 
 std::string DataAggregationExporter_Widget::_getDelimiter() const
@@ -478,87 +614,4 @@ bool DataAggregationExporter_Widget::_shouldIncludeHeader() const
 int DataAggregationExporter_Widget::_getPrecision() const
 {
     return ui->precision_spinbox->value();
-}
-
-std::map<std::string, std::vector<Interval>> DataAggregationExporter_Widget::_buildReferenceIntervals() const
-{
-    std::map<std::string, std::vector<Interval>> reference_intervals;
-    
-    // Collect all DigitalIntervalSeries referenced by export columns
-    for (const auto& column : _export_columns) {
-        if (column.data_type == DM_DataType::DigitalInterval && 
-            !column.reference_data_key.empty()) {
-            
-            auto interval_data = _data_manager->getData<DigitalIntervalSeries>(column.reference_data_key);
-            if (interval_data) {
-                reference_intervals[column.reference_data_key] = interval_data->getDigitalIntervalSeries();
-            }
-        }
-    }
-    
-    return reference_intervals;
-}
-
-std::map<std::string, std::shared_ptr<AnalogTimeSeries>> DataAggregationExporter_Widget::_buildReferenceAnalog() const
-{
-    std::map<std::string, std::shared_ptr<AnalogTimeSeries>> reference_analog;
-    
-    // Collect all AnalogTimeSeries referenced by export columns  
-    for (const auto& column : _export_columns) {
-        if (column.data_type == DM_DataType::Analog) {
-            auto analog_data = _data_manager->getData<AnalogTimeSeries>(column.data_key);
-            if (analog_data) {
-                reference_analog[column.data_key] = analog_data;
-            }
-        }
-    }
-    
-    return reference_analog;
-}
-
-std::map<std::string, std::shared_ptr<PointData>> DataAggregationExporter_Widget::_buildReferencePoints() const
-{
-    std::map<std::string, std::shared_ptr<PointData>> reference_points;
-    
-    // Collect all PointData referenced by export columns
-    for (const auto& column : _export_columns) {
-        if (column.data_type == DM_DataType::Points) {
-            auto point_data = _data_manager->getData<PointData>(column.data_key);
-            if (point_data) {
-                reference_points[column.data_key] = point_data;
-            }
-        }
-    }
-    
-    return reference_points;
-}
-
-std::vector<TransformationConfig> DataAggregationExporter_Widget::_buildTransformationConfigs() const
-{
-    std::vector<TransformationConfig> configs;
-    configs.reserve(_export_columns.size());
-    
-    for (const auto& column : _export_columns) {
-        // Check which transformations need reference data keys
-        if (column.transformation == TransformationType::IntervalID || 
-            column.transformation == TransformationType::IntervalCount) {
-            // Interval transformations need reference data key
-            configs.emplace_back(column.transformation, column.column_name, column.reference_data_key);
-        } else if (column.transformation == TransformationType::AnalogMean ||
-                   column.transformation == TransformationType::AnalogMin ||
-                   column.transformation == TransformationType::AnalogMax ||
-                   column.transformation == TransformationType::AnalogStdDev) {
-            // Analog transformations need reference data key (use data_key as reference)
-            configs.emplace_back(column.transformation, column.column_name, column.data_key);
-        } else if (column.transformation == TransformationType::PointMeanX ||
-                   column.transformation == TransformationType::PointMeanY) {
-            // Point transformations need reference data key (use data_key as reference)
-            configs.emplace_back(column.transformation, column.column_name, column.data_key);
-        } else {
-            // Interval metadata transformations don't need reference data key
-            configs.emplace_back(column.transformation, column.column_name);
-        }
-    }
-    
-    return configs;
 } 

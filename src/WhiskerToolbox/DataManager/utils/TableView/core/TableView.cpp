@@ -135,6 +135,9 @@ void TableView::materializeColumn(std::string const & columnName, std::set<std::
 ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
     // Try to get the data source to understand its structure
     // First try as analog source
+
+    
+
     auto analogSource = m_dataManager->getAnalogSource(sourceName);
     if (analogSource) {
         // Generate plan based on row selector type for analog data
@@ -158,6 +161,8 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
             for (size_t index: indices) {
                 timeFrameIndices.emplace_back(static_cast<int64_t>(index));
             }
+
+            std::cout << "WARNING: IndexSelector is not supported for analog data" << std::endl;
 
             return ExecutionPlan(std::move(timeFrameIndices), nullptr);
         }
@@ -188,6 +193,8 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
                 timeFrameIndices.emplace_back(static_cast<int64_t>(index));
             }
 
+            std::cout << "WARNING: IndexSelector is not supported for interval data" << std::endl;
+
             return ExecutionPlan(std::move(timeFrameIndices), nullptr);
         }
     }
@@ -216,6 +223,8 @@ ExecutionPlan TableView::generateExecutionPlan(std::string const & sourceName) {
             for (size_t index: indices) {
                 timeFrameIndices.emplace_back(static_cast<int64_t>(index));
             }
+
+            std::cout << "WARNING: IndexSelector is not supported for event data" << std::endl;
 
             return ExecutionPlan(std::move(timeFrameIndices), nullptr);
         }

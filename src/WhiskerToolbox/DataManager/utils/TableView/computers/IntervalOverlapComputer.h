@@ -85,35 +85,43 @@ public:
 
         auto rowIntervals = plan.getIntervals();
         auto destinationTimeFrame = plan.getTimeFrame();
+        auto sourceTimeFrame = m_source->getTimeFrame();
 
         std::vector<T> results;
         results.reserve(rowIntervals.size());
+        switch (m_operation) {
+            case IntervalOverlapOperation::AssignID:
+                for (auto const & rowInterval: rowIntervals) {
+                    auto columnIntervals = m_source->getIntervalsInRange(
+                        TimeFrameIndex(0), 
+                        rowInterval.end, 
+                        destinationTimeFrame.get());
+                    if (columnIntervals.empty()) {
+                        results.push_back(static_cast<T>(-1));
+                        continue;
+                    }
+                    // Need to convert to their time coordinates
+                    auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnIntervals.back().start));
+                    auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(columnIntervals.back().end));
+                    auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
+                    auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
 
-        // Get all column intervals from the source
-        // We need to get the full range of column intervals
-        // Use the actual size of the destination timeframe
-        std::vector<Interval> columnIntervals;
-        if (destinationTimeFrame) {
-            auto destinationSize = destinationTimeFrame->getTotalFrameCount();
-            columnIntervals = m_source->getIntervalsInRange(
-                TimeFrameIndex(0),
-                TimeFrameIndex(destinationSize - 1), // Use the actual size
-                    destinationTimeFrame.get());
-        } else {
-            columnIntervals = m_source->getIntervals();
-        }
-
-        for (auto const & rowInterval: rowIntervals) {
-            switch (m_operation) {
-                case IntervalOverlapOperation::AssignID:
-                    results.push_back(static_cast<T>(findContainingInterval(rowInterval, columnIntervals)));
-                    break;
-                case IntervalOverlapOperation::CountOverlaps:
+                    if (source_start <= destination_end && destination_start <= source_end) {
+                        results.push_back(static_cast<T>(columnIntervals.size() - 1));
+                    } else {
+                        results.push_back(static_cast<T>(-1));
+                    }
+                }
+                break;
+            case IntervalOverlapOperation::CountOverlaps:
+                for (auto const & rowInterval: rowIntervals) {
+                    auto columnIntervals = m_source->getIntervalsInRange(
+                        rowInterval.start, 
+                        rowInterval.end, 
+                        destinationTimeFrame.get());
                     results.push_back(static_cast<T>(countOverlappingIntervals(rowInterval, columnIntervals)));
-                    break;
-                default:
-                    throw std::runtime_error("Unknown IntervalOverlapOperation");
-            }
+                }
+                break;
         }
 
         return results;
