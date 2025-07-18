@@ -45,6 +45,10 @@ MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Me
     connect(ui->show_outline_checkbox, &QCheckBox::toggled,
             this, &MediaMask_Widget::_toggleShowOutline);
 
+    // Connect transparency control
+    connect(ui->use_as_transparency_checkbox, &QCheckBox::toggled,
+            this, &MediaMask_Widget::_toggleUseAsTransparency);
+
     // Setup the selection mode widgets
     _setupSelectionModePages();
 
@@ -125,6 +129,11 @@ void MediaMask_Widget::setActiveKey(std::string const & key) {
             ui->show_outline_checkbox->blockSignals(true);
             ui->show_outline_checkbox->setChecked(config.value()->show_outline);
             ui->show_outline_checkbox->blockSignals(false);
+
+            // Set transparency checkbox
+            ui->use_as_transparency_checkbox->blockSignals(true);
+            ui->use_as_transparency_checkbox->setChecked(config.value()->use_as_transparency);
+            ui->use_as_transparency_checkbox->blockSignals(false);
         }
     }
 }
@@ -237,6 +246,24 @@ void MediaMask_Widget::_toggleShowOutline(bool checked) {
         _scene->UpdateCanvas();
     }
     std::cout << "Show outline " << (checked ? "enabled" : "disabled") << std::endl;
+}
+
+void MediaMask_Widget::_toggleUseAsTransparency(bool checked) {
+    std::cout << "Transparency checkbox toggled: " << (checked ? "enabled" : "disabled") << std::endl;
+    
+    if (!_active_key.empty()) {
+        auto mask_opts = _scene->getMaskConfig(_active_key);
+        if (mask_opts.has_value()) {
+            mask_opts.value()->use_as_transparency = checked;
+            std::cout << "Updated mask config for key: " << _active_key << std::endl;
+        } else {
+            std::cout << "No mask config found for key: " << _active_key << std::endl;
+        }
+        _scene->UpdateCanvas();
+    } else {
+        std::cout << "No active key set" << std::endl;
+    }
+    std::cout << "Use as transparency " << (checked ? "enabled" : "disabled") << std::endl;
 }
 
 void MediaMask_Widget::_setupDilationWidget() {

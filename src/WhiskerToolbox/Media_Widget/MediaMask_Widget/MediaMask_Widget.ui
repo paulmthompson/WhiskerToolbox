@@ -119,6 +119,19 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="use_as_transparency_checkbox">
+     <property name="toolTip">
+      <string>Use mask as transparency layer - unmasked areas become black, masked areas show media</string>
+     </property>
+     <property name="text">
+      <string>Use as transparency layer</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QWidget" name="dilation_section_placeholder" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
