@@ -1,5 +1,6 @@
 #include "EventPlotOpenGLWidget.hpp"
 
+#include <QDebug>
 #include <QMouseEvent>
 #include <QToolTip>
 #include <QVector2D>
@@ -43,6 +44,8 @@ EventPlotOpenGLWidget::~EventPlotOpenGLWidget() {
     _vertex_array_object.destroy();
     _highlight_vertex_buffer.destroy();
     _highlight_vertex_array_object.destroy();
+    _center_line_buffer.destroy();
+    _center_line_vertex_array_object.destroy();
 
     doneCurrent();
 }
@@ -75,6 +78,17 @@ void EventPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
 
 void EventPlotOpenGLWidget::setEventData(std::vector<std::vector<float>> const & event_data) {
     _event_data = event_data;
+    qDebug() << "EventPlotOpenGLWidget::setEventData called with" << event_data.size() << "trials";
+    for (size_t i = 0; i < event_data.size(); ++i) {
+        qDebug() << "Trial" << i << "has" << event_data[i].size() << "events";
+    }
+    
+    // TEMPORARY: Add a test event if no events exist
+    if (_event_data.empty()) {
+        qDebug() << "EventPlotOpenGLWidget::setEventData - adding test data";
+        _event_data = {{100.0f, -50.0f, 200.0f}}; // Test events at known positions
+    }
+    
     updateVertexData();
     update();
 }
@@ -92,6 +106,8 @@ QVector2D EventPlotOpenGLWidget::screenToWorld(int screen_x, int screen_y) const
 }
 
 void EventPlotOpenGLWidget::initializeGL() {
+    qDebug() << "EventPlotOpenGLWidget::initializeGL called";
+    
     initializeOpenGLFunctions();
 
     // Set clear color
@@ -104,13 +120,18 @@ void EventPlotOpenGLWidget::initializeGL() {
     initializeShaders();
     initializeBuffers();
     updateMatrices();
+    
+    qDebug() << "EventPlotOpenGLWidget::initializeGL completed";
 }
 
 void EventPlotOpenGLWidget::paintGL() {
+    qDebug() << "EventPlotOpenGLWidget::paintGL called";
+    
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!_shader_program || !_shader_program->isLinked()) {
+        qDebug() << "EventPlotOpenGLWidget::paintGL - shader program not ready";
         return;
     }
 
@@ -120,6 +141,9 @@ void EventPlotOpenGLWidget::paintGL() {
     // Set transformation matrices
     _shader_program->setUniformValue("view_matrix", _view_matrix);
     _shader_program->setUniformValue("projection_matrix", _projection_matrix);
+
+    // Render center line
+    renderCenterLine();
 
     // Render events
     renderEvents();
@@ -163,20 +187,33 @@ void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
         _last_mouse_pos = current_pos;
     } else {
-        // Handle hover detection
+                // Handle hover detection
         auto hovered_event = findEventNear(event->pos().x(), event->pos().y());
-
-        if (!hovered_event.has_value()) {
-            _tooltip_timer->stop();
-            QToolTip::hideText();
-        } else {
-            if (_hovered_event.has_value() && _tooltips_enabled && (_hovered_event->trial_index != hovered_event->trial_index || _hovered_event->event_index != hovered_event->event_index)) {
+        
+        // Compare the optional values properly
+        bool hover_changed = false;
+        if (hovered_event.has_value() != _hovered_event.has_value()) {
+            hover_changed = true;
+        } else if (hovered_event.has_value() && _hovered_event.has_value()) {
+            // Both have values, compare the actual event data
+            hover_changed = (hovered_event->trial_index != _hovered_event->trial_index ||
+                           hovered_event->event_index != _hovered_event->event_index);
+        }
+        
+        if (hover_changed) {
+            _hovered_event = hovered_event;
+            
+            if (_hovered_event.has_value() && _tooltips_enabled) {
                 // Start tooltip timer
                 _tooltip_timer->start();
-            } 
+            } else {
+                // Hide tooltip immediately
+                _tooltip_timer->stop();
+                QToolTip::hideText();
+            }
+            
+            update();
         }
-
-        update();
     }
 }
 
@@ -252,18 +289,23 @@ void EventPlotOpenGLWidget::initializeShaders() {
     // Compile and link shaders
     if (!_shader_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertex_shader_source)) {
         qWarning("Failed to compile vertex shader");
+        qDebug() << "Vertex shader compilation error:" << _shader_program->log();
         return;
     }
 
     if (!_shader_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragment_shader_source)) {
         qWarning("Failed to compile fragment shader");
+        qDebug() << "Fragment shader compilation error:" << _shader_program->log();
         return;
     }
 
     if (!_shader_program->link()) {
         qWarning("Failed to link shader program");
+        qDebug() << "Shader program linking error:" << _shader_program->log();
         return;
     }
+    
+    qDebug() << "EventPlotOpenGLWidget::initializeShaders - shader program linked successfully";
 }
 
 void EventPlotOpenGLWidget::initializeBuffers() {
@@ -298,6 +340,24 @@ void EventPlotOpenGLWidget::initializeBuffers() {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     _highlight_vertex_buffer.release();
     _highlight_vertex_array_object.release();
+
+    // Create center line buffer and vertex array object
+    _center_line_buffer.create();
+    _center_line_buffer.bind();
+    _center_line_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    
+    // Create a vertical line at x=0 from y=-1 to y=1
+    float center_line_data[4] = {0.0f, -1.0f, 0.0f, 1.0f}; // Two points: (0,-1) and (0,1)
+    _center_line_buffer.allocate(center_line_data, 4 * sizeof(float));
+    _center_line_buffer.release();
+
+    _center_line_vertex_array_object.create();
+    _center_line_vertex_array_object.bind();
+    _center_line_buffer.bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    _center_line_buffer.release();
+    _center_line_vertex_array_object.release();
 }
 
 void EventPlotOpenGLWidget::updateMatrices() {
@@ -310,11 +370,18 @@ void EventPlotOpenGLWidget::updateMatrices() {
     // Use X-axis range to set the horizontal bounds
     // Events are normalized to 0, so range is from -negative_range to +positive_range
     _projection_matrix.setToIdentity();
-    float left = -static_cast<float>(_negative_range);
-    float right = static_cast<float>(_positive_range);
+    
+    // TEMPORARY: Use a smaller range for testing to see if events are visible
+    // float left = -static_cast<float>(_negative_range);
+    // float right = static_cast<float>(_positive_range);
+    float left = -1000.0f;  // Smaller range for testing
+    float right = 1000.0f;   // Smaller range for testing
+    
     float bottom = -1.0f;
     float top = 1.0f;
     _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
+    
+    qDebug() << "EventPlotOpenGLWidget::updateMatrices - projection bounds:" << left << "to" << right << "Y:" << bottom << "to" << top;
 }
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
@@ -355,6 +422,7 @@ void EventPlotOpenGLWidget::updateVertexData() {
     _total_events = 0;
 
     if (_event_data.empty()) {
+        qDebug() << "EventPlotOpenGLWidget::updateVertexData - no event data";
         return;
     }
 
@@ -362,6 +430,8 @@ void EventPlotOpenGLWidget::updateVertexData() {
     for (auto const & trial: _event_data) {
         _total_events += trial.size();
     }
+
+    qDebug() << "EventPlotOpenGLWidget::updateVertexData - total events:" << _total_events;
 
     _vertex_data.reserve(_total_events * 2);// 2 floats per vertex (x, y)
 
@@ -375,14 +445,32 @@ void EventPlotOpenGLWidget::updateVertexData() {
             // event_time is already normalized to center (0 = center)
             _vertex_data.push_back(event_time);
             _vertex_data.push_back(y);
+            
+                // Debug: print first few events
+    if (_vertex_data.size() <= 10) {
+        qDebug() << "Event" << _vertex_data.size()/2 << "at position:" << event_time << "," << y;
+    }
+    
+    // Debug: print some sample events from different trials
+    if (trial_index < 3 && !_event_data[trial_index].empty()) {
+        qDebug() << "Trial" << trial_index << "sample events:";
+        for (size_t i = 0; i < std::min(size_t(3), _event_data[trial_index].size()); ++i) {
+            qDebug() << "  Event" << i << "time:" << _event_data[trial_index][i];
         }
     }
+        }
+    }
+
+    qDebug() << "EventPlotOpenGLWidget::updateVertexData - vertex data size:" << _vertex_data.size();
 
     // Update OpenGL buffer
     if (_vertex_buffer.isCreated()) {
         _vertex_buffer.bind();
         _vertex_buffer.allocate(_vertex_data.data(), static_cast<int>(_vertex_data.size() * sizeof(float)));
         _vertex_buffer.release();
+        qDebug() << "EventPlotOpenGLWidget::updateVertexData - buffer updated";
+    } else {
+        qDebug() << "EventPlotOpenGLWidget::updateVertexData - vertex buffer not created!";
     }
 }
 
@@ -429,8 +517,11 @@ float EventPlotOpenGLWidget::calculateWorldTolerance(float screen_tolerance) con
 
 void EventPlotOpenGLWidget::renderEvents() {
     if (_vertex_data.empty()) {
+        qDebug() << "EventPlotOpenGLWidget::renderEvents - no vertex data";
         return;
     }
+
+    qDebug() << "EventPlotOpenGLWidget::renderEvents - rendering" << _total_events << "events";
 
     _vertex_array_object.bind();
     _vertex_buffer.bind();
@@ -444,6 +535,12 @@ void EventPlotOpenGLWidget::renderEvents() {
 
     _vertex_buffer.release();
     _vertex_array_object.release();
+    
+    // Check for OpenGL errors
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        qDebug() << "EventPlotOpenGLWidget::renderEvents - OpenGL error:" << error;
+    }
 }
 
 void EventPlotOpenGLWidget::renderHoveredEvent() {
@@ -471,4 +568,27 @@ void EventPlotOpenGLWidget::renderHoveredEvent() {
 
     _highlight_vertex_buffer.release();
     _highlight_vertex_array_object.release();
+}
+
+void EventPlotOpenGLWidget::renderCenterLine() {
+    qDebug() << "EventPlotOpenGLWidget::renderCenterLine called";
+    
+    _center_line_vertex_array_object.bind();
+    _center_line_buffer.bind();
+
+    // Set uniforms for center line rendering
+    _shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black
+    _shader_program->setUniformValue("u_point_size", 2.0f); // Thin line
+
+    // Draw the center line as GL_LINES
+    glDrawArrays(GL_LINES, 0, 2);
+
+    _center_line_buffer.release();
+    _center_line_vertex_array_object.release();
+    
+    // Check for OpenGL errors
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        qDebug() << "EventPlotOpenGLWidget::renderCenterLine - OpenGL error:" << error;
+    }
 }

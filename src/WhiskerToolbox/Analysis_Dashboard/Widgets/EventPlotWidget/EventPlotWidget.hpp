@@ -69,6 +69,7 @@ signals:
      */
     void renderingPropertiesChanged();
 
+
 protected:
     void paint(QPainter * painter, QStyleOptionGraphicsItem const * option, QWidget * widget = nullptr) override;
     void resizeEvent(QGraphicsSceneResizeEvent * event) override;

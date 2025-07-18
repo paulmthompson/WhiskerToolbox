@@ -138,6 +138,8 @@ private:
     QOpenGLVertexArrayObject _vertex_array_object;
     QOpenGLBuffer _highlight_vertex_buffer;
     QOpenGLVertexArrayObject _highlight_vertex_array_object;
+    QOpenGLBuffer _center_line_buffer;
+    QOpenGLVertexArrayObject _center_line_vertex_array_object;
 
     // View transformation
     QMatrix4x4 _view_matrix;
@@ -232,6 +234,11 @@ private:
      * @brief Render hovered event with larger size
      */
     void renderHoveredEvent();
+
+    /**
+     * @brief Render the center line at t=0
+     */
+    void renderCenterLine();
 };
 
 #endif// EVENTPLOTOPENGLWIDGET_HPP

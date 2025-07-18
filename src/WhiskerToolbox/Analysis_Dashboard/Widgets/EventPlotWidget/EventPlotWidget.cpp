@@ -2,6 +2,7 @@
 #include "EventPlotOpenGLWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include <QDebug>
 #include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/utils/TableView/core/TableViewBuilder.h"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
@@ -88,24 +89,47 @@ void EventPlotWidget::paint(QPainter * painter, QStyleOptionGraphicsItem const *
 void EventPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
     AbstractPlotWidget::resizeEvent(event);
 
-    if (_proxy_widget) {
-        _proxy_widget->setGeometry(rect());
+    if (_opengl_widget && _proxy_widget) {
+        QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);
+        _opengl_widget->resize(content_rect.size().toSize());
+        _proxy_widget->setGeometry(content_rect);
+        
+        // Force update after resize
+        _opengl_widget->update();
     }
 }
 
 void EventPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
-    qDebug() << "EventPlotWidget::mousePressEvent";
-
-    // Emit selection signal
-    emit plotSelected(getPlotId());
-
-    AbstractPlotWidget::mousePressEvent(event);
+    // Check if the click is in the title area (top 25 pixels)
+    QRectF title_area = boundingRect().adjusted(0, 0, 0, -boundingRect().height() + 25);
+    
+    if (title_area.contains(event->pos())) {
+        // Click in title area - handle selection and allow movement
+        emit plotSelected(getPlotId());
+        // Make sure the item is movable for dragging
+        setFlag(QGraphicsItem::ItemIsMovable, true);
+        AbstractPlotWidget::mousePressEvent(event);
+    } else {
+        // Click in content area - let the OpenGL widget handle it
+        // But still emit selection signal
+        emit plotSelected(getPlotId());
+        // Disable movement when clicking in content area
+        setFlag(QGraphicsItem::ItemIsMovable, false);
+        // Don't call parent implementation to avoid interfering with OpenGL panning
+        event->accept();
+    }
 }
 
 void EventPlotWidget::updateVisualization() {
-    if (_opengl_widget) {
-        _opengl_widget->update();
+    if (!_data_manager || !_opengl_widget) {
+        return;
     }
+
+    loadEventData();
+    
+    // Request render update through signal (like SpatialOverlayPlotWidget)
+    update();
+    emit renderUpdateRequested(getPlotId());
 }
 
 void EventPlotWidget::handleFrameJumpRequest(int64_t time_frame_index, QString const & data_key) {
@@ -170,10 +194,7 @@ void EventPlotWidget::loadEventData() {
         if (_opengl_widget) {
             _opengl_widget->setEventData(event_data);
         }
-        
-        for (auto const & event : event_data) {
-            qDebug() << "EventPlotWidget::loadEventData event: " << event;
-        }   
+         
     } else {
         qDebug() << "EventPlotWidget::loadEventData _table_view is nullptr";
     }
@@ -196,6 +217,26 @@ void EventPlotWidget::setupOpenGLWidget() {
     // Connect signals from OpenGL widget
     connect(_opengl_widget, &EventPlotOpenGLWidget::frameJumpRequested,
             this, &EventPlotWidget::handleFrameJumpRequest);
+    
+    // Connect property change signals to trigger updates (like SpatialOverlayPlotWidget)
+    connect(_opengl_widget, &EventPlotOpenGLWidget::zoomLevelChanged,
+            this, [this](float) { 
+                update(); // Trigger graphics item update
+                emit renderUpdateRequested(getPlotId());
+                emit renderingPropertiesChanged();
+            });
+    
+    connect(_opengl_widget, &EventPlotOpenGLWidget::panOffsetChanged,
+            this, [this](float, float) { 
+                update(); // Trigger graphics item update
+                emit renderUpdateRequested(getPlotId());
+                emit renderingPropertiesChanged();
+            });
+    
+    connect(_opengl_widget, &EventPlotOpenGLWidget::tooltipsEnabledChanged,
+            this, [this](bool) { 
+                emit renderingPropertiesChanged();
+            });
 }
 
 void EventPlotWidget::setXAxisRange(int negative_range, int positive_range) {
