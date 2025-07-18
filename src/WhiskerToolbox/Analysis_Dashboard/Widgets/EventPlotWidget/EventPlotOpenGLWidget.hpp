@@ -162,6 +162,11 @@ private:
     int _negative_range;
     int _positive_range;
 
+    // Data bounds tracking (like SpatialOverlayOpenGLWidget)
+    float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
+    bool _data_bounds_valid;
+    bool _opengl_resources_initialized;
+
     // Event data
     std::vector<std::vector<float>> _event_data;
     std::vector<float> _vertex_data;
@@ -190,6 +195,20 @@ private:
      * @brief Update view and projection matrices
      */
     void updateMatrices();
+
+    /**
+     * @brief Calculate data bounds from event data
+     */
+    void calculateDataBounds();
+
+    /**
+     * @brief Calculate projection bounds for coordinate transformation
+     * @param left Output: left bound
+     * @param right Output: right bound  
+     * @param bottom Output: bottom bound
+     * @param top Output: top bound
+     */
+    void calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const;
 
     /**
      * @brief Handle mouse panning

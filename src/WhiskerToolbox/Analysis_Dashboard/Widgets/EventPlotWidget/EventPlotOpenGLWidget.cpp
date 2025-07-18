@@ -20,16 +20,36 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
       _negative_range(30000),
       _positive_range(30000),
       _total_events(0),
+      _data_min_x(0.0f),
+      _data_max_x(0.0f),
+      _data_min_y(0.0f),
+      _data_max_y(0.0f),
+      _data_bounds_valid(false),
+      _opengl_resources_initialized(false),
       _tooltip_timer(nullptr) {
     // Set widget attributes for OpenGL
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
+
+    // Request OpenGL 4.1 Core Profile (same as SpatialOverlayOpenGLWidget)
+    QSurfaceFormat format;
+    format.setVersion(4, 1);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setSamples(4); // Enable multisampling for smooth points
+    setFormat(format);
 
     // Initialize tooltip timer
     _tooltip_timer = new QTimer(this);
     _tooltip_timer->setSingleShot(true);
     _tooltip_timer->setInterval(500);// 500ms delay
     connect(_tooltip_timer, &QTimer::timeout, this, &EventPlotOpenGLWidget::handleTooltipTimer);
+    
+    // Initialize with default data bounds to enable rendering
+    _data_min_x = -1000.0f;
+    _data_max_x = 1000.0f;
+    _data_min_y = -1.0f;
+    _data_max_y = 1.0f;
+    _data_bounds_valid = true;  // Allow rendering even without data
 }
 
 EventPlotOpenGLWidget::~EventPlotOpenGLWidget() {
@@ -86,39 +106,65 @@ void EventPlotOpenGLWidget::setEventData(std::vector<std::vector<float>> const &
     // TEMPORARY: Add a test event if no events exist
     if (_event_data.empty()) {
         qDebug() << "EventPlotOpenGLWidget::setEventData - adding test data";
-        _event_data = {{100.0f, -50.0f, 200.0f}}; // Test events at known positions
+        _event_data = {{100.0f, -50.0f, 200.0f}, {-100.0f, 0.0f, 150.0f}}; // Test events at known positions
     }
     
+    calculateDataBounds();  // Calculate bounds before updating vertex data
     updateVertexData();
+    updateMatrices();
     update();
 }
 
 QVector2D EventPlotOpenGLWidget::screenToWorld(int screen_x, int screen_y) const {
-    // Convert screen coordinates to normalized device coordinates
-    float ndc_x = (2.0f * screen_x) / _widget_width - 1.0f;
-    float ndc_y = 1.0f - (2.0f * screen_y) / _widget_height;
+    float left, right, bottom, top;
+    calculateProjectionBounds(left, right, bottom, top);
 
-    // Apply inverse view transformation
-    QMatrix4x4 inv_view = _view_matrix.inverted();
-    QVector4D world_pos = inv_view * QVector4D(ndc_x, ndc_y, 0.0f, 1.0f);
+    if (left == right || bottom == top) {
+        return QVector2D(0, 0);
+    }
 
-    return QVector2D(world_pos.x(), world_pos.y());
+    // Convert screen coordinates to world coordinates using the projection bounds
+    float world_x = left + (static_cast<float>(screen_x) / _widget_width) * (right - left);
+    float world_y = top - (static_cast<float>(screen_y) / _widget_height) * (top - bottom);// Y is flipped in screen coordinates
+
+    return QVector2D(world_x, world_y);
 }
 
 void EventPlotOpenGLWidget::initializeGL() {
     qDebug() << "EventPlotOpenGLWidget::initializeGL called";
     
-    initializeOpenGLFunctions();
+    // Check if OpenGL functions can be initialized
+    if (!initializeOpenGLFunctions()) {
+        qWarning() << "EventPlotOpenGLWidget::initializeGL - Failed to initialize OpenGL functions";
+        return;
+    }
 
     // Set clear color
     glClearColor(0.95f, 0.95f, 0.95f, 1.0f);// Light gray background
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
+    
+    // Enable programmable point size
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    
+    // Enable blending for smoother points
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Enable multisampling if available
+    auto fmt = format();
+    if (fmt.samples() > 1) {
+        glEnable(GL_MULTISAMPLE);
+    }
 
     // Initialize shaders and buffers
     initializeShaders();
     initializeBuffers();
+    
+    // Mark OpenGL resources as initialized
+    _opengl_resources_initialized = true;
+    
     updateMatrices();
     
     qDebug() << "EventPlotOpenGLWidget::initializeGL completed";
@@ -135,6 +181,11 @@ void EventPlotOpenGLWidget::paintGL() {
         return;
     }
 
+    if (!_opengl_resources_initialized) {
+        qDebug() << "EventPlotOpenGLWidget::paintGL - OpenGL resources not initialized";
+        return;
+    }
+
     // Bind shader program
     _shader_program->bind();
 
@@ -142,11 +193,13 @@ void EventPlotOpenGLWidget::paintGL() {
     _shader_program->setUniformValue("view_matrix", _view_matrix);
     _shader_program->setUniformValue("projection_matrix", _projection_matrix);
 
-    // Render center line
+    // Always render center line (should be visible even without data)
     renderCenterLine();
 
-    // Render events
-    renderEvents();
+    // Render events if we have data
+    if (_data_bounds_valid && !_vertex_data.empty()) {
+        renderEvents();
+    }
 
     // Render hovered event if any
     if (_hovered_event.has_value()) {
@@ -155,11 +208,16 @@ void EventPlotOpenGLWidget::paintGL() {
 
     // Unbind
     _shader_program->release();
+    
+    qDebug() << "EventPlotOpenGLWidget::paintGL completed";
 }
 
 void EventPlotOpenGLWidget::resizeGL(int width, int height) {
     _widget_width = width;
     _widget_height = height;
+
+    // Set the viewport
+    glViewport(0, 0, width, height);
 
     // Update projection matrix for new aspect ratio
     updateMatrices();
@@ -346,7 +404,7 @@ void EventPlotOpenGLWidget::initializeBuffers() {
     _center_line_buffer.bind();
     _center_line_buffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     
-    // Create a vertical line at x=0 from y=-1 to y=1
+    // Create a vertical line at x=0 spanning the full Y range
     float center_line_data[4] = {0.0f, -1.0f, 0.0f, 1.0f}; // Two points: (0,-1) and (0,1)
     _center_line_buffer.allocate(center_line_data, 4 * sizeof(float));
     _center_line_buffer.release();
@@ -358,6 +416,8 @@ void EventPlotOpenGLWidget::initializeBuffers() {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     _center_line_buffer.release();
     _center_line_vertex_array_object.release();
+    
+    qDebug() << "EventPlotOpenGLWidget::initializeBuffers - center line buffer created";
 }
 
 void EventPlotOpenGLWidget::updateMatrices() {
@@ -366,22 +426,27 @@ void EventPlotOpenGLWidget::updateMatrices() {
     _view_matrix.translate(_pan_offset_x, _pan_offset_y, 0.0f);
     _view_matrix.scale(_zoom_level, _zoom_level, 1.0f);
 
-    // Update projection matrix (orthographic)
-    // Use X-axis range to set the horizontal bounds
-    // Events are normalized to 0, so range is from -negative_range to +positive_range
+    // Update projection matrix (orthographic) - use same approach as SpatialOverlayOpenGLWidget
     _projection_matrix.setToIdentity();
     
-    // TEMPORARY: Use a smaller range for testing to see if events are visible
-    // float left = -static_cast<float>(_negative_range);
-    // float right = static_cast<float>(_positive_range);
-    float left = -1000.0f;  // Smaller range for testing
-    float right = 1000.0f;   // Smaller range for testing
+    float left, right, bottom, top;
+    calculateProjectionBounds(left, right, bottom, top);
     
-    float bottom = -1.0f;
-    float top = 1.0f;
+    // Always ensure valid bounds
+    if (left >= right) {
+        left = -1000.0f;
+        right = 1000.0f;
+    }
+    if (bottom >= top) {
+        bottom = -1.0f;
+        top = 1.0f;
+    }
+    
     _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
     
-    qDebug() << "EventPlotOpenGLWidget::updateMatrices - projection bounds:" << left << "to" << right << "Y:" << bottom << "to" << top;
+    qDebug() << "EventPlotOpenGLWidget::updateMatrices - projection bounds:" 
+             << "left:" << left << "right:" << right 
+             << "bottom:" << bottom << "top:" << top;
 }
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
@@ -472,6 +537,39 @@ void EventPlotOpenGLWidget::updateVertexData() {
     } else {
         qDebug() << "EventPlotOpenGLWidget::updateVertexData - vertex buffer not created!";
     }
+}
+
+void EventPlotOpenGLWidget::calculateDataBounds() {
+    if (_event_data.empty()) {
+        _data_min_x = -1000.0f;  // Set reasonable default bounds
+        _data_max_x = 1000.0f;
+        _data_min_y = -1.0f;
+        _data_max_y = 1.0f;
+        _data_bounds_valid = false;
+        qDebug() << "EventPlotOpenGLWidget::calculateDataBounds - no data, using defaults";
+        return;
+    }
+
+    _data_min_x = std::numeric_limits<float>::max();
+    _data_max_x = std::numeric_limits<float>::min();
+    _data_min_y = std::numeric_limits<float>::max();
+    _data_max_y = std::numeric_limits<float>::min();
+
+    for (auto const & trial: _event_data) {
+        for (float event_time: trial) {
+            _data_min_x = std::min(_data_min_x, event_time);
+            _data_max_x = std::max(_data_max_x, event_time);
+        }
+    }
+
+    _data_min_y = -1.0f; // Y-axis is normalized to [-1, 1]
+    _data_max_y = 1.0f;
+
+    _data_bounds_valid = true;
+    
+    qDebug() << "EventPlotOpenGLWidget::calculateDataBounds - bounds:" 
+             << "X[" << _data_min_x << "," << _data_max_x << "]" 
+             << "Y[" << _data_min_y << "," << _data_max_y << "]";
 }
 
 std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEventNear(int screen_x, int screen_y, float tolerance_pixels) const {
@@ -573,14 +671,20 @@ void EventPlotOpenGLWidget::renderHoveredEvent() {
 void EventPlotOpenGLWidget::renderCenterLine() {
     qDebug() << "EventPlotOpenGLWidget::renderCenterLine called";
     
+    if (!_center_line_vertex_array_object.isCreated() || !_center_line_buffer.isCreated()) {
+        qDebug() << "EventPlotOpenGLWidget::renderCenterLine - buffers not created";
+        return;
+    }
+    
     _center_line_vertex_array_object.bind();
     _center_line_buffer.bind();
 
     // Set uniforms for center line rendering
     _shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black
-    _shader_program->setUniformValue("u_point_size", 2.0f); // Thin line
+    _shader_program->setUniformValue("u_point_size", 2.0f); // Thin line (not used for lines)
 
     // Draw the center line as GL_LINES
+    glLineWidth(2.0f);  // Make the line thicker for visibility
     glDrawArrays(GL_LINES, 0, 2);
 
     _center_line_buffer.release();
@@ -591,4 +695,57 @@ void EventPlotOpenGLWidget::renderCenterLine() {
     if (error != GL_NO_ERROR) {
         qDebug() << "EventPlotOpenGLWidget::renderCenterLine - OpenGL error:" << error;
     }
+}
+
+void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const {
+    if (!_data_bounds_valid || _widget_width <= 0 || _widget_height <= 0) {
+        // Use safe default bounds
+        left = -1000.0f;
+        right = 1000.0f;
+        bottom = -1.0f;
+        top = 1.0f;
+        qDebug() << "EventPlotOpenGLWidget::calculateProjectionBounds - using default bounds";
+        return;
+    }
+
+    // Calculate orthographic projection bounds (same logic as SpatialOverlayOpenGLWidget)
+    float data_width = _data_max_x - _data_min_x;
+    float data_height = _data_max_y - _data_min_y;
+    float center_x = (_data_min_x + _data_max_x) * 0.5f;
+    float center_y = (_data_min_y + _data_max_y) * 0.5f;
+
+    // Ensure minimum width/height to avoid degenerate cases
+    if (data_width < 1.0f) {
+        data_width = 1000.0f;  // Reasonable default for time axis
+    }
+    if (data_height < 0.1f) {
+        data_height = 2.0f;    // Reasonable default for normalized Y axis
+    }
+
+    // Add padding and apply zoom
+    float padding = 1.1f;// 10% padding
+    float zoom_factor = 1.0f / _zoom_level;
+    float half_width = (data_width * padding * zoom_factor) / 2.0f;
+    float half_height = (data_height * padding * zoom_factor) / 2.0f;
+
+    // Apply aspect ratio correction
+    float aspect_ratio = static_cast<float>(_widget_width) / _widget_height;
+    if (aspect_ratio > 1.0f) {
+        half_width *= aspect_ratio;
+    } else {
+        half_height /= aspect_ratio;
+    }
+
+    // Apply pan offset
+    float pan_x = _pan_offset_x * data_width * zoom_factor;
+    float pan_y = _pan_offset_y * data_height * zoom_factor;
+
+    left = center_x - half_width + pan_x;
+    right = center_x + half_width + pan_x;
+    bottom = center_y - half_height + pan_y;
+    top = center_y + half_height + pan_y;
+    
+    qDebug() << "EventPlotOpenGLWidget::calculateProjectionBounds - bounds:" 
+             << "left:" << left << "right:" << right 
+             << "bottom:" << bottom << "top:" << top;
 }
