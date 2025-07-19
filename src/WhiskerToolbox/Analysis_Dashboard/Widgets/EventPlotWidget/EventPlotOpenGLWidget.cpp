@@ -21,10 +21,6 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
       _negative_range(30000),
       _positive_range(30000),
       _total_events(0),
-      _data_min_x(0.0f),
-      _data_max_x(0.0f),
-      _data_min_y(0.0f),
-      _data_max_y(0.0f),
       _data_bounds_valid(false),
       _opengl_resources_initialized(false),
       _tooltip_timer(nullptr),
@@ -63,8 +59,6 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     // Initialize hover processing state
     _hover_processing_active = false;
     
-    // Calculate initial bounds based on default range
-    calculateDataBounds();
 }
 
 
@@ -128,7 +122,6 @@ void EventPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
 void EventPlotOpenGLWidget::setEventData(std::vector<std::vector<float>> const & event_data) {
     _event_data = event_data;
     
-    calculateDataBounds();  // Calculate bounds before updating vertex data
     updateVertexData();
     updateMatrices();
     update();
@@ -512,8 +505,6 @@ void EventPlotOpenGLWidget::updateMatrices() {
              << "bottom:" << bottom << "top:" << top
              << "y_zoom:" << _y_zoom_level;
     
-    // Update spatial index when view bounds change
-    buildSpatialIndex();
 }
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
@@ -545,8 +536,6 @@ void EventPlotOpenGLWidget::setXAxisRange(int negative_range, int positive_range
         _negative_range = negative_range;
         _positive_range = positive_range;
         
-        // Recalculate bounds and matrices with new range
-        calculateDataBounds();
         updateMatrices();
         update();
         
@@ -612,25 +601,6 @@ void EventPlotOpenGLWidget::updateVertexData() {
         qDebug() << "EventPlotOpenGLWidget::updateVertexData - vertex buffer not created!";
     }
     
-    // Build spatial index for hover detection
-    buildSpatialIndex();
-}
-
-void EventPlotOpenGLWidget::calculateDataBounds() {
-    // Since we're using user-specified X-axis range, we don't need data-dependent bounds
-    // Just set fixed bounds for consistency
-    _data_min_x = -static_cast<float>(_negative_range);
-    _data_max_x = static_cast<float>(_positive_range);
-    _data_min_y = -1.0f; // Y-axis is always normalized to [-1, 1]
-    _data_max_y = 1.0f;
-    
-    // Always mark bounds as valid since we're using fixed ranges
-    _data_bounds_valid = true;
-    
-    qDebug() << "EventPlotOpenGLWidget::calculateDataBounds - using fixed bounds:" 
-             << "X[" << _data_min_x << "," << _data_max_x << "]" 
-             << "Y[" << _data_min_y << "," << _data_max_y << "]"
-             << "from ranges: -" << _negative_range << "to +" << _positive_range;
 }
 
 std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEventNear(int screen_x, int screen_y, float tolerance_pixels) {
@@ -816,50 +786,6 @@ void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & righ
              << "ranges: -" << _negative_range << "to +" << _positive_range
              << "y_zoom:" << _y_zoom_level;
 }
-
-void EventPlotOpenGLWidget::buildSpatialIndex() {
-    if (_event_data.empty()) {
-        _spatial_index.reset();
-        _quad_tree_points.clear();
-        return;
-    }
-    
-    // Clear existing spatial index
-    _quad_tree_points.clear();
-    
-    // Calculate the bounding box for the quad tree
-    // Use the data bounds or reasonable defaults
-    float minX = _data_bounds_valid ? _data_min_x : -1000.0f;
-    float maxX = _data_bounds_valid ? _data_max_x : 1000.0f;
-    float minY = _data_bounds_valid ? _data_min_y : -1.0f;
-    float maxY = _data_bounds_valid ? _data_max_y : 1.0f;
-    
-    // Create new spatial index
-    BoundingBox bounds(minX, minY, maxX, maxY);
-    _spatial_index = std::make_unique<QuadTree<int64_t>>(bounds);
-    
-    // Calculate Y scale (same as in updateVertexData)
-    float y_scale = 2.0f / static_cast<float>(_event_data.size());
-    
-    // Build spatial index from event data
-    for (size_t trial_index = 0; trial_index < _event_data.size(); ++trial_index) {
-        float y = -1.0f + (static_cast<float>(trial_index) + 0.5f) * y_scale;
-        
-        for (size_t event_idx = 0; event_idx < _event_data[trial_index].size(); ++event_idx) {
-            float event_time = _event_data[trial_index][event_idx];
-            
-            // Create unique ID for this event
-            int64_t event_id = (static_cast<int64_t>(trial_index) << 32) | event_idx;
-            
-            // Add to spatial index
-            _spatial_index->insert(event_time, y, event_id);
-            
-            // Store event data for quick lookup
-            _quad_tree_points.emplace(event_id, QuadTreePoint<int64_t>(event_time, y, event_id));
-        }
-    }
-}
-
 
 void EventPlotOpenGLWidget::processHoverDebounce() {
     if (!_tooltips_enabled || _hover_processing_active) {

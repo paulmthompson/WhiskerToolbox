@@ -183,8 +183,6 @@ private:
     int _negative_range;
     int _positive_range;
 
-    // Data bounds tracking (like SpatialOverlayOpenGLWidget)
-    float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
     bool _data_bounds_valid;
     bool _opengl_resources_initialized;
 
@@ -228,11 +226,6 @@ private:
     void updateMatrices();
 
     /**
-     * @brief Calculate data bounds from event data
-     */
-    void calculateDataBounds();
-
-    /**
      * @brief Calculate projection bounds for coordinate transformation
      * @param left Output: left bound
      * @param right Output: right bound  
@@ -258,11 +251,6 @@ private:
      * @brief Update vertex data from event data
      */
     void updateVertexData();
-
-    /**
-     * @brief Build spatial index from event data for efficient hover detection
-     */
-    void buildSpatialIndex();
 
     /**
      * @brief Process hover detection with debouncing (improved version)
