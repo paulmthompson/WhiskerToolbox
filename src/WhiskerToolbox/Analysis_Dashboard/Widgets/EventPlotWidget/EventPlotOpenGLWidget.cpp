@@ -798,7 +798,7 @@ void EventPlotOpenGLWidget::processHoverDebounce() {
     QPoint screen_pos = _pending_hover_pos;
     
     // Find the nearest event using spatial index
-    auto hovered_event = findEventNearEfficient(screen_pos.x(), screen_pos.y());
+    auto hovered_event = findEventNear(screen_pos.x(), screen_pos.y());
     
     // Compare the optional values properly
     bool hover_changed = false;
@@ -826,33 +826,6 @@ void EventPlotOpenGLWidget::processHoverDebounce() {
     }
     
     _hover_processing_active = false;
-}
-
-std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEventNearEfficient(int screen_x, int screen_y, float tolerance_pixels) const {
-    if (!_spatial_index || _quad_tree_points.empty()) {
-        return std::nullopt;
-    }
-    
-    // Convert screen coordinates to world coordinates
-    float world_x, world_y;
-    const_cast<EventPlotOpenGLWidget*>(this)->screenToWorld(screen_x, screen_y, world_x, world_y);
-    
-    // Convert tolerance from screen pixels to world coordinates
-    float world_tolerance = calculateWorldTolerance(tolerance_pixels);
-    
-    // Use QuadTree's findNearest method
-    const QuadTreePoint<int64_t>* nearest_point = _spatial_index->findNearest(world_x, world_y, world_tolerance);
-    
-    if (!nearest_point) {
-        return std::nullopt;
-    }
-    
-    // Extract trial_index and event_index from the event_id
-    int64_t event_id = nearest_point->data;
-    int trial_index = static_cast<int>(event_id >> 32);
-    int event_index = static_cast<int>(event_id & 0xFFFFFFFF);
-    
-    return HoveredEvent{trial_index, event_index, nearest_point->x, nearest_point->y};
 }
 
 float EventPlotOpenGLWidget::calculateWorldTolerance(float screen_tolerance) const {

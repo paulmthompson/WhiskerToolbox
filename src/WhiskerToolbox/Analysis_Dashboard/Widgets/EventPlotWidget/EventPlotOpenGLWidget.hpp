@@ -191,10 +191,6 @@ private:
     std::vector<float> _vertex_data;
     size_t _total_events;
 
-    // Spatial indexing for efficient hover detection
-    std::unique_ptr<QuadTree<int64_t>> _spatial_index;
-    std::unordered_map<int64_t, QuadTreePoint<int64_t>> _quad_tree_points;
-
     // Hover state - improved version
     struct HoveredEvent {
         int trial_index;
@@ -256,15 +252,6 @@ private:
      * @brief Process hover detection with debouncing (improved version)
      */
     void processHoverDebounce();
-
-    /**
-     * @brief Find event near screen coordinates using spatial index
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
-     * @param tolerance_pixels Tolerance in pixels
-     * @return Optional hovered event
-     */
-    std::optional<HoveredEvent> findEventNearEfficient(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
 
     /**
      * @brief Find event near screen coordinates (legacy method)
