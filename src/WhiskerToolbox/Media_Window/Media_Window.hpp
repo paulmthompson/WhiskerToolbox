@@ -220,7 +220,8 @@ private:
     void _clearMasks();
     void _clearMaskBoundingBoxes();
     void _clearMaskOutlines();
-    void _plotSingleMaskData(std::vector<Mask2D> const & maskData, ImageSize mask_size, QRgb plot_color);
+    void _plotSingleMaskData(std::vector<Mask2D> const & maskData, ImageSize mask_size, QRgb plot_color, MaskDisplayOptions const * mask_config);
+    QImage _applyTransparencyMasks(QImage const & media_image);
 
     void _plotPointData();
     void _clearPoints();

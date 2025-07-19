@@ -1326,7 +1326,7 @@ void SpatialOverlayOpenGLWidget::calculateProjectionBounds(float & left, float &
 QString create_tooltipText(QuadTreePoint<int64_t> const * point, QString const & data_key) {
     if (!point) return QString();
 
-    return QString("Dataset: %1\nFrame: %2\nPosition: (%3, %4)")
+    return QString("Dataset: %1\nInterval: %2\nPosition: (%3, %4)")
             .arg(data_key)
             .arg(point->data)
             .arg(point->x, 0, 'f', 2)

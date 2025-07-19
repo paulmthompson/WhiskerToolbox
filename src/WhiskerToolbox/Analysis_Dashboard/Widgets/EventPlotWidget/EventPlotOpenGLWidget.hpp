@@ -1,6 +1,9 @@
 #ifndef EVENTPLOTOPENGLWIDGET_HPP
 #define EVENTPLOTOPENGLWIDGET_HPP
 
+#include "SpatialIndex/QuadTree.hpp"
+#include "CoreGeometry/boundingbox.hpp"
+
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_1_Core>
@@ -92,14 +95,6 @@ public:
     void getVisibleBounds(float & left_bound, float & right_bound) const;
 
     /**
-     * @brief Convert screen coordinates to world coordinates
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
-     * @return World coordinates
-     */
-    QVector2D screenToWorld(int screen_x, int screen_y) const;
-
-    /**
      * @brief Set the event data to display
      * @param event_data Vector of trials, each containing vector of event times
      */
@@ -149,6 +144,12 @@ private slots:
      */
     void handleTooltipTimer();
 
+    /**
+     * @brief Handle tooltip refresh timer timeout
+     */
+    void handleTooltipRefresh();
+
+
 private:
     // OpenGL resources
     QOpenGLShaderProgram * _shader_program;
@@ -192,7 +193,11 @@ private:
     std::vector<float> _vertex_data;
     size_t _total_events;
 
-    // Hover state
+    // Spatial indexing for efficient hover detection
+    std::unique_ptr<QuadTree<int64_t>> _spatial_index;
+    std::unordered_map<int64_t, QuadTreePoint<int64_t>> _quad_tree_points;
+
+    // Hover state - improved version
     struct HoveredEvent {
         int trial_index;
         int event_index;
@@ -200,6 +205,12 @@ private:
         float y;
     };
     std::optional<HoveredEvent> _hovered_event;
+
+    // Hover processing timers (similar to SpatialOverlayOpenGLWidget)
+    QTimer * _hover_debounce_timer;
+    QTimer * _tooltip_refresh_timer;
+    bool _hover_processing_active;
+    QPoint _pending_hover_pos;
 
     /**
      * @brief Initialize OpenGL shaders
@@ -249,13 +260,32 @@ private:
     void updateVertexData();
 
     /**
-     * @brief Find event near screen coordinates
+     * @brief Build spatial index from event data for efficient hover detection
+     */
+    void buildSpatialIndex();
+
+    /**
+     * @brief Process hover detection with debouncing (improved version)
+     */
+    void processHoverDebounce();
+
+    /**
+     * @brief Find event near screen coordinates using spatial index
      * @param screen_x Screen X coordinate
      * @param screen_y Screen Y coordinate
      * @param tolerance_pixels Tolerance in pixels
      * @return Optional hovered event
      */
-    std::optional<HoveredEvent> findEventNear(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
+    std::optional<HoveredEvent> findEventNearEfficient(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
+
+    /**
+     * @brief Find event near screen coordinates (legacy method)
+     * @param screen_x Screen X coordinate
+     * @param screen_y Screen Y coordinate
+     * @param tolerance_pixels Tolerance in pixels
+     * @return Optional hovered event
+     */
+    std::optional<HoveredEvent> findEventNear(int screen_x, int screen_y, float tolerance_pixels = 10.0f);
 
     /**
      * @brief Calculate world tolerance from screen tolerance
@@ -263,6 +293,15 @@ private:
      * @return World tolerance
      */
     float calculateWorldTolerance(float screen_tolerance) const;
+
+    /**
+     * @brief Convert screen coordinates to world coordinates
+     * @param screen_x Screen X coordinate
+     * @param screen_y Screen Y coordinate
+     * @param world_x Output world X coordinate
+     * @param world_y Output world Y coordinate
+     */
+    void screenToWorld(int screen_x, int screen_y, float& world_x, float& world_y);
 
     /**
      * @brief Render all events using OpenGL
@@ -278,6 +317,9 @@ private:
      * @brief Render the center line at t=0
      */
     void renderCenterLine();
+    
+    
+
 };
 
 #endif// EVENTPLOTOPENGLWIDGET_HPP

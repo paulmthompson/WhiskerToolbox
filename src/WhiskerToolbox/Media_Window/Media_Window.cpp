@@ -342,6 +342,23 @@ void Media_Window::UpdateCanvas() {
             Qt::IgnoreAspectRatio,
             Qt::SmoothTransformation);
 
+    // Check if any masks are in transparency mode
+    bool has_transparency_mask = false;
+    for (auto const & [mask_key, mask_config] : _mask_configs) {
+        if (mask_config->is_visible && mask_config->use_as_transparency) {
+            has_transparency_mask = true;
+            std::cout << "Found transparency mask: " << mask_key << std::endl;
+            break;
+        }
+    }
+    
+    std::cout << "Has transparency masks: " << (has_transparency_mask ? "YES" : "NO") << std::endl;
+
+    // If we have transparency masks, modify the new_image
+    if (has_transparency_mask) {
+        new_image = _applyTransparencyMasks(new_image);
+    }
+
     _canvasPixmap->setPixmap(QPixmap::fromImage(new_image));
     _canvasImage = new_image;
 
@@ -726,8 +743,8 @@ void Media_Window::_plotMaskData() {
             maskData2 = mask->getAtTime(TimeFrameIndex(-1));
         }
 
-        _plotSingleMaskData(maskData, image_size, plot_color);
-        _plotSingleMaskData(maskData2, image_size, plot_color);
+        _plotSingleMaskData(maskData, image_size, plot_color, _mask_config.get());
+        _plotSingleMaskData(maskData2, image_size, plot_color, _mask_config.get());
 
         // Plot bounding boxes if enabled
         if (_mask_config.get()->show_bounding_box) {
@@ -797,7 +814,7 @@ void Media_Window::_plotMaskData() {
 
                     if (!outline_mask.empty()) {
                         // Plot the outline mask using the same approach as regular masks
-                        _plotSingleMaskData({outline_mask}, image_size, outline_color);
+                        _plotSingleMaskData({outline_mask}, image_size, outline_color, _mask_config.get());
                     }
                 }
             }
@@ -810,7 +827,7 @@ void Media_Window::_plotMaskData() {
 
                     if (!outline_mask.empty()) {
                         // Plot the outline mask using the same approach as regular masks
-                        _plotSingleMaskData({outline_mask}, image_size, outline_color);
+                        _plotSingleMaskData({outline_mask}, image_size, outline_color, _mask_config.get());
                     }
                 }
             }
@@ -818,11 +835,15 @@ void Media_Window::_plotMaskData() {
     }
 }
 
-void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, ImageSize mask_size, QRgb plot_color) {
+void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, ImageSize mask_size, QRgb plot_color, MaskDisplayOptions const * mask_config) {
+    // Skip transparency masks as they are handled at the media level
+    if (mask_config && mask_config->use_as_transparency) {
+        return;
+    }
+    
     for (auto const & single_mask: maskData) {
-
+        // Normal mode: overlay mask on top of media
         QImage unscaled_mask_image(mask_size.width, mask_size.height, QImage::Format::Format_ARGB32);
-
         unscaled_mask_image.fill(0);
 
         for (auto const point: single_mask) {
@@ -832,11 +853,73 @@ void Media_Window::_plotSingleMaskData(std::vector<Mask2D> const & maskData, Ima
         }
 
         auto scaled_mask_image = unscaled_mask_image.scaled(_canvasWidth, _canvasHeight);
-
         auto maskPixmap = addPixmap(QPixmap::fromImage(scaled_mask_image));
-
         _masks.append(maskPixmap);
     }
+}
+
+QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
+    std::cout << "Applying transparency masks..." << std::endl;
+    
+    std::cout << "Media image size: " << media_image.width() << "x" << media_image.height() << std::endl;
+    std::cout << "Canvas dimensions: " << _canvasWidth << "x" << _canvasHeight << std::endl;
+    
+    QImage final_image = media_image;
+    
+    int transparency_mask_count = 0;
+    int total_mask_points = 0;
+    
+    // Process all transparency masks
+    for (auto const & [mask_key, mask_config] : _mask_configs) {
+        if (!mask_config->is_visible || !mask_config->use_as_transparency) {
+            continue;
+        }
+        
+        transparency_mask_count++;
+        std::cout << "Processing transparency mask: " << mask_key << std::endl;
+        
+        auto mask_data = _data_manager->getData<MaskData>(mask_key);
+        auto image_size = mask_data->getImageSize();
+        
+        std::cout << "Mask image size: " << image_size.width << "x" << image_size.height << std::endl;
+        
+        auto const current_time = _data_manager->getCurrentTime();
+        auto maskData = mask_data->getAtTime(TimeFrameIndex(current_time));
+
+        std::cout << "Mask data size: " << maskData.size() << std::endl;
+        
+        // Calculate scaling factors
+        float xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
+        float yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
+        
+        std::cout << "Scaling factors: x=" << xAspect << ", y=" << yAspect << std::endl;
+
+        QImage unscaled_mask_image(image_size.width, image_size.height, QImage::Format::Format_ARGB32);
+        unscaled_mask_image.fill(0);
+        // Add mask points to combined mask
+        for (auto const & single_mask: maskData) {        
+            for (auto const point: single_mask) {
+                unscaled_mask_image.setPixel(
+                        QPoint(static_cast<int>(point.x), static_cast<int>(point.y)),
+                        qRgba(255, 255, 255, 255));
+            }
+        }
+
+        QImage scaled_mask_image = unscaled_mask_image.scaled(_canvasWidth, _canvasHeight);
+        // I want to copy final_image where scaled_mask_image is white, and keep the rest of the image the same
+        for (int y = 0; y < _canvasHeight; ++y) {
+            for (int x = 0; x < _canvasWidth; ++x) {
+                if (scaled_mask_image.pixel(x, y) == qRgba(255, 255, 255, 255)) {
+                    final_image.setPixel(x, y, final_image.pixel(x, y));
+                } else {
+                    final_image.setPixel(x, y, qRgba(0, 0, 0, 255));
+                }
+            }
+        }
+    }
+    
+    
+    return final_image;
 }
 
 void Media_Window::_plotPointData() {

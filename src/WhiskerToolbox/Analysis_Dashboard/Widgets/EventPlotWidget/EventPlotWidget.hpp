@@ -3,13 +3,13 @@
 
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 
-#include <QGraphicsProxyWidget>
-#include <QGraphicsSceneMouseEvent>
+#include <memory>
 
 class EventPlotOpenGLWidget;
+class QGraphicsProxyWidget;
+class QGraphicsSceneMouseEvent;
 class TableView;
 
-#include <memory>
 
 /**
  * @brief Event plot widget for visualizing event data

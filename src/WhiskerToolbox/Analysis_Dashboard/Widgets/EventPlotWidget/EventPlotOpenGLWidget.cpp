@@ -27,7 +27,11 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
       _data_max_y(0.0f),
       _data_bounds_valid(false),
       _opengl_resources_initialized(false),
-      _tooltip_timer(nullptr) {
+      _tooltip_timer(nullptr),
+      _hover_debounce_timer(nullptr),
+      _tooltip_refresh_timer(nullptr),
+      _hover_processing_active(false),
+      _pending_hover_pos(0, 0) {
     // Set widget attributes for OpenGL
     setAttribute(Qt::WA_AlwaysStackOnTop);
     setFocusPolicy(Qt::StrongFocus);
@@ -44,6 +48,20 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     _tooltip_timer->setSingleShot(true);
     _tooltip_timer->setInterval(500);// 500ms delay
     connect(_tooltip_timer, &QTimer::timeout, this, &EventPlotOpenGLWidget::handleTooltipTimer);
+
+    // Initialize hover processing timers (similar to SpatialOverlayOpenGLWidget)
+    _hover_debounce_timer = new QTimer(this);
+    _hover_debounce_timer->setSingleShot(true);
+    _hover_debounce_timer->setInterval(16); // ~60 FPS debounce
+    connect(_hover_debounce_timer, &QTimer::timeout, this, &EventPlotOpenGLWidget::processHoverDebounce);
+
+    _tooltip_refresh_timer = new QTimer(this);
+    _tooltip_refresh_timer->setSingleShot(false);
+    _tooltip_refresh_timer->setInterval(100); // Refresh every 100ms
+    connect(_tooltip_refresh_timer, &QTimer::timeout, this, &EventPlotOpenGLWidget::handleTooltipRefresh);
+
+    // Initialize hover processing state
+    _hover_processing_active = false;
     
     // Calculate initial bounds based on default range
     calculateDataBounds();
@@ -114,21 +132,6 @@ void EventPlotOpenGLWidget::setEventData(std::vector<std::vector<float>> const &
     updateVertexData();
     updateMatrices();
     update();
-}
-
-QVector2D EventPlotOpenGLWidget::screenToWorld(int screen_x, int screen_y) const {
-    float left, right, bottom, top;
-    calculateProjectionBounds(left, right, bottom, top);
-
-    if (left == right || bottom == top) {
-        return QVector2D(0, 0);
-    }
-
-    // Convert screen coordinates to world coordinates using the projection bounds
-    float world_x = left + (static_cast<float>(screen_x) / _widget_width) * (right - left);
-    float world_y = top - (static_cast<float>(screen_y) / _widget_height) * (top - bottom);// Y is flipped in screen coordinates
-
-    return QVector2D(world_x, world_y);
 }
 
 void EventPlotOpenGLWidget::initializeGL() {
@@ -230,7 +233,9 @@ void EventPlotOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
     // Handle double-click for frame jumping
     if (event->type() == QEvent::MouseButtonDblClick) {
-        QVector2D world_pos = screenToWorld(event->pos().x(), event->pos().y());
+        float world_x;
+        float world_y;
+        screenToWorld(event->pos().x(), event->pos().y(), world_x, world_y);
         // TODO: Find event at world position and emit frameJumpRequested
         // This will be implemented in subsequent steps
     }
@@ -246,32 +251,19 @@ void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
         _last_mouse_pos = current_pos;
     } else {
-                // Handle hover detection
-        auto hovered_event = findEventNear(event->pos().x(), event->pos().y());
-        
-        // Compare the optional values properly
-        bool hover_changed = false;
-        if (hovered_event.has_value() != _hovered_event.has_value()) {
-            hover_changed = true;
-        } else if (hovered_event.has_value() && _hovered_event.has_value()) {
-            // Both have values, compare the actual event data
-            hover_changed = (hovered_event->trial_index != _hovered_event->trial_index ||
-                           hovered_event->event_index != _hovered_event->event_index);
-        }
-        
-        if (hover_changed) {
-            _hovered_event = hovered_event;
+        // Handle tooltip logic if tooltips are enabled (improved version)
+        if (_tooltips_enabled) {
+            // Store the current mouse position for debounced processing
+            _pending_hover_pos = event->pos();
             
-            if (_hovered_event.has_value() && _tooltips_enabled) {
-                // Start tooltip timer
-                _tooltip_timer->start();
-            } else {
-                // Hide tooltip immediately
-                _tooltip_timer->stop();
-                QToolTip::hideText();
+            // If hover processing is currently active, skip this event
+            if (_hover_processing_active) {
+                return;
             }
             
-            update();
+            // Start or restart the debounce timer
+            _hover_debounce_timer->stop();
+            _hover_debounce_timer->start();
         }
     }
 }
@@ -302,6 +294,17 @@ void EventPlotOpenGLWidget::handleTooltipTimer() {
 
         QToolTip::showText(mapToGlobal(QPoint(_last_mouse_pos.x(), _last_mouse_pos.y())),
                            tooltip_text, this);
+    }
+}
+
+void EventPlotOpenGLWidget::handleTooltipRefresh() {
+    if (_hovered_event.has_value() && _tooltips_enabled) {
+        QString tooltip_text = QString("Trial %1, Event %2\nTime: %3 ms")
+                                       .arg(_hovered_event->trial_index + 1)
+                                       .arg(_hovered_event->event_index + 1)
+                                       .arg(_hovered_event->x, 0, 'f', 1);
+
+        QToolTip::showText(mapToGlobal(_pending_hover_pos), tooltip_text, this);
     }
 }
 
@@ -508,6 +511,9 @@ void EventPlotOpenGLWidget::updateMatrices() {
              << "left:" << left << "right:" << right 
              << "bottom:" << bottom << "top:" << top
              << "y_zoom:" << _y_zoom_level;
+    
+    // Update spatial index when view bounds change
+    buildSpatialIndex();
 }
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
@@ -605,6 +611,9 @@ void EventPlotOpenGLWidget::updateVertexData() {
     } else {
         qDebug() << "EventPlotOpenGLWidget::updateVertexData - vertex buffer not created!";
     }
+    
+    // Build spatial index for hover detection
+    buildSpatialIndex();
 }
 
 void EventPlotOpenGLWidget::calculateDataBounds() {
@@ -624,12 +633,13 @@ void EventPlotOpenGLWidget::calculateDataBounds() {
              << "from ranges: -" << _negative_range << "to +" << _positive_range;
 }
 
-std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEventNear(int screen_x, int screen_y, float tolerance_pixels) const {
+std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEventNear(int screen_x, int screen_y, float tolerance_pixels) {
     if (_event_data.empty() || _vertex_data.empty()) {
         return std::nullopt;
-    }
+        }
 
-    QVector2D world_pos = screenToWorld(screen_x, screen_y);
+    float world_x, world_y;
+    screenToWorld(screen_x, screen_y, world_x, world_y);
     float world_tolerance = calculateWorldTolerance(tolerance_pixels);
 
     // Convert trial index to y-coordinate
@@ -639,12 +649,12 @@ std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEv
         float trial_y = -1.0f + (static_cast<float>(trial_index) + 0.5f) * y_scale;
 
         // Check if mouse is near this trial's y-coordinate
-        if (std::abs(world_pos.y() - trial_y) <= world_tolerance) {
+        if (std::abs(world_y - trial_y) <= world_tolerance) {
             for (size_t event_index = 0; event_index < _event_data[trial_index].size(); ++event_index) {
                 float event_x = _event_data[trial_index][event_index];
 
                 // Check if mouse is near this event's x-coordinate
-                if (std::abs(world_pos.x() - event_x) <= world_tolerance) {
+                if (std::abs(world_x - event_x) <= world_tolerance) {
                     return HoveredEvent{
                             static_cast<int>(trial_index),
                             static_cast<int>(event_index),
@@ -656,13 +666,6 @@ std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEv
     }
 
     return std::nullopt;
-}
-
-float EventPlotOpenGLWidget::calculateWorldTolerance(float screen_tolerance) const {
-    // Convert screen tolerance to world coordinates
-    // This is a simplified conversion - in a real implementation you might want more sophisticated coordinate transformation
-    float world_tolerance = screen_tolerance * 0.01f;// Rough conversion factor
-    return world_tolerance;
 }
 
 void EventPlotOpenGLWidget::renderEvents() {
@@ -710,7 +713,7 @@ void EventPlotOpenGLWidget::renderHoveredEvent() {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
     // Set uniforms for highlight rendering
-    _shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f));// Red
+    _shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black
     _shader_program->setUniformValue("u_point_size", 12.0f);                       // Larger size
 
     // Draw the highlighted event
@@ -812,4 +815,147 @@ void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & righ
              << "bottom:" << bottom << "top:" << top
              << "ranges: -" << _negative_range << "to +" << _positive_range
              << "y_zoom:" << _y_zoom_level;
+}
+
+void EventPlotOpenGLWidget::buildSpatialIndex() {
+    if (_event_data.empty()) {
+        _spatial_index.reset();
+        _quad_tree_points.clear();
+        return;
+    }
+    
+    // Clear existing spatial index
+    _quad_tree_points.clear();
+    
+    // Calculate the bounding box for the quad tree
+    // Use the data bounds or reasonable defaults
+    float minX = _data_bounds_valid ? _data_min_x : -1000.0f;
+    float maxX = _data_bounds_valid ? _data_max_x : 1000.0f;
+    float minY = _data_bounds_valid ? _data_min_y : -1.0f;
+    float maxY = _data_bounds_valid ? _data_max_y : 1.0f;
+    
+    // Create new spatial index
+    BoundingBox bounds(minX, minY, maxX, maxY);
+    _spatial_index = std::make_unique<QuadTree<int64_t>>(bounds);
+    
+    // Calculate Y scale (same as in updateVertexData)
+    float y_scale = 2.0f / static_cast<float>(_event_data.size());
+    
+    // Build spatial index from event data
+    for (size_t trial_index = 0; trial_index < _event_data.size(); ++trial_index) {
+        float y = -1.0f + (static_cast<float>(trial_index) + 0.5f) * y_scale;
+        
+        for (size_t event_idx = 0; event_idx < _event_data[trial_index].size(); ++event_idx) {
+            float event_time = _event_data[trial_index][event_idx];
+            
+            // Create unique ID for this event
+            int64_t event_id = (static_cast<int64_t>(trial_index) << 32) | event_idx;
+            
+            // Add to spatial index
+            _spatial_index->insert(event_time, y, event_id);
+            
+            // Store event data for quick lookup
+            _quad_tree_points.emplace(event_id, QuadTreePoint<int64_t>(event_time, y, event_id));
+        }
+    }
+}
+
+
+void EventPlotOpenGLWidget::processHoverDebounce() {
+    if (!_tooltips_enabled || _hover_processing_active) {
+        return;
+    }
+    
+    _hover_processing_active = true;
+    
+    // Get the screen coordinates
+    QPoint screen_pos = _pending_hover_pos;
+    
+    // Find the nearest event using spatial index
+    auto hovered_event = findEventNearEfficient(screen_pos.x(), screen_pos.y());
+    
+    // Compare the optional values properly
+    bool hover_changed = false;
+    if (hovered_event.has_value() != _hovered_event.has_value()) {
+        hover_changed = true;
+    } else if (hovered_event.has_value() && _hovered_event.has_value()) {
+        // Both have values, compare the actual event data
+        hover_changed = (hovered_event->trial_index != _hovered_event->trial_index ||
+                       hovered_event->event_index != _hovered_event->event_index);
+    }
+    
+    if (hover_changed) {
+        _hovered_event = hovered_event;
+        
+        if (_hovered_event.has_value()) {
+            // Start tooltip timer
+            _tooltip_refresh_timer->start();
+        } else {
+            // Hide tooltip immediately
+            _tooltip_refresh_timer->stop();
+            QToolTip::hideText();
+        }
+        
+        update();
+    }
+    
+    _hover_processing_active = false;
+}
+
+std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEventNearEfficient(int screen_x, int screen_y, float tolerance_pixels) const {
+    if (!_spatial_index || _quad_tree_points.empty()) {
+        return std::nullopt;
+    }
+    
+    // Convert screen coordinates to world coordinates
+    float world_x, world_y;
+    const_cast<EventPlotOpenGLWidget*>(this)->screenToWorld(screen_x, screen_y, world_x, world_y);
+    
+    // Convert tolerance from screen pixels to world coordinates
+    float world_tolerance = calculateWorldTolerance(tolerance_pixels);
+    
+    // Use QuadTree's findNearest method
+    const QuadTreePoint<int64_t>* nearest_point = _spatial_index->findNearest(world_x, world_y, world_tolerance);
+    
+    if (!nearest_point) {
+        return std::nullopt;
+    }
+    
+    // Extract trial_index and event_index from the event_id
+    int64_t event_id = nearest_point->data;
+    int trial_index = static_cast<int>(event_id >> 32);
+    int event_index = static_cast<int>(event_id & 0xFFFFFFFF);
+    
+    return HoveredEvent{trial_index, event_index, nearest_point->x, nearest_point->y};
+}
+
+float EventPlotOpenGLWidget::calculateWorldTolerance(float screen_tolerance) const {
+    // Calculate projection bounds
+    float left, right, bottom, top;
+    calculateProjectionBounds(left, right, bottom, top);
+    
+    // Calculate world units per pixel
+    float world_width = right - left;
+    float world_height = top - bottom;
+    float world_per_pixel_x = world_width / _widget_width;
+    float world_per_pixel_y = world_height / _widget_height;
+    
+    // Use the smaller of the two to ensure we don't miss events
+    float world_per_pixel = std::min(world_per_pixel_x, world_per_pixel_y);
+    
+    return screen_tolerance * world_per_pixel;
+}
+
+void EventPlotOpenGLWidget::screenToWorld(int screen_x, int screen_y, float& world_x, float& world_y) {
+    // Calculate projection bounds
+    float left, right, bottom, top;
+    calculateProjectionBounds(left, right, bottom, top);
+    
+    // Convert screen coordinates to normalized coordinates [0, 1]
+    float norm_x = static_cast<float>(screen_x) / _widget_width;
+    float norm_y = 1.0f - static_cast<float>(screen_y) / _widget_height; // Flip Y axis
+    
+    // Convert to world coordinates
+    world_x = left + norm_x * (right - left);
+    world_y = bottom + norm_y * (top - bottom);
 }
