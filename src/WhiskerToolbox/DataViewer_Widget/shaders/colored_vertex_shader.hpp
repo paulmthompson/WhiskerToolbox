@@ -1,3 +1,4 @@
+// DEPRECATED: This file is superseded by resource-based shaders (.vert/.frag in the shaders/ directory and .qrc). Do not add new shaders here.
 #ifndef WHISKERTOOLBOX_COLORED_VERTEX_SHADER_HPP
 #define WHISKERTOOLBOX_COLORED_VERTEX_SHADER_HPP
 

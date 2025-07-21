@@ -625,4 +625,3 @@ void on_plot_hover(const TableView& table, size_t hovered_row_index) {
     // 3. Display the generated tooltip text to the user.
     show_tooltip(tooltip_text);
 }
-

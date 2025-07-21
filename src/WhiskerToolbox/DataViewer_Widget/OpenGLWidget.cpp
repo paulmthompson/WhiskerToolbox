@@ -14,7 +14,6 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame.hpp"
 #include "shaders/colored_vertex_shader.hpp"
-#include "shaders/dashed_line_shader.hpp"
 
 #include <QMouseEvent>
 #include <QOpenGLContext>
@@ -225,6 +224,15 @@ QOpenGLShaderProgram * create_shader_program(char const * vertexShaderSource,
     return prog;
 }
 
+// Replace the old create_shader_program with a new version that loads from resource files for the dashed shader
+QOpenGLShaderProgram * create_shader_program_from_resource(QString const & vertexResource, QString const & fragmentResource) {
+    auto prog = new QOpenGLShaderProgram;
+    prog->addShaderFromSourceFile(QOpenGLShader::Vertex, vertexResource);
+    prog->addShaderFromSourceFile(QOpenGLShader::Fragment, fragmentResource);
+    prog->link();
+    return prog;
+}
+
 void OpenGLWidget::initializeGL() {
 
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &OpenGLWidget::cleanup);
@@ -257,7 +265,7 @@ void OpenGLWidget::initializeGL() {
     m_colorLoc = glGetUniformLocation(m_program_ID, "u_color");
     m_alphaLoc = glGetUniformLocation(m_program_ID, "u_alpha");
 
-    m_dashedProgram = create_shader_program(dashedVertexShaderSource, dashedFragmentShaderSource);
+    m_dashedProgram = create_shader_program_from_resource(":/shaders/dashed_line.vert", ":/shaders/dashed_line.frag");
 
     auto const m_dashedProgram_ID = m_dashedProgram->programId();
     glUseProgram(m_dashedProgram_ID);

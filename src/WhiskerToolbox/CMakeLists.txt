@@ -322,7 +322,6 @@ set(PROJECT_SOURCES
         DataViewer_Widget/DataViewer_Tree_Widget/TreeWidgetStateManager.hpp
         DataViewer_Widget/OpenGLWidget.cpp
         DataViewer_Widget/OpenGLWidget.hpp
-        DataViewer_Widget/shaders/dashed_line_shader.hpp
         DataViewer_Widget/shaders/colored_vertex_shader.hpp
         DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.cpp
         DataViewer_Widget/AnalogTimeSeries/AnalogViewer_Widget.hpp

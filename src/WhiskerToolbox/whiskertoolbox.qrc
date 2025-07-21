@@ -3,5 +3,7 @@
         <file>images/fastforward.png</file>
         <file>images/rewind.png</file>
         <file>my_stylesheet.qss</file>
+        <file>shaders/dashed_line.vert</file>
+        <file>shaders/dashed_line.frag</file>
     </qresource>
 </RCC>
