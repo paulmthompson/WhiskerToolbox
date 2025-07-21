@@ -263,6 +263,32 @@ void OpenGLWidget::initializeGL() {
             m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/dashed_line.frag" : "src/WhiskerToolbox/shaders/dashed_line.frag",
             "",
             m_shaderSourceType);
+    
+    // Get uniform locations for axes shader
+    auto axesProgram = ShaderManager::instance().getProgram("axes");
+    if (axesProgram) {
+        auto nativeProgram = axesProgram->getNativeProgram();
+        if (nativeProgram) {
+            m_projMatrixLoc = nativeProgram->uniformLocation("projMatrix");
+            m_viewMatrixLoc = nativeProgram->uniformLocation("viewMatrix");
+            m_modelMatrixLoc = nativeProgram->uniformLocation("modelMatrix");
+            m_colorLoc = nativeProgram->uniformLocation("u_color");
+            m_alphaLoc = nativeProgram->uniformLocation("u_alpha");
+        }
+    }
+    
+    // Get uniform locations for dashed line shader
+    auto dashedProgram = ShaderManager::instance().getProgram("dashed_line");
+    if (dashedProgram) {
+        auto nativeProgram = dashedProgram->getNativeProgram();
+        if (nativeProgram) {
+            m_dashedProjMatrixLoc = nativeProgram->uniformLocation("u_mvp");
+            m_dashedResolutionLoc = nativeProgram->uniformLocation("u_resolution");
+            m_dashedDashSizeLoc = nativeProgram->uniformLocation("u_dashSize");
+            m_dashedGapSizeLoc = nativeProgram->uniformLocation("u_gapSize");
+        }
+    }
+    
     // Connect reload signal to redraw
     connect(&ShaderManager::instance(), &ShaderManager::shaderReloaded, this, [this](std::string const &) { update(); });
     m_vao.create();
@@ -276,11 +302,11 @@ void OpenGLWidget::initializeGL() {
 void OpenGLWidget::setupVertexAttribs() {
 
     m_vbo.bind();                     // glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
-    int const vertex_argument_num = 2;// Only position (x, y) now
+    int const vertex_argument_num = 4;// Position (x, y, 0, 1) for axes shader
 
-    // Attribute 0: vertex positions (x, y)
+    // Attribute 0: vertex positions (x, y, 0, 1) for axes shader
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), nullptr);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, vertex_argument_num * sizeof(GLfloat), nullptr);
 
     // Disable unused vertex attributes
     glDisableVertexAttribArray(1);
@@ -690,6 +716,8 @@ void OpenGLWidget::drawAnalogSeries() {
 
                 m_vertices.push_back(xCanvasPos);
                 m_vertices.push_back(yCanvasPos);
+                m_vertices.push_back(0.0f);  // z coordinate
+                m_vertices.push_back(1.0f);  // w coordinate
 
                 ++(*time_begin);
             }
@@ -699,7 +727,7 @@ void OpenGLWidget::drawAnalogSeries() {
 
             // Set line thickness from display options
             glLineWidth(static_cast<float>(display_options->line_thickness));
-            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 2));
+            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(m_vertices.size() / 4));
 
         } else if (display_options->gap_handling == AnalogGapHandling::DetectGaps) {
             // Draw multiple line segments, breaking at gaps
@@ -747,7 +775,7 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & 
                     m_vbo.bind();
                     m_vbo.allocate(segment_vertices.data(), static_cast<int>(segment_vertices.size() * sizeof(GLfloat)));
                     m_vbo.release();
-                    glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 2));
+                    glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 4));
                 }
 
                 // Start new segment
@@ -755,25 +783,27 @@ void OpenGLWidget::_drawAnalogSeriesWithGapDetection(std::vector<float> const & 
             }
         }
 
-        // Add current point to segment (only position now)
+        // Add current point to segment (4D coordinates: x, y, 0, 1)
         segment_vertices.push_back(xCanvasPos);
         segment_vertices.push_back(yCanvasPos);
+        segment_vertices.push_back(0.0f);  // z coordinate
+        segment_vertices.push_back(1.0f);  // w coordinate
 
         prev_index = (**time_begin).getValue();
         ++(*time_begin);
     }
 
     // Draw final segment
-    if (segment_vertices.size() >= 2) {// At least 1 point
+    if (segment_vertices.size() >= 4) {// At least 1 point (4 floats)
         m_vbo.bind();
         m_vbo.allocate(segment_vertices.data(), static_cast<int>(segment_vertices.size() * sizeof(GLfloat)));
         m_vbo.release();
 
-        if (segment_vertices.size() >= 4) {
-            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 2));
+        if (segment_vertices.size() >= 8) {// At least 2 points (8 floats)
+            glDrawArrays(GL_LINE_STRIP, 0, static_cast<int>(segment_vertices.size() / 4));
         } else {
             // Single point - draw as a small marker
-            glDrawArrays(GL_POINTS, 0, static_cast<int>(segment_vertices.size() / 2));
+            glDrawArrays(GL_POINTS, 0, static_cast<int>(segment_vertices.size() / 4));
         }
     }
 }
@@ -792,6 +822,8 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::vector<float> const & data,
 
         m_vertices.push_back(xCanvasPos);
         m_vertices.push_back(yCanvasPos);
+        m_vertices.push_back(0.0f);  // z coordinate
+        m_vertices.push_back(1.0f);  // w coordinate
 
         ++(*time_begin);
     }
@@ -803,7 +835,7 @@ void OpenGLWidget::_drawAnalogSeriesAsMarkers(std::vector<float> const & data,
 
         // Set point size for better visibility
         //glPointSize(3.0f);
-        glDrawArrays(GL_POINTS, 0, static_cast<int>(m_vertices.size() / 2));
+        glDrawArrays(GL_POINTS, 0, static_cast<int>(m_vertices.size() / 4));
         //glPointSize(1.0f); // Reset to default
     }
 }
@@ -878,10 +910,10 @@ void OpenGLWidget::drawAxis() {
     glUniform3f(m_colorLoc, r, g, b);
     glUniform1f(m_alphaLoc, 1.0f);
 
-    // Draw horizontal line at x=0
-    std::array<GLfloat, 4> lineVertices = {
-            0.0f, _yMin,
-            0.0f, _yMax};
+    // Draw horizontal line at x=0 with 4D coordinates (x, y, 0, 1)
+    std::array<GLfloat, 8> lineVertices = {
+            0.0f, _yMin, 0.0f, 1.0f,
+            0.0f, _yMax, 0.0f, 1.0f};
 
     m_vbo.bind();
     m_vbo.allocate(lineVertices.data(), lineVertices.size() * sizeof(GLfloat));
@@ -1023,6 +1055,7 @@ void OpenGLWidget::drawDashedLine(LineParameters const & params) {
 
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
 
+    // Pass 3D coordinates (z=0) to match the vertex shader input format
     std::array<float, 6> vertices = {
             params.xStart, params.yStart, 0.0f,
             params.xEnd, params.yEnd, 0.0f};
