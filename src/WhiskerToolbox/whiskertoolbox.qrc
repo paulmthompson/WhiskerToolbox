@@ -7,5 +7,7 @@
         <file>shaders/dashed_line.frag</file>
         <file>shaders/colored_vertex.vert</file>
         <file>shaders/colored_vertex.frag</file>
+        <file>shaders/line.vert</file>
+        <file>shaders/line.frag</file>
     </qresource>
 </RCC>

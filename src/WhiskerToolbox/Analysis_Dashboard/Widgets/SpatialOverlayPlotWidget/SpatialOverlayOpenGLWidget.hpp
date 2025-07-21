@@ -5,6 +5,7 @@
 #include "SelectionModes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 #include "Masks/MaskDataVisualization.hpp"
+#include "../ShaderManager/ShaderManager.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -255,7 +256,6 @@ private:
 
     // Modern OpenGL rendering resources
     QOpenGLShaderProgram * _shader_program;
-    QOpenGLShaderProgram * _line_shader_program;
     QOpenGLShaderProgram * _texture_shader_program;
 
     // Global highlight rendering resources (shared across all PointData)

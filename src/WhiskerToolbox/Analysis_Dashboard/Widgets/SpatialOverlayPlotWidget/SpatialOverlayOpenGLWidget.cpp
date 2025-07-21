@@ -1,4 +1,5 @@
 #include "SpatialOverlayOpenGLWidget.hpp"
+#include "ShaderManager/ShaderManager.hpp"
 
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
@@ -18,7 +19,6 @@
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
       _shader_program(nullptr),
-      _line_shader_program(nullptr),
       _highlight_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _opengl_resources_initialized(false),
       _zoom_level(1.0f),
@@ -477,7 +477,10 @@ void SpatialOverlayOpenGLWidget::paintGL() {
     // Render polygon overlay using the polygon selection handler
     if (_polygon_selection_handler && _polygon_selection_handler->isPolygonSelecting()) {
         QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-        _polygon_selection_handler->renderPolygonOverlay(_line_shader_program, mvp_matrix);
+        auto lineProgram = ShaderManager::instance().getProgram("line");
+        if (lineProgram) {
+            _polygon_selection_handler->renderPolygonOverlay(lineProgram->getNativeProgram(), mvp_matrix);
+        }
     }
     
 }
@@ -1043,19 +1046,20 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
     }
     
     // === DRAW CALL 2: Render mask bounding boxes ===
-    if (_line_shader_program && _line_shader_program->bind()) {
+    auto lineProgram = ShaderManager::instance().getProgram("line");
+    if (lineProgram && lineProgram->getNativeProgram()->bind()) {
         QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-        _line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
+        lineProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
         
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         
         // Render hover mask bounding boxes (on top of everything else)
         for (auto const& [key, viz] : _mask_data_visualizations) {
-            viz->renderHoverMaskUnionPolygon(_line_shader_program);
+            viz->renderHoverMaskUnionPolygon(lineProgram->getNativeProgram());
         }
         
-        _line_shader_program->release();
+        lineProgram->getNativeProgram()->release();
     }
 }
 
@@ -1119,49 +1123,9 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
         return;
     }
 
-    // Create and compile line shader program
-    _line_shader_program = new QOpenGLShaderProgram(this);
-
-    // Vertex shader for lines (same as points but without point size)
-    QString line_vertex_shader_source = R"(
-        #version 410 core
-        
-        layout(location = 0) in vec2 a_position;
-        
-        uniform mat4 u_mvp_matrix;
-        uniform float u_point_size;
-        
-        void main() {
-            gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
-            gl_PointSize = u_point_size;
-        }
-    )";
-
-    // Fragment shader for lines (flat color)
-    QString line_fragment_shader_source = R"(
-        #version 410 core
-        
-        uniform vec4 u_color;
-        
-        out vec4 FragColor;
-        
-        void main() {
-            FragColor = u_color;
-        }
-    )";
-
-    if (!_line_shader_program->addShaderFromSourceCode(QOpenGLShader::Vertex, line_vertex_shader_source)) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile line vertex shader:" << _line_shader_program->log();
-        return;
-    }
-
-    if (!_line_shader_program->addShaderFromSourceCode(QOpenGLShader::Fragment, line_fragment_shader_source)) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile line fragment shader:" << _line_shader_program->log();
-        return;
-    }
-
-    if (!_line_shader_program->link()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to link line shader program:" << _line_shader_program->log();
+    // Load line shader program from ShaderManager
+    if (!ShaderManager::instance().loadProgram("line", ":/shaders/line.vert", ":/shaders/line.frag", "", ShaderSourceType::Resource)) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to load line shader program from ShaderManager";
         return;
     }
 
@@ -1258,9 +1222,6 @@ void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
 
         delete _shader_program;
         _shader_program = nullptr;
-
-        delete _line_shader_program;
-        _line_shader_program = nullptr;
 
         delete _texture_shader_program;
         _texture_shader_program = nullptr;
