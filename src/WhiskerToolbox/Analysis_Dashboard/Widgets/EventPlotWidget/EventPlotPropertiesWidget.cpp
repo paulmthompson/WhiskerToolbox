@@ -89,6 +89,12 @@ void EventPlotPropertiesWidget::updateFromPlot() {
         ui->tooltips_checkbox->blockSignals(true);
         ui->tooltips_checkbox->setChecked(tooltips_enabled);
         ui->tooltips_checkbox->blockSignals(false);
+
+        // Update dark mode checkbox state
+        auto plot_theme = _event_plot_widget->getOpenGLWidget()->getPlotTheme();
+        ui->dark_mode_checkbox->blockSignals(true);
+        ui->dark_mode_checkbox->setChecked(plot_theme == EventPlotOpenGLWidget::PlotTheme::Dark);
+        ui->dark_mode_checkbox->blockSignals(false);
     }
 }
 
@@ -177,6 +183,13 @@ void EventPlotPropertiesWidget::onTooltipsEnabledChanged(bool enabled) {
     }
 }
 
+void EventPlotPropertiesWidget::onDarkModeToggled(bool enabled) {
+    if (_event_plot_widget && _event_plot_widget->getOpenGLWidget()) {
+        auto plotTheme = enabled ? EventPlotOpenGLWidget::PlotTheme::Dark : EventPlotOpenGLWidget::PlotTheme::Light;
+        _event_plot_widget->getOpenGLWidget()->setPlotTheme(plotTheme);
+    }
+}
+
 void EventPlotPropertiesWidget::setupConnections() {
     // Connect UI signals to slots
     if (ui->x_axis_combo) {
@@ -207,6 +220,11 @@ void EventPlotPropertiesWidget::setupConnections() {
     if (ui->tooltips_checkbox) {
         connect(ui->tooltips_checkbox, &QCheckBox::toggled,
                 this, &EventPlotPropertiesWidget::onTooltipsEnabledChanged);
+    }
+
+    if (ui->dark_mode_checkbox) {
+        connect(ui->dark_mode_checkbox, &QCheckBox::toggled,
+                this, &EventPlotPropertiesWidget::onDarkModeToggled);
     }
 
     if (ui->capture_range_spinbox) {

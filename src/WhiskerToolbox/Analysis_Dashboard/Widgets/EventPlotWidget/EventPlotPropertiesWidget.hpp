@@ -87,6 +87,12 @@ private slots:
     void onTooltipsEnabledChanged(bool enabled);
 
     /**
+     * @brief Handle dark mode toggle changes
+     * @param enabled Whether dark mode should be enabled
+     */
+    void onDarkModeToggled(bool enabled);
+
+    /**
      * @brief Handle capture range changes
      * @param value New capture range value in samples
      */
