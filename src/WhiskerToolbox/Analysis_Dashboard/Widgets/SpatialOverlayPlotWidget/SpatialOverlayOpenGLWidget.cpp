@@ -18,7 +18,6 @@
 
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
-      _shader_program(nullptr),
       _highlight_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _opengl_resources_initialized(false),
       _zoom_level(1.0f),
@@ -978,15 +977,16 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
         return;
     }
     
-    // Use shader program
-    if (!_shader_program->bind()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to bind shader program";
+    // Get point shader program from ShaderManager
+    auto pointProgram = ShaderManager::instance().getProgram("point");
+    if (!pointProgram || !pointProgram->getNativeProgram()->bind()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to bind point shader program";
         return;
     }
     
     // Set uniform matrices
     QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-    _shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
+    pointProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
     
     // Enable blending for regular points
     glEnable(GL_BLEND);
@@ -994,19 +994,19 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
     
     // === DRAW CALL 1: Render all regular points for each PointData ===
     for (auto const& [key, viz] : _point_data_visualizations) {
-        viz->renderPoints(_shader_program, _point_size);
+        viz->renderPoints(pointProgram->getNativeProgram(), _point_size);
     }
     
     // === DRAW CALL 2: Render selected points for each PointData ===
     glDisable(GL_BLEND); // Solid color for selections
     for (auto const& [key, viz] : _point_data_visualizations) {
-        viz->renderSelectedPoints(_shader_program, _point_size);
+        viz->renderSelectedPoints(pointProgram->getNativeProgram(), _point_size);
     }
     
     // === DRAW CALL 3: Render hover point (if any) ===
     for (auto const& [key, viz] : _point_data_visualizations) {
         if (viz->current_hover_point) {
-            viz->renderHoverPoint(_shader_program, _point_size, _highlight_vertex_buffer, _highlight_vertex_array_object);
+            viz->renderHoverPoint(pointProgram->getNativeProgram(), _point_size, _highlight_vertex_buffer, _highlight_vertex_array_object);
             break; // Only one hover point at a time
         }
     }
@@ -1014,7 +1014,7 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
     // Re-enable blending
     glEnable(GL_BLEND);
     
-    _shader_program->release();
+    pointProgram->getNativeProgram()->release();
 }
 
 void SpatialOverlayOpenGLWidget::renderMasks() {
@@ -1066,60 +1066,9 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
 void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     qDebug() << "SpatialOverlayOpenGLWidget: Initializing OpenGL resources";
 
-    // Create and compile point shader program
-    _shader_program = new QOpenGLShaderProgram(this);
-
-    // Vertex shader for points
-    QString vertex_shader_source = R"(
-        #version 410 core
-        
-        layout(location = 0) in vec2 a_position;
-        
-        uniform mat4 u_mvp_matrix;
-        uniform float u_point_size;
-        
-        void main() {
-            gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
-            gl_PointSize = u_point_size;
-        }
-    )";
-
-    // Fragment shader for points
-    QString fragment_shader_source = R"(
-        #version 410 core
-        
-        uniform vec4 u_color;
-        
-        out vec4 FragColor;
-        
-        void main() {
-            // Create circular points
-            vec2 coord = gl_PointCoord - vec2(0.5, 0.5);
-            float distance = length(coord);
-            
-            // Discard fragments outside the circle
-            if (distance > 0.5) {
-                discard;
-            }
-            
-            // Smooth anti-aliased edge
-            float alpha = 1.0 - smoothstep(0.4, 0.5, distance);
-            FragColor = vec4(u_color.rgb, u_color.a * alpha);
-        }
-    )";
-
-    if (!_shader_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertex_shader_source)) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile vertex shader:" << _shader_program->log();
-        return;
-    }
-
-    if (!_shader_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragment_shader_source)) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile fragment shader:" << _shader_program->log();
-        return;
-    }
-
-    if (!_shader_program->link()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to link shader program:" << _shader_program->log();
+    // Load point shader program from ShaderManager
+    if (!ShaderManager::instance().loadProgram("point", ":/shaders/point.vert", ":/shaders/point.frag", "", ShaderSourceType::Resource)) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to load point shader program from ShaderManager";
         return;
     }
 
@@ -1219,9 +1168,6 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
 void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
     if (_opengl_resources_initialized) {
         makeCurrent();
-
-        delete _shader_program;
-        _shader_program = nullptr;
 
         delete _texture_shader_program;
         _texture_shader_program = nullptr;

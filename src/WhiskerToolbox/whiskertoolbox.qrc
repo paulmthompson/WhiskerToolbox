@@ -9,5 +9,7 @@
         <file>shaders/colored_vertex.frag</file>
         <file>shaders/line.vert</file>
         <file>shaders/line.frag</file>
+        <file>shaders/point.vert</file>
+        <file>shaders/point.frag</file>
     </qresource>
 </RCC>

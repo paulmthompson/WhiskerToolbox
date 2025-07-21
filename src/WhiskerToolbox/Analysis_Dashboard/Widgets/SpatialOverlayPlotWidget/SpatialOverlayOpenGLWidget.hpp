@@ -255,7 +255,6 @@ private:
     //std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
 
     // Modern OpenGL rendering resources
-    QOpenGLShaderProgram * _shader_program;
     QOpenGLShaderProgram * _texture_shader_program;
 
     // Global highlight rendering resources (shared across all PointData)
