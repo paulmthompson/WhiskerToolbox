@@ -13,7 +13,6 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame.hpp"
-#include "shaders/colored_vertex_shader.hpp"
 
 #include <QMouseEvent>
 #include <QOpenGLContext>
@@ -255,7 +254,7 @@ void OpenGLWidget::initializeGL() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    m_program = create_shader_program(vertexShaderSource, fragmentShaderSource);
+    m_program = create_shader_program_from_resource(":/shaders/colored_vertex.vert", ":/shaders/colored_vertex.frag");
 
     auto const m_program_ID = m_program->programId();
     glUseProgram(m_program_ID);

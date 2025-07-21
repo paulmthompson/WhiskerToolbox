@@ -5,5 +5,7 @@
         <file>my_stylesheet.qss</file>
         <file>shaders/dashed_line.vert</file>
         <file>shaders/dashed_line.frag</file>
+        <file>shaders/colored_vertex.vert</file>
+        <file>shaders/colored_vertex.frag</file>
     </qresource>
 </RCC>
