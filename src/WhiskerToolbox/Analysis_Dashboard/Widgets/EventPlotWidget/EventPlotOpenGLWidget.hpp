@@ -3,6 +3,7 @@
 
 #include "SpatialIndex/QuadTree.hpp"
 #include "CoreGeometry/boundingbox.hpp"
+#include "ShaderManager/ShaderManager.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -99,6 +100,13 @@ public:
      * @param event_data Vector of trials, each containing vector of event times
      */
     void setEventData(std::vector<std::vector<float>> const & event_data);
+
+    enum class PlotTheme {
+        Dark,
+        Light
+    };
+    void setPlotTheme(PlotTheme theme) { _plot_theme = theme; update(); }
+    PlotTheme getPlotTheme() const { return _plot_theme; }
 
 signals:
     /**
@@ -205,6 +213,8 @@ private:
     QTimer * _tooltip_refresh_timer;
     bool _hover_processing_active;
     QPoint _pending_hover_pos;
+
+    PlotTheme _plot_theme = PlotTheme::Dark;
 
     /**
      * @brief Initialize OpenGL shaders

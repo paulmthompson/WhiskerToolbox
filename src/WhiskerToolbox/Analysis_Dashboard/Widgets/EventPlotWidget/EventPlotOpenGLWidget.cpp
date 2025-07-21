@@ -1,4 +1,5 @@
 #include "EventPlotOpenGLWidget.hpp"
+#include "ShaderManager/ShaderManager.hpp"
 
 #include <QDebug>
 #include <QMouseEvent>
@@ -136,8 +137,12 @@ void EventPlotOpenGLWidget::initializeGL() {
         return;
     }
 
-    // Set clear color
-    glClearColor(0.95f, 0.95f, 0.95f, 1.0f);// Light gray background
+    // Set clear color based on theme
+    if (_plot_theme == PlotTheme::Dark) {
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // dark gray
+    } else {
+        glClearColor(0.95f, 0.95f, 0.95f, 1.0f); // light gray
+    }
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
@@ -165,6 +170,12 @@ void EventPlotOpenGLWidget::initializeGL() {
     updateMatrices();
     
     qDebug() << "EventPlotOpenGLWidget::initializeGL completed";
+
+    // Load axes shader via ShaderManager
+    ShaderManager::instance().loadProgram(
+        "axes",
+        ":/shaders/colored_vertex.vert",
+        ":/shaders/colored_vertex.frag");
 }
 
 void EventPlotOpenGLWidget::paintGL() {
@@ -694,47 +705,46 @@ void EventPlotOpenGLWidget::renderHoveredEvent() {
 }
 
 void EventPlotOpenGLWidget::renderCenterLine() {
-    qDebug() << "EventPlotOpenGLWidget::renderCenterLine called";
-    
-    if (!_center_line_vertex_array_object.isCreated() || !_center_line_buffer.isCreated()) {
-        qDebug() << "EventPlotOpenGLWidget::renderCenterLine - buffers not created";
-        return;
-    }
-    
-    if (!_line_shader_program || !_line_shader_program->isLinked()) {
-        qDebug() << "EventPlotOpenGLWidget::renderCenterLine - line shader program not ready";
-        return;
-    }
-    
-    // Use the line shader program for rendering the center line
-    _line_shader_program->bind();
-
-    // Set transformation matrices
-    _line_shader_program->setUniformValue("view_matrix", _view_matrix);
-    _line_shader_program->setUniformValue("projection_matrix", _projection_matrix);
-    
-    // Set the world X coordinate for the center line (always at X=0)
-    _line_shader_program->setUniformValue("u_world_x", 0.0f);
-    
-    // Set line color (red)
-    _line_shader_program->setUniformValue("u_color", QVector4D(0.8f, 0.2f, 0.2f, 1.0f));
-    
-    // Bind vertex array object
-    _center_line_vertex_array_object.bind();
-
-    // Draw the center line as GL_LINES (2 vertices: bottom to top)
-    glDrawArrays(GL_LINES, 0, 2);
-
-    _center_line_vertex_array_object.release();
-    _line_shader_program->release();
-    
-    // Check for OpenGL errors
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        qDebug() << "EventPlotOpenGLWidget::renderCenterLine - OpenGL error:" << error;
+    // Use ShaderManager axes shader for center line
+    auto axesProgram = ShaderManager::instance().getProgram("axes");
+    if (!axesProgram) return;
+    glUseProgram(axesProgram->getProgramId());
+    auto nativeProgram = axesProgram->getNativeProgram();
+    if (!nativeProgram) return;
+    // Set up MVP
+    QMatrix4x4 mvp = _projection_matrix * _view_matrix;
+    int projLoc = nativeProgram->uniformLocation("projMatrix");
+    int viewLoc = nativeProgram->uniformLocation("viewMatrix");
+    int modelLoc = nativeProgram->uniformLocation("modelMatrix");
+    int colorLoc = nativeProgram->uniformLocation("u_color");
+    int alphaLoc = nativeProgram->uniformLocation("u_alpha");
+    QMatrix4x4 identity;
+    nativeProgram->setUniformValue(projLoc, _projection_matrix);
+    nativeProgram->setUniformValue(viewLoc, _view_matrix);
+    nativeProgram->setUniformValue(modelLoc, identity);
+    // Set color: white for dark mode, black for light mode
+    if (_plot_theme == PlotTheme::Dark) {
+        nativeProgram->setUniformValue(colorLoc, QVector3D(1.0f, 1.0f, 1.0f));
     } else {
-        qDebug() << "EventPlotOpenGLWidget::renderCenterLine completed successfully with line from canvas bottom to top";
+        nativeProgram->setUniformValue(colorLoc, QVector3D(0.0f, 0.0f, 0.0f));
     }
+    nativeProgram->setUniformValue(alphaLoc, 1.0f);
+    // Center line vertex data (4D)
+    float lineVertices[8] = {0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f};
+    GLuint vbo, vao;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(lineVertices), lineVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
+    glDrawArrays(GL_LINES, 0, 2);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &vbo);
+    glDeleteVertexArrays(1, &vao);
+    glUseProgram(0);
 }
 
 void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & right, float & bottom, float & top) const {
