@@ -9,19 +9,18 @@ PointDataVisualization::PointDataVisualization(QString const & data_key,
     : key(data_key),
       vertex_buffer(QOpenGLBuffer::VertexBuffer),
       selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
-      color(1.0f, 0.0f, 0.0f, 1.0f) 
-{
+      color(1.0f, 0.0f, 0.0f, 1.0f) {
     // Calculate bounds for QuadTree initialization
     BoundingBox bounds = calculateBoundsForPointData(point_data.get());
-            
+
     spatial_index = std::make_unique<QuadTree<int64_t>>(bounds);
-    vertex_data.reserve(point_data->GetAllPointsAsRange().size() * 2); // Reserve space for x and y coordinates
-    
-    for (auto const & time_points_pair : point_data->GetAllPointsAsRange()) {
-        for (auto const & point : time_points_pair.points) {
+    vertex_data.reserve(point_data->GetAllPointsAsRange().size() * 2);// Reserve space for x and y coordinates
+
+    for (auto const & time_points_pair: point_data->GetAllPointsAsRange()) {
+        for (auto const & point: time_points_pair.points) {
             // Store original coordinates in QuadTree (preserve data structure)
             spatial_index->insert(point.x, point.y, time_points_pair.time.getValue());
-            
+
             // Store original coordinates in vertex data for OpenGL rendering
             vertex_data.push_back(point.x);
             vertex_data.push_back(point.y);
@@ -146,15 +145,15 @@ bool PointDataVisualization::togglePointSelection(QuadTreePoint<int64_t> const *
 
 bool PointDataVisualization::removePointFromSelection(QuadTreePoint<int64_t> const * point_ptr) {
     auto it = selected_points.find(point_ptr);
-    
+
     if (it != selected_points.end()) {
         // Point is selected, remove it
         selected_points.erase(it);
         updateSelectionVertexBuffer();
-        return true; // Point was removed
+        return true;// Point was removed
     }
-    
-    return false; // Point wasn't selected
+
+    return false;// Point wasn't selected
 }
 
 void PointDataVisualization::renderPoints(QOpenGLShaderProgram * shader_program, float point_size) {

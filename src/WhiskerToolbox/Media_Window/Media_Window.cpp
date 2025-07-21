@@ -398,7 +398,13 @@ void Media_Window::UpdateCanvas() {
     QImage scene_image(_canvasWidth, _canvasHeight, QImage::Format_ARGB32);
     scene_image.fill(Qt::transparent);// Optional: fill with transparent background
     QPainter painter(&scene_image);
-    this->render(&painter);
+    
+    // Set the scene rect to match the canvas dimensions
+    this->setSceneRect(0, 0, _canvasWidth, _canvasHeight);
+    
+    // Render the scene with proper viewport mapping
+    this->render(&painter, QRectF(0, 0, _canvasWidth, _canvasHeight), 
+                 QRect(0, 0, _canvasWidth, _canvasHeight));
 
     emit canvasUpdated(scene_image);
 }
