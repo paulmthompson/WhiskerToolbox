@@ -4,8 +4,8 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
-#include "Media/Media_Data.hpp"
 #include "Media/Image_Data.hpp"
+#include "Media/Media_Data.hpp"
 #include "Media/Video_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "Tensors/Tensor_Data.hpp"
@@ -16,6 +16,7 @@
 #include "DigitalTimeSeries/IO/JSON/Digital_Interval_Series_JSON.hpp"
 #include "Lines/IO/JSON/Line_Data_JSON.hpp"
 #include "Masks/IO/JSON/Mask_Data_JSON.hpp"
+#include "Media/IO/JSON/Image_Data_JSON.hpp"
 #include "Media/Video_Data_Loader.hpp"
 #include "Points/IO/JSON/Point_Data_JSON.hpp"
 #include "Tensors/IO/numpy/Tensor_Data_numpy.hpp"
@@ -313,8 +314,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
             }
             case DM_DataType::Images: {
 
-                auto media = std::make_shared<ImageData>();
-                media->LoadMedia(file_path);
+                auto media = load_into_ImageData(file_path, item);
                 dm->setData<ImageData>("media", media);
 
                 data_info_list.push_back({name, "ImageData", ""});
@@ -468,7 +468,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, std::string c
                 if (item["format"] == "filename") {
 
                     // Get required parameters
-                    std::string const folder_path = file_path; // file path is required argument
+                    std::string const folder_path = file_path;// file path is required argument
                     std::string const regex_pattern = item["regex_pattern"];
 
                     // Get optional parameters with defaults
@@ -531,7 +531,7 @@ DM_DataType DataManager::getType(std::string const & key) const {
             } else if (dynamic_cast<ImageData *>(media_data.get()) != nullptr) {
                 return DM_DataType::Images;
             } else {
-                return DM_DataType::Video; //Old behavior
+                return DM_DataType::Video;//Old behavior
             }
         } else if (std::holds_alternative<std::shared_ptr<PointData>>(it->second)) {
             return DM_DataType::Points;

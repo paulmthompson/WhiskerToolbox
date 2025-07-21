@@ -80,3 +80,8 @@ int ImageData::getFrameIndexFromNumber(int frame_id) {
     std::cout << "No matching frame found for requested ID" << std::endl;
     return 0;
 }
+
+void ImageData::setImagePaths(std::vector<std::filesystem::path> const & image_paths) {
+    _image_paths = image_paths;
+    setTotalFrameCount(static_cast<int>(_image_paths.size()));
+}

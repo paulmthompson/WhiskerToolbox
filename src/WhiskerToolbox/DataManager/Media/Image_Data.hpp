@@ -16,6 +16,16 @@ public:
 
     int getFrameIndexFromNumber(int frame_id) override;
 
+    /**
+     * @brief Set the image paths directly
+     * 
+     * This method allows setting the image paths directly instead of loading from a directory.
+     * This is useful for the new loading pattern with options.
+     * 
+     * @param image_paths Vector of file paths to the image files
+     */
+    void setImagePaths(std::vector<std::filesystem::path> const & image_paths);
+
 protected:
     void doLoadMedia(std::string const & name) override;
     void doLoadFrame(int frame_id) override;

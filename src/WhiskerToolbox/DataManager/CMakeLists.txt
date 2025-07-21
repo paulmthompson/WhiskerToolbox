@@ -33,6 +33,10 @@ set(DATAMANAGER_SOURCES
         Media/HDF5_Data.hpp
         Media/HDF5_Data.cpp
         Media/Video_Data_Loader.hpp
+        Media/IO/Image_Data_Loader.hpp
+        Media/IO/Image_Data_Loader.cpp
+        Media/IO/JSON/Image_Data_JSON.hpp
+        Media/IO/JSON/Image_Data_JSON.cpp
 
         DigitalTimeSeries/Digital_Interval_Series.hpp
         DigitalTimeSeries/Digital_Interval_Series.cpp
