@@ -234,7 +234,9 @@ void DataAggregationExporter_Widget::_onAddExportButtonClicked()
     
     // For transformations that need reference data, store the data key
     if (column.transformation_type == "interval_id" || 
-        column.transformation_type == "interval_count") {
+        column.transformation_type == "interval_count" ||
+        column.transformation_type == "interval_id_start" ||
+        column.transformation_type == "interval_id_end") {
         column.reference_data_key = selected_key;
     }
     
@@ -295,7 +297,7 @@ std::vector<std::string> DataAggregationExporter_Widget::_getAvailableTransforma
                 transformations = {"start", "end", "duration"};
             } else {
                 // Different interval: offer relational transformations
-                transformations = {"interval_count", "interval_id"};
+                transformations = {"interval_count", "interval_id", "interval_id_start", "interval_id_end"};
             }
             break;
         default:
@@ -315,6 +317,8 @@ QString DataAggregationExporter_Widget::_getTransformationDisplayName(const std:
     if (transformation == "mean_y") return "Point Mean Y";
     if (transformation == "interval_count") return "Interval Count";
     if (transformation == "interval_id") return "Interval ID";
+    if (transformation == "interval_id_start") return "Interval Start ID";
+    if (transformation == "interval_id_end") return "Interval End ID";
     if (transformation == "start") return "Interval Start";
     if (transformation == "end") return "Interval End";
     if (transformation == "duration") return "Interval Duration";
@@ -334,6 +338,8 @@ QString DataAggregationExporter_Widget::_generateDefaultColumnName(const std::st
     else if (transformation == "mean_y") suffix = "_y_mean";
     else if (transformation == "interval_count") suffix = "_count";
     else if (transformation == "interval_id") suffix = "_id";
+    else if (transformation == "interval_id_start") suffix = "_id_start";
+    else if (transformation == "interval_id_end") suffix = "_id_end";
     else if (transformation == "start") return "interval_start";
     else if (transformation == "end") return "interval_end";
     else if (transformation == "duration") return "interval_duration";
@@ -570,7 +576,10 @@ std::unique_ptr<IColumnComputer<double>> DataAggregationExporter_Widget::_create
         
         return std::make_unique<IntervalPropertyComputer<double>>(source, property, column.data_key);
     }
-    else if (column.transformation_type == "interval_count" || column.transformation_type == "interval_id") {
+    else if (column.transformation_type == "interval_count" || 
+             column.transformation_type == "interval_id" ||
+             column.transformation_type == "interval_id_start" ||
+             column.transformation_type == "interval_id_end") {
         // Get interval source for reference data
         auto source = _data_manager_extension->getIntervalSource(column.reference_data_key);
         if (!source) {
@@ -581,6 +590,8 @@ std::unique_ptr<IColumnComputer<double>> DataAggregationExporter_Widget::_create
         IntervalOverlapOperation operation;
         if (column.transformation_type == "interval_count") operation = IntervalOverlapOperation::CountOverlaps;
         else if (column.transformation_type == "interval_id") operation = IntervalOverlapOperation::AssignID;
+        else if (column.transformation_type == "interval_id_start") operation = IntervalOverlapOperation::AssignID_Start;
+        else if (column.transformation_type == "interval_id_end") operation = IntervalOverlapOperation::AssignID_End;
         else throw std::runtime_error("Unknown overlap operation: " + column.transformation_type);
         
         return std::make_unique<IntervalOverlapComputer<double>>(source, operation, column.reference_data_key);

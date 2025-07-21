@@ -14,8 +14,10 @@
  * @brief Enumeration of operations that can be performed on interval overlaps.
  */
 enum class IntervalOverlapOperation : std::uint8_t {
-    AssignID,    ///< Assigns the index of the column interval that contains/overlaps with the row interval
-    CountOverlaps///< Counts the number of column intervals that overlap with each row interval
+    AssignID,       ///< Assigns the index of the column interval that contains/overlaps with the row interval
+    CountOverlaps,   ///< Counts the number of column intervals that overlap with each row interval
+    AssignID_Start,  ///< Finds the start index of the column interval that contains/overlaps with the row interval
+    AssignID_End     ///< Finds the end index of the column interval that contains/overlaps with the row interval
 };
 
 /**
@@ -89,8 +91,9 @@ public:
 
         std::vector<T> results;
         results.reserve(rowIntervals.size());
-        switch (m_operation) {
-            case IntervalOverlapOperation::AssignID:
+        if (m_operation == IntervalOverlapOperation::AssignID ||
+            m_operation == IntervalOverlapOperation::AssignID_Start ||
+            m_operation == IntervalOverlapOperation::AssignID_End) {
                 for (auto const & rowInterval: rowIntervals) {
                     auto columnIntervals = m_source->getIntervalsInRange(
                         TimeFrameIndex(0), 
@@ -107,21 +110,30 @@ public:
                     auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
 
                     if (source_start <= destination_end && destination_start <= source_end) {
-                        results.push_back(static_cast<T>(columnIntervals.size() - 1));
+
+                        if (m_operation == IntervalOverlapOperation::AssignID_Start) {
+                            // Convert into row time frame
+                            auto source_start_index = destinationTimeFrame->getIndexAtTime(source_start);
+                            results.push_back(static_cast<T>(source_start_index.getValue()));
+                        } else if (m_operation == IntervalOverlapOperation::AssignID_End) {
+                            // Convert into row time frame
+                            auto source_end_index = destinationTimeFrame->getIndexAtTime(source_end);
+                            results.push_back(static_cast<T>(source_end_index.getValue()));
+                        } else {
+                            results.push_back(static_cast<T>(columnIntervals.size() - 1));
+                        }
                     } else {
                         results.push_back(static_cast<T>(-1));
                     }
                 }
-                break;
-            case IntervalOverlapOperation::CountOverlaps:
-                for (auto const & rowInterval: rowIntervals) {
-                    auto columnIntervals = m_source->getIntervalsInRange(
-                        rowInterval.start, 
-                        rowInterval.end, 
-                        destinationTimeFrame.get());
-                    results.push_back(static_cast<T>(countOverlappingIntervals(rowInterval, columnIntervals)));
-                }
-                break;
+        } else if (m_operation == IntervalOverlapOperation::CountOverlaps) {
+            for (auto const & rowInterval: rowIntervals) {
+                auto columnIntervals = m_source->getIntervalsInRange(
+                    rowInterval.start, 
+                    rowInterval.end, 
+                    destinationTimeFrame.get());
+                results.push_back(static_cast<T>(countOverlappingIntervals(rowInterval, columnIntervals)));
+            }
         }
 
         return results;
