@@ -23,6 +23,7 @@ add_subdirectory(CoreGeometry)
 add_subdirectory(DataManager)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
+add_subdirectory(ShaderManager)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -564,6 +565,7 @@ target_link_libraries(WhiskerToolbox PRIVATE Whisker-Analysis)
 target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer)
 target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)
 target_link_libraries(WhiskerToolbox PUBLIC NEURALYZER_GEOMETRY)
+target_link_libraries(WhiskerToolbox PRIVATE ShaderManager)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 

@@ -30,6 +30,8 @@
 #include <iostream>
 #include <ranges>
 
+#include "../ShaderManager/ShaderManager.hpp"
+
 // This was a helpful resource for making a dashed line:
 //https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
 
@@ -233,15 +235,11 @@ QOpenGLShaderProgram * create_shader_program_from_resource(QString const & verte
 }
 
 void OpenGLWidget::initializeGL() {
-
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &OpenGLWidget::cleanup);
-
     initializeOpenGLFunctions();
-
     auto fmt = format();
     std::cout << "OpenGL major version: " << fmt.majorVersion() << std::endl;
     std::cout << "OpenGL minor version: " << fmt.minorVersion() << std::endl;
-
     int r, g, b;
     hexToRGB(m_background_color, r, g, b);
     glClearColor(
@@ -249,41 +247,30 @@ void OpenGLWidget::initializeGL() {
             static_cast<float>(g) / 255.0f,
             static_cast<float>(b) / 255.0f,
             1.0f);
-
-    // Enable blending for transparency support
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    m_program = create_shader_program_from_resource(":/shaders/colored_vertex.vert", ":/shaders/colored_vertex.frag");
-
-    auto const m_program_ID = m_program->programId();
-    glUseProgram(m_program_ID);
-    m_projMatrixLoc = glGetUniformLocation(m_program_ID, "projMatrix");
-    m_viewMatrixLoc = glGetUniformLocation(m_program_ID, "viewMatrix");
-    m_modelMatrixLoc = glGetUniformLocation(m_program_ID, "modelMatrix");
-    m_colorLoc = glGetUniformLocation(m_program_ID, "u_color");
-    m_alphaLoc = glGetUniformLocation(m_program_ID, "u_alpha");
-
-    m_dashedProgram = create_shader_program_from_resource(":/shaders/dashed_line.vert", ":/shaders/dashed_line.frag");
-
-    auto const m_dashedProgram_ID = m_dashedProgram->programId();
-    glUseProgram(m_dashedProgram_ID);
-    m_dashedProjMatrixLoc = glGetUniformLocation(m_dashedProgram_ID, "u_mvp");
-    m_dashedResolutionLoc = glGetUniformLocation(m_dashedProgram_ID, "u_resolution");
-    m_dashedDashSizeLoc = glGetUniformLocation(m_dashedProgram_ID, "u_dashSize");
-    m_dashedGapSizeLoc = glGetUniformLocation(m_dashedProgram_ID, "u_gapSize");
-
+    // Load axes shader
+    ShaderManager::instance().loadProgram(
+            "axes",
+            m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/colored_vertex.vert" : "src/WhiskerToolbox/shaders/colored_vertex.vert",
+            m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/colored_vertex.frag" : "src/WhiskerToolbox/shaders/colored_vertex.frag",
+            "",
+            m_shaderSourceType);
+    // Load dashed line shader
+    ShaderManager::instance().loadProgram(
+            "dashed_line",
+            m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/dashed_line.vert" : "src/WhiskerToolbox/shaders/dashed_line.vert",
+            m_shaderSourceType == ShaderSourceType::Resource ? ":/shaders/dashed_line.frag" : "src/WhiskerToolbox/shaders/dashed_line.frag",
+            "",
+            m_shaderSourceType);
+    // Connect reload signal to redraw
+    connect(&ShaderManager::instance(), &ShaderManager::shaderReloaded, this, [this](std::string const &) { update(); });
     m_vao.create();
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
-
     m_vbo.create();
     m_vbo.bind();
     m_vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-
     setupVertexAttribs();
-
-    //m_program->release();
-    //m_dashedProgram->release();
 }
 
 void OpenGLWidget::setupVertexAttribs() {
@@ -319,14 +306,12 @@ void OpenGLWidget::drawDigitalEventSeries() {
     int r, g, b;
     auto const start_time = _xAxis.getStart();
     auto const end_time = _xAxis.getEnd();
-    auto const m_program_ID = m_program->programId();
+    auto axesProgram = ShaderManager::instance().getProgram("axes");
+    if (axesProgram) glUseProgram(axesProgram->getProgramId());
 
     auto const min_y = _yMin;
     auto const max_y = _yMax;
 
-    glUseProgram(m_program_ID);
-
-    //QOpenGLFunctions_4_1_Core::glBindVertexArray(m_vao.objectId());
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);// glBindVertexArray
     setupVertexAttribs();
 
@@ -443,11 +428,9 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
     //auto const min_y = _yMin;
     //auto const max_y = _yMax;
 
-    auto const m_program_ID = m_program->programId();
+    auto axesProgram = ShaderManager::instance().getProgram("axes");
+    if (axesProgram) glUseProgram(axesProgram->getProgramId());
 
-    glUseProgram(m_program_ID);
-
-    //QOpenGLFunctions_4_1_Core::glBindVertexArray(m_vao.objectId());
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);// glBindVertexArray
     setupVertexAttribs();
 
@@ -618,9 +601,8 @@ void OpenGLWidget::drawAnalogSeries() {
     auto const start_time = TimeFrameIndex(_xAxis.getStart());
     auto const end_time = TimeFrameIndex(_xAxis.getEnd());
 
-    auto const m_program_ID = m_program->programId();
-
-    glUseProgram(m_program_ID);
+    auto axesProgram = ShaderManager::instance().getProgram("axes");
+    if (axesProgram) glUseProgram(axesProgram->getProgramId());
 
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
@@ -880,9 +862,8 @@ void OpenGLWidget::resizeGL(int w, int h) {
 
 void OpenGLWidget::drawAxis() {
 
-    auto const m_program_ID = m_program->programId();
-
-    glUseProgram(m_program_ID);
+    auto axesProgram = ShaderManager::instance().getProgram("axes");
+    if (axesProgram) glUseProgram(axesProgram->getProgramId());
 
     glUniformMatrix4fv(m_projMatrixLoc, 1, GL_FALSE, m_proj.constData());
     glUniformMatrix4fv(m_viewMatrixLoc, 1, GL_FALSE, m_view.constData());
@@ -1031,9 +1012,8 @@ void OpenGLWidget::clearSeries() {
 
 void OpenGLWidget::drawDashedLine(LineParameters const & params) {
 
-    auto const m_dashedProgram_ID = m_dashedProgram->programId();
-
-    glUseProgram(m_dashedProgram_ID);
+    auto dashedProgram = ShaderManager::instance().getProgram("dashed_line");
+    if (dashedProgram) glUseProgram(dashedProgram->getProgramId());
 
     glUniformMatrix4fv(m_dashedProjMatrixLoc, 1, GL_FALSE, (m_proj * m_view * m_model).constData());
     std::array<GLfloat, 2> hw = {static_cast<float>(width()), static_cast<float>(height())};
@@ -1550,8 +1530,8 @@ void OpenGLWidget::drawDraggedInterval() {
         return;
     }
 
-    auto const m_program_ID = m_program->programId();
-    glUseProgram(m_program_ID);
+    auto axesProgram = ShaderManager::instance().getProgram("axes");
+    if (axesProgram) glUseProgram(axesProgram->getProgramId());
 
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();
@@ -1867,8 +1847,8 @@ void OpenGLWidget::drawNewIntervalBeingCreated() {
         return;
     }
 
-    auto const m_program_ID = m_program->programId();
-    glUseProgram(m_program_ID);
+    auto axesProgram = ShaderManager::instance().getProgram("axes");
+    if (axesProgram) glUseProgram(axesProgram->getProgramId());
 
     QOpenGLVertexArrayObject::Binder const vaoBinder(&m_vao);
     setupVertexAttribs();

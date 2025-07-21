@@ -1,6 +1,7 @@
 #ifndef OPENGLWIDGET_HPP
 #define OPENGLWIDGET_HPP
 
+#include "ShaderManager/ShaderManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataViewer/XAxis.hpp"
 #include "TimeFrame.hpp"
@@ -483,6 +484,10 @@ private:
     int64_t _new_interval_end_time{0};
     int64_t _new_interval_click_time{0};// Time coordinate where double-click occurred
     QPoint _new_interval_click_pos;
+
+    // ShaderManager integration
+    ShaderSourceType m_shaderSourceType = ShaderSourceType::Resource;
+    void setShaderSourceType(ShaderSourceType type) { m_shaderSourceType = type; }
 };
 
 namespace TimeSeriesDefaultValues {
