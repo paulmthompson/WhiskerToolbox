@@ -31,6 +31,13 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     std::vector<uint32_t> line_offsets;          // Start index of each line in vertex_data (legacy)
     std::vector<uint32_t> line_lengths;          // Number of vertices in each line (legacy)
     std::vector<LineIdentifier> line_identifiers;// Mapping from line index to identifier
+    
+    // Vertex range tracking for efficient hover rendering
+    struct LineVertexRange {
+        uint32_t start_vertex;  // Starting vertex index
+        uint32_t vertex_count;  // Number of vertices for this line
+    };
+    std::vector<LineVertexRange> line_vertex_ranges; // Vertex ranges for each line
 
     // OpenGL resources
     QOpenGLBuffer vertex_buffer;
@@ -55,6 +62,8 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     // Hover state for this LineData
     LineIdentifier current_hover_line;
     bool has_hover_line = false;
+    uint32_t cached_hover_line_index = 0;     // Cached index to avoid linear search
+    GLint cached_hover_uniform_location = -1; // Cached uniform location to avoid repeated queries
 
     // Selection state for this LineData (for future implementation)
     std::unordered_set<LineIdentifier> selected_lines;

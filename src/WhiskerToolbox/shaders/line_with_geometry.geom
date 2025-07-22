@@ -32,28 +32,30 @@ void main() {
     vec2 v2 = p1 - perp * half_width_ndc;
     vec2 v3 = p1 + perp * half_width_ndc;
     
-    // Emit vertices
+    // Emit vertices (use same line ID for all vertices of this line segment)
+    uint line_id = v_line_id[0];  // Both vertices should have the same line ID
+    
     g_position = v0;
     g_tex_coord = vec2(0.0, 0.0);
-    g_line_id = v_line_id[0];
+    g_line_id = line_id;
     gl_Position = vec4(v0, 0.0, 1.0);
     EmitVertex();
     
     g_position = v1;
     g_tex_coord = vec2(0.0, 1.0);
-    g_line_id = v_line_id[0];
+    g_line_id = line_id;
     gl_Position = vec4(v1, 0.0, 1.0);
     EmitVertex();
     
     g_position = v2;
     g_tex_coord = vec2(1.0, 0.0);
-    g_line_id = v_line_id[1];
+    g_line_id = line_id;
     gl_Position = vec4(v2, 0.0, 1.0);
     EmitVertex();
     
     g_position = v3;
     g_tex_coord = vec2(1.0, 1.0);
-    g_line_id = v_line_id[1];
+    g_line_id = line_id;
     gl_Position = vec4(v3, 0.0, 1.0);
     EmitVertex();
     

@@ -14,14 +14,13 @@ uniform bool u_is_selected;
 out vec4 FragColor;
 
 void main() {
-    // Determine the color based on state
+    // Use normal color for regular rendering
     vec4 final_color = u_color;
     
-    if (u_is_hovered && g_line_id == u_hover_line_id) {
-        final_color = u_hover_color;
-    } else if (u_is_selected) {
-        final_color = u_selected_color;
+    // Check if this specific line should be highlighted
+    if (u_hover_line_id > 0u && g_line_id == u_hover_line_id) {
+        final_color = vec4(1.0, 0.0, 1.0, 1.0); // Bright magenta for maximum visibility
     }
-    
+
     FragColor = final_color;
 }

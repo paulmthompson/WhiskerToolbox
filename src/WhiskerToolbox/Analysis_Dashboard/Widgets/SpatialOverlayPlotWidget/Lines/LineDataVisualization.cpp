@@ -39,6 +39,7 @@ void LineDataVisualization::buildVertexData(std::shared_ptr<LineData> const & li
     line_offsets.clear();
     line_lengths.clear();
     line_identifiers.clear();
+    line_vertex_ranges.clear();  // Clear vertex ranges too
 
     if (!line_data) {
         return;
@@ -74,6 +75,9 @@ void LineDataVisualization::buildVertexData(std::shared_ptr<LineData> const & li
 
             // Store line identifier
             line_identifiers.push_back({time_frame.getValue(), line_id});
+            
+            // Record the starting vertex index for this line
+            uint32_t line_start_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
 
             // Convert line strip to line segments (pairs of consecutive vertices)
             for (size_t i = 0; i < line.size() - 1; ++i) {
@@ -83,13 +87,22 @@ void LineDataVisualization::buildVertexData(std::shared_ptr<LineData> const & li
                 // Add first vertex of segment
                 segment_vertices.push_back(p0.x);
                 segment_vertices.push_back(p0.y);
-                segment_line_ids.push_back(line_index);
+                segment_line_ids.push_back(line_index + 1);  // Use 1-based indexing for picking
 
                 // Add second vertex of segment
                 segment_vertices.push_back(p1.x);
                 segment_vertices.push_back(p1.y);
-                segment_line_ids.push_back(line_index);
+                segment_line_ids.push_back(line_index + 1);  // Use 1-based indexing for picking
             }
+            
+            // Record the vertex count for this line
+            uint32_t line_end_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
+            uint32_t line_vertex_count = line_end_vertex - line_start_vertex;
+            
+            // Store the range for efficient hover rendering
+            line_vertex_ranges.push_back({line_start_vertex, line_vertex_count});
+            
+            //qDebug() << "Line" << line_index << "range: start=" << line_start_vertex << "count=" << line_vertex_count;
 
             line_index++;
         }
@@ -197,10 +210,19 @@ void LineDataVisualization::initializeOpenGLResources() {
     auto* line_program = shader_manager.getProgram("line_with_geometry");
     if (line_program) {
         line_shader_program = line_program->getNativeProgram();
-        qDebug() << "Successfully loaded line_with_geometry shader";
+        
+        // Cache the uniform location for efficient hover rendering
+        if (line_shader_program) {
+            line_shader_program->bind();
+            cached_hover_uniform_location = line_shader_program->uniformLocation("u_hover_line_id");
+            line_shader_program->release();
+        }
+        
+        qDebug() << "Successfully loaded line_with_geometry shader, hover uniform location:" << cached_hover_uniform_location;
     } else {
         qDebug() << "line_with_geometry shader is null!";
         line_shader_program = nullptr;
+        cached_hover_uniform_location = -1;
     }
     
     // Load picking shader
@@ -275,23 +297,8 @@ void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, f
     shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));// TODO: Get actual viewport
     shader_program->setUniformValue("u_canvas_size", canvas_size);  // For coordinate normalization
 
-    // Set hover state
-    if (has_hover_line) {
-        // Find the line index for the hovered line
-        auto it = std::find_if(line_identifiers.begin(), line_identifiers.end(),
-                               [this](LineIdentifier const & id) {
-                                   return id == current_hover_line;
-                               });
-        if (it != line_identifiers.end()) {
-            uint32_t line_index = static_cast<uint32_t>(std::distance(line_identifiers.begin(), it));
-            shader_program->setUniformValue("u_hover_line_id", line_index);
-            shader_program->setUniformValue("u_is_hovered", true);
-        } else {
-            shader_program->setUniformValue("u_is_hovered", false);
-        }
-    } else {
-        shader_program->setUniformValue("u_is_hovered", false);
-    }
+    // Set hover state - but don't render hovered line in main pass
+    shader_program->setUniformValue("u_hover_line_id", 0u);  // Disable hover highlighting in main pass
 
     shader_program->setUniformValue("u_is_selected", false);// TODO: Implement selection
 
@@ -308,6 +315,29 @@ void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, f
         glDrawArrays(GL_LINES, 0, total_vertices);
     }
 
+    // NOW render ONLY the hovered line ON TOP if there is one
+    if (has_hover_line && cached_hover_line_index < line_vertex_ranges.size()) {
+        // Use cached index to avoid expensive linear search
+        const auto& range = line_vertex_ranges[cached_hover_line_index];
+        
+        if (range.vertex_count > 0) {
+            // Set hover uniform efficiently
+            uint32_t shader_line_id = cached_hover_line_index + 1;  // Use 1-based indexing
+            glUniform1ui(cached_hover_uniform_location, shader_line_id);
+            
+            // Draw ONLY the segments for this specific line
+            glDrawArrays(GL_LINES, range.start_vertex, range.vertex_count);
+        }
+    }
+                qDebug() << "RENDER: Line index" << line_index << "out of range for vertex ranges (size:" << line_vertex_ranges.size() << ")";
+            }
+        } else {
+            qDebug() << "RENDER: Could not find hover line" << current_hover_line.time_frame << "," << current_hover_line.line_id << "in line_identifiers";
+        }
+    } else {
+        qDebug() << "RENDER: has_hover_line is false, no hover line to render";
+    }
+
     vertex_array_object.release();
     shader_program->release();
 }
@@ -322,7 +352,14 @@ void LineDataVisualization::renderLines(float line_width) {
 
 void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
     if (!visible || vertex_data.empty() || !picking_shader_program || !picking_framebuffer) {
+        qDebug() << "renderLinesToPickingBuffer: Skipping render - missing resources";
         return;
+    }
+
+    static bool first_picking_render = true;
+    if (first_picking_render) {
+        qDebug() << "renderLinesToPickingBuffer: First render with" << vertex_data.size() / 2 << "vertices";
+        first_picking_render = false;
     }
 
     // Bind picking framebuffer
@@ -357,22 +394,32 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
 
 std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(int screen_x, int screen_y) {
     if (!picking_framebuffer || !picking_shader_program) {
+        qDebug() << "getLineAtScreenPosition: Missing framebuffer or shader";
         return std::nullopt;
     }
 
+    qDebug() << "getLineAtScreenPosition called at (" << screen_x << "," << screen_y << ")";
+
     // Render to picking buffer
-    const_cast<LineDataVisualization *>(this)->renderLinesToPickingBuffer(5.0f);// Use reasonable line width
+    const_cast<LineDataVisualization *>(this)->renderLinesToPickingBuffer(20.0f);// Use larger line width for easier picking
 
     // Read pixel at screen position
     picking_framebuffer->bind();
 
     // Convert screen coordinates to framebuffer coordinates
-    int fb_x = static_cast<int>((screen_x / 1024.0f) * picking_framebuffer->width());
-    int fb_y = static_cast<int>((screen_y / 1024.0f) * picking_framebuffer->height());
+    // TODO: This assumes screen coordinates match the 1024x1024 viewport
+    // This might need to be adjusted based on actual viewport size
+    float normalized_x = static_cast<float>(screen_x) / 1024.0f;
+    float normalized_y = static_cast<float>(screen_y) / 1024.0f;
+    
+    int fb_x = static_cast<int>(normalized_x * picking_framebuffer->width());
+    int fb_y = static_cast<int>(normalized_y * picking_framebuffer->height());
 
     // Clamp coordinates
     fb_x = std::max(0, std::min(fb_x, picking_framebuffer->width() - 1));
     fb_y = std::max(0, std::min(fb_y, picking_framebuffer->height() - 1));
+
+    qDebug() << "Screen coords (" << screen_x << "," << screen_y << ") -> normalized (" << normalized_x << "," << normalized_y << ") -> framebuffer (" << fb_x << "," << fb_y << ")";
 
     // Read pixel
     unsigned char pixel[4];
@@ -380,16 +427,23 @@ std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(int
 
     picking_framebuffer->release();
 
+    qDebug() << "Pixel color: R=" << (int)pixel[0] << " G=" << (int)pixel[1] 
+             << " B=" << (int)pixel[2] << " A=" << (int)pixel[3];
+
     // Convert pixel color back to line ID
     uint32_t line_id = (static_cast<uint32_t>(pixel[0]) << 16) |
                        (static_cast<uint32_t>(pixel[1]) << 8) |
                        static_cast<uint32_t>(pixel[2]);
 
+    qDebug() << "Decoded line_id:" << line_id << "total lines:" << line_identifiers.size();
+
     // Check if we found a valid line
-    if (line_id < line_identifiers.size()) {
-        return line_identifiers[line_id];
+    if (line_id > 0 && line_id <= line_identifiers.size()) {
+        qDebug() << "Found line at index:" << (line_id - 1);
+        return line_identifiers[line_id - 1];  // Adjust for 1-based indexing
     }
 
+    qDebug() << "No line found at this position";
     return std::nullopt;
 }
 
@@ -397,8 +451,20 @@ void LineDataVisualization::setHoverLine(std::optional<LineIdentifier> line_id) 
     if (line_id.has_value()) {
         current_hover_line = line_id.value();
         has_hover_line = true;
+        
+        // Cache the line index to avoid expensive linear search during rendering
+        auto it = std::find_if(line_identifiers.begin(), line_identifiers.end(),
+                               [this](LineIdentifier const & id) {
+                                   return id == current_hover_line;
+                               });
+        if (it != line_identifiers.end()) {
+            cached_hover_line_index = static_cast<uint32_t>(std::distance(line_identifiers.begin(), it));
+        } else {
+            has_hover_line = false; // Invalid line ID
+        }
     } else {
         has_hover_line = false;
+        cached_hover_line_index = 0;
     }
 }
 
