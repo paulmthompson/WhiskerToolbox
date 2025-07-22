@@ -138,7 +138,7 @@ void SpatialOverlayPlotPropertiesWidget::setupFeatureTable() {
     if (ui->feature_table_widget) {
 
         ui->feature_table_widget->setColumns({"Feature", "Type", "Enabled"});
-        ui->feature_table_widget->setTypeFilter({DM_DataType::Points, DM_DataType::Mask});
+        ui->feature_table_widget->setTypeFilter({DM_DataType::Points, DM_DataType::Mask, DM_DataType::Line});
         
         // Connect signals from the feature table
         connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected,
@@ -275,7 +275,9 @@ void SpatialOverlayPlotPropertiesWidget::updatePlotWidget() {
     if (!mask_data_keys.empty()) {
         _spatial_plot_widget->setMaskDataKeys(mask_data_keys);
     }
-    //_spatial_plot_widget->setLineDataKeys(line_data_keys);
+    if (!line_data_keys.empty()) {
+        _spatial_plot_widget->setLineDataKeys(line_data_keys);
+    }
 
     // Update visualization settings
     // Note: We'll need to add public interfaces to SpatialOverlayPlotWidget for these
