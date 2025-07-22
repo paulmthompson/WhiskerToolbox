@@ -538,20 +538,20 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
             float const interval_y_min = -1.0f;// Bottom of interval in local coordinates
             float const interval_y_max = +1.0f;// Top of interval in local coordinates
 
-            std::array<GLfloat, 8> vertices = {
-                    xStart, interval_y_min,
-                    xEnd, interval_y_min,
-                    xEnd, interval_y_max,
-                    xStart, interval_y_max};
+            // Create 4D vertices (x, y, 0, 1) to match the shader expectations
+            std::array<GLfloat, 16> vertices = {
+                    xStart, interval_y_min, 0.0f, 1.0f,
+                    xEnd, interval_y_min, 0.0f, 1.0f,
+                    xEnd, interval_y_max, 0.0f, 1.0f,
+                    xStart, interval_y_max, 0.0f, 1.0f};
 
-            //glBindBuffer(GL_ARRAY_BUFFER, m_vbo.bufferId());
             m_vbo.bind();
             m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
             m_vbo.release();
 
             GLint const first = 0;  // Starting index of enabled array
             GLsizei const count = 4;// number of indexes to render
-            glDrawArrays(GL_QUADS, first, count);
+            glDrawArrays(GL_TRIANGLE_FAN, first, count);
         }
 
         // Draw highlighting for selected intervals
@@ -580,36 +580,36 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
                 glUniform1f(m_alphaLoc, 1.0f);
 
                 // Bottom edge
-                std::array<GLfloat, 4> bottom_edge = {
-                        highlighted_start, -1.0f,
-                        highlighted_end, -1.0f};
+                std::array<GLfloat, 8> bottom_edge = {
+                        highlighted_start, -1.0f, 0.0f, 1.0f,
+                        highlighted_end, -1.0f, 0.0f, 1.0f};
                 m_vbo.bind();
                 m_vbo.allocate(bottom_edge.data(), bottom_edge.size() * sizeof(GLfloat));
                 m_vbo.release();
                 glDrawArrays(GL_LINES, 0, 2);
 
                 // Top edge
-                std::array<GLfloat, 4> top_edge = {
-                        highlighted_start, 1.0f,
-                        highlighted_end, 1.0f};
+                std::array<GLfloat, 8> top_edge = {
+                        highlighted_start, 1.0f, 0.0f, 1.0f,
+                        highlighted_end, 1.0f, 0.0f, 1.0f};
                 m_vbo.bind();
                 m_vbo.allocate(top_edge.data(), top_edge.size() * sizeof(GLfloat));
                 m_vbo.release();
                 glDrawArrays(GL_LINES, 0, 2);
 
                 // Left edge
-                std::array<GLfloat, 4> left_edge = {
-                        highlighted_start, -1.0f,
-                        highlighted_start, 1.0f};
+                std::array<GLfloat, 8> left_edge = {
+                        highlighted_start, -1.0f, 0.0f, 1.0f,
+                        highlighted_start, 1.0f, 0.0f, 1.0f};
                 m_vbo.bind();
                 m_vbo.allocate(left_edge.data(), left_edge.size() * sizeof(GLfloat));
                 m_vbo.release();
                 glDrawArrays(GL_LINES, 0, 2);
 
                 // Right edge
-                std::array<GLfloat, 4> right_edge = {
-                        highlighted_end, -1.0f,
-                        highlighted_end, 1.0f};
+                std::array<GLfloat, 8> right_edge = {
+                        highlighted_end, -1.0f, 0.0f, 1.0f,
+                        highlighted_end, 1.0f, 0.0f, 1.0f};
                 m_vbo.bind();
                 m_vbo.allocate(right_edge.data(), right_edge.size() * sizeof(GLfloat));
                 m_vbo.release();
@@ -1602,31 +1602,33 @@ void OpenGLWidget::drawDraggedInterval() {
     glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
     glUniform1f(m_alphaLoc, 0.2f);
 
-    std::array<GLfloat, 8> original_vertices = {
-            original_start, min_y,
-            original_end, min_y,
-            original_end, max_y,
-            original_start, max_y};
+    // Create 4D vertices (x, y, 0, 1) to match the shader expectations
+    std::array<GLfloat, 16> original_vertices = {
+            original_start, min_y, 0.0f, 1.0f,
+            original_end, min_y, 0.0f, 1.0f,
+            original_end, max_y, 0.0f, 1.0f,
+            original_start, max_y, 0.0f, 1.0f};
 
     m_vbo.bind();
     m_vbo.allocate(original_vertices.data(), original_vertices.size() * sizeof(GLfloat));
     m_vbo.release();
-    glDrawArrays(GL_QUADS, 0, 4);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     // Set color and alpha uniforms for dragged interval (semi-transparent)
     glUniform3f(m_colorLoc, rNorm, gNorm, bNorm);
     glUniform1f(m_alphaLoc, 0.8f);
 
-    std::array<GLfloat, 8> dragged_vertices = {
-            dragged_start, min_y,
-            dragged_end, min_y,
-            dragged_end, max_y,
-            dragged_start, max_y};
+    // Create 4D vertices (x, y, 0, 1) to match the shader expectations
+    std::array<GLfloat, 16> dragged_vertices = {
+            dragged_start, min_y, 0.0f, 1.0f,
+            dragged_end, min_y, 0.0f, 1.0f,
+            dragged_end, max_y, 0.0f, 1.0f,
+            dragged_start, max_y, 0.0f, 1.0f};
 
     m_vbo.bind();
     m_vbo.allocate(dragged_vertices.data(), dragged_vertices.size() * sizeof(GLfloat));
     m_vbo.release();
-    glDrawArrays(GL_QUADS, 0, 4);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     glUseProgram(0);
 }
@@ -1916,16 +1918,17 @@ void OpenGLWidget::drawNewIntervalBeingCreated() {
     float const new_end = std::min(static_cast<float>(_new_interval_end_time), end_time);
 
     // Draw the new interval being created with 50% transparency
-    std::array<GLfloat, 8> new_interval_vertices = {
-            new_start, min_y,
-            new_end, min_y,
-            new_end, max_y,
-            new_start, max_y};
+    // Create 4D vertices (x, y, 0, 1) to match the shader expectations
+    std::array<GLfloat, 16> new_interval_vertices = {
+            new_start, min_y, 0.0f, 1.0f,
+            new_end, min_y, 0.0f, 1.0f,
+            new_end, max_y, 0.0f, 1.0f,
+            new_start, max_y, 0.0f, 1.0f};
 
     m_vbo.bind();
     m_vbo.allocate(new_interval_vertices.data(), new_interval_vertices.size() * sizeof(GLfloat));
     m_vbo.release();
-    glDrawArrays(GL_QUADS, 0, 4);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     glUseProgram(0);
 }
