@@ -11,5 +11,11 @@
         <file>shaders/line.frag</file>
         <file>shaders/point.vert</file>
         <file>shaders/point.frag</file>
+        <file>shaders/line_with_geometry.vert</file>
+        <file>shaders/line_with_geometry.geom</file>
+        <file>shaders/line_with_geometry.frag</file>
+        <file>shaders/line_picking.vert</file>
+        <file>shaders/line_picking.geom</file>
+        <file>shaders/line_picking.frag</file>
     </qresource>
 </RCC>

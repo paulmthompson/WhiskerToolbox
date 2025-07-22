@@ -2,6 +2,7 @@
 
 #include "DataManager/Lines/Line_Data.hpp"
 #include "ShaderManager/ShaderManager.hpp"
+#include "ShaderManager/ShaderSourceType.hpp"
 
 
 #include <QDebug>
@@ -43,7 +44,23 @@ void LineDataVisualization::buildVertexData(std::shared_ptr<LineData> const & li
         return;
     }
 
-    uint32_t current_offset = 0;
+    // Get canvas size for coordinate normalization
+    ImageSize image_size = line_data->getImageSize();
+    if (image_size.width <= 0 || image_size.height <= 0) {
+        qDebug() << "Invalid image size for LineData, using media data instead";
+    }
+    if (image_size.width <= 0 || image_size.height <= 0) {
+        qDebug() << "Using default canvas size 640x480 for LineData";
+        image_size = {640, 480}; // Fallback to a default size
+    }
+    canvas_size = QVector2D(static_cast<float>(image_size.width), static_cast<float>(image_size.height));
+    qDebug() << "Canvas size:" << canvas_size.x() << "x" << canvas_size.y();
+
+    // We'll create line segments (pairs of vertices) for the geometry shader
+    // Each line segment gets a line ID for picking/hovering
+    std::vector<float> segment_vertices;      // All line segments as pairs of vertices
+    std::vector<uint32_t> segment_line_ids;  // Line ID for each vertex in segments
+
     uint32_t line_index = 0;
 
     // Iterate through all time frames and lines
@@ -51,30 +68,59 @@ void LineDataVisualization::buildVertexData(std::shared_ptr<LineData> const & li
         for (int line_id = 0; line_id < static_cast<int>(lines.size()); ++line_id) {
             Line2D const & line = lines[line_id];
 
-            if (line.empty()) {
+            if (line.size() < 2) {  // Need at least 2 points for a line
                 continue;
             }
 
             // Store line identifier
             line_identifiers.push_back({time_frame.getValue(), line_id});
 
-            // Store line offset and length
-            line_offsets.push_back(current_offset);
-            line_lengths.push_back(static_cast<uint32_t>(line.size()));
+            // Convert line strip to line segments (pairs of consecutive vertices)
+            for (size_t i = 0; i < line.size() - 1; ++i) {
+                Point2D<float> const & p0 = line[i];
+                Point2D<float> const & p1 = line[i + 1];
 
-            // Add vertices for this line
-            for (Point2D<float> const & point: line) {
-                vertex_data.push_back(point.x);
-                vertex_data.push_back(point.y);
+                // Add first vertex of segment
+                segment_vertices.push_back(p0.x);
+                segment_vertices.push_back(p0.y);
+                segment_line_ids.push_back(line_index);
+
+                // Add second vertex of segment
+                segment_vertices.push_back(p1.x);
+                segment_vertices.push_back(p1.y);
+                segment_line_ids.push_back(line_index);
             }
 
-            current_offset += static_cast<uint32_t>(line.size());
             line_index++;
         }
     }
 
-    qDebug() << "LineDataVisualization: Built vertex data for" << line_identifiers.size()
-             << "lines with" << vertex_data.size() / 2 << "vertices";
+    // Store the processed data
+    vertex_data = std::move(segment_vertices);
+    line_id_data = std::move(segment_line_ids);
+
+    qDebug() << "LineDataVisualization: Built" << line_identifiers.size() 
+             << "lines with" << vertex_data.size() / 4 << "segments (" 
+             << vertex_data.size() / 2 << "vertices)";
+    
+    // Debug: print coordinate range
+    if (!vertex_data.empty()) {
+        float min_x = vertex_data[0], max_x = vertex_data[0];
+        float min_y = vertex_data[1], max_y = vertex_data[1];
+        for (size_t i = 0; i < vertex_data.size(); i += 2) {
+            min_x = std::min(min_x, vertex_data[i]);
+            max_x = std::max(max_x, vertex_data[i]);
+            min_y = std::min(min_y, vertex_data[i + 1]);
+            max_y = std::max(max_y, vertex_data[i + 1]);
+        }
+        qDebug() << "Vertex coordinate range: X[" << min_x << "," << max_x << "] Y[" << min_y << "," << max_y << "]";
+        
+        // Check if coordinates are in expected range for OpenGL
+        if (min_x < -10.0f || max_x > 10.0f || min_y < -10.0f || max_y > 10.0f) {
+            qDebug() << "WARNING: Coordinates appear to be outside typical OpenGL range [-1,1]";
+            qDebug() << "You may need coordinate transformation/normalization for proper display";
+        }
+    }
 }
 
 void LineDataVisualization::initializeOpenGLResources() {
@@ -94,19 +140,10 @@ void LineDataVisualization::initializeOpenGLResources() {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
     // Create line ID buffer (for geometry shader)
-    QOpenGLBuffer line_id_buffer;
     line_id_buffer.create();
     line_id_buffer.bind();
 
-    // Create line ID data (each vertex gets the line index)
-    std::vector<uint32_t> line_id_data;
-    for (size_t i = 0; i < line_identifiers.size(); ++i) {
-        uint32_t line_length = line_lengths[i];
-        for (uint32_t j = 0; j < line_length; ++j) {
-            line_id_data.push_back(static_cast<uint32_t>(i));
-        }
-    }
-
+    // Use the pre-computed line ID data
     line_id_buffer.allocate(line_id_data.data(), static_cast<int>(line_id_data.size() * sizeof(uint32_t)));
     glEnableVertexAttribArray(1);
     glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(uint32_t), nullptr);
@@ -146,28 +183,54 @@ void LineDataVisualization::initializeOpenGLResources() {
     // Load shader programs
     ShaderManager & shader_manager = ShaderManager::instance();
 
-    // Load line rendering shader
+        // Load line rendering shader
     if (!shader_manager.getProgram("line_with_geometry")) {
-        shader_manager.loadProgram("line_with_geometry",
-                                   "shaders/line_with_geometry.vert",
-                                   "shaders/line_with_geometry.frag",
-                                   "shaders/line_with_geometry.geom");
+        bool success = shader_manager.loadProgram("line_with_geometry", 
+                                 ":/shaders/line_with_geometry.vert",
+                                 ":/shaders/line_with_geometry.frag",
+                                 ":/shaders/line_with_geometry.geom",
+                                 ShaderSourceType::Resource);
+        if (!success) {
+            qDebug() << "Failed to load line_with_geometry shader!";
+        }
     }
-    line_shader_program = shader_manager.getProgram("line_with_geometry")->getNativeProgram();
-
+    auto* line_program = shader_manager.getProgram("line_with_geometry");
+    if (line_program) {
+        line_shader_program = line_program->getNativeProgram();
+        qDebug() << "Successfully loaded line_with_geometry shader";
+    } else {
+        qDebug() << "line_with_geometry shader is null!";
+        line_shader_program = nullptr;
+    }
+    
     // Load picking shader
     if (!shader_manager.getProgram("line_picking")) {
-        shader_manager.loadProgram("line_picking",
-                                   "shaders/line_picking.vert",
-                                   "shaders/line_picking.frag",
-                                   "shaders/line_picking.geom");
+        bool success = shader_manager.loadProgram("line_picking",
+                                 ":/shaders/line_picking.vert",
+                                 ":/shaders/line_picking.frag",
+                                 ":/shaders/line_picking.geom",
+                                 ShaderSourceType::Resource);
+        if (!success) {
+            qDebug() << "Failed to load line_picking shader!";
+        }
     }
-    picking_shader_program = shader_manager.getProgram("line_picking")->getNativeProgram();
+    auto* picking_program = shader_manager.getProgram("line_picking");
+    if (picking_program) {
+        picking_shader_program = picking_program->getNativeProgram();
+        qDebug() << "Successfully loaded line_picking shader";
+    } else {
+        qDebug() << "line_picking shader is null!";
+        picking_shader_program = nullptr;
+    }
 }
 
 void LineDataVisualization::cleanupOpenGLResources() {
     if (vertex_buffer.isCreated()) {
         vertex_buffer.destroy();
+    }
+
+    if (line_id_buffer.isCreated()) {
+        line_id_buffer.destroy();
     }
 
     if (vertex_array_object.isCreated()) {
@@ -190,7 +253,16 @@ void LineDataVisualization::cleanupOpenGLResources() {
 
 void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, float line_width) {
     if (!visible || vertex_data.empty() || !shader_program) {
+        qDebug() << "LineDataVisualization::renderLines: Skipping render. visible=" << visible 
+                 << "vertex_data.size()=" << vertex_data.size() 
+                 << "shader_program=" << (shader_program ? "valid" : "null");
         return;
+    }
+
+    static bool first_render = true;
+    if (first_render) {
+        qDebug() << "LineDataVisualization::renderLines: Rendering" << line_identifiers.size() << "lines";
+        first_render = false;
     }
 
     shader_program->bind();
@@ -201,6 +273,7 @@ void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, f
     shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black for selected
     shader_program->setUniformValue("u_line_width", line_width);
     shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));// TODO: Get actual viewport
+    shader_program->setUniformValue("u_canvas_size", canvas_size);  // For coordinate normalization
 
     // Set hover state
     if (has_hover_line) {
@@ -225,18 +298,26 @@ void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, f
     // Bind vertex array object
     vertex_array_object.bind();
 
-    // Render lines using line strips
-    for (size_t i = 0; i < line_identifiers.size(); ++i) {
-        uint32_t offset = line_offsets[i];
-        uint32_t length = line_lengths[i];
-
-        if (length > 1) {
-            glDrawArrays(GL_LINE_STRIP, offset, length);
+    // Render ALL line segments in a single draw call - MASSIVE performance improvement!
+    // The geometry shader will convert each pair of vertices into a thick line quad
+    if (!vertex_data.empty()) {
+        uint32_t total_vertices = static_cast<uint32_t>(vertex_data.size() / 2);
+        if (first_render) {
+            qDebug() << "Drawing" << total_vertices / 2 << "line segments in single draw call";
         }
+        glDrawArrays(GL_LINES, 0, total_vertices);
     }
 
     vertex_array_object.release();
     shader_program->release();
+}
+
+void LineDataVisualization::renderLines(float line_width) {
+    if (line_shader_program) {
+        renderLines(line_shader_program, line_width);
+    } else {
+        qDebug() << "Cannot render lines: line_shader_program is null (shader compilation failed?)";
+    }
 }
 
 void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
@@ -256,18 +337,15 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
     // Set uniforms
     picking_shader_program->setUniformValue("u_line_width", line_width);
     picking_shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));// TODO: Get actual viewport
+    picking_shader_program->setUniformValue("u_canvas_size", canvas_size);  // For coordinate normalization
 
     // Bind picking vertex array object
     picking_vertex_array_object.bind();
 
-    // Render lines using line strips
-    for (size_t i = 0; i < line_identifiers.size(); ++i) {
-        uint32_t offset = line_offsets[i];
-        uint32_t length = line_lengths[i];
-
-        if (length > 1) {
-            glDrawArrays(GL_LINE_STRIP, offset, length);
-        }
+    // Render ALL line segments in a single draw call for picking
+    if (!vertex_data.empty()) {
+        uint32_t total_vertices = static_cast<uint32_t>(vertex_data.size() / 2);
+        glDrawArrays(GL_LINES, 0, total_vertices);
     }
 
     picking_vertex_array_object.release();

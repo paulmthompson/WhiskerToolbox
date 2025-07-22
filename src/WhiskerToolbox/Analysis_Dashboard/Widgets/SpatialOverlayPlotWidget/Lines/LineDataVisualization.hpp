@@ -26,13 +26,15 @@ class QOpenGLShaderProgram;
  */
 struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     // Line data storage
-    std::vector<float> vertex_data;              // All line vertices flattened
-    std::vector<uint32_t> line_offsets;          // Start index of each line in vertex_data
-    std::vector<uint32_t> line_lengths;          // Number of vertices in each line
+    std::vector<float> vertex_data;              // All line segments as pairs of vertices
+    std::vector<uint32_t> line_id_data;          // Line ID for each vertex
+    std::vector<uint32_t> line_offsets;          // Start index of each line in vertex_data (legacy)
+    std::vector<uint32_t> line_lengths;          // Number of vertices in each line (legacy)
     std::vector<LineIdentifier> line_identifiers;// Mapping from line index to identifier
 
     // OpenGL resources
     QOpenGLBuffer vertex_buffer;
+    QOpenGLBuffer line_id_buffer;
     QOpenGLVertexArrayObject vertex_array_object;
 
     // Picking framebuffer for hover detection
@@ -48,6 +50,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QString key;
     QVector4D color;
     bool visible = true;
+    QVector2D canvas_size;  // Canvas size for coordinate normalization
 
     // Hover state for this LineData
     LineIdentifier current_hover_line;
@@ -83,6 +86,11 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @brief Render lines for this LineData
      */
     void renderLines(QOpenGLShaderProgram * shader_program, float line_width);
+
+    /**
+     * @brief Render lines using internal shader program (convenience method)
+     */
+    void renderLines(float line_width);
 
     /**
      * @brief Render lines to picking framebuffer for hover detection

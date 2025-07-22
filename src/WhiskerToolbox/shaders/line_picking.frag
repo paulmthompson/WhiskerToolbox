@@ -1,6 +1,6 @@
 #version 410 core
 
-in uint g_line_id;
+flat in uint g_line_id;
 
 out vec4 FragColor;
 
@@ -12,6 +12,6 @@ void main() {
     float g = float((id >> 8) & 0xFF) / 255.0;
     float b = float(id & 0xFF) / 255.0;
     float a = 1.0;
-
+    
     FragColor = vec4(r, g, b, a);
 }
