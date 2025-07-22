@@ -230,13 +230,19 @@ void MainWindow::_updateFrameCount() {
                   << "The video has " << frame_count
                   << " the time vector has " << _data_manager->getTime()->getTotalFrameCount() << std::endl;
 
-        std::vector<int> t(frame_count);
-        std::iota(std::begin(t), std::end(t), 0);
+        if (_data_manager->getTime()->getTotalFrameCount() == 0) {
+            std::vector<int> t(frame_count);
+            std::iota(std::begin(t), std::end(t), 0);
 
-        auto new_timeframe = std::make_shared<TimeFrame>(t);
+            auto new_timeframe = std::make_shared<TimeFrame>(t);
 
-        _data_manager->removeTime("time");
-        _data_manager->setTime("time", new_timeframe);
+            _data_manager->removeTime("time");
+            _data_manager->setTime("time", new_timeframe);
+        } else {    
+            std::cout << "The time vector is not empty, so we will not create a new time vector" << std::endl;
+        
+        
+        }
     }
 
     ui->time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount() - 1);
