@@ -8,7 +8,7 @@ uniform mat4 projMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 void main() {
-   gl_Position = projMatrix * viewMatrix * modelMatrix * vertex;
-   fragColor = u_color;
-   fragAlpha = u_alpha;
-} 
+    gl_Position = projMatrix * viewMatrix * modelMatrix * vertex;
+    fragColor = u_color;
+    fragAlpha = u_alpha;
+}

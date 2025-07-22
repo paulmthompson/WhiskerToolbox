@@ -58,6 +58,8 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotOpenGLWidget.hpp
         Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotOpenGLWidget.cpp
 
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Lines/LineDataVisualization.hpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Lines/LineDataVisualization.cpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.hpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.cpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp

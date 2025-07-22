@@ -4,8 +4,11 @@
 #include "PolygonSelectionHandler.hpp"
 #include "SelectionModes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
-#include "Masks/MaskDataVisualization.hpp"
+#include "SpatialIndex/RTree.hpp"
+#include "Masks/MaskIdentifier.hpp"
+#include "Lines/LineIdentifier.hpp"
 #include "../ShaderManager/ShaderManager.hpp"
+
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -156,6 +159,18 @@ public:
      */
     void setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map);
 
+    /**
+     * @brief Get the currently selected lines from all LineData objects
+     * @return Vector of pairs containing data key and selected line identifiers
+     */
+    std::vector<std::pair<QString, std::vector<LineIdentifier>>> getSelectedLineData() const;
+
+    /**
+     * @brief Get total number of selected lines across all LineData visualizations
+     * @return Total selected line count
+     */
+    size_t getTotalSelectedLines() const;
+
 signals:
     /**
      * @brief Emitted when user double-clicks on a point to jump to that frame
@@ -252,7 +267,7 @@ private:
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
 
     // LineData visualizations - each LineData has its own OpenGL resources
-    //std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
+    std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
 
     // Modern OpenGL rendering resources
     QOpenGLShaderProgram * _texture_shader_program;
@@ -353,6 +368,20 @@ private:
     PointDataVisualization * getCurrentHoverVisualization() const;
 
     /**
+     * @brief Find line near screen coordinates across all LineData visualizations
+     * @param screen_x Screen X coordinate
+     * @param screen_y Screen Y coordinate
+     * @return Pair of LineDataVisualization and line identifier, or {nullptr, std::nullopt} if none found
+     */
+    std::pair<LineDataVisualization *, std::optional<LineIdentifier>> findLineNear(int screen_x, int screen_y) const;
+
+    /**
+     * @brief Get the LineDataVisualization that currently has a hover line
+     * @return Pointer to the visualization with hover line, or nullptr if none
+     */
+    LineDataVisualization * getCurrentHoverLineVisualization() const;
+
+    /**
      * @brief Calculate world tolerance from screen tolerance
      * @param screen_tolerance Tolerance in screen pixels
      * @return World tolerance
@@ -368,6 +397,11 @@ private:
      * @brief Render all masks using OpenGL
      */
     void renderMasks();
+
+    /**
+     * @brief Render all lines using OpenGL
+     */
+    void renderLines();
 
     /**
      * @brief Apply a selection region to find all points within it

@@ -8,4 +8,4 @@ uniform float u_point_size;
 void main() {
     gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
     gl_PointSize = u_point_size;
-} 
+}

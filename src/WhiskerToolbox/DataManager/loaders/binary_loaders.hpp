@@ -196,6 +196,7 @@ inline std::vector<std::pair<float, float>> extractIntervals(std::vector<int> co
             in_interval = false;
         }
     }
+
     return intervals;
 }
 

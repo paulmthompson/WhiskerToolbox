@@ -55,7 +55,9 @@ std::shared_ptr<DigitalIntervalSeries> load_into_DigitalIntervalSeries(std::stri
             auto intervals = Loader::extractIntervals(digital_data, transition);
             std::cout << "Loaded " << intervals.size() << " intervals " << std::endl;
 
-            return std::make_shared<DigitalIntervalSeries>(intervals);
+            digital_interval_series = std::make_shared<DigitalIntervalSeries>(intervals);
+
+            return digital_interval_series;
         }
         case IntervalDataType::csv: {
 

@@ -12,6 +12,7 @@
 #include "DataViewer_Widget.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "ShaderManager/ShaderManager.hpp"
 #include "TimeFrame.hpp"
 
 #include <QMouseEvent>
@@ -30,7 +31,7 @@
 #include <iostream>
 #include <ranges>
 
-#include "../ShaderManager/ShaderManager.hpp"
+
 
 // This was a helpful resource for making a dashed line:
 //https://stackoverflow.com/questions/52928678/dashed-line-in-opengl3
@@ -473,11 +474,13 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         if (!display_options->is_visible) continue;
 
         // Get only the intervals that overlap with the visible range
+        // These will be
         auto visible_intervals = series->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
                 TimeFrameIndex(static_cast<int64_t>(start_time)),
                 TimeFrameIndex(static_cast<int64_t>(end_time)),
-                time_frame.get(),
-                _master_time_frame.get());
+                _master_time_frame.get(),
+                time_frame.get()
+                );
 
         hexToRGB(display_options->hex_color, r, g, b);
         float const rNorm = static_cast<float>(r) / 255.0f;
@@ -517,6 +520,8 @@ void OpenGLWidget::drawDigitalIntervalSeries() {
         glUniform1f(m_alphaLoc, alpha);
 
         for (auto const & interval: visible_intervals) {
+
+            std::cout << "interval.start:" << interval.start << "interval.end:" << interval.end << std::endl;
 
             auto start = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.start)));
             auto end = static_cast<float>(time_frame->getTimeAtIndex(TimeFrameIndex(interval.end)));

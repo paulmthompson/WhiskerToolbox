@@ -5,6 +5,7 @@
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Lines/LineDataVisualization.hpp"
 
 #include <QApplication>
 #include <QDebug>
@@ -277,6 +278,33 @@ PointDataVisualization* SpatialOverlayOpenGLWidget::getCurrentHoverVisualization
     return nullptr;
 }
 
+std::pair<LineDataVisualization *, std::optional<LineIdentifier>> SpatialOverlayOpenGLWidget::findLineNear(int screen_x, int screen_y) const {
+    if (_line_data_visualizations.empty()) {
+        return {nullptr, std::nullopt};
+    }
+    
+    // Try to find a line at the screen position using GPU picking
+    for (auto const& [key, viz] : _line_data_visualizations) {
+        if (!viz->visible) continue;
+        
+        auto line_id = viz->getLineAtScreenPosition(screen_x, screen_y);
+        if (line_id.has_value()) {
+            return {viz.get(), line_id};
+        }
+    }
+    
+    return {nullptr, std::nullopt};
+}
+
+LineDataVisualization* SpatialOverlayOpenGLWidget::getCurrentHoverLineVisualization() const {
+    for (auto const& [key, viz] : _line_data_visualizations) {
+        if (viz->has_hover_line) {
+            return viz.get();
+        }
+    }
+    return nullptr;
+}
+
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
     size_t total = 0;
     for (auto const& [key, viz] : _point_data_visualizations) {
@@ -285,8 +313,33 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
     return total;
 }
 
+std::vector<std::pair<QString, std::vector<LineIdentifier>>> SpatialOverlayOpenGLWidget::getSelectedLineData() const {
+    std::vector<std::pair<QString, std::vector<LineIdentifier>>> result;
+    
+    for (auto const& [key, viz] : _line_data_visualizations) {
+        if (!viz->selected_lines.empty()) {
+            std::vector<LineIdentifier> selected_lines;
+            selected_lines.reserve(viz->selected_lines.size());
+            for (auto const& line_id : viz->selected_lines) {
+                selected_lines.push_back(line_id);
+            }
+            result.emplace_back(key, std::move(selected_lines));
+        }
+    }
+    
+    return result;
+}
+
+size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
+    size_t total = 0;
+    for (auto const& [key, viz] : _line_data_visualizations) {
+        total += viz->selected_lines.size();
+    }
+    return total;
+}
+
 void SpatialOverlayOpenGLWidget::calculateDataBounds() {
-    if (_point_data_visualizations.empty() && _mask_data_visualizations.empty()) {
+    if (_point_data_visualizations.empty() && _mask_data_visualizations.empty() && _line_data_visualizations.empty()) {
         _data_bounds_valid = false;
         return;
     }
@@ -324,6 +377,23 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
         min_y = std::min(min_y, viz->world_min_y);
         max_y = std::max(max_y, viz->world_max_y);
         has_points = true;
+    }
+    
+    // Calculate bounds from line data
+    for (auto const& [key, viz] : _line_data_visualizations) {
+        if (!viz->visible || viz->vertex_data.empty()) continue;
+        
+        // Iterate through vertex data (x, y pairs)
+        for (size_t i = 0; i < viz->vertex_data.size(); i += 2) {
+            float x = viz->vertex_data[i];
+            float y = viz->vertex_data[i + 1];
+            
+            min_x = std::min(min_x, x);
+            max_x = std::max(max_x, x);
+            min_y = std::min(min_y, y);
+            max_y = std::max(max_y, y);
+            has_points = true;
+        }
     }
     
     if (!has_points) {
@@ -366,7 +436,49 @@ std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const*>>> Spat
 
 void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map) {
     // Clear existing visualizations
-    //_line_data_visualizations.clear();
+    _line_data_visualizations.clear();
+    
+    // Set different colors for different datasets
+    static std::vector<QVector4D> colors = {
+        QVector4D(0.0f, 0.0f, 1.0f, 1.0f), // Blue
+        QVector4D(0.0f, 1.0f, 0.0f, 1.0f), // Green
+        QVector4D(1.0f, 0.0f, 0.0f, 1.0f), // Red
+        QVector4D(1.0f, 1.0f, 0.0f, 1.0f), // Yellow
+        QVector4D(1.0f, 0.0f, 1.0f, 1.0f), // Magenta
+        QVector4D(0.0f, 1.0f, 1.0f, 1.0f), // Cyan
+    };
+    
+    // Create visualization for each LineData
+    size_t color_index = 0;
+    for (auto const & [key, line_data] : line_data_map) {
+        if (!line_data) {
+            qDebug() << "SpatialOverlayOpenGLWidget: Null line data for key:" << key;
+            continue;
+        }
+        
+        auto viz = std::make_unique<LineDataVisualization>(key, line_data);
+        viz->color = colors[color_index % colors.size()];
+        color_index++;
+        
+        qDebug() << "SpatialOverlayOpenGLWidget: Created line visualization for" << key 
+                 << "with" << viz->line_identifiers.size() << "lines";
+        
+        _line_data_visualizations[key] = std::move(viz);
+    }
+    
+    calculateDataBounds();
+    updateViewMatrices();
+    
+    // Ensure OpenGL context is current before forcing repaint
+    if (context() && context()->isValid()) {
+        makeCurrent();
+        update();
+        repaint();
+        QApplication::processEvents();
+        doneCurrent();
+    } else {
+        update();
+    }
 }
 
 
@@ -472,6 +584,7 @@ void SpatialOverlayOpenGLWidget::paintGL() {
 
     renderPoints(); // Temporarily disabled to isolate blue color source
     renderMasks();
+    renderLines();
 
     // Render polygon overlay using the polygon selection handler
     if (_polygon_selection_handler && _polygon_selection_handler->isPolygonSelecting()) {
@@ -737,6 +850,11 @@ void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
     // Clear all hover states
     for (auto const& [key, viz] : _point_data_visualizations) {
         viz->current_hover_point = nullptr;
+    }
+    
+    // Clear line hover states
+    for (auto const& [key, viz] : _line_data_visualizations) {
+        viz->setHoverLine(std::nullopt);
     }
     
     for (auto const& [key, viz] : _mask_data_visualizations) {
@@ -1063,6 +1181,34 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
     }
 }
 
+void SpatialOverlayOpenGLWidget::renderLines() {
+    if (_line_data_visualizations.empty() || !_opengl_resources_initialized) {
+        return;
+    }
+    
+    // Get line shader program from ShaderManager
+    auto lineProgram = ShaderManager::instance().getProgram("line_with_geometry");
+    if (!lineProgram || !lineProgram->getNativeProgram()->bind()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to bind line shader program";
+        return;
+    }
+    
+    // Set uniform matrices
+    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
+    lineProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
+    
+    // Enable blending for regular lines
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    // Render all lines for each LineData
+    for (auto const& [key, viz] : _line_data_visualizations) {
+        viz->renderLines(lineProgram->getNativeProgram(), 2.0f); // Default line width
+    }
+    
+    lineProgram->getNativeProgram()->release();
+}
+
 void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     qDebug() << "SpatialOverlayOpenGLWidget: Initializing OpenGL resources";
 
@@ -1251,9 +1397,10 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
     
     qDebug() << "SpatialOverlayOpenGLWidget: Processing debounced hover at" << _pending_hover_pos;
 
-    // Find points and masks near the stored hover position
+    // Find points, masks, and lines near the stored hover position
     auto [viz, point] = findPointNear(_pending_hover_pos.x(), _pending_hover_pos.y());
     auto mask_results = findMasksNear(_pending_hover_pos.x(), _pending_hover_pos.y());
+    auto [line_viz, line_id] = findLineNear(_pending_hover_pos.x(), _pending_hover_pos.y());
     
     // Clear old hover states
     PointDataVisualization* old_hover_viz = getCurrentHoverVisualization();
@@ -1264,6 +1411,12 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
     // Clear old mask hover states
     for (auto const& [key, mask_viz] : _mask_data_visualizations) {
         mask_viz->clearHover();
+    }
+    
+    // Clear old line hover states
+    LineDataVisualization* old_line_hover_viz = getCurrentHoverLineVisualization();
+    if (old_line_hover_viz && old_line_hover_viz != line_viz) {
+        old_line_hover_viz->setHoverLine(std::nullopt);
     }
     
     // Set new hover state
@@ -1292,8 +1445,18 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
             total_masks += entries.size();
         }
         qDebug() << "SpatialOverlayOpenGLWidget: Hovering over" << total_masks << "masks (processed after debounce)";
+    } else if (line_viz && line_id.has_value()) {
+        // Set line hover state
+        line_viz->setHoverLine(line_id);
+        _tooltip_timer->stop();
+        _tooltip_refresh_timer->stop();
+        _tooltip_timer->start();
+        
+        qDebug() << "SpatialOverlayOpenGLWidget: Hovering over line in" << line_viz->key
+                 << "timeframe:" << line_id.value().time_frame << "line_id:" 
+                 << line_id.value().line_id;
     } else {
-        // No point or mask under cursor
+        // No point, mask, or line under cursor
         if (old_hover_viz) {
             old_hover_viz->current_hover_point = nullptr;
         }
