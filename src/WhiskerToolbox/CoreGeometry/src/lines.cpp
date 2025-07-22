@@ -1,5 +1,4 @@
-
-#include "lines.hpp"
+#include "CoreGeometry/lines.hpp"
 
 #include <cmath>
 #include <cstdint>

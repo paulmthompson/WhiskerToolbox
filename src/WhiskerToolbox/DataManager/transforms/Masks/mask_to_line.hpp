@@ -4,7 +4,7 @@
 #include "transforms/data_transforms.hpp"
 
 #include "CoreGeometry/points.hpp"
-#include "Lines/lines.hpp"
+#include "CoreGeometry/lines.hpp"
 
 #include <memory>
 #include <string>

@@ -3,7 +3,7 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/points.hpp"
-#include "Lines/lines.hpp"
+#include "CoreGeometry/lines.hpp"
 
 #include <cstdint>
 #include <vector>

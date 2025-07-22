@@ -2,14 +2,6 @@
 set(lines_subdirectory_sources
         Line_Data.hpp
         Line_Data.cpp
-        lines.hpp
-        lines.cpp
-        utils/line_geometry.hpp
-        utils/line_geometry.cpp
-        utils/line_resampling.cpp
-        utils/line_resampling.hpp
-        utils/order_line.cpp
-        utils/order_line.hpp
         IO/CSV/Line_Data_CSV.hpp
         IO/CSV/Line_Data_CSV.cpp
         IO/HDF5/Line_Data_HDF5.hpp
@@ -30,7 +22,6 @@ set(lines_subdirectory_sources
 
 set(lines_test_sources
         Line_Data.test.cpp
-        utils/line_geometry.test.cpp
 )
 
 prefix_list_items(lines_subdirectory_sources "Lines")

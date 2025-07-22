@@ -2,7 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Lines/Line_Data.hpp"
-#include "Lines/utils/line_geometry.hpp"
+#include "CoreGeometry/line_geometry.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"
 
 #include <armadillo>

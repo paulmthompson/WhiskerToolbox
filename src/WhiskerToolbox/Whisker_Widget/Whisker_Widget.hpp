@@ -3,7 +3,7 @@
 
 #include "CoreGeometry/ImageSize.hpp"// for ImageSize
 #include "CoreGeometry/points.hpp"// for Point2D
-#include "Lines/lines.hpp"
+#include "CoreGeometry/lines.hpp"
 
 #include "DataManager/TimeFrame.hpp"
 

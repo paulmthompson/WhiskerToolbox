@@ -1,7 +1,7 @@
 #ifndef LINE_GEOMETRY_HPP
 #define LINE_GEOMETRY_HPP
 
-#include "Lines/lines.hpp"
+#include "CoreGeometry/lines.hpp"
 
 #include <optional>
 

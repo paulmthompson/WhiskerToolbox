@@ -1,7 +1,7 @@
 #include "line_point_extraction.hpp"
 
 #include "Lines/Line_Data.hpp"
-#include "Lines/utils/line_geometry.hpp"
+#include "CoreGeometry/line_geometry.hpp"
 #include "Points/Point_Data.hpp"
 #include "utils/polynomial/parametric_polynomial_utils.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"

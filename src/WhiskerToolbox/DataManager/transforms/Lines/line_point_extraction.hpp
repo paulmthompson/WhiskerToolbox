@@ -3,7 +3,7 @@
 
 #include "transforms/data_transforms.hpp"
 
-#include "Lines/lines.hpp"
+#include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
 #include <memory>   // std::shared_ptr

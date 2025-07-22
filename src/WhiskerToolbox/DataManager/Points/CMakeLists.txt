@@ -6,8 +6,6 @@ set(points_sources
     IO/CSV/Point_Data_CSV.cpp
     IO/JSON/Point_Data_JSON.hpp
     IO/JSON/Point_Data_JSON.cpp
-    utils/point_geometry.hpp
-    utils/point_geometry.cpp
 )
 
 set(points_test_sources

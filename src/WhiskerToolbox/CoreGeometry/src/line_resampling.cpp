@@ -1,4 +1,4 @@
-#include "line_resampling.hpp"
+#include "CoreGeometry/line_resampling.hpp"
 
 #include <cmath>  // For std::sqrt, std::abs
 

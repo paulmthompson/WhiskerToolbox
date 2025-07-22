@@ -2,7 +2,7 @@
 #define MEDIALINE_WIDGET_HPP
 
 
-#include "DataManager/Lines/lines.hpp"
+#include "CoreGeometry/lines.hpp"
 #include "DataManager/TimeFrame.hpp"
 
 #include <QMap>

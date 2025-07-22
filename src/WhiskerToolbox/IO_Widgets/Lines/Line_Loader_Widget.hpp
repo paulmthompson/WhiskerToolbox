@@ -2,8 +2,9 @@
 #define LINE_LOADER_WIDGET_HPP
 
 #include "../Scaling_Widget/Scaling_Widget.hpp"
-#include "Lines/lines.hpp"
+#include "CoreGeometry/lines.hpp"
 #include "DataManager/TimeFrame.hpp"
+
 #include <QWidget>
 
 #include <memory>

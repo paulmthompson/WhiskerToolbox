@@ -6,7 +6,7 @@
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame.hpp"
 #include "DigitalTimeSeries/interval_data.hpp"
-#include "lines.hpp"
+#include "CoreGeometry/lines.hpp"
 
 #include <cstddef>
 #include <map>

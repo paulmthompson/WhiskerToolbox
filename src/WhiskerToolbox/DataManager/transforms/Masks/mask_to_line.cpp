@@ -3,8 +3,8 @@
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 
-#include "Lines/utils/line_resampling.hpp"
-#include "Lines/utils/order_line.hpp"
+#include "CoreGeometry/line_resampling.hpp"
+#include "CoreGeometry/order_line.hpp"
 #include "Masks/utils/skeletonize.hpp"
 #include "utils/polynomial/parametric_polynomial_utils.hpp"
 #include "utils/polynomial/polynomial_fit.hpp"

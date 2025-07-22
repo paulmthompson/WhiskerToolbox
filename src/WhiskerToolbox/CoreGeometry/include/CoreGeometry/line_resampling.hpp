@@ -1,7 +1,7 @@
 #ifndef LINE_RESAMPLING_HPP
 #define LINE_RESAMPLING_HPP
 
-#include "Lines/lines.hpp" // For Line2D and Point2D
+#include "CoreGeometry/lines.hpp" // For Line2D and Point2D
 
 /**
  * @brief Resamples a line to a target point spacing.

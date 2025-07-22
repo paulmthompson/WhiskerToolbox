@@ -2,7 +2,7 @@
 #define LINE_ANGLE_HPP
 
 #include "transforms/data_transforms.hpp"
-#include "Lines/lines.hpp"
+#include "CoreGeometry/lines.hpp"
 
 #include <memory>   // std::shared_ptr
 #include <string>   // std::string

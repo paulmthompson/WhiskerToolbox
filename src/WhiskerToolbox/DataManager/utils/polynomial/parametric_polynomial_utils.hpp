@@ -1,7 +1,7 @@
 #ifndef PARAMETRIC_POLYNOMIAL_UTILS_HPP
 #define PARAMETRIC_POLYNOMIAL_UTILS_HPP
 
-#include "Lines/lines.hpp" // For Point2D
+#include "CoreGeometry/lines.hpp" // For Point2D
 
 #include <vector>
 
