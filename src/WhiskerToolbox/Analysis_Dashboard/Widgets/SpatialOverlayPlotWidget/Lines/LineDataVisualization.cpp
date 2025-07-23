@@ -275,53 +275,39 @@ void LineDataVisualization::cleanupOpenGLResources() {
 
 void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, float line_width) {
     if (!visible || vertex_data.empty() || !shader_program) {
-        qDebug() << "LineDataVisualization::renderLines: Skipping render. visible=" << visible 
-                 << "vertex_data.size()=" << vertex_data.size() 
-                 << "shader_program=" << (shader_program ? "valid" : "null");
         return;
-    }
-
-    static bool first_render = true;
-    if (first_render) {
-        qDebug() << "LineDataVisualization::renderLines: Rendering" << line_identifiers.size() << "lines";
-        first_render = false;
     }
 
     shader_program->bind();
 
-    // Set uniforms
+    // Set uniforms (most are set once per frame, not per hover)
     shader_program->setUniformValue("u_color", color);
     shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));   // Yellow for hover
     shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black for selected
     shader_program->setUniformValue("u_line_width", line_width);
     shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));// TODO: Get actual viewport
     shader_program->setUniformValue("u_canvas_size", canvas_size);  // For coordinate normalization
-
-    // Set hover state - but don't render hovered line in main pass
-    shader_program->setUniformValue("u_hover_line_id", 0u);  // Disable hover highlighting in main pass
-
     shader_program->setUniformValue("u_is_selected", false);// TODO: Implement selection
+
+    // Set hover state - disable hover highlighting in main pass
+    shader_program->setUniformValue("u_hover_line_id", 0u);
 
     // Bind vertex array object
     vertex_array_object.bind();
 
-    // Render ALL line segments in a single draw call - MASSIVE performance improvement!
-    // The geometry shader will convert each pair of vertices into a thick line quad
+    // Render ALL line segments in a single draw call
     if (!vertex_data.empty()) {
         uint32_t total_vertices = static_cast<uint32_t>(vertex_data.size() / 2);
-        if (first_render) {
-            qDebug() << "Drawing" << total_vertices / 2 << "line segments in single draw call";
-        }
         glDrawArrays(GL_LINES, 0, total_vertices);
     }
 
     // NOW render ONLY the hovered line ON TOP if there is one
-    if (has_hover_line && cached_hover_line_index < line_vertex_ranges.size()) {
+    if (has_hover_line && cached_hover_line_index < line_vertex_ranges.size() && cached_hover_uniform_location >= 0) {
         // Use cached index to avoid expensive linear search
         const auto& range = line_vertex_ranges[cached_hover_line_index];
         
         if (range.vertex_count > 0) {
-            // Set hover uniform efficiently
+            // Set hover uniform efficiently using cached location
             uint32_t shader_line_id = cached_hover_line_index + 1;  // Use 1-based indexing
             glUniform1ui(cached_hover_uniform_location, shader_line_id);
             
@@ -329,15 +315,6 @@ void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, f
             glDrawArrays(GL_LINES, range.start_vertex, range.vertex_count);
         }
     }
-                qDebug() << "RENDER: Line index" << line_index << "out of range for vertex ranges (size:" << line_vertex_ranges.size() << ")";
-            }
-        } else {
-            qDebug() << "RENDER: Could not find hover line" << current_hover_line.time_frame << "," << current_hover_line.line_id << "in line_identifiers";
-        }
-    } else {
-        qDebug() << "RENDER: has_hover_line is false, no hover line to render";
-    }
-
     vertex_array_object.release();
     shader_program->release();
 }
