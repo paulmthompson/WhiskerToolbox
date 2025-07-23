@@ -477,30 +477,23 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
         first_picking_render = false;
     }
 
-    // Store current viewport
     GLint old_viewport[4];
     glGetIntegerv(GL_VIEWPORT, old_viewport);
 
-    // Bind picking framebuffer
     picking_framebuffer->bind();
     glViewport(0, 0, picking_framebuffer->width(), picking_framebuffer->height());
 
-
-    // Clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     picking_shader_program->bind();
 
-    // Set uniforms
     picking_shader_program->setUniformValue("u_line_width", line_width);
     picking_shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));// TODO: Get actual viewport
     picking_shader_program->setUniformValue("u_canvas_size", canvas_size);  // For coordinate normalization
 
-    // Bind picking vertex array object
     picking_vertex_array_object.bind();
 
-    // Render ALL line segments in a single draw call for picking
     if (!vertex_data.empty()) {
         uint32_t total_vertices = static_cast<uint32_t>(vertex_data.size() / 2);
         glDrawArrays(GL_LINES, 0, total_vertices);
@@ -509,10 +502,8 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
     picking_vertex_array_object.release();
     picking_shader_program->release();
 
-    // Unbind framebuffer
     picking_framebuffer->release();
 
-    // Restore viewport
     glViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
 }
 
@@ -522,12 +513,6 @@ std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(
         qDebug() << "getLineAtScreenPosition: Missing framebuffer or shader";
         return std::nullopt;
     }
-
-    qDebug() << "getLineAtScreenPosition called at (" << screen_x << "," << screen_y << ")";
-
-    // Always re-render to picking buffer for accurate hover detection.
-    // Use a larger line width for easier picking.
-    //renderLinesToPickingBuffer(20.0f);
 
     // Read pixel at screen position
     picking_framebuffer->bind();
@@ -547,28 +532,19 @@ std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(
     fb_x = std::max(0, std::min(fb_x, picking_framebuffer->width() - 1));
     fb_y = std::max(0, std::min(fb_y, picking_framebuffer->height() - 1));
 
-    qDebug() << "Screen (" << screen_x << "," << screen_y << ") in widget (" << widget_width << "x"
-             << widget_height << ") -> FB (" << fb_x << "," << fb_y << ")";
-
-    // Read pixel
     unsigned char pixel[4];
     glReadPixels(fb_x, fb_y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
 
     picking_framebuffer->release();
-
-    //qDebug() << "Pixel color: R=" << (int)pixel[0] << " G=" << (int)pixel[1] 
-    //         << " B=" << (int)pixel[2] << " A=" << (int)pixel[3];
 
     // Convert pixel color back to line ID
     uint32_t line_id = (static_cast<uint32_t>(pixel[0]) << 16) |
                        (static_cast<uint32_t>(pixel[1]) << 8) |
                        static_cast<uint32_t>(pixel[2]);
 
-    //qDebug() << "Decoded line_id:" << line_id << "total lines:" << line_identifiers.size();
 
     // Check if we found a valid line
     if (line_id > 0 && line_id <= line_identifiers.size()) {
-        //qDebug() << "Found line at index:" << (line_id - 1);
         return line_identifiers[line_id - 1];  // Adjust for 1-based indexing
     }
 

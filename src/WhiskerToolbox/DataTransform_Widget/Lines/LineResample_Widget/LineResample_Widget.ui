@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>300</width>
-    <height>200</height>
+    <width>350</width>
+    <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="titleLabel">
      <property name="text">
-      <string>Resample Line Points</string>
+      <string>Line Simplification</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -28,9 +28,42 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="algorithmGroupBox">
+     <property name="title">
+      <string>Algorithm Selection</string>
+     </property>
+     <layout class="QFormLayout" name="algorithmFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="algorithmLabel">
+        <property name="text">
+         <string>Algorithm:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="algorithmComboBox">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>Fixed Spacing</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Douglas-Peucker</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="paramsGroupBox">
      <property name="title">
-      <string>Resampling Parameters</string>
+      <string>Parameters</string>
      </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
@@ -43,7 +76,7 @@
       <item row="0" column="1">
        <widget class="QDoubleSpinBox" name="targetSpacingSpinBox">
         <property name="minimum">
-         <double>0.1</double> <!-- Allow very small spacing if desired -->
+         <double>0.1</double>
         </property>
         <property name="maximum">
          <double>100.0</double>
@@ -52,14 +85,43 @@
          <double>0.5</double>
         </property>
         <property name="value">
-         <double>5.0</double> <!-- Default from parameters -->
+         <double>5.0</double>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
+      <item row="1" column="0">
+       <widget class="QLabel" name="epsilonLabel">
+        <property name="text">
+         <string>Epsilon (pixels):</string>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="epsilonSpinBox">
+        <property name="minimum">
+         <double>0.1</double>
+        </property>
+        <property name="maximum">
+         <double>50.0</double>
+        </property>
+        <property name="singleStep">
+         <double>0.1</double>
+        </property>
+        <property name="value">
+         <double>2.0</double>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
        <widget class="QLabel" name="descriptionLabel">
         <property name="text">
-         <string>Resamples the line by creating new points along the line segments to achieve the desired approximate spacing. First and last points are preserved.</string>
+         <string>Fixed Spacing: Resamples the line by creating new points along the line segments to achieve the desired approximate spacing. First and last points are preserved.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
