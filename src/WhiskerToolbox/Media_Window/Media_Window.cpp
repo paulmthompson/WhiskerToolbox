@@ -1420,9 +1420,7 @@ bool Media_Window::hasPreviewMaskData(std::string const & mask_key) const {
     return _mask_preview_active && _preview_mask_data.count(mask_key) > 0;
 }
 
-std::vector<Mask2D> Media_Window::getPreviewMaskData(std::string const & mask_key, int time) const {
-
-    static_cast<void>(time);
+std::vector<Mask2D> Media_Window::getPreviewMaskData(std::string const & mask_key) const {
 
     if (hasPreviewMaskData(mask_key)) {
         return _preview_mask_data.at(mask_key);

@@ -355,7 +355,7 @@ void MediaMask_Widget::_applyDilationPermanently() {
 
     // Get current time and get the preview data from Media_Window
     auto current_time = _data_manager->getCurrentTime();
-    auto preview_masks = _scene->getPreviewMaskData(_active_key, current_time);
+    auto preview_masks = _scene->getPreviewMaskData(_active_key);
 
     // Clear existing masks at this time
     mask_data->clearAtTime(TimeFrameIndex(current_time), false);

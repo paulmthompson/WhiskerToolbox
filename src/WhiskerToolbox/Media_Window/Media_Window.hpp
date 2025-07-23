@@ -146,10 +146,9 @@ public:
     /**
      * @brief Get preview mask data for a given key and time
      * @param mask_key The mask key
-     * @param time The time index
      * @return Preview mask data if available, empty vector otherwise
      */
-    std::vector<Mask2D> getPreviewMaskData(std::string const & mask_key, int time) const;
+    std::vector<Mask2D> getPreviewMaskData(std::string const & mask_key) const;
 
     /**
      * @brief Set preview mask data for a given key
