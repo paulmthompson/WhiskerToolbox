@@ -50,16 +50,6 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QOpenGLBuffer picking_vertex_buffer;
     QOpenGLVertexArrayObject picking_vertex_array_object;
 
-    // Cached rendering for performance optimization
-    QOpenGLFramebufferObject * static_lines_cache;     // Cache of all 300k lines (rendered once)
-    QOpenGLFramebufferObject * dynamic_hover_buffer;   // Buffer for hover line (rendered each frame)
-    bool static_cache_valid = false;                   // Whether cache needs regeneration
-    float cached_line_width = -1.0f;                   // Line width used for cache (invalidate if changed)
-
-    // Cached rendering framebuffer - render all lines once, reuse every frame
-    QOpenGLFramebufferObject * cached_lines_framebuffer;
-    bool cached_lines_valid = false;  // Whether the cached render is up to date
-
     // Shader programs
     QOpenGLShaderProgram * line_shader_program;
     QOpenGLShaderProgram * picking_shader_program;
@@ -109,27 +99,6 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      */
     void updatePickingFramebuffer();
 
-    /**
-     * @brief Render all static lines to cache (called once or when cache is invalidated)
-     */
-    void renderStaticLinesToCache(float line_width);
-
-    /**
-     * @brief Render hover line to dynamic buffer
-     */
-    void renderHoverLineToDynamicBuffer(float line_width);
-
-    /**
-     * @brief Composite cached static lines + dynamic hover line to screen
-     * @param view_transform 3x3 matrix for zoom/pan transformation
-     */
-    void compositeCachedLines(QOpenGLShaderProgram * composite_shader, 
-                             const QMatrix3x3& view_transform = QMatrix3x3());
-
-    /**
-     * @brief Invalidate static cache (call when line data changes)
-     */
-    void invalidateStaticCache();
 
     /**
      * @brief Render lines for this LineData

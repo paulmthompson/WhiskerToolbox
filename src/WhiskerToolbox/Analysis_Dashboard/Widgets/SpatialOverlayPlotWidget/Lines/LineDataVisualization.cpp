@@ -24,7 +24,6 @@ LineDataVisualization::LineDataVisualization(QString const & data_key, std::shar
 
     buildVertexData(line_data.get());
 
-    // Initialize OpenGL resources
     initializeOpenGLResources();
 }
 
@@ -71,7 +70,6 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
                 continue;
             }
 
-            // Store line identifier
             line_identifiers.push_back({time_frame.getValue(), line_id});
             
             // Record the starting vertex index for this line
@@ -141,20 +139,16 @@ void LineDataVisualization::initializeOpenGLResources() {
     vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
     vertex_buffer.release();
 
-    // Create vertex array object
     vertex_array_object.create();
     vertex_array_object.bind();
 
-    // Set up vertex attributes
     vertex_buffer.bind();
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    // Create line ID buffer (for geometry shader)
     line_id_buffer.create();
     line_id_buffer.bind();
 
-    // Use the pre-computed line ID data
     line_id_buffer.allocate(line_id_data.data(), static_cast<int>(line_id_data.size() * sizeof(uint32_t)));
     glEnableVertexAttribArray(1);
     glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(uint32_t), nullptr);
@@ -163,23 +157,11 @@ void LineDataVisualization::initializeOpenGLResources() {
     vertex_buffer.release();
     vertex_array_object.release();
 
-    // Create picking framebuffer
     QOpenGLFramebufferObjectFormat format;
     format.setInternalTextureFormat(GL_RGBA8);
 
     picking_framebuffer = new QOpenGLFramebufferObject(1024, 1024, format);
 
-    // Create high-resolution cache for static lines (use 4K for zoom capability)
-    QOpenGLFramebufferObjectFormat cache_format;
-    cache_format.setInternalTextureFormat(GL_RGBA8);
-    cache_format.setSamples(0); // No multisampling for cache textures
-    
-    static_lines_cache = new QOpenGLFramebufferObject(4096, 4096, cache_format);
-    dynamic_hover_buffer = new QOpenGLFramebufferObject(4096, 4096, cache_format);
-    
-    static_cache_valid = false; // Will be generated on first render
-
-    // Create picking vertex buffer and VAO
     picking_vertex_buffer.create();
     picking_vertex_buffer.bind();
     picking_vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
@@ -278,16 +260,7 @@ void LineDataVisualization::cleanupOpenGLResources() {
         delete picking_framebuffer;
         picking_framebuffer = nullptr;
     }
-    
-    if (static_lines_cache) {
-        delete static_lines_cache;
-        static_lines_cache = nullptr;
-    }
-    
-    if (dynamic_hover_buffer) {
-        delete dynamic_hover_buffer;
-        dynamic_hover_buffer = nullptr;
-    }
+
 }
 
 void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, float line_width) {
@@ -295,135 +268,13 @@ void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, f
         return;
     }
 
-    // For now, use direct rendering for stability
-    // TODO: Enable cached rendering once texture composition is implemented
     renderLinesDirect(shader_program, line_width);
     
-    /* Cached rendering approach (disabled for now):
-    if (static_lines_cache && dynamic_hover_buffer) {
-        // Check if we need to regenerate the static cache
-        if (!static_cache_valid || cached_line_width != line_width) {
-            renderStaticLinesToCache(line_width);
-            static_cache_valid = true;
-            cached_line_width = line_width;
-        }
-        
-        // Render hover line to dynamic buffer (if any)
-        if (has_hover_line) {
-            renderHoverLineToDynamicBuffer(line_width);
-        }
-        
-        // Composite both textures to screen
-        compositeCachedLines(shader_program);
-    } else {
-        renderLinesDirect(shader_program, line_width);
-    }
-    */
-}
-
-void LineDataVisualization::renderStaticLinesToCache(float line_width) {
-    if (!static_lines_cache || !line_shader_program) return;
-    
-    // Store current viewport to restore later
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    
-    // Render all lines to high-resolution cache texture
-    static_lines_cache->bind();
-    
-    // Clear with transparent background
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    
-    // Set viewport to cache resolution
-    glViewport(0, 0, static_lines_cache->width(), static_lines_cache->height());
-    
-    line_shader_program->bind();
-    
-    // Set uniforms for static rendering (no hover)
-    line_shader_program->setUniformValue("u_color", color);
-    line_shader_program->setUniformValue("u_line_width", line_width);
-    line_shader_program->setUniformValue("u_viewport_size", 
-        QVector2D(static_cast<float>(static_lines_cache->width()), 
-                  static_cast<float>(static_lines_cache->height())));
-    line_shader_program->setUniformValue("u_canvas_size", canvas_size);
-    glUniform1ui(cached_hover_uniform_location, 0u); // No hover in static cache
-    
-    // Render all lines
-    vertex_array_object.bind();
-    if (!vertex_data.empty()) {
-        uint32_t total_vertices = static_cast<uint32_t>(vertex_data.size() / 2);
-        glDrawArrays(GL_LINES, 0, total_vertices);
-    }
-    vertex_array_object.release();
-    line_shader_program->release();
-    
-    static_lines_cache->release();
-    
-    // Restore original viewport
-    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-}
-
-void LineDataVisualization::renderHoverLineToDynamicBuffer(float line_width) {
-    if (!dynamic_hover_buffer || !line_shader_program || !has_hover_line) return;
-    if (cached_hover_line_index >= line_vertex_ranges.size()) return;
-    
-    // Store current viewport to restore later
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    
-    // Render only hover line to dynamic buffer
-    dynamic_hover_buffer->bind();
-    
-    // Clear with transparent background
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    
-    // Set viewport to dynamic buffer resolution
-    glViewport(0, 0, dynamic_hover_buffer->width(), dynamic_hover_buffer->height());
-    
-    line_shader_program->bind();
-    
-    // Set uniforms for hover rendering
-    line_shader_program->setUniformValue("u_color", color);  // Use normal color as base
-    line_shader_program->setUniformValue("u_line_width", line_width);
-    line_shader_program->setUniformValue("u_viewport_size", 
-        QVector2D(static_cast<float>(dynamic_hover_buffer->width()), 
-                  static_cast<float>(dynamic_hover_buffer->height())));
-    line_shader_program->setUniformValue("u_canvas_size", canvas_size);
-    
-    // Set hover state for this specific line
-    uint32_t shader_line_id = cached_hover_line_index + 1;
-    glUniform1ui(cached_hover_uniform_location, shader_line_id);
-    
-    // Render only the hovered line segments
-    vertex_array_object.bind();
-    const auto& range = line_vertex_ranges[cached_hover_line_index];
-    if (range.vertex_count > 0) {
-        glDrawArrays(GL_LINES, range.start_vertex, range.vertex_count);
-    }
-    vertex_array_object.release();
-    line_shader_program->release();
-    
-    dynamic_hover_buffer->release();
-    
-    // Restore original viewport
-    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-}
-
-void LineDataVisualization::compositeCachedLines(QOpenGLShaderProgram * composite_shader, 
-                                                 const QMatrix3x3& view_transform) {
-    // TODO: Implement texture composition with view transforms
-    // For now, fall back to direct rendering
-    // This is where zoom/pan would be applied as texture sampling transforms
-    renderLinesDirect(composite_shader, cached_line_width);
 }
 
 void LineDataVisualization::renderLinesDirect(QOpenGLShaderProgram * shader_program, float line_width) {
-    // Original single-pass rendering (fallback)
     shader_program->bind();
 
-    // Set uniforms
     shader_program->setUniformValue("u_color", color);
     shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
     shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));
@@ -452,10 +303,6 @@ void LineDataVisualization::renderLinesDirect(QOpenGLShaderProgram * shader_prog
     }
     vertex_array_object.release();
     shader_program->release();
-}
-
-void LineDataVisualization::invalidateStaticCache() {
-    static_cache_valid = false;
 }
 
 void LineDataVisualization::renderLines(float line_width) {
