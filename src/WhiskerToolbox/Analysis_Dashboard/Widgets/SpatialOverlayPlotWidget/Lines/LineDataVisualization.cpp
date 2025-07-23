@@ -527,7 +527,7 @@ std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(
 
     // Always re-render to picking buffer for accurate hover detection.
     // Use a larger line width for easier picking.
-    renderLinesToPickingBuffer(20.0f);
+    //renderLinesToPickingBuffer(20.0f);
 
     // Read pixel at screen position
     picking_framebuffer->bind();
