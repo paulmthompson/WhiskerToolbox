@@ -137,7 +137,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     /**
      * @brief Render all lines to the scene framebuffer for caching.
      */
-    void renderLinesToSceneBuffer(float line_width);
+    void renderLinesToSceneBuffer(QOpenGLShaderProgram * shader_program, float line_width);
 
     /**
      * @brief Blit the cached scene framebuffer to the screen.

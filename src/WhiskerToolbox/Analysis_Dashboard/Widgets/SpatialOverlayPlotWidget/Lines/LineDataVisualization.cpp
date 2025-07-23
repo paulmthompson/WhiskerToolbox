@@ -28,6 +28,7 @@ LineDataVisualization::LineDataVisualization(QString const & data_key, std::shar
     buildVertexData(m_line_data.get());
 
     initializeOpenGLResources();
+    m_dataIsDirty = false;// Data is clean after initial build and buffer creation
 }
 
 LineDataVisualization::~LineDataVisualization() {
@@ -133,8 +134,6 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
             qDebug() << "You may need coordinate transformation/normalization for proper display";
         }
     }
-
-    m_dataIsDirty = true;
 }
 
 void LineDataVisualization::initializeOpenGLResources() {
@@ -340,7 +339,7 @@ void LineDataVisualization::renderLinesDirect(QOpenGLShaderProgram * shader_prog
     }
 
     if (m_viewIsDirty) {
-        renderLinesToSceneBuffer(line_width);
+        renderLinesToSceneBuffer(shader_program, line_width);
         renderLinesToPickingBuffer(line_width);
         m_viewIsDirty = false;
     }
@@ -362,27 +361,33 @@ void LineDataVisualization::renderLines(float line_width) {
     }
 }
 
-void LineDataVisualization::renderLinesToSceneBuffer(float line_width) {
-    if (!visible || vertex_data.empty() || !line_shader_program || !scene_framebuffer) {
+void LineDataVisualization::renderLinesToSceneBuffer(QOpenGLShaderProgram * shader_program, float line_width) {
+    if (!visible || vertex_data.empty() || !shader_program || !scene_framebuffer) {
         qDebug() << "renderLinesToSceneBuffer: Skipping render - missing resources";
         return;
     }
 
-    scene_framebuffer->bind();
+    // Store current viewport
+    GLint old_viewport[4];
+    glGetIntegerv(GL_VIEWPORT, old_viewport);
 
+    scene_framebuffer->bind();
+    glViewport(0, 0, scene_framebuffer->width(), scene_framebuffer->height());
+
+    glEnable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-    line_shader_program->bind();
+    shader_program->bind();
 
-    line_shader_program->setUniformValue("u_color", color);
-    line_shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
-    line_shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));
-    line_shader_program->setUniformValue("u_line_width", line_width);
-    line_shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));
-    line_shader_program->setUniformValue("u_canvas_size", canvas_size);
-    line_shader_program->setUniformValue("u_is_selected", false);
-    line_shader_program->setUniformValue("u_hover_line_id", 0u);// Don't highlight any hover line in the main scene
+    shader_program->setUniformValue("u_color", color);
+    shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
+    shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));
+    shader_program->setUniformValue("u_line_width", line_width);
+    shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));
+    shader_program->setUniformValue("u_canvas_size", canvas_size);
+    shader_program->setUniformValue("u_is_selected", false);
+    shader_program->setUniformValue("u_hover_line_id", 0u);// Don't highlight any hover line in the main scene
 
     vertex_array_object.bind();
     if (!vertex_data.empty()) {
@@ -390,9 +395,13 @@ void LineDataVisualization::renderLinesToSceneBuffer(float line_width) {
         glDrawArrays(GL_LINES, 0, total_vertices);
     }
     vertex_array_object.release();
-    line_shader_program->release();
+    shader_program->release();
 
     scene_framebuffer->release();
+    glDisable(GL_DEPTH_TEST);
+
+    // Restore viewport
+    glViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
 }
 
 void LineDataVisualization::blitSceneBuffer() {
@@ -468,8 +477,14 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
         first_picking_render = false;
     }
 
+    // Store current viewport
+    GLint old_viewport[4];
+    glGetIntegerv(GL_VIEWPORT, old_viewport);
+
     // Bind picking framebuffer
     picking_framebuffer->bind();
+    glViewport(0, 0, picking_framebuffer->width(), picking_framebuffer->height());
+
 
     // Clear framebuffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -496,6 +511,9 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
 
     // Unbind framebuffer
     picking_framebuffer->release();
+
+    // Restore viewport
+    glViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
 }
 
 std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(int screen_x, int screen_y) {
