@@ -583,6 +583,9 @@ float Media_Window::getYAspect() const {
 
 void Media_Window::_plotLineData() {
     auto const current_time = _data_manager->getCurrentTime();
+
+    auto video_timeframe = _data_manager->getTime("time");
+
     auto xAspect = getXAspect();
     auto yAspect = getYAspect();
 
@@ -592,8 +595,11 @@ void Media_Window::_plotLineData() {
 
         auto plot_color = plot_color_with_alpha(_line_config.get());
 
+        auto line_timeframe_key = _data_manager->getTimeFrame(line_key);
+        auto line_timeframe = _data_manager->getTime(line_timeframe_key);
+
         auto line_data = _data_manager->getData<LineData>(line_key);
-        auto lineData = line_data->getAtTime(TimeFrameIndex(current_time));
+        auto lineData = line_data->getAtTime(TimeFrameIndex(current_time), video_timeframe.get(), line_timeframe.get());
 
         // Check for line-specific image size scaling
         auto image_size = line_data->getImageSize();
@@ -727,6 +733,8 @@ void Media_Window::_plotLineData() {
 void Media_Window::_plotMaskData() {
     auto const current_time = _data_manager->getCurrentTime();
 
+    auto video_timeframe = _data_manager->getTime("time");
+
     for (auto const & [mask_key, _mask_config]: _mask_configs) {
         if (!_mask_config.get()->is_visible) continue;
 
@@ -734,6 +742,9 @@ void Media_Window::_plotMaskData() {
 
         auto mask = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask->getImageSize();
+
+        auto mask_timeframe_key = _data_manager->getTimeFrame(mask_key);
+        auto mask_timeframe = _data_manager->getTime(mask_timeframe_key);
 
         // Check for preview data first
         std::vector<Mask2D> maskData;
@@ -745,7 +756,7 @@ void Media_Window::_plotMaskData() {
             maskData2.clear();// No time -1 data for preview
         } else {
             // Use original data
-            maskData = mask->getAtTime(TimeFrameIndex(current_time));
+            maskData = mask->getAtTime(TimeFrameIndex(current_time), video_timeframe.get(), mask_timeframe.get());
             maskData2 = mask->getAtTime(TimeFrameIndex(-1));
         }
 
@@ -869,6 +880,8 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
     
     std::cout << "Media image size: " << media_image.width() << "x" << media_image.height() << std::endl;
     std::cout << "Canvas dimensions: " << _canvasWidth << "x" << _canvasHeight << std::endl;
+
+    auto video_timeframe = _data_manager->getTime("time");
     
     QImage final_image = media_image;
     
@@ -886,11 +899,14 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
         
         auto mask_data = _data_manager->getData<MaskData>(mask_key);
         auto image_size = mask_data->getImageSize();
+
+        auto mask_timeframe_key = _data_manager->getTimeFrame(mask_key);
+        auto mask_timeframe = _data_manager->getTime(mask_timeframe_key);
         
         std::cout << "Mask image size: " << image_size.width << "x" << image_size.height << std::endl;
         
         auto const current_time = _data_manager->getCurrentTime();
-        auto maskData = mask_data->getAtTime(TimeFrameIndex(current_time));
+        auto maskData = mask_data->getAtTime(TimeFrameIndex(current_time), video_timeframe.get(), mask_timeframe.get());
 
         std::cout << "Mask data size: " << maskData.size() << std::endl;
         
