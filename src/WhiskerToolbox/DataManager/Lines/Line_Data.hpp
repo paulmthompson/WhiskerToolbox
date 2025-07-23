@@ -304,11 +304,20 @@ public:
      */
     std::size_t moveTo(LineData& target, std::vector<TimeFrameIndex> const & times, bool notify = true);
 
+    // ========== Time Frame ==========
+    /**
+     * @brief Set the time frame
+     * 
+     * @param time_frame The time frame to set
+     */
+    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
+
 protected:
 private:
     std::map<TimeFrameIndex, std::vector<Line2D>> _data;
     std::vector<Line2D> _empty{};
     ImageSize _image_size;
+    std::shared_ptr<TimeFrame> _time_frame {nullptr};
 };
 
 

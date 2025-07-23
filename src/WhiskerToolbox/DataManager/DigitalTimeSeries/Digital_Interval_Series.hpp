@@ -173,9 +173,19 @@ public:
             return getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
         };
 
+    // ========== Time Frame ==========
+
+    /**
+     * @brief Set the time frame
+     * 
+     * @param time_frame The time frame to set
+     */
+    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
+
 private:
     std::vector<Interval> _data{};
-
+    std::shared_ptr<TimeFrame> _time_frame {nullptr};
+    
     void _addEvent(Interval new_interval);
     void _setEventAtTime(TimeFrameIndex time, bool event);
     void _removeEventAtTime(TimeFrameIndex time);

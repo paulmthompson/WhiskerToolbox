@@ -67,9 +67,19 @@ public:
         return _feature_shape;
     }
 
+    // ========== Time Frame ==========
+
+    /**
+     * @brief Set the time frame
+     * 
+     * @param time_frame The time frame to set
+     */
+    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
+
 private:
     std::map<TimeFrameIndex, torch::Tensor> _data;
     std::vector<size_t> _feature_shape;
+    std::shared_ptr<TimeFrame> _time_frame {nullptr};
 };
 
 

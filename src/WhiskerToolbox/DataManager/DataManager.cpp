@@ -54,16 +54,22 @@ bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> ti
     }
 
     if (_times.find(key) != _times.end()) {
-        if (overwrite) {
-            _times[key] = std::move(timeframe);
-            return true;
-        } else {
+        if (!overwrite) {
             std::cerr << "Error: Time key already exists in DataManager: " << key << std::endl;
             return false;
         }
     }
 
     _times[key] = std::move(timeframe);
+
+    if (_data.find(key) != _data.end()) {
+        auto data = _data[key];
+        std::visit([this, timeframe](auto & x) {
+            x->setTimeFrame(timeframe);
+        },
+                   data);
+    }
+
     return true;
 }
 
@@ -108,6 +114,14 @@ bool DataManager::setTimeFrame(std::string const & data_key, std::string const &
     }
 
     _time_frames[data_key] = time_key;
+
+    if (_data.find(data_key) != _data.end()) {
+        auto data = _data[data_key];
+        std::visit([this, time_key](auto & x) {
+            x->setTimeFrame(this->_times[time_key]);
+        },
+                   data);
+    }
     return true;
 }
 

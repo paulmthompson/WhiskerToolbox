@@ -37,6 +37,8 @@ public:
     */
     [[nodiscard]] bool clearAtTime(TimeFrameIndex time, bool notify = true);
 
+    [[nodiscard]] bool clearAtTime(TimeIndexAndFrame const & time_index_and_frame, bool notify = true);
+
     /**
      * @brief Removes a mask at the specified time and index
      * 
@@ -75,6 +77,10 @@ public:
     * @param notify If true, observers will be notified of the change (default: true)
     */
     void addAtTime(TimeFrameIndex time,
+                       std::vector<Point2D<uint32_t>> mask,
+                       bool notify = true);
+
+    void addAtTime(TimeIndexAndFrame const & time_index_and_frame,
                        std::vector<Point2D<uint32_t>> mask,
                        bool notify = true);
 
@@ -118,6 +124,8 @@ public:
      * @return A vector of Mask2D
      */
     [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeFrameIndex time) const;
+
+    [[nodiscard]] std::vector<Mask2D> const & getAtTime(TimeIndexAndFrame const & time_index_and_frame) const;
 
     /**
      * @brief Get the masks at a specific time with timeframe conversion
@@ -291,11 +299,21 @@ public:
      */
     std::size_t moveTo(MaskData& target, std::vector<TimeFrameIndex> const& times, bool notify = true);
 
+
+    // ========== Time Frame ==========
+    /**
+     * @brief Set the time frame
+     * 
+     * @param time_frame The time frame to set
+     */
+    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
+
 protected:
 private:
     std::map<TimeFrameIndex, std::vector<Mask2D>> _data;
     std::vector<Mask2D> _empty{};
     ImageSize _image_size;
+    std::shared_ptr<TimeFrame> _time_frame {nullptr};
 };
 
 

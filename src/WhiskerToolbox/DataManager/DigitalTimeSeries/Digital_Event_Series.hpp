@@ -102,8 +102,18 @@ public:
         return result;
     }
 
+    // ========== Time Frame ==========
+
+    /**
+     * @brief Set the time frame
+     * 
+     * @param time_frame The time frame to set
+     */
+    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
+
 private:
     std::vector<float> _data{};
+    std::shared_ptr<TimeFrame> _time_frame {nullptr};
 
     // Sort the events in ascending order
     void _sortEvents();

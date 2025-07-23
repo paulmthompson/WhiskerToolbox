@@ -353,17 +353,17 @@ void MediaMask_Widget::_applyDilationPermanently() {
         return;
     }
 
-    // Get current time and get the preview data from Media_Window
-    auto current_time = _data_manager->getCurrentTime();
     auto preview_masks = _scene->getPreviewMaskData(_active_key);
 
+    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame("time");
+
     // Clear existing masks at this time
-    mask_data->clearAtTime(TimeFrameIndex(current_time), false);
+    mask_data->clearAtTime(current_index_and_frame, false);
 
     // Add the dilated masks
     for (auto const & dilated_mask: preview_masks) {
         if (!dilated_mask.empty()) {
-            mask_data->addAtTime(TimeFrameIndex(current_time), dilated_mask, false);
+            mask_data->addAtTime(current_index_and_frame, dilated_mask, false);
         }
     }
 
@@ -460,9 +460,9 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     // Generate ellipse pixels using the new general-purpose function
     auto brush_pixels = generate_ellipse_pixels(x_mask, y_mask, brush_radius_x, brush_radius_y);
 
-    // Get current time and existing masks
-    auto current_time = _data_manager->getCurrentTime();
-    auto const & existing_masks = mask_data->getAtTime(TimeFrameIndex(current_time));
+
+    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame("time");
+    auto const & existing_masks = mask_data->getAtTime(current_index_and_frame);
 
     // Get or create the primary mask (index 0)
     std::vector<Point2D<uint32_t>> primary_mask;
@@ -493,8 +493,8 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     // Only update the mask data if we added new pixels
     if (added_count > 0) {
         // Clear all masks at this time
-        mask_data->clearAtTime(TimeFrameIndex(current_time), false);
-        mask_data->addAtTime(TimeFrameIndex(current_time), std::move(primary_mask), false);
+        mask_data->clearAtTime(current_index_and_frame, false);
+        mask_data->addAtTime(current_index_and_frame, std::move(primary_mask), false);
 
         // Notify observers
         mask_data->notifyObservers();
@@ -553,8 +553,8 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     float y_mask = y_mask_raw;
 
     // Get current time and existing masks
-    auto current_time = _data_manager->getCurrentTime();
-    auto const & existing_masks = mask_data->getAtTime(TimeFrameIndex(current_time));
+    auto current_index_and_frame = _data_manager->getCurrentIndexAndFrame("time");
+    auto const & existing_masks = mask_data->getAtTime(current_index_and_frame);
 
     // Check if there's a primary mask (index 0) to remove from
     if (existing_masks.empty()) {
@@ -589,11 +589,11 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     // Only update if we actually removed pixels
     if (removed_count > 0) {
 
-        mask_data->clearAtTime(TimeFrameIndex(current_time), false);
+        mask_data->clearAtTime(current_index_and_frame, false);
 
         // Add the filtered mask back if it still has points OR if empty masks are allowed
         if (!filtered_mask.empty() || _allow_empty_mask) {
-            mask_data->addAtTime(TimeFrameIndex(current_time), std::move(filtered_mask), false);
+            mask_data->addAtTime(current_index_and_frame, std::move(filtered_mask), false);
         }
 
         // Notify observers

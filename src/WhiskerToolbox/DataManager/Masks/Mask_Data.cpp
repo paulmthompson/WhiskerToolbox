@@ -20,6 +20,29 @@ bool MaskData::clearAtTime(TimeFrameIndex const time, bool notify) {
     return false;
 }
 
+bool MaskData::clearAtTime(TimeIndexAndFrame const & time_index_and_frame, bool notify) {
+
+    if (time_index_and_frame.time_frame.get() == _time_frame.get()) {
+        return clearAtTime(time_index_and_frame.index, notify);
+    }
+
+    if (!time_index_and_frame.time_frame || !_time_frame.get()) {
+        return false;
+    }
+
+    auto time = time_index_and_frame.time_frame->getTimeAtIndex(time_index_and_frame.index);
+    auto time_index = _time_frame->getIndexAtTime(time);
+
+
+    if (clear_at_time(time_index, _data)) {
+        if (notify) {
+            notifyObservers();
+        }
+        return true;
+    }
+    return false;
+}
+
 bool MaskData::clearAtTime(TimeFrameIndex const time, size_t const index, bool notify) {
     if (clear_at_time(time, index, _data)) {
         if (notify) {
@@ -31,42 +54,59 @@ bool MaskData::clearAtTime(TimeFrameIndex const time, size_t const index, bool n
 }
 
 void MaskData::addAtTime(TimeFrameIndex const time,
-                             std::vector<uint32_t> const & x,
-                             std::vector<uint32_t> const & y,
-                             bool notify) {
+                         std::vector<uint32_t> const & x,
+                         std::vector<uint32_t> const & y,
+                         bool notify) {
     auto new_mask = create_mask(x, y);
     add_at_time(time, std::move(new_mask), _data);
-    
+
     if (notify) {
         notifyObservers();
     }
 }
 
 void MaskData::addAtTime(TimeFrameIndex const time,
-                             std::vector<Point2D<uint32_t>> mask,
-                             bool notify) {
+                         std::vector<Point2D<uint32_t>> mask,
+                         bool notify) {
     add_at_time(time, std::move(mask), _data);
-    
+
     if (notify) {
         notifyObservers();
     }
 }
-        
+
+void MaskData::addAtTime(TimeIndexAndFrame const & time_index_and_frame,
+                         std::vector<Point2D<uint32_t>> mask,
+                         bool notify) {
+    if (time_index_and_frame.time_frame.get() == _time_frame.get()) {
+        addAtTime(time_index_and_frame.index, std::move(mask), notify);
+    }
+
+    if (!time_index_and_frame.time_frame || !_time_frame.get()) {
+        return;
+    }
+
+    auto time = time_index_and_frame.time_frame->getTimeAtIndex(time_index_and_frame.index);
+    auto time_index = _time_frame->getIndexAtTime(time);
+
+    add_at_time(time_index, std::move(mask), _data);
+}
+
 void MaskData::addAtTime(TimeFrameIndex const time,
-                             std::vector<uint32_t> && x,
-                             std::vector<uint32_t> && y,
-                             bool notify) {
+                         std::vector<uint32_t> && x,
+                         std::vector<uint32_t> && y,
+                         bool notify) {
     // Create mask efficiently using move semantics
     auto new_mask = Mask2D{};
     new_mask.reserve(x.size());
-    
+
     for (std::size_t i = 0; i < x.size(); i++) {
         //new_mask.emplace_back(x[i], y[i]);
         new_mask.push_back({x[i], y[i]});
     }
 
     _data[time].push_back(std::move(new_mask));
-    
+
     if (notify) {
         notifyObservers();
     }
@@ -78,7 +118,15 @@ std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time) const
     return get_at_time(time, _data, _empty);
 }
 
-std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time, 
+std::vector<Mask2D> const & MaskData::getAtTime(TimeIndexAndFrame const & time_index_and_frame) const {
+    return get_at_time(time_index_and_frame.index,
+                       _data,
+                       _empty,
+                       time_index_and_frame.time_frame.get(),
+                       _time_frame.get());
+}
+
+std::vector<Mask2D> const & MaskData::getAtTime(TimeFrameIndex const time,
                                                 TimeFrame const * source_timeframe,
                                                 TimeFrame const * mask_timeframe) const {
 
@@ -101,9 +149,9 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
     float const scale_x = static_cast<float>(image_size.width) / static_cast<float>(_image_size.width);
     float const scale_y = static_cast<float>(image_size.height) / static_cast<float>(_image_size.height);
 
-    for (auto & [time, masks] : _data) {
-        for (auto & mask : masks) {
-            for (auto & point : mask) {
+    for (auto & [time, masks]: _data) {
+        for (auto & mask: masks) {
+            for (auto & point: mask) {
                 point.x = static_cast<uint32_t>(std::round(static_cast<float>(point.x) * scale_x));
                 point.y = static_cast<uint32_t>(std::round(static_cast<float>(point.y) * scale_y));
             }
@@ -114,9 +162,9 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
 
 // ========== Copy and Move ==========
 
-std::size_t MaskData::copyTo(MaskData& target, TimeFrameInterval const & interval, bool notify) const {
+std::size_t MaskData::copyTo(MaskData & target, TimeFrameInterval const & interval, bool notify) const {
     if (interval.start > interval.end) {
-        std::cerr << "MaskData::copyTo: interval start (" << interval.start.getValue() 
+        std::cerr << "MaskData::copyTo: interval start (" << interval.start.getValue()
                   << ") must be <= interval end (" << interval.end.getValue() << ")" << std::endl;
         return 0;
     }
@@ -130,10 +178,10 @@ std::size_t MaskData::copyTo(MaskData& target, TimeFrameInterval const & interva
     std::size_t total_masks_copied = 0;
 
     // Iterate through all times in the source data within the interval
-    for (auto const & [time, masks] : _data) {
+    for (auto const & [time, masks]: _data) {
         if (time >= interval.start && time <= interval.end && !masks.empty()) {
-            for (auto const& mask : masks) {
-                target.addAtTime(time, mask, false); // Don't notify for each operation
+            for (auto const & mask: masks) {
+                target.addAtTime(time, mask, false);// Don't notify for each operation
                 total_masks_copied++;
             }
         }
@@ -147,15 +195,15 @@ std::size_t MaskData::copyTo(MaskData& target, TimeFrameInterval const & interva
     return total_masks_copied;
 }
 
-std::size_t MaskData::copyTo(MaskData& target, std::vector<TimeFrameIndex> const& times, bool notify) const {
+std::size_t MaskData::copyTo(MaskData & target, std::vector<TimeFrameIndex> const & times, bool notify) const {
     std::size_t total_masks_copied = 0;
 
     // Copy masks for each specified time
-    for (TimeFrameIndex time : times) {
+    for (TimeFrameIndex time: times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
-            for (auto const& mask : it->second) {
-                target.addAtTime(time, mask, false); // Don't notify for each operation
+            for (auto const & mask: it->second) {
+                target.addAtTime(time, mask, false);// Don't notify for each operation
                 total_masks_copied++;
             }
         }
@@ -169,9 +217,9 @@ std::size_t MaskData::copyTo(MaskData& target, std::vector<TimeFrameIndex> const
     return total_masks_copied;
 }
 
-std::size_t MaskData::moveTo(MaskData& target, TimeFrameInterval const & interval, bool notify) {
+std::size_t MaskData::moveTo(MaskData & target, TimeFrameInterval const & interval, bool notify) {
     if (interval.start > interval.end) {
-        std::cerr << "MaskData::moveTo: interval start (" << interval.start.getValue() 
+        std::cerr << "MaskData::moveTo: interval start (" << interval.start.getValue()
                   << ") must be <= interval end (" << interval.end.getValue() << ")" << std::endl;
         return 0;
     }
@@ -180,10 +228,10 @@ std::size_t MaskData::moveTo(MaskData& target, TimeFrameInterval const & interva
     std::vector<TimeFrameIndex> times_to_clear;
 
     // First, copy all masks in the interval to target
-    for (auto const & [time, masks] : _data) {
+    for (auto const & [time, masks]: _data) {
         if (time >= interval.start && time <= interval.end && !masks.empty()) {
-            for (auto const& mask : masks) {
-                target.addAtTime(time, mask, false); // Don't notify for each operation
+            for (auto const & mask: masks) {
+                target.addAtTime(time, mask, false);// Don't notify for each operation
                 total_masks_moved++;
             }
             times_to_clear.push_back(time);
@@ -191,8 +239,8 @@ std::size_t MaskData::moveTo(MaskData& target, TimeFrameInterval const & interva
     }
 
     // Then, clear all the times from source
-    for (TimeFrameIndex time : times_to_clear) {
-        clearAtTime(time, false); // Don't notify for each operation
+    for (TimeFrameIndex time: times_to_clear) {
+        clearAtTime(time, false);// Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested
@@ -204,16 +252,16 @@ std::size_t MaskData::moveTo(MaskData& target, TimeFrameInterval const & interva
     return total_masks_moved;
 }
 
-std::size_t MaskData::moveTo(MaskData& target, std::vector<TimeFrameIndex> const& times, bool notify) {
+std::size_t MaskData::moveTo(MaskData & target, std::vector<TimeFrameIndex> const & times, bool notify) {
     std::size_t total_masks_moved = 0;
     std::vector<TimeFrameIndex> times_to_clear;
 
     // First, copy masks for each specified time to target
-    for (TimeFrameIndex time : times) {
+    for (TimeFrameIndex time: times) {
         auto it = _data.find(time);
         if (it != _data.end() && !it->second.empty()) {
-            for (auto const& mask : it->second) {
-                target.addAtTime(time, mask, false); // Don't notify for each operation
+            for (auto const & mask: it->second) {
+                target.addAtTime(time, mask, false);// Don't notify for each operation
                 total_masks_moved++;
             }
             times_to_clear.push_back(time);
@@ -221,8 +269,8 @@ std::size_t MaskData::moveTo(MaskData& target, std::vector<TimeFrameIndex> const
     }
 
     // Then, clear all the times from source
-    for (TimeFrameIndex time : times_to_clear) {
-        clearAtTime(time, false); // Don't notify for each operation
+    for (TimeFrameIndex time: times_to_clear) {
+        clearAtTime(time, false);// Don't notify for each operation
     }
 
     // Notify observers only once at the end if requested

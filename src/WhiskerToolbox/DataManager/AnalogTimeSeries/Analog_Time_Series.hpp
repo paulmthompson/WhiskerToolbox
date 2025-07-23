@@ -540,10 +540,19 @@ public:
     */
     const TimeStorage& getTimeStorage() const noexcept { return _time_storage; }
 
+    // ========== Time Frame ==========
+    /**
+     * @brief Set the time frame
+     * 
+     * @param time_frame The time frame to set
+     */
+    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
+
 protected:
 private:
     std::vector<float> _data;
     TimeStorage _time_storage;
+    std::shared_ptr<TimeFrame> _time_frame {nullptr};
 
     // New TimeFrameV2 support
     std::optional<AnyTimeFrame> _timeframe_v2;

@@ -3,10 +3,12 @@
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "Observer/Observer_Data.hpp"
+#include "TimeFrame.hpp"
 
 #include <cstdint>
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -82,6 +84,15 @@ public:
     void setProcess(std::string const & key, std::function<void(cv::Mat & input)> process);
     void removeProcess(std::string const & key);
 
+    // ========== Time Frame ==========
+
+    /**
+     * @brief Set the time frame
+     * 
+     * @param time_frame The time frame to set
+     */
+    void setTimeFrame(std::shared_ptr<TimeFrame> time_frame) { _time_frame = time_frame; }
+
 protected:
     virtual void doLoadMedia(std::string const & name) {
         static_cast<void>(name);
@@ -104,6 +115,8 @@ private:
     std::map<std::string, std::function<void(cv::Mat & input)>> _process_chain;
     int _last_loaded_frame = -1;
     int _last_processed_frame = -1;
+
+    std::shared_ptr<TimeFrame> _time_frame {nullptr};
 
     void _processData();
 };
