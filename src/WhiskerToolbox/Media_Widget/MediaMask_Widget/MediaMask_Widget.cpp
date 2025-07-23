@@ -588,7 +588,7 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
 
     // Only update if we actually removed pixels
     if (removed_count > 0) {
-        // Clear all masks at this time
+
         mask_data->clearAtTime(TimeFrameIndex(current_time), false);
 
         // Add the filtered mask back if it still has points OR if empty masks are allowed

@@ -516,7 +516,8 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
     glViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
 }
 
-std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(int screen_x, int screen_y) {
+std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(
+    int screen_x, int screen_y, int widget_width, int widget_height) {
     if (!picking_framebuffer || !picking_shader_program) {
         qDebug() << "getLineAtScreenPosition: Missing framebuffer or shader";
         return std::nullopt;
@@ -531,20 +532,23 @@ std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(int
     // Read pixel at screen position
     picking_framebuffer->bind();
 
-    // Convert screen coordinates to framebuffer coordinates
-    // TODO: This assumes screen coordinates match the 1024x1024 viewport
-    // This might need to be adjusted based on actual viewport size
-    float normalized_x = static_cast<float>(screen_x) / 1024.0f;
-    float normalized_y = static_cast<float>(screen_y) / 1024.0f;
-    
+    // Convert screen coordinates to framebuffer coordinates.
+    // The mouse y-coordinate is typically from the top, while OpenGL's is from the bottom.
+    int inverted_y = widget_height - screen_y;
+
+    // Normalize coordinates based on widget size, then scale to framebuffer size.
+    float normalized_x = static_cast<float>(screen_x) / static_cast<float>(widget_width);
+    float normalized_y = static_cast<float>(inverted_y) / static_cast<float>(widget_height);
+
     int fb_x = static_cast<int>(normalized_x * picking_framebuffer->width());
     int fb_y = static_cast<int>(normalized_y * picking_framebuffer->height());
 
-    // Clamp coordinates
+    // Clamp coordinates to be safe
     fb_x = std::max(0, std::min(fb_x, picking_framebuffer->width() - 1));
     fb_y = std::max(0, std::min(fb_y, picking_framebuffer->height() - 1));
 
-    //qDebug() << "Screen coords (" << screen_x << "," << screen_y << ") -> normalized (" << normalized_x << "," << normalized_y << ") -> framebuffer (" << fb_x << "," << fb_y << ")";
+    qDebug() << "Screen (" << screen_x << "," << screen_y << ") in widget (" << widget_width << "x"
+             << widget_height << ") -> FB (" << fb_x << "," << fb_y << ")";
 
     // Read pixel
     unsigned char pixel[4];

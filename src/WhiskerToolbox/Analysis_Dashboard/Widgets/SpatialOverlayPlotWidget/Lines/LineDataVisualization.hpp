@@ -153,9 +153,12 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @brief Get line identifier at screen position
      * @param screen_x Screen X coordinate
      * @param screen_y Screen Y coordinate
+     * @param widget_width The width of the viewport/widget
+     * @param widget_height The height of the viewport/widget
      * @return Line identifier if found, empty optional otherwise
      */
-    std::optional<LineIdentifier> getLineAtScreenPosition(int screen_x, int screen_y);
+    std::optional<LineIdentifier> getLineAtScreenPosition(
+        int screen_x, int screen_y, int widget_width, int widget_height);
 
     /**
      * @brief Set hover line

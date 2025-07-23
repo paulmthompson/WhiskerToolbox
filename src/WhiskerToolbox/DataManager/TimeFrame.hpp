@@ -83,6 +83,15 @@ private:
     int _total_frame_count{0};
 };
 
+//TimeFrameIndex and TimeFrame struct
+struct TimeIndexAndFrame {
+    TimeFrameIndex index;
+    std::shared_ptr<TimeFrame> time_frame;
+};
+
+
+
+
 /**
  * @brief Converts a time index from one TimeFrame to another.
  *

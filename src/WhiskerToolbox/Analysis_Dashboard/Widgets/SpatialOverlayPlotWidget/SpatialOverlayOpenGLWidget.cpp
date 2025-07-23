@@ -286,8 +286,12 @@ std::pair<LineDataVisualization *, std::optional<LineIdentifier>> SpatialOverlay
     // Try to find a line at the screen position using GPU picking
     for (auto const& [key, viz] : _line_data_visualizations) {
         if (!viz->visible) continue;
+
+        // Get widget width and height
+        int widget_width = width();
+        int widget_height = height();
         
-        auto line_id = viz->getLineAtScreenPosition(screen_x, screen_y);
+        auto line_id = viz->getLineAtScreenPosition(screen_x, screen_y, widget_width, widget_height);
         if (line_id.has_value()) {
             return {viz.get(), line_id};
         }
