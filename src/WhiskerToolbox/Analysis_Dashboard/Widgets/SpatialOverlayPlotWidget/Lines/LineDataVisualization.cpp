@@ -13,16 +13,19 @@
 #include <cmath>
 
 LineDataVisualization::LineDataVisualization(QString const & data_key, std::shared_ptr<LineData> const & line_data)
-    : key(data_key),
+    : m_line_data(line_data),
+      key(data_key),
+      scene_framebuffer(nullptr),
       picking_framebuffer(nullptr),
       line_shader_program(nullptr),
-      picking_shader_program(nullptr) {
+      picking_shader_program(nullptr),
+      blit_shader_program(nullptr) {
 
     initializeOpenGLFunctions();
 
     color = QVector4D(0.0f, 0.0f, 1.0f, 1.0f);
 
-    buildVertexData(line_data.get());
+    buildVertexData(m_line_data.get());
 
     initializeOpenGLResources();
 }
@@ -130,14 +133,14 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
             qDebug() << "You may need coordinate transformation/normalization for proper display";
         }
     }
+
+    m_dataIsDirty = true;
 }
 
 void LineDataVisualization::initializeOpenGLResources() {
     // Create vertex buffer
     vertex_buffer.create();
-    vertex_buffer.bind();
-    vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
-    vertex_buffer.release();
+    line_id_buffer.create();
 
     vertex_array_object.create();
     vertex_array_object.bind();
@@ -146,10 +149,7 @@ void LineDataVisualization::initializeOpenGLResources() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    line_id_buffer.create();
     line_id_buffer.bind();
-
-    line_id_buffer.allocate(line_id_data.data(), static_cast<int>(line_id_data.size() * sizeof(uint32_t)));
     glEnableVertexAttribArray(1);
     glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(uint32_t), nullptr);
 
@@ -159,18 +159,16 @@ void LineDataVisualization::initializeOpenGLResources() {
 
     QOpenGLFramebufferObjectFormat format;
     format.setInternalTextureFormat(GL_RGBA8);
+    format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
 
+
+    scene_framebuffer = new QOpenGLFramebufferObject(1024, 1024, format);
     picking_framebuffer = new QOpenGLFramebufferObject(1024, 1024, format);
-
-    picking_vertex_buffer.create();
-    picking_vertex_buffer.bind();
-    picking_vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
-    picking_vertex_buffer.release();
 
     picking_vertex_array_object.create();
     picking_vertex_array_object.bind();
 
-    picking_vertex_buffer.bind();
+    vertex_buffer.bind();
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
@@ -179,53 +177,74 @@ void LineDataVisualization::initializeOpenGLResources() {
     glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(uint32_t), nullptr);
 
     line_id_buffer.release();
-    picking_vertex_buffer.release();
+    vertex_buffer.release();
     picking_vertex_array_object.release();
+
+    // Fullscreen quad setup for blitting
+    fullscreen_quad_vbo.create();
+    fullscreen_quad_vao.create();
+    fullscreen_quad_vao.bind();
+    fullscreen_quad_vbo.bind();
+
+    const float quad_vertices[] = {
+        // positions // texCoords
+        -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
+        1.0f,  1.0f, 1.0f, 1.0f, 1.0f,  -1.0f, 1.0f, 0.0f,
+    };
+    fullscreen_quad_vbo.allocate(quad_vertices, sizeof(quad_vertices));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+
+    fullscreen_quad_vbo.release();
+    fullscreen_quad_vao.release();
 
     // Load shader programs
     ShaderManager & shader_manager = ShaderManager::instance();
 
-        // Load line rendering shader
+    // Load line rendering shader
     if (!shader_manager.getProgram("line_with_geometry")) {
-        bool success = shader_manager.loadProgram("line_with_geometry", 
-                                 ":/shaders/line_with_geometry.vert",
-                                 ":/shaders/line_with_geometry.frag",
-                                 ":/shaders/line_with_geometry.geom",
-                                 ShaderSourceType::Resource);
+        bool success = shader_manager.loadProgram("line_with_geometry",
+                                                  ":/shaders/line_with_geometry.vert",
+                                                  ":/shaders/line_with_geometry.frag",
+                                                  ":/shaders/line_with_geometry.geom",
+                                                  ShaderSourceType::Resource);
         if (!success) {
             qDebug() << "Failed to load line_with_geometry shader!";
         }
     }
-    auto* line_program = shader_manager.getProgram("line_with_geometry");
+    auto * line_program = shader_manager.getProgram("line_with_geometry");
     if (line_program) {
         line_shader_program = line_program->getNativeProgram();
-        
+
         // Cache the uniform location for efficient hover rendering
         if (line_shader_program) {
             line_shader_program->bind();
             cached_hover_uniform_location = line_shader_program->uniformLocation("u_hover_line_id");
             line_shader_program->release();
         }
-        
-        qDebug() << "Successfully loaded line_with_geometry shader, hover uniform location:" << cached_hover_uniform_location;
+
+        qDebug() << "Successfully loaded line_with_geometry shader, hover uniform location:"
+                 << cached_hover_uniform_location;
     } else {
         qDebug() << "line_with_geometry shader is null!";
         line_shader_program = nullptr;
         cached_hover_uniform_location = -1;
     }
-    
+
     // Load picking shader
     if (!shader_manager.getProgram("line_picking")) {
         bool success = shader_manager.loadProgram("line_picking",
-                                 ":/shaders/line_picking.vert",
-                                 ":/shaders/line_picking.frag",
-                                 ":/shaders/line_picking.geom",
-                                 ShaderSourceType::Resource);
+                                                  ":/shaders/line_picking.vert",
+                                                  ":/shaders/line_picking.frag",
+                                                  ":/shaders/line_picking.geom",
+                                                  ShaderSourceType::Resource);
         if (!success) {
             qDebug() << "Failed to load line_picking shader!";
         }
     }
-    auto* picking_program = shader_manager.getProgram("line_picking");
+    auto * picking_program = shader_manager.getProgram("line_picking");
     if (picking_program) {
         picking_shader_program = picking_program->getNativeProgram();
         qDebug() << "Successfully loaded line_picking shader";
@@ -233,6 +252,26 @@ void LineDataVisualization::initializeOpenGLResources() {
         qDebug() << "line_picking shader is null!";
         picking_shader_program = nullptr;
     }
+
+    // Load blit shader
+    if (!shader_manager.getProgram("blit")) {
+        bool success =
+            shader_manager.loadProgram("blit", 
+            ":/shaders/blit.vert", ":/shaders/blit.frag", "",ShaderSourceType::Resource);
+        if (!success) {
+            qDebug() << "Failed to load blit shader!";
+        }
+    }
+    auto * blit_program = shader_manager.getProgram("blit");
+    if (blit_program) {
+        blit_shader_program = blit_program->getNativeProgram();
+        qDebug() << "Successfully loaded blit shader";
+    } else {
+        qDebug() << "blit shader is null!";
+        blit_shader_program = nullptr;
+    }
+
+    updateOpenGLBuffers();
 }
 
 void LineDataVisualization::cleanupOpenGLResources() {
@@ -248,19 +287,37 @@ void LineDataVisualization::cleanupOpenGLResources() {
         vertex_array_object.destroy();
     }
 
-    if (picking_vertex_buffer.isCreated()) {
-        picking_vertex_buffer.destroy();
-    }
-
     if (picking_vertex_array_object.isCreated()) {
         picking_vertex_array_object.destroy();
+    }
+
+    if (fullscreen_quad_vbo.isCreated()) {
+        fullscreen_quad_vbo.destroy();
+    }
+
+    if (fullscreen_quad_vao.isCreated()) {
+        fullscreen_quad_vao.destroy();
+    }
+
+    if (scene_framebuffer) {
+        delete scene_framebuffer;
+        scene_framebuffer = nullptr;
     }
 
     if (picking_framebuffer) {
         delete picking_framebuffer;
         picking_framebuffer = nullptr;
     }
+}
 
+void LineDataVisualization::updateOpenGLBuffers() {
+    vertex_buffer.bind();
+    vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
+    vertex_buffer.release();
+
+    line_id_buffer.bind();
+    line_id_buffer.allocate(line_id_data.data(), static_cast<int>(line_id_data.size() * sizeof(uint32_t)));
+    line_id_buffer.release();
 }
 
 void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, float line_width) {
@@ -273,36 +330,28 @@ void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, f
 }
 
 void LineDataVisualization::renderLinesDirect(QOpenGLShaderProgram * shader_program, float line_width) {
-    shader_program->bind();
 
-    shader_program->setUniformValue("u_color", color);
-    shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
-    shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));
-    shader_program->setUniformValue("u_line_width", line_width);
-    shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));
-    shader_program->setUniformValue("u_canvas_size", canvas_size);
-    shader_program->setUniformValue("u_is_selected", false);
-
-    // Set hover state
-    if (has_hover_line && cached_hover_line_index < line_vertex_ranges.size() && cached_hover_uniform_location >= 0) {
-        uint32_t shader_line_id = cached_hover_line_index + 1;
-        glUniform1ui(cached_hover_uniform_location, shader_line_id);
-    } else {
-        if (cached_hover_uniform_location >= 0) {
-            glUniform1ui(cached_hover_uniform_location, 0u);
-        } else {
-            shader_program->setUniformValue("u_hover_line_id", 0u);
-        }
+    if (m_dataIsDirty) {
+        qDebug() << "LineDataVisualization: Data is dirty, rebuilding vertex data";
+        buildVertexData(m_line_data.get());
+        updateOpenGLBuffers();
+        m_dataIsDirty = false;
+        m_viewIsDirty = true;// Data change necessitates a view update
     }
 
-    // Render all lines
-    vertex_array_object.bind();
-    if (!vertex_data.empty()) {
-        uint32_t total_vertices = static_cast<uint32_t>(vertex_data.size() / 2);
-        glDrawArrays(GL_LINES, 0, total_vertices);
+    if (m_viewIsDirty) {
+        renderLinesToSceneBuffer(line_width);
+        renderLinesToPickingBuffer(line_width);
+        m_viewIsDirty = false;
     }
-    vertex_array_object.release();
-    shader_program->release();
+
+    // Blit the cached scene to the screen
+    blitSceneBuffer();
+
+    // Draw hover line on top
+    if (has_hover_line) {
+        renderHoverLine(shader_program, line_width);
+    }
 }
 
 void LineDataVisualization::renderLines(float line_width) {
@@ -311,6 +360,100 @@ void LineDataVisualization::renderLines(float line_width) {
     } else {
         qDebug() << "Cannot render lines: line_shader_program is null (shader compilation failed?)";
     }
+}
+
+void LineDataVisualization::renderLinesToSceneBuffer(float line_width) {
+    if (!visible || vertex_data.empty() || !line_shader_program || !scene_framebuffer) {
+        qDebug() << "renderLinesToSceneBuffer: Skipping render - missing resources";
+        return;
+    }
+
+    scene_framebuffer->bind();
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+    line_shader_program->bind();
+
+    line_shader_program->setUniformValue("u_color", color);
+    line_shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
+    line_shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));
+    line_shader_program->setUniformValue("u_line_width", line_width);
+    line_shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));
+    line_shader_program->setUniformValue("u_canvas_size", canvas_size);
+    line_shader_program->setUniformValue("u_is_selected", false);
+    line_shader_program->setUniformValue("u_hover_line_id", 0u);// Don't highlight any hover line in the main scene
+
+    vertex_array_object.bind();
+    if (!vertex_data.empty()) {
+        uint32_t total_vertices = static_cast<uint32_t>(vertex_data.size() / 2);
+        glDrawArrays(GL_LINES, 0, total_vertices);
+    }
+    vertex_array_object.release();
+    line_shader_program->release();
+
+    scene_framebuffer->release();
+}
+
+void LineDataVisualization::blitSceneBuffer() {
+    if (!blit_shader_program || !scene_framebuffer) {
+        return;
+    }
+
+    blit_shader_program->bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, scene_framebuffer->texture());
+    blit_shader_program->setUniformValue("u_texture", 0);
+
+    fullscreen_quad_vao.bind();
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    fullscreen_quad_vao.release();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    blit_shader_program->release();
+}
+
+void LineDataVisualization::renderHoverLine(QOpenGLShaderProgram * shader_program, float line_width) {
+    if (!has_hover_line || cached_hover_line_index >= line_vertex_ranges.size()) {
+        return;
+    }
+
+    shader_program->bind();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    shader_program->setUniformValue("u_color", color);
+    shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
+    shader_program->setUniformValue("u_line_width", line_width);
+    shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));
+    shader_program->setUniformValue("u_canvas_size", canvas_size);
+
+    // Set hover state
+    uint32_t shader_line_id = cached_hover_line_index + 1;
+    if (cached_hover_uniform_location >= 0) {
+        glUniform1ui(cached_hover_uniform_location, shader_line_id);
+    } else {
+        shader_program->setUniformValue("u_hover_line_id", shader_line_id);
+    }
+
+    // Get the vertex range for the hovered line
+    LineVertexRange const & range = line_vertex_ranges[cached_hover_line_index];
+
+    // Render just the hovered line
+    vertex_array_object.bind();
+    glDrawArrays(GL_LINES, range.start_vertex, range.vertex_count);
+    vertex_array_object.release();
+
+    // Reset hover state
+    if (cached_hover_uniform_location >= 0) {
+        glUniform1ui(cached_hover_uniform_location, 0u);
+    } else {
+        shader_program->setUniformValue("u_hover_line_id", 0u);
+    }
+
+    glDisable(GL_BLEND);
+    shader_program->release();
 }
 
 void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
@@ -329,7 +472,7 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
     picking_framebuffer->bind();
 
     // Clear framebuffer
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     picking_shader_program->bind();
@@ -363,8 +506,9 @@ std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(int
 
     qDebug() << "getLineAtScreenPosition called at (" << screen_x << "," << screen_y << ")";
 
-    // Render to picking buffer
-    const_cast<LineDataVisualization *>(this)->renderLinesToPickingBuffer(20.0f);// Use larger line width for easier picking
+    // Always re-render to picking buffer for accurate hover detection.
+    // Use a larger line width for easier picking.
+    renderLinesToPickingBuffer(20.0f);
 
     // Read pixel at screen position
     picking_framebuffer->bind();

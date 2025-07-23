@@ -27,6 +27,7 @@ class QOpenGLShaderProgram;
  */
 struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     // Line data storage
+    std::shared_ptr<LineData> m_line_data;
     std::vector<float> vertex_data;              // All line segments as pairs of vertices
     std::vector<uint32_t> line_id_data;          // Line ID for each vertex
     std::vector<uint32_t> line_offsets;          // Start index of each line in vertex_data (legacy)
@@ -45,14 +46,22 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QOpenGLBuffer line_id_buffer;
     QOpenGLVertexArrayObject vertex_array_object;
 
-    // Picking framebuffer for hover detection
-    QOpenGLFramebufferObject * picking_framebuffer;
+    // Framebuffers
+    QOpenGLFramebufferObject * scene_framebuffer;  // For caching the rendered scene
+    QOpenGLFramebufferObject * picking_framebuffer;// For hover detection
+
+    // Picking-specific GL resources
     QOpenGLBuffer picking_vertex_buffer;
     QOpenGLVertexArrayObject picking_vertex_array_object;
+
+    // Fullscreen quad for blitting
+    QOpenGLVertexArrayObject fullscreen_quad_vao;
+    QOpenGLBuffer fullscreen_quad_vbo;
 
     // Shader programs
     QOpenGLShaderProgram * line_shader_program;
     QOpenGLShaderProgram * picking_shader_program;
+    QOpenGLShaderProgram * blit_shader_program;
 
     // Visualization properties
     QString key;
@@ -99,6 +108,11 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      */
     void updatePickingFramebuffer();
 
+    /**
+     * @brief Update OpenGL buffers with current vertex data
+     */
+    void updateOpenGLBuffers();
+
 
     /**
      * @brief Render lines for this LineData
@@ -119,6 +133,21 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @brief Render lines to picking framebuffer for hover detection
      */
     void renderLinesToPickingBuffer(float line_width);
+
+    /**
+     * @brief Render all lines to the scene framebuffer for caching.
+     */
+    void renderLinesToSceneBuffer(float line_width);
+
+    /**
+     * @brief Blit the cached scene framebuffer to the screen.
+     */
+    void blitSceneBuffer();
+
+    /**
+     * @brief Render just the currently hovered line.
+     */
+    void renderHoverLine(QOpenGLShaderProgram * shader_program, float line_width);
 
     /**
      * @brief Get line identifier at screen position
