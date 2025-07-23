@@ -204,6 +204,14 @@
             <number>2</number>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Line Intersection Selection</string>
+           </property>
+           <property name="data">
+            <number>3</number>
+           </property>
+          </item>
          </widget>
         </item>
         <item>

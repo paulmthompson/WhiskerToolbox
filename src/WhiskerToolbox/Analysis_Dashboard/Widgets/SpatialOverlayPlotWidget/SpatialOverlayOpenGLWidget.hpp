@@ -1,13 +1,13 @@
 #ifndef SPATIALOVERLAYOPENGLWIDGET_HPP
 #define SPATIALOVERLAYOPENGLWIDGET_HPP
 
+#include "../ShaderManager/ShaderManager.hpp"
+#include "Lines/LineIdentifier.hpp"
+#include "Masks/MaskIdentifier.hpp"
 #include "PolygonSelectionHandler.hpp"
 #include "SelectionModes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 #include "SpatialIndex/RTree.hpp"
-#include "Masks/MaskIdentifier.hpp"
-#include "Lines/LineIdentifier.hpp"
-#include "../ShaderManager/ShaderManager.hpp"
 
 
 #include <QMatrix4x4>
@@ -86,7 +86,7 @@ public:
      * @brief Get current tooltip enabled state
      */
     bool getTooltipsEnabled() const { return _tooltips_enabled; }
-        /**
+    /**
      * @brief Programmatically clear all selected points
      */
     void clearSelection();
@@ -107,7 +107,7 @@ public:
      */
     void setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map);
 
-        /**
+    /**
      * @brief Set the point size for rendering
      * @param point_size Point size in pixels
      */
@@ -118,7 +118,7 @@ public:
      */
     float getPointSize() const { return _point_size; }
 
-        /**
+    /**
      * @brief Get the currently selected points from all PointData objects
      * @return Vector of pairs containing data key and selected points
      */
@@ -262,7 +262,7 @@ private slots:
 private:
     // PointData visualizations - each PointData has its own QuadTree and OpenGL resources
     std::unordered_map<QString, std::unique_ptr<PointDataVisualization>> _point_data_visualizations;
-    
+
     // MaskData visualizations - each MaskData has its own RTree and OpenGL resources
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
 
@@ -292,7 +292,7 @@ private:
     QPoint _current_mouse_pos;
     QTimer * _tooltip_timer;
     QTimer * _tooltip_refresh_timer;
-    QTimer * _fps_limiter_timer;// fps limiting
+    QTimer * _fps_limiter_timer;   // fps limiting
     QTimer * _hover_debounce_timer;// Debounce timer for hover processing
     bool _tooltips_enabled;
     bool _pending_update;         //fps limiting
@@ -302,6 +302,13 @@ private:
 
     // Polygon selection handler
     std::unique_ptr<PolygonSelectionHandler> _polygon_selection_handler;
+
+    // Line intersection drawing state
+    bool _is_drawing_line;
+    QVector2D _line_start_pos;
+    QVector2D _line_end_pos;
+    QOpenGLBuffer _line_drawing_buffer;
+    QOpenGLVertexArrayObject _line_drawing_vao;
 
     // Data bounds
     float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
@@ -409,6 +416,11 @@ private:
      * @param add_to_selection If true, add to existing selection; if false, replace selection
      */
     void applySelectionRegion(SelectionRegion const & region, bool add_to_selection = false);
+
+    /**
+     * @brief Render the line drawing overlay for line intersection mode
+     */
+    void renderLineDrawingOverlay();
 };
 
 QString create_tooltipText(QuadTreePoint<int64_t> const * point, QString const & data_key);

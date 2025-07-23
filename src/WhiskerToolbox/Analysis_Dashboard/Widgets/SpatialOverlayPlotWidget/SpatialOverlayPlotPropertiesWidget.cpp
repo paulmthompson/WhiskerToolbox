@@ -299,6 +299,8 @@ void SpatialOverlayPlotPropertiesWidget::onSelectionModeChanged(int index) {
         mode = SelectionMode::PointSelection;
     } else if (index == 2) {
         mode = SelectionMode::PolygonSelection;
+    } else if (index == 3) {
+        mode = SelectionMode::LineIntersection;
     }
 
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Setting selection mode to:" << static_cast<int>(mode);
@@ -347,6 +349,8 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
         mode = SelectionMode::PointSelection;
     } else if (current_index == 2) {
         mode = SelectionMode::PolygonSelection;
+    } else if (current_index == 3) {
+        mode = SelectionMode::LineIntersection;
     }
 
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Current selection mode:" << static_cast<int>(mode);
@@ -377,6 +381,15 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
                           "• Right Click to complete polygon and select enclosed points\n"
                           "• Press Escape to cancel current polygon\n"
                           "• Red dots show vertices, blue lines show edges";
+            break;
+            
+        case SelectionMode::LineIntersection:
+            instructions = "📏 Line Intersection Selection Mode\n"
+                          "• Click and hold to start drawing a line\n"
+                          "• Drag to extend the line from start point\n"
+                          "• Release to find all lines that intersect with your drawn line\n"
+                          "• Only works with Line data - no effect on Points or Masks\n"
+                          "• Selected lines will be highlighted";
             break;
     }
     

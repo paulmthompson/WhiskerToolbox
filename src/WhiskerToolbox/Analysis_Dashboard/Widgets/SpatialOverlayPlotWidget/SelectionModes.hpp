@@ -1,8 +1,8 @@
 #ifndef SPATIALOVERLAY_SELECTION_MODES_HPP
 #define SPATIALOVERLAY_SELECTION_MODES_HPP
 
-#include "CoreGeometry/polygon.hpp"
 #include "CoreGeometry/points.hpp"
+#include "CoreGeometry/polygon.hpp"
 
 #include <cstdint>
 #include <string>
@@ -12,9 +12,10 @@
  * @brief Selection modes for spatial selection
  */
 enum class SelectionMode {
-    None,           ///< No selection mode active
-    PointSelection, ///< Individual point selection (Ctrl+click)
-    PolygonSelection///< Polygon area selection (click and drag)
+    None,            ///< No selection mode active
+    PointSelection,  ///< Individual point selection (Ctrl+click)
+    PolygonSelection,///< Polygon area selection (click and drag)
+    LineIntersection ///< Line intersection selection (click and drag to create line)
 };
 
 /**
