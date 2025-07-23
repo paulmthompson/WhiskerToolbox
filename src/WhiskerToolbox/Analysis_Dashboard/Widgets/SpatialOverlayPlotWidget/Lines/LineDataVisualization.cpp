@@ -20,11 +20,9 @@ LineDataVisualization::LineDataVisualization(QString const & data_key, std::shar
 
     initializeOpenGLFunctions();
 
-    // Set default color (can be customized later)
     color = QVector4D(0.0f, 0.0f, 1.0f, 1.0f);
 
-    // Build vertex data from LineData
-    buildVertexData(line_data);
+    buildVertexData(line_data.get());
 
     // Initialize OpenGL resources
     initializeOpenGLResources();
@@ -34,7 +32,7 @@ LineDataVisualization::~LineDataVisualization() {
     cleanupOpenGLResources();
 }
 
-void LineDataVisualization::buildVertexData(std::shared_ptr<LineData> const & line_data) {
+void LineDataVisualization::buildVertexData(LineData const * line_data) {
     vertex_data.clear();
     line_offsets.clear();
     line_lengths.clear();

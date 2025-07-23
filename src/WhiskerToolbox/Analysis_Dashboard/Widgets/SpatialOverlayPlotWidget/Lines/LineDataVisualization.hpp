@@ -82,6 +82,9 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QOpenGLBuffer selection_vertex_buffer;
     QOpenGLVertexArrayObject selection_vertex_array_object;
 
+    bool m_viewIsDirty = true;
+    bool m_dataIsDirty = true;
+
     LineDataVisualization(QString const & data_key, std::shared_ptr<LineData> const & line_data);
     ~LineDataVisualization();
 
@@ -95,7 +98,11 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      */
     void cleanupOpenGLResources();
 
-    void buildVertexData(std::shared_ptr<LineData> const & line_data);
+    /**
+     * @brief Build vertex data from LineData object. This is called when the line data is changed.
+     * @param line_data The LineData to build vertex data from
+     */
+    void buildVertexData(LineData const * line_data);
 
     /**
      * @brief Update picking framebuffer with current line data
