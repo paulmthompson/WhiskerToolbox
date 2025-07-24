@@ -5,10 +5,8 @@
 
 PolygonSelectionHandler::PolygonSelectionHandler(
         RequestUpdateCallback request_update_callback,
-        ScreenToWorldCallback screen_to_world_callback,
         ApplySelectionRegionCallback apply_selection_region_callback)
     : _request_update_callback(request_update_callback),
-      _screen_to_world_callback(screen_to_world_callback),
       _apply_selection_region_callback(apply_selection_region_callback),
       _polygon_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _polygon_line_buffer(QOpenGLBuffer::VertexBuffer),
@@ -22,10 +20,8 @@ PolygonSelectionHandler::~PolygonSelectionHandler() {
 
 void PolygonSelectionHandler::setCallbacks(
         RequestUpdateCallback request_update_callback,
-        ScreenToWorldCallback screen_to_world_callback,
         ApplySelectionRegionCallback apply_selection_region_callback) {
     _request_update_callback = request_update_callback;
-    _screen_to_world_callback = screen_to_world_callback;
     _apply_selection_region_callback = apply_selection_region_callback;
 }
 
@@ -92,25 +88,17 @@ void PolygonSelectionHandler::cleanupOpenGLResources() {
     }
 }
 
-void PolygonSelectionHandler::startPolygonSelection(int screen_x, int screen_y) {
-    if (!_screen_to_world_callback) {
-        qWarning() << "PolygonSelectionHandler: No screen to world callback set";
-        return;
-    }
+void PolygonSelectionHandler::startPolygonSelection(int world_x, int world_y) {
 
-    qDebug() << "PolygonSelectionHandler: Starting polygon selection at" << screen_x << "," << screen_y;
+    qDebug() << "PolygonSelectionHandler: Starting polygon selection at" << world_x << "," << world_y;
 
     _is_polygon_selecting = true;
     _polygon_vertices.clear();
-    _polygon_screen_points.clear();
 
     // Add first vertex
-    QVector2D world_pos = _screen_to_world_callback(screen_x, screen_y);
-    _polygon_vertices.push_back(Point2D<float>(world_pos.x(), world_pos.y()));
-    _polygon_screen_points.push_back(QPoint(screen_x, screen_y));
+    _polygon_vertices.push_back(Point2D<float>(world_x, world_y));
 
-    qDebug() << "PolygonSelectionHandler: Added first polygon vertex at world:" << world_pos.x() << "," << world_pos.y()
-             << "screen:" << screen_x << "," << screen_y;
+    qDebug() << "PolygonSelectionHandler: Added first polygon vertex at world:" << world_x << "," << world_y;
 
     // Update polygon buffers
     updatePolygonBuffers();
@@ -120,17 +108,15 @@ void PolygonSelectionHandler::startPolygonSelection(int screen_x, int screen_y) 
     }
 }
 
-void PolygonSelectionHandler::addPolygonVertex(int screen_x, int screen_y) {
-    if (!_is_polygon_selecting || !_screen_to_world_callback) {
+void PolygonSelectionHandler::addPolygonVertex(int world_x, int world_y) {
+    if (!_is_polygon_selecting) {
         return;
     }
 
-    QVector2D world_pos = _screen_to_world_callback(screen_x, screen_y);
-    _polygon_vertices.push_back(Point2D<float>(world_pos.x(), world_pos.y()));
-    _polygon_screen_points.push_back(QPoint(screen_x, screen_y));
+    _polygon_vertices.push_back(Point2D<float>(world_x, world_y));
 
     qDebug() << "PolygonSelectionHandler: Added polygon vertex" << _polygon_vertices.size()
-             << "at" << world_pos.x() << "," << world_pos.y();
+             << "at" << world_x << "," << world_y;
 
     // Update polygon buffers
     updatePolygonBuffers();
@@ -165,7 +151,6 @@ void PolygonSelectionHandler::completePolygonSelection() {
     // Clean up polygon selection state
     _is_polygon_selecting = false;
     _polygon_vertices.clear();
-    _polygon_screen_points.clear();
 
     if (_request_update_callback) {
         _request_update_callback();
@@ -177,7 +162,6 @@ void PolygonSelectionHandler::cancelPolygonSelection() {
 
     _is_polygon_selecting = false;
     _polygon_vertices.clear();
-    _polygon_screen_points.clear();
 
     // Clear polygon buffers
     if (_opengl_resources_initialized) {

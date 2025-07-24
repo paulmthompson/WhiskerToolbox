@@ -47,7 +47,6 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     // Initialize polygon selection handler with callbacks
     _polygon_selection_handler = std::make_unique<PolygonSelectionHandler>(
             [this]() { requestThrottledUpdate(); },                                                                          // request update callback
-            [this](int screen_x, int screen_y) { return screenToWorld(screen_x, screen_y); },                                // screen to world callback
             [this](SelectionRegion const & region, bool add_to_selection) { applySelectionRegion(region, add_to_selection); }// apply selection region callback
     );
 
@@ -636,12 +635,13 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         // Handle different selection modes
         if (_selection_mode == SelectionMode::PolygonSelection) {
+            auto [world_x, world_y] = screenToWorld(event->pos().x(), event->pos().y());
             if (!_polygon_selection_handler->isPolygonSelecting()) {
                 // Start new polygon selection
-                _polygon_selection_handler->startPolygonSelection(event->pos().x(), event->pos().y());
+                _polygon_selection_handler->startPolygonSelection(world_x, world_y);
             } else {
                 // Add vertex to current polygon
-                _polygon_selection_handler->addPolygonVertex(event->pos().x(), event->pos().y());
+                _polygon_selection_handler->addPolygonVertex(world_x, world_y);
             }
             event->accept();
             return;

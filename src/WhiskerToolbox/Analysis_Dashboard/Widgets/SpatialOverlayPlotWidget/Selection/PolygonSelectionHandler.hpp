@@ -46,12 +46,10 @@ class PolygonSelectionHandler : protected QOpenGLFunctions_4_1_Core {
 public:
     // Callback function types
     using RequestUpdateCallback = std::function<void()>;
-    using ScreenToWorldCallback = std::function<QVector2D(int, int)>;
     using ApplySelectionRegionCallback = std::function<void(SelectionRegion const &, bool)>;
 
     explicit PolygonSelectionHandler(
             RequestUpdateCallback request_update_callback = nullptr,
-            ScreenToWorldCallback screen_to_world_callback = nullptr,
             ApplySelectionRegionCallback apply_selection_region_callback = nullptr);
     ~PolygonSelectionHandler();
 
@@ -63,7 +61,6 @@ public:
      */
     void setCallbacks(
             RequestUpdateCallback request_update_callback,
-            ScreenToWorldCallback screen_to_world_callback,
             ApplySelectionRegionCallback apply_selection_region_callback);
 
     /**
@@ -91,18 +88,18 @@ public:
     size_t getVertexCount() const { return _polygon_vertices.size(); }
 
     /**
-     * @brief Start polygon selection at given screen coordinates
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
+     * @brief Start polygon selection at given world coordinates
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
      */
-    void startPolygonSelection(int screen_x, int screen_y);
+    void startPolygonSelection(int world_x, int world_y);
 
     /**
      * @brief Add point to current polygon selection
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
      */
-    void addPolygonVertex(int screen_x, int screen_y);
+    void addPolygonVertex(int world_x, int world_y);
 
     /**
      * @brief Complete polygon selection and create selection region
@@ -130,7 +127,6 @@ public:
 private:
     // Callback functions
     RequestUpdateCallback _request_update_callback;
-    ScreenToWorldCallback _screen_to_world_callback;
     ApplySelectionRegionCallback _apply_selection_region_callback;
 
     // OpenGL rendering resources
@@ -143,7 +139,6 @@ private:
     // Polygon selection state
     bool _is_polygon_selecting;
     std::vector<Point2D<float>> _polygon_vertices;                 // Current polygon vertices in world coordinates
-    std::vector<QPoint> _polygon_screen_points;               // Polygon vertices in screen coordinates for rendering
     std::unique_ptr<SelectionRegion> _active_selection_region;// Current selection region
 
     /**
