@@ -187,6 +187,8 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @param mode The current selection mode
      */
     void setSelectionMode(SelectionMode mode);
+
+    void clearSelection();
 };
 
 #endif// LINEDATAVISUALIZATION_HPP

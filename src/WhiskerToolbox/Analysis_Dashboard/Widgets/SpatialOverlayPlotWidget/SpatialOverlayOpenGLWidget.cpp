@@ -1042,6 +1042,13 @@ void SpatialOverlayOpenGLWidget::clearSelection() {
         }
     }
 
+    for (auto const & [key, viz]: _line_data_visualizations) {
+        if (!viz->selected_lines.empty()) {
+            viz->clearSelection();
+            had_selection = true;
+        }
+    }
+
     if (had_selection) {
         emit selectionChanged(0, QString(), 0);
         requestThrottledUpdate();
@@ -1051,10 +1058,7 @@ void SpatialOverlayOpenGLWidget::clearSelection() {
 
 void SpatialOverlayOpenGLWidget::applySelectionRegion(SelectionRegion const & region, bool add_to_selection) {
     if (!add_to_selection) {
-        // Clear all selections
-        for (auto const & [key, viz]: _point_data_visualizations) {
-            viz->clearSelection();
-        }
+        clearSelection();
     }
 
     float min_x, min_y, max_x, max_y;

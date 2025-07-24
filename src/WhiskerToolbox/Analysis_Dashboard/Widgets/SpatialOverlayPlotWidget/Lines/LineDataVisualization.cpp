@@ -621,3 +621,7 @@ void LineDataVisualization::setSelectionMode(SelectionMode mode) {
         // For now, just update the state - future implementation will handle visual changes
     }
 }
+
+void LineDataVisualization::clearSelection() {
+    
+}
