@@ -2,7 +2,7 @@
 #define SPATIALOVERLAYPLOTWIDGET_HPP
 
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
-#include "SelectionModes.hpp"
+#include "Selection/SelectionModes.hpp"
 
 
 #include <QGraphicsSceneMouseEvent>

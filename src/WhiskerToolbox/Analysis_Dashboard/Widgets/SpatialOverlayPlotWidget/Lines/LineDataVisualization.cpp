@@ -611,3 +611,13 @@ BoundingBox LineDataVisualization::calculateBoundsForLineData(LineData const * l
 
     return BoundingBox(min_x, min_y, max_x, max_y);
 }
+
+void LineDataVisualization::setSelectionMode(SelectionMode mode) {
+    if (_current_selection_mode != mode) {
+        _current_selection_mode = mode;
+        qDebug() << "LineDataVisualization: Selection mode changed to" << static_cast<int>(mode);
+        
+        // In line intersection mode, we might want to change how lines are rendered
+        // For now, just update the state - future implementation will handle visual changes
+    }
+}

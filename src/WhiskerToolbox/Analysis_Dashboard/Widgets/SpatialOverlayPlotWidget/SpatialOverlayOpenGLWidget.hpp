@@ -4,8 +4,8 @@
 #include "../ShaderManager/ShaderManager.hpp"
 #include "Lines/LineIdentifier.hpp"
 #include "Masks/MaskIdentifier.hpp"
-#include "PolygonSelectionHandler.hpp"
-#include "SelectionModes.hpp"
+#include "Selection/PolygonSelectionHandler.hpp"
+#include "Selection/SelectionModes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 #include "SpatialIndex/RTree.hpp"
 
@@ -310,6 +310,20 @@ private:
     QOpenGLBuffer _line_drawing_buffer;
     QOpenGLVertexArrayObject _line_drawing_vao;
 
+    // Interaction state management
+    enum class InteractionState {
+        None,           ///< No interaction active
+        Hover,          ///< Normal hover detection
+        LineDrawing,    ///< Drawing line for intersection
+        PolygonDrawing, ///< Drawing polygon for selection
+        Panning         ///< Panning the view
+    };
+    
+    InteractionState _interaction_state;
+    QVector2D _current_mouse_world_pos;  ///< Current mouse position in world coordinates
+    QVector2D _line_draw_start_pos;      ///< Line drawing start position
+    QVector2D _line_draw_end_pos;        ///< Line drawing end position
+
     // Data bounds
     float _data_min_x, _data_max_x, _data_min_y, _data_max_y;
     bool _data_bounds_valid;
@@ -421,6 +435,40 @@ private:
      * @brief Render the line drawing overlay for line intersection mode
      */
     void renderLineDrawingOverlay();
+
+    /**
+     * @brief Render common overlay elements (tooltips, selection indicators, etc.)
+     */
+    void renderCommonOverlay();
+
+    /**
+     * @brief Update interaction state based on current mouse position and selection mode
+     */
+    void updateInteractionState();
+
+    /**
+     * @brief Set the current interaction state
+     * @param state The new interaction state
+     */
+    void setInteractionState(InteractionState state);
+
+    /**
+     * @brief Get the current interaction state
+     * @return Current interaction state
+     */
+    InteractionState getInteractionState() const { return _interaction_state; }
+
+    /**
+     * @brief Update mouse position in world coordinates
+     * @param screen_x Screen X coordinate
+     * @param screen_y Screen Y coordinate
+     */
+    void updateMouseWorldPosition(int screen_x, int screen_y);
+
+    /**
+     * @brief Update all line visualizations with current selection mode
+     */
+    void updateLineVisualizationSelectionModes();
 };
 
 QString create_tooltipText(QuadTreePoint<int64_t> const * point, QString const & data_key);

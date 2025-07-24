@@ -31,7 +31,8 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _pending_update(false),
       _hover_processing_active(false),
       _selection_mode(SelectionMode::PointSelection),
-      _is_drawing_line(false) {
+      _is_drawing_line(false),
+      _interaction_state(InteractionState::None) {
 
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
@@ -539,9 +540,15 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
         if (_is_drawing_line) {
             _is_drawing_line = false;
         }
+        
+        // Reset interaction state
+        setInteractionState(InteractionState::None);
 
         _selection_mode = mode;
         emit selectionModeChanged(_selection_mode);
+
+        // Update line visualizations with new selection mode
+        updateLineVisualizationSelectionModes();
 
         // Update cursor based on selection mode
         if (_selection_mode == SelectionMode::PolygonSelection) {
@@ -592,7 +599,11 @@ void SpatialOverlayOpenGLWidget::paintGL() {
         return;
     }
 
-    renderPoints();// Temporarily disabled to isolate blue color source
+    // Update interaction state before rendering
+    updateInteractionState();
+
+    // Render data visualizations
+    renderPoints();
     renderMasks();
     renderLines();
 
@@ -605,10 +616,8 @@ void SpatialOverlayOpenGLWidget::paintGL() {
         }
     }
 
-    // Render line drawing overlay for line intersection mode
-    if (_is_drawing_line) {
-        renderLineDrawingOverlay();
-    }
+    // Render common overlay elements (tooltips, selection indicators, etc.)
+    renderCommonOverlay();
 }
 
 void SpatialOverlayOpenGLWidget::paintEvent(QPaintEvent * event) {
@@ -733,9 +742,9 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         // Line intersection mode - start drawing line
         if (_selection_mode == SelectionMode::LineIntersection) {
             _is_drawing_line = true;
-            _line_start_pos = screenToWorld(event->pos().x(), event->pos().y());
-            _line_end_pos = _line_start_pos;
-            qDebug() << "SpatialOverlayOpenGLWidget: Started line drawing at" << _line_start_pos;
+            _line_draw_start_pos = screenToWorld(event->pos().x(), event->pos().y());
+            _line_draw_end_pos = _line_draw_start_pos;
+            qDebug() << "SpatialOverlayOpenGLWidget: Started line drawing at" << _line_draw_start_pos;
             event->accept();
             return;
         }
@@ -779,14 +788,17 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
 void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     _current_mouse_pos = event->pos();
+    
+    // Update mouse world position for state management
+    updateMouseWorldPosition(event->pos().x(), event->pos().y());
 
     // Handle line drawing in LineIntersection mode
     if (_is_drawing_line && (event->buttons() & Qt::LeftButton)) {
-        _line_end_pos = screenToWorld(event->pos().x(), event->pos().y());
-        qDebug() << "SpatialOverlayOpenGLWidget: Line drawing to" << _line_end_pos;
+        _line_draw_end_pos = screenToWorld(event->pos().x(), event->pos().y());
+        qDebug() << "SpatialOverlayOpenGLWidget: Line drawing to" << _line_draw_end_pos;
         requestThrottledUpdate();
         event->accept();
-        return;
+        // Don't return here - allow hover processing to continue
     }
 
     if (_is_panning && (event->buttons() & Qt::LeftButton)) {
@@ -838,7 +850,7 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
         // Handle line drawing completion
         if (_is_drawing_line) {
             _is_drawing_line = false;
-            qDebug() << "SpatialOverlayOpenGLWidget: Line drawing completed from" << _line_start_pos << "to" << _line_end_pos;
+            qDebug() << "SpatialOverlayOpenGLWidget: Line drawing completed from" << _line_draw_start_pos << "to" << _line_draw_end_pos;
             // TODO: Implement line intersection logic here
             requestThrottledUpdate();
             event->accept();
@@ -1455,6 +1467,11 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
         // Skip processing if data is invalid, tooltips are disabled, or we're already processing
         return;
     }
+    
+    // Skip hover processing if we're in a drawing state (line drawing, polygon drawing)
+    if (_interaction_state == InteractionState::LineDrawing || _interaction_state == InteractionState::PolygonDrawing) {
+        return;
+    }
 
     // Set processing flag to prevent new hover calculations
     _hover_processing_active = true;
@@ -1560,8 +1577,8 @@ void SpatialOverlayOpenGLWidget::renderLineDrawingOverlay() {
 
     // Update the buffer with current line data
     float line_data[] = {
-            _line_start_pos.x(), _line_start_pos.y(),
-            _line_end_pos.x(), _line_end_pos.y()};
+            _line_draw_start_pos.x(), _line_draw_start_pos.y(),
+            _line_draw_end_pos.x(), _line_draw_end_pos.y()};
     _line_drawing_buffer.write(0, line_data, sizeof(line_data));
 
     // Disable blending for solid black line
@@ -1581,4 +1598,45 @@ void SpatialOverlayOpenGLWidget::renderLineDrawingOverlay() {
     _line_drawing_buffer.release();
     _line_drawing_vao.release();
     lineProgram->getNativeProgram()->release();
+}
+
+void SpatialOverlayOpenGLWidget::updateMouseWorldPosition(int screen_x, int screen_y) {
+    _current_mouse_world_pos = screenToWorld(screen_x, screen_y);
+}
+
+void SpatialOverlayOpenGLWidget::setInteractionState(InteractionState state) {
+    if (_interaction_state != state) {
+        _interaction_state = state;
+        qDebug() << "SpatialOverlayOpenGLWidget: Interaction state changed to" << static_cast<int>(state);
+        requestThrottledUpdate();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::updateInteractionState() {
+    // Update interaction state based on current selection mode and mouse state
+    if (_selection_mode == SelectionMode::LineIntersection && _is_drawing_line) {
+        setInteractionState(InteractionState::LineDrawing);
+    } else if (_selection_mode == SelectionMode::PolygonSelection && _polygon_selection_handler->isPolygonSelecting()) {
+        setInteractionState(InteractionState::PolygonDrawing);
+    } else if (_is_panning) {
+        setInteractionState(InteractionState::Panning);
+    } else {
+        setInteractionState(InteractionState::Hover);
+    }
+}
+
+void SpatialOverlayOpenGLWidget::renderCommonOverlay() {
+    // Render tooltips and other common overlay elements
+    // This will be expanded to handle tooltip rendering and other common UI elements
+    
+    // For now, just render line drawing overlay if in line drawing state
+    if (_interaction_state == InteractionState::LineDrawing) {
+        renderLineDrawingOverlay();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::updateLineVisualizationSelectionModes() {
+    for (auto const& [key, viz] : _line_data_visualizations) {
+        viz->setSelectionMode(_selection_mode);
+    }
 }

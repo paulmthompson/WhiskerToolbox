@@ -4,6 +4,7 @@
 #include "CoreGeometry/boundingbox.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "LineIdentifier.hpp"
+#include "../Selection/SelectionModes.hpp"
 
 #include <QOpenGLBuffer>
 #include <QOpenGLFramebufferObject>
@@ -80,6 +81,9 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     std::vector<float> selection_vertex_data;
     QOpenGLBuffer selection_vertex_buffer;
     QOpenGLVertexArrayObject selection_vertex_array_object;
+
+    // Selection mode state
+    SelectionMode _current_selection_mode;
 
     bool m_viewIsDirty = true;
     bool m_dataIsDirty = true;
@@ -177,6 +181,12 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @return BoundingBox for the LineData
      */
     BoundingBox calculateBoundsForLineData(LineData const * line_data) const;
+
+    /**
+     * @brief Set the current selection mode for this visualization
+     * @param mode The current selection mode
+     */
+    void setSelectionMode(SelectionMode mode);
 };
 
 #endif// LINEDATAVISUALIZATION_HPP
