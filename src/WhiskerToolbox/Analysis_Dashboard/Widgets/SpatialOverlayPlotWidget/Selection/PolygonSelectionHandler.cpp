@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QOpenGLFunctions>
+#include <QMouseEvent>
 
 PolygonSelectionHandler::PolygonSelectionHandler(
         ApplySelectionRegionCallback apply_selection_region_callback)
@@ -235,6 +236,20 @@ void PolygonSelectionHandler::renderPolygonOverlay(QOpenGLShaderProgram * line_s
     line_shader_program->release();
 
     qDebug() << "PolygonSelectionHandler: Finished rendering polygon overlay";
+}
+
+void PolygonSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) {
+    if (event->button() == Qt::LeftButton) {
+        if (!isPolygonSelecting()) {
+            startPolygonSelection(world_pos.x(), world_pos.y());
+        } else {
+            addPolygonVertex(world_pos.x(), world_pos.y());
+        }
+    }  else if (event->button() == Qt::RightButton) {
+        if (isPolygonSelecting()) {
+            completePolygonSelection();
+        } 
+    }
 }
 
 void PolygonSelectionHandler::updatePolygonBuffers() {

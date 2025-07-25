@@ -4,7 +4,6 @@
 #include "../ShaderManager/ShaderManager.hpp"
 #include "Lines/LineIdentifier.hpp"
 #include "Masks/MaskIdentifier.hpp"
-#include "Selection/PolygonSelectionHandler.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 #include "SpatialIndex/RTree.hpp"
@@ -31,6 +30,7 @@ class MaskData;
 class MaskDataVisualization;
 class LineData;
 class LineDataVisualization;
+class PolygonSelectionHandler;
 
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
@@ -300,7 +300,6 @@ private:
     QPoint _pending_hover_pos;    // Store the latest hover position for processing
     SelectionMode _selection_mode;// Current selection mode
 
-    // Polygon selection handler
     std::unique_ptr<PolygonSelectionHandler> _polygon_selection_handler;
 
     // Line intersection drawing state

@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+class QMouseEvent;
 
 /**
  * @brief Polygon selection region for area-based selection
@@ -118,6 +119,8 @@ public:
      */
     std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { return _active_selection_region; }
 
+
+    void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos); 
 private:
   
     ApplySelectionRegionCallback _apply_selection_region_callback;

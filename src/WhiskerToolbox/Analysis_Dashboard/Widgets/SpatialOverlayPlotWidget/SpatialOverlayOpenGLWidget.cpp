@@ -4,6 +4,7 @@
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Lines/LineDataVisualization.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 
@@ -631,23 +632,15 @@ void SpatialOverlayOpenGLWidget::resizeGL(int w, int h) {
 }
 
 void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
-    if (event->button() == Qt::LeftButton) {
-        // Handle different selection modes
-        if (_selection_mode == SelectionMode::PolygonSelection) {
-            auto [world_x, world_y] = screenToWorld(event->pos().x(), event->pos().y());
-            if (!_polygon_selection_handler->isPolygonSelecting()) {
-                // Start new polygon selection
-                _polygon_selection_handler->startPolygonSelection(world_x, world_y);
-                
-            } else {
-                // Add vertex to current polygon
-                _polygon_selection_handler->addPolygonVertex(world_x, world_y);
-            }
-            requestThrottledUpdate();
-            event->accept();
-            return;
-        }
+    auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
+    if (_selection_mode == SelectionMode::PolygonSelection) {
+        _polygon_selection_handler->mousePressEvent(event, world_pos);
+        requestThrottledUpdate();
+        event->accept();
+        return;
+    } 
 
+    if (event->button() == Qt::LeftButton) {
         // Point and mask selection mode - requires Ctrl+Click for toggle, Shift+Click for removal
         if (_selection_mode == SelectionMode::PointSelection && (event->modifiers() & Qt::ControlModifier)) {
             // First try to find points near the click
@@ -757,16 +750,9 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         }
         event->accept();
     } else if (event->button() == Qt::RightButton) {
-        // Right click - complete polygon selection or clear selection
-        if (_polygon_selection_handler->isPolygonSelecting()) {
-            _polygon_selection_handler->completePolygonSelection();
-            requestThrottledUpdate();
-            event->accept();
-            return;
-        } else {
-            // Context menu could go here in the future
-            event->ignore();
-        }
+        
+        event->ignore();
+
     } else {
         // Let other mouse buttons propagate to parent widget
         event->ignore();
