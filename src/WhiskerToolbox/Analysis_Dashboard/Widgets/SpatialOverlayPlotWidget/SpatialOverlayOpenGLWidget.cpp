@@ -33,7 +33,8 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _hover_processing_active(false),
       _selection_mode(SelectionMode::PointSelection),
       _is_drawing_line(false),
-      _interaction_state(InteractionState::None) {
+      _interaction_state(InteractionState::None),
+      _polygon_selection_handler(nullptr) {
 
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
@@ -44,11 +45,6 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setSamples(4);// Enable multisampling for smooth points
     setFormat(format);
-
-    // Initialize polygon selection handler with callbacks
-    _polygon_selection_handler = std::make_unique<PolygonSelectionHandler>(                                                                       // request update callback
-            [this](SelectionRegion const & region, bool add_to_selection) { applySelectionRegion(region, add_to_selection); }// apply selection region callback
-    );
 
     _tooltip_timer = new QTimer(this);
     _tooltip_timer->setSingleShot(true);
@@ -531,8 +527,10 @@ void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
 void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
     if (mode != _selection_mode) {
         // Cancel any active polygon selection when switching modes
-        if (_polygon_selection_handler->isPolygonSelecting()) {
-            _polygon_selection_handler->cancelPolygonSelection();
+        if (_polygon_selection_handler) {
+            if (_polygon_selection_handler->isPolygonSelecting()) {
+                _polygon_selection_handler->cancelPolygonSelection();
+            }
         }
 
         // Cancel any active line drawing when switching modes
@@ -551,6 +549,13 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
 
         // Update cursor based on selection mode
         if (_selection_mode == SelectionMode::PolygonSelection) {
+
+            if (!_polygon_selection_handler) {
+                _polygon_selection_handler = std::make_unique<PolygonSelectionHandler>(                                                                       // request update callback
+                        [this](SelectionRegion const & region, bool add_to_selection) { applySelectionRegion(region, add_to_selection); }// apply selection region callback
+                );
+            }
+            
             setCursor(Qt::CrossCursor);
         } else {
             setCursor(Qt::ArrowCursor);
@@ -607,7 +612,9 @@ void SpatialOverlayOpenGLWidget::paintGL() {
     renderLines();
 
     QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-    _polygon_selection_handler->render(mvp_matrix);
+    if (_polygon_selection_handler) {
+        _polygon_selection_handler->render(mvp_matrix);
+    }
 
     renderCommonOverlay();
 }
@@ -1361,9 +1368,6 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     _line_drawing_vao.release();
     _line_drawing_buffer.release();
 
-    // Initialize polygon selection handler OpenGL resources
-    _polygon_selection_handler->initializeOpenGLResources();
-
     _opengl_resources_initialized = true;
     qDebug() << "SpatialOverlayOpenGLWidget: OpenGL resources initialized successfully";
 }
@@ -1390,9 +1394,6 @@ void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
         for (auto const & [key, viz]: _mask_data_visualizations) {
             viz->cleanupOpenGLResources();
         }
-
-        // Clean up polygon selection handler OpenGL resources
-        _polygon_selection_handler->cleanupOpenGLResources();
 
         _opengl_resources_initialized = false;
 
@@ -1600,7 +1601,7 @@ void SpatialOverlayOpenGLWidget::updateInteractionState() {
     // Update interaction state based on current selection mode and mouse state
     if (_selection_mode == SelectionMode::LineIntersection && _is_drawing_line) {
         setInteractionState(InteractionState::LineDrawing);
-    } else if (_selection_mode == SelectionMode::PolygonSelection && _polygon_selection_handler->isPolygonSelecting()) {
+    } else if (_selection_mode == SelectionMode::PolygonSelection) {
         setInteractionState(InteractionState::PolygonDrawing);
     } else if (_is_panning) {
         setInteractionState(InteractionState::Panning);

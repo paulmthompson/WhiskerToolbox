@@ -59,17 +59,6 @@ public:
     void setCallbacks(
             ApplySelectionRegionCallback apply_selection_region_callback);
 
-    /**
-     * @brief Initialize OpenGL resources
-     * Must be called from an OpenGL context
-     */
-    void initializeOpenGLResources();
-
-    /**
-     * @brief Clean up OpenGL resources
-     * Must be called from an OpenGL context
-     */
-    void cleanupOpenGLResources();
 
     /**
      * @brief Check if currently in polygon selection mode
@@ -90,12 +79,7 @@ public:
      */
     void startPolygonSelection(int world_x, int world_y);
 
-    /**
-     * @brief Add point to current polygon selection
-     * @param world_x World X coordinate
-     * @param world_y World Y coordinate
-     */
-    void addPolygonVertex(int world_x, int world_y);
+
 
     /**
      * @brief Complete polygon selection and create selection region
@@ -132,7 +116,6 @@ private:
     QOpenGLVertexArrayObject _polygon_vertex_array_object;
     QOpenGLBuffer _polygon_line_buffer;
     QOpenGLVertexArrayObject _polygon_line_array_object;
-    bool _opengl_resources_initialized;
 
     // Polygon selection state
     bool _is_polygon_selecting;
@@ -140,9 +123,28 @@ private:
     std::unique_ptr<SelectionRegion> _active_selection_region;// Current selection region
 
     /**
+     * @brief Initialize OpenGL resources
+     * Must be called from an OpenGL context
+     */
+    void initializeOpenGLResources();
+
+    /**
+     * @brief Clean up OpenGL resources
+     * Must be called from an OpenGL context
+     */
+    void cleanupOpenGLResources();
+
+    /**
      * @brief Update polygon vertex and line buffers
      */
     void updatePolygonBuffers();
+
+    /**
+     * @brief Add point to current polygon selection
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
+     */
+    void addPolygonVertex(int world_x, int world_y);
 };
 
 #endif// POLYGONSELECTIONHANDLER_HPP

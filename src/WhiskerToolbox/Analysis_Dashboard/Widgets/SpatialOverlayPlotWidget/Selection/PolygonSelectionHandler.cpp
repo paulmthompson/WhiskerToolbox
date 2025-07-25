@@ -3,7 +3,6 @@
 #include "ShaderManager/ShaderManager.hpp"
 
 #include <QDebug>
-#include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QMouseEvent>
 
@@ -12,8 +11,11 @@ PolygonSelectionHandler::PolygonSelectionHandler(
     : _apply_selection_region_callback(apply_selection_region_callback),
       _polygon_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _polygon_line_buffer(QOpenGLBuffer::VertexBuffer),
-      _opengl_resources_initialized(false),
       _is_polygon_selecting(false) {
+
+    initializeOpenGLFunctions();
+        
+    initializeOpenGLResources();
 
 }
 
@@ -27,15 +29,6 @@ void PolygonSelectionHandler::setCallbacks(
 }
 
 void PolygonSelectionHandler::initializeOpenGLResources() {
-    if (_opengl_resources_initialized) {
-        return;
-    }
-
-    // Initialize OpenGL functions
-    if (!initializeOpenGLFunctions()) {
-        qWarning() << "PolygonSelectionHandler: Failed to initialize OpenGL functions";
-        return;
-    }
 
     ShaderManager & shader_manager = ShaderManager::instance();
     if (!shader_manager.getProgram("line")) {
@@ -85,20 +78,15 @@ void PolygonSelectionHandler::initializeOpenGLResources() {
     _polygon_line_array_object.release();
     _polygon_line_buffer.release();
 
-    _opengl_resources_initialized = true;
     qDebug() << "PolygonSelectionHandler: OpenGL resources initialized successfully";
 }
 
 void PolygonSelectionHandler::cleanupOpenGLResources() {
-    if (_opengl_resources_initialized) {
         _polygon_vertex_buffer.destroy();
         _polygon_vertex_array_object.destroy();
 
         _polygon_line_buffer.destroy();
         _polygon_line_array_object.destroy();
-
-        _opengl_resources_initialized = false;
-    }
 }
 
 void PolygonSelectionHandler::startPolygonSelection(int world_x, int world_y) {
@@ -167,7 +155,7 @@ void PolygonSelectionHandler::cancelPolygonSelection() {
     _polygon_vertices.clear();
 
     // Clear polygon buffers
-    if (_opengl_resources_initialized) {
+
         _polygon_vertex_buffer.bind();
         glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
         _polygon_vertex_buffer.release();
@@ -175,7 +163,6 @@ void PolygonSelectionHandler::cancelPolygonSelection() {
         _polygon_line_buffer.bind();
         glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
         _polygon_line_buffer.release();
-    }
 }
 
 void PolygonSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
@@ -272,7 +259,7 @@ void PolygonSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D con
 }
 
 void PolygonSelectionHandler::updatePolygonBuffers() {
-    if (!_opengl_resources_initialized || _polygon_vertices.empty()) {
+    if (_polygon_vertices.empty()) {
         return;
     }
 
