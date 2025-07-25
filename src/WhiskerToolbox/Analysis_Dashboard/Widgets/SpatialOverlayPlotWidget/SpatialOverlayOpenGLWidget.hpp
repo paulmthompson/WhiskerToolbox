@@ -426,13 +426,6 @@ private:
     void renderLines();
 
     /**
-     * @brief Apply a selection region to find all points within it
-     * @param region The selection region to apply
-     * @param add_to_selection If true, add to existing selection; if false, replace selection
-     */
-    void applySelectionRegion(SelectionRegion const & region, bool add_to_selection = false);
-
-    /**
      * @brief Render the line drawing overlay for line intersection mode
      */
     void renderLineDrawingOverlay();

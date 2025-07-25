@@ -47,11 +47,21 @@ private:
  */
 class PolygonSelectionHandler : protected QOpenGLFunctions_4_1_Core {
 public:
-    using ApplySelectionRegionCallback = std::function<void(SelectionRegion const &, bool)>;
+    using NotificationCallback = std::function<void()>;
 
-    explicit PolygonSelectionHandler(
-            ApplySelectionRegionCallback apply_selection_region_callback = nullptr);
+    explicit PolygonSelectionHandler();
     ~PolygonSelectionHandler();
+
+    /**
+     * @brief Set the notification callback to be called when selection is completed
+     * @param callback The callback function to call when selection is completed
+     */
+    void setNotificationCallback(NotificationCallback callback);
+
+    /**
+     * @brief Clear the notification callback
+     */
+    void clearNotificationCallback();
 
     /**
      * @brief Render polygon selection overlay using OpenGL
@@ -74,7 +84,7 @@ public:
 
 private:
   
-    ApplySelectionRegionCallback _apply_selection_region_callback;
+    NotificationCallback _notification_callback;
 
     QOpenGLShaderProgram * _line_shader_program;
 

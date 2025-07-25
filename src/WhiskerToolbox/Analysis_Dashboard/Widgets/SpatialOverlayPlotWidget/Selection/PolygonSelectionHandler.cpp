@@ -7,10 +7,8 @@
 #include <QOpenGLShaderProgram>
 #include <QMouseEvent>
 
-PolygonSelectionHandler::PolygonSelectionHandler(
-        ApplySelectionRegionCallback apply_selection_region_callback)
-    : _apply_selection_region_callback(apply_selection_region_callback),
-      _polygon_vertex_buffer(QOpenGLBuffer::VertexBuffer),
+PolygonSelectionHandler::PolygonSelectionHandler()
+    : _polygon_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _polygon_line_buffer(QOpenGLBuffer::VertexBuffer),
       _is_polygon_selecting(false) {
 
@@ -22,6 +20,14 @@ PolygonSelectionHandler::PolygonSelectionHandler(
 
 PolygonSelectionHandler::~PolygonSelectionHandler() {
     cleanupOpenGLResources();
+}
+
+void PolygonSelectionHandler::setNotificationCallback(NotificationCallback callback) {
+    _notification_callback = callback;
+}
+
+void PolygonSelectionHandler::clearNotificationCallback() {
+    _notification_callback = nullptr;
 }
 
 void PolygonSelectionHandler::initializeOpenGLResources() {
@@ -124,11 +130,6 @@ void PolygonSelectionHandler::completePolygonSelection() {
         return;
     }
 
-    if (!_apply_selection_region_callback) {
-        qWarning() << "PolygonSelectionHandler: No apply selection region callback set";
-        return;
-    }
-
     qDebug() << "PolygonSelectionHandler: Completing polygon selection with"
              << _polygon_vertices.size() << "vertices";
 
@@ -136,8 +137,10 @@ void PolygonSelectionHandler::completePolygonSelection() {
     auto polygon_region = std::make_unique<PolygonSelectionRegion>(_polygon_vertices);
     _active_selection_region = std::move(polygon_region);
 
-    _apply_selection_region_callback(*_active_selection_region, false); // Notify selection
-
+    // Call notification callback if set
+    if (_notification_callback) {
+        _notification_callback();
+    }
 
     // Clean up polygon selection state
     _is_polygon_selecting = false;

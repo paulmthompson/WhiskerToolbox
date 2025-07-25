@@ -539,6 +539,7 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
         // Cancel any active polygon selection when switching modes
         if (_polygon_selection_handler) {
             _polygon_selection_handler->deactivate();
+            _polygon_selection_handler->clearNotificationCallback();
         }
 
         // Cancel any active line drawing when switching modes
@@ -559,10 +560,13 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
         if (_selection_mode == SelectionMode::PolygonSelection) {
 
             if (!_polygon_selection_handler) {
-                _polygon_selection_handler = std::make_unique<PolygonSelectionHandler>(                                                           
-                        [this](SelectionRegion const & region, bool add_to_selection) { applySelectionRegion(region, add_to_selection); }// apply selection region callback
-                );
+                _polygon_selection_handler = std::make_unique<PolygonSelectionHandler>();
             }
+            
+            // Set notification callback to call makeSelection when polygon selection is completed
+            _polygon_selection_handler->setNotificationCallback([this]() {
+                makeSelection();
+            });
             
             setCursor(Qt::CrossCursor);
         } else {
@@ -1047,48 +1051,6 @@ void SpatialOverlayOpenGLWidget::clearSelection() {
         emit selectionChanged(0, QString(), 0);
         requestThrottledUpdate();
         qDebug() << "SpatialOverlayOpenGLWidget: All selections cleared";
-    }
-}
-
-void SpatialOverlayOpenGLWidget::applySelectionRegion(SelectionRegion const & region, bool add_to_selection) {
-    if (!add_to_selection) {
-        clearSelection();
-    }
-
-    float min_x, min_y, max_x, max_y;
-    region.getBoundingBox(min_x, min_y, max_x, max_y);
-    BoundingBox query_bounds(min_x, min_y, max_x, max_y);
-
-    size_t total_points_added = 0;
-    QString last_modified_key;
-
-    // Query each PointData's QuadTree
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (!viz->visible || !viz->spatial_index) continue;
-
-        std::vector<QuadTreePoint<int64_t> const *> candidate_points;
-        viz->spatial_index->queryPointers(query_bounds, candidate_points);
-
-        size_t points_added_this_data = 0;
-        for (auto const * point_ptr: candidate_points) {
-            if (region.containsPoint(Point2D<float>(point_ptr->x, point_ptr->y))) {
-                if (viz->selected_points.find(point_ptr) == viz->selected_points.end()) {
-                    viz->selected_points.insert(point_ptr);
-                    points_added_this_data++;
-                }
-            }
-        }
-
-        if (points_added_this_data > 0) {
-            viz->updateSelectionVertexBuffer();
-            total_points_added += points_added_this_data;
-            last_modified_key = key;
-        }
-    }
-
-    if (total_points_added > 0) {
-        emit selectionChanged(getTotalSelectedPoints(), last_modified_key, total_points_added);
-        requestThrottledUpdate();
     }
 }
 
