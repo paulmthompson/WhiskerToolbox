@@ -4,8 +4,9 @@
 #include "ShaderManager/ShaderManager.hpp"
 #include "ShaderManager/ShaderSourceType.hpp"
 
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
-
 
 #include <QDebug>
 #include <QOpenGLFramebufferObject>
@@ -42,7 +43,7 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
     line_offsets.clear();
     line_lengths.clear();
     line_identifiers.clear();
-    line_vertex_ranges.clear();  // Clear vertex ranges too
+    line_vertex_ranges.clear();// Clear vertex ranges too
 
     if (!line_data) {
         return;
@@ -55,15 +56,15 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
     }
     if (image_size.width <= 0 || image_size.height <= 0) {
         qDebug() << "Using default canvas size 640x480 for LineData";
-        image_size = {640, 480}; // Fallback to a default size
+        image_size = {640, 480};// Fallback to a default size
     }
     canvas_size = QVector2D(static_cast<float>(image_size.width), static_cast<float>(image_size.height));
     qDebug() << "Canvas size:" << canvas_size.x() << "x" << canvas_size.y();
 
     // We'll create line segments (pairs of vertices) for the geometry shader
     // Each line segment gets a line ID for picking/hovering
-    std::vector<float> segment_vertices;      // All line segments as pairs of vertices
-    std::vector<uint32_t> segment_line_ids;  // Line ID for each vertex in segments
+    std::vector<float> segment_vertices;   // All line segments as pairs of vertices
+    std::vector<uint32_t> segment_line_ids;// Line ID for each vertex in segments
 
     uint32_t line_index = 0;
 
@@ -72,12 +73,12 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
         for (int line_id = 0; line_id < static_cast<int>(lines.size()); ++line_id) {
             Line2D const & line = lines[line_id];
 
-            if (line.size() < 2) {  // Need at least 2 points for a line
+            if (line.size() < 2) {// Need at least 2 points for a line
                 continue;
             }
 
             line_identifiers.push_back({time_frame.getValue(), line_id});
-            
+
             // Record the starting vertex index for this line
             uint32_t line_start_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
 
@@ -89,21 +90,21 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
                 // Add first vertex of segment
                 segment_vertices.push_back(p0.x);
                 segment_vertices.push_back(p0.y);
-                segment_line_ids.push_back(line_index + 1);  // Use 1-based indexing for picking
+                segment_line_ids.push_back(line_index + 1);// Use 1-based indexing for picking
 
                 // Add second vertex of segment
                 segment_vertices.push_back(p1.x);
                 segment_vertices.push_back(p1.y);
-                segment_line_ids.push_back(line_index + 1);  // Use 1-based indexing for picking
+                segment_line_ids.push_back(line_index + 1);// Use 1-based indexing for picking
             }
-            
+
             // Record the vertex count for this line
             uint32_t line_end_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
             uint32_t line_vertex_count = line_end_vertex - line_start_vertex;
-            
+
             // Store the range for efficient hover rendering
             line_vertex_ranges.push_back({line_start_vertex, line_vertex_count});
-            
+
             //qDebug() << "Line" << line_index << "range: start=" << line_start_vertex << "count=" << line_vertex_count;
 
             line_index++;
@@ -114,10 +115,10 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
     vertex_data = std::move(segment_vertices);
     line_id_data = std::move(segment_line_ids);
 
-    qDebug() << "LineDataVisualization: Built" << line_identifiers.size() 
-             << "lines with" << vertex_data.size() / 4 << "segments (" 
+    qDebug() << "LineDataVisualization: Built" << line_identifiers.size()
+             << "lines with" << vertex_data.size() / 4 << "segments ("
              << vertex_data.size() / 2 << "vertices)";
-    
+
     // Debug: print coordinate range
     if (!vertex_data.empty()) {
         float min_x = vertex_data[0], max_x = vertex_data[0];
@@ -129,7 +130,7 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
             max_y = std::max(max_y, vertex_data[i + 1]);
         }
         qDebug() << "Vertex coordinate range: X[" << min_x << "," << max_x << "] Y[" << min_y << "," << max_y << "]";
-        
+
         // Check if coordinates are in expected range for OpenGL
         if (min_x < -10.0f || max_x > 10.0f || min_y < -10.0f || max_y > 10.0f) {
             qDebug() << "WARNING: Coordinates appear to be outside typical OpenGL range [-1,1]";
@@ -187,16 +188,30 @@ void LineDataVisualization::initializeOpenGLResources() {
     fullscreen_quad_vao.bind();
     fullscreen_quad_vbo.bind();
 
-    const float quad_vertices[] = {
-        // positions // texCoords
-        -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
-        1.0f,  1.0f, 1.0f, 1.0f, 1.0f,  -1.0f, 1.0f, 0.0f,
+    float const quad_vertices[] = {
+            // positions // texCoords
+            -1.0f,
+            1.0f,
+            0.0f,
+            1.0f,
+            -1.0f,
+            -1.0f,
+            0.0f,
+            0.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+            -1.0f,
+            1.0f,
+            0.0f,
     };
     fullscreen_quad_vbo.allocate(quad_vertices, sizeof(quad_vertices));
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *) (2 * sizeof(float)));
 
     fullscreen_quad_vbo.release();
     fullscreen_quad_vao.release();
@@ -257,8 +272,8 @@ void LineDataVisualization::initializeOpenGLResources() {
     // Load blit shader
     if (!shader_manager.getProgram("blit")) {
         bool success =
-            shader_manager.loadProgram("blit", 
-            ":/shaders/blit.vert", ":/shaders/blit.frag", "",ShaderSourceType::Resource);
+                shader_manager.loadProgram("blit",
+                                           ":/shaders/blit.vert", ":/shaders/blit.frag", "", ShaderSourceType::Resource);
         if (!success) {
             qDebug() << "Failed to load blit shader!";
         }
@@ -327,7 +342,6 @@ void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, f
     }
 
     renderLinesDirect(shader_program, line_width);
-    
 }
 
 void LineDataVisualization::renderLinesDirect(QOpenGLShaderProgram * shader_program, float line_width) {
@@ -492,7 +506,7 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
 
     picking_shader_program->setUniformValue("u_line_width", line_width);
     picking_shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));// TODO: Get actual viewport
-    picking_shader_program->setUniformValue("u_canvas_size", canvas_size);  // For coordinate normalization
+    picking_shader_program->setUniformValue("u_canvas_size", canvas_size);                  // For coordinate normalization
 
     picking_vertex_array_object.bind();
 
@@ -510,7 +524,7 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
 }
 
 std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(
-    int screen_x, int screen_y, int widget_width, int widget_height) {
+        int screen_x, int screen_y, int widget_width, int widget_height) {
     if (!picking_framebuffer || !picking_shader_program) {
         qDebug() << "getLineAtScreenPosition: Missing framebuffer or shader";
         return std::nullopt;
@@ -547,7 +561,7 @@ std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(
 
     // Check if we found a valid line
     if (line_id > 0 && line_id <= line_identifiers.size()) {
-        return line_identifiers[line_id - 1];  // Adjust for 1-based indexing
+        return line_identifiers[line_id - 1];// Adjust for 1-based indexing
     }
 
     qDebug() << "No line found at this position";
@@ -558,7 +572,7 @@ void LineDataVisualization::setHoverLine(std::optional<LineIdentifier> line_id) 
     if (line_id.has_value()) {
         current_hover_line = line_id.value();
         has_hover_line = true;
-        
+
         // Cache the line index to avoid expensive linear search during rendering
         auto it = std::find_if(line_identifiers.begin(), line_identifiers.end(),
                                [this](LineIdentifier const & id) {
@@ -567,7 +581,7 @@ void LineDataVisualization::setHoverLine(std::optional<LineIdentifier> line_id) 
         if (it != line_identifiers.end()) {
             cached_hover_line_index = static_cast<uint32_t>(std::distance(line_identifiers.begin(), it));
         } else {
-            has_hover_line = false; // Invalid line ID
+            has_hover_line = false;// Invalid line ID
         }
     } else {
         has_hover_line = false;
@@ -618,17 +632,16 @@ void LineDataVisualization::setSelectionMode(SelectionMode mode) {
     if (_current_selection_mode != mode) {
         _current_selection_mode = mode;
         qDebug() << "LineDataVisualization: Selection mode changed to" << static_cast<int>(mode);
-        
+
         // In line intersection mode, we might want to change how lines are rendered
         // For now, just update the state - future implementation will handle visual changes
     }
 }
 
 void LineDataVisualization::clearSelection() {
-    
 }
 
-void LineDataVisualization::applySelection(std::variant<std::unique_ptr<PolygonSelectionHandler>> const & selection_handler) {
+void LineDataVisualization::applySelection(SelectionVariant & selection_handler) {
     if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
     } else {

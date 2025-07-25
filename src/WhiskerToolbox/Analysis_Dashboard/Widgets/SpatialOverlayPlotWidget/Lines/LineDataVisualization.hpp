@@ -1,28 +1,31 @@
 #ifndef LINEDATAVISUALIZATION_HPP
 #define LINEDATAVISUALIZATION_HPP
 
+#include "../Selection/SelectionModes.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 #include "LineIdentifier.hpp"
-#include "../Selection/SelectionModes.hpp"
+#include "../Selection/SelectionHandlers.hpp"
 
+#include <QGenericMatrix>
 #include <QOpenGLBuffer>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLVertexArrayObject>
 #include <QString>
 #include <QVector4D>
-#include <QGenericMatrix>
 
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 #include <variant>
+#include <vector>
 
 class QOpenGLShaderProgram;
 class PolygonSelectionHandler;
+class LineSelectionHandler;
+class NoneSelectionHandler;
 
 
 /**
@@ -36,13 +39,13 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     std::vector<uint32_t> line_offsets;          // Start index of each line in vertex_data (legacy)
     std::vector<uint32_t> line_lengths;          // Number of vertices in each line (legacy)
     std::vector<LineIdentifier> line_identifiers;// Mapping from line index to identifier
-    
+
     // Vertex range tracking for efficient hover rendering
     struct LineVertexRange {
-        uint32_t start_vertex;  // Starting vertex index
-        uint32_t vertex_count;  // Number of vertices for this line
+        uint32_t start_vertex;// Starting vertex index
+        uint32_t vertex_count;// Number of vertices for this line
     };
-    std::vector<LineVertexRange> line_vertex_ranges; // Vertex ranges for each line
+    std::vector<LineVertexRange> line_vertex_ranges;// Vertex ranges for each line
 
     // OpenGL resources
     QOpenGLBuffer vertex_buffer;
@@ -70,13 +73,13 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QString key;
     QVector4D color;
     bool visible = true;
-    QVector2D canvas_size;  // Canvas size for coordinate normalization
+    QVector2D canvas_size;// Canvas size for coordinate normalization
 
     // Hover state for this LineData
     LineIdentifier current_hover_line;
     bool has_hover_line = false;
-    uint32_t cached_hover_line_index = 0;     // Cached index to avoid linear search
-    GLint cached_hover_uniform_location = -1; // Cached uniform location to avoid repeated queries
+    uint32_t cached_hover_line_index = 0;    // Cached index to avoid linear search
+    GLint cached_hover_uniform_location = -1;// Cached uniform location to avoid repeated queries
 
     // Selection state for this LineData (for future implementation)
     std::unordered_set<LineIdentifier> selected_lines;
@@ -164,7 +167,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @return Line identifier if found, empty optional otherwise
      */
     std::optional<LineIdentifier> getLineAtScreenPosition(
-        int screen_x, int screen_y, int widget_width, int widget_height);
+            int screen_x, int screen_y, int widget_width, int widget_height);
 
     /**
      * @brief Set hover line
@@ -194,7 +197,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
 
     //========== Selection Handlers ==========
 
-    void applySelection(std::variant<std::unique_ptr<PolygonSelectionHandler>> const & selection_handler);
+    void applySelection(SelectionVariant & selection_handler);
 
     /**
      * @brief Apply selection to this LineDataVisualization

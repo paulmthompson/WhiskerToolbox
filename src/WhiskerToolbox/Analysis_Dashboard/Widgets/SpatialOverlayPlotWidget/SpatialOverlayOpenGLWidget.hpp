@@ -4,6 +4,7 @@
 #include "../ShaderManager/ShaderManager.hpp"
 #include "Lines/LineIdentifier.hpp"
 #include "Masks/MaskIdentifier.hpp"
+#include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 #include "SpatialIndex/RTree.hpp"
@@ -32,6 +33,8 @@ class MaskDataVisualization;
 class LineData;
 class LineDataVisualization;
 class PolygonSelectionHandler;
+class LineSelectionHandler;
+class NoneSelectionHandler;
 
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
@@ -303,14 +306,7 @@ private:
     QPoint _pending_hover_pos;    // Store the latest hover position for processing
     SelectionMode _selection_mode;// Current selection mode
 
-    std::variant<std::unique_ptr<PolygonSelectionHandler>> _selection_handler;
-
-    // Line intersection drawing state
-    bool _is_drawing_line;
-    QVector2D _line_start_pos;
-    QVector2D _line_end_pos;
-    QOpenGLBuffer _line_drawing_buffer;
-    QOpenGLVertexArrayObject _line_drawing_vao;
+    SelectionVariant _selection_handler;
 
     // Interaction state management
     enum class InteractionState {
@@ -426,10 +422,7 @@ private:
      */
     void renderLines();
 
-    /**
-     * @brief Render the line drawing overlay for line intersection mode
-     */
-    void renderLineDrawingOverlay();
+
 
     /**
      * @brief Render common overlay elements (tooltips, selection indicators, etc.)

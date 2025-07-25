@@ -4,15 +4,17 @@
 #include "CoreGeometry/polygon_adapter.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
 
-#include <QOpenGLShaderProgram>
 #include <QDebug>
+#include <QOpenGLShaderProgram>
 
 #include <algorithm>
-#include <limits>
 #include <cmath>
 #include <iostream>
+#include <limits>
 
 MaskDataVisualization::MaskDataVisualization(QString const & data_key,
                                              std::shared_ptr<MaskData> const & mask_data)
@@ -21,25 +23,25 @@ MaskDataVisualization::MaskDataVisualization(QString const & data_key,
       quad_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       color(1.0f, 0.0f, 0.0f, 1.0f),
       hover_union_polygon(std::vector<Point2D<float>>()) {
-      
+
     if (!mask_data) {
         qDebug() << "MaskDataVisualization: Null mask data provided";
         return;
     }
-    
+
     // Set world bounds based on image size
     auto image_size = mask_data->getImageSize();
     world_min_x = 0.0f;
     world_max_x = static_cast<float>(image_size.width);
     world_min_y = 0.0f;
     world_max_y = static_cast<float>(image_size.height);
-    
+
     spatial_index = std::make_unique<RTree<MaskIdentifier>>();
-    
+
     // Precompute all visualization data
     populateRTree();
     createBinaryImageTexture();
-    
+
     initializeOpenGLResources();
 }
 
@@ -64,10 +66,10 @@ void MaskDataVisualization::initializeOpenGLResources() {
     // Quad vertices covering the world bounds
     // Note: Texture coordinates are flipped vertically to correct Y-axis orientation
     float quad_vertices[] = {
-        world_min_x, world_min_y, 0.0f, 1.0f,  // Bottom-left -> Top-left in texture
-        world_max_x, world_min_y, 1.0f, 1.0f,  // Bottom-right -> Top-right in texture
-        world_max_x, world_max_y, 1.0f, 0.0f,  // Top-right -> Bottom-right in texture
-        world_min_x, world_max_y, 0.0f, 0.0f   // Top-left -> Bottom-left in texture
+            world_min_x, world_min_y, 0.0f, 1.0f,// Bottom-left -> Top-left in texture
+            world_max_x, world_min_y, 1.0f, 1.0f,// Bottom-right -> Top-right in texture
+            world_max_x, world_max_y, 1.0f, 0.0f,// Top-right -> Bottom-right in texture
+            world_min_x, world_max_y, 0.0f, 0.0f // Top-left -> Bottom-left in texture
     };
 
     quad_vertex_buffer.allocate(quad_vertices, sizeof(quad_vertices));
@@ -75,11 +77,11 @@ void MaskDataVisualization::initializeOpenGLResources() {
     // Position attribute
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), nullptr);
-    
+
     // Texture coordinate attribute
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 
-                         reinterpret_cast<void*>(2 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
+                          reinterpret_cast<void *>(2 * sizeof(float)));
 
     quad_vertex_buffer.release();
     quad_vertex_array_object.release();
@@ -151,71 +153,71 @@ void MaskDataVisualization::clearSelection() {
 
 void MaskDataVisualization::selectMasks(std::vector<MaskIdentifier> const & mask_ids) {
     qDebug() << "MaskDataVisualization: Selecting" << mask_ids.size() << "masks";
-    
-    for (auto const & mask_id : mask_ids) {
+
+    for (auto const & mask_id: mask_ids) {
         selected_masks.insert(mask_id);
     }
-    
+
     updateSelectionBinaryImageTexture();
     qDebug() << "MaskDataVisualization: Total selected masks:" << selected_masks.size();
 }
 
 bool MaskDataVisualization::toggleMaskSelection(MaskIdentifier const & mask_id) {
     auto it = selected_masks.find(mask_id);
-    
+
     if (it != selected_masks.end()) {
         // Mask is selected, remove it
         selected_masks.erase(it);
         updateSelectionBinaryImageTexture();
-        qDebug() << "MaskDataVisualization: Deselected mask" << mask_id.timeframe << "," << mask_id.mask_index 
+        qDebug() << "MaskDataVisualization: Deselected mask" << mask_id.timeframe << "," << mask_id.mask_index
                  << "- Total selected:" << selected_masks.size();
-        return false; // Mask was deselected
+        return false;// Mask was deselected
     } else {
         // Mask is not selected, add it
         selected_masks.insert(mask_id);
         updateSelectionBinaryImageTexture();
         qDebug() << "MaskDataVisualization: Selected mask" << mask_id.timeframe << "," << mask_id.mask_index
                  << "- Total selected:" << selected_masks.size();
-        return true; // Mask was selected
+        return true;// Mask was selected
     }
 }
 
 bool MaskDataVisualization::removeMaskFromSelection(MaskIdentifier const & mask_id) {
     auto it = selected_masks.find(mask_id);
-    
+
     if (it != selected_masks.end()) {
         // Mask is selected, remove it
         selected_masks.erase(it);
         updateSelectionBinaryImageTexture();
         qDebug() << "MaskDataVisualization: Removed mask" << mask_id.timeframe << "," << mask_id.mask_index
                  << "from selection - Total selected:" << selected_masks.size();
-        return true; // Mask was removed
+        return true;// Mask was removed
     }
-    
-    return false; // Mask wasn't selected
+
+    return false;// Mask wasn't selected
 }
 
 size_t MaskDataVisualization::removeIntersectingMasks(std::vector<MaskIdentifier> const & mask_ids) {
     size_t removed_count = 0;
-    
+
     // Find intersection between current selection and provided mask_ids
-    for (auto const & mask_id : mask_ids) {
+    for (auto const & mask_id: mask_ids) {
         auto it = selected_masks.find(mask_id);
         if (it != selected_masks.end()) {
             // This mask is in both sets - remove it from selection
             selected_masks.erase(it);
             removed_count++;
-            qDebug() << "MaskDataVisualization: Removed intersecting mask" 
+            qDebug() << "MaskDataVisualization: Removed intersecting mask"
                      << mask_id.timeframe << "," << mask_id.mask_index;
         }
     }
-    
+
     if (removed_count > 0) {
         updateSelectionBinaryImageTexture();
-        qDebug() << "MaskDataVisualization: Removed" << removed_count 
+        qDebug() << "MaskDataVisualization: Removed" << removed_count
                  << "intersecting masks - Total selected:" << selected_masks.size();
     }
-    
+
     return removed_count;
 }
 
@@ -233,9 +235,9 @@ void MaskDataVisualization::clearHover() {
 
 std::vector<MaskIdentifier> MaskDataVisualization::findMasksContainingPoint(float world_x, float world_y) const {
     std::vector<MaskIdentifier> result;
-    
+
     if (!spatial_index) return result;
-    
+
     // Use R-tree to find candidate masks
     qDebug() << "MaskDataVisualization: Finding masks containing point" << world_x << world_y;
     BoundingBox point_bbox(world_x, world_y, world_x, world_y);
@@ -243,44 +245,44 @@ std::vector<MaskIdentifier> MaskDataVisualization::findMasksContainingPoint(floa
     spatial_index->query(point_bbox, candidates);
 
     qDebug() << "MaskDataVisualization: Found" << candidates.size() << "candidates from R-tree";
-    
+
     // Check each candidate mask for actual point containment
     uint32_t pixel_x = static_cast<uint32_t>(std::round(world_x));
     uint32_t pixel_y = static_cast<uint32_t>(std::round(world_y));
 
-    for (auto const & candidate : candidates) {
+    for (auto const & candidate: candidates) {
         /*
         if (maskContainsPoint(candidate.data, pixel_x, pixel_y)) {
             result.push_back(candidate.data);
         }
         */
-       result.push_back(candidate.data); // Use faster RTreeEntry data directly for now
+        result.push_back(candidate.data);// Use faster RTreeEntry data directly for now
     }
 
     qDebug() << "MaskDataVisualization: Found" << result.size() << "masks containing point";
-    
+
     return result;
 }
 
 std::vector<MaskIdentifier> MaskDataVisualization::refineMasksContainingPoint(std::vector<RTreeEntry<MaskIdentifier>> const & entries, float world_x, float world_y) const {
     std::vector<MaskIdentifier> result;
-    
+
     if (!mask_data) return result;
-    
+
     qDebug() << "MaskDataVisualization: Refining" << entries.size() << "R-tree entries using precise point checking";
-    
+
     // Check each candidate mask for actual point containment
     uint32_t pixel_x = static_cast<uint32_t>(std::round(world_x));
     uint32_t pixel_y = static_cast<uint32_t>(std::round(world_y));
 
-    for (auto const & entry : entries) {
+    for (auto const & entry: entries) {
         if (maskContainsPoint(entry.data, pixel_x, pixel_y)) {
             result.push_back(entry.data);
         }
     }
 
     qDebug() << "MaskDataVisualization: Refined to" << result.size() << "masks containing point after precise checking";
-    
+
     return result;
 }
 
@@ -322,9 +324,9 @@ void MaskDataVisualization::createBinaryImageTexture() {
     binary_image_data.resize(image_size.width * image_size.height, 0.0f);
 
     // Aggregate all masks into the binary image
-    for (auto const & time_masks_pair : mask_data->getAllAsRange()) {
-        for (auto const & mask : time_masks_pair.masks) {
-            for (auto const & point : mask) {
+    for (auto const & time_masks_pair: mask_data->getAllAsRange()) {
+        for (auto const & mask: time_masks_pair.masks) {
+            for (auto const & point: mask) {
                 if (point.x < image_size.width && point.y < image_size.height) {
                     size_t index = point.y * image_size.width + point.x;
                     binary_image_data[index] += 1.0f;
@@ -339,18 +341,18 @@ void MaskDataVisualization::createBinaryImageTexture() {
     if (!binary_image_data.empty()) {
         float max_value = *std::max_element(binary_image_data.begin(), binary_image_data.end());
         qDebug() << "MaskDataVisualization: Max mask density:" << max_value;
-        
+
         if (max_value > 0.0f) {
             // Use logarithmic scaling to compress the dynamic range
             // This makes sparse areas more visible while preserving dense areas
-            for (auto & value : binary_image_data) {
+            for (auto & value: binary_image_data) {
                 if (value > 0.0f) {
                     // Apply log scaling: log(1 + value) / log(1 + max_value)
                     // This ensures that even single masks (value=1) are visible
                     value = std::log(1.0f + value) / std::log(1.0f + max_value);
                 }
             }
-            
+
             // Debug: Check scaled values
             float min_scaled = *std::min_element(binary_image_data.begin(), binary_image_data.end());
             float max_scaled = *std::max_element(binary_image_data.begin(), binary_image_data.end());
@@ -371,15 +373,15 @@ void MaskDataVisualization::updateSelectionBinaryImageTexture() {
     selection_binary_image_data.resize(image_size.width * image_size.height, 0.0f);
 
     // Only include selected masks in the selection binary image
-    for (auto const & mask_id : selected_masks) {
+    for (auto const & mask_id: selected_masks) {
         auto const & masks = mask_data->getAtTime(TimeFrameIndex(mask_id.timeframe));
         if (mask_id.mask_index < masks.size()) {
             auto const & mask = masks[mask_id.mask_index];
-            
-            for (auto const & point : mask) {
+
+            for (auto const & point: mask) {
                 if (point.x < image_size.width && point.y < image_size.height) {
                     size_t index = point.y * image_size.width + point.x;
-                    selection_binary_image_data[index] = 1.0f; // Uniform opacity for selected masks
+                    selection_binary_image_data[index] = 1.0f;// Uniform opacity for selected masks
                 }
             }
         }
@@ -412,21 +414,20 @@ void MaskDataVisualization::populateRTree() {
 
     qDebug() << "MaskDataVisualization: Populating R-tree with" << mask_data->size() << "time frames";
 
-    for (auto const & time_masks_pair : mask_data->getAllAsRange()) {
+    for (auto const & time_masks_pair: mask_data->getAllAsRange()) {
         for (size_t mask_index = 0; mask_index < time_masks_pair.masks.size(); ++mask_index) {
             auto const & mask = time_masks_pair.masks[mask_index];
-            
+
             if (mask.empty()) continue;
 
             // Calculate bounding box for this mask
             auto [min_point, max_point] = get_bounding_box(mask);
-            
+
             BoundingBox bbox(static_cast<float>(min_point.x), static_cast<float>(min_point.y),
-                           static_cast<float>(max_point.x), static_cast<float>(max_point.y));
-            
+                             static_cast<float>(max_point.x), static_cast<float>(max_point.y));
+
             MaskIdentifier mask_id(time_masks_pair.time.getValue(), mask_index);
             spatial_index->insert(bbox, mask_id);
-
         }
     }
 
@@ -437,17 +438,17 @@ bool MaskDataVisualization::maskContainsPoint(MaskIdentifier const & mask_id, ui
     if (!mask_data) return false;
 
     //return true;
-    
+
     auto const & masks = mask_data->getAtTime(TimeFrameIndex(mask_id.timeframe));
 
     if (masks.empty()) return false;
 
     auto const & mask = masks[mask_id.mask_index];
 
-    for (auto const & point : mask) {
+    for (auto const & point: mask) {
         if (point.x == pixel_x && point.y == pixel_y) {
             return true;
-        } 
+        }
     }
 
     return false;
@@ -455,12 +456,12 @@ bool MaskDataVisualization::maskContainsPoint(MaskIdentifier const & mask_id, ui
 
 std::pair<float, float> MaskDataVisualization::worldToTexture(float world_x, float world_y) const {
     if (!mask_data) return {0.0f, 0.0f};
-    
+
     auto image_size = mask_data->getImageSize();
-    
+
     float u = (world_x - world_min_x) / (world_max_x - world_min_x);
     float v = (world_y - world_min_y) / (world_max_y - world_min_y);
-    
+
     return {u, v};
 }
 
@@ -471,10 +472,10 @@ void MaskDataVisualization::renderHoverMaskUnionPolygon(QOpenGLShaderProgram * s
     hover_polygon_buffer.bind();
 
     // Set uniforms for polygon rendering (black outline)
-    QVector4D polygon_color = QVector4D(0.0f, 0.0f, 0.0f, 1.0f); // Black
+    QVector4D polygon_color = QVector4D(0.0f, 0.0f, 0.0f, 1.0f);// Black
     shader_program->setUniformValue("u_color", polygon_color);
-    
-    glLineWidth(3.0f); // Thick lines for visibility
+
+    glLineWidth(3.0f);// Thick lines for visibility
 
     // Draw the union polygon as a line loop
     glDrawArrays(GL_LINE_LOOP, 0, static_cast<GLsizei>(hover_polygon_data.size() / 2));
@@ -493,9 +494,9 @@ void MaskDataVisualization::renderSelectedMasks(QOpenGLShaderProgram * shader_pr
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, selection_binary_image_texture);
     shader_program->setUniformValue("u_texture", 0);
-    
+
     // Set different color for selected masks (e.g., yellow with some transparency)
-    QVector4D selection_color = QVector4D(1.0f, 1.0f, 0.0f, 0.7f); // Yellow with 70% opacity
+    QVector4D selection_color = QVector4D(1.0f, 1.0f, 0.0f, 0.7f);// Yellow with 70% opacity
     shader_program->setUniformValue("u_color", selection_color);
 
     // Enable blending for transparency
@@ -524,12 +525,12 @@ void MaskDataVisualization::updateHoverUnionPolygon() {
 
     hover_polygon_array_object.bind();
     hover_polygon_buffer.bind();
-    
+
     if (hover_polygon_data.empty()) {
         glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
     } else {
         hover_polygon_buffer.allocate(hover_polygon_data.data(),
-                                    static_cast<int>(hover_polygon_data.size() * sizeof(float)));
+                                      static_cast<int>(hover_polygon_data.size() * sizeof(float)));
     }
 
     glEnableVertexAttribArray(0);
@@ -546,24 +547,24 @@ Polygon MaskDataVisualization::computeUnionPolygonFromEntries(std::vector<RTreeE
 
 std::vector<float> MaskDataVisualization::generatePolygonVertexData(Polygon const & polygon) const {
     std::vector<float> vertex_data;
-    
+
     if (!polygon.isValid()) {
         return vertex_data;
     }
-    
-    const auto& vertices = polygon.getVertices();
+
+    auto const & vertices = polygon.getVertices();
     vertex_data.reserve(vertices.size() * 2);
-    
-    for (const auto& vertex : vertices) {
+
+    for (auto const & vertex: vertices) {
         vertex_data.push_back(vertex.x);
-        vertex_data.push_back(flipY(vertex.y));  // Flip Y coordinate for OpenGL rendering
+        vertex_data.push_back(flipY(vertex.y));// Flip Y coordinate for OpenGL rendering
     }
-    
+
     return vertex_data;
 }
 
 // Helper function to check if all 4 corners of a bounding box are contained in a polygon
-static bool isBoundingBoxContainedInPolygon(const BoundingBox& bbox, const Polygon& polygon) {
+static bool isBoundingBoxContainedInPolygon(BoundingBox const & bbox, Polygon const & polygon) {
     return polygon.containsPoint({bbox.min_x, bbox.min_y}) &&
            polygon.containsPoint({bbox.max_x, bbox.min_y}) &&
            polygon.containsPoint({bbox.max_x, bbox.max_y}) &&
@@ -586,46 +587,46 @@ static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<MaskId
     if (entries.empty()) {
         return Polygon(std::vector<Point2D<float>>{});
     }
-    
+
     if (entries.size() == 1) {
         BoundingBox bbox(entries[0].min_x, entries[0].min_y, entries[0].max_x, entries[0].max_y);
         return Polygon(bbox);
     }
-    
+
     std::cout << "MaskDataVisualization: Computing union using polygon containment with " << entries.size() << " bounding boxes" << std::endl;
-    
+
     // Convert entries to BoundingBox objects with their areas
     std::vector<std::pair<BoundingBox, float>> bbox_with_areas;
     bbox_with_areas.reserve(entries.size());
-    
-    for (const auto& entry : entries) {
+
+    for (auto const & entry: entries) {
         BoundingBox bbox(entry.min_x, entry.min_y, entry.max_x, entry.max_y);
         float area = bbox.width() * bbox.height();
         bbox_with_areas.emplace_back(bbox, area);
     }
-    
+
     // Sort by area (largest first)
     std::sort(bbox_with_areas.begin(), bbox_with_areas.end(),
-              [](const auto& a, const auto& b) { return a.second > b.second; });
+              [](auto const & a, auto const & b) { return a.second > b.second; });
 
     Polygon comparison_polygon(bbox_with_areas[0].first);
-        
+
     size_t union_operations = 0;
 
     // Process remaining boxes from largest to smallest
     for (size_t i = 1; i < bbox_with_areas.size(); ++i) {
-        const BoundingBox& test_bbox = bbox_with_areas[i].first;
-        
+        BoundingBox const & test_bbox = bbox_with_areas[i].first;
+
         // Check if all 4 corners of test_bbox are contained in comparison_polygon
         if (isBoundingBoxContainedInPolygon(test_bbox, comparison_polygon)) {
             // Test box is completely contained - skip it
             continue;
         }
-        
-        
+
+
         Polygon test_polygon(test_bbox);
         Polygon new_comparison = comparison_polygon.unionWith(test_polygon);
-        
+
         if (!new_comparison.isValid()) {
             std::cout << "MaskDataVisualization: Union operation failed! Falling back to bounding box approximation" << std::endl;
             // Fall back to overall bounding box if union fails
@@ -634,31 +635,33 @@ static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<MaskId
                 remaining_boxes.push_back(bbox_with_areas[j].first);
             }
             BoundingBox overall_bbox(
-                std::min_element(remaining_boxes.begin(), remaining_boxes.end(),
-                    [](const BoundingBox& a, const BoundingBox& b) { return a.min_x < b.min_x; })->min_x,
-                std::min_element(remaining_boxes.begin(), remaining_boxes.end(),
-                    [](const BoundingBox& a, const BoundingBox& b) { return a.min_y < b.min_y; })->min_y,
-                std::max_element(remaining_boxes.begin(), remaining_boxes.end(),
-                    [](const BoundingBox& a, const BoundingBox& b) { return a.max_x < b.max_x; })->max_x,
-                std::max_element(remaining_boxes.begin(), remaining_boxes.end(),
-                    [](const BoundingBox& a, const BoundingBox& b) { return a.max_y < b.max_y; })->max_y
-            );
+                    std::min_element(remaining_boxes.begin(), remaining_boxes.end(),
+                                     [](BoundingBox const & a, BoundingBox const & b) { return a.min_x < b.min_x; })
+                            ->min_x,
+                    std::min_element(remaining_boxes.begin(), remaining_boxes.end(),
+                                     [](BoundingBox const & a, BoundingBox const & b) { return a.min_y < b.min_y; })
+                            ->min_y,
+                    std::max_element(remaining_boxes.begin(), remaining_boxes.end(),
+                                     [](BoundingBox const & a, BoundingBox const & b) { return a.max_x < b.max_x; })
+                            ->max_x,
+                    std::max_element(remaining_boxes.begin(), remaining_boxes.end(),
+                                     [](BoundingBox const & a, BoundingBox const & b) { return a.max_y < b.max_y; })
+                            ->max_y);
             return Polygon(overall_bbox);
         }
-        
+
         comparison_polygon = new_comparison;
         union_operations++;
-        
     }
-    
-    std::cout << "MaskDataVisualization: Algorithm completed. Total union operations: " << union_operations 
+
+    std::cout << "MaskDataVisualization: Algorithm completed. Total union operations: " << union_operations
               << " out of " << (entries.size() - 1) << " possible operations" << std::endl;
     std::cout << "MaskDataVisualization: Final polygon has " << comparison_polygon.vertexCount() << " vertices" << std::endl;
-    
+
     return comparison_polygon;
 }
 
-void MaskDataVisualization::applySelection(std::variant<std::unique_ptr<PolygonSelectionHandler>> const & selection_handler) {
+void MaskDataVisualization::applySelection(SelectionVariant & selection_handler) {
     if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
     } else {
@@ -667,6 +670,6 @@ void MaskDataVisualization::applySelection(std::variant<std::unique_ptr<PolygonS
 }
 
 void MaskDataVisualization::applySelection(PolygonSelectionHandler const & selection_handler) {
-    
+
     std::cout << "Mask Data Polygon Selection not implemented" << std::endl;
 }

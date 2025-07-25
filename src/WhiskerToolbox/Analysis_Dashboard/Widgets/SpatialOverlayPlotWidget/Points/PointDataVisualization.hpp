@@ -2,7 +2,7 @@
 #define POINTDATAVISUALIZATION_HPP
 
 #include "SpatialIndex/QuadTree.hpp"
-
+#include "../Selection/SelectionHandlers.hpp"
 
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_1_Core>
@@ -19,6 +19,8 @@
 class PointData;
 class QOpenGLShaderProgram;
 class PolygonSelectionHandler;
+class LineSelectionHandler;
+class NoneSelectionHandler;
 
 
 /**
@@ -110,7 +112,7 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      * @brief Apply selection to this PointDataVisualization
      * @param selection_handler The PolygonSelectionHandler to apply
      */
-    void applySelection(std::variant<std::unique_ptr<PolygonSelectionHandler>> const & selection_handler);
+    void applySelection(SelectionVariant & selection_handler);
 
     /**
      * @brief Apply selection to this PointDataVisualization

@@ -1,6 +1,9 @@
 #include "PointDataVisualization.hpp"
 
 #include "DataManager/Points/Point_Data.hpp"
+
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
 
 #include <QOpenGLShaderProgram>
@@ -253,7 +256,7 @@ BoundingBox PointDataVisualization::calculateBoundsForPointData(PointData const 
                        max_x + padding_x, max_y + padding_y);
 }
 
-void PointDataVisualization::applySelection(std::variant<std::unique_ptr<PolygonSelectionHandler>> const & selection_handler) {
+void PointDataVisualization::applySelection(SelectionVariant & selection_handler) {
     if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
     } else {

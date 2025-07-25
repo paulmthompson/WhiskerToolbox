@@ -64,8 +64,12 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.cpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.cpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.cpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.cpp
+        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/SelectionHandlers.hpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/SelectionModes.hpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/SelectionModes.cpp
         Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
