@@ -471,9 +471,9 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
                 event->scenePos().y() / getYAspect());
 
         // Emit strong-typed coordinate signals
-        CanvasCoordinates canvas_coords(static_cast<float>(event->scenePos().x()),
+        CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
                                         static_cast<float>(event->scenePos().y()));
-        MediaCoordinates media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
+        MediaCoordinates const media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
                                       static_cast<float>(event->scenePos().y() / getYAspect()));
         emit leftClickCanvas(canvas_coords);
         emit leftClickMediaCoords(media_coords);
@@ -493,9 +493,9 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
                 event->scenePos().y() / getYAspect());
 
         // Emit strong-typed coordinate signals
-        CanvasCoordinates canvas_coords(static_cast<float>(event->scenePos().x()),
+        CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
                                         static_cast<float>(event->scenePos().y()));
-        MediaCoordinates media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
+        MediaCoordinates const media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
                                       static_cast<float>(event->scenePos().y() / getYAspect()));
         emit rightClickCanvas(canvas_coords);
         emit rightClickMediaCoords(media_coords);
@@ -556,7 +556,7 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
     emit mouseMove(event->scenePos().x(), event->scenePos().y());
 
     // Emit strong-typed coordinate signal
-    CanvasCoordinates canvas_coords(static_cast<float>(event->scenePos().x()),
+    CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
                                     static_cast<float>(event->scenePos().y()));
     emit mouseMoveCanvas(canvas_coords);
 
@@ -626,13 +626,13 @@ void Media_Window::_plotLineData() {
             }
 
             // Check if this line is selected
-            bool is_selected = (_line_config.get()->selected_line_index == line_idx);
+            bool const is_selected = (_line_config.get()->selected_line_index == line_idx);
 
             // Use segment if enabled, otherwise use full line
             Line2D line_to_plot;
             if (_line_config.get()->show_segment) {
-                float start_percentage = static_cast<float>(_line_config.get()->segment_start_percentage) / 100.0f;
-                float end_percentage = static_cast<float>(_line_config.get()->segment_end_percentage) / 100.0f;
+                float const start_percentage = static_cast<float>(_line_config.get()->segment_start_percentage) / 100.0f;
+                float const end_percentage = static_cast<float>(_line_config.get()->segment_end_percentage) / 100.0f;
                 line_to_plot = get_segment_between_percentages(single_line, start_percentage, end_percentage);
 
                 // If segment is empty (invalid percentages), skip this line
@@ -886,7 +886,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
     QImage final_image = media_image;
     
     int transparency_mask_count = 0;
-    int total_mask_points = 0;
+    int const total_mask_points = 0;
     
     // Process all transparency masks
     for (auto const & [mask_key, mask_config] : _mask_configs) {
@@ -911,8 +911,8 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
         std::cout << "Mask data size: " << maskData.size() << std::endl;
         
         // Calculate scaling factors
-        float xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
-        float yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
+        float const xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
+        float const yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
         
         std::cout << "Scaling factors: x=" << xAspect << ", y=" << yAspect << std::endl;
 
@@ -927,7 +927,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
             }
         }
 
-        QImage scaled_mask_image = unscaled_mask_image.scaled(_canvasWidth, _canvasHeight);
+        QImage const scaled_mask_image = unscaled_mask_image.scaled(_canvasWidth, _canvasHeight);
         // I want to copy final_image where scaled_mask_image is white, and keep the rest of the image the same
         for (int y = 0; y < _canvasHeight; ++y) {
             for (int x = 0; x < _canvasWidth; ++x) {
@@ -1114,7 +1114,7 @@ void Media_Window::_plotDigitalIntervalSeries() {
             continue;
         }
 
-        bool needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
+        bool const needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
 
         // Generate relative times based on frame range setting
         std::vector<int> relative_times;
@@ -1208,7 +1208,7 @@ void Media_Window::_plotDigitalIntervalBorders() {
             continue;
         }
 
-        bool needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
+        bool const needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
 
         // Check if an interval is present at the current frame
         bool interval_present = false;

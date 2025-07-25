@@ -163,7 +163,7 @@ void DataTransform_Widget::_handleFeatureSelected(QString const & feature) {
     auto data_variant = _data_manager->getDataVariant(key);
 
     if (data_variant == std::nullopt) return;
-    std::vector<std::string> operation_names = _registry->getOperationNamesForVariant(data_variant.value());
+    std::vector<std::string> const operation_names = _registry->getOperationNamesForVariant(data_variant.value());
 
     ui->operationComboBox->clear();
 
@@ -356,7 +356,7 @@ QString DataTransform_Widget::_generateOutputName() const {
         return QString();
     }
 
-    QString inputKey = _highlighted_available_feature;
+    QString const inputKey = _highlighted_available_feature;
     QString transformName = QString::fromStdString(_currentSelectedOperation->getName());
 
     // Clean up the transform name for use in the output name:
@@ -367,7 +367,7 @@ QString DataTransform_Widget::_generateOutputName() const {
     transformName.replace(' ', '_');
 
     // Remove common operation prefixes to make names more concise
-    QStringList prefixesToRemove = {"calculate_", "extract_", "convert_", "threshold_"};
+    QStringList const prefixesToRemove = {"calculate_", "extract_", "convert_", "threshold_"};
     for (QString const & prefix: prefixesToRemove) {
         if (transformName.startsWith(prefix)) {
             transformName = transformName.mid(prefix.length());
@@ -380,7 +380,7 @@ QString DataTransform_Widget::_generateOutputName() const {
 }
 
 void DataTransform_Widget::_updateOutputName() {
-    QString outputName = _generateOutputName();
+    QString const outputName = _generateOutputName();
     if (!outputName.isEmpty()) {
         ui->output_name_edit->setText(outputName);
     }

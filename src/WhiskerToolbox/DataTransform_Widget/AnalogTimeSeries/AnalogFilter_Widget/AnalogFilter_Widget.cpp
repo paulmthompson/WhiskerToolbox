@@ -53,9 +53,9 @@ void AnalogFilter_Widget::_updateVisibleParameters() {
     auto response = ui->response_combobox->currentText().toStdString();
 
     // Show/hide parameters based on filter type
-    bool is_rbj = (filter_type == "RBJ");
-    bool is_chebyshev = (filter_type.find("Chebyshev") != std::string::npos);
-    bool is_band_filter = (response == "Band Pass" || response == "Band Stop (Notch)");
+    bool const is_rbj = (filter_type == "RBJ");
+    bool const is_chebyshev = (filter_type.find("Chebyshev") != std::string::npos);
+    bool const is_band_filter = (response == "Band Pass" || response == "Band Stop (Notch)");
 
     // Order is not applicable for RBJ filters (always 2nd order)
     ui->order_label->setVisible(!is_rbj);
@@ -85,10 +85,10 @@ void AnalogFilter_Widget::_validateParameters() {
     bool valid = true;
     QString error_message;
 
-    double sampling_rate = ui->sampling_rate_spinbox->value();
-    double cutoff = ui->cutoff_frequency_spinbox->value();
-    double high_cutoff = ui->high_cutoff_spinbox->value();
-    bool is_band_filter = ui->response_combobox->currentText().contains("Band");
+    double const sampling_rate = ui->sampling_rate_spinbox->value();
+    double const cutoff = ui->cutoff_frequency_spinbox->value();
+    double const high_cutoff = ui->high_cutoff_spinbox->value();
+    bool const is_band_filter = ui->response_combobox->currentText().contains("Band");
 
     // Validate sampling rate
     if (sampling_rate <= 0.0) {
@@ -97,7 +97,7 @@ void AnalogFilter_Widget::_validateParameters() {
     }
 
     // Validate cutoff frequencies against Nyquist
-    double nyquist = sampling_rate / 2.0;
+    double const nyquist = sampling_rate / 2.0;
     if (cutoff >= nyquist) {
         valid = false;
         error_message = QString("Cutoff frequency must be less than Nyquist frequency (%1 Hz)").arg(nyquist);
@@ -123,16 +123,16 @@ void AnalogFilter_Widget::_validateParameters() {
 
 std::unique_ptr<TransformParametersBase> AnalogFilter_Widget::getParameters() const {
     // Get current UI values
-    double sampling_rate = ui->sampling_rate_spinbox->value();
-    double cutoff_freq = ui->cutoff_frequency_spinbox->value();
-    double high_cutoff = ui->high_cutoff_spinbox->value();
-    int order = ui->order_spinbox->value();
-    double q_factor = ui->q_factor_spinbox->value();
-    double ripple_db = ui->ripple_spinbox->value();
-    bool zero_phase = ui->zero_phase_checkbox->isChecked();
+    double const sampling_rate = ui->sampling_rate_spinbox->value();
+    double const cutoff_freq = ui->cutoff_frequency_spinbox->value();
+    double const high_cutoff = ui->high_cutoff_spinbox->value();
+    int const order = ui->order_spinbox->value();
+    double const q_factor = ui->q_factor_spinbox->value();
+    double const ripple_db = ui->ripple_spinbox->value();
+    bool const zero_phase = ui->zero_phase_checkbox->isChecked();
     
-    QString type_str = ui->filter_type_combobox->currentText();
-    QString response_str = ui->response_combobox->currentText();
+    QString const type_str = ui->filter_type_combobox->currentText();
+    QString const response_str = ui->response_combobox->currentText();
     
     std::unique_ptr<IFilter> filter;
         

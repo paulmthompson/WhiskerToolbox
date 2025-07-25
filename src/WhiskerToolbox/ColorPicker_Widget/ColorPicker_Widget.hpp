@@ -4,7 +4,6 @@
 #include <QColor>
 #include <QWidget>
 
-#include <memory>
 
 namespace Ui {
 class ColorPicker_Widget;
@@ -21,10 +20,10 @@ public:
     void setColor(int r, int g, int b);
     void setAlpha(int alpha_percent);
 
-    QString getHexColor() const;
-    QColor getColor() const;
-    int getAlphaPercent() const;
-    float getAlphaFloat() const;
+    [[nodiscard]] QString getHexColor() const;
+    [[nodiscard]] QColor getColor() const;
+    [[nodiscard]] int getAlphaPercent() const;
+    [[nodiscard]] float getAlphaFloat() const;
 
 signals:
     void colorChanged(const QString& hex_color);
