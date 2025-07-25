@@ -3,6 +3,7 @@
 #include "ShaderManager/ShaderManager.hpp"
 
 #include <QDebug>
+#include <QKeyEvent>
 #include <QOpenGLShaderProgram>
 #include <QMouseEvent>
 
@@ -256,6 +257,17 @@ void PolygonSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D con
             completePolygonSelection();
         } 
     }
+}
+
+void PolygonSelectionHandler::keyPressEvent(QKeyEvent * event) {
+    if (event->key() == Qt::Key_Escape) {
+        cancelPolygonSelection();
+    }
+}
+
+void PolygonSelectionHandler::deactivate() {
+    cancelPolygonSelection();
+    //cleanupOpenGLResources();
 }
 
 void PolygonSelectionHandler::updatePolygonBuffers() {

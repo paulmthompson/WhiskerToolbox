@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+class QKeyEvent;
 class QMouseEvent;
 class QOpenGLShaderProgram;
 
@@ -59,43 +60,13 @@ public:
     void setCallbacks(
             ApplySelectionRegionCallback apply_selection_region_callback);
 
-
-    /**
-     * @brief Check if currently in polygon selection mode
-     * @return True if actively selecting a polygon
-     */
-    bool isPolygonSelecting() const { return _is_polygon_selecting; }
-
-    /**
-     * @brief Get the number of vertices in the current polygon
-     * @return Number of vertices
-     */
-    size_t getVertexCount() const { return _polygon_vertices.size(); }
-
-    /**
-     * @brief Start polygon selection at given world coordinates
-     * @param world_x World X coordinate
-     * @param world_y World Y coordinate
-     */
-    void startPolygonSelection(int world_x, int world_y);
-
-
-
-    /**
-     * @brief Complete polygon selection and create selection region
-     */
-    void completePolygonSelection();
-
-    /**
-     * @brief Cancel current polygon selection
-     */
-    void cancelPolygonSelection();
-
     /**
      * @brief Render polygon selection overlay using OpenGL
      * @param mvp_matrix Model-View-Projection matrix
      */
     void render(QMatrix4x4 const & mvp_matrix);
+
+    void deactivate();
 
     /**
      * @brief Get the current active selection region (if any)
@@ -105,6 +76,9 @@ public:
 
 
     void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos); 
+
+    void keyPressEvent(QKeyEvent * event);
+
 private:
   
     ApplySelectionRegionCallback _apply_selection_region_callback;
@@ -145,6 +119,38 @@ private:
      * @param world_y World Y coordinate
      */
     void addPolygonVertex(int world_x, int world_y);
+
+    
+    /**
+     * @brief Check if currently in polygon selection mode
+     * @return True if actively selecting a polygon
+     */
+    bool isPolygonSelecting() const { return _is_polygon_selecting; }
+
+    /**
+     * @brief Get the number of vertices in the current polygon
+     * @return Number of vertices
+     */
+    size_t getVertexCount() const { return _polygon_vertices.size(); }
+
+    /**
+     * @brief Start polygon selection at given world coordinates
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
+     */
+    void startPolygonSelection(int world_x, int world_y);
+
+
+
+    /**
+     * @brief Complete polygon selection and create selection region
+     */
+    void completePolygonSelection();
+
+    /**
+     * @brief Cancel current polygon selection
+     */
+    void cancelPolygonSelection();
 };
 
 #endif// POLYGONSELECTIONHANDLER_HPP

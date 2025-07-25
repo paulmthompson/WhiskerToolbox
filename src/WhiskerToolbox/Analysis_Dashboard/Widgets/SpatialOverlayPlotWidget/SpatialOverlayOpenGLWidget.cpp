@@ -528,9 +528,7 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
     if (mode != _selection_mode) {
         // Cancel any active polygon selection when switching modes
         if (_polygon_selection_handler) {
-            if (_polygon_selection_handler->isPolygonSelecting()) {
-                _polygon_selection_handler->cancelPolygonSelection();
-            }
+            _polygon_selection_handler->deactivate();
         }
 
         // Cancel any active line drawing when switching modes
@@ -902,7 +900,6 @@ void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
         viz->clearHover();
     }
 
-    // Use throttled update
     requestThrottledUpdate();
 
     QOpenGLWidget::leaveEvent(event);
@@ -910,8 +907,8 @@ void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
 
 void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
     if (event->key() == Qt::Key_Escape) {
-        if (_polygon_selection_handler->isPolygonSelecting()) {
-            _polygon_selection_handler->cancelPolygonSelection();
+        if (_polygon_selection_handler) {
+            _polygon_selection_handler->keyPressEvent(event);
             requestThrottledUpdate();
             event->accept();
             return;
