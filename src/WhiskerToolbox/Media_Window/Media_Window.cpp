@@ -60,10 +60,10 @@ void Media_Window::addLineDataToScene(std::string const & line_key) {
 }
 
 void Media_Window::_clearLines() {
-    for (auto pathItem: _line_paths) {
+    for (auto pathItem: std::as_const(_line_paths)) {
         removeItem(pathItem);
     }
-    for (auto pathItem: _line_paths) {
+    for (auto pathItem: std::as_const(_line_paths)) {
         delete pathItem;
     }
     _line_paths.clear();
@@ -89,33 +89,33 @@ void Media_Window::addMaskDataToScene(std::string const & mask_key) {
 }
 
 void Media_Window::_clearMasks() {
-    for (auto maskItem: _masks) {
+    for (auto maskItem: std::as_const(_masks)) {
         removeItem(maskItem);
     }
 
-    for (auto maskItem: _masks) {
+    for (auto maskItem: std::as_const(_masks)) {
         delete maskItem;
     }
     _masks.clear();
 }
 
 void Media_Window::_clearMaskBoundingBoxes() {
-    for (auto boundingBoxItem: _mask_bounding_boxes) {
+    for (auto boundingBoxItem: std::as_const(_mask_bounding_boxes)) {
         removeItem(boundingBoxItem);
     }
 
-    for (auto boundingBoxItem: _mask_bounding_boxes) {
+    for (auto boundingBoxItem: std::as_const(_mask_bounding_boxes)) {
         delete boundingBoxItem;
     }
     _mask_bounding_boxes.clear();
 }
 
 void Media_Window::_clearMaskOutlines() {
-    for (auto outlineItem: _mask_outlines) {
+    for (auto outlineItem: std::as_const(_mask_outlines)) {
         removeItem(outlineItem);
     }
 
-    for (auto outlineItem: _mask_outlines) {
+    for (auto outlineItem: std::as_const(_mask_outlines)) {
         delete outlineItem;
     }
     _mask_outlines.clear();
@@ -247,8 +247,8 @@ void Media_Window::_plotTextOverlays() {
         }
 
         // Calculate position based on relative coordinates (0.0-1.0)
-        float x_pos = overlay.x_position * static_cast<float>(_canvasWidth);
-        float y_pos = overlay.y_position * static_cast<float>(_canvasHeight);
+        float const x_pos = overlay.x_position * static_cast<float>(_canvasWidth);
+        float const y_pos = overlay.y_position * static_cast<float>(_canvasHeight);
 
         // Create text item
         auto text_item = addText(overlay.text);
@@ -259,7 +259,7 @@ void Media_Window::_plotTextOverlays() {
         text_item->setFont(font);
 
         // Set color
-        QColor text_color(overlay.color);
+        QColor const text_color(overlay.color);
         text_item->setDefaultTextColor(text_color);
 
         // Handle orientation
@@ -1364,8 +1364,8 @@ void Media_Window::setHoverCircleRadius(int radius) {
 
     // Update the existing hover circle item if it exists
     if (_hover_circle_item && _show_hover_circle) {
-        qreal x = _hover_position.x() - _hover_circle_radius;
-        qreal y = _hover_position.y() - _hover_circle_radius;
+        qreal const x = _hover_position.x() - _hover_circle_radius;
+        qreal const y = _hover_position.y() - _hover_circle_radius;
         _hover_circle_item->setRect(x, y, _hover_circle_radius * 2, _hover_circle_radius * 2);
     }
 }
@@ -1376,8 +1376,8 @@ void Media_Window::_updateHoverCirclePosition() {
 
     if (_hover_circle_item && _show_hover_circle) {
         // Update the position of the existing hover circle item
-        qreal x = _hover_position.x() - _hover_circle_radius;
-        qreal y = _hover_position.y() - _hover_circle_radius;
+        qreal const x = _hover_position.x() - _hover_circle_radius;
+        qreal const y = _hover_position.y() - _hover_circle_radius;
         _hover_circle_item->setRect(x, y, _hover_circle_radius * 2, _hover_circle_radius * 2);
         _hover_circle_item->setVisible(true);
 
@@ -1398,7 +1398,7 @@ void Media_Window::_addRemoveData() {
 }
 
 bool Media_Window::_needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe, 
-                                             std::shared_ptr<TimeFrame> interval_timeframe) {
+                                             const std::shared_ptr<TimeFrame>& interval_timeframe) {
     // If either timeframe is null, no conversion is possible/needed
     if (!video_timeframe || !interval_timeframe) {
         return false;

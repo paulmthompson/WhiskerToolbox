@@ -141,14 +141,14 @@ public:
      * @param mask_key The mask key to check
      * @return True if preview data exists for this key
      */
-    bool hasPreviewMaskData(std::string const & mask_key) const;
+    [[nodiscard]] bool hasPreviewMaskData(std::string const & mask_key) const;
 
     /**
      * @brief Get preview mask data for a given key and time
      * @param mask_key The mask key
      * @return Preview mask data if available, empty vector otherwise
      */
-    std::vector<Mask2D> getPreviewMaskData(std::string const & mask_key) const;
+    [[nodiscard]] std::vector<Mask2D> getPreviewMaskData(std::string const & mask_key) const;
 
     /**
      * @brief Set preview mask data for a given key
@@ -223,6 +223,7 @@ private:
     QImage _applyTransparencyMasks(QImage const & media_image);
 
     void _plotPointData();
+    void extracted();
     void _clearPoints();
 
     void _plotDigitalIntervalSeries();
@@ -241,7 +242,7 @@ private:
 
     // Helper for timeframe conversion
     bool _needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe, 
-                                   std::shared_ptr<TimeFrame> interval_timeframe);
+                                   const std::shared_ptr<TimeFrame>& interval_timeframe);
 
 public slots:
     void LoadFrame(int frame_id);
