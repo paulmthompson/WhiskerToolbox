@@ -24,3 +24,15 @@ Refactor: add const qualifiers for improved clarity and const-correctness
 - Ensured immutability for values that do not change after initialization
 - Improved code clarity and enforced const-correctness
 
+7/25 4:42
+Refactor: Apply const correctness and [[nodiscard]] to UI logic and helper methods
+
+- Added `const` qualifiers to local variables where values are not modified (e.g., `QColor`, `QString`, `bool`, `float`, `CanvasCoordinates`, `MediaCoordinates`) across multiple UI components.
+- Marked key const-returning methods with `[[nodiscard]]` (e.g., `_generateOutputName`, `getHexColor`) to ensure their return values are not accidentally ignored.
+- Improved signal-emitting blocks by marking `CanvasCoordinates` and `MediaCoordinates` as `const` to clarify immutability and intent.
+- Updated coordinate handling in mouse event logic for clarity and consistency.
+- Enforced `const` on filter helper method signatures and local variables in filter configuration logic.
+- Applied `const` to loop-scoped and lambda-captured variables in image/mask processing (e.g., scaling factors, image data).
+- Improved maintainability, type safety, and potential for compiler optimization by eliminating unnecessary mutability throughout the codebase.
+  
+
