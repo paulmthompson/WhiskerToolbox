@@ -54,13 +54,6 @@ public:
     ~PolygonSelectionHandler();
 
     /**
-     * @brief Set the callbacks for communicating with the parent widget
-     * @param apply_selection_region_callback Callback for applying selection regions
-     */
-    void setCallbacks(
-            ApplySelectionRegionCallback apply_selection_region_callback);
-
-    /**
      * @brief Render polygon selection overlay using OpenGL
      * @param mvp_matrix Model-View-Projection matrix
      */

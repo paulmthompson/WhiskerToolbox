@@ -17,6 +17,7 @@
 
 class PointData;
 class QOpenGLShaderProgram;
+class PolygonSelectionHandler;
 
 
 /**
@@ -57,6 +58,8 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      * @brief Update selection vertex buffer with current selection
      */
     void updateSelectionVertexBuffer();
+
+    void applySelection(PolygonSelectionHandler const & selection_handler);
 
     /**
      * @brief Clear all selected points

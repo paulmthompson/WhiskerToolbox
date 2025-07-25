@@ -24,11 +24,6 @@ PolygonSelectionHandler::~PolygonSelectionHandler() {
     cleanupOpenGLResources();
 }
 
-void PolygonSelectionHandler::setCallbacks(
-        ApplySelectionRegionCallback apply_selection_region_callback) {
-    _apply_selection_region_callback = apply_selection_region_callback;
-}
-
 void PolygonSelectionHandler::initializeOpenGLResources() {
 
     ShaderManager & shader_manager = ShaderManager::instance();
@@ -139,10 +134,10 @@ void PolygonSelectionHandler::completePolygonSelection() {
 
     // Create selection region and apply it
     auto polygon_region = std::make_unique<PolygonSelectionRegion>(_polygon_vertices);
-    _apply_selection_region_callback(*polygon_region, false);// Replace existing selection
-
-    // Store the active region for future use if needed
     _active_selection_region = std::move(polygon_region);
+
+    _apply_selection_region_callback(*_active_selection_region, false); // Notify selection
+
 
     // Clean up polygon selection state
     _is_polygon_selecting = false;

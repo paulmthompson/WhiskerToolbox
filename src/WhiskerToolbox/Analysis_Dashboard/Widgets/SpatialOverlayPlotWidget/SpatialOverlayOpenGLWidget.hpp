@@ -171,6 +171,8 @@ public:
      */
     size_t getTotalSelectedLines() const;
 
+    void makeSelection();
+
 signals:
     /**
      * @brief Emitted when user double-clicks on a point to jump to that frame

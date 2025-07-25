@@ -1,6 +1,7 @@
 #include "PointDataVisualization.hpp"
 
 #include "DataManager/Points/Point_Data.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
 
 #include <QOpenGLShaderProgram>
 
@@ -250,4 +251,42 @@ BoundingBox PointDataVisualization::calculateBoundsForPointData(PointData const 
 
     return BoundingBox(min_x - padding_x, min_y - padding_y,
                        max_x + padding_x, max_y + padding_y);
+}
+
+void PointDataVisualization::applySelection(PolygonSelectionHandler const & selection_handler) {
+    if (!selected_points.empty()) {
+        clearSelection();
+    }
+
+    auto const & region = selection_handler.getActiveSelectionRegion();
+
+    float min_x, min_y, max_x, max_y;
+    region->getBoundingBox(min_x, min_y, max_x, max_y);
+    BoundingBox query_bounds(min_x, min_y, max_x, max_y);
+
+    size_t total_points_added = 0;
+    QString last_modified_key;
+
+    // Query each PointData's QuadTree
+    if (!visible || !spatial_index) {
+        return;
+    }
+
+    std::vector<QuadTreePoint<int64_t> const *> candidate_points;
+    spatial_index->queryPointers(query_bounds, candidate_points);
+
+    size_t points_added_this_data = 0;
+    for (auto const * point_ptr: candidate_points) {
+        if (region->containsPoint(Point2D<float>(point_ptr->x, point_ptr->y))) {
+            if (selected_points.find(point_ptr) == selected_points.end()) {
+                selected_points.insert(point_ptr);
+                points_added_this_data++;
+            }
+        }
+    }
+
+    if (points_added_this_data > 0) {
+        updateSelectionVertexBuffer();
+        total_points_added += points_added_this_data;
+    }
 }

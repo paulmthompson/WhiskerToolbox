@@ -524,6 +524,16 @@ void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
     }
 }
 
+void SpatialOverlayOpenGLWidget::makeSelection() {
+    if (_polygon_selection_handler) {
+        
+        for (auto const & [key, viz]: _point_data_visualizations) {
+            viz->applySelection(*_polygon_selection_handler);
+        }
+    }
+    requestThrottledUpdate();
+}
+
 void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
     if (mode != _selection_mode) {
         // Cancel any active polygon selection when switching modes
@@ -549,7 +559,7 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
         if (_selection_mode == SelectionMode::PolygonSelection) {
 
             if (!_polygon_selection_handler) {
-                _polygon_selection_handler = std::make_unique<PolygonSelectionHandler>(                                                                       // request update callback
+                _polygon_selection_handler = std::make_unique<PolygonSelectionHandler>(                                                           
                         [this](SelectionRegion const & region, bool add_to_selection) { applySelectionRegion(region, add_to_selection); }// apply selection region callback
                 );
             }
