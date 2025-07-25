@@ -16,3 +16,11 @@ Refactor: Improve code readability, safety, and consistency
 - Modified UI layout file to:
   - Add missing cursor property (`ArrowCursor`)
   - Add new "Purple" theme option to the appearance selector.
+ 
+7/25 10:25
+Refactor: add const qualifiers for improved clarity and const-correctness
+
+- Added const to local variables such as colors, positions, and brushes
+- Ensured immutability for values that do not change after initialization
+- Improved code clarity and enforced const-correctness
+
