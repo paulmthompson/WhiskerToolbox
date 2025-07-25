@@ -4,10 +4,8 @@
 #include <QOpenGLFunctions>
 
 PolygonSelectionHandler::PolygonSelectionHandler(
-        RequestUpdateCallback request_update_callback,
         ApplySelectionRegionCallback apply_selection_region_callback)
-    : _request_update_callback(request_update_callback),
-      _apply_selection_region_callback(apply_selection_region_callback),
+    : _apply_selection_region_callback(apply_selection_region_callback),
       _polygon_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _polygon_line_buffer(QOpenGLBuffer::VertexBuffer),
       _opengl_resources_initialized(false),
@@ -19,9 +17,7 @@ PolygonSelectionHandler::~PolygonSelectionHandler() {
 }
 
 void PolygonSelectionHandler::setCallbacks(
-        RequestUpdateCallback request_update_callback,
         ApplySelectionRegionCallback apply_selection_region_callback) {
-    _request_update_callback = request_update_callback;
     _apply_selection_region_callback = apply_selection_region_callback;
 }
 
@@ -103,9 +99,6 @@ void PolygonSelectionHandler::startPolygonSelection(int world_x, int world_y) {
     // Update polygon buffers
     updatePolygonBuffers();
 
-    if (_request_update_callback) {
-        _request_update_callback();
-    }
 }
 
 void PolygonSelectionHandler::addPolygonVertex(int world_x, int world_y) {
@@ -121,9 +114,6 @@ void PolygonSelectionHandler::addPolygonVertex(int world_x, int world_y) {
     // Update polygon buffers
     updatePolygonBuffers();
 
-    if (_request_update_callback) {
-        _request_update_callback();
-    }
 }
 
 void PolygonSelectionHandler::completePolygonSelection() {
@@ -151,10 +141,6 @@ void PolygonSelectionHandler::completePolygonSelection() {
     // Clean up polygon selection state
     _is_polygon_selecting = false;
     _polygon_vertices.clear();
-
-    if (_request_update_callback) {
-        _request_update_callback();
-    }
 }
 
 void PolygonSelectionHandler::cancelPolygonSelection() {
@@ -172,10 +158,6 @@ void PolygonSelectionHandler::cancelPolygonSelection() {
         _polygon_line_buffer.bind();
         glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
         _polygon_line_buffer.release();
-    }
-
-    if (_request_update_callback) {
-        _request_update_callback();
     }
 }
 

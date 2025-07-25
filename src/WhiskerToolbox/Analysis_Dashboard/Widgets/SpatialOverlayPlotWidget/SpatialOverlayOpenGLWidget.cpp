@@ -45,8 +45,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     setFormat(format);
 
     // Initialize polygon selection handler with callbacks
-    _polygon_selection_handler = std::make_unique<PolygonSelectionHandler>(
-            [this]() { requestThrottledUpdate(); },                                                                          // request update callback
+    _polygon_selection_handler = std::make_unique<PolygonSelectionHandler>(                                                                       // request update callback
             [this](SelectionRegion const & region, bool add_to_selection) { applySelectionRegion(region, add_to_selection); }// apply selection region callback
     );
 
@@ -639,10 +638,12 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
             if (!_polygon_selection_handler->isPolygonSelecting()) {
                 // Start new polygon selection
                 _polygon_selection_handler->startPolygonSelection(world_x, world_y);
+                
             } else {
                 // Add vertex to current polygon
                 _polygon_selection_handler->addPolygonVertex(world_x, world_y);
             }
+            requestThrottledUpdate();
             event->accept();
             return;
         }
@@ -759,6 +760,7 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         // Right click - complete polygon selection or clear selection
         if (_polygon_selection_handler->isPolygonSelecting()) {
             _polygon_selection_handler->completePolygonSelection();
+            requestThrottledUpdate();
             event->accept();
             return;
         } else {
@@ -926,6 +928,7 @@ void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
     if (event->key() == Qt::Key_Escape) {
         if (_polygon_selection_handler->isPolygonSelecting()) {
             _polygon_selection_handler->cancelPolygonSelection();
+            requestThrottledUpdate();
             event->accept();
             return;
         }

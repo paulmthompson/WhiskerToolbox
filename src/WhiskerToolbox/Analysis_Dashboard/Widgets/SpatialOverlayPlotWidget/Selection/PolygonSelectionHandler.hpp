@@ -44,23 +44,17 @@ private:
  */
 class PolygonSelectionHandler : protected QOpenGLFunctions_4_1_Core {
 public:
-    // Callback function types
-    using RequestUpdateCallback = std::function<void()>;
     using ApplySelectionRegionCallback = std::function<void(SelectionRegion const &, bool)>;
 
     explicit PolygonSelectionHandler(
-            RequestUpdateCallback request_update_callback = nullptr,
             ApplySelectionRegionCallback apply_selection_region_callback = nullptr);
     ~PolygonSelectionHandler();
 
     /**
      * @brief Set the callbacks for communicating with the parent widget
-     * @param request_update_callback Callback for requesting display updates
-     * @param screen_to_world_callback Callback for screen to world coordinate conversion
      * @param apply_selection_region_callback Callback for applying selection regions
      */
     void setCallbacks(
-            RequestUpdateCallback request_update_callback,
             ApplySelectionRegionCallback apply_selection_region_callback);
 
     /**
@@ -125,8 +119,7 @@ public:
     std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { return _active_selection_region; }
 
 private:
-    // Callback functions
-    RequestUpdateCallback _request_update_callback;
+  
     ApplySelectionRegionCallback _apply_selection_region_callback;
 
     // OpenGL rendering resources
