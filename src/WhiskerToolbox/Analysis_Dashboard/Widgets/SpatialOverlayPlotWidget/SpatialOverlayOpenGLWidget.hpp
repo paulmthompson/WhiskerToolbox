@@ -453,10 +453,6 @@ private:
      */
     void updateMouseWorldPosition(int screen_x, int screen_y);
 
-    /**
-     * @brief Update all line visualizations with current selection mode
-     */
-    void updateLineVisualizationSelectionModes();
 };
 
 QString create_tooltipText(QuadTreePoint<int64_t> const * point, QString const & data_key);

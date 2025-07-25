@@ -542,14 +542,11 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
 
 void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
     if (mode != _selection_mode) {
-        // Cancel any active polygon selection when switching modes
+
         std::visit([](auto & handler) {
-            if (handler) {
                 handler->deactivate();
                 handler->clearNotificationCallback();
-            }
-        },
-                   _selection_handler);
+        }, _selection_handler);
 
 
         // Reset interaction state
@@ -558,36 +555,26 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
         _selection_mode = mode;
         emit selectionModeChanged(_selection_mode);
 
-        // Update line visualizations with new selection mode
-        updateLineVisualizationSelectionModes();
-
         // Update cursor based on selection mode
         if (_selection_mode == SelectionMode::PolygonSelection) {
             _selection_handler = std::make_unique<PolygonSelectionHandler>();
-            std::visit([this](auto & handler) {
-                handler->setNotificationCallback([this]() {
-                    makeSelection();
-                });
-            },
-                       _selection_handler);
             setCursor(Qt::CrossCursor);
         } else if (_selection_mode == SelectionMode::LineIntersection) {
             _selection_handler = std::make_unique<LineSelectionHandler>();
-            std::visit([this](auto & handler) {
-                handler->setNotificationCallback([this]() {
-                    makeSelection();
-                });
-            },
-                       _selection_handler);
             setCursor(Qt::CrossCursor);
-        } else {
+        } else if (_selection_mode == SelectionMode::None) {
             _selection_handler = std::make_unique<NoneSelectionHandler>();
             setCursor(Qt::ArrowCursor);
         }
-        qDebug() << "SpatialOverlayOpenGLWidget: Selection mode changed to" << static_cast<int>(_selection_mode);
-    }
 
-    requestThrottledUpdate();
+        std::visit([this](auto & handler) {
+            handler->setNotificationCallback([this]() {
+                    makeSelection();
+            });
+        }, _selection_handler);
+
+        requestThrottledUpdate();
+    }
 }
 
 void SpatialOverlayOpenGLWidget::initializeGL() {
@@ -1536,8 +1523,3 @@ void SpatialOverlayOpenGLWidget::renderCommonOverlay() {
     // This will be expanded to handle tooltip rendering and other common UI elements
 }
 
-void SpatialOverlayOpenGLWidget::updateLineVisualizationSelectionModes() {
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        viz->setSelectionMode(_selection_mode);
-    }
-}

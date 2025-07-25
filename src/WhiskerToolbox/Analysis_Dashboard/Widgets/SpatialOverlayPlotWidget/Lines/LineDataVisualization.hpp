@@ -87,9 +87,6 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     QOpenGLBuffer selection_vertex_buffer;
     QOpenGLVertexArrayObject selection_vertex_array_object;
 
-    // Selection mode state
-    SelectionMode _current_selection_mode;
-
     bool m_viewIsDirty = true;
     bool m_dataIsDirty = true;
 
@@ -187,11 +184,6 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      */
     BoundingBox calculateBoundsForLineData(LineData const * line_data) const;
 
-    /**
-     * @brief Set the current selection mode for this visualization
-     * @param mode The current selection mode
-     */
-    void setSelectionMode(SelectionMode mode);
 
     void clearSelection();
 
