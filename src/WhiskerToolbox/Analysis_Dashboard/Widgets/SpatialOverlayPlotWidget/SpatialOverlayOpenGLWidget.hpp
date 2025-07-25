@@ -123,12 +123,6 @@ public:
     float getPointSize() const { return _point_size; }
 
     /**
-     * @brief Get the currently selected points from all PointData objects
-     * @return Vector of pairs containing data key and selected points
-     */
-    std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const *>>> getSelectedPointData() const;
-
-    /**
      * @brief Get total number of selected points across all PointData visualizations
      * @return Total selected point count
      */
@@ -142,12 +136,6 @@ public:
      */
     void setMaskData(std::unordered_map<QString, std::shared_ptr<MaskData>> const & mask_data_map);
 
-
-    /**
-     * @brief Get the currently selected masks from all MaskData objects
-     * @return Vector of pairs containing data key and selected mask identifiers
-     */
-    std::vector<std::pair<QString, std::vector<MaskIdentifier>>> getSelectedMaskData() const;
 
     /**
      * @brief Get total number of selected masks across all MaskData visualizations
@@ -307,17 +295,7 @@ private:
     SelectionMode _selection_mode;// Current selection mode
 
     SelectionVariant _selection_handler;
-
-    // Interaction state management
-    enum class InteractionState {
-        None,           ///< No interaction active
-        Hover,          ///< Normal hover detection
-        LineDrawing,    ///< Drawing line for intersection
-        PolygonDrawing, ///< Drawing polygon for selection
-        Panning         ///< Panning the view
-    };
     
-    InteractionState _interaction_state;
     QVector2D _current_mouse_world_pos;  ///< Current mouse position in world coordinates
     QVector2D _line_draw_start_pos;      ///< Line drawing start position
     QVector2D _line_draw_end_pos;        ///< Line drawing end position
@@ -428,23 +406,6 @@ private:
      * @brief Render common overlay elements (tooltips, selection indicators, etc.)
      */
     void renderCommonOverlay();
-
-    /**
-     * @brief Update interaction state based on current mouse position and selection mode
-     */
-    void updateInteractionState();
-
-    /**
-     * @brief Set the current interaction state
-     * @param state The new interaction state
-     */
-    void setInteractionState(InteractionState state);
-
-    /**
-     * @brief Get the current interaction state
-     * @return Current interaction state
-     */
-    InteractionState getInteractionState() const { return _interaction_state; }
 
     /**
      * @brief Update mouse position in world coordinates

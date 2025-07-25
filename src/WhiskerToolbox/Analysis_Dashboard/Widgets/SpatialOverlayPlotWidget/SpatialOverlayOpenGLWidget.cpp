@@ -34,7 +34,6 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _pending_update(false),
       _hover_processing_active(false),
       _selection_mode(SelectionMode::PointSelection),
-      _interaction_state(InteractionState::None),
       _selection_handler(std::make_unique<NoneSelectionHandler>()) {
 
     setMouseTracking(true);
@@ -181,13 +180,6 @@ void SpatialOverlayOpenGLWidget::setMaskData(std::unordered_map<QString, std::sh
     } else {
         update();
     }
-}
-
-std::vector<std::pair<QString, std::vector<MaskIdentifier>>> SpatialOverlayOpenGLWidget::getSelectedMaskData() const {
-    std::vector<std::pair<QString, std::vector<MaskIdentifier>>> result;
-
-
-    return result;
 }
 
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
@@ -415,25 +407,6 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
     _data_bounds_valid = true;
 }
 
-std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const *>>> SpatialOverlayOpenGLWidget::getSelectedPointData() const {
-    std::vector<std::pair<QString, std::vector<QuadTreePoint<int64_t> const *>>> result;
-
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (!viz->selected_points.empty()) {
-            std::vector<QuadTreePoint<int64_t> const *> points;
-            points.reserve(viz->selected_points.size());
-
-            for (auto const * point: viz->selected_points) {
-                points.push_back(point);
-            }
-
-            result.emplace_back(key, std::move(points));
-        }
-    }
-
-    return result;
-}
-
 //========== Line Data ==========
 
 void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map) {
@@ -548,10 +521,6 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
                 handler->clearNotificationCallback();
         }, _selection_handler);
 
-
-        // Reset interaction state
-        setInteractionState(InteractionState::None);
-
         _selection_mode = mode;
         emit selectionModeChanged(_selection_mode);
 
@@ -614,9 +583,6 @@ void SpatialOverlayOpenGLWidget::paintGL() {
     if (!_data_bounds_valid || !_opengl_resources_initialized) {
         return;
     }
-
-    // Update interaction state before rendering
-    updateInteractionState();
 
     // Render data visualizations
     renderPoints();
@@ -749,7 +715,6 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
                 }
             }
         }
-
 
         // Regular left click - start panning (if not in polygon selection mode)
         if (_selection_mode != SelectionMode::PolygonSelection) {
@@ -1398,11 +1363,6 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
         return;
     }
 
-    // Skip hover processing if we're in a drawing state (line drawing, polygon drawing)
-    if (_interaction_state == InteractionState::LineDrawing || _interaction_state == InteractionState::PolygonDrawing) {
-        return;
-    }
-
     // Set processing flag to prevent new hover calculations
     _hover_processing_active = true;
 
@@ -1485,37 +1445,6 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
 
 void SpatialOverlayOpenGLWidget::updateMouseWorldPosition(int screen_x, int screen_y) {
     _current_mouse_world_pos = screenToWorld(screen_x, screen_y);
-}
-
-void SpatialOverlayOpenGLWidget::setInteractionState(InteractionState state) {
-    if (_interaction_state != state) {
-        _interaction_state = state;
-        qDebug() << "SpatialOverlayOpenGLWidget: Interaction state changed to" << static_cast<int>(state);
-        requestThrottledUpdate();
-    }
-}
-
-void SpatialOverlayOpenGLWidget::updateInteractionState() {
-    // Update interaction state based on current selection mode and mouse state
-    std::visit([this](auto & handler) {
-        if (handler) {
-            if constexpr (std::is_same_v<std::decay_t<decltype(handler)>, std::unique_ptr<LineSelectionHandler>>) {
-                if (handler->isLineSelecting()) {
-                    setInteractionState(InteractionState::LineDrawing);
-                    return;
-                }
-            }
-        }
-    },
-               _selection_handler);
-
-    if (_selection_mode == SelectionMode::PolygonSelection) {
-        setInteractionState(InteractionState::PolygonDrawing);
-    } else if (_is_panning) {
-        setInteractionState(InteractionState::Panning);
-    } else {
-        setInteractionState(InteractionState::Hover);
-    }
 }
 
 void SpatialOverlayOpenGLWidget::renderCommonOverlay() {
