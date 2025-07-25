@@ -22,6 +22,7 @@
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 class PointData;
@@ -302,7 +303,7 @@ private:
     QPoint _pending_hover_pos;    // Store the latest hover position for processing
     SelectionMode _selection_mode;// Current selection mode
 
-    std::unique_ptr<PolygonSelectionHandler> _polygon_selection_handler;
+    std::variant<std::unique_ptr<PolygonSelectionHandler>> _selection_handler;
 
     // Line intersection drawing state
     bool _is_drawing_line;

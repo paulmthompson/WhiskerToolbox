@@ -16,6 +16,7 @@
 #include <set>
 #include <unordered_set>
 #include <vector>
+#include <variant>
 
 class MaskData;
 class QOpenGLShaderProgram;
@@ -171,6 +172,12 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
 
 
     //========== Selection Handlers ==========
+
+    /**
+     * @brief Apply selection to this MaskDataVisualization
+     * @param selection_handler The PolygonSelectionHandler to apply
+     */
+    void applySelection(std::variant<std::unique_ptr<PolygonSelectionHandler>> const & selection_handler);
 
     /**
      * @brief Apply selection to this MaskDataVisualization

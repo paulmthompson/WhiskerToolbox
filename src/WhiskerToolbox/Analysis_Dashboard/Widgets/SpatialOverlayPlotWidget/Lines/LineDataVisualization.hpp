@@ -19,6 +19,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <variant>
 
 class QOpenGLShaderProgram;
 class PolygonSelectionHandler;
@@ -192,6 +193,8 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void clearSelection();
 
     //========== Selection Handlers ==========
+
+    void applySelection(std::variant<std::unique_ptr<PolygonSelectionHandler>> const & selection_handler);
 
     /**
      * @brief Apply selection to this LineDataVisualization

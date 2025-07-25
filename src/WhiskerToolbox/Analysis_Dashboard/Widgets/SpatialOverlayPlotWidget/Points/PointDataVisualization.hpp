@@ -14,6 +14,7 @@
 #include <memory>
 #include <unordered_set>
 #include <vector>
+#include <variant>
 
 class PointData;
 class QOpenGLShaderProgram;
@@ -104,6 +105,12 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     BoundingBox calculateBoundsForPointData(PointData const * point_data) const;
 
     //========== Selection Handlers ==========
+
+    /**
+     * @brief Apply selection to this PointDataVisualization
+     * @param selection_handler The PolygonSelectionHandler to apply
+     */
+    void applySelection(std::variant<std::unique_ptr<PolygonSelectionHandler>> const & selection_handler);
 
     /**
      * @brief Apply selection to this PointDataVisualization

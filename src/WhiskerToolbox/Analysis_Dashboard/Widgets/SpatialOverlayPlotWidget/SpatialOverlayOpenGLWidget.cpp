@@ -34,7 +34,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _selection_mode(SelectionMode::PointSelection),
       _is_drawing_line(false),
       _interaction_state(InteractionState::None),
-      _polygon_selection_handler(nullptr) {
+      _selection_handler(nullptr) {
 
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
@@ -525,16 +525,21 @@ void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
 }
 
 void SpatialOverlayOpenGLWidget::makeSelection() {
-    if (_polygon_selection_handler) {
+
+    auto handler_populated =std::visit([](auto & handler) {
+        if (handler) {return true;} else {return false;}
+    }, _selection_handler);
+    
+    if (handler_populated) {
         
         for (auto const & [key, viz]: _point_data_visualizations) {
-            viz->applySelection(*_polygon_selection_handler);
+            viz->applySelection(_selection_handler);
         }
         for (auto const & [key, viz]: _mask_data_visualizations) {
-            viz->applySelection(*_polygon_selection_handler);
+            viz->applySelection(_selection_handler);
         }
         for (auto const & [key, viz]: _line_data_visualizations) {
-            viz->applySelection(*_polygon_selection_handler);
+            viz->applySelection(_selection_handler);
         }
     }
     requestThrottledUpdate();
@@ -543,10 +548,12 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
 void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
     if (mode != _selection_mode) {
         // Cancel any active polygon selection when switching modes
-        if (_polygon_selection_handler) {
-            _polygon_selection_handler->deactivate();
-            _polygon_selection_handler->clearNotificationCallback();
-        }
+            std::visit([](auto & handler) {
+                if (handler) {
+                    handler->deactivate();
+                    handler->clearNotificationCallback();
+                }
+            }, _selection_handler);
 
         // Cancel any active line drawing when switching modes
         if (_is_drawing_line) {
@@ -565,22 +572,26 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
         // Update cursor based on selection mode
         if (_selection_mode == SelectionMode::PolygonSelection) {
 
-            if (!_polygon_selection_handler) {
-                _polygon_selection_handler = std::make_unique<PolygonSelectionHandler>();
-            }
-            
-            // Set notification callback to call makeSelection when polygon selection is completed
-            _polygon_selection_handler->setNotificationCallback([this]() {
-                makeSelection();
-            });
+            std::visit([](auto & handler) {
+                if (!handler) {
+                    handler = std::make_unique<PolygonSelectionHandler>();
+                }
+            }, _selection_handler);
+
+            std::visit([this](auto & handler) {
+                handler->setNotificationCallback([this]() {
+                    makeSelection();
+                });
+            }, _selection_handler);
             
             setCursor(Qt::CrossCursor);
         } else {
             setCursor(Qt::ArrowCursor);
         }
-
         qDebug() << "SpatialOverlayOpenGLWidget: Selection mode changed to" << static_cast<int>(_selection_mode);
     }
+
+    requestThrottledUpdate();
 }
 
 void SpatialOverlayOpenGLWidget::initializeGL() {
@@ -630,9 +641,11 @@ void SpatialOverlayOpenGLWidget::paintGL() {
     renderLines();
 
     QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-    if (_polygon_selection_handler) {
-        _polygon_selection_handler->render(mvp_matrix);
-    }
+    std::visit([mvp_matrix](auto & handler) {
+        if (handler) {
+            handler->render(mvp_matrix);
+        }
+    }, _selection_handler);
 
     renderCommonOverlay();
 }
@@ -651,12 +664,15 @@ void SpatialOverlayOpenGLWidget::resizeGL(int w, int h) {
 
 void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
-    if (_selection_mode == SelectionMode::PolygonSelection) {
-        _polygon_selection_handler->mousePressEvent(event, world_pos);
-        requestThrottledUpdate();
-        event->accept();
-        return;
-    } 
+
+
+    std::visit([event, world_pos](auto & handler) {
+        if (handler) {
+            handler->mousePressEvent(event, world_pos);
+        }
+    }, _selection_handler);
+
+    requestThrottledUpdate();
 
     if (event->button() == Qt::LeftButton) {
         // Point and mask selection mode - requires Ctrl+Click for toggle, Shift+Click for removal
@@ -927,12 +943,15 @@ void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
 
 void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
     if (event->key() == Qt::Key_Escape) {
-        if (_polygon_selection_handler) {
-            _polygon_selection_handler->keyPressEvent(event);
-            requestThrottledUpdate();
-            event->accept();
-            return;
-        }
+        std::visit([event](auto & handler) {
+            if (handler) {
+                handler->keyPressEvent(event);
+            }
+        }, _selection_handler);
+
+        requestThrottledUpdate();
+        event->accept();
+        return;
     } else if (event->key() == Qt::Key_Delete || event->key() == Qt::Key_Backspace) {
         if (getTotalSelectedPoints() > 0) {
             clearSelection();

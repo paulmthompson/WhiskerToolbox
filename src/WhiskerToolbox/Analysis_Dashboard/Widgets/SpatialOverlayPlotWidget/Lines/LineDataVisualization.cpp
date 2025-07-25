@@ -628,6 +628,14 @@ void LineDataVisualization::clearSelection() {
     
 }
 
+void LineDataVisualization::applySelection(std::variant<std::unique_ptr<PolygonSelectionHandler>> const & selection_handler) {
+    if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
+        applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
+    } else {
+        std::cout << "LineDataVisualization::applySelection: selection_handler is not a PolygonSelectionHandler" << std::endl;
+    }
+}
+
 void LineDataVisualization::applySelection(PolygonSelectionHandler const & selection_handler) {
     std::cout << "Line Data Polygon Selection not implemented" << std::endl;
 }

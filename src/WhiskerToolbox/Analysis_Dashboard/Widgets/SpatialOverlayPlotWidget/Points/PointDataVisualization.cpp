@@ -253,6 +253,14 @@ BoundingBox PointDataVisualization::calculateBoundsForPointData(PointData const 
                        max_x + padding_x, max_y + padding_y);
 }
 
+void PointDataVisualization::applySelection(std::variant<std::unique_ptr<PolygonSelectionHandler>> const & selection_handler) {
+    if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
+        applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
+    } else {
+        std::cout << "PointDataVisualization::applySelection: selection_handler is not a PolygonSelectionHandler" << std::endl;
+    }
+}
+
 void PointDataVisualization::applySelection(PolygonSelectionHandler const & selection_handler) {
     if (!selected_points.empty()) {
         clearSelection();
