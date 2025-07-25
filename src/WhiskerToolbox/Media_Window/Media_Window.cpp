@@ -675,7 +675,7 @@ void Media_Window::_plotLineData() {
             _line_paths.append(linePath);
 
             // Add dot at line base (always filled) - selected lines have red dot
-            QColor dot_color = is_selected ? QColor(255, 0, 0) : plot_color;
+            QColor const dot_color = is_selected ? QColor(255, 0, 0) : plot_color;
             auto ellipse = addEllipse(
                     static_cast<float>(line_to_plot[0].x) * xAspect - 2.5,
                     static_cast<float>(line_to_plot[0].y) * yAspect - 2.5,
@@ -691,7 +691,7 @@ void Media_Window::_plotLineData() {
                 pointPen.setWidth(1);
 
                 // Empty brush for open circles
-                QBrush emptyBrush(Qt::NoBrush);
+                QBrush const emptyBrush(Qt::NoBrush);
 
                 // Start from the second point (first one is already shown as filled)
                 for (size_t i = 1; i < line_to_plot.size(); i++) {
@@ -707,8 +707,8 @@ void Media_Window::_plotLineData() {
 
             // If position marker is enabled, add a marker at the specified percentage
             if (_line_config.get()->show_position_marker) {
-                float percentage = static_cast<float>(_line_config.get()->position_percentage) / 100.0f;
-                Point2D<float> marker_pos = get_position_at_percentage(line_to_plot, percentage);
+                float const percentage = static_cast<float>(_line_config.get()->position_percentage) / 100.0f;
+                Point2D<float> const marker_pos = get_position_at_percentage(line_to_plot, percentage);
 
                 float const marker_x = marker_pos.x * xAspect;
                 float const marker_y = marker_pos.y * yAspect;
@@ -716,7 +716,7 @@ void Media_Window::_plotLineData() {
                 // Create a distinctive marker (filled circle with border)
                 QPen markerPen(QColor(255, 255, 255));// White border
                 markerPen.setWidth(2);
-                QBrush markerBrush(dot_color);// Same color as line but filled
+                QBrush const markerBrush(dot_color);// Same color as line but filled
 
                 auto marker = addEllipse(
                         marker_x - 4.0f,
@@ -766,8 +766,8 @@ void Media_Window::_plotMaskData() {
         // Plot bounding boxes if enabled
         if (_mask_config.get()->show_bounding_box) {
             // Calculate scaling factors based on mask image size, not media aspect ratio
-            float xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
-            float yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
+            float const xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
+            float const yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
 
             // For current time masks
             for (auto const & single_mask: maskData) {
@@ -777,15 +777,15 @@ void Media_Window::_plotMaskData() {
                     auto max_point = bounding_box.second;
 
                     // Scale coordinates to canvas using mask image size
-                    float min_x = static_cast<float>(min_point.x) * xAspect;
-                    float min_y = static_cast<float>(min_point.y) * yAspect;
-                    float max_x = static_cast<float>(max_point.x) * xAspect;
-                    float max_y = static_cast<float>(max_point.y) * yAspect;
+                    float const min_x = static_cast<float>(min_point.x) * xAspect;
+                    float const min_y = static_cast<float>(min_point.y) * yAspect;
+                    float const max_x = static_cast<float>(max_point.x) * xAspect;
+                    float const max_y = static_cast<float>(max_point.y) * yAspect;
 
                     // Draw bounding box rectangle (no fill, just outline)
                     QPen boundingBoxPen(plot_color);
                     boundingBoxPen.setWidth(2);
-                    QBrush emptyBrush(Qt::NoBrush);
+                    QBrush const emptyBrush(Qt::NoBrush);
 
                     auto boundingBoxRect = addRect(min_x, min_y, max_x - min_x, max_y - min_y,
                                                    boundingBoxPen, emptyBrush);
@@ -801,15 +801,15 @@ void Media_Window::_plotMaskData() {
                     auto max_point = bounding_box.second;
 
                     // Scale coordinates to canvas using mask image size
-                    float min_x = static_cast<float>(min_point.x) * xAspect;
-                    float min_y = static_cast<float>(min_point.y) * yAspect;
-                    float max_x = static_cast<float>(max_point.x) * xAspect;
-                    float max_y = static_cast<float>(max_point.y) * yAspect;
+                    float const min_x = static_cast<float>(min_point.x) * xAspect;
+                    float const min_y = static_cast<float>(min_point.y) * yAspect;
+                    float const max_x = static_cast<float>(max_point.x) * xAspect;
+                    float const max_y = static_cast<float>(max_point.y) * yAspect;
 
                     // Draw bounding box rectangle (no fill, just outline)
                     QPen boundingBoxPen(plot_color);
                     boundingBoxPen.setWidth(2);
-                    QBrush emptyBrush(Qt::NoBrush);
+                    QBrush const emptyBrush(Qt::NoBrush);
 
                     auto boundingBoxRect = addRect(min_x, min_y, max_x - min_x, max_y - min_y,
                                                    boundingBoxPen, emptyBrush);
@@ -821,7 +821,7 @@ void Media_Window::_plotMaskData() {
         // Plot outlines if enabled
         if (_mask_config.get()->show_outline) {
             // Create a slightly darker color for outlines
-            QRgb outline_color = plot_color;
+            QRgb const outline_color = plot_color;
 
             // For current time masks
             for (auto const & single_mask: maskData) {
@@ -998,7 +998,7 @@ void Media_Window::_plotPointData() {
                 case PointMarkerShape::Circle: {
                     QPen pen(plot_color);
                     pen.setWidth(2);
-                    QBrush brush(plot_color);
+                    QBrush const brush(plot_color);
                     auto ellipse = addEllipse(x_pos - point_size / 2, y_pos - point_size / 2,
                                               point_size, point_size, pen, brush);
                     _points.append(ellipse);
@@ -1007,7 +1007,7 @@ void Media_Window::_plotPointData() {
                 case PointMarkerShape::Square: {
                     QPen pen(plot_color);
                     pen.setWidth(2);
-                    QBrush brush(plot_color);
+                    QBrush const brush(plot_color);
                     auto rect = addRect(x_pos - point_size / 2, y_pos - point_size / 2,
                                         point_size, point_size, pen, brush);
                     _points.append(rect);
@@ -1016,7 +1016,7 @@ void Media_Window::_plotPointData() {
                 case PointMarkerShape::Triangle: {
                     QPen pen(plot_color);
                     pen.setWidth(2);
-                    QBrush brush(plot_color);
+                    QBrush const brush(plot_color);
 
                     // Create triangle polygon
                     QPolygonF triangle;
@@ -1227,7 +1227,7 @@ void Media_Window::_plotDigitalIntervalBorders() {
             auto plot_color = plot_color_with_alpha(_interval_config.get());
 
             // Get border thickness from config
-            int thickness = _interval_config->border_thickness;
+            int const thickness = _interval_config->border_thickness;
 
             QPen border_pen(plot_color);
             border_pen.setWidth(thickness);
@@ -1273,9 +1273,9 @@ void Media_Window::_plotTensorData() {
                 //int const pixel_value = static_cast<int>(value * 255);// Assuming the tensor values are normalized between 0 and 1
 
                 // Use the config color with alpha
-                QColor color(QString::fromStdString(config->hex_color));
-                int alpha = std::lround(config->alpha * 255.0f * (value > 0 ? 1.0f : 0.0f));
-                QRgb rgb = qRgba(color.red(), color.green(), color.blue(), alpha);
+                QColor const color(QString::fromStdString(config->hex_color));
+                int const alpha = std::lround(config->alpha * 255.0f * (value > 0 ? 1.0f : 0.0f));
+                QRgb const rgb = qRgba(color.red(), color.green(), color.blue(), alpha);
 
                 tensor_image.setPixel(x, y, rgb);
             }
