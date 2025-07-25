@@ -21,6 +21,7 @@
 #include <vector>
 
 class QOpenGLShaderProgram;
+class PolygonSelectionHandler;
 
 
 /**
@@ -189,6 +190,14 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void setSelectionMode(SelectionMode mode);
 
     void clearSelection();
+
+    //========== Selection Handlers ==========
+
+    /**
+     * @brief Apply selection to this LineDataVisualization
+     * @param selection_handler The PolygonSelectionHandler to apply
+     */
+    void applySelection(PolygonSelectionHandler const & selection_handler);
 };
 
 #endif// LINEDATAVISUALIZATION_HPP

@@ -19,6 +19,7 @@
 
 class MaskData;
 class QOpenGLShaderProgram;
+class PolygonSelectionHandler;
 
 
 
@@ -167,6 +168,15 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @return Number of masks actually removed from the current selection
      */
     size_t removeIntersectingMasks(std::vector<MaskIdentifier> const & mask_ids);
+
+
+    //========== Selection Handlers ==========
+
+    /**
+     * @brief Apply selection to this MaskDataVisualization
+     * @param selection_handler The PolygonSelectionHandler to apply
+     */
+    void applySelection(PolygonSelectionHandler const & selection_handler);
 
 private:
     /**

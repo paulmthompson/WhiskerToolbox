@@ -4,6 +4,8 @@
 #include "CoreGeometry/polygon_adapter.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
+
 #include <QOpenGLShaderProgram>
 #include <QDebug>
 
@@ -654,4 +656,9 @@ static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<MaskId
     std::cout << "MaskDataVisualization: Final polygon has " << comparison_polygon.vertexCount() << " vertices" << std::endl;
     
     return comparison_polygon;
+}
+
+void MaskDataVisualization::applySelection(PolygonSelectionHandler const & selection_handler) {
+    
+    std::cout << "Mask Data Polygon Selection not implemented" << std::endl;
 }

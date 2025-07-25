@@ -4,6 +4,8 @@
 #include "ShaderManager/ShaderManager.hpp"
 #include "ShaderManager/ShaderSourceType.hpp"
 
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
+
 
 #include <QDebug>
 #include <QOpenGLFramebufferObject>
@@ -624,4 +626,8 @@ void LineDataVisualization::setSelectionMode(SelectionMode mode) {
 
 void LineDataVisualization::clearSelection() {
     
+}
+
+void LineDataVisualization::applySelection(PolygonSelectionHandler const & selection_handler) {
+    std::cout << "Line Data Polygon Selection not implemented" << std::endl;
 }

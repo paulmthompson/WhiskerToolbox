@@ -59,8 +59,6 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      */
     void updateSelectionVertexBuffer();
 
-    void applySelection(PolygonSelectionHandler const & selection_handler);
-
     /**
      * @brief Clear all selected points
      */
@@ -104,6 +102,14 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      * @return BoundingBox for the PointData
      */
     BoundingBox calculateBoundsForPointData(PointData const * point_data) const;
+
+    //========== Selection Handlers ==========
+
+    /**
+     * @brief Apply selection to this PointDataVisualization
+     * @param selection_handler The PolygonSelectionHandler to apply
+     */
+    void applySelection(PolygonSelectionHandler const & selection_handler);
 };
 
 

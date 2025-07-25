@@ -530,6 +530,12 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
         for (auto const & [key, viz]: _point_data_visualizations) {
             viz->applySelection(*_polygon_selection_handler);
         }
+        for (auto const & [key, viz]: _mask_data_visualizations) {
+            viz->applySelection(*_polygon_selection_handler);
+        }
+        for (auto const & [key, viz]: _line_data_visualizations) {
+            viz->applySelection(*_polygon_selection_handler);
+        }
     }
     requestThrottledUpdate();
 }
