@@ -606,16 +606,9 @@ void SpatialOverlayOpenGLWidget::paintGL() {
     renderMasks();
     renderLines();
 
-    // Render polygon overlay using the polygon selection handler
-    if (_polygon_selection_handler && _polygon_selection_handler->isPolygonSelecting()) {
-        QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-        auto lineProgram = ShaderManager::instance().getProgram("line");
-        if (lineProgram) {
-            _polygon_selection_handler->renderPolygonOverlay(lineProgram->getNativeProgram(), mvp_matrix);
-        }
-    }
+    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
+    _polygon_selection_handler->render(mvp_matrix);
 
-    // Render common overlay elements (tooltips, selection indicators, etc.)
     renderCommonOverlay();
 }
 
@@ -659,13 +652,12 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
             }
 
             // If no points found, try to find masks near the click
-            auto [world_x, world_y] = screenToWorld(event->pos().x(), event->pos().y());
             auto mask_results = findMasksNear(event->pos().x(), event->pos().y());
 
             if (!mask_results.empty()) {
                 for (auto const & [mask_viz, entries]: mask_results) {
                     // Refine using precise point checking
-                    auto refined_masks = mask_viz->refineMasksContainingPoint(entries, world_x, world_y);
+                    auto refined_masks = mask_viz->refineMasksContainingPoint(entries, world_pos.x(), world_pos.y());
 
                     if (!refined_masks.empty()) {
                         // Toggle the first mask found (most common use case)
@@ -706,13 +698,12 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
             }
 
             // If no points found, try to find masks near the click
-            auto [world_x, world_y] = screenToWorld(event->pos().x(), event->pos().y());
             auto mask_results = findMasksNear(event->pos().x(), event->pos().y());
 
             if (!mask_results.empty()) {
                 for (auto const & [mask_viz, entries]: mask_results) {
                     // Refine using precise point checking
-                    auto refined_masks = mask_viz->refineMasksContainingPoint(entries, world_x, world_y);
+                    auto refined_masks = mask_viz->refineMasksContainingPoint(entries, world_pos.x(), world_pos.y());
 
                     if (!refined_masks.empty()) {
                         // Remove all intersecting masks between current selection and new masks

@@ -3,11 +3,11 @@
 
 #include "SelectionModes.hpp"
 #include "CoreGeometry/points.hpp"
+#include "ShaderManager/ShaderProgram.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_1_Core>
-#include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 #include <QPoint>
 #include <QVector2D>
@@ -17,6 +17,7 @@
 #include <vector>
 
 class QMouseEvent;
+class QOpenGLShaderProgram;
 
 /**
  * @brief Polygon selection region for area-based selection
@@ -108,10 +109,9 @@ public:
 
     /**
      * @brief Render polygon selection overlay using OpenGL
-     * @param line_shader_program Shader program for line rendering
      * @param mvp_matrix Model-View-Projection matrix
      */
-    void renderPolygonOverlay(QOpenGLShaderProgram * line_shader_program, QMatrix4x4 const & mvp_matrix);
+    void render(QMatrix4x4 const & mvp_matrix);
 
     /**
      * @brief Get the current active selection region (if any)
@@ -124,6 +124,8 @@ public:
 private:
   
     ApplySelectionRegionCallback _apply_selection_region_callback;
+
+    QOpenGLShaderProgram * _line_shader_program;
 
     // OpenGL rendering resources
     QOpenGLBuffer _polygon_vertex_buffer;

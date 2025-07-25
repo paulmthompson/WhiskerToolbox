@@ -1,7 +1,10 @@
 #include "PolygonSelectionHandler.hpp"
 
+#include "ShaderManager/ShaderManager.hpp"
+
 #include <QDebug>
 #include <QOpenGLFunctions>
+#include <QOpenGLShaderProgram>
 #include <QMouseEvent>
 
 PolygonSelectionHandler::PolygonSelectionHandler(
@@ -11,6 +14,7 @@ PolygonSelectionHandler::PolygonSelectionHandler(
       _polygon_line_buffer(QOpenGLBuffer::VertexBuffer),
       _opengl_resources_initialized(false),
       _is_polygon_selecting(false) {
+
 }
 
 PolygonSelectionHandler::~PolygonSelectionHandler() {
@@ -31,6 +35,18 @@ void PolygonSelectionHandler::initializeOpenGLResources() {
     if (!initializeOpenGLFunctions()) {
         qWarning() << "PolygonSelectionHandler: Failed to initialize OpenGL functions";
         return;
+    }
+
+    ShaderManager & shader_manager = ShaderManager::instance();
+    if (!shader_manager.getProgram("line")) {
+        bool success = shader_manager.loadProgram("line",
+                                                  ":/shaders/line.vert",
+                                                  ":/shaders/line.frag",
+                                                  "",
+                                                  ShaderSourceType::Resource);
+        if (!success) {
+            qDebug() << "Failed to load line shader!";
+        }
     }
 
     // Create polygon vertex array object and buffer
@@ -162,21 +178,24 @@ void PolygonSelectionHandler::cancelPolygonSelection() {
     }
 }
 
-void PolygonSelectionHandler::renderPolygonOverlay(QOpenGLShaderProgram * line_shader_program, QMatrix4x4 const & mvp_matrix) {
-    if (!_is_polygon_selecting || _polygon_vertices.empty() || !line_shader_program) {
+void PolygonSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
+    if (!_is_polygon_selecting || _polygon_vertices.empty()) {
         return;
     }
+
+    ShaderManager & shader_manager = ShaderManager::instance();
+    _line_shader_program = shader_manager.getProgram("line")->getNativeProgram();
 
     qDebug() << "PolygonSelectionHandler: Rendering polygon overlay with" << _polygon_vertices.size() << "vertices";
 
     // Use line shader program
-    if (!line_shader_program->bind()) {
+    if (!_line_shader_program->bind()) {
         qDebug() << "PolygonSelectionHandler: Failed to bind line shader program";
         return;
     }
 
     // Set uniform matrices
-    line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
+    _line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
 
     // Enable line smoothing
     glEnable(GL_LINE_SMOOTH);
@@ -194,8 +213,8 @@ void PolygonSelectionHandler::renderPolygonOverlay(QOpenGLShaderProgram * line_s
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
     // Set uniforms for vertices (red points)
-    line_shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f));// Red
-    line_shader_program->setUniformValue("u_point_size", 8.0f);
+    _line_shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.0f, 0.0f, 1.0f));// Red
+    _line_shader_program->setUniformValue("u_point_size", 8.0f);
 
     // Draw vertices as points
     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_polygon_vertices.size()));
@@ -213,7 +232,7 @@ void PolygonSelectionHandler::renderPolygonOverlay(QOpenGLShaderProgram * line_s
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
         // Set uniforms for lines (blue dashed appearance)
-        line_shader_program->setUniformValue("u_color", QVector4D(0.2f, 0.6f, 1.0f, 1.0f));// Blue
+        _line_shader_program->setUniformValue("u_color", QVector4D(0.2f, 0.6f, 1.0f, 1.0f));// Blue
 
         // Draw lines
         glDrawArrays(GL_LINES, 0, static_cast<GLsizei>((_polygon_vertices.size() - 1) * 2));
@@ -221,7 +240,7 @@ void PolygonSelectionHandler::renderPolygonOverlay(QOpenGLShaderProgram * line_s
         // Draw closure line if we have 3+ vertices
         if (_polygon_vertices.size() >= 3) {
             // Draw closure line with different color
-            line_shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.6f, 0.2f, 1.0f));// Orange
+            _line_shader_program->setUniformValue("u_color", QVector4D(1.0f, 0.6f, 0.2f, 1.0f));// Orange
             glDrawArrays(GL_LINES, static_cast<GLint>((_polygon_vertices.size() - 1) * 2), 2);
         }
 
@@ -233,7 +252,7 @@ void PolygonSelectionHandler::renderPolygonOverlay(QOpenGLShaderProgram * line_s
     glLineWidth(1.0f);
     glDisable(GL_LINE_SMOOTH);
 
-    line_shader_program->release();
+    _line_shader_program->release();
 
     qDebug() << "PolygonSelectionHandler: Finished rendering polygon overlay";
 }
