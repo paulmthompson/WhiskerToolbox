@@ -192,13 +192,27 @@ void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
 
 void LineSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) {
     if (event->button() == Qt::LeftButton) {
-        if (!isLineSelecting()) {
+        if (!_is_drawing_line) {
             startLineSelection(world_pos.x(), world_pos.y());
         }
     } else if (event->button() == Qt::RightButton) {
-        if (isLineSelecting()) {
+        if (_is_drawing_line) {
             completeLineSelection();
         }
+    }
+}
+
+void LineSelectionHandler::mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {
+    if (_is_drawing_line && (event->buttons() & Qt::LeftButton)) {
+        qDebug() << "LineSelectionHandler: Updating line end point to" << world_pos.x() << "," << world_pos.y();
+        updateLineEndPoint(world_pos.x(), world_pos.y());
+    }
+}
+
+void LineSelectionHandler::mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {
+    if (_is_drawing_line && (event->button() == Qt::LeftButton)) {
+        qDebug() << "LineSelectionHandler: Completing line selection";
+        completeLineSelection();
     }
 }
 

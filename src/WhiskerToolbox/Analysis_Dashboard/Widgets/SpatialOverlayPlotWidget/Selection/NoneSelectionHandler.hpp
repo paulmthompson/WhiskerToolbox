@@ -73,6 +73,12 @@ public:
         // No-op - this handler doesn't respond to mouse events
     }
 
+    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {
+        
+    }
+
+    void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {}
+
     /**
      * @brief Handle key press events (no-op)
      * @param event Key event (ignored)

@@ -80,6 +80,10 @@ public:
 
     void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos); 
 
+    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {}
+
+    void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {}
+
     void keyPressEvent(QKeyEvent * event);
 
 private:

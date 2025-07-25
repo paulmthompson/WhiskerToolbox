@@ -86,13 +86,11 @@ public:
 
     void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos);
 
-    void keyPressEvent(QKeyEvent * event);
+    void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos);
 
-    /**
-     * @brief Check if currently in line selection mode
-     * @return True if actively drawing a line
-     */
-    bool isLineSelecting() const { return _is_drawing_line; }
+    void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos);
+
+    void keyPressEvent(QKeyEvent * event);
 
     /**
      * @brief Update line end point during drawing

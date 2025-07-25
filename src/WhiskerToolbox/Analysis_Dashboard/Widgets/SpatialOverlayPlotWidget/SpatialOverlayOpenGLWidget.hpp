@@ -297,8 +297,7 @@ private:
     SelectionVariant _selection_handler;
     
     QVector2D _current_mouse_world_pos;  ///< Current mouse position in world coordinates
-    QVector2D _line_draw_start_pos;      ///< Line drawing start position
-    QVector2D _line_draw_end_pos;        ///< Line drawing end position
+
 
     // Data bounds
     float _data_min_x, _data_max_x, _data_min_y, _data_max_y;

@@ -750,22 +750,12 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     _current_mouse_pos = event->pos();
 
-    // Update mouse world position for state management
     updateMouseWorldPosition(event->pos().x(), event->pos().y());
 
-    // Delegate to selection handler for line drawing
     auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
     std::visit([event, world_pos](auto & handler) {
-        if (handler) {
-            // For LineSelectionHandler, we need to update the end point during mouse move
-            if constexpr (std::is_same_v<std::decay_t<decltype(handler)>, std::unique_ptr<LineSelectionHandler>>) {
-                if (handler->isLineSelecting() && (event->buttons() & Qt::LeftButton)) {
-                    handler->updateLineEndPoint(world_pos.x(), world_pos.y());
-                }
-            }
-        }
-    },
-               _selection_handler);
+        handler->mouseMoveEvent(event, world_pos);
+    }, _selection_handler);
 
     if (_is_panning && (event->buttons() & Qt::LeftButton)) {
         QPoint delta = event->pos() - _last_mouse_pos;
@@ -812,6 +802,12 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 }
 
 void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
+
+    auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
+    std::visit([event, world_pos](auto & handler) {
+        handler->mouseReleaseEvent(event, world_pos);
+    }, _selection_handler);
+
     if (event->button() == Qt::LeftButton) {
         _is_panning = false;
         event->accept();
