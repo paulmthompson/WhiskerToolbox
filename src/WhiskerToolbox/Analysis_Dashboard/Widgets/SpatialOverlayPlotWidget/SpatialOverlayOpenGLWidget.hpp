@@ -266,10 +266,6 @@ private:
     // Modern OpenGL rendering resources
     QOpenGLShaderProgram * _texture_shader_program;
 
-    // Global highlight rendering resources (shared across all PointData)
-    QOpenGLBuffer _highlight_vertex_buffer;
-    QOpenGLVertexArrayObject _highlight_vertex_array_object;
-
     bool _opengl_resources_initialized;
 
     // View parameters

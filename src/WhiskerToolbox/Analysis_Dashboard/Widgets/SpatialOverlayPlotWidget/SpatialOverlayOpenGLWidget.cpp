@@ -22,7 +22,6 @@
 
 SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
-      _highlight_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _opengl_resources_initialized(false),
       _zoom_level(1.0f),
       _pan_offset_x(0.0f),
@@ -584,12 +583,12 @@ void SpatialOverlayOpenGLWidget::paintGL() {
         return;
     }
 
-    // Render data visualizations
+    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
+
     renderPoints();
     renderMasks();
     renderLines();
 
-    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
     std::visit([mvp_matrix](auto & handler) {
         if (handler) {
             handler->render(mvp_matrix);
@@ -879,8 +878,7 @@ void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
             if (handler) {
                 handler->keyPressEvent(event);
             }
-        },
-                   _selection_handler);
+        }, _selection_handler);
 
         requestThrottledUpdate();
         event->accept();
@@ -975,12 +973,6 @@ void SpatialOverlayOpenGLWidget::handleTooltipRefresh() {
     }
 }
 
-float SpatialOverlayOpenGLWidget::calculateWorldTolerance(float screen_tolerance) const {
-    QVector2D world_pos = screenToWorld(0, 0);
-    QVector2D world_pos_offset = screenToWorld(static_cast<int>(screen_tolerance), 0);
-    return std::abs(world_pos_offset.x() - world_pos.x());
-}
-
 void SpatialOverlayOpenGLWidget::clearSelection() {
     bool had_selection = false;
 
@@ -1042,6 +1034,13 @@ QPoint SpatialOverlayOpenGLWidget::worldToScreen(float world_x, float world_y) c
     return QPoint(screen_x, screen_y);
 }
 
+float SpatialOverlayOpenGLWidget::calculateWorldTolerance(float screen_tolerance) const {
+    QVector2D world_pos = screenToWorld(0, 0);
+    QVector2D world_pos_offset = screenToWorld(static_cast<int>(screen_tolerance), 0);
+    return std::abs(world_pos_offset.x() - world_pos.x());
+}
+
+
 void SpatialOverlayOpenGLWidget::updateViewMatrices() {
     // Update projection matrix for current aspect ratio
     _projection_matrix.setToIdentity();
@@ -1068,44 +1067,11 @@ void SpatialOverlayOpenGLWidget::renderPoints() {
         return;
     }
 
-    // Get point shader program from ShaderManager
-    auto pointProgram = ShaderManager::instance().getProgram("point");
-    if (!pointProgram || !pointProgram->getNativeProgram()->bind()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to bind point shader program";
-        return;
-    }
-
-    // Set uniform matrices
     QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-    pointProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
 
-    // Enable blending for regular points
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // === DRAW CALL 1: Render all regular points for each PointData ===
     for (auto const & [key, viz]: _point_data_visualizations) {
-        viz->renderPoints(pointProgram->getNativeProgram(), _point_size);
+        viz->render(mvp_matrix, _point_size);
     }
-
-    // === DRAW CALL 2: Render selected points for each PointData ===
-    glDisable(GL_BLEND);// Solid color for selections
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        viz->renderSelectedPoints(pointProgram->getNativeProgram(), _point_size);
-    }
-
-    // === DRAW CALL 3: Render hover point (if any) ===
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (viz->current_hover_point) {
-            viz->renderHoverPoint(pointProgram->getNativeProgram(), _point_size, _highlight_vertex_buffer, _highlight_vertex_array_object);
-            break;// Only one hover point at a time
-        }
-    }
-
-    // Re-enable blending
-    glEnable(GL_BLEND);
-
-    pointProgram->getNativeProgram()->release();
 }
 
 void SpatialOverlayOpenGLWidget::renderMasks() {
@@ -1259,24 +1225,6 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
         return;
     }
 
-    // Create highlight vertex array object and buffer
-    _highlight_vertex_array_object.create();
-    _highlight_vertex_array_object.bind();
-
-    _highlight_vertex_buffer.create();
-    _highlight_vertex_buffer.bind();
-    _highlight_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-
-    // Pre-allocate highlight buffer for one point (2 floats)
-    glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
-
-    // Set up vertex attributes for highlight
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    _highlight_vertex_array_object.release();
-    _highlight_vertex_buffer.release();
-
     _opengl_resources_initialized = true;
     qDebug() << "SpatialOverlayOpenGLWidget: OpenGL resources initialized successfully";
 }
@@ -1287,9 +1235,6 @@ void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
 
         delete _texture_shader_program;
         _texture_shader_program = nullptr;
-
-        _highlight_vertex_buffer.destroy();
-        _highlight_vertex_array_object.destroy();
 
         // Clean up all PointData visualizations
         for (auto const & [key, viz]: _point_data_visualizations) {

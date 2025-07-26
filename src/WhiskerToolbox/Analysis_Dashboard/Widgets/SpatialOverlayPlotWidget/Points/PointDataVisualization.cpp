@@ -2,6 +2,7 @@
 
 #include "DataManager/Points/Point_Data.hpp"
 
+#include "ShaderManager/ShaderManager.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
@@ -13,6 +14,7 @@ PointDataVisualization::PointDataVisualization(QString const & data_key,
     : key(data_key),
       vertex_buffer(QOpenGLBuffer::VertexBuffer),
       selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
+      _highlight_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       color(1.0f, 0.0f, 0.0f, 1.0f) {
     // Calculate bounds for QuadTree initialization
     BoundingBox bounds = calculateBoundsForPointData(point_data.get());
@@ -41,6 +43,16 @@ PointDataVisualization::~PointDataVisualization() {
 void PointDataVisualization::initializeOpenGLResources() {
 
     if (!initializeOpenGLFunctions()) {
+        return;
+    }
+
+    // Load point shader program from ShaderManager
+    if (!ShaderManager::instance().loadProgram("point",
+                                               ":/shaders/point.vert",
+                                               ":/shaders/point.frag",
+                                               "",
+                                               ShaderSourceType::Resource)) {
+        qDebug() << "PointDataVisualization: Failed to load point shader program";
         return;
     }
 
@@ -73,6 +85,24 @@ void PointDataVisualization::initializeOpenGLResources() {
 
     selection_vertex_buffer.release();
     selection_vertex_array_object.release();
+
+    // Create highlight vertex array object and buffer
+    _highlight_vertex_array_object.create();
+    _highlight_vertex_array_object.bind();
+
+    _highlight_vertex_buffer.create();
+    _highlight_vertex_buffer.bind();
+    _highlight_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+
+    // Pre-allocate highlight buffer for one point (2 floats)
+    glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+
+    // Set up vertex attributes for highlight
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+
+    _highlight_vertex_array_object.release();
+    _highlight_vertex_buffer.release();
 }
 
 void PointDataVisualization::cleanupOpenGLResources() {
@@ -87,6 +117,12 @@ void PointDataVisualization::cleanupOpenGLResources() {
     }
     if (selection_vertex_array_object.isCreated()) {
         selection_vertex_array_object.destroy();
+    }
+    if (_highlight_vertex_buffer.isCreated()) {
+        _highlight_vertex_buffer.destroy();
+    }
+    if (_highlight_vertex_array_object.isCreated()) {
+        _highlight_vertex_array_object.destroy();
     }
 }
 
@@ -160,6 +196,34 @@ bool PointDataVisualization::removePointFromSelection(QuadTreePoint<int64_t> con
     return false;// Point wasn't selected
 }
 
+void PointDataVisualization::render(QMatrix4x4 const & mvp_matrix, float point_size) {
+    auto pointProgram = ShaderManager::instance().getProgram("point");
+    if (!pointProgram || !pointProgram->getNativeProgram()->bind()) {
+        qDebug() << "PointDataVisualization: Failed to bind point shader program";
+        return;
+    }
+
+    pointProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
+
+    // Render regular points
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    renderPoints(pointProgram->getNativeProgram(), point_size);
+
+    // Render selected points
+    glDisable(GL_BLEND);
+    renderSelectedPoints(pointProgram->getNativeProgram(), point_size);
+
+    // Render hover point
+    if (current_hover_point) {
+        renderHoverPoint(pointProgram->getNativeProgram(), point_size);
+    }
+
+    glEnable(GL_BLEND);
+
+    pointProgram->getNativeProgram()->release();
+}
+
 void PointDataVisualization::renderPoints(QOpenGLShaderProgram * shader_program, float point_size) {
     if (!visible || vertex_data.empty()) return;
 
@@ -195,13 +259,11 @@ void PointDataVisualization::renderSelectedPoints(QOpenGLShaderProgram * shader_
 }
 
 void PointDataVisualization::renderHoverPoint(QOpenGLShaderProgram * shader_program,
-                                              float point_size,
-                                              QOpenGLBuffer & highlight_buffer,
-                                              QOpenGLVertexArrayObject & highlight_vao) {
+                                              float point_size) {
     if (!current_hover_point) return;
 
-    highlight_vao.bind();
-    highlight_buffer.bind();
+    _highlight_vertex_array_object.bind();
+    _highlight_vertex_buffer.bind();
 
     // Store original coordinates in hover point data
     float highlight_data[2] = {current_hover_point->x, current_hover_point->y};
@@ -218,8 +280,8 @@ void PointDataVisualization::renderHoverPoint(QOpenGLShaderProgram * shader_prog
     // Draw the highlighted point
     glDrawArrays(GL_POINTS, 0, 1);
 
-    highlight_buffer.release();
-    highlight_vao.release();
+    _highlight_vertex_buffer.release();
+    _highlight_vertex_array_object.release();
 }
 
 BoundingBox PointDataVisualization::calculateBoundsForPointData(PointData const * point_data) const {
