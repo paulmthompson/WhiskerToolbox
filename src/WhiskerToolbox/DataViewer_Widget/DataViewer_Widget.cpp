@@ -893,7 +893,7 @@ void DataViewer_Widget::_calculateOptimalEventSpacing(std::vector<std::string> c
     for (auto const & key: all_keys) {
         if (_data_manager->getType(key) == DM_DataType::DigitalEvent) {
             // Check if this key is already in our group (avoid double counting)
-            bool in_group = std::find(group_keys.begin(), group_keys.end(), key) != group_keys.end();
+            bool const in_group = std::find(group_keys.begin(), group_keys.end(), key) != group_keys.end();
             if (!in_group) {
                 // Check if this series is currently visible
                 auto config = ui->openGLWidget->getDigitalEventConfig(key);
