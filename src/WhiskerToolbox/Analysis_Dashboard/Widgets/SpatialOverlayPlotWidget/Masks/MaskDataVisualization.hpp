@@ -1,11 +1,12 @@
 #ifndef MASKDATAVISUALIZATION_HPP
 #define MASKDATAVISUALIZATION_HPP
 
-#include "SpatialIndex/RTree.hpp"
 #include "CoreGeometry/polygon.hpp"
 #include "MaskIdentifier.hpp"
+#include "SpatialIndex/RTree.hpp"
 #include "../Selection/SelectionHandlers.hpp"
 
+#include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLVertexArrayObject>
@@ -83,6 +84,12 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      */
     void cleanupOpenGLResources();
 
+    /**
+     * @brief Render all masks, selections, and hover highlights for this visualization
+     * @param mvp_matrix The model-view-projection matrix
+     */
+    void render(QMatrix4x4 const & mvp_matrix);
+
 
     /**
      * @brief Clear all selected masks
@@ -116,24 +123,6 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @return Vector of mask identifiers from entries that contain the point
      */
     std::vector<MaskIdentifier> refineMasksContainingPoint(std::vector<RTreeEntry<MaskIdentifier>> const & entries, float world_x, float world_y) const;
-
-    /**
-     * @brief Render the binary image texture
-     * @param shader_program The shader program to use for rendering
-     */
-    void renderBinaryImage(QOpenGLShaderProgram * shader_program);
-
-    /**
-     * @brief Render hover mask union polygon
-     * @param shader_program The shader program to use for rendering
-     */
-    void renderHoverMaskUnionPolygon(QOpenGLShaderProgram * shader_program);
-
-    /**
-     * @brief Render selected masks as a binary image with different color/opacity
-     * @param shader_program The shader program to use for rendering
-     */
-    void renderSelectedMasks(QOpenGLShaderProgram * shader_program);
 
     /**
      * @brief Calculate bounding box for the entire MaskData
@@ -189,6 +178,24 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void applySelection(PolygonSelectionHandler const & selection_handler);
 
 private:
+    /**
+     * @brief Render the binary image texture
+     * @param shader_program The shader program to use for rendering
+     */
+    void renderBinaryImage(QOpenGLShaderProgram * shader_program);
+
+    /**
+     * @brief Render hover mask union polygon
+     * @param shader_program The shader program to use for rendering
+     */
+    void renderHoverMaskUnionPolygon(QOpenGLShaderProgram * shader_program);
+
+    /**
+     * @brief Render selected masks as a binary image with different color/opacity
+     * @param shader_program The shader program to use for rendering
+     */
+    void renderSelectedMasks(QOpenGLShaderProgram * shader_program);
+
     /**
      * @brief Create the binary image texture from all masks
      */

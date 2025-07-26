@@ -1079,43 +1079,9 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
         return;
     }
 
-    auto textureProgram = ShaderManager::instance().getProgram("texture");
-    if (textureProgram && textureProgram->getNativeProgram()->bind()) {
-        // === DRAW CALL 1: Render binary image textures ===
-        QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-        textureProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        for (auto const & [key, viz]: _mask_data_visualizations) {
-            viz->renderBinaryImage(textureProgram->getNativeProgram());
-        }
-
-        // Render selected masks with textures
-        glDisable(GL_BLEND);// Solid color for selections
-        for (auto const & [key, viz]: _mask_data_visualizations) {
-            viz->renderSelectedMasks(textureProgram->getNativeProgram());
-        }
-
-        textureProgram->getNativeProgram()->release();
-    }
-
-    // === DRAW CALL 2: Render mask bounding boxes ===
-    auto lineProgram = ShaderManager::instance().getProgram("line");
-    if (lineProgram && lineProgram->getNativeProgram()->bind()) {
-        QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-        lineProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        // Render hover mask bounding boxes (on top of everything else)
-        for (auto const & [key, viz]: _mask_data_visualizations) {
-            viz->renderHoverMaskUnionPolygon(lineProgram->getNativeProgram());
-        }
-
-        lineProgram->getNativeProgram()->release();
+    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
+    for (auto const & [key, viz]: _mask_data_visualizations) {
+        viz->render(mvp_matrix);
     }
 }
 

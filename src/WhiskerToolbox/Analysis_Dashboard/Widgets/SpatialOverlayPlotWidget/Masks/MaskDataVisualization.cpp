@@ -4,6 +4,7 @@
 #include "CoreGeometry/polygon_adapter.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 
+#include "ShaderManager/ShaderManager.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
@@ -52,6 +53,25 @@ MaskDataVisualization::~MaskDataVisualization() {
 void MaskDataVisualization::initializeOpenGLResources() {
     if (!initializeOpenGLFunctions()) {
         qDebug() << "MaskDataVisualization: Failed to initialize OpenGL functions";
+        return;
+    }
+
+    // Load necessary shaders from ShaderManager
+    if (!ShaderManager::instance().loadProgram("texture",
+                                               ":/shaders/texture.vert",
+                                               ":/shaders/texture.frag",
+                                               "",
+                                               ShaderSourceType::Resource)) {
+        qDebug() << "MaskDataVisualization: Failed to load texture shader program";
+        return;
+    }
+
+    if (!ShaderManager::instance().loadProgram("line",
+                                               ":/shaders/line.vert",
+                                               ":/shaders/line.frag",
+                                               "",
+                                               ShaderSourceType::Resource)) {
+        qDebug() << "MaskDataVisualization: Failed to load line shader program";
         return;
     }
 
@@ -284,6 +304,33 @@ std::vector<MaskIdentifier> MaskDataVisualization::refineMasksContainingPoint(st
     qDebug() << "MaskDataVisualization: Refined to" << result.size() << "masks containing point after precise checking";
 
     return result;
+}
+
+void MaskDataVisualization::render(QMatrix4x4 const & mvp_matrix) {
+    auto textureProgram = ShaderManager::instance().getProgram("texture");
+    if (textureProgram && textureProgram->getNativeProgram()->bind()) {
+        textureProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        renderBinaryImage(textureProgram->getNativeProgram());
+        renderSelectedMasks(textureProgram->getNativeProgram());
+
+        textureProgram->getNativeProgram()->release();
+    }
+
+    auto lineProgram = ShaderManager::instance().getProgram("line");
+    if (lineProgram && lineProgram->getNativeProgram()->bind()) {
+        lineProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        renderHoverMaskUnionPolygon(lineProgram->getNativeProgram());
+
+        lineProgram->getNativeProgram()->release();
+    }
 }
 
 void MaskDataVisualization::renderBinaryImage(QOpenGLShaderProgram * shader_program) {
