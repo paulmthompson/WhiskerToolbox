@@ -1079,27 +1079,26 @@ void SpatialOverlayOpenGLWidget::renderMasks() {
         return;
     }
 
-
-    if (_texture_shader_program && _texture_shader_program->bind()) {
-
+    auto textureProgram = ShaderManager::instance().getProgram("texture");
+    if (textureProgram && textureProgram->getNativeProgram()->bind()) {
         // === DRAW CALL 1: Render binary image textures ===
         QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-        _texture_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
+        textureProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         for (auto const & [key, viz]: _mask_data_visualizations) {
-            viz->renderBinaryImage(_texture_shader_program);
+            viz->renderBinaryImage(textureProgram->getNativeProgram());
         }
 
         // Render selected masks with textures
         glDisable(GL_BLEND);// Solid color for selections
         for (auto const & [key, viz]: _mask_data_visualizations) {
-            viz->renderSelectedMasks(_texture_shader_program);
+            viz->renderSelectedMasks(textureProgram->getNativeProgram());
         }
 
-        _texture_shader_program->release();
+        textureProgram->getNativeProgram()->release();
     }
 
     // === DRAW CALL 2: Render mask bounding boxes ===
@@ -1163,65 +1162,9 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
         return;
     }
 
-    // Create and compile texture shader program
-    _texture_shader_program = new QOpenGLShaderProgram(this);
-
-    // Vertex shader for texture rendering
-    QString texture_vertex_shader_source = R"(
-        #version 410 core
-        
-        layout(location = 0) in vec2 a_position;
-        layout(location = 1) in vec2 a_texCoord;
-        
-        uniform mat4 u_mvp_matrix;
-        
-        out vec2 v_texCoord;
-        
-        void main() {
-            gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
-            v_texCoord = a_texCoord;
-        }
-    )";
-
-    // Fragment shader for texture rendering
-    QString texture_fragment_shader_source = R"(
-        #version 410 core
-        
-        in vec2 v_texCoord;
-        uniform sampler2D u_texture;
-        uniform vec4 u_color;
-        
-        out vec4 FragColor;
-        
-        void main() {
-            float intensity = texture(u_texture, v_texCoord).r;
-            
-            // Only render pixels where masks exist
-            if (intensity <= 0.0) {
-                discard;
-            }
-            
-            // Proper density visualization with premultiplied alpha output
-            vec3 final_color = u_color.rgb;  // Keep color pure (red for masks)
-            float final_alpha = u_color.a * intensity;  // Density affects transparency
-            
-            // Output premultiplied alpha to work correctly with GL_ONE, GL_ONE_MINUS_SRC_ALPHA
-            FragColor = vec4(final_color * final_alpha, final_alpha);
-        }
-    )";
-
-    if (!_texture_shader_program->addShaderFromSourceCode(QOpenGLShader::Vertex, texture_vertex_shader_source)) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile texture vertex shader:" << _texture_shader_program->log();
-        return;
-    }
-
-    if (!_texture_shader_program->addShaderFromSourceCode(QOpenGLShader::Fragment, texture_fragment_shader_source)) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to compile texture fragment shader:" << _texture_shader_program->log();
-        return;
-    }
-
-    if (!_texture_shader_program->link()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to link texture shader program:" << _texture_shader_program->log();
+    // Load texture shader program from ShaderManager
+    if (!ShaderManager::instance().loadProgram("texture", ":/shaders/texture.vert", ":/shaders/texture.frag", "", ShaderSourceType::Resource)) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Failed to load texture shader program from ShaderManager";
         return;
     }
 
@@ -1232,9 +1175,6 @@ void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
 void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
     if (_opengl_resources_initialized) {
         makeCurrent();
-
-        delete _texture_shader_program;
-        _texture_shader_program = nullptr;
 
         // Clean up all PointData visualizations
         for (auto const & [key, viz]: _point_data_visualizations) {

@@ -19,5 +19,7 @@
         <file>shaders/line_picking.frag</file>
         <file>shaders/blit.vert</file>
         <file>shaders/blit.frag</file>
+        <file>shaders/texture.vert</file>
+        <file>shaders/texture.frag</file>
     </qresource>
 </RCC>

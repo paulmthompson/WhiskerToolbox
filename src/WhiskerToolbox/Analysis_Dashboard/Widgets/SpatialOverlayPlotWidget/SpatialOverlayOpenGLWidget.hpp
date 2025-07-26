@@ -264,8 +264,6 @@ private:
     std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
 
     // Modern OpenGL rendering resources
-    QOpenGLShaderProgram * _texture_shader_program;
-
     bool _opengl_resources_initialized;
 
     // View parameters
