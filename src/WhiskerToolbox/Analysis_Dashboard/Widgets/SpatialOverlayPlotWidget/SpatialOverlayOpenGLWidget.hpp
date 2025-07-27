@@ -1,13 +1,9 @@
 #ifndef SPATIALOVERLAYOPENGLWIDGET_HPP
 #define SPATIALOVERLAYOPENGLWIDGET_HPP
 
-#include "../ShaderManager/ShaderManager.hpp"
-#include "Lines/LineIdentifier.hpp"
-#include "Masks/MaskIdentifier.hpp"
+#include "ShaderManager/ShaderManager.hpp"
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
-#include "SpatialIndex/QuadTree.hpp"
-#include "SpatialIndex/RTree.hpp"
 
 
 #include <QMatrix4x4>
@@ -150,12 +146,6 @@ public:
      * @param line_data_map Map of data key to LineData objects
      */
     void setLineData(std::unordered_map<QString, std::shared_ptr<LineData>> const & line_data_map);
-
-    /**
-     * @brief Get the currently selected lines from all LineData objects
-     * @return Vector of pairs containing data key and selected line identifiers
-     */
-    std::vector<std::pair<QString, std::vector<LineIdentifier>>> getSelectedLineData() const;
 
     /**
      * @brief Get total number of selected lines across all LineData visualizations

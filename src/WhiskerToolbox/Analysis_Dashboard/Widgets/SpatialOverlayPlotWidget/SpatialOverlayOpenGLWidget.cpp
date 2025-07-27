@@ -209,23 +209,6 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
     return total;
 }
 
-std::vector<std::pair<QString, std::vector<LineIdentifier>>> SpatialOverlayOpenGLWidget::getSelectedLineData() const {
-    std::vector<std::pair<QString, std::vector<LineIdentifier>>> result;
-
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        if (!viz->selected_lines.empty()) {
-            std::vector<LineIdentifier> selected_lines;
-            selected_lines.reserve(viz->selected_lines.size());
-            for (auto const & line_id: viz->selected_lines) {
-                selected_lines.push_back(line_id);
-            }
-            result.emplace_back(key, std::move(selected_lines));
-        }
-    }
-
-    return result;
-}
-
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
     size_t total = 0;
     for (auto const & [key, viz]: _line_data_visualizations) {
