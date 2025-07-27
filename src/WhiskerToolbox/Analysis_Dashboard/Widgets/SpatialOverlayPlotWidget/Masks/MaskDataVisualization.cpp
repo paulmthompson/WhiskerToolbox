@@ -745,3 +745,13 @@ void MaskDataVisualization::applySelection(PointSelectionHandler const & selecti
         removeIntersectingMasks(refined_masks);
     }
 }
+
+QString MaskDataVisualization::getTooltipText() const {
+    if (current_hover_entries.empty()) {
+        return QString();
+    }
+
+    size_t total_hover_masks = current_hover_entries.size();
+    QString tooltip_text = QString("%1: %2 masks").arg(key).arg(total_hover_masks);
+    return tooltip_text;
+}

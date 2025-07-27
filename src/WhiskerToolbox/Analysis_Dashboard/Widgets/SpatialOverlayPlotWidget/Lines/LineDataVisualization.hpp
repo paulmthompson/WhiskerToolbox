@@ -168,6 +168,14 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      */
     void applySelection(PolygonSelectionHandler const & selection_handler);
 
+    /**
+     * @brief Get tooltip text for the current hover state
+     * @return QString with tooltip information, or empty if no hover
+     */
+    QString getTooltipText() const {
+        return QString();
+    };
+
 private:
     void renderLinesToPickingBuffer(QMatrix4x4 const & mvp_matrix, float line_width);
     void renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width);

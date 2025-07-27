@@ -817,30 +817,35 @@ void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
 void SpatialOverlayOpenGLWidget::_handleTooltipTimer() {
     if (!_data_bounds_valid || !_tooltips_enabled) return;
 
-    auto [viz, point] = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
-    if (viz && point && viz->current_hover_point == point) {
-        QString tooltip_text = create_tooltipText(point, viz->key);
-        QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
+    QStringList tooltip_parts;
+
+    // Get tooltips from point visualizations
+    for (auto const & [key, viz] : _point_data_visualizations) {
+        if (viz->current_hover_point) {
+            tooltip_parts << viz->getTooltipText();
+        }
+    }
+
+    // Get tooltips from mask visualizations
+    for (auto const & [key, viz] : _mask_data_visualizations) {
+        if (!viz->current_hover_entries.empty()) {
+            tooltip_parts << viz->getTooltipText();
+        }
+    }
+
+    // Get tooltips from line visualizations
+    for (auto const & [key, viz] : _line_data_visualizations) {
+        if (viz->has_hover_line) {
+            tooltip_parts << viz->getTooltipText();
+        }
+    }
+
+    if (!tooltip_parts.isEmpty()) {
+        QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_parts.join("<hr>"), this);
         _tooltip_refresh_timer->start();
     } else {
-        // Check for mask tooltips
-        size_t total_hover_masks = 0;
-        QStringList mask_info;
-
-        for (auto const & [key, mask_viz]: _mask_data_visualizations) {
-            if (!mask_viz->current_hover_entries.empty()) {
-                total_hover_masks += mask_viz->current_hover_entries.size();
-                mask_info << QString("%1: %2 masks").arg(key).arg(mask_viz->current_hover_entries.size());
-            }
-        }
-
-        if (total_hover_masks > 0) {
-            QString tooltip_text = QString("Masks under cursor: %1\n%2")
-                                           .arg(total_hover_masks)
-                                           .arg(mask_info.join("\n"));
-            QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
-            _tooltip_refresh_timer->start();
-        }
+        _tooltip_refresh_timer->stop();
+        QToolTip::hideText();
     }
 }
 
@@ -862,34 +867,8 @@ void SpatialOverlayOpenGLWidget::handleTooltipRefresh() {
         return;
     }
 
-    // Check if we're still hovering over the same point
-    auto [viz, point] = findPointNear(_current_mouse_pos.x(), _current_mouse_pos.y());
-    if (viz && point && viz->current_hover_point == point) {
-        QString tooltip_text = create_tooltipText(point, viz->key);
-        QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
-    } else {
-        // Check for mask tooltips
-        size_t total_hover_masks = 0;
-        QStringList mask_info;
-
-        for (auto const & [key, mask_viz]: _mask_data_visualizations) {
-            if (!mask_viz->current_hover_entries.empty()) {
-                total_hover_masks += mask_viz->current_hover_entries.size();
-                mask_info << QString("%1: %2 masks").arg(key).arg(mask_viz->current_hover_entries.size());
-            }
-        }
-
-        if (total_hover_masks > 0) {
-            QString tooltip_text = QString("Masks under cursor: %1\n%2")
-                                           .arg(total_hover_masks)
-                                           .arg(mask_info.join("\n"));
-            QToolTip::showText(mapToGlobal(_current_mouse_pos), tooltip_text, this);
-        } else {
-            // No longer hovering over point or masks, stop refresh timer
-            _tooltip_refresh_timer->stop();
-            QToolTip::hideText();
-        }
-    }
+    // The logic is the same as the initial timer, so we can just call it.
+    _handleTooltipTimer();
 }
 
 void SpatialOverlayOpenGLWidget::clearSelection() {
@@ -1091,16 +1070,6 @@ void SpatialOverlayOpenGLWidget::calculateProjectionBounds(float & left, float &
     right = center_x + half_width + pan_x;
     bottom = center_y - half_height + pan_y;
     top = center_y + half_height + pan_y;
-}
-
-QString create_tooltipText(QuadTreePoint<int64_t> const * point, QString const & data_key) {
-    if (!point) return QString();
-
-    return QString("Dataset: %1\nInterval: %2\nPosition: (%3, %4)")
-            .arg(data_key)
-            .arg(point->data)
-            .arg(point->x, 0, 'f', 2)
-            .arg(point->y, 0, 'f', 2);
 }
 
 void SpatialOverlayOpenGLWidget::processHoverDebounce() {

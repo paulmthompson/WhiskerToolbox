@@ -119,6 +119,12 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      */
     void applySelection(PointSelectionHandler const & selection_handler);
 
+    /**
+     * @brief Get tooltip text for the current hover state
+     * @return QString with tooltip information, or empty if no hover
+     */
+    QString getTooltipText() const;
+
 private:
     /**
      * @brief Render points for this PointData

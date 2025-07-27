@@ -409,6 +409,4 @@ private:
 
 };
 
-QString create_tooltipText(QuadTreePoint<int64_t> const * point, QString const & data_key);
-
 #endif// SPATIALOVERLAYOPENGLWIDGET_HPP

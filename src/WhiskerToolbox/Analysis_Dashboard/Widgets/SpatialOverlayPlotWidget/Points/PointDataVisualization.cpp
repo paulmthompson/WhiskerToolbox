@@ -383,3 +383,15 @@ void PointDataVisualization::applySelection(PointSelectionHandler const & select
         }
     }
 }
+
+QString PointDataVisualization::getTooltipText() const {
+    if (!current_hover_point) {
+        return QString();
+    }
+
+    return QString("Dataset: %1\nInterval: %2\nPosition: (%3, %4)")
+            .arg(key)
+            .arg(current_hover_point->data)
+            .arg(current_hover_point->x, 0, 'f', 2)
+            .arg(current_hover_point->y, 0, 'f', 2);
+}
