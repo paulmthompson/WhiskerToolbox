@@ -25,6 +25,7 @@ class QOpenGLShaderProgram;
 class PolygonSelectionHandler;
 class NoneSelectionHandler;
 class LineSelectionHandler;
+class PointSelectionHandler;
 
 
 
@@ -176,6 +177,12 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @param selection_handler The PolygonSelectionHandler to apply
      */
     void applySelection(PolygonSelectionHandler const & selection_handler);
+
+    /**
+     * @brief Apply selection to this MaskDataVisualization
+     * @param selection_handler The PointSelectionHandler to apply
+     */
+    void applySelection(PointSelectionHandler const & selection_handler);
 
 private:
     /**

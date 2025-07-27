@@ -6,6 +6,7 @@
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp"
 
 #include <QOpenGLShaderProgram>
 
@@ -321,7 +322,10 @@ BoundingBox PointDataVisualization::calculateBoundsForPointData(PointData const 
 void PointDataVisualization::applySelection(SelectionVariant & selection_handler) {
     if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
-    } else {
+    } else if (std::holds_alternative<std::unique_ptr<PointSelectionHandler>>(selection_handler)) {
+        applySelection(*std::get<std::unique_ptr<PointSelectionHandler>>(selection_handler));
+    }
+    else {
         std::cout << "PointDataVisualization::applySelection: selection_handler is not a PolygonSelectionHandler" << std::endl;
     }
 }
@@ -361,5 +365,21 @@ void PointDataVisualization::applySelection(PolygonSelectionHandler const & sele
     if (points_added_this_data > 0) {
         updateSelectionVertexBuffer();
         total_points_added += points_added_this_data;
+    }
+}
+
+void PointDataVisualization::applySelection(PointSelectionHandler const & selection_handler) {
+    float tolerance = selection_handler.getWorldTolerance();
+    QVector2D world_pos = selection_handler.getWorldPos();
+    Qt::KeyboardModifiers modifiers = selection_handler.getModifiers();
+
+    auto const * candidate = spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
+
+    if (candidate) {
+        if (modifiers & Qt::ControlModifier) {
+            togglePointSelection(candidate);
+        } else if (modifiers & Qt::ShiftModifier) {
+            removePointFromSelection(candidate);
+        }
     }
 }

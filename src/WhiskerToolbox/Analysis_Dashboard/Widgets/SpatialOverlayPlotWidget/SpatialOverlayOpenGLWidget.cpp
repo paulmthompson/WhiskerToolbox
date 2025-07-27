@@ -7,6 +7,7 @@
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 
@@ -33,7 +34,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _pending_update(false),
       _hover_processing_active(false),
       _selection_mode(SelectionMode::PointSelection),
-      _selection_handler(std::make_unique<NoneSelectionHandler>()) {
+      _selection_handler(std::make_unique<PointSelectionHandler>(calculateWorldTolerance(10.0f))) {
 
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
@@ -531,6 +532,9 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
         } else if (_selection_mode == SelectionMode::LineIntersection) {
             _selection_handler = std::make_unique<LineSelectionHandler>();
             setCursor(Qt::CrossCursor);
+        } else if (_selection_mode == SelectionMode::PointSelection) {
+            _selection_handler = std::make_unique<PointSelectionHandler>(calculateWorldTolerance(10.0f));
+            setCursor(Qt::ArrowCursor);
         } else if (_selection_mode == SelectionMode::None) {
             _selection_handler = std::make_unique<NoneSelectionHandler>();
             setCursor(Qt::ArrowCursor);
@@ -627,98 +631,8 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     requestThrottledUpdate();
 
     if (event->button() == Qt::LeftButton) {
-        // Point and mask selection mode - requires Ctrl+Click for toggle, Shift+Click for removal
-        if (_selection_mode == SelectionMode::PointSelection && (event->modifiers() & Qt::ControlModifier)) {
-            // First try to find points near the click
-            auto [viz, point] = findPointNear(event->pos().x(), event->pos().y());
-            if (viz && point) {
-                bool was_selected = viz->togglePointSelection(point);
-
-                qDebug() << "SpatialOverlayOpenGLWidget: Point" << (was_selected ? "selected" : "deselected")
-                         << "in" << viz->key << "at (" << point->x << "," << point->y << ")";
-
-                // Emit selection changed signal with data-specific information
-                emit selectionChanged(getTotalSelectedPoints(), viz->key, viz->selected_points.size());
-                requestThrottledUpdate();
-                event->accept();
-                return;
-            }
-
-            // If no points found, try to find masks near the click
-            auto mask_results = findMasksNear(event->pos().x(), event->pos().y());
-
-            if (!mask_results.empty()) {
-                for (auto const & [mask_viz, entries]: mask_results) {
-                    // Refine using precise point checking
-                    auto refined_masks = mask_viz->refineMasksContainingPoint(entries, world_pos.x(), world_pos.y());
-
-                    if (!refined_masks.empty()) {
-                        // Toggle the first mask found (most common use case)
-                        auto const & first_mask = refined_masks[0];
-                        bool was_selected = mask_viz->toggleMaskSelection(first_mask);
-
-                        qDebug() << "SpatialOverlayOpenGLWidget: Mask" << (was_selected ? "selected" : "deselected")
-                                 << "in" << mask_viz->key << "at timeframe" << first_mask.timeframe
-                                 << "index" << first_mask.mask_index;
-
-                        // Emit selection changed signal
-                        emit selectionChanged(getTotalSelectedMasks(), mask_viz->key, mask_viz->selected_masks.size());
-                        requestThrottledUpdate();
-                        event->accept();
-                        return;
-                    }
-                }
-            }
-        }
-
-        // Point and mask removal mode - Shift+Click to remove from selection
-        if (_selection_mode == SelectionMode::PointSelection && (event->modifiers() & Qt::ShiftModifier)) {
-            // First try to find points near the click
-            auto [viz, point] = findPointNear(event->pos().x(), event->pos().y());
-            if (viz && point) {
-                bool was_removed = viz->removePointFromSelection(point);
-
-                if (was_removed) {
-                    qDebug() << "SpatialOverlayOpenGLWidget: Point removed from selection"
-                             << "in" << viz->key << "at (" << point->x << "," << point->y << ")";
-
-                    // Emit selection changed signal
-                    emit selectionChanged(getTotalSelectedPoints(), viz->key, viz->selected_points.size());
-                    requestThrottledUpdate();
-                    event->accept();
-                    return;
-                }
-            }
-
-            // If no points found, try to find masks near the click
-            auto mask_results = findMasksNear(event->pos().x(), event->pos().y());
-
-            if (!mask_results.empty()) {
-                for (auto const & [mask_viz, entries]: mask_results) {
-                    // Refine using precise point checking
-                    auto refined_masks = mask_viz->refineMasksContainingPoint(entries, world_pos.x(), world_pos.y());
-
-                    if (!refined_masks.empty()) {
-                        // Remove all intersecting masks between current selection and new masks
-                        size_t removed_count = mask_viz->removeIntersectingMasks(refined_masks);
-
-                        if (removed_count > 0) {
-                            qDebug() << "SpatialOverlayOpenGLWidget: Removed" << removed_count
-                                     << "intersecting masks from selection in" << mask_viz->key;
-
-                            // Emit selection changed signal
-                            emit selectionChanged(getTotalSelectedMasks(), mask_viz->key, mask_viz->selected_masks.size());
-                            requestThrottledUpdate();
-                            event->accept();
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Regular left click - start panning (if not in polygon selection mode)
-        if (_selection_mode != SelectionMode::PolygonSelection) {
+        // Regular left click - start panning (if not in polygon or line selection mode)
+        if (_selection_mode != SelectionMode::PolygonSelection && _selection_mode != SelectionMode::LineIntersection) {
             _is_panning = true;
             _last_mouse_pos = event->pos();
         }

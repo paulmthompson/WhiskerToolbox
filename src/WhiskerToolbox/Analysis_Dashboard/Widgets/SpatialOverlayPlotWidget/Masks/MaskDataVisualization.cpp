@@ -8,6 +8,7 @@
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp"
 
 #include <QDebug>
 #include <QOpenGLShaderProgram>
@@ -711,7 +712,10 @@ static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<MaskId
 void MaskDataVisualization::applySelection(SelectionVariant & selection_handler) {
     if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
-    } else {
+    } else if (std::holds_alternative<std::unique_ptr<PointSelectionHandler>>(selection_handler)) {
+        applySelection(*std::get<std::unique_ptr<PointSelectionHandler>>(selection_handler));
+    }
+    else {
         std::cout << "MaskDataVisualization::applySelection: selection_handler is not a PolygonSelectionHandler" << std::endl;
     }
 }
@@ -719,4 +723,25 @@ void MaskDataVisualization::applySelection(SelectionVariant & selection_handler)
 void MaskDataVisualization::applySelection(PolygonSelectionHandler const & selection_handler) {
 
     std::cout << "Mask Data Polygon Selection not implemented" << std::endl;
+}
+
+void MaskDataVisualization::applySelection(PointSelectionHandler const & selection_handler) {
+    QVector2D world_pos = selection_handler.getWorldPos();
+    Qt::KeyboardModifiers modifiers = selection_handler.getModifiers();
+
+    BoundingBox point_bbox(world_pos.x(), world_pos.y(), world_pos.x(), world_pos.y());
+    std::vector<RTreeEntry<MaskIdentifier>> entries;
+    spatial_index->query(point_bbox, entries);
+
+    if (entries.empty()) return;
+
+    auto refined_masks = refineMasksContainingPoint(entries, world_pos.x(), world_pos.y());
+    if(refined_masks.empty()) return;
+    
+    if (modifiers & Qt::ControlModifier) {
+        // Toggle the first mask found
+        toggleMaskSelection(refined_masks[0]);
+    } else if (modifiers & Qt::ShiftModifier) {
+        removeIntersectingMasks(refined_masks);
+    }
 }
