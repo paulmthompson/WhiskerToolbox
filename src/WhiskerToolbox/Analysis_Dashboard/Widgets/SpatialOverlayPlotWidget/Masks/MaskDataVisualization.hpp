@@ -12,6 +12,7 @@
 #include <QOpenGLVertexArrayObject>
 #include <QString>
 #include <QVector4D>
+#include <QVector2D>
 
 #include <cstdint>
 #include <memory>
@@ -109,23 +110,6 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     void clearHover();
 
     /**
-     * @brief Find all masks that contain the given point
-     * @param world_x World X coordinate
-     * @param world_y World Y coordinate
-     * @return Vector of mask identifiers that contain the point
-     */
-    std::vector<MaskIdentifier> findMasksContainingPoint(float world_x, float world_y) const;
-
-    /**
-     * @brief Refine R-tree entries to only those that contain the given point using precise pixel checking
-     * @param entries Vector of R-tree entries to refine
-     * @param world_x World X coordinate
-     * @param world_y World Y coordinate
-     * @return Vector of mask identifiers from entries that contain the point
-     */
-    std::vector<MaskIdentifier> refineMasksContainingPoint(std::vector<RTreeEntry<MaskIdentifier>> const & entries, float world_x, float world_y) const;
-
-    /**
      * @brief Calculate bounding box for the entire MaskData
      * @return BoundingBox encompassing all masks
      */
@@ -190,6 +174,13 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      */
     QString getTooltipText() const;
 
+    /**
+     * @brief Handle hover events for this visualization
+     * @param world_pos The mouse position in world coordinates
+     * @return True if the hover state changed, false otherwise
+     */
+    bool handleHover(const QVector2D & world_pos);
+
 private:
     /**
      * @brief Render the binary image texture
@@ -224,6 +215,26 @@ private:
      * @brief Update the selection binary image texture based on currently selected masks
      */
     void updateSelectionBinaryImageTexture();
+
+    /**
+     * @brief Find all masks that contain the given point
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
+     * @return Vector of mask identifiers that contain the point
+     */
+    std::vector<MaskIdentifier> findMasksContainingPoint(float world_x, float world_y) const;
+
+    /**
+     * @brief Refine R-tree entries to only those that contain the given point using precise pixel checking
+     * @param entries Vector of R-tree entries to refine
+     * @param world_x World X coordinate
+     * @param world_y World Y coordinate
+     * @return Vector of mask identifiers from entries that contain the point
+     */
+    std::vector<MaskIdentifier> refineMasksContainingPoint(
+            std::vector<RTreeEntry<MaskIdentifier>> const & entries,
+            float world_x,
+            float world_y) const;
 
     /**
      * @brief Compute the union polygon from R-tree entries

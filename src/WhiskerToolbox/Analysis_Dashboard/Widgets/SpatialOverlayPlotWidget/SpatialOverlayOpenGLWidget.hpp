@@ -335,43 +335,6 @@ private:
     void calculateDataBounds();
 
     /**
-     * @brief Find point near screen coordinates across all PointData visualizations
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
-     * @param tolerance_pixels Tolerance in pixels
-     * @return Pair of PointDataVisualization and point, or {nullptr, nullptr} if none found
-     */
-    std::pair<PointDataVisualization *, QuadTreePoint<int64_t> const *> findPointNear(int screen_x, int screen_y, float tolerance_pixels = 10.0f) const;
-
-    /**
-     * @brief Find masks near screen coordinates across all MaskData visualizations
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
-     * @return Vector of pairs containing MaskDataVisualization and R-tree entries with bounding boxes
-     */
-    std::vector<std::pair<MaskDataVisualization *, std::vector<RTreeEntry<MaskIdentifier>>>> findMasksNear(int screen_x, int screen_y) const;
-
-    /**
-     * @brief Get the PointDataVisualization that currently has a hover point
-     * @return Pointer to visualization with hover point, or nullptr
-     */
-    PointDataVisualization * getCurrentHoverVisualization() const;
-
-    /**
-     * @brief Find line near screen coordinates across all LineData visualizations
-     * @param screen_x Screen X coordinate
-     * @param screen_y Screen Y coordinate
-     * @return Pair of LineDataVisualization and line identifier, or {nullptr, std::nullopt} if none found
-     */
-    std::pair<LineDataVisualization *, std::optional<LineIdentifier>> findLineNear(int screen_x, int screen_y) const;
-
-    /**
-     * @brief Get the LineDataVisualization that currently has a hover line
-     * @return Pointer to the visualization with hover line, or nullptr if none
-     */
-    LineDataVisualization * getCurrentHoverLineVisualization() const;
-
-    /**
      * @brief Calculate world tolerance from screen tolerance
      * @param screen_tolerance Tolerance in screen pixels
      * @return World tolerance

@@ -632,3 +632,34 @@ void LineDataVisualization::applySelection(SelectionVariant & selection_handler)
 void LineDataVisualization::applySelection(PolygonSelectionHandler const & selection_handler) {
     std::cout << "Line Data Polygon Selection not implemented" << std::endl;
 }
+
+QString LineDataVisualization::getTooltipText() const {
+    if (!has_hover_line) {
+        return QString();
+    }
+
+    return QString("Dataset: %1\nTimeframe: %2\nLine ID: %3")
+            .arg(key)
+            .arg(current_hover_line.time_frame)
+            .arg(current_hover_line.line_id);
+}
+
+bool LineDataVisualization::handleHover(const QPoint & screen_pos, const QSize & widget_size) {
+    auto line_id = getLineAtScreenPosition(
+            screen_pos.x(), screen_pos.y(), widget_size.width(), widget_size.height());
+
+    bool hover_changed = false;
+    if (line_id.has_value()) {
+        if (!has_hover_line || !(current_hover_line == line_id.value())) {
+            setHoverLine(line_id);
+            hover_changed = true;
+        }
+    } else {
+        if (has_hover_line) {
+            setHoverLine(std::nullopt);
+            hover_changed = true;
+        }
+    }
+
+    return hover_changed;
+}

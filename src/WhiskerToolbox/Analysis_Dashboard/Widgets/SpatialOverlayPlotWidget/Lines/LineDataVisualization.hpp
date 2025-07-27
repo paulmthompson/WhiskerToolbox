@@ -172,9 +172,15 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @brief Get tooltip text for the current hover state
      * @return QString with tooltip information, or empty if no hover
      */
-    QString getTooltipText() const {
-        return QString();
-    };
+    QString getTooltipText() const;
+
+    /**
+     * @brief Handle hover events for this visualization
+     * @param screen_pos The mouse position in screen coordinates
+     * @param widget_size The size of the widget in pixels
+     * @return True if the hover state changed, false otherwise
+     */
+    bool handleHover(const QPoint & screen_pos, const QSize & widget_size);
 
 private:
     void renderLinesToPickingBuffer(QMatrix4x4 const & mvp_matrix, float line_width);

@@ -395,3 +395,18 @@ QString PointDataVisualization::getTooltipText() const {
             .arg(current_hover_point->x, 0, 'f', 2)
             .arg(current_hover_point->y, 0, 'f', 2);
 }
+
+bool PointDataVisualization::handleHover(const QVector2D & world_pos, float tolerance) {
+    auto const * nearest_point = spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
+    bool hover_changed = (current_hover_point != nearest_point);
+    current_hover_point = nearest_point;
+    return hover_changed;
+}
+
+std::optional<int64_t> PointDataVisualization::handleDoubleClick(const QVector2D & world_pos, float tolerance) {
+    auto const * nearest_point = spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
+    if (nearest_point) {
+        return nearest_point->data;
+    }
+    return std::nullopt;
+}

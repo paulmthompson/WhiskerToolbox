@@ -190,30 +190,6 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedMasks() const {
     return total;
 }
 
-std::vector<std::pair<MaskDataVisualization *, std::vector<RTreeEntry<MaskIdentifier>>>> SpatialOverlayOpenGLWidget::findMasksNear(int screen_x, int screen_y) const {
-    std::vector<std::pair<MaskDataVisualization *, std::vector<RTreeEntry<MaskIdentifier>>>> result;
-
-    if (_mask_data_visualizations.empty()) {
-        return result;
-    }
-
-    QVector2D world_pos = screenToWorld(screen_x, screen_y);
-    BoundingBox point_bbox(world_pos.x(), world_pos.y(), world_pos.x(), world_pos.y());
-
-    for (auto const & [key, viz]: _mask_data_visualizations) {
-        if (!viz->visible || !viz->spatial_index) continue;
-
-        std::vector<RTreeEntry<MaskIdentifier>> entries;
-        viz->spatial_index->query(point_bbox, entries);
-
-        if (!entries.empty()) {
-            result.emplace_back(viz.get(), std::move(entries));
-        }
-    }
-
-    return result;
-}
-
 void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
     float new_point_size = std::max(1.0f, std::min(50.0f, point_size));// Clamp between 1 and 50 pixels
     if (new_point_size != _point_size) {
@@ -223,80 +199,6 @@ void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
         // Use throttled update for better performance
         requestThrottledUpdate();
     }
-}
-
-
-std::pair<PointDataVisualization *, QuadTreePoint<int64_t> const *> SpatialOverlayOpenGLWidget::findPointNear(int screen_x, int screen_y, float tolerance_pixels) const {
-    if (_point_data_visualizations.empty()) {
-        return {nullptr, nullptr};
-    }
-
-    QVector2D world_pos = screenToWorld(screen_x, screen_y);
-    float world_tolerance = calculateWorldTolerance(tolerance_pixels);
-
-    QuadTreePoint<int64_t> const * nearest_point = nullptr;
-    PointDataVisualization * nearest_viz = nullptr;
-    float nearest_distance = std::numeric_limits<float>::max();
-
-    // Query all PointData QuadTrees
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (!viz->visible || !viz->spatial_index) continue;
-
-        auto const * candidate = viz->spatial_index->findNearest(
-                world_pos.x(), world_pos.y(), world_tolerance);
-
-        if (candidate) {
-            float distance = std::sqrt(std::pow(candidate->x - world_pos.x(), 2) +
-                                       std::pow(candidate->y - world_pos.y(), 2));
-            if (distance < nearest_distance) {
-                nearest_distance = distance;
-                nearest_point = candidate;
-                nearest_viz = viz.get();
-            }
-        }
-    }
-
-    return {nearest_viz, nearest_point};
-}
-
-PointDataVisualization * SpatialOverlayOpenGLWidget::getCurrentHoverVisualization() const {
-    for (auto const & [key, viz]: _point_data_visualizations) {
-        if (viz->current_hover_point) {
-            return viz.get();
-        }
-    }
-    return nullptr;
-}
-
-std::pair<LineDataVisualization *, std::optional<LineIdentifier>> SpatialOverlayOpenGLWidget::findLineNear(int screen_x, int screen_y) const {
-    if (_line_data_visualizations.empty()) {
-        return {nullptr, std::nullopt};
-    }
-
-    // Try to find a line at the screen position using GPU picking
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        if (!viz->visible) continue;
-
-        // Get widget width and height
-        int widget_width = width();
-        int widget_height = height();
-
-        auto line_id = viz->getLineAtScreenPosition(screen_x, screen_y, widget_width, widget_height);
-        if (line_id.has_value()) {
-            return {viz.get(), line_id};
-        }
-    }
-
-    return {nullptr, std::nullopt};
-}
-
-LineDataVisualization * SpatialOverlayOpenGLWidget::getCurrentHoverLineVisualization() const {
-    for (auto const & [key, viz]: _line_data_visualizations) {
-        if (viz->has_hover_line) {
-            return viz.get();
-        }
-    }
-    return nullptr;
 }
 
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
@@ -737,18 +639,22 @@ void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         qDebug() << "SpatialOverlayOpenGLWidget: Double-click detected at" << event->pos();
 
-        auto [viz, point] = findPointNear(event->pos().x(), event->pos().y());
-        if (viz && point) {
-            qDebug() << "SpatialOverlayOpenGLWidget: Double-click on point at ("
-                     << point->x << "," << point->y << ") frame:" << point->data
-                     << "data:" << viz->key;
+        QVector2D world_pos = screenToWorld(event->pos().x(), event->pos().y());
+        float tolerance = calculateWorldTolerance(10.0f);
 
-            emit frameJumpRequested(point->data, viz->key);
-            event->accept();
-        } else {
-            qDebug() << "SpatialOverlayOpenGLWidget: Double-click but no point found near cursor";
-            event->ignore();
+        for (auto const & [key, viz]: _point_data_visualizations) {
+            auto frame_index = viz->handleDoubleClick(world_pos, tolerance);
+            if (frame_index.has_value()) {
+                qDebug() << "SpatialOverlayOpenGLWidget: Double-click on point in" << key
+                         << "frame:" << frame_index.value();
+                emit frameJumpRequested(frame_index.value(), key);
+                event->accept();
+                return;
+            }
         }
+
+        qDebug() << "SpatialOverlayOpenGLWidget: Double-click but no point found near cursor";
+        event->ignore();
     } else {
         event->ignore();
     }
@@ -1083,72 +989,35 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
 
     qDebug() << "SpatialOverlayOpenGLWidget: Processing debounced hover at" << _pending_hover_pos;
 
-    // Find points, masks, and lines near the stored hover position
-    auto [viz, point] = findPointNear(_pending_hover_pos.x(), _pending_hover_pos.y());
-    auto mask_results = findMasksNear(_pending_hover_pos.x(), _pending_hover_pos.y());
-    auto [line_viz, line_id] = findLineNear(_pending_hover_pos.x(), _pending_hover_pos.y());
+    QVector2D world_pos = screenToWorld(_pending_hover_pos.x(), _pending_hover_pos.y());
+    float tolerance = calculateWorldTolerance(10.0f);
+    bool needs_tooltip_update = false;
 
-    // Clear old hover states
-    PointDataVisualization * old_hover_viz = getCurrentHoverVisualization();
-    if (old_hover_viz && old_hover_viz != viz) {
-        old_hover_viz->current_hover_point = nullptr;
-    }
-
-    // Clear old mask hover states
-    for (auto const & [key, mask_viz]: _mask_data_visualizations) {
-        mask_viz->clearHover();
-    }
-
-    // Clear old line hover states
-    LineDataVisualization * old_line_hover_viz = getCurrentHoverLineVisualization();
-    if (old_line_hover_viz && old_line_hover_viz != line_viz) {
-        old_line_hover_viz->setHoverLine(std::nullopt);
-    }
-
-    // Set new hover state
-    if (viz && point) {
-        if (viz->current_hover_point != point) {
-            viz->current_hover_point = point;
-            _tooltip_timer->stop();
-            _tooltip_refresh_timer->stop();
-            _tooltip_timer->start();
-
-            qDebug() << "SpatialOverlayOpenGLWidget: Hovering over point in" << viz->key
-                     << "at" << point->x << "," << point->y << "frame:" << point->data;
+    // Delegate hover handling to each point data visualization
+    for (auto const & [key, viz]: _point_data_visualizations) {
+        if (viz->handleHover(world_pos, tolerance)) {
+            needs_tooltip_update = true;
         }
-    } else if (!mask_results.empty()) {
-        // Set mask hover states - this is where the expensive polygon union happens
-        for (auto const & [mask_viz, entries]: mask_results) {
-            mask_viz->setHoverEntries(entries);
-        }
+    }
 
+    // Delegate hover handling to each mask data visualization
+    for (auto const & [key, viz]: _mask_data_visualizations) {
+        if (viz->handleHover(world_pos)) {
+            needs_tooltip_update = true;
+        }
+    }
+
+    // Delegate hover handling to each line data visualization
+    for (auto const & [key, viz]: _line_data_visualizations) {
+        if (viz->handleHover(_pending_hover_pos, size())) {
+            needs_tooltip_update = true;
+        }
+    }
+
+    if (needs_tooltip_update) {
         _tooltip_timer->stop();
         _tooltip_refresh_timer->stop();
         _tooltip_timer->start();
-
-        size_t total_masks = 0;
-        for (auto const & [mask_viz, entries]: mask_results) {
-            total_masks += entries.size();
-        }
-        qDebug() << "SpatialOverlayOpenGLWidget: Hovering over" << total_masks << "masks (processed after debounce)";
-    } else if (line_viz && line_id.has_value()) {
-        // Set line hover state
-        line_viz->setHoverLine(line_id);
-        _tooltip_timer->stop();
-        _tooltip_refresh_timer->stop();
-        _tooltip_timer->start();
-
-        qDebug() << "SpatialOverlayOpenGLWidget: Hovering over line in" << line_viz->key
-                 << "timeframe:" << line_id.value().time_frame << "line_id:"
-                 << line_id.value().line_id;
-    } else {
-        // No point, mask, or line under cursor
-        if (old_hover_viz) {
-            old_hover_viz->current_hover_point = nullptr;
-        }
-        _tooltip_timer->stop();
-        _tooltip_refresh_timer->stop();
-        QToolTip::hideText();
     }
 
     requestThrottledUpdate();

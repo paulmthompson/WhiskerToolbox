@@ -16,6 +16,7 @@
 #include <unordered_set>
 #include <vector>
 #include <variant>
+#include <optional>
 
 class PointData;
 class QOpenGLShaderProgram;
@@ -124,6 +125,22 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      * @return QString with tooltip information, or empty if no hover
      */
     QString getTooltipText() const;
+
+    /**
+     * @brief Handle hover events for this visualization
+     * @param world_pos The mouse position in world coordinates
+     * @param tolerance The tolerance in world coordinates for finding a near point
+     * @return True if the hover state changed, false otherwise
+     */
+    bool handleHover(const QVector2D & world_pos, float tolerance);
+
+    /**
+     * @brief Handle double-click events for this visualization
+     * @param world_pos The mouse position in world coordinates
+     * @param tolerance The tolerance in world coordinates for finding a near point
+     * @return The time frame index of the double-clicked point, or std::nullopt if none
+     */
+    std::optional<int64_t> handleDoubleClick(const QVector2D & world_pos, float tolerance);
 
 private:
     /**

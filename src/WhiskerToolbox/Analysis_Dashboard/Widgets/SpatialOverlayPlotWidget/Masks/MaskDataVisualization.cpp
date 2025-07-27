@@ -755,3 +755,19 @@ QString MaskDataVisualization::getTooltipText() const {
     QString tooltip_text = QString("%1: %2 masks").arg(key).arg(total_hover_masks);
     return tooltip_text;
 }
+
+bool MaskDataVisualization::handleHover(const QVector2D & world_pos) {
+    BoundingBox point_bbox(world_pos.x(), world_pos.y(), world_pos.x(), world_pos.y());
+    std::vector<RTreeEntry<MaskIdentifier>> entries;
+    spatial_index->query(point_bbox, entries);
+
+    // This comparison is simplified. For a more robust check, we would need to
+    // compare the content of the vectors.
+    bool hover_changed = (current_hover_entries.size() != entries.size());
+
+    if (hover_changed) {
+        setHoverEntries(entries);
+    }
+
+    return hover_changed;
+}
