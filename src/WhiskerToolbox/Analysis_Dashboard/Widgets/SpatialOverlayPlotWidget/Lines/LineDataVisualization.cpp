@@ -336,15 +336,10 @@ void LineDataVisualization::updateOpenGLBuffers() {
     line_id_buffer.release();
 }
 
-void LineDataVisualization::renderLines(QOpenGLShaderProgram * shader_program, float line_width) {
-    if (!visible || vertex_data.empty() || !shader_program) {
+void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_width) {
+    if (!visible || vertex_data.empty() || !line_shader_program) {
         return;
     }
-
-    renderLinesDirect(shader_program, line_width);
-}
-
-void LineDataVisualization::renderLinesDirect(QOpenGLShaderProgram * shader_program, float line_width) {
 
     if (m_dataIsDirty) {
         qDebug() << "LineDataVisualization: Data is dirty, rebuilding vertex data";
@@ -355,8 +350,8 @@ void LineDataVisualization::renderLinesDirect(QOpenGLShaderProgram * shader_prog
     }
 
     if (m_viewIsDirty) {
-        renderLinesToSceneBuffer(shader_program, line_width);
-        renderLinesToPickingBuffer(line_width);
+        renderLinesToSceneBuffer(mvp_matrix, line_shader_program, line_width);
+        renderLinesToPickingBuffer(mvp_matrix, line_width);
         m_viewIsDirty = false;
     }
 
@@ -365,19 +360,11 @@ void LineDataVisualization::renderLinesDirect(QOpenGLShaderProgram * shader_prog
 
     // Draw hover line on top
     if (has_hover_line) {
-        renderHoverLine(shader_program, line_width);
+        renderHoverLine(mvp_matrix, line_shader_program, line_width);
     }
 }
 
-void LineDataVisualization::renderLines(float line_width) {
-    if (line_shader_program) {
-        renderLines(line_shader_program, line_width);
-    } else {
-        qDebug() << "Cannot render lines: line_shader_program is null (shader compilation failed?)";
-    }
-}
-
-void LineDataVisualization::renderLinesToSceneBuffer(QOpenGLShaderProgram * shader_program, float line_width) {
+void LineDataVisualization::renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width) {
     if (!visible || vertex_data.empty() || !shader_program || !scene_framebuffer) {
         qDebug() << "renderLinesToSceneBuffer: Skipping render - missing resources";
         return;
@@ -396,6 +383,7 @@ void LineDataVisualization::renderLinesToSceneBuffer(QOpenGLShaderProgram * shad
 
     shader_program->bind();
 
+    shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
     shader_program->setUniformValue("u_color", color);
     shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
     shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));
@@ -438,7 +426,7 @@ void LineDataVisualization::blitSceneBuffer() {
     blit_shader_program->release();
 }
 
-void LineDataVisualization::renderHoverLine(QOpenGLShaderProgram * shader_program, float line_width) {
+void LineDataVisualization::renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width) {
     if (!has_hover_line || cached_hover_line_index >= line_vertex_ranges.size()) {
         return;
     }
@@ -448,6 +436,7 @@ void LineDataVisualization::renderHoverLine(QOpenGLShaderProgram * shader_progra
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
     shader_program->setUniformValue("u_color", color);
     shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
     shader_program->setUniformValue("u_line_width", line_width);
@@ -481,7 +470,7 @@ void LineDataVisualization::renderHoverLine(QOpenGLShaderProgram * shader_progra
     shader_program->release();
 }
 
-void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
+void LineDataVisualization::renderLinesToPickingBuffer(QMatrix4x4 const & mvp_matrix, float line_width) {
     if (!visible || vertex_data.empty() || !picking_shader_program || !picking_framebuffer) {
         qDebug() << "renderLinesToPickingBuffer: Skipping render - missing resources";
         return;
@@ -504,6 +493,7 @@ void LineDataVisualization::renderLinesToPickingBuffer(float line_width) {
 
     picking_shader_program->bind();
 
+    picking_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
     picking_shader_program->setUniformValue("u_line_width", line_width);
     picking_shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));// TODO: Get actual viewport
     picking_shader_program->setUniformValue("u_canvas_size", canvas_size);                  // For coordinate normalization

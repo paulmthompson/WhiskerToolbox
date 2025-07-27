@@ -516,9 +516,10 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
     if (mode != _selection_mode) {
 
         std::visit([](auto & handler) {
-                handler->deactivate();
-                handler->clearNotificationCallback();
-        }, _selection_handler);
+            handler->deactivate();
+            handler->clearNotificationCallback();
+        },
+                   _selection_handler);
 
         _selection_mode = mode;
         emit selectionModeChanged(_selection_mode);
@@ -537,9 +538,10 @@ void SpatialOverlayOpenGLWidget::setSelectionMode(SelectionMode mode) {
 
         std::visit([this](auto & handler) {
             handler->setNotificationCallback([this]() {
-                    makeSelection();
+                makeSelection();
             });
-        }, _selection_handler);
+        },
+                   _selection_handler);
 
         requestThrottledUpdate();
     }
@@ -754,7 +756,8 @@ void SpatialOverlayOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
     auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
     std::visit([event, world_pos](auto & handler) {
         handler->mouseMoveEvent(event, world_pos);
-    }, _selection_handler);
+    },
+               _selection_handler);
 
     if (_is_panning && (event->buttons() & Qt::LeftButton)) {
         QPoint delta = event->pos() - _last_mouse_pos;
@@ -805,7 +808,8 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
     auto world_pos = screenToWorld(event->pos().x(), event->pos().y());
     std::visit([event, world_pos](auto & handler) {
         handler->mouseReleaseEvent(event, world_pos);
-    }, _selection_handler);
+    },
+               _selection_handler);
 
     if (event->button() == Qt::LeftButton) {
         _is_panning = false;
@@ -878,7 +882,8 @@ void SpatialOverlayOpenGLWidget::keyPressEvent(QKeyEvent * event) {
             if (handler) {
                 handler->keyPressEvent(event);
             }
-        }, _selection_handler);
+        },
+                   _selection_handler);
 
         requestThrottledUpdate();
         event->accept();
@@ -1090,45 +1095,27 @@ void SpatialOverlayOpenGLWidget::renderLines() {
         return;
     }
 
-    // Get line shader program from ShaderManager
-    auto lineProgram = ShaderManager::instance().getProgram("line_with_geometry");
-    if (!lineProgram || !lineProgram->getNativeProgram()->bind()) {
-        qDebug() << "SpatialOverlayOpenGLWidget: Failed to bind line shader program";
-        return;
-    }
-
-    // Set uniform matrices
     QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
-    lineProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
-
-    // Enable blending for regular lines
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Render all lines for each LineData
     for (auto const & [key, viz]: _line_data_visualizations) {
-        viz->renderLines(lineProgram->getNativeProgram(), 2.0f);// Default line width
+        viz->render(mvp_matrix, 2.0f);// Default line width
     }
-
-    lineProgram->getNativeProgram()->release();
 }
 
 void SpatialOverlayOpenGLWidget::initializeOpenGLResources() {
     qDebug() << "SpatialOverlayOpenGLWidget: Initializing OpenGL resources";
 
-    // Load point shader program from ShaderManager
     if (!ShaderManager::instance().loadProgram("point", ":/shaders/point.vert", ":/shaders/point.frag", "", ShaderSourceType::Resource)) {
         qDebug() << "SpatialOverlayOpenGLWidget: Failed to load point shader program from ShaderManager";
         return;
     }
 
-    // Load line shader program from ShaderManager
     if (!ShaderManager::instance().loadProgram("line", ":/shaders/line.vert", ":/shaders/line.frag", "", ShaderSourceType::Resource)) {
         qDebug() << "SpatialOverlayOpenGLWidget: Failed to load line shader program from ShaderManager";
         return;
     }
 
-    // Load texture shader program from ShaderManager
     if (!ShaderManager::instance().loadProgram("texture", ":/shaders/texture.vert", ":/shaders/texture.frag", "", ShaderSourceType::Resource)) {
         qDebug() << "SpatialOverlayOpenGLWidget: Failed to load texture shader program from ShaderManager";
         return;
@@ -1142,12 +1129,10 @@ void SpatialOverlayOpenGLWidget::cleanupOpenGLResources() {
     if (_opengl_resources_initialized) {
         makeCurrent();
 
-        // Clean up all PointData visualizations
         for (auto const & [key, viz]: _point_data_visualizations) {
             viz->cleanupOpenGLResources();
         }
 
-        // Clean up all MaskData visualizations
         for (auto const & [key, viz]: _mask_data_visualizations) {
             viz->cleanupOpenGLResources();
         }
@@ -1298,4 +1283,3 @@ void SpatialOverlayOpenGLWidget::renderCommonOverlay() {
     // Render tooltips and other common overlay elements
     // This will be expanded to handle tooltip rendering and other common UI elements
 }
-

@@ -14,6 +14,7 @@
 #include <QOpenGLVertexArrayObject>
 #include <QString>
 #include <QVector4D>
+#include <QMatrix4x4>
 
 #include <cstdint>
 #include <memory>
@@ -123,37 +124,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
     /**
      * @brief Render lines for this LineData
      */
-    void renderLines(QOpenGLShaderProgram * shader_program, float line_width);
-
-    /**
-     * @brief Direct rendering fallback (original method)
-     */
-    void renderLinesDirect(QOpenGLShaderProgram * shader_program, float line_width);
-
-    /**
-     * @brief Render lines using internal shader program (convenience method)
-     */
-    void renderLines(float line_width);
-
-    /**
-     * @brief Render lines to picking framebuffer for hover detection
-     */
-    void renderLinesToPickingBuffer(float line_width);
-
-    /**
-     * @brief Render all lines to the scene framebuffer for caching.
-     */
-    void renderLinesToSceneBuffer(QOpenGLShaderProgram * shader_program, float line_width);
-
-    /**
-     * @brief Blit the cached scene framebuffer to the screen.
-     */
-    void blitSceneBuffer();
-
-    /**
-     * @brief Render just the currently hovered line.
-     */
-    void renderHoverLine(QOpenGLShaderProgram * shader_program, float line_width);
+    void render(QMatrix4x4 const & mvp_matrix, float line_width);
 
     /**
      * @brief Get line identifier at screen position
@@ -196,6 +167,12 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @param selection_handler The PolygonSelectionHandler to apply
      */
     void applySelection(PolygonSelectionHandler const & selection_handler);
+
+private:
+    void renderLinesToPickingBuffer(QMatrix4x4 const & mvp_matrix, float line_width);
+    void renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width);
+    void blitSceneBuffer();
+    void renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width);
 };
 
 #endif// LINEDATAVISUALIZATION_HPP
