@@ -223,7 +223,6 @@ private:
     QImage _applyTransparencyMasks(QImage const & media_image);
 
     void _plotPointData();
-    void extracted();
     void _clearPoints();
 
     void _plotDigitalIntervalSeries();
