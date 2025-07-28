@@ -35,4 +35,7 @@ Refactor: Apply const correctness and [[nodiscard]] to UI logic and helper metho
 - Applied `const` to loop-scoped and lambda-captured variables in image/mask processing (e.g., scaling factors, image data).
 - Improved maintainability, type safety, and potential for compiler optimization by eliminating unnecessary mutability throughout the codebase.
   
+7/28 12:27 
+Added Go to Frame Feature
 
+- Allows for frame selection with direct seeking implementation
