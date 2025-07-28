@@ -247,8 +247,8 @@ void Media_Window::_plotTextOverlays() {
         }
 
         // Calculate position based on relative coordinates (0.0-1.0)
-        float x_pos = overlay.x_position * static_cast<float>(_canvasWidth);
-        float y_pos = overlay.y_position * static_cast<float>(_canvasHeight);
+        float const x_pos = overlay.x_position * static_cast<float>(_canvasWidth);
+        float const y_pos = overlay.y_position * static_cast<float>(_canvasHeight);
 
         // Create text item
         auto text_item = addText(overlay.text);
@@ -259,7 +259,7 @@ void Media_Window::_plotTextOverlays() {
         text_item->setFont(font);
 
         // Set color
-        QColor text_color(overlay.color);
+        QColor const text_color(overlay.color);
         text_item->setDefaultTextColor(text_color);
 
         // Handle orientation
@@ -471,9 +471,9 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
                 event->scenePos().y() / getYAspect());
 
         // Emit strong-typed coordinate signals
-        CanvasCoordinates canvas_coords(static_cast<float>(event->scenePos().x()),
+        CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
                                         static_cast<float>(event->scenePos().y()));
-        MediaCoordinates media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
+        MediaCoordinates const media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
                                       static_cast<float>(event->scenePos().y() / getYAspect()));
         emit leftClickCanvas(canvas_coords);
         emit leftClickMediaCoords(media_coords);
@@ -493,9 +493,9 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
                 event->scenePos().y() / getYAspect());
 
         // Emit strong-typed coordinate signals
-        CanvasCoordinates canvas_coords(static_cast<float>(event->scenePos().x()),
+        CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
                                         static_cast<float>(event->scenePos().y()));
-        MediaCoordinates media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
+        MediaCoordinates const media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
                                       static_cast<float>(event->scenePos().y() / getYAspect()));
         emit rightClickCanvas(canvas_coords);
         emit rightClickMediaCoords(media_coords);
@@ -556,7 +556,7 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
     emit mouseMove(event->scenePos().x(), event->scenePos().y());
 
     // Emit strong-typed coordinate signal
-    CanvasCoordinates canvas_coords(static_cast<float>(event->scenePos().x()),
+    CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
                                     static_cast<float>(event->scenePos().y()));
     emit mouseMoveCanvas(canvas_coords);
 
@@ -626,13 +626,13 @@ void Media_Window::_plotLineData() {
             }
 
             // Check if this line is selected
-            bool is_selected = (_line_config.get()->selected_line_index == line_idx);
+            bool const is_selected = (_line_config.get()->selected_line_index == line_idx);
 
             // Use segment if enabled, otherwise use full line
             Line2D line_to_plot;
             if (_line_config.get()->show_segment) {
-                float start_percentage = static_cast<float>(_line_config.get()->segment_start_percentage) / 100.0f;
-                float end_percentage = static_cast<float>(_line_config.get()->segment_end_percentage) / 100.0f;
+                float const start_percentage = static_cast<float>(_line_config.get()->segment_start_percentage) / 100.0f;
+                float const end_percentage = static_cast<float>(_line_config.get()->segment_end_percentage) / 100.0f;
                 line_to_plot = get_segment_between_percentages(single_line, start_percentage, end_percentage);
 
                 // If segment is empty (invalid percentages), skip this line
@@ -675,7 +675,7 @@ void Media_Window::_plotLineData() {
             _line_paths.append(linePath);
 
             // Add dot at line base (always filled) - selected lines have red dot
-            QColor dot_color = is_selected ? QColor(255, 0, 0) : plot_color;
+            QColor const dot_color = is_selected ? QColor(255, 0, 0) : plot_color;
             auto ellipse = addEllipse(
                     static_cast<float>(line_to_plot[0].x) * xAspect - 2.5,
                     static_cast<float>(line_to_plot[0].y) * yAspect - 2.5,
@@ -691,7 +691,7 @@ void Media_Window::_plotLineData() {
                 pointPen.setWidth(1);
 
                 // Empty brush for open circles
-                QBrush emptyBrush(Qt::NoBrush);
+                QBrush const emptyBrush(Qt::NoBrush);
 
                 // Start from the second point (first one is already shown as filled)
                 for (size_t i = 1; i < line_to_plot.size(); i++) {
@@ -707,8 +707,8 @@ void Media_Window::_plotLineData() {
 
             // If position marker is enabled, add a marker at the specified percentage
             if (_line_config.get()->show_position_marker) {
-                float percentage = static_cast<float>(_line_config.get()->position_percentage) / 100.0f;
-                Point2D<float> marker_pos = get_position_at_percentage(line_to_plot, percentage);
+                float const percentage = static_cast<float>(_line_config.get()->position_percentage) / 100.0f;
+                Point2D<float> const marker_pos = get_position_at_percentage(line_to_plot, percentage);
 
                 float const marker_x = marker_pos.x * xAspect;
                 float const marker_y = marker_pos.y * yAspect;
@@ -716,7 +716,7 @@ void Media_Window::_plotLineData() {
                 // Create a distinctive marker (filled circle with border)
                 QPen markerPen(QColor(255, 255, 255));// White border
                 markerPen.setWidth(2);
-                QBrush markerBrush(dot_color);// Same color as line but filled
+                QBrush const markerBrush(dot_color);// Same color as line but filled
 
                 auto marker = addEllipse(
                         marker_x - 4.0f,
@@ -766,8 +766,8 @@ void Media_Window::_plotMaskData() {
         // Plot bounding boxes if enabled
         if (_mask_config.get()->show_bounding_box) {
             // Calculate scaling factors based on mask image size, not media aspect ratio
-            float xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
-            float yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
+            float const xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
+            float const yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
 
             // For current time masks
             for (auto const & single_mask: maskData) {
@@ -777,15 +777,15 @@ void Media_Window::_plotMaskData() {
                     auto max_point = bounding_box.second;
 
                     // Scale coordinates to canvas using mask image size
-                    float min_x = static_cast<float>(min_point.x) * xAspect;
-                    float min_y = static_cast<float>(min_point.y) * yAspect;
-                    float max_x = static_cast<float>(max_point.x) * xAspect;
-                    float max_y = static_cast<float>(max_point.y) * yAspect;
+                    float const min_x = static_cast<float>(min_point.x) * xAspect;
+                    float const min_y = static_cast<float>(min_point.y) * yAspect;
+                    float const max_x = static_cast<float>(max_point.x) * xAspect;
+                    float const max_y = static_cast<float>(max_point.y) * yAspect;
 
                     // Draw bounding box rectangle (no fill, just outline)
                     QPen boundingBoxPen(plot_color);
                     boundingBoxPen.setWidth(2);
-                    QBrush emptyBrush(Qt::NoBrush);
+                    QBrush const emptyBrush(Qt::NoBrush);
 
                     auto boundingBoxRect = addRect(min_x, min_y, max_x - min_x, max_y - min_y,
                                                    boundingBoxPen, emptyBrush);
@@ -801,15 +801,15 @@ void Media_Window::_plotMaskData() {
                     auto max_point = bounding_box.second;
 
                     // Scale coordinates to canvas using mask image size
-                    float min_x = static_cast<float>(min_point.x) * xAspect;
-                    float min_y = static_cast<float>(min_point.y) * yAspect;
-                    float max_x = static_cast<float>(max_point.x) * xAspect;
-                    float max_y = static_cast<float>(max_point.y) * yAspect;
+                    float const min_x = static_cast<float>(min_point.x) * xAspect;
+                    float const min_y = static_cast<float>(min_point.y) * yAspect;
+                    float const max_x = static_cast<float>(max_point.x) * xAspect;
+                    float const max_y = static_cast<float>(max_point.y) * yAspect;
 
                     // Draw bounding box rectangle (no fill, just outline)
                     QPen boundingBoxPen(plot_color);
                     boundingBoxPen.setWidth(2);
-                    QBrush emptyBrush(Qt::NoBrush);
+                    QBrush const emptyBrush(Qt::NoBrush);
 
                     auto boundingBoxRect = addRect(min_x, min_y, max_x - min_x, max_y - min_y,
                                                    boundingBoxPen, emptyBrush);
@@ -821,7 +821,7 @@ void Media_Window::_plotMaskData() {
         // Plot outlines if enabled
         if (_mask_config.get()->show_outline) {
             // Create a slightly darker color for outlines
-            QRgb outline_color = plot_color;
+            QRgb const outline_color = plot_color;
 
             // For current time masks
             for (auto const & single_mask: maskData) {
@@ -886,7 +886,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
     QImage final_image = media_image;
     
     int transparency_mask_count = 0;
-    int total_mask_points = 0;
+    int const total_mask_points = 0;
     
     // Process all transparency masks
     for (auto const & [mask_key, mask_config] : _mask_configs) {
@@ -911,8 +911,8 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
         std::cout << "Mask data size: " << maskData.size() << std::endl;
         
         // Calculate scaling factors
-        float xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
-        float yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
+        float const xAspect = static_cast<float>(_canvasWidth) / static_cast<float>(image_size.width);
+        float const yAspect = static_cast<float>(_canvasHeight) / static_cast<float>(image_size.height);
         
         std::cout << "Scaling factors: x=" << xAspect << ", y=" << yAspect << std::endl;
 
@@ -927,7 +927,7 @@ QImage Media_Window::_applyTransparencyMasks(QImage const & media_image) {
             }
         }
 
-        QImage scaled_mask_image = unscaled_mask_image.scaled(_canvasWidth, _canvasHeight);
+        QImage const scaled_mask_image = unscaled_mask_image.scaled(_canvasWidth, _canvasHeight);
         // I want to copy final_image where scaled_mask_image is white, and keep the rest of the image the same
         for (int y = 0; y < _canvasHeight; ++y) {
             for (int x = 0; x < _canvasWidth; ++x) {
@@ -998,7 +998,7 @@ void Media_Window::_plotPointData() {
                 case PointMarkerShape::Circle: {
                     QPen pen(plot_color);
                     pen.setWidth(2);
-                    QBrush brush(plot_color);
+                    QBrush const brush(plot_color);
                     auto ellipse = addEllipse(x_pos - point_size / 2, y_pos - point_size / 2,
                                               point_size, point_size, pen, brush);
                     _points.append(ellipse);
@@ -1007,7 +1007,7 @@ void Media_Window::_plotPointData() {
                 case PointMarkerShape::Square: {
                     QPen pen(plot_color);
                     pen.setWidth(2);
-                    QBrush brush(plot_color);
+                    QBrush const brush(plot_color);
                     auto rect = addRect(x_pos - point_size / 2, y_pos - point_size / 2,
                                         point_size, point_size, pen, brush);
                     _points.append(rect);
@@ -1016,7 +1016,7 @@ void Media_Window::_plotPointData() {
                 case PointMarkerShape::Triangle: {
                     QPen pen(plot_color);
                     pen.setWidth(2);
-                    QBrush brush(plot_color);
+                    QBrush const brush(plot_color);
 
                     // Create triangle polygon
                     QPolygonF triangle;
@@ -1114,7 +1114,7 @@ void Media_Window::_plotDigitalIntervalSeries() {
             continue;
         }
 
-        bool needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
+        bool const needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
 
         // Generate relative times based on frame range setting
         std::vector<int> relative_times;
@@ -1208,7 +1208,7 @@ void Media_Window::_plotDigitalIntervalBorders() {
             continue;
         }
 
-        bool needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
+        bool const needs_conversion = _needsTimeFrameConversion(video_timeframe, interval_timeframe);
 
         // Check if an interval is present at the current frame
         bool interval_present = false;
@@ -1227,7 +1227,7 @@ void Media_Window::_plotDigitalIntervalBorders() {
             auto plot_color = plot_color_with_alpha(_interval_config.get());
 
             // Get border thickness from config
-            int thickness = _interval_config->border_thickness;
+            int const thickness = _interval_config->border_thickness;
 
             QPen border_pen(plot_color);
             border_pen.setWidth(thickness);
@@ -1273,9 +1273,9 @@ void Media_Window::_plotTensorData() {
                 //int const pixel_value = static_cast<int>(value * 255);// Assuming the tensor values are normalized between 0 and 1
 
                 // Use the config color with alpha
-                QColor color(QString::fromStdString(config->hex_color));
-                int alpha = std::lround(config->alpha * 255.0f * (value > 0 ? 1.0f : 0.0f));
-                QRgb rgb = qRgba(color.red(), color.green(), color.blue(), alpha);
+                QColor const color(QString::fromStdString(config->hex_color));
+                int const alpha = std::lround(config->alpha * 255.0f * (value > 0 ? 1.0f : 0.0f));
+                QRgb const rgb = qRgba(color.red(), color.green(), color.blue(), alpha);
 
                 tensor_image.setPixel(x, y, rgb);
             }
@@ -1364,8 +1364,8 @@ void Media_Window::setHoverCircleRadius(int radius) {
 
     // Update the existing hover circle item if it exists
     if (_hover_circle_item && _show_hover_circle) {
-        qreal x = _hover_position.x() - _hover_circle_radius;
-        qreal y = _hover_position.y() - _hover_circle_radius;
+        qreal const x = _hover_position.x() - _hover_circle_radius;
+        qreal const y = _hover_position.y() - _hover_circle_radius;
         _hover_circle_item->setRect(x, y, _hover_circle_radius * 2, _hover_circle_radius * 2);
     }
 }
@@ -1376,8 +1376,8 @@ void Media_Window::_updateHoverCirclePosition() {
 
     if (_hover_circle_item && _show_hover_circle) {
         // Update the position of the existing hover circle item
-        qreal x = _hover_position.x() - _hover_circle_radius;
-        qreal y = _hover_position.y() - _hover_circle_radius;
+        qreal const x = _hover_position.x() - _hover_circle_radius;
+        qreal const y = _hover_position.y() - _hover_circle_radius;
         _hover_circle_item->setRect(x, y, _hover_circle_radius * 2, _hover_circle_radius * 2);
         _hover_circle_item->setVisible(true);
 
@@ -1398,7 +1398,7 @@ void Media_Window::_addRemoveData() {
 }
 
 bool Media_Window::_needsTimeFrameConversion(std::shared_ptr<TimeFrame> video_timeframe, 
-                                             std::shared_ptr<TimeFrame> interval_timeframe) {
+                                             const std::shared_ptr<TimeFrame>& interval_timeframe) {
     // If either timeframe is null, no conversion is possible/needed
     if (!video_timeframe || !interval_timeframe) {
         return false;

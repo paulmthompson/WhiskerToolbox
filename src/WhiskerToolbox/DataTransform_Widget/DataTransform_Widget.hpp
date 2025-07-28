@@ -48,7 +48,7 @@ private:
      * @brief Generates an output name based on the input feature and transform operation
      * @return QString containing the generated output name, or empty string if either input is missing
      */
-    QString _generateOutputName() const;
+    [[nodiscard]] QString _generateOutputName() const;
     
     /**
      * @brief Updates the output name edit box with the automatically generated name

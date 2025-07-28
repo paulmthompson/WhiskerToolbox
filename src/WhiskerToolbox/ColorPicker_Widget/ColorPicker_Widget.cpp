@@ -41,7 +41,7 @@ void ColorPicker_Widget::setColor(const QString& hex_color) {
     ui->lineEdit->setText(hex_color);
 
     // Convert hex to RGB
-    QColor color(hex_color);
+    QColor const color(hex_color);
     ui->red_spinbox->setValue(color.red());
     ui->green_spinbox->setValue(color.green());
     ui->blue_spinbox->setValue(color.blue());
@@ -62,7 +62,7 @@ void ColorPicker_Widget::setColor(int r, int g, int b) {
     ui->blue_spinbox->setValue(b);
 
     // Convert to hex and set hex field
-    QColor color(r, g, b);
+    QColor const color(r, g, b);
     ui->lineEdit->setText(color.name());
 
     _updateColorDisplay();
@@ -99,12 +99,12 @@ void ColorPicker_Widget::_onRgbChanged() {
     _updating = true;
 
     // Get RGB values
-    int r = ui->red_spinbox->value();
-    int g = ui->green_spinbox->value();
-    int b = ui->blue_spinbox->value();
+    int const r = ui->red_spinbox->value();
+    int const g = ui->green_spinbox->value();
+    int const b = ui->blue_spinbox->value();
 
     // Convert to hex and update hex field
-    QColor color(r, g, b);
+    QColor const color(r, g, b);
     ui->lineEdit->setText(color.name());
 
     _updateColorDisplay();
@@ -121,9 +121,9 @@ void ColorPicker_Widget::_onHexChanged() {
 
     _updating = true;
 
-    QString hexColor = ui->lineEdit->text();
+    QString const hexColor = ui->lineEdit->text();
     if (isValidHexColor(hexColor.toStdString())) {
-        QColor color(hexColor);
+        QColor const color(hexColor);
 
         // Update RGB spinboxes
         ui->red_spinbox->setValue(color.red());
@@ -155,6 +155,6 @@ void ColorPicker_Widget::_updateColorDisplay() {
     QColor color = getColor();
     color.setAlpha(static_cast<int>(getAlphaFloat() * 255));
 
-    QString styleSheet = QString("background-color: %1;").arg(color.name(color.alpha() < 255 ? QColor::HexArgb : QColor::HexRgb));
+    QString const styleSheet = QString("background-color: %1;").arg(color.name(color.alpha() < 255 ? QColor::HexArgb : QColor::HexRgb));
     ui->color_preview->setStyleSheet(styleSheet);
 }
