@@ -673,12 +673,12 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
 
     // 1. Transform selection line from world to framebuffer coordinates
     QPoint p1_screen = QPoint(
-        ((selection_region->getStartPoint().x - context.world_bounds.left()) / context.world_bounds.width()) * context.viewport_rect.width(),
-        ((context.world_bounds.top() - selection_region->getStartPoint().y) / context.world_bounds.height()) * context.viewport_rect.height()
+        ((selection_region->getStartPoint().x - context.world_bounds.left()) / context.world_bounds.width()) * picking_framebuffer->width(),
+        ((context.world_bounds.top() - selection_region->getStartPoint().y) / context.world_bounds.height()) * picking_framebuffer->height()
     );
     QPoint p2_screen = QPoint(
-        ((selection_region->getEndPoint().x - context.world_bounds.left()) / context.world_bounds.width()) * context.viewport_rect.width(),
-        ((context.world_bounds.top() - selection_region->getEndPoint().y) / context.world_bounds.height()) * context.viewport_rect.height()
+        ((selection_region->getEndPoint().x - context.world_bounds.left()) / context.world_bounds.width()) * picking_framebuffer->width(),
+        ((context.world_bounds.top() - selection_region->getEndPoint().y) / context.world_bounds.height()) * picking_framebuffer->height()
     );
 
     // 2. Sample pixels along the line in the picking framebuffer

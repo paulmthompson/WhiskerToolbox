@@ -12,7 +12,6 @@
 #include <QPoint>
 #include <QVector2D>
 
-
 #include <functional>
 #include <memory>
 #include <vector>

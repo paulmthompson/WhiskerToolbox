@@ -6,6 +6,7 @@
 #include <QKeyEvent>
 #include <QOpenGLShaderProgram>
 #include <QMouseEvent>
+#include <QGuiApplication>
 
 LineSelectionHandler::LineSelectionHandler()
     : _line_vertex_buffer(QOpenGLBuffer::VertexBuffer),
@@ -194,33 +195,28 @@ void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
 void LineSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) {
     if (event->button() == Qt::LeftButton) {
         if (!_is_drawing_line) {
-            _current_behavior = LineSelectionBehavior::Replace;
+            Qt::KeyboardModifiers modifiers = QGuiApplication::keyboardModifiers();
+            if (modifiers.testFlag(Qt::ControlModifier)) {
+                _current_behavior = LineSelectionBehavior::Append;
+            } else if (modifiers.testFlag(Qt::ShiftModifier)) {
+                _current_behavior = LineSelectionBehavior::Remove;
+            } else {
+                _current_behavior = LineSelectionBehavior::Replace;
+            }
             startLineSelection(world_pos.x(), world_pos.y());
-        }
-    } else if (event->button() == Qt::MiddleButton) {
-        if (!_is_drawing_line) {
-            _current_behavior = LineSelectionBehavior::Append;
-            startLineSelection(world_pos.x(), world_pos.y());
-        }
-    } else if (event->button() == Qt::RightButton) {
-        if (!_is_drawing_line) {
-            _current_behavior = LineSelectionBehavior::Remove;
-            startLineSelection(world_pos.x(), world_pos.y());
-        } else {
-            completeLineSelection();
         }
     }
 }
 
 void LineSelectionHandler::mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {
-    if (_is_drawing_line && (event->buttons() & (Qt::LeftButton | Qt::MiddleButton | Qt::RightButton))) {
+    if (_is_drawing_line && (event->buttons() & Qt::LeftButton)) {
         qDebug() << "LineSelectionHandler: Updating line end point to" << world_pos.x() << "," << world_pos.y();
         updateLineEndPoint(world_pos.x(), world_pos.y());
     }
 }
 
 void LineSelectionHandler::mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {
-    if (_is_drawing_line && (event->button() == Qt::LeftButton || event->button() == Qt::MiddleButton || event->button() == Qt::RightButton)) {
+    if (_is_drawing_line && (event->button() == Qt::LeftButton)) {
         qDebug() << "LineSelectionHandler: Completing line selection";
         completeLineSelection();
     }
