@@ -6,6 +6,7 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "LineIdentifier.hpp"
 #include "../Selection/SelectionHandlers.hpp"
+#include "../RenderingContext.hpp"
 
 #include <QGenericMatrix>
 #include <QOpenGLBuffer>
@@ -160,13 +161,20 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
 
     //========== Selection Handlers ==========
 
-    void applySelection(SelectionVariant & selection_handler);
+    void applySelection(SelectionVariant & selection_handler, RenderingContext const& context);
 
     /**
      * @brief Apply selection to this LineDataVisualization
      * @param selection_handler The PolygonSelectionHandler to apply
      */
     void applySelection(PolygonSelectionHandler const & selection_handler);
+
+    /**
+     * @brief Apply selection to this LineDataVisualization
+     * @param selection_handler The LineSelectionHandler to apply
+     * @param context The rendering context
+     */
+    void applySelection(LineSelectionHandler const & selection_handler, RenderingContext const& context);
 
     /**
      * @brief Get tooltip text for the current hover state
@@ -187,6 +195,7 @@ private:
     void renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width);
     void blitSceneBuffer();
     void renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width);
+    void renderSelection(QMatrix4x4 const & mvp_matrix, float line_width);
 };
 
 #endif// LINEDATAVISUALIZATION_HPP

@@ -384,6 +384,21 @@ void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
 }
 
 void SpatialOverlayOpenGLWidget::makeSelection() {
+    auto context = createRenderingContext();
+
+    if (_selection_handler.valueless_by_exception()) {
+        return;
+    }
+
+    // If there's no active selection region, it implies a clear command
+    bool should_clear = std::visit([](auto& handler) {
+        return handler->getActiveSelectionRegion() == nullptr;
+    }, _selection_handler);
+
+    if (should_clear) {
+        clearSelection();
+        return;
+    }
 
     for (auto const & [key, viz]: _point_data_visualizations) {
         viz->applySelection(_selection_handler);
@@ -392,7 +407,7 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
         viz->applySelection(_selection_handler);
     }
     for (auto const & [key, viz]: _line_data_visualizations) {
-        viz->applySelection(_selection_handler);
+        viz->applySelection(_selection_handler, context);
     }
 
     requestThrottledUpdate();
@@ -1007,6 +1022,19 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
 
     // Clear processing flag to allow new hover calculations
     _hover_processing_active = false;
+}
+
+RenderingContext SpatialOverlayOpenGLWidget::createRenderingContext() const {
+    float left, right, bottom, top;
+    calculateProjectionBounds(left, right, bottom, top);
+
+    return {
+        _model_matrix,
+        _view_matrix,
+        _projection_matrix,
+        rect(),
+        QRectF(QPointF(left, top), QPointF(right, bottom))
+    };
 }
 
 

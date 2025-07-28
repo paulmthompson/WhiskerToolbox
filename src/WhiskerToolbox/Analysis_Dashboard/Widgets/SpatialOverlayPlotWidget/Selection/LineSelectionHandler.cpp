@@ -108,6 +108,7 @@ void LineSelectionHandler::completeLineSelection() {
 
     // Create selection region and apply it
     auto line_region = std::make_unique<LineSelectionRegion>(_line_start_point, _line_end_point);
+    line_region->setBehavior(_current_behavior);
     _active_selection_region = std::move(line_region);
 
     // Call notification callback if set
@@ -193,24 +194,33 @@ void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
 void LineSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const & world_pos) {
     if (event->button() == Qt::LeftButton) {
         if (!_is_drawing_line) {
+            _current_behavior = LineSelectionBehavior::Replace;
+            startLineSelection(world_pos.x(), world_pos.y());
+        }
+    } else if (event->button() == Qt::MiddleButton) {
+        if (!_is_drawing_line) {
+            _current_behavior = LineSelectionBehavior::Append;
             startLineSelection(world_pos.x(), world_pos.y());
         }
     } else if (event->button() == Qt::RightButton) {
-        if (_is_drawing_line) {
+        if (!_is_drawing_line) {
+            _current_behavior = LineSelectionBehavior::Remove;
+            startLineSelection(world_pos.x(), world_pos.y());
+        } else {
             completeLineSelection();
         }
     }
 }
 
 void LineSelectionHandler::mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {
-    if (_is_drawing_line && (event->buttons() & Qt::LeftButton)) {
+    if (_is_drawing_line && (event->buttons() & (Qt::LeftButton | Qt::MiddleButton | Qt::RightButton))) {
         qDebug() << "LineSelectionHandler: Updating line end point to" << world_pos.x() << "," << world_pos.y();
         updateLineEndPoint(world_pos.x(), world_pos.y());
     }
 }
 
 void LineSelectionHandler::mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {
-    if (_is_drawing_line && (event->button() == Qt::LeftButton)) {
+    if (_is_drawing_line && (event->button() == Qt::LeftButton || event->button() == Qt::MiddleButton || event->button() == Qt::RightButton)) {
         qDebug() << "LineSelectionHandler: Completing line selection";
         completeLineSelection();
     }
@@ -218,7 +228,13 @@ void LineSelectionHandler::mouseReleaseEvent(QMouseEvent * event, QVector2D cons
 
 void LineSelectionHandler::keyPressEvent(QKeyEvent * event) {
     if (event->key() == Qt::Key_Escape) {
-        cancelLineSelection();
+        if (_is_drawing_line) {
+            cancelLineSelection();
+        } else {
+            if (_notification_callback) {
+                _notification_callback();
+            }
+        }
     }
 }
 

@@ -17,9 +17,14 @@ void main() {
     // Use normal color for regular rendering
     vec4 final_color = u_color;
     
+    // Check if this specific line is selected
+    if (u_is_selected) {
+        final_color = u_selected_color;
+    }
+
     // Check if this specific line should be highlighted
     if (u_hover_line_id > 0u && g_line_id == u_hover_line_id) {
-        final_color = vec4(1.0, 0.0, 1.0, 1.0); // Bright magenta for maximum visibility
+        final_color = u_hover_color;
     }
 
     FragColor = final_color;

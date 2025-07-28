@@ -12,6 +12,7 @@
 #include <QPoint>
 #include <QVector2D>
 
+
 #include <functional>
 #include <memory>
 #include <vector>
@@ -19,6 +20,12 @@
 class QKeyEvent;
 class QMouseEvent;
 class QOpenGLShaderProgram;
+
+enum class LineSelectionBehavior {
+    Replace,
+    Append,
+    Remove
+};
 
 /**
  * @brief Line selection region for line-based selection
@@ -40,10 +47,14 @@ public:
      */
     Point2D<float> const & getEndPoint() const { return _end_point; }
 
+    LineSelectionBehavior getBehavior() const { return _behavior; }
+    void setBehavior(LineSelectionBehavior behavior) { _behavior = behavior; }
+
 
 private:
     Point2D<float> _start_point;
     Point2D<float> _end_point;
+    LineSelectionBehavior _behavior = LineSelectionBehavior::Replace;
 };
 
 /**
@@ -113,6 +124,7 @@ private:
     Point2D<float> _line_start_point;  // Line start point in world coordinates
     Point2D<float> _line_end_point;    // Line end point in world coordinates
     std::unique_ptr<SelectionRegion> _active_selection_region; // Current selection region
+    LineSelectionBehavior _current_behavior;
 
     /**
      * @brief Initialize OpenGL resources

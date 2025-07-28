@@ -287,6 +287,15 @@ void LineDataVisualization::initializeOpenGLResources() {
         blit_shader_program = nullptr;
     }
 
+    selection_vertex_buffer.create();
+    selection_vertex_array_object.create();
+    selection_vertex_array_object.bind();
+    selection_vertex_buffer.bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), nullptr);
+    selection_vertex_buffer.release();
+    selection_vertex_array_object.release();
+
     updateOpenGLBuffers();
 }
 
@@ -323,6 +332,13 @@ void LineDataVisualization::cleanupOpenGLResources() {
     if (picking_framebuffer) {
         delete picking_framebuffer;
         picking_framebuffer = nullptr;
+    }
+
+    if (selection_vertex_buffer.isCreated()) {
+        selection_vertex_buffer.destroy();
+    }
+    if (selection_vertex_array_object.isCreated()) {
+        selection_vertex_array_object.destroy();
     }
 }
 
@@ -361,6 +377,10 @@ void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_wid
     // Draw hover line on top
     if (has_hover_line) {
         renderHoverLine(mvp_matrix, line_shader_program, line_width);
+    }
+
+    if (!selected_lines.empty()) {
+        renderSelection(mvp_matrix, line_width);
     }
 }
 
@@ -619,18 +639,133 @@ BoundingBox LineDataVisualization::calculateBoundsForLineData(LineData const * l
 }
 
 void LineDataVisualization::clearSelection() {
+    selected_lines.clear();
+    selection_vertex_buffer.bind();
+    selection_vertex_buffer.allocate(nullptr, 0);
+    selection_vertex_buffer.release();
+    m_viewIsDirty = true;
 }
 
-void LineDataVisualization::applySelection(SelectionVariant & selection_handler) {
+void LineDataVisualization::applySelection(SelectionVariant & selection_handler, RenderingContext const& context) {
     if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
-    } else {
+    } else if (std::holds_alternative<std::unique_ptr<LineSelectionHandler>>(selection_handler)) {
+        applySelection(*std::get<std::unique_ptr<LineSelectionHandler>>(selection_handler), context);
+    }
+    else {
         std::cout << "LineDataVisualization::applySelection: selection_handler is not a PolygonSelectionHandler" << std::endl;
     }
 }
 
 void LineDataVisualization::applySelection(PolygonSelectionHandler const & selection_handler) {
     std::cout << "Line Data Polygon Selection not implemented" << std::endl;
+}
+
+void LineDataVisualization::applySelection(LineSelectionHandler const & selection_handler, RenderingContext const & context) {
+    if (!picking_framebuffer) {
+        return;
+    }
+
+    auto selection_region = dynamic_cast<LineSelectionRegion const *>(selection_handler.getActiveSelectionRegion().get());
+    if (!selection_region) {
+        return;
+    }
+
+    // 1. Transform selection line from world to framebuffer coordinates
+    QPoint p1_screen = QPoint(
+        ((selection_region->getStartPoint().x - context.world_bounds.left()) / context.world_bounds.width()) * context.viewport_rect.width(),
+        ((context.world_bounds.top() - selection_region->getStartPoint().y) / context.world_bounds.height()) * context.viewport_rect.height()
+    );
+    QPoint p2_screen = QPoint(
+        ((selection_region->getEndPoint().x - context.world_bounds.left()) / context.world_bounds.width()) * context.viewport_rect.width(),
+        ((context.world_bounds.top() - selection_region->getEndPoint().y) / context.world_bounds.height()) * context.viewport_rect.height()
+    );
+
+    // 2. Sample pixels along the line in the picking framebuffer
+    std::unordered_set<uint32_t> intersecting_line_ids;
+    picking_framebuffer->bind();
+
+    int x0 = p1_screen.x(), y0 = p1_screen.y();
+    int x1 = p2_screen.x(), y1 = p2_screen.y();
+
+    // Bresenham's line algorithm to sample pixels
+    int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    int dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy, e2;
+
+    for (;;) {
+        // Clamp coordinates to be safe
+        int fb_x = std::max(0, std::min(x0, picking_framebuffer->width() - 1));
+        int fb_y = std::max(0, std::min(y0, picking_framebuffer->height() - 1));
+
+        unsigned char pixel[4];
+        glReadPixels(fb_x, fb_y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+        
+        uint32_t line_id = (static_cast<uint32_t>(pixel[0]) << 16) |
+                           (static_cast<uint32_t>(pixel[1]) << 8) |
+                           static_cast<uint32_t>(pixel[2]);
+
+        if (line_id > 0) {
+            intersecting_line_ids.insert(line_id);
+        }
+
+        if (x0 == x1 && y0 == y1) break;
+        e2 = 2 * err;
+        if (e2 >= dy) { err += dy; x0 += sx; }
+        if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+    picking_framebuffer->release();
+
+    // 3. Update selection based on keyboard modifiers
+    LineSelectionBehavior behavior = selection_region->getBehavior();
+
+    if (behavior == LineSelectionBehavior::Replace) {
+        selected_lines.clear();
+        for (uint32_t id : intersecting_line_ids) {
+            if (id > 0 && id <= line_identifiers.size()) {
+                selected_lines.insert(line_identifiers[id - 1]);
+            }
+        }
+    } else if (behavior == LineSelectionBehavior::Append) {
+        for (uint32_t id : intersecting_line_ids) {
+            if (id > 0 && id <= line_identifiers.size()) {
+                selected_lines.insert(line_identifiers[id - 1]);
+            }
+        }
+    } else if (behavior == LineSelectionBehavior::Remove) {
+        for (uint32_t id : intersecting_line_ids) {
+            if (id > 0 && id <= line_identifiers.size()) {
+                selected_lines.erase(line_identifiers[id - 1]);
+            }
+        }
+    }
+    
+    // 4. Update vertex buffer for selected lines
+    std::vector<float> selection_vertices;
+    for(auto const& line_id : selected_lines) {
+        auto it = std::find(line_identifiers.begin(), line_identifiers.end(), line_id);
+        if (it != line_identifiers.end()) {
+            size_t index = std::distance(line_identifiers.begin(), it);
+            LineVertexRange const& range = line_vertex_ranges[index];
+            for(size_t i = 0; i < range.vertex_count; ++i) {
+                selection_vertices.push_back(vertex_data[(range.start_vertex + i) * 2]);
+                selection_vertices.push_back(vertex_data[(range.start_vertex + i) * 2 + 1]);
+            }
+        }
+    }
+
+    selection_vertex_buffer.bind();
+    selection_vertex_buffer.allocate(selection_vertices.data(), static_cast<int>(selection_vertices.size() * sizeof(float)));
+    selection_vertex_buffer.release();
+
+    selection_vertex_array_object.bind();
+    selection_vertex_buffer.bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    selection_vertex_buffer.release();
+    selection_vertex_array_object.release();
+    
+    m_viewIsDirty = true;
 }
 
 QString LineDataVisualization::getTooltipText() const {
@@ -662,4 +797,34 @@ bool LineDataVisualization::handleHover(const QPoint & screen_pos, const QSize &
     }
 
     return hover_changed;
+}
+
+void LineDataVisualization::renderSelection(QMatrix4x4 const & mvp_matrix, float line_width)
+{
+    if (selected_lines.empty() || !line_shader_program) {
+        return;
+    }
+
+    line_shader_program->bind();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
+    line_shader_program->setUniformValue("u_color", color);
+    line_shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
+    line_shader_program->setUniformValue("u_selected_color", QVector4D(0.1f, 0.1f, 0.1f, 1.0f)); // Darker color
+    line_shader_program->setUniformValue("u_line_width", line_width + 1.0f); // Slightly thicker
+    line_shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));
+    line_shader_program->setUniformValue("u_canvas_size", canvas_size);
+    line_shader_program->setUniformValue("u_is_selected", true);
+    line_shader_program->setUniformValue("u_hover_line_id", 0u);
+
+    selection_vertex_array_object.bind();
+    glDrawArrays(GL_LINES, 0, selection_vertex_buffer.size() / (2 * sizeof(float)));
+    selection_vertex_array_object.release();
+
+    line_shader_program->setUniformValue("u_is_selected", false); // Reset state
+    glDisable(GL_BLEND);
+    line_shader_program->release();
 }

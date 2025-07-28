@@ -4,6 +4,7 @@
 #include "ShaderManager/ShaderManager.hpp"
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
+#include "RenderingContext.hpp"
 
 
 #include <QMatrix4x4>
@@ -237,23 +238,16 @@ private slots:
      */
     void processHoverDebounce();
 
-private slots:
     /**
      * @brief Throttled update method to limit FPS
      */
     void requestThrottledUpdate();
 
 private:
-    // PointData visualizations - each PointData has its own QuadTree and OpenGL resources
     std::unordered_map<QString, std::unique_ptr<PointDataVisualization>> _point_data_visualizations;
-
-    // MaskData visualizations - each MaskData has its own RTree and OpenGL resources
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
-
-    // LineData visualizations - each LineData has its own OpenGL resources
     std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
 
-    // Modern OpenGL rendering resources
     bool _opengl_resources_initialized;
 
     // View parameters
@@ -345,6 +339,12 @@ private:
      * @brief Render all lines using OpenGL
      */
     void renderLines();
+
+    /**
+     * @brief Creates a rendering context for the current frame
+     * @return A RenderingContext object populated with the current state.
+     */
+    RenderingContext createRenderingContext() const;
 
 
 
