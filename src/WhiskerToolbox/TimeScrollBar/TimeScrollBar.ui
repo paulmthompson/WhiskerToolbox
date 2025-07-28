@@ -136,9 +136,15 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="frame_label">
-           <property name="text">
-            <string>0</string>
+          <widget class="QSpinBox" name="frame_spinbox">
+           <property name="focusPolicy">
+            <enum>Qt::FocusPolicy::StrongFocus</enum>
+           </property>
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>0</number>
            </property>
           </widget>
          </item>
