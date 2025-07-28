@@ -1006,8 +1006,11 @@ void SpatialOverlayOpenGLWidget::processHoverDebounce() {
     }
 
     // Delegate hover handling to each line data visualization
+    QMatrix4x4 mvp_matrix = _projection_matrix * _view_matrix * _model_matrix;
+    qDebug() << "SpatialOverlayOpenGLWidget: Processing" << _line_data_visualizations.size() << "line visualizations";
     for (auto const & [key, viz]: _line_data_visualizations) {
-        if (viz->handleHover(_pending_hover_pos, size())) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Calling handleHover on line viz" << key;
+        if (viz->handleHover(_pending_hover_pos, size(), mvp_matrix)) {
             needs_tooltip_update = true;
         }
     }

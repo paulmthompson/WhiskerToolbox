@@ -19,10 +19,9 @@ LineDataVisualization::LineDataVisualization(QString const & data_key, std::shar
     : m_line_data(line_data),
       key(data_key),
       scene_framebuffer(nullptr),
-      picking_framebuffer(nullptr),
       line_shader_program(nullptr),
-      picking_shader_program(nullptr),
-      blit_shader_program(nullptr) {
+      blit_shader_program(nullptr),
+      line_intersection_compute_shader(nullptr) {
 
     initializeOpenGLFunctions();
 
@@ -165,22 +164,9 @@ void LineDataVisualization::initializeOpenGLResources() {
 
 
     scene_framebuffer = new QOpenGLFramebufferObject(1024, 1024, format);
-    picking_framebuffer = new QOpenGLFramebufferObject(1024, 1024, format);
 
-    picking_vertex_array_object.create();
-    picking_vertex_array_object.bind();
-
-    vertex_buffer.bind();
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    line_id_buffer.bind();
-    glEnableVertexAttribArray(1);
-    glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(uint32_t), nullptr);
-
-    line_id_buffer.release();
-    vertex_buffer.release();
-    picking_vertex_array_object.release();
+    // Initialize compute shader resources for line intersection
+    initializeComputeShaderResources();
 
     // Fullscreen quad setup for blitting
     fullscreen_quad_vbo.create();
@@ -249,24 +235,18 @@ void LineDataVisualization::initializeOpenGLResources() {
         cached_hover_uniform_location = -1;
     }
 
-    // Load picking shader
-    if (!shader_manager.getProgram("line_picking")) {
-        bool success = shader_manager.loadProgram("line_picking",
-                                                  ":/shaders/line_picking.vert",
-                                                  ":/shaders/line_picking.frag",
-                                                  ":/shaders/line_picking.geom",
-                                                  ShaderSourceType::Resource);
-        if (!success) {
-            qDebug() << "Failed to load line_picking shader!";
-        }
-    }
-    auto * picking_program = shader_manager.getProgram("line_picking");
-    if (picking_program) {
-        picking_shader_program = picking_program->getNativeProgram();
-        qDebug() << "Successfully loaded line_picking shader";
+    // Load compute shader directly (ShaderManager doesn't support compute shaders yet)
+    line_intersection_compute_shader = new QOpenGLShaderProgram();
+    if (!line_intersection_compute_shader->addShaderFromSourceFile(QOpenGLShader::Compute, ":/shaders/line_intersection.comp")) {
+        qDebug() << "Failed to compile line intersection compute shader:" << line_intersection_compute_shader->log();
+        delete line_intersection_compute_shader;
+        line_intersection_compute_shader = nullptr;
+    } else if (!line_intersection_compute_shader->link()) {
+        qDebug() << "Failed to link line intersection compute shader:" << line_intersection_compute_shader->log();
+        delete line_intersection_compute_shader;
+        line_intersection_compute_shader = nullptr;
     } else {
-        qDebug() << "line_picking shader is null!";
-        picking_shader_program = nullptr;
+        qDebug() << "Successfully loaded line_intersection_compute shader";
     }
 
     // Load blit shader
@@ -312,10 +292,6 @@ void LineDataVisualization::cleanupOpenGLResources() {
         vertex_array_object.destroy();
     }
 
-    if (picking_vertex_array_object.isCreated()) {
-        picking_vertex_array_object.destroy();
-    }
-
     if (fullscreen_quad_vbo.isCreated()) {
         fullscreen_quad_vbo.destroy();
     }
@@ -329,16 +305,18 @@ void LineDataVisualization::cleanupOpenGLResources() {
         scene_framebuffer = nullptr;
     }
 
-    if (picking_framebuffer) {
-        delete picking_framebuffer;
-        picking_framebuffer = nullptr;
-    }
-
     if (selection_vertex_buffer.isCreated()) {
         selection_vertex_buffer.destroy();
     }
     if (selection_vertex_array_object.isCreated()) {
         selection_vertex_array_object.destroy();
+    }
+
+    cleanupComputeShaderResources();
+
+    if (line_intersection_compute_shader) {
+        delete line_intersection_compute_shader;
+        line_intersection_compute_shader = nullptr;
     }
 }
 
@@ -350,6 +328,9 @@ void LineDataVisualization::updateOpenGLBuffers() {
     line_id_buffer.bind();
     line_id_buffer.allocate(line_id_data.data(), static_cast<int>(line_id_data.size() * sizeof(uint32_t)));
     line_id_buffer.release();
+
+    // Update line segments buffer for compute shader
+    updateLineSegmentsBuffer();
 }
 
 void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_width) {
@@ -367,7 +348,6 @@ void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_wid
 
     if (m_viewIsDirty) {
         renderLinesToSceneBuffer(mvp_matrix, line_shader_program, line_width);
-        renderLinesToPickingBuffer(mvp_matrix, line_width);
         m_viewIsDirty = false;
     }
 
@@ -491,94 +471,6 @@ void LineDataVisualization::renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpen
     shader_program->release();
 }
 
-void LineDataVisualization::renderLinesToPickingBuffer(QMatrix4x4 const & mvp_matrix, float line_width) {
-    if (!visible || vertex_data.empty() || !picking_shader_program || !picking_framebuffer) {
-        qDebug() << "renderLinesToPickingBuffer: Skipping render - missing resources";
-        return;
-    }
-
-    static bool first_picking_render = true;
-    if (first_picking_render) {
-        qDebug() << "renderLinesToPickingBuffer: First render with" << vertex_data.size() / 2 << "vertices";
-        first_picking_render = false;
-    }
-
-    GLint old_viewport[4];
-    glGetIntegerv(GL_VIEWPORT, old_viewport);
-
-    picking_framebuffer->bind();
-    glViewport(0, 0, picking_framebuffer->width(), picking_framebuffer->height());
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-    picking_shader_program->bind();
-
-    picking_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
-    picking_shader_program->setUniformValue("u_line_width", line_width);
-    picking_shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));// TODO: Get actual viewport
-    picking_shader_program->setUniformValue("u_canvas_size", canvas_size);                  // For coordinate normalization
-
-    picking_vertex_array_object.bind();
-
-    if (!vertex_data.empty()) {
-        uint32_t total_vertices = static_cast<uint32_t>(vertex_data.size() / 2);
-        glDrawArrays(GL_LINES, 0, total_vertices);
-    }
-
-    picking_vertex_array_object.release();
-    picking_shader_program->release();
-
-    picking_framebuffer->release();
-
-    glViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
-}
-
-std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(
-        int screen_x, int screen_y, int widget_width, int widget_height) {
-    if (!picking_framebuffer || !picking_shader_program) {
-        qDebug() << "getLineAtScreenPosition: Missing framebuffer or shader";
-        return std::nullopt;
-    }
-
-    // Read pixel at screen position
-    picking_framebuffer->bind();
-
-    // Convert screen coordinates to framebuffer coordinates.
-    // The mouse y-coordinate is typically from the top, while OpenGL's is from the bottom.
-    int inverted_y = widget_height - screen_y;
-
-    // Normalize coordinates based on widget size, then scale to framebuffer size.
-    float normalized_x = static_cast<float>(screen_x) / static_cast<float>(widget_width);
-    float normalized_y = static_cast<float>(inverted_y) / static_cast<float>(widget_height);
-
-    int fb_x = static_cast<int>(normalized_x * picking_framebuffer->width());
-    int fb_y = static_cast<int>(normalized_y * picking_framebuffer->height());
-
-    // Clamp coordinates to be safe
-    fb_x = std::max(0, std::min(fb_x, picking_framebuffer->width() - 1));
-    fb_y = std::max(0, std::min(fb_y, picking_framebuffer->height() - 1));
-
-    unsigned char pixel[4];
-    glReadPixels(fb_x, fb_y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
-
-    picking_framebuffer->release();
-
-    // Convert pixel color back to line ID
-    uint32_t line_id = (static_cast<uint32_t>(pixel[0]) << 16) |
-                       (static_cast<uint32_t>(pixel[1]) << 8) |
-                       static_cast<uint32_t>(pixel[2]);
-
-
-    // Check if we found a valid line
-    if (line_id > 0 && line_id <= line_identifiers.size()) {
-        return line_identifiers[line_id - 1];// Adjust for 1-based indexing
-    }
-
-    qDebug() << "No line found at this position";
-    return std::nullopt;
-}
-
 void LineDataVisualization::setHoverLine(std::optional<LineIdentifier> line_id) {
     if (line_id.has_value()) {
         current_hover_line = line_id.value();
@@ -664,121 +556,64 @@ void LineDataVisualization::applySelection(PolygonSelectionHandler const & selec
 }
 
 void LineDataVisualization::applySelection(LineSelectionHandler const & selection_handler, RenderingContext const & context) {
-    if (!picking_framebuffer) {
-        return;
-    }
-
     auto selection_region = dynamic_cast<LineSelectionRegion const *>(selection_handler.getActiveSelectionRegion().get());
     if (!selection_region) {
         return;
     }
 
-    // 1. Transform selection line from screen coordinates to framebuffer coordinates
-    // The selection region now stores screen coordinates directly, so we can convert to framebuffer coordinates
-    int inverted_y1 = context.viewport_rect.height() - static_cast<int>(selection_region->getStartPointScreen().y);
-    int inverted_y2 = context.viewport_rect.height() - static_cast<int>(selection_region->getEndPointScreen().y);
-
-    float normalized_x1 = static_cast<float>(static_cast<int>(selection_region->getStartPointScreen().x)) / static_cast<float>(context.viewport_rect.width());
-    float normalized_y1 = static_cast<float>(inverted_y1) / static_cast<float>(context.viewport_rect.height());
-    float normalized_x2 = static_cast<float>(static_cast<int>(selection_region->getEndPointScreen().x)) / static_cast<float>(context.viewport_rect.width());
-    float normalized_y2 = static_cast<float>(inverted_y2) / static_cast<float>(context.viewport_rect.height());
-
-    QPoint p1_fb = QPoint(
-        static_cast<int>(normalized_x1 * picking_framebuffer->width()),
-        static_cast<int>(normalized_y1 * picking_framebuffer->height())
-    );
-    QPoint p2_fb = QPoint(
-        static_cast<int>(normalized_x2 * picking_framebuffer->width()),
-        static_cast<int>(normalized_y2 * picking_framebuffer->height())
-    );
-
+    qDebug() << "LineDataVisualization::applySelection: Using compute shader approach";
     qDebug() << "LineDataVisualization::applySelection: Screen coords:" 
              << selection_region->getStartPointScreen().x << "," << selection_region->getStartPointScreen().y
              << "to" << selection_region->getEndPointScreen().x << "," << selection_region->getEndPointScreen().y;
-    qDebug() << "LineDataVisualization::applySelection: Framebuffer coords:" 
-             << p1_fb.x() << "," << p1_fb.y() << "to" << p2_fb.x() << "," << p2_fb.y();
 
-    // 2. Sample pixels along the line in the picking framebuffer
-    std::unordered_set<uint32_t> intersecting_line_ids;
-    picking_framebuffer->bind();
+    // Construct MVP matrix from context
+    QMatrix4x4 mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
 
-    int x0 = p1_fb.x(), y0 = p1_fb.y();
-    int x1 = p2_fb.x(), y1 = p2_fb.y();
+    // Use the new compute shader method to find all intersecting lines
+    auto intersecting_lines = getAllLinesIntersectingLine(
+        static_cast<int>(selection_region->getStartPointScreen().x),
+        static_cast<int>(selection_region->getStartPointScreen().y),
+        static_cast<int>(selection_region->getEndPointScreen().x),
+        static_cast<int>(selection_region->getEndPointScreen().y),
+        context.viewport_rect.width(),
+        context.viewport_rect.height(),
+        mvp_matrix,
+        5.0f // Line width tolerance for selection
+    );
 
-    // Bresenham's line algorithm to sample pixels
-    int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-    int dy = -std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-    int err = dx + dy, e2;
+    qDebug() << "LineDataVisualization::applySelection: Found" << intersecting_lines.size() << "intersecting lines";
 
-    for (;;) {
-        // Clamp coordinates to be safe
-        int fb_x = std::max(0, std::min(x0, picking_framebuffer->width() - 1));
-        int fb_y = std::max(0, std::min(y0, picking_framebuffer->height() - 1));
-
-        unsigned char pixel[4];
-        glReadPixels(fb_x, fb_y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
-        
-        uint32_t line_id = (static_cast<uint32_t>(pixel[0]) << 16) |
-                           (static_cast<uint32_t>(pixel[1]) << 8) |
-                           static_cast<uint32_t>(pixel[2]);
-
-        if (line_id > 0) {
-            intersecting_line_ids.insert(line_id);
-            qDebug() << "LineDataVisualization::applySelection: Found line ID" << line_id << "at pixel" << fb_x << "," << fb_y;
-        }
-
-        if (x0 == x1 && y0 == y1) break;
-        e2 = 2 * err;
-        if (e2 >= dy) { err += dy; x0 += sx; }
-        if (e2 <= dx) { err += dx; y0 += sy; }
-    }
-    picking_framebuffer->release();
-
-    qDebug() << "LineDataVisualization::applySelection: Found" << intersecting_line_ids.size() << "intersecting lines";
-
-    // 3. Update selection based on keyboard modifiers
+    // Update selection based on keyboard modifiers
     LineSelectionBehavior behavior = selection_region->getBehavior();
 
     if (behavior == LineSelectionBehavior::Replace) {
         selected_lines.clear();
-        for (uint32_t id : intersecting_line_ids) {
-            if (id > 0 && id <= line_identifiers.size()) {
-                selected_lines.insert(line_identifiers[id - 1]);
-            }
+        for (const auto& line_id : intersecting_lines) {
+            selected_lines.insert(line_id);
         }
     } else if (behavior == LineSelectionBehavior::Append) {
-        for (uint32_t id : intersecting_line_ids) {
-            if (id > 0 && id <= line_identifiers.size()) {
-                selected_lines.insert(line_identifiers[id - 1]);
-            }
+        for (const auto& line_id : intersecting_lines) {
+            selected_lines.insert(line_id);
         }
     } else if (behavior == LineSelectionBehavior::Remove) {
-        for (uint32_t id : intersecting_line_ids) {
-            if (id > 0 && id <= line_identifiers.size()) {
-                selected_lines.erase(line_identifiers[id - 1]);
-            }
+        for (const auto& line_id : intersecting_lines) {
+            selected_lines.erase(line_id);
         }
     }
     
     qDebug() << "LineDataVisualization::applySelection: Selected" << selected_lines.size() << "lines";
-    qDebug() << "LineDataVisualization::applySelection: Data structure sizes - line_identifiers:" << line_identifiers.size() 
-             << "line_vertex_ranges:" << line_vertex_ranges.size() << "vertex_data:" << vertex_data.size();
     
-    // 4. Update vertex buffer for selected lines
+    // Update vertex buffer for selected lines
     std::vector<float> selection_vertices;
     qDebug() << "LineDataVisualization::applySelection: Starting vertex buffer creation for" << selected_lines.size() << "selected lines";
     
     for(auto const& line_id : selected_lines) {
-        qDebug() << "LineDataVisualization::applySelection: Processing line" << line_id.time_frame << "," << line_id.line_id;
         auto it = std::find(line_identifiers.begin(), line_identifiers.end(), line_id);
         if (it != line_identifiers.end()) {
             size_t index = std::distance(line_identifiers.begin(), it);
-            qDebug() << "LineDataVisualization::applySelection: Found line at index" << index;
             
             if (index < line_vertex_ranges.size()) {
                 LineVertexRange const& range = line_vertex_ranges[index];
-                qDebug() << "LineDataVisualization::applySelection: Adding line" << line_id.time_frame << "," << line_id.line_id 
-                         << "with" << range.vertex_count << "vertices starting at" << range.start_vertex;
                 
                 // Check if the range is valid
                 if (range.start_vertex + range.vertex_count <= vertex_data.size() / 2) {
@@ -787,42 +622,18 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
                         if (vertex_index + 1 < vertex_data.size()) {
                             selection_vertices.push_back(vertex_data[vertex_index]);
                             selection_vertices.push_back(vertex_data[vertex_index + 1]);
-                        } else {
-                            qDebug() << "LineDataVisualization::applySelection: ERROR - vertex index out of bounds:" << vertex_index;
                         }
                     }
-                } else {
-                    qDebug() << "LineDataVisualization::applySelection: ERROR - invalid vertex range:" 
-                             << "start=" << range.start_vertex << "count=" << range.vertex_count 
-                             << "max=" << vertex_data.size() / 2;
                 }
-            } else {
-                qDebug() << "LineDataVisualization::applySelection: ERROR - index" << index << "out of bounds for line_vertex_ranges";
             }
-        } else {
-            qDebug() << "LineDataVisualization::applySelection: ERROR - line not found in line_identifiers";
         }
     }
 
     qDebug() << "LineDataVisualization::applySelection: Created" << selection_vertices.size() << "vertices for selection buffer";
 
     selection_vertex_buffer.bind();
-    qDebug() << "LineDataVisualization::applySelection: Before allocate - buffer size:" << selection_vertex_buffer.size();
     selection_vertex_buffer.allocate(selection_vertices.data(), static_cast<int>(selection_vertices.size() * sizeof(float)));
-    qDebug() << "LineDataVisualization::applySelection: After allocate - buffer size:" << selection_vertex_buffer.size();
     selection_vertex_buffer.release();
-
-    selection_vertex_array_object.bind();
-    selection_vertex_buffer.bind();
-    int buffer_size = selection_vertex_buffer.size();
-    int vertex_count = buffer_size / (2 * sizeof(float));
-    qDebug() << "LineDataVisualization::renderSelection: Buffer size:" << buffer_size << "bytes, vertex count:" << vertex_count;
-    qDebug() << "LineDataVisualization::renderSelection: sizeof(float)=" << sizeof(float) << ", 2*sizeof(float)=" << (2 * sizeof(float));
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-    glDrawArrays(GL_LINES, 0, vertex_count);
-    selection_vertex_buffer.release();
-    selection_vertex_array_object.release();
     
     m_viewIsDirty = true;
 }
@@ -836,26 +647,6 @@ QString LineDataVisualization::getTooltipText() const {
             .arg(key)
             .arg(current_hover_line.time_frame)
             .arg(current_hover_line.line_id);
-}
-
-bool LineDataVisualization::handleHover(const QPoint & screen_pos, const QSize & widget_size) {
-    auto line_id = getLineAtScreenPosition(
-            screen_pos.x(), screen_pos.y(), widget_size.width(), widget_size.height());
-
-    bool hover_changed = false;
-    if (line_id.has_value()) {
-        if (!has_hover_line || !(current_hover_line == line_id.value())) {
-            setHoverLine(line_id);
-            hover_changed = true;
-        }
-    } else {
-        if (has_hover_line) {
-            setHoverLine(std::nullopt);
-            hover_changed = true;
-        }
-    }
-
-    return hover_changed;
 }
 
 void LineDataVisualization::renderSelection(QMatrix4x4 const & mvp_matrix, float line_width)
@@ -899,4 +690,224 @@ void LineDataVisualization::renderSelection(QMatrix4x4 const & mvp_matrix, float
     line_shader_program->release();
     
     qDebug() << "LineDataVisualization::renderSelection: Finished rendering selected lines";
+}
+
+void LineDataVisualization::initializeComputeShaderResources() {
+    // Create buffers for compute shader
+    line_segments_buffer.create();
+    intersection_results_buffer.create();
+    intersection_count_buffer.create();
+
+    // Initialize intersection count buffer with zero
+    intersection_count_buffer.bind();
+    intersection_count_buffer.allocate(sizeof(uint32_t));
+    uint32_t zero = 0;
+    intersection_count_buffer.write(0, &zero, sizeof(uint32_t));
+    intersection_count_buffer.release();
+
+    // Allocate a reasonable size for intersection results (can be expanded if needed)
+    intersection_results_buffer.bind();
+    intersection_results_buffer.allocate(100000 * sizeof(uint32_t)); // Space for up to 100,000 results
+    intersection_results_buffer.release();
+
+    qDebug() << "LineDataVisualization: Initialized compute shader resources";
+}
+
+void LineDataVisualization::cleanupComputeShaderResources() {
+    if (line_segments_buffer.isCreated()) {
+        line_segments_buffer.destroy();
+    }
+    if (intersection_results_buffer.isCreated()) {
+        intersection_results_buffer.destroy();
+    }
+    if (intersection_count_buffer.isCreated()) {
+        intersection_count_buffer.destroy();
+    }
+}
+
+void LineDataVisualization::updateLineSegmentsBuffer() {
+    if (!line_segments_buffer.isCreated()) {
+        return;
+    }
+
+    // Create line segments data for compute shader
+    // Each segment: x1, y1, x2, y2, line_id (4 floats + 1 uint, but we'll pack line_id as float for simplicity)
+    segments_data.clear();
+    segments_data.reserve(vertex_data.size() / 2 * 5); // vertex_data has x,y pairs, we need x1,y1,x2,y2,id
+
+    for (size_t i = 0; i < vertex_data.size(); i += 4) { // Each line segment is 4 floats (x1,y1,x2,y2)
+        if (i + 3 < vertex_data.size()) {
+            // Extract segment coordinates
+            segments_data.push_back(vertex_data[i]);     // x1
+            segments_data.push_back(vertex_data[i + 1]); // y1
+            segments_data.push_back(vertex_data[i + 2]); // x2
+            segments_data.push_back(vertex_data[i + 3]); // y2
+            
+            // Get line ID from line_id_data (same index as vertex data)
+            uint32_t line_id = (i/2 < line_id_data.size()) ? line_id_data[i/2] : 0;
+            segments_data.push_back(*reinterpret_cast<float*>(&line_id)); // Pack uint as float bits
+        }
+    }
+
+    line_segments_buffer.bind();
+    line_segments_buffer.allocate(segments_data.data(), static_cast<int>(segments_data.size() * sizeof(float)));
+    line_segments_buffer.release();
+
+    qDebug() << "LineDataVisualization: Updated line segments buffer with" << segments_data.size() / 5 << "segments";
+}
+
+std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
+        int start_x, int start_y, int end_x, int end_y,
+        int widget_width, int widget_height,
+        const QMatrix4x4& mvp_matrix, float line_width) {
+    
+    if (!line_intersection_compute_shader || vertex_data.empty()) {
+        qDebug() << "LineDataVisualization: Compute shader not available or no vertex data";
+        return {};
+    }
+
+    // Update line segments buffer if dirty
+    if (m_dataIsDirty) {
+        qDebug() << "LineDataVisualization: Data is dirty, updating line segments buffer";
+        updateLineSegmentsBuffer();
+    } else {
+        qDebug() << "LineDataVisualization: Data is clean, using existing segments buffer";
+    }
+
+    // Convert screen coordinates to normalized device coordinates [-1, 1]
+    float ndc_start_x = (2.0f * start_x / widget_width) - 1.0f;
+    float ndc_start_y = 1.0f - (2.0f * start_y / widget_height); // Flip Y
+    float ndc_end_x = (2.0f * end_x / widget_width) - 1.0f;
+    float ndc_end_y = 1.0f - (2.0f * end_y / widget_height); // Flip Y
+
+    // Create the selection line in NDC space (this is what the compute shader will work with)
+    QVector2D query_start(ndc_start_x, ndc_start_y);
+    QVector2D query_end(ndc_end_x, ndc_end_y);
+
+    qDebug() << "LineDataVisualization: Screen coords:" << start_x << "," << start_y << "to" << end_x << "," << end_y;
+    qDebug() << "LineDataVisualization: NDC coords:" << query_start.x() << "," << query_start.y() 
+             << "to" << query_end.x() << "," << query_end.y();
+
+    // Reset intersection count to zero
+    uint32_t zero = 0;
+    intersection_count_buffer.bind();
+    intersection_count_buffer.write(0, &zero, sizeof(uint32_t));
+    intersection_count_buffer.release();
+
+    // Bind compute shader and set uniforms
+    line_intersection_compute_shader->bind();
+    line_intersection_compute_shader->setUniformValue("u_query_line_start", query_start);
+    line_intersection_compute_shader->setUniformValue("u_query_line_end", query_end);
+    line_intersection_compute_shader->setUniformValue("u_line_width", line_width * 0.01f); // Scale down for NDC space
+    line_intersection_compute_shader->setUniformValue("u_mvp_matrix", mvp_matrix);
+    line_intersection_compute_shader->setUniformValue("u_canvas_size", canvas_size);
+
+    // Bind storage buffers
+    line_segments_buffer.bind();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, line_segments_buffer.bufferId());
+    line_segments_buffer.release();
+
+    intersection_results_buffer.bind();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, intersection_results_buffer.bufferId());
+    intersection_results_buffer.release();
+
+    intersection_count_buffer.bind();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, intersection_count_buffer.bufferId());
+    intersection_count_buffer.release();
+
+    // Dispatch compute shader
+    uint32_t num_segments = static_cast<uint32_t>(segments_data.size() / 5); // 5 floats per segment (x1,y1,x2,y2,line_id)
+    uint32_t num_work_groups = (num_segments + 63) / 64; // 64 is the local_size_x in the compute shader
+    
+    qDebug() << "LineDataVisualization: Dispatching compute shader with" << num_segments << "segments," << num_work_groups << "work groups";
+    qDebug() << "LineDataVisualization: segments_data size:" << segments_data.size() << "floats";
+    
+    if (num_segments == 0) {
+        qDebug() << "LineDataVisualization: No segments to process!";
+        line_intersection_compute_shader->release();
+        return {};
+    }
+    
+    glDispatchCompute(num_work_groups, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+    line_intersection_compute_shader->release();
+
+    // Read back results
+    intersection_count_buffer.bind();
+    uint32_t* count_data = static_cast<uint32_t*>(intersection_count_buffer.map(QOpenGLBuffer::ReadOnly));
+    uint32_t result_count = count_data ? *count_data : 0;
+    intersection_count_buffer.unmap();
+    intersection_count_buffer.release();
+
+    qDebug() << "LineDataVisualization: Found" << result_count << "intersecting line segments";
+
+    if (result_count == 0) {
+        return {};
+    }
+
+    // Read back intersection results
+    intersection_results_buffer.bind();
+    uint32_t* results_data = static_cast<uint32_t*>(intersection_results_buffer.map(QOpenGLBuffer::ReadOnly));
+    
+    std::vector<LineIdentifier> intersecting_lines;
+    std::unordered_set<uint32_t> unique_line_ids; // To avoid duplicates
+
+    if (results_data) {
+        for (uint32_t i = 0; i < result_count && i < 100000; ++i) {
+            uint32_t line_id = results_data[i];
+            if (line_id > 0 && line_id <= line_identifiers.size() && unique_line_ids.find(line_id) == unique_line_ids.end()) {
+                unique_line_ids.insert(line_id);
+                intersecting_lines.push_back(line_identifiers[line_id - 1]); // Convert from 1-based to 0-based indexing
+            }
+        }
+    }
+
+    intersection_results_buffer.unmap();
+    intersection_results_buffer.release();
+
+    qDebug() << "LineDataVisualization: Returning" << intersecting_lines.size() << "unique intersecting lines";
+    return intersecting_lines;
+}
+
+std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(
+        int screen_x, int screen_y, int widget_width, int widget_height) {
+    qDebug() << "LineDataVisualization::getLineAtScreenPosition: This method needs MVP matrix, use handleHover instead";
+    return std::nullopt;
+}
+
+bool LineDataVisualization::handleHover(const QPoint & screen_pos, const QSize & widget_size, const QMatrix4x4& mvp_matrix) {
+    qDebug() << "LineDataVisualization::handleHover: Called with screen pos" << screen_pos.x() << "," << screen_pos.y();
+    
+    // Use the new compute shader approach for hover detection
+    // Create a small line segment around the point for intersection testing
+    int tolerance = 3; // 3 pixel tolerance for hover
+    
+    auto intersecting_lines = getAllLinesIntersectingLine(
+        screen_pos.x() - tolerance, screen_pos.y() - tolerance,
+        screen_pos.x() + tolerance, screen_pos.y() + tolerance,
+        widget_size.width(), widget_size.height(),
+        mvp_matrix,
+        3.0f // Small line width for hover queries
+    );
+
+    qDebug() << "LineDataVisualization::handleHover: Found" << intersecting_lines.size() << "intersecting lines";
+
+    bool hover_changed = false;
+    if (!intersecting_lines.empty()) {
+        LineIdentifier line_id = intersecting_lines[0]; // Take the first intersecting line
+        if (!has_hover_line || !(current_hover_line == line_id)) {
+            qDebug() << "LineDataVisualization::handleHover: Setting hover line to" << line_id.time_frame << "," << line_id.line_id;
+            setHoverLine(line_id);
+            hover_changed = true;
+        }
+    } else {
+        if (has_hover_line) {
+            qDebug() << "LineDataVisualization::handleHover: Clearing hover line";
+            setHoverLine(std::nullopt);
+            hover_changed = true;
+        }
+    }
+
+    return hover_changed;
 }

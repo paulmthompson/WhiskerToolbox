@@ -1,0 +1,119 @@
+#version 430
+
+// Compute shader for finding all lines that intersect with a given line segment
+// Uses geometric line-line intersection testing in NDC space
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// Input line segment to test against (in NDC space [-1,1])
+uniform vec2 u_query_line_start;
+uniform vec2 u_query_line_end;
+uniform float u_line_width;
+uniform mat4 u_mvp_matrix;
+uniform vec2 u_canvas_size;
+
+// Line segments buffer: each line segment is stored as 4 floats (x1, y1, x2, y2) + 1 uint (line_id)
+layout(std430, binding = 0) readonly buffer LineSegmentsBuffer {
+    float line_segments[];
+};
+
+// Results buffer: stores intersecting line IDs
+layout(std430, binding = 1) writeonly buffer IntersectionResultsBuffer {
+    uint intersection_results[];
+};
+
+// Atomic counter for number of results
+layout(std430, binding = 2) buffer IntersectionCountBuffer {
+    uint intersection_count;
+};
+
+// Transform world coordinates to NDC space
+vec2 worldToNDC(vec2 world_pos) {
+    vec4 clip_pos = u_mvp_matrix * vec4(world_pos, 0.0, 1.0);
+    
+    // Convert from clip space to NDC space [-1,1]
+    return clip_pos.xy / clip_pos.w;
+}
+
+// Distance from point to line segment
+float distancePointToLineSegment(vec2 point, vec2 line_start, vec2 line_end) {
+    vec2 line_vec = line_end - line_start;
+    float line_length_sq = dot(line_vec, line_vec);
+    
+    if (line_length_sq == 0.0) {
+        return distance(point, line_start);
+    }
+    
+    float t = max(0.0, min(1.0, dot(point - line_start, line_vec) / line_length_sq));
+    vec2 projection = line_start + t * line_vec;
+    return distance(point, projection);
+}
+
+// Line segment intersection test
+bool lineSegmentsIntersect(vec2 a1, vec2 a2, vec2 b1, vec2 b2, float tolerance) {
+    // Check if the line segments are close enough to be considered intersecting
+    // We use distance-based intersection for thick lines
+    
+    // Check if any endpoint of one segment is close to the other segment
+    if (distancePointToLineSegment(a1, b1, b2) <= tolerance ||
+        distancePointToLineSegment(a2, b1, b2) <= tolerance ||
+        distancePointToLineSegment(b1, a1, a2) <= tolerance ||
+        distancePointToLineSegment(b2, a1, a2) <= tolerance) {
+        return true;
+    }
+    
+    // Check for actual geometric intersection
+    vec2 dir1 = a2 - a1;
+    vec2 dir2 = b2 - b1;
+    
+    float cross_product = dir1.x * dir2.y - dir1.y * dir2.x;
+    
+    // Lines are parallel
+    if (abs(cross_product) < 1e-6) {
+        return false;
+    }
+    
+    vec2 diff = b1 - a1;
+    float t = (diff.x * dir2.y - diff.y * dir2.x) / cross_product;
+    float u = (diff.x * dir1.y - diff.y * dir1.x) / cross_product;
+    
+    // Check if intersection point is within both line segments
+    return (t >= 0.0 && t <= 1.0 && u >= 0.0 && u <= 1.0);
+}
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    
+    // Each line segment is stored as 5 values: x1, y1, x2, y2, line_id
+    uint total_segments = uint(line_segments.length()) / 5u;
+    
+    if (index >= total_segments) {
+        return;
+    }
+    
+    uint base_index = index * 5u;
+    
+    // Extract line segment data (in world coordinates)
+    vec2 segment_start = vec2(line_segments[base_index], line_segments[base_index + 1u]);
+    vec2 segment_end = vec2(line_segments[base_index + 2u], line_segments[base_index + 3u]);
+    uint line_id = floatBitsToUint(line_segments[base_index + 4u]);
+    
+    // Transform line segment to NDC space
+    vec2 ndc_start = worldToNDC(segment_start);
+    vec2 ndc_end = worldToNDC(segment_end);
+    
+    // Test intersection with query line
+    float tolerance = u_line_width;
+    bool intersects = lineSegmentsIntersect(u_query_line_start, u_query_line_end, 
+                                          ndc_start, ndc_end, tolerance);
+    
+    if (intersects) {
+        // Atomically increment the counter and store the result
+        uint result_index = atomicAdd(intersection_count, 1u);
+        
+        // Make sure we don't exceed buffer bounds
+        if (result_index < intersection_results.length()) {
+            intersection_results[result_index] = line_id;
+        }
+    }
+}

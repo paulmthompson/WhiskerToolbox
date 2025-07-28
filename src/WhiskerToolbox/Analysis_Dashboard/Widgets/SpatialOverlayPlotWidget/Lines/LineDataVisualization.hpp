@@ -11,7 +11,7 @@
 #include <QGenericMatrix>
 #include <QOpenGLBuffer>
 #include <QOpenGLFramebufferObject>
-#include <QOpenGLFunctions_4_1_Core>
+#include <QOpenGLFunctions_4_3_Core>
 #include <QOpenGLVertexArrayObject>
 #include <QString>
 #include <QVector4D>
@@ -33,7 +33,7 @@ class NoneSelectionHandler;
 /**
  * @brief Visualization data for a single LineData object
  */
-struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
+struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     // Line data storage
     std::shared_ptr<LineData> m_line_data;
     std::vector<float> vertex_data;              // All line segments as pairs of vertices
@@ -56,11 +56,12 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
 
     // Framebuffers
     QOpenGLFramebufferObject * scene_framebuffer;  // For caching the rendered scene
-    QOpenGLFramebufferObject * picking_framebuffer;// For hover detection
 
-    // Picking-specific GL resources
-    QOpenGLBuffer picking_vertex_buffer;
-    QOpenGLVertexArrayObject picking_vertex_array_object;
+    // Compute shader resources for line intersection
+    QOpenGLBuffer line_segments_buffer;    // Buffer containing all line segments
+    QOpenGLBuffer intersection_results_buffer; // Buffer for storing intersection results
+    QOpenGLBuffer intersection_count_buffer;   // Buffer for storing result count
+    std::vector<float> segments_data;      // CPU copy of line segments for compute shader
 
     // Fullscreen quad for blitting
     QOpenGLVertexArrayObject fullscreen_quad_vao;
@@ -68,8 +69,8 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
 
     // Shader programs
     QOpenGLShaderProgram * line_shader_program;
-    QOpenGLShaderProgram * picking_shader_program;
     QOpenGLShaderProgram * blit_shader_program;
+    QOpenGLShaderProgram * line_intersection_compute_shader;
 
     // Visualization properties
     QString key;
@@ -139,6 +140,23 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
             int screen_x, int screen_y, int widget_width, int widget_height);
 
     /**
+     * @brief Get all line identifiers intersecting a line segment on screen
+     * @param start_x Screen X coordinate of line start
+     * @param start_y Screen Y coordinate of line start
+     * @param end_x Screen X coordinate of line end
+     * @param end_y Screen Y coordinate of line end
+     * @param widget_width The width of the viewport/widget
+     * @param widget_height The height of the viewport/widget
+     * @param mvp_matrix The model-view-projection matrix for coordinate transformation
+     * @param line_width The line width for intersection tolerance
+     * @return Vector of all intersecting line identifiers
+     */
+    std::vector<LineIdentifier> getAllLinesIntersectingLine(
+            int start_x, int start_y, int end_x, int end_y,
+            int widget_width, int widget_height,
+            const QMatrix4x4& mvp_matrix, float line_width);
+
+    /**
      * @brief Set hover line
      * @param line_id The line identifier to hover, or empty for no hover
      */
@@ -186,16 +204,19 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @brief Handle hover events for this visualization
      * @param screen_pos The mouse position in screen coordinates
      * @param widget_size The size of the widget in pixels
+     * @param mvp_matrix The model-view-projection matrix for coordinate transformation
      * @return True if the hover state changed, false otherwise
      */
-    bool handleHover(const QPoint & screen_pos, const QSize & widget_size);
+    bool handleHover(const QPoint & screen_pos, const QSize & widget_size, const QMatrix4x4& mvp_matrix);
 
 private:
-    void renderLinesToPickingBuffer(QMatrix4x4 const & mvp_matrix, float line_width);
     void renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width);
     void blitSceneBuffer();
     void renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width);
     void renderSelection(QMatrix4x4 const & mvp_matrix, float line_width);
+    void initializeComputeShaderResources();
+    void cleanupComputeShaderResources();
+    void updateLineSegmentsBuffer();
 };
 
 #endif// LINEDATAVISUALIZATION_HPP
