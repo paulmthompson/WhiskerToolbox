@@ -380,6 +380,7 @@ void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_wid
     }
 
     if (!selected_lines.empty()) {
+        qDebug() << "LineDataVisualization::render: Calling renderSelection for" << selected_lines.size() << "selected lines";
         renderSelection(mvp_matrix, line_width);
     }
 }
@@ -639,6 +640,7 @@ BoundingBox LineDataVisualization::calculateBoundsForLineData(LineData const * l
 }
 
 void LineDataVisualization::clearSelection() {
+    qDebug() << "LineDataVisualization::clearSelection: Clearing selection";
     selected_lines.clear();
     selection_vertex_buffer.bind();
     selection_vertex_buffer.allocate(nullptr, 0);
@@ -759,29 +761,66 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
     }
     
     qDebug() << "LineDataVisualization::applySelection: Selected" << selected_lines.size() << "lines";
+    qDebug() << "LineDataVisualization::applySelection: Data structure sizes - line_identifiers:" << line_identifiers.size() 
+             << "line_vertex_ranges:" << line_vertex_ranges.size() << "vertex_data:" << vertex_data.size();
     
     // 4. Update vertex buffer for selected lines
     std::vector<float> selection_vertices;
+    qDebug() << "LineDataVisualization::applySelection: Starting vertex buffer creation for" << selected_lines.size() << "selected lines";
+    
     for(auto const& line_id : selected_lines) {
+        qDebug() << "LineDataVisualization::applySelection: Processing line" << line_id.time_frame << "," << line_id.line_id;
         auto it = std::find(line_identifiers.begin(), line_identifiers.end(), line_id);
         if (it != line_identifiers.end()) {
             size_t index = std::distance(line_identifiers.begin(), it);
-            LineVertexRange const& range = line_vertex_ranges[index];
-            for(size_t i = 0; i < range.vertex_count; ++i) {
-                selection_vertices.push_back(vertex_data[(range.start_vertex + i) * 2]);
-                selection_vertices.push_back(vertex_data[(range.start_vertex + i) * 2 + 1]);
+            qDebug() << "LineDataVisualization::applySelection: Found line at index" << index;
+            
+            if (index < line_vertex_ranges.size()) {
+                LineVertexRange const& range = line_vertex_ranges[index];
+                qDebug() << "LineDataVisualization::applySelection: Adding line" << line_id.time_frame << "," << line_id.line_id 
+                         << "with" << range.vertex_count << "vertices starting at" << range.start_vertex;
+                
+                // Check if the range is valid
+                if (range.start_vertex + range.vertex_count <= vertex_data.size() / 2) {
+                    for(size_t i = 0; i < range.vertex_count; ++i) {
+                        size_t vertex_index = (range.start_vertex + i) * 2;
+                        if (vertex_index + 1 < vertex_data.size()) {
+                            selection_vertices.push_back(vertex_data[vertex_index]);
+                            selection_vertices.push_back(vertex_data[vertex_index + 1]);
+                        } else {
+                            qDebug() << "LineDataVisualization::applySelection: ERROR - vertex index out of bounds:" << vertex_index;
+                        }
+                    }
+                } else {
+                    qDebug() << "LineDataVisualization::applySelection: ERROR - invalid vertex range:" 
+                             << "start=" << range.start_vertex << "count=" << range.vertex_count 
+                             << "max=" << vertex_data.size() / 2;
+                }
+            } else {
+                qDebug() << "LineDataVisualization::applySelection: ERROR - index" << index << "out of bounds for line_vertex_ranges";
             }
+        } else {
+            qDebug() << "LineDataVisualization::applySelection: ERROR - line not found in line_identifiers";
         }
     }
 
+    qDebug() << "LineDataVisualization::applySelection: Created" << selection_vertices.size() << "vertices for selection buffer";
+
     selection_vertex_buffer.bind();
+    qDebug() << "LineDataVisualization::applySelection: Before allocate - buffer size:" << selection_vertex_buffer.size();
     selection_vertex_buffer.allocate(selection_vertices.data(), static_cast<int>(selection_vertices.size() * sizeof(float)));
+    qDebug() << "LineDataVisualization::applySelection: After allocate - buffer size:" << selection_vertex_buffer.size();
     selection_vertex_buffer.release();
 
     selection_vertex_array_object.bind();
     selection_vertex_buffer.bind();
+    int buffer_size = selection_vertex_buffer.size();
+    int vertex_count = buffer_size / (2 * sizeof(float));
+    qDebug() << "LineDataVisualization::renderSelection: Buffer size:" << buffer_size << "bytes, vertex count:" << vertex_count;
+    qDebug() << "LineDataVisualization::renderSelection: sizeof(float)=" << sizeof(float) << ", 2*sizeof(float)=" << (2 * sizeof(float));
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    glDrawArrays(GL_LINES, 0, vertex_count);
     selection_vertex_buffer.release();
     selection_vertex_array_object.release();
     
@@ -822,8 +861,11 @@ bool LineDataVisualization::handleHover(const QPoint & screen_pos, const QSize &
 void LineDataVisualization::renderSelection(QMatrix4x4 const & mvp_matrix, float line_width)
 {
     if (selected_lines.empty() || !line_shader_program) {
+        qDebug() << "LineDataVisualization::renderSelection: Skipping - selected_lines empty or no shader";
         return;
     }
+
+    qDebug() << "LineDataVisualization::renderSelection: Rendering" << selected_lines.size() << "selected lines";
 
     line_shader_program->bind();
 
@@ -833,18 +875,28 @@ void LineDataVisualization::renderSelection(QMatrix4x4 const & mvp_matrix, float
     line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
     line_shader_program->setUniformValue("u_color", color);
     line_shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
-    line_shader_program->setUniformValue("u_selected_color", QVector4D(0.1f, 0.1f, 0.1f, 1.0f)); // Darker color
-    line_shader_program->setUniformValue("u_line_width", line_width + 1.0f); // Slightly thicker
+    line_shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f)); // Black color
+    line_shader_program->setUniformValue("u_line_width", line_width + 2.0f); // Thicker for visibility
     line_shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));
     line_shader_program->setUniformValue("u_canvas_size", canvas_size);
     line_shader_program->setUniformValue("u_is_selected", true);
     line_shader_program->setUniformValue("u_hover_line_id", 0u);
 
     selection_vertex_array_object.bind();
-    glDrawArrays(GL_LINES, 0, selection_vertex_buffer.size() / (2 * sizeof(float)));
+    selection_vertex_buffer.bind();
+    int buffer_size = selection_vertex_buffer.size();
+    int vertex_count = buffer_size / (2 * sizeof(float));
+    qDebug() << "LineDataVisualization::renderSelection: Buffer size:" << buffer_size << "bytes, vertex count:" << vertex_count;
+    qDebug() << "LineDataVisualization::renderSelection: sizeof(float)=" << sizeof(float) << ", 2*sizeof(float)=" << (2 * sizeof(float));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    glDrawArrays(GL_LINES, 0, vertex_count);
+    selection_vertex_buffer.release();
     selection_vertex_array_object.release();
 
     line_shader_program->setUniformValue("u_is_selected", false); // Reset state
     glDisable(GL_BLEND);
     line_shader_program->release();
+    
+    qDebug() << "LineDataVisualization::renderSelection: Finished rendering selected lines";
 }
