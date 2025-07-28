@@ -33,18 +33,22 @@ void VideoData::doLoadMedia(std::string const & name) {
 }
 
 void VideoData::doLoadFrame(int frame_id) {
-
-    //In most circumstances, we want to decode forward from
+    // In most circumstances, we want to decode forward from
     // the current frame without reseeking to a keyframe
     bool frame_by_frame = true;
 
+    // Direct seeking is needed when:
+    // - Going to the start or end of video
+    // - Going backwards
+    // - Making large jumps forward (more than 100 frames ahead)
     if ((frame_id == 0) ||
         (frame_id >= this->getTotalFrameCount() - 1) ||
-        (frame_id <= _last_decoded_frame)) {
+        (frame_id <= _last_decoded_frame) ||
+        (frame_id > _last_decoded_frame + 100)) { // Add this condition for large forward jumps
         frame_by_frame = false;
     }
 
-    //We load the data associated with the frame
+    // We load the data associated with the frame
     this->setRawData(_vd->getFrame(frame_id, frame_by_frame));
     _last_decoded_frame = frame_id;
 }

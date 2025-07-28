@@ -45,6 +45,7 @@ private slots:
     void PlayButton();
     void RewindButton();
     void FastForwardButton();
+    void FrameSpinBoxChanged(int frameNumber);
 signals:
     void timeChanged(int x);
 };

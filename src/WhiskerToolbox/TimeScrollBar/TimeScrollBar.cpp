@@ -1,4 +1,3 @@
-
 #include "TimeScrollBar.hpp"
 
 #include "ui_TimeScrollBar.h"
@@ -29,6 +28,9 @@ TimeScrollBar::TimeScrollBar(QWidget *parent) :
     connect(ui->rewind, &QPushButton::clicked, this, &TimeScrollBar::RewindButton);
     connect(ui->fastforward, &QPushButton::clicked, this, &TimeScrollBar::FastForwardButton);
 
+    // Set up spin box with keyboard tracking disabled (only update on Enter key or arrow clicks)
+    ui->frame_spinbox->setKeyboardTracking(false);
+    connect(ui->frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), this, &TimeScrollBar::FrameSpinBoxChanged);
 };
 
 TimeScrollBar::~TimeScrollBar() {
@@ -76,14 +78,19 @@ void TimeScrollBar::_updateFrameLabels(int frame_num) {
     
     auto video_time = video_timeframe->getTimeAtIndex(TimeFrameIndex(frame_num));
 
-    ui->frame_label->setText(QString::number(frame_num));
     ui->time_label->setText(QString::number(video_time));
+
+    // Update the spin box value without triggering valueChanged signal
+    ui->frame_spinbox->blockSignals(true);
+    ui->frame_spinbox->setValue(frame_num);
+    ui->frame_spinbox->blockSignals(false);
 }
 
 void TimeScrollBar::updateScrollBarNewMax(int new_max) {
 
     ui->frame_count_label->setText(QString::number(new_max));
     ui->horizontalScrollBar->setMaximum(new_max);
+    ui->frame_spinbox->setMaximum(new_max);
 
 }
 
@@ -162,4 +169,14 @@ void TimeScrollBar::changeScrollBarValue(int new_value, bool relative)
 
     Slider_Scroll(new_value);
 
+}
+
+void TimeScrollBar::FrameSpinBoxChanged(int new_frame)
+{
+    auto frame_id = _data_manager->getTime()->checkFrameInbounds(new_frame);
+    _data_manager->setCurrentTime(frame_id);
+    ui->horizontalScrollBar->setSliderPosition(frame_id);
+    _updateFrameLabels(frame_id);
+
+    emit timeChanged(frame_id);
 }
