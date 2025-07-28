@@ -60,10 +60,10 @@ void Media_Window::addLineDataToScene(std::string const & line_key) {
 }
 
 void Media_Window::_clearLines() {
-    for (auto pathItem: std::as_const(_line_paths)) {
+    for (auto pathItem: _line_paths) {
         removeItem(pathItem);
     }
-    for (auto pathItem: std::as_const(_line_paths)) {
+    for (auto pathItem: _line_paths) {
         delete pathItem;
     }
     _line_paths.clear();
@@ -89,33 +89,33 @@ void Media_Window::addMaskDataToScene(std::string const & mask_key) {
 }
 
 void Media_Window::_clearMasks() {
-    for (auto maskItem: std::as_const(_masks)) {
+    for (auto maskItem: _masks) {
         removeItem(maskItem);
     }
 
-    for (auto maskItem: std::as_const(_masks)) {
+    for (auto maskItem: _masks) {
         delete maskItem;
     }
     _masks.clear();
 }
 
 void Media_Window::_clearMaskBoundingBoxes() {
-    for (auto boundingBoxItem: std::as_const(_mask_bounding_boxes)) {
+    for (auto boundingBoxItem: _mask_bounding_boxes) {
         removeItem(boundingBoxItem);
     }
 
-    for (auto boundingBoxItem: std::as_const(_mask_bounding_boxes)) {
+    for (auto boundingBoxItem: _mask_bounding_boxes) {
         delete boundingBoxItem;
     }
     _mask_bounding_boxes.clear();
 }
 
 void Media_Window::_clearMaskOutlines() {
-    for (auto outlineItem: std::as_const(_mask_outlines)) {
+    for (auto outlineItem: _mask_outlines) {
         removeItem(outlineItem);
     }
 
-    for (auto outlineItem: std::as_const(_mask_outlines)) {
+    for (auto outlineItem: _mask_outlines) {
         delete outlineItem;
     }
     _mask_outlines.clear();
