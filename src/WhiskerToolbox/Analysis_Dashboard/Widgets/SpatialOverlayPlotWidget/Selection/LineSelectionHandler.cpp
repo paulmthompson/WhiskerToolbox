@@ -8,6 +8,7 @@
 #include <QMouseEvent>
 #include <QGuiApplication>
 
+
 LineSelectionHandler::LineSelectionHandler()
     : _line_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _is_drawing_line(false) {
@@ -74,8 +75,8 @@ void LineSelectionHandler::startLineSelection(float world_x, float world_y) {
     qDebug() << "LineSelectionHandler: Starting line selection at" << world_x << "," << world_y;
 
     _is_drawing_line = true;
-    _line_start_point = Point2D<float>(world_x, world_y);
-    _line_end_point = _line_start_point; // Initially end point is same as start point
+    _line_start_point_world = Point2D<float>(world_x, world_y);
+    _line_end_point_world = _line_start_point_world; // Initially end point is same as start point
 
     qDebug() << "LineSelectionHandler: Added first line point at world:" << world_x << "," << world_y;
 
@@ -88,7 +89,7 @@ void LineSelectionHandler::updateLineEndPoint(float world_x, float world_y) {
         return;
     }
 
-    _line_end_point = Point2D<float>(world_x, world_y);
+    _line_end_point_world = Point2D<float>(world_x, world_y);
 
     qDebug() << "LineSelectionHandler: Updated line end point to" << world_x << "," << world_y;
 
@@ -104,12 +105,14 @@ void LineSelectionHandler::completeLineSelection() {
     }
 
     qDebug() << "LineSelectionHandler: Completing line selection from" 
-             << _line_start_point.x << "," << _line_start_point.y 
-             << "to" << _line_end_point.x << "," << _line_end_point.y;
+             << _line_start_point_world.x << "," << _line_start_point_world.y 
+             << "to" << _line_end_point_world.x << "," << _line_end_point_world.y;
 
     // Create selection region and apply it
-    auto line_region = std::make_unique<LineSelectionRegion>(_line_start_point, _line_end_point);
+    auto line_region = std::make_unique<LineSelectionRegion>(_line_start_point_world, _line_end_point_world);
     line_region->setBehavior(_current_behavior);
+    // Set screen coordinates for picking
+    line_region->setScreenCoordinates(_line_start_point_screen, _line_end_point_screen);
     _active_selection_region = std::move(line_region);
 
     // Call notification callback if set
@@ -141,8 +144,8 @@ void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
     _line_shader_program = shader_manager.getProgram("line")->getNativeProgram();
 
     qDebug() << "LineSelectionHandler: Rendering line overlay from" 
-             << _line_start_point.x << "," << _line_start_point.y 
-             << "to" << _line_end_point.x << "," << _line_end_point.y;
+             << _line_start_point_world.x << "," << _line_start_point_world.y 
+             << "to" << _line_end_point_world.x << "," << _line_end_point_world.y;
 
     // Use line shader program
     if (!_line_shader_program->bind()) {
@@ -204,6 +207,9 @@ void LineSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const 
                 _current_behavior = LineSelectionBehavior::Replace;
             }
             startLineSelection(world_pos.x(), world_pos.y());
+            // Store screen coordinates for picking
+            _line_start_point_screen = Point2D<float>(event->pos().x(), event->pos().y());
+            _line_end_point_screen = _line_start_point_screen;
         }
     }
 }
@@ -212,6 +218,8 @@ void LineSelectionHandler::mouseMoveEvent(QMouseEvent * event, QVector2D const &
     if (_is_drawing_line && (event->buttons() & Qt::LeftButton)) {
         qDebug() << "LineSelectionHandler: Updating line end point to" << world_pos.x() << "," << world_pos.y();
         updateLineEndPoint(world_pos.x(), world_pos.y());
+        // Update screen coordinates for picking
+        _line_end_point_screen = Point2D<float>(event->pos().x(), event->pos().y());
     }
 }
 
@@ -245,8 +253,8 @@ void LineSelectionHandler::updateLineBuffer() {
 
     // Update line buffer with current line data
     std::vector<float> line_data = {
-        _line_start_point.x, _line_start_point.y,
-        _line_end_point.x, _line_end_point.y
+        _line_start_point_world.x, _line_start_point_world.y,
+        _line_end_point_world.x, _line_end_point_world.y
     };
 
     _line_vertex_array_object.bind();

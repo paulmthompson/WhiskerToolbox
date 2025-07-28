@@ -46,13 +46,35 @@ public:
      */
     Point2D<float> const & getEndPoint() const { return _end_point; }
 
+    /**
+     * @brief Get the start point of the line in screen coordinates
+     */
+    Point2D<float> const & getStartPointScreen() const { return _start_point_screen; }
+
+    /**
+     * @brief Get the end point of the line in screen coordinates
+     */
+    Point2D<float> const & getEndPointScreen() const { return _end_point_screen; }
+
     LineSelectionBehavior getBehavior() const { return _behavior; }
     void setBehavior(LineSelectionBehavior behavior) { _behavior = behavior; }
+
+    /**
+     * @brief Set screen coordinates for picking
+     * @param start_point_screen Start point in screen coordinates
+     * @param end_point_screen End point in screen coordinates
+     */
+    void setScreenCoordinates(Point2D<float> const & start_point_screen, Point2D<float> const & end_point_screen) {
+        _start_point_screen = start_point_screen;
+        _end_point_screen = end_point_screen;
+    }
 
 
 private:
     Point2D<float> _start_point;
     Point2D<float> _end_point;
+    Point2D<float> _start_point_screen;
+    Point2D<float> _end_point_screen;
     LineSelectionBehavior _behavior = LineSelectionBehavior::Replace;
 };
 
@@ -120,8 +142,10 @@ private:
 
     // Line selection state
     bool _is_drawing_line;
-    Point2D<float> _line_start_point;  // Line start point in world coordinates
-    Point2D<float> _line_end_point;    // Line end point in world coordinates
+    Point2D<float> _line_start_point_world;  // Line start point in world coordinates (for rendering)
+    Point2D<float> _line_end_point_world;    // Line end point in world coordinates (for rendering)
+    Point2D<float> _line_start_point_screen; // Line start point in screen coordinates (for picking)
+    Point2D<float> _line_end_point_screen;   // Line end point in screen coordinates (for picking)
     std::unique_ptr<SelectionRegion> _active_selection_region; // Current selection region
     LineSelectionBehavior _current_behavior;
 

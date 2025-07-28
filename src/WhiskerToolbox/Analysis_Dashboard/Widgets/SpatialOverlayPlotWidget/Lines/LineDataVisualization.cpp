@@ -671,22 +671,37 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
         return;
     }
 
-    // 1. Transform selection line from world to framebuffer coordinates
-    QPoint p1_screen = QPoint(
-        ((selection_region->getStartPoint().x - context.world_bounds.left()) / context.world_bounds.width()) * picking_framebuffer->width(),
-        ((context.world_bounds.top() - selection_region->getStartPoint().y) / context.world_bounds.height()) * picking_framebuffer->height()
+    // 1. Transform selection line from screen coordinates to framebuffer coordinates
+    // The selection region now stores screen coordinates directly, so we can convert to framebuffer coordinates
+    int inverted_y1 = context.viewport_rect.height() - static_cast<int>(selection_region->getStartPointScreen().y);
+    int inverted_y2 = context.viewport_rect.height() - static_cast<int>(selection_region->getEndPointScreen().y);
+
+    float normalized_x1 = static_cast<float>(static_cast<int>(selection_region->getStartPointScreen().x)) / static_cast<float>(context.viewport_rect.width());
+    float normalized_y1 = static_cast<float>(inverted_y1) / static_cast<float>(context.viewport_rect.height());
+    float normalized_x2 = static_cast<float>(static_cast<int>(selection_region->getEndPointScreen().x)) / static_cast<float>(context.viewport_rect.width());
+    float normalized_y2 = static_cast<float>(inverted_y2) / static_cast<float>(context.viewport_rect.height());
+
+    QPoint p1_fb = QPoint(
+        static_cast<int>(normalized_x1 * picking_framebuffer->width()),
+        static_cast<int>(normalized_y1 * picking_framebuffer->height())
     );
-    QPoint p2_screen = QPoint(
-        ((selection_region->getEndPoint().x - context.world_bounds.left()) / context.world_bounds.width()) * picking_framebuffer->width(),
-        ((context.world_bounds.top() - selection_region->getEndPoint().y) / context.world_bounds.height()) * picking_framebuffer->height()
+    QPoint p2_fb = QPoint(
+        static_cast<int>(normalized_x2 * picking_framebuffer->width()),
+        static_cast<int>(normalized_y2 * picking_framebuffer->height())
     );
+
+    qDebug() << "LineDataVisualization::applySelection: Screen coords:" 
+             << selection_region->getStartPointScreen().x << "," << selection_region->getStartPointScreen().y
+             << "to" << selection_region->getEndPointScreen().x << "," << selection_region->getEndPointScreen().y;
+    qDebug() << "LineDataVisualization::applySelection: Framebuffer coords:" 
+             << p1_fb.x() << "," << p1_fb.y() << "to" << p2_fb.x() << "," << p2_fb.y();
 
     // 2. Sample pixels along the line in the picking framebuffer
     std::unordered_set<uint32_t> intersecting_line_ids;
     picking_framebuffer->bind();
 
-    int x0 = p1_screen.x(), y0 = p1_screen.y();
-    int x1 = p2_screen.x(), y1 = p2_screen.y();
+    int x0 = p1_fb.x(), y0 = p1_fb.y();
+    int x1 = p2_fb.x(), y1 = p2_fb.y();
 
     // Bresenham's line algorithm to sample pixels
     int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
@@ -707,6 +722,7 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
 
         if (line_id > 0) {
             intersecting_line_ids.insert(line_id);
+            qDebug() << "LineDataVisualization::applySelection: Found line ID" << line_id << "at pixel" << fb_x << "," << fb_y;
         }
 
         if (x0 == x1 && y0 == y1) break;
@@ -715,6 +731,8 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
         if (e2 <= dx) { err += dx; y0 += sy; }
     }
     picking_framebuffer->release();
+
+    qDebug() << "LineDataVisualization::applySelection: Found" << intersecting_line_ids.size() << "intersecting lines";
 
     // 3. Update selection based on keyboard modifiers
     LineSelectionBehavior behavior = selection_region->getBehavior();
@@ -739,6 +757,8 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
             }
         }
     }
+    
+    qDebug() << "LineDataVisualization::applySelection: Selected" << selected_lines.size() << "lines";
     
     // 4. Update vertex buffer for selected lines
     std::vector<float> selection_vertices;
