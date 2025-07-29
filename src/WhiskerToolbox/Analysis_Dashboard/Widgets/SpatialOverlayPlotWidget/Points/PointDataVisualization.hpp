@@ -40,22 +40,22 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
 
     // Selection state for this PointData
     std::unordered_set<QuadTreePoint<int64_t> const *> m_selected_points;
-    std::vector<float> selection_vertex_data;
-    QOpenGLBuffer selection_vertex_buffer;
-    QOpenGLVertexArrayObject selection_vertex_array_object;
+    std::vector<float> m_selection_vertex_data;
+    QOpenGLBuffer m_selection_vertex_buffer;
+    QOpenGLVertexArrayObject m_selection_vertex_array_object;
 
     // Hover state for this PointData
-    QuadTreePoint<int64_t> const * current_hover_point = nullptr;
-    QOpenGLBuffer _highlight_vertex_buffer;
-    QOpenGLVertexArrayObject _highlight_vertex_array_object;
+    QuadTreePoint<int64_t> const * m_current_hover_point = nullptr;
+    QOpenGLBuffer m_highlight_vertex_buffer;
+    QOpenGLVertexArrayObject m_highlight_vertex_array_object;
 
     // Visibility management for points
-    std::unordered_set<QuadTreePoint<int64_t> const *> hidden_points; // Set of hidden point pointers
+    std::unordered_set<QuadTreePoint<int64_t> const *> m_hidden_points; 
     
     // Statistics tracking
-    size_t total_point_count = 0;
-    size_t hidden_point_count = 0;
-    size_t visible_vertex_count = 0; // Number of vertices currently in the vertex buffer
+    size_t m_total_point_count = 0;
+    size_t m_hidden_point_count = 0;
+    size_t m_visible_vertex_count = 0; // Number of vertices currently in the vertex buffer
 
     PointDataVisualization(QString const & data_key, std::shared_ptr<PointData> const & point_data);
     ~PointDataVisualization();
@@ -81,6 +81,11 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     void clearSelection();
 
     /**
+     * @brief Clear hover point
+     */
+    void clearHover();
+
+    /**
      * @brief Toggle selection of a point
      * @param point_ptr Pointer to the point to toggle
      * @return True if point was selected, false if deselected
@@ -101,12 +106,7 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      */
     void render(QMatrix4x4 const & mvp_matrix, float point_size);
 
-    /**
-     * @brief Calculate bounding box for a PointData object
-     * @param point_data The PointData to calculate bounds for
-     * @return BoundingBox for the PointData
-     */
-    BoundingBox calculateBoundsForPointData(PointData const * point_data) const;
+
 
     //========== Selection Handlers ==========
 
@@ -174,22 +174,22 @@ private:
     /**
      * @brief Render points for this PointData
      */
-    void renderPoints(QOpenGLShaderProgram * shader_program, float point_size);
+    void _renderPoints(QOpenGLShaderProgram * shader_program, float point_size);
 
     /**
      * @brief Render selected points for this PointData
      */
-    void renderSelectedPoints(QOpenGLShaderProgram * shader_program, float point_size);
+    void _renderSelectedPoints(QOpenGLShaderProgram * shader_program, float point_size);
 
     /**
      * @brief Render hover point for this PointData
      */
-    void renderHoverPoint(QOpenGLShaderProgram * shader_program, float point_size);
+    void _renderHoverPoint(QOpenGLShaderProgram * shader_program, float point_size);
 
     /**
      * @brief Update vertex buffer to exclude hidden points
      */
-    void updateVisibleVertexBuffer();
+    void _updateVisibleVertexBuffer();
 };
 
 

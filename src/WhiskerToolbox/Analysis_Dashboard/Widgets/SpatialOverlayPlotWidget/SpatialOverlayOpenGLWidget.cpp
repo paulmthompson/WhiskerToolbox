@@ -399,7 +399,7 @@ void SpatialOverlayOpenGLWidget::setTooltipsEnabled(bool enabled) {
 
             // Clear all hover states
             for (auto const & [key, viz]: _point_data_visualizations) {
-                viz->current_hover_point = nullptr;
+                viz->m_current_hover_point = nullptr;
             }
         }
     }
@@ -581,7 +581,7 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
 
     // Clear hover states
     for (auto const & [key, viz]: _point_data_visualizations) {
-        viz->current_hover_point = nullptr;
+        viz->m_current_hover_point = nullptr;
     }
     
     // Clear line hover states as well
@@ -729,7 +729,7 @@ void SpatialOverlayOpenGLWidget::leaveEvent(QEvent * event) {
 
     // Clear all hover states
     for (auto const & [key, viz]: _point_data_visualizations) {
-        viz->current_hover_point = nullptr;
+        viz->clearHover();
     }
 
     // Clear line hover states
@@ -777,7 +777,7 @@ void SpatialOverlayOpenGLWidget::_handleTooltipTimer() {
 
     // Get tooltips from point visualizations
     for (auto const & [key, viz] : _point_data_visualizations) {
-        if (viz->current_hover_point) {
+        if (viz->m_current_hover_point) {
             tooltip_parts << viz->getTooltipText();
         }
     }

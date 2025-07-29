@@ -2,6 +2,8 @@
 set(points_sources
     Point_Data.hpp
     Point_Data.cpp
+    utils/Point_Data_utils.hpp
+    utils/Point_Data_utils.cpp
     IO/CSV/Point_Data_CSV.hpp
     IO/CSV/Point_Data_CSV.cpp
     IO/JSON/Point_Data_JSON.hpp
