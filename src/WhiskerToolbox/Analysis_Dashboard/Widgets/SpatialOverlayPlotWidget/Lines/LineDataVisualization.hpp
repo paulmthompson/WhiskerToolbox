@@ -19,9 +19,9 @@
 
 #include <cstdint>
 #include <memory>
-#include <unordered_map>
+#include <optional>
 #include <unordered_set>
-#include <variant>
+#include <unordered_map>
 #include <vector>
 
 class QOpenGLShaderProgram;
@@ -89,6 +89,11 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     std::vector<float> selection_vertex_data;
     QOpenGLBuffer selection_vertex_buffer;
     QOpenGLVertexArrayObject selection_vertex_array_object;
+    
+    // GPU-based selection using mask buffer
+    QOpenGLBuffer selection_mask_buffer;  // Buffer containing selection mask for each line
+    std::vector<uint32_t> selection_mask; // CPU copy of selection mask
+    std::unordered_map<LineIdentifier, size_t> line_id_to_index; // Fast lookup from LineIdentifier to index
 
     bool m_viewIsDirty = true;
     bool m_dataIsDirty = true;
@@ -217,6 +222,7 @@ private:
     void initializeComputeShaderResources();
     void cleanupComputeShaderResources();
     void updateLineSegmentsBuffer();
+    void updateSelectionMask();
 };
 
 #endif// LINEDATAVISUALIZATION_HPP

@@ -14,6 +14,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <unordered_map>
+#include <chrono>
 
 LineDataVisualization::LineDataVisualization(QString const & data_key, std::shared_ptr<LineData> const & line_data)
     : m_line_data(line_data),
@@ -117,6 +119,12 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
     qDebug() << "LineDataVisualization: Built" << line_identifiers.size()
              << "lines with" << vertex_data.size() / 4 << "segments ("
              << vertex_data.size() / 2 << "vertices)";
+
+    // Build fast lookup map from LineIdentifier to index
+    line_id_to_index.clear();
+    for (size_t i = 0; i < line_identifiers.size(); ++i) {
+        line_id_to_index[line_identifiers[i]] = i;
+    }
 
     // Debug: print coordinate range
     if (!vertex_data.empty()) {
@@ -276,6 +284,9 @@ void LineDataVisualization::initializeOpenGLResources() {
     selection_vertex_buffer.release();
     selection_vertex_array_object.release();
 
+    // Initialize selection mask buffer
+    selection_mask_buffer.create();
+
     updateOpenGLBuffers();
 }
 
@@ -311,6 +322,9 @@ void LineDataVisualization::cleanupOpenGLResources() {
     if (selection_vertex_array_object.isCreated()) {
         selection_vertex_array_object.destroy();
     }
+    if (selection_mask_buffer.isCreated()) {
+        selection_mask_buffer.destroy();
+    }
 
     cleanupComputeShaderResources();
 
@@ -328,6 +342,12 @@ void LineDataVisualization::updateOpenGLBuffers() {
     line_id_buffer.bind();
     line_id_buffer.allocate(line_id_data.data(), static_cast<int>(line_id_data.size() * sizeof(uint32_t)));
     line_id_buffer.release();
+
+    // Initialize selection mask (all unselected initially)
+    selection_mask.assign(line_identifiers.size(), 0);
+    selection_mask_buffer.bind();
+    selection_mask_buffer.allocate(selection_mask.data(), static_cast<int>(selection_mask.size() * sizeof(uint32_t)));
+    selection_mask_buffer.release();
 
     // Update line segments buffer for compute shader
     updateLineSegmentsBuffer();
@@ -359,10 +379,8 @@ void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_wid
         renderHoverLine(mvp_matrix, line_shader_program, line_width);
     }
 
-    if (!selected_lines.empty()) {
-        qDebug() << "LineDataVisualization::render: Calling renderSelection for" << selected_lines.size() << "selected lines";
-        renderSelection(mvp_matrix, line_width);
-    }
+    // Selection is now handled automatically by the geometry shader using the selection mask buffer
+    // No need for separate renderSelection call
 }
 
 void LineDataVisualization::renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width) {
@@ -393,6 +411,11 @@ void LineDataVisualization::renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matr
     shader_program->setUniformValue("u_canvas_size", canvas_size);
     shader_program->setUniformValue("u_is_selected", false);
     shader_program->setUniformValue("u_hover_line_id", 0u);// Don't highlight any hover line in the main scene
+
+    // Bind selection mask buffer for geometry shader
+    selection_mask_buffer.bind();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, selection_mask_buffer.bufferId());
+    selection_mask_buffer.release();
 
     vertex_array_object.bind();
     if (!vertex_data.empty()) {
@@ -451,6 +474,11 @@ void LineDataVisualization::renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpen
     } else {
         shader_program->setUniformValue("u_hover_line_id", shader_line_id);
     }
+
+    // Bind selection mask buffer for geometry shader
+    selection_mask_buffer.bind();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, selection_mask_buffer.bufferId());
+    selection_mask_buffer.release();
 
     // Get the vertex range for the hovered line
     LineVertexRange const & range = line_vertex_ranges[cached_hover_line_index];
@@ -534,6 +562,10 @@ BoundingBox LineDataVisualization::calculateBoundsForLineData(LineData const * l
 void LineDataVisualization::clearSelection() {
     qDebug() << "LineDataVisualization::clearSelection: Clearing selection";
     selected_lines.clear();
+    
+    // Clear selection mask
+    updateSelectionMask();
+    
     selection_vertex_buffer.bind();
     selection_vertex_buffer.allocate(nullptr, 0);
     selection_vertex_buffer.release();
@@ -603,37 +635,8 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
     
     qDebug() << "LineDataVisualization::applySelection: Selected" << selected_lines.size() << "lines";
     
-    // Update vertex buffer for selected lines
-    std::vector<float> selection_vertices;
-    qDebug() << "LineDataVisualization::applySelection: Starting vertex buffer creation for" << selected_lines.size() << "selected lines";
-    
-    for(auto const& line_id : selected_lines) {
-        auto it = std::find(line_identifiers.begin(), line_identifiers.end(), line_id);
-        if (it != line_identifiers.end()) {
-            size_t index = std::distance(line_identifiers.begin(), it);
-            
-            if (index < line_vertex_ranges.size()) {
-                LineVertexRange const& range = line_vertex_ranges[index];
-                
-                // Check if the range is valid
-                if (range.start_vertex + range.vertex_count <= vertex_data.size() / 2) {
-                    for(size_t i = 0; i < range.vertex_count; ++i) {
-                        size_t vertex_index = (range.start_vertex + i) * 2;
-                        if (vertex_index + 1 < vertex_data.size()) {
-                            selection_vertices.push_back(vertex_data[vertex_index]);
-                            selection_vertices.push_back(vertex_data[vertex_index + 1]);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    qDebug() << "LineDataVisualization::applySelection: Created" << selection_vertices.size() << "vertices for selection buffer";
-
-    selection_vertex_buffer.bind();
-    selection_vertex_buffer.allocate(selection_vertices.data(), static_cast<int>(selection_vertices.size() * sizeof(float)));
-    selection_vertex_buffer.release();
+    // Update GPU selection mask efficiently
+    updateSelectionMask();
     
     m_viewIsDirty = true;
 }
@@ -754,6 +757,40 @@ void LineDataVisualization::updateLineSegmentsBuffer() {
     line_segments_buffer.release();
 
     qDebug() << "LineDataVisualization: Updated line segments buffer with" << segments_data.size() / 5 << "segments";
+}
+
+void LineDataVisualization::updateSelectionMask() {
+    auto start_time = std::chrono::high_resolution_clock::now();
+    
+    // Reset all selections
+    std::fill(selection_mask.begin(), selection_mask.end(), 0);
+    
+    // Mark selected lines using fast hash map lookup
+    for (const auto& line_id : selected_lines) {
+        auto it = line_id_to_index.find(line_id);
+        if (it != line_id_to_index.end()) {
+            size_t index = it->second;
+            if (index < selection_mask.size()) {
+                selection_mask[index] = 1; // Mark as selected
+            }
+        }
+    }
+    
+    auto cpu_time = std::chrono::high_resolution_clock::now();
+    
+    // Update GPU buffer
+    selection_mask_buffer.bind();
+    selection_mask_buffer.write(0, selection_mask.data(), static_cast<int>(selection_mask.size() * sizeof(uint32_t)));
+    selection_mask_buffer.release();
+    
+    auto end_time = std::chrono::high_resolution_clock::now();
+    
+    auto cpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(cpu_time - start_time);
+    auto gpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - cpu_time);
+    auto total_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    
+    qDebug() << "LineDataVisualization: Updated selection mask for" << selected_lines.size() << "lines in" 
+             << total_duration.count() << "μs (CPU:" << cpu_duration.count() << "μs, GPU:" << gpu_duration.count() << "μs)";
 }
 
 std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
