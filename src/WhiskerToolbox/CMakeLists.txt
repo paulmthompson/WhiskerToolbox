@@ -527,6 +527,10 @@ set(PROJECT_SOURCES
         Terminal_Widget/TerminalWidget.hpp
         Terminal_Widget/TerminalWidget.cpp
         Terminal_Widget/TerminalWidget.ui
+
+        Test_Widget/Test_Widget.hpp
+        Test_Widget/Test_Widget.cpp
+        Test_Widget/Test_Widget.ui
 )
 
 if (WIN32)

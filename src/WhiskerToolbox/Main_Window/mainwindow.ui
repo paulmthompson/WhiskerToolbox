@@ -99,6 +99,7 @@
     <addaction name="actionData_Transforms"/>
     <addaction name="actionTerminal_Output"/>
     <addaction name="actionAnalysis_Dashboard"/>
+    <addaction name="actionTest_Widget"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -239,6 +240,11 @@
   <action name="actionAnalysis_Dashboard">
    <property name="text">
     <string>Analysis Dashboard</string>
+   </property>
+  </action>
+  <action name="actionTest_Widget">
+   <property name="text">
+    <string>Test Widget</string>
    </property>
   </action>
  </widget>

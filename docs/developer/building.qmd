@@ -1,0 +1,18 @@
+---
+title: "Building"
+format: html
+---
+
+CMakeUserPresets.json
+
+### IDE Specific Instructions:
+
+#### CLion
+
+At the top to configure build properties, select More Action -\> Configuration -\> Edit...
+
+Under Environment variables, adding this on windows works for me:
+
+```         
+PATH=bin\;C:\Qt\6.7.2\msvc2019_64\bin\;_deps\torch-src\lib\;_deps\iir-build\;$PATH$
+```

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>File IO – Neuralyzer</title>
+<title>Building – Neuralyzer</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -149,7 +149,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/file_io.html">File IO</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../developer/building.html">Building</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -169,7 +169,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
+  <a href="../developer/building.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Building</span></a>
   </div>
 </li>
@@ -187,7 +187,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link active">
+  <a href="../developer/file_io.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">File IO</span></a>
   </div>
 </li>
@@ -245,15 +245,7 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#file-inputoutput-and-memory-management-considerations" id="toc-file-inputoutput-and-memory-management-considerations" class="nav-link active" data-scroll-target="#file-inputoutput-and-memory-management-considerations">File Input/Output and Memory Management Considerations</a>
-  <ul class="collapse">
-  <li><a href="#overview-of-file-io-requirements" id="toc-overview-of-file-io-requirements" class="nav-link" data-scroll-target="#overview-of-file-io-requirements">Overview of File IO Requirements</a></li>
-  <li><a href="#incremental-data-adjustments-and-key-value-stores" id="toc-incremental-data-adjustments-and-key-value-stores" class="nav-link" data-scroll-target="#incremental-data-adjustments-and-key-value-stores">Incremental Data Adjustments and Key-Value Stores</a></li>
-  <li><a href="#serialization-with-captain-proto" id="toc-serialization-with-captain-proto" class="nav-link" data-scroll-target="#serialization-with-captain-proto">Serialization with Captain Proto</a></li>
-  <li><a href="#memory-mapping-implementation" id="toc-memory-mapping-implementation" class="nav-link" data-scroll-target="#memory-mapping-implementation">Memory Mapping Implementation</a></li>
-  <li><a href="#key-value-database-libraries" id="toc-key-value-database-libraries" class="nav-link" data-scroll-target="#key-value-database-libraries">Key-Value Database Libraries</a></li>
-  <li><a href="#prioritization-and-future-considerations" id="toc-prioritization-and-future-considerations" class="nav-link" data-scroll-target="#prioritization-and-future-considerations">Prioritization and Future Considerations</a></li>
-  </ul></li>
+  <li><a href="#ide-specific-instructions" id="toc-ide-specific-instructions" class="nav-link active" data-scroll-target="#ide-specific-instructions">IDE Specific Instructions:</a></li>
   </ul>
 </nav>
     </div>
@@ -262,7 +254,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">File IO</h1>
+<h1 class="title">Building</h1>
 </div>
 
 
@@ -279,31 +271,14 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="file-inputoutput-and-memory-management-considerations" class="level1">
-<h1>File Input/Output and Memory Management Considerations</h1>
-<section id="overview-of-file-io-requirements" class="level2">
-<h2 class="anchored" data-anchor-id="overview-of-file-io-requirements">Overview of File IO Requirements</h2>
-<p>Because <strong>Neuralizer</strong> is compatible with a wide range of data, its file IO needs to support a wide range of file formats. Some of these file formats will be pre-subscribed, such as data acquisition-specific formats for electrophysiology. Others are more specific to this package, such as for line data that varies over time. We must also be aware from the start that some electrophysiology file sizes can be expected to be larger than easy to work with on a regular desktop machine. For instance, Neuropixel probes record almost 400 channels at 20 kHz and are becoming more routine for use. Consequently, multiple file formats should have the ability to be easily memory-mapped and loaded from disk rather than loading the entire file into RAM.</p>
-</section>
-<section id="incremental-data-adjustments-and-key-value-stores" class="level2">
-<h2 class="anchored" data-anchor-id="incremental-data-adjustments-and-key-value-stores">Incremental Data Adjustments and Key-Value Stores</h2>
-<p>Another important consideration from the start is that many of these data types will be incrementally adjusted. For instance, processing a video sequence frame by frame or manually adjusting the output of an automated algorithm requires changing some subset of data in a much larger scheme. For some of these file types that are greater than hundreds of megabytes, resaving an entire file for point manipulations could be onerous and time-consuming. Consequently, for some file types, it would be advantageous to use a key-value database type structure that allows us to easily make incremental adjustments and only save those changes, consequently saving data much more quickly. To my knowledge, this process is quite common in the wild but uncommon in neuroscience.</p>
-</section>
-<section id="serialization-with-captain-proto" class="level2">
-<h2 class="anchored" data-anchor-id="serialization-with-captain-proto">Serialization with Captain Proto</h2>
-<p>The process of data serialization and deserialization will be accomplished with the <strong>Captain Proto</strong> library. This is able to easily create binary files from more complex data structures, such as those that hold multiple lines of varying size per unit time. This library can define output file structures that are purely binary and would be saved and loaded as entire objects. Alternatively, different definitions can be used to save objects as key-value pairs; for instance, each time point can be the key and the data at that time can be the value.</p>
-</section>
-<section id="memory-mapping-implementation" class="level2">
-<h2 class="anchored" data-anchor-id="memory-mapping-implementation">Memory Mapping Implementation</h2>
-<p>Captain Proto does not perform memory mapping itself. Memory mapping is different across different types of file systems, so to maintain cross-platform use, we will need to either specify different interfaces for interacting with Captain Proto or we could use another third-party library that does this for us. <strong>Boost.Interprocess</strong> is commonly cited for this purpose, but there are others.</p>
-</section>
-<section id="key-value-database-libraries" class="level2">
-<h2 class="anchored" data-anchor-id="key-value-database-libraries">Key-Value Database Libraries</h2>
-<p>For key-value database structures, there are multiple libraries available. Many of these are mature and designed to work with servers of extremely large datasets, and some have been developed by very large companies. One of the most popular is called <strong>LMDB</strong>, but in my test cases, this appears to be not as great with Windows. Using this library requires specifying some maximum file size; on Linux, the resulting file size is only the size of the data, but with my testing on Windows, this large maximum file size seems to persist. An alternative database is <strong>RocksDB</strong>. This software is developed by Facebook, seems to be quite mature, and should also be able to save as a key-value pair across platforms.</p>
-</section>
-<section id="prioritization-and-future-considerations" class="level2">
-<h2 class="anchored" data-anchor-id="prioritization-and-future-considerations">Prioritization and Future Considerations</h2>
-<p>Currently, the data that would benefit from key-value updates is only theoretical. Having a line for whiskers for each frame in a high-speed video of up to 200,000 frames results in a file size that is almost 300 MB. However, saving a binary file in its entirety when making whisker-specific updates through manual curation still takes less than a second to save and is not noticeable to the user. Consequently, I think prioritizing having binary outputs to save entire files and memory mapping of those binary file types that are read-only, such as for Neuropixel analog traces, may be the most desirable next feature. Key-value pairs with something like RocksDB should be remembered for the future, but I am going to make that less of a priority until I see a clear use case that would benefit.</p>
+<p>CMakeUserPresets.json</p>
+<section id="ide-specific-instructions" class="level3">
+<h3 class="anchored" data-anchor-id="ide-specific-instructions">IDE Specific Instructions:</h3>
+<section id="clion" class="level4">
+<h4 class="anchored" data-anchor-id="clion">CLion</h4>
+<p>At the top to configure build properties, select More Action -&gt; Configuration -&gt; Edit…</p>
+<p>Under Environment variables, adding this on windows works for me:</p>
+<pre><code>PATH=bin\;C:\Qt\6.7.2\msvc2019_64\bin\;_deps\torch-src\lib\;_deps\iir-build\;$PATH$</code></pre>
 
 
 </section>
