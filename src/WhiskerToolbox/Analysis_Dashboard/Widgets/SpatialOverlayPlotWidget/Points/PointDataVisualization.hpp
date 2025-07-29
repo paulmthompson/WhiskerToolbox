@@ -57,6 +57,11 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     size_t m_hidden_point_count = 0;
     size_t m_visible_vertex_count = 0; // Number of vertices currently in the vertex buffer
 
+    // Time range filtering
+    int m_time_range_start = 0;
+    int m_time_range_end = 999999;
+    bool m_time_range_enabled = false;
+
     PointDataVisualization(QString const & data_key, std::shared_ptr<PointData> const & point_data);
     ~PointDataVisualization();
 
@@ -105,7 +110,6 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      * @param point_size The size of the points to render
      */
     void render(QMatrix4x4 const & mvp_matrix, float point_size);
-
 
 
     //========== Selection Handlers ==========
@@ -169,6 +173,9 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      * @return Pair of (total_points, hidden_points)
      */
     std::pair<size_t, size_t> getVisibilityStats() const;
+
+    void setTimeRangeEnabled(bool enabled);
+    void setTimeRange(int start_frame, int end_frame);
 
 private:
     /**

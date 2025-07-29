@@ -466,7 +466,9 @@ void PointDataVisualization::_updateVisibleVertexBuffer() {
     
     for (const auto* point_ptr : all_points) {
         // Skip hidden points
-        if (m_hidden_points.find(point_ptr) == m_hidden_points.end()) {
+        if (m_hidden_points.find(point_ptr) == m_hidden_points.end() &&
+            point_ptr->data >= m_time_range_start &&
+            point_ptr->data <= m_time_range_end) {
             visible_vertex_data.push_back(point_ptr->x);
             visible_vertex_data.push_back(point_ptr->y);
         }
@@ -482,4 +484,29 @@ void PointDataVisualization::_updateVisibleVertexBuffer() {
     
     qDebug() << "PointDataVisualization: Updated vertex buffer with" << (m_visible_vertex_count / 2) 
              << "visible points out of" << m_total_point_count << "total points";
+}
+
+void PointDataVisualization::setTimeRangeEnabled(bool enabled) {
+    qDebug() << "PointDataVisualization::setTimeRangeEnabled(" << enabled << ")";
+    
+    if (m_time_range_enabled != enabled) {
+        m_time_range_enabled = enabled;
+        
+        // Update visibility mask to apply or remove time range filtering
+        _updateVisibleVertexBuffer();
+        
+        qDebug() << "Time range filtering" << (enabled ? "enabled" : "disabled");
+    }
+}
+
+void PointDataVisualization::setTimeRange(int start_frame, int end_frame) {
+    qDebug() << "PointDataVisualization::setTimeRange(" << start_frame << "," << end_frame << ")";
+    
+    m_time_range_start = start_frame;
+    m_time_range_end = end_frame;
+    
+    // Update visibility mask to apply time range filtering
+    _updateVisibleVertexBuffer();
+    
+    qDebug() << "Time range updated and visibility mask refreshed";
 }
