@@ -553,10 +553,17 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     _hover_debounce_timer->stop();
     _hover_processing_active = false;
     QToolTip::hideText();
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Mouse press - disabled hover processing, selection mode:" << (int)_selection_mode;
 
     // Clear hover states
     for (auto const & [key, viz]: _point_data_visualizations) {
         viz->current_hover_point = nullptr;
+    }
+    
+    // Clear line hover states as well
+    for (auto const & [key, viz]: _line_data_visualizations) {
+        viz->setHoverLine(std::nullopt);
     }
 
     requestThrottledUpdate();
@@ -627,6 +634,21 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 
     if (event->button() == Qt::LeftButton) {
         _is_panning = false;
+        
+        // Re-enable hover processing after interaction ends
+        // This ensures hover works again even if the click was in an incompatible selection mode
+        _hover_processing_active = false;
+        
+        // Trigger hover processing to restart immediately if mouse is over content
+        if (_tooltips_enabled && _data_bounds_valid) {
+            _pending_hover_pos = event->pos();
+            _hover_debounce_timer->stop();
+            _hover_debounce_timer->start();
+            qDebug() << "SpatialOverlayOpenGLWidget: Mouse release - restarted hover processing at" << event->pos();
+        } else {
+            qDebug() << "SpatialOverlayOpenGLWidget: Mouse release - hover processing not restarted (tooltips:" << _tooltips_enabled << ", bounds_valid:" << _data_bounds_valid << ")";
+        }
+        
         event->accept();
     } else {
         event->ignore();
