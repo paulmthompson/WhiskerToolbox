@@ -137,6 +137,17 @@ public:
     float getPointSize() const { return _point_size; }
 
     /**
+     * @brief Set the line width for rendering
+     * @param line_width Line width in pixels
+     */
+    void setLineWidth(float line_width);
+
+    /**
+     * @brief Get current line width
+     */
+    float getLineWidth() const { return _line_width; }
+
+    /**
      * @brief Get total number of selected points across all PointData visualizations
      * @return Total selected point count
      */
@@ -188,6 +199,12 @@ signals:
      * @param point_size The new point size in pixels
      */
     void pointSizeChanged(float point_size);
+
+    /**
+     * @brief Emitted when line width changes
+     * @param line_width The new line width in pixels
+     */
+    void lineWidthChanged(float line_width);
 
     /**
      * @brief Emitted when zoom level changes
@@ -273,6 +290,7 @@ private:
     float _zoom_level;
     float _pan_offset_x, _pan_offset_y;
     float _point_size;
+    float _line_width;
     QMatrix4x4 _projection_matrix;
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _model_matrix;

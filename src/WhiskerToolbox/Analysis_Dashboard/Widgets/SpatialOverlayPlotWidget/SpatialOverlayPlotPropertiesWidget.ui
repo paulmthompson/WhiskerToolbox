@@ -95,6 +95,49 @@
        </layout>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="line_width_layout">
+        <item>
+         <widget class="QLabel" name="line_width_label">
+          <property name="text">
+           <string>Line Width:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="line_width_spinbox">
+          <property name="suffix">
+           <string> px</string>
+          </property>
+          <property name="minimum">
+           <double>0.500000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>20.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.500000000000000</double>
+          </property>
+          <property name="value">
+           <double>2.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="line_width_spacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="zoom_layout">
         <item>
          <widget class="QLabel" name="zoom_label">

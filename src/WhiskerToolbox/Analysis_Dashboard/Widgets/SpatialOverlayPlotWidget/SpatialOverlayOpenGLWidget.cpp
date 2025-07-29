@@ -29,6 +29,7 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
       _point_size(8.0f),
+      _line_width(2.0f),
       _is_panning(false),
       _data_bounds_valid(false),
       _tooltips_enabled(true),
@@ -196,6 +197,17 @@ void SpatialOverlayOpenGLWidget::setPointSize(float point_size) {
     if (new_point_size != _point_size) {
         _point_size = new_point_size;
         emit pointSizeChanged(_point_size);
+
+        // Use throttled update for better performance
+        requestThrottledUpdate();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::setLineWidth(float line_width) {
+    float new_line_width = std::max(0.5f, std::min(20.0f, line_width));// Clamp between 0.5 and 20 pixels
+    if (new_line_width != _line_width) {
+        _line_width = new_line_width;
+        emit lineWidthChanged(_line_width);
 
         // Use throttled update for better performance
         requestThrottledUpdate();
@@ -936,7 +948,7 @@ void SpatialOverlayOpenGLWidget::renderLines() {
 
     // Render all lines for each LineData
     for (auto const & [key, viz]: _line_data_visualizations) {
-        viz->render(mvp_matrix, 2.0f);// Default line width
+        viz->render(mvp_matrix, _line_width);// Use member variable for line width
     }
 }
 

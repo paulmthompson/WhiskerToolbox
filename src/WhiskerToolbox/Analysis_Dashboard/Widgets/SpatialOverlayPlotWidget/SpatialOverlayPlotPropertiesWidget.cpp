@@ -26,7 +26,8 @@ SpatialOverlayPlotPropertiesWidget::SpatialOverlayPlotPropertiesWidget(QWidget *
       _spatial_plot_widget(nullptr),
       _start_frame(0),
       _end_frame(999999),
-      _total_frame_count(0) {
+      _total_frame_count(0),
+      _line_width(2.0) {
     ui->setupUi(this);
     
     setupFeatureTable();
@@ -112,6 +113,11 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
             ui->point_size_spinbox->setValue(static_cast<double>(current_point_size));
             ui->point_size_spinbox->blockSignals(false);
 
+            float current_line_width = _spatial_plot_widget->getOpenGLWidget()->getLineWidth();
+            ui->line_width_spinbox->blockSignals(true);
+            ui->line_width_spinbox->setValue(static_cast<double>(current_line_width));
+            ui->line_width_spinbox->blockSignals(false);
+
             bool tooltips_enabled = _spatial_plot_widget->getOpenGLWidget()->getTooltipsEnabled();
             ui->tooltips_checkbox->blockSignals(true);
             ui->tooltips_checkbox->setChecked(tooltips_enabled);
@@ -190,6 +196,14 @@ void SpatialOverlayPlotPropertiesWidget::onPointSizeChanged(double value) {
     }
 }
 
+void SpatialOverlayPlotPropertiesWidget::onLineWidthChanged(double value) {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: onLineWidthChanged called with value:" << value;
+    _line_width = value;
+    if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
+        _spatial_plot_widget->getOpenGLWidget()->setLineWidth(static_cast<float>(value));
+    }
+}
+
 void SpatialOverlayPlotPropertiesWidget::onZoomLevelChanged(double value) {
     if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
         _spatial_plot_widget->getOpenGLWidget()->setZoomLevel(static_cast<float>(value));
@@ -219,6 +233,9 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
     // Visualization settings
     connect(ui->point_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &SpatialOverlayPlotPropertiesWidget::onPointSizeChanged);
+
+    connect(ui->line_width_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &SpatialOverlayPlotPropertiesWidget::onLineWidthChanged);
 
     connect(ui->zoom_level_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &SpatialOverlayPlotPropertiesWidget::onZoomLevelChanged);

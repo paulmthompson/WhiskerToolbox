@@ -83,9 +83,8 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     uint32_t cached_hover_line_index = 0;    // Cached index to avoid linear search
     GLint cached_hover_uniform_location = -1;// Cached uniform location to avoid repeated queries
 
-    std::unordered_set<LineIdentifier> selected_lines;
-
     // GPU-based selection using mask buffer
+    std::unordered_set<LineIdentifier> selected_lines;
     QOpenGLBuffer selection_mask_buffer;                        // Buffer containing selection mask for each line
     std::vector<uint32_t> selection_mask;                       // CPU copy of selection mask
     std::unordered_map<LineIdentifier, size_t> line_id_to_index;// Fast lookup from LineIdentifier to index

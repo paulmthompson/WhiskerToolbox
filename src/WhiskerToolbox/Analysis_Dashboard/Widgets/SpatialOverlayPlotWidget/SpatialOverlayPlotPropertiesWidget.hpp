@@ -70,6 +70,12 @@ private slots:
     void onPointSizeChanged(double value);
 
     /**
+     * @brief Handle line width changes
+     * @param value New line width value
+     */
+    void onLineWidthChanged(double value);
+
+    /**
      * @brief Handle zoom level changes
      * @param value New zoom level value
      */
@@ -129,6 +135,9 @@ private:
     int _start_frame;
     int _end_frame;
     int _total_frame_count;
+    
+    // Line visualization settings
+    double _line_width;
 
     /**
      * @brief Setup connections between UI elements and handlers
