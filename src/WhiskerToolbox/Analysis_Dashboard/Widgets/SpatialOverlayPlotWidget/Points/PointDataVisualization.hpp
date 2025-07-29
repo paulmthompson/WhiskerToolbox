@@ -39,7 +39,7 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     bool m_visible = true;
 
     // Selection state for this PointData
-    std::unordered_set<QuadTreePoint<int64_t> const *> selected_points;
+    std::unordered_set<QuadTreePoint<int64_t> const *> m_selected_points;
     std::vector<float> selection_vertex_data;
     QOpenGLBuffer selection_vertex_buffer;
     QOpenGLVertexArrayObject selection_vertex_array_object;

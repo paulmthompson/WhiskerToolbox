@@ -135,7 +135,7 @@ void PointDataVisualization::cleanupOpenGLResources() {
 void PointDataVisualization::updateSelectionVertexBuffer() {
     selection_vertex_data.clear();
 
-    if (selected_points.empty()) {
+    if (m_selected_points.empty()) {
         // Clear the buffer if no selection
         selection_vertex_buffer.bind();
         glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
@@ -144,9 +144,9 @@ void PointDataVisualization::updateSelectionVertexBuffer() {
     }
 
     // Prepare vertex data for selected points
-    selection_vertex_data.reserve(selected_points.size() * 2);
+    selection_vertex_data.reserve(m_selected_points.size() * 2);
 
-    for (auto const * point_ptr: selected_points) {
+    for (auto const * point_ptr: m_selected_points) {
         // Store original coordinates in selection vertex data
         selection_vertex_data.push_back(point_ptr->x);
         selection_vertex_data.push_back(point_ptr->y);
@@ -167,34 +167,34 @@ void PointDataVisualization::updateSelectionVertexBuffer() {
 }
 
 void PointDataVisualization::clearSelection() {
-    if (!selected_points.empty()) {
-        selected_points.clear();
+    if (!m_selected_points.empty()) {
+        m_selected_points.clear();
         updateSelectionVertexBuffer();
     }
 }
 
 bool PointDataVisualization::togglePointSelection(QuadTreePoint<int64_t> const * point_ptr) {
-    auto it = selected_points.find(point_ptr);
+    auto it = m_selected_points.find(point_ptr);
 
-    if (it != selected_points.end()) {
+    if (it != m_selected_points.end()) {
         // Point is selected, remove it
-        selected_points.erase(it);
+        m_selected_points.erase(it);
         updateSelectionVertexBuffer();
         return false;// Point was deselected
     } else {
         // Point is not selected, add it
-        selected_points.insert(point_ptr);
+        m_selected_points.insert(point_ptr);
         updateSelectionVertexBuffer();
         return true;// Point was selected
     }
 }
 
 bool PointDataVisualization::removePointFromSelection(QuadTreePoint<int64_t> const * point_ptr) {
-    auto it = selected_points.find(point_ptr);
+    auto it = m_selected_points.find(point_ptr);
 
-    if (it != selected_points.end()) {
+    if (it != m_selected_points.end()) {
         // Point is selected, remove it
-        selected_points.erase(it);
+        m_selected_points.erase(it);
         updateSelectionVertexBuffer();
         return true;// Point was removed
     }
@@ -248,7 +248,7 @@ void PointDataVisualization::renderPoints(QOpenGLShaderProgram * shader_program,
 }
 
 void PointDataVisualization::renderSelectedPoints(QOpenGLShaderProgram * shader_program, float point_size) {
-    if (selected_points.empty()) return;
+    if (m_selected_points.empty()) return;
 
     selection_vertex_array_object.bind();
     selection_vertex_buffer.bind();
@@ -258,7 +258,7 @@ void PointDataVisualization::renderSelectedPoints(QOpenGLShaderProgram * shader_
     shader_program->setUniformValue("u_point_size", point_size * 1.5f);           // Slightly larger
 
     // Draw the selected points
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(selected_points.size()));
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_selected_points.size()));
 
     selection_vertex_buffer.release();
     selection_vertex_array_object.release();
@@ -336,7 +336,7 @@ void PointDataVisualization::applySelection(SelectionVariant & selection_handler
 }
 
 void PointDataVisualization::applySelection(PolygonSelectionHandler const & selection_handler) {
-    if (!selected_points.empty()) {
+    if (!m_selected_points.empty()) {
         clearSelection();
     }
 
@@ -360,8 +360,8 @@ void PointDataVisualization::applySelection(PolygonSelectionHandler const & sele
     size_t points_added_this_data = 0;
     for (auto const * point_ptr: candidate_points) {
         if (region->containsPoint(Point2D<float>(point_ptr->x, point_ptr->y))) {
-            if (selected_points.find(point_ptr) == selected_points.end()) {
-                selected_points.insert(point_ptr);
+            if (m_selected_points.find(point_ptr) == m_selected_points.end()) {
+                m_selected_points.insert(point_ptr);
                 points_added_this_data++;
             }
         }
@@ -431,7 +431,7 @@ std::optional<int64_t> PointDataVisualization::handleDoubleClick(const QVector2D
 //========== Visibility Management ==========
 
 size_t PointDataVisualization::hideSelectedPoints() {
-    if (selected_points.empty()) {
+    if (m_selected_points.empty()) {
         qDebug() << "PointDataVisualization: No points selected for hiding";
         return 0;
     }
@@ -439,7 +439,7 @@ size_t PointDataVisualization::hideSelectedPoints() {
     size_t hidden_count = 0;
     
     // Add selected points to hidden set
-    for (const auto* point_ptr : selected_points) {
+    for (const auto* point_ptr : m_selected_points) {
         if (hidden_points.find(point_ptr) == hidden_points.end()) {
             hidden_points.insert(point_ptr);
             hidden_count++;
@@ -447,7 +447,7 @@ size_t PointDataVisualization::hideSelectedPoints() {
     }
     
     // Clear selection since hidden points should not be selected
-    selected_points.clear();
+    m_selected_points.clear();
     
     // Update statistics
     hidden_point_count = hidden_points.size();

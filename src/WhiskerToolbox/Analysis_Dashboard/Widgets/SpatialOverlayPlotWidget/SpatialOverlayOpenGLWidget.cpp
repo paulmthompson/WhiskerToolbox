@@ -41,9 +41,9 @@ SpatialOverlayOpenGLWidget::SpatialOverlayOpenGLWidget(QWidget * parent)
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
 
-    // Request OpenGL 4.1 Core Profile
+    // Request OpenGL 4.3 Core Profile
     QSurfaceFormat format;
-    format.setVersion(4, 1);
+    format.setVersion(4, 3);
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setSamples(4);// Enable multisampling for smooth points
     setFormat(format);
@@ -217,7 +217,7 @@ void SpatialOverlayOpenGLWidget::setLineWidth(float line_width) {
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
     size_t total = 0;
     for (auto const & [key, viz]: _point_data_visualizations) {
-        total += viz->selected_points.size();
+        total += viz->m_selected_points.size();
     }
     return total;
 }
@@ -831,7 +831,7 @@ void SpatialOverlayOpenGLWidget::clearSelection() {
     bool had_selection = false;
 
     for (auto const & [key, viz]: _point_data_visualizations) {
-        if (!viz->selected_points.empty()) {
+        if (!viz->m_selected_points.empty()) {
             viz->clearSelection();
             had_selection = true;
         }
