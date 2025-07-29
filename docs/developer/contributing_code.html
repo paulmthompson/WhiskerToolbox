@@ -169,6 +169,12 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="../developer/building.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Building</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="../developer/contributing_code.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Contributing Code</span></a>
   </div>
@@ -203,6 +209,9 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">Data Manager Widget</span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+ <span class="menu-text">developer/data_transformations_widget.qmd</span>
+  </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../developer/data_viewer_widget.html" class="sidebar-item-text sidebar-link">
@@ -294,6 +303,7 @@ ul.task-list li input[type="checkbox"] {
 <li>Prefer forward declarations in header files</li>
 <li>Document pre-conditions and post-conditions in doxygen comments uses the <span class="citation" data-cites="pre">@pre</span> and <span class="citation" data-cites="post">@post</span> tags.</li>
 <li>This is a C++20 project. Prefer standard library algorithms and std::ranges where possible.</li>
+<li>Private member variables and functions in classes should be prefaced with an underscore operator (e.g.&nbsp;calculateMean). In a struct with public facing member variables, they should be prefaced with m followed by an underscore (e.g.&nbsp;m_height).</li>
 </ul>
 </section>
 <section id="before-you-submit-a-pull-request" class="level2">
@@ -315,7 +325,7 @@ ul.task-list li input[type="checkbox"] {
 <li><p>Testing is performed with Catch2.&nbsp;</p></li>
 <li><p>The component being tested generally has two TEST_CASE parts. The first will test the “happy path” to ensure that the computations work as expected. Different SECTIONs will be used for different computations. A second TEST_CASE will handle error handling and edge cases. Each SECTION will be for a different edge case / error.</p></li>
 <li><p>Use descriptive names for each test.</p></li>
-<li><p>TEST_CASEs should also use useful tags.</p></li>
+<li><p>TEST_CASES should also use useful tags.</p></li>
 <li><p>Use REQUIRE instead of CHECK</p></li>
 <li><p>Simple setup can be performed in the beginning of a TEST_CASE. Fixtures are only necessary for complex setup/teardown.</p></li>
 <li><p>Prefer Catch::Matchers::WithinRel to Catch::Approx</p></li>
