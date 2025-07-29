@@ -537,9 +537,8 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
         }
         event->accept();
     } else if (event->button() == Qt::RightButton) {
-
-        event->ignore();
-
+        // Accept right click so we get the corresponding mouseReleaseEvent
+        event->accept();
     } else {
         // Let other mouse buttons propagate to parent widget
         event->ignore();
