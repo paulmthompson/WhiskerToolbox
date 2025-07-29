@@ -253,6 +253,53 @@ border-radius: 4px;
        </widget>
       </item>
       <item>
+       <widget class="QGroupBox" name="selection_status_group">
+        <property name="title">
+         <string>Selection Status</string>
+        </property>
+        <property name="maximumHeight">
+         <number>80</number>
+        </property>
+        <layout class="QVBoxLayout" name="selection_status_layout">
+         <property name="spacing">
+          <number>4</number>
+         </property>
+         <property name="leftMargin">
+          <number>8</number>
+         </property>
+         <property name="topMargin">
+          <number>8</number>
+         </property>
+         <property name="rightMargin">
+          <number>8</number>
+         </property>
+         <property name="bottomMargin">
+          <number>8</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="active_dataset_label">
+           <property name="text">
+            <string>Active Dataset: None</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QLabel { font-weight: bold; color: #333; }</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="selection_count_label">
+           <property name="text">
+            <string>Selected: 0 points, 0 masks, 0 lines</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QLabel { color: #555; font-size: 11px; }</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="clear_selection_button">
         <property name="text">
          <string>Clear Selection</string>

@@ -97,7 +97,10 @@ private slots:
      */
     void onClearSelectionClicked();
 
-
+    /**
+     * @brief Update selection status display
+     */
+    void updateSelectionStatus();
 
 private:
     Ui::SpatialOverlayPlotPropertiesWidget * ui;

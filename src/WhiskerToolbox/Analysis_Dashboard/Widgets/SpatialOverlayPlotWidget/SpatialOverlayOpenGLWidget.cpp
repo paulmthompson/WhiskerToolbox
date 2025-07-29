@@ -411,6 +411,10 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
         viz->applySelection(_selection_handler, context);
     }
 
+    // Emit selection changed signal with updated counts
+    size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
+    emit selectionChanged(total_selected, QString(), 0);
+
     requestThrottledUpdate();
 }
 

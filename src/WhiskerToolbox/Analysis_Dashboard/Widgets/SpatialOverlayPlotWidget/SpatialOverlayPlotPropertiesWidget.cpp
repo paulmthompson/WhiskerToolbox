@@ -52,11 +52,10 @@ void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot
     if (_spatial_plot_widget) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: Updating available data sources and UI";
         
-        // Connect to plot widget signals
         connect(_spatial_plot_widget, &SpatialOverlayPlotWidget::selectionChanged,
                 this, [this](size_t selectedCount) {
             qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection changed, count:" << selectedCount;
-            // Could update UI to show selection count if desired
+            updateSelectionStatus();
         });
         
         connect(_spatial_plot_widget, &SpatialOverlayPlotWidget::selectionModeChanged,
@@ -125,6 +124,9 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
             updateSelectionInstructions();
 
         }
+        
+        // Update selection status display
+        updateSelectionStatus();
     } else {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot - no spatial plot widget available";
     }
@@ -324,6 +326,9 @@ void SpatialOverlayPlotPropertiesWidget::onClearSelectionClicked() {
     if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
         _spatial_plot_widget->getOpenGLWidget()->clearSelection();
         qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection cleared";
+        
+        // Update selection status display
+        updateSelectionStatus();
     }
 }
 
@@ -395,4 +400,55 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
     
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Setting instructions:" << instructions;
     ui->selection_instructions_label->setText(instructions);
+}
+
+void SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() called";
+    
+    if (!ui->active_dataset_label || !ui->selection_count_label) {
+        qDebug() << "SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() - Missing UI labels";
+        return;
+    }
+    
+    // Update active dataset information
+    QString activeDataset = "None";
+    if (_spatial_plot_widget) {
+        // Get the current active datasets from the plot widget
+        QStringList pointKeys = _spatial_plot_widget->getPointDataKeys();
+        QStringList maskKeys = _spatial_plot_widget->getMaskDataKeys();
+        QStringList lineKeys = _spatial_plot_widget->getLineDataKeys();
+        
+        QStringList allKeys = pointKeys + maskKeys + lineKeys;
+        if (!allKeys.isEmpty()) {
+            if (allKeys.size() == 1) {
+                activeDataset = allKeys.first();
+            } else {
+                activeDataset = QString("Multiple (%1)").arg(allKeys.size());
+            }
+        }
+    }
+    
+    ui->active_dataset_label->setText(QString("Active Dataset: %1").arg(activeDataset));
+    
+    // Update selection counts
+    size_t pointCount = 0;
+    size_t maskCount = 0; 
+    size_t lineCount = 0;
+    
+    if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
+        pointCount = _spatial_plot_widget->getOpenGLWidget()->getTotalSelectedPoints();
+        maskCount = _spatial_plot_widget->getOpenGLWidget()->getTotalSelectedMasks();
+        lineCount = _spatial_plot_widget->getOpenGLWidget()->getTotalSelectedLines();
+    }
+    
+    QString selectionText = QString("Selected: %1 points, %2 masks, %3 lines")
+                           .arg(pointCount)
+                           .arg(maskCount)
+                           .arg(lineCount);
+    
+    ui->selection_count_label->setText(selectionText);
+    
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: Updated selection status - Dataset:" << activeDataset 
+             << "Selected:" << pointCount << "points," << maskCount << "masks," << lineCount << "lines";
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: Set label text to:" << selectionText;
 }
