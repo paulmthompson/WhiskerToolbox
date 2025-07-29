@@ -248,19 +248,7 @@ void LineDataVisualization::initializeOpenGLResources() {
         blit_shader_program = nullptr;
     }
 
-    selection_vertex_buffer.create();
-    selection_vertex_array_object.create();
-    selection_vertex_array_object.bind();
-    selection_vertex_buffer.bind();
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), nullptr);
-    selection_vertex_buffer.release();
-    selection_vertex_array_object.release();
-
-    // Initialize selection mask buffer
     selection_mask_buffer.create();
-    
-    // Initialize visibility mask buffer
     visibility_mask_buffer.create();
 
     updateOpenGLBuffers();
@@ -290,13 +278,6 @@ void LineDataVisualization::cleanupOpenGLResources() {
     if (scene_framebuffer) {
         delete scene_framebuffer;
         scene_framebuffer = nullptr;
-    }
-
-    if (selection_vertex_buffer.isCreated()) {
-        selection_vertex_buffer.destroy();
-    }
-    if (selection_vertex_array_object.isCreated()) {
-        selection_vertex_array_object.destroy();
     }
     if (selection_mask_buffer.isCreated()) {
         selection_mask_buffer.destroy();
@@ -564,9 +545,9 @@ void LineDataVisualization::clearSelection() {
     selected_lines.clear();
     updateSelectionMask();
     
-    selection_vertex_buffer.bind();
-    selection_vertex_buffer.allocate(nullptr, 0);
-    selection_vertex_buffer.release();
+    //selection_vertex_buffer.bind();
+    //selection_vertex_buffer.allocate(nullptr, 0);
+    //selection_vertex_buffer.release();
     m_viewIsDirty = true;
 }
 
@@ -672,18 +653,6 @@ void LineDataVisualization::renderSelection(QMatrix4x4 const & mvp_matrix, float
     line_shader_program->setUniformValue("u_canvas_size", canvas_size);
     line_shader_program->setUniformValue("u_is_selected", true);
     line_shader_program->setUniformValue("u_hover_line_id", 0u);
-
-    selection_vertex_array_object.bind();
-    selection_vertex_buffer.bind();
-    int buffer_size = selection_vertex_buffer.size();
-    int vertex_count = buffer_size / (2 * sizeof(float));
-    qDebug() << "LineDataVisualization::renderSelection: Buffer size:" << buffer_size << "bytes, vertex count:" << vertex_count;
-    qDebug() << "LineDataVisualization::renderSelection: sizeof(float)=" << sizeof(float) << ", 2*sizeof(float)=" << (2 * sizeof(float));
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-    glDrawArrays(GL_LINES, 0, vertex_count);
-    selection_vertex_buffer.release();
-    selection_vertex_array_object.release();
 
     line_shader_program->setUniformValue("u_is_selected", false); // Reset state
     glDisable(GL_BLEND);

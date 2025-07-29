@@ -84,8 +84,6 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     GLint cached_hover_uniform_location = -1;// Cached uniform location to avoid repeated queries
 
     std::unordered_set<LineIdentifier> selected_lines;
-    QOpenGLBuffer selection_vertex_buffer;
-    QOpenGLVertexArrayObject selection_vertex_array_object;
 
     // GPU-based selection using mask buffer
     QOpenGLBuffer selection_mask_buffer;                        // Buffer containing selection mask for each line
