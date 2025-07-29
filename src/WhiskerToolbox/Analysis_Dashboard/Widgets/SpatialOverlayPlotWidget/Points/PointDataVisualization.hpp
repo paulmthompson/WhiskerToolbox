@@ -49,6 +49,14 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     QOpenGLBuffer _highlight_vertex_buffer;
     QOpenGLVertexArrayObject _highlight_vertex_array_object;
 
+    // Visibility management for points
+    std::unordered_set<QuadTreePoint<int64_t> const *> hidden_points; // Set of hidden point pointers
+    
+    // Statistics tracking
+    size_t total_point_count = 0;
+    size_t hidden_point_count = 0;
+    size_t visible_vertex_count = 0; // Number of vertices currently in the vertex buffer
+
     PointDataVisualization(QString const & data_key, std::shared_ptr<PointData> const & point_data);
     ~PointDataVisualization();
 
@@ -142,6 +150,26 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      */
     std::optional<int64_t> handleDoubleClick(const QVector2D & world_pos, float tolerance);
 
+    //========== Visibility Management ==========
+    
+    /**
+     * @brief Hide selected points from view
+     * @return Number of points that were hidden
+     */
+    size_t hideSelectedPoints();
+    
+    /**
+     * @brief Show all hidden points in this visualization
+     * @return Number of points that were shown
+     */
+    size_t showAllPoints();
+    
+    /**
+     * @brief Get visibility statistics
+     * @return Pair of (total_points, hidden_points)
+     */
+    std::pair<size_t, size_t> getVisibilityStats() const;
+
 private:
     /**
      * @brief Render points for this PointData
@@ -157,6 +185,11 @@ private:
      * @brief Render hover point for this PointData
      */
     void renderHoverPoint(QOpenGLShaderProgram * shader_program, float point_size);
+
+    /**
+     * @brief Update vertex buffer to exclude hidden points
+     */
+    void updateVisibleVertexBuffer();
 };
 
 

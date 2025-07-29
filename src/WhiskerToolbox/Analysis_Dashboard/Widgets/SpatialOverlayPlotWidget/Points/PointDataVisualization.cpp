@@ -34,6 +34,11 @@ PointDataVisualization::PointDataVisualization(QString const & data_key,
         }
     }
 
+    // Initialize visibility statistics
+    total_point_count = vertex_data.size() / 2;
+    hidden_point_count = 0;
+    visible_vertex_count = vertex_data.size();
+
     initializeOpenGLResources();
 }
 
@@ -235,8 +240,8 @@ void PointDataVisualization::renderPoints(QOpenGLShaderProgram * shader_program,
     shader_program->setUniformValue("u_color", color);
     shader_program->setUniformValue("u_point_size", point_size);
 
-    // Draw points for this PointData
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(vertex_data.size() / 2));
+    // Draw only the visible points (those currently in the vertex buffer)
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(visible_vertex_count / 2));
 
     vertex_buffer.release();
     vertex_array_object.release();
@@ -398,6 +403,12 @@ QString PointDataVisualization::getTooltipText() const {
 
 bool PointDataVisualization::handleHover(const QVector2D & world_pos, float tolerance) {
     auto const * nearest_point = spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
+    
+    // Check if the nearest point is hidden
+    if (nearest_point && hidden_points.find(nearest_point) != hidden_points.end()) {
+        nearest_point = nullptr; // Treat hidden points as if they don't exist for hover
+    }
+    
     bool hover_changed = (current_hover_point != nearest_point);
     current_hover_point = nearest_point;
     return hover_changed;
@@ -405,8 +416,101 @@ bool PointDataVisualization::handleHover(const QVector2D & world_pos, float tole
 
 std::optional<int64_t> PointDataVisualization::handleDoubleClick(const QVector2D & world_pos, float tolerance) {
     auto const * nearest_point = spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
+    
+    // Check if the nearest point is hidden
+    if (nearest_point && hidden_points.find(nearest_point) != hidden_points.end()) {
+        return std::nullopt; // Hidden points can't be double-clicked
+    }
+    
     if (nearest_point) {
         return nearest_point->data;
     }
     return std::nullopt;
+}
+
+//========== Visibility Management ==========
+
+size_t PointDataVisualization::hideSelectedPoints() {
+    if (selected_points.empty()) {
+        qDebug() << "PointDataVisualization: No points selected for hiding";
+        return 0;
+    }
+    
+    size_t hidden_count = 0;
+    
+    // Add selected points to hidden set
+    for (const auto* point_ptr : selected_points) {
+        if (hidden_points.find(point_ptr) == hidden_points.end()) {
+            hidden_points.insert(point_ptr);
+            hidden_count++;
+        }
+    }
+    
+    // Clear selection since hidden points should not be selected
+    selected_points.clear();
+    
+    // Update statistics
+    hidden_point_count = hidden_points.size();
+    
+    // Update GPU buffers
+    updateSelectionVertexBuffer();
+    updateVisibleVertexBuffer();
+    
+    qDebug() << "PointDataVisualization: Hidden" << hidden_count << "points, total hidden:" << hidden_point_count;
+    
+    return hidden_count;
+}
+
+size_t PointDataVisualization::showAllPoints() {
+    size_t shown_count = hidden_points.size();
+    
+    // Clear all hidden points
+    hidden_points.clear();
+    hidden_point_count = 0;
+    
+    // Update GPU vertex buffer to show all points
+    updateVisibleVertexBuffer();
+    
+    qDebug() << "PointDataVisualization: Showed" << shown_count << "points, all points now visible";
+    
+    return shown_count;
+}
+
+std::pair<size_t, size_t> PointDataVisualization::getVisibilityStats() const {
+    return {total_point_count, hidden_point_count};
+}
+
+void PointDataVisualization::updateVisibleVertexBuffer() {
+    if (!spatial_index) {
+        return;
+    }
+    
+    // Create new vertex data excluding hidden points
+    std::vector<float> visible_vertex_data;
+    
+    // Get all points from the spatial index and filter out hidden ones
+    std::vector<QuadTreePoint<int64_t> const *> all_points;
+    BoundingBox full_bounds = spatial_index->getBounds();
+    spatial_index->queryPointers(full_bounds, all_points);
+    
+    total_point_count = all_points.size();
+    
+    for (const auto* point_ptr : all_points) {
+        // Skip hidden points
+        if (hidden_points.find(point_ptr) == hidden_points.end()) {
+            visible_vertex_data.push_back(point_ptr->x);
+            visible_vertex_data.push_back(point_ptr->y);
+        }
+    }
+    
+    // Update the visible vertex count
+    visible_vertex_count = visible_vertex_data.size();
+    
+    // Update the vertex buffer with only visible points
+    vertex_buffer.bind();
+    vertex_buffer.allocate(visible_vertex_data.data(), static_cast<int>(visible_vertex_data.size() * sizeof(float)));
+    vertex_buffer.release();
+    
+    qDebug() << "PointDataVisualization: Updated vertex buffer with" << (visible_vertex_count / 2) 
+             << "visible points out of" << total_point_count << "total points";
 }

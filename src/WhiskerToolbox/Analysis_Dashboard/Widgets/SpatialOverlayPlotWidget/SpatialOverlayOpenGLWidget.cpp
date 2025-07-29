@@ -1112,7 +1112,11 @@ void SpatialOverlayOpenGLWidget::hideSelectedItems() {
         total_hidden += viz->hideSelectedLines();
     }
     
-    // TODO: Hide selected points (no-op for now)
+    // Hide selected points
+    for (auto const & [key, viz]: _point_data_visualizations) {
+        total_hidden += viz->hideSelectedPoints();
+    }
+    
     // TODO: Hide selected masks (no-op for now)
     
     if (total_hidden > 0) {
@@ -1138,7 +1142,11 @@ void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
         total_shown += viz->showAllLines();
     }
     
-    // TODO: Show all hidden points (no-op for now)
+    // Show all hidden points
+    for (auto const & [key, viz]: _point_data_visualizations) {
+        total_shown += viz->showAllPoints();
+    }
+    
     // TODO: Show all hidden masks (no-op for now)
     
     if (total_shown > 0) {
