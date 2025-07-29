@@ -841,6 +841,21 @@ void LineDataVisualization::updateVisibilityMask() {
         }
     }
     
+    // Apply time range filtering if enabled
+    if (time_range_enabled && !line_identifiers.empty()) {
+        for (size_t i = 0; i < line_identifiers.size() && i < visibility_mask.size(); ++i) {
+            const LineIdentifier& line_id = line_identifiers[i];
+            int64_t line_time_frame = line_id.time_frame;
+            
+            // Hide lines outside the time range
+            if (line_time_frame < time_range_start || line_time_frame > time_range_end) {
+                visibility_mask[i] = 0; // Mark as hidden due to time range
+            }
+        }
+        
+        qDebug() << "Applied time range filtering: frames" << time_range_start << "to" << time_range_end;
+    }
+    
     auto cpu_time = std::chrono::high_resolution_clock::now();
     
     // Update GPU buffer
@@ -854,7 +869,8 @@ void LineDataVisualization::updateVisibilityMask() {
     auto gpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - cpu_time);
     auto total_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
     
-    qDebug() << "LineDataVisualization: Updated visibility mask for" << hidden_lines.size() << "hidden lines in" 
+    size_t total_filters = hidden_lines.size() + (time_range_enabled ? 1 : 0);
+    qDebug() << "LineDataVisualization: Updated visibility mask with" << total_filters << "filters in" 
              << total_duration.count() << "μs (CPU:" << cpu_duration.count() << "μs, GPU:" << gpu_duration.count() << "μs)";
 }
 
@@ -1068,4 +1084,33 @@ size_t LineDataVisualization::showAllLines() {
 
 std::pair<size_t, size_t> LineDataVisualization::getVisibilityStats() const {
     return {total_line_count, hidden_line_count};
+}
+
+void LineDataVisualization::setTimeRange(int start_frame, int end_frame) {
+    qDebug() << "LineDataVisualization::setTimeRange(" << start_frame << "," << end_frame << ")";
+    
+    time_range_start = start_frame;
+    time_range_end = end_frame;
+    
+    // Update visibility mask to apply time range filtering
+    updateVisibilityMask();
+    
+    qDebug() << "Time range updated and visibility mask refreshed";
+}
+
+void LineDataVisualization::setTimeRangeEnabled(bool enabled) {
+    qDebug() << "LineDataVisualization::setTimeRangeEnabled(" << enabled << ")";
+    
+    if (time_range_enabled != enabled) {
+        time_range_enabled = enabled;
+        
+        // Update visibility mask to apply or remove time range filtering
+        updateVisibilityMask();
+        
+        qDebug() << "Time range filtering" << (enabled ? "enabled" : "disabled");
+    }
+}
+
+std::tuple<int, int, bool> LineDataVisualization::getTimeRange() const {
+    return {time_range_start, time_range_end, time_range_enabled};
 }

@@ -309,6 +309,97 @@ border-radius: 4px;
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QGroupBox" name="time_range_group">
+        <property name="title">
+         <string>Time Range Filter</string>
+        </property>
+        <property name="maximumHeight">
+         <number>120</number>
+        </property>
+        <layout class="QVBoxLayout" name="time_range_layout">
+         <property name="spacing">
+          <number>6</number>
+         </property>
+         <property name="leftMargin">
+          <number>8</number>
+         </property>
+         <property name="topMargin">
+          <number>8</number>
+         </property>
+         <property name="rightMargin">
+          <number>8</number>
+         </property>
+         <property name="bottomMargin">
+          <number>8</number>
+         </property>
+         <item>
+          <layout class="QHBoxLayout" name="start_frame_layout">
+           <item>
+            <widget class="QLabel" name="start_frame_label">
+             <property name="text">
+              <string>Start Frame:</string>
+             </property>
+             <property name="minimumWidth">
+              <number>80</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="start_frame_spinbox">
+             <property name="minimum">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <number>999999</number>
+             </property>
+             <property name="value">
+              <number>0</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="end_frame_layout">
+           <item>
+            <widget class="QLabel" name="end_frame_label">
+             <property name="text">
+              <string>End Frame:</string>
+             </property>
+             <property name="minimumWidth">
+              <number>80</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="end_frame_spinbox">
+             <property name="minimum">
+              <number>0</number>
+             </property>
+             <property name="maximum">
+              <number>999999</number>
+             </property>
+             <property name="value">
+              <number>999999</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QPushButton" name="update_time_range_button">
+           <property name="text">
+            <string>Update Time Range</string>
+           </property>
+           <property name="maximumWidth">
+            <number>150</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

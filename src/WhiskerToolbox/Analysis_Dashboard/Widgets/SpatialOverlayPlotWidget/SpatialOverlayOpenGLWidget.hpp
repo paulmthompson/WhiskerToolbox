@@ -173,6 +173,8 @@ public:
 
     void makeSelection();
 
+    void applyTimeRangeFilter(int start_frame, int end_frame);
+
 signals:
     /**
      * @brief Emitted when user double-clicks on a point to jump to that frame

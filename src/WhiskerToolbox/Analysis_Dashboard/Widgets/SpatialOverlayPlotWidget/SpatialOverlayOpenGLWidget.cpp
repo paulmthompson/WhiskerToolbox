@@ -218,6 +218,15 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
     return total;
 }
 
+void SpatialOverlayOpenGLWidget::applyTimeRangeFilter(int start_frame, int end_frame) {
+    for (auto & [key, lineViz] : _line_data_visualizations) {
+
+        lineViz->setTimeRangeEnabled(true);
+        lineViz->setTimeRange(start_frame, end_frame);
+    }
+    requestThrottledUpdate();
+}
+
 void SpatialOverlayOpenGLWidget::calculateDataBounds() {
     if (_point_data_visualizations.empty() && _mask_data_visualizations.empty() && _line_data_visualizations.empty()) {
         _data_bounds_valid = false;

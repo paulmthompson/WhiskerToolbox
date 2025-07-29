@@ -100,6 +100,11 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     std::vector<uint32_t> visibility_mask; // CPU copy of visibility mask (1 = visible, 0 = hidden)
     std::unordered_set<LineIdentifier> hidden_lines; // Set of hidden line identifiers
     
+    // Time range filtering
+    int time_range_start = 0;
+    int time_range_end = 999999;
+    bool time_range_enabled = false;
+    
     // Statistics tracking
     size_t total_line_count = 0;
     size_t hidden_line_count = 0;
@@ -243,6 +248,27 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
      * @return Pair of (total_lines, hidden_lines)
      */
     std::pair<size_t, size_t> getVisibilityStats() const;
+
+    //========== Time Range Filtering ==========
+    
+    /**
+     * @brief Set time range filter for line visibility
+     * @param start_frame Start frame (inclusive)
+     * @param end_frame End frame (inclusive)
+     */
+    void setTimeRange(int start_frame, int end_frame);
+    
+    /**
+     * @brief Enable or disable time range filtering
+     * @param enabled Whether time range filtering should be active
+     */
+    void setTimeRangeEnabled(bool enabled);
+    
+    /**
+     * @brief Get current time range settings
+     * @return Tuple of (start_frame, end_frame, enabled)
+     */
+    std::tuple<int, int, bool> getTimeRange() const;
 
 private:
     void renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width);

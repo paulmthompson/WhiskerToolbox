@@ -102,11 +102,33 @@ private slots:
      */
     void updateSelectionStatus();
 
+    /**
+     * @brief Handle time range update button click
+     */
+    void onUpdateTimeRangeClicked();
+
+    /**
+     * @brief Handle start frame spinbox value changes
+     * @param value New start frame value
+     */
+    void onStartFrameChanged(int value);
+
+    /**
+     * @brief Handle end frame spinbox value changes
+     * @param value New end frame value
+     */
+    void onEndFrameChanged(int value);
+
 private:
     Ui::SpatialOverlayPlotPropertiesWidget * ui;
     SpatialOverlayPlotWidget * _spatial_plot_widget;
     std::shared_ptr<DataManager> _data_manager;
     QStringList _selected_features; // Track selected features from the feature table
+    
+    // Time range filtering
+    int _start_frame;
+    int _end_frame;
+    int _total_frame_count;
 
     /**
      * @brief Setup connections between UI elements and handlers
@@ -139,6 +161,16 @@ private:
      * @brief Update the instruction text based on current selection mode
      */
     void updateSelectionInstructions();
+
+    /**
+     * @brief Setup time range controls with current data
+     */
+    void setupTimeRangeControls();
+
+    /**
+     * @brief Update the time range filter based on current spinbox values
+     */
+    void updateTimeRangeFilter();
 };
 
 #endif// SPATIALOVERLAYPLOTPROPERTIESWIDGET_HPP

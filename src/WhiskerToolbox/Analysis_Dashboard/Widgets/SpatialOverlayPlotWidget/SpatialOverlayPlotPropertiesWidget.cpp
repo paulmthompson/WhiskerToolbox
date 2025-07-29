@@ -23,7 +23,10 @@
 SpatialOverlayPlotPropertiesWidget::SpatialOverlayPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
       ui(new Ui::SpatialOverlayPlotPropertiesWidget),
-      _spatial_plot_widget(nullptr) {
+      _spatial_plot_widget(nullptr),
+      _start_frame(0),
+      _end_frame(999999),
+      _total_frame_count(0) {
     ui->setupUi(this);
     
     setupFeatureTable();
@@ -41,6 +44,9 @@ void SpatialOverlayPlotPropertiesWidget::setDataManager(std::shared_ptr<DataMana
         ui->feature_table_widget->setDataManager(_data_manager);
         ui->feature_table_widget->populateTable();
     }
+    
+    // Setup time range controls when data manager is available
+    setupTimeRangeControls();
 }
 
 void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) {
@@ -224,14 +230,25 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
     connect(ui->tooltips_checkbox, &QCheckBox::toggled,
             this, &SpatialOverlayPlotPropertiesWidget::onTooltipsEnabledChanged);
 
-    // Selection settings
+        // Selection settings
     connect(ui->selection_mode_combo, &QComboBox::currentIndexChanged,
             this, &SpatialOverlayPlotPropertiesWidget::onSelectionModeChanged);
 
     connect(ui->clear_selection_button, &QPushButton::clicked,
             this, &SpatialOverlayPlotPropertiesWidget::onClearSelectionClicked);
     
+    // Time range filtering
+    connect(ui->start_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &SpatialOverlayPlotPropertiesWidget::onStartFrameChanged);
+    
+    connect(ui->end_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &SpatialOverlayPlotPropertiesWidget::onEndFrameChanged);
+    
+    connect(ui->update_time_range_button, &QPushButton::clicked,
+            this, &SpatialOverlayPlotPropertiesWidget::onUpdateTimeRangeClicked);
 }
+    
+
 
 
 
@@ -451,4 +468,75 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Updated selection status - Dataset:" << activeDataset 
              << "Selected:" << pointCount << "points," << maskCount << "masks," << lineCount << "lines";
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Set label text to:" << selectionText;
+}
+
+void SpatialOverlayPlotPropertiesWidget::onUpdateTimeRangeClicked() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget::onUpdateTimeRangeClicked() called";
+    
+    _start_frame = ui->start_frame_spinbox->value();
+    _end_frame = ui->end_frame_spinbox->value();
+    
+    qDebug() << "Time range updated: start=" << _start_frame << ", end=" << _end_frame;
+    
+    updateTimeRangeFilter();
+}
+
+void SpatialOverlayPlotPropertiesWidget::onStartFrameChanged(int value) {
+    // Ensure start frame doesn't exceed end frame
+    if (value > ui->end_frame_spinbox->value()) {
+        ui->end_frame_spinbox->setValue(value);
+    }
+}
+
+void SpatialOverlayPlotPropertiesWidget::onEndFrameChanged(int value) {
+    // Ensure end frame isn't less than start frame
+    if (value < ui->start_frame_spinbox->value()) {
+        ui->start_frame_spinbox->setValue(value);
+    }
+}
+
+void SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() called";
+    
+    // Get total frame count from data manager
+    _total_frame_count = 0;
+    if (_data_manager) {
+        try {
+            auto timeFrame = _data_manager->getTime("time");
+            if (timeFrame) {
+                _total_frame_count = static_cast<int>(timeFrame->getTotalFrameCount());
+                qDebug() << "Total frame count from data manager:" << _total_frame_count;
+            }
+        } catch (const std::exception& e) {
+            qDebug() << "Error getting time frame:" << e.what();
+        }
+    }
+    
+    // Update spinbox ranges
+    if (_total_frame_count > 0) {
+        ui->start_frame_spinbox->setMaximum(_total_frame_count - 1);
+        ui->end_frame_spinbox->setMaximum(_total_frame_count - 1);
+        ui->end_frame_spinbox->setValue(_total_frame_count - 1);
+        _end_frame = _total_frame_count - 1;
+    }
+    
+    qDebug() << "Time range controls setup complete - max frame:" << (_total_frame_count - 1);
+}
+
+void SpatialOverlayPlotPropertiesWidget::updateTimeRangeFilter() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget::updateTimeRangeFilter() called with range:" 
+             << _start_frame << "to" << _end_frame;
+    
+    if (!_spatial_plot_widget) {
+        qDebug() << "No spatial plot widget available for time range filtering";
+        return;
+    }
+    
+    // Apply time range filter to the OpenGL widget
+    auto openglWidget = _spatial_plot_widget->getOpenGLWidget();
+
+    if (openglWidget) {
+        qDebug() << "Applying time range filter to OpenGL widget";
+        openglWidget->applyTimeRangeFilter(_start_frame, _end_frame);
+    }
 }
