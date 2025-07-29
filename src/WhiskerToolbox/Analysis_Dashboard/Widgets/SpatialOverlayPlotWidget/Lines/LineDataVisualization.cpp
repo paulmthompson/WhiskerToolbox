@@ -868,6 +868,11 @@ std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, intersection_count_buffer.bufferId());
     intersection_count_buffer.release();
 
+    // Bind visibility mask buffer for compute shader
+    visibility_mask_buffer.bind();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, visibility_mask_buffer.bufferId());
+    visibility_mask_buffer.release();
+
     // Dispatch compute shader
     uint32_t num_segments = static_cast<uint32_t>(segments_data.size() / 5); // 5 floats per segment (x1,y1,x2,y2,line_id)
     uint32_t num_work_groups = (num_segments + 63) / 64; // 64 is the local_size_x in the compute shader

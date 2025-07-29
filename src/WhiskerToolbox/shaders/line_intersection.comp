@@ -27,6 +27,11 @@ layout(std430, binding = 2) buffer IntersectionCountBuffer {
     uint intersection_count;
 };
 
+// Visibility mask buffer: 1 = visible, 0 = hidden
+layout(std430, binding = 3) readonly buffer VisibilityMaskBuffer {
+    uint visibility_mask[];
+};
+
 // Transform world coordinates to NDC space
 vec2 worldToNDC(vec2 world_pos) {
     vec4 clip_pos = u_mvp_matrix * vec4(world_pos, 0.0, 1.0);
@@ -97,6 +102,14 @@ void main() {
     vec2 segment_start = vec2(line_segments[base_index], line_segments[base_index + 1u]);
     vec2 segment_end = vec2(line_segments[base_index + 2u], line_segments[base_index + 3u]);
     uint line_id = floatBitsToUint(line_segments[base_index + 4u]);
+    
+    // Check if this line is visible (line_id is 1-based, visibility_mask is 0-based)
+    if (line_id > 0u && line_id <= uint(visibility_mask.length())) {
+        uint visibility_index = line_id - 1u;
+        if (visibility_mask[visibility_index] == 0u) {
+            return; // Line is hidden, skip intersection test
+        }
+    }
     
     // Transform line segment to NDC space
     vec2 ndc_start = worldToNDC(segment_start);
