@@ -270,12 +270,12 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
 
     // Calculate bounds from line data
     for (auto const & [key, viz]: _line_data_visualizations) {
-        if (!viz->visible || viz->vertex_data.empty()) continue;
+        if (!viz->visible || viz->m_vertex_data.empty()) continue;
 
         // Iterate through vertex data (x, y pairs)
-        for (size_t i = 0; i < viz->vertex_data.size(); i += 2) {
-            float x = viz->vertex_data[i];
-            float y = viz->vertex_data[i + 1];
+        for (size_t i = 0; i < viz->m_vertex_data.size(); i += 2) {
+            float x = viz->m_vertex_data[i];
+            float y = viz->m_vertex_data[i + 1];
 
             min_x = std::min(min_x, x);
             max_x = std::max(max_x, x);
@@ -331,7 +331,7 @@ void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::sh
         color_index++;
 
         qDebug() << "SpatialOverlayOpenGLWidget: Created line visualization for" << key
-                 << "with" << viz->line_identifiers.size() << "lines";
+                 << "with" << viz->m_line_identifiers.size() << "lines";
 
         _line_data_visualizations[key] = std::move(viz);
     }

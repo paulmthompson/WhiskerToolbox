@@ -40,11 +40,9 @@ LineDataVisualization::~LineDataVisualization() {
 }
 
 void LineDataVisualization::buildVertexData(LineData const * line_data) {
-    vertex_data.clear();
-    line_offsets.clear();
-    line_lengths.clear();
-    line_identifiers.clear();
-    line_vertex_ranges.clear();// Clear vertex ranges too
+    m_vertex_data.clear();
+    m_line_identifiers.clear();
+    m_line_vertex_ranges.clear();// Clear vertex ranges too
 
     if (!line_data) {
         return;
@@ -78,7 +76,7 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
                 continue;
             }
 
-            line_identifiers.push_back({time_frame.getValue(), line_id});
+            m_line_identifiers.push_back({time_frame.getValue(), line_id});
 
             // Record the starting vertex index for this line
             uint32_t line_start_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
@@ -104,7 +102,7 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
             uint32_t line_vertex_count = line_end_vertex - line_start_vertex;
 
             // Store the range for efficient hover rendering
-            line_vertex_ranges.push_back({line_start_vertex, line_vertex_count});
+            m_line_vertex_ranges.push_back({line_start_vertex, line_vertex_count});
 
             //qDebug() << "Line" << line_index << "range: start=" << line_start_vertex << "count=" << line_vertex_count;
 
@@ -113,61 +111,42 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
     }
 
     // Store the processed data
-    vertex_data = std::move(segment_vertices);
-    line_id_data = std::move(segment_line_ids);
+    m_vertex_data = std::move(segment_vertices);
+    m_line_id_data = std::move(segment_line_ids);
 
-    qDebug() << "LineDataVisualization: Built" << line_identifiers.size()
-             << "lines with" << vertex_data.size() / 4 << "segments ("
-             << vertex_data.size() / 2 << "vertices)";
+    qDebug() << "LineDataVisualization: Built" << m_line_identifiers.size()
+             << "lines with" << m_vertex_data.size() / 4 << "segments ("
+             << m_vertex_data.size() / 2 << "vertices)";
 
     // Build fast lookup map from LineIdentifier to index
     line_id_to_index.clear();
-    for (size_t i = 0; i < line_identifiers.size(); ++i) {
-        line_id_to_index[line_identifiers[i]] = i;
+    for (size_t i = 0; i < m_line_identifiers.size(); ++i) {
+        line_id_to_index[m_line_identifiers[i]] = i;
     }
     
     // Update statistics
-    total_line_count = line_identifiers.size();
+    total_line_count = m_line_identifiers.size();
     hidden_line_count = hidden_lines.size(); // Preserve hidden count across rebuilds
-
-    // Debug: print coordinate range
-    if (!vertex_data.empty()) {
-        float min_x = vertex_data[0], max_x = vertex_data[0];
-        float min_y = vertex_data[1], max_y = vertex_data[1];
-        for (size_t i = 0; i < vertex_data.size(); i += 2) {
-            min_x = std::min(min_x, vertex_data[i]);
-            max_x = std::max(max_x, vertex_data[i]);
-            min_y = std::min(min_y, vertex_data[i + 1]);
-            max_y = std::max(max_y, vertex_data[i + 1]);
-        }
-        qDebug() << "Vertex coordinate range: X[" << min_x << "," << max_x << "] Y[" << min_y << "," << max_y << "]";
-
-        // Check if coordinates are in expected range for OpenGL
-        if (min_x < -10.0f || max_x > 10.0f || min_y < -10.0f || max_y > 10.0f) {
-            qDebug() << "WARNING: Coordinates appear to be outside typical OpenGL range [-1,1]";
-            qDebug() << "You may need coordinate transformation/normalization for proper display";
-        }
-    }
 }
 
 void LineDataVisualization::initializeOpenGLResources() {
     // Create vertex buffer
-    vertex_buffer.create();
-    line_id_buffer.create();
+    m_vertex_buffer.create();
+    m_line_id_buffer.create();
 
     vertex_array_object.create();
     vertex_array_object.bind();
 
-    vertex_buffer.bind();
+    m_vertex_buffer.bind();
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    line_id_buffer.bind();
+    m_line_id_buffer.bind();
     glEnableVertexAttribArray(1);
     glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, sizeof(uint32_t), nullptr);
 
-    line_id_buffer.release();
-    vertex_buffer.release();
+    m_line_id_buffer.release();
+    m_vertex_buffer.release();
     vertex_array_object.release();
 
     QOpenGLFramebufferObjectFormat format;
@@ -298,12 +277,12 @@ void LineDataVisualization::initializeOpenGLResources() {
 }
 
 void LineDataVisualization::cleanupOpenGLResources() {
-    if (vertex_buffer.isCreated()) {
-        vertex_buffer.destroy();
+    if (m_vertex_buffer.isCreated()) {
+        m_vertex_buffer.destroy();
     }
 
-    if (line_id_buffer.isCreated()) {
-        line_id_buffer.destroy();
+    if (m_line_id_buffer.isCreated()) {
+        m_line_id_buffer.destroy();
     }
 
     if (vertex_array_object.isCreated()) {
@@ -345,22 +324,22 @@ void LineDataVisualization::cleanupOpenGLResources() {
 }
 
 void LineDataVisualization::updateOpenGLBuffers() {
-    vertex_buffer.bind();
-    vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
-    vertex_buffer.release();
+    m_vertex_buffer.bind();
+    m_vertex_buffer.allocate(m_vertex_data.data(), static_cast<int>(m_vertex_data.size() * sizeof(float)));
+    m_vertex_buffer.release();
 
-    line_id_buffer.bind();
-    line_id_buffer.allocate(line_id_data.data(), static_cast<int>(line_id_data.size() * sizeof(uint32_t)));
-    line_id_buffer.release();
+    m_line_id_buffer.bind();
+    m_line_id_buffer.allocate(m_line_id_data.data(), static_cast<int>(m_line_id_data.size() * sizeof(uint32_t)));
+    m_line_id_buffer.release();
 
     // Initialize selection mask (all unselected initially)
-    selection_mask.assign(line_identifiers.size(), 0);
+    selection_mask.assign(m_line_identifiers.size(), 0);
     selection_mask_buffer.bind();
     selection_mask_buffer.allocate(selection_mask.data(), static_cast<int>(selection_mask.size() * sizeof(uint32_t)));
     selection_mask_buffer.release();
 
     // Initialize visibility mask (all visible initially, except those in hidden_lines set)
-    visibility_mask.assign(line_identifiers.size(), 1); // Default to visible
+    visibility_mask.assign(m_line_identifiers.size(), 1); // Default to visible
     updateVisibilityMask(); // Apply any existing hidden lines
 
     // Update line segments buffer for compute shader
@@ -368,7 +347,7 @@ void LineDataVisualization::updateOpenGLBuffers() {
 }
 
 void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_width) {
-    if (!visible || vertex_data.empty() || !line_shader_program) {
+    if (!visible || m_vertex_data.empty() || !line_shader_program) {
         return;
     }
 
@@ -405,7 +384,7 @@ void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_wid
 }
 
 void LineDataVisualization::renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width) {
-    if (!visible || vertex_data.empty() || !shader_program || !scene_framebuffer) {
+    if (!visible || m_vertex_data.empty() || !shader_program || !scene_framebuffer) {
         qDebug() << "renderLinesToSceneBuffer: Skipping render - missing resources";
         return;
     }
@@ -444,8 +423,8 @@ void LineDataVisualization::renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matr
     visibility_mask_buffer.release();
 
     vertex_array_object.bind();
-    if (!vertex_data.empty()) {
-        uint32_t total_vertices = static_cast<uint32_t>(vertex_data.size() / 2);
+    if (!m_vertex_data.empty()) {
+        uint32_t total_vertices = static_cast<uint32_t>(m_vertex_data.size() / 2);
         glDrawArrays(GL_LINES, 0, total_vertices);
     }
     vertex_array_object.release();
@@ -477,7 +456,7 @@ void LineDataVisualization::blitSceneBuffer() {
 }
 
 void LineDataVisualization::renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width) {
-    if (!has_hover_line || cached_hover_line_index >= line_vertex_ranges.size()) {
+    if (!has_hover_line || cached_hover_line_index >= m_line_vertex_ranges.size()) {
         return;
     }
 
@@ -512,7 +491,7 @@ void LineDataVisualization::renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpen
     visibility_mask_buffer.release();
 
     // Get the vertex range for the hovered line
-    LineVertexRange const & range = line_vertex_ranges[cached_hover_line_index];
+    LineVertexRange const & range = m_line_vertex_ranges[cached_hover_line_index];
 
     // Render just the hovered line
     vertex_array_object.bind();
@@ -536,12 +515,12 @@ void LineDataVisualization::setHoverLine(std::optional<LineIdentifier> line_id) 
         has_hover_line = true;
 
         // Cache the line index to avoid expensive linear search during rendering
-        auto it = std::find_if(line_identifiers.begin(), line_identifiers.end(),
+        auto it = std::find_if(m_line_identifiers.begin(), m_line_identifiers.end(),
                                [this](LineIdentifier const & id) {
                                    return id == current_hover_line;
                                });
-        if (it != line_identifiers.end()) {
-            cached_hover_line_index = static_cast<uint32_t>(std::distance(line_identifiers.begin(), it));
+        if (it != m_line_identifiers.end()) {
+            cached_hover_line_index = static_cast<uint32_t>(std::distance(m_line_identifiers.begin(), it));
         } else {
             has_hover_line = false;// Invalid line ID
         }
@@ -593,8 +572,6 @@ BoundingBox LineDataVisualization::calculateBoundsForLineData(LineData const * l
 void LineDataVisualization::clearSelection() {
     qDebug() << "LineDataVisualization::clearSelection: Clearing selection";
     selected_lines.clear();
-    
-    // Clear selection mask
     updateSelectionMask();
     
     selection_vertex_buffer.bind();
@@ -629,10 +606,9 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
              << selection_region->getStartPointScreen().x << "," << selection_region->getStartPointScreen().y
              << "to" << selection_region->getEndPointScreen().x << "," << selection_region->getEndPointScreen().y;
 
-    // Construct MVP matrix from context
     QMatrix4x4 mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
 
-    // Use the new compute shader method to find all intersecting lines
+    const auto line_width_tolerance = 5.0f;
     auto intersecting_lines = getAllLinesIntersectingLine(
         static_cast<int>(selection_region->getStartPointScreen().x),
         static_cast<int>(selection_region->getStartPointScreen().y),
@@ -641,7 +617,7 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
         context.viewport_rect.width(),
         context.viewport_rect.height(),
         mvp_matrix,
-        5.0f // Line width tolerance for selection
+        line_width_tolerance
     );
 
     qDebug() << "LineDataVisualization::applySelection: Found" << intersecting_lines.size() << "intersecting lines";
@@ -767,18 +743,18 @@ void LineDataVisualization::updateLineSegmentsBuffer() {
     // Create line segments data for compute shader
     // Each segment: x1, y1, x2, y2, line_id (4 floats + 1 uint, but we'll pack line_id as float for simplicity)
     segments_data.clear();
-    segments_data.reserve(vertex_data.size() / 2 * 5); // vertex_data has x,y pairs, we need x1,y1,x2,y2,id
+    segments_data.reserve(m_vertex_data.size() / 2 * 5); // m_vertex_data has x,y pairs, we need x1,y1,x2,y2,id
 
-    for (size_t i = 0; i < vertex_data.size(); i += 4) { // Each line segment is 4 floats (x1,y1,x2,y2)
-        if (i + 3 < vertex_data.size()) {
+    for (size_t i = 0; i < m_vertex_data.size(); i += 4) { // Each line segment is 4 floats (x1,y1,x2,y2)
+        if (i + 3 < m_vertex_data.size()) {
             // Extract segment coordinates
-            segments_data.push_back(vertex_data[i]);     // x1
-            segments_data.push_back(vertex_data[i + 1]); // y1
-            segments_data.push_back(vertex_data[i + 2]); // x2
-            segments_data.push_back(vertex_data[i + 3]); // y2
+            segments_data.push_back(m_vertex_data[i]);     // x1
+            segments_data.push_back(m_vertex_data[i + 1]); // y1
+            segments_data.push_back(m_vertex_data[i + 2]); // x2
+            segments_data.push_back(m_vertex_data[i + 3]); // y2
             
-            // Get line ID from line_id_data (same index as vertex data)
-            uint32_t line_id = (i/2 < line_id_data.size()) ? line_id_data[i/2] : 0;
+            // Get line ID from m_line_id_data (same index as vertex data)
+            uint32_t line_id = (i/2 < m_line_id_data.size()) ? m_line_id_data[i/2] : 0;
             segments_data.push_back(*reinterpret_cast<float*>(&line_id)); // Pack uint as float bits
         }
     }
@@ -842,9 +818,9 @@ void LineDataVisualization::updateVisibilityMask() {
     }
     
     // Apply time range filtering if enabled
-    if (time_range_enabled && !line_identifiers.empty()) {
-        for (size_t i = 0; i < line_identifiers.size() && i < visibility_mask.size(); ++i) {
-            const LineIdentifier& line_id = line_identifiers[i];
+    if (time_range_enabled && !m_line_identifiers.empty()) {
+        for (size_t i = 0; i < m_line_identifiers.size() && i < visibility_mask.size(); ++i) {
+            const LineIdentifier& line_id = m_line_identifiers[i];
             int64_t line_time_frame = line_id.time_frame;
             
             // Hide lines outside the time range
@@ -879,7 +855,7 @@ std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
         int widget_width, int widget_height,
         const QMatrix4x4& mvp_matrix, float line_width) {
     
-    if (!line_intersection_compute_shader || vertex_data.empty()) {
+    if (!line_intersection_compute_shader || m_vertex_data.empty()) {
         qDebug() << "LineDataVisualization: Compute shader not available or no vertex data";
         return {};
     }
@@ -974,9 +950,9 @@ std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
     if (results_data) {
         for (uint32_t i = 0; i < result_count && i < 100000; ++i) {
             uint32_t line_id = results_data[i];
-            if (line_id > 0 && line_id <= line_identifiers.size() && unique_line_ids.find(line_id) == unique_line_ids.end()) {
+            if (line_id > 0 && line_id <= m_line_identifiers.size() && unique_line_ids.find(line_id) == unique_line_ids.end()) {
                 unique_line_ids.insert(line_id);
-                intersecting_lines.push_back(line_identifiers[line_id - 1]); // Convert from 1-based to 0-based indexing
+                intersecting_lines.push_back(m_line_identifiers[line_id - 1]); // Convert from 1-based to 0-based indexing
             }
         }
     }
