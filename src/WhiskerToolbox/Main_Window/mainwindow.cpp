@@ -513,7 +513,18 @@ void MainWindow::openDataManager() {
                 this);
 
         dm_widget->setObjectName(key);
-        registerDockWidget(key, dm_widget.get(), ads::RightDockWidgetArea);
+        //registerDockWidget(key, dm_widget.get(), ads::RightDockWidgetArea);
+        auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
+
+        // Set size constraints before adding the widget to the dock
+        dm_widget->setMinimumHeight(400);
+        dm_widget->setMaximumHeight(600);
+
+        dock_widget->setWidget(dm_widget.get(),
+                             ads::CDockWidget::ForceNoScrollArea);
+        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromDockWidget);
+        _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
+
         _widgets[key] = std::move(dm_widget);
     }
 
@@ -575,7 +586,18 @@ void MainWindow::openDataTransforms() {
                 this);
 
         dt_widget->setObjectName(key);
-        registerDockWidget(key, dt_widget.get(), ads::RightDockWidgetArea);
+        //registerDockWidget(key, dt_widget.get(), ads::RightDockWidgetArea);
+        auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
+
+        // Set size constraints before adding the widget to the dock
+        dt_widget->setMinimumHeight(400);
+        dt_widget->setMaximumHeight(600);
+
+        dock_widget->setWidget(dt_widget.get(),
+                             ads::CDockWidget::ForceNoScrollArea);
+        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromDockWidget);
+        _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
+
         _widgets[key] = std::move(dt_widget);
     }
 

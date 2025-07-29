@@ -67,10 +67,10 @@ Media_Widget::Media_Widget(QWidget * parent)
         Media_Widget::_addFeatureToDisplay(feature, false);
     });
 
-    // Ensure the feature table is properly sized on startup with increased right margin
+    // Ensure the feature table is properly sized on startup with smaller right margin
     QTimer::singleShot(0, this, [this]() {
         int scrollAreaWidth = ui->scrollArea->width();
-        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 29); // Increased from 20 to 29 for bigger right margin
+        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 20); // Decreased from 29 to 20 for smaller right margin
     });
 }
 
@@ -251,9 +251,9 @@ void Media_Widget::_updateCanvasSize() {
         ui->graphicsView->setSceneRect(0, 0, width, height);
         ui->graphicsView->fitInView(0, 0, width, height, Qt::IgnoreAspectRatio);
 
-        // Update the feature table size to match the scroll area width with increased right margin
+        // Update the feature table size to match the scroll area width with smaller right margin
         int scrollAreaWidth = ui->scrollArea->width();
-        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 29); // Increased from 20 to 29 for bigger right margin
+        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 20); // Decreased from 29 to 20 for smaller right margin
     }
 }
 
