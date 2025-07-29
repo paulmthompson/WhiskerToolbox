@@ -23,6 +23,9 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
       ui(new Ui::Feature_Table_Widget) {
     ui->setupUi(this);
 
+    // Disable horizontal scrollbar
+    ui->available_features_table->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
     // Set font sizes - increase table content font for better readability
     QFont headerFont = ui->available_features_table->horizontalHeader()->font();
     headerFont.setPointSize(8);// Increased from 6 to 8
@@ -35,10 +38,12 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
 
     // Set uniform row spacing
     ui->available_features_table->verticalHeader()->setDefaultSectionSize(25);
-    ui->available_features_table->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->available_features_table->verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     // Set equal column widths
     ui->available_features_table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+
 
     // Apply dark mode compatible styling to maintain blue selection highlighting
     // This prevents checkboxes from interfering with row selection colors
@@ -255,6 +260,16 @@ void Feature_Table_Widget::populateTable() {
     if (featureColumnIndex != -1) {
         ui->available_features_table->sortItems(featureColumnIndex, Qt::AscendingOrder);
     }
+
+    // Adjust table height to show all rows
+    int rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
+    int headerHeight = ui->available_features_table->horizontalHeader()->height();
+    int totalHeight = (rowHeight * ui->available_features_table->rowCount()) + headerHeight;
+    ui->available_features_table->setMinimumHeight(totalHeight);
+    ui->available_features_table->setMaximumHeight(totalHeight);
+
+    // Force layout update
+    updateGeometry();
 }
 
 void Feature_Table_Widget::_refreshFeatures() {
@@ -282,4 +297,18 @@ void Feature_Table_Widget::_highlightFeature(int row, int column) {
             emit featureSelected(_highlighted_feature);
         }
     }
+}
+
+void Feature_Table_Widget::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+
+    // Make the table widget take up the full width of the widget minus margins
+    ui->available_features_table->setFixedWidth(this->width());
+
+    // Recalculate height based on content
+    int rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
+    int headerHeight = ui->available_features_table->horizontalHeader()->height();
+    int totalHeight = (rowHeight * ui->available_features_table->rowCount()) + headerHeight;
+    ui->available_features_table->setMinimumHeight(totalHeight);
+    ui->available_features_table->setMaximumHeight(totalHeight);
 }

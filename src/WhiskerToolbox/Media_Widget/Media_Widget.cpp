@@ -1,6 +1,6 @@
 #include "Media_Widget.hpp"
-
 #include "ui_Media_Widget.h"
+#include <QTimer>
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -65,6 +65,12 @@ Media_Widget::Media_Widget(QWidget * parent)
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::removeFeature, this, [this](QString const & feature) {
         Media_Widget::_addFeatureToDisplay(feature, false);
+    });
+
+    // Ensure the feature table is properly sized on startup with increased right margin
+    QTimer::singleShot(0, this, [this]() {
+        int scrollAreaWidth = ui->scrollArea->width();
+        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 29); // Increased from 20 to 29 for bigger right margin
     });
 }
 
@@ -244,6 +250,10 @@ void Media_Widget::_updateCanvasSize() {
         // Ensure the view fits the scene properly
         ui->graphicsView->setSceneRect(0, 0, width, height);
         ui->graphicsView->fitInView(0, 0, width, height, Qt::IgnoreAspectRatio);
+
+        // Update the feature table size to match the scroll area width with increased right margin
+        int scrollAreaWidth = ui->scrollArea->width();
+        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 29); // Increased from 20 to 29 for bigger right margin
     }
 }
 

@@ -629,7 +629,14 @@ void MainWindow::openTestWidget() {
         auto test_widget = std::make_unique<Test_Widget>(this);
 
         test_widget->setObjectName(key);
-        registerDockWidget(key, test_widget.get(), ads::RightDockWidgetArea);
+
+        //registerDockWidget(key, test_widget.get(), ads::RightDockWidgetArea);
+        auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
+        dock_widget->setWidget(test_widget.get(),
+                               ads::CDockWidget::ForceNoScrollArea);
+        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
+        _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
+
         _widgets[key] = std::move(test_widget);
     }
 
