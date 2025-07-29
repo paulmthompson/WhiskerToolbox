@@ -366,6 +366,13 @@ void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_wid
         m_viewIsDirty = true;// Data change necessitates a view update
     }
 
+    // Check if MVP matrix has changed (for panning/zooming)
+    if (mvp_matrix != m_cachedMvpMatrix) {
+        qDebug() << "LineDataVisualization: MVP matrix changed, marking view as dirty";
+        m_viewIsDirty = true;
+        m_cachedMvpMatrix = mvp_matrix;
+    }
+
     if (m_viewIsDirty) {
         renderLinesToSceneBuffer(mvp_matrix, line_shader_program, line_width);
         m_viewIsDirty = false;

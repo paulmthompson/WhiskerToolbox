@@ -97,6 +97,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
 
     bool m_viewIsDirty = true;
     bool m_dataIsDirty = true;
+    QMatrix4x4 m_cachedMvpMatrix; // Cached MVP matrix to detect view changes
 
     LineDataVisualization(QString const & data_key, std::shared_ptr<LineData> const & line_data);
     ~LineDataVisualization();
