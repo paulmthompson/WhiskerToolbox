@@ -30,13 +30,13 @@ class PointSelectionHandler;
  * @brief Visualization data for a single PointData object
  */
 struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
-    std::unique_ptr<QuadTree<int64_t>> spatial_index;
-    std::vector<float> vertex_data;
-    QOpenGLBuffer vertex_buffer;
-    QOpenGLVertexArrayObject vertex_array_object;
-    QString key;
-    QVector4D color;
-    bool visible = true;
+    std::unique_ptr<QuadTree<int64_t>> m_spatial_index;
+    std::vector<float> m_vertex_data;
+    QOpenGLBuffer m_vertex_buffer;
+    QOpenGLVertexArrayObject m_vertex_array_object;
+    QString m_key;
+    QVector4D m_color;
+    bool m_visible = true;
 
     // Selection state for this PointData
     std::unordered_set<QuadTreePoint<int64_t> const *> selected_points;

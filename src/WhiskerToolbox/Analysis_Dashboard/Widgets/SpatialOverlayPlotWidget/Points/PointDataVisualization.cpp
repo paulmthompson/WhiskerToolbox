@@ -12,32 +12,32 @@
 
 PointDataVisualization::PointDataVisualization(QString const & data_key,
                                                std::shared_ptr<PointData> const & point_data)
-    : key(data_key),
-      vertex_buffer(QOpenGLBuffer::VertexBuffer),
+    : m_key(data_key),
+      m_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       _highlight_vertex_buffer(QOpenGLBuffer::VertexBuffer),
-      color(1.0f, 0.0f, 0.0f, 1.0f) {
+      m_color(1.0f, 0.0f, 0.0f, 1.0f) {
     // Calculate bounds for QuadTree initialization
     BoundingBox bounds = calculateBoundsForPointData(point_data.get());
 
-    spatial_index = std::make_unique<QuadTree<int64_t>>(bounds);
-    vertex_data.reserve(point_data->GetAllPointsAsRange().size() * 2);// Reserve space for x and y coordinates
+    m_spatial_index = std::make_unique<QuadTree<int64_t>>(bounds);
+    m_vertex_data.reserve(point_data->GetAllPointsAsRange().size() * 2);// Reserve space for x and y coordinates
 
     for (auto const & time_points_pair: point_data->GetAllPointsAsRange()) {
         for (auto const & point: time_points_pair.points) {
             // Store original coordinates in QuadTree (preserve data structure)
-            spatial_index->insert(point.x, point.y, time_points_pair.time.getValue());
+            m_spatial_index->insert(point.x, point.y, time_points_pair.time.getValue());
 
             // Store original coordinates in vertex data for OpenGL rendering
-            vertex_data.push_back(point.x);
-            vertex_data.push_back(point.y);
+            m_vertex_data.push_back(point.x);
+            m_vertex_data.push_back(point.y);
         }
     }
 
     // Initialize visibility statistics
-    total_point_count = vertex_data.size() / 2;
+    total_point_count = m_vertex_data.size() / 2;
     hidden_point_count = 0;
-    visible_vertex_count = vertex_data.size();
+    visible_vertex_count = m_vertex_data.size();
 
     initializeOpenGLResources();
 }
@@ -63,19 +63,19 @@ void PointDataVisualization::initializeOpenGLResources() {
     }
 
 
-    vertex_array_object.create();
-    vertex_array_object.bind();
+    m_vertex_array_object.create();
+    m_vertex_array_object.bind();
 
-    vertex_buffer.create();
-    vertex_buffer.bind();
-    vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-    vertex_buffer.allocate(vertex_data.data(), static_cast<int>(vertex_data.size() * sizeof(float)));
+    m_vertex_buffer.create();
+    m_vertex_buffer.bind();
+    m_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    m_vertex_buffer.allocate(m_vertex_data.data(), static_cast<int>(m_vertex_data.size() * sizeof(float)));
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
-    vertex_buffer.release();
-    vertex_array_object.release();
+    m_vertex_buffer.release();
+    m_vertex_array_object.release();
 
     // Initialize selection vertex buffer
     selection_vertex_array_object.create();
@@ -112,11 +112,11 @@ void PointDataVisualization::initializeOpenGLResources() {
 }
 
 void PointDataVisualization::cleanupOpenGLResources() {
-    if (vertex_buffer.isCreated()) {
-        vertex_buffer.destroy();
+    if (m_vertex_buffer.isCreated()) {
+        m_vertex_buffer.destroy();
     }
-    if (vertex_array_object.isCreated()) {
-        vertex_array_object.destroy();
+    if (m_vertex_array_object.isCreated()) {
+        m_vertex_array_object.destroy();
     }
     if (selection_vertex_buffer.isCreated()) {
         selection_vertex_buffer.destroy();
@@ -231,20 +231,20 @@ void PointDataVisualization::render(QMatrix4x4 const & mvp_matrix, float point_s
 }
 
 void PointDataVisualization::renderPoints(QOpenGLShaderProgram * shader_program, float point_size) {
-    if (!visible || vertex_data.empty()) return;
+    if (!m_visible || m_vertex_data.empty()) return;
 
-    vertex_array_object.bind();
-    vertex_buffer.bind();
+    m_vertex_array_object.bind();
+    m_vertex_buffer.bind();
 
     // Set color for this PointData
-    shader_program->setUniformValue("u_color", color);
+    shader_program->setUniformValue("u_color", m_color);
     shader_program->setUniformValue("u_point_size", point_size);
 
     // Draw only the visible points (those currently in the vertex buffer)
     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(visible_vertex_count / 2));
 
-    vertex_buffer.release();
-    vertex_array_object.release();
+    m_vertex_buffer.release();
+    m_vertex_array_object.release();
 }
 
 void PointDataVisualization::renderSelectedPoints(QOpenGLShaderProgram * shader_program, float point_size) {
@@ -350,12 +350,12 @@ void PointDataVisualization::applySelection(PolygonSelectionHandler const & sele
     QString last_modified_key;
 
     // Query each PointData's QuadTree
-    if (!visible || !spatial_index) {
+    if (!m_visible || !m_spatial_index) {
         return;
     }
 
     std::vector<QuadTreePoint<int64_t> const *> candidate_points;
-    spatial_index->queryPointers(query_bounds, candidate_points);
+    m_spatial_index->queryPointers(query_bounds, candidate_points);
 
     size_t points_added_this_data = 0;
     for (auto const * point_ptr: candidate_points) {
@@ -378,7 +378,7 @@ void PointDataVisualization::applySelection(PointSelectionHandler const & select
     QVector2D world_pos = selection_handler.getWorldPos();
     Qt::KeyboardModifiers modifiers = selection_handler.getModifiers();
 
-    auto const * candidate = spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
+    auto const * candidate = m_spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
 
     if (candidate) {
         if (modifiers & Qt::ControlModifier) {
@@ -395,14 +395,14 @@ QString PointDataVisualization::getTooltipText() const {
     }
 
     return QString("Dataset: %1\nInterval: %2\nPosition: (%3, %4)")
-            .arg(key)
+            .arg(m_key)
             .arg(current_hover_point->data)
             .arg(current_hover_point->x, 0, 'f', 2)
             .arg(current_hover_point->y, 0, 'f', 2);
 }
 
 bool PointDataVisualization::handleHover(const QVector2D & world_pos, float tolerance) {
-    auto const * nearest_point = spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
+    auto const * nearest_point = m_spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
     
     // Check if the nearest point is hidden
     if (nearest_point && hidden_points.find(nearest_point) != hidden_points.end()) {
@@ -415,7 +415,7 @@ bool PointDataVisualization::handleHover(const QVector2D & world_pos, float tole
 }
 
 std::optional<int64_t> PointDataVisualization::handleDoubleClick(const QVector2D & world_pos, float tolerance) {
-    auto const * nearest_point = spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
+    auto const * nearest_point = m_spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
     
     // Check if the nearest point is hidden
     if (nearest_point && hidden_points.find(nearest_point) != hidden_points.end()) {
@@ -481,7 +481,7 @@ std::pair<size_t, size_t> PointDataVisualization::getVisibilityStats() const {
 }
 
 void PointDataVisualization::updateVisibleVertexBuffer() {
-    if (!spatial_index) {
+    if (!m_spatial_index) {
         return;
     }
     
@@ -490,8 +490,8 @@ void PointDataVisualization::updateVisibleVertexBuffer() {
     
     // Get all points from the spatial index and filter out hidden ones
     std::vector<QuadTreePoint<int64_t> const *> all_points;
-    BoundingBox full_bounds = spatial_index->getBounds();
-    spatial_index->queryPointers(full_bounds, all_points);
+    BoundingBox full_bounds = m_spatial_index->getBounds();
+    m_spatial_index->queryPointers(full_bounds, all_points);
     
     total_point_count = all_points.size();
     
@@ -507,9 +507,9 @@ void PointDataVisualization::updateVisibleVertexBuffer() {
     visible_vertex_count = visible_vertex_data.size();
     
     // Update the vertex buffer with only visible points
-    vertex_buffer.bind();
-    vertex_buffer.allocate(visible_vertex_data.data(), static_cast<int>(visible_vertex_data.size() * sizeof(float)));
-    vertex_buffer.release();
+    m_vertex_buffer.bind();
+    m_vertex_buffer.allocate(visible_vertex_data.data(), static_cast<int>(visible_vertex_data.size() * sizeof(float)));
+    m_vertex_buffer.release();
     
     qDebug() << "PointDataVisualization: Updated vertex buffer with" << (visible_vertex_count / 2) 
              << "visible points out of" << total_point_count << "total points";

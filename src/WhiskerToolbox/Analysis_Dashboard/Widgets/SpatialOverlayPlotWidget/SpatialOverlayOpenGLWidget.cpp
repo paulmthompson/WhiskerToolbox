@@ -108,11 +108,11 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
         }
 
         auto viz = std::make_unique<PointDataVisualization>(key, point_data);
-        viz->color = colors[color_index % colors.size()];
+        viz->m_color = colors[color_index % colors.size()];
         color_index++;
 
         qDebug() << "SpatialOverlayOpenGLWidget: Created visualization for" << key
-                 << "with" << viz->vertex_data.size() / 2 << "points";
+                 << "with" << viz->m_vertex_data.size() / 2 << "points";
 
         _point_data_visualizations[key] = std::move(viz);
     }
@@ -254,12 +254,12 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
 
     // Calculate bounds from point data
     for (auto const & [key, viz]: _point_data_visualizations) {
-        if (!viz->visible || viz->vertex_data.empty()) continue;
+        if (!viz->m_visible || viz->m_vertex_data.empty()) continue;
 
         // Iterate through vertex data (x, y pairs)
-        for (size_t i = 0; i < viz->vertex_data.size(); i += 2) {
-            float x = viz->vertex_data[i];
-            float y = viz->vertex_data[i + 1];
+        for (size_t i = 0; i < viz->m_vertex_data.size(); i += 2) {
+            float x = viz->m_vertex_data[i];
+            float y = viz->m_vertex_data[i + 1];
 
             min_x = std::min(min_x, x);
             max_x = std::max(max_x, x);
