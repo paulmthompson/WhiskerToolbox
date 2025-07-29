@@ -125,6 +125,10 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
     for (size_t i = 0; i < line_identifiers.size(); ++i) {
         line_id_to_index[line_identifiers[i]] = i;
     }
+    
+    // Update statistics
+    total_line_count = line_identifiers.size();
+    hidden_line_count = hidden_lines.size(); // Preserve hidden count across rebuilds
 
     // Debug: print coordinate range
     if (!vertex_data.empty()) {
@@ -286,6 +290,9 @@ void LineDataVisualization::initializeOpenGLResources() {
 
     // Initialize selection mask buffer
     selection_mask_buffer.create();
+    
+    // Initialize visibility mask buffer
+    visibility_mask_buffer.create();
 
     updateOpenGLBuffers();
 }
@@ -325,6 +332,9 @@ void LineDataVisualization::cleanupOpenGLResources() {
     if (selection_mask_buffer.isCreated()) {
         selection_mask_buffer.destroy();
     }
+    if (visibility_mask_buffer.isCreated()) {
+        visibility_mask_buffer.destroy();
+    }
 
     cleanupComputeShaderResources();
 
@@ -348,6 +358,10 @@ void LineDataVisualization::updateOpenGLBuffers() {
     selection_mask_buffer.bind();
     selection_mask_buffer.allocate(selection_mask.data(), static_cast<int>(selection_mask.size() * sizeof(uint32_t)));
     selection_mask_buffer.release();
+
+    // Initialize visibility mask (all visible initially, except those in hidden_lines set)
+    visibility_mask.assign(line_identifiers.size(), 1); // Default to visible
+    updateVisibilityMask(); // Apply any existing hidden lines
 
     // Update line segments buffer for compute shader
     updateLineSegmentsBuffer();
@@ -423,6 +437,11 @@ void LineDataVisualization::renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matr
     selection_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, selection_mask_buffer.bufferId());
     selection_mask_buffer.release();
+    
+    // Bind visibility mask buffer for geometry shader
+    visibility_mask_buffer.bind();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, visibility_mask_buffer.bufferId());
+    visibility_mask_buffer.release();
 
     vertex_array_object.bind();
     if (!vertex_data.empty()) {
@@ -486,6 +505,11 @@ void LineDataVisualization::renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpen
     selection_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, selection_mask_buffer.bufferId());
     selection_mask_buffer.release();
+    
+    // Bind visibility mask buffer for geometry shader
+    visibility_mask_buffer.bind();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, visibility_mask_buffer.bufferId());
+    visibility_mask_buffer.release();
 
     // Get the vertex range for the hovered line
     LineVertexRange const & range = line_vertex_ranges[cached_hover_line_index];
@@ -800,6 +824,40 @@ void LineDataVisualization::updateSelectionMask() {
              << total_duration.count() << "μs (CPU:" << cpu_duration.count() << "μs, GPU:" << gpu_duration.count() << "μs)";
 }
 
+void LineDataVisualization::updateVisibilityMask() {
+    auto start_time = std::chrono::high_resolution_clock::now();
+    
+    // Reset all to visible
+    std::fill(visibility_mask.begin(), visibility_mask.end(), 1);
+    
+    // Mark hidden lines using fast hash map lookup
+    for (const auto& line_id : hidden_lines) {
+        auto it = line_id_to_index.find(line_id);
+        if (it != line_id_to_index.end()) {
+            size_t index = it->second;
+            if (index < visibility_mask.size()) {
+                visibility_mask[index] = 0; // Mark as hidden
+            }
+        }
+    }
+    
+    auto cpu_time = std::chrono::high_resolution_clock::now();
+    
+    // Update GPU buffer
+    visibility_mask_buffer.bind();
+    visibility_mask_buffer.allocate(visibility_mask.data(), static_cast<int>(visibility_mask.size() * sizeof(uint32_t)));
+    visibility_mask_buffer.release();
+    
+    auto end_time = std::chrono::high_resolution_clock::now();
+    
+    auto cpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(cpu_time - start_time);
+    auto gpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - cpu_time);
+    auto total_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    
+    qDebug() << "LineDataVisualization: Updated visibility mask for" << hidden_lines.size() << "hidden lines in" 
+             << total_duration.count() << "μs (CPU:" << cpu_duration.count() << "μs, GPU:" << gpu_duration.count() << "μs)";
+}
+
 std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
         int start_x, int start_y, int end_x, int end_y,
         int widget_width, int widget_height,
@@ -954,4 +1012,60 @@ bool LineDataVisualization::handleHover(const QPoint & screen_pos, const QSize &
     }
 
     return hover_changed;
+}
+
+//========== Visibility Management ==========
+
+size_t LineDataVisualization::hideSelectedLines() {
+    if (selected_lines.empty()) {
+        return 0;
+    }
+    
+    size_t hidden_count = 0;
+    
+    // Add selected lines to hidden set
+    for (const auto& line_id : selected_lines) {
+        if (hidden_lines.insert(line_id).second) { // .second is true if insertion happened
+            hidden_count++;
+        }
+    }
+    
+    // Clear selection since hidden lines should not be selected
+    selected_lines.clear();
+    
+    // Update statistics
+    hidden_line_count = hidden_lines.size();
+    
+    // Update GPU buffers
+    updateSelectionMask();
+    updateVisibilityMask();
+    
+    // Mark view as dirty to trigger re-render
+    m_viewIsDirty = true;
+    
+    qDebug() << "LineDataVisualization: Hidden" << hidden_count << "lines, total hidden:" << hidden_line_count;
+    
+    return hidden_count;
+}
+
+size_t LineDataVisualization::showAllLines() {
+    size_t shown_count = hidden_lines.size();
+    
+    // Clear all hidden lines
+    hidden_lines.clear();
+    hidden_line_count = 0;
+    
+    // Update GPU visibility buffer
+    updateVisibilityMask();
+    
+    // Mark view as dirty to trigger re-render
+    m_viewIsDirty = true;
+    
+    qDebug() << "LineDataVisualization: Showed" << shown_count << "lines, all lines now visible";
+    
+    return shown_count;
+}
+
+std::pair<size_t, size_t> LineDataVisualization::getVisibilityStats() const {
+    return {total_line_count, hidden_line_count};
 }

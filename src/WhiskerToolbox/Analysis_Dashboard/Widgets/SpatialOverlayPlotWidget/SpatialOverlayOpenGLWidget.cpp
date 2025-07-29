@@ -13,6 +13,7 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QMenu>
 #include <QMouseEvent>
 #include <QToolTip>
 #include <QWheelEvent>
@@ -528,8 +529,6 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     },
                _selection_handler);
 
-    requestThrottledUpdate();
-
     if (event->button() == Qt::LeftButton) {
         // Regular left click - start panning (if not in polygon or line selection mode)
         if (_selection_mode != SelectionMode::PolygonSelection && _selection_mode != SelectionMode::LineIntersection) {
@@ -650,9 +649,16 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
         }
         
         event->accept();
+    } else if (event->button() == Qt::RightButton) {
+        
+        qDebug() << "SpatialOverlayOpenGLWidget: Right-click detected at" << event->pos();
+        showContextMenu(event->pos());
+        event->accept();
     } else {
         event->ignore();
     }
+
+    requestThrottledUpdate();
 }
 
 void SpatialOverlayOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
@@ -1070,4 +1076,74 @@ void SpatialOverlayOpenGLWidget::updateMouseWorldPosition(int screen_x, int scre
 void SpatialOverlayOpenGLWidget::renderCommonOverlay() {
     // Render tooltips and other common overlay elements
     // This will be expanded to handle tooltip rendering and other common UI elements
+}
+
+//========== Visibility Management ==========
+
+void SpatialOverlayOpenGLWidget::hideSelectedItems() {
+    size_t total_hidden = 0;
+    
+    // Hide selected lines
+    for (auto const & [key, viz]: _line_data_visualizations) {
+        total_hidden += viz->hideSelectedLines();
+    }
+    
+    // TODO: Hide selected points (no-op for now)
+    // TODO: Hide selected masks (no-op for now)
+    
+    if (total_hidden > 0) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Hidden" << total_hidden << "items";
+        requestThrottledUpdate();
+        
+        // Update selection count since hidden items are no longer selected
+        emit selectionChanged(getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines(), QString(), 0);
+    }
+}
+
+void SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset() {
+    // For now, we'll show all items across all datasets since we don't have a concept of "current" dataset
+    // This can be enhanced later when there's a UI concept of active/current dataset
+    showAllItemsAllDatasets();
+}
+
+void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
+    size_t total_shown = 0;
+    
+    // Show all hidden lines
+    for (auto const & [key, viz]: _line_data_visualizations) {
+        total_shown += viz->showAllLines();
+    }
+    
+    // TODO: Show all hidden points (no-op for now)
+    // TODO: Show all hidden masks (no-op for now)
+    
+    if (total_shown > 0) {
+        qDebug() << "SpatialOverlayOpenGLWidget: Showed" << total_shown << "items";
+        requestThrottledUpdate();
+    }
+}
+
+void SpatialOverlayOpenGLWidget::showContextMenu(const QPoint& pos) {
+    QMenu contextMenu(this);
+    
+    // Check if we have any selected items
+    size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
+    
+    // Add "Hide Selected" option if there are selected items
+    if (total_selected > 0) {
+        QAction* hideAction = contextMenu.addAction(QString("Hide Selected (%1 items)").arg(total_selected));
+        connect(hideAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::hideSelectedItems);
+    }
+    
+    // Add "Show All" submenu
+    QMenu* showAllMenu = contextMenu.addMenu("Show All");
+    
+    QAction* showCurrentAction = showAllMenu->addAction("Show All (Current Dataset)");
+    connect(showCurrentAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset);
+    
+    QAction* showAllAction = showAllMenu->addAction("Show All (All Datasets)");
+    connect(showAllAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsAllDatasets);
+    
+    // Show the menu at the cursor position
+    contextMenu.exec(mapToGlobal(pos));
 }

@@ -92,6 +92,23 @@ public:
      */
     void clearSelection();
 
+    //========== Visibility Management ==========
+    
+    /**
+     * @brief Hide selected items from view
+     */
+    void hideSelectedItems();
+    
+    /**
+     * @brief Show all hidden items in the current active dataset
+     */
+    void showAllItemsCurrentDataset();
+    
+    /**
+     * @brief Show all hidden items across all datasets
+     */
+    void showAllItemsAllDatasets();
+
     /**
      * @brief Convert screen coordinates to world coordinates
      * @param screen_x Screen X coordinate
@@ -359,6 +376,12 @@ private:
      * @param screen_y Screen Y coordinate
      */
     void updateMouseWorldPosition(int screen_x, int screen_y);
+
+    /**
+     * @brief Show context menu at the given position
+     * @param pos The position to show the menu at
+     */
+    void showContextMenu(const QPoint& pos);
 
 };
 

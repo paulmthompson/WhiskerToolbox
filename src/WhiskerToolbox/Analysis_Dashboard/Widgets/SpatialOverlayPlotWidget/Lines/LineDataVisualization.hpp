@@ -95,6 +95,15 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     std::vector<uint32_t> selection_mask; // CPU copy of selection mask
     std::unordered_map<LineIdentifier, size_t> line_id_to_index; // Fast lookup from LineIdentifier to index
 
+    // Visibility system for individual lines
+    QOpenGLBuffer visibility_mask_buffer;  // Buffer containing visibility mask for each line
+    std::vector<uint32_t> visibility_mask; // CPU copy of visibility mask (1 = visible, 0 = hidden)
+    std::unordered_set<LineIdentifier> hidden_lines; // Set of hidden line identifiers
+    
+    // Statistics tracking
+    size_t total_line_count = 0;
+    size_t hidden_line_count = 0;
+
     bool m_viewIsDirty = true;
     bool m_dataIsDirty = true;
     QMatrix4x4 m_cachedMvpMatrix; // Cached MVP matrix to detect view changes
@@ -215,6 +224,26 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
      */
     bool handleHover(const QPoint & screen_pos, const QSize & widget_size, const QMatrix4x4& mvp_matrix);
 
+    //========== Visibility Management ==========
+    
+    /**
+     * @brief Hide selected lines from view
+     * @return Number of lines that were hidden
+     */
+    size_t hideSelectedLines();
+    
+    /**
+     * @brief Show all hidden lines in this visualization
+     * @return Number of lines that were shown
+     */
+    size_t showAllLines();
+    
+    /**
+     * @brief Get visibility statistics
+     * @return Pair of (total_lines, hidden_lines)
+     */
+    std::pair<size_t, size_t> getVisibilityStats() const;
+
 private:
     void renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matrix, QOpenGLShaderProgram * shader_program, float line_width);
     void blitSceneBuffer();
@@ -224,6 +253,7 @@ private:
     void cleanupComputeShaderResources();
     void updateLineSegmentsBuffer();
     void updateSelectionMask();
+    void updateVisibilityMask();
 };
 
 #endif// LINEDATAVISUALIZATION_HPP

@@ -19,7 +19,25 @@ layout(std430, binding = 3) readonly buffer SelectionMaskBuffer {
     uint selection_mask[];
 };
 
+// Visibility mask buffer: each uint corresponds to a line ID (1-based)
+layout(std430, binding = 4) readonly buffer VisibilityMaskBuffer {
+    uint visibility_mask[];
+};
+
 void main() {
+    uint line_id = v_line_id[0];  // Both vertices should have the same line ID
+    
+    // Check if this line is visible (line_id is 1-based, array is 0-based)
+    uint is_visible = 1u; // Default to visible
+    if (line_id > 0u && line_id <= visibility_mask.length()) {
+        is_visible = visibility_mask[line_id - 1u];
+    }
+    
+    // Skip rendering if line is hidden
+    if (is_visible == 0u) {
+        return;
+    }
+    
     // Get the two vertices of the line segment
     vec2 p0 = v_position[0];
     vec2 p1 = v_position[1];
@@ -37,9 +55,6 @@ void main() {
     vec2 v1 = p0 + perp * half_width_ndc;
     vec2 v2 = p1 - perp * half_width_ndc;
     vec2 v3 = p1 + perp * half_width_ndc;
-    
-    // Emit vertices (use same line ID for all vertices of this line segment)
-    uint line_id = v_line_id[0];  // Both vertices should have the same line ID
     
     // Check if this line is selected (line_id is 1-based, array is 0-based)
     uint is_selected = 0u;
