@@ -18,7 +18,7 @@
 #include <chrono>
 
 LineDataVisualization::LineDataVisualization(QString const & data_key, std::shared_ptr<LineData> const & line_data)
-    : m_line_data(line_data),
+    : m_line_data_ptr(line_data),
       key(data_key),
       scene_framebuffer(nullptr),
       line_shader_program(nullptr),
@@ -29,7 +29,7 @@ LineDataVisualization::LineDataVisualization(QString const & data_key, std::shar
 
     color = QVector4D(0.0f, 0.0f, 1.0f, 1.0f);
 
-    buildVertexData(m_line_data.get());
+    buildVertexData();
 
     initializeOpenGLResources();
     m_dataIsDirty = false;// Data is clean after initial build and buffer creation
@@ -39,17 +39,17 @@ LineDataVisualization::~LineDataVisualization() {
     cleanupOpenGLResources();
 }
 
-void LineDataVisualization::buildVertexData(LineData const * line_data) {
+void LineDataVisualization::buildVertexData() {
     m_vertex_data.clear();
     m_line_identifiers.clear();
-    m_line_vertex_ranges.clear();// Clear vertex ranges too
+    m_line_vertex_ranges.clear();
 
-    if (!line_data) {
+    if (!m_line_data_ptr) {
         return;
     }
 
     // Get canvas size for coordinate normalization
-    ImageSize image_size = line_data->getImageSize();
+    ImageSize image_size = m_line_data_ptr->getImageSize();
     if (image_size.width <= 0 || image_size.height <= 0) {
         qDebug() << "Invalid image size for LineData, using media data instead";
     }
@@ -67,18 +67,16 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
 
     uint32_t line_index = 0;
 
-    // Iterate through all time frames and lines
-    for (auto const & [time_frame, lines]: line_data->GetAllLinesAsRange()) {
+    for (auto const & [time_frame, lines]: m_line_data_ptr->GetAllLinesAsRange()) {
         for (int line_id = 0; line_id < static_cast<int>(lines.size()); ++line_id) {
             Line2D const & line = lines[line_id];
 
-            if (line.size() < 2) {// Need at least 2 points for a line
+            if (line.size() < 2) {
                 continue;
             }
 
             m_line_identifiers.push_back({time_frame.getValue(), line_id});
 
-            // Record the starting vertex index for this line
             uint32_t line_start_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
 
             // Convert line strip to line segments (pairs of consecutive vertices)
@@ -86,31 +84,24 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
                 Point2D<float> const & p0 = line[i];
                 Point2D<float> const & p1 = line[i + 1];
 
-                // Add first vertex of segment
                 segment_vertices.push_back(p0.x);
                 segment_vertices.push_back(p0.y);
                 segment_line_ids.push_back(line_index + 1);// Use 1-based indexing for picking
 
-                // Add second vertex of segment
                 segment_vertices.push_back(p1.x);
                 segment_vertices.push_back(p1.y);
                 segment_line_ids.push_back(line_index + 1);// Use 1-based indexing for picking
             }
 
-            // Record the vertex count for this line
             uint32_t line_end_vertex = static_cast<uint32_t>(segment_vertices.size() / 2);
             uint32_t line_vertex_count = line_end_vertex - line_start_vertex;
 
-            // Store the range for efficient hover rendering
             m_line_vertex_ranges.push_back({line_start_vertex, line_vertex_count});
-
-            //qDebug() << "Line" << line_index << "range: start=" << line_start_vertex << "count=" << line_vertex_count;
 
             line_index++;
         }
     }
 
-    // Store the processed data
     m_vertex_data = std::move(segment_vertices);
     m_line_id_data = std::move(segment_line_ids);
 
@@ -124,9 +115,8 @@ void LineDataVisualization::buildVertexData(LineData const * line_data) {
         line_id_to_index[m_line_identifiers[i]] = i;
     }
     
-    // Update statistics
     total_line_count = m_line_identifiers.size();
-    hidden_line_count = hidden_lines.size(); // Preserve hidden count across rebuilds
+    hidden_line_count = hidden_lines.size();
 }
 
 void LineDataVisualization::initializeOpenGLResources() {
@@ -134,8 +124,8 @@ void LineDataVisualization::initializeOpenGLResources() {
     m_vertex_buffer.create();
     m_line_id_buffer.create();
 
-    vertex_array_object.create();
-    vertex_array_object.bind();
+    m_vertex_array_object.create();
+    m_vertex_array_object.bind();
 
     m_vertex_buffer.bind();
     glEnableVertexAttribArray(0);
@@ -147,7 +137,7 @@ void LineDataVisualization::initializeOpenGLResources() {
 
     m_line_id_buffer.release();
     m_vertex_buffer.release();
-    vertex_array_object.release();
+    m_vertex_array_object.release();
 
     QOpenGLFramebufferObjectFormat format;
     format.setInternalTextureFormat(GL_RGBA8);
@@ -285,8 +275,8 @@ void LineDataVisualization::cleanupOpenGLResources() {
         m_line_id_buffer.destroy();
     }
 
-    if (vertex_array_object.isCreated()) {
-        vertex_array_object.destroy();
+    if (m_vertex_array_object.isCreated()) {
+        m_vertex_array_object.destroy();
     }
 
     if (fullscreen_quad_vbo.isCreated()) {
@@ -353,7 +343,7 @@ void LineDataVisualization::render(QMatrix4x4 const & mvp_matrix, float line_wid
 
     if (m_dataIsDirty) {
         qDebug() << "LineDataVisualization: Data is dirty, rebuilding vertex data";
-        buildVertexData(m_line_data.get());
+        buildVertexData();
         updateOpenGLBuffers();
         m_dataIsDirty = false;
         m_viewIsDirty = true;// Data change necessitates a view update
@@ -422,12 +412,12 @@ void LineDataVisualization::renderLinesToSceneBuffer(QMatrix4x4 const & mvp_matr
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, visibility_mask_buffer.bufferId());
     visibility_mask_buffer.release();
 
-    vertex_array_object.bind();
+    m_vertex_array_object.bind();
     if (!m_vertex_data.empty()) {
         uint32_t total_vertices = static_cast<uint32_t>(m_vertex_data.size() / 2);
         glDrawArrays(GL_LINES, 0, total_vertices);
     }
-    vertex_array_object.release();
+    m_vertex_array_object.release();
     shader_program->release();
 
     scene_framebuffer->release();
@@ -494,9 +484,9 @@ void LineDataVisualization::renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpen
     LineVertexRange const & range = m_line_vertex_ranges[cached_hover_line_index];
 
     // Render just the hovered line
-    vertex_array_object.bind();
+    m_vertex_array_object.bind();
     glDrawArrays(GL_LINES, range.start_vertex, range.vertex_count);
-    vertex_array_object.release();
+    m_vertex_array_object.release();
 
     // Reset hover state
     if (cached_hover_uniform_location >= 0) {

@@ -35,7 +35,8 @@ class NoneSelectionHandler;
  */
 struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     // Line data storage
-    std::shared_ptr<LineData> m_line_data;
+    std::shared_ptr<LineData> m_line_data_ptr;
+
     std::vector<float> m_vertex_data;            // All line segments as pairs of vertices
     std::vector<uint32_t> m_line_id_data;        // Line ID for each vertex
     std::vector<LineIdentifier> m_line_identifiers;// Mapping from line index to identifier
@@ -50,7 +51,7 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
     // OpenGL resources
     QOpenGLBuffer m_vertex_buffer;
     QOpenGLBuffer m_line_id_buffer;
-    QOpenGLVertexArrayObject vertex_array_object;
+    QOpenGLVertexArrayObject m_vertex_array_object;
 
     // Framebuffers
     QOpenGLFramebufferObject * scene_framebuffer;// For caching the rendered scene
@@ -125,9 +126,8 @@ struct LineDataVisualization : protected QOpenGLFunctions_4_3_Core {
 
     /**
      * @brief Build vertex data from LineData object. This is called when the line data is changed.
-     * @param line_data The LineData to build vertex data from
      */
-    void buildVertexData(LineData const * line_data);
+    void buildVertexData();
 
     /**
      * @brief Update picking framebuffer with current line data
