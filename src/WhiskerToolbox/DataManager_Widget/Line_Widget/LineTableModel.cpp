@@ -1,7 +1,7 @@
 #include "LineTableModel.hpp"
 #include "DataManager/Lines/Line_Data.hpp"
 
-#include <iostream>// For debugging
+#include <iostream>
 
 LineTableModel::LineTableModel(QObject * parent)
     : QAbstractTableModel(parent) {}

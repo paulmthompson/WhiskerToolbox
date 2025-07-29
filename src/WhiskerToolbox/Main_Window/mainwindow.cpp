@@ -30,6 +30,7 @@
 #include "Tongue_Widget/Tongue_Widget.hpp"
 #include "Whisker_Widget.hpp"
 #include "Terminal_Widget/TerminalWidget.hpp"
+#include "Test_Widget/Test_Widget.hpp"
 
 #include <QFileDialog>
 #include <QImage>
@@ -125,6 +126,7 @@ void MainWindow::_createActions() {
     connect(ui->actionData_Transforms, &QAction::triggered, this, &MainWindow::openDataTransforms);
     connect(ui->actionTerminal_Output, &QAction::triggered, this, &MainWindow::openTerminalWidget);
     connect(ui->actionAnalysis_Dashboard, &QAction::triggered, this, &MainWindow::openAnalysisDashboard);
+    connect(ui->actionTest_Widget, &QAction::triggered, this, &MainWindow::openTestWidget);
 }
 
 /*
@@ -616,6 +618,20 @@ void MainWindow::openAnalysisDashboard() {
 
     auto ptr = dynamic_cast<Analysis_Dashboard *>(_widgets[key].get());
     ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openTestWidget() {
+    std::string const key = "Test_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto test_widget = std::make_unique<Test_Widget>(this);
+
+        test_widget->setObjectName(key);
+        registerDockWidget(key, test_widget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(test_widget);
+    }
 
     showDockWidget(key);
 }
