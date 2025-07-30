@@ -18,6 +18,7 @@ class QSplitter;
 class QLineEdit;
 class QGroupBox;
 class DataManager;
+class MainWindow;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class BatchProcessing_Widget; }
@@ -28,7 +29,7 @@ class BatchProcessing_Widget : public QWidget
     Q_OBJECT
 
 public:
-    explicit BatchProcessing_Widget(std::shared_ptr<DataManager> dataManager, QWidget *parent = nullptr);
+    explicit BatchProcessing_Widget(std::shared_ptr<DataManager> dataManager, MainWindow* mainWindow, QWidget *parent = nullptr);
     ~BatchProcessing_Widget();
 
     void openWidget();
@@ -80,6 +81,7 @@ private:
     QString m_currentJsonFile;
     QJsonDocument m_jsonDocument;
     std::shared_ptr<DataManager> m_dataManager;
+    MainWindow* m_mainWindow;
 };
 
 #endif // BATCHPROCESSING_WIDGET_HPP

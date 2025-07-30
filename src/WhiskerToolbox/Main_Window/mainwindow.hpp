@@ -1,6 +1,8 @@
 #ifndef MAINWINDOW_HPP
 #define MAINWINDOW_HPP
 
+#include "DataManager/DataManagerTypes.hpp"
+
 #include <QMainWindow>
 
 #include "DockManager.h"
@@ -38,6 +40,8 @@ public:
 
     void registerDockWidget(std::string const & key, QWidget * widget, ads::DockWidgetArea area);
     void showDockWidget(std::string const & key);
+
+    void processLoadedData(std::vector<DataInfo> const & data_info);
 
 
 protected:

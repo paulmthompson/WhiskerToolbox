@@ -2,6 +2,7 @@
 #include "ui_BatchProcessing_Widget.h"
 
 #include "DataManager/DataManager.hpp"
+#include "Main_Window/mainwindow.hpp"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -30,7 +31,7 @@
 #include <QStandardPaths>
 #include <QDebug>
 
-BatchProcessing_Widget::BatchProcessing_Widget(std::shared_ptr<DataManager> dataManager, QWidget *parent)
+BatchProcessing_Widget::BatchProcessing_Widget(std::shared_ptr<DataManager> dataManager, MainWindow* mainWindow, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::BatchProcessing_Widget)
     , m_mainLayout(nullptr)
@@ -47,6 +48,7 @@ BatchProcessing_Widget::BatchProcessing_Widget(std::shared_ptr<DataManager> data
     , m_jsonTextEdit(nullptr)
     , m_jsonStatusLabel(nullptr)
     , m_dataManager(dataManager)
+    , m_mainWindow(mainWindow)
 {
     ui->setupUi(this);
     setupUI();
@@ -377,6 +379,11 @@ void BatchProcessing_Widget::loadFolderWithJson()
             QMessageBox::information(this, "No Data Loaded", 
                                    "No data was loaded. Check your JSON configuration and folder contents.");
         } else {
+            // Process the loaded data through MainWindow to update GUI components
+            if (m_mainWindow) {
+                m_mainWindow->processLoadedData(dataInfoList);
+            }
+            
             QString message = QString("Successfully loaded %1 data items from folder:\n%2")
                             .arg(dataInfoList.size())
                             .arg(selectedFolder);
