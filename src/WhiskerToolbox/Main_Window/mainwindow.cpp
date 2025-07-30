@@ -339,7 +339,7 @@ void MainWindow::openBatchProcessingWidget() {
     std::string const key = "BatchProcessing_widget";
 
     if (_widgets.find(key) == _widgets.end()) {
-        auto batchProcessingWidget = std::make_unique<BatchProcessing_Widget>(this);
+        auto batchProcessingWidget = std::make_unique<BatchProcessing_Widget>(_data_manager, this);
 
         batchProcessingWidget->setObjectName(key);
         registerDockWidget(key, batchProcessingWidget.get(), ads::RightDockWidgetArea);
