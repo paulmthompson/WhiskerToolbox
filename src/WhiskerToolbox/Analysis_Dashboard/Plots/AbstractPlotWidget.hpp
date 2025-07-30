@@ -7,6 +7,7 @@
 #include <memory>
 
 class DataManager;
+class GroupManager;
 class QGraphicsSceneMouseEvent;
 
 /**
@@ -46,6 +47,12 @@ public:
      * @param data_manager Shared pointer to the data manager
      */
     virtual void setDataManager(std::shared_ptr<DataManager> data_manager);
+
+    /**
+     * @brief Set the group manager for data grouping
+     * @param group_manager Pointer to the group manager
+     */
+    virtual void setGroupManager(GroupManager* group_manager);
 
     /**
      * @brief Get the unique identifier for this plot instance
@@ -90,6 +97,7 @@ protected:
     void generateUniqueId();
 
     std::shared_ptr<DataManager> _data_manager;
+    GroupManager* _group_manager = nullptr;
     QString _plot_title;
     QString _plot_id;
 

@@ -7,6 +7,7 @@
 
 class AnalysisDashboardScene;
 class DataManager;
+class GroupManager;
 class QGraphicsView;
 class QSplitter;
 class TimeScrollBar;
@@ -39,6 +40,12 @@ public:
      */
     void openWidget();
 
+    /**
+     * @brief Get the group manager for this dashboard
+     * @return Pointer to the group manager
+     */
+    GroupManager* getGroupManager() const { return _group_manager.get(); }
+
 private slots:
     /**
      * @brief Handle plot selection from the graphics scene
@@ -65,6 +72,7 @@ private:
     Ui::Analysis_Dashboard* ui;
     
     std::shared_ptr<DataManager> _data_manager;
+    std::unique_ptr<GroupManager> _group_manager;
     TimeScrollBar* _time_scrollbar;
     
     // Main panels

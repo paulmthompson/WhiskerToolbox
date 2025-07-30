@@ -1,6 +1,8 @@
 #include "ToolboxPanel.hpp"
 #include "ui_ToolboxPanel.h"
 #include "DraggableListWidget.hpp"
+#include "../Groups/GroupManagementWidget.hpp"
+#include "../Groups/GroupManager.hpp"
 
 #include <QListWidget>
 #include <QListWidgetItem>
@@ -8,16 +10,23 @@
 #include <QIcon>
 #include <QDebug>
 
-ToolboxPanel::ToolboxPanel(QWidget* parent)
+ToolboxPanel::ToolboxPanel(GroupManager* group_manager, QWidget* parent)
     : QWidget(parent),
-      ui(new Ui::ToolboxPanel) {
+      ui(new Ui::ToolboxPanel),
+      _group_widget(nullptr) {
     ui->setupUi(this);
+    
+    // Create and add the group management widget at the top
+    _group_widget = new GroupManagementWidget(group_manager, this);
+    
+    // Insert the group widget at the top of the layout
+    auto * layout = ui->verticalLayout;
+    layout->insertWidget(0, _group_widget);  // Insert at index 0 (top)
     
     // Replace the standard QListWidget with our custom DraggableListWidget
     DraggableListWidget* draggable_list = new DraggableListWidget(this);
     
     // Remove the old list widget and add the new one
-    QLayout* layout = ui->verticalLayout;
     delete ui->plot_list;
     layout->addWidget(draggable_list);
     ui->plot_list = draggable_list;

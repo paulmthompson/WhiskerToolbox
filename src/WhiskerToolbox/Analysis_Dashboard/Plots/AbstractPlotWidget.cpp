@@ -45,6 +45,11 @@ void AbstractPlotWidget::setDataManager(std::shared_ptr<DataManager> data_manage
     _data_manager = std::move(data_manager);
 }
 
+void AbstractPlotWidget::setGroupManager(GroupManager* group_manager) {
+    qDebug() << "AbstractPlotWidget: setGroupManager called for plot" << _plot_id << "with GroupManager:" << (group_manager != nullptr);
+    _group_manager = group_manager;
+}
+
 QString AbstractPlotWidget::getPlotId() const {
     return _plot_id;
 }

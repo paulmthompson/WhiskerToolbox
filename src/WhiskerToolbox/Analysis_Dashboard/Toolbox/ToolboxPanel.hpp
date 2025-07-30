@@ -9,6 +9,8 @@ class ToolboxPanel;
 
 class QListWidget;
 class QListWidgetItem;
+class GroupManager;
+class GroupManagementWidget;
 
 /**
  * @brief Toolbox panel containing available plot types for dragging to the dashboard
@@ -20,7 +22,7 @@ class ToolboxPanel : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ToolboxPanel(QWidget* parent = nullptr);
+    explicit ToolboxPanel(GroupManager* group_manager, QWidget* parent = nullptr);
     ~ToolboxPanel() override;
 
 private slots:
@@ -32,6 +34,7 @@ private slots:
 
 private:
     Ui::ToolboxPanel* ui;
+    GroupManagementWidget* _group_widget;
 
     /**
      * @brief Initialize the toolbox with available plot types

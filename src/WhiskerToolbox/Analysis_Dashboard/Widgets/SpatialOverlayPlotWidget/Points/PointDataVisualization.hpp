@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 #include <vector>
 #include <variant>
 #include <optional>
@@ -24,6 +25,7 @@ class PolygonSelectionHandler;
 class LineSelectionHandler;
 class NoneSelectionHandler;
 class PointSelectionHandler;
+class GroupManager;
 
 
 /**
@@ -41,7 +43,7 @@ class PointSelectionHandler;
  */
 struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     std::unique_ptr<QuadTree<int64_t>> m_spatial_index;
-    std::vector<float> m_vertex_data;
+    std::vector<float> m_vertex_data;  // Format: x, y, group_id per vertex (3 floats per point)
     QOpenGLBuffer m_vertex_buffer;
     QOpenGLVertexArrayObject m_vertex_array_object;
     QString m_key;
@@ -72,7 +74,13 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     int m_time_range_end = 999999;
     bool m_time_range_enabled = false;
 
-    PointDataVisualization(QString const & data_key, std::shared_ptr<PointData> const & point_data);
+    // Group management
+    GroupManager* m_group_manager = nullptr;
+    bool m_group_data_needs_update = false;
+
+    PointDataVisualization(QString const & data_key, 
+                           std::shared_ptr<PointData> const & point_data,
+                           GroupManager* group_manager = nullptr);
     ~PointDataVisualization();
 
     /**
@@ -187,6 +195,25 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     void setTimeRangeEnabled(bool enabled);
     void setTimeRange(int start_frame, int end_frame);
 
+    //========== Group Management ==========
+    
+    /**
+     * @brief Set the group manager for this visualization
+     * @param group_manager Pointer to the group manager
+     */
+    void setGroupManager(GroupManager* group_manager);
+    
+    /**
+     * @brief Get selected point time stamp IDs for group assignment
+     * @return Set of time stamp IDs of currently selected points
+     */
+    std::unordered_set<int64_t> getSelectedPointIds() const;
+    
+    /**
+     * @brief Refresh group-based rendering data (call when group assignments change)
+     */
+    void refreshGroupRenderData();
+
 private:
     /**
      * @brief Render points for this PointData
@@ -207,6 +234,11 @@ private:
      * @brief Update vertex buffer to exclude hidden points
      */
     void _updateVisibleVertexBuffer();
+    
+    /**
+     * @brief Update group IDs in vertex data
+     */
+    void _updateGroupVertexData();
 };
 
 

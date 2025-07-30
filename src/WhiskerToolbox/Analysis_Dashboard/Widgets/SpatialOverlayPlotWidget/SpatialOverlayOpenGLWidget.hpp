@@ -32,6 +32,7 @@ class LineDataVisualization;
 class PolygonSelectionHandler;
 class LineSelectionHandler;
 class NoneSelectionHandler;
+class GroupManager;
 
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
@@ -186,6 +187,10 @@ public:
 
     void applyTimeRangeFilter(int start_frame, int end_frame);
 
+    
+    void setGroupManager(GroupManager* group_manager);
+
+
 signals:
     /**
      * @brief Emitted when user double-clicks on a point to jump to that frame
@@ -284,6 +289,7 @@ private:
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
     std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
 
+    GroupManager* _group_manager = nullptr;
     bool _opengl_resources_initialized;
 
     // View parameters
@@ -402,6 +408,22 @@ private:
      * @param pos The position to show the menu at
      */
     void showContextMenu(const QPoint& pos);
+
+    /**
+     * @brief Assign selected points to a new group
+     */
+    void assignSelectedPointsToNewGroup();
+
+    /**
+     * @brief Assign selected points to an existing group
+     * @param group_id The ID of the group to assign to
+     */
+    void assignSelectedPointsToGroup(int group_id);
+
+    /**
+     * @brief Remove selected points from their groups
+     */
+    void ungroupSelectedPoints();
 
 };
 

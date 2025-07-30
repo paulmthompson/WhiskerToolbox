@@ -9,6 +9,7 @@
 
 class AbstractPlotWidget;
 class DataManager;
+class GroupManager;
 class QGraphicsSceneDragDropEvent;
 class QMimeData;
 
@@ -30,6 +31,12 @@ public:
      * @param data_manager Shared pointer to the data manager
      */
     void setDataManager(std::shared_ptr<DataManager> data_manager);
+
+    /**
+     * @brief Set the group manager for plot widgets
+     * @param group_manager Pointer to the group manager
+     */
+    void setGroupManager(GroupManager* group_manager);
 
     /**
      * @brief Add a plot widget to the scene at the specified position
@@ -109,6 +116,7 @@ private slots:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
+    GroupManager* _group_manager = nullptr;
     QMap<QString, AbstractPlotWidget*> _plot_widgets;
 
     /**

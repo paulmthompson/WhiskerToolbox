@@ -1,6 +1,7 @@
 #include "SpatialOverlayOpenGLWidget.hpp"
 #include "ShaderManager/ShaderManager.hpp"
 
+#include "Analysis_Dashboard/Groups/GroupManager.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Lines/LineDataVisualization.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp"
@@ -85,6 +86,41 @@ SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
 
 //========== Point Data ==========
 
+void SpatialOverlayOpenGLWidget::setGroupManager(GroupManager* group_manager) {
+    _group_manager = group_manager;
+    
+    // Connect to group manager signals to handle updates
+    if (_group_manager) {
+        connect(_group_manager, &GroupManager::pointAssignmentsChanged,
+                this, [this](const std::unordered_set<int>& affected_groups) {
+                    Q_UNUSED(affected_groups)
+                    // Refresh visualization data for all point visualizations
+                    for (auto& [key, viz] : _point_data_visualizations) {
+                        if (viz) {
+                            viz->refreshGroupRenderData();
+                        }
+                    }
+                    update(); // Trigger a repaint
+                });
+        
+        connect(_group_manager, &GroupManager::groupModified,
+                this, [this](int group_id) {
+                    Q_UNUSED(group_id)
+                    // Color changes don't require vertex data refresh, just re-render
+                    update();
+                });
+    }
+    
+    // Update existing point data visualizations with the group manager
+    for (auto& [key, viz] : _point_data_visualizations) {
+        if (viz) {
+            viz->setGroupManager(_group_manager);
+        }
+    }
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Set group manager for" << _point_data_visualizations.size() << "visualizations";
+}
+
 void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::shared_ptr<PointData>> const & point_data_map) {
     // Clear existing visualizations
     _point_data_visualizations.clear();
@@ -107,7 +143,7 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
             continue;
         }
 
-        auto viz = std::make_unique<PointDataVisualization>(key, point_data);
+        auto viz = std::make_unique<PointDataVisualization>(key, point_data, _group_manager);
         viz->m_color = colors[color_index % colors.size()];
         color_index++;
 
@@ -262,10 +298,11 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
     for (auto const & [key, viz]: _point_data_visualizations) {
         if (!viz->m_visible || viz->m_vertex_data.empty()) continue;
 
-        // Iterate through vertex data (x, y pairs)
-        for (size_t i = 0; i < viz->m_vertex_data.size(); i += 2) {
+        // Iterate through vertex data (x, y, group_id triplets)
+        for (size_t i = 0; i < viz->m_vertex_data.size(); i += 3) {
             float x = viz->m_vertex_data[i];
             float y = viz->m_vertex_data[i + 1];
+            // Skip group_id at i + 2
 
             min_x = std::min(min_x, x);
             max_x = std::max(max_x, x);
@@ -1163,6 +1200,39 @@ void SpatialOverlayOpenGLWidget::showContextMenu(const QPoint& pos) {
     // Check if we have any selected items
     size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
     
+    // Add group assignment options if we have selected points and a group manager
+    if (total_selected > 0 && _group_manager) {
+        // Add "Assign to Group" submenu
+        QMenu* assignGroupMenu = contextMenu.addMenu("Assign to Group");
+        
+        // Add "New Group" option
+        QAction* newGroupAction = assignGroupMenu->addAction("Create New Group");
+        connect(newGroupAction, &QAction::triggered, this, [this]() {
+            assignSelectedPointsToNewGroup();
+        });
+        
+        assignGroupMenu->addSeparator();
+        
+        // Add existing groups
+        const auto& groups = _group_manager->getGroups();
+        for (auto it = groups.begin(); it != groups.end(); ++it) {
+            const auto& group = it.value();
+            QAction* groupAction = assignGroupMenu->addAction(group.name);
+            int group_id = group.id;
+            connect(groupAction, &QAction::triggered, this, [this, group_id]() {
+                assignSelectedPointsToGroup(group_id);
+            });
+        }
+        
+        // Add "Remove from Group" option
+        QAction* ungroupAction = contextMenu.addAction("Remove from Group");
+        connect(ungroupAction, &QAction::triggered, this, [this]() {
+            ungroupSelectedPoints();
+        });
+        
+        contextMenu.addSeparator();
+    }
+    
     // Add "Hide Selected" option if there are selected items
     if (total_selected > 0) {
         QAction* hideAction = contextMenu.addAction(QString("Hide Selected (%1 items)").arg(total_selected));
@@ -1180,4 +1250,90 @@ void SpatialOverlayOpenGLWidget::showContextMenu(const QPoint& pos) {
     
     // Show the menu at the cursor position
     contextMenu.exec(mapToGlobal(pos));
+}
+
+//========== Group Assignment Methods ==========
+
+void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
+    if (!_group_manager) {
+        qDebug() << "SpatialOverlayOpenGLWidget: No group manager available for group assignment";
+        return;
+    }
+    
+    // Collect all selected point IDs
+    std::unordered_set<int64_t> selected_point_ids;
+    for (const auto& [key, viz] : _point_data_visualizations) {
+        if (viz) {
+            auto point_ids = viz->getSelectedPointIds();
+            selected_point_ids.insert(point_ids.begin(), point_ids.end());
+        }
+    }
+    
+    if (selected_point_ids.empty()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to new group";
+        return;
+    }
+    
+    // Create a new group
+    QString group_name = QString("Group %1").arg(_group_manager->getGroups().size() + 1);
+    int group_id = _group_manager->createGroup(group_name);
+    
+    // Assign selected points to the new group
+    _group_manager->assignPointsToGroup(group_id, selected_point_ids);
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size() 
+             << "points to new group" << group_id;
+}
+
+void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
+    if (!_group_manager) {
+        qDebug() << "SpatialOverlayOpenGLWidget: No group manager available for group assignment";
+        return;
+    }
+    
+    // Collect all selected point IDs
+    std::unordered_set<int64_t> selected_point_ids;
+    for (const auto& [key, viz] : _point_data_visualizations) {
+        if (viz) {
+            auto point_ids = viz->getSelectedPointIds();
+            selected_point_ids.insert(point_ids.begin(), point_ids.end());
+        }
+    }
+    
+    if (selected_point_ids.empty()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to group" << group_id;
+        return;
+    }
+    
+    // Assign selected points to the specified group
+    _group_manager->assignPointsToGroup(group_id, selected_point_ids);
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size() 
+             << "points to group" << group_id;
+}
+
+void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
+    if (!_group_manager) {
+        qDebug() << "SpatialOverlayOpenGLWidget: No group manager available for ungrouping";
+        return;
+    }
+    
+    // Collect all selected point IDs
+    std::unordered_set<int64_t> selected_point_ids;
+    for (const auto& [key, viz] : _point_data_visualizations) {
+        if (viz) {
+            auto point_ids = viz->getSelectedPointIds();
+            selected_point_ids.insert(point_ids.begin(), point_ids.end());
+        }
+    }
+    
+    if (selected_point_ids.empty()) {
+        qDebug() << "SpatialOverlayOpenGLWidget: No selected points to ungroup";
+        return;
+    }
+    
+    // Remove selected points from all groups
+    _group_manager->ungroupPoints(selected_point_ids);
+    
+    qDebug() << "SpatialOverlayOpenGLWidget: Ungrouped" << selected_point_ids.size() << "points";
 }

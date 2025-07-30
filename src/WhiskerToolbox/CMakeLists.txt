@@ -41,6 +41,11 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Scene/AnalysisDashboardScene.hpp
         Analysis_Dashboard/Scene/AnalysisDashboardScene.cpp
 
+        Analysis_Dashboard/Groups/GroupManager.hpp
+        Analysis_Dashboard/Groups/GroupManager.cpp
+        Analysis_Dashboard/Groups/GroupManagementWidget.hpp
+        Analysis_Dashboard/Groups/GroupManagementWidget.cpp
+
         Analysis_Dashboard/Toolbox/ToolboxPanel.hpp
         Analysis_Dashboard/Toolbox/ToolboxPanel.cpp
         Analysis_Dashboard/Toolbox/ToolboxPanel.ui

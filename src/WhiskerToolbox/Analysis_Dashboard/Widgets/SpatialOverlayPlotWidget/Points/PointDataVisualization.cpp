@@ -2,6 +2,7 @@
 
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Points/utils/Point_Data_utils.hpp"
+#include "Analysis_Dashboard/Groups/GroupManager.hpp"
 
 #include "ShaderManager/ShaderManager.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
@@ -12,31 +13,35 @@
 #include <QOpenGLShaderProgram>
 
 PointDataVisualization::PointDataVisualization(QString const & data_key,
-                                               std::shared_ptr<PointData> const & point_data)
+                                               std::shared_ptr<PointData> const & point_data,
+                                               GroupManager* group_manager)
     : m_key(data_key),
       m_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       m_selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       m_highlight_vertex_buffer(QOpenGLBuffer::VertexBuffer),
-      m_color(1.0f, 0.0f, 0.0f, 1.0f) {
+      m_color(1.0f, 0.0f, 0.0f, 1.0f),
+      m_group_manager(group_manager),
+      m_group_data_needs_update(false) {
     // Calculate bounds for QuadTree initialization
     BoundingBox bounds = calculateBoundsForPointData(point_data.get());
 
     m_spatial_index = std::make_unique<QuadTree<int64_t>>(bounds);
-    m_vertex_data.reserve(point_data->GetAllPointsAsRange().size() * 2);// Reserve space for x and y coordinates
+    m_vertex_data.reserve(point_data->GetAllPointsAsRange().size() * 3);// Reserve space for x, y, group_id
 
     for (auto const & time_points_pair: point_data->GetAllPointsAsRange()) {
         for (auto const & point: time_points_pair.points) {
             // Store original coordinates in QuadTree (preserve data structure)
             m_spatial_index->insert(point.x, point.y, time_points_pair.time.getValue());
 
-            // Store original coordinates in vertex data for OpenGL rendering
+            // Store coordinates and group_id in vertex data for OpenGL rendering
             m_vertex_data.push_back(point.x);
             m_vertex_data.push_back(point.y);
+            m_vertex_data.push_back(0.0f);  // group_id = 0 (ungrouped) initially
         }
     }
 
     // Initialize visibility statistics
-    m_total_point_count = m_vertex_data.size() / 2;
+    m_total_point_count = m_vertex_data.size() / 3;  // 3 components per point now
     m_hidden_point_count = 0;
     m_visible_vertex_count = m_vertex_data.size();
 
@@ -72,8 +77,13 @@ void PointDataVisualization::initializeOpenGLResources() {
     m_vertex_buffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
     m_vertex_buffer.allocate(m_vertex_data.data(), static_cast<int>(m_vertex_data.size() * sizeof(float)));
 
+    // Position attribute (x, y)
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    
+    // Group ID attribute
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(2 * sizeof(float)));
 
     m_vertex_buffer.release();
     m_vertex_array_object.release();
@@ -210,6 +220,11 @@ void PointDataVisualization::render(QMatrix4x4 const & mvp_matrix, float point_s
 
     pointProgram->getNativeProgram()->setUniformValue("u_mvp_matrix", mvp_matrix);
 
+    // Update group vertex data if needed
+    if (m_group_data_needs_update) {
+        _updateGroupVertexData();
+    }
+
     // Render regular points
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -235,12 +250,29 @@ void PointDataVisualization::_renderPoints(QOpenGLShaderProgram * shader_program
     m_vertex_array_object.bind();
     m_vertex_buffer.bind();
 
-    // Set color for this PointData
-    shader_program->setUniformValue("u_color", m_color);
+    // Set up group colors as uniform array if we have groups
+    if (m_group_manager) {
+        const auto& groups = m_group_manager->getGroups();
+        std::vector<QVector4D> group_colors;
+        group_colors.push_back(m_color); // Index 0 = ungrouped color
+        
+        for (auto it = groups.begin(); it != groups.end(); ++it) {
+            const auto& group = it.value();
+            group_colors.push_back(QVector4D(group.color.redF(), group.color.greenF(), 
+                                           group.color.blueF(), group.color.alphaF()));
+        }
+        
+        // Pass group colors to shader (implementation depends on shader)
+        // For now, use default color - shader enhancement needed for full group support
+        shader_program->setUniformValue("u_color", m_color);
+    } else {
+        shader_program->setUniformValue("u_color", m_color);
+    }
+
     shader_program->setUniformValue("u_point_size", point_size);
 
-    // Draw only the visible points (those currently in the vertex buffer)
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_visible_vertex_count / 2));
+    // Draw all points in a single call
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_total_point_count));
 
     m_vertex_buffer.release();
     m_vertex_array_object.release();
@@ -454,36 +486,45 @@ void PointDataVisualization::_updateVisibleVertexBuffer() {
         return;
     }
     
-    // Create new vertex data excluding hidden points
-    std::vector<float> visible_vertex_data;
+    // Rebuild vertex data with current visibility and group assignments
+    m_vertex_data.clear();
     
-    // Get all points from the spatial index and filter out hidden ones
+    // Get all points from the spatial index
     std::vector<QuadTreePoint<int64_t> const *> all_points;
     BoundingBox full_bounds = m_spatial_index->getBounds();
     m_spatial_index->queryPointers(full_bounds, all_points);
     
     m_total_point_count = all_points.size();
+    m_hidden_point_count = 0;
     
     for (const auto* point_ptr : all_points) {
-        // Skip hidden points
-        if (m_hidden_points.find(point_ptr) == m_hidden_points.end() &&
-            point_ptr->data >= m_time_range_start &&
-            point_ptr->data <= m_time_range_end) {
-            visible_vertex_data.push_back(point_ptr->x);
-            visible_vertex_data.push_back(point_ptr->y);
+        // Check if point is hidden or outside time range
+        bool is_hidden = (m_hidden_points.find(point_ptr) != m_hidden_points.end());
+        bool outside_time_range = (m_time_range_enabled && 
+                                  (point_ptr->data < m_time_range_start || point_ptr->data > m_time_range_end));
+        
+        if (is_hidden || outside_time_range) {
+            m_hidden_point_count++;
         }
+        
+        // Add all points to vertex data (hidden points will be filtered in shader if needed)
+        m_vertex_data.push_back(point_ptr->x);
+        m_vertex_data.push_back(point_ptr->y);
+        
+        // Get group ID for this point
+        int group_id = (m_group_manager ? m_group_manager->getPointGroup(point_ptr->data) : -1);
+        m_vertex_data.push_back(static_cast<float>(group_id == -1 ? 0 : group_id));
     }
     
-    // Update the visible vertex count
-    m_visible_vertex_count = visible_vertex_data.size();
+    m_visible_vertex_count = m_vertex_data.size();
     
-    // Update the vertex buffer with only visible points
+    // Update the OpenGL vertex buffer
     m_vertex_buffer.bind();
-    m_vertex_buffer.allocate(visible_vertex_data.data(), static_cast<int>(visible_vertex_data.size() * sizeof(float)));
+    m_vertex_buffer.allocate(m_vertex_data.data(), static_cast<int>(m_vertex_data.size() * sizeof(float)));
     m_vertex_buffer.release();
     
-    qDebug() << "PointDataVisualization: Updated vertex buffer with" << (m_visible_vertex_count / 2) 
-             << "visible points out of" << m_total_point_count << "total points";
+    qDebug() << "PointDataVisualization: Updated vertex buffer with" << m_total_point_count 
+             << "total points (" << m_hidden_point_count << "hidden)";
 }
 
 void PointDataVisualization::setTimeRangeEnabled(bool enabled) {
@@ -509,4 +550,67 @@ void PointDataVisualization::setTimeRange(int start_frame, int end_frame) {
     _updateVisibleVertexBuffer();
     
     qDebug() << "Time range updated and visibility mask refreshed";
+}
+
+//========== Group Management ==========
+
+void PointDataVisualization::setGroupManager(GroupManager* group_manager) {
+    m_group_manager = group_manager;
+    
+    if (m_group_manager) {
+        // Initial refresh of group data
+        refreshGroupRenderData();
+    }
+}
+
+std::unordered_set<int64_t> PointDataVisualization::getSelectedPointIds() const {
+    std::unordered_set<int64_t> point_ids;
+    
+    for (const auto* point_ptr : m_selected_points) {
+        point_ids.insert(point_ptr->data);  // data field contains the time stamp ID
+    }
+    
+    return point_ids;
+}
+
+void PointDataVisualization::refreshGroupRenderData() {
+    if (!m_group_manager) {
+        return;
+    }
+    
+    m_group_data_needs_update = true;
+    _updateGroupVertexData();
+}
+
+//========== Private Methods ==========
+
+void PointDataVisualization::_updateGroupVertexData() {
+    if (!m_group_manager || !m_spatial_index) {
+        return;
+    }
+    
+    // Get all points from the spatial index
+    std::vector<QuadTreePoint<int64_t> const *> all_points;
+    BoundingBox full_bounds = m_spatial_index->getBounds();
+    m_spatial_index->queryPointers(full_bounds, all_points);
+    
+    // Update group IDs in vertex data
+    size_t vertex_index = 0;
+    for (const auto* point_ptr : all_points) {
+        if (vertex_index * 3 + 2 < m_vertex_data.size()) {
+            // Get group ID for this point (0 = ungrouped)
+            int group_id = m_group_manager->getPointGroup(point_ptr->data);
+            m_vertex_data[vertex_index * 3 + 2] = static_cast<float>(group_id == -1 ? 0 : group_id);
+            vertex_index++;
+        }
+    }
+    
+    // Update OpenGL buffer
+    if (m_vertex_buffer.isCreated()) {
+        m_vertex_buffer.bind();
+        m_vertex_buffer.allocate(m_vertex_data.data(), static_cast<int>(m_vertex_data.size() * sizeof(float)));
+        m_vertex_buffer.release();
+    }
+    
+    m_group_data_needs_update = false;
 }
