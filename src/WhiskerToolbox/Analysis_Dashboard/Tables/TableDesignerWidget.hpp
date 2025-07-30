@@ -106,6 +106,21 @@ private slots:
     void onColumnComputerChanged();
 
     /**
+     * @brief Handle changes to the column list selection
+     */
+    void onColumnSelectionChanged();
+
+    /**
+     * @brief Handle changes to the column name text
+     */
+    void onColumnNameChanged();
+
+    /**
+     * @brief Handle changes to the column description text
+     */
+    void onColumnDescriptionChanged();
+
+    /**
      * @brief Handle building the table
      */
     void onBuildTable();
@@ -227,6 +242,22 @@ private:
      * @param selected_source The selected row data source
      */
     void updateRowInfoLabel(const QString& selected_source);
+    
+    /**
+     * @brief Load column configuration from table manager into UI
+     * @param column_index The index of the column to load
+     */
+    void loadColumnConfiguration(int column_index);
+    
+    /**
+     * @brief Save current column configuration from UI to table manager
+     */
+    void saveCurrentColumnConfiguration();
+    
+    /**
+     * @brief Clear the column configuration UI
+     */
+    void clearColumnConfiguration();
     
     /**
      * @brief Get available data sources from the data manager

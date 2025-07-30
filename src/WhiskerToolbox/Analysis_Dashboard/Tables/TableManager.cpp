@@ -140,6 +140,136 @@ bool TableManager::updateTableRowSource(const QString& table_id, const QString& 
     return true;
 }
 
+bool TableManager::addTableColumn(const QString& table_id, const ColumnInfo& column_info) {
+    if (!hasTable(table_id)) {
+        return false;
+    }
+    
+    auto& table = _table_info[table_id];
+    table.columns.append(column_info);
+    
+    // Update the columnNames list for backward compatibility
+    table.columnNames.clear();
+    for (const auto& column : table.columns) {
+        table.columnNames.append(column.name);
+    }
+    
+    qDebug() << "Added column" << column_info.name << "to table" << table_id;
+    emit tableInfoUpdated(table_id);
+    
+    return true;
+}
+
+bool TableManager::updateTableColumn(const QString& table_id, int column_index, const ColumnInfo& column_info) {
+    if (!hasTable(table_id)) {
+        return false;
+    }
+    
+    auto& table = _table_info[table_id];
+    if (column_index < 0 || column_index >= table.columns.size()) {
+        return false;
+    }
+    
+    table.columns[column_index] = column_info;
+    
+    // Update the columnNames list for backward compatibility
+    table.columnNames.clear();
+    for (const auto& column : table.columns) {
+        table.columnNames.append(column.name);
+    }
+    
+    qDebug() << "Updated column" << column_index << "in table" << table_id << "to:" << column_info.name;
+    emit tableInfoUpdated(table_id);
+    
+    return true;
+}
+
+bool TableManager::removeTableColumn(const QString& table_id, int column_index) {
+    if (!hasTable(table_id)) {
+        return false;
+    }
+    
+    auto& table = _table_info[table_id];
+    if (column_index < 0 || column_index >= table.columns.size()) {
+        return false;
+    }
+    
+    QString column_name = table.columns[column_index].name;
+    table.columns.removeAt(column_index);
+    
+    // Update the columnNames list for backward compatibility
+    table.columnNames.clear();
+    for (const auto& column : table.columns) {
+        table.columnNames.append(column.name);
+    }
+    
+    qDebug() << "Removed column" << column_name << "from table" << table_id;
+    emit tableInfoUpdated(table_id);
+    
+    return true;
+}
+
+bool TableManager::moveTableColumnUp(const QString& table_id, int column_index) {
+    if (!hasTable(table_id)) {
+        return false;
+    }
+    
+    auto& table = _table_info[table_id];
+    if (column_index <= 0 || column_index >= table.columns.size()) {
+        return false;
+    }
+    
+    table.columns.swapItemsAt(column_index - 1, column_index);
+    
+    // Update the columnNames list for backward compatibility
+    table.columnNames.clear();
+    for (const auto& column : table.columns) {
+        table.columnNames.append(column.name);
+    }
+    
+    qDebug() << "Moved column" << column_index << "up in table" << table_id;
+    emit tableInfoUpdated(table_id);
+    
+    return true;
+}
+
+bool TableManager::moveTableColumnDown(const QString& table_id, int column_index) {
+    if (!hasTable(table_id)) {
+        return false;
+    }
+    
+    auto& table = _table_info[table_id];
+    if (column_index < 0 || column_index >= table.columns.size() - 1) {
+        return false;
+    }
+    
+    table.columns.swapItemsAt(column_index, column_index + 1);
+    
+    // Update the columnNames list for backward compatibility
+    table.columnNames.clear();
+    for (const auto& column : table.columns) {
+        table.columnNames.append(column.name);
+    }
+    
+    qDebug() << "Moved column" << column_index << "down in table" << table_id;
+    emit tableInfoUpdated(table_id);
+    
+    return true;
+}
+
+TableManager::ColumnInfo TableManager::getTableColumn(const QString& table_id, int column_index) const {
+    if (!hasTable(table_id)) {
+        return ColumnInfo();
+    }
+    
+    const auto& table = _table_info.value(table_id);
+    if (column_index < 0 || column_index >= table.columns.size()) {
+        return ColumnInfo();
+    }
+    
+    return table.columns[column_index];
+}
+
 QString TableManager::generateUniqueTableId(const QString& base_name) const {
     QString candidate;
     do {

@@ -23,12 +23,26 @@ class TableManager : public QObject {
     Q_OBJECT
 
 public:
+    struct ColumnInfo {
+        QString name;              ///< User-friendly name for the column
+        QString description;       ///< Optional description
+        QString dataSourceName;    ///< Name/ID of the data source (e.g., "analog:LFP", "events:Spikes")
+        QString computerName;      ///< Name of the computer to use
+        
+        ColumnInfo() = default;
+        ColumnInfo(QString column_name, QString column_description = "", 
+                   QString data_source = "", QString computer = "")
+            : name(std::move(column_name)), description(std::move(column_description)),
+              dataSourceName(std::move(data_source)), computerName(std::move(computer)) {}
+    };
+
     struct TableInfo {
-        QString id;              ///< Unique identifier for the table
-        QString name;            ///< User-friendly name for the table
-        QString description;     ///< Optional description
-        QString rowSourceName;   ///< Name of the data source used for rows
-        QStringList columnNames; ///< Names of columns in the table
+        QString id;                        ///< Unique identifier for the table
+        QString name;                      ///< User-friendly name for the table
+        QString description;               ///< Optional description
+        QString rowSourceName;             ///< Name of the data source used for rows
+        QStringList columnNames;           ///< Names of columns in the table (for backward compatibility)
+        QList<ColumnInfo> columns;         ///< Detailed column configurations
         
         TableInfo() = default;
         TableInfo(QString table_id, QString table_name, QString table_description = "")
@@ -124,6 +138,55 @@ public:
      * @return True if successful, false if table doesn't exist
      */
     bool updateTableRowSource(const QString& table_id, const QString& row_source_name);
+
+    /**
+     * @brief Add a column to a table
+     * @param table_id The table ID
+     * @param column_info The column configuration
+     * @return True if successful, false if table doesn't exist
+     */
+    bool addTableColumn(const QString& table_id, const ColumnInfo& column_info);
+
+    /**
+     * @brief Update a column in a table
+     * @param table_id The table ID
+     * @param column_index The index of the column to update
+     * @param column_info The updated column configuration
+     * @return True if successful, false if table doesn't exist or invalid index
+     */
+    bool updateTableColumn(const QString& table_id, int column_index, const ColumnInfo& column_info);
+
+    /**
+     * @brief Remove a column from a table
+     * @param table_id The table ID
+     * @param column_index The index of the column to remove
+     * @return True if successful, false if table doesn't exist or invalid index
+     */
+    bool removeTableColumn(const QString& table_id, int column_index);
+
+    /**
+     * @brief Move a column up in the list (decrease index)
+     * @param table_id The table ID
+     * @param column_index The index of the column to move up
+     * @return True if successful, false if table doesn't exist or invalid move
+     */
+    bool moveTableColumnUp(const QString& table_id, int column_index);
+
+    /**
+     * @brief Move a column down in the list (increase index)
+     * @param table_id The table ID
+     * @param column_index The index of the column to move down
+     * @return True if successful, false if table doesn't exist or invalid move
+     */
+    bool moveTableColumnDown(const QString& table_id, int column_index);
+
+    /**
+     * @brief Get column information for a specific column
+     * @param table_id The table ID
+     * @param column_index The index of the column
+     * @return Column information, or empty ColumnInfo if not found
+     */
+    ColumnInfo getTableColumn(const QString& table_id, int column_index) const;
 
     /**
      * @brief Generate a unique table ID
