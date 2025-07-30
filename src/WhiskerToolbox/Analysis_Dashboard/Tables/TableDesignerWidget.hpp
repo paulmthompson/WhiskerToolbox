@@ -223,6 +223,12 @@ private:
     void updateBuildStatus(const QString& message, bool is_error = false);
     
     /**
+     * @brief Update the row info label without triggering signals
+     * @param selected_source The selected row data source
+     */
+    void updateRowInfoLabel(const QString& selected_source);
+    
+    /**
      * @brief Get available data sources from the data manager
      * @return List of data source names
      */

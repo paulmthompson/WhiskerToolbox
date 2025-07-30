@@ -342,63 +342,13 @@ void TableDesignerWidget::onRowDataSourceChanged() {
     }
     
     // Save the row source selection to the current table
+    // Only save if we have a current table and we're not loading table info
     if (!_current_table_id.isEmpty() && _table_manager) {
         _table_manager->updateTableRowSource(_current_table_id, selected);
     }
     
-    // Parse the selected source to get type and name
-    QString source_type;
-    QString source_name;
-    
-    if (selected.startsWith("TimeFrame: ")) {
-        source_type = "TimeFrame";
-        source_name = selected.mid(11); // Remove "TimeFrame: " prefix
-    } else if (selected.startsWith("Events: ")) {
-        source_type = "Events";
-        source_name = selected.mid(8); // Remove "Events: " prefix
-    } else if (selected.startsWith("Intervals: ")) {
-        source_type = "Intervals";
-        source_name = selected.mid(11); // Remove "Intervals: " prefix
-    }
-    
-    // Get additional information about the selected source
-    QString info_text = QString("Selected: %1 (%2)").arg(source_name, source_type);
-    
-    if (!_table_manager) {
-        _row_info_label->setText(info_text);
-        return;
-    }
-    
-    auto data_manager_extension = _table_manager->getDataManagerExtension();
-    if (!data_manager_extension) {
-        _row_info_label->setText(info_text);
-        return;
-    }
-
-    auto const source_name_str = source_name.toStdString();
-    
-    // Add specific information based on source type
-    if (source_type == "TimeFrame") {
-
-        auto timeframe = _data_manager->getTime(source_name_str);
-        if (timeframe) {
-            info_text += QString(" - %1 time points").arg(timeframe->getTotalFrameCount());
-        }
-    } else if (source_type == "Events") {
-        auto event_series = _data_manager->getData<DigitalEventSeries>(source_name.toStdString());
-        if (event_series) {
-            auto events = event_series->getEventSeries();
-            info_text += QString(" - %1 events").arg(events.size());
-        }
-    } else if (source_type == "Intervals") {
-        auto interval_series = _data_manager->getData<DigitalIntervalSeries>(source_name.toStdString());
-        if (interval_series) {
-            auto intervals = interval_series->getDigitalIntervalSeries();
-            info_text += QString(" - %1 intervals").arg(intervals.size());
-        }
-    }
-    
-    _row_info_label->setText(info_text);
+    // Update the info label
+    updateRowInfoLabel(selected);
     
     // Refresh column computer options since they depend on row selector type
     refreshColumnComputerCombo();
@@ -692,9 +642,13 @@ void TableDesignerWidget::loadTableInfo(const QString& table_id) {
     if (!info.rowSourceName.isEmpty()) {
         int row_index = _row_data_source_combo->findText(info.rowSourceName);
         if (row_index >= 0) {
+            // Block signals to prevent circular dependency when loading table info
+            _row_data_source_combo->blockSignals(true);
             _row_data_source_combo->setCurrentIndex(row_index);
-            // Trigger the change handler to update info label
-            onRowDataSourceChanged();
+            _row_data_source_combo->blockSignals(false);
+            
+            // Manually update the info label without triggering the signal handler
+            updateRowInfoLabel(info.rowSourceName);
         }
     }
     
@@ -807,4 +761,64 @@ QStringList TableDesignerWidget::getAvailableTableColumns() const {
     }
     
     return columns;
+}
+
+void TableDesignerWidget::updateRowInfoLabel(const QString& selected_source) {
+    if (selected_source.isEmpty()) {
+        _row_info_label->setText("No row source selected");
+        return;
+    }
+    
+    // Parse the selected source to get type and name
+    QString source_type;
+    QString source_name;
+    
+    if (selected_source.startsWith("TimeFrame: ")) {
+        source_type = "TimeFrame";
+        source_name = selected_source.mid(11); // Remove "TimeFrame: " prefix
+    } else if (selected_source.startsWith("Events: ")) {
+        source_type = "Events";
+        source_name = selected_source.mid(8); // Remove "Events: " prefix
+    } else if (selected_source.startsWith("Intervals: ")) {
+        source_type = "Intervals";
+        source_name = selected_source.mid(11); // Remove "Intervals: " prefix
+    }
+    
+    // Get additional information about the selected source
+    QString info_text = QString("Selected: %1 (%2)").arg(source_name, source_type);
+    
+    if (!_table_manager) {
+        _row_info_label->setText(info_text);
+        return;
+    }
+    
+    auto data_manager_extension = _table_manager->getDataManagerExtension();
+    if (!data_manager_extension) {
+        _row_info_label->setText(info_text);
+        return;
+    }
+
+    auto const source_name_str = source_name.toStdString();
+    
+    // Add specific information based on source type
+    if (source_type == "TimeFrame") {
+        auto timeframe = _data_manager->getTime(source_name_str);
+        if (timeframe) {
+            info_text += QString(" - %1 time points").arg(timeframe->getTotalFrameCount());
+        }
+    } else if (source_type == "Events") {
+        auto event_series = _data_manager->getData<DigitalEventSeries>(source_name_str);
+        if (event_series) {
+            auto events = event_series->getEventSeries();
+            info_text += QString(" - %1 events").arg(events.size());
+        }
+    } else if (source_type == "Intervals") {
+        auto interval_series = _data_manager->getData<DigitalIntervalSeries>(source_name_str);
+        if (interval_series) {
+            auto intervals = interval_series->getDigitalIntervalSeries();
+            info_text += QString(" - %1 intervals").arg(intervals.size());
+        }
+    }
+    
+    _row_info_label->setText(info_text);
 }
