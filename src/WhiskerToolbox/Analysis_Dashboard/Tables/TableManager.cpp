@@ -127,6 +127,19 @@ bool TableManager::updateTableInfo(const QString& table_id, const QString& table
     return true;
 }
 
+bool TableManager::updateTableRowSource(const QString& table_id, const QString& row_source_name) {
+    if (!hasTable(table_id)) {
+        return false;
+    }
+    
+    _table_info[table_id].rowSourceName = row_source_name;
+    
+    qDebug() << "Updated row source for table" << table_id << "to:" << row_source_name;
+    emit tableInfoUpdated(table_id);
+    
+    return true;
+}
+
 QString TableManager::generateUniqueTableId(const QString& base_name) const {
     QString candidate;
     do {

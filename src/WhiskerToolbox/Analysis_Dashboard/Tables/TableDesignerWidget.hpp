@@ -38,7 +38,7 @@ class TableDesignerWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit TableDesignerWidget(TableManager* table_manager, QWidget* parent = nullptr);
+    explicit TableDesignerWidget(TableManager* table_manager, std::shared_ptr<DataManager> data_manager, QWidget* parent = nullptr);
     ~TableDesignerWidget() override;
 
 signals:
@@ -125,6 +125,8 @@ private slots:
 private:
     Ui::TableDesignerWidget* ui;
     TableManager* _table_manager;
+
+    std::shared_ptr<DataManager> _data_manager;
     
     // UI components (manually created for now, could use .ui file later)
     QVBoxLayout* _main_layout;

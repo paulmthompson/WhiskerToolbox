@@ -118,6 +118,14 @@ public:
     bool updateTableInfo(const QString& table_id, const QString& table_name, const QString& table_description = "");
 
     /**
+     * @brief Update the row source name for a table
+     * @param table_id The table ID
+     * @param row_source_name The row source name
+     * @return True if successful, false if table doesn't exist
+     */
+    bool updateTableRowSource(const QString& table_id, const QString& row_source_name);
+
+    /**
      * @brief Generate a unique table ID
      * @param base_name Base name for the ID generation
      * @return Unique table ID

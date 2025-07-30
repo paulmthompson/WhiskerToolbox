@@ -3,6 +3,10 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/ComputerRegistry.hpp"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
+#include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/Points/Point_Data.hpp"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -18,10 +22,11 @@
 #include <QInputDialog>
 #include <QDebug>
 
-TableDesignerWidget::TableDesignerWidget(TableManager* table_manager, QWidget* parent)
+TableDesignerWidget::TableDesignerWidget(TableManager* table_manager, std::shared_ptr<DataManager> data_manager, QWidget* parent)
     : QWidget(parent),
       ui(nullptr),
       _table_manager(table_manager),
+      _data_manager(data_manager),
       _main_layout(nullptr),
       _table_selection_group(nullptr),
       _table_combo(nullptr),
@@ -336,9 +341,64 @@ void TableDesignerWidget::onRowDataSourceChanged() {
         return;
     }
     
-    // Update info label with details about the selected source
-    // This is a placeholder - you might want to add more detailed information
-    _row_info_label->setText(QString("Selected: %1").arg(selected));
+    // Save the row source selection to the current table
+    if (!_current_table_id.isEmpty() && _table_manager) {
+        _table_manager->updateTableRowSource(_current_table_id, selected);
+    }
+    
+    // Parse the selected source to get type and name
+    QString source_type;
+    QString source_name;
+    
+    if (selected.startsWith("TimeFrame: ")) {
+        source_type = "TimeFrame";
+        source_name = selected.mid(11); // Remove "TimeFrame: " prefix
+    } else if (selected.startsWith("Events: ")) {
+        source_type = "Events";
+        source_name = selected.mid(8); // Remove "Events: " prefix
+    } else if (selected.startsWith("Intervals: ")) {
+        source_type = "Intervals";
+        source_name = selected.mid(11); // Remove "Intervals: " prefix
+    }
+    
+    // Get additional information about the selected source
+    QString info_text = QString("Selected: %1 (%2)").arg(source_name, source_type);
+    
+    if (!_table_manager) {
+        _row_info_label->setText(info_text);
+        return;
+    }
+    
+    auto data_manager_extension = _table_manager->getDataManagerExtension();
+    if (!data_manager_extension) {
+        _row_info_label->setText(info_text);
+        return;
+    }
+
+    auto const source_name_str = source_name.toStdString();
+    
+    // Add specific information based on source type
+    if (source_type == "TimeFrame") {
+
+        auto timeframe = _data_manager->getTime(source_name_str);
+        if (timeframe) {
+            info_text += QString(" - %1 time points").arg(timeframe->getTotalFrameCount());
+        }
+    } else if (source_type == "Events") {
+        auto event_series = _data_manager->getData<DigitalEventSeries>(source_name.toStdString());
+        if (event_series) {
+            auto events = event_series->getEventSeries();
+            info_text += QString(" - %1 events").arg(events.size());
+        }
+    } else if (source_type == "Intervals") {
+        auto interval_series = _data_manager->getData<DigitalIntervalSeries>(source_name.toStdString());
+        if (interval_series) {
+            auto intervals = interval_series->getDigitalIntervalSeries();
+            info_text += QString(" - %1 intervals").arg(intervals.size());
+        }
+    }
+    
+    _row_info_label->setText(info_text);
     
     // Refresh column computer options since they depend on row selector type
     refreshColumnComputerCombo();
@@ -528,21 +588,55 @@ void TableDesignerWidget::refreshColumnDataSourceCombo() {
         return;
     }
     
-    // Add data manager sources
-    auto data_sources = getAvailableDataSources();
-    for (const QString& source : data_sources) {
-        _column_data_source_combo->addItem(QString("DataManager: %1").arg(source), source);
+    auto data_manager_extension = _table_manager->getDataManagerExtension();
+    if (!data_manager_extension) {
+        return;
     }
     
-    // Add existing table columns
+    // Add AnalogTimeSeries data sources (continuous signals)
+    auto analog_keys = _data_manager->getKeys<AnalogTimeSeries>();
+    for (const auto& key : analog_keys) {
+        _column_data_source_combo->addItem(QString("Analog: %1").arg(QString::fromStdString(key)), 
+                                           QString("analog:%1").arg(QString::fromStdString(key)));
+    }
+    
+    // Add DigitalEventSeries data sources (discrete events)
+    auto event_keys = _data_manager->getKeys<DigitalEventSeries>();
+    for (const auto& key : event_keys) {
+        _column_data_source_combo->addItem(QString("Events: %1").arg(QString::fromStdString(key)), 
+                                           QString("events:%1").arg(QString::fromStdString(key)));
+    }
+    
+    // Add DigitalIntervalSeries data sources (time intervals)
+    auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
+    for (const auto& key : interval_keys) {
+        _column_data_source_combo->addItem(QString("Intervals: %1").arg(QString::fromStdString(key)), 
+                                           QString("intervals:%1").arg(QString::fromStdString(key)));
+    }
+    
+    // Add PointData sources with component access (X, Y coordinates)
+    auto point_keys = _data_manager->getKeys<PointData>();
+    for (const auto& key : point_keys) {
+        _column_data_source_combo->addItem(QString("Points X: %1").arg(QString::fromStdString(key)), 
+                                           QString("points_x:%1").arg(QString::fromStdString(key)));
+        _column_data_source_combo->addItem(QString("Points Y: %1").arg(QString::fromStdString(key)), 
+                                           QString("points_y:%1").arg(QString::fromStdString(key)));
+    }
+    
+    // Add existing table columns as potential data sources
     auto table_columns = getAvailableTableColumns();
     for (const QString& column : table_columns) {
-        _column_data_source_combo->addItem(QString("Table Column: %1").arg(column), column);
+        _column_data_source_combo->addItem(QString("Table Column: %1").arg(column), 
+                                           QString("table:%1").arg(column));
     }
     
     if (_column_data_source_combo->count() == 0) {
         _column_data_source_combo->addItem("(No data sources available)", "");
     }
+    
+    qDebug() << "Column data sources: " << analog_keys.size() << "analog," 
+             << event_keys.size() << "events," << interval_keys.size() << "intervals," 
+             << point_keys.size() << "point series," << table_columns.size() << "table columns";
 }
 
 void TableDesignerWidget::refreshColumnComputerCombo() {
@@ -599,6 +693,8 @@ void TableDesignerWidget::loadTableInfo(const QString& table_id) {
         int row_index = _row_data_source_combo->findText(info.rowSourceName);
         if (row_index >= 0) {
             _row_data_source_combo->setCurrentIndex(row_index);
+            // Trigger the change handler to update info label
+            onRowDataSourceChanged();
         }
     }
     
@@ -665,11 +761,30 @@ QStringList TableDesignerWidget::getAvailableDataSources() const {
         return sources;
     }
     
-    // TODO: Query DataManagerExtension for available sources
-    // This is a placeholder implementation
+    // Add TimeFrame keys as potential row sources
+    // TimeFrames can define intervals for analysis
+    auto timeframe_keys = _data_manager->getTimeFrameKeys();
+    for (const auto& key : timeframe_keys) {
+        sources << QString("TimeFrame: %1").arg(QString::fromStdString(key));
+    }
     
-    // Add some example sources
-    sources << "example_timeframe" << "example_events" << "example_intervals";
+    // Add DigitalEventSeries keys as potential row sources
+    // Events can be used to define analysis windows or timestamps
+    auto event_keys = _data_manager->getKeys<DigitalEventSeries>();
+    for (const auto& key : event_keys) {
+        sources << QString("Events: %1").arg(QString::fromStdString(key));
+    }
+    
+    // Add DigitalIntervalSeries keys as potential row sources
+    // Intervals directly define analysis windows
+    auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
+    for (const auto& key : interval_keys) {
+        sources << QString("Intervals: %1").arg(QString::fromStdString(key));
+    }
+    
+    qDebug() << "Found" << timeframe_keys.size() << "TimeFrames," 
+             << event_keys.size() << "Event series," 
+             << interval_keys.size() << "Interval series";
     
     return sources;
 }

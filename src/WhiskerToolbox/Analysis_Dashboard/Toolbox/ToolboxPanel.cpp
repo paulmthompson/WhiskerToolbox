@@ -25,7 +25,7 @@ ToolboxPanel::ToolboxPanel(GroupManager* group_manager, std::shared_ptr<DataMana
     _group_widget = new GroupManagementWidget(group_manager, this);
     
     // Create the table designer widget
-    _table_designer_widget = new TableDesignerWidget(_table_manager.get(), this);
+    _table_designer_widget = new TableDesignerWidget(_table_manager.get(), data_manager, this);
     
     // Insert widgets into the layout
     auto * layout = ui->verticalLayout;
