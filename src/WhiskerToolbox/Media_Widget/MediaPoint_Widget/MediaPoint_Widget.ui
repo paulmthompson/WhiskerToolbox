@@ -10,6 +10,12 @@
     <height>300</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
@@ -103,48 +109,22 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
-     <property name="spacing">
-      <number>6</number>
+    <widget class="ColorPicker_Widget" name="color_picker" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <item>
-      <widget class="ColorPicker_Widget" name="color_picker" native="true">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>264</width>
-         <height>0</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_4">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
+    </widget>
    </item>
    <item>
     <layout class="QGridLayout" name="point_settings_layout">
      <property name="sizeConstraint">
-      <enum>QLayout::SizeConstraint::SetFixedSize</enum>
+      <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
      </property>
      <property name="horizontalSpacing">
-      <number>0</number>
+      <number>6</number>
      </property>
      <property name="verticalSpacing">
       <number>6</number>
@@ -158,6 +138,12 @@
      </item>
      <item row="0" column="2">
       <widget class="QSpinBox" name="point_size_spinbox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>50</width>
@@ -178,16 +164,10 @@
      <item row="2" column="1" colspan="2">
       <widget class="QComboBox" name="marker_shape_combo">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>100</width>
-         <height>0</height>
-        </size>
        </property>
        <item>
         <property name="text">
@@ -224,12 +204,18 @@
      <item row="2" column="0">
       <widget class="QLabel" name="marker_shape_label">
        <property name="text">
-        <string>Marker Shape:      </string>
+        <string>Marker Shape:</string>
        </property>
       </widget>
      </item>
      <item row="0" column="1">
       <widget class="QSlider" name="point_size_slider">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimum">
         <number>1</number>
        </property>
@@ -244,19 +230,6 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="3" rowspan="3">
-      <spacer name="horizontalSpacer_5">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
     </layout>
    </item>
    <item>
@@ -265,36 +238,30 @@
       <number>6</number>
      </property>
      <property name="sizeConstraint">
-      <enum>QLayout::SizeConstraint::SetFixedSize</enum>
+      <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
      </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <property name="spacing">
-        <number>1</number>
+        <number>6</number>
        </property>
        <property name="sizeConstraint">
-        <enum>QLayout::SizeConstraint::SetFixedSize</enum>
+        <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
        </property>
        <item>
         <widget class="QLabel" name="label_4">
          <property name="text">
-          <string>Mouse Mode:      </string>
+          <string>Mouse Mode:</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QComboBox" name="selection_model_combo">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>100</width>
-           <height>0</height>
-          </size>
          </property>
          <item>
           <property name="text">
@@ -303,25 +270,12 @@
          </item>
         </widget>
        </item>
-       <item>
-        <spacer name="horizontalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
       </layout>
      </item>
      <item>
       <widget class="QLabel" name="selection_model_label">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
@@ -341,7 +295,7 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>250</width>
+         <width>20</width>
          <height>40</height>
         </size>
        </property>

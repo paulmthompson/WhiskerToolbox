@@ -10,9 +10,15 @@
     <height>100</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="minimumSize">
    <size>
-    <width>200</width>
+    <width>180</width>
     <height>100</height>
    </size>
   </property>
@@ -41,6 +47,12 @@
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="0">
         <widget class="QSpinBox" name="red_spinbox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="maximum">
           <number>255</number>
          </property>
@@ -48,6 +60,12 @@
        </item>
        <item row="0" column="1">
         <widget class="QSpinBox" name="green_spinbox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="maximum">
           <number>255</number>
          </property>
@@ -55,6 +73,12 @@
        </item>
        <item row="0" column="2">
         <widget class="QSpinBox" name="blue_spinbox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="maximum">
           <number>255</number>
          </property>
@@ -94,6 +118,12 @@
      </item>
      <item>
       <widget class="QWidget" name="color_preview" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>40</width>
@@ -123,7 +153,14 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QLineEdit" name="lineEdit"/>
+      <widget class="QLineEdit" name="lineEdit">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
      </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_5">
@@ -134,6 +171,12 @@
      </item>
      <item row="1" column="1">
       <widget class="QSlider" name="horizontalSlider">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="maximum">
         <number>100</number>
        </property>

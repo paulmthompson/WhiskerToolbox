@@ -98,26 +98,33 @@ void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_mana
 }
 
 void Feature_Table_Widget::_addFeatureName(std::string const & key, int row, int col) {
-    ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(key)));
+    auto* item = new QTableWidgetItem(QString::fromStdString(key));
+    item->setTextAlignment(Qt::AlignCenter);
+    ui->available_features_table->setItem(row, col, item);
 }
 
 void Feature_Table_Widget::_addFeatureType(std::string const & key, int row, int col) {
 
     std::string const type = convert_data_type_to_string(_data_manager->getType(key));
-    ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(type)));
+    auto* item = new QTableWidgetItem(QString::fromStdString(type));
+    item->setTextAlignment(Qt::AlignCenter);
+    ui->available_features_table->setItem(row, col, item);
 }
 
 void Feature_Table_Widget::_addFeatureClock(std::string const & key, int row, int col) {
 
     std::string const clock = _data_manager->getTimeFrame(key);
-    ui->available_features_table->setItem(row, col, new QTableWidgetItem(QString::fromStdString(clock)));
+    auto* item = new QTableWidgetItem(QString::fromStdString(clock));
+    item->setTextAlignment(Qt::AlignCenter);
+    ui->available_features_table->setItem(row, col, item);
 }
 
 void Feature_Table_Widget::_addFeatureElements(std::string const & key, int row, int col) {
 
     static_cast<void>(key);
-
-    ui->available_features_table->setItem(row, col, new QTableWidgetItem("1"));
+    auto* item = new QTableWidgetItem("1");
+    item->setTextAlignment(Qt::AlignCenter);
+    ui->available_features_table->setItem(row, col, item);
 }
 
 void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, int col) {

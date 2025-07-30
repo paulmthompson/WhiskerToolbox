@@ -1,6 +1,8 @@
 #include "Media_Widget.hpp"
 #include "ui_Media_Widget.h"
 #include <QTimer>
+#include <QApplication>
+#include <QResizeEvent>
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -253,7 +255,19 @@ void Media_Widget::_updateCanvasSize() {
 
         // Update the feature table size to match the scroll area width with smaller right margin
         int scrollAreaWidth = ui->scrollArea->width();
-        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 10); // Decreased from 29 to 10 for even smaller right margin
+        int featureTableWidth = scrollAreaWidth - 10;
+        ui->feature_table_widget->setFixedWidth(featureTableWidth);
+
+        // Update stacked widget width to match feature table
+        ui->stackedWidget->setFixedWidth(featureTableWidth);
+
+        // Update all widgets in the stacked widget to match the width
+        for (int i = 0; i < ui->stackedWidget->count(); ++i) {
+            QWidget* widget = ui->stackedWidget->widget(i);
+            if (widget) {
+                widget->setFixedWidth(featureTableWidth);
+            }
+        }
     }
 }
 
