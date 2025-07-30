@@ -366,6 +366,10 @@ void BatchProcessing_Widget::loadFolderWithJson()
     }
     
     try {
+        // Reset DataManager to clear any previously loaded data
+        qDebug() << "Resetting DataManager before loading new data...";
+        m_dataManager->reset();
+        
         // Load data using the current JSON content and selected folder
         auto dataInfoList = loadDataFromJsonContent(jsonText, selectedFolder);
         
