@@ -9,6 +9,7 @@
 #include <QStringList>
 #include <QTableWidget>
 #include <qcheckbox.h>
+#include <QHBoxLayout>
 
 #include <iostream>
 
@@ -120,25 +121,37 @@ void Feature_Table_Widget::_addFeatureElements(std::string const & key, int row,
 }
 
 void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, int col) {
+    // Create a widget to center the checkbox
+    QWidget* centerWidget = new QWidget();
+    QHBoxLayout* layout = new QHBoxLayout(centerWidget);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setAlignment(Qt::AlignCenter);
+
+    // Create the checkbox
     auto checkboxItem = new QCheckBox();
     checkboxItem->setCheckState(Qt::Unchecked);
 
-    // Center the checkbox in the cell - using a simpler approach
-    checkboxItem->setAttribute(Qt::WA_TranslucentBackground);
+    // Add checkbox to the layout
+    layout->addWidget(checkboxItem);
 
-    ui->available_features_table->setCellWidget(row, col, checkboxItem);
+    // Set the widget in the cell
+    ui->available_features_table->setCellWidget(row, col, centerWidget);
 
-    connect(checkboxItem, &QCheckBox::stateChanged, [this, key](int state) {
+    // Connect the state change signal
+    connect(checkboxItem, &QCheckBox::stateChanged, [this, key, checkboxItem](int state) {
         if (state == Qt::Checked) {
+            // Feature is enabled
             emit addFeature(QString::fromStdString(key));
-        } else {
-            emit removeFeature(QString::fromStdString(key));
-        }
 
-        // Also emit featureSelected signal to ensure the stacked widget shows the correct pane
-        // when user directly clicks the checkbox
-        _highlighted_feature = QString::fromStdString(key);
-        emit featureSelected(_highlighted_feature);
+            // Select the feature when checked
+            _highlighted_feature = QString::fromStdString(key);
+            emit featureSelected(_highlighted_feature);
+        } else {
+            // Feature is disabled
+            emit removeFeature(QString::fromStdString(key));
+
+            // We don't change selection when unchecked
+        }
     });
 }
 

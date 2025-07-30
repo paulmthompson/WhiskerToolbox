@@ -36,8 +36,8 @@ Media_Widget::Media_Widget(QWidget * parent)
     ui->splitter->setStretchFactor(0, 0);// Left panel (scroll area) doesn't stretch
     ui->splitter->setStretchFactor(1, 1);// Right panel (graphics view) stretches
 
-    // Set initial sizes: 200px for left panel, rest for canvas
-    ui->splitter->setSizes({300, 563});
+    // Set initial sizes: 250px for left panel, rest for canvas (reduced from 350px)
+    ui->splitter->setSizes({250, 513});
 
     // Set collapsible behavior
     ui->splitter->setCollapsible(0, false);// Prevent left panel from collapsing
@@ -70,7 +70,7 @@ Media_Widget::Media_Widget(QWidget * parent)
     // Ensure the feature table is properly sized on startup with smaller right margin
     QTimer::singleShot(0, this, [this]() {
         int scrollAreaWidth = ui->scrollArea->width();
-        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 20); // Decreased from 29 to 20 for smaller right margin
+        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 10); // Decreased from 20 to 10 for even smaller right margin
     });
 }
 
@@ -253,7 +253,7 @@ void Media_Widget::_updateCanvasSize() {
 
         // Update the feature table size to match the scroll area width with smaller right margin
         int scrollAreaWidth = ui->scrollArea->width();
-        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 20); // Decreased from 29 to 20 for smaller right margin
+        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 10); // Decreased from 29 to 10 for even smaller right margin
     }
 }
 
