@@ -40,6 +40,17 @@ void AnalysisDashboardScene::setGroupManager(GroupManager* group_manager) {
     }
 }
 
+void AnalysisDashboardScene::setTableManager(TableManager* table_manager) {
+    _table_manager = table_manager;
+    
+    // Update existing plot widgets with the table manager
+    for (auto* plot : _plot_widgets.values()) {
+        if (plot) {
+            plot->setTableManager(_table_manager);
+        }
+    }
+}
+
 void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget* plot_widget, const QPointF& position) {
     if (!plot_widget) {
         return;
@@ -48,6 +59,16 @@ void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget* plot_widget, cons
     // Set data manager if available
     if (_data_manager) {
         plot_widget->setDataManager(_data_manager);
+    }
+    
+    // Set group manager if available
+    if (_group_manager) {
+        plot_widget->setGroupManager(_group_manager);
+    }
+    
+    // Set table manager if available
+    if (_table_manager) {
+        plot_widget->setTableManager(_table_manager);
     }
     
     // Set group manager if available

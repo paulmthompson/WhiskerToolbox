@@ -3,11 +3,14 @@
 
 #include <QGraphicsWidget>
 #include <QString>
+#include <QStringList>
 
 #include <memory>
 
 class DataManager;
 class GroupManager;
+class TableManager;
+class TableView;
 class QGraphicsSceneMouseEvent;
 
 /**
@@ -55,6 +58,25 @@ public:
     virtual void setGroupManager(GroupManager* group_manager);
 
     /**
+     * @brief Set the table manager for accessing table views
+     * @param table_manager Pointer to the table manager
+     */
+    virtual void setTableManager(TableManager* table_manager);
+
+    /**
+     * @brief Get available table IDs that this widget can use
+     * @return List of table IDs
+     */
+    virtual QStringList getAvailableTableIds() const;
+
+    /**
+     * @brief Get a specific table view by ID
+     * @param table_id The table ID to retrieve
+     * @return Shared pointer to the table view, or nullptr if not found
+     */
+    virtual std::shared_ptr<TableView> getTableView(const QString& table_id) const;
+
+    /**
      * @brief Get the unique identifier for this plot instance
      * @return Unique ID string
      */
@@ -98,6 +120,7 @@ protected:
 
     std::shared_ptr<DataManager> _data_manager;
     GroupManager* _group_manager = nullptr;
+    TableManager* _table_manager = nullptr;
     QString _plot_title;
     QString _plot_id;
 

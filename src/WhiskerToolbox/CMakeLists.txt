@@ -52,6 +52,11 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Toolbox/DraggableListWidget.hpp
         Analysis_Dashboard/Toolbox/DraggableListWidget.cpp
 
+        Analysis_Dashboard/Tables/TableManager.hpp
+        Analysis_Dashboard/Tables/TableManager.cpp
+        Analysis_Dashboard/Tables/TableDesignerWidget.hpp
+        Analysis_Dashboard/Tables/TableDesignerWidget.cpp
+
         Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
         Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
 

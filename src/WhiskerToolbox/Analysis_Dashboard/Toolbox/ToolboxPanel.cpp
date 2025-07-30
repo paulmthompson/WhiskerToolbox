@@ -3,6 +3,9 @@
 #include "DraggableListWidget.hpp"
 #include "../Groups/GroupManagementWidget.hpp"
 #include "../Groups/GroupManager.hpp"
+#include "../Tables/TableManager.hpp"
+#include "../Tables/TableDesignerWidget.hpp"
+#include "DataManager/DataManager.hpp"
 
 #include <QListWidget>
 #include <QListWidgetItem>
@@ -10,16 +13,21 @@
 #include <QIcon>
 #include <QDebug>
 
-ToolboxPanel::ToolboxPanel(GroupManager* group_manager, QWidget* parent)
+ToolboxPanel::ToolboxPanel(GroupManager* group_manager, std::shared_ptr<DataManager> data_manager, QWidget* parent)
     : QWidget(parent),
       ui(new Ui::ToolboxPanel),
-      _group_widget(nullptr) {
+      _group_widget(nullptr),
+      _table_manager(std::make_unique<TableManager>(data_manager, this)),
+      _table_designer_widget(nullptr) {
     ui->setupUi(this);
     
     // Create and add the group management widget at the top
     _group_widget = new GroupManagementWidget(group_manager, this);
     
-    // Insert the group widget at the top of the layout
+    // Create the table designer widget
+    _table_designer_widget = new TableDesignerWidget(_table_manager.get(), this);
+    
+    // Insert widgets into the layout
     auto * layout = ui->verticalLayout;
     layout->insertWidget(0, _group_widget);  // Insert at index 0 (top)
     
@@ -30,6 +38,9 @@ ToolboxPanel::ToolboxPanel(GroupManager* group_manager, QWidget* parent)
     delete ui->plot_list;
     layout->addWidget(draggable_list);
     ui->plot_list = draggable_list;
+    
+    // Add the table designer widget after the plot list
+    layout->addWidget(_table_designer_widget);
     
     // Initialize with available plot types
     initializeToolbox();
