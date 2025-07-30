@@ -225,7 +225,7 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedPoints() const {
 size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
     size_t total = 0;
     for (auto const & [key, viz]: _line_data_visualizations) {
-        total += viz->selected_lines.size();
+        total += viz->m_selected_lines.size();
     }
     return total;
 }
@@ -288,7 +288,7 @@ void SpatialOverlayOpenGLWidget::calculateDataBounds() {
 
     // Calculate bounds from line data
     for (auto const & [key, viz]: _line_data_visualizations) {
-        if (!viz->visible || viz->m_vertex_data.empty()) continue;
+        if (!viz->m_visible || viz->m_vertex_data.empty()) continue;
 
         // Iterate through vertex data (x, y pairs)
         for (size_t i = 0; i < viz->m_vertex_data.size(); i += 2) {
@@ -345,7 +345,7 @@ void SpatialOverlayOpenGLWidget::setLineData(std::unordered_map<QString, std::sh
         }
 
         auto viz = std::make_unique<LineDataVisualization>(key, line_data);
-        viz->color = colors[color_index % colors.size()];
+        viz->m_color = colors[color_index % colors.size()];
         color_index++;
 
         qDebug() << "SpatialOverlayOpenGLWidget: Created line visualization for" << key
@@ -797,7 +797,7 @@ void SpatialOverlayOpenGLWidget::_handleTooltipTimer() {
 
     // Get tooltips from line visualizations
     for (auto const & [key, viz] : _line_data_visualizations) {
-        if (viz->has_hover_line) {
+        if (viz->m_has_hover_line) {
             tooltip_parts << viz->getTooltipText();
         }
     }
@@ -851,7 +851,7 @@ void SpatialOverlayOpenGLWidget::clearSelection() {
     }
 
     for (auto const & [key, viz]: _line_data_visualizations) {
-        if (!viz->selected_lines.empty()) {
+        if (!viz->m_selected_lines.empty()) {
             viz->clearSelection();
             had_selection = true;
         }
@@ -1113,12 +1113,10 @@ void SpatialOverlayOpenGLWidget::renderCommonOverlay() {
 void SpatialOverlayOpenGLWidget::hideSelectedItems() {
     size_t total_hidden = 0;
     
-    // Hide selected lines
     for (auto const & [key, viz]: _line_data_visualizations) {
         total_hidden += viz->hideSelectedLines();
     }
     
-    // Hide selected points
     for (auto const & [key, viz]: _point_data_visualizations) {
         total_hidden += viz->hideSelectedPoints();
     }
@@ -1143,12 +1141,10 @@ void SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset() {
 void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
     size_t total_shown = 0;
     
-    // Show all hidden lines
     for (auto const & [key, viz]: _line_data_visualizations) {
         total_shown += viz->showAllLines();
     }
     
-    // Show all hidden points
     for (auto const & [key, viz]: _point_data_visualizations) {
         total_shown += viz->showAllPoints();
     }

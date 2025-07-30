@@ -27,7 +27,17 @@ class PointSelectionHandler;
 
 
 /**
- * @brief Visualization data for a single PointData object
+ * @brief Visualization for Point Data
+ * 
+ * Each Point will have state for:
+ * - Selection state (selected or not)
+ * - X/Y coordinates in world space
+ * - Visibility (hidden or not)
+ * 
+ * Soon will also add a color state for each point, although there will be a default color
+ * 
+ * 
+ * Data is stored in a QuadTree for efficient spatial queries
  */
 struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     std::unique_ptr<QuadTree<int64_t>> m_spatial_index;
