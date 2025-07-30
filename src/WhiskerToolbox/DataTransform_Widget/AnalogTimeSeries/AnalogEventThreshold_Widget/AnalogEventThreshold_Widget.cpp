@@ -1,4 +1,3 @@
-
 #include "AnalogEventThreshold_Widget.hpp"
 
 #include "ui_AnalogEventThreshold_Widget.h"
@@ -39,4 +38,3 @@ std::unique_ptr<TransformParametersBase> AnalogEventThreshold_Widget::getParamet
 
     return params;
 }
-

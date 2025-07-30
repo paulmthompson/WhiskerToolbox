@@ -594,9 +594,11 @@ void MainWindow::openDataTransforms() {
 
         // Create dock widget with appropriate settings
         auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
+
+        // Use ForceNoScrollArea to prevent adding another scroll area
         dock_widget->setWidget(dt_widget.get(), ads::CDockWidget::ForceNoScrollArea);
 
-        // Change to MinimumSizeHintFromContent to match Test_Widget behavior
+        // Ensure the dock widget sizes based on content
         dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
 
         _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);

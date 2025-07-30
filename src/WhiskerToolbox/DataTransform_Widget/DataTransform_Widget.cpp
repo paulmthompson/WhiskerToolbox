@@ -34,7 +34,7 @@
 DataTransform_Widget::DataTransform_Widget(
         std::shared_ptr<DataManager> data_manager,
         QWidget * parent)
-    : QWidget(parent),
+    : QScrollArea(parent),
       ui(new Ui::DataTransform_Widget),
       _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
@@ -42,6 +42,11 @@ DataTransform_Widget::DataTransform_Widget(
     // Set explicit size policy and minimum size
     setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
     setMinimumSize(250, 400);
+
+    // Configure scroll area properties - disable scroll bars completely
+    setWidgetResizable(true);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     _registry = std::make_unique<TransformRegistry>();
 
@@ -267,6 +272,15 @@ void DataTransform_Widget::_displayParameterWidget(std::string const & op_name) 
 
     if (newParamWidget) {
         std::cout << "Adding Widget" << std::endl;
+
+        // Set size policy for dynamic resizing without scrollbars
+        newParamWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        newParamWidget->setMaximumWidth(ui->stackedWidget->width());
+
+        // Ensure no scrollbars appear
+        setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
         int const widgetIndex = ui->stackedWidget->addWidget(newParamWidget);
         _currentParameterWidget = newParamWidget;// Set as active
 
@@ -388,6 +402,26 @@ void DataTransform_Widget::_updateOutputName() {
     if (!outputName.isEmpty()) {
         ui->output_name_edit->setText(outputName);
     }
+}
+
+void DataTransform_Widget::resizeEvent(QResizeEvent* event) {
+    QScrollArea::resizeEvent(event);
+
+    // Ensure content widget fills the scroll area completely
+    if (widget()) {
+        widget()->resize(viewport()->size());
+    }
+
+    // Update the width of components inside the stackedWidget
+    if (_currentParameterWidget) {
+        _currentParameterWidget->setMaximumWidth(ui->stackedWidget->width());
+
+        // Trigger layout update
+        _currentParameterWidget->updateGeometry();
+    }
+
+    // Ensure the stackedWidget is properly sized
+    ui->stackedWidget->updateGeometry();
 }
 
 QSize DataTransform_Widget::sizeHint() const {

@@ -297,8 +297,13 @@ void Feature_Table_Widget::_refreshFeatures() {
 }
 
 void Feature_Table_Widget::_highlightFeature(int row, int column) {
-
     static_cast<void>(column);
+
+    // Verify row is valid
+    if (row < 0 || row >= ui->available_features_table->rowCount()) {
+        std::cout << "Invalid row index: " << row << std::endl;
+        return;
+    }
 
     // Always get the feature name from the "Feature" column (typically column 0)
     // regardless of which column was clicked
@@ -311,11 +316,22 @@ void Feature_Table_Widget::_highlightFeature(int row, int column) {
     }
 
     if (featureColumnIndex != -1) {
+        // Verify column index is valid
+        if (featureColumnIndex >= ui->available_features_table->columnCount()) {
+            std::cout << "Feature column index out of range: " << featureColumnIndex << std::endl;
+            return;
+        }
+
         QTableWidgetItem * featureItem = ui->available_features_table->item(row, featureColumnIndex);
         if (featureItem) {
             _highlighted_feature = featureItem->text();
+            std::cout << "Emitting featureSelected: " << _highlighted_feature.toStdString() << std::endl;
             emit featureSelected(_highlighted_feature);
+        } else {
+            std::cout << "Feature item is null at row " << row << ", column " << featureColumnIndex << std::endl;
         }
+    } else {
+        std::cout << "Feature column not found in columns list" << std::endl;
     }
 }
 
