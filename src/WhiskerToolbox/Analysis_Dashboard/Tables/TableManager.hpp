@@ -1,6 +1,8 @@
 #ifndef TABLEMANAGER_HPP
 #define TABLEMANAGER_HPP
 
+#include "TableInfo.hpp"
+
 #include <QObject>
 #include <QString>
 #include <QMap>
@@ -23,31 +25,6 @@ class TableManager : public QObject {
     Q_OBJECT
 
 public:
-    struct ColumnInfo {
-        QString name;              ///< User-friendly name for the column
-        QString description;       ///< Optional description
-        QString dataSourceName;    ///< Name/ID of the data source (e.g., "analog:LFP", "events:Spikes")
-        QString computerName;      ///< Name of the computer to use
-        
-        ColumnInfo() = default;
-        ColumnInfo(QString column_name, QString column_description = "", 
-                   QString data_source = "", QString computer = "")
-            : name(std::move(column_name)), description(std::move(column_description)),
-              dataSourceName(std::move(data_source)), computerName(std::move(computer)) {}
-    };
-
-    struct TableInfo {
-        QString id;                        ///< Unique identifier for the table
-        QString name;                      ///< User-friendly name for the table
-        QString description;               ///< Optional description
-        QString rowSourceName;             ///< Name of the data source used for rows
-        QStringList columnNames;           ///< Names of columns in the table (for backward compatibility)
-        QList<ColumnInfo> columns;         ///< Detailed column configurations
-        
-        TableInfo() = default;
-        TableInfo(QString table_id, QString table_name, QString table_description = "")
-            : id(std::move(table_id)), name(std::move(table_name)), description(std::move(table_description)) {}
-    };
 
     explicit TableManager(std::shared_ptr<DataManager> data_manager, QObject* parent = nullptr);
     ~TableManager();
@@ -187,6 +164,21 @@ public:
      * @return Column information, or empty ColumnInfo if not found
      */
     ColumnInfo getTableColumn(const QString& table_id, int column_index) const;
+
+    /**
+     * @brief Store a built TableView for a table
+     * @param table_id The table ID
+     * @param table_view The built TableView to store
+     * @return True if successful, false if table doesn't exist
+     */
+    bool storeBuiltTable(const QString& table_id, TableView table_view);
+
+    /**
+     * @brief Get a stored TableView for a table
+     * @param table_id The table ID
+     * @return Shared pointer to the TableView, or nullptr if not found
+     */
+    std::shared_ptr<TableView> getBuiltTable(const QString& table_id) const;
 
     /**
      * @brief Generate a unique table ID

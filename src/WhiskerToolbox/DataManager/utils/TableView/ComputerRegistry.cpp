@@ -136,7 +136,7 @@ std::vector<std::string> ComputerRegistry::getAllAdapterNames() const {
 }
 
 void ComputerRegistry::registerComputer(ComputerInfo info, ComputerFactory factory) {
-    std::string const& name = info.name;
+    std::string const name = info.name; // Copy the name before moving
     
     if (name_to_computer_.count(name)) {
         std::cerr << "Warning: Computer '" << name << "' already registered." << std::endl;
@@ -155,7 +155,7 @@ void ComputerRegistry::registerComputer(ComputerInfo info, ComputerFactory facto
 }
 
 void ComputerRegistry::registerAdapter(AdapterInfo info, AdapterFactory factory) {
-    std::string const& name = info.name;
+    std::string const name = info.name; // Copy the name before moving
     
     if (name_to_adapter_.count(name)) {
         std::cerr << "Warning: Adapter '" << name << "' already registered." << std::endl;

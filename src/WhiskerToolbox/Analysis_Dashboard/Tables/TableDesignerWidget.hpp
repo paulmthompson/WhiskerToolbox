@@ -1,8 +1,11 @@
 #ifndef TABLEDESIGNERWIDGET_HPP
 #define TABLEDESIGNERWIDGET_HPP
 
+#include "TableInfo.hpp"
+
 #include <QWidget>
 #include <QStringList>
+
 #include <memory>
 
 class QVBoxLayout;
@@ -20,6 +23,8 @@ class QSplitter;
 class TableManager;
 class DataManager;
 class ComputerRegistry;
+class IRowSelector;
+class TableViewBuilder;
 
 namespace Ui {
 class TableDesignerWidget;
@@ -40,6 +45,11 @@ class TableDesignerWidget : public QWidget {
 public:
     explicit TableDesignerWidget(TableManager* table_manager, std::shared_ptr<DataManager> data_manager, QWidget* parent = nullptr);
     ~TableDesignerWidget() override;
+
+    /**
+     * @brief Refresh all data sources (useful if data is loaded after widget creation)
+     */
+    void refreshAllDataSources();
 
 signals:
     /**
@@ -258,6 +268,21 @@ private:
      * @brief Clear the column configuration UI
      */
     void clearColumnConfiguration();
+    
+    /**
+     * @brief Create a row selector based on the selected row source
+     * @param row_source The selected row source string
+     * @return Unique pointer to the created row selector, or nullptr if creation failed
+     */
+    std::unique_ptr<IRowSelector> createRowSelector(const QString& row_source);
+    
+    /**
+     * @brief Add a column to the table view builder
+     * @param builder Reference to the TableViewBuilder
+     * @param column_info The column configuration
+     * @return True if the column was added successfully, false otherwise
+     */
+    bool addColumnToBuilder(TableViewBuilder& builder, const ColumnInfo& column_info);
     
     /**
      * @brief Get available data sources from the data manager

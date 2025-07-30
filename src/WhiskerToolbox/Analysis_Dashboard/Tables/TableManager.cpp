@@ -52,7 +52,7 @@ bool TableManager::hasTable(const QString& table_id) const {
     return _table_info.contains(table_id);
 }
 
-TableManager::TableInfo TableManager::getTableInfo(const QString& table_id) const {
+TableInfo TableManager::getTableInfo(const QString& table_id) const {
     auto it = _table_info.find(table_id);
     if (it != _table_info.end()) {
         return it.value();
@@ -71,7 +71,7 @@ std::vector<QString> TableManager::getTableIds() const {
     return ids;
 }
 
-std::vector<TableManager::TableInfo> TableManager::getAllTableInfo() const {
+std::vector<TableInfo> TableManager::getAllTableInfo() const {
     std::vector<TableInfo> infos;
     infos.reserve(_table_info.size());
     
@@ -257,7 +257,7 @@ bool TableManager::moveTableColumnDown(const QString& table_id, int column_index
     return true;
 }
 
-TableManager::ColumnInfo TableManager::getTableColumn(const QString& table_id, int column_index) const {
+ColumnInfo TableManager::getTableColumn(const QString& table_id, int column_index) const {
     if (!hasTable(table_id)) {
         return ColumnInfo();
     }
@@ -268,6 +268,27 @@ TableManager::ColumnInfo TableManager::getTableColumn(const QString& table_id, i
     }
     
     return table.columns[column_index];
+}
+
+bool TableManager::storeBuiltTable(const QString& table_id, TableView table_view) {
+    if (!hasTable(table_id)) {
+        return false;
+    }
+    
+    _table_views[table_id] = std::make_shared<TableView>(std::move(table_view));
+    
+    qDebug() << "Stored built table for:" << table_id;
+    emit tableDataChanged(table_id);
+    
+    return true;
+}
+
+std::shared_ptr<TableView> TableManager::getBuiltTable(const QString& table_id) const {
+    auto it = _table_views.find(table_id);
+    if (it != _table_views.end()) {
+        return it.value();
+    }
+    return nullptr;
 }
 
 QString TableManager::generateUniqueTableId(const QString& base_name) const {

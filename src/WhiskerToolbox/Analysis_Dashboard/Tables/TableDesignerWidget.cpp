@@ -3,6 +3,11 @@
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/ComputerRegistry.hpp"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
+#include "DataManager/utils/TableView/core/TableViewBuilder.h"
+#include "DataManager/utils/TableView/interfaces/IRowSelector.h"
+#include "DataManager/utils/TableView/interfaces/IColumnComputer.h"
+#include "DataManager/utils/TableView/computers/IntervalReductionComputer.h"
+#include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"
 #include "DataManager/DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "DataManager/AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -67,6 +72,17 @@ TableDesignerWidget::TableDesignerWidget(TableManager* table_manager, std::share
 
 TableDesignerWidget::~TableDesignerWidget() {
     // Note: Qt will handle cleanup of child widgets
+}
+
+void TableDesignerWidget::refreshAllDataSources() {
+    qDebug() << "Manually refreshing all data sources...";
+    refreshRowDataSourceCombo();
+    refreshColumnDataSourceCombo();
+    
+    // If we have a selected table, refresh its info
+    if (!_current_table_id.isEmpty()) {
+        loadTableInfo(_current_table_id);
+    }
 }
 
 void TableDesignerWidget::initializeUI() {
@@ -374,7 +390,7 @@ void TableDesignerWidget::onAddColumn() {
     QString column_name = QString("Column_%1").arg(_column_list->count() + 1);
     
     // Create column info and add to table manager
-    TableManager::ColumnInfo column_info(column_name);
+    ColumnInfo column_info(column_name);
     if (_table_manager->addTableColumn(_current_table_id, column_info)) {
         // Add to UI list
         auto* item = new QListWidgetItem(column_name, _column_list);
@@ -500,18 +516,61 @@ void TableDesignerWidget::onBuildTable() {
         return;
     }
     
-    // TODO: Implement the actual table building logic
-    // This is where we would:
-    // 1. Create the appropriate row selector based on the selected row source
-    // 2. Use TableViewBuilder to add columns
-    // 3. Build the TableView
-    // 4. Store it in the TableManager
-    
-    updateBuildStatus("Table building not yet implemented", true);
-    
-    qDebug() << "Building table:" << _current_table_id;
-    qDebug() << "Row source:" << row_source;
-    qDebug() << "Columns:" << _column_list->count();
+    try {
+        // Get the table info with column configurations
+        auto table_info = _table_manager->getTableInfo(_current_table_id);
+        if (table_info.columns.isEmpty()) {
+            updateBuildStatus("No column configurations found", true);
+            return;
+        }
+        
+        // Create the row selector
+        auto row_selector = createRowSelector(row_source);
+        if (!row_selector) {
+            updateBuildStatus("Failed to create row selector", true);
+            return;
+        }
+        
+        // Get the data manager extension
+        auto data_manager_extension = _table_manager->getDataManagerExtension();
+        if (!data_manager_extension) {
+            updateBuildStatus("DataManager extension not available", true);
+            return;
+        }
+        
+        // Create the TableViewBuilder
+        TableViewBuilder builder(data_manager_extension);
+        builder.setRowSelector(std::move(row_selector));
+        
+        // Add all columns
+        bool all_columns_valid = true;
+        for (const auto& column_info : table_info.columns) {
+            if (!addColumnToBuilder(builder, column_info)) {
+                updateBuildStatus(QString("Failed to create column: %1").arg(column_info.name), true);
+                all_columns_valid = false;
+                break;
+            }
+        }
+        
+        if (!all_columns_valid) {
+            return;
+        }
+        
+        // Build the table
+        auto table_view = builder.build();
+        
+        // Store the built table in the TableManager
+        if (_table_manager->storeBuiltTable(_current_table_id, std::move(table_view))) {
+            updateBuildStatus("Table built successfully!");
+            qDebug() << "Successfully built table:" << _current_table_id;
+        } else {
+            updateBuildStatus("Failed to store built table", true);
+        }
+        
+    } catch (const std::exception& e) {
+        updateBuildStatus(QString("Error building table: %1").arg(e.what()), true);
+        qDebug() << "Exception during table building:" << e.what();
+    }
 }
 
 void TableDesignerWidget::onSaveTableInfo() {
@@ -581,16 +640,20 @@ void TableDesignerWidget::refreshRowDataSourceCombo() {
     _row_data_source_combo->clear();
     
     if (!_table_manager) {
+        qDebug() << "refreshRowDataSourceCombo: No table manager";
         return;
     }
     
     auto data_sources = getAvailableDataSources();
+    qDebug() << "refreshRowDataSourceCombo: Found" << data_sources.size() << "data sources:" << data_sources;
+    
     for (const QString& source : data_sources) {
         _row_data_source_combo->addItem(source);
     }
     
     if (_row_data_source_combo->count() == 0) {
         _row_data_source_combo->addItem("(No data sources available)");
+        qDebug() << "refreshRowDataSourceCombo: No data sources available";
     }
 }
 
@@ -847,38 +910,52 @@ QStringList TableDesignerWidget::getAvailableDataSources() const {
     QStringList sources;
     
     if (!_table_manager) {
+        qDebug() << "getAvailableDataSources: No table manager";
         return sources;
     }
     
     auto data_manager_extension = _table_manager->getDataManagerExtension();
     if (!data_manager_extension) {
+        qDebug() << "getAvailableDataSources: No data manager extension";
+        return sources;
+    }
+    
+    if (!_data_manager) {
+        qDebug() << "getAvailableDataSources: No data manager";
         return sources;
     }
     
     // Add TimeFrame keys as potential row sources
     // TimeFrames can define intervals for analysis
     auto timeframe_keys = _data_manager->getTimeFrameKeys();
+    qDebug() << "getAvailableDataSources: TimeFrame keys:" << timeframe_keys.size();
     for (const auto& key : timeframe_keys) {
-        sources << QString("TimeFrame: %1").arg(QString::fromStdString(key));
+        QString source = QString("TimeFrame: %1").arg(QString::fromStdString(key));
+        sources << source;
+        qDebug() << "  Added TimeFrame:" << source;
     }
     
     // Add DigitalEventSeries keys as potential row sources
     // Events can be used to define analysis windows or timestamps
     auto event_keys = _data_manager->getKeys<DigitalEventSeries>();
+    qDebug() << "getAvailableDataSources: Event keys:" << event_keys.size();
     for (const auto& key : event_keys) {
-        sources << QString("Events: %1").arg(QString::fromStdString(key));
+        QString source = QString("Events: %1").arg(QString::fromStdString(key));
+        sources << source;
+        qDebug() << "  Added Events:" << source;
     }
     
     // Add DigitalIntervalSeries keys as potential row sources
     // Intervals directly define analysis windows
     auto interval_keys = _data_manager->getKeys<DigitalIntervalSeries>();
+    qDebug() << "getAvailableDataSources: Interval keys:" << interval_keys.size();
     for (const auto& key : interval_keys) {
-        sources << QString("Intervals: %1").arg(QString::fromStdString(key));
+        QString source = QString("Intervals: %1").arg(QString::fromStdString(key));
+        sources << source;
+        qDebug() << "  Added Intervals:" << source;
     }
     
-    qDebug() << "Found" << timeframe_keys.size() << "TimeFrames," 
-             << event_keys.size() << "Event series," 
-             << interval_keys.size() << "Interval series";
+    qDebug() << "getAvailableDataSources: Total sources found:" << sources.size();
     
     return sources;
 }
@@ -1017,7 +1094,7 @@ void TableDesignerWidget::saveCurrentColumnConfiguration() {
     }
     
     // Create column info from UI
-    TableManager::ColumnInfo column_info;
+    ColumnInfo column_info;
     column_info.name = _column_name_edit->text().trimmed();
     column_info.description = _column_description_edit->toPlainText().trimmed();
     column_info.dataSourceName = _column_data_source_combo->currentData().toString();
@@ -1034,4 +1111,241 @@ void TableDesignerWidget::clearColumnConfiguration() {
     _column_description_edit->clear();
     _column_data_source_combo->setCurrentIndex(-1);
     _column_computer_combo->setCurrentIndex(-1);
+}
+
+std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(const QString& row_source) {
+    // Parse the row source to get type and name
+    QString source_type;
+    QString source_name;
+    
+    if (row_source.startsWith("TimeFrame: ")) {
+        source_type = "TimeFrame";
+        source_name = row_source.mid(11); // Remove "TimeFrame: " prefix
+    } else if (row_source.startsWith("Events: ")) {
+        source_type = "Events";
+        source_name = row_source.mid(8); // Remove "Events: " prefix
+    } else if (row_source.startsWith("Intervals: ")) {
+        source_type = "Intervals";
+        source_name = row_source.mid(11); // Remove "Intervals: " prefix
+    } else {
+        qDebug() << "Unknown row source format:" << row_source;
+        return nullptr;
+    }
+    
+    auto const source_name_str = source_name.toStdString();
+    
+    try {
+        if (source_type == "TimeFrame") {
+            // Create IntervalSelector using TimeFrame
+            auto timeframe = _data_manager->getTime(source_name_str);
+            if (!timeframe) {
+                qDebug() << "TimeFrame not found:" << source_name;
+                return nullptr;
+            }
+            
+            // Create intervals for the entire timeframe
+            std::vector<TimeFrameInterval> intervals;
+            intervals.emplace_back(TimeFrameIndex(0), TimeFrameIndex(timeframe->getTotalFrameCount() - 1));
+            
+            return std::make_unique<IntervalSelector>(std::move(intervals), timeframe);
+            
+        } else if (source_type == "Events") {
+            // Create TimestampSelector using DigitalEventSeries
+            auto event_series = _data_manager->getData<DigitalEventSeries>(source_name_str);
+            if (!event_series) {
+                qDebug() << "DigitalEventSeries not found:" << source_name;
+                return nullptr;
+            }
+            
+            auto events = event_series->getEventSeries();
+            auto timeframe_key = _data_manager->getTimeFrame(source_name_str);
+            auto timeframe_obj = _data_manager->getTime(timeframe_key);
+            if (!timeframe_obj) {
+                qDebug() << "TimeFrame not found for events:" << timeframe_key;
+                return nullptr;
+            }
+            
+            // Convert events to TimeFrameIndex
+            std::vector<TimeFrameIndex> timestamps;
+            for (const auto& event : events) {
+                timestamps.push_back(TimeFrameIndex(static_cast<int64_t>(event)));
+            }
+            
+            return std::make_unique<TimestampSelector>(std::move(timestamps), timeframe_obj);
+            
+        } else if (source_type == "Intervals") {
+            // Create IntervalSelector using DigitalIntervalSeries
+            auto interval_series = _data_manager->getData<DigitalIntervalSeries>(source_name_str);
+            if (!interval_series) {
+                qDebug() << "DigitalIntervalSeries not found:" << source_name;
+                return nullptr;
+            }
+            
+            auto intervals = interval_series->getDigitalIntervalSeries();
+            auto timeframe_key = _data_manager->getTimeFrame(source_name_str);
+            auto timeframe_obj = _data_manager->getTime(timeframe_key);
+            if (!timeframe_obj) {
+                qDebug() << "TimeFrame not found for intervals:" << timeframe_key;
+                return nullptr;
+            }
+            
+            // Convert DigitalInterval to TimeFrameInterval
+            std::vector<TimeFrameInterval> tf_intervals;
+            for (const auto& interval : intervals) {
+                tf_intervals.emplace_back(TimeFrameIndex(interval.start), 
+                TimeFrameIndex(interval.end));
+            }
+            
+            return std::make_unique<IntervalSelector>(std::move(tf_intervals), timeframe_obj);
+        }
+        
+    } catch (const std::exception& e) {
+        qDebug() << "Exception creating row selector:" << e.what();
+        return nullptr;
+    }
+    
+    qDebug() << "Unsupported row source type:" << source_type;
+    return nullptr;
+}
+
+bool TableDesignerWidget::addColumnToBuilder(TableViewBuilder& builder, const ColumnInfo& column_info) {
+    if (column_info.dataSourceName.isEmpty() || column_info.computerName.isEmpty()) {
+        qDebug() << "Column" << column_info.name << "missing data source or computer configuration";
+        return false;
+    }
+    
+    try {
+        // Get the data manager extension
+        auto data_manager_extension = _table_manager->getDataManagerExtension();
+        if (!data_manager_extension) {
+            qDebug() << "DataManagerExtension not available";
+            return false;
+        }
+        
+        // Create DataSourceVariant from column data source
+        DataSourceVariant data_source_variant;
+        bool valid_source = false;
+        
+        const QString& column_source = column_info.dataSourceName;
+        
+        if (column_source.startsWith("analog:")) {
+            QString source_name = column_source.mid(7); // Remove "analog:" prefix
+            auto analog_source = data_manager_extension->getAnalogSource(source_name.toStdString());
+            if (analog_source) {
+                data_source_variant = analog_source;
+                valid_source = true;
+            }
+        } else if (column_source.startsWith("events:")) {
+            QString source_name = column_source.mid(7); // Remove "events:" prefix
+            auto event_source = data_manager_extension->getEventSource(source_name.toStdString());
+            if (event_source) {
+                data_source_variant = event_source;
+                valid_source = true;
+            }
+        } else if (column_source.startsWith("intervals:")) {
+            QString source_name = column_source.mid(10); // Remove "intervals:" prefix
+            auto interval_source = data_manager_extension->getIntervalSource(source_name.toStdString());
+            if (interval_source) {
+                data_source_variant = interval_source;
+                valid_source = true;
+            }
+        } else if (column_source.startsWith("points_x:")) {
+            QString source_name = column_source.mid(9); // Remove "points_x:" prefix
+            auto analog_source = data_manager_extension->getAnalogSource(source_name.toStdString() + ".x");
+            if (analog_source) {
+                data_source_variant = analog_source;
+                valid_source = true;
+            }
+        } else if (column_source.startsWith("points_y:")) {
+            QString source_name = column_source.mid(9); // Remove "points_y:" prefix
+            auto analog_source = data_manager_extension->getAnalogSource(source_name.toStdString() + ".y");
+            if (analog_source) {
+                data_source_variant = analog_source;
+                valid_source = true;
+            }
+        }
+        
+        if (!valid_source) {
+            qDebug() << "Failed to create data source for column:" << column_info.name;
+            return false;
+        }
+        
+        // Create the computer from the registry
+        const auto& registry = _table_manager->getComputerRegistry();
+        auto computer_base = registry.createComputer(column_info.computerName.toStdString(), data_source_variant);
+        if (!computer_base) {
+            qDebug() << "Failed to create computer" << column_info.computerName << "for column:" << column_info.name;
+            return false;
+        }
+        
+        // The computer is wrapped in a ComputerWrapper. We need to work with the actual IColumnComputer
+        // For now, assume all computers return double. This could be enhanced later
+        // to handle different return types by querying the computer's type
+        auto computer_wrapper = dynamic_cast<ComputerWrapper<double>*>(computer_base.get());
+        if (!computer_wrapper) {
+            qDebug() << "Computer" << column_info.computerName << "is not a double computer wrapper for column:" << column_info.name;
+            return false;
+        }
+        
+        // Get the actual computer from the wrapper
+        auto typed_computer = computer_wrapper->get();
+        if (!typed_computer) {
+            qDebug() << "Failed to get typed computer from wrapper for column:" << column_info.name;
+            return false;
+        }
+        
+        // Since we can't easily extract the computer from the wrapper without modifying the wrapper class,
+        // let's create the computer again directly for the builder
+        // This is not ideal but works around the ownership issue
+        auto new_computer = registry.createComputer(column_info.computerName.toStdString(), data_source_variant);
+        if (!new_computer) {
+            qDebug() << "Failed to recreate computer" << column_info.computerName << "for builder";
+            return false;
+        }
+        
+        auto new_wrapper = dynamic_cast<ComputerWrapper<double>*>(new_computer.get());
+        if (!new_wrapper) {
+            qDebug() << "Failed to cast recreated computer to wrapper";
+            return false;
+        }
+        
+        // Now we need to work around the ownership issue. 
+        // For now, let's use a different approach - create the computer inline
+        // based on the computer name and source
+        std::unique_ptr<IColumnComputer<double>> final_computer;
+        
+        // Handle specific computer types
+        if (column_info.computerName == "Interval Mean") {
+            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&data_source_variant)) {
+                final_computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Mean);
+            }
+        } else if (column_info.computerName == "Interval Max") {
+            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&data_source_variant)) {
+                final_computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Max);
+            }
+        } else if (column_info.computerName == "Interval Min") {
+            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&data_source_variant)) {
+                final_computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Min);
+            }
+        } else if (column_info.computerName == "Interval Standard Deviation") {
+            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&data_source_variant)) {
+                final_computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::StdDev);
+            }
+        }
+        
+        if (!final_computer) {
+            qDebug() << "Failed to create final computer for" << column_info.computerName;
+            return false;
+        }
+        
+        // Add the column to the builder
+        builder.addColumn(column_info.name.toStdString(), std::move(final_computer));
+        
+        qDebug() << "Added column to builder:" << column_info.name;
+        return true;
+        
+    } catch (const std::exception& e) {
+        qDebug() << "Exception adding column" << column_info.name << "to builder:" << e.what();
+        return false;
+    }
 }
