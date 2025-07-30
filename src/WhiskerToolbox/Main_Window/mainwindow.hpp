@@ -73,6 +73,7 @@ private slots:
     void openTongueTracking();
     void openMLWidget();
     void openDataViewer();
+    void openBatchProcessingWidget();
     void openPointLoaderWidget();
     void openMaskLoaderWidget();
     void openLineLoaderWidget();

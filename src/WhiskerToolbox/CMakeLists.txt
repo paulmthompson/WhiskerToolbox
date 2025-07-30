@@ -91,6 +91,10 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.cpp
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.ui
 
+        BatchProcessing_Widget/BatchProcessing_Widget.hpp
+        BatchProcessing_Widget/BatchProcessing_Widget.cpp
+        BatchProcessing_Widget/BatchProcessing_Widget.ui
+
         ColorPicker_Widget/ColorPicker_Widget.hpp
         ColorPicker_Widget/ColorPicker_Widget.cpp
         ColorPicker_Widget/ColorPicker_Widget.ui

@@ -10,6 +10,7 @@
 #include "DataManager/Media/Video_Data.hpp"
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
+#include "BatchProcessing_Widget/BatchProcessing_Widget.hpp"
 #include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataTransform_Widget/DataTransform_Widget.hpp"
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
@@ -114,6 +115,7 @@ void MainWindow::_createActions() {
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
+    connect(ui->actionBatch_Processing, &QAction::triggered, this, &MainWindow::openBatchProcessingWidget);
     connect(ui->actionLoad_Points, &QAction::triggered, this, &MainWindow::openPointLoaderWidget);
     connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
     connect(ui->actionLoad_Lines, &QAction::triggered, this, &MainWindow::openLineLoaderWidget);
@@ -328,6 +330,23 @@ void MainWindow::openDataViewer() {
     }
 
     auto ptr = dynamic_cast<DataViewer_Widget *>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openBatchProcessingWidget() {
+    std::string const key = "BatchProcessing_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto batchProcessingWidget = std::make_unique<BatchProcessing_Widget>(this);
+
+        batchProcessingWidget->setObjectName(key);
+        registerDockWidget(key, batchProcessingWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(batchProcessingWidget);
+    }
+
+    auto ptr = dynamic_cast<BatchProcessing_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);
