@@ -195,6 +195,11 @@ std::unordered_set<int64_t> GroupManager::getGroupPoints(int group_id) const {
     return (it != m_groups.end()) ? it.value().point_ids : std::unordered_set<int64_t>();
 }
 
+int GroupManager::getGroupMemberCount(int group_id) const {
+    auto it = m_groups.find(group_id);
+    return (it != m_groups.end()) ? static_cast<int>(it.value().point_ids.size()) : 0;
+}
+
 void GroupManager::clearAllGroups() {
     qDebug() << "GroupManager: Clearing all groups";
     

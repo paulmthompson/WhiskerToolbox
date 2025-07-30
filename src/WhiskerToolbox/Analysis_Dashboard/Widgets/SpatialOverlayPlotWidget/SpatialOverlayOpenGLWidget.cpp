@@ -148,7 +148,7 @@ void SpatialOverlayOpenGLWidget::setPointData(std::unordered_map<QString, std::s
         color_index++;
 
         qDebug() << "SpatialOverlayOpenGLWidget: Created visualization for" << key
-                 << "with" << viz->m_vertex_data.size() / 2 << "points";
+                 << "with" << viz->m_vertex_data.size() / 3 << "points";
 
         _point_data_visualizations[key] = std::move(viz);
     }
@@ -1281,6 +1281,9 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
     // Assign selected points to the new group
     _group_manager->assignPointsToGroup(group_id, selected_point_ids);
     
+    // Clear selection after assignment
+    clearSelection();
+    
     qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size() 
              << "points to new group" << group_id;
 }
@@ -1308,6 +1311,9 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
     // Assign selected points to the specified group
     _group_manager->assignPointsToGroup(group_id, selected_point_ids);
     
+    // Clear selection after assignment
+    clearSelection();
+    
     qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size() 
              << "points to group" << group_id;
 }
@@ -1334,6 +1340,9 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
     
     // Remove selected points from all groups
     _group_manager->ungroupPoints(selected_point_ids);
+    
+    // Clear selection after ungrouping
+    clearSelection();
     
     qDebug() << "SpatialOverlayOpenGLWidget: Ungrouped" << selected_point_ids.size() << "points";
 }

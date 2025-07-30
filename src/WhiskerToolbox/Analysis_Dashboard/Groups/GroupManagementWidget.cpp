@@ -25,6 +25,8 @@ GroupManagementWidget::GroupManagementWidget(GroupManager* group_manager, QWidge
             this, &GroupManagementWidget::onGroupRemoved);
     connect(m_group_manager, &GroupManager::groupModified,
             this, &GroupManagementWidget::onGroupModified);
+    connect(m_group_manager, &GroupManager::pointAssignmentsChanged,
+            this, &GroupManagementWidget::onPointAssignmentsChanged);
     
     // Connect table signals
     connect(m_groups_table, &QTableWidget::itemChanged,
@@ -55,8 +57,8 @@ void GroupManagementWidget::setupUI() {
     m_layout->addWidget(m_title_label);
     
     // Groups table
-    m_groups_table = new QTableWidget(0, 2, this);  // 2 columns: Name, Color
-    m_groups_table->setHorizontalHeaderLabels({"Name", "Color"});
+    m_groups_table = new QTableWidget(0, 3, this);  // 3 columns: Name, Color, Members
+    m_groups_table->setHorizontalHeaderLabels({"Name", "Color", "Members"});
     m_groups_table->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_groups_table->setAlternatingRowColors(true);
     m_groups_table->setMinimumHeight(120);
@@ -67,7 +69,9 @@ void GroupManagementWidget::setupUI() {
     header->setStretchLastSection(false);
     header->setSectionResizeMode(0, QHeaderView::Stretch);  // Name column stretches
     header->setSectionResizeMode(1, QHeaderView::Fixed);    // Color column fixed width
+    header->setSectionResizeMode(2, QHeaderView::Fixed);    // Members column fixed width
     m_groups_table->setColumnWidth(1, 50);  // Color button column width
+    m_groups_table->setColumnWidth(2, 60);  // Members column width
     
     m_groups_table->verticalHeader()->setVisible(false);
     m_groups_table->setShowGrid(false);
@@ -123,6 +127,13 @@ void GroupManagementWidget::addGroupRow(int group_id, int row) {
     QPushButton* color_button = createColorButton(group_id);
     updateColorButton(color_button, group->color);
     m_groups_table->setCellWidget(row, 1, color_button);
+    
+    // Members column
+    int member_count = m_group_manager->getGroupMemberCount(group_id);
+    QTableWidgetItem* members_item = new QTableWidgetItem(QString::number(member_count));
+    members_item->setFlags(members_item->flags() & ~Qt::ItemIsEditable);  // Make read-only
+    members_item->setTextAlignment(Qt::AlignCenter);
+    m_groups_table->setItem(row, 2, members_item);
 }
 
 QPushButton* GroupManagementWidget::createColorButton(int group_id) {
@@ -194,6 +205,29 @@ void GroupManagementWidget::onGroupModified(int group_id) {
                 QPushButton* color_button = qobject_cast<QPushButton*>(m_groups_table->cellWidget(row, 1));
                 if (color_button) {
                     updateColorButton(color_button, group->color);
+                }
+                
+                // Update member count
+                QTableWidgetItem* members_item = m_groups_table->item(row, 2);
+                if (members_item) {
+                    int member_count = m_group_manager->getGroupMemberCount(group_id);
+                    members_item->setText(QString::number(member_count));
+                }
+            }
+        }
+    }
+}
+
+void GroupManagementWidget::onPointAssignmentsChanged(const std::unordered_set<int>& affected_groups) {
+    if (!m_updating_table) {
+        // Update member counts for all affected groups
+        for (int group_id : affected_groups) {
+            int row = findRowForGroupId(group_id);
+            if (row >= 0) {
+                QTableWidgetItem* members_item = m_groups_table->item(row, 2);
+                if (members_item) {
+                    int member_count = m_group_manager->getGroupMemberCount(group_id);
+                    members_item->setText(QString::number(member_count));
                 }
             }
         }

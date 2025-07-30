@@ -2,6 +2,7 @@
 #define GROUPMANAGEMENTWIDGET_HPP
 
 #include <QWidget>
+#include <unordered_set>
 
 class GroupManager;
 class QTableWidget;
@@ -53,6 +54,12 @@ private slots:
      * @param group_id The ID of the modified group
      */
     void onGroupModified(int group_id);
+
+    /**
+     * @brief Handle when point assignments change in groups
+     * @param affected_groups Set of group IDs that were affected
+     */
+    void onPointAssignmentsChanged(const std::unordered_set<int>& affected_groups);
 
     /**
      * @brief Handle when table item is changed (name editing)

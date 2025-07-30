@@ -127,6 +127,13 @@ public:
     std::unordered_set<int64_t> getGroupPoints(int group_id) const;
 
     /**
+     * @brief Get the number of points assigned to a specific group
+     * @param group_id The group ID
+     * @return Number of points in the group, 0 if group doesn't exist
+     */
+    int getGroupMemberCount(int group_id) const;
+
+    /**
      * @brief Clear all groups and assignments
      */
     void clearAllGroups();

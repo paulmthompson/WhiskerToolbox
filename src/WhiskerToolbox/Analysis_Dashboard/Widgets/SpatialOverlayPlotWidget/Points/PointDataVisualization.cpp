@@ -250,25 +250,34 @@ void PointDataVisualization::_renderPoints(QOpenGLShaderProgram * shader_program
     m_vertex_array_object.bind();
     m_vertex_buffer.bind();
 
-    // Set up group colors as uniform array if we have groups
+    // Set up group colors if we have a group manager
     if (m_group_manager) {
         const auto& groups = m_group_manager->getGroups();
-        std::vector<QVector4D> group_colors;
-        group_colors.push_back(m_color); // Index 0 = ungrouped color
         
-        for (auto it = groups.begin(); it != groups.end(); ++it) {
+        // Prepare color array - index 0 is for ungrouped points
+        std::vector<QVector4D> group_colors(32, m_color);
+        group_colors[0] = m_color; // Index 0 = ungrouped color
+        
+        // Map group colors to consecutive indices starting from 1
+        int color_index = 1;
+        for (auto it = groups.begin(); it != groups.end() && color_index < 32; ++it) {
             const auto& group = it.value();
-            group_colors.push_back(QVector4D(group.color.redF(), group.color.greenF(), 
-                                           group.color.blueF(), group.color.alphaF()));
+            group_colors[color_index] = QVector4D(group.color.redF(), group.color.greenF(), 
+                                                 group.color.blueF(), group.color.alphaF());
+            color_index++;
         }
         
-        // Pass group colors to shader (implementation depends on shader)
-        // For now, use default color - shader enhancement needed for full group support
-        shader_program->setUniformValue("u_color", m_color);
+        // Pass color array to shader
+        shader_program->setUniformValueArray("u_group_colors", group_colors.data(), 32);
+        shader_program->setUniformValue("u_num_groups", 32);
     } else {
-        shader_program->setUniformValue("u_color", m_color);
+        // No groups, all points use default color
+        std::vector<QVector4D> group_colors(32, m_color);
+        shader_program->setUniformValueArray("u_group_colors", group_colors.data(), 32);
+        shader_program->setUniformValue("u_num_groups", 32);
     }
 
+    shader_program->setUniformValue("u_color", m_color);
     shader_program->setUniformValue("u_point_size", point_size);
 
     // Draw all points in a single call
@@ -589,20 +598,55 @@ void PointDataVisualization::_updateGroupVertexData() {
         return;
     }
     
-    // Get all points from the spatial index
+    // Create mapping from group ID to shader color index
+    const auto& groups = m_group_manager->getGroups();
+    std::unordered_map<int, int> group_id_to_color_index;
+    int color_index = 1; // Start from index 1 (0 is for ungrouped)
+    for (auto it = groups.begin(); it != groups.end() && color_index < 32; ++it) {
+        group_id_to_color_index[it.key()] = color_index;
+        color_index++;
+    }
+    
+    // Create a mapping from (x,y) coordinates to point data (time stamps)
+    // This ensures we get the correct point ID for each vertex position
+    std::unordered_map<std::string, int64_t> coord_to_timestamp;
     std::vector<QuadTreePoint<int64_t> const *> all_points;
     BoundingBox full_bounds = m_spatial_index->getBounds();
     m_spatial_index->queryPointers(full_bounds, all_points);
     
-    // Update group IDs in vertex data
-    size_t vertex_index = 0;
     for (const auto* point_ptr : all_points) {
-        if (vertex_index * 3 + 2 < m_vertex_data.size()) {
-            // Get group ID for this point (0 = ungrouped)
-            int group_id = m_group_manager->getPointGroup(point_ptr->data);
-            m_vertex_data[vertex_index * 3 + 2] = static_cast<float>(group_id == -1 ? 0 : group_id);
-            vertex_index++;
+        // Use string key for coordinate lookup (with precision to handle floating point)
+        std::string coord_key = std::to_string(static_cast<int>(point_ptr->x * 10000)) + "," + 
+                               std::to_string(static_cast<int>(point_ptr->y * 10000));
+        coord_to_timestamp[coord_key] = point_ptr->data;
+    }
+    
+    // Update group IDs in vertex data using coordinate lookup
+    for (size_t i = 0; i < m_vertex_data.size(); i += 3) {
+        float x = m_vertex_data[i];
+        float y = m_vertex_data[i + 1];
+        
+        // Create coordinate key for lookup
+        std::string coord_key = std::to_string(static_cast<int>(x * 10000)) + "," + 
+                               std::to_string(static_cast<int>(y * 10000));
+        
+        // Find the timestamp for this coordinate
+        auto coord_it = coord_to_timestamp.find(coord_key);
+        int group_id = -1;
+        if (coord_it != coord_to_timestamp.end()) {
+            group_id = m_group_manager->getPointGroup(coord_it->second);
         }
+        
+        // Map to shader color index
+        float shader_group_id = 0.0f; // Default to ungrouped (index 0)
+        if (group_id != -1) {
+            auto it = group_id_to_color_index.find(group_id);
+            if (it != group_id_to_color_index.end()) {
+                shader_group_id = static_cast<float>(it->second);
+            }
+        }
+        
+        m_vertex_data[i + 2] = shader_group_id;
     }
     
     // Update OpenGL buffer
