@@ -39,6 +39,10 @@ DataTransform_Widget::DataTransform_Widget(
       _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
+    // Set explicit size policy and minimum size
+    setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+    setMinimumSize(250, 400);
+
     _registry = std::make_unique<TransformRegistry>();
 
     ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
@@ -384,4 +388,12 @@ void DataTransform_Widget::_updateOutputName() {
     if (!outputName.isEmpty()) {
         ui->output_name_edit->setText(outputName);
     }
+}
+
+QSize DataTransform_Widget::sizeHint() const {
+    return QSize(350, 600);
+}
+
+QSize DataTransform_Widget::minimumSizeHint() const {
+    return QSize(250, 400);
 }

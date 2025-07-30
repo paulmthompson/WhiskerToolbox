@@ -33,6 +33,9 @@ public:
      */
     void clearFeatureSelection();
 
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
+
 private:
     Ui::DataManager_Widget * ui;
     TimeScrollBar * _time_scrollbar;

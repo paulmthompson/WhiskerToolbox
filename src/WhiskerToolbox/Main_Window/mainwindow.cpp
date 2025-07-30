@@ -513,23 +513,24 @@ void MainWindow::openDataManager() {
                 this);
 
         dm_widget->setObjectName(key);
-        //registerDockWidget(key, dm_widget.get(), ads::RightDockWidgetArea);
+
+        // Set explicit minimum size constraints
+        dm_widget->setMinimumSize(250, 400);
+        dm_widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+
+        // Create dock widget with appropriate settings
         auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
+        dock_widget->setWidget(dm_widget.get(), ads::CDockWidget::ForceNoScrollArea);
 
-        // Set size constraints before adding the widget to the dock
-        dm_widget->setMinimumHeight(400);
-        dm_widget->setMaximumHeight(600);
+        // Change to MinimumSizeHintFromContent to match Test_Widget behavior
+        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
 
-        dock_widget->setWidget(dm_widget.get(),
-                             ads::CDockWidget::ForceNoScrollArea);
-        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromDockWidget);
         _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
 
         _widgets[key] = std::move(dm_widget);
     }
 
     auto ptr = dynamic_cast<DataManager_Widget *>(_widgets[key].get());
-    //connect(ui->time_scrollbar, &TimeScrollBar::timeChanged, ptr, &DataManager_Widget::LoadFrame);
     ptr->openWidget();
 
     showDockWidget(key);
@@ -586,16 +587,18 @@ void MainWindow::openDataTransforms() {
                 this);
 
         dt_widget->setObjectName(key);
-        //registerDockWidget(key, dt_widget.get(), ads::RightDockWidgetArea);
+
+        // Set explicit minimum size constraints
+        dt_widget->setMinimumSize(250, 400);
+        dt_widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+
+        // Create dock widget with appropriate settings
         auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
+        dock_widget->setWidget(dt_widget.get(), ads::CDockWidget::ForceNoScrollArea);
 
-        // Set size constraints before adding the widget to the dock
-        dt_widget->setMinimumHeight(400);
-        dt_widget->setMaximumHeight(600);
+        // Change to MinimumSizeHintFromContent to match Test_Widget behavior
+        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
 
-        dock_widget->setWidget(dt_widget.get(),
-                             ads::CDockWidget::ForceNoScrollArea);
-        dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromDockWidget);
         _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);
 
         _widgets[key] = std::move(dt_widget);

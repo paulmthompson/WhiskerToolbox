@@ -30,6 +30,9 @@ public:
 
     void openWidget();// Call
 
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
+
 private:
     Ui::DataTransform_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;

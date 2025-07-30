@@ -42,6 +42,10 @@ DataManager_Widget::DataManager_Widget(
       _data_manager{std::move(data_manager)} {
     ui->setupUi(this);
 
+    // Set explicit size policy and minimum size
+    setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+    setMinimumSize(250, 400);
+
     ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
     ui->feature_table_widget->setDataManager(_data_manager);
 
@@ -355,4 +359,12 @@ void DataManager_Widget::_changeScrollbar(int frame_id) {
     }
 
     _time_scrollbar->changeScrollBarValue(frame_id);
+}
+
+QSize DataManager_Widget::sizeHint() const {
+    return QSize(350, 600);
+}
+
+QSize DataManager_Widget::minimumSizeHint() const {
+    return QSize(250, 400);
 }
