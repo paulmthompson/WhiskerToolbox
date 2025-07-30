@@ -35,8 +35,7 @@ class GroupManager;
  * - Selection state (selected or not)
  * - X/Y coordinates in world space
  * - Visibility (hidden or not)
- * 
- * Soon will also add a color state for each point, although there will be a default color
+
  * 
  * 
  * Data is stored in a QuadTree for efficient spatial queries

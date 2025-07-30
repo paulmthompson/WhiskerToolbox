@@ -607,34 +607,18 @@ void PointDataVisualization::_updateGroupVertexData() {
         color_index++;
     }
     
-    // Create a mapping from (x,y) coordinates to point data (time stamps)
-    // This ensures we get the correct point ID for each vertex position
-    std::unordered_map<std::string, int64_t> coord_to_timestamp;
-    std::vector<QuadTreePoint<int64_t> const *> all_points;
-    BoundingBox full_bounds = m_spatial_index->getBounds();
-    m_spatial_index->queryPointers(full_bounds, all_points);
-    
-    for (const auto* point_ptr : all_points) {
-        // Use string key for coordinate lookup (with precision to handle floating point)
-        std::string coord_key = std::to_string(static_cast<int>(point_ptr->x * 10000)) + "," + 
-                               std::to_string(static_cast<int>(point_ptr->y * 10000));
-        coord_to_timestamp[coord_key] = point_ptr->data;
-    }
-    
-    // Update group IDs in vertex data using coordinate lookup
+    // Update group IDs in vertex data using direct timestamp lookup
     for (size_t i = 0; i < m_vertex_data.size(); i += 3) {
         float x = m_vertex_data[i];
         float y = m_vertex_data[i + 1];
         
-        // Create coordinate key for lookup
-        std::string coord_key = std::to_string(static_cast<int>(x * 10000)) + "," + 
-                               std::to_string(static_cast<int>(y * 10000));
+        // Find the timestamp for this vertex position using spatial index
+        auto const* point_ptr = m_spatial_index->findNearest(x, y, 0.0001f);
         
-        // Find the timestamp for this coordinate
-        auto coord_it = coord_to_timestamp.find(coord_key);
         int group_id = -1;
-        if (coord_it != coord_to_timestamp.end()) {
-            group_id = m_group_manager->getPointGroup(coord_it->second);
+        if (point_ptr) {
+            // Use timestamp-based group lookup - much more efficient
+            group_id = m_group_manager->getPointGroup(point_ptr->data);
         }
         
         // Map to shader color index
