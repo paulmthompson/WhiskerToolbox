@@ -522,7 +522,7 @@ void MainWindow::openDataManager() {
         auto dock_widget = new ads::CDockWidget(QString::fromStdString(key));
         dock_widget->setWidget(dm_widget.get(), ads::CDockWidget::ForceNoScrollArea);
 
-        // Change to MinimumSizeHintFromContent to match Test_Widget behavior
+        // Change to MinimumSizeHintFromContent to match DataTransform_Widget behavior
         dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
 
         _m_DockManager->addDockWidget(ads::RightDockWidgetArea, dock_widget);

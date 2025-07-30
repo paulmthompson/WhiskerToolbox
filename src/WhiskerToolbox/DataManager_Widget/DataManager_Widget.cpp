@@ -36,7 +36,7 @@ DataManager_Widget::DataManager_Widget(
         std::shared_ptr<DataManager> data_manager,
         TimeScrollBar * time_scrollbar,
         QWidget * parent)
-    : QWidget(parent),
+    : QScrollArea(parent),
       ui(new Ui::DataManager_Widget),
       _time_scrollbar{time_scrollbar},
       _data_manager{std::move(data_manager)} {
@@ -46,9 +46,21 @@ DataManager_Widget::DataManager_Widget(
     setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
     setMinimumSize(250, 400);
 
+    // Configure scroll area properties
+    setWidgetResizable(true);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    // Ensure the content widget has the correct size policy
+    ui->scrollAreaWidgetContents->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+
     ui->feature_table_widget->setColumns({"Feature", "Type", "Clock"});
     ui->feature_table_widget->setDataManager(_data_manager);
 
+    // Ensure the feature table doesn't expand beyond available width
+    ui->feature_table_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    // Initialize stacked widgets
     ui->stackedWidget->addWidget(new Point_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Image_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Mask_Widget(_data_manager));
@@ -58,6 +70,7 @@ DataManager_Widget::DataManager_Widget(
     ui->stackedWidget->addWidget(new DigitalEventSeries_Widget(_data_manager));
     ui->stackedWidget->addWidget(new Tensor_Widget(_data_manager));
 
+    // Setup collapsible sections
     ui->output_dir_section->autoSetContentLayout();
     ui->output_dir_section->setTitle("Output Directory");
 
@@ -66,6 +79,12 @@ DataManager_Widget::DataManager_Widget(
 
     // Set the DataManager for the NewDataWidget that was created from the UI file
     ui->new_data_widget->setDataManager(_data_manager);
+
+    // Configure size policies for child widgets to ensure they fit within container
+    ui->output_dir_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    ui->new_data_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    ui->selected_feature_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+    ui->stackedWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     connect(ui->output_dir_widget, &OutputDirectoryWidget::dirChanged, this, &DataManager_Widget::_changeOutputDir);
     connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected, this, &DataManager_Widget::_handleFeatureSelected);
@@ -359,6 +378,75 @@ void DataManager_Widget::_changeScrollbar(int frame_id) {
     }
 
     _time_scrollbar->changeScrollBarValue(frame_id);
+}
+
+void DataManager_Widget::resizeEvent(QResizeEvent* event) {
+    QScrollArea::resizeEvent(event);
+
+    // Ensure content widget fills the scroll area completely
+    if (widget()) {
+        widget()->resize(viewport()->size());
+    }
+
+    // Force layout update to ensure proper sizing of child widgets
+    if (ui->scrollAreaWidgetContents->layout()) {
+        ui->scrollAreaWidgetContents->layout()->invalidate();
+        ui->scrollAreaWidgetContents->layout()->activate();
+    }
+
+    // Update child widgets to ensure they fit within the available width
+    int const availableWidth = viewport()->width() - 20; // Account for margins
+
+    // Update the feature table width
+    if (ui->feature_table_widget) {
+        ui->feature_table_widget->setMaximumWidth(availableWidth);
+        ui->feature_table_widget->updateGeometry();
+    }
+
+    // Update the sections
+    if (ui->output_dir_section) {
+        ui->output_dir_section->setMaximumWidth(availableWidth);
+        ui->output_dir_section->updateGeometry();
+    }
+
+    if (ui->new_data_section) {
+        ui->new_data_section->setMaximumWidth(availableWidth);
+        ui->new_data_section->updateGeometry();
+    }
+
+    // Update the stacked widget
+    if (ui->stackedWidget) {
+        ui->stackedWidget->setMaximumWidth(availableWidth);
+        ui->stackedWidget->updateGeometry();
+
+        // Update the current widget in the stack
+        QWidget* currentWidget = ui->stackedWidget->currentWidget();
+        if (currentWidget) {
+            currentWidget->setMaximumWidth(availableWidth);
+            currentWidget->updateGeometry();
+        }
+    }
+}
+
+void DataManager_Widget::showEvent(QShowEvent* event) {
+    QScrollArea::showEvent(event);
+
+    // Delay the resize slightly to ensure it happens after the widget is visible
+    QTimer::singleShot(0, this, [this]() {
+        if (widget() && viewport()) {
+            // Resize the content widget to match the viewport
+            widget()->resize(viewport()->size());
+
+            // Force layout update
+            if (ui->scrollAreaWidgetContents->layout()) {
+                ui->scrollAreaWidgetContents->layout()->invalidate();
+                ui->scrollAreaWidgetContents->layout()->activate();
+            }
+
+            // Update geometry
+            widget()->updateGeometry();
+        }
+    });
 }
 
 QSize DataManager_Widget::sizeHint() const {
