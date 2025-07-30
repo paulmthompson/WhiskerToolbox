@@ -1,3 +1,64 @@
 ---
 title: "Keypoint Video Labeling"
 ---
+
+![](licking_mouse_cartoon.mp4){fig-align="center"}
+
+(\^ this should be a gif)
+
+This tutorial will show you how to add, review, and change key points located on frames throughout a video.
+
+![](2.png)
+
+Load the video that you intend to label. Or, select Load JSON configuration if you have generated a key point .csv and would like to review the labels. (See: setting up a JSON file)
+
+![](3.png)
+
+Open the data manager to create a new point feature
+
+![](4.png)
+
+Set the output directory for your key point-coordinate containing .csv file
+
+Create a new point feature with the type: point
+
+Time frame should correspond to (x)
+
+Name the point after the feature that you will be labeling
+
+![](5.png)
+
+Enable the feature in the media widget to open the point editor\
+Change the color and opacity (Alpha) to ensure visibility
+
+Change the size and shape of the key point if needed
+
+Choose "select point" under mouse mode to begin adding points
+
+NOTE: the key point will always be represented by a single pixel and the marker shape information will not be retained
+
+To add points, click anywhere in the media canvas to add a point. If a point already exists in the frame, the point will be moved.
+
+![](6.png)
+
+Once labeling is finished, labeled frames and the feature coordinates will appear in the data manager when the new feature is selected.
+
+From here, the export selections can be made.
+
+The delimiter will specify the separations between each column
+
+The line ending will specify the separations made between each line
+
+This text formatting information is useful for subsequent data analysis
+
+![](7.png)
+
+By checking the "Export matching media frames" box, a new folder will be created in the output folder that will contain images of the frames that contain key points.
+
+NOTE: the key points will not be overlaid on the frame
+
+![](8.png)
+
+Once done, click "Save to CSV"
+
+If successful, your screen should look like this, and the key point data should be saved to the output folder defined earlier.
