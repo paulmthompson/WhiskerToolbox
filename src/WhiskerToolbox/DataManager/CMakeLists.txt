@@ -134,6 +134,9 @@ set(DATAMANAGER_SOURCES
         utils/TableView/computers/AnalogSliceGathererComputer.h
         utils/TableView/computers/StandardizeComputer.h
 
+        utils/TableView/ComputerRegistry.cpp 
+        utils/TableView/ComputerRegistry.hpp
+
 
         transforms/data_transforms.cpp
         transforms/data_transforms.hpp
