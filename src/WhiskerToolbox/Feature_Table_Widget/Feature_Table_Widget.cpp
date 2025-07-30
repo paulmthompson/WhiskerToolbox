@@ -58,26 +58,21 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
             "    color: white;"
             "}"
             "QCheckBox {"
-            "    background-color: transparent;"// Transparent background for checkboxes
+            "    background-color: transparent;"
             "    color: white;"
-            "}"
-            "QCheckBox:checked {"
-            "    background-color: transparent;"
-            "}"
-            "QCheckBox:unchecked {"
-            "    background-color: transparent;"
+            "    spacing: 0px;"
             "}"
             "QCheckBox::indicator {"
-            "    width: 13px;"
-            "    height: 13px;"
+            "    width: 12px;"
+            "    height: 12px;"
+            "    border-radius: 2px;"
+            "    border: 1px solid #ffffff;"
             "}"
             "QCheckBox::indicator:unchecked {"
-            "    border: 1px solid #cccccc;"
             "    background-color: #2a2a2a;"
             "}"
             "QCheckBox::indicator:checked {"
-            "    border: 1px solid #0078d4;"
-            "    background-color: #0078d4;"
+            "    background-color: #ffffff;"
             "}");
 
     //connect(ui->refresh_dm_features, &QPushButton::clicked, this, &Feature_Table_Widget::_refreshFeatures);
@@ -134,9 +129,12 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setAlignment(Qt::AlignCenter);
 
-    // Create the checkbox
+    // Create the checkbox - standard QCheckBox with no text
     auto checkboxItem = new QCheckBox();
     checkboxItem->setCheckState(Qt::Unchecked);
+
+    // Remove any text - we only want the checkbox indicator
+    checkboxItem->setText("");
 
     // Add checkbox to the layout
     layout->addWidget(checkboxItem);
