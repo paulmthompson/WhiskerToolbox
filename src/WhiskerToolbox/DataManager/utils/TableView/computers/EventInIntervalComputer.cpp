@@ -3,6 +3,26 @@
 #include <algorithm>
 #include <stdexcept>
 
+/**
+ * @brief Finds events within a specific interval using binary search.
+ * 
+ * This private helper method efficiently locates all events that fall within
+ * the specified interval using binary search algorithms. It assumes the events
+ * are sorted in ascending order for optimal performance.
+ * 
+ * @param events Span of all events, must be sorted in ascending order
+ * @param startIdx Start index of the interval (inclusive)
+ * @param endIdx End index of the interval (inclusive)
+ * @return Vector of TimeFrameIndex values representing events within the interval
+ * 
+ * @pre @p events is sorted in ascending order
+ * @pre @p startIdx <= @p endIdx
+ * 
+ * @post Result contains only events where startIdx <= event <= endIdx
+ * @post Result is sorted in ascending order
+ * 
+ * @note Time complexity: O(log n) where n is the number of events
+ */
 template<typename T>
 auto EventInIntervalComputer<T>::findEventsInInterval(std::span<const TimeFrameIndex> events,
                                                      TimeFrameIndex startIdx,
@@ -20,7 +40,28 @@ auto EventInIntervalComputer<T>::findEventsInInterval(std::span<const TimeFrameI
     return result;
 }
 
-// Template specialization for bool (Presence operation)
+/**
+ * @brief Template specialization for bool (Presence operation).
+ * 
+ * Computes whether any events exist within each interval of the execution plan.
+ * Returns a boolean vector where each element indicates the presence (true) or
+ * absence (false) of events in the corresponding interval.
+ * 
+ * This specialization is optimized for detecting event occurrence patterns and
+ * is commonly used for binary classification of time intervals based on event
+ * presence.
+ * 
+ * @param plan The execution plan containing interval boundaries and time frame
+ * @return Vector of boolean values indicating event presence in each interval
+ * 
+ * @pre @p m_operation == EventOperation::Presence
+ * @pre @p plan contains valid intervals and non-null time frame
+ * 
+ * @post Result vector size equals plan.getIntervals().size()
+ * @post Each result is true if any events exist in the corresponding interval, false otherwise
+ * 
+ * @throws std::runtime_error if operation type doesn't match EventOperation::Presence
+ */
 template<>
 auto EventInIntervalComputer<bool>::compute(const ExecutionPlan& plan) const -> std::vector<bool> {
     if (m_operation != EventOperation::Presence) {
@@ -43,7 +84,28 @@ auto EventInIntervalComputer<bool>::compute(const ExecutionPlan& plan) const -> 
     return results;
 }
 
-// Template specialization for int (Count operation)
+/**
+ * @brief Template specialization for int (Count operation).
+ * 
+ * Computes the number of events within each interval of the execution plan.
+ * Returns an integer vector where each element represents the count of events
+ * in the corresponding interval.
+ * 
+ * This specialization is useful for quantifying event frequency and density
+ * across different time periods, commonly used in spike rate analysis and
+ * event frequency studies.
+ * 
+ * @param plan The execution plan containing interval boundaries and time frame
+ * @return Vector of integer values representing event counts in each interval
+ * 
+ * @pre @p m_operation == EventOperation::Count
+ * @pre @p plan contains valid intervals and non-null time frame
+ * 
+ * @post Result vector size equals plan.getIntervals().size()
+ * @post Each result is the number of events in the corresponding interval (>= 0)
+ * 
+ * @throws std::runtime_error if operation type doesn't match EventOperation::Count
+ */
 template<>
 auto EventInIntervalComputer<int>::compute(const ExecutionPlan& plan) const -> std::vector<int> {
     if (m_operation != EventOperation::Count) {
@@ -66,7 +128,35 @@ auto EventInIntervalComputer<int>::compute(const ExecutionPlan& plan) const -> s
     return results;
 }
 
-// Template specialization for std::vector<TimeFrameIndex> (Gather operation)
+/**
+ * @brief Template specialization for std::vector<float> (Gather operations).
+ * 
+ * Computes the actual event times within each interval of the execution plan.
+ * Returns a vector of float vectors where each inner vector contains the
+ * event times that occurred within the corresponding interval.
+ * 
+ * This specialization supports two modes:
+ * - EventOperation::Gather: Returns absolute event times within each interval
+ * - EventOperation::Gather_Center: Returns event times relative to interval center
+ * 
+ * This is particularly useful for detailed event analysis, spike timing studies,
+ * and when the exact timing of events within intervals is required.
+ * 
+ * @param plan The execution plan containing interval boundaries and time frame
+ * @return Vector of float vectors, each containing event times within the corresponding interval
+ * 
+ * @pre @p m_operation == EventOperation::Gather || m_operation == EventOperation::Gather_Center
+ * @pre @p plan contains valid intervals and non-null time frame
+ * @pre Source and destination time frames are compatible
+ * 
+ * @post Result vector size equals plan.getIntervals().size()
+ * @post For Gather operation: each inner vector contains absolute event times within the interval
+ * @post For Gather_Center operation: each inner vector contains event times relative to interval center
+ * @post Each inner vector is sorted in ascending order
+ * 
+ * @throws std::runtime_error if operation type doesn't match EventOperation::Gather or EventOperation::Gather_Center
+ * @throws std::runtime_error if source and destination time frames are incompatible
+ */
 template<>
 auto EventInIntervalComputer<std::vector<float>>::compute(const ExecutionPlan& plan) const -> std::vector<std::vector<float>> {
     if (m_operation != EventOperation::Gather && m_operation != EventOperation::Gather_Center) {
