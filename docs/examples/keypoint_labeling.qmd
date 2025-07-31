@@ -2,63 +2,155 @@
 title: "Keypoint Video Labeling"
 ---
 
-![](licking_mouse_cartoon.mp4){fig-align="center"}
+![](gif.gif){fig-align="center"}
 
-(\^ this should be a gif)
+Keypoint labeling is a powerful method to systematically study motion, behavior, and anatomical positioning over time. By marking and tracking specific locations on subjects across frames in a video, you can extract detailed data about the dynamics of movement.
 
-This tutorial will show you how to add, review, and change key points located on frames throughout a video.
+For example, keypoint data can be used to:
 
-![](2.png)
+-   Quantify fine-scale behaviors like licking, grooming, or chewing
 
-Load the video that you intend to label. Or, select Load JSON configuration if you have generated a key point .csv and would like to review the labels. (See: setting up a JSON file)
+-   Track anatomical features over time for posture and gait analysis
 
-![](3.png)
+-   Align behavioral sequences with physiological recordings
 
-Open the data manager to create a new point feature
+-   Train machine learning models for automated behavior detection
 
-![](4.png)
+-   Visualize and compare motion trajectories across individuals or trials
 
-Set the output directory for your key point-coordinate containing .csv file
+This tutorial will guide you through the process of labeling keypoints on a video and saving the keypoint data.
 
-Create a new point feature with the type: point
+------------------------------------------------------------------------
 
-Time frame should correspond to (x)
+## Step 1: Load Video or Existing Labels
 
-Name the point after the feature that you will be labeling
+![](2.png){fig-align="center"}
 
-![](5.png)
+To begin labeling:
 
-Enable the feature in the media widget to open the point editor\
-Change the color and opacity (Alpha) to ensure visibility
+1.  Open the application and navigate to `File > Load Data`.
+2.  Select the video you intend to annotate.
 
-Change the size and shape of the key point if needed
+Alternatively, if you've already created keypoints and want to review or update them:
 
-Choose "select point" under mouse mode to begin adding points
+-   Select `File > Load JSON Configuration` and choose your `.json` file.
 
-NOTE: the key point will always be represented by a single pixel and the marker shape information will not be retained
+::: callout-tip
+See: [Setting up a JSON File](#) for more on configuration options.
+:::
 
-To add points, click anywhere in the media canvas to add a point. If a point already exists in the frame, the point will be moved.
+------------------------------------------------------------------------
 
-![](6.png)
+## Step 2: Open the Data Manager
 
-Once labeling is finished, labeled frames and the feature coordinates will appear in the data manager when the new feature is selected.
+![](3.png){fig-align="center"}
 
-From here, the export selections can be made.
+To create or manage point data:
 
-The delimiter will specify the separations between each column
+-   Navigate to `Modules > Data Manager` to open the **Data Manager Module**.
 
-The line ending will specify the separations made between each line
+------------------------------------------------------------------------
 
-This text formatting information is useful for subsequent data analysis
+## Step 3: Create a New Keypoint Feature
 
-![](7.png)
+![](4.png){fig-align="center"}
 
-By checking the "Export matching media frames" box, a new folder will be created in the output folder that will contain images of the frames that contain key points.
+In the **Data Manager**:
 
-NOTE: the key points will not be overlaid on the frame
+1.  **Set the Output Directory**: This is where your labeled data (CSV) will be saved.
+    -   Example: `C:/Users/wanglab/Desktop/Cartoon_Mouse`
+2.  **Create New Data**:
+    -   **Type**: `point`
+    -   **Time Frame**: Select based on your analysis requirements (e.g., `time` for temporal tracking).
+    -   **Name**: Choose a descriptive name (e.g., `jaw`, `nose`, or `paw`).
 
-![](8.png)
+Click **Create New Data** to add the new feature.
 
-Once done, click "Save to CSV"
+------------------------------------------------------------------------
 
-If successful, your screen should look like this, and the key point data should be saved to the output folder defined earlier.
+## Step 4: Edit and Add Keypoints in the Media Widget
+
+![](5.png){fig-align="center"}
+
+Once the point feature is created:
+
+1.  **Enable the Feature**: Select the feature in the media widget to activate the keypoint editor.
+2.  **Customize Appearance**:
+    -   Choose a **color** using the hex selector.
+    -   Adjust the **opacity (Alpha)** for better contrast against the video.
+    -   Modify the **size** and **shape** of the marker if needed.
+3.  **Begin Labeling**:
+    -   Switch mouse mode to **"Select Point"**.
+    -   Click anywhere in the video frame to **add a point**.
+    -   Clicking on an existing point will **move** it.
+
+![](label.gif){fig-align="center" width="678"}
+
+::: callout-important
+Note: The keypoint is recorded as a single-pixel coordinate. Visual shape and style are only for display and are **not saved**.
+:::
+
+------------------------------------------------------------------------
+
+## Step 5: Review and Export Your Labels
+
+![](6.png){fig-align="center"}
+
+After labeling:
+
+1.  Select your feature (e.g., `jaw`) in the Data Manager.
+2.  You'll see a spreadsheet with:
+    -   Frame indices
+    -   (x, y) coordinates for each labeled keypoint
+
+### Export Options:
+
+-   **File Name**: Choose a meaningful name for your CSV.
+-   **Delimiter**: (e.g., comma `,` or tab `\t`) – separates columns.
+-   **Line Ending**: Select line break style (`\n`, `\r\n`, etc.).
+-   **Header**: Optionally include a header row with custom labels.
+
+------------------------------------------------------------------------
+
+## Optional: Export Matching Media Frames
+
+![](7.png){fig-align="center"}
+
+You can export the video frames where keypoints were labeled:
+
+1.  Check `Export Matching Media Frames`.
+2.  Choose from export options:
+    -   **Save by Frame Name**
+    -   **Frame ID Padding**
+    -   **Image Name Prefix**
+    -   **Subfolder for Images**
+    -   **Overwrite Existing Files**
+
+::: callout-warning
+Keypoints will **not** be drawn on these frames. Only raw frames are exported.
+:::
+
+------------------------------------------------------------------------
+
+## Step 6: Save to CSV
+
+![](8.png){fig-align="center"}
+
+Once you’ve reviewed your labels:
+
+-   Click **"Save to CSV"**
+
+A confirmation will appear showing the file path.
+
+Your labeled keypoint data is now saved and ready for further analysis.
+
+------------------------------------------------------------------------
+
+### Summary
+
+This tutorial demonstrated how to:
+
+-   Load a video or keypoint configuration
+-   Create and configure keypoint data
+-   Annotate frames with feature coordinates
+-   Export label data and relevant frames
