@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TableDesignerWidget</class>
+ <widget class="QWidget" name="TableDesignerWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Table Designer</string>
+  </property>
+  <layout class="QVBoxLayout" name="main_layout">
+   <property name="spacing">
+    <number>8</number>
+   </property>
+   <property name="leftMargin">
+    <number>8</number>
+   </property>
+   <property name="topMargin">
+    <number>8</number>
+   </property>
+   <property name="rightMargin">
+    <number>8</number>
+   </property>
+   <property name="bottomMargin">
+    <number>8</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="table_selection_group">
+     <property name="title">
+      <string>Table Selection</string>
+     </property>
+     <layout class="QVBoxLayout" name="table_selection_layout">
+      <item>
+       <layout class="QHBoxLayout" name="table_selection_row">
+        <item>
+         <widget class="QComboBox" name="table_combo">
+          <property name="minimumWidth">
+           <number>150</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="new_table_btn">
+          <property name="text">
+           <string>New</string>
+          </property>
+          <property name="maximumWidth">
+           <number>60</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="delete_table_btn">
+          <property name="text">
+           <string>Delete</string>
+          </property>
+          <property name="maximumWidth">
+           <number>60</number>
+          </property>
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="table_info_group">
+     <property name="title">
+      <string>Table Information</string>
+     </property>
+     <layout class="QVBoxLayout" name="table_info_layout">
+      <item>
+       <layout class="QHBoxLayout" name="name_row">
+        <item>
+         <widget class="QLabel" name="name_label">
+          <property name="text">
+           <string>Name:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="table_name_edit"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="description_label">
+        <property name="text">
+         <string>Description:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTextEdit" name="table_description_edit">
+        <property name="maximumHeight">
+         <number>60</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="save_info_btn">
+        <property name="text">
+         <string>Save Info</string>
+        </property>
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="row_source_group">
+     <property name="title">
+      <string>Row Data Source</string>
+     </property>
+     <layout class="QVBoxLayout" name="row_source_layout">
+      <item>
+       <layout class="QHBoxLayout" name="row_combo_row">
+        <item>
+         <widget class="QLabel" name="row_source_label">
+          <property name="text">
+           <string>Source:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="row_data_source_combo">
+          <property name="minimumWidth">
+           <number>200</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="row_info_label">
+        <property name="text">
+         <string>No row source selected</string>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: gray; font-style: italic; }</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="column_design_group">
+     <property name="title">
+      <string>Column Design</string>
+     </property>
+     <layout class="QVBoxLayout" name="column_design_layout">
+      <item>
+       <widget class="QSplitter" name="column_splitter">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <widget class="QWidget" name="column_list_widget" native="true">
+         <layout class="QVBoxLayout" name="column_list_layout">
+          <item>
+           <widget class="QLabel" name="columns_label">
+            <property name="text">
+             <string>Columns:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="column_list">
+            <property name="minimumHeight">
+             <number>150</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="column_buttons_layout">
+            <item>
+             <widget class="QPushButton" name="add_column_btn">
+              <property name="text">
+               <string>Add</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="remove_column_btn">
+              <property name="text">
+               <string>Remove</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="move_up_btn">
+              <property name="text">
+               <string>↑</string>
+              </property>
+              <property name="maximumWidth">
+               <number>30</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="move_down_btn">
+              <property name="text">
+               <string>↓</string>
+              </property>
+              <property name="maximumWidth">
+               <number>30</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="column_config_widget" native="true">
+         <layout class="QVBoxLayout" name="column_config_layout">
+          <item>
+           <widget class="QLabel" name="column_config_label">
+            <property name="text">
+             <string>Column Configuration:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="col_name_row">
+            <item>
+             <widget class="QLabel" name="col_name_label">
+              <property name="text">
+               <string>Name:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="column_name_edit"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="col_source_row">
+            <item>
+             <widget class="QLabel" name="col_source_label">
+              <property name="text">
+               <string>Data Source:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="column_data_source_combo"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="col_computer_row">
+            <item>
+             <widget class="QLabel" name="col_computer_label">
+              <property name="text">
+               <string>Computer:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="column_computer_combo"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="col_description_label">
+            <property name="text">
+             <string>Description:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTextEdit" name="column_description_edit">
+            <property name="maximumHeight">
+             <number>60</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="build_group">
+     <property name="title">
+      <string>Build Table</string>
+     </property>
+     <layout class="QVBoxLayout" name="build_layout">
+      <item>
+       <widget class="QPushButton" name="build_table_btn">
+        <property name="text">
+         <string>Build Table</string>
+        </property>
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="build_status_label">
+        <property name="text">
+         <string>No table selected</string>
+        </property>
+        <property name="styleSheet">
+         <string>QLabel { color: gray; font-style: italic; }</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 
