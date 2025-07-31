@@ -26,12 +26,12 @@ GlobalPropertiesWidget::~GlobalPropertiesWidget() {
 }
 
 void GlobalPropertiesWidget::handleBackgroundColorChanged() {
-    QColor current_color = ui->background_color_button->palette().color(QPalette::Button);
-    QColor new_color = QColorDialog::getColor(current_color, this, "Choose Background Color");
+    QColor const current_color = ui->background_color_button->palette().color(QPalette::Button);
+    QColor const new_color = QColorDialog::getColor(current_color, this, "Choose Background Color");
     
     if (new_color.isValid()) {
         // Update button appearance
-        QString style_sheet = QString("background-color: rgb(%1, %2, %3);")
+        QString const style_sheet = QString("background-color: rgb(%1, %2, %3);")
                                 .arg(new_color.red())
                                 .arg(new_color.green())
                                 .arg(new_color.blue());

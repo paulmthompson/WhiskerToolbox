@@ -65,7 +65,7 @@ void Analysis_Dashboard::initializeDashboard() {
     connectSignals();
     
     // Set initial splitter sizes (toolbox: 250px, center: remaining, properties: 250px)
-    QList<int> sizes = {250, 700, 250};
+    QList<int> const sizes = {250, 700, 250};
     ui->main_splitter->setSizes(sizes);
     
     qDebug() << "Analysis Dashboard initialized successfully";
@@ -78,15 +78,15 @@ void Analysis_Dashboard::setupLayout() {
     QWidget* properties_container = ui->properties_container;
     
     // Create layouts for each container
-    QVBoxLayout* toolbox_layout = new QVBoxLayout(toolbox_container);
+    auto* toolbox_layout = new QVBoxLayout(toolbox_container);
     toolbox_layout->setContentsMargins(0, 0, 0, 0);
     toolbox_layout->addWidget(_toolbox_panel);
     
-    QVBoxLayout* graphics_layout = new QVBoxLayout(graphics_container);
+    auto* graphics_layout = new QVBoxLayout(graphics_container);
     graphics_layout->setContentsMargins(0, 0, 0, 0);
     graphics_layout->addWidget(_graphics_view);
     
-    QVBoxLayout* properties_layout = new QVBoxLayout(properties_container);
+    auto* properties_layout = new QVBoxLayout(properties_container);
     properties_layout->setContentsMargins(0, 0, 0, 0);
     properties_layout->addWidget(_properties_panel);
 }
@@ -122,7 +122,7 @@ void Analysis_Dashboard::handlePlotAdded(const QString& plot_id) {
     qDebug() << "Plot added:" << plot_id;
     
     // Update status bar or other UI elements as needed
-    QString status_text = QString("Plot added: %1").arg(plot_id);
+    QString const status_text = QString("Plot added: %1").arg(plot_id);
     ui->statusbar->showMessage(status_text, 3000);
 }
 
@@ -133,7 +133,7 @@ void Analysis_Dashboard::handlePlotRemoved(const QString& plot_id) {
     _properties_panel->showGlobalProperties();
     
     // Update status bar
-    QString status_text = QString("Plot removed: %1").arg(plot_id);
+    QString const status_text = QString("Plot removed: %1").arg(plot_id);
     ui->statusbar->showMessage(status_text, 3000);
 }
 

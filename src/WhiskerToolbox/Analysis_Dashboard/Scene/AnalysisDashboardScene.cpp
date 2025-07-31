@@ -53,7 +53,7 @@ void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget* plot_widget, cons
     plot_widget->setPos(position);
     
     // Store in map
-    QString plot_id = plot_widget->getPlotId();
+    QString const plot_id = plot_widget->getPlotId();
     _plot_widgets[plot_id] = plot_widget;
     
     emit plotAdded(plot_id);
@@ -161,7 +161,7 @@ AbstractPlotWidget* AnalysisDashboardScene::createPlotFromMimeData(const QMimeDa
         return nullptr;
     }
     
-    QString plot_type = QString::fromUtf8(mime_data->data("application/x-plottype"));
+    QString const plot_type = QString::fromUtf8(mime_data->data("application/x-plottype"));
     
     // Factory pattern for creating different plot types
     if (plot_type == "scatter_plot") {
