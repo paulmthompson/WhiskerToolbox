@@ -31,7 +31,11 @@ website:
             href: user_guide/index.qmd
           - text: "Developer Guide"
             href: developer/index.qmd
-                
+
+      - icon: github
+        href: https://github.com/paulmthompson/WhiskerToolbox
+        aria-label: GitHub
+
       - text: "Concepts"
             
   sidebar:
@@ -102,10 +106,10 @@ website:
 
 format:
   html:
-    theme: github-dark
-    smooth-scroll: true
+    theme:
+      light: flatly
+      dark: darkly
     css: styles.css
     toc: true
 
 editor: visual
-
