@@ -7,8 +7,8 @@
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 
@@ -86,23 +86,23 @@ SpatialOverlayOpenGLWidget::~SpatialOverlayOpenGLWidget() {
 
 //========== Point Data ==========
 
-void SpatialOverlayOpenGLWidget::setGroupManager(GroupManager* group_manager) {
+void SpatialOverlayOpenGLWidget::setGroupManager(GroupManager * group_manager) {
     _group_manager = group_manager;
-    
+
     // Connect to group manager signals to handle updates
     if (_group_manager) {
         connect(_group_manager, &GroupManager::pointAssignmentsChanged,
-                this, [this](const std::unordered_set<int>& affected_groups) {
+                this, [this](std::unordered_set<int> const & affected_groups) {
                     Q_UNUSED(affected_groups)
                     // Refresh visualization data for all point visualizations
-                    for (auto& [key, viz] : _point_data_visualizations) {
+                    for (auto & [key, viz]: _point_data_visualizations) {
                         if (viz) {
                             viz->refreshGroupRenderData();
                         }
                     }
-                    update(); // Trigger a repaint
+                    update();// Trigger a repaint
                 });
-        
+
         connect(_group_manager, &GroupManager::groupModified,
                 this, [this](int group_id) {
                     Q_UNUSED(group_id)
@@ -110,14 +110,14 @@ void SpatialOverlayOpenGLWidget::setGroupManager(GroupManager* group_manager) {
                     update();
                 });
     }
-    
+
     // Update existing point data visualizations with the group manager
-    for (auto& [key, viz] : _point_data_visualizations) {
+    for (auto & [key, viz]: _point_data_visualizations) {
         if (viz) {
             viz->setGroupManager(_group_manager);
         }
     }
-    
+
     qDebug() << "SpatialOverlayOpenGLWidget: Set group manager for" << _point_data_visualizations.size() << "visualizations";
 }
 
@@ -268,12 +268,12 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
 
 void SpatialOverlayOpenGLWidget::applyTimeRangeFilter(int start_frame, int end_frame) {
 
-    for (auto & [key, pointViz] : _point_data_visualizations) {
+    for (auto & [key, pointViz]: _point_data_visualizations) {
         pointViz->setTimeRangeEnabled(true);
         pointViz->setTimeRange(start_frame, end_frame);
     }
 
-    for (auto & [key, lineViz] : _line_data_visualizations) {
+    for (auto & [key, lineViz]: _line_data_visualizations) {
 
         lineViz->setTimeRangeEnabled(true);
         lineViz->setTimeRange(start_frame, end_frame);
@@ -456,9 +456,10 @@ void SpatialOverlayOpenGLWidget::makeSelection() {
     }
 
     // If there's no active selection region, it implies a clear command
-    bool should_clear = std::visit([](auto& handler) {
+    bool should_clear = std::visit([](auto & handler) {
         return handler->getActiveSelectionRegion() == nullptr;
-    }, _selection_handler);
+    },
+                                   _selection_handler);
 
     if (should_clear) {
         clearSelection();
@@ -619,14 +620,14 @@ void SpatialOverlayOpenGLWidget::mousePressEvent(QMouseEvent * event) {
     _hover_debounce_timer->stop();
     _hover_processing_active = false;
     QToolTip::hideText();
-    
-    qDebug() << "SpatialOverlayOpenGLWidget: Mouse press - disabled hover processing, selection mode:" << (int)_selection_mode;
+
+    qDebug() << "SpatialOverlayOpenGLWidget: Mouse press - disabled hover processing, selection mode:" << (int) _selection_mode;
 
     // Clear hover states
     for (auto const & [key, viz]: _point_data_visualizations) {
         viz->m_current_hover_point = nullptr;
     }
-    
+
     // Clear line hover states as well
     for (auto const & [key, viz]: _line_data_visualizations) {
         viz->setHoverLine(std::nullopt);
@@ -700,11 +701,11 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
 
     if (event->button() == Qt::LeftButton) {
         _is_panning = false;
-        
+
         // Re-enable hover processing after interaction ends
         // This ensures hover works again even if the click was in an incompatible selection mode
         _hover_processing_active = false;
-        
+
         // Trigger hover processing to restart immediately if mouse is over content
         if (_tooltips_enabled && _data_bounds_valid) {
             _pending_hover_pos = event->pos();
@@ -714,10 +715,10 @@ void SpatialOverlayOpenGLWidget::mouseReleaseEvent(QMouseEvent * event) {
         } else {
             qDebug() << "SpatialOverlayOpenGLWidget: Mouse release - hover processing not restarted (tooltips:" << _tooltips_enabled << ", bounds_valid:" << _data_bounds_valid << ")";
         }
-        
+
         event->accept();
     } else if (event->button() == Qt::RightButton) {
-        
+
         qDebug() << "SpatialOverlayOpenGLWidget: Right-click detected at" << event->pos();
         showContextMenu(event->pos());
         event->accept();
@@ -819,21 +820,21 @@ void SpatialOverlayOpenGLWidget::_handleTooltipTimer() {
     QStringList tooltip_parts;
 
     // Get tooltips from point visualizations
-    for (auto const & [key, viz] : _point_data_visualizations) {
+    for (auto const & [key, viz]: _point_data_visualizations) {
         if (viz->m_current_hover_point) {
             tooltip_parts << viz->getTooltipText();
         }
     }
 
     // Get tooltips from mask visualizations
-    for (auto const & [key, viz] : _mask_data_visualizations) {
+    for (auto const & [key, viz]: _mask_data_visualizations) {
         if (!viz->current_hover_entries.empty()) {
             tooltip_parts << viz->getTooltipText();
         }
     }
 
     // Get tooltips from line visualizations
-    for (auto const & [key, viz] : _line_data_visualizations) {
+    for (auto const & [key, viz]: _line_data_visualizations) {
         if (viz->m_has_hover_line) {
             tooltip_parts << viz->getTooltipText();
         }
@@ -1127,12 +1128,11 @@ RenderingContext SpatialOverlayOpenGLWidget::createRenderingContext() const {
     calculateProjectionBounds(left, right, bottom, top);
 
     return {
-        _model_matrix,
-        _view_matrix,
-        _projection_matrix,
-        rect(),
-        QRectF(QPointF(left, top), QPointF(right, bottom))
-    };
+            _model_matrix,
+            _view_matrix,
+            _projection_matrix,
+            rect(),
+            QRectF(QPointF(left, top), QPointF(right, bottom))};
 }
 
 
@@ -1149,21 +1149,21 @@ void SpatialOverlayOpenGLWidget::renderCommonOverlay() {
 
 void SpatialOverlayOpenGLWidget::hideSelectedItems() {
     size_t total_hidden = 0;
-    
+
     for (auto const & [key, viz]: _line_data_visualizations) {
         total_hidden += viz->hideSelectedLines();
     }
-    
+
     for (auto const & [key, viz]: _point_data_visualizations) {
         total_hidden += viz->hideSelectedPoints();
     }
-    
+
     // TODO: Hide selected masks (no-op for now)
-    
+
     if (total_hidden > 0) {
         qDebug() << "SpatialOverlayOpenGLWidget: Hidden" << total_hidden << "items";
         requestThrottledUpdate();
-        
+
         // Update selection count since hidden items are no longer selected
         emit selectionChanged(getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines(), QString(), 0);
     }
@@ -1177,77 +1177,77 @@ void SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset() {
 
 void SpatialOverlayOpenGLWidget::showAllItemsAllDatasets() {
     size_t total_shown = 0;
-    
+
     for (auto const & [key, viz]: _line_data_visualizations) {
         total_shown += viz->showAllLines();
     }
-    
+
     for (auto const & [key, viz]: _point_data_visualizations) {
         total_shown += viz->showAllPoints();
     }
-    
+
     // TODO: Show all hidden masks (no-op for now)
-    
+
     if (total_shown > 0) {
         qDebug() << "SpatialOverlayOpenGLWidget: Showed" << total_shown << "items";
         requestThrottledUpdate();
     }
 }
 
-void SpatialOverlayOpenGLWidget::showContextMenu(const QPoint& pos) {
+void SpatialOverlayOpenGLWidget::showContextMenu(QPoint const & pos) {
     QMenu contextMenu(this);
-    
+
     // Check if we have any selected items
     size_t total_selected = getTotalSelectedPoints() + getTotalSelectedMasks() + getTotalSelectedLines();
-    
+
     // Add group assignment options if we have selected points and a group manager
     if (total_selected > 0 && _group_manager) {
         // Add "Assign to Group" submenu
-        QMenu* assignGroupMenu = contextMenu.addMenu("Assign to Group");
-        
+        QMenu * assignGroupMenu = contextMenu.addMenu("Assign to Group");
+
         // Add "New Group" option
-        QAction* newGroupAction = assignGroupMenu->addAction("Create New Group");
+        QAction * newGroupAction = assignGroupMenu->addAction("Create New Group");
         connect(newGroupAction, &QAction::triggered, this, [this]() {
             assignSelectedPointsToNewGroup();
         });
-        
+
         assignGroupMenu->addSeparator();
-        
+
         // Add existing groups
-        const auto& groups = _group_manager->getGroups();
+        auto const & groups = _group_manager->getGroups();
         for (auto it = groups.begin(); it != groups.end(); ++it) {
-            const auto& group = it.value();
-            QAction* groupAction = assignGroupMenu->addAction(group.name);
+            auto const & group = it.value();
+            QAction * groupAction = assignGroupMenu->addAction(group.name);
             int group_id = group.id;
             connect(groupAction, &QAction::triggered, this, [this, group_id]() {
                 assignSelectedPointsToGroup(group_id);
             });
         }
-        
+
         // Add "Remove from Group" option
-        QAction* ungroupAction = contextMenu.addAction("Remove from Group");
+        QAction * ungroupAction = contextMenu.addAction("Remove from Group");
         connect(ungroupAction, &QAction::triggered, this, [this]() {
             ungroupSelectedPoints();
         });
-        
+
         contextMenu.addSeparator();
     }
-    
+
     // Add "Hide Selected" option if there are selected items
     if (total_selected > 0) {
-        QAction* hideAction = contextMenu.addAction(QString("Hide Selected (%1 items)").arg(total_selected));
+        QAction * hideAction = contextMenu.addAction(QString("Hide Selected (%1 items)").arg(total_selected));
         connect(hideAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::hideSelectedItems);
     }
-    
+
     // Add "Show All" submenu
-    QMenu* showAllMenu = contextMenu.addMenu("Show All");
-    
-    QAction* showCurrentAction = showAllMenu->addAction("Show All (Current Dataset)");
+    QMenu * showAllMenu = contextMenu.addMenu("Show All");
+
+    QAction * showCurrentAction = showAllMenu->addAction("Show All (Current Dataset)");
     connect(showCurrentAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsCurrentDataset);
-    
-    QAction* showAllAction = showAllMenu->addAction("Show All (All Datasets)");
+
+    QAction * showAllAction = showAllMenu->addAction("Show All (All Datasets)");
     connect(showAllAction, &QAction::triggered, this, &SpatialOverlayOpenGLWidget::showAllItemsAllDatasets);
-    
+
     // Show the menu at the cursor position
     contextMenu.exec(mapToGlobal(pos));
 }
@@ -1259,32 +1259,32 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToNewGroup() {
         qDebug() << "SpatialOverlayOpenGLWidget: No group manager available for group assignment";
         return;
     }
-    
+
     // Collect all selected point IDs
     std::unordered_set<int64_t> selected_point_ids;
-    for (const auto& [key, viz] : _point_data_visualizations) {
+    for (auto const & [key, viz]: _point_data_visualizations) {
         if (viz) {
             auto point_ids = viz->getSelectedPointIds();
             selected_point_ids.insert(point_ids.begin(), point_ids.end());
         }
     }
-    
+
     if (selected_point_ids.empty()) {
         qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to new group";
         return;
     }
-    
+
     // Create a new group
     QString group_name = QString("Group %1").arg(_group_manager->getGroups().size() + 1);
     int group_id = _group_manager->createGroup(group_name);
-    
+
     // Assign selected points to the new group
     _group_manager->assignPointsToGroup(group_id, selected_point_ids);
-    
+
     // Clear selection after assignment
     clearSelection();
-    
-    qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size() 
+
+    qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size()
              << "points to new group" << group_id;
 }
 
@@ -1293,28 +1293,28 @@ void SpatialOverlayOpenGLWidget::assignSelectedPointsToGroup(int group_id) {
         qDebug() << "SpatialOverlayOpenGLWidget: No group manager available for group assignment";
         return;
     }
-    
+
     // Collect all selected point IDs
     std::unordered_set<int64_t> selected_point_ids;
-    for (const auto& [key, viz] : _point_data_visualizations) {
+    for (auto const & [key, viz]: _point_data_visualizations) {
         if (viz) {
             auto point_ids = viz->getSelectedPointIds();
             selected_point_ids.insert(point_ids.begin(), point_ids.end());
         }
     }
-    
+
     if (selected_point_ids.empty()) {
         qDebug() << "SpatialOverlayOpenGLWidget: No selected points to assign to group" << group_id;
         return;
     }
-    
+
     // Assign selected points to the specified group
     _group_manager->assignPointsToGroup(group_id, selected_point_ids);
-    
+
     // Clear selection after assignment
     clearSelection();
-    
-    qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size() 
+
+    qDebug() << "SpatialOverlayOpenGLWidget: Assigned" << selected_point_ids.size()
              << "points to group" << group_id;
 }
 
@@ -1323,26 +1323,26 @@ void SpatialOverlayOpenGLWidget::ungroupSelectedPoints() {
         qDebug() << "SpatialOverlayOpenGLWidget: No group manager available for ungrouping";
         return;
     }
-    
+
     // Collect all selected point IDs
     std::unordered_set<int64_t> selected_point_ids;
-    for (const auto& [key, viz] : _point_data_visualizations) {
+    for (auto const & [key, viz]: _point_data_visualizations) {
         if (viz) {
             auto point_ids = viz->getSelectedPointIds();
             selected_point_ids.insert(point_ids.begin(), point_ids.end());
         }
     }
-    
+
     if (selected_point_ids.empty()) {
         qDebug() << "SpatialOverlayOpenGLWidget: No selected points to ungroup";
         return;
     }
-    
+
     // Remove selected points from all groups
     _group_manager->ungroupPoints(selected_point_ids);
-    
+
     // Clear selection after ungrouping
     clearSelection();
-    
+
     qDebug() << "SpatialOverlayOpenGLWidget: Ungrouped" << selected_point_ids.size() << "points";
 }

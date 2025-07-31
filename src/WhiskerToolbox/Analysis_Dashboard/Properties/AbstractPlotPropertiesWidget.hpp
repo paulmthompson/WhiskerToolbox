@@ -16,7 +16,7 @@ class AbstractPlotPropertiesWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit AbstractPlotPropertiesWidget(QWidget* parent = nullptr);
+    explicit AbstractPlotPropertiesWidget(QWidget * parent = nullptr);
     ~AbstractPlotPropertiesWidget() override = default;
 
     /**
@@ -29,7 +29,7 @@ public:
      * @brief Set the plot widget that this properties widget configures
      * @param plot_widget Pointer to the plot widget
      */
-    virtual void setPlotWidget(AbstractPlotWidget* plot_widget) = 0;
+    virtual void setPlotWidget(AbstractPlotWidget * plot_widget) = 0;
 
     /**
      * @brief Update the properties display from the current plot widget
@@ -48,7 +48,7 @@ signals:
     void propertiesChanged();
 
 protected:
-    AbstractPlotWidget* _plot_widget;
+    AbstractPlotWidget * _plot_widget;
 };
 
-#endif // ABSTRACTPLOTPROPERTIESWIDGET_HPP 
+#endif// ABSTRACTPLOTPROPERTIESWIDGET_HPP

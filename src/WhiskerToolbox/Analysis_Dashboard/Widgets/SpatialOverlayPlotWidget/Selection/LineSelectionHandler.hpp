@@ -1,8 +1,8 @@
 #ifndef LINESELECTIONHANDLER_HPP
 #define LINESELECTIONHANDLER_HPP
 
-#include "SelectionModes.hpp"
 #include "CoreGeometry/lines.hpp"
+#include "SelectionModes.hpp"
 #include "ShaderManager/ShaderProgram.hpp"
 
 #include <QMatrix4x4>
@@ -142,11 +142,11 @@ private:
 
     // Line selection state
     bool _is_drawing_line;
-    Point2D<float> _line_start_point_world;  // Line start point in world coordinates (for rendering)
-    Point2D<float> _line_end_point_world;    // Line end point in world coordinates (for rendering)
-    Point2D<float> _line_start_point_screen; // Line start point in screen coordinates (for picking)
-    Point2D<float> _line_end_point_screen;   // Line end point in screen coordinates (for picking)
-    std::unique_ptr<SelectionRegion> _active_selection_region; // Current selection region
+    Point2D<float> _line_start_point_world;                   // Line start point in world coordinates (for rendering)
+    Point2D<float> _line_end_point_world;                     // Line end point in world coordinates (for rendering)
+    Point2D<float> _line_start_point_screen;                  // Line start point in screen coordinates (for picking)
+    Point2D<float> _line_end_point_screen;                    // Line end point in screen coordinates (for picking)
+    std::unique_ptr<SelectionRegion> _active_selection_region;// Current selection region
     LineSelectionBehavior _current_behavior;
 
     /**
@@ -174,7 +174,6 @@ private:
     void startLineSelection(float world_x, float world_y);
 
 
-
     /**
      * @brief Complete line selection and create selection region
      */
@@ -186,4 +185,4 @@ private:
     void cancelLineSelection();
 };
 
-#endif// LINESELECTIONHANDLER_HPP 
+#endif// LINESELECTIONHANDLER_HPP

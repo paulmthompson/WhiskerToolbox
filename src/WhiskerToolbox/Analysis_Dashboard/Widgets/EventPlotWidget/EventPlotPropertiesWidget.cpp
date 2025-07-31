@@ -45,7 +45,7 @@ void EventPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) 
 
     if (_event_plot_widget) {
         updateFromPlot();
-        
+
         // Connect to pan offset changes to update view bounds labels
         if (_event_plot_widget->getOpenGLWidget()) {
             connect(_event_plot_widget->getOpenGLWidget(), &EventPlotOpenGLWidget::panOffsetChanged,

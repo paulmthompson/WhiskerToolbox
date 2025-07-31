@@ -41,12 +41,6 @@
    </item>
    <item>
     <widget class="QListWidget" name="plot_list">
-     <property name="dragDropMode">
-      <enum>QAbstractItemView::DragOnly</enum>
-     </property>
-     <property name="defaultDropAction">
-      <enum>Qt::CopyAction</enum>
-     </property>
      <property name="alternatingRowColors">
       <bool>true</bool>
      </property>
@@ -61,6 +55,16 @@
      </property>
      <property name="spacing">
       <number>2</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="add_button">
+     <property name="text">
+      <string>Add Selected Plot</string>
+     </property>
+     <property name="enabled">
+      <bool>false</bool>
      </property>
     </widget>
    </item>

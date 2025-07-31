@@ -1,8 +1,8 @@
 #ifndef POINTDATAVISUALIZATION_HPP
 #define POINTDATAVISUALIZATION_HPP
 
-#include "SpatialIndex/QuadTree.hpp"
 #include "../Selection/SelectionHandlers.hpp"
+#include "SpatialIndex/QuadTree.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -13,11 +13,11 @@
 
 #include <cstdint>
 #include <memory>
-#include <unordered_set>
-#include <unordered_map>
-#include <vector>
-#include <variant>
 #include <optional>
+#include <unordered_map>
+#include <unordered_set>
+#include <variant>
+#include <vector>
 
 class PointData;
 class QOpenGLShaderProgram;
@@ -40,9 +40,9 @@ class GroupManager;
  * 
  * Data is stored in a QuadTree for efficient spatial queries
  */
-struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
+struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core {
     std::unique_ptr<QuadTree<int64_t>> m_spatial_index;
-    std::vector<float> m_vertex_data;  // Format: x, y, group_id per vertex (3 floats per point)
+    std::vector<float> m_vertex_data;// Format: x, y, group_id per vertex (3 floats per point)
     QOpenGLBuffer m_vertex_buffer;
     QOpenGLVertexArrayObject m_vertex_array_object;
     QString m_key;
@@ -61,12 +61,12 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     QOpenGLVertexArrayObject m_highlight_vertex_array_object;
 
     // Visibility management for points
-    std::unordered_set<QuadTreePoint<int64_t> const *> m_hidden_points; 
-    
+    std::unordered_set<QuadTreePoint<int64_t> const *> m_hidden_points;
+
     // Statistics tracking
     size_t m_total_point_count = 0;
     size_t m_hidden_point_count = 0;
-    size_t m_visible_vertex_count = 0; // Number of vertices currently in the vertex buffer
+    size_t m_visible_vertex_count = 0;// Number of vertices currently in the vertex buffer
 
     // Time range filtering
     int m_time_range_start = 0;
@@ -74,12 +74,12 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     bool m_time_range_enabled = false;
 
     // Group management
-    GroupManager* m_group_manager = nullptr;
+    GroupManager * m_group_manager = nullptr;
     bool m_group_data_needs_update = false;
 
-    PointDataVisualization(QString const & data_key, 
+    PointDataVisualization(QString const & data_key,
                            std::shared_ptr<PointData> const & point_data,
-                           GroupManager* group_manager = nullptr);
+                           GroupManager * group_manager = nullptr);
     ~PointDataVisualization();
 
     /**
@@ -161,7 +161,7 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      * @param tolerance The tolerance in world coordinates for finding a near point
      * @return True if the hover state changed, false otherwise
      */
-    bool handleHover(const QVector2D & world_pos, float tolerance);
+    bool handleHover(QVector2D const & world_pos, float tolerance);
 
     /**
      * @brief Handle double-click events for this visualization
@@ -169,22 +169,22 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      * @param tolerance The tolerance in world coordinates for finding a near point
      * @return The time frame index of the double-clicked point, or std::nullopt if none
      */
-    std::optional<int64_t> handleDoubleClick(const QVector2D & world_pos, float tolerance);
+    std::optional<int64_t> handleDoubleClick(QVector2D const & world_pos, float tolerance);
 
     //========== Visibility Management ==========
-    
+
     /**
      * @brief Hide selected points from view
      * @return Number of points that were hidden
      */
     size_t hideSelectedPoints();
-    
+
     /**
      * @brief Show all hidden points in this visualization
      * @return Number of points that were shown
      */
     size_t showAllPoints();
-    
+
     /**
      * @brief Get visibility statistics
      * @return Pair of (total_points, hidden_points)
@@ -195,19 +195,19 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     void setTimeRange(int start_frame, int end_frame);
 
     //========== Group Management ==========
-    
+
     /**
      * @brief Set the group manager for this visualization
      * @param group_manager Pointer to the group manager
      */
-    void setGroupManager(GroupManager* group_manager);
-    
+    void setGroupManager(GroupManager * group_manager);
+
     /**
      * @brief Get selected point time stamp IDs for group assignment
      * @return Set of time stamp IDs of currently selected points
      */
     std::unordered_set<int64_t> getSelectedPointIds() const;
-    
+
     /**
      * @brief Refresh group-based rendering data (call when group assignments change)
      */
@@ -233,7 +233,7 @@ private:
      * @brief Update vertex buffer to exclude hidden points
      */
     void _updateVisibleVertexBuffer();
-    
+
     /**
      * @brief Update group IDs in vertex data
      */
@@ -241,4 +241,4 @@ private:
 };
 
 
-#endif // POINTDATAVISUALIZATION_HPP
+#endif// POINTDATAVISUALIZATION_HPP

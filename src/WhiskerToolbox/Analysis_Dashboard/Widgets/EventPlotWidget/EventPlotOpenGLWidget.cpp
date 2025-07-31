@@ -36,7 +36,7 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     QSurfaceFormat format;
     format.setVersion(4, 1);
     format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSamples(4); // Enable multisampling for smooth points
+    format.setSamples(4);// Enable multisampling for smooth points
     setFormat(format);
 
     // Initialize tooltip timer
@@ -48,17 +48,16 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     // Initialize hover processing timers (similar to SpatialOverlayOpenGLWidget)
     _hover_debounce_timer = new QTimer(this);
     _hover_debounce_timer->setSingleShot(true);
-    _hover_debounce_timer->setInterval(16); // ~60 FPS debounce
+    _hover_debounce_timer->setInterval(16);// ~60 FPS debounce
     connect(_hover_debounce_timer, &QTimer::timeout, this, &EventPlotOpenGLWidget::processHoverDebounce);
 
     _tooltip_refresh_timer = new QTimer(this);
     _tooltip_refresh_timer->setSingleShot(false);
-    _tooltip_refresh_timer->setInterval(100); // Refresh every 100ms
+    _tooltip_refresh_timer->setInterval(100);// Refresh every 100ms
     connect(_tooltip_refresh_timer, &QTimer::timeout, this, &EventPlotOpenGLWidget::handleTooltipRefresh);
 
     // Initialize hover processing state
     _hover_processing_active = false;
-    
 }
 
 
@@ -115,7 +114,7 @@ void EventPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
 
 void EventPlotOpenGLWidget::setEventData(std::vector<std::vector<float>> const & event_data) {
     _event_data = event_data;
-    
+
     updateVertexData();
     updateMatrices();
     update();
@@ -123,7 +122,7 @@ void EventPlotOpenGLWidget::setEventData(std::vector<std::vector<float>> const &
 
 void EventPlotOpenGLWidget::initializeGL() {
     qDebug() << "EventPlotOpenGLWidget::initializeGL called";
-    
+
     // Check if OpenGL functions can be initialized
     if (!initializeOpenGLFunctions()) {
         qWarning() << "EventPlotOpenGLWidget::initializeGL - Failed to initialize OpenGL functions";
@@ -132,17 +131,17 @@ void EventPlotOpenGLWidget::initializeGL() {
 
     // Set clear color based on theme
     if (_plot_theme == PlotTheme::Dark) {
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f); // dark gray
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);// dark gray
     } else {
-        glClearColor(0.95f, 0.95f, 0.95f, 1.0f); // light gray
+        glClearColor(0.95f, 0.95f, 0.95f, 1.0f);// light gray
     }
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
-    
+
     // Enable programmable point size
     glEnable(GL_PROGRAM_POINT_SIZE);
-    
+
     // Enable blending for smoother points
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -156,24 +155,24 @@ void EventPlotOpenGLWidget::initializeGL() {
     // Initialize shaders and buffers
     initializeShaders();
     initializeBuffers();
-    
+
     // Mark OpenGL resources as initialized
     _opengl_resources_initialized = true;
-    
+
     updateMatrices();
-    
+
     qDebug() << "EventPlotOpenGLWidget::initializeGL completed";
 
     // Load axes shader via ShaderManager
     ShaderManager::instance().loadProgram(
-        "axes",
-        ":/shaders/colored_vertex.vert",
-        ":/shaders/colored_vertex.frag");
+            "axes",
+            ":/shaders/colored_vertex.vert",
+            ":/shaders/colored_vertex.frag");
 }
 
 void EventPlotOpenGLWidget::paintGL() {
     qDebug() << "EventPlotOpenGLWidget::paintGL called";
-    
+
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -209,7 +208,7 @@ void EventPlotOpenGLWidget::paintGL() {
 
     // Unbind point shader
     _shader_program->release();
-    
+
     qDebug() << "EventPlotOpenGLWidget::paintGL completed";
 }
 
@@ -252,12 +251,12 @@ void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
         if (_tooltips_enabled) {
             // Store the current mouse position for debounced processing
             _pending_hover_pos = event->pos();
-            
+
             // If hover processing is currently active, skip this event
             if (_hover_processing_active) {
                 return;
             }
-            
+
             // Start or restart the debounce timer
             _hover_debounce_timer->stop();
             _hover_debounce_timer->start();
@@ -363,7 +362,7 @@ void EventPlotOpenGLWidget::initializeShaders() {
         qDebug() << "Shader program linking error:" << _shader_program->log();
         return;
     }
-    
+
     qDebug() << "EventPlotOpenGLWidget::initializeShaders - point shader program linked successfully";
 }
 
@@ -399,7 +398,7 @@ void EventPlotOpenGLWidget::initializeBuffers() {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     _highlight_vertex_buffer.release();
     _highlight_vertex_array_object.release();
-    
+
     qDebug() << "EventPlotOpenGLWidget::initializeBuffers - center line buffer created (static line)";
 }
 
@@ -407,14 +406,14 @@ void EventPlotOpenGLWidget::updateMatrices() {
     // Update view matrix (pan and Y zoom only)
     _view_matrix.setToIdentity();
     _view_matrix.translate(_pan_offset_x, _pan_offset_y, 0.0f);
-    _view_matrix.scale(1.0f, _y_zoom_level, 1.0f);  // Only scale Y axis
+    _view_matrix.scale(1.0f, _y_zoom_level, 1.0f);// Only scale Y axis
 
     // Update projection matrix (orthographic)
     _projection_matrix.setToIdentity();
-    
+
     float left, right, bottom, top;
     calculateProjectionBounds(left, right, bottom, top);
-    
+
     // Always ensure valid bounds
     if (left >= right) {
         left = -static_cast<float>(_negative_range);
@@ -424,14 +423,13 @@ void EventPlotOpenGLWidget::updateMatrices() {
         bottom = -1.0f;
         top = 1.0f;
     }
-    
+
     _projection_matrix.ortho(left, right, bottom, top, -1.0f, 1.0f);
-    
-    qDebug() << "EventPlotOpenGLWidget::updateMatrices - projection bounds:" 
-             << "left:" << left << "right:" << right 
+
+    qDebug() << "EventPlotOpenGLWidget::updateMatrices - projection bounds:"
+             << "left:" << left << "right:" << right
              << "bottom:" << bottom << "top:" << top
              << "y_zoom:" << _y_zoom_level;
-    
 }
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
@@ -454,7 +452,7 @@ void EventPlotOpenGLWidget::handleZooming(int delta_y) {
         _y_zoom_level = new_y_zoom;
         updateMatrices();
         update();
-        emit zoomLevelChanged(_y_zoom_level);  // Emit Y zoom level change
+        emit zoomLevelChanged(_y_zoom_level);// Emit Y zoom level change
     }
 }
 
@@ -462,12 +460,11 @@ void EventPlotOpenGLWidget::setXAxisRange(int negative_range, int positive_range
     if (_negative_range != negative_range || _positive_range != positive_range) {
         _negative_range = negative_range;
         _positive_range = positive_range;
-        
+
         updateMatrices();
         update();
-        
+
         qDebug() << "EventPlotOpenGLWidget::setXAxisRange - updated to:" << -negative_range << "to" << positive_range;
-    
     }
 }
 
@@ -480,7 +477,7 @@ void EventPlotOpenGLWidget::getVisibleBounds(float & left_bound, float & right_b
     // Calculate the actual visible bounds including pan offset
     float left, right, bottom, top;
     calculateProjectionBounds(left, right, bottom, top);
-    
+
     left_bound = left;
     right_bound = right;
 }
@@ -527,13 +524,12 @@ void EventPlotOpenGLWidget::updateVertexData() {
     } else {
         qDebug() << "EventPlotOpenGLWidget::updateVertexData - vertex buffer not created!";
     }
-    
 }
 
 std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEventNear(int screen_x, int screen_y, float tolerance_pixels) {
     if (_event_data.empty() || _vertex_data.empty()) {
         return std::nullopt;
-        }
+    }
 
     float world_x, world_y;
     screenToWorld(screen_x, screen_y, world_x, world_y);
@@ -585,7 +581,7 @@ void EventPlotOpenGLWidget::renderEvents() {
 
     _vertex_buffer.release();
     _vertex_array_object.release();
-    
+
     // Check for OpenGL errors
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -676,16 +672,16 @@ void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & righ
 
     // Use the user-specified X-axis range (no X zoom, controlled by spinboxes)
     float x_range_width = static_cast<float>(_negative_range + _positive_range);
-    float center_x = 0.0f;  // Always center at 0
-    
+    float center_x = 0.0f;// Always center at 0
+
     // Y-axis is always normalized to [-1, 1] for trials, but apply Y zoom
     float y_range_height = 2.0f;
     float center_y = 0.0f;
 
     // Apply zoom: X uses no zoom (controlled by spinboxes), Y uses Y zoom
-    float x_zoom_factor = 1.0f;  // No X zoom
-    float y_zoom_factor = 1.0f / _y_zoom_level;  // Y zoom only
-    
+    float x_zoom_factor = 1.0f;                // No X zoom
+    float y_zoom_factor = 1.0f / _y_zoom_level;// Y zoom only
+
     float half_width = (x_range_width * x_zoom_factor) / 2.0f;
     float half_height = (y_range_height * y_zoom_factor) / 2.0f;
 
@@ -705,9 +701,9 @@ void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & righ
     right = center_x + half_width + pan_x;
     bottom = center_y - half_height + pan_y;
     top = center_y + half_height + pan_y;
-    
-    qDebug() << "EventPlotOpenGLWidget::calculateProjectionBounds - user-specified bounds:" 
-             << "left:" << left << "right:" << right 
+
+    qDebug() << "EventPlotOpenGLWidget::calculateProjectionBounds - user-specified bounds:"
+             << "left:" << left << "right:" << right
              << "bottom:" << bottom << "top:" << top
              << "ranges: -" << _negative_range << "to +" << _positive_range
              << "y_zoom:" << _y_zoom_level;
@@ -717,15 +713,15 @@ void EventPlotOpenGLWidget::processHoverDebounce() {
     if (!_tooltips_enabled || _hover_processing_active) {
         return;
     }
-    
+
     _hover_processing_active = true;
-    
+
     // Get the screen coordinates
     QPoint screen_pos = _pending_hover_pos;
-    
+
     // Find the nearest event using spatial index
     auto hovered_event = findEventNear(screen_pos.x(), screen_pos.y());
-    
+
     // Compare the optional values properly
     bool hover_changed = false;
     if (hovered_event.has_value() != _hovered_event.has_value()) {
@@ -733,12 +729,12 @@ void EventPlotOpenGLWidget::processHoverDebounce() {
     } else if (hovered_event.has_value() && _hovered_event.has_value()) {
         // Both have values, compare the actual event data
         hover_changed = (hovered_event->trial_index != _hovered_event->trial_index ||
-                       hovered_event->event_index != _hovered_event->event_index);
+                         hovered_event->event_index != _hovered_event->event_index);
     }
-    
+
     if (hover_changed) {
         _hovered_event = hovered_event;
-        
+
         if (_hovered_event.has_value()) {
             // Start tooltip timer
             _tooltip_refresh_timer->start();
@@ -747,10 +743,10 @@ void EventPlotOpenGLWidget::processHoverDebounce() {
             _tooltip_refresh_timer->stop();
             QToolTip::hideText();
         }
-        
+
         update();
     }
-    
+
     _hover_processing_active = false;
 }
 
@@ -758,28 +754,28 @@ float EventPlotOpenGLWidget::calculateWorldTolerance(float screen_tolerance) con
     // Calculate projection bounds
     float left, right, bottom, top;
     calculateProjectionBounds(left, right, bottom, top);
-    
+
     // Calculate world units per pixel
     float world_width = right - left;
     float world_height = top - bottom;
     float world_per_pixel_x = world_width / _widget_width;
     float world_per_pixel_y = world_height / _widget_height;
-    
+
     // Use the smaller of the two to ensure we don't miss events
     float world_per_pixel = std::min(world_per_pixel_x, world_per_pixel_y);
-    
+
     return screen_tolerance * world_per_pixel;
 }
 
-void EventPlotOpenGLWidget::screenToWorld(int screen_x, int screen_y, float& world_x, float& world_y) {
+void EventPlotOpenGLWidget::screenToWorld(int screen_x, int screen_y, float & world_x, float & world_y) {
     // Calculate projection bounds
     float left, right, bottom, top;
     calculateProjectionBounds(left, right, bottom, top);
-    
+
     // Convert screen coordinates to normalized coordinates [0, 1]
     float norm_x = static_cast<float>(screen_x) / _widget_width;
-    float norm_y = 1.0f - static_cast<float>(screen_y) / _widget_height; // Flip Y axis
-    
+    float norm_y = 1.0f - static_cast<float>(screen_y) / _widget_height;// Flip Y axis
+
     // Convert to world coordinates
     world_x = left + norm_x * (right - left);
     world_y = bottom + norm_y * (top - bottom);

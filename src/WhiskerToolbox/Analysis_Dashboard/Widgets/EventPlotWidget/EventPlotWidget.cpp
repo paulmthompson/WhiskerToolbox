@@ -2,17 +2,16 @@
 #include "EventPlotOpenGLWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
-#include <QDebug>
-#include "DataManager/utils/TableView/core/TableView.h"
-#include "DataManager/utils/TableView/core/TableViewBuilder.h"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
 #include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"
+#include "DataManager/utils/TableView/core/TableView.h"
+#include "DataManager/utils/TableView/core/TableViewBuilder.h"
+#include <QDebug>
 
 #include <QGraphicsProxyWidget>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
-
 
 
 EventPlotWidget::EventPlotWidget(QGraphicsItem * parent)
@@ -21,7 +20,6 @@ EventPlotWidget::EventPlotWidget(QGraphicsItem * parent)
       _proxy_widget(nullptr),
       _table_view(nullptr) {
     qDebug() << "EventPlotWidget::EventPlotWidget constructor called";
-
 
 
     setPlotTitle("Event Plot");
@@ -93,7 +91,7 @@ void EventPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
         QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);
         _opengl_widget->resize(content_rect.size().toSize());
         _proxy_widget->setGeometry(content_rect);
-        
+
         // Force update after resize
         _opengl_widget->update();
     }
@@ -102,7 +100,7 @@ void EventPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
 void EventPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
     // Check if the click is in the title area (top 25 pixels)
     QRectF title_area = boundingRect().adjusted(0, 0, 0, -boundingRect().height() + 25);
-    
+
     if (title_area.contains(event->pos())) {
         // Click in title area - handle selection and allow movement
         emit plotSelected(getPlotId());
@@ -126,7 +124,7 @@ void EventPlotWidget::updateVisualization() {
     }
 
     loadEventData();
-    
+
     // Request render update through signal (like SpatialOverlayPlotWidget)
     update();
     emit renderUpdateRequested(getPlotId());
@@ -154,7 +152,7 @@ void EventPlotWidget::loadEventData() {
 
     auto rowIntervals = rowIntervalSeries->getDigitalIntervalSeries();
     std::vector<TimeFrameInterval> timeFrameIntervals;
-    for (auto const & interval : rowIntervals) {
+    for (auto const & interval: rowIntervals) {
         timeFrameIntervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
     }
 
@@ -167,7 +165,7 @@ void EventPlotWidget::loadEventData() {
     }
 
     auto rowSelector = std::make_unique<IntervalSelector>(timeFrameIntervals, row_timeframe);
-        
+
     builder.setRowSelector(std::move(rowSelector));
 
     // Add y-axis data
@@ -177,10 +175,10 @@ void EventPlotWidget::loadEventData() {
         return;
     }
 
-    builder.addColumn<std::vector<float>>(_y_axis_data_keys[0].toStdString(), 
-        std::make_unique<EventInIntervalComputer<std::vector<float>>>(eventSource, 
-            EventOperation::Gather_Center,
-            _y_axis_data_keys[0].toStdString()));
+    builder.addColumn<std::vector<float>>(_y_axis_data_keys[0].toStdString(),
+                                          std::make_unique<EventInIntervalComputer<std::vector<float>>>(eventSource,
+                                                                                                        EventOperation::Gather_Center,
+                                                                                                        _y_axis_data_keys[0].toStdString()));
 
     _table_view = std::make_unique<TableView>(builder.build());
 
@@ -189,13 +187,13 @@ void EventPlotWidget::loadEventData() {
         auto event_data = _table_view->getColumnValues<std::vector<float>>(_y_axis_data_keys[0].toStdString());
 
         qDebug() << "EventPlotWidget::loadEventData event_data size: " << event_data.size();
-        
+
         // Pass the event data to the OpenGL widget
         if (_opengl_widget) {
             _opengl_widget->setEventData(event_data);
             emit renderUpdateRequested(getPlotId());
         }
-         
+
     } else {
         qDebug() << "EventPlotWidget::loadEventData _table_view is nullptr";
     }
@@ -218,24 +216,24 @@ void EventPlotWidget::setupOpenGLWidget() {
     // Connect signals from OpenGL widget
     connect(_opengl_widget, &EventPlotOpenGLWidget::frameJumpRequested,
             this, &EventPlotWidget::handleFrameJumpRequest);
-    
+
     // Connect property change signals to trigger updates (like SpatialOverlayPlotWidget)
     connect(_opengl_widget, &EventPlotOpenGLWidget::zoomLevelChanged,
-            this, [this](float) { 
-                update(); // Trigger graphics item update
+            this, [this](float) {
+                update();// Trigger graphics item update
                 emit renderUpdateRequested(getPlotId());
                 emit renderingPropertiesChanged();
             });
-    
+
     connect(_opengl_widget, &EventPlotOpenGLWidget::panOffsetChanged,
-            this, [this](float, float) { 
-                update(); // Trigger graphics item update
+            this, [this](float, float) {
+                update();// Trigger graphics item update
                 emit renderUpdateRequested(getPlotId());
                 emit renderingPropertiesChanged();
             });
-    
+
     connect(_opengl_widget, &EventPlotOpenGLWidget::tooltipsEnabledChanged,
-            this, [this](bool) { 
+            this, [this](bool) {
                 emit renderingPropertiesChanged();
             });
 }

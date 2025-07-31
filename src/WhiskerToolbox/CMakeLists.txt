@@ -50,8 +50,6 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Toolbox/ToolboxPanel.hpp
         Analysis_Dashboard/Toolbox/ToolboxPanel.cpp
         Analysis_Dashboard/Toolbox/ToolboxPanel.ui
-        Analysis_Dashboard/Toolbox/DraggableListWidget.hpp
-        Analysis_Dashboard/Toolbox/DraggableListWidget.cpp
 
         Analysis_Dashboard/Tables/TableManager.hpp
         Analysis_Dashboard/Tables/TableManager.cpp

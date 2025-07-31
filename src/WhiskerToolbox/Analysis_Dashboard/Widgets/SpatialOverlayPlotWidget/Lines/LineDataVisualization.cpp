@@ -13,9 +13,9 @@
 #include <QOpenGLShaderProgram>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <unordered_map>
-#include <chrono>
 
 LineDataVisualization::LineDataVisualization(QString const & data_key, std::shared_ptr<LineData> const & line_data)
     : m_line_data_ptr(line_data),
@@ -114,7 +114,7 @@ void LineDataVisualization::buildVertexData() {
     for (size_t i = 0; i < m_line_identifiers.size(); ++i) {
         m_line_id_to_index[m_line_identifiers[i]] = i;
     }
-    
+
     m_total_line_count = m_line_identifiers.size();
     m_hidden_line_count = m_hidden_lines.size();
 }
@@ -310,8 +310,8 @@ void LineDataVisualization::updateOpenGLBuffers() {
     m_selection_mask_buffer.release();
 
     // Initialize visibility mask (all visible initially, except those in hidden_lines set)
-    m_visibility_mask.assign(m_line_identifiers.size(), 1); // Default to visible
-    _updateVisibilityMask(); // Apply any existing hidden lines
+    m_visibility_mask.assign(m_line_identifiers.size(), 1);// Default to visible
+    _updateVisibilityMask();                               // Apply any existing hidden lines
 
     // Update line segments buffer for compute shader
     _updateLineSegmentsBuffer();
@@ -387,7 +387,7 @@ void LineDataVisualization::_renderLinesToSceneBuffer(QMatrix4x4 const & mvp_mat
     m_selection_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_selection_mask_buffer.bufferId());
     m_selection_mask_buffer.release();
-    
+
     // Bind visibility mask buffer for geometry shader
     m_visibility_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_visibility_mask_buffer.bufferId());
@@ -455,7 +455,7 @@ void LineDataVisualization::_renderHoverLine(QMatrix4x4 const & mvp_matrix, QOpe
     m_selection_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_selection_mask_buffer.bufferId());
     m_selection_mask_buffer.release();
-    
+
     // Bind visibility mask buffer for geometry shader
     m_visibility_mask_buffer.bind();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, m_visibility_mask_buffer.bufferId());
@@ -544,20 +544,19 @@ void LineDataVisualization::clearSelection() {
     qDebug() << "LineDataVisualization::clearSelection: Clearing selection";
     m_selected_lines.clear();
     _updateSelectionMask();
-    
+
     //selection_vertex_buffer.bind();
     //selection_vertex_buffer.allocate(nullptr, 0);
     //selection_vertex_buffer.release();
     m_viewIsDirty = true;
 }
 
-void LineDataVisualization::applySelection(SelectionVariant & selection_handler, RenderingContext const& context) {
+void LineDataVisualization::applySelection(SelectionVariant & selection_handler, RenderingContext const & context) {
     if (std::holds_alternative<std::unique_ptr<PolygonSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
     } else if (std::holds_alternative<std::unique_ptr<LineSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<LineSelectionHandler>>(selection_handler), context);
-    }
-    else {
+    } else {
         std::cout << "LineDataVisualization::applySelection: selection_handler is not a PolygonSelectionHandler" << std::endl;
     }
 }
@@ -573,23 +572,22 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
     }
 
     qDebug() << "LineDataVisualization::applySelection: Using compute shader approach";
-    qDebug() << "LineDataVisualization::applySelection: Screen coords:" 
+    qDebug() << "LineDataVisualization::applySelection: Screen coords:"
              << selection_region->getStartPointScreen().x << "," << selection_region->getStartPointScreen().y
              << "to" << selection_region->getEndPointScreen().x << "," << selection_region->getEndPointScreen().y;
 
     QMatrix4x4 mvp_matrix = context.projection_matrix * context.view_matrix * context.model_matrix;
 
-    const auto line_width_tolerance = 5.0f;
+    auto const line_width_tolerance = 5.0f;
     auto intersecting_lines = getAllLinesIntersectingLine(
-        static_cast<int>(selection_region->getStartPointScreen().x),
-        static_cast<int>(selection_region->getStartPointScreen().y),
-        static_cast<int>(selection_region->getEndPointScreen().x),
-        static_cast<int>(selection_region->getEndPointScreen().y),
-        context.viewport_rect.width(),
-        context.viewport_rect.height(),
-        mvp_matrix,
-        line_width_tolerance
-    );
+            static_cast<int>(selection_region->getStartPointScreen().x),
+            static_cast<int>(selection_region->getStartPointScreen().y),
+            static_cast<int>(selection_region->getEndPointScreen().x),
+            static_cast<int>(selection_region->getEndPointScreen().y),
+            context.viewport_rect.width(),
+            context.viewport_rect.height(),
+            mvp_matrix,
+            line_width_tolerance);
 
     qDebug() << "LineDataVisualization::applySelection: Found" << intersecting_lines.size() << "intersecting lines";
 
@@ -598,24 +596,24 @@ void LineDataVisualization::applySelection(LineSelectionHandler const & selectio
 
     if (behavior == LineSelectionBehavior::Replace) {
         m_selected_lines.clear();
-        for (const auto& line_id : intersecting_lines) {
+        for (auto const & line_id: intersecting_lines) {
             m_selected_lines.insert(line_id);
         }
     } else if (behavior == LineSelectionBehavior::Append) {
-        for (const auto& line_id : intersecting_lines) {
+        for (auto const & line_id: intersecting_lines) {
             m_selected_lines.insert(line_id);
         }
     } else if (behavior == LineSelectionBehavior::Remove) {
-        for (const auto& line_id : intersecting_lines) {
+        for (auto const & line_id: intersecting_lines) {
             m_selected_lines.erase(line_id);
         }
     }
-    
+
     qDebug() << "LineDataVisualization::applySelection: Selected" << m_selected_lines.size() << "lines";
-    
+
     // Update GPU selection mask efficiently
     _updateSelectionMask();
-    
+
     m_viewIsDirty = true;
 }
 
@@ -630,8 +628,7 @@ QString LineDataVisualization::getTooltipText() const {
             .arg(m_current_hover_line.line_id);
 }
 
-void LineDataVisualization::_renderSelection(QMatrix4x4 const & mvp_matrix, float line_width)
-{
+void LineDataVisualization::_renderSelection(QMatrix4x4 const & mvp_matrix, float line_width) {
     if (m_selected_lines.empty() || !m_line_shader_program) {
         qDebug() << "LineDataVisualization::renderSelection: Skipping - selected_lines empty or no shader";
         return;
@@ -647,17 +644,17 @@ void LineDataVisualization::_renderSelection(QMatrix4x4 const & mvp_matrix, floa
     m_line_shader_program->setUniformValue("u_mvp_matrix", mvp_matrix);
     m_line_shader_program->setUniformValue("u_color", m_color);
     m_line_shader_program->setUniformValue("u_hover_color", QVector4D(1.0f, 1.0f, 0.0f, 1.0f));
-    m_line_shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f)); // Black color
-    m_line_shader_program->setUniformValue("u_line_width", line_width + 2.0f); // Thicker for visibility
+    m_line_shader_program->setUniformValue("u_selected_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black color
+    m_line_shader_program->setUniformValue("u_line_width", line_width + 2.0f);                    // Thicker for visibility
     m_line_shader_program->setUniformValue("u_viewport_size", QVector2D(1024.0f, 1024.0f));
     m_line_shader_program->setUniformValue("u_canvas_size", m_canvas_size);
     m_line_shader_program->setUniformValue("u_is_selected", true);
     m_line_shader_program->setUniformValue("u_hover_line_id", 0u);
 
-    m_line_shader_program->setUniformValue("u_is_selected", false); // Reset state
+    m_line_shader_program->setUniformValue("u_is_selected", false);// Reset state
     glDisable(GL_BLEND);
     m_line_shader_program->release();
-    
+
     qDebug() << "LineDataVisualization::renderSelection: Finished rendering selected lines";
 }
 
@@ -676,7 +673,7 @@ void LineDataVisualization::_initializeComputeShaderResources() {
 
     // Allocate a reasonable size for intersection results (can be expanded if needed)
     m_intersection_results_buffer.bind();
-    m_intersection_results_buffer.allocate(100000 * sizeof(uint32_t)); // Space for up to 100,000 results
+    m_intersection_results_buffer.allocate(100000 * sizeof(uint32_t));// Space for up to 100,000 results
     m_intersection_results_buffer.release();
 
     qDebug() << "LineDataVisualization: Initialized compute shader resources";
@@ -702,19 +699,19 @@ void LineDataVisualization::_updateLineSegmentsBuffer() {
     // Create line segments data for compute shader
     // Each segment: x1, y1, x2, y2, line_id (4 floats + 1 uint, but we'll pack line_id as float for simplicity)
     m_segments_data.clear();
-    m_segments_data.reserve(m_vertex_data.size() / 2 * 5); // m_vertex_data has x,y pairs, we need x1,y1,x2,y2,id
+    m_segments_data.reserve(m_vertex_data.size() / 2 * 5);// m_vertex_data has x,y pairs, we need x1,y1,x2,y2,id
 
-    for (size_t i = 0; i < m_vertex_data.size(); i += 4) { // Each line segment is 4 floats (x1,y1,x2,y2)
+    for (size_t i = 0; i < m_vertex_data.size(); i += 4) {// Each line segment is 4 floats (x1,y1,x2,y2)
         if (i + 3 < m_vertex_data.size()) {
             // Extract segment coordinates
-            m_segments_data.push_back(m_vertex_data[i]);     // x1
-            m_segments_data.push_back(m_vertex_data[i + 1]); // y1
-            m_segments_data.push_back(m_vertex_data[i + 2]); // x2
-            m_segments_data.push_back(m_vertex_data[i + 3]); // y2
-            
+            m_segments_data.push_back(m_vertex_data[i]);    // x1
+            m_segments_data.push_back(m_vertex_data[i + 1]);// y1
+            m_segments_data.push_back(m_vertex_data[i + 2]);// x2
+            m_segments_data.push_back(m_vertex_data[i + 3]);// y2
+
             // Get line ID from m_line_id_data (same index as vertex data)
-            uint32_t line_id = (i/2 < m_line_id_data.size()) ? m_line_id_data[i/2] : 0;
-            m_segments_data.push_back(*reinterpret_cast<float*>(&line_id)); // Pack uint as float bits
+            uint32_t line_id = (i / 2 < m_line_id_data.size()) ? m_line_id_data[i / 2] : 0;
+            m_segments_data.push_back(*reinterpret_cast<float *>(&line_id));// Pack uint as float bits
         }
     }
 
@@ -727,93 +724,93 @@ void LineDataVisualization::_updateLineSegmentsBuffer() {
 
 void LineDataVisualization::_updateSelectionMask() {
     auto start_time = std::chrono::high_resolution_clock::now();
-    
+
     // Reset all selections
     std::fill(m_selection_mask.begin(), m_selection_mask.end(), 0);
-    
+
     // Mark selected lines using fast hash map lookup
-    for (const auto& line_id : m_selected_lines) {
+    for (auto const & line_id: m_selected_lines) {
         auto it = m_line_id_to_index.find(line_id);
         if (it != m_line_id_to_index.end()) {
             size_t index = it->second;
             if (index < m_selection_mask.size()) {
-                m_selection_mask[index] = 1; // Mark as selected
+                m_selection_mask[index] = 1;// Mark as selected
             }
         }
     }
-    
+
     auto cpu_time = std::chrono::high_resolution_clock::now();
-    
+
     // Update GPU buffer
     m_selection_mask_buffer.bind();
     m_selection_mask_buffer.write(0, m_selection_mask.data(), static_cast<int>(m_selection_mask.size() * sizeof(uint32_t)));
     m_selection_mask_buffer.release();
-    
+
     auto end_time = std::chrono::high_resolution_clock::now();
-    
+
     auto cpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(cpu_time - start_time);
     auto gpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - cpu_time);
     auto total_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    
-    qDebug() << "LineDataVisualization: Updated selection mask for" << m_selected_lines.size() << "lines in" 
+
+    qDebug() << "LineDataVisualization: Updated selection mask for" << m_selected_lines.size() << "lines in"
              << total_duration.count() << "μs (CPU:" << cpu_duration.count() << "μs, GPU:" << gpu_duration.count() << "μs)";
 }
 
 void LineDataVisualization::_updateVisibilityMask() {
     auto start_time = std::chrono::high_resolution_clock::now();
-    
+
     // Reset all to visible
     std::fill(m_visibility_mask.begin(), m_visibility_mask.end(), 1);
-    
+
     // Mark hidden lines using fast hash map lookup
-    for (const auto& line_id : m_hidden_lines) {
+    for (auto const & line_id: m_hidden_lines) {
         auto it = m_line_id_to_index.find(line_id);
         if (it != m_line_id_to_index.end()) {
             size_t index = it->second;
             if (index < m_visibility_mask.size()) {
-                m_visibility_mask[index] = 0; // Mark as hidden
+                m_visibility_mask[index] = 0;// Mark as hidden
             }
         }
     }
-    
+
     // Apply time range filtering if enabled
     if (m_time_range_enabled && !m_line_identifiers.empty()) {
         for (size_t i = 0; i < m_line_identifiers.size() && i < m_visibility_mask.size(); ++i) {
-            const LineIdentifier& line_id = m_line_identifiers[i];
+            LineIdentifier const & line_id = m_line_identifiers[i];
             int64_t line_time_frame = line_id.time_frame;
-            
+
             // Hide lines outside the time range
             if (line_time_frame < m_time_range_start || line_time_frame > m_time_range_end) {
-                m_visibility_mask[i] = 0; // Mark as hidden due to time range
+                m_visibility_mask[i] = 0;// Mark as hidden due to time range
             }
         }
-        
+
         qDebug() << "Applied time range filtering: frames" << m_time_range_start << "to" << m_time_range_end;
     }
-    
+
     auto cpu_time = std::chrono::high_resolution_clock::now();
-    
+
     // Update GPU buffer
     m_visibility_mask_buffer.bind();
     m_visibility_mask_buffer.allocate(m_visibility_mask.data(), static_cast<int>(m_visibility_mask.size() * sizeof(uint32_t)));
     m_visibility_mask_buffer.release();
-    
+
     auto end_time = std::chrono::high_resolution_clock::now();
-    
+
     auto cpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(cpu_time - start_time);
     auto gpu_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - cpu_time);
     auto total_duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    
+
     size_t total_filters = m_hidden_lines.size() + (m_time_range_enabled ? 1 : 0);
-    qDebug() << "LineDataVisualization: Updated visibility mask with" << total_filters << "filters in" 
+    qDebug() << "LineDataVisualization: Updated visibility mask with" << total_filters << "filters in"
              << total_duration.count() << "μs (CPU:" << cpu_duration.count() << "μs, GPU:" << gpu_duration.count() << "μs)";
 }
 
 std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
         int start_x, int start_y, int end_x, int end_y,
         int widget_width, int widget_height,
-        const QMatrix4x4& mvp_matrix, float line_width) {
-    
+        QMatrix4x4 const & mvp_matrix, float line_width) {
+
     if (!m_line_intersection_compute_shader || m_vertex_data.empty()) {
         qDebug() << "LineDataVisualization: Compute shader not available or no vertex data";
         return {};
@@ -829,16 +826,16 @@ std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
 
     // Convert screen coordinates to normalized device coordinates [-1, 1]
     float ndc_start_x = (2.0f * start_x / widget_width) - 1.0f;
-    float ndc_start_y = 1.0f - (2.0f * start_y / widget_height); // Flip Y
+    float ndc_start_y = 1.0f - (2.0f * start_y / widget_height);// Flip Y
     float ndc_end_x = (2.0f * end_x / widget_width) - 1.0f;
-    float ndc_end_y = 1.0f - (2.0f * end_y / widget_height); // Flip Y
+    float ndc_end_y = 1.0f - (2.0f * end_y / widget_height);// Flip Y
 
     // Create the selection line in NDC space (this is what the compute shader will work with)
     QVector2D query_start(ndc_start_x, ndc_start_y);
     QVector2D query_end(ndc_end_x, ndc_end_y);
 
     qDebug() << "LineDataVisualization: Screen coords:" << start_x << "," << start_y << "to" << end_x << "," << end_y;
-    qDebug() << "LineDataVisualization: NDC coords:" << query_start.x() << "," << query_start.y() 
+    qDebug() << "LineDataVisualization: NDC coords:" << query_start.x() << "," << query_start.y()
              << "to" << query_end.x() << "," << query_end.y();
 
     // Reset intersection count to zero
@@ -851,7 +848,7 @@ std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
     m_line_intersection_compute_shader->bind();
     m_line_intersection_compute_shader->setUniformValue("u_query_line_start", query_start);
     m_line_intersection_compute_shader->setUniformValue("u_query_line_end", query_end);
-    m_line_intersection_compute_shader->setUniformValue("u_line_width", line_width * 0.01f); // Scale down for NDC space
+    m_line_intersection_compute_shader->setUniformValue("u_line_width", line_width * 0.01f);// Scale down for NDC space
     m_line_intersection_compute_shader->setUniformValue("u_mvp_matrix", mvp_matrix);
     m_line_intersection_compute_shader->setUniformValue("u_canvas_size", m_canvas_size);
 
@@ -874,18 +871,18 @@ std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
     m_visibility_mask_buffer.release();
 
     // Dispatch compute shader
-    uint32_t num_segments = static_cast<uint32_t>(m_segments_data.size() / 5); // 5 floats per segment (x1,y1,x2,y2,line_id)
-    uint32_t num_work_groups = (num_segments + 63) / 64; // 64 is the local_size_x in the compute shader
-    
+    uint32_t num_segments = static_cast<uint32_t>(m_segments_data.size() / 5);// 5 floats per segment (x1,y1,x2,y2,line_id)
+    uint32_t num_work_groups = (num_segments + 63) / 64;                      // 64 is the local_size_x in the compute shader
+
     qDebug() << "LineDataVisualization: Dispatching compute shader with" << num_segments << "segments," << num_work_groups << "work groups";
     qDebug() << "LineDataVisualization: segments_data size:" << m_segments_data.size() << "floats";
-    
+
     if (num_segments == 0) {
         qDebug() << "LineDataVisualization: No segments to process!";
         m_line_intersection_compute_shader->release();
         return {};
     }
-    
+
     glDispatchCompute(num_work_groups, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -893,7 +890,7 @@ std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
 
     // Read back results
     m_intersection_count_buffer.bind();
-    uint32_t* count_data = static_cast<uint32_t*>(m_intersection_count_buffer.map(QOpenGLBuffer::ReadOnly));
+    uint32_t * count_data = static_cast<uint32_t *>(m_intersection_count_buffer.map(QOpenGLBuffer::ReadOnly));
     uint32_t result_count = count_data ? *count_data : 0;
     m_intersection_count_buffer.unmap();
     m_intersection_count_buffer.release();
@@ -906,17 +903,17 @@ std::vector<LineIdentifier> LineDataVisualization::getAllLinesIntersectingLine(
 
     // Read back intersection results
     m_intersection_results_buffer.bind();
-    uint32_t* results_data = static_cast<uint32_t*>(m_intersection_results_buffer.map(QOpenGLBuffer::ReadOnly));
-    
+    uint32_t * results_data = static_cast<uint32_t *>(m_intersection_results_buffer.map(QOpenGLBuffer::ReadOnly));
+
     std::vector<LineIdentifier> intersecting_lines;
-    std::unordered_set<uint32_t> unique_line_ids; // To avoid duplicates
+    std::unordered_set<uint32_t> unique_line_ids;// To avoid duplicates
 
     if (results_data) {
         for (uint32_t i = 0; i < result_count && i < 100000; ++i) {
             uint32_t line_id = results_data[i];
             if (line_id > 0 && line_id <= m_line_identifiers.size() && unique_line_ids.find(line_id) == unique_line_ids.end()) {
                 unique_line_ids.insert(line_id);
-                intersecting_lines.push_back(m_line_identifiers[line_id - 1]); // Convert from 1-based to 0-based indexing
+                intersecting_lines.push_back(m_line_identifiers[line_id - 1]);// Convert from 1-based to 0-based indexing
             }
         }
     }
@@ -934,26 +931,26 @@ std::optional<LineIdentifier> LineDataVisualization::getLineAtScreenPosition(
     return std::nullopt;
 }
 
-bool LineDataVisualization::handleHover(const QPoint & screen_pos, const QSize & widget_size, const QMatrix4x4& mvp_matrix) {
+bool LineDataVisualization::handleHover(QPoint const & screen_pos, QSize const & widget_size, QMatrix4x4 const & mvp_matrix) {
     qDebug() << "LineDataVisualization::handleHover: Called with screen pos" << screen_pos.x() << "," << screen_pos.y();
-    
+
     // Use the new compute shader approach for hover detection
     // Create a small line segment around the point for intersection testing
-    int tolerance = 3; // 3 pixel tolerance for hover
-    
+    int tolerance = 3;// 3 pixel tolerance for hover
+
     auto intersecting_lines = getAllLinesIntersectingLine(
-        screen_pos.x() - tolerance, screen_pos.y() - tolerance,
-        screen_pos.x() + tolerance, screen_pos.y() + tolerance,
-        widget_size.width(), widget_size.height(),
-        mvp_matrix,
-        3.0f // Small line width for hover queries
+            screen_pos.x() - tolerance, screen_pos.y() - tolerance,
+            screen_pos.x() + tolerance, screen_pos.y() + tolerance,
+            widget_size.width(), widget_size.height(),
+            mvp_matrix,
+            3.0f// Small line width for hover queries
     );
 
     qDebug() << "LineDataVisualization::handleHover: Found" << intersecting_lines.size() << "intersecting lines";
 
     bool hover_changed = false;
     if (!intersecting_lines.empty()) {
-        LineIdentifier line_id = intersecting_lines[0]; // Take the first intersecting line
+        LineIdentifier line_id = intersecting_lines[0];// Take the first intersecting line
         if (!m_has_hover_line || !(m_current_hover_line == line_id)) {
             qDebug() << "LineDataVisualization::handleHover: Setting hover line to" << line_id.time_frame << "," << line_id.line_id;
             setHoverLine(line_id);
@@ -976,49 +973,49 @@ size_t LineDataVisualization::hideSelectedLines() {
     if (m_selected_lines.empty()) {
         return 0;
     }
-    
+
     size_t hidden_count = 0;
-    
+
     // Add selected lines to hidden set
-    for (const auto& line_id : m_selected_lines) {
-        if (m_hidden_lines.insert(line_id).second) { // .second is true if insertion happened
+    for (auto const & line_id: m_selected_lines) {
+        if (m_hidden_lines.insert(line_id).second) {// .second is true if insertion happened
             hidden_count++;
         }
     }
-    
+
     // Clear selection since hidden lines should not be selected
     m_selected_lines.clear();
-    
+
     // Update statistics
     m_hidden_line_count = m_hidden_lines.size();
-    
+
     // Update GPU buffers
     _updateSelectionMask();
     _updateVisibilityMask();
-    
+
     // Mark view as dirty to trigger re-render
     m_viewIsDirty = true;
-    
+
     qDebug() << "LineDataVisualization: Hidden" << hidden_count << "lines, total hidden:" << m_hidden_line_count;
-    
+
     return hidden_count;
 }
 
 size_t LineDataVisualization::showAllLines() {
     size_t shown_count = m_hidden_lines.size();
-    
+
     // Clear all hidden lines
     m_hidden_lines.clear();
     m_hidden_line_count = 0;
-    
+
     // Update GPU visibility buffer
     _updateVisibilityMask();
-    
+
     // Mark view as dirty to trigger re-render
     m_viewIsDirty = true;
-    
+
     qDebug() << "LineDataVisualization: Showed" << shown_count << "lines, all lines now visible";
-    
+
     return shown_count;
 }
 
@@ -1028,25 +1025,25 @@ std::pair<size_t, size_t> LineDataVisualization::getVisibilityStats() const {
 
 void LineDataVisualization::setTimeRange(int start_frame, int end_frame) {
     qDebug() << "LineDataVisualization::setTimeRange(" << start_frame << "," << end_frame << ")";
-    
+
     m_time_range_start = start_frame;
     m_time_range_end = end_frame;
-    
+
     // Update visibility mask to apply time range filtering
     _updateVisibilityMask();
-    
+
     qDebug() << "Time range updated and visibility mask refreshed";
 }
 
 void LineDataVisualization::setTimeRangeEnabled(bool enabled) {
     qDebug() << "LineDataVisualization::setTimeRangeEnabled(" << enabled << ")";
-    
+
     if (m_time_range_enabled != enabled) {
         m_time_range_enabled = enabled;
-        
+
         // Update visibility mask to apply or remove time range filtering
         _updateVisibilityMask();
-        
+
         qDebug() << "Time range filtering" << (enabled ? "enabled" : "disabled");
     }
 }

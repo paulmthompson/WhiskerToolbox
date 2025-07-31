@@ -13,8 +13,8 @@
 #include <QMouseEvent>
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
-#include <QPainter>
 #include <QPaintEvent>
+#include <QPainter>
 #include <QPen>
 
 #include <cmath>
@@ -80,7 +80,7 @@ void SpatialOverlayPlotWidget::paint(QPainter * painter, QStyleOptionGraphicsIte
 void SpatialOverlayPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
     // Check if the click is in the title area (top 25 pixels)
     QRectF title_area = boundingRect().adjusted(0, 0, 0, -boundingRect().height() + 25);
-    
+
     if (title_area.contains(event->pos())) {
         // Click in title area - handle selection and allow movement
         emit plotSelected(getPlotId());
@@ -105,14 +105,14 @@ void SpatialOverlayPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
         QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);
         _opengl_widget->resize(content_rect.size().toSize());
         _proxy_widget->setGeometry(content_rect);
-        
+
         // Force update after resize
         _opengl_widget->update();
     }
 }
 
 void SpatialOverlayPlotWidget::updateVisualization() {
-   
+
     if (!_data_manager || !_opengl_widget) {
         return;
     }
@@ -120,15 +120,15 @@ void SpatialOverlayPlotWidget::updateVisualization() {
     loadPointData();
     loadMaskData();
     loadLineData();
-    
+
     // Request render update through signal
     update();
     emit renderUpdateRequested(getPlotId());
 }
 
 void SpatialOverlayPlotWidget::handleFrameJumpRequest(int64_t time_frame_index, QString const & data_key) {
-    qDebug() << "SpatialOverlayPlotWidget: Frame jump requested to frame:" 
-             << time_frame_index << "for data key:" 
+    qDebug() << "SpatialOverlayPlotWidget: Frame jump requested to frame:"
+             << time_frame_index << "for data key:"
              << data_key;
     emit frameJumpRequested(time_frame_index, data_key.toStdString());
 }
@@ -179,7 +179,7 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     _opengl_widget = new SpatialOverlayOpenGLWidget();
     _proxy_widget = new QGraphicsProxyWidget(this);
     _proxy_widget->setWidget(_opengl_widget);
-    
+
     // Configure the proxy widget to not interfere with parent interactions
     _proxy_widget->setFlag(QGraphicsItem::ItemIsMovable, false);
     _proxy_widget->setFlag(QGraphicsItem::ItemIsSelectable, false);
@@ -192,49 +192,49 @@ void SpatialOverlayPlotWidget::setupOpenGLWidget() {
     // Connect signals
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::frameJumpRequested,
             this, &SpatialOverlayPlotWidget::handleFrameJumpRequest);
-    
+
     // Connect property change signals to trigger updates
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::pointSizeChanged,
-            this, [this](float) { 
-                update(); // Trigger graphics item update
+            this, [this](float) {
+                update();// Trigger graphics item update
                 emit renderUpdateRequested(getPlotId());
                 emit renderingPropertiesChanged();
             });
-    
+
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::zoomLevelChanged,
-            this, [this](float) { 
-                update(); // Trigger graphics item update
+            this, [this](float) {
+                update();// Trigger graphics item update
                 emit renderUpdateRequested(getPlotId());
                 emit renderingPropertiesChanged();
             });
-    
+
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::panOffsetChanged,
-            this, [this](float, float) { 
-                update(); // Trigger graphics item update
+            this, [this](float, float) {
+                update();// Trigger graphics item update
                 emit renderUpdateRequested(getPlotId());
                 emit renderingPropertiesChanged();
             });
-    
+
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::tooltipsEnabledChanged,
-            this, [this](bool) { 
+            this, [this](bool) {
                 emit renderingPropertiesChanged();
             });
-    
+
     // Connect highlight state changes to trigger scene graph updates
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::highlightStateChanged,
             this, [this]() {
-                update(); // Trigger graphics item update
+                update();// Trigger graphics item update
                 emit renderUpdateRequested(getPlotId());
             });
-    
+
     // Connect selection change signals
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::selectionChanged,
             this, [this](size_t selected_count) {
                 emit selectionChanged(selected_count);
-                update(); // Trigger graphics item update
+                update();// Trigger graphics item update
                 emit renderUpdateRequested(getPlotId());
             });
-    
+
     // Connect selection mode change signals
     connect(_opengl_widget, &SpatialOverlayOpenGLWidget::selectionModeChanged,
             this, [this](SelectionMode mode) {
@@ -258,15 +258,15 @@ SelectionMode SpatialOverlayPlotWidget::getSelectionMode() const {
 void SpatialOverlayPlotWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     // Call parent implementation
     AbstractPlotWidget::setDataManager(data_manager);
-    
+
     // Update visualization with new data manager
     updateVisualization();
 }
 
-void SpatialOverlayPlotWidget::setGroupManager(GroupManager* group_manager) {
+void SpatialOverlayPlotWidget::setGroupManager(GroupManager * group_manager) {
     // Call parent implementation
     AbstractPlotWidget::setGroupManager(group_manager);
-    
+
     // Pass group manager to OpenGL widget
     if (_opengl_widget) {
         _opengl_widget->setGroupManager(group_manager);

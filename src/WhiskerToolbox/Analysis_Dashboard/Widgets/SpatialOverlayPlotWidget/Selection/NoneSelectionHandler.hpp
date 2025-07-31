@@ -59,9 +59,9 @@ public:
      * @brief Get the current active selection region (always nullptr)
      * @return nullptr
      */
-    std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { 
+    std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const {
         static std::unique_ptr<SelectionRegion> null_region = nullptr;
-        return null_region; 
+        return null_region;
     }
 
     /**
@@ -74,7 +74,6 @@ public:
     }
 
     void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {
-        
     }
 
     void mouseReleaseEvent(QMouseEvent * event, QVector2D const & world_pos) {}
@@ -88,4 +87,4 @@ public:
     }
 };
 
-#endif// NONESELECTIONHANDLER_HPP 
+#endif// NONESELECTIONHANDLER_HPP

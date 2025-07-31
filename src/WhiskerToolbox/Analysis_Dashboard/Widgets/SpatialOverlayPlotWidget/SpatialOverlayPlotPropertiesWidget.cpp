@@ -17,8 +17,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSplitter>
-#include <QVBoxLayout>
 #include <QTimer>
+#include <QVBoxLayout>
 
 SpatialOverlayPlotPropertiesWidget::SpatialOverlayPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
@@ -29,7 +29,7 @@ SpatialOverlayPlotPropertiesWidget::SpatialOverlayPlotPropertiesWidget(QWidget *
       _total_frame_count(0),
       _line_width(2.0) {
     ui->setupUi(this);
-    
+
     setupFeatureTable();
     setupConnections();
 }
@@ -40,12 +40,12 @@ SpatialOverlayPlotPropertiesWidget::~SpatialOverlayPlotPropertiesWidget() {
 
 void SpatialOverlayPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = std::move(data_manager);
-    
+
     if (_data_manager && ui->feature_table_widget) {
         ui->feature_table_widget->setDataManager(_data_manager);
         ui->feature_table_widget->populateTable();
     }
-    
+
     // Setup time range controls when data manager is available
     setupTimeRangeControls();
 }
@@ -58,35 +58,35 @@ void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot
 
     if (_spatial_plot_widget) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: Updating available data sources and UI";
-        
+
         connect(_spatial_plot_widget, &SpatialOverlayPlotWidget::selectionChanged,
                 this, [this](size_t selectedCount) {
-            qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection changed, count:" << selectedCount;
-            updateSelectionStatus();
-        });
-        
+                    qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection changed, count:" << selectedCount;
+                    updateSelectionStatus();
+                });
+
         connect(_spatial_plot_widget, &SpatialOverlayPlotWidget::selectionModeChanged,
                 this, [this](SelectionMode mode) {
-            qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection mode changed to:" << static_cast<int>(mode);
-            // Update combo box if changed externally
-            for (int i = 0; i < ui->selection_mode_combo->count(); ++i) {
-                if (static_cast<SelectionMode>(ui->selection_mode_combo->itemData(i).toInt()) == mode) {
-                    ui->selection_mode_combo->blockSignals(true);
-                    ui->selection_mode_combo->setCurrentIndex(i);
-                    ui->selection_mode_combo->blockSignals(false);
-                    ui->clear_selection_button->setEnabled(mode != SelectionMode::None);
-                    updateSelectionInstructions();
-                    break;
-                }
-            }
-        });
-        
+                    qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection mode changed to:" << static_cast<int>(mode);
+                    // Update combo box if changed externally
+                    for (int i = 0; i < ui->selection_mode_combo->count(); ++i) {
+                        if (static_cast<SelectionMode>(ui->selection_mode_combo->itemData(i).toInt()) == mode) {
+                            ui->selection_mode_combo->blockSignals(true);
+                            ui->selection_mode_combo->setCurrentIndex(i);
+                            ui->selection_mode_combo->blockSignals(false);
+                            ui->clear_selection_button->setEnabled(mode != SelectionMode::None);
+                            updateSelectionInstructions();
+                            break;
+                        }
+                    }
+                });
+
         // Update available data sources
         updateAvailableDataSources();
-        
+
         // Update UI from plot
         updateFromPlot();
-        
+
         // Initialize selection instructions
         updateSelectionInstructions();
     }
@@ -99,7 +99,7 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
         QStringList current_keys = _spatial_plot_widget->getPointDataKeys();
         qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot - current keys from plot:" << current_keys;
         setSelectedDataSources(current_keys);
-        
+
         // Update zoom level and point size from current widget state
         if (_spatial_plot_widget->getOpenGLWidget()) {
 
@@ -123,7 +123,7 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
             ui->tooltips_checkbox->setChecked(tooltips_enabled);
             ui->tooltips_checkbox->blockSignals(false);
 
-            SelectionMode current_selection_mode = _spatial_plot_widget->getSelectionMode();     
+            SelectionMode current_selection_mode = _spatial_plot_widget->getSelectionMode();
             ui->selection_mode_combo->blockSignals(true);
             for (int i = 0; i < ui->selection_mode_combo->count(); ++i) {
                 if (static_cast<SelectionMode>(ui->selection_mode_combo->itemData(i).toInt()) == current_selection_mode) {
@@ -134,9 +134,8 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
             ui->clear_selection_button->setEnabled(current_selection_mode != SelectionMode::None);
             ui->selection_mode_combo->blockSignals(false);
             updateSelectionInstructions();
-
         }
-        
+
         // Update selection status display
         updateSelectionStatus();
     } else {
@@ -153,7 +152,7 @@ void SpatialOverlayPlotPropertiesWidget::setupFeatureTable() {
 
         ui->feature_table_widget->setColumns({"Feature", "Type", "Enabled"});
         ui->feature_table_widget->setTypeFilter({DM_DataType::Points, DM_DataType::Mask, DM_DataType::Line});
-        
+
         // Connect signals from the feature table
         connect(ui->feature_table_widget, &Feature_Table_Widget::featureSelected,
                 this, &SpatialOverlayPlotPropertiesWidget::onFeatureSelected);
@@ -227,9 +226,8 @@ void SpatialOverlayPlotPropertiesWidget::onTooltipsEnabledChanged(bool enabled) 
 }
 
 
-
 void SpatialOverlayPlotPropertiesWidget::setupConnections() {
-    
+
     // Visualization settings
     connect(ui->point_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &SpatialOverlayPlotPropertiesWidget::onPointSizeChanged);
@@ -247,26 +245,23 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
     connect(ui->tooltips_checkbox, &QCheckBox::toggled,
             this, &SpatialOverlayPlotPropertiesWidget::onTooltipsEnabledChanged);
 
-        // Selection settings
+    // Selection settings
     connect(ui->selection_mode_combo, &QComboBox::currentIndexChanged,
             this, &SpatialOverlayPlotPropertiesWidget::onSelectionModeChanged);
 
     connect(ui->clear_selection_button, &QPushButton::clicked,
             this, &SpatialOverlayPlotPropertiesWidget::onClearSelectionClicked);
-    
+
     // Time range filtering
     connect(ui->start_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &SpatialOverlayPlotPropertiesWidget::onStartFrameChanged);
-    
+
     connect(ui->end_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &SpatialOverlayPlotPropertiesWidget::onEndFrameChanged);
-    
+
     connect(ui->update_time_range_button, &QPushButton::clicked,
             this, &SpatialOverlayPlotPropertiesWidget::onUpdateTimeRangeClicked);
 }
-    
-
-
 
 
 QStringList SpatialOverlayPlotPropertiesWidget::getSelectedDataSources() const {
@@ -275,9 +270,9 @@ QStringList SpatialOverlayPlotPropertiesWidget::getSelectedDataSources() const {
 
 void SpatialOverlayPlotPropertiesWidget::setSelectedDataSources(QStringList const & selected_keys) {
     qDebug() << "SpatialOverlayPlotPropertiesWidget: setSelectedDataSources called with keys:" << selected_keys;
-    
+
     _selected_features = selected_keys;
-    
+
     // TODO: Update the feature table UI to reflect the selected state
     // This would require the Feature_Table_Widget to provide methods to
     // programmatically set checkbox states
@@ -305,7 +300,7 @@ void SpatialOverlayPlotPropertiesWidget::updatePlotWidget() {
         }
     }
 
-    if (!point_data_keys.empty()) { 
+    if (!point_data_keys.empty()) {
         _spatial_plot_widget->setPointDataKeys(point_data_keys);
     }
     if (!mask_data_keys.empty()) {
@@ -322,12 +317,12 @@ void SpatialOverlayPlotPropertiesWidget::updatePlotWidget() {
 
 void SpatialOverlayPlotPropertiesWidget::onSelectionModeChanged(int index) {
     qDebug() << "SpatialOverlayPlotPropertiesWidget: onSelectionModeChanged called with index:" << index;
-    
+
     if (index < 0 || index >= ui->selection_mode_combo->count()) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: Invalid index, ignoring";
         return;
     }
-    
+
     // Get the SelectionMode from the combo box data
     SelectionMode mode = SelectionMode::None;
 
@@ -340,27 +335,26 @@ void SpatialOverlayPlotPropertiesWidget::onSelectionModeChanged(int index) {
     }
 
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Setting selection mode to:" << static_cast<int>(mode);
-    
-    
+
+
     if (_spatial_plot_widget) {
         _spatial_plot_widget->setSelectionMode(mode);
 
         // Update instruction text first
         updateSelectionInstructions();
-        
+
         // Update clear selection button enabled state
         ui->clear_selection_button->setEnabled(mode != SelectionMode::None);
-
     }
 }
 
 void SpatialOverlayPlotPropertiesWidget::onClearSelectionClicked() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget: onClearSelectionClicked called";
-    
+
     if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
         _spatial_plot_widget->getOpenGLWidget()->clearSelection();
         qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection cleared";
-        
+
         // Update selection status display
         updateSelectionStatus();
     }
@@ -368,21 +362,21 @@ void SpatialOverlayPlotPropertiesWidget::onClearSelectionClicked() {
 
 void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget: updateSelectionInstructions called";
-    
+
     if (!ui->selection_instructions_label || !ui->selection_mode_combo) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: Missing UI elements, returning";
         return;
     }
-    
+
     int current_index = ui->selection_mode_combo->currentIndex();
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Current combo index:" << current_index;
-    
+
     if (current_index < 0 || current_index >= ui->selection_mode_combo->count()) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: Invalid combo index, returning";
         return;
     }
-    
-    SelectionMode mode = SelectionMode::None;   
+
+    SelectionMode mode = SelectionMode::None;
 
     if (current_index == 1) {
         mode = SelectionMode::PointSelection;
@@ -393,57 +387,57 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
     }
 
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Current selection mode:" << static_cast<int>(mode);
-    
+
     QString instructions;
-    
+
     switch (mode) {
         case SelectionMode::None:
             instructions = "📍 Selection Disabled\n"
-                          "No point selection available in this mode.";
+                           "No point selection available in this mode.";
             break;
-            
+
         case SelectionMode::PointSelection:
             instructions = "🖱️ Point & Mask Selection Mode\n"
-                          "• Hold Ctrl + Left Click on points or masks to select/deselect\n"
-                          "• Each Ctrl+Click toggles selection (adds if not selected, removes if selected)\n"
-                          "• Hold Shift + Left Click to remove from selection:\n"
-                          "  - Points: Removes individual point if selected\n"
-                          "  - Masks: Removes all intersecting masks between current selection and clicked area\n"
-                          "• Selected points appear in black, selected masks have enhanced visibility\n"
-                          "• Use 'Clear Selection' button to remove all selections\n"
-                          "• Double-click points to jump to that frame";
+                           "• Hold Ctrl + Left Click on points or masks to select/deselect\n"
+                           "• Each Ctrl+Click toggles selection (adds if not selected, removes if selected)\n"
+                           "• Hold Shift + Left Click to remove from selection:\n"
+                           "  - Points: Removes individual point if selected\n"
+                           "  - Masks: Removes all intersecting masks between current selection and clicked area\n"
+                           "• Selected points appear in black, selected masks have enhanced visibility\n"
+                           "• Use 'Clear Selection' button to remove all selections\n"
+                           "• Double-click points to jump to that frame";
             break;
-            
+
         case SelectionMode::PolygonSelection:
             instructions = "📐 Polygon Selection Mode\n"
-                          "• Left Click to add vertices to polygon\n"
-                          "• Right Click to complete polygon and select enclosed points\n"
-                          "• Press Escape to cancel current polygon\n"
-                          "• Red dots show vertices, blue lines show edges";
+                           "• Left Click to add vertices to polygon\n"
+                           "• Right Click to complete polygon and select enclosed points\n"
+                           "• Press Escape to cancel current polygon\n"
+                           "• Red dots show vertices, blue lines show edges";
             break;
-            
+
         case SelectionMode::LineIntersection:
             instructions = "📏 Line Intersection Selection Mode\n"
-                          "• Click and hold to start drawing a line\n"
-                          "• Drag to extend the line from start point\n"
-                          "• Release to find all lines that intersect with your drawn line\n"
-                          "• Only works with Line data - no effect on Points or Masks\n"
-                          "• Selected lines will be highlighted";
+                           "• Click and hold to start drawing a line\n"
+                           "• Drag to extend the line from start point\n"
+                           "• Release to find all lines that intersect with your drawn line\n"
+                           "• Only works with Line data - no effect on Points or Masks\n"
+                           "• Selected lines will be highlighted";
             break;
     }
-    
+
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Setting instructions:" << instructions;
     ui->selection_instructions_label->setText(instructions);
 }
 
 void SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() called";
-    
+
     if (!ui->active_dataset_label || !ui->selection_count_label) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() - Missing UI labels";
         return;
     }
-    
+
     // Update active dataset information
     QString activeDataset = "None";
     if (_spatial_plot_widget) {
@@ -451,7 +445,7 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() {
         QStringList pointKeys = _spatial_plot_widget->getPointDataKeys();
         QStringList maskKeys = _spatial_plot_widget->getMaskDataKeys();
         QStringList lineKeys = _spatial_plot_widget->getLineDataKeys();
-        
+
         QStringList allKeys = pointKeys + maskKeys + lineKeys;
         if (!allKeys.isEmpty()) {
             if (allKeys.size() == 1) {
@@ -461,40 +455,40 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() {
             }
         }
     }
-    
+
     ui->active_dataset_label->setText(QString("Active Dataset: %1").arg(activeDataset));
-    
+
     // Update selection counts
     size_t pointCount = 0;
-    size_t maskCount = 0; 
+    size_t maskCount = 0;
     size_t lineCount = 0;
-    
+
     if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
         pointCount = _spatial_plot_widget->getOpenGLWidget()->getTotalSelectedPoints();
         maskCount = _spatial_plot_widget->getOpenGLWidget()->getTotalSelectedMasks();
         lineCount = _spatial_plot_widget->getOpenGLWidget()->getTotalSelectedLines();
     }
-    
+
     QString selectionText = QString("Selected: %1 points, %2 masks, %3 lines")
-                           .arg(pointCount)
-                           .arg(maskCount)
-                           .arg(lineCount);
-    
+                                    .arg(pointCount)
+                                    .arg(maskCount)
+                                    .arg(lineCount);
+
     ui->selection_count_label->setText(selectionText);
-    
-    qDebug() << "SpatialOverlayPlotPropertiesWidget: Updated selection status - Dataset:" << activeDataset 
+
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: Updated selection status - Dataset:" << activeDataset
              << "Selected:" << pointCount << "points," << maskCount << "masks," << lineCount << "lines";
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Set label text to:" << selectionText;
 }
 
 void SpatialOverlayPlotPropertiesWidget::onUpdateTimeRangeClicked() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget::onUpdateTimeRangeClicked() called";
-    
+
     _start_frame = ui->start_frame_spinbox->value();
     _end_frame = ui->end_frame_spinbox->value();
-    
+
     qDebug() << "Time range updated: start=" << _start_frame << ", end=" << _end_frame;
-    
+
     updateTimeRangeFilter();
 }
 
@@ -514,7 +508,7 @@ void SpatialOverlayPlotPropertiesWidget::onEndFrameChanged(int value) {
 
 void SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() {
     qDebug() << "SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() called";
-    
+
     // Get total frame count from data manager
     _total_frame_count = 0;
     if (_data_manager) {
@@ -524,11 +518,11 @@ void SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() {
                 _total_frame_count = static_cast<int>(timeFrame->getTotalFrameCount());
                 qDebug() << "Total frame count from data manager:" << _total_frame_count;
             }
-        } catch (const std::exception& e) {
+        } catch (std::exception const & e) {
             qDebug() << "Error getting time frame:" << e.what();
         }
     }
-    
+
     // Update spinbox ranges
     if (_total_frame_count > 0) {
         ui->start_frame_spinbox->setMaximum(_total_frame_count - 1);
@@ -536,19 +530,19 @@ void SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() {
         ui->end_frame_spinbox->setValue(_total_frame_count - 1);
         _end_frame = _total_frame_count - 1;
     }
-    
+
     qDebug() << "Time range controls setup complete - max frame:" << (_total_frame_count - 1);
 }
 
 void SpatialOverlayPlotPropertiesWidget::updateTimeRangeFilter() {
-    qDebug() << "SpatialOverlayPlotPropertiesWidget::updateTimeRangeFilter() called with range:" 
+    qDebug() << "SpatialOverlayPlotPropertiesWidget::updateTimeRangeFilter() called with range:"
              << _start_frame << "to" << _end_frame;
-    
+
     if (!_spatial_plot_widget) {
         qDebug() << "No spatial plot widget available for time range filtering";
         return;
     }
-    
+
     // Apply time range filter to the OpenGL widget
     auto openglWidget = _spatial_plot_widget->getOpenGLWidget();
 

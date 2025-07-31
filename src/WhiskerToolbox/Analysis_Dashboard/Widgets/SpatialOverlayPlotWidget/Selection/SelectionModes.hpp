@@ -43,5 +43,4 @@ public:
 };
 
 
-
 #endif// SPATIALOVERLAY_SELECTION_MODES_HPP

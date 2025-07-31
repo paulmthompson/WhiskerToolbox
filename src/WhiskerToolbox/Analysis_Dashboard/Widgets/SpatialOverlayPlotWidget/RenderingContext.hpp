@@ -15,8 +15,8 @@ struct RenderingContext {
     QMatrix4x4 model_matrix;
     QMatrix4x4 view_matrix;
     QMatrix4x4 projection_matrix;
-    QRect viewport_rect;      // Viewport dimensions in pixels
-    QRectF world_bounds;      // Viewport bounds in world coordinates
+    QRect viewport_rect;// Viewport dimensions in pixels
+    QRectF world_bounds;// Viewport bounds in world coordinates
 };
 
-#endif // RENDERINGCONTEXT_HPP 
+#endif// RENDERINGCONTEXT_HPP

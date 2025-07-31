@@ -17,37 +17,49 @@ class TableDesignerWidget;
 class DataManager;
 
 /**
- * @brief Toolbox panel containing available plot types for dragging to the dashboard
+ * @brief Toolbox panel containing available plot types for adding to the dashboard
  * 
- * This widget provides a list of available plot types that users can drag
- * into the main dashboard graphics view to create new plots. It also contains
+ * This widget provides a list of available plot types that users can select
+ * and add to the main dashboard graphics view to create new plots. It also contains
  * the groups management interface and table designer widget.
  */
 class ToolboxPanel : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ToolboxPanel(GroupManager* group_manager, std::shared_ptr<DataManager> data_manager, QWidget* parent = nullptr);
+    explicit ToolboxPanel(GroupManager * group_manager, std::shared_ptr<DataManager> data_manager, QWidget * parent = nullptr);
     ~ToolboxPanel() override;
 
     /**
      * @brief Get the table manager instance
      * @return Pointer to the table manager
      */
-    TableManager* getTableManager() const { return _table_manager.get(); }
+    TableManager * getTableManager() const { return _table_manager.get(); }
+
+signals:
+    /**
+     * @brief Emitted when user wants to add a plot of the specified type
+     * @param plot_type The type of plot to add
+     */
+    void plotTypeSelected(QString const & plot_type);
 
 private slots:
     /**
-     * @brief Handle when user starts dragging an item from the toolbox
-     * @param item The list widget item being dragged
+     * @brief Handle when user clicks the Add button
      */
-    void handleItemDoubleClicked(QListWidgetItem* item);
+    void handleAddButtonClicked();
+
+    /**
+     * @brief Handle when user double-clicks an item in the list
+     * @param item The list widget item that was double-clicked
+     */
+    void handleItemDoubleClicked(QListWidgetItem * item);
 
 private:
-    Ui::ToolboxPanel* ui;
-    GroupManagementWidget* _group_widget;
+    Ui::ToolboxPanel * ui;
+    GroupManagementWidget * _group_widget;
     std::unique_ptr<TableManager> _table_manager;
-    TableDesignerWidget* _table_designer_widget;
+    TableDesignerWidget * _table_designer_widget;
 
     /**
      * @brief Initialize the toolbox with available plot types
@@ -60,7 +72,7 @@ private:
      * @param display_name The human-readable display name
      * @param icon_path Path to the icon for this plot type (optional)
      */
-    void addPlotType(const QString& plot_type, const QString& display_name, const QString& icon_path = QString());
+    void addPlotType(QString const & plot_type, QString const & display_name, QString const & icon_path = QString());
 };
 
-#endif // TOOLBOXPANEL_HPP 
+#endif// TOOLBOXPANEL_HPP

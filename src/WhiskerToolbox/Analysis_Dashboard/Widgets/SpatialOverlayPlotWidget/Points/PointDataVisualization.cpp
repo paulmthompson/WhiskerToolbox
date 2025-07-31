@@ -1,20 +1,20 @@
 #include "PointDataVisualization.hpp"
 
+#include "Analysis_Dashboard/Groups/GroupManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/Points/utils/Point_Data_utils.hpp"
-#include "Analysis_Dashboard/Groups/GroupManager.hpp"
 
-#include "ShaderManager/ShaderManager.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
+#include "ShaderManager/ShaderManager.hpp"
 
 #include <QOpenGLShaderProgram>
 
 PointDataVisualization::PointDataVisualization(QString const & data_key,
                                                std::shared_ptr<PointData> const & point_data,
-                                               GroupManager* group_manager)
+                                               GroupManager * group_manager)
     : m_key(data_key),
       m_vertex_buffer(QOpenGLBuffer::VertexBuffer),
       m_selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
@@ -36,12 +36,12 @@ PointDataVisualization::PointDataVisualization(QString const & data_key,
             // Store coordinates and group_id in vertex data for OpenGL rendering
             m_vertex_data.push_back(point.x);
             m_vertex_data.push_back(point.y);
-            m_vertex_data.push_back(0.0f);  // group_id = 0 (ungrouped) initially
+            m_vertex_data.push_back(0.0f);// group_id = 0 (ungrouped) initially
         }
     }
 
     // Initialize visibility statistics
-    m_total_point_count = m_vertex_data.size() / 3;  // 3 components per point now
+    m_total_point_count = m_vertex_data.size() / 3;// 3 components per point now
     m_hidden_point_count = 0;
     m_visible_vertex_count = m_vertex_data.size();
 
@@ -80,10 +80,10 @@ void PointDataVisualization::initializeOpenGLResources() {
     // Position attribute (x, y)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    
+
     // Group ID attribute
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) (2 * sizeof(float)));
 
     m_vertex_buffer.release();
     m_vertex_array_object.release();
@@ -165,7 +165,7 @@ void PointDataVisualization::updateSelectionVertexBuffer() {
     m_selection_vertex_array_object.bind();
     m_selection_vertex_buffer.bind();
     m_selection_vertex_buffer.allocate(m_selection_vertex_data.data(),
-                                     static_cast<int>(m_selection_vertex_data.size() * sizeof(float)));
+                                       static_cast<int>(m_selection_vertex_data.size() * sizeof(float)));
 
     // Set up vertex attributes
     glEnableVertexAttribArray(0);
@@ -252,21 +252,21 @@ void PointDataVisualization::_renderPoints(QOpenGLShaderProgram * shader_program
 
     // Set up group colors if we have a group manager
     if (m_group_manager) {
-        const auto& groups = m_group_manager->getGroups();
-        
+        auto const & groups = m_group_manager->getGroups();
+
         // Prepare color array - index 0 is for ungrouped points
         std::vector<QVector4D> group_colors(32, m_color);
-        group_colors[0] = m_color; // Index 0 = ungrouped color
-        
+        group_colors[0] = m_color;// Index 0 = ungrouped color
+
         // Map group colors to consecutive indices starting from 1
         int color_index = 1;
         for (auto it = groups.begin(); it != groups.end() && color_index < 32; ++it) {
-            const auto& group = it.value();
-            group_colors[color_index] = QVector4D(group.color.redF(), group.color.greenF(), 
-                                                 group.color.blueF(), group.color.alphaF());
+            auto const & group = it.value();
+            group_colors[color_index] = QVector4D(group.color.redF(), group.color.greenF(),
+                                                  group.color.blueF(), group.color.alphaF());
             color_index++;
         }
-        
+
         // Pass color array to shader
         shader_program->setUniformValueArray("u_group_colors", group_colors.data(), 32);
         shader_program->setUniformValue("u_num_groups", 32);
@@ -305,7 +305,7 @@ void PointDataVisualization::_renderSelectedPoints(QOpenGLShaderProgram * shader
 }
 
 void PointDataVisualization::_renderHoverPoint(QOpenGLShaderProgram * shader_program,
-                                              float point_size) {
+                                               float point_size) {
     if (!m_current_hover_point) return;
 
     m_highlight_vertex_array_object.bind();
@@ -335,8 +335,7 @@ void PointDataVisualization::applySelection(SelectionVariant & selection_handler
         applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
     } else if (std::holds_alternative<std::unique_ptr<PointSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<PointSelectionHandler>>(selection_handler));
-    }
-    else {
+    } else {
         std::cout << "PointDataVisualization::applySelection: selection_handler is not a PolygonSelectionHandler" << std::endl;
     }
 }
@@ -407,14 +406,14 @@ QString PointDataVisualization::getTooltipText() const {
             .arg(m_current_hover_point->y, 0, 'f', 2);
 }
 
-bool PointDataVisualization::handleHover(const QVector2D & world_pos, float tolerance) {
+bool PointDataVisualization::handleHover(QVector2D const & world_pos, float tolerance) {
     auto const * nearest_point = m_spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
-    
+
     // Check if the nearest point is hidden
     if (nearest_point && m_hidden_points.find(nearest_point) != m_hidden_points.end()) {
-        nearest_point = nullptr; // Treat hidden points as if they don't exist for hover
+        nearest_point = nullptr;// Treat hidden points as if they don't exist for hover
     }
-    
+
     bool hover_changed = (m_current_hover_point != nearest_point);
     m_current_hover_point = nearest_point;
     return hover_changed;
@@ -424,14 +423,14 @@ void PointDataVisualization::clearHover() {
     m_current_hover_point = nullptr;
 }
 
-std::optional<int64_t> PointDataVisualization::handleDoubleClick(const QVector2D & world_pos, float tolerance) {
+std::optional<int64_t> PointDataVisualization::handleDoubleClick(QVector2D const & world_pos, float tolerance) {
     auto const * nearest_point = m_spatial_index->findNearest(world_pos.x(), world_pos.y(), tolerance);
-    
+
     // Check if the nearest point is hidden
     if (nearest_point && m_hidden_points.find(nearest_point) != m_hidden_points.end()) {
-        return std::nullopt; // Hidden points can't be double-clicked
+        return std::nullopt;// Hidden points can't be double-clicked
     }
-    
+
     if (nearest_point) {
         return nearest_point->data;
     }
@@ -445,44 +444,44 @@ size_t PointDataVisualization::hideSelectedPoints() {
         qDebug() << "PointDataVisualization: No points selected for hiding";
         return 0;
     }
-    
+
     size_t hidden_count = 0;
-    
+
     // Add selected points to hidden set
-    for (const auto* point_ptr : m_selected_points) {
+    for (auto const * point_ptr: m_selected_points) {
         if (m_hidden_points.find(point_ptr) == m_hidden_points.end()) {
             m_hidden_points.insert(point_ptr);
             hidden_count++;
         }
     }
-    
+
     // Clear selection since hidden points should not be selected
     m_selected_points.clear();
-    
+
     // Update statistics
     m_hidden_point_count = m_hidden_points.size();
-    
+
     // Update GPU buffers
     updateSelectionVertexBuffer();
     _updateVisibleVertexBuffer();
-    
-    qDebug() << "PointDataVisualization: Hidden" << hidden_count 
+
+    qDebug() << "PointDataVisualization: Hidden" << hidden_count
              << "points, total hidden:" << m_hidden_point_count;
-    
+
     return hidden_count;
 }
 
 size_t PointDataVisualization::showAllPoints() {
     size_t shown_count = m_hidden_points.size();
-    
+
     m_hidden_points.clear();
     m_hidden_point_count = 0;
-    
+
     // Update GPU vertex buffer to show all points
     _updateVisibleVertexBuffer();
-    
+
     qDebug() << "PointDataVisualization: Showed" << shown_count << "points, all points now visible";
-    
+
     return shown_count;
 }
 
@@ -494,78 +493,78 @@ void PointDataVisualization::_updateVisibleVertexBuffer() {
     if (!m_spatial_index) {
         return;
     }
-    
+
     // Rebuild vertex data with current visibility and group assignments
     m_vertex_data.clear();
-    
+
     // Get all points from the spatial index
     std::vector<QuadTreePoint<int64_t> const *> all_points;
     BoundingBox full_bounds = m_spatial_index->getBounds();
     m_spatial_index->queryPointers(full_bounds, all_points);
-    
+
     m_total_point_count = all_points.size();
     m_hidden_point_count = 0;
-    
-    for (const auto* point_ptr : all_points) {
+
+    for (auto const * point_ptr: all_points) {
         // Check if point is hidden or outside time range
         bool is_hidden = (m_hidden_points.find(point_ptr) != m_hidden_points.end());
-        bool outside_time_range = (m_time_range_enabled && 
-                                  (point_ptr->data < m_time_range_start || point_ptr->data > m_time_range_end));
-        
+        bool outside_time_range = (m_time_range_enabled &&
+                                   (point_ptr->data < m_time_range_start || point_ptr->data > m_time_range_end));
+
         if (is_hidden || outside_time_range) {
             m_hidden_point_count++;
         }
-        
+
         // Add all points to vertex data (hidden points will be filtered in shader if needed)
         m_vertex_data.push_back(point_ptr->x);
         m_vertex_data.push_back(point_ptr->y);
-        
+
         // Get group ID for this point
         int group_id = (m_group_manager ? m_group_manager->getPointGroup(point_ptr->data) : -1);
         m_vertex_data.push_back(static_cast<float>(group_id == -1 ? 0 : group_id));
     }
-    
+
     m_visible_vertex_count = m_vertex_data.size();
-    
+
     // Update the OpenGL vertex buffer
     m_vertex_buffer.bind();
     m_vertex_buffer.allocate(m_vertex_data.data(), static_cast<int>(m_vertex_data.size() * sizeof(float)));
     m_vertex_buffer.release();
-    
-    qDebug() << "PointDataVisualization: Updated vertex buffer with" << m_total_point_count 
+
+    qDebug() << "PointDataVisualization: Updated vertex buffer with" << m_total_point_count
              << "total points (" << m_hidden_point_count << "hidden)";
 }
 
 void PointDataVisualization::setTimeRangeEnabled(bool enabled) {
     qDebug() << "PointDataVisualization::setTimeRangeEnabled(" << enabled << ")";
-    
+
     if (m_time_range_enabled != enabled) {
         m_time_range_enabled = enabled;
-        
+
         // Update visibility mask to apply or remove time range filtering
         _updateVisibleVertexBuffer();
-        
+
         qDebug() << "Time range filtering" << (enabled ? "enabled" : "disabled");
     }
 }
 
 void PointDataVisualization::setTimeRange(int start_frame, int end_frame) {
     qDebug() << "PointDataVisualization::setTimeRange(" << start_frame << "," << end_frame << ")";
-    
+
     m_time_range_start = start_frame;
     m_time_range_end = end_frame;
-    
+
     // Update visibility mask to apply time range filtering
     _updateVisibleVertexBuffer();
-    
+
     qDebug() << "Time range updated and visibility mask refreshed";
 }
 
 //========== Group Management ==========
 
-void PointDataVisualization::setGroupManager(GroupManager* group_manager) {
+void PointDataVisualization::setGroupManager(GroupManager * group_manager) {
     m_group_manager = group_manager;
-    
+
     if (m_group_manager) {
         // Initial refresh of group data
         refreshGroupRenderData();
@@ -574,11 +573,11 @@ void PointDataVisualization::setGroupManager(GroupManager* group_manager) {
 
 std::unordered_set<int64_t> PointDataVisualization::getSelectedPointIds() const {
     std::unordered_set<int64_t> point_ids;
-    
-    for (const auto* point_ptr : m_selected_points) {
-        point_ids.insert(point_ptr->data);  // data field contains the time stamp ID
+
+    for (auto const * point_ptr: m_selected_points) {
+        point_ids.insert(point_ptr->data);// data field contains the time stamp ID
     }
-    
+
     return point_ids;
 }
 
@@ -586,7 +585,7 @@ void PointDataVisualization::refreshGroupRenderData() {
     if (!m_group_manager) {
         return;
     }
-    
+
     m_group_data_needs_update = true;
     _updateGroupVertexData();
 }
@@ -597,48 +596,48 @@ void PointDataVisualization::_updateGroupVertexData() {
     if (!m_group_manager || !m_spatial_index) {
         return;
     }
-    
+
     // Create mapping from group ID to shader color index
-    const auto& groups = m_group_manager->getGroups();
+    auto const & groups = m_group_manager->getGroups();
     std::unordered_map<int, int> group_id_to_color_index;
-    int color_index = 1; // Start from index 1 (0 is for ungrouped)
+    int color_index = 1;// Start from index 1 (0 is for ungrouped)
     for (auto it = groups.begin(); it != groups.end() && color_index < 32; ++it) {
         group_id_to_color_index[it.key()] = color_index;
         color_index++;
     }
-    
+
     // Update group IDs in vertex data using direct timestamp lookup
     for (size_t i = 0; i < m_vertex_data.size(); i += 3) {
         float x = m_vertex_data[i];
         float y = m_vertex_data[i + 1];
-        
+
         // Find the timestamp for this vertex position using spatial index
-        auto const* point_ptr = m_spatial_index->findNearest(x, y, 0.0001f);
-        
+        auto const * point_ptr = m_spatial_index->findNearest(x, y, 0.0001f);
+
         int group_id = -1;
         if (point_ptr) {
             // Use timestamp-based group lookup - much more efficient
             group_id = m_group_manager->getPointGroup(point_ptr->data);
         }
-        
+
         // Map to shader color index
-        float shader_group_id = 0.0f; // Default to ungrouped (index 0)
+        float shader_group_id = 0.0f;// Default to ungrouped (index 0)
         if (group_id != -1) {
             auto it = group_id_to_color_index.find(group_id);
             if (it != group_id_to_color_index.end()) {
                 shader_group_id = static_cast<float>(it->second);
             }
         }
-        
+
         m_vertex_data[i + 2] = shader_group_id;
     }
-    
+
     // Update OpenGL buffer
     if (m_vertex_buffer.isCreated()) {
         m_vertex_buffer.bind();
         m_vertex_buffer.allocate(m_vertex_data.data(), static_cast<int>(m_vertex_data.size() * sizeof(float)));
         m_vertex_buffer.release();
     }
-    
+
     m_group_data_needs_update = false;
 }

@@ -17,7 +17,6 @@ class SpatialOverlayOpenGLWidget;
 class TimeFrameIndex;
 
 
-
 /**
  * @brief Spatial overlay plot widget for visualizing PointData across all time frames
  * 
@@ -82,7 +81,7 @@ public:
      * @brief Set the group manager for data grouping
      * @param group_manager Pointer to the group manager
      */
-    void setGroupManager(GroupManager* group_manager) override;
+    void setGroupManager(GroupManager * group_manager) override;
 
     /**
      * @brief Set the selection mode for the plot

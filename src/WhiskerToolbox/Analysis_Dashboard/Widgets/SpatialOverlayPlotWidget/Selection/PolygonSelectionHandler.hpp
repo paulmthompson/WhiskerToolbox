@@ -1,8 +1,8 @@
 #ifndef POLYGONSELECTIONHANDLER_HPP
 #define POLYGONSELECTIONHANDLER_HPP
 
-#include "SelectionModes.hpp"
 #include "CoreGeometry/points.hpp"
+#include "SelectionModes.hpp"
 #include "ShaderManager/ShaderProgram.hpp"
 
 #include <QMatrix4x4>
@@ -78,7 +78,7 @@ public:
     std::unique_ptr<SelectionRegion> const & getActiveSelectionRegion() const { return _active_selection_region; }
 
 
-    void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos); 
+    void mousePressEvent(QMouseEvent * event, QVector2D const & world_pos);
 
     void mouseMoveEvent(QMouseEvent * event, QVector2D const & world_pos) {}
 
@@ -87,7 +87,6 @@ public:
     void keyPressEvent(QKeyEvent * event);
 
 private:
-  
     NotificationCallback _notification_callback;
 
     QOpenGLShaderProgram * _line_shader_program;
@@ -100,7 +99,7 @@ private:
 
     // Polygon selection state
     bool _is_polygon_selecting;
-    std::vector<Point2D<float>> _polygon_vertices;                 // Current polygon vertices in world coordinates
+    std::vector<Point2D<float>> _polygon_vertices;            // Current polygon vertices in world coordinates
     std::unique_ptr<SelectionRegion> _active_selection_region;// Current selection region
 
     /**
@@ -127,7 +126,7 @@ private:
      */
     void addPolygonVertex(int world_x, int world_y);
 
-    
+
     /**
      * @brief Check if currently in polygon selection mode
      * @return True if actively selecting a polygon
@@ -146,7 +145,6 @@ private:
      * @param world_y World Y coordinate
      */
     void startPolygonSelection(int world_x, int world_y);
-
 
 
     /**

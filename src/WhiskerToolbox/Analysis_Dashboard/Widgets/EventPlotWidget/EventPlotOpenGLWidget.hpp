@@ -1,9 +1,9 @@
 #ifndef EVENTPLOTOPENGLWIDGET_HPP
 #define EVENTPLOTOPENGLWIDGET_HPP
 
-#include "SpatialIndex/QuadTree.hpp"
 #include "CoreGeometry/boundingbox.hpp"
 #include "ShaderManager/ShaderManager.hpp"
+#include "SpatialIndex/QuadTree.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -105,7 +105,10 @@ public:
         Dark,
         Light
     };
-    void setPlotTheme(PlotTheme theme) { _plot_theme = theme; update(); }
+    void setPlotTheme(PlotTheme theme) {
+        _plot_theme = theme;
+        update();
+    }
     PlotTheme getPlotTheme() const { return _plot_theme; }
 
 signals:
@@ -169,8 +172,8 @@ private:
     // View transformation
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _projection_matrix;
-    float _zoom_level;      // Overall zoom level (kept for compatibility)
-    float _y_zoom_level;    // Y-axis zoom level (for trial spacing)
+    float _zoom_level;  // Overall zoom level (kept for compatibility)
+    float _y_zoom_level;// Y-axis zoom level (for trial spacing)
     float _pan_offset_x;
     float _pan_offset_y;
 
@@ -283,7 +286,7 @@ private:
      * @param world_x Output world X coordinate
      * @param world_y Output world Y coordinate
      */
-    void screenToWorld(int screen_x, int screen_y, float& world_x, float& world_y);
+    void screenToWorld(int screen_x, int screen_y, float & world_x, float & world_y);
 
     /**
      * @brief Render all events using OpenGL
@@ -299,9 +302,6 @@ private:
      * @brief Render the center line at t=0
      */
     void renderCenterLine();
-    
-    
-
 };
 
 #endif// EVENTPLOTOPENGLWIDGET_HPP

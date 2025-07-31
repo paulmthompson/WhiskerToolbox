@@ -1,25 +1,25 @@
 #ifndef MASKDATAVISUALIZATION_HPP
 #define MASKDATAVISUALIZATION_HPP
 
+#include "../Selection/SelectionHandlers.hpp"
 #include "CoreGeometry/polygon.hpp"
 #include "MaskIdentifier.hpp"
 #include "SpatialIndex/RTree.hpp"
-#include "../Selection/SelectionHandlers.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_1_Core>
 #include <QOpenGLVertexArrayObject>
 #include <QString>
-#include <QVector4D>
 #include <QVector2D>
+#include <QVector4D>
 
 #include <cstdint>
 #include <memory>
 #include <set>
 #include <unordered_set>
-#include <vector>
 #include <variant>
+#include <vector>
 
 class MaskData;
 class QOpenGLShaderProgram;
@@ -29,47 +29,45 @@ class LineSelectionHandler;
 class PointSelectionHandler;
 
 
-
 /**
  * @brief Visualization data for a single MaskData object
  */
 struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
     // R-tree for spatial indexing of mask bounding boxes
     std::unique_ptr<RTree<MaskIdentifier>> spatial_index;
-    
+
     // Binary image texture data and OpenGL objects
     std::vector<float> binary_image_data;
     GLuint binary_image_texture = 0;
     QOpenGLBuffer quad_vertex_buffer;
     QOpenGLVertexArrayObject quad_vertex_array_object;
-    
 
-    
+
     // Selection and hover data
     std::set<MaskIdentifier> selected_masks;
     std::vector<float> selection_binary_image_data;
     GLuint selection_binary_image_texture = 0;
-    
+
     // Hover state
     std::vector<RTreeEntry<MaskIdentifier>> current_hover_entries;
-    
+
     // Hover union polygon rendering
     Polygon hover_union_polygon;
     std::vector<float> hover_polygon_data;
     QOpenGLBuffer hover_polygon_buffer;
     QOpenGLVertexArrayObject hover_polygon_array_object;
-    
+
     // Visualization properties
     QString key;
     QVector4D color;
     bool visible = true;
-    
+
     // World bounds based on image size
     float world_min_x = 0.0f;
     float world_max_x = 1.0f;
     float world_min_y = 0.0f;
     float world_max_y = 1.0f;
-    
+
     // Reference to original data (not owned)
     std::shared_ptr<MaskData> mask_data;
 
@@ -179,7 +177,7 @@ struct MaskDataVisualization : protected QOpenGLFunctions_4_1_Core {
      * @param world_pos The mouse position in world coordinates
      * @return True if the hover state changed, false otherwise
      */
-    bool handleHover(const QVector2D & world_pos);
+    bool handleHover(QVector2D const & world_pos);
 
 private:
     /**
@@ -280,11 +278,9 @@ private:
     float flipY(float y) const {
         return world_max_y - y;
     }
-
-    
 };
 
 static Polygon computeUnionPolygonUsingContainment(std::vector<RTreeEntry<MaskIdentifier>> const & entries);
-   
 
-#endif // MASKDATAVISUALIZATION_HPP
+
+#endif// MASKDATAVISUALIZATION_HPP

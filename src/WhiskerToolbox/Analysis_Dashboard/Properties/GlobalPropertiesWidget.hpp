@@ -17,7 +17,7 @@ class GlobalPropertiesWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit GlobalPropertiesWidget(QWidget* parent = nullptr);
+    explicit GlobalPropertiesWidget(QWidget * parent = nullptr);
     ~GlobalPropertiesWidget() override;
 
 signals:
@@ -43,7 +43,7 @@ private slots:
     void handleSnapToGridChanged(bool enabled);
 
 private:
-    Ui::GlobalPropertiesWidget* ui;
+    Ui::GlobalPropertiesWidget * ui;
 };
 
-#endif // GLOBALPROPERTIESWIDGET_HPP 
+#endif// GLOBALPROPERTIESWIDGET_HPP

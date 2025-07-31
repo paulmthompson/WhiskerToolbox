@@ -9,17 +9,20 @@
 #include "Scene/AnalysisDashboardScene.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "Toolbox/ToolboxPanel.hpp"
+#include "Widgets/EventPlotWidget/EventPlotWidget.hpp"
+#include "Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp"
+#include "Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
 
+#include <QDebug>
 #include <QGraphicsView>
+#include <QHBoxLayout>
+#include <QPainter>
 #include <QSplitter>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QDebug>
-#include <QPainter>
 
-Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager, 
-    TimeScrollBar * time_scrollbar,
-    QWidget* parent)
+Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager,
+                                       TimeScrollBar * time_scrollbar,
+                                       QWidget * parent)
     : QMainWindow(parent),
       ui(new Ui::Analysis_Dashboard),
       _data_manager(std::move(data_manager)),
@@ -30,9 +33,9 @@ Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager
       _dashboard_scene(nullptr),
       _graphics_view(nullptr),
       _main_splitter(nullptr) {
-    
+
     ui->setupUi(this);
-    
+
     initializeDashboard();
 }
 
@@ -50,67 +53,70 @@ void Analysis_Dashboard::initializeDashboard() {
     _properties_panel = new PropertiesPanel(this);
     _dashboard_scene = new AnalysisDashboardScene(this);
     _graphics_view = new QGraphicsView(_dashboard_scene, this);
-    
+
     // Configure the graphics view
     _graphics_view->setRenderHint(QPainter::Antialiasing);
     _graphics_view->setDragMode(QGraphicsView::RubberBandDrag);
-    _graphics_view->setAcceptDrops(true);
     _graphics_view->setMinimumSize(400, 300);
-    
+
     // Set data manager for the scene
     if (_data_manager) {
         _dashboard_scene->setDataManager(_data_manager);
         _properties_panel->setDataManager(_data_manager);
     }
-    
+
     // Set group manager for the scene
     if (_group_manager) {
         _dashboard_scene->setGroupManager(_group_manager.get());
     }
-    
+
     // Set table manager for the scene
     if (_toolbox_panel && _toolbox_panel->getTableManager()) {
         _dashboard_scene->setTableManager(_toolbox_panel->getTableManager());
     }
-    
+
     setupLayout();
     connectSignals();
-    
+
     // Set initial splitter sizes (toolbox: 250px, center: remaining, properties: 250px)
     QList<int> sizes = {250, 700, 250};
     ui->main_splitter->setSizes(sizes);
-    
+
     qDebug() << "Analysis Dashboard initialized successfully";
 }
 
 void Analysis_Dashboard::setupLayout() {
     // Get the container widgets from the UI
-    QWidget* toolbox_container = ui->toolbox_container;
-    QWidget* graphics_container = ui->graphics_container;
-    QWidget* properties_container = ui->properties_container;
-    
+    QWidget * toolbox_container = ui->toolbox_container;
+    QWidget * graphics_container = ui->graphics_container;
+    QWidget * properties_container = ui->properties_container;
+
     // Create layouts for each container
-    QVBoxLayout* toolbox_layout = new QVBoxLayout(toolbox_container);
+    QVBoxLayout * toolbox_layout = new QVBoxLayout(toolbox_container);
     toolbox_layout->setContentsMargins(0, 0, 0, 0);
     toolbox_layout->addWidget(_toolbox_panel);
-    
-    QVBoxLayout* graphics_layout = new QVBoxLayout(graphics_container);
+
+    QVBoxLayout * graphics_layout = new QVBoxLayout(graphics_container);
     graphics_layout->setContentsMargins(0, 0, 0, 0);
     graphics_layout->addWidget(_graphics_view);
-    
-    QVBoxLayout* properties_layout = new QVBoxLayout(properties_container);
+
+    QVBoxLayout * properties_layout = new QVBoxLayout(properties_container);
     properties_layout->setContentsMargins(0, 0, 0, 0);
     properties_layout->addWidget(_properties_panel);
 }
 
 void Analysis_Dashboard::connectSignals() {
+    // Connect toolbox panel signals
+    connect(_toolbox_panel, &ToolboxPanel::plotTypeSelected,
+            this, &Analysis_Dashboard::handlePlotTypeSelected);
+
     // Connect dashboard scene signals
     connect(_dashboard_scene, &AnalysisDashboardScene::plotSelected,
             this, &Analysis_Dashboard::handlePlotSelected);
-    
+
     connect(_dashboard_scene, &AnalysisDashboardScene::plotAdded,
             this, &Analysis_Dashboard::handlePlotAdded);
-    
+
     connect(_dashboard_scene, &AnalysisDashboardScene::plotRemoved,
             this, &Analysis_Dashboard::handlePlotRemoved);
 
@@ -118,11 +124,11 @@ void Analysis_Dashboard::connectSignals() {
             this, &Analysis_Dashboard::_changeScrollbar);
 }
 
-void Analysis_Dashboard::handlePlotSelected(const QString& plot_id) {
+void Analysis_Dashboard::handlePlotSelected(QString const & plot_id) {
     qDebug() << "Plot selected:" << plot_id;
-    
+
     // Get the plot widget and show its properties
-    AbstractPlotWidget* plot_widget = _dashboard_scene->getPlotWidget(plot_id);
+    AbstractPlotWidget * plot_widget = _dashboard_scene->getPlotWidget(plot_id);
     if (plot_widget) {
         _properties_panel->showPlotProperties(plot_id, plot_widget);
     } else {
@@ -130,23 +136,55 @@ void Analysis_Dashboard::handlePlotSelected(const QString& plot_id) {
     }
 }
 
-void Analysis_Dashboard::handlePlotAdded(const QString& plot_id) {
+void Analysis_Dashboard::handlePlotAdded(QString const & plot_id) {
     qDebug() << "Plot added:" << plot_id;
-    
+
     // Update status bar or other UI elements as needed
     QString status_text = QString("Plot added: %1").arg(plot_id);
     ui->statusbar->showMessage(status_text, 3000);
 }
 
-void Analysis_Dashboard::handlePlotRemoved(const QString& plot_id) {
+void Analysis_Dashboard::handlePlotRemoved(QString const & plot_id) {
     qDebug() << "Plot removed:" << plot_id;
-    
+
     // If this was the selected plot, show global properties
     _properties_panel->showGlobalProperties();
-    
+
     // Update status bar
     QString status_text = QString("Plot removed: %1").arg(plot_id);
     ui->statusbar->showMessage(status_text, 3000);
+}
+
+void Analysis_Dashboard::handlePlotTypeSelected(QString const & plot_type) {
+    qDebug() << "Plot type selected:" << plot_type;
+
+    // Create a new plot widget of the selected type
+    AbstractPlotWidget * new_plot = createPlotWidget(plot_type);
+    if (new_plot) {
+        // Add the plot to the scene at a default position
+        _dashboard_scene->addPlotWidget(new_plot, QPointF(50, 50));
+    }
+}
+
+AbstractPlotWidget * Analysis_Dashboard::createPlotWidget(QString const & plot_type) {
+    // Factory pattern for creating different plot types
+    if (plot_type == "scatter_plot") {
+        return new ScatterPlotWidget();
+    } else if (plot_type == "spatial_overlay_plot") {
+        qDebug() << "Creating spatial overlay plot widget";
+        return new SpatialOverlayPlotWidget();
+    } else if (plot_type == "event_plot") {
+        qDebug() << "Creating event plot widget";
+        return new EventPlotWidget();
+    }
+
+    // Add more plot types here as they are implemented
+    // else if (plot_type == "line_plot") {
+    //     return new LinePlotWidget();
+    // }
+
+    qDebug() << "Unknown plot type:" << plot_type;
+    return nullptr;
 }
 
 void Analysis_Dashboard::_changeScrollbar(int64_t time_frame_index, std::string const & active_feature) {

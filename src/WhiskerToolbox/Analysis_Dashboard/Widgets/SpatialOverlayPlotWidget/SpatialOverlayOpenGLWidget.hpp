@@ -1,10 +1,10 @@
 #ifndef SPATIALOVERLAYOPENGLWIDGET_HPP
 #define SPATIALOVERLAYOPENGLWIDGET_HPP
 
-#include "ShaderManager/ShaderManager.hpp"
+#include "RenderingContext.hpp"
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
-#include "RenderingContext.hpp"
+#include "ShaderManager/ShaderManager.hpp"
 
 
 #include <QMatrix4x4>
@@ -94,17 +94,17 @@ public:
     void clearSelection();
 
     //========== Visibility Management ==========
-    
+
     /**
      * @brief Hide selected items from view
      */
     void hideSelectedItems();
-    
+
     /**
      * @brief Show all hidden items in the current active dataset
      */
     void showAllItemsCurrentDataset();
-    
+
     /**
      * @brief Show all hidden items across all datasets
      */
@@ -187,8 +187,8 @@ public:
 
     void applyTimeRangeFilter(int start_frame, int end_frame);
 
-    
-    void setGroupManager(GroupManager* group_manager);
+
+    void setGroupManager(GroupManager * group_manager);
 
 
 signals:
@@ -289,7 +289,7 @@ private:
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
     std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
 
-    GroupManager* _group_manager = nullptr;
+    GroupManager * _group_manager = nullptr;
     bool _opengl_resources_initialized;
 
     // View parameters
@@ -316,8 +316,8 @@ private:
     SelectionMode _selection_mode;// Current selection mode
 
     SelectionVariant _selection_handler;
-    
-    QVector2D _current_mouse_world_pos;  ///< Current mouse position in world coordinates
+
+    QVector2D _current_mouse_world_pos;///< Current mouse position in world coordinates
 
 
     // Data bounds
@@ -390,7 +390,6 @@ private:
     RenderingContext createRenderingContext() const;
 
 
-
     /**
      * @brief Render common overlay elements (tooltips, selection indicators, etc.)
      */
@@ -407,7 +406,7 @@ private:
      * @brief Show context menu at the given position
      * @param pos The position to show the menu at
      */
-    void showContextMenu(const QPoint& pos);
+    void showContextMenu(QPoint const & pos);
 
     /**
      * @brief Assign selected points to a new group
@@ -424,7 +423,6 @@ private:
      * @brief Remove selected points from their groups
      */
     void ungroupSelectedPoints();
-
 };
 
 #endif// SPATIALOVERLAYOPENGLWIDGET_HPP

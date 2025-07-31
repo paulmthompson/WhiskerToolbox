@@ -3,10 +3,10 @@
 #include "ShaderManager/ShaderManager.hpp"
 
 #include <QDebug>
-#include <QKeyEvent>
-#include <QOpenGLShaderProgram>
-#include <QMouseEvent>
 #include <QGuiApplication>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QOpenGLShaderProgram>
 
 
 LineSelectionHandler::LineSelectionHandler()
@@ -14,7 +14,7 @@ LineSelectionHandler::LineSelectionHandler()
       _is_drawing_line(false) {
 
     initializeOpenGLFunctions();
-        
+
     initializeOpenGLResources();
 }
 
@@ -76,7 +76,7 @@ void LineSelectionHandler::startLineSelection(float world_x, float world_y) {
 
     _is_drawing_line = true;
     _line_start_point_world = Point2D<float>(world_x, world_y);
-    _line_end_point_world = _line_start_point_world; // Initially end point is same as start point
+    _line_end_point_world = _line_start_point_world;// Initially end point is same as start point
 
     qDebug() << "LineSelectionHandler: Added first line point at world:" << world_x << "," << world_y;
 
@@ -104,8 +104,8 @@ void LineSelectionHandler::completeLineSelection() {
         return;
     }
 
-    qDebug() << "LineSelectionHandler: Completing line selection from" 
-             << _line_start_point_world.x << "," << _line_start_point_world.y 
+    qDebug() << "LineSelectionHandler: Completing line selection from"
+             << _line_start_point_world.x << "," << _line_start_point_world.y
              << "to" << _line_end_point_world.x << "," << _line_end_point_world.y;
 
     // Create selection region and apply it
@@ -143,8 +143,8 @@ void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
     ShaderManager & shader_manager = ShaderManager::instance();
     _line_shader_program = shader_manager.getProgram("line")->getNativeProgram();
 
-    qDebug() << "LineSelectionHandler: Rendering line overlay from" 
-             << _line_start_point_world.x << "," << _line_start_point_world.y 
+    qDebug() << "LineSelectionHandler: Rendering line overlay from"
+             << _line_start_point_world.x << "," << _line_start_point_world.y
              << "to" << _line_end_point_world.x << "," << _line_end_point_world.y;
 
     // Use line shader program
@@ -172,7 +172,7 @@ void LineSelectionHandler::render(QMatrix4x4 const & mvp_matrix) {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 
     // Set uniforms for line (black solid line)
-    _line_shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f)); // Black
+    _line_shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black
 
     // Disable blending for solid black line
     glDisable(GL_BLEND);
@@ -253,9 +253,8 @@ void LineSelectionHandler::updateLineBuffer() {
 
     // Update line buffer with current line data
     std::vector<float> line_data = {
-        _line_start_point_world.x, _line_start_point_world.y,
-        _line_end_point_world.x, _line_end_point_world.y
-    };
+            _line_start_point_world.x, _line_start_point_world.y,
+            _line_end_point_world.x, _line_end_point_world.y};
 
     _line_vertex_array_object.bind();
     _line_vertex_buffer.bind();
@@ -272,40 +271,41 @@ void LineSelectionHandler::updateLineBuffer() {
 // LineSelectionRegion implementation
 
 LineSelectionRegion::LineSelectionRegion(Point2D<float> const & start_point, Point2D<float> const & end_point)
-    : _start_point(start_point), _end_point(end_point) {
+    : _start_point(start_point),
+      _end_point(end_point) {
 }
 
 bool LineSelectionRegion::containsPoint(Point2D<float> point) const {
     // For line selection, we'll use a simple distance-based approach
     // A point is "contained" if it's within a certain distance of the line
-    
-    const float tolerance = 5.0f; // 5 pixel tolerance
-    
+
+    float const tolerance = 5.0f;// 5 pixel tolerance
+
     // Calculate distance from point to line segment
     float dx = _end_point.x - _start_point.x;
     float dy = _end_point.y - _start_point.y;
-    
+
     if (dx == 0.0f && dy == 0.0f) {
         // Line is actually a point, check distance to that point
-        float distance = std::sqrt(std::pow(point.x - _start_point.x, 2) + 
+        float distance = std::sqrt(std::pow(point.x - _start_point.x, 2) +
                                    std::pow(point.y - _start_point.y, 2));
         return distance <= tolerance;
     }
-    
+
     // Calculate the closest point on the line segment to the given point
     float t = ((point.x - _start_point.x) * dx + (point.y - _start_point.y) * dy) / (dx * dx + dy * dy);
-    
+
     // Clamp t to [0, 1] to stay within the line segment
     t = std::max(0.0f, std::min(1.0f, t));
-    
+
     // Calculate the closest point on the line segment
     float closest_x = _start_point.x + t * dx;
     float closest_y = _start_point.y + t * dy;
-    
+
     // Calculate distance from point to closest point on line
-    float distance = std::sqrt(std::pow(point.x - closest_x, 2) + 
+    float distance = std::sqrt(std::pow(point.x - closest_x, 2) +
                                std::pow(point.y - closest_y, 2));
-    
+
     return distance <= tolerance;
 }
 
@@ -314,4 +314,4 @@ void LineSelectionRegion::getBoundingBox(float & min_x, float & min_y, float & m
     min_y = std::min(_start_point.y, _end_point.y);
     max_x = std::max(_start_point.x, _end_point.x);
     max_y = std::max(_start_point.y, _end_point.y);
-} 
+}

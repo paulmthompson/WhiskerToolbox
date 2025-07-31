@@ -2,8 +2,7 @@
 #include <QMouseEvent>
 
 PointSelectionHandler::PointSelectionHandler(float world_tolerance)
-    : _world_tolerance(world_tolerance)
-{}
+    : _world_tolerance(world_tolerance) {}
 
 void PointSelectionHandler::setNotificationCallback(NotificationCallback callback) {
     _notification_callback = callback;
@@ -22,4 +21,4 @@ void PointSelectionHandler::mousePressEvent(QMouseEvent * event, QVector2D const
             _notification_callback();
         }
     }
-} 
+}

@@ -1,12 +1,12 @@
 #ifndef POINTSELECTIONHANDLER_HPP
 #define POINTSELECTIONHANDLER_HPP
 
-#include "SelectionModes.hpp"
 #include "CoreGeometry/points.hpp"
+#include "SelectionModes.hpp"
 
 #include <QMatrix4x4>
-#include <QVector2D>
 #include <QMouseEvent>
+#include <QVector2D>
 
 #include <functional>
 #include <memory>
@@ -39,7 +39,7 @@ public:
 
     QVector2D getWorldPos() const { return _world_pos; }
     Qt::KeyboardModifiers getModifiers() const { return _modifiers; }
-    
+
     // TODO: This tolerance should be updated when the zoom level changes
     float getWorldTolerance() const { return _world_tolerance; }
 
@@ -51,4 +51,4 @@ private:
     float _world_tolerance;
 };
 
-#endif // POINTSELECTIONHANDLER_HPP 
+#endif// POINTSELECTIONHANDLER_HPP

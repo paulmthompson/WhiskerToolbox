@@ -4,11 +4,11 @@
 #include "CoreGeometry/polygon_adapter.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 
-#include "ShaderManager/ShaderManager.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp"
+#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
+#include "ShaderManager/ShaderManager.hpp"
 
 #include <QDebug>
 #include <QOpenGLShaderProgram>
@@ -714,8 +714,7 @@ void MaskDataVisualization::applySelection(SelectionVariant & selection_handler)
         applySelection(*std::get<std::unique_ptr<PolygonSelectionHandler>>(selection_handler));
     } else if (std::holds_alternative<std::unique_ptr<PointSelectionHandler>>(selection_handler)) {
         applySelection(*std::get<std::unique_ptr<PointSelectionHandler>>(selection_handler));
-    }
-    else {
+    } else {
         std::cout << "MaskDataVisualization::applySelection: selection_handler is not a PolygonSelectionHandler" << std::endl;
     }
 }
@@ -736,8 +735,8 @@ void MaskDataVisualization::applySelection(PointSelectionHandler const & selecti
     if (entries.empty()) return;
 
     auto refined_masks = refineMasksContainingPoint(entries, world_pos.x(), world_pos.y());
-    if(refined_masks.empty()) return;
-    
+    if (refined_masks.empty()) return;
+
     if (modifiers & Qt::ControlModifier) {
         // Toggle the first mask found
         toggleMaskSelection(refined_masks[0]);
@@ -756,7 +755,7 @@ QString MaskDataVisualization::getTooltipText() const {
     return tooltip_text;
 }
 
-bool MaskDataVisualization::handleHover(const QVector2D & world_pos) {
+bool MaskDataVisualization::handleHover(QVector2D const & world_pos) {
     BoundingBox point_bbox(world_pos.x(), world_pos.y(), world_pos.x(), world_pos.y());
     std::vector<RTreeEntry<MaskIdentifier>> entries;
     spatial_index->query(point_bbox, entries);

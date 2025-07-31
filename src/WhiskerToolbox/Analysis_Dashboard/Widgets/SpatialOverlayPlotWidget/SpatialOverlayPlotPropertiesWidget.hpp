@@ -129,13 +129,13 @@ private:
     Ui::SpatialOverlayPlotPropertiesWidget * ui;
     SpatialOverlayPlotWidget * _spatial_plot_widget;
     std::shared_ptr<DataManager> _data_manager;
-    QStringList _selected_features; // Track selected features from the feature table
-    
+    QStringList _selected_features;// Track selected features from the feature table
+
     // Time range filtering
     int _start_frame;
     int _end_frame;
     int _total_frame_count;
-    
+
     // Line visualization settings
     double _line_width;
 

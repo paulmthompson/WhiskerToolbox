@@ -24,7 +24,7 @@ class AbstractPlotWidget : public QGraphicsWidget {
     Q_OBJECT
 
 public:
-    explicit AbstractPlotWidget(QGraphicsItem* parent = nullptr);
+    explicit AbstractPlotWidget(QGraphicsItem * parent = nullptr);
     ~AbstractPlotWidget() override = default;
 
     /**
@@ -43,7 +43,7 @@ public:
      * @brief Set the plot instance name/title
      * @param title The new title for this plot
      */
-    virtual void setPlotTitle(const QString& title);
+    virtual void setPlotTitle(QString const & title);
 
     /**
      * @brief Set the data manager for accessing data
@@ -55,13 +55,13 @@ public:
      * @brief Set the group manager for data grouping
      * @param group_manager Pointer to the group manager
      */
-    virtual void setGroupManager(GroupManager* group_manager);
+    virtual void setGroupManager(GroupManager * group_manager);
 
     /**
      * @brief Set the table manager for accessing table views
      * @param table_manager Pointer to the table manager
      */
-    virtual void setTableManager(TableManager* table_manager);
+    virtual void setTableManager(TableManager * table_manager);
 
     /**
      * @brief Get available table IDs that this widget can use
@@ -74,7 +74,7 @@ public:
      * @param table_id The table ID to retrieve
      * @return Shared pointer to the table view, or nullptr if not found
      */
-    virtual std::shared_ptr<TableView> getTableView(const QString& table_id) const;
+    virtual std::shared_ptr<TableView> getTableView(QString const & table_id) const;
 
     /**
      * @brief Get the unique identifier for this plot instance
@@ -87,21 +87,21 @@ signals:
      * @brief Emitted when this plot is selected/clicked
      * @param plot_id The unique ID of this plot
      */
-    void plotSelected(const QString& plot_id);
+    void plotSelected(QString const & plot_id);
 
     /**
      * @brief Emitted when plot properties change and need to be updated in properties panel
      * @param plot_id The unique ID of this plot
      */
-    void propertiesChanged(const QString& plot_id);
+    void propertiesChanged(QString const & plot_id);
 
     /**
      * @brief Emitted when this plot needs to be re-rendered/updated
      * @param plot_id The unique ID of this plot
      */
-    void renderUpdateRequested(const QString& plot_id);
+    void renderUpdateRequested(QString const & plot_id);
 
-        /**
+    /**
      * @brief Emitted when user requests to jump to a specific frame
      * @param time_frame_index The time frame index to jump to
      */
@@ -111,7 +111,7 @@ protected:
     /**
      * @brief Handle mouse press events for selection
      */
-    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
 
     /**
      * @brief Generate a unique ID for this plot instance
@@ -119,8 +119,8 @@ protected:
     void generateUniqueId();
 
     std::shared_ptr<DataManager> _data_manager;
-    GroupManager* _group_manager = nullptr;
-    TableManager* _table_manager = nullptr;
+    GroupManager * _group_manager = nullptr;
+    TableManager * _table_manager = nullptr;
     QString _plot_title;
     QString _plot_id;
 
@@ -128,4 +128,4 @@ private:
     static int _next_plot_id;
 };
 
-#endif // ABSTRACTPLOTWIDGET_HPP 
+#endif// ABSTRACTPLOTWIDGET_HPP
