@@ -19,6 +19,7 @@
 #include <QPainter>
 #include <QSplitter>
 #include <QVBoxLayout>
+#include <QTimer>
 
 Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager,
                                        TimeScrollBar * time_scrollbar,
@@ -59,6 +60,10 @@ void Analysis_Dashboard::initializeDashboard() {
     _graphics_view->setDragMode(QGraphicsView::RubberBandDrag);
     _graphics_view->setMinimumSize(400, 300);
 
+    // Disable scrollbars to prevent scrolling
+    _graphics_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    _graphics_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
     // Set data manager for the scene
     if (_data_manager) {
         _dashboard_scene->setDataManager(_data_manager);
@@ -81,6 +86,9 @@ void Analysis_Dashboard::initializeDashboard() {
     // Set initial splitter sizes (toolbox: 250px, center: remaining, properties: 250px)
     QList<int> sizes = {250, 700, 250};
     ui->main_splitter->setSizes(sizes);
+
+    // Update graphics view after layout is set up
+    updateGraphicsView();
 
     qDebug() << "Analysis Dashboard initialized successfully";
 }
@@ -161,8 +169,16 @@ void Analysis_Dashboard::handlePlotTypeSelected(QString const & plot_type) {
     // Create a new plot widget of the selected type
     AbstractPlotWidget * new_plot = createPlotWidget(plot_type);
     if (new_plot) {
-        // Add the plot to the scene at a default position
-        _dashboard_scene->addPlotWidget(new_plot, QPointF(50, 50));
+        // Add the plot to the scene at a centered position
+        _dashboard_scene->addPlotWidget(new_plot, QPointF(0, 0));// Will be centered by the scene
+
+        // Ensure the plot is visible by fitting the scene content
+        // Use a small delay to ensure the plot is properly added first
+        QTimer::singleShot(10, [this]() {
+            if (_graphics_view && _dashboard_scene) {
+                _graphics_view->fitInView(_dashboard_scene->sceneRect(), Qt::KeepAspectRatio);
+            }
+        });
     }
 }
 
@@ -205,4 +221,22 @@ void Analysis_Dashboard::_changeScrollbar(int64_t time_frame_index, std::string 
     }
 
     _time_scrollbar->changeScrollBarValue(time_frame_index);
+}
+
+void Analysis_Dashboard::resizeEvent(QResizeEvent * event) {
+    QMainWindow::resizeEvent(event);
+
+    // Update the graphics view to fit the new size
+    updateGraphicsView();
+}
+
+void Analysis_Dashboard::updateGraphicsView() {
+    if (_graphics_view && _dashboard_scene) {
+        // Don't change the scene rect - just fit the existing content to the view
+        // This preserves the positions of existing plots
+        _graphics_view->fitInView(_dashboard_scene->sceneRect(), Qt::KeepAspectRatio);
+        
+        // Ensure all plots are still visible within the scene bounds
+        _dashboard_scene->ensurePlotsVisible();
+    }
 }

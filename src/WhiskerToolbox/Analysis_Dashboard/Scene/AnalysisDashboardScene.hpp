@@ -11,8 +11,6 @@ class AbstractPlotWidget;
 class DataManager;
 class GroupManager;
 class TableManager;
-class QGraphicsSceneDragDropEvent;
-class QMimeData;
 
 /**
  * @brief Custom QGraphicsScene for the Analysis Dashboard
@@ -71,6 +69,11 @@ public:
      */
     QMap<QString, AbstractPlotWidget *> getAllPlotWidgets() const;
 
+    /**
+     * @brief Ensure all plots are visible within the scene bounds
+     */
+    void ensurePlotsVisible();
+
 signals:
     /**
      * @brief Emitted when a plot widget is selected
@@ -111,12 +114,6 @@ private:
     TableManager * _table_manager = nullptr;
     QMap<QString, AbstractPlotWidget *> _plot_widgets;
 
-    /**
-     * @brief Create a plot widget from mime data
-     * @param mime_data The mime data containing plot type information
-     * @return Pointer to the created plot widget, or nullptr if creation failed
-     */
-    AbstractPlotWidget * createPlotFromMimeData(QMimeData const * mime_data);
 };
 
 #endif// ANALYSISDASHBOARDSCENE_HPP

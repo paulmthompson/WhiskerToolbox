@@ -12,8 +12,9 @@
 AnalysisDashboardScene::AnalysisDashboardScene(QObject * parent)
     : QGraphicsScene(parent) {
 
-    // Set a large scene rect to allow for many plots
-    setSceneRect(0, 0, 2000, 2000);
+    // Set a fixed scene rect that won't change during resizing
+    // This ensures plot positions remain stable
+    setSceneRect(0, 0, 1000, 800);
 }
 
 void AnalysisDashboardScene::setDataManager(std::shared_ptr<DataManager> data_manager) {
@@ -69,11 +70,6 @@ void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget * plot_widget, QPo
         plot_widget->setTableManager(_table_manager);
     }
 
-    // Set group manager if available
-    if (_group_manager) {
-        plot_widget->setGroupManager(_group_manager);
-    }
-
     // Connect signals
     connect(plot_widget, &AbstractPlotWidget::plotSelected,
             this, &AnalysisDashboardScene::handlePlotSelected);
@@ -84,9 +80,28 @@ void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget * plot_widget, QPo
     connect(plot_widget, &AbstractPlotWidget::frameJumpRequested,
             this, &AnalysisDashboardScene::frameJumpRequested);
 
-    // Add to scene and position
+    // Add to scene
     addItem(plot_widget);
-    plot_widget->setPos(position);
+
+    // Position the plot - if position is (0,0) or invalid, center it in the scene
+    QPointF plot_position = position;
+    if (position.isNull() || (position.x() == 0 && position.y() == 0)) {
+        // Center the plot in the scene
+        QRectF scene_rect = sceneRect();
+        QRectF plot_bounds = plot_widget->boundingRect();
+        
+        // Calculate center position, ensuring the plot stays within scene bounds
+        qreal center_x = scene_rect.center().x() - plot_bounds.width() / 2;
+        qreal center_y = scene_rect.center().y() - plot_bounds.height() / 2;
+        
+        // Clamp to scene bounds
+        center_x = qMax(scene_rect.left(), qMin(center_x, scene_rect.right() - plot_bounds.width()));
+        center_y = qMax(scene_rect.top(), qMin(center_y, scene_rect.bottom() - plot_bounds.height()));
+        
+        plot_position = QPointF(center_x, center_y);
+    }
+
+    plot_widget->setPos(plot_position);
 
     // Store in map
     QString plot_id = plot_widget->getPlotId();
@@ -94,7 +109,7 @@ void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget * plot_widget, QPo
 
     emit plotAdded(plot_id);
 
-    qDebug() << "Added plot" << plot_id << "at position" << position;
+    qDebug() << "Added plot" << plot_id << "at position" << plot_position;
 }
 
 void AnalysisDashboardScene::removePlotWidget(QString const & plot_id) {
@@ -128,6 +143,34 @@ AbstractPlotWidget * AnalysisDashboardScene::getPlotWidget(QString const & plot_
 
 QMap<QString, AbstractPlotWidget *> AnalysisDashboardScene::getAllPlotWidgets() const {
     return _plot_widgets;
+}
+
+void AnalysisDashboardScene::ensurePlotsVisible() {
+    QRectF scene_rect = sceneRect();
+    
+    for (auto * plot : _plot_widgets.values()) {
+        if (plot) {
+            QRectF plot_bounds = plot->boundingRect();
+            QPointF plot_pos = plot->pos();
+            
+            // Check if plot is outside scene bounds
+            if (plot_pos.x() < scene_rect.left() || 
+                plot_pos.x() + plot_bounds.width() > scene_rect.right() ||
+                plot_pos.y() < scene_rect.top() || 
+                plot_pos.y() + plot_bounds.height() > scene_rect.bottom()) {
+                
+                // Move plot to center of scene
+                qreal center_x = scene_rect.center().x() - plot_bounds.width() / 2;
+                qreal center_y = scene_rect.center().y() - plot_bounds.height() / 2;
+                
+                // Clamp to scene bounds
+                center_x = qMax(scene_rect.left(), qMin(center_x, scene_rect.right() - plot_bounds.width()));
+                center_y = qMax(scene_rect.top(), qMin(center_y, scene_rect.bottom() - plot_bounds.height()));
+                
+                plot->setPos(QPointF(center_x, center_y));
+            }
+        }
+    }
 }
 
 void AnalysisDashboardScene::handlePlotSelected(QString const & plot_id) {

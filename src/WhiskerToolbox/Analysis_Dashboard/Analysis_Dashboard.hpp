@@ -47,6 +47,13 @@ public:
      */
     GroupManager * getGroupManager() const { return _group_manager.get(); }
 
+protected:
+    /**
+     * @brief Handle window resize events to adjust graphics view
+     * @param event The resize event
+     */
+    void resizeEvent(QResizeEvent * event) override;
+
 private slots:
     /**
      * @brief Handle plot type selection from the toolbox panel
@@ -112,6 +119,11 @@ private:
      * @return Pointer to the created plot widget, or nullptr if creation failed
      */
     AbstractPlotWidget * createPlotWidget(QString const & plot_type);
+
+    /**
+     * @brief Update the graphics view to fit the scene content
+     */
+    void updateGraphicsView();
 };
 
 #endif// ANALYSIS_DASHBOARD_HPP
