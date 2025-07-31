@@ -1,6 +1,8 @@
 #ifndef ABSTRACTPLOTWIDGET_HPP
 #define ABSTRACTPLOTWIDGET_HPP
 
+#include "AbstractPlotParameters.hpp"
+
 #include <QGraphicsWidget>
 #include <QString>
 #include <QStringList>
@@ -114,18 +116,19 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent * event) override;
 
     /**
-     * @brief Generate a unique ID for this plot instance
+     * @brief Get the parameters struct for this plot
+     * @return Reference to the parameters struct
      */
-    void generateUniqueId();
+    AbstractPlotParameters & getParameters();
 
-    std::shared_ptr<DataManager> _data_manager;
-    GroupManager * _group_manager = nullptr;
-    TableManager * _table_manager = nullptr;
-    QString _plot_title;
-    QString _plot_id;
+    /**
+     * @brief Get the parameters struct for this plot (const version)
+     * @return Const reference to the parameters struct
+     */
+    AbstractPlotParameters const & getParameters() const;
 
-private:
-    static int _next_plot_id;
+protected:
+    AbstractPlotParameters _parameters;
 };
 
 #endif// ABSTRACTPLOTWIDGET_HPP

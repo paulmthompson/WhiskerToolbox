@@ -114,7 +114,7 @@ void Analysis_Dashboard::setupLayout() {
 }
 
 void Analysis_Dashboard::connectSignals() {
-    // Connect toolbox panel signals
+
     connect(_toolbox_panel, &ToolboxPanel::plotTypeSelected,
             this, &Analysis_Dashboard::handlePlotTypeSelected);
 
@@ -135,7 +135,6 @@ void Analysis_Dashboard::connectSignals() {
 void Analysis_Dashboard::handlePlotSelected(QString const & plot_id) {
     qDebug() << "Plot selected:" << plot_id;
 
-    // Get the plot widget and show its properties
     AbstractPlotWidget * plot_widget = _dashboard_scene->getPlotWidget(plot_id);
     if (plot_widget) {
         _properties_panel->showPlotProperties(plot_id, plot_widget);
@@ -147,7 +146,6 @@ void Analysis_Dashboard::handlePlotSelected(QString const & plot_id) {
 void Analysis_Dashboard::handlePlotAdded(QString const & plot_id) {
     qDebug() << "Plot added:" << plot_id;
 
-    // Update status bar or other UI elements as needed
     QString status_text = QString("Plot added: %1").arg(plot_id);
     ui->statusbar->showMessage(status_text, 3000);
 }
@@ -166,7 +164,7 @@ void Analysis_Dashboard::handlePlotRemoved(QString const & plot_id) {
 void Analysis_Dashboard::handlePlotTypeSelected(QString const & plot_type) {
     qDebug() << "Plot type selected:" << plot_type;
 
-    // Create a new plot widget of the selected type
+
     AbstractPlotWidget * new_plot = createPlotWidget(plot_type);
     if (new_plot) {
         // Add the plot to the scene at a centered position

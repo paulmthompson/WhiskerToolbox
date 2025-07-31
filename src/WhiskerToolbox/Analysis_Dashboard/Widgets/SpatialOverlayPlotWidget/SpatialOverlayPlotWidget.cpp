@@ -113,7 +113,7 @@ void SpatialOverlayPlotWidget::resizeEvent(QGraphicsSceneResizeEvent * event) {
 
 void SpatialOverlayPlotWidget::updateVisualization() {
 
-    if (!_data_manager || !_opengl_widget) {
+    if (!_parameters.data_manager || !_opengl_widget) {
         return;
     }
 
@@ -137,7 +137,7 @@ void SpatialOverlayPlotWidget::loadPointData() {
     std::unordered_map<QString, std::shared_ptr<PointData>> point_data_map;
 
     for (QString const & key: _point_data_keys) {
-        auto point_data = _data_manager->getData<PointData>(key.toStdString());
+        auto point_data = _parameters.data_manager->getData<PointData>(key.toStdString());
         if (point_data) {
             point_data_map[key] = point_data;
         }
@@ -151,7 +151,7 @@ void SpatialOverlayPlotWidget::loadMaskData() {
     std::unordered_map<QString, std::shared_ptr<MaskData>> mask_data_map;
 
     for (QString const & key: _mask_data_keys) {
-        auto mask_data = _data_manager->getData<MaskData>(key.toStdString());
+        auto mask_data = _parameters.data_manager->getData<MaskData>(key.toStdString());
         if (mask_data) {
             mask_data_map[key] = mask_data;
         }
@@ -165,7 +165,7 @@ void SpatialOverlayPlotWidget::loadLineData() {
     std::unordered_map<QString, std::shared_ptr<LineData>> line_data_map;
 
     for (QString const & key: _line_data_keys) {
-        auto line_data = _data_manager->getData<LineData>(key.toStdString());
+        auto line_data = _parameters.data_manager->getData<LineData>(key.toStdString());
         if (line_data) {
             line_data_map[key] = line_data;
         }

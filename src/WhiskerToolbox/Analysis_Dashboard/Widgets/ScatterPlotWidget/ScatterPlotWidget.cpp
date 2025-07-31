@@ -47,7 +47,7 @@ void ScatterPlotWidget::paint(QPainter * painter, QStyleOptionGraphicsItem const
     painter->setFont(title_font);
 
     QRectF title_rect = rect.adjusted(5, 5, -5, -rect.height() + 20);
-    painter->drawText(title_rect, Qt::AlignCenter, _plot_title);
+    painter->drawText(title_rect, Qt::AlignCenter, QString::fromStdString(_parameters.getPlotTitle()));
 
     // Draw plot area
     QRectF plot_rect = rect.adjusted(20, 25, -10, -10);

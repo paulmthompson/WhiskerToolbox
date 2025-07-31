@@ -63,6 +63,13 @@ private slots:
 
     /**
      * @brief Handle plot selection from the graphics scene
+     * 
+     * When a plot is selected, it emits a signal that is caught by
+     * the AnalysisDashboardScene that encloses it. This then propogates
+     * the signal upward to the Analysis_Dashboard. The Analysis Dashboard
+     * can then show the appropriate properties panel based on the plot ID.
+     * 
+     * 
      * @param plot_id The unique ID of the selected plot
      */
     void handlePlotSelected(QString const & plot_id);
@@ -115,6 +122,9 @@ private:
 
     /**
      * @brief Create a plot widget of the specified type
+     * 
+     * This is a factory method that creates a new plot widget of the specified type.
+     * 
      * @param plot_type The type of plot to create
      * @return Pointer to the created plot widget, or nullptr if creation failed
      */

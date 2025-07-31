@@ -1,5 +1,6 @@
 #include "AbstractPlotWidget.hpp"
 
+
 #include "../Tables/TableManager.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
@@ -7,13 +8,8 @@
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 
-// Static member initialization
-int AbstractPlotWidget::_next_plot_id = 1;
-
 AbstractPlotWidget::AbstractPlotWidget(QGraphicsItem * parent)
-    : QGraphicsWidget(parent),
-      _plot_title("Untitled Plot") {
-    generateUniqueId();
+    : QGraphicsWidget(parent) {
 
     // Make the widget selectable, movable, and resizable
     setFlag(QGraphicsItem::ItemIsMovable, true);
@@ -31,38 +27,39 @@ AbstractPlotWidget::AbstractPlotWidget(QGraphicsItem * parent)
 }
 
 QString AbstractPlotWidget::getPlotTitle() const {
-    return _plot_title;
+    return QString::fromStdString(_parameters.getPlotTitle());
 }
 
 void AbstractPlotWidget::setPlotTitle(QString const & title) {
-    if (_plot_title != title) {
-        _plot_title = title;
-        emit propertiesChanged(_plot_id);
+    std::string std_title = title.toStdString();
+    if (_parameters.getPlotTitle() != std_title) {
+        _parameters.setPlotTitle(std_title);
+        emit propertiesChanged(QString::fromStdString(_parameters.getPlotId()));
         update();// Request repaint
     }
 }
 
 void AbstractPlotWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
-    qDebug() << "AbstractPlotWidget: setDataManager called for plot" << _plot_id << "with DataManager:" << (data_manager != nullptr);
-    _data_manager = std::move(data_manager);
+    qDebug() << "AbstractPlotWidget: setDataManager called for plot" << QString::fromStdString(_parameters.getPlotId()) << "with DataManager:" << (data_manager != nullptr);
+    _parameters.data_manager = std::move(data_manager);
 }
 
 void AbstractPlotWidget::setGroupManager(GroupManager * group_manager) {
-    qDebug() << "AbstractPlotWidget: setGroupManager called for plot" << _plot_id << "with GroupManager:" << (group_manager != nullptr);
-    _group_manager = group_manager;
+    qDebug() << "AbstractPlotWidget: setGroupManager called for plot" << QString::fromStdString(_parameters.getPlotId()) << "with GroupManager:" << (group_manager != nullptr);
+    _parameters.group_manager = group_manager;
 }
 
 void AbstractPlotWidget::setTableManager(TableManager * table_manager) {
-    qDebug() << "AbstractPlotWidget: setTableManager called for plot" << _plot_id << "with TableManager:" << (table_manager != nullptr);
-    _table_manager = table_manager;
+    qDebug() << "AbstractPlotWidget: setTableManager called for plot" << QString::fromStdString(_parameters.getPlotId()) << "with TableManager:" << (table_manager != nullptr);
+    _parameters.table_manager = table_manager;
 }
 
 QStringList AbstractPlotWidget::getAvailableTableIds() const {
-    if (!_table_manager) {
+    if (!_parameters.table_manager) {
         return QStringList();
     }
 
-    auto table_ids = _table_manager->getTableIds();
+    auto table_ids = _parameters.table_manager->getTableIds();
     QStringList qt_table_ids;
     for (auto const & id: table_ids) {
         qt_table_ids.append(id);
@@ -72,25 +69,29 @@ QStringList AbstractPlotWidget::getAvailableTableIds() const {
 }
 
 std::shared_ptr<TableView> AbstractPlotWidget::getTableView(QString const & table_id) const {
-    if (!_table_manager) {
+    if (!_parameters.table_manager) {
         return nullptr;
     }
 
-    return _table_manager->getTableView(table_id);
+    return _parameters.table_manager->getTableView(table_id);
 }
 
 QString AbstractPlotWidget::getPlotId() const {
-    return _plot_id;
+    return QString::fromStdString(_parameters.getPlotId());
 }
 
 void AbstractPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
     // Handle selection
-    emit plotSelected(_plot_id);
+    emit plotSelected(QString::fromStdString(_parameters.getPlotId()));
 
     // Call parent implementation for standard behavior (dragging, etc.)
     QGraphicsWidget::mousePressEvent(event);
 }
 
-void AbstractPlotWidget::generateUniqueId() {
-    _plot_id = QString("plot_%1").arg(_next_plot_id++);
+AbstractPlotParameters & AbstractPlotWidget::getParameters() {
+    return _parameters;
+}
+
+AbstractPlotParameters const & AbstractPlotWidget::getParameters() const {
+    return _parameters;
 }

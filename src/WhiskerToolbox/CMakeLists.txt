@@ -37,6 +37,8 @@ set(PROJECT_SOURCES
 
         Analysis_Dashboard/Plots/AbstractPlotWidget.hpp
         Analysis_Dashboard/Plots/AbstractPlotWidget.cpp
+        Analysis_Dashboard/Plots/AbstractPlotParameters.hpp
+        Analysis_Dashboard/Plots/AbstractPlotParameters.cpp
 
         Analysis_Dashboard/Scene/AnalysisDashboardScene.hpp
         Analysis_Dashboard/Scene/AnalysisDashboardScene.cpp

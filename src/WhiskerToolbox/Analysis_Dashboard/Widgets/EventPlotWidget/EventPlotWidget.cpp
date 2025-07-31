@@ -119,7 +119,7 @@ void EventPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
 }
 
 void EventPlotWidget::updateVisualization() {
-    if (!_data_manager || !_opengl_widget) {
+    if (!_parameters.data_manager || !_opengl_widget) {
         return;
     }
 
@@ -141,10 +141,10 @@ void EventPlotWidget::loadEventData() {
     qDebug() << "EventPlotWidget::loadEventData _y_axis_data_keys: " << _y_axis_data_keys;
 
     // We will use builder to create a table view
-    auto dataManagerExtension = std::make_shared<DataManagerExtension>(*_data_manager);
+    auto dataManagerExtension = std::make_shared<DataManagerExtension>(*_parameters.data_manager);
     TableViewBuilder builder(dataManagerExtension);
 
-    auto rowIntervalSeries = _data_manager->getData<DigitalIntervalSeries>(_event_data_keys[0].toStdString());
+    auto rowIntervalSeries = _parameters.data_manager->getData<DigitalIntervalSeries>(_event_data_keys[0].toStdString());
     if (!rowIntervalSeries) {
         qDebug() << "EventPlotWidget::loadEventData rowIntervalSeries is nullptr";
         return;
@@ -156,8 +156,8 @@ void EventPlotWidget::loadEventData() {
         timeFrameIntervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
     }
 
-    auto row_timeframe_key = _data_manager->getTimeFrame(_event_data_keys[0].toStdString());
-    auto row_timeframe = _data_manager->getTime(row_timeframe_key);
+    auto row_timeframe_key = _parameters.data_manager->getTimeFrame(_event_data_keys[0].toStdString());
+    auto row_timeframe = _parameters.data_manager->getTime(row_timeframe_key);
 
     if (!row_timeframe) {
         qDebug() << "EventPlotWidget::loadEventData row_timeframe is nullptr";
