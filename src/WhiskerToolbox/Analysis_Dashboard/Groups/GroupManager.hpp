@@ -1,12 +1,12 @@
 #ifndef GROUPMANAGER_HPP
 #define GROUPMANAGER_HPP
 
-#include <QObject>
 #include <QColor>
 #include <QMap>
+#include <QObject>
 #include <QString>
-#include <unordered_set>
 #include <cstdint>
+#include <unordered_set>
 
 /**
  * @brief Manages groups for data visualization with colors and point assignments
@@ -22,13 +22,15 @@ public:
         int id;
         QString name;
         QColor color;
-        std::unordered_set<int64_t> point_ids;  // Time stamp IDs of points in this group
-        
-        Group(int group_id, const QString& group_name, const QColor& group_color)
-            : id(group_id), name(group_name), color(group_color) {}
+        std::unordered_set<int64_t> point_ids;// Time stamp IDs of points in this group
+
+        Group(int group_id, QString const & group_name, QColor const & group_color)
+            : id(group_id),
+              name(group_name),
+              color(group_color) {}
     };
 
-    explicit GroupManager(QObject* parent = nullptr);
+    explicit GroupManager(QObject * parent = nullptr);
     ~GroupManager() = default;
 
     /**
@@ -36,7 +38,7 @@ public:
      * @param name The name for the new group
      * @return The ID of the created group
      */
-    int createGroup(const QString& name);
+    int createGroup(QString const & name);
 
     /**
      * @brief Create a new group with specified color
@@ -44,7 +46,7 @@ public:
      * @param color The color for the new group
      * @return The ID of the created group
      */
-    int createGroup(const QString& name, const QColor& color);
+    int createGroup(QString const & name, QColor const & color);
 
     /**
      * @brief Remove a group and unassign all its points
@@ -57,14 +59,14 @@ public:
      * @brief Get all groups
      * @return Map of group ID to Group object
      */
-    const QMap<int, Group>& getGroups() const { return m_groups; }
+    QMap<int, Group> const & getGroups() const { return m_groups; }
 
     /**
      * @brief Get a specific group by ID
      * @param group_id The group ID
      * @return Pointer to the group, or nullptr if not found
      */
-    const Group* getGroup(int group_id) const;
+    Group const * getGroup(int group_id) const;
 
     /**
      * @brief Update group name
@@ -72,7 +74,7 @@ public:
      * @param name The new name
      * @return True if successful, false if group doesn't exist
      */
-    bool setGroupName(int group_id, const QString& name);
+    bool setGroupName(int group_id, QString const & name);
 
     /**
      * @brief Update group color
@@ -80,7 +82,7 @@ public:
      * @param color The new color
      * @return True if successful, false if group doesn't exist
      */
-    bool setGroupColor(int group_id, const QColor& color);
+    bool setGroupColor(int group_id, QColor const & color);
 
     /**
      * @brief Assign points to a group
@@ -88,7 +90,7 @@ public:
      * @param point_ids Set of time stamp IDs to assign
      * @return True if successful, false if group doesn't exist
      */
-    bool assignPointsToGroup(int group_id, const std::unordered_set<int64_t>& point_ids);
+    bool assignPointsToGroup(int group_id, std::unordered_set<int64_t> const & point_ids);
 
     /**
      * @brief Remove points from a group
@@ -96,13 +98,13 @@ public:
      * @param point_ids Set of time stamp IDs to remove
      * @return True if successful, false if group doesn't exist
      */
-    bool removePointsFromGroup(int group_id, const std::unordered_set<int64_t>& point_ids);
+    bool removePointsFromGroup(int group_id, std::unordered_set<int64_t> const & point_ids);
 
     /**
      * @brief Remove points from all groups (ungroup them)
      * @param point_ids Set of time stamp IDs to ungroup
      */
-    void ungroupPoints(const std::unordered_set<int64_t>& point_ids);
+    void ungroupPoints(std::unordered_set<int64_t> const & point_ids);
 
     /**
      * @brief Get which group a point belongs to
@@ -117,7 +119,7 @@ public:
      * @param default_color The color to use if the point is ungrouped
      * @return The color to use for rendering this point
      */
-    QColor getPointColor(int64_t point_id, const QColor& default_color) const;
+    QColor getPointColor(int64_t point_id, QColor const & default_color) const;
 
     /**
      * @brief Get all point IDs assigned to a specific group
@@ -161,16 +163,16 @@ signals:
      * @brief Emitted when point assignments change
      * @param affected_groups Set of group IDs that were affected
      */
-    void pointAssignmentsChanged(const std::unordered_set<int>& affected_groups);
+    void pointAssignmentsChanged(std::unordered_set<int> const & affected_groups);
 
 private:
     QMap<int, Group> m_groups;
-    QMap<int64_t, int> m_point_to_group;  // Fast lookup for point -> group mapping
+    QMap<int64_t, int> m_point_to_group;// Fast lookup for point -> group mapping
     int m_next_group_id;
-    
+
     // Default color palette
-    static const QVector<QColor> DEFAULT_COLORS;
-    
+    static QVector<QColor> const DEFAULT_COLORS;
+
     /**
      * @brief Get the next color from the default palette
      * @return A color from the predefined palette
@@ -178,4 +180,4 @@ private:
     QColor getNextDefaultColor() const;
 };
 
-#endif // GROUPMANAGER_HPP
+#endif// GROUPMANAGER_HPP

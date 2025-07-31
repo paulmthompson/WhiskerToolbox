@@ -2,14 +2,16 @@
 #define GROUPMANAGEMENTWIDGET_HPP
 
 #include <QWidget>
+
 #include <unordered_set>
 
 class GroupManager;
-class QTableWidget;
 class QTableWidgetItem;
 class QPushButton;
-class QLabel;
-class QVBoxLayout;
+
+namespace Ui {
+class GroupManagementWidget;
+}
 
 /**
  * @brief Widget for managing data groups in the toolbox panel
@@ -22,8 +24,8 @@ class GroupManagementWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit GroupManagementWidget(GroupManager* group_manager, QWidget* parent = nullptr);
-    ~GroupManagementWidget() = default;
+    explicit GroupManagementWidget(GroupManager * group_manager, QWidget * parent = nullptr);
+    ~GroupManagementWidget();
 
 public slots:
     /**
@@ -59,13 +61,13 @@ private slots:
      * @brief Handle when point assignments change in groups
      * @param affected_groups Set of group IDs that were affected
      */
-    void onPointAssignmentsChanged(const std::unordered_set<int>& affected_groups);
+    void onPointAssignmentsChanged(std::unordered_set<int> const & affected_groups);
 
     /**
      * @brief Handle when table item is changed (name editing)
      * @param item The changed table item
      */
-    void onItemChanged(QTableWidgetItem* item);
+    void onItemChanged(QTableWidgetItem * item);
 
     /**
      * @brief Handle when a color button is clicked
@@ -78,18 +80,12 @@ private slots:
     void onSelectionChanged();
 
 private:
-    GroupManager* m_group_manager;
-    
-    // UI components
-    QVBoxLayout* m_layout;
-    QLabel* m_title_label;
-    QTableWidget* m_groups_table;
-    QPushButton* m_add_button;
-    QPushButton* m_remove_button;
-    
-    // Internal state
-    bool m_updating_table;  // Flag to prevent recursive updates
-    
+    GroupManager * m_group_manager;
+
+    Ui::GroupManagementWidget * m_ui;
+
+    bool m_updating_table;
+
     /**
      * @brief Initialize the UI components
      */
@@ -112,14 +108,14 @@ private:
      * @param group_id The group ID
      * @return The created color button
      */
-    QPushButton* createColorButton(int group_id);
+    QPushButton * createColorButton(int group_id);
 
     /**
      * @brief Update the color button appearance
      * @param button The button to update
      * @param color The color to display
      */
-    void updateColorButton(QPushButton* button, const QColor& color);
+    void updateColorButton(QPushButton * button, QColor const & color);
 
     /**
      * @brief Get the group ID for a table row
@@ -136,4 +132,4 @@ private:
     int findRowForGroupId(int group_id) const;
 };
 
-#endif // GROUPMANAGEMENTWIDGET_HPP
+#endif// GROUPMANAGEMENTWIDGET_HPP

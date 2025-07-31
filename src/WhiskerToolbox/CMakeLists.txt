@@ -45,6 +45,7 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Groups/GroupManager.cpp
         Analysis_Dashboard/Groups/GroupManagementWidget.hpp
         Analysis_Dashboard/Groups/GroupManagementWidget.cpp
+        Analysis_Dashboard/Groups/GroupManagementWidget.ui
 
         Analysis_Dashboard/Toolbox/ToolboxPanel.hpp
         Analysis_Dashboard/Toolbox/ToolboxPanel.cpp
