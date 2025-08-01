@@ -254,3 +254,21 @@ SelectionMode SpatialOverlayPlotWidget::getSelectionMode() const {
     }
     return SelectionMode::None;
 }
+
+void SpatialOverlayPlotWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    // Call parent implementation
+    AbstractPlotWidget::setDataManager(data_manager);
+    
+    // Update visualization with new data manager
+    updateVisualization();
+}
+
+void SpatialOverlayPlotWidget::setGroupManager(GroupManager* group_manager) {
+    // Call parent implementation
+    AbstractPlotWidget::setGroupManager(group_manager);
+    
+    // Pass group manager to OpenGL widget
+    if (_opengl_widget) {
+        _opengl_widget->setGroupManager(group_manager);
+    }
+}

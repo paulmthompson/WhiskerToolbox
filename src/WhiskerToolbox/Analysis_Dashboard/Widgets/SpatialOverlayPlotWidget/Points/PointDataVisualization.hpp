@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 #include <vector>
 #include <variant>
 #include <optional>
@@ -24,32 +25,61 @@ class PolygonSelectionHandler;
 class LineSelectionHandler;
 class NoneSelectionHandler;
 class PointSelectionHandler;
+class GroupManager;
 
 
 /**
- * @brief Visualization data for a single PointData object
+ * @brief Visualization for Point Data
+ * 
+ * Each Point will have state for:
+ * - Selection state (selected or not)
+ * - X/Y coordinates in world space
+ * - Visibility (hidden or not)
+
+ * 
+ * 
+ * Data is stored in a QuadTree for efficient spatial queries
  */
 struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
-    std::unique_ptr<QuadTree<int64_t>> spatial_index;
-    std::vector<float> vertex_data;
-    QOpenGLBuffer vertex_buffer;
-    QOpenGLVertexArrayObject vertex_array_object;
-    QString key;
-    QVector4D color;
-    bool visible = true;
+    std::unique_ptr<QuadTree<int64_t>> m_spatial_index;
+    std::vector<float> m_vertex_data;  // Format: x, y, group_id per vertex (3 floats per point)
+    QOpenGLBuffer m_vertex_buffer;
+    QOpenGLVertexArrayObject m_vertex_array_object;
+    QString m_key;
+    QVector4D m_color;
+    bool m_visible = true;
 
     // Selection state for this PointData
-    std::unordered_set<QuadTreePoint<int64_t> const *> selected_points;
-    std::vector<float> selection_vertex_data;
-    QOpenGLBuffer selection_vertex_buffer;
-    QOpenGLVertexArrayObject selection_vertex_array_object;
+    std::unordered_set<QuadTreePoint<int64_t> const *> m_selected_points;
+    std::vector<float> m_selection_vertex_data;
+    QOpenGLBuffer m_selection_vertex_buffer;
+    QOpenGLVertexArrayObject m_selection_vertex_array_object;
 
     // Hover state for this PointData
-    QuadTreePoint<int64_t> const * current_hover_point = nullptr;
-    QOpenGLBuffer _highlight_vertex_buffer;
-    QOpenGLVertexArrayObject _highlight_vertex_array_object;
+    QuadTreePoint<int64_t> const * m_current_hover_point = nullptr;
+    QOpenGLBuffer m_highlight_vertex_buffer;
+    QOpenGLVertexArrayObject m_highlight_vertex_array_object;
 
-    PointDataVisualization(QString const & data_key, std::shared_ptr<PointData> const & point_data);
+    // Visibility management for points
+    std::unordered_set<QuadTreePoint<int64_t> const *> m_hidden_points; 
+    
+    // Statistics tracking
+    size_t m_total_point_count = 0;
+    size_t m_hidden_point_count = 0;
+    size_t m_visible_vertex_count = 0; // Number of vertices currently in the vertex buffer
+
+    // Time range filtering
+    int m_time_range_start = 0;
+    int m_time_range_end = 999999;
+    bool m_time_range_enabled = false;
+
+    // Group management
+    GroupManager* m_group_manager = nullptr;
+    bool m_group_data_needs_update = false;
+
+    PointDataVisualization(QString const & data_key, 
+                           std::shared_ptr<PointData> const & point_data,
+                           GroupManager* group_manager = nullptr);
     ~PointDataVisualization();
 
     /**
@@ -73,6 +103,11 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
     void clearSelection();
 
     /**
+     * @brief Clear hover point
+     */
+    void clearHover();
+
+    /**
      * @brief Toggle selection of a point
      * @param point_ptr Pointer to the point to toggle
      * @return True if point was selected, false if deselected
@@ -93,12 +128,6 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      */
     void render(QMatrix4x4 const & mvp_matrix, float point_size);
 
-    /**
-     * @brief Calculate bounding box for a PointData object
-     * @param point_data The PointData to calculate bounds for
-     * @return BoundingBox for the PointData
-     */
-    BoundingBox calculateBoundsForPointData(PointData const * point_data) const;
 
     //========== Selection Handlers ==========
 
@@ -142,21 +171,73 @@ struct PointDataVisualization : protected QOpenGLFunctions_4_1_Core  {
      */
     std::optional<int64_t> handleDoubleClick(const QVector2D & world_pos, float tolerance);
 
+    //========== Visibility Management ==========
+    
+    /**
+     * @brief Hide selected points from view
+     * @return Number of points that were hidden
+     */
+    size_t hideSelectedPoints();
+    
+    /**
+     * @brief Show all hidden points in this visualization
+     * @return Number of points that were shown
+     */
+    size_t showAllPoints();
+    
+    /**
+     * @brief Get visibility statistics
+     * @return Pair of (total_points, hidden_points)
+     */
+    std::pair<size_t, size_t> getVisibilityStats() const;
+
+    void setTimeRangeEnabled(bool enabled);
+    void setTimeRange(int start_frame, int end_frame);
+
+    //========== Group Management ==========
+    
+    /**
+     * @brief Set the group manager for this visualization
+     * @param group_manager Pointer to the group manager
+     */
+    void setGroupManager(GroupManager* group_manager);
+    
+    /**
+     * @brief Get selected point time stamp IDs for group assignment
+     * @return Set of time stamp IDs of currently selected points
+     */
+    std::unordered_set<int64_t> getSelectedPointIds() const;
+    
+    /**
+     * @brief Refresh group-based rendering data (call when group assignments change)
+     */
+    void refreshGroupRenderData();
+
 private:
     /**
      * @brief Render points for this PointData
      */
-    void renderPoints(QOpenGLShaderProgram * shader_program, float point_size);
+    void _renderPoints(QOpenGLShaderProgram * shader_program, float point_size);
 
     /**
      * @brief Render selected points for this PointData
      */
-    void renderSelectedPoints(QOpenGLShaderProgram * shader_program, float point_size);
+    void _renderSelectedPoints(QOpenGLShaderProgram * shader_program, float point_size);
 
     /**
      * @brief Render hover point for this PointData
      */
-    void renderHoverPoint(QOpenGLShaderProgram * shader_program, float point_size);
+    void _renderHoverPoint(QOpenGLShaderProgram * shader_program, float point_size);
+
+    /**
+     * @brief Update vertex buffer to exclude hidden points
+     */
+    void _updateVisibleVertexBuffer();
+    
+    /**
+     * @brief Update group IDs in vertex data
+     */
+    void _updateGroupVertexData();
 };
 
 

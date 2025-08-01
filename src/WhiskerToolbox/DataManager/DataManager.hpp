@@ -96,6 +96,25 @@ public:
     */
     [[nodiscard]] std::vector<std::string> getTimeFrameKeys();
 
+    /**
+    * @brief Clear all data and reset DataManager to initial state
+    *
+    * This function removes all loaded data objects, TimeFrame objects (except the default "time" frame),
+    * and clears all mappings between data keys and time frame keys. This is useful for batch processing
+    * where you want to load different datasets with the same configuration.
+    * 
+    * The function will:
+    * - Remove all data objects from _data
+    * - Remove all TimeFrame objects except the default "time" frame
+    * - Clear all data-to-timeframe mappings
+    * - Remove all TimeFrameV2 objects and mappings
+    * - Reset media data to default empty state
+    * - Notify observers of the state change
+    *
+    * @note The default "time" TimeFrame and "media" data key are preserved but reset to empty state
+    */
+    void reset();
+
     // ========== New TimeFrameV2 API (Parallel System) ==========
 
     /**

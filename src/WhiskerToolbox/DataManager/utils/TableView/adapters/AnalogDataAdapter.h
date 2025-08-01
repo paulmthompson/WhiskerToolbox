@@ -17,6 +17,9 @@ class AnalogDataAdapter : public IAnalogSource {
 public:
     /**
      * @brief Constructs an AnalogDataAdapter.
+     * 
+     * 
+     * 
      * @param analogData Shared pointer to the AnalogTimeSeries source.
      * @param timeFrame Shared pointer to the TimeFrame this data belongs to.
      * @param name The name of this data source.

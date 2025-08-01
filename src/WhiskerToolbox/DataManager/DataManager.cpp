@@ -46,6 +46,40 @@ DataManager::DataManager() {
     _output_path = std::filesystem::current_path();
 }
 
+void DataManager::reset() {
+    std::cout << "DataManager: Resetting to initial state..." << std::endl;
+    
+    // Clear all data objects except media (which we'll reset)
+    auto mediaData = _data.find("media");
+    _data.clear();
+    
+    // Reset media to a fresh empty MediaData object
+    _data["media"] = std::make_shared<MediaData>();
+    
+    // Clear all TimeFrame objects except the default "time" frame
+    auto defaultTime = _times.find("time");
+    _times.clear();
+    
+    // Recreate the default "time" TimeFrame
+    _times["time"] = std::make_shared<TimeFrame>();
+    
+    // Clear all data-to-timeframe mappings and recreate the default media mapping
+    _time_frames.clear();
+    setTimeFrame("media", "time");
+    
+    // Clear TimeFrameV2 objects and mappings
+    _times_v2.clear();
+    _time_frames_v2.clear();
+    
+    // Reset current time
+    _current_time = 0;
+    
+    // Notify observers that the state has changed
+    _notifyObservers();
+    
+    std::cout << "DataManager: Reset complete. Default 'time' frame and 'media' data restored." << std::endl;
+}
+
 bool DataManager::setTime(std::string const & key, std::shared_ptr<TimeFrame> timeframe, bool overwrite) {
 
     if (!timeframe) {

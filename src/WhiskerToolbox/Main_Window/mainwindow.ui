@@ -92,6 +92,7 @@
      <string>Modules</string>
     </property>
     <addaction name="actionData_Manager"/>
+    <addaction name="actionBatch_Processing"/>
     <addaction name="actionWhisker_Tracking"/>
     <addaction name="actionTongue_Tracking"/>
     <addaction name="actionMachine_Learning"/>
@@ -175,6 +176,11 @@
   <action name="actionData_Viewer">
    <property name="text">
     <string>Data Viewer</string>
+   </property>
+  </action>
+  <action name="actionBatch_Processing">
+   <property name="text">
+    <string>Batch Processing</string>
    </property>
   </action>
   <action name="actionLoad_JSON_Config">

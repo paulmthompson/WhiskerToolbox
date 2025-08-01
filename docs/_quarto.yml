@@ -43,13 +43,16 @@ website:
       style: "docked"
       contents:
         - developer/index.qmd
+        - developer/building.qmd
         - developer/contributing_code.qmd
         - developer/data_manager.qmd 
         - developer/file_io.qmd
         - developer/image_processing.qmd
         - developer/media_widget.qmd
         - developer/data_manager_widget.qmd
+        - developer/data_transform_widget.qmd
         - developer/data_viewer_widget.qmd
+        - developer/table_view.qmd
         - section: "Features"
           href: developer/Features/overview.qmd
           contents:

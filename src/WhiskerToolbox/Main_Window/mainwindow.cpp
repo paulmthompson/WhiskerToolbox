@@ -10,6 +10,7 @@
 #include "DataManager/Media/Video_Data.hpp"
 
 #include "Analysis_Dashboard/Analysis_Dashboard.hpp"
+#include "BatchProcessing_Widget/BatchProcessing_Widget.hpp"
 #include "DataManager_Widget/DataManager_Widget.hpp"
 #include "DataTransform_Widget/DataTransform_Widget.hpp"
 #include "DataViewer_Widget/DataViewer_Widget.hpp"
@@ -114,6 +115,7 @@ void MainWindow::_createActions() {
     connect(ui->actionTongue_Tracking, &QAction::triggered, this, &MainWindow::openTongueTracking);
     connect(ui->actionMachine_Learning, &QAction::triggered, this, &MainWindow::openMLWidget);
     connect(ui->actionData_Viewer, &QAction::triggered, this, &MainWindow::openDataViewer);
+    connect(ui->actionBatch_Processing, &QAction::triggered, this, &MainWindow::openBatchProcessingWidget);
     connect(ui->actionLoad_Points, &QAction::triggered, this, &MainWindow::openPointLoaderWidget);
     connect(ui->actionLoad_Masks, &QAction::triggered, this, &MainWindow::openMaskLoaderWidget);
     connect(ui->actionLoad_Lines, &QAction::triggered, this, &MainWindow::openLineLoaderWidget);
@@ -198,19 +200,32 @@ void MainWindow::_loadJSONConfig() {
     }
 
     auto data_info = load_data_from_json_config(_data_manager.get(), filename.toStdString());
+    processLoadedData(data_info);
+}
 
+void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
+    bool hasMediaData = false;
+    
     for (auto const & data: data_info) {
         if (data.data_class == "VideoData") {
-            _LoadData();
-
+            hasMediaData = true;
         } else if (data.data_class == "ImageData") {
-            _LoadData();
+            hasMediaData = true;
         } else if (
                 (data.data_class == "PointData") ||
                 (data.data_class == "MaskData") ||
                 (data.data_class == "LineData")) {
             ui->media_widget->setFeatureColor(data.key, data.color);
         }
+    }
+    
+    // Only update media-related components if we loaded media data
+    if (hasMediaData) {
+        _LoadData();
+    } else {
+        // If no media data was loaded, we might still need to update the time scrollbar
+        // if new time-based data was added
+        _updateFrameCount();
     }
 }
 
@@ -328,6 +343,23 @@ void MainWindow::openDataViewer() {
     }
 
     auto ptr = dynamic_cast<DataViewer_Widget *>(_widgets[key].get());
+    ptr->openWidget();
+
+    showDockWidget(key);
+}
+
+void MainWindow::openBatchProcessingWidget() {
+    std::string const key = "BatchProcessing_widget";
+
+    if (_widgets.find(key) == _widgets.end()) {
+        auto batchProcessingWidget = std::make_unique<BatchProcessing_Widget>(_data_manager, this, this);
+
+        batchProcessingWidget->setObjectName(key);
+        registerDockWidget(key, batchProcessingWidget.get(), ads::RightDockWidgetArea);
+        _widgets[key] = std::move(batchProcessingWidget);
+    }
+
+    auto ptr = dynamic_cast<BatchProcessing_Widget *>(_widgets[key].get());
     ptr->openWidget();
 
     showDockWidget(key);

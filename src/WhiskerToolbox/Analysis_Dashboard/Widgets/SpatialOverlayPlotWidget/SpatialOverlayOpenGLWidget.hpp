@@ -32,6 +32,7 @@ class LineDataVisualization;
 class PolygonSelectionHandler;
 class LineSelectionHandler;
 class NoneSelectionHandler;
+class GroupManager;
 
 /**
  * @brief OpenGL widget for rendering spatial data with high performance
@@ -92,6 +93,23 @@ public:
      */
     void clearSelection();
 
+    //========== Visibility Management ==========
+    
+    /**
+     * @brief Hide selected items from view
+     */
+    void hideSelectedItems();
+    
+    /**
+     * @brief Show all hidden items in the current active dataset
+     */
+    void showAllItemsCurrentDataset();
+    
+    /**
+     * @brief Show all hidden items across all datasets
+     */
+    void showAllItemsAllDatasets();
+
     /**
      * @brief Convert screen coordinates to world coordinates
      * @param screen_x Screen X coordinate
@@ -118,6 +136,17 @@ public:
      * @brief Get current point size
      */
     float getPointSize() const { return _point_size; }
+
+    /**
+     * @brief Set the line width for rendering
+     * @param line_width Line width in pixels
+     */
+    void setLineWidth(float line_width);
+
+    /**
+     * @brief Get current line width
+     */
+    float getLineWidth() const { return _line_width; }
 
     /**
      * @brief Get total number of selected points across all PointData visualizations
@@ -156,6 +185,12 @@ public:
 
     void makeSelection();
 
+    void applyTimeRangeFilter(int start_frame, int end_frame);
+
+    
+    void setGroupManager(GroupManager* group_manager);
+
+
 signals:
     /**
      * @brief Emitted when user double-clicks on a point to jump to that frame
@@ -169,6 +204,12 @@ signals:
      * @param point_size The new point size in pixels
      */
     void pointSizeChanged(float point_size);
+
+    /**
+     * @brief Emitted when line width changes
+     * @param line_width The new line width in pixels
+     */
+    void lineWidthChanged(float line_width);
 
     /**
      * @brief Emitted when zoom level changes
@@ -248,12 +289,14 @@ private:
     std::unordered_map<QString, std::unique_ptr<MaskDataVisualization>> _mask_data_visualizations;
     std::unordered_map<QString, std::unique_ptr<LineDataVisualization>> _line_data_visualizations;
 
+    GroupManager* _group_manager = nullptr;
     bool _opengl_resources_initialized;
 
     // View parameters
     float _zoom_level;
     float _pan_offset_x, _pan_offset_y;
     float _point_size;
+    float _line_width;
     QMatrix4x4 _projection_matrix;
     QMatrix4x4 _view_matrix;
     QMatrix4x4 _model_matrix;
@@ -359,6 +402,28 @@ private:
      * @param screen_y Screen Y coordinate
      */
     void updateMouseWorldPosition(int screen_x, int screen_y);
+
+    /**
+     * @brief Show context menu at the given position
+     * @param pos The position to show the menu at
+     */
+    void showContextMenu(const QPoint& pos);
+
+    /**
+     * @brief Assign selected points to a new group
+     */
+    void assignSelectedPointsToNewGroup();
+
+    /**
+     * @brief Assign selected points to an existing group
+     * @param group_id The ID of the group to assign to
+     */
+    void assignSelectedPointsToGroup(int group_id);
+
+    /**
+     * @brief Remove selected points from their groups
+     */
+    void ungroupSelectedPoints();
 
 };
 

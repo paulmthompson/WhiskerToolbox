@@ -1,5 +1,6 @@
 #include "AnalysisDashboardScene.hpp"
 
+#include "Analysis_Dashboard/Groups/GroupManager.hpp"
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 #include "Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotWidget.hpp"
 #include "Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp"
@@ -28,6 +29,28 @@ void AnalysisDashboardScene::setDataManager(std::shared_ptr<DataManager> data_ma
     }
 }
 
+void AnalysisDashboardScene::setGroupManager(GroupManager* group_manager) {
+    _group_manager = group_manager;
+    
+    // Update existing plot widgets with the group manager
+    for (auto* plot : _plot_widgets.values()) {
+        if (plot) {
+            plot->setGroupManager(_group_manager);
+        }
+    }
+}
+
+void AnalysisDashboardScene::setTableManager(TableManager* table_manager) {
+    _table_manager = table_manager;
+    
+    // Update existing plot widgets with the table manager
+    for (auto* plot : _plot_widgets.values()) {
+        if (plot) {
+            plot->setTableManager(_table_manager);
+        }
+    }
+}
+
 void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget* plot_widget, const QPointF& position) {
     if (!plot_widget) {
         return;
@@ -36,6 +59,21 @@ void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget* plot_widget, cons
     // Set data manager if available
     if (_data_manager) {
         plot_widget->setDataManager(_data_manager);
+    }
+    
+    // Set group manager if available
+    if (_group_manager) {
+        plot_widget->setGroupManager(_group_manager);
+    }
+    
+    // Set table manager if available
+    if (_table_manager) {
+        plot_widget->setTableManager(_table_manager);
+    }
+    
+    // Set group manager if available
+    if (_group_manager) {
+        plot_widget->setGroupManager(_group_manager);
     }
     
     // Connect signals

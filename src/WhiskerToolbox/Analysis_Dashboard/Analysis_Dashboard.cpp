@@ -3,6 +3,7 @@
 #include "ui_Analysis_Dashboard.h"
 
 #include "DataManager/DataManager.hpp"
+#include "Groups/GroupManager.hpp"
 #include "Plots/AbstractPlotWidget.hpp"
 #include "Properties/PropertiesPanel.hpp"
 #include "Scene/AnalysisDashboardScene.hpp"
@@ -22,6 +23,7 @@ Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager
     : QMainWindow(parent),
       ui(new Ui::Analysis_Dashboard),
       _data_manager(std::move(data_manager)),
+      _group_manager(std::make_unique<GroupManager>(this)),
       _time_scrollbar(time_scrollbar),
       _toolbox_panel(nullptr),
       _properties_panel(nullptr),
@@ -44,7 +46,7 @@ void Analysis_Dashboard::openWidget() {
 
 void Analysis_Dashboard::initializeDashboard() {
     // Create the main components
-    _toolbox_panel = new ToolboxPanel(this);
+    _toolbox_panel = new ToolboxPanel(_group_manager.get(), _data_manager, this);
     _properties_panel = new PropertiesPanel(this);
     _dashboard_scene = new AnalysisDashboardScene(this);
     _graphics_view = new QGraphicsView(_dashboard_scene, this);
@@ -59,6 +61,16 @@ void Analysis_Dashboard::initializeDashboard() {
     if (_data_manager) {
         _dashboard_scene->setDataManager(_data_manager);
         _properties_panel->setDataManager(_data_manager);
+    }
+    
+    // Set group manager for the scene
+    if (_group_manager) {
+        _dashboard_scene->setGroupManager(_group_manager.get());
+    }
+    
+    // Set table manager for the scene
+    if (_toolbox_panel && _toolbox_panel->getTableManager()) {
+        _dashboard_scene->setTableManager(_toolbox_panel->getTableManager());
     }
     
     setupLayout();

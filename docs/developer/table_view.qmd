@@ -1,0 +1,58 @@
+---
+title: "Table View"
+format: html
+---
+
+# The TableView Class
+
+The `TableView` class is able to take heterogeneous data from the Data Manager and structure it like a spreadsheet.
+
+## Columns
+
+The columns may represent simple double or floating-point values, but also could take the form of different types like Booleans, counting numbers, or even arrays of values. Columns also may be data that is not directly in the Data Manager, but come as the result of some processing similar to the transformation infrastructure in the Data Manager. Some of these transformations may be redundant. I imagine transformations done for the `TableView` may be out of convenience or for data that you don't necessarily care about saving as its own type, but just need for some additional processing.
+
+The transformations done on data for a column need not necessarily come from the Data Manager, but also could come from other columns in the `TableView`. For instance, if we compute some kind of transformation and hold it in a column, we could then choose to z-score it.
+
+## Rows
+
+The other difference from transformations comes from the concept of a row in the `TableView` structure. A row in the `TableView` could be a timestamp, just like how data is stored in the Manager, but also could be something that is an aggregator. For instance, a digital interview interval in the Data Manager can serve as a row. In this scheme, a double value in a column may not correspond to some value at an instant time, but rather one that is the average over an interval that corresponds to the row. It also could be the minimum value, the maximum value, or it could represent something like a standard deviation.
+
+## Constructing a TableView
+
+To create a `TableView`, the user must define what will make up the rows and what will make up the columns.
+
+Rows are defined by selector objects that currently can be supported by intervals or timestamps. Note that these timestamps could correspond to the different timeframes in the Data Manager class.
+
+Columns are created by different computer objects. These computer objects work on different data sources that are placed into the `TableView`, and usually perform some kind of transformation. These data sources are things like analog sources, event sources, or interval sources. Adapter objects exist in the `TableView` to allow types in the Data Manager to be converted to these forms. Some of these transformations are straightforward. For instance, an analog source can be simply converted into a column of doubles. But something like point data would be broken up into two columns of x and y values for each timestamp.
+
+The computers for a column that are available depend on the input data type as well as what row selector is being used (for example, intervals versus timestamps). A factory and registry is available to list the types of computers available for these combinations and can output the computer object that is available from the factory.
+
+With the rows, analog sources defined, and computers, a builder object can be used to create an actual `TableView`.
+
+# Use Cases
+
+There are several use cases of the `TableView` at the moment.
+
+## CSV Export
+
+The first, and most straightforward, use case is simple CSV export. For instance, imagine an experiment where an animal is licking. The intervals are calculated when licks occur. We would like to have some output for each lick where we are aware of the start time of the lick, the end time of the lick, and the duration. Within each of these licks, we would like to know the maximum surface area of the tongue that is stored in an analog data source at each timestamp from a tracked video.
+
+We may also wish to know if some other digital events are co-occurring. For instance, licks are often organized in sequences of so-called bouts, so there are multiple intervals of licks within a single bout. That digital interval may be contained within the data manager. We can include that as a column, or each lick can be identified by an integer that represents which bout it belongs to. So there may be three licks within the first bout that all have an ID of 0, then licks four and five have a bout ID of 1, et cetera.
+
+This can also be a convenient interface to get time conversion information from data that is in a different timeframe. For instance, imagine if we are also considering the ID of a laser digital interval that is coincident with a lick. This laser may be acquired in a different timeframe with a different sampling rate. In addition to getting the ID of the coincident laser interval, we can also get its start time in units of camera frames, like the lick. In this way, we'll be finding what is the closest camera frame to the beginning of the laser start time that was around this lick. This can be useful for aligning to different event types.
+
+This data can be serialized to a CSV. In this way, we can also include data that would be array-like, like gathering all of the events within some interval. This could be useful for getting, say, the spike times that occur within some meaningful experimental time block.
+
+## Analysis Dashboard
+
+The next use of the `TableView` is in the analysis dashboard. This is one of the main plotting interfaces for Neuralyzer. In this widget, we are able to plot different kinds of data that are in the data manager. The `TableView` then allows us to also plot different transformations of data that is in the data manager. For instance, if we wanted to visualize a raster plot from a spiking neuron, we could use the `TableView` to use a row selector that is an interval around some event. Let's imagine aligning to lick onset. We could pick one second on either side of the lick onset and call that an interval, and then gather the event times for each of those. This would give us a data structure that is essentially an array of arrays, and we can also normalize these to that event time. This gives us the exact data structure necessary for creating a raster plot.
+
+## Feature Extraction and Dimensionality Reduction
+
+The `TableView` architecture also provides a convenient interface to get something that looks like a 2D array. Imagine if we wanted to try to figure out features of a two-dimensional line to determine its identity. We could calculate with computers to make columns for the curvature of the line, and perhaps we would want to get the x and y positions at different fractional line lengths (e.g., where is the x position at 20% along the line, 40% along the line, 60% along the line, etc.). Then we could also include the angle of the line, the follicular position, etc.
+
+I probably don't want to have to go through the data transform widget and extract all of these and keep them hanging around, because what I really would want is to have a 2D array and then perform some kind of dimensionality reduction on it. Then, with those arbitrary features, I might be able to look for clusters that ideally would correspond to the same whisker, compared to multiple whiskers that would have differences in the first or second principal component.
+
+## Machine Learning Interface
+
+Similarly, the `TableView` provides a convenient interface to try to gather data to feed into some kind of machine learning algorithm. We can use the `TableView` to get our feature matrix for training some kind of model. In that case, if we are trying to classify specific frames of a movie that correspond to some behavior, we could use time as our row selector. Then we could use different calculated quantities from the video, like, say, the 2D positions of key points as the columns, and feed this to some kind of machine learning classification model if we also have accompanying labels. For instance, a label could specify that this frame corresponds to some behavior and this one does not. That could even be one of the columns of our `TableView` that we then separate and treat differently.

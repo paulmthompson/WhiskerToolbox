@@ -70,6 +70,12 @@ private slots:
     void onPointSizeChanged(double value);
 
     /**
+     * @brief Handle line width changes
+     * @param value New line width value
+     */
+    void onLineWidthChanged(double value);
+
+    /**
      * @brief Handle zoom level changes
      * @param value New zoom level value
      */
@@ -97,13 +103,41 @@ private slots:
      */
     void onClearSelectionClicked();
 
+    /**
+     * @brief Update selection status display
+     */
+    void updateSelectionStatus();
 
+    /**
+     * @brief Handle time range update button click
+     */
+    void onUpdateTimeRangeClicked();
+
+    /**
+     * @brief Handle start frame spinbox value changes
+     * @param value New start frame value
+     */
+    void onStartFrameChanged(int value);
+
+    /**
+     * @brief Handle end frame spinbox value changes
+     * @param value New end frame value
+     */
+    void onEndFrameChanged(int value);
 
 private:
     Ui::SpatialOverlayPlotPropertiesWidget * ui;
     SpatialOverlayPlotWidget * _spatial_plot_widget;
     std::shared_ptr<DataManager> _data_manager;
     QStringList _selected_features; // Track selected features from the feature table
+    
+    // Time range filtering
+    int _start_frame;
+    int _end_frame;
+    int _total_frame_count;
+    
+    // Line visualization settings
+    double _line_width;
 
     /**
      * @brief Setup connections between UI elements and handlers
@@ -136,6 +170,16 @@ private:
      * @brief Update the instruction text based on current selection mode
      */
     void updateSelectionInstructions();
+
+    /**
+     * @brief Setup time range controls with current data
+     */
+    void setupTimeRangeControls();
+
+    /**
+     * @brief Update the time range filter based on current spinbox values
+     */
+    void updateTimeRangeFilter();
 };
 
 #endif// SPATIALOVERLAYPLOTPROPERTIESWIDGET_HPP

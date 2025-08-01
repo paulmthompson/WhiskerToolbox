@@ -41,11 +41,22 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Scene/AnalysisDashboardScene.hpp
         Analysis_Dashboard/Scene/AnalysisDashboardScene.cpp
 
+        Analysis_Dashboard/Groups/GroupManager.hpp
+        Analysis_Dashboard/Groups/GroupManager.cpp
+        Analysis_Dashboard/Groups/GroupManagementWidget.hpp
+        Analysis_Dashboard/Groups/GroupManagementWidget.cpp
+        Analysis_Dashboard/Groups/GroupManagementWidget.ui
+
         Analysis_Dashboard/Toolbox/ToolboxPanel.hpp
         Analysis_Dashboard/Toolbox/ToolboxPanel.cpp
         Analysis_Dashboard/Toolbox/ToolboxPanel.ui
         Analysis_Dashboard/Toolbox/DraggableListWidget.hpp
         Analysis_Dashboard/Toolbox/DraggableListWidget.cpp
+
+        Analysis_Dashboard/Tables/TableManager.hpp
+        Analysis_Dashboard/Tables/TableManager.cpp
+        Analysis_Dashboard/Tables/TableDesignerWidget.hpp
+        Analysis_Dashboard/Tables/TableDesignerWidget.cpp
 
         Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
         Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
@@ -90,6 +101,10 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.hpp
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.cpp
         Analysis_Dashboard/Properties/GlobalPropertiesWidget.ui
+
+        BatchProcessing_Widget/BatchProcessing_Widget.hpp
+        BatchProcessing_Widget/BatchProcessing_Widget.cpp
+        BatchProcessing_Widget/BatchProcessing_Widget.ui
 
         ColorPicker_Widget/ColorPicker_Widget.hpp
         ColorPicker_Widget/ColorPicker_Widget.cpp

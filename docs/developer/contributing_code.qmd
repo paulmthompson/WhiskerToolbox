@@ -21,6 +21,7 @@ format: html
 -   Prefer forward declarations in header files
 -   Document pre-conditions and post-conditions in doxygen comments uses the @pre and @post tags.
 -   This is a C++20 project. Prefer standard library algorithms and std::ranges where possible.
+-   Private member variables and functions in classes should be prefaced with an underscore operator (e.g. calculateMean). In a struct with public facing member variables, they should be prefaced with m followed by an underscore (e.g. m_height).
 
 ## Before You Submit a Pull Request
 
@@ -43,7 +44,7 @@ Please make sure to run clang-tidy on all of your submitted files with the style
 
 -   Use descriptive names for each test.
 
--   TEST_CASEs should also use useful tags.
+-   TEST_CASES should also use useful tags.
 
 -   Use REQUIRE instead of CHECK
 

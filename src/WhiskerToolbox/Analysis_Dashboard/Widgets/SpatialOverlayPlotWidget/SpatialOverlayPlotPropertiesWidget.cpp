@@ -23,7 +23,11 @@
 SpatialOverlayPlotPropertiesWidget::SpatialOverlayPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
       ui(new Ui::SpatialOverlayPlotPropertiesWidget),
-      _spatial_plot_widget(nullptr) {
+      _spatial_plot_widget(nullptr),
+      _start_frame(0),
+      _end_frame(999999),
+      _total_frame_count(0),
+      _line_width(2.0) {
     ui->setupUi(this);
     
     setupFeatureTable();
@@ -41,6 +45,9 @@ void SpatialOverlayPlotPropertiesWidget::setDataManager(std::shared_ptr<DataMana
         ui->feature_table_widget->setDataManager(_data_manager);
         ui->feature_table_widget->populateTable();
     }
+    
+    // Setup time range controls when data manager is available
+    setupTimeRangeControls();
 }
 
 void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget) {
@@ -52,11 +59,10 @@ void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot
     if (_spatial_plot_widget) {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: Updating available data sources and UI";
         
-        // Connect to plot widget signals
         connect(_spatial_plot_widget, &SpatialOverlayPlotWidget::selectionChanged,
                 this, [this](size_t selectedCount) {
             qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection changed, count:" << selectedCount;
-            // Could update UI to show selection count if desired
+            updateSelectionStatus();
         });
         
         connect(_spatial_plot_widget, &SpatialOverlayPlotWidget::selectionModeChanged,
@@ -107,6 +113,11 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
             ui->point_size_spinbox->setValue(static_cast<double>(current_point_size));
             ui->point_size_spinbox->blockSignals(false);
 
+            float current_line_width = _spatial_plot_widget->getOpenGLWidget()->getLineWidth();
+            ui->line_width_spinbox->blockSignals(true);
+            ui->line_width_spinbox->setValue(static_cast<double>(current_line_width));
+            ui->line_width_spinbox->blockSignals(false);
+
             bool tooltips_enabled = _spatial_plot_widget->getOpenGLWidget()->getTooltipsEnabled();
             ui->tooltips_checkbox->blockSignals(true);
             ui->tooltips_checkbox->setChecked(tooltips_enabled);
@@ -125,6 +136,9 @@ void SpatialOverlayPlotPropertiesWidget::updateFromPlot() {
             updateSelectionInstructions();
 
         }
+        
+        // Update selection status display
+        updateSelectionStatus();
     } else {
         qDebug() << "SpatialOverlayPlotPropertiesWidget: updateFromPlot - no spatial plot widget available";
     }
@@ -182,6 +196,14 @@ void SpatialOverlayPlotPropertiesWidget::onPointSizeChanged(double value) {
     }
 }
 
+void SpatialOverlayPlotPropertiesWidget::onLineWidthChanged(double value) {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: onLineWidthChanged called with value:" << value;
+    _line_width = value;
+    if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
+        _spatial_plot_widget->getOpenGLWidget()->setLineWidth(static_cast<float>(value));
+    }
+}
+
 void SpatialOverlayPlotPropertiesWidget::onZoomLevelChanged(double value) {
     if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
         _spatial_plot_widget->getOpenGLWidget()->setZoomLevel(static_cast<float>(value));
@@ -212,6 +234,9 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
     connect(ui->point_size_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &SpatialOverlayPlotPropertiesWidget::onPointSizeChanged);
 
+    connect(ui->line_width_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &SpatialOverlayPlotPropertiesWidget::onLineWidthChanged);
+
     connect(ui->zoom_level_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             this, &SpatialOverlayPlotPropertiesWidget::onZoomLevelChanged);
 
@@ -222,14 +247,25 @@ void SpatialOverlayPlotPropertiesWidget::setupConnections() {
     connect(ui->tooltips_checkbox, &QCheckBox::toggled,
             this, &SpatialOverlayPlotPropertiesWidget::onTooltipsEnabledChanged);
 
-    // Selection settings
+        // Selection settings
     connect(ui->selection_mode_combo, &QComboBox::currentIndexChanged,
             this, &SpatialOverlayPlotPropertiesWidget::onSelectionModeChanged);
 
     connect(ui->clear_selection_button, &QPushButton::clicked,
             this, &SpatialOverlayPlotPropertiesWidget::onClearSelectionClicked);
     
+    // Time range filtering
+    connect(ui->start_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &SpatialOverlayPlotPropertiesWidget::onStartFrameChanged);
+    
+    connect(ui->end_frame_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &SpatialOverlayPlotPropertiesWidget::onEndFrameChanged);
+    
+    connect(ui->update_time_range_button, &QPushButton::clicked,
+            this, &SpatialOverlayPlotPropertiesWidget::onUpdateTimeRangeClicked);
 }
+    
+
 
 
 
@@ -324,6 +360,9 @@ void SpatialOverlayPlotPropertiesWidget::onClearSelectionClicked() {
     if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
         _spatial_plot_widget->getOpenGLWidget()->clearSelection();
         qDebug() << "SpatialOverlayPlotPropertiesWidget: Selection cleared";
+        
+        // Update selection status display
+        updateSelectionStatus();
     }
 }
 
@@ -395,4 +434,126 @@ void SpatialOverlayPlotPropertiesWidget::updateSelectionInstructions() {
     
     qDebug() << "SpatialOverlayPlotPropertiesWidget: Setting instructions:" << instructions;
     ui->selection_instructions_label->setText(instructions);
+}
+
+void SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() called";
+    
+    if (!ui->active_dataset_label || !ui->selection_count_label) {
+        qDebug() << "SpatialOverlayPlotPropertiesWidget::updateSelectionStatus() - Missing UI labels";
+        return;
+    }
+    
+    // Update active dataset information
+    QString activeDataset = "None";
+    if (_spatial_plot_widget) {
+        // Get the current active datasets from the plot widget
+        QStringList pointKeys = _spatial_plot_widget->getPointDataKeys();
+        QStringList maskKeys = _spatial_plot_widget->getMaskDataKeys();
+        QStringList lineKeys = _spatial_plot_widget->getLineDataKeys();
+        
+        QStringList allKeys = pointKeys + maskKeys + lineKeys;
+        if (!allKeys.isEmpty()) {
+            if (allKeys.size() == 1) {
+                activeDataset = allKeys.first();
+            } else {
+                activeDataset = QString("Multiple (%1)").arg(allKeys.size());
+            }
+        }
+    }
+    
+    ui->active_dataset_label->setText(QString("Active Dataset: %1").arg(activeDataset));
+    
+    // Update selection counts
+    size_t pointCount = 0;
+    size_t maskCount = 0; 
+    size_t lineCount = 0;
+    
+    if (_spatial_plot_widget && _spatial_plot_widget->getOpenGLWidget()) {
+        pointCount = _spatial_plot_widget->getOpenGLWidget()->getTotalSelectedPoints();
+        maskCount = _spatial_plot_widget->getOpenGLWidget()->getTotalSelectedMasks();
+        lineCount = _spatial_plot_widget->getOpenGLWidget()->getTotalSelectedLines();
+    }
+    
+    QString selectionText = QString("Selected: %1 points, %2 masks, %3 lines")
+                           .arg(pointCount)
+                           .arg(maskCount)
+                           .arg(lineCount);
+    
+    ui->selection_count_label->setText(selectionText);
+    
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: Updated selection status - Dataset:" << activeDataset 
+             << "Selected:" << pointCount << "points," << maskCount << "masks," << lineCount << "lines";
+    qDebug() << "SpatialOverlayPlotPropertiesWidget: Set label text to:" << selectionText;
+}
+
+void SpatialOverlayPlotPropertiesWidget::onUpdateTimeRangeClicked() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget::onUpdateTimeRangeClicked() called";
+    
+    _start_frame = ui->start_frame_spinbox->value();
+    _end_frame = ui->end_frame_spinbox->value();
+    
+    qDebug() << "Time range updated: start=" << _start_frame << ", end=" << _end_frame;
+    
+    updateTimeRangeFilter();
+}
+
+void SpatialOverlayPlotPropertiesWidget::onStartFrameChanged(int value) {
+    // Ensure start frame doesn't exceed end frame
+    if (value > ui->end_frame_spinbox->value()) {
+        ui->end_frame_spinbox->setValue(value);
+    }
+}
+
+void SpatialOverlayPlotPropertiesWidget::onEndFrameChanged(int value) {
+    // Ensure end frame isn't less than start frame
+    if (value < ui->start_frame_spinbox->value()) {
+        ui->start_frame_spinbox->setValue(value);
+    }
+}
+
+void SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget::setupTimeRangeControls() called";
+    
+    // Get total frame count from data manager
+    _total_frame_count = 0;
+    if (_data_manager) {
+        try {
+            auto timeFrame = _data_manager->getTime("time");
+            if (timeFrame) {
+                _total_frame_count = static_cast<int>(timeFrame->getTotalFrameCount());
+                qDebug() << "Total frame count from data manager:" << _total_frame_count;
+            }
+        } catch (const std::exception& e) {
+            qDebug() << "Error getting time frame:" << e.what();
+        }
+    }
+    
+    // Update spinbox ranges
+    if (_total_frame_count > 0) {
+        ui->start_frame_spinbox->setMaximum(_total_frame_count - 1);
+        ui->end_frame_spinbox->setMaximum(_total_frame_count - 1);
+        ui->end_frame_spinbox->setValue(_total_frame_count - 1);
+        _end_frame = _total_frame_count - 1;
+    }
+    
+    qDebug() << "Time range controls setup complete - max frame:" << (_total_frame_count - 1);
+}
+
+void SpatialOverlayPlotPropertiesWidget::updateTimeRangeFilter() {
+    qDebug() << "SpatialOverlayPlotPropertiesWidget::updateTimeRangeFilter() called with range:" 
+             << _start_frame << "to" << _end_frame;
+    
+    if (!_spatial_plot_widget) {
+        qDebug() << "No spatial plot widget available for time range filtering";
+        return;
+    }
+    
+    // Apply time range filter to the OpenGL widget
+    auto openglWidget = _spatial_plot_widget->getOpenGLWidget();
+
+    if (openglWidget) {
+        qDebug() << "Applying time range filter to OpenGL widget";
+        openglWidget->applyTimeRangeFilter(_start_frame, _end_frame);
+    }
 }

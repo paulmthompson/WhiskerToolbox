@@ -33,4 +33,88 @@ The system revolves around a few key components:
 
 1.  The `ProgressCallback` mechanism allows the `TransformOperation` to notify the `DataTransform_Widget` about its progress, which then updates the UI. This is a simple form of the Observer pattern.
 
-## 
+## Design Example
+
+First, the user will create the transformation translation unit. These are located in the DataManager/transforms directory. The transformations are organized according to their input type. The designer will first need to specify the transformation operation itself, which should take a pointer to the input and return a std::shared_ptr to the output type. The user can also overload this function to take a ProgressCallback for longer operations. For example:
+
+``` cpp
+struct MaskConnectedComponentParameters : public TransformParametersBase {
+    /**
+     * @brief Minimum size (in pixels) for a connected component to be preserved
+     * 
+     * Connected components smaller than this threshold will be removed from the mask.
+     * Must be greater than 0.
+     */
+    int threshold = 10;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Remove small connected components from mask data
+ * 
+ * This function applies connected component analysis to remove small isolated
+ * regions from masks. Uses 8-connectivity (considers diagonal neighbors as connected).
+ * 
+ * @param mask_data The MaskData to process
+ * @param params The connected component parameters
+ * @return A new MaskData with small connected components removed
+ */
+std::shared_ptr<MaskData> remove_small_connected_components(
+        MaskData const * mask_data,
+        MaskConnectedComponentParameters const * params = nullptr);
+
+/**
+ * @brief Remove small connected components from mask data with progress reporting
+ * 
+ * @param mask_data The MaskData to process
+ * @param params The connected component parameters
+ * @param progressCallback Progress reporting callback
+ * @return A new MaskData with small connected components removed
+ */
+std::shared_ptr<MaskData> remove_small_connected_components(
+        MaskData const * mask_data,
+        MaskConnectedComponentParameters const * params,
+        ProgressCallback progressCallback);
+```
+
+The user will also need to define a TransformationOperation interface class that uses this function. This is defined in DataManager/transforms/data_transforms.hpp and this is an example for the MaskConnectedComponentOperation:\
+
+``` cpp
+class MaskConnectedComponentOperation final : public TransformOperation {
+public:
+    [[nodiscard]] std::string getName() const override;
+    [[nodiscard]] std::type_index getTargetInputTypeIndex() const override;
+    [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
+    [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
+    
+    DataTypeVariant execute(DataTypeVariant const & dataVariant,
+                           TransformParametersBase const * transformParameters) override;
+                           
+    DataTypeVariant execute(DataTypeVariant const & dataVariant,
+                           TransformParametersBase const * transformParameters,
+                           ProgressCallback progressCallback) override;
+};
+```
+
+The body of these functions is mostly boilerplate that will be verbatim between operations.
+
+::: callout-important
+The value return by the getName function will need to be used later in the User Interface exactly. If you do not use the name here to identify your transformation, it may not appear in the UI.
+:::
+
+After you have designed your tranformation, add the files to the CMakeLists.txt for DataManager listed in DataManager/CMakeLists.txt. Then include your header in DataManager/transforms/TransformRegistry.cpp and add your type with the \_registerOperation function.
+
+Now you can create the user interface for your transformation operation. The user interfaces are kept in DataTransform_Widget under folders for the specific input type (same as the transformation). Create a hpp/cpp/ui triplet for your transformation. The purpose of this UI should be to populate parameters structure you created with the tranformation. If you have no options structure, this widget can simply be a label the describes the transformation. See MaskArea_Widget for an example fo a blank UI and LineResample_Widget for a more complex example. Your widget will need to inherit from TransformParameter_Widget as a base class.
+
+Once you have completed your widget triplet, add these files to the main CMakeLists.txt for WhiskerToolbox. Then you will modify DataTransform_Widget.cpp to include the header to your UI, and populate \_parameterWidgetFactories with the name of your transformation. For example:\
+
+``` cpp
+_parameterWidgetFactories["Remove Small Connected Components"] = [](QWidget * parent) -> TransformParameter_Widget * {
+        return new MaskConnectedComponent_Widget(parent);
+    };
+```
+
+Note that the name in this map (e.g. "Remove Small Connected Components") *must* match the name that is returned by your transformation operation!
+
+After this, compile and your transformation should appear in the data transformation widget!
