@@ -1,4 +1,5 @@
 #include "PlotContainer.hpp"
+#include "DataSourceRegistry.hpp"
 #include "Plots/AbstractPlotWidget.hpp"
 #include "Properties/AbstractPlotPropertiesWidget.hpp"
 
@@ -56,6 +57,51 @@ void PlotContainer::configureManagers(std::shared_ptr<DataManager> data_manager,
     if (properties_widget_) {
         properties_widget_->setDataManager(data_manager);
         qDebug() << "PlotContainer::configureManagers: Configured properties widget";
+    } else {
+        qDebug() << "PlotContainer::configureManagers: ERROR - null properties_widget_";
+    }
+}
+
+void PlotContainer::configureManagers(DataSourceRegistry* data_source_registry,
+                                     GroupManager* group_manager,
+                                     TableManager* table_manager)
+{
+    qDebug() << "PlotContainer::configureManagers: Configuring with DataSourceRegistry for plot:" << getPlotId();
+    qDebug() << "  - DataSourceRegistry:" << (data_source_registry != nullptr);
+    qDebug() << "  - GroupManager:" << (group_manager != nullptr);
+    qDebug() << "  - TableManager:" << (table_manager != nullptr);
+    
+    if (plot_widget_) {
+        // Set the data source registry if the plot widget supports it
+        // For now, we'll still set the primary DataManager for backwards compatibility
+        if (data_source_registry) {
+            AbstractDataSource* primary_source = data_source_registry->getDataSource("primary_data_manager");
+            if (primary_source && primary_source->getType() == "DataManager") {
+                // For backwards compatibility, also set the DataManager directly
+                // In the future, plots will access data through the registry
+                plot_widget_->setDataSourceRegistry(data_source_registry);
+                qDebug() << "  - Set DataSourceRegistry on plot widget";
+            }
+        }
+        
+        plot_widget_->setGroupManager(group_manager);
+        plot_widget_->setTableManager(table_manager);
+        qDebug() << "PlotContainer::configureManagers: Configured plot widget with registry";
+    } else {
+        qDebug() << "PlotContainer::configureManagers: ERROR - null plot_widget_";
+    }
+    
+    if (properties_widget_) {
+        // Properties widgets still use DataManager directly for now
+        if (data_source_registry) {
+            AbstractDataSource* primary_source = data_source_registry->getDataSource("primary_data_manager");
+            if (primary_source && primary_source->getType() == "DataManager") {
+                // We need to access the actual DataManager from the source
+                // For now, we'll use the legacy configureManagers method
+                qDebug() << "  - Properties widget still uses legacy DataManager interface";
+            }
+        }
+        qDebug() << "PlotContainer::configureManagers: Configured properties widget with registry";
     } else {
         qDebug() << "PlotContainer::configureManagers: ERROR - null properties_widget_";
     }

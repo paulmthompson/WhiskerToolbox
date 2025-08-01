@@ -8,6 +8,7 @@
 class AbstractPlotWidget;
 class AbstractPlotPropertiesWidget;
 class DataManager;
+class DataSourceRegistry;
 class GroupManager;
 class TableManager;
 
@@ -54,15 +55,27 @@ public:
     QString getPlotType() const;
 
     /**
-     * @brief Configure all managers for both plot and properties widgets
-     * 
-     * This ensures both widgets have consistent access to data sources.
+     * @brief Configure the plot and properties widgets with necessary managers
      * 
      * @param data_manager Shared pointer to data manager
      * @param group_manager Pointer to group manager
      * @param table_manager Pointer to table manager
      */
     void configureManagers(std::shared_ptr<DataManager> data_manager,
+                          GroupManager* group_manager,
+                          TableManager* table_manager);
+
+    /**
+     * @brief Configure the plot and properties widgets with data source registry
+     * 
+     * This overload allows plots to access data through the unified registry interface
+     * instead of directly depending on DataManager.
+     * 
+     * @param data_source_registry Pointer to data source registry
+     * @param group_manager Pointer to group manager
+     * @param table_manager Pointer to table manager
+     */
+    void configureManagers(DataSourceRegistry* data_source_registry,
                           GroupManager* group_manager,
                           TableManager* table_manager);
 

@@ -10,6 +10,7 @@
 #include <memory>
 
 class DataManager;
+class DataSourceRegistry;
 class GroupManager;
 class TableManager;
 class TableView;
@@ -52,6 +53,12 @@ public:
      * @param data_manager Shared pointer to the data manager
      */
     virtual void setDataManager(std::shared_ptr<DataManager> data_manager);
+
+    /**
+     * @brief Set the data source registry for unified data access
+     * @param data_source_registry Pointer to the data source registry
+     */
+    virtual void setDataSourceRegistry(DataSourceRegistry* data_source_registry);
 
     /**
      * @brief Set the group manager for data grouping

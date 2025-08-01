@@ -7,6 +7,7 @@
 
 class AbstractPlotOrganizer;
 class DataManager;
+class DataSourceRegistry;
 class GroupCoordinator;
 class GroupManager;
 class QGraphicsView;
@@ -46,6 +47,12 @@ public:
      * @return Pointer to the group manager
      */
     GroupManager * getGroupManager() const { return _group_manager.get(); }
+
+    /**
+     * @brief Get the data source registry for this dashboard
+     * @return Pointer to the data source registry
+     */
+    DataSourceRegistry * getDataSourceRegistry() const { return _data_source_registry.get(); }
 
 protected:
     /**
@@ -93,6 +100,7 @@ private:
     Ui::Analysis_Dashboard * ui;
 
     std::shared_ptr<DataManager> _data_manager;
+    std::unique_ptr<DataSourceRegistry> _data_source_registry;
     std::unique_ptr<GroupManager> _group_manager;
     std::unique_ptr<GroupCoordinator> _group_coordinator;
     TimeScrollBar * _time_scrollbar;

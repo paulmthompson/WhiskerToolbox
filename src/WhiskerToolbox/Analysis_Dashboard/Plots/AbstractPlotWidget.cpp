@@ -44,6 +44,11 @@ void AbstractPlotWidget::setDataManager(std::shared_ptr<DataManager> data_manage
     _parameters.data_manager = std::move(data_manager);
 }
 
+void AbstractPlotWidget::setDataSourceRegistry(DataSourceRegistry* data_source_registry) {
+    qDebug() << "AbstractPlotWidget: setDataSourceRegistry called for plot" << QString::fromStdString(_parameters.getPlotId()) << "with registry:" << (data_source_registry != nullptr);
+    _parameters.data_source_registry = data_source_registry;
+}
+
 void AbstractPlotWidget::setGroupManager(GroupManager * group_manager) {
     qDebug() << "AbstractPlotWidget: setGroupManager called for plot" << QString::fromStdString(_parameters.getPlotId()) << "with GroupManager:" << (group_manager != nullptr);
     _parameters.group_manager = group_manager;

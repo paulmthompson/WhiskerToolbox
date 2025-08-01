@@ -3,6 +3,7 @@
 #include "ui_Analysis_Dashboard.h"
 
 #include "AbstractPlotOrganizer.hpp"
+#include "DataSourceRegistry.hpp"
 #include "GraphicsScenePlotOrganizer.hpp"
 #include "GroupCoordinator.hpp"
 #include "PlotContainer.hpp"
@@ -29,6 +30,7 @@ Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager
     : QMainWindow(parent),
       ui(new Ui::Analysis_Dashboard),
       _data_manager(std::move(data_manager)),
+      _data_source_registry(std::make_unique<DataSourceRegistry>(this)),
       _group_manager(std::make_unique<GroupManager>(this)),
       _group_coordinator(nullptr),
       _time_scrollbar(time_scrollbar),
@@ -60,6 +62,13 @@ void Analysis_Dashboard::initializeDashboard() {
 
     // Create the group coordinator for cross-plot highlighting
     _group_coordinator = std::make_unique<GroupCoordinator>(_group_manager.get(), this);
+
+    // Initialize the data source registry with the primary data manager
+    if (_data_manager) {
+        auto data_manager_source = std::make_unique<DataManagerSource>(_data_manager.get(), this);
+        _data_source_registry->registerDataSource("primary_data_manager", std::move(data_manager_source));
+        qDebug() << "Analysis_Dashboard: Registered primary DataManager as data source";
+    }
 
     // Set data manager for the properties panel
     if (_data_manager) {
@@ -189,11 +198,11 @@ bool Analysis_Dashboard::createAndAddPlot(QString const & plot_type) {
     
     qDebug() << "Analysis_Dashboard::createAndAddPlot: Created plot container with ID:" << plot_container->getPlotId();
     
-    // Configure the plot with all necessary managers
-    plot_container->configureManagers(_data_manager, _group_manager.get(), 
+    // Configure the plot with data source registry for unified data access
+    plot_container->configureManagers(_data_source_registry.get(), _group_manager.get(), 
                                      _toolbox_panel ? _toolbox_panel->getTableManager() : nullptr);
     
-    qDebug() << "Analysis_Dashboard::createAndAddPlot: Configured managers, adding to organizer";
+    qDebug() << "Analysis_Dashboard::createAndAddPlot: Configured managers with DataSourceRegistry, adding to organizer";
     
     // Add the plot to the organizer
     _plot_organizer->addPlot(std::move(plot_container));

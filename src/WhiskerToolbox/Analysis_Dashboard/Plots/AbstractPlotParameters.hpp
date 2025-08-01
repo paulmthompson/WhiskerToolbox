@@ -5,6 +5,7 @@
 #include <string>
 
 class DataManager;
+class DataSourceRegistry;
 class GroupManager;
 class TableManager;
 
@@ -53,6 +54,7 @@ struct AbstractPlotParameters {
 
     // State variables
     std::shared_ptr<DataManager> data_manager;
+    DataSourceRegistry * data_source_registry = nullptr;
     GroupManager * group_manager = nullptr;
     TableManager * table_manager = nullptr;
     std::string plot_title;
