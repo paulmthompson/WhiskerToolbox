@@ -41,6 +41,9 @@ signals:
     void removeFeature(QString const & feature);
     void colorChange(QString const & feature, QString const & hex_color);
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private slots:
     void _refreshFeatures();
     void _highlightFeature(int row, int column);
