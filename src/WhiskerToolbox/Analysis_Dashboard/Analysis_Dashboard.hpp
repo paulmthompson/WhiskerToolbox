@@ -7,6 +7,7 @@
 
 class AbstractPlotOrganizer;
 class DataManager;
+class GroupCoordinator;
 class GroupManager;
 class QGraphicsView;
 class QSplitter;
@@ -93,6 +94,7 @@ private:
 
     std::shared_ptr<DataManager> _data_manager;
     std::unique_ptr<GroupManager> _group_manager;
+    std::unique_ptr<GroupCoordinator> _group_coordinator;
     TimeScrollBar * _time_scrollbar;
 
     // Main panels

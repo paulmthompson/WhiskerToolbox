@@ -4,6 +4,7 @@
 
 #include "AbstractPlotOrganizer.hpp"
 #include "GraphicsScenePlotOrganizer.hpp"
+#include "GroupCoordinator.hpp"
 #include "PlotContainer.hpp"
 #include "PlotFactory.hpp"
 #include "DataManager/DataManager.hpp"
@@ -29,6 +30,7 @@ Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager
       ui(new Ui::Analysis_Dashboard),
       _data_manager(std::move(data_manager)),
       _group_manager(std::make_unique<GroupManager>(this)),
+      _group_coordinator(nullptr),
       _time_scrollbar(time_scrollbar),
       _toolbox_panel(nullptr),
       _properties_panel(nullptr),
@@ -56,8 +58,8 @@ void Analysis_Dashboard::initializeDashboard() {
     // Create the plot organizer (using GraphicsScene implementation for now)
     _plot_organizer = std::make_unique<GraphicsScenePlotOrganizer>(this);
 
-    // Configure the plot organizer by configuring each new plot with managers
-    // This will be done when plots are added
+    // Create the group coordinator for cross-plot highlighting
+    _group_coordinator = std::make_unique<GroupCoordinator>(_group_manager.get(), this);
 
     // Set data manager for the properties panel
     if (_data_manager) {
@@ -74,7 +76,7 @@ void Analysis_Dashboard::initializeDashboard() {
     // Update plot display after layout is set up
     updatePlotDisplay();
 
-    qDebug() << "Analysis Dashboard initialized successfully";
+    qDebug() << "Analysis Dashboard initialized successfully with GroupCoordinator";
 }
 
 void Analysis_Dashboard::setupLayout() {
@@ -133,12 +135,28 @@ void Analysis_Dashboard::handlePlotSelected(QString const & plot_id) {
 void Analysis_Dashboard::handlePlotAdded(QString const & plot_id) {
     qDebug() << "Plot added:" << plot_id;
 
+    // Register the plot with the group coordinator for cross-plot highlighting
+    PlotContainer* plot_container = _plot_organizer->getPlot(plot_id);
+    if (plot_container && _group_coordinator) {
+        AbstractPlotWidget* plot_widget = plot_container->getPlotWidget();
+        if (plot_widget) {
+            _group_coordinator->registerPlot(plot_id, plot_widget);
+            qDebug() << "Plot" << plot_id << "registered with GroupCoordinator";
+        }
+    }
+
     QString status_text = QString("Plot added: %1").arg(plot_id);
     ui->statusbar->showMessage(status_text, 3000);
 }
 
 void Analysis_Dashboard::handlePlotRemoved(QString const & plot_id) {
     qDebug() << "Plot removed:" << plot_id;
+
+    // Unregister the plot from the group coordinator
+    if (_group_coordinator) {
+        _group_coordinator->unregisterPlot(plot_id);
+        qDebug() << "Plot" << plot_id << "unregistered from GroupCoordinator";
+    }
 
     // If this was the selected plot, show global properties
     _properties_panel->showGlobalProperties();

@@ -42,6 +42,8 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/PlotContainer.cpp
         Analysis_Dashboard/PlotFactory.hpp 
         Analysis_Dashboard/PlotFactory.cpp
+        Analysis_Dashboard/GroupCoordinator.hpp 
+        Analysis_Dashboard/GroupCoordinator.cpp
 
         Analysis_Dashboard/Plots/AbstractPlotWidget.hpp
         Analysis_Dashboard/Plots/AbstractPlotWidget.cpp

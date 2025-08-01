@@ -110,6 +110,43 @@ signals:
      */
     void frameJumpRequested(int64_t time_frame_index, std::string const & data_key);
 
+    /**
+     * @brief Emitted when this plot requests a group to be highlighted across all plots
+     * @param group_id The group ID to highlight
+     * @param highlight True to highlight, false to unhighlight
+     * @param plot_id The ID of this plot (to avoid echo)
+     */
+    void groupHighlightRequested(int group_id, bool highlight, QString const & plot_id);
+
+public slots:
+    /**
+     * @brief Handle group selection changes from GroupCoordinator
+     * @param group_id The group ID that was selected/deselected
+     * @param selected True if selected, false if deselected
+     */
+    virtual void onGroupSelectionChanged(int group_id, bool selected) {}
+
+    /**
+     * @brief Handle group highlighting requests from GroupCoordinator
+     * @param group_id The group ID to highlight/unhighlight
+     * @param highlight True to highlight, false to unhighlight
+     */
+    virtual void onGroupHighlightChanged(int group_id, bool highlight) {}
+
+    /**
+     * @brief Handle new group creation from GroupCoordinator
+     * @param group_id The new group ID
+     * @param group_name The group name
+     * @param group_color The group color
+     */
+    virtual void onGroupCreated(int group_id, QString const & group_name, QColor const & group_color) {}
+
+    /**
+     * @brief Handle group removal from GroupCoordinator
+     * @param group_id The removed group ID
+     */
+    virtual void onGroupRemoved(int group_id) {}
+
 protected:
     /**
      * @brief Handle mouse press events for selection
