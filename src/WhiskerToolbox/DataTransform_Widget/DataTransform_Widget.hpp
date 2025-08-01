@@ -5,8 +5,7 @@
 #include "DataManagerTypes.hpp"
 
 #include <QString>
-#include <QScrollArea>
-#include <QResizeEvent>
+#include <QWidget>
 
 #include <map>
 #include <memory>
@@ -22,7 +21,7 @@ class TransformParameter_Widget;
 class TransformRegistry;
 
 
-class DataTransform_Widget : public QScrollArea {
+class DataTransform_Widget : public QWidget {
     Q_OBJECT
 public:
     DataTransform_Widget(std::shared_ptr<DataManager> data_manager,
@@ -30,12 +29,6 @@ public:
     ~DataTransform_Widget() override;
 
     void openWidget();// Call
-
-    QSize sizeHint() const override;
-    QSize minimumSizeHint() const override;
-
-protected:
-    void resizeEvent(QResizeEvent* event) override;
 
 private:
     Ui::DataTransform_Widget * ui;

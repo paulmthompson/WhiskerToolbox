@@ -34,12 +34,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b53751a350365c71b6c909e95f209ed1.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-87cd5c4c137eb48cdca371794a3979d3.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-686b15c34b244653d4c55e362e50c6f0.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-8ea241a1766a3129914e7a59ac5729ec.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -67,6 +65,7 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<style>html{ scroll-behavior: smooth; }</style>
 
 
 <link rel="stylesheet" href="../styles.css">
@@ -134,11 +133,6 @@ ul.task-list li input[type="checkbox"] {
   </li>  
     </ul>
   </li>
-  <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
-</i> 
-<span class="menu-text"></span></a>
-  </li>  
   <li class="nav-item">
     <span class="nav-link">
 <span class="menu-text">Concepts</span>
@@ -147,7 +141,6 @@ ul.task-list li input[type="checkbox"] {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
@@ -156,26 +149,8 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#step-1-load-video-or-existing-labels" id="toc-step-1-load-video-or-existing-labels" class="nav-link active" data-scroll-target="#step-1-load-video-or-existing-labels">Step 1: Load Video or Existing Labels</a></li>
-  <li><a href="#step-2-open-the-data-manager" id="toc-step-2-open-the-data-manager" class="nav-link" data-scroll-target="#step-2-open-the-data-manager">Step 2: Open the Data Manager</a></li>
-  <li><a href="#step-3-create-a-new-keypoint-feature" id="toc-step-3-create-a-new-keypoint-feature" class="nav-link" data-scroll-target="#step-3-create-a-new-keypoint-feature">Step 3: Create a New Keypoint Feature</a></li>
-  <li><a href="#step-4-edit-and-add-keypoints-in-the-media-widget" id="toc-step-4-edit-and-add-keypoints-in-the-media-widget" class="nav-link" data-scroll-target="#step-4-edit-and-add-keypoints-in-the-media-widget">Step 4: Edit and Add Keypoints in the Media Widget</a></li>
-  <li><a href="#step-5-review-and-export-your-labels" id="toc-step-5-review-and-export-your-labels" class="nav-link" data-scroll-target="#step-5-review-and-export-your-labels">Step 5: Review and Export Your Labels</a>
-  <ul class="collapse">
-  <li><a href="#export-options" id="toc-export-options" class="nav-link" data-scroll-target="#export-options">Export Options:</a></li>
-  </ul></li>
-  <li><a href="#optional-export-matching-media-frames" id="toc-optional-export-matching-media-frames" class="nav-link" data-scroll-target="#optional-export-matching-media-frames">Optional: Export Matching Media Frames</a></li>
-  <li><a href="#step-6-save-to-csv" id="toc-step-6-save-to-csv" class="nav-link" data-scroll-target="#step-6-save-to-csv">Step 6: Save to CSV</a>
-  <ul class="collapse">
-  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
-  </ul></li>
-  </ul>
-</nav>
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -199,220 +174,8 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="gif.gif" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
-</figure>
-</div>
-<p>Keypoint labeling is a powerful method to systematically study motion, behavior, and anatomical positioning over time. By marking and tracking specific locations on subjects across frames in a video, you can extract detailed data about the dynamics of movement.</p>
-<p>For example, keypoint data can be used to:</p>
-<ul>
-<li><p>Quantify fine-scale behaviors like licking, grooming, or chewing</p></li>
-<li><p>Track anatomical features over time for posture and gait analysis</p></li>
-<li><p>Align behavioral sequences with physiological recordings</p></li>
-<li><p>Train machine learning models for automated behavior detection</p></li>
-<li><p>Visualize and compare motion trajectories across individuals or trials</p></li>
-</ul>
-<p>This tutorial will guide you through the process of labeling keypoints on a video and saving the keypoint data.</p>
-<hr>
-<section id="step-1-load-video-or-existing-labels" class="level2">
-<h2 class="anchored" data-anchor-id="step-1-load-video-or-existing-labels">Step 1: Load Video or Existing Labels</h2>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="2.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
-</figure>
-</div>
-<p>To begin labeling:</p>
-<ol type="1">
-<li>Open the application and navigate to <code>File &gt; Load Data</code>.</li>
-<li>Select the video you intend to annotate.</li>
-</ol>
-<p>Alternatively, if you’ve already created keypoints and want to review or update them:</p>
-<ul>
-<li>Select <code>File &gt; Load JSON Configuration</code> and choose your <code>.json</code> file.</li>
-</ul>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Tip
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>See: <a href="#">Setting up a JSON File</a> for more on configuration options.</p>
-</div>
-</div>
-<hr>
-</section>
-<section id="step-2-open-the-data-manager" class="level2">
-<h2 class="anchored" data-anchor-id="step-2-open-the-data-manager">Step 2: Open the Data Manager</h2>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="3.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
-</figure>
-</div>
-<p>To create or manage point data:</p>
-<ul>
-<li>Navigate to <code>Modules &gt; Data Manager</code> to open the <strong>Data Manager Module</strong>.</li>
-</ul>
-<hr>
-</section>
-<section id="step-3-create-a-new-keypoint-feature" class="level2">
-<h2 class="anchored" data-anchor-id="step-3-create-a-new-keypoint-feature">Step 3: Create a New Keypoint Feature</h2>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="4.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
-</figure>
-</div>
-<p>In the <strong>Data Manager</strong>:</p>
-<ol type="1">
-<li><strong>Set the Output Directory</strong>: This is where your labeled data (CSV) will be saved.
-<ul>
-<li>Example: <code>C:/Users/wanglab/Desktop/Cartoon_Mouse</code></li>
-</ul></li>
-<li><strong>Create New Data</strong>:
-<ul>
-<li><strong>Type</strong>: <code>point</code></li>
-<li><strong>Time Frame</strong>: Select based on your analysis requirements (e.g., <code>time</code> for temporal tracking).</li>
-<li><strong>Name</strong>: Choose a descriptive name (e.g., <code>jaw</code>, <code>nose</code>, or <code>paw</code>).</li>
-</ul></li>
-</ol>
-<p>Click <strong>Create New Data</strong> to add the new feature.</p>
-<hr>
-</section>
-<section id="step-4-edit-and-add-keypoints-in-the-media-widget" class="level2">
-<h2 class="anchored" data-anchor-id="step-4-edit-and-add-keypoints-in-the-media-widget">Step 4: Edit and Add Keypoints in the Media Widget</h2>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="5.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
-</figure>
-</div>
-<p>Once the point feature is created:</p>
-<ol type="1">
-<li><strong>Enable the Feature</strong>: Select the feature in the media widget to activate the keypoint editor.</li>
-<li><strong>Customize Appearance</strong>:
-<ul>
-<li>Choose a <strong>color</strong> using the hex selector.</li>
-<li>Adjust the <strong>opacity (Alpha)</strong> for better contrast against the video.</li>
-<li>Modify the <strong>size</strong> and <strong>shape</strong> of the marker if needed.</li>
-</ul></li>
-<li><strong>Begin Labeling</strong>:
-<ul>
-<li>Switch mouse mode to <strong>“Select Point”</strong>.</li>
-<li>Click anywhere in the video frame to <strong>add a point</strong>.</li>
-<li>Clicking on an existing point will <strong>move</strong> it.</li>
-</ul></li>
-</ol>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="label.gif" class="img-fluid quarto-figure quarto-figure-center figure-img" width="678"></p>
-</figure>
-</div>
-<div class="callout callout-style-default callout-important callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Important
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Note: The keypoint is recorded as a single-pixel coordinate. Visual shape and style are only for display and are <strong>not saved</strong>.</p>
-</div>
-</div>
-<hr>
-</section>
-<section id="step-5-review-and-export-your-labels" class="level2">
-<h2 class="anchored" data-anchor-id="step-5-review-and-export-your-labels">Step 5: Review and Export Your Labels</h2>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="6.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
-</figure>
-</div>
-<p>After labeling:</p>
-<ol type="1">
-<li>Select your feature (e.g., <code>jaw</code>) in the Data Manager.</li>
-<li>You’ll see a spreadsheet with:
-<ul>
-<li>Frame indices</li>
-<li>(x, y) coordinates for each labeled keypoint</li>
-</ul></li>
-</ol>
-<section id="export-options" class="level3">
-<h3 class="anchored" data-anchor-id="export-options">Export Options:</h3>
-<ul>
-<li><strong>File Name</strong>: Choose a meaningful name for your CSV.</li>
-<li><strong>Delimiter</strong>: (e.g., comma <code>,</code> or tab <code>\t</code>) – separates columns.</li>
-<li><strong>Line Ending</strong>: Select line break style (<code>\n</code>, <code>\r\n</code>, etc.).</li>
-<li><strong>Header</strong>: Optionally include a header row with custom labels.</li>
-</ul>
-<hr>
-</section>
-</section>
-<section id="optional-export-matching-media-frames" class="level2">
-<h2 class="anchored" data-anchor-id="optional-export-matching-media-frames">Optional: Export Matching Media Frames</h2>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="7.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
-</figure>
-</div>
-<p>You can export the video frames where keypoints were labeled:</p>
-<ol type="1">
-<li>Check <code>Export Matching Media Frames</code>.</li>
-<li>Choose from export options:
-<ul>
-<li><strong>Save by Frame Name</strong></li>
-<li><strong>Frame ID Padding</strong></li>
-<li><strong>Image Name Prefix</strong></li>
-<li><strong>Subfolder for Images</strong></li>
-<li><strong>Overwrite Existing Files</strong></li>
-</ul></li>
-</ol>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Keypoints will <strong>not</strong> be drawn on these frames. Only raw frames are exported.</p>
-</div>
-</div>
-<hr>
-</section>
-<section id="step-6-save-to-csv" class="level2">
-<h2 class="anchored" data-anchor-id="step-6-save-to-csv">Step 6: Save to CSV</h2>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="8.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
-</figure>
-</div>
-<p>Once you’ve reviewed your labels:</p>
-<ul>
-<li>Click <strong>“Save to CSV”</strong></li>
-</ul>
-<p>A confirmation will appear showing the file path.</p>
-<p>Your labeled keypoint data is now saved and ready for further analysis.</p>
-<hr>
-<section id="summary" class="level3">
-<h3 class="anchored" data-anchor-id="summary">Summary</h3>
-<p>This tutorial demonstrated how to:</p>
-<ul>
-<li>Load a video or keypoint configuration</li>
-<li>Create and configure keypoint data</li>
-<li>Annotate frames with feature coordinates</li>
-<li>Export label data and relevant frames</li>
-</ul>
 
 
-</section>
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -435,150 +198,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
   toggleBodyColorPrimary();  
-  const disableStylesheet = (stylesheets) => {
-    for (let i=0; i < stylesheets.length; i++) {
-      const stylesheet = stylesheets[i];
-      stylesheet.rel = 'prefetch';
-    }
-  }
-  const enableStylesheet = (stylesheets) => {
-    for (let i=0; i < stylesheets.length; i++) {
-      const stylesheet = stylesheets[i];
-      stylesheet.rel = 'stylesheet';
-    }
-  }
-  const manageTransitions = (selector, allowTransitions) => {
-    const els = window.document.querySelectorAll(selector);
-    for (let i=0; i < els.length; i++) {
-      const el = els[i];
-      if (allowTransitions) {
-        el.classList.remove('notransition');
-      } else {
-        el.classList.add('notransition');
-      }
-    }
-  }
-  const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
-    const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
-    const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
-    let newTheme = '';
-    if(darkModeDefault) {
-      newTheme = isAlternate ? baseTheme : alternateTheme;
-    } else {
-      newTheme = isAlternate ? alternateTheme : baseTheme;
-    }
-    const changeGiscusTheme = () => {
-      // From: https://github.com/giscus/giscus/issues/336
-      const sendMessage = (message) => {
-        const iframe = document.querySelector('iframe.giscus-frame');
-        if (!iframe) return;
-        iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
-      }
-      sendMessage({
-        setConfig: {
-          theme: newTheme
-        }
-      });
-    }
-    const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
-    if (isGiscussLoaded) {
-      changeGiscusTheme();
-    }
-  }
-  const toggleColorMode = (alternate) => {
-    // Switch the stylesheets
-    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
-    manageTransitions('#quarto-margin-sidebar .nav-link', false);
-    if (alternate) {
-      enableStylesheet(alternateStylesheets);
-      for (const sheetNode of alternateStylesheets) {
-        if (sheetNode.id === "quarto-bootstrap") {
-          toggleBodyColorMode(sheetNode);
-        }
-      }
-    } else {
-      disableStylesheet(alternateStylesheets);
-      toggleBodyColorPrimary();
-    }
-    manageTransitions('#quarto-margin-sidebar .nav-link', true);
-    // Switch the toggles
-    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
-    for (let i=0; i < toggles.length; i++) {
-      const toggle = toggles[i];
-      if (toggle) {
-        if (alternate) {
-          toggle.classList.add("alternate");     
-        } else {
-          toggle.classList.remove("alternate");
-        }
-      }
-    }
-    // Hack to workaround the fact that safari doesn't
-    // properly recolor the scrollbar when toggling (#1455)
-    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
-      manageTransitions("body", false);
-      window.scrollTo(0, 1);
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-        manageTransitions("body", true);
-      }, 40);  
-    }
-  }
-  const isFileUrl = () => { 
-    return window.location.protocol === 'file:';
-  }
-  const hasAlternateSentinel = () => {  
-    let styleSentinel = getColorSchemeSentinel();
-    if (styleSentinel !== null) {
-      return styleSentinel === "alternate";
-    } else {
-      return false;
-    }
-  }
-  const setStyleSentinel = (alternate) => {
-    const value = alternate ? "alternate" : "default";
-    if (!isFileUrl()) {
-      window.localStorage.setItem("quarto-color-scheme", value);
-    } else {
-      localAlternateSentinel = value;
-    }
-  }
-  const getColorSchemeSentinel = () => {
-    if (!isFileUrl()) {
-      const storageValue = window.localStorage.getItem("quarto-color-scheme");
-      return storageValue != null ? storageValue : localAlternateSentinel;
-    } else {
-      return localAlternateSentinel;
-    }
-  }
-  const darkModeDefault = false;
-  let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
-  // Dark / light mode switch
-  window.quartoToggleColorScheme = () => {
-    // Read the current dark / light value 
-    let toAlternate = !hasAlternateSentinel();
-    toggleColorMode(toAlternate);
-    setStyleSentinel(toAlternate);
-    toggleGiscusIfUsed(toAlternate, darkModeDefault);
-  };
-  // Ensure there is a toggle, if there isn't float one in the top right
-  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-    const a = window.document.createElement('a');
-    a.classList.add('top-right');
-    a.classList.add('quarto-color-scheme-toggle');
-    a.href = "";
-    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
-    const i = window.document.createElement("i");
-    i.classList.add('bi');
-    a.appendChild(i);
-    window.document.body.appendChild(a);
-  }
-  // Switch to dark mode if need be
-  if (hasAlternateSentinel()) {
-    toggleColorMode(true);
-  } else {
-    toggleColorMode(false);
-  }
   const icon = "";
   const anchorJS = new window.AnchorJS();
   anchorJS.options = {
@@ -981,4 +600,5 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 
 
 
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
 </body></html>

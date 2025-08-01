@@ -2,10 +2,7 @@
 #define DATAMANAGER_WIDGET_HPP
 
 #include <QString>
-#include <QScrollArea>
-#include <QResizeEvent>
-#include <QShowEvent>
-#include <QTimer>
+#include <QWidget>
 
 #include <memory>
 #include <string>
@@ -18,7 +15,7 @@ class DataManager_Widget;
 class DataManager;
 class TimeScrollBar;
 
-class DataManager_Widget : public QScrollArea {
+class DataManager_Widget : public QWidget {
     Q_OBJECT
 public:
     DataManager_Widget(std::shared_ptr<DataManager> data_manager,
@@ -35,13 +32,6 @@ public:
      * clearing any active widgets and resetting the feature label.
      */
     void clearFeatureSelection();
-
-    QSize sizeHint() const override;
-    QSize minimumSizeHint() const override;
-
-protected:
-    void resizeEvent(QResizeEvent* event) override;
-    void showEvent(QShowEvent* event) override;
 
 private:
     Ui::DataManager_Widget * ui;

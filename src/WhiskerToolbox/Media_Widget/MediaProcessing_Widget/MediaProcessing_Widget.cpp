@@ -17,7 +17,6 @@
 #include <QHideEvent>
 #include <QScrollArea>
 #include <QVBoxLayout>
-#include <QTimer>
 #include <iostream>
 
 MediaProcessing_Widget::MediaProcessing_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent)
@@ -41,29 +40,12 @@ MediaProcessing_Widget::MediaProcessing_Widget(std::shared_ptr<DataManager> data
       _magic_eraser_section(nullptr) {
 
     ui->setupUi(this);
-
-    // Set size policy to expand to fill available space
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
     _setupProcessingWidgets();
+
 
     if (_scene) {
         connect(_scene, &Media_Window::leftReleaseDrawing, this, &MediaProcessing_Widget::_onDrawingFinished);
     }
-
-    // Use a timer to adjust size after the UI has been fully initialized
-    QTimer::singleShot(0, this, [this]() {
-        if (parentWidget()) {
-            // Resize to match parent widget width
-            setMinimumWidth(parentWidget()->width());
-            adjustSize();
-
-            // Make the scroll area widget contents expand properly
-            if (ui->scrollAreaWidgetContents) {
-                ui->scrollAreaWidgetContents->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-            }
-        }
-    });
 }
 
 MediaProcessing_Widget::~MediaProcessing_Widget() {
