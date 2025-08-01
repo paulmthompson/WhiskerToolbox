@@ -43,6 +43,13 @@ public:
     void showPlotProperties(QString const & plot_id, AbstractPlotWidget * plot_widget);
 
     /**
+     * @brief Show properties widget directly from a PlotContainer
+     * @param plot_id The unique ID of the selected plot
+     * @param properties_widget Pointer to the properties widget from PlotContainer
+     */
+    void showContainerProperties(QString const & plot_id, AbstractPlotPropertiesWidget * properties_widget);
+
+    /**
      * @brief Show global properties (no plot selected)
      */
     void showGlobalProperties();

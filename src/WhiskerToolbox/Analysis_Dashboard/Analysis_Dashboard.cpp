@@ -2,16 +2,17 @@
 #include "Analysis_Dashboard.hpp"
 #include "ui_Analysis_Dashboard.h"
 
+#include "AbstractPlotOrganizer.hpp"
+#include "GraphicsScenePlotOrganizer.hpp"
+#include "PlotContainer.hpp"
+#include "PlotFactory.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Groups/GroupManager.hpp"
 #include "Plots/AbstractPlotWidget.hpp"
+#include "Properties/AbstractPlotPropertiesWidget.hpp"
 #include "Properties/PropertiesPanel.hpp"
-#include "Scene/AnalysisDashboardScene.hpp"
 #include "TimeScrollBar/TimeScrollBar.hpp"
 #include "Toolbox/ToolboxPanel.hpp"
-#include "Widgets/EventPlotWidget/EventPlotWidget.hpp"
-#include "Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp"
-#include "Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp"
 
 #include <QDebug>
 #include <QGraphicsView>
@@ -31,8 +32,7 @@ Analysis_Dashboard::Analysis_Dashboard(std::shared_ptr<DataManager> data_manager
       _time_scrollbar(time_scrollbar),
       _toolbox_panel(nullptr),
       _properties_panel(nullptr),
-      _dashboard_scene(nullptr),
-      _graphics_view(nullptr),
+      _plot_organizer(nullptr),
       _main_splitter(nullptr) {
 
     ui->setupUi(this);
@@ -52,32 +52,16 @@ void Analysis_Dashboard::initializeDashboard() {
     // Create the main components
     _toolbox_panel = new ToolboxPanel(_group_manager.get(), _data_manager, this);
     _properties_panel = new PropertiesPanel(this);
-    _dashboard_scene = new AnalysisDashboardScene(this);
-    _graphics_view = new QGraphicsView(_dashboard_scene, this);
+    
+    // Create the plot organizer (using GraphicsScene implementation for now)
+    _plot_organizer = std::make_unique<GraphicsScenePlotOrganizer>(this);
 
-    // Configure the graphics view
-    _graphics_view->setRenderHint(QPainter::Antialiasing);
-    _graphics_view->setDragMode(QGraphicsView::RubberBandDrag);
-    _graphics_view->setMinimumSize(400, 300);
+    // Configure the plot organizer by configuring each new plot with managers
+    // This will be done when plots are added
 
-    // Disable scrollbars to prevent scrolling
-    _graphics_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    _graphics_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    // Set data manager for the scene
+    // Set data manager for the properties panel
     if (_data_manager) {
-        _dashboard_scene->setDataManager(_data_manager);
         _properties_panel->setDataManager(_data_manager);
-    }
-
-    // Set group manager for the scene
-    if (_group_manager) {
-        _dashboard_scene->setGroupManager(_group_manager.get());
-    }
-
-    // Set table manager for the scene
-    if (_toolbox_panel && _toolbox_panel->getTableManager()) {
-        _dashboard_scene->setTableManager(_toolbox_panel->getTableManager());
     }
 
     setupLayout();
@@ -87,8 +71,8 @@ void Analysis_Dashboard::initializeDashboard() {
     QList<int> sizes = {250, 700, 250};
     ui->main_splitter->setSizes(sizes);
 
-    // Update graphics view after layout is set up
-    updateGraphicsView();
+    // Update plot display after layout is set up
+    updatePlotDisplay();
 
     qDebug() << "Analysis Dashboard initialized successfully";
 }
@@ -106,7 +90,7 @@ void Analysis_Dashboard::setupLayout() {
 
     QVBoxLayout * graphics_layout = new QVBoxLayout(graphics_container);
     graphics_layout->setContentsMargins(0, 0, 0, 0);
-    graphics_layout->addWidget(_graphics_view);
+    graphics_layout->addWidget(_plot_organizer->getDisplayWidget());
 
     QVBoxLayout * properties_layout = new QVBoxLayout(properties_container);
     properties_layout->setContentsMargins(0, 0, 0, 0);
@@ -118,27 +102,30 @@ void Analysis_Dashboard::connectSignals() {
     connect(_toolbox_panel, &ToolboxPanel::plotTypeSelected,
             this, &Analysis_Dashboard::handlePlotTypeSelected);
 
-    // Connect dashboard scene signals
-    connect(_dashboard_scene, &AnalysisDashboardScene::plotSelected,
+    // Connect plot organizer signals
+    connect(_plot_organizer.get(), &AbstractPlotOrganizer::plotSelected,
             this, &Analysis_Dashboard::handlePlotSelected);
 
-    connect(_dashboard_scene, &AnalysisDashboardScene::plotAdded,
+    connect(_plot_organizer.get(), &AbstractPlotOrganizer::plotAdded,
             this, &Analysis_Dashboard::handlePlotAdded);
 
-    connect(_dashboard_scene, &AnalysisDashboardScene::plotRemoved,
+    connect(_plot_organizer.get(), &AbstractPlotOrganizer::plotRemoved,
             this, &Analysis_Dashboard::handlePlotRemoved);
 
-    connect(_dashboard_scene, &AnalysisDashboardScene::frameJumpRequested,
+    connect(_plot_organizer.get(), &AbstractPlotOrganizer::frameJumpRequested,
             this, &Analysis_Dashboard::_changeScrollbar);
 }
 
 void Analysis_Dashboard::handlePlotSelected(QString const & plot_id) {
-    qDebug() << "Plot selected:" << plot_id;
+    qDebug() << "Analysis_Dashboard::handlePlotSelected called with plot_id:" << plot_id;
 
-    AbstractPlotWidget * plot_widget = _dashboard_scene->getPlotWidget(plot_id);
-    if (plot_widget) {
-        _properties_panel->showPlotProperties(plot_id, plot_widget);
+    PlotContainer* plot_container = _plot_organizer->getPlot(plot_id);
+    if (plot_container) {
+        qDebug() << "Analysis_Dashboard: Found plot container, showing properties";
+        // Use the new method that works directly with PlotContainer's properties widget
+        _properties_panel->showContainerProperties(plot_id, plot_container->getPropertiesWidget());
     } else {
+        qDebug() << "Analysis_Dashboard: No plot container found, showing global properties";
         _properties_panel->showGlobalProperties();
     }
 }
@@ -164,41 +151,37 @@ void Analysis_Dashboard::handlePlotRemoved(QString const & plot_id) {
 void Analysis_Dashboard::handlePlotTypeSelected(QString const & plot_type) {
     qDebug() << "Plot type selected:" << plot_type;
 
-
-    AbstractPlotWidget * new_plot = createPlotWidget(plot_type);
-    if (new_plot) {
-        // Add the plot to the scene at a centered position
-        _dashboard_scene->addPlotWidget(new_plot, QPointF(0, 0));// Will be centered by the scene
-
-        // Ensure the plot is visible by fitting the scene content
+    if (createAndAddPlot(plot_type)) {
         // Use a small delay to ensure the plot is properly added first
         QTimer::singleShot(10, [this]() {
-            if (_graphics_view && _dashboard_scene) {
-                _graphics_view->fitInView(_dashboard_scene->sceneRect(), Qt::KeepAspectRatio);
-            }
+            updatePlotDisplay();
         });
     }
 }
 
-AbstractPlotWidget * Analysis_Dashboard::createPlotWidget(QString const & plot_type) {
-    // Factory pattern for creating different plot types
-    if (plot_type == "scatter_plot") {
-        return new ScatterPlotWidget();
-    } else if (plot_type == "spatial_overlay_plot") {
-        qDebug() << "Creating spatial overlay plot widget";
-        return new SpatialOverlayPlotWidget();
-    } else if (plot_type == "event_plot") {
-        qDebug() << "Creating event plot widget";
-        return new EventPlotWidget();
+bool Analysis_Dashboard::createAndAddPlot(QString const & plot_type) {
+    qDebug() << "Analysis_Dashboard::createAndAddPlot: Creating plot of type:" << plot_type;
+    
+    // Use the plot factory to create a complete plot container
+    auto plot_container = PlotFactory::createPlotContainer(plot_type);
+    if (!plot_container) {
+        qDebug() << "Failed to create plot container for type:" << plot_type;
+        return false;
     }
-
-    // Add more plot types here as they are implemented
-    // else if (plot_type == "line_plot") {
-    //     return new LinePlotWidget();
-    // }
-
-    qDebug() << "Unknown plot type:" << plot_type;
-    return nullptr;
+    
+    qDebug() << "Analysis_Dashboard::createAndAddPlot: Created plot container with ID:" << plot_container->getPlotId();
+    
+    // Configure the plot with all necessary managers
+    plot_container->configureManagers(_data_manager, _group_manager.get(), 
+                                     _toolbox_panel ? _toolbox_panel->getTableManager() : nullptr);
+    
+    qDebug() << "Analysis_Dashboard::createAndAddPlot: Configured managers, adding to organizer";
+    
+    // Add the plot to the organizer
+    _plot_organizer->addPlot(std::move(plot_container));
+    
+    qDebug() << "Analysis_Dashboard::createAndAddPlot: Successfully added to organizer";
+    return true;
 }
 
 void Analysis_Dashboard::_changeScrollbar(int64_t time_frame_index, std::string const & active_feature) {
@@ -224,17 +207,15 @@ void Analysis_Dashboard::_changeScrollbar(int64_t time_frame_index, std::string 
 void Analysis_Dashboard::resizeEvent(QResizeEvent * event) {
     QMainWindow::resizeEvent(event);
 
-    // Update the graphics view to fit the new size
-    updateGraphicsView();
+    // Update the plot display to fit the new size
+    updatePlotDisplay();
 }
 
-void Analysis_Dashboard::updateGraphicsView() {
-    if (_graphics_view && _dashboard_scene) {
-        // Don't change the scene rect - just fit the existing content to the view
-        // This preserves the positions of existing plots
-        _graphics_view->fitInView(_dashboard_scene->sceneRect(), Qt::KeepAspectRatio);
-        
-        // Ensure all plots are still visible within the scene bounds
-        _dashboard_scene->ensurePlotsVisible();
+void Analysis_Dashboard::updatePlotDisplay() {
+    if (_plot_organizer) {
+        // For GraphicsScene organizer, ensure plots are visible
+        if (auto* graphics_organizer = dynamic_cast<GraphicsScenePlotOrganizer*>(_plot_organizer.get())) {
+            graphics_organizer->ensurePlotsVisible();
+        }
     }
 }

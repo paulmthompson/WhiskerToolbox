@@ -84,6 +84,7 @@ public:
      */
     QString getPlotId() const;
 
+
 signals:
     /**
      * @brief Emitted when this plot is selected/clicked

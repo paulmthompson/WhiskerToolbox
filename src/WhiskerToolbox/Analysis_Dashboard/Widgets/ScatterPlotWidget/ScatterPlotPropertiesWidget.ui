@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ScatterPlotPropertiesWidget</class>
+ <widget class="QWidget" name="ScatterPlotPropertiesWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>300</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Scatter Plot Properties</string>
+  </property>
+  <layout class="QVBoxLayout" name="main_layout">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <property name="leftMargin">
+    <number>5</number>
+   </property>
+   <property name="topMargin">
+    <number>5</number>
+   </property>
+   <property name="rightMargin">
+    <number>5</number>
+   </property>
+   <property name="bottomMargin">
+    <number>5</number>
+   </property>
+   <item>
+    <widget class="QGroupBox" name="x_axis_group">
+     <property name="title">
+      <string>X-Axis Data</string>
+     </property>
+     <layout class="QVBoxLayout" name="x_axis_layout">
+      <item>
+       <layout class="QHBoxLayout" name="x_axis_selection_layout">
+        <item>
+         <widget class="QLabel" name="x_axis_label">
+          <property name="text">
+           <string>Data Source:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="x_axis_combo">
+          <property name="minimumWidth">
+           <number>150</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="x_axis_info_label">
+        <property name="text">
+         <string>Select a data source for the X-axis</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel { 
+color: #555; 
+font-size: 11px; 
+padding: 8px; 
+background-color: #f0f0f0; 
+border: 1px solid #ccc; 
+border-radius: 4px; 
+}</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="y_axis_group">
+     <property name="title">
+      <string>Y-Axis Data</string>
+     </property>
+     <layout class="QVBoxLayout" name="y_axis_layout">
+      <item>
+       <layout class="QHBoxLayout" name="y_axis_selection_layout">
+        <item>
+         <widget class="QLabel" name="y_axis_label">
+          <property name="text">
+           <string>Data Source:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="y_axis_combo">
+          <property name="minimumWidth">
+           <number>150</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="y_axis_info_label">
+        <property name="text">
+         <string>Select a data source for the Y-axis</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel { 
+color: #555; 
+font-size: 11px; 
+padding: 8px; 
+background-color: #f0f0f0; 
+border: 1px solid #ccc; 
+border-radius: 4px; 
+}</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="visualization_group">
+     <property name="title">
+      <string>Visualization Settings</string>
+     </property>
+     <layout class="QVBoxLayout" name="vis_layout">
+      <item>
+       <layout class="QHBoxLayout" name="point_size_layout">
+        <item>
+         <widget class="QLabel" name="point_size_label">
+          <property name="text">
+           <string>Point Size:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="point_size_spinbox">
+          <property name="suffix">
+           <string>px</string>
+          </property>
+          <property name="minimum">
+           <double>0.500000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>20.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.500000000000000</double>
+          </property>
+          <property name="value">
+           <double>3.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_point_size">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="point_color_layout">
+        <item>
+         <widget class="QLabel" name="point_color_label">
+          <property name="text">
+           <string>Point Color:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="point_color_button">
+          <property name="minimumSize">
+           <size>
+            <width>60</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QPushButton { 
+background-color: #3268a8; 
+border: 1px solid #ccc; 
+border-radius: 3px; 
+}</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_point_color">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="show_grid_checkbox">
+        <property name="text">
+         <string>Show Grid</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="show_legend_checkbox">
+        <property name="text">
+         <string>Show Legend</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui> 

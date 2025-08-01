@@ -81,8 +81,10 @@ void SpatialOverlayPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot
                     }
                 });
 
-        // Update available data sources
-        updateAvailableDataSources();
+        // Update available data sources if data manager is available. Might be null during initial setup.
+        if (_data_manager) {
+            updateAvailableDataSources();
+        }
 
         // Update UI from plot
         updateFromPlot();

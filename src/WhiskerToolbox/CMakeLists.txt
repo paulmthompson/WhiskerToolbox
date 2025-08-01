@@ -35,6 +35,14 @@ set(PROJECT_SOURCES
         Analysis_Dashboard/Analysis_Dashboard.cpp
         Analysis_Dashboard/Analysis_Dashboard.ui
 
+        Analysis_Dashboard/AbstractPlotOrganizer.hpp 
+        Analysis_Dashboard/GraphicsScenePlotOrganizer.hpp 
+        Analysis_Dashboard/GraphicsScenePlotOrganizer.cpp
+        Analysis_Dashboard/PlotContainer.hpp 
+        Analysis_Dashboard/PlotContainer.cpp
+        Analysis_Dashboard/PlotFactory.hpp 
+        Analysis_Dashboard/PlotFactory.cpp
+
         Analysis_Dashboard/Plots/AbstractPlotWidget.hpp
         Analysis_Dashboard/Plots/AbstractPlotWidget.cpp
         Analysis_Dashboard/Plots/AbstractPlotParameters.hpp
@@ -61,6 +69,9 @@ set(PROJECT_SOURCES
 
         Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
         Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
+        Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp
+        Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.cpp
+        Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.ui
 
         Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotWidget.hpp
         Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotWidget.cpp

@@ -82,7 +82,9 @@ QString AbstractPlotWidget::getPlotId() const {
 
 void AbstractPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
     // Handle selection
-    emit plotSelected(QString::fromStdString(_parameters.getPlotId()));
+    QString plot_id = QString::fromStdString(_parameters.getPlotId());
+    qDebug() << "AbstractPlotWidget::mousePressEvent: Emitting plotSelected for plot_id:" << plot_id;
+    emit plotSelected(plot_id);
 
     // Call parent implementation for standard behavior (dragging, etc.)
     QGraphicsWidget::mousePressEvent(event);

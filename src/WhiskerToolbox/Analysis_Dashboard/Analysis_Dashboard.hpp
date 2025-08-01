@@ -5,8 +5,7 @@
 
 #include <memory>
 
-class AnalysisDashboardScene;
-class AbstractPlotWidget;
+class AbstractPlotOrganizer;
 class DataManager;
 class GroupManager;
 class QGraphicsView;
@@ -99,8 +98,7 @@ private:
     // Main panels
     ToolboxPanel * _toolbox_panel;
     PropertiesPanel * _properties_panel;
-    AnalysisDashboardScene * _dashboard_scene;
-    QGraphicsView * _graphics_view;
+    std::unique_ptr<AbstractPlotOrganizer> _plot_organizer;
 
     // Layout
     QSplitter * _main_splitter;
@@ -121,19 +119,20 @@ private:
     void connectSignals();
 
     /**
-     * @brief Create a plot widget of the specified type
+     * @brief Create a plot container for the specified type
      * 
-     * This is a factory method that creates a new plot widget of the specified type.
+     * This method uses the PlotFactory to create a complete plot container
+     * with both plot widget and properties widget.
      * 
      * @param plot_type The type of plot to create
-     * @return Pointer to the created plot widget, or nullptr if creation failed
+     * @return True if plot was created and added successfully, false otherwise
      */
-    AbstractPlotWidget * createPlotWidget(QString const & plot_type);
+    bool createAndAddPlot(QString const & plot_type);
 
     /**
-     * @brief Update the graphics view to fit the scene content
+     * @brief Update the plot organizer display
      */
-    void updateGraphicsView();
+    void updatePlotDisplay();
 };
 
 #endif// ANALYSIS_DASHBOARD_HPP

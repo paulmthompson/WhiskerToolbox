@@ -2,6 +2,7 @@
 #include "AbstractPlotPropertiesWidget.hpp"
 #include "Analysis_Dashboard/Plots/AbstractPlotWidget.hpp"
 #include "Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp"
+#include "Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp"
 #include "GlobalPropertiesWidget.hpp"
 #include "ui_PropertiesPanel.h"
@@ -90,6 +91,35 @@ void PropertiesPanel::showPlotProperties(QString const & plot_id, AbstractPlotWi
     }
 }
 
+void PropertiesPanel::showContainerProperties(QString const & plot_id, AbstractPlotPropertiesWidget * properties_widget) {
+    qDebug() << "PropertiesPanel: showContainerProperties called for plot_id:" << plot_id;
+
+    if (!properties_widget) {
+        qDebug() << "PropertiesPanel: No properties widget provided, showing global properties";
+        showGlobalProperties();
+        return;
+    }
+
+    _current_plot_id = plot_id;
+    // We don't store the plot widget in this case since we're using the container's properties widget
+
+    qDebug() << "PropertiesPanel: Switching to container properties widget";
+    
+    // Check if this properties widget is already in the stacked widget
+    int index = _stacked_widget->indexOf(properties_widget);
+    if (index == -1) {
+        // Add the properties widget to the stacked widget
+        qDebug() << "PropertiesPanel: Adding new properties widget to stack";
+        _stacked_widget->addWidget(properties_widget);
+    }
+    
+    // Update the properties widget from its associated plot
+    properties_widget->updateFromPlot();
+    
+    // Show the properties widget
+    _stacked_widget->setCurrentWidget(properties_widget);
+}
+
 void PropertiesPanel::showGlobalProperties() {
     qDebug() << "PropertiesPanel: showGlobalProperties called";
     _current_plot_id.clear();
@@ -134,6 +164,14 @@ void PropertiesPanel::registerBuiltInPropertiesWidgets() {
     }
     registerPlotPropertiesWidget("Event Plot", event_properties);
     qDebug() << "PropertiesPanel: Registered properties widget for 'Event Plot'";
+
+    // Scatter Plot
+    ScatterPlotPropertiesWidget * scatter_properties = new ScatterPlotPropertiesWidget(this);
+    if (_data_manager) {
+        scatter_properties->setDataManager(_data_manager);
+    }
+    registerPlotPropertiesWidget("Scatter Plot", scatter_properties);
+    qDebug() << "PropertiesPanel: Registered properties widget for 'Scatter Plot'";
 }
 
 AbstractPlotPropertiesWidget * PropertiesPanel::getPropertiesWidgetForPlotType(QString const & plot_type) {
