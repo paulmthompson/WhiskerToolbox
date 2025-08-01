@@ -67,7 +67,7 @@ void PropertiesPanel::showPlotProperties(const QString& plot_id, AbstractPlotWid
     _current_plot_widget = plot_widget;
     
     // Get the properties widget for this plot type
-    QString plot_type = plot_widget->getPlotType();
+    QString const plot_type = plot_widget->getPlotType();
     qDebug() << "PropertiesPanel: Showing properties for plot type:" << plot_type;
     AbstractPlotPropertiesWidget* properties_widget = getPropertiesWidgetForPlotType(plot_type);
     
@@ -120,7 +120,7 @@ void PropertiesPanel::registerBuiltInPropertiesWidgets() {
     // Register properties widgets for built-in plot types
     
     // Spatial Overlay Plot
-    SpatialOverlayPlotPropertiesWidget* spatial_properties = new SpatialOverlayPlotPropertiesWidget(this);
+    auto* spatial_properties = new SpatialOverlayPlotPropertiesWidget(this);
     if (_data_manager) {
         spatial_properties->setDataManager(_data_manager);
     }
@@ -128,7 +128,7 @@ void PropertiesPanel::registerBuiltInPropertiesWidgets() {
     qDebug() << "PropertiesPanel: Registered properties widget for 'Spatial Overlay Plot'";
 
     // Event Plot
-    EventPlotPropertiesWidget* event_properties = new EventPlotPropertiesWidget(this);
+    auto* event_properties = new EventPlotPropertiesWidget(this);
     if (_data_manager) {
         event_properties->setDataManager(_data_manager);
     }
