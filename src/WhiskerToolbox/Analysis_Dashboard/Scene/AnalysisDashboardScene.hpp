@@ -63,13 +63,13 @@ public:
      * @param plot_id The unique ID of the plot
      * @return Pointer to the plot widget, or nullptr if not found
      */
-    [[nodiscard]] AbstractPlotWidget* getPlotWidget(const QString& plot_id) const;
+    AbstractPlotWidget* getPlotWidget(const QString& plot_id) const;
 
     /**
      * @brief Get all plot widgets in the scene
      * @return Map of plot ID to plot widget pointer
      */
-    [[nodiscard]] QMap<QString, AbstractPlotWidget*> getAllPlotWidgets() const;
+    QMap<QString, AbstractPlotWidget*> getAllPlotWidgets() const;
 
 signals:
     /**
@@ -132,7 +132,7 @@ private:
      * @param mime_data The mime data containing plot type information
      * @return Pointer to the created plot widget, or nullptr if creation failed
      */
-    static AbstractPlotWidget* createPlotFromMimeData(const QMimeData* mime_data);
+    AbstractPlotWidget* createPlotFromMimeData(const QMimeData* mime_data);
 };
 
 #endif // ANALYSISDASHBOARDSCENE_HPP 

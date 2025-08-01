@@ -31,13 +31,13 @@ public:
      * @brief Get the plot type name (e.g., "Scatter Plot", "Line Plot")
      * @return The human-readable name of this plot type
      */
-    [[nodiscard]] virtual QString getPlotType() const = 0;
+    virtual QString getPlotType() const = 0;
 
     /**
      * @brief Get the plot instance name/title
      * @return The specific name/title for this plot instance
      */
-    [[nodiscard]] virtual QString getPlotTitle() const;
+    virtual QString getPlotTitle() const;
 
     /**
      * @brief Set the plot instance name/title
@@ -80,7 +80,7 @@ public:
      * @brief Get the unique identifier for this plot instance
      * @return Unique ID string
      */
-    [[nodiscard]] QString getPlotId() const;
+    QString getPlotId() const;
 
 signals:
     /**

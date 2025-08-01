@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>390</width>
-    <height>412</height>
+    <width>400</width>
+    <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,20 +16,21 @@
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="titleLabel">
-     <property name="styleSheet">
-      <string>font-weight: bold; font-size: 14px;</string>
-     </property>
      <property name="text">
       <string>Remove Small Connected Components</string>
      </property>
      <property name="alignment">
-      <set>Qt::AlignmentFlag::AlignCenter</set>
+      <set>Qt::AlignCenter</set>
      </property>
      <property name="margin">
       <number>5</number>
      </property>
+     <property name="styleSheet">
+      <string>font-weight: bold; font-size: 14px;</string>
+     </property>
     </widget>
    </item>
+   
    <item>
     <widget class="QGroupBox" name="descriptionGroupBox">
      <property name="title">
@@ -48,9 +49,6 @@
       </item>
       <item>
        <widget class="QLabel" name="bulletPointsLabel">
-        <property name="styleSheet">
-         <string>margin-left: 10px;</string>
-        </property>
         <property name="text">
          <string>• Identifies connected regions using 8-connectivity (including diagonals)
 • Removes components smaller than the specified threshold
@@ -60,11 +58,15 @@
         <property name="wordWrap">
          <bool>true</bool>
         </property>
+        <property name="styleSheet">
+         <string>margin-left: 10px;</string>
+        </property>
        </widget>
       </item>
      </layout>
     </widget>
    </item>
+   
    <item>
     <widget class="QGroupBox" name="parametersGroupBox">
      <property name="title">
@@ -97,6 +99,7 @@
      </layout>
     </widget>
    </item>
+   
    <item>
     <widget class="QGroupBox" name="notesGroupBox">
      <property name="title">
@@ -105,24 +108,25 @@
      <layout class="QVBoxLayout" name="notesLayout">
       <item>
        <widget class="QLabel" name="notesLabel">
-        <property name="styleSheet">
-         <string>color: #666;</string>
-        </property>
         <property name="text">
          <string>This operation uses 8-connectivity, meaning pixels connected horizontally, vertically, or diagonally are considered part of the same component. Choose a threshold that removes unwanted noise while preserving meaningful mask regions.</string>
         </property>
         <property name="wordWrap">
          <bool>true</bool>
         </property>
+        <property name="styleSheet">
+         <string>color: #666;</string>
+        </property>
        </widget>
       </item>
      </layout>
     </widget>
    </item>
+   
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
-      <enum>Qt::Orientation::Vertical</enum>
+      <enum>Qt::Vertical</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
@@ -136,4 +140,4 @@
  </widget>
  <resources/>
  <connections/>
-</ui>
+</ui> 

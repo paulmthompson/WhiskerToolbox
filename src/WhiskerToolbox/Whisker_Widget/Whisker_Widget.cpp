@@ -59,7 +59,7 @@ Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
       _data_manager{std::move(data_manager)},
       ui(new Ui::Whisker_Widget) {
     ui->setupUi(this);
-    
+
     _data_manager->setData<LineData>("unlabeled_whiskers");
 
     _janelia_config_widget = new Janelia_Config(_wt);

@@ -24,9 +24,6 @@ MediaMask_Widget::MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Me
       _scene{scene} {
     ui->setupUi(this);
 
-    // Set size policy for proper resizing
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-
     // Setup selection modes
     _selection_modes["(None)"] = Selection_Mode::None;
     _selection_modes["Brush"] = Selection_Mode::Brush;
@@ -641,26 +638,5 @@ void MediaMask_Widget::_onAllowEmptyMaskChanged(bool allow) {
     _allow_empty_mask = allow;
     if (_debug_performance) {
         std::cout << "Allow empty mask setting changed to: " << (allow ? "enabled" : "disabled") << std::endl;
-    }
-}
-
-void MediaMask_Widget::resizeEvent(QResizeEvent* event) {
-    QWidget::resizeEvent(event);
-
-    // Ensure the color picker and stacked widget components resize properly
-    int availableWidth = width() - 20; // Account for margins
-
-    // Update color picker width to use available space
-    ui->color_picker->setFixedWidth(qMin(availableWidth, 400)); // Cap at reasonable maximum
-
-    // Update stacked widget width
-    ui->mode_stacked_widget->setFixedWidth(availableWidth);
-
-    // Update all widgets in the stacked widget
-    for (int i = 0; i < ui->mode_stacked_widget->count(); ++i) {
-        QWidget* widget = ui->mode_stacked_widget->widget(i);
-        if (widget) {
-            widget->setFixedWidth(availableWidth);
-        }
     }
 }
