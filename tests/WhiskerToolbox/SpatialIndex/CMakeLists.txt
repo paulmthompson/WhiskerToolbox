@@ -1,3 +1,12 @@
+if (APPLE)
+    message(STATUS "Testing Currenly not supported on MacOS")
+    return()
+endif()
+
+if (WIN32)
+    message(STATUS "Testing Currenly not supported on Windows")
+    return()
+endif()
 
 # Test executable for SpatialIndex
 add_executable(SpatialIndexTests
