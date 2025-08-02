@@ -29,10 +29,6 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Plots/AbstractPlotParameters.hpp
     Plots/AbstractPlotParameters.cpp
 
-    # Scene
-    Scene/AnalysisDashboardScene.hpp
-    Scene/AnalysisDashboardScene.cpp
-
     # Groups
     Groups/GroupManager.hpp
     Groups/GroupManager.cpp
