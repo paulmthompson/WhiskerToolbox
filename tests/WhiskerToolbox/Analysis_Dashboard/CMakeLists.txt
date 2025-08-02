@@ -17,6 +17,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 # Test executable for AnalysisDashboard
 add_executable(AnalysisDashboardTests
     test_analysis_dashboard.cpp
+    ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/whiskertoolbox.qrc
 )
 
 target_link_libraries(AnalysisDashboardTests 
@@ -34,6 +35,8 @@ target_link_libraries(AnalysisDashboardTests
     Qt6::OpenGL
     Qt6::OpenGLWidgets
 )
+
+#Turn off sanitize for this target
 
 target_include_directories(AnalysisDashboardTests PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Analysis_Dashboard>"

@@ -15,6 +15,8 @@
 #include <QWidget>
 #include <QOpenGLContext>
 #include <QOffscreenSurface>
+#include <QOpenGLFunctions>
+
 #include <memory>
 #include <filesystem>
 #include <fstream>
@@ -40,73 +42,131 @@ protected:
     ~QtTestFixture() {
         // Clean up any remaining widgets
         QApplication::processEvents();
+
+        QApplication::closeAllWindows();
+
+        if (context) {
+            context->makeCurrent(nullptr);
+        }
+
+        if (surface) {
+            surface->destroy();
+        }
     }
     
     void setupOpenGLContext() {
-        // Create an offscreen surface for OpenGL context
+        // Set OpenGL format for OpenGL 4.1 compatibility
+        QSurfaceFormat format;
+        format.setVersion(4, 1);
+        format.setProfile(QSurfaceFormat::CoreProfile);
+        format.setRenderableType(QSurfaceFormat::OpenGL);
+        format.setSwapBehavior(QSurfaceFormat::SingleBuffer);
+        format.setSwapInterval(0); // Disable vsync
+
+        // Create OpenGL context with the specified format
+        context = std::make_unique<QOpenGLContext>();
+        context->setFormat(format);
+        
+        // Create an offscreen surface with the specified format
         surface = std::make_unique<QOffscreenSurface>();
+        surface->setFormat(format);
         surface->create();
         
-        // Create OpenGL context
-        context = std::make_unique<QOpenGLContext>();
-        context->create();
-        context->makeCurrent(surface.get());
+        if (!context->create()) {
+            FAIL("Failed to create OpenGL context");
+            return;
+        }
         
-        // Verify context is valid
+        if (!context->makeCurrent(surface.get())) {
+            FAIL("Failed to make OpenGL context current");
+            return;
+        }
+        
+        // Verify context is valid and has the required version
         REQUIRE(context->isValid());
+        
+        // Check OpenGL version
+        QOpenGLFunctions* functions = context->functions();
+        REQUIRE(functions != nullptr);
+        
+        // Get OpenGL version
+        const char* version = reinterpret_cast<const char*>(functions->glGetString(GL_VERSION));
+        REQUIRE(version != nullptr);
+        
     }
     
     void initializeShaderManager() {
         // Get the ShaderManager instance
         auto& shader_manager = ShaderManager::instance();
         
-        // Create basic vertex and fragment shaders for testing
-        // These are minimal shaders that should compile successfully
-        std::string vertex_shader_source = R"(
-            #version 330 core
-            layout (location = 0) in vec3 aPos;
-            uniform mat4 model;
-            uniform mat4 view;
-            uniform mat4 projection;
-            void main() {
-                gl_Position = projection * view * model * vec4(aPos, 1.0);
-            }
-        )";
+        // Test resource file access first
+        QFile testFile(":/shaders/point.frag");
+        if (!testFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            std::cerr << "Failed to open resource file :/shaders/point.frag" << std::endl;
+            FAIL("Cannot access shader resources");
+            return;
+        }
         
-        std::string fragment_shader_source = R"(
-            #version 330 core
-            out vec4 FragColor;
-            uniform vec3 color;
-            void main() {
-                FragColor = vec4(color, 1.0);
-            }
-        )";
+        QTextStream in(&testFile);
+        QString content = in.readAll();
+        testFile.close();
         
-        // Write shaders to temporary files
-        vertex_shader_path = std::filesystem::temp_directory_path() / "test_vertex.glsl";
-        fragment_shader_path = std::filesystem::temp_directory_path() / "test_fragment.glsl";
+        std::cout << "Shader content length: " << content.length() << std::endl;
+        if (content.length() < 10) {
+            std::cerr << "Shader content too short, might be empty or corrupted" << std::endl;
+            FAIL("Shader resource appears to be empty or corrupted");
+            return;
+        }
         
-        std::ofstream vertex_file(vertex_shader_path);
-        vertex_file << vertex_shader_source;
-        vertex_file.close();
+        // Load shaders from the qrc resource file
+        // These are the actual shaders used by your application
+        bool success = shader_manager.loadProgram("point", 
+                                                ":/shaders/point.vert", 
+                                                ":/shaders/point.frag", 
+                                                "", 
+                                                ShaderSourceType::Resource);
+        if (!success) {
+            std::cerr << "Failed to load point shader program" << std::endl;
+        }
+        REQUIRE(success);
         
-        std::ofstream fragment_file(fragment_shader_path);
-        fragment_file << fragment_shader_source;
-        fragment_file.close();
+        success = shader_manager.loadProgram("line", 
+                                          ":/shaders/line.vert", 
+                                          ":/shaders/line.frag", 
+                                          "", 
+                                          ShaderSourceType::Resource);
+        if (!success) {
+            std::cerr << "Failed to load line shader program" << std::endl;
+        }
+        REQUIRE(success);
         
-        // Load the test shader program
-        bool success = shader_manager.loadProgram("test_program", 
-                                                vertex_shader_path.string(),
-                                                fragment_shader_path.string());
+        success = shader_manager.loadProgram("texture", 
+                                          ":/shaders/texture.vert", 
+                                          ":/shaders/texture.frag", 
+                                          "", 
+                                          ShaderSourceType::Resource);
+        if (!success) {
+            std::cerr << "Failed to load texture shader program" << std::endl;
+        }
+        REQUIRE(success);
+        
+        // Also load a more complex shader with geometry shader
+        success = shader_manager.loadProgram("line_with_geometry", 
+                                          ":/shaders/line_with_geometry.vert", 
+                                          ":/shaders/line_with_geometry.frag", 
+                                          ":/shaders/line_with_geometry.geom", 
+                                          ShaderSourceType::Resource);
+        if (!success) {
+            std::cerr << "Failed to load line_with_geometry shader program" << std::endl;
+        }
         REQUIRE(success);
     }
     
     std::unique_ptr<QApplication> app;
     std::unique_ptr<QOffscreenSurface> surface;
     std::unique_ptr<QOpenGLContext> context;
-    std::filesystem::path vertex_shader_path;
-    std::filesystem::path fragment_shader_path;
 };
+
 
 TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - Basic Creation", "[AnalysisDashboard]") {
     // Create a data manager
@@ -346,10 +406,18 @@ TEST_CASE_METHOD(QtTestFixture, "Analysis Dashboard - ShaderManager Integration"
     auto& shader_manager = ShaderManager::instance();
     REQUIRE(&shader_manager != nullptr);
     
-    // Test that our test shader program was loaded
-    auto test_program = shader_manager.getProgram("test_program");
-    REQUIRE(test_program != nullptr);
-    REQUIRE(test_program->getProgramId() != 0);
+    // Test that our shader programs were loaded from resources
+    auto point_program = shader_manager.getProgram("point");
+    REQUIRE(point_program != nullptr);
+    REQUIRE(point_program->getProgramId() != 0);
+    
+    auto line_program = shader_manager.getProgram("line");
+    REQUIRE(line_program != nullptr);
+    REQUIRE(line_program->getProgramId() != 0);
+    
+    auto texture_program = shader_manager.getProgram("texture");
+    REQUIRE(texture_program != nullptr);
+    REQUIRE(texture_program->getProgramId() != 0);
     
     // Create a data manager
     auto data_manager = std::make_shared<DataManager>();
@@ -422,4 +490,81 @@ TEST_CASE_METHOD(QtTestFixture, "Feature_Table_Widget - Data Manager Integration
     
     // Clean up
     delete feature_table_widget;
+}
+
+TEST_CASE_METHOD(QtTestFixture, "OpenGL Context - Version Check", "[OpenGL]") {
+    // Test that we have a valid OpenGL 4.1+ context
+    REQUIRE(context != nullptr);
+    REQUIRE(context->isValid());
+    
+    // Get OpenGL version information
+    QOpenGLFunctions* functions = context->functions();
+    REQUIRE(functions != nullptr);
+    
+    const char* version = reinterpret_cast<const char*>(functions->glGetString(GL_VERSION));
+    REQUIRE(version != nullptr);
+    
+    const char* vendor = reinterpret_cast<const char*>(functions->glGetString(GL_VENDOR));
+    const char* renderer = reinterpret_cast<const char*>(functions->glGetString(GL_RENDERER));
+    
+    // Print OpenGL information for debugging
+    std::cout << "OpenGL Version: " << version << std::endl;
+    std::cout << "OpenGL Vendor: " << vendor << std::endl;
+    std::cout << "OpenGL Renderer: " << renderer << std::endl;
+    
+    // Parse version string to check if it's >= 4.1
+    QString versionStr(version);
+    QStringList parts = versionStr.split('.');
+    REQUIRE(parts.size() >= 2);
+    
+    int major = parts[0].toInt();
+    int minor = parts[1].toInt();
+    
+    REQUIRE(major >= 4);
+    if (major == 4) {
+        REQUIRE(minor >= 1);
+    }
+}
+
+TEST_CASE_METHOD(QtTestFixture, "ShaderManager - Resource Loading", "[ShaderManager]") {
+    // Test that ShaderManager can load shaders from Qt resources
+    auto& shader_manager = ShaderManager::instance();
+    REQUIRE(&shader_manager != nullptr);
+    
+    // Test loading different types of shaders from resources
+    SECTION("Basic Vertex/Fragment Shaders") {
+        auto point_program = shader_manager.getProgram("point");
+        REQUIRE(point_program != nullptr);
+        REQUIRE(point_program->getProgramId() != 0);
+        
+        auto line_program = shader_manager.getProgram("line");
+        REQUIRE(line_program != nullptr);
+        REQUIRE(line_program->getProgramId() != 0);
+    }
+    
+    SECTION("Texture Shader") {
+        auto texture_program = shader_manager.getProgram("texture");
+        REQUIRE(texture_program != nullptr);
+        REQUIRE(texture_program->getProgramId() != 0);
+    }
+    
+    SECTION("Geometry Shader") {
+        auto geometry_program = shader_manager.getProgram("line_with_geometry");
+        REQUIRE(geometry_program != nullptr);
+        REQUIRE(geometry_program->getProgramId() != 0);
+    }
+    
+    SECTION("Shader Program Properties") {
+        auto point_program = shader_manager.getProgram("point");
+        REQUIRE(point_program != nullptr);
+        
+        // Test that the program has valid OpenGL program ID
+        GLuint program_id = point_program->getProgramId();
+        REQUIRE(program_id != 0);
+        
+        // Test that we can get the native QOpenGLShaderProgram
+        QOpenGLShaderProgram* native_program = point_program->getNativeProgram();
+        REQUIRE(native_program != nullptr);
+        REQUIRE(native_program->isLinked());
+    }
 }
