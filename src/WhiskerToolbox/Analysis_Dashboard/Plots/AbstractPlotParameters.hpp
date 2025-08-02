@@ -53,7 +53,6 @@ struct AbstractPlotParameters {
     std::string getPlotTitle() const;
 
     // State variables
-    std::shared_ptr<DataManager> data_manager;
     DataSourceRegistry * data_source_registry = nullptr;
     GroupManager * group_manager = nullptr;
     TableManager * table_manager = nullptr;

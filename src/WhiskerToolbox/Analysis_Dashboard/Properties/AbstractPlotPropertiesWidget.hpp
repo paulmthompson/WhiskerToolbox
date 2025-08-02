@@ -5,6 +5,7 @@
 
 class AbstractPlotWidget;
 class DataManager;
+class DataSourceRegistry;
 
 /**
  * @brief Abstract base class for plot-specific properties widgets
@@ -24,6 +25,12 @@ public:
      * @param data_manager Pointer to the data manager
      */
     virtual void setDataManager(std::shared_ptr<DataManager> data_manager) = 0;
+
+    /**
+     * @brief Set the data source registry for unified data access
+     * @param data_source_registry Pointer to the data source registry
+     */
+    virtual void setDataSourceRegistry(DataSourceRegistry * data_source_registry) = 0;
 
     /**
      * @brief Set the plot widget that this properties widget configures
@@ -49,6 +56,7 @@ signals:
 
 protected:
     AbstractPlotWidget * _plot_widget;
+    DataSourceRegistry * _data_source_registry;
 };
 
 #endif// ABSTRACTPLOTPROPERTIESWIDGET_HPP

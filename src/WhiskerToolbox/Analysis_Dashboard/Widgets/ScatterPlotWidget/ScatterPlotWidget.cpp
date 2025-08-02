@@ -1,5 +1,7 @@
 #include "ScatterPlotWidget.hpp"
 
+#include "Analysis_Dashboard/DataSourceRegistry.hpp"
+
 #include <QBrush>
 #include <QPainter>
 #include <QPen>

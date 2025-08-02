@@ -1,6 +1,7 @@
 #include "EventPlotWidget.hpp"
 #include "EventPlotOpenGLWidget.hpp"
 
+#include "Analysis_Dashboard/DataSourceRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/adapters/DataManagerExtension.h"
 #include "DataManager/utils/TableView/computers/EventInIntervalComputer.h"
@@ -119,7 +120,7 @@ void EventPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
 }
 
 void EventPlotWidget::updateVisualization() {
-    if (!_parameters.data_manager || !_opengl_widget) {
+    if (!_parameters.data_source_registry || !_opengl_widget) {
         return;
     }
 
@@ -140,11 +141,33 @@ void EventPlotWidget::loadEventData() {
     qDebug() << "EventPlotWidget::loadEventData _event_data_keys: " << _event_data_keys;
     qDebug() << "EventPlotWidget::loadEventData _y_axis_data_keys: " << _y_axis_data_keys;
 
-    // We will use builder to create a table view
-    auto dataManagerExtension = std::make_shared<DataManagerExtension>(*_parameters.data_manager);
-    TableViewBuilder builder(dataManagerExtension);
+    // Get DataManager from the DataSourceRegistry
+    auto digital_interval_series = _parameters.data_source_registry->getData<DigitalIntervalSeries>(_event_data_keys[0].toStdString());
+    if (!digital_interval_series) {
+        qDebug() << "EventPlotWidget::loadEventData digital_interval_series is nullptr";
+        return;
+    }
 
-    auto rowIntervalSeries = _parameters.data_manager->getData<DigitalIntervalSeries>(_event_data_keys[0].toStdString());
+    // We will use builder to create a table view
+    // Note: DataManagerExtension still needs the actual DataManager
+    // For now, get it from the registry for compatibility
+    AbstractDataSource* primary_source = _parameters.data_source_registry->getDataSource("primary_data_manager");
+    if (!primary_source || primary_source->getType() != "DataManager") {
+        qDebug() << "EventPlotWidget::loadEventData: No primary DataManager source available";
+        return;
+    }
+    
+    DataManagerSource* dm_source = static_cast<DataManagerSource*>(primary_source);
+    DataManager* data_manager = dm_source->getDataManager();
+    if (!data_manager) {
+        qDebug() << "EventPlotWidget::loadEventData: DataManager is null";
+        return;
+    }
+
+    auto dataManagerExtension = std::make_shared<DataManagerExtension>(*data_manager);
+    TableViewBuilder builder(dataManagerExtension);
+    
+    auto rowIntervalSeries = digital_interval_series;
     if (!rowIntervalSeries) {
         qDebug() << "EventPlotWidget::loadEventData rowIntervalSeries is nullptr";
         return;
@@ -156,8 +179,8 @@ void EventPlotWidget::loadEventData() {
         timeFrameIntervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
     }
 
-    auto row_timeframe_key = _parameters.data_manager->getTimeFrame(_event_data_keys[0].toStdString());
-    auto row_timeframe = _parameters.data_manager->getTime(row_timeframe_key);
+    auto row_timeframe_key = data_manager->getTimeFrame(_event_data_keys[0].toStdString());
+    auto row_timeframe = data_manager->getTime(row_timeframe_key);
 
     if (!row_timeframe) {
         qDebug() << "EventPlotWidget::loadEventData row_timeframe is nullptr";

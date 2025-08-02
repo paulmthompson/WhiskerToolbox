@@ -2,6 +2,7 @@
 #include "ScatterPlotPropertiesWidget.hpp"
 #include "ScatterPlotWidget.hpp"
 
+#include "Analysis_Dashboard/DataSourceRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "ui_ScatterPlotPropertiesWidget.h"
@@ -27,6 +28,29 @@ ScatterPlotPropertiesWidget::~ScatterPlotPropertiesWidget() {
 
 void ScatterPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
     _data_manager = data_manager;
+    updateAvailableDataSources();
+}
+
+void ScatterPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * data_source_registry) {
+    _data_source_registry = data_source_registry;
+    
+    // For backwards compatibility, extract the DataManager from the registry
+    if (_data_source_registry) {
+        AbstractDataSource* primary_source = _data_source_registry->getDataSource("primary_data_manager");
+        if (primary_source && primary_source->getType() == "DataManager") {
+            // Get the actual DataManager for the feature table
+            DataManagerSource* dm_source = static_cast<DataManagerSource*>(primary_source);
+            DataManager* data_manager = dm_source->getDataManager();
+            
+            if (data_manager) {
+                // Create a shared_ptr for compatibility
+                std::shared_ptr<DataManager> shared_dm(data_manager, [](DataManager*){});
+                setDataManager(shared_dm);
+                qDebug() << "EventPlotPropertiesWidget: Set DataManager from DataSourceRegistry";
+            }
+        }
+    }
+    
     updateAvailableDataSources();
 }
 
@@ -68,7 +92,7 @@ void ScatterPlotPropertiesWidget::applyToPlot() {
 }
 
 void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
-    if (!_data_manager || !ui->x_axis_combo || !ui->y_axis_combo) {
+    if (!_data_source_registry || !ui->x_axis_combo || !ui->y_axis_combo) {
         return;
     }
 

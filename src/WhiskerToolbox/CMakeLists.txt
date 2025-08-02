@@ -24,6 +24,8 @@ add_subdirectory(DataManager)
 add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
 add_subdirectory(ShaderManager)
+add_subdirectory(TimeScrollBar)
+add_subdirectory(Analysis_Dashboard)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -31,92 +33,7 @@ set(PROJECT_SOURCES
         my_stylesheet.qss
         color_scheme.hpp
 
-        Analysis_Dashboard/Analysis_Dashboard.hpp
-        Analysis_Dashboard/Analysis_Dashboard.cpp
-        Analysis_Dashboard/Analysis_Dashboard.ui
 
-        Analysis_Dashboard/AbstractPlotOrganizer.hpp 
-        Analysis_Dashboard/GraphicsScenePlotOrganizer.hpp 
-        Analysis_Dashboard/GraphicsScenePlotOrganizer.cpp
-        Analysis_Dashboard/PlotContainer.hpp 
-        Analysis_Dashboard/PlotContainer.cpp
-        Analysis_Dashboard/PlotFactory.hpp 
-        Analysis_Dashboard/PlotFactory.cpp
-        Analysis_Dashboard/GroupCoordinator.hpp 
-        Analysis_Dashboard/GroupCoordinator.cpp
-        Analysis_Dashboard/DataSourceRegistry.hpp
-        Analysis_Dashboard/DataSourceRegistry.cpp
-
-        Analysis_Dashboard/Plots/AbstractPlotWidget.hpp
-        Analysis_Dashboard/Plots/AbstractPlotWidget.cpp
-        Analysis_Dashboard/Plots/AbstractPlotParameters.hpp
-        Analysis_Dashboard/Plots/AbstractPlotParameters.cpp
-
-        Analysis_Dashboard/Scene/AnalysisDashboardScene.hpp
-        Analysis_Dashboard/Scene/AnalysisDashboardScene.cpp
-
-        Analysis_Dashboard/Groups/GroupManager.hpp
-        Analysis_Dashboard/Groups/GroupManager.cpp
-        Analysis_Dashboard/Groups/GroupManagementWidget.hpp
-        Analysis_Dashboard/Groups/GroupManagementWidget.cpp
-        Analysis_Dashboard/Groups/GroupManagementWidget.ui
-
-        Analysis_Dashboard/Toolbox/ToolboxPanel.hpp
-        Analysis_Dashboard/Toolbox/ToolboxPanel.cpp
-        Analysis_Dashboard/Toolbox/ToolboxPanel.ui
-
-        Analysis_Dashboard/Tables/TableManager.hpp
-        Analysis_Dashboard/Tables/TableManager.cpp
-        Analysis_Dashboard/Tables/TableDesignerWidget.hpp
-        Analysis_Dashboard/Tables/TableDesignerWidget.cpp
-        Analysis_Dashboard/Tables/TableDesignerWidget.ui
-
-        Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.hpp
-        Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotWidget.cpp
-        Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.hpp
-        Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.cpp
-        Analysis_Dashboard/Widgets/ScatterPlotWidget/ScatterPlotPropertiesWidget.ui
-
-        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotWidget.hpp
-        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotWidget.cpp
-        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotPropertiesWidget.hpp
-        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotPropertiesWidget.cpp
-        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotPropertiesWidget.ui
-        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotOpenGLWidget.hpp
-        Analysis_Dashboard/Widgets/EventPlotWidget/EventPlotOpenGLWidget.cpp
-
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Lines/LineDataVisualization.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Lines/LineDataVisualization.cpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.cpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.cpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.cpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.cpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.cpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/SelectionHandlers.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/SelectionModes.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/SelectionModes.cpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.cpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.cpp
-        Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.ui
-
-        Analysis_Dashboard/Properties/PropertiesPanel.hpp
-        Analysis_Dashboard/Properties/PropertiesPanel.cpp
-        Analysis_Dashboard/Properties/PropertiesPanel.ui
-        Analysis_Dashboard/Properties/AbstractPlotPropertiesWidget.hpp
-        Analysis_Dashboard/Properties/AbstractPlotPropertiesWidget.cpp
-        Analysis_Dashboard/Properties/GlobalPropertiesWidget.hpp
-        Analysis_Dashboard/Properties/GlobalPropertiesWidget.cpp
-        Analysis_Dashboard/Properties/GlobalPropertiesWidget.ui
 
         BatchProcessing_Widget/BatchProcessing_Widget.hpp
         BatchProcessing_Widget/BatchProcessing_Widget.cpp
@@ -349,9 +266,7 @@ set(PROJECT_SOURCES
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.cpp
         Media_Widget/MouseBrush_Widget/MouseBrush_Widget.ui
 
-        TimeScrollBar/TimeScrollBar.hpp
-        TimeScrollBar/TimeScrollBar.cpp
-        TimeScrollBar/TimeScrollBar.ui
+
 
         DataViewer_Widget/DataViewer_Widget.cpp
         DataViewer_Widget/DataViewer_Widget.hpp
@@ -609,6 +524,8 @@ target_link_libraries(WhiskerToolbox PRIVATE DataManager DataViewer)
 target_link_libraries(WhiskerToolbox PRIVATE SpatialIndex)
 target_link_libraries(WhiskerToolbox PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(WhiskerToolbox PRIVATE ShaderManager)
+target_link_libraries(WhiskerToolbox PRIVATE TimeScrollBar)
+target_link_libraries(WhiskerToolbox PRIVATE Analysis_Dashboard)
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 

@@ -1,14 +1,16 @@
 #ifndef DATASOURCEREGISTRY_HPP
 #define DATASOURCEREGISTRY_HPP
 
+#include "DataManager/DataManager.hpp"
+
 #include <QObject>
 #include <QString>
 #include <QVariant>
 #include <QAbstractItemModel>
+
 #include <memory>
 #include <map>
 
-class DataManager;
 class QTableView;
 
 /**
@@ -107,6 +109,13 @@ public:
     QVariant getColumnData(const QString& column_name) const override;
     QVariant getValue(int row, const QString& column_name) const override;
 
+    /**
+     * @brief Get the underlying DataManager pointer for backwards compatibility
+     * @return Pointer to the wrapped DataManager, or nullptr if invalid
+     */
+    DataManager* getDataManager() const { return data_manager_; }
+
+
 private:
     DataManager* data_manager_;
     int data_manager_observer_id_;
@@ -196,6 +205,29 @@ public:
      * @return True if registered, false otherwise
      */
     bool isSourceRegistered(const QString& source_id) const;
+
+    /**
+     * @brief Get typed data from the primary DataManager source
+     * @tparam T The data type to retrieve (e.g., PointData, LineData)
+     * @param key The data key
+     * @return Shared pointer to the data, or nullptr if not found
+     */
+    template<typename T>
+    std::shared_ptr<T> getData(const std::string& key) const {
+        AbstractDataSource* primary_source = getDataSource("primary_data_manager");
+        if (!primary_source || primary_source->getType() != "DataManager") {
+            return nullptr;
+        }
+        
+        DataManagerSource* dm_source = static_cast<DataManagerSource*>(primary_source);
+        DataManager* data_manager = dm_source->getDataManager();
+        
+        if (!data_manager) {
+            return nullptr;
+        }
+        
+        return data_manager->getData<T>(key);
+    }
 
 signals:
     /**

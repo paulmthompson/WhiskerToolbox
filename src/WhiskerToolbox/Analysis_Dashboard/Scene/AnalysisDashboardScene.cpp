@@ -17,17 +17,6 @@ AnalysisDashboardScene::AnalysisDashboardScene(QObject * parent)
     setSceneRect(0, 0, 1000, 800);
 }
 
-void AnalysisDashboardScene::setDataManager(std::shared_ptr<DataManager> data_manager) {
-    _data_manager = std::move(data_manager);
-
-    // Update existing plot widgets with the data manager
-    for (auto * plot: _plot_widgets.values()) {
-        if (plot) {
-            plot->setDataManager(_data_manager);
-        }
-    }
-}
-
 void AnalysisDashboardScene::setGroupManager(GroupManager * group_manager) {
     _group_manager = group_manager;
 
@@ -53,11 +42,6 @@ void AnalysisDashboardScene::setTableManager(TableManager * table_manager) {
 void AnalysisDashboardScene::addPlotWidget(AbstractPlotWidget * plot_widget, QPointF const & position) {
     if (!plot_widget) {
         return;
-    }
-
-    // Set data manager if available
-    if (_data_manager) {
-        plot_widget->setDataManager(_data_manager);
     }
 
     // Set group manager if available

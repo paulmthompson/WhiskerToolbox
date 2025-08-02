@@ -8,6 +8,7 @@
 #include <set>
 
 class DataManager;
+class DataSourceRegistry;
 class EventPlotWidget;
 
 namespace Ui {
@@ -30,6 +31,7 @@ public:
     ~EventPlotPropertiesWidget() override;
 
     void setDataManager(std::shared_ptr<DataManager> data_manager) override;
+    void setDataSourceRegistry(DataSourceRegistry * data_source_registry) override;
     void setPlotWidget(AbstractPlotWidget * plot_widget) override;
     void updateFromPlot() override;
     void applyToPlot() override;

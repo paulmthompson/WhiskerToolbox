@@ -2,6 +2,7 @@
 #include "EventPlotOpenGLWidget.hpp"
 #include "EventPlotWidget.hpp"
 
+#include "Analysis_Dashboard/DataSourceRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "ui_EventPlotPropertiesWidget.h"
@@ -36,6 +37,27 @@ void EventPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data
     if (ui->y_axis_feature_table) {
         ui->y_axis_feature_table->setDataManager(_data_manager);
         ui->y_axis_feature_table->populateTable();
+    }
+}
+
+void EventPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * data_source_registry) {
+    _data_source_registry = data_source_registry;
+    
+    // For backwards compatibility, extract the DataManager from the registry
+    if (_data_source_registry) {
+        AbstractDataSource* primary_source = _data_source_registry->getDataSource("primary_data_manager");
+        if (primary_source && primary_source->getType() == "DataManager") {
+            // Get the actual DataManager for the feature table
+            DataManagerSource* dm_source = static_cast<DataManagerSource*>(primary_source);
+            DataManager* data_manager = dm_source->getDataManager();
+            
+            if (data_manager) {
+                // Create a shared_ptr for compatibility
+                std::shared_ptr<DataManager> shared_dm(data_manager, [](DataManager*){});
+                setDataManager(shared_dm);
+                qDebug() << "EventPlotPropertiesWidget: Set DataManager from DataSourceRegistry";
+            }
+        }
     }
 }
 

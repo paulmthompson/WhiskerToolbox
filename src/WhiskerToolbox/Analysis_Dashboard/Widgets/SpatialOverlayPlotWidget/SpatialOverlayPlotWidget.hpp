@@ -72,12 +72,6 @@ public:
     SpatialOverlayOpenGLWidget * getOpenGLWidget() const { return _opengl_widget; }
 
     /**
-     * @brief Set the data manager for accessing data
-     * @param data_manager Shared pointer to the data manager
-     */
-    void setDataManager(std::shared_ptr<DataManager> data_manager) override;
-
-    /**
      * @brief Set the group manager for data grouping
      * @param group_manager Pointer to the group manager
      */

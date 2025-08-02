@@ -26,12 +26,6 @@ public:
     ~AnalysisDashboardScene() override = default;
 
     /**
-     * @brief Set the data manager for plot widgets
-     * @param data_manager Shared pointer to the data manager
-     */
-    void setDataManager(std::shared_ptr<DataManager> data_manager);
-
-    /**
      * @brief Set the group manager for plot widgets
      * @param group_manager Pointer to the group manager
      */

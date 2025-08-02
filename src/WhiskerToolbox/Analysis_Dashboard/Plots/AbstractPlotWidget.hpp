@@ -49,12 +49,6 @@ public:
     virtual void setPlotTitle(QString const & title);
 
     /**
-     * @brief Set the data manager for accessing data
-     * @param data_manager Shared pointer to the data manager
-     */
-    virtual void setDataManager(std::shared_ptr<DataManager> data_manager);
-
-    /**
      * @brief Set the data source registry for unified data access
      * @param data_source_registry Pointer to the data source registry
      */
