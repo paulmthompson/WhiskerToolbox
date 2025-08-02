@@ -73,3 +73,15 @@ void ShaderManager::onFileChanged(QString const & path) {
         m_fileWatcher.addPath(path);
     }
 }
+
+void ShaderManager::cleanup() {
+    // Clear all shader programs
+    for (auto& [name, program] : m_programs) {
+        if (program) {
+            delete program.release();
+        }
+    }
+    m_programs.clear();
+    m_fileWatcher.removePaths(m_fileWatcher.files());
+    m_fileWatcher.removePaths(m_fileWatcher.directories());
+}

@@ -32,6 +32,8 @@ public:
     ShaderManager(ShaderManager const &) = delete;
     void operator=(ShaderManager const &) = delete;
 
+    void cleanup();
+
 signals:
     void shaderReloaded(std::string const & name);
 

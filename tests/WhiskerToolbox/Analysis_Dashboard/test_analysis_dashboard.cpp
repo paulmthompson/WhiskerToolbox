@@ -26,6 +26,10 @@ class QtTestFixture {
 protected:
     QtTestFixture() {
         // Create a minimal Qt application for testing
+       // if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM")) {
+       //     qputenv("QT_QPA_PLATFORM", "offscreen");
+       // }
+        // Create a minimal Qt application for testing
         static int argc = 1;
         static char* argv[] = {const_cast<char*>("test")};
         if (!QApplication::instance()) {
@@ -42,15 +46,22 @@ protected:
     ~QtTestFixture() {
         // Clean up any remaining widgets
         QApplication::processEvents();
-
         QApplication::closeAllWindows();
 
+        auto& shader_manager = ShaderManager::instance();
+        shader_manager.cleanup();
+
         if (context) {
-            context->makeCurrent(nullptr);
+            context->doneCurrent();
         }
 
         if (surface) {
             surface->destroy();
+        }
+
+        if (app) {
+            app->processEvents();
+            app->quit();
         }
     }
     
