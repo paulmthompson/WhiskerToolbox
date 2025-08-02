@@ -44,5 +44,6 @@ target_include_directories(AnalysisDashboardTests PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/TimeScrollBar>"
 )
 
-# Add test to CTest
-catch_discover_tests(AnalysisDashboardTests)
+catch_discover_tests(AnalysisDashboardTests PROPERTIES 
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+)

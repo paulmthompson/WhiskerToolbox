@@ -26,9 +26,16 @@ class QtTestFixture {
 protected:
     QtTestFixture() {
         // Create a minimal Qt application for testing
-       // if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM")) {
-       //     qputenv("QT_QPA_PLATFORM", "offscreen");
-       // }
+        if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM")) {
+           // qputenv("QT_QPA_PLATFORM", "xcb");
+        }
+
+        //qputenv("WAYLAND_DISPLAY", "");
+        //qputenv("XDG_SESSION_TYPE", "x11");
+        
+        // Disable Qt Wayland warnings/logging
+        qputenv("QT_LOGGING_RULES", "qt.qpa.wayland*=false");
+
         // Create a minimal Qt application for testing
         static int argc = 1;
         static char* argv[] = {const_cast<char*>("test")};
@@ -36,6 +43,12 @@ protected:
             app = std::make_unique<QApplication>(argc, argv);
         }
         
+        QString platformName = QGuiApplication::platformName();
+        std::cout << "Platform name: " << platformName.toStdString() << std::endl;
+        if (platformName.contains("wayland", Qt::CaseInsensitive)) {
+           // FAIL("Still using Wayland platform despite override");
+        }
+
         // Set up OpenGL context for ShaderManager
         setupOpenGLContext();
         
@@ -103,6 +116,8 @@ protected:
         // Get OpenGL version
         const char* version = reinterpret_cast<const char*>(functions->glGetString(GL_VERSION));
         REQUIRE(version != nullptr);
+
+        std::cout << "OpenGL Version: " << version << std::endl;
         
     }
     
