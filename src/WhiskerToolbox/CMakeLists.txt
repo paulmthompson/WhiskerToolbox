@@ -25,7 +25,8 @@ add_subdirectory(DataViewer)
 add_subdirectory(SpatialIndex)
 add_subdirectory(ShaderManager)
 add_subdirectory(TimeScrollBar)
-add_subdirectory(Analysis_Dashboard)
+add_subdirectory(Analysis_Dashboard)    
+add_subdirectory(Feature_Table_Widget)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -332,11 +333,6 @@ set(PROJECT_SOURCES
         Tongue_Widget/Tongue_Widget.cpp
         Tongue_Widget/Tongue_Widget.ui
 
-        Feature_Table_Widget/Feature_Table_Widget.hpp
-        Feature_Table_Widget/Feature_Table_Widget.cpp
-        Feature_Table_Widget/Feature_Table_Widget.ui
-        Color_Widget/Color_Widget.hpp
-
         Feature_Tree_Widget/Feature_Tree_Widget.cpp
         Feature_Tree_Widget/Feature_Tree_Widget.hpp
         Feature_Tree_Widget/Feature_Tree_Widget.ui
@@ -526,6 +522,8 @@ target_link_libraries(WhiskerToolbox PUBLIC NEURALYZER_GEOMETRY)
 target_link_libraries(WhiskerToolbox PRIVATE ShaderManager)
 target_link_libraries(WhiskerToolbox PRIVATE TimeScrollBar)
 target_link_libraries(WhiskerToolbox PRIVATE Analysis_Dashboard)
+target_link_libraries(WhiskerToolbox PRIVATE Feature_Table_Widget)
+
 
 target_link_libraries(WhiskerToolbox PRIVATE opencv_core opencv_imgproc opencv_highgui opencv_photo)
 

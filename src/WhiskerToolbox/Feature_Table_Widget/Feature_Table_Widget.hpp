@@ -1,7 +1,7 @@
 #ifndef FEATURE_TABLE_WIDGET_HPP
 #define FEATURE_TABLE_WIDGET_HPP
 
-#include "DataManagerTypes.hpp"
+#include "DataManager/DataManagerTypes.hpp"
 
 #include <QString>
 #include <QStringList>
@@ -31,15 +31,12 @@ public:
     void populateTable();
     void setColumns(QStringList columns) { _columns = std::move(columns); }
     void setTypeFilter(std::vector<DM_DataType> type) { _type_filters = std::move(type); }
-    std::string getFeatureColor(std::string const & key);
-    void setFeatureColor(std::string const & key, std::string const & hex_color);
     [[nodiscard]] QString getHighlightedFeature() const { return _highlighted_feature; }
 
 signals:
     void featureSelected(QString const & feature);
     void addFeature(QString const & feature);
     void removeFeature(QString const & feature);
-    void colorChange(QString const & feature, QString const & hex_color);
 
 private slots:
     void _refreshFeatures();
@@ -58,7 +55,6 @@ private:
     void _addFeatureClock(std::string const & key, int row, int col);
     void _addFeatureElements(std::string const & key, int row, int col);
     void _addFeatureEnabled(std::string const & key, int row, int col);
-    void _addFeatureColor(std::string const & key, int row, int col);
 };
 
 #endif// FEATURE_TABLE_WIDGET_HPP

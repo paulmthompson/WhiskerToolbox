@@ -2,7 +2,6 @@
 #include "ui_Feature_Tree_Widget.h"
 
 #include "../DataManager/utils/color.hpp"
-#include "Color_Widget/Color_Widget.hpp"
 #include "DataManager.hpp"
 
 #include <QCheckBox>
@@ -73,50 +72,6 @@ std::vector<std::string> Feature_Tree_Widget::getSelectedFeatures() const {
     }
 }
 
-std::string Feature_Tree_Widget::getFeatureColor(std::string const & key) {
-    if (_features.find(key) != _features.end()) {
-        return _features[key].color;
-    }
-    return "";
-}
-
-void Feature_Tree_Widget::setFeatureColor(std::string const & key, std::string const & hex_color) {
-    if (_features.find(key) == _features.end()) {
-        return;
-    }
-
-    _features[key].color = hex_color;
-
-    // Update UI if item exists
-    if (_feature_items.find(key) != _feature_items.end()) {
-        QTreeWidgetItem * item = _feature_items[key];
-        _setupColorColumn(item, 3, hex_color);
-    }
-}
-
-std::string Feature_Tree_Widget::getGroupColor(std::string const & group) {
-    return getFeatureColor(group);
-}
-
-void Feature_Tree_Widget::setGroupColor(std::string const & group, std::string const & hex_color) {
-    if (_features.find(group) == _features.end() || !_features[group].isGroup) {
-        return;
-    }
-
-    // Set color for group
-    setFeatureColor(group, hex_color);
-
-    // Set same color for all children
-    for (auto const & childKey: _features[group].children) {
-        setFeatureColor(childKey, hex_color);
-    }
-
-    // Emit signal for all affected features
-    std::vector<std::string> features = _features[group].children;
-    features.push_back(group);
-    emit colorChangeFeatures(features, hex_color);
-}
-
 void Feature_Tree_Widget::refreshTree() {
     _refreshFeatures();
 }
@@ -177,35 +132,6 @@ void Feature_Tree_Widget::_itemChanged(QTreeWidgetItem * item, int column) {
     }
 }
 
-void Feature_Tree_Widget::_handleColorChange(QTreeWidgetItem * item, std::string const & color) {
-    if (!item) return;
-
-    std::string const key = item->text(0).toStdString();
-
-    // Update color in data structure
-    if (_features.find(key) != _features.end()) {
-        _features[key].color = color;
-
-        std::vector<std::string> affectedFeatures;
-
-        // If it's a group, apply to all children
-        if (_features[key].isGroup) {
-            for (auto const & childKey: _features[key].children) {
-                setFeatureColor(childKey, color);
-            }
-            affectedFeatures = _features[key].children;
-        } else {
-            affectedFeatures = {key};
-        }
-
-        // Add group itself to affected features
-        affectedFeatures.push_back(key);
-
-        // Emit signal
-        emit colorChangeFeatures(affectedFeatures, color);
-    }
-}
-
 void Feature_Tree_Widget::_refreshFeatures() {
     // Clear existing data
     ui->treeWidget->clear();
@@ -249,7 +175,6 @@ void Feature_Tree_Widget::_populateTree() {
             groupFeature.type = "Group";
             groupFeature.isGroup = true;
             groupFeature.children = members;
-            groupFeature.color = generateRandomColor();
             _features[groupName] = groupFeature;
 
             // Create tree item
@@ -263,7 +188,6 @@ void Feature_Tree_Widget::_populateTree() {
                 childFeature.type = convert_data_type_to_string(_data_manager->getType(member));
                 childFeature.timeFrame = _data_manager->getTimeFrame(member);
                 childFeature.isGroup = false;
-                childFeature.color = _features[groupName].color;// Inherit parent color
                 _features[member] = childFeature;
 
                 // Add as child to tree
@@ -274,7 +198,6 @@ void Feature_Tree_Widget::_populateTree() {
                 childItem->setFlags(childItem->flags() | Qt::ItemIsUserCheckable);
 
                 setup_checkbox_column(childItem, 2, false);
-                _setupColorColumn(childItem, 3, childFeature.color);
 
                 _feature_items[member] = childItem;
             }
@@ -305,7 +228,6 @@ void Feature_Tree_Widget::_populateTree() {
             feature.type = convert_data_type_to_string(type);
             feature.timeFrame = _data_manager->getTimeFrame(key);
             feature.isGroup = false;
-            feature.color = generateRandomColor();
             _features[key] = feature;
 
             // Add to tree
@@ -351,7 +273,6 @@ void Feature_Tree_Widget::_addFeatureToTree(std::string const & key, bool isGrou
     item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 
     setup_checkbox_column(item, 2, false);
-    _setupColorColumn(item, 3, _features[key].color);
 
     if (isGroup) {
         _group_items[key] = item;
@@ -365,18 +286,6 @@ void Feature_Tree_Widget::_setupTreeItem(QTreeWidgetItem * item, TreeFeature con
     item->setText(1, QString::fromStdString(feature.type));
 
     setup_checkbox_column(item, 2, feature.enabled);
-    _setupColorColumn(item, 3, feature.color);
-}
-
-void Feature_Tree_Widget::_setupColorColumn(QTreeWidgetItem * item, int column, std::string const & color) {
-    auto * colorWidget = new ColorWidget();
-    colorWidget->setText(QString::fromStdString(color));
-    ui->treeWidget->setItemWidget(item, column, colorWidget);
-
-    // Connect color change signal
-    connect(colorWidget, &ColorWidget::colorChanged, [this, item](QString const & color) {
-        _handleColorChange(item, color.toStdString());
-    });
 }
 
 void setup_checkbox_column(QTreeWidgetItem * item, int column, bool checked) {

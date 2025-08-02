@@ -124,6 +124,8 @@ target_link_libraries(Analysis_Dashboard PRIVATE
 target_link_libraries(Analysis_Dashboard PRIVATE TimeScrollBar)
 target_link_libraries(Analysis_Dashboard PRIVATE DataManager)
 target_link_libraries(Analysis_Dashboard PRIVATE NEURALYZER_GEOMETRY)
+target_link_libraries(Analysis_Dashboard PRIVATE ShaderManager)
+target_link_libraries(Analysis_Dashboard PRIVATE Feature_Table_Widget)
 
 # Include directories
 target_include_directories(Analysis_Dashboard PUBLIC
@@ -156,3 +158,4 @@ set_target_properties(Analysis_Dashboard PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+

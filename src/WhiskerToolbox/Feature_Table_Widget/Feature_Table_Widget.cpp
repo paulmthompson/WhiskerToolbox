@@ -1,8 +1,7 @@
 #include "Feature_Table_Widget.hpp"
 #include "ui_Feature_Table_Widget.h"
 
-#include "../DataManager/utils/color.hpp"
-#include "Color_Widget/Color_Widget.hpp"
+#include "DataManager/utils/color.hpp"
 #include "DataManager.hpp"
 
 #include <QPushButton>
@@ -12,11 +11,6 @@
 
 #include <iostream>
 
-std::vector<std::string> default_colors = {"#ff0000", // Red
-                                           "#008000", // Green
-                                           "#00ffff", // Cyan
-                                           "#ff00ff", // Magenta
-                                           "#ffff00"};// Yellow
 
 Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
     : QWidget(parent),
@@ -137,76 +131,6 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
     });
 }
 
-void Feature_Table_Widget::_addFeatureColor(std::string const & key, int row, int col) {
-
-    auto colorWidget = new ColorWidget();
-    if (static_cast<size_t>(row) < default_colors.size()) {
-        colorWidget->setText(QString::fromStdString(default_colors[row]));
-    } else {
-        colorWidget->setText(QString::fromStdString(generateRandomColor()));
-    }
-    ui->available_features_table->setCellWidget(row, col, colorWidget);
-
-    connect(colorWidget, &ColorWidget::colorChanged, [this, key](QString const & color) {
-        std::cout << "Color received as " << color.toStdString() << std::endl;
-        colorChange(QString::fromStdString(key), color);
-    });
-}
-
-//If there is a column named "Color" in the table, this function should return the color of the feature
-std::string Feature_Table_Widget::getFeatureColor(std::string const & key) {
-    // Get the color of the feature
-
-    //Find row by key
-    int row = -1;
-    for (int i = 0; i < ui->available_features_table->rowCount(); i++) {
-        if (ui->available_features_table->item(i, 0)->text() == QString::fromStdString(key)) {
-            row = i;
-            break;
-        }
-    }
-    if (row == -1) {
-        return "";
-    }
-    int col = -1;
-    for (int i = 0; i < _columns.size(); i++) {
-        if (_columns[i] == "Color") {
-            col = i;
-            break;
-        }
-    }
-    auto colorWidget = ui->available_features_table->cellWidget(row, col);
-    if (colorWidget) {
-        return dynamic_cast<ColorWidget *>(colorWidget)->text().toStdString();
-    }
-    return "";
-}
-
-void Feature_Table_Widget::setFeatureColor(std::string const & key, std::string const & hex_color) {
-    //Find row by key
-    int row = -1;
-    for (int i = 0; i < ui->available_features_table->rowCount(); i++) {
-        if (ui->available_features_table->item(i, 0)->text() == QString::fromStdString(key)) {
-            row = i;
-            break;
-        }
-    }
-    if (row == -1) {
-        return;
-    }
-    int col = -1;
-    for (int i = 0; i < _columns.size(); i++) {
-        if (_columns[i] == "Color") {
-            col = i;
-            break;
-        }
-    }
-    auto colorWidget = ui->available_features_table->cellWidget(row, col);
-    if (colorWidget) {
-        dynamic_cast<ColorWidget *>(colorWidget)->setText(QString::fromStdString(hex_color));
-    }
-}
-
 void Feature_Table_Widget::populateTable() {
     ui->available_features_table->setRowCount(0);
     ui->available_features_table->setColumnCount(static_cast<int>(_columns.size()));
@@ -237,8 +161,6 @@ void Feature_Table_Widget::populateTable() {
                 _addFeatureElements(key, row, i);
             } else if (_columns[i] == "Enabled") {
                 _addFeatureEnabled(key, row, i);
-            } else if (_columns[i] == "Color") {
-                _addFeatureColor(key, row, i);
             }
         }
     }

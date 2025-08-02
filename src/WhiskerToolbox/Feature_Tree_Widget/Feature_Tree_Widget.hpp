@@ -40,14 +40,6 @@ public:
     // Get selected features (single item or group)
     [[nodiscard]] std::vector<std::string> getSelectedFeatures() const;
 
-    // Get/set feature color
-    std::string getFeatureColor(std::string const & key);
-    void setFeatureColor(std::string const & key, std::string const & hex_color);
-
-    // Get/set group color (applies to all children)
-    std::string getGroupColor(std::string const & group);
-    void setGroupColor(std::string const & group, std::string const & hex_color);
-
     // Refresh the tree view
     void refreshTree();
 
@@ -60,7 +52,6 @@ signals:
 private slots:
     void _itemSelected(QTreeWidgetItem * item, int column);
     void _itemChanged(QTreeWidgetItem * item, int column);
-    void _handleColorChange(QTreeWidgetItem * item, std::string const & color);
     void _refreshFeatures();
 
 private:
@@ -93,7 +84,6 @@ private:
     std::string _extractGroupName(std::string const & key);
     void _addFeatureToTree(std::string const & key, bool isGroup = false);
     void _setupTreeItem(QTreeWidgetItem * item, TreeFeature const & feature);
-    void _setupColorColumn(QTreeWidgetItem * item, int column, std::string const & color);
     bool _hasTypeFilter(DM_DataType const & type);
     void _updateChildrenState(QTreeWidgetItem * parent, int column);
     void _updateParentState(QTreeWidgetItem * child, int column);
