@@ -13,6 +13,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
+#include <QTimer>
 
 
 EventPlotWidget::EventPlotWidget(QGraphicsItem * parent)
@@ -226,6 +227,10 @@ void EventPlotWidget::loadEventData() {
 
 void EventPlotWidget::setupOpenGLWidget() {
     _opengl_widget = new EventPlotOpenGLWidget();
+    
+    // Block signals during setup to prevent premature signal emissions
+    _opengl_widget->blockSignals(true);
+    
     _proxy_widget = new QGraphicsProxyWidget(this);
     _proxy_widget->setWidget(_opengl_widget);
 
@@ -235,6 +240,23 @@ void EventPlotWidget::setupOpenGLWidget() {
     QRectF content_rect = boundingRect().adjusted(2, 25, -2, -2);
     _opengl_widget->resize(content_rect.size().toSize());
     _proxy_widget->setGeometry(content_rect);
+
+    // Connect signals immediately, but OpenGL widget signals are blocked
+    connectOpenGLSignals();
+    
+    // Defer unblocking signals until after OpenGL widget is fully initialized
+    // Use QTimer::singleShot to delay until next event loop iteration
+    QTimer::singleShot(0, this, [this]() {
+        if (_opengl_widget) {
+            _opengl_widget->blockSignals(false);
+        }
+    });
+}
+
+void EventPlotWidget::connectOpenGLSignals() {
+    if (!_opengl_widget) {
+        return;
+    }
 
     // Connect signals from OpenGL widget
     connect(_opengl_widget, &EventPlotOpenGLWidget::frameJumpRequested,

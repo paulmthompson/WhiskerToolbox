@@ -18,7 +18,8 @@
 EventPlotPropertiesWidget::EventPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
       ui(new Ui::EventPlotPropertiesWidget),
-      _event_plot_widget(nullptr) {
+      _event_plot_widget(nullptr),
+      _applying_properties(false) {
     ui->setupUi(this);
     setupConnections();
     setupYAxisFeatureTable();
@@ -125,8 +126,14 @@ void EventPlotPropertiesWidget::applyToPlot() {
         return;
     }
 
+    // Set flag to prevent signal emission during property application
+    _applying_properties = true;
+    
     // Apply current settings to the plot widget
     updatePlotWidget();
+    
+    // Reset flag
+    _applying_properties = false;
 }
 
 void EventPlotPropertiesWidget::updateAvailableDataSources() {
@@ -382,8 +389,11 @@ void EventPlotPropertiesWidget::updatePlotWidget() {
     QStringList y_axis_features = getSelectedYAxisFeatures();
     _event_plot_widget->setYAxisDataKeys(y_axis_features);
 
-    // Emit properties changed signal
-    emit propertiesChanged();
+    // Only emit properties changed signal when not applying properties
+    // (to prevent infinite loop when applyToPlot() calls updatePlotWidget())
+    if (!_applying_properties) {
+        emit propertiesChanged();
+    }
 }
 
 void EventPlotPropertiesWidget::onCaptureRangeChanged(int value) {

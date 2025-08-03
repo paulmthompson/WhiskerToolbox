@@ -114,6 +114,11 @@ private:
      * @brief Setup the OpenGL widget and proxy
      */
     void setupOpenGLWidget();
+
+    /**
+     * @brief Connect OpenGL widget signals (called after initialization)
+     */
+    void connectOpenGLSignals();
 };
 
 #endif// EVENTPLOTWIDGET_HPP

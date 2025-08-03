@@ -110,6 +110,7 @@ private:
     EventPlotWidget * _event_plot_widget;
     std::shared_ptr<DataManager> _data_manager;
     std::set<QString> _selected_y_axis_features;
+    bool _applying_properties;  // Flag to prevent signal emission during applyToPlot()
 
     /**
      * @brief Setup connections between UI elements and handlers
