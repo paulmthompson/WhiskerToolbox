@@ -1,4 +1,4 @@
-#include "test_fixtures.hpp"
+#include "../fixtures/qt_test_fixtures.hpp"
 
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp"
 #include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/VectorPointVisualization.hpp"

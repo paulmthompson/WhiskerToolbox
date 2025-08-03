@@ -8,7 +8,7 @@
 #include <QWidget>
 #include <memory>
 
-#include "test_fixtures.hpp"
+#include "../fixtures/qt_test_fixtures.hpp"
 
 TEST_CASE_METHOD(QtWidgetTestFixture, "TableDesignerWidget can be created and added to application", "[widget][table_designer]") {
     // Create a data manager for testing

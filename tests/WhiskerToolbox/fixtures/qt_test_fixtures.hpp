@@ -1,5 +1,5 @@
-#ifndef TEST_FIXTURES_HPP
-#define TEST_FIXTURES_HPP
+#ifndef QT_TEST_FIXTURES_HPP
+#define QT_TEST_FIXTURES_HPP
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
@@ -432,4 +432,4 @@ private:
     std::unique_ptr<QApplication> m_app;
 };
 
-#endif // TEST_FIXTURES_HPP 
+#endif // QT_TEST_FIXTURES_HPP 
