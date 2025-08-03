@@ -69,6 +69,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/SpatialOverlayPlotWidget/Masks/MaskDataVisualization.cpp
     Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.hpp
     Widgets/SpatialOverlayPlotWidget/Points/PointDataVisualization.cpp
+    Widgets/SpatialOverlayPlotWidget/Points/GenericPointVisualization.hpp
+    Widgets/SpatialOverlayPlotWidget/Points/VectorPointVisualization.hpp
     Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp
     Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.cpp
     Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp

@@ -269,8 +269,8 @@ size_t SpatialOverlayOpenGLWidget::getTotalSelectedLines() const {
 void SpatialOverlayOpenGLWidget::applyTimeRangeFilter(int start_frame, int end_frame) {
 
     for (auto & [key, pointViz]: _point_data_visualizations) {
-        pointViz->setTimeRangeEnabled(true);
-        pointViz->setTimeRange(start_frame, end_frame);
+        pointViz->setDataRangeEnabled(true);
+        pointViz->setDataRange(start_frame, end_frame);
     }
 
     for (auto & [key, lineViz]: _line_data_visualizations) {
