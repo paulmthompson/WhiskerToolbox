@@ -2,6 +2,7 @@
 
 #include "computers/IntervalReductionComputer.h"
 #include "computers/EventInIntervalComputer.h"
+#include "computers/IntervalPropertyComputer.h"
 #include "adapters/PointComponentAdapter.h"
 #include "Points/Point_Data.hpp"
 
@@ -324,6 +325,71 @@ void ComputerRegistry::registerBuiltInComputers() {
         
         registerComputer(std::move(info), std::move(factory));
     }
+    
+    // IntervalPropertyComputer - Start
+    {
+        ComputerInfo info("Interval Start",
+                         "Get the start time of intervals",
+                         typeid(double),
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IIntervalSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::Start, (*intervalSrc)->getName());
+                return std::make_unique<ComputerWrapper<double>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
+    // IntervalPropertyComputer - End
+    {
+        ComputerInfo info("Interval End",
+                         "Get the end time of intervals",
+                         typeid(double),
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IIntervalSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::End, (*intervalSrc)->getName());
+                return std::make_unique<ComputerWrapper<double>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
+    // IntervalPropertyComputer - Duration
+    {
+        ComputerInfo info("Interval Duration",
+                         "Get the duration of intervals",
+                         typeid(double),
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IIntervalSource>));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
+                auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::Duration, (*intervalSrc)->getName());
+                return std::make_unique<ComputerWrapper<double>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
+    // Note: No computers are currently registered for RowSelectorType::Timestamp
+    // This means when using Events as row sources (which create TimestampSelector),
+    // no computers will be available. This would require implementing computers
+    // that can work with timestamp-based row selectors.
     
     std::cout << "Finished registering built-in computers." << std::endl;
 }

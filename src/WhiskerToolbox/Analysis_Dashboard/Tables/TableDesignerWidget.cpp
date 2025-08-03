@@ -242,7 +242,8 @@ void TableDesignerWidget::onAddColumn() {
         auto * item = new QListWidgetItem(column_name, ui->column_list);
         item->setData(Qt::UserRole, ui->column_list->count() - 1);// Store column index
 
-        ui->column_list->setCurrentItem(item);
+        // Don't automatically select the new column to avoid triggering loadColumnConfiguration
+        // The user can manually select it if they want to configure it
         ui->column_name_edit->setText(column_name);
         ui->column_name_edit->selectAll();
         ui->column_name_edit->setFocus();
@@ -312,8 +313,16 @@ void TableDesignerWidget::onMoveColumnDown() {
 }
 
 void TableDesignerWidget::onColumnDataSourceChanged() {
-    refreshColumnComputerCombo();
-    saveCurrentColumnConfiguration();
+    qDebug() << "onColumnDataSourceChanged called";
+    qDebug() << "Current column data source:" << ui->column_data_source_combo->currentText();
+    qDebug() << "Current column data source data:" << ui->column_data_source_combo->currentData().toString();
+    
+    // Only refresh and save if we're not loading configuration (to prevent infinite loops)
+    if (!_loading_column_configuration) {
+        refreshColumnComputerCombo();
+        saveCurrentColumnConfiguration();
+    }
+    
     qDebug() << "Column data source changed to:" << ui->column_data_source_combo->currentText();
 }
 
@@ -463,7 +472,7 @@ void TableDesignerWidget::onTableManagerTableRemoved(QString const & table_id) {
 }
 
 void TableDesignerWidget::onTableManagerTableInfoUpdated(QString const & table_id) {
-    if (_current_table_id == table_id) {
+    if (_current_table_id == table_id && !_updating_column_configuration) {
         loadTableInfo(table_id);
     }
     qDebug() << "Table info updated signal received:" << table_id;
@@ -562,9 +571,20 @@ void TableDesignerWidget::refreshColumnDataSourceCombo() {
 }
 
 void TableDesignerWidget::refreshColumnComputerCombo() {
+    qDebug() << "refreshColumnComputerCombo called";
+    
+    // Prevent recursive calls
+    if (_refreshing_computer_combo) {
+        qDebug() << "refreshColumnComputerCombo: Already refreshing, skipping to prevent recursion";
+        return;
+    }
+    
+    _refreshing_computer_combo = true;
     ui->column_computer_combo->clear();
 
     if (!_table_manager) {
+        qDebug() << "No table manager available";
+        _refreshing_computer_combo = false;
         return;
     }
 
@@ -573,11 +593,13 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
 
     if (row_source.isEmpty()) {
         ui->column_computer_combo->addItem("(Select row source first)", "");
+        _refreshing_computer_combo = false;
         return;
     }
 
     if (column_source.isEmpty()) {
         ui->column_computer_combo->addItem("(Select column data source first)", "");
+        _refreshing_computer_combo = false;
         return;
     }
 
@@ -585,10 +607,13 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
     RowSelectorType row_selector_type = RowSelectorType::Interval;// Default
     if (row_source.startsWith("TimeFrame: ")) {
         row_selector_type = RowSelectorType::Interval;// TimeFrames define intervals
+        qDebug() << "Row selector type: Interval (TimeFrame)";
     } else if (row_source.startsWith("Events: ")) {
         row_selector_type = RowSelectorType::Timestamp;// Events define timestamps
+        qDebug() << "Row selector type: Timestamp (Events)";
     } else if (row_source.startsWith("Intervals: ")) {
         row_selector_type = RowSelectorType::Interval;// Intervals are intervals
+        qDebug() << "Row selector type: Interval (Intervals)";
     }
 
     // Create DataSourceVariant from column source
@@ -598,54 +623,80 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
     auto data_manager_extension = _table_manager->getDataManagerExtension();
     if (!data_manager_extension) {
         ui->column_computer_combo->addItem("(DataManager not available)", "");
+        _refreshing_computer_combo = false;
         return;
     }
 
     // Parse column source and create appropriate adapter
     if (column_source.startsWith("analog:")) {
         QString source_name = column_source.mid(7);// Remove "analog:" prefix
+        qDebug() << "Creating analog source for:" << source_name;
         auto analog_source = data_manager_extension->getAnalogSource(source_name.toStdString());
         if (analog_source) {
             data_source_variant = analog_source;
             valid_source = true;
+            qDebug() << "Successfully created analog source";
+        } else {
+            qDebug() << "Failed to create analog source";
         }
     } else if (column_source.startsWith("events:")) {
         QString source_name = column_source.mid(7);// Remove "events:" prefix
+        qDebug() << "Creating event source for:" << source_name;
         auto event_source = data_manager_extension->getEventSource(source_name.toStdString());
         if (event_source) {
             data_source_variant = event_source;
             valid_source = true;
+            qDebug() << "Successfully created event source";
+        } else {
+            qDebug() << "Failed to create event source";
         }
     } else if (column_source.startsWith("intervals:")) {
         QString source_name = column_source.mid(10);// Remove "intervals:" prefix
+        qDebug() << "Creating interval source for:" << source_name;
         auto interval_source = data_manager_extension->getIntervalSource(source_name.toStdString());
         if (interval_source) {
             data_source_variant = interval_source;
             valid_source = true;
+            qDebug() << "Successfully created interval source";
+        } else {
+            qDebug() << "Failed to create interval source";
         }
     } else if (column_source.startsWith("points_x:")) {
         QString source_name = column_source.mid(9);// Remove "points_x:" prefix
+        qDebug() << "Creating points X source for:" << source_name;
         auto analog_source = data_manager_extension->getAnalogSource(source_name.toStdString() + ".x");
         if (analog_source) {
             data_source_variant = analog_source;
             valid_source = true;
+            qDebug() << "Successfully created points X source";
+        } else {
+            qDebug() << "Failed to create points X source";
         }
     } else if (column_source.startsWith("points_y:")) {
         QString source_name = column_source.mid(9);// Remove "points_y:" prefix
+        qDebug() << "Creating points Y source for:" << source_name;
         auto analog_source = data_manager_extension->getAnalogSource(source_name.toStdString() + ".y");
         if (analog_source) {
             data_source_variant = analog_source;
             valid_source = true;
+            qDebug() << "Successfully created points Y source";
+        } else {
+            qDebug() << "Failed to create points Y source";
         }
     } else if (column_source.startsWith("table:")) {
         // TODO: Handle table column references
         // For now, show that this is not yet implemented
+        qDebug() << "Table columns not yet supported";
         ui->column_computer_combo->addItem("(Table columns not yet supported)", "");
+        _refreshing_computer_combo = false;
         return;
+    } else {
+        qDebug() << "Unknown column source format:" << column_source;
     }
 
     if (!valid_source) {
         ui->column_computer_combo->addItem("(Invalid column data source)", "");
+        _refreshing_computer_combo = false;
         return;
     }
 
@@ -665,6 +716,15 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
 
     qDebug() << "Refreshed computer combo: row selector type" << static_cast<int>(row_selector_type)
              << ", found" << available_computers.size() << "compatible computers";
+    qDebug() << "Column source:" << column_source << ", valid_source:" << valid_source;
+    qDebug() << "DataSourceVariant type:" << data_source_variant.index();
+    
+    if (available_computers.empty()) {
+        qDebug() << "No computers available for row selector type" << static_cast<int>(row_selector_type)
+                 << "and data source variant index" << data_source_variant.index();
+    }
+    
+    _refreshing_computer_combo = false;
 }
 
 void TableDesignerWidget::loadTableInfo(QString const & table_id) {
@@ -697,6 +757,11 @@ void TableDesignerWidget::loadTableInfo(QString const & table_id) {
             
             // Update interval settings visibility
             updateIntervalSettingsVisibility();
+            
+            // Since signals were blocked, refresh column computer combo
+            // This will be called again when column configuration is loaded, but ensures
+            // the combo is updated based on the row source
+            refreshColumnComputerCombo();
         }
     }
 
@@ -911,6 +976,8 @@ void TableDesignerWidget::updateRowInfoLabel(QString const & selected_source) {
 }
 
 void TableDesignerWidget::loadColumnConfiguration(int column_index) {
+    qDebug() << "loadColumnConfiguration called for column" << column_index;
+    
     if (_current_table_id.isEmpty() || !_table_manager) {
         clearColumnConfiguration();
         return;
@@ -921,6 +988,13 @@ void TableDesignerWidget::loadColumnConfiguration(int column_index) {
         clearColumnConfiguration();
         return;
     }
+
+    qDebug() << "Loading column config - name:" << column_info.name 
+             << "dataSource:" << column_info.dataSourceName 
+             << "computer:" << column_info.computerName;
+
+    // Set flag to prevent infinite loops
+    _loading_column_configuration = true;
 
     // Block signals to prevent circular updates
     ui->column_name_edit->blockSignals(true);
@@ -937,22 +1011,39 @@ void TableDesignerWidget::loadColumnConfiguration(int column_index) {
         int data_source_index = ui->column_data_source_combo->findData(column_info.dataSourceName);
         if (data_source_index >= 0) {
             ui->column_data_source_combo->setCurrentIndex(data_source_index);
+            qDebug() << "Set data source combo to index" << data_source_index;
+        } else {
+            qDebug() << "Could not find data source" << column_info.dataSourceName << "in combo box";
         }
+    } else {
+        qDebug() << "No data source name in saved configuration";
     }
 
-    // Set computer combo
-    if (!column_info.computerName.isEmpty()) {
-        int computer_index = ui->column_computer_combo->findData(column_info.computerName);
-        if (computer_index >= 0) {
-            ui->column_computer_combo->setCurrentIndex(computer_index);
-        }
-    }
+    // Note: Computer combo will be set after refreshing based on the data source
 
     // Restore signals
     ui->column_name_edit->blockSignals(false);
     ui->column_description_edit->blockSignals(false);
     ui->column_data_source_combo->blockSignals(false);
     ui->column_computer_combo->blockSignals(false);
+
+    // Since signals were blocked, we need to manually refresh the computer combo
+    // to populate it based on the loaded data source
+    refreshColumnComputerCombo();
+
+    // Now set the computer combo to the saved value after the refresh
+    if (!column_info.computerName.isEmpty()) {
+        int computer_index = ui->column_computer_combo->findData(column_info.computerName);
+        if (computer_index >= 0) {
+            ui->column_computer_combo->setCurrentIndex(computer_index);
+            qDebug() << "Set computer combo to index" << computer_index << "after refresh";
+        } else {
+            qDebug() << "Could not find computer" << column_info.computerName << "in refreshed combo box";
+        }
+    }
+
+    // Reset flag
+    _loading_column_configuration = false;
 
     qDebug() << "Loaded column configuration for:" << column_info.name;
 }
@@ -962,6 +1053,9 @@ void TableDesignerWidget::saveCurrentColumnConfiguration() {
     if (current_row < 0 || _current_table_id.isEmpty() || !_table_manager) {
         return;
     }
+
+    // Set flag to prevent reload during update
+    _updating_column_configuration = true;
 
     // Create column info from UI
     ColumnInfo column_info;
@@ -974,6 +1068,9 @@ void TableDesignerWidget::saveCurrentColumnConfiguration() {
     if (_table_manager->updateTableColumn(_current_table_id, current_row, column_info)) {
         qDebug() << "Saved column configuration for:" << column_info.name;
     }
+
+    // Reset flag
+    _updating_column_configuration = false;
 }
 
 void TableDesignerWidget::clearColumnConfiguration() {

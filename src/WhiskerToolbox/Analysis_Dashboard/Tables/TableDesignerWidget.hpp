@@ -151,6 +151,9 @@ private:
     std::shared_ptr<DataManager> _data_manager;
 
     QString _current_table_id;
+    bool _loading_column_configuration = false; // Flag to prevent infinite loops
+    bool _refreshing_computer_combo = false; // Flag to prevent recursive refreshes
+    bool _updating_column_configuration = false; // Flag to prevent reload during column updates
 
     /**
      * @brief Connect all signals and slots
