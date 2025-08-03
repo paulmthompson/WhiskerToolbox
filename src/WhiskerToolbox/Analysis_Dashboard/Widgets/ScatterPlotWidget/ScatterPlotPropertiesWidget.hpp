@@ -78,6 +78,8 @@ private:
     Ui::ScatterPlotPropertiesWidget * ui;
     ScatterPlotWidget * _scatter_plot_widget;
     std::shared_ptr<DataManager> _data_manager;
+    DataSourceRegistry * _data_source_registry;
+    bool _applying_properties;  // Flag to prevent signal emission during applyToPlot()
 
     /**
      * @brief Setup connections between UI elements and handlers

@@ -17,7 +17,9 @@
 ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
       ui(new Ui::ScatterPlotPropertiesWidget),
-      _scatter_plot_widget(nullptr) {
+      _scatter_plot_widget(nullptr),
+      _data_source_registry(nullptr),
+      _applying_properties(false) {
     ui->setupUi(this);
     setupConnections();
 }
@@ -87,8 +89,14 @@ void ScatterPlotPropertiesWidget::applyToPlot() {
         return;
     }
 
+    // Set flag to prevent signal emission during property application
+    _applying_properties = true;
+    
     // Apply current settings to the plot widget
     updatePlotWidget();
+    
+    // Reset flag
+    _applying_properties = false;
 }
 
 void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
@@ -233,7 +241,12 @@ void ScatterPlotPropertiesWidget::updatePlotWidget() {
 
     // For now, just emit properties changed signal
     // In a real implementation, you would update the plot widget with the current settings
-    emit propertiesChanged();
+    
+    // Only emit properties changed signal when not applying properties
+    // (to prevent infinite loop when applyToPlot() calls updatePlotWidget())
+    if (!_applying_properties) {
+        emit propertiesChanged();
+    }
 }
 
 void ScatterPlotPropertiesWidget::updateXAxisInfoLabel() {
