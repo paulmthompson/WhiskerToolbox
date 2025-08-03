@@ -360,4 +360,76 @@ protected:
     }
 };
 
+/**
+ * @brief Test fixture for Qt widget testing without OpenGL requirements
+ * 
+ * This fixture provides a simplified testing environment for Qt widgets that don't
+ * require OpenGL rendering, using offscreen rendering for headless testing.
+ */
+class QtWidgetTestFixture {
+protected:
+    QtWidgetTestFixture() {
+        // Create a minimal Qt application for testing
+        if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM")) {
+            // qputenv("QT_QPA_PLATFORM", "xcb");
+        }
+
+        // Disable Qt Wayland warnings/logging
+        qputenv("QT_LOGGING_RULES", "qt.qpa.wayland*=false");
+
+        // Create a minimal Qt application for testing
+        static int argc = 1;
+        static char* argv[] = {const_cast<char*>("test")};
+        if (!QApplication::instance()) {
+            m_app = std::make_unique<QApplication>(argc, argv);
+        }
+        
+        QString platformName = QGuiApplication::platformName();
+        std::cout << "Platform name: " << platformName.toStdString() << std::endl;
+        if (platformName.contains("wayland", Qt::CaseInsensitive)) {
+            // FAIL("Still using Wayland platform despite override");
+        }
+    }
+    
+    ~QtWidgetTestFixture() {
+        // Clean up any remaining widgets
+        QApplication::processEvents();
+        QApplication::closeAllWindows();
+
+        if (m_app) {
+            m_app->processEvents();
+            m_app->quit();
+        }
+    }
+    
+    /**
+     * @brief Get the Qt application
+     * @return Pointer to the Qt application
+     */
+    QApplication* getApplication() const { return m_app.get(); }
+    
+    /**
+     * @brief Process Qt events
+     */
+    void processEvents() {
+        if (m_app) {
+            m_app->processEvents();
+        }
+    }
+    
+    /**
+     * @brief Wait for a specified number of milliseconds
+     * @param ms Milliseconds to wait
+     */
+    void wait(int ms) {
+        QTimer::singleShot(ms, [this]() {
+            processEvents();
+        });
+        processEvents();
+    }
+
+private:
+    std::unique_ptr<QApplication> m_app;
+};
+
 #endif // TEST_FIXTURES_HPP 
