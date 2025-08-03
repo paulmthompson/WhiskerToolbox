@@ -74,6 +74,16 @@ private slots:
     void onRowDataSourceChanged();
 
     /**
+     * @brief Handle changes to the capture range
+     */
+    void onCaptureRangeChanged();
+
+    /**
+     * @brief Handle changes to the interval settings
+     */
+    void onIntervalSettingChanged();
+
+    /**
      * @brief Handle adding a new column
      */
     void onAddColumn();
@@ -190,6 +200,35 @@ private:
      * @param selected_source The selected row data source
      */
     void updateRowInfoLabel(QString const & selected_source);
+
+    /**
+     * @brief Update the visibility of interval settings based on selected data type
+     */
+    void updateIntervalSettingsVisibility();
+
+    /**
+     * @brief Get the capture range value in samples
+     * @return Capture range value
+     */
+    int getCaptureRange() const;
+
+    /**
+     * @brief Set the capture range value in samples
+     * @param value Capture range value
+     */
+    void setCaptureRange(int value);
+
+    /**
+     * @brief Check if interval beginning is selected
+     * @return True if beginning is selected, false if end is selected
+     */
+    bool isIntervalBeginningSelected() const;
+
+    /**
+     * @brief Check if interval itself is selected
+     * @return True if interval itself is selected, false otherwise
+     */
+    bool isIntervalItselfSelected() const;
 
     /**
      * @brief Load column configuration from table manager into UI

@@ -144,6 +144,88 @@
        </layout>
       </item>
       <item>
+       <layout class="QHBoxLayout" name="capture_range_layout">
+        <item>
+         <widget class="QLabel" name="capture_range_label">
+          <property name="text">
+           <string>Capture Range:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="capture_range_spinbox">
+          <property name="prefix">
+           <string>±</string>
+          </property>
+          <property name="suffix">
+           <string> samples</string>
+          </property>
+          <property name="minimum">
+           <number>100</number>
+          </property>
+          <property name="maximum">
+           <number>100000</number>
+          </property>
+          <property name="singleStep">
+           <number>100</number>
+          </property>
+          <property name="value">
+           <number>30000</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_capture">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="interval_settings_group">
+        <property name="title">
+         <string>Interval Settings</string>
+        </property>
+        <property name="visible">
+         <bool>false</bool>
+        </property>
+        <layout class="QVBoxLayout" name="interval_layout">
+         <item>
+          <widget class="QRadioButton" name="interval_beginning_radio">
+           <property name="text">
+            <string>Use Beginning of Interval</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="interval_end_radio">
+           <property name="text">
+            <string>Use End of Interval</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="interval_itself_radio">
+           <property name="text">
+            <string>Use Interval Itself</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
        <widget class="QLabel" name="row_info_label">
         <property name="text">
          <string>No row source selected</string>

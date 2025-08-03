@@ -66,6 +66,14 @@ void TableDesignerWidget::connectSignals() {
     // Row source signals
     connect(ui->row_data_source_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &TableDesignerWidget::onRowDataSourceChanged);
+    connect(ui->capture_range_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &TableDesignerWidget::onCaptureRangeChanged);
+    connect(ui->interval_beginning_radio, &QRadioButton::toggled,
+            this, &TableDesignerWidget::onIntervalSettingChanged);
+    connect(ui->interval_end_radio, &QRadioButton::toggled,
+            this, &TableDesignerWidget::onIntervalSettingChanged);
+    connect(ui->interval_itself_radio, &QRadioButton::toggled,
+            this, &TableDesignerWidget::onIntervalSettingChanged);
 
     // Column design signals
     connect(ui->add_column_btn, &QPushButton::clicked,
@@ -192,10 +200,32 @@ void TableDesignerWidget::onRowDataSourceChanged() {
     // Update the info label
     updateRowInfoLabel(selected);
 
+    // Update interval settings visibility
+    updateIntervalSettingsVisibility();
+
     // Refresh column computer options since they depend on row selector type
     refreshColumnComputerCombo();
 
     qDebug() << "Row data source changed to:" << selected;
+}
+
+void TableDesignerWidget::onCaptureRangeChanged() {
+    // Update the info label to reflect the new capture range
+    QString selected = ui->row_data_source_combo->currentText();
+    if (!selected.isEmpty()) {
+        updateRowInfoLabel(selected);
+    }
+}
+
+void TableDesignerWidget::onIntervalSettingChanged() {
+    // Update the info label to reflect the new interval setting
+    QString selected = ui->row_data_source_combo->currentText();
+    if (!selected.isEmpty()) {
+        updateRowInfoLabel(selected);
+    }
+    
+    // Update capture range visibility based on interval setting
+    updateIntervalSettingsVisibility();
 }
 
 void TableDesignerWidget::onAddColumn() {
@@ -664,6 +694,9 @@ void TableDesignerWidget::loadTableInfo(QString const & table_id) {
 
             // Manually update the info label without triggering the signal handler
             updateRowInfoLabel(info.rowSourceName);
+            
+            // Update interval settings visibility
+            updateIntervalSettingsVisibility();
         }
     }
 
@@ -699,6 +732,18 @@ void TableDesignerWidget::clearUI() {
     // Clear row source
     ui->row_data_source_combo->setCurrentIndex(-1);
     ui->row_info_label->setText("No row source selected");
+    
+    // Reset capture range and interval settings
+    setCaptureRange(30000); // Default value
+    if (ui->interval_beginning_radio) {
+        ui->interval_beginning_radio->setChecked(true);
+    }
+    if (ui->interval_itself_radio) {
+        ui->interval_itself_radio->setChecked(false);
+    }
+    if (ui->interval_settings_group) {
+        ui->interval_settings_group->setVisible(false);
+    }
 
     // Clear columns
     ui->column_list->clear();
@@ -850,6 +895,15 @@ void TableDesignerWidget::updateRowInfoLabel(QString const & selected_source) {
         if (interval_series) {
             auto intervals = interval_series->getDigitalIntervalSeries();
             info_text += QString(" - %1 intervals").arg(intervals.size());
+            
+            // Add capture range and interval setting information
+            if (isIntervalItselfSelected()) {
+                info_text += QString("\nUsing intervals as-is (no capture range)");
+            } else {
+                int capture_range = getCaptureRange();
+                QString interval_point = isIntervalBeginningSelected() ? "beginning" : "end";
+                info_text += QString("\nCapture range: ±%1 samples around %2 of intervals").arg(capture_range).arg(interval_point);
+            }
         }
     }
 
@@ -990,7 +1044,7 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
             return std::make_unique<TimestampSelector>(std::move(timestamps), timeframe_obj);
 
         } else if (source_type == "Intervals") {
-            // Create IntervalSelector using DigitalIntervalSeries
+            // Create IntervalSelector using DigitalIntervalSeries with capture range
             auto interval_series = _data_manager->getData<DigitalIntervalSeries>(source_name_str);
             if (!interval_series) {
                 qDebug() << "DigitalIntervalSeries not found:" << source_name;
@@ -1005,11 +1059,36 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
                 return nullptr;
             }
 
-            // Convert DigitalInterval to TimeFrameInterval
+            // Get capture range and interval setting
+            int capture_range = getCaptureRange();
+            bool use_beginning = isIntervalBeginningSelected();
+            bool use_interval_itself = isIntervalItselfSelected();
+
+            // Create intervals based on the selected option
             std::vector<TimeFrameInterval> tf_intervals;
             for (auto const & interval: intervals) {
-                tf_intervals.emplace_back(TimeFrameIndex(interval.start),
-                                          TimeFrameIndex(interval.end));
+                if (use_interval_itself) {
+                    // Use the interval as-is
+                    tf_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+                } else {
+                    // Determine the reference point (beginning or end of interval)
+                    int64_t reference_point;
+                    if (use_beginning) {
+                        reference_point = interval.start;
+                    } else {
+                        reference_point = interval.end;
+                    }
+
+                    // Create a new interval around the reference point
+                    int64_t start_point = reference_point - capture_range;
+                    int64_t end_point = reference_point + capture_range;
+
+                    // Ensure bounds are within the timeframe
+                    start_point = std::max(start_point, 0L);
+                    end_point = std::min(end_point, static_cast<int64_t>(timeframe_obj->getTotalFrameCount() - 1));
+
+                    tf_intervals.emplace_back(TimeFrameIndex(start_point), TimeFrameIndex(end_point));
+                }
             }
 
             return std::make_unique<IntervalSelector>(std::move(tf_intervals), timeframe_obj);
@@ -1164,4 +1243,72 @@ bool TableDesignerWidget::addColumnToBuilder(TableViewBuilder & builder, ColumnI
         qDebug() << "Exception adding column" << column_info.name << "to builder:" << e.what();
         return false;
     }
+}
+
+void TableDesignerWidget::updateIntervalSettingsVisibility() {
+    if (!ui->interval_settings_group) {
+        return;
+    }
+
+    QString selected_key = ui->row_data_source_combo->currentText();
+    if (selected_key.isEmpty()) {
+        ui->interval_settings_group->setVisible(false);
+        if (ui->capture_range_spinbox) {
+            ui->capture_range_spinbox->setEnabled(false);
+        }
+        return;
+    }
+
+    if (!_data_manager) {
+        ui->interval_settings_group->setVisible(false);
+        if (ui->capture_range_spinbox) {
+            ui->capture_range_spinbox->setEnabled(false);
+        }
+        return;
+    }
+
+    // Check if the selected source is an interval series
+    if (selected_key.startsWith("Intervals: ")) {
+        ui->interval_settings_group->setVisible(true);
+        
+        // Enable/disable capture range based on interval setting
+        if (ui->capture_range_spinbox) {
+            bool use_interval_itself = isIntervalItselfSelected();
+            ui->capture_range_spinbox->setEnabled(!use_interval_itself);
+        }
+    } else {
+        ui->interval_settings_group->setVisible(false);
+        if (ui->capture_range_spinbox) {
+            ui->capture_range_spinbox->setEnabled(false);
+        }
+    }
+}
+
+int TableDesignerWidget::getCaptureRange() const {
+    if (ui->capture_range_spinbox) {
+        return ui->capture_range_spinbox->value();
+    }
+    return 30000;// Default value
+}
+
+void TableDesignerWidget::setCaptureRange(int value) {
+    if (ui->capture_range_spinbox) {
+        ui->capture_range_spinbox->blockSignals(true);
+        ui->capture_range_spinbox->setValue(value);
+        ui->capture_range_spinbox->blockSignals(false);
+    }
+}
+
+bool TableDesignerWidget::isIntervalBeginningSelected() const {
+    if (ui->interval_beginning_radio) {
+        return ui->interval_beginning_radio->isChecked();
+    }
+    return true;// Default to beginning
+}
+
+bool TableDesignerWidget::isIntervalItselfSelected() const {
+    if (ui->interval_itself_radio) {
+        return ui->interval_itself_radio->isChecked();
+    }
+    return false;// Default to not selected
 }
