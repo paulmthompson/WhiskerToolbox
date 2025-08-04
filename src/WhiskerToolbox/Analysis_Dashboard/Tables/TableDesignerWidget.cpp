@@ -18,6 +18,8 @@
 #include <QDebug>
 #include <QInputDialog>
 #include <QMessageBox>
+
+#include <algorithm>
 #include <typeindex>
 #include <vector>
 #include <tuple>
@@ -1217,7 +1219,7 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
                     int64_t end_point = reference_point + capture_range;
 
                     // Ensure bounds are within the timeframe
-                    start_point = std::max(start_point, 0L);
+                    start_point = std::max(start_point, int64_t(0));
                     end_point = std::min(end_point, static_cast<int64_t>(timeframe_obj->getTotalFrameCount() - 1));
 
                     tf_intervals.emplace_back(TimeFrameIndex(start_point), TimeFrameIndex(end_point));

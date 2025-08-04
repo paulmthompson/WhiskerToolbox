@@ -2,8 +2,11 @@
 #define GENERICPOINTVISUALIZATION_HPP
 
 #include "../Selection/SelectionHandlers.hpp"
+#include "Groups/GroupManager.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 #include "ShaderManager/ShaderManager.hpp"
+#include "../Selection/PointSelectionHandler.hpp"
+#include "../Selection/PolygonSelectionHandler.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
@@ -22,10 +25,8 @@
 #include <vector>
 
 class QOpenGLShaderProgram;
-class PolygonSelectionHandler;
 class LineSelectionHandler;
 class NoneSelectionHandler;
-class PointSelectionHandler;
 class GroupManager;
 
 /**
