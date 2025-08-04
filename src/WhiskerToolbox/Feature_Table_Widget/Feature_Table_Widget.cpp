@@ -2,7 +2,6 @@
 #include "ui_Feature_Table_Widget.h"
 
 #include "DataManager/utils/color.hpp"
-#include "Color_Widget/Color_Widget.hpp"
 #include "DataManager.hpp"
 
 #include <QPushButton>
