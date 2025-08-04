@@ -4,6 +4,8 @@
 #include <QString>
 #include <QStringList>
 #include <typeindex>
+#include <map>
+#include <string>
 
 struct ColumnInfo {
     QString name;                ///< User-friendly name for the column
@@ -17,6 +19,9 @@ struct ColumnInfo {
     bool isVectorType = false;                     ///< True if output is std::vector<T>
     std::type_index elementType = typeid(void);    ///< For vector types, the element type
     QString elementTypeName;                       ///< Human-readable name of the element type
+    
+    // Computer parameters
+    std::map<std::string, std::string> parameters; ///< Parameters to pass to the computer factory
 
     ColumnInfo() = default;
     ColumnInfo(QString column_name, QString column_description = "",

@@ -23,6 +23,67 @@ class PointData;
 class TimeFrame;
 
 /**
+ * @brief Abstract base for parameter descriptors that provide UI hints without Qt dependencies.
+ */
+class IParameterDescriptor {
+public:
+    IParameterDescriptor();
+    virtual ~IParameterDescriptor();
+    virtual std::string getName() const = 0;
+    virtual std::string getDescription() const = 0;
+    virtual bool isRequired() const = 0;
+    virtual std::string getUIHint() const = 0;  // "enum", "text", "number", etc.
+    virtual std::map<std::string, std::string> getUIProperties() const = 0;
+    virtual std::unique_ptr<IParameterDescriptor> clone() const = 0;
+};
+
+/**
+ * @brief Parameter descriptor for enumerated/choice parameters.
+ */
+class EnumParameterDescriptor : public IParameterDescriptor {
+    std::string name_;
+    std::string description_;
+    std::vector<std::string> options_;
+    std::string defaultValue_;
+    bool required_;
+    
+public:
+    EnumParameterDescriptor(std::string name, std::string description, 
+                           std::vector<std::string> options, std::string defaultValue = "", 
+                           bool required = true)
+        : name_(std::move(name)), description_(std::move(description)), 
+          options_(std::move(options)), defaultValue_(std::move(defaultValue)), 
+          required_(required) {}
+    
+    std::string getName() const override { return name_; }
+    std::string getDescription() const override { return description_; }
+    bool isRequired() const override { return required_; }
+    std::string getUIHint() const override { return "enum"; }
+    
+    std::map<std::string, std::string> getUIProperties() const override {
+        std::map<std::string, std::string> props;
+        
+        // Join options with comma
+        std::string optionsStr;
+        for (size_t i = 0; i < options_.size(); ++i) {
+            if (i > 0) optionsStr += ",";
+            optionsStr += options_[i];
+        }
+        
+        props["options"] = optionsStr;
+        props["default"] = defaultValue_;
+        return props;
+    }
+    
+    std::unique_ptr<IParameterDescriptor> clone() const override {
+        return std::make_unique<EnumParameterDescriptor>(name_, description_, options_, defaultValue_, required_);
+    }
+    
+    const std::vector<std::string>& getOptions() const { return options_; }
+    const std::string& getDefaultValue() const { return defaultValue_; }
+};
+
+/**
  * @brief Non-templated base class for type-erased computer storage.
  * 
  * This allows us to store different templated IColumnComputer instances
@@ -85,13 +146,10 @@ struct ComputerParameterInfo {
     bool isRequired;            ///< Whether the parameter is required
     std::string defaultValue;   ///< String representation of default value (if any)
     
-    // Default constructor
-    ComputerParameterInfo() 
-        : name(), description(), type(typeid(void)), isRequired(false), defaultValue() {}
-    
-    // Convenience constructor
-    ComputerParameterInfo(std::string name_, std::string description_, std::type_index type_, bool required = false, std::string defaultValue_ = "")
-        : name(std::move(name_)), description(std::move(description_)), type(type_), isRequired(required), defaultValue(std::move(defaultValue_)) {}
+    ComputerParameterInfo();
+    ComputerParameterInfo(std::string name_, std::string description_, std::type_index type_, bool required = false, std::string defaultValue_ = "");
+
+    ~ComputerParameterInfo();
 };
 
 /**
@@ -107,13 +165,13 @@ struct ComputerInfo {
     std::string elementTypeName;                        ///< Human-readable name of the element type
     RowSelectorType requiredRowSelector;                ///< Required row selector type
     std::type_index requiredSourceType;                 ///< Required data source interface type
-    std::vector<ComputerParameterInfo> parameters;     ///< Required/optional parameters
+    std::vector<std::unique_ptr<IParameterDescriptor>> parameterDescriptors; ///< Parameter descriptors for UI generation
     
     // Default constructor
     ComputerInfo() 
         : name(), description(), outputType(typeid(void)), outputTypeName("void"),
           isVectorType(false), elementType(typeid(void)), elementTypeName("void"),
-          requiredRowSelector(RowSelectorType::Interval), requiredSourceType(typeid(void)), parameters() {}
+          requiredRowSelector(RowSelectorType::Interval), requiredSourceType(typeid(void)), parameterDescriptors() {}
     
     // Helper constructor for simple types
     ComputerInfo(std::string name_, std::string description_, std::type_index outputType_, 
@@ -121,7 +179,17 @@ struct ComputerInfo {
         : name(std::move(name_)), description(std::move(description_)), 
           outputType(outputType_), outputTypeName(std::move(outputTypeName_)),
           isVectorType(false), elementType(outputType_), elementTypeName(outputTypeName_),
-          requiredRowSelector(rowSelector_), requiredSourceType(sourceType_), parameters() {}
+          requiredRowSelector(rowSelector_), requiredSourceType(sourceType_), parameterDescriptors() {}
+
+    // Constructor with parameter descriptors for simple types
+    ComputerInfo(std::string name_, std::string description_, std::type_index outputType_, 
+                 std::string outputTypeName_, RowSelectorType rowSelector_, std::type_index sourceType_,
+                 std::vector<std::unique_ptr<IParameterDescriptor>> parameterDescriptors_)
+        : name(std::move(name_)), description(std::move(description_)), 
+          outputType(outputType_), outputTypeName(std::move(outputTypeName_)),
+          isVectorType(false), elementType(outputType_), elementTypeName(outputTypeName_),
+          requiredRowSelector(rowSelector_), requiredSourceType(sourceType_), 
+          parameterDescriptors(std::move(parameterDescriptors_)) {}
     
     // Helper constructor for vector types
     ComputerInfo(std::string name_, std::string description_, std::type_index outputType_, 
@@ -130,7 +198,61 @@ struct ComputerInfo {
         : name(std::move(name_)), description(std::move(description_)), 
           outputType(outputType_), outputTypeName(std::move(outputTypeName_)),
           isVectorType(true), elementType(elementType_), elementTypeName(std::move(elementTypeName_)),
-          requiredRowSelector(rowSelector_), requiredSourceType(sourceType_), parameters() {}
+          requiredRowSelector(rowSelector_), requiredSourceType(sourceType_), parameterDescriptors() {}
+
+    // Helper constructor for vector types with parameter descriptors
+    ComputerInfo(std::string name_, std::string description_, std::type_index outputType_, 
+                 std::string outputTypeName_, std::type_index elementType_, std::string elementTypeName_,
+                 RowSelectorType rowSelector_, std::type_index sourceType_,
+                 std::vector<std::unique_ptr<IParameterDescriptor>> parameterDescriptors_)
+        : name(std::move(name_)), description(std::move(description_)),
+          outputType(outputType_), outputTypeName(std::move(outputTypeName_)),
+          isVectorType(true), elementType(elementType_), elementTypeName(std::move(elementTypeName_)),
+          requiredRowSelector(rowSelector_), requiredSourceType(sourceType_),
+          parameterDescriptors(std::move(parameterDescriptors_)) {}
+    
+    // Helper methods
+    bool hasParameters() const { return !parameterDescriptors.empty(); }
+    
+    // Copy constructor
+    ComputerInfo(const ComputerInfo& other)
+        : name(other.name), description(other.description), 
+          outputType(other.outputType), outputTypeName(other.outputTypeName),
+          isVectorType(other.isVectorType), elementType(other.elementType), 
+          elementTypeName(other.elementTypeName),
+          requiredRowSelector(other.requiredRowSelector), 
+          requiredSourceType(other.requiredSourceType) {
+        // Deep copy parameter descriptors
+        parameterDescriptors.reserve(other.parameterDescriptors.size());
+        for (const auto& param : other.parameterDescriptors) {
+            parameterDescriptors.push_back(param->clone());
+        }
+    }
+    
+    // Copy assignment operator
+    ComputerInfo& operator=(const ComputerInfo& other) {
+        if (this != &other) {
+            name = other.name;
+            description = other.description;
+            outputType = other.outputType;
+            outputTypeName = other.outputTypeName;
+            isVectorType = other.isVectorType;
+            elementType = other.elementType;
+            elementTypeName = other.elementTypeName;
+            requiredRowSelector = other.requiredRowSelector;
+            requiredSourceType = other.requiredSourceType;
+            
+            // Deep copy parameter descriptors
+            parameterDescriptors.clear();
+            parameterDescriptors.reserve(other.parameterDescriptors.size());
+            for (const auto& param : other.parameterDescriptors) {
+                parameterDescriptors.push_back(param->clone());
+            }
+        }
+        return *this;
+    }
+    
+    // Move constructor and assignment are automatically generated and work correctly
     
     // Legacy convenience constructor for backward compatibility
     ComputerInfo(std::string name_, std::string description_, std::type_index outputType_, 
@@ -138,7 +260,7 @@ struct ComputerInfo {
                  std::vector<ComputerParameterInfo> params = {})
         : name(std::move(name_)), description(std::move(description_)), outputType(outputType_),
           outputTypeName("unknown"), isVectorType(false), elementType(outputType_), elementTypeName("unknown"),
-          requiredRowSelector(rowSelector), requiredSourceType(sourceType), parameters(std::move(params)) {}
+          requiredRowSelector(rowSelector), requiredSourceType(sourceType), parameterDescriptors() {}
 };
 
 /**

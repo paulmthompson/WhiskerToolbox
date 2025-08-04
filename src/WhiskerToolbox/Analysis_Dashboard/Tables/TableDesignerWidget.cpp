@@ -18,6 +18,12 @@
 #include <QDebug>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QLabel>
+#include <QGroupBox>
 
 #include <algorithm>
 #include <typeindex>
@@ -31,6 +37,13 @@ TableDesignerWidget::TableDesignerWidget(TableManager * table_manager, std::shar
       _data_manager(data_manager) {
 
     ui->setupUi(this);
+    
+    // Set up parameter UI container
+    _parameter_widget = ui->parameter_container_widget;
+    _parameter_layout = new QVBoxLayout(_parameter_widget);
+    _parameter_layout->setContentsMargins(0, 0, 0, 0);
+    _parameter_layout->setSpacing(4);
+    
     connectSignals();
     refreshTableCombo();
     refreshRowDataSourceCombo();
@@ -334,6 +347,9 @@ void TableDesignerWidget::onColumnDataSourceChanged() {
 void TableDesignerWidget::onColumnComputerChanged() {
     saveCurrentColumnConfiguration();
     
+    // Clear existing parameter UI
+    clearParameterUI();
+    
     // Get and display type information for the selected computer
     QString computer_name = ui->column_computer_combo->currentData().toString();
     if (!computer_name.isEmpty() && _table_manager) {
@@ -346,6 +362,9 @@ void TableDesignerWidget::onColumnComputerChanged() {
         
         qDebug() << "Column computer changed to:" << ui->column_computer_combo->currentText() 
                  << "-" << type_info;
+        
+        // Setup parameter UI for the selected computer
+        setupParameterUI(computer_name);
         
         // If there's a type info label in the UI, update it
         // For now, we'll just log it - you could add a label to the UI to display this
@@ -1075,6 +1094,12 @@ void TableDesignerWidget::loadColumnConfiguration(int column_index) {
         if (computer_index >= 0) {
             ui->column_computer_combo->setCurrentIndex(computer_index);
             qDebug() << "Set computer combo to index" << computer_index << "after refresh";
+            
+            // Setup parameter UI for the loaded computer
+            setupParameterUI(column_info.computerName);
+            
+            // Load parameter values
+            setParameterValues(column_info.parameters);
         } else {
             qDebug() << "Could not find computer" << column_info.computerName << "in refreshed combo box";
         }
@@ -1101,6 +1126,7 @@ void TableDesignerWidget::saveCurrentColumnConfiguration() {
     column_info.description = ui->column_description_edit->toPlainText().trimmed();
     column_info.dataSourceName = ui->column_data_source_combo->currentData().toString();
     column_info.computerName = ui->column_computer_combo->currentData().toString();
+    column_info.parameters = getCurrentParameterValues();
 
     // Save to table manager
     if (_table_manager->updateTableColumn(_current_table_id, current_row, column_info)) {
@@ -1116,6 +1142,7 @@ void TableDesignerWidget::clearColumnConfiguration() {
     ui->column_description_edit->clear();
     ui->column_data_source_combo->setCurrentIndex(-1);
     ui->column_computer_combo->setCurrentIndex(-1);
+    clearParameterUI();
 }
 
 std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString const & row_source) {
@@ -1333,6 +1360,8 @@ bool TableDesignerWidget::addColumnToBuilder(TableViewBuilder & builder, ColumnI
             success = addTypedColumnToBuilder<std::vector<double>>(builder, column_info, data_source_variant, registry);
         } else if (return_type == typeid(std::vector<int>)) {
             success = addTypedColumnToBuilder<std::vector<int>>(builder, column_info, data_source_variant, registry);
+        } else if (return_type == typeid(std::vector<float>)) {
+            success = addTypedColumnToBuilder<std::vector<float>>(builder, column_info, data_source_variant, registry);
         } else {
             qDebug() << "Unsupported return type for computer" << column_info.computerName 
                      << "- type:" << computer_info_ptr->outputTypeName.c_str();
@@ -1359,10 +1388,11 @@ bool TableDesignerWidget::addTypedColumnToBuilder(TableViewBuilder & builder,
                                                   DataSourceVariant const & data_source_variant,
                                                   ComputerRegistry const & registry) {
     try {
-        // Use the registry's type-safe computer creation method
+        // Use the registry's type-safe computer creation method with parameters
         auto typed_computer = registry.createTypedComputer<T>(
             column_info.computerName.toStdString(), 
-            data_source_variant
+            data_source_variant,
+            column_info.parameters
         );
         
         if (!typed_computer) {
@@ -1391,6 +1421,7 @@ template bool TableDesignerWidget::addTypedColumnToBuilder<int>(TableViewBuilder
 template bool TableDesignerWidget::addTypedColumnToBuilder<bool>(TableViewBuilder &, ColumnInfo const &, DataSourceVariant const &, ComputerRegistry const &);
 template bool TableDesignerWidget::addTypedColumnToBuilder<std::vector<double>>(TableViewBuilder &, ColumnInfo const &, DataSourceVariant const &, ComputerRegistry const &);
 template bool TableDesignerWidget::addTypedColumnToBuilder<std::vector<int>>(TableViewBuilder &, ColumnInfo const &, DataSourceVariant const &, ComputerRegistry const &);
+template bool TableDesignerWidget::addTypedColumnToBuilder<std::vector<float>>(TableViewBuilder &, ColumnInfo const &, DataSourceVariant const &, ComputerRegistry const &);
 
 void TableDesignerWidget::updateIntervalSettingsVisibility() {
     if (!ui->interval_settings_group) {
@@ -1458,4 +1489,161 @@ bool TableDesignerWidget::isIntervalItselfSelected() const {
         return ui->interval_itself_radio->isChecked();
     }
     return false;// Default to not selected
+}
+
+void TableDesignerWidget::setupParameterUI(QString const & computerName) {
+    clearParameterUI();
+    
+    if (!_table_manager || computerName.isEmpty()) {
+        return;
+    }
+    
+    // Get computer info from table manager
+    auto computer_info = _table_manager->getComputerInfo(computerName);
+    if (!computer_info) {
+        return;
+    }
+    
+    // Check if this computer has parameters
+    if (!computer_info->hasParameters()) {
+        _parameter_widget->setVisible(false);
+        return;
+    }
+    
+    _parameter_widget->setVisible(true);
+    
+    // Create a group box for the parameters
+    auto* group_box = new QGroupBox("Parameters", _parameter_widget);
+    auto* group_layout = new QVBoxLayout(group_box);
+    
+    // Create controls for each parameter
+    for (const auto& param_desc : computer_info->parameterDescriptors) {
+        auto* control = createParameterControl(param_desc.get());
+        if (control) {
+            _parameter_controls[param_desc->getName()] = control;
+            
+            // Create label and control layout
+            auto* param_layout = new QHBoxLayout();
+            auto* label = new QLabel(QString::fromStdString(param_desc->getName()) + ":", group_box);
+            label->setToolTip(QString::fromStdString(param_desc->getDescription()));
+            
+            param_layout->addWidget(label);
+            param_layout->addWidget(control);
+            param_layout->setStretch(1, 1); // Give control more space
+            
+            group_layout->addLayout(param_layout);
+        }
+    }
+    
+    _parameter_layout->addWidget(group_box);
+}
+
+void TableDesignerWidget::clearParameterUI() {
+    // Clear the parameter controls map
+    _parameter_controls.clear();
+    
+    // Remove all widgets from the parameter layout
+    while (QLayoutItem* item = _parameter_layout->takeAt(0)) {
+        if (QWidget* widget = item->widget()) {
+            widget->deleteLater();
+        }
+        delete item;
+    }
+    
+    _parameter_widget->setVisible(false);
+}
+
+QWidget* TableDesignerWidget::createParameterControl(IParameterDescriptor const * descriptor) {
+    if (!descriptor) {
+        return nullptr;
+    }
+    
+    QString uiHint = QString::fromStdString(descriptor->getUIHint());
+    
+    if (uiHint == "enum") {
+        // Create combo box for enum parameters
+        auto* combo = new QComboBox();
+        
+        auto properties = descriptor->getUIProperties();
+        QString optionsStr = QString::fromStdString(properties["options"]);
+        QString defaultValue = QString::fromStdString(properties["default"]);
+        
+        // Parse options (comma-separated)
+        QStringList options = optionsStr.split(",", Qt::SkipEmptyParts);
+        for (const QString& option : options) {
+            combo->addItem(option.trimmed());
+        }
+        
+        // Set default value if specified
+        if (!defaultValue.isEmpty()) {
+            int index = combo->findText(defaultValue);
+            if (index >= 0) {
+                combo->setCurrentIndex(index);
+            }
+        }
+        
+        return combo;
+    } else if (uiHint == "text") {
+        // Create line edit for text parameters
+        auto* lineEdit = new QLineEdit();
+        
+        auto properties = descriptor->getUIProperties();
+        QString defaultValue = QString::fromStdString(properties["default"]);
+        
+        if (!defaultValue.isEmpty()) {
+            lineEdit->setText(defaultValue);
+        }
+        
+        return lineEdit;
+    } else if (uiHint == "number") {
+        // Create line edit for number parameters (could be enhanced with validators)
+        auto* lineEdit = new QLineEdit();
+        
+        auto properties = descriptor->getUIProperties();
+        QString defaultValue = QString::fromStdString(properties["default"]);
+        
+        if (!defaultValue.isEmpty()) {
+            lineEdit->setText(defaultValue);
+        }
+        
+        return lineEdit;
+    }
+    
+    // Unsupported parameter type, create a simple text edit
+    auto* lineEdit = new QLineEdit();
+    lineEdit->setEnabled(false);
+    lineEdit->setPlaceholderText("Unsupported parameter type: " + uiHint);
+    return lineEdit;
+}
+
+std::map<std::string, std::string> TableDesignerWidget::getCurrentParameterValues() const {
+    std::map<std::string, std::string> values;
+    
+    for (const auto& [paramName, widget] : _parameter_controls) {
+        if (auto* combo = qobject_cast<QComboBox*>(widget)) {
+            values[paramName] = combo->currentText().toStdString();
+        } else if (auto* lineEdit = qobject_cast<QLineEdit*>(widget)) {
+            values[paramName] = lineEdit->text().toStdString();
+        }
+    }
+    
+    return values;
+}
+
+void TableDesignerWidget::setParameterValues(std::map<std::string, std::string> const & parameters) {
+    for (const auto& [paramName, paramValue] : parameters) {
+        auto it = _parameter_controls.find(paramName);
+        if (it != _parameter_controls.end()) {
+            QWidget* widget = it->second;
+            
+            if (auto* combo = qobject_cast<QComboBox*>(widget)) {
+                int index = combo->findText(QString::fromStdString(paramValue));
+                if (index >= 0) {
+                    combo->setCurrentIndex(index);
+                }
+            } else if (auto* lineEdit = qobject_cast<QLineEdit*>(widget)) {
+                lineEdit->setText(QString::fromStdString(paramValue));
+            }
+        }
+    }
 }

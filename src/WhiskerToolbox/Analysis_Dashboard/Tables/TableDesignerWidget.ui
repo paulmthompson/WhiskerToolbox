@@ -370,6 +370,13 @@
            </layout>
           </item>
           <item>
+           <widget class="QWidget" name="parameter_container_widget">
+            <property name="visible">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="col_description_label">
             <property name="text">
              <string>Description:</string>

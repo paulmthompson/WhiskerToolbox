@@ -14,6 +14,7 @@ class TableView;
 class DataManager;
 class ComputerRegistry;
 class DataManagerExtension;
+struct ComputerInfo;
 
 /**
  * @brief Manages user-created table views for the analysis dashboard
@@ -210,6 +211,13 @@ public:
      * @return Tuple of (output_type_name, is_vector_type, element_type_name)
      */
     std::tuple<QString, bool, QString> getComputerTypeInfo(QString const & computer_name) const;
+    
+    /**
+     * @brief Get computer information including parameters
+     * @param computer_name The name of the computer
+     * @return Pointer to ComputerInfo, or nullptr if not found
+     */
+    ComputerInfo const* getComputerInfo(QString const & computer_name) const;
     
     /**
      * @brief Get all available output types that can be generated

@@ -6,14 +6,20 @@
 
 #include <QStringList>
 #include <QWidget>
+#include <QVBoxLayout>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QLabel>
 
 #include <memory>
+#include <map>
 
 class TableManager;
 class DataManager;
 class ComputerRegistry;
 class IRowSelector;
 class TableViewBuilder;
+class IParameterDescriptor;
 
 namespace Ui {
 class TableDesignerWidget;
@@ -155,6 +161,11 @@ private:
     bool _loading_column_configuration = false; // Flag to prevent infinite loops
     bool _refreshing_computer_combo = false; // Flag to prevent recursive refreshes
     bool _updating_column_configuration = false; // Flag to prevent reload during column updates
+    
+    // Parameter UI management
+    QWidget * _parameter_widget = nullptr;
+    QVBoxLayout * _parameter_layout = nullptr;
+    std::map<std::string, QWidget*> _parameter_controls;
 
     /**
      * @brief Connect all signals and slots
@@ -291,6 +302,36 @@ private:
      * @return List of table column references
      */
     QStringList getAvailableTableColumns() const;
+
+    /**
+     * @brief Setup parameter UI for the selected computer
+     * @param computerName The name of the selected computer
+     */
+    void setupParameterUI(QString const & computerName);
+
+    /**
+     * @brief Clear all parameter UI controls
+     */
+    void clearParameterUI();
+
+    /**
+     * @brief Create parameter control widget based on descriptor
+     * @param descriptor The parameter descriptor
+     * @return Widget for the parameter, or nullptr if unsupported type
+     */
+    QWidget* createParameterControl(IParameterDescriptor const * descriptor);
+
+    /**
+     * @brief Get current parameter values from UI controls
+     * @return Map of parameter name to string value
+     */
+    std::map<std::string, std::string> getCurrentParameterValues() const;
+
+    /**
+     * @brief Set parameter values in UI controls
+     * @param parameters Map of parameter name to string value
+     */
+    void setParameterValues(std::map<std::string, std::string> const & parameters);
 };
 
 #endif// TABLEDESIGNERWIDGET_HPP

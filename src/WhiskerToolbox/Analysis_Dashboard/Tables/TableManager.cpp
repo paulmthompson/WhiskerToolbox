@@ -352,6 +352,10 @@ std::tuple<QString, bool, QString> TableManager::getComputerTypeInfo(QString con
     );
 }
 
+ComputerInfo const* TableManager::getComputerInfo(QString const & computer_name) const {
+    return _computer_registry->findComputerInfo(computer_name.toStdString());
+}
+
 QStringList TableManager::getAvailableOutputTypes() const {
     auto type_names = _computer_registry->getOutputTypeNames();
     

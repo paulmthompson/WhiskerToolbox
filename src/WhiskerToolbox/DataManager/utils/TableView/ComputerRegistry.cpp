@@ -11,6 +11,18 @@
 #include <set>
 #include <optional>
 
+IParameterDescriptor::IParameterDescriptor() = default;
+
+IParameterDescriptor::~IParameterDescriptor() = default;
+
+ComputerParameterInfo::ComputerParameterInfo()
+        : name(), description(), type(typeid(void)), isRequired(false), defaultValue() {}
+    
+ComputerParameterInfo::ComputerParameterInfo(std::string name_, std::string description_, std::type_index type_, bool required, std::string defaultValue_)
+        : name(std::move(name_)), description(std::move(description_)), type(type_), isRequired(required), defaultValue(std::move(defaultValue_)) {}
+
+ComputerParameterInfo::~ComputerParameterInfo() = default;
+
 ComputerRegistry::ComputerRegistry() {
     std::cout << "Initializing Computer Registry..." << std::endl;
     
@@ -446,6 +458,50 @@ void ComputerRegistry::registerBuiltInComputers() {
             if (auto intervalSrc = std::get_if<std::shared_ptr<IIntervalSource>>(&source)) {
                 auto computer = std::make_unique<IntervalPropertyComputer<double>>(*intervalSrc, IntervalProperty::Duration, (*intervalSrc)->getName());
                 return std::make_unique<ComputerWrapper<double>>(std::move(computer));
+            }
+            return nullptr;
+        };
+        
+        registerComputer(std::move(info), std::move(factory));
+    }
+    
+    // EventInIntervalComputer - Gather with parameter
+    {
+        // Create parameter descriptors
+        std::vector<std::unique_ptr<IParameterDescriptor>> paramDescriptors;
+        paramDescriptors.push_back(std::make_unique<EnumParameterDescriptor>(
+            "mode", "Gathering mode for event times",
+            std::vector<std::string>{"absolute", "centered"}, 
+            "absolute", true
+        ));
+        
+        ComputerInfo info("Event Gather",
+                         "Gather event times within intervals",
+                         typeid(std::vector<float>),
+                         "std::vector<float>",
+                         typeid(float),
+                         "float",
+                         RowSelectorType::Interval,
+                         typeid(std::shared_ptr<IEventSource>),
+                         std::move(paramDescriptors));
+        
+        ComputerFactory factory = [](DataSourceVariant const& source, 
+                                   std::map<std::string, std::string> const& parameters) -> std::unique_ptr<IComputerBase> {
+            if (auto eventSrc = std::get_if<std::shared_ptr<IEventSource>>(&source)) {
+                // Parse the mode parameter
+                EventOperation operation = EventOperation::Gather; // default
+                auto mode_it = parameters.find("mode");
+                if (mode_it != parameters.end()) {
+                    if (mode_it->second == "centered") {
+                        operation = EventOperation::Gather_Center;
+                    } else {
+                        operation = EventOperation::Gather;
+                    }
+                }
+                
+                auto computer = std::make_unique<EventInIntervalComputer<std::vector<float>>>(
+                    *eventSrc, operation, (*eventSrc)->getName());
+                return std::make_unique<ComputerWrapper<std::vector<float>>>(std::move(computer));
             }
             return nullptr;
         };
