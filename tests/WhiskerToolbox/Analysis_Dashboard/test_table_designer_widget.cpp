@@ -9,10 +9,41 @@
 #include <memory>
 
 #include "../fixtures/qt_test_fixtures.hpp"
+#include "../fixtures/data_manager_test_fixtures.hpp"
 
-TEST_CASE_METHOD(QtWidgetTestFixture, "TableDesignerWidget can be created and added to application", "[widget][table_designer]") {
-    // Create a data manager for testing
-    auto data_manager = std::make_shared<DataManager>();
+/**
+ * @brief Combined test fixture for table designer widget testing
+ * 
+ * This fixture combines Qt widget testing capabilities with a populated DataManager
+ * for testing table designer functionality with real data.
+ */
+class TableDesignerTestFixture : public QtWidgetTestFixture, public DataManagerTestFixture {
+protected:
+    TableDesignerTestFixture() : QtWidgetTestFixture(), DataManagerTestFixture() {
+        // Additional setup if needed
+    }
+    
+    /**
+     * @brief Get the DataManager as a shared pointer for widget testing
+     * @return Shared pointer to the DataManager
+     */
+    std::shared_ptr<DataManager> getDataManagerShared() {
+        return std::shared_ptr<DataManager>(getDataManagerPtr(), [](DataManager*) {
+            // Custom deleter - don't delete since DataManagerTestFixture owns it
+        });
+    }
+};
+
+TEST_CASE_METHOD(TableDesignerTestFixture, 
+    "Analysis Dashboard - TableDesignerWidget - Widget can be created and added to application",
+     "[widget][table_designer]") {
+    // Use the populated DataManager from the fixture
+    auto data_manager = getDataManagerShared();
+    REQUIRE(data_manager != nullptr);
+    
+    // Verify that the DataManager has test data
+    auto all_keys = data_manager->getAllKeys();
+    REQUIRE(all_keys.size() > 0);
     
     // Create a table manager
     auto table_manager = std::make_unique<TableManager>(data_manager);
@@ -58,9 +89,19 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "TableDesignerWidget can be created and ad
     // Widget will be automatically cleaned up when unique_ptr goes out of scope
 }
 
-TEST_CASE_METHOD(QtWidgetTestFixture, "TableManager can create and manage tables", "[table_manager]") {
-    // Create a data manager for testing
-    auto data_manager = std::make_shared<DataManager>();
+TEST_CASE_METHOD(TableDesignerTestFixture, "TableManager can create and manage tables", "[table_manager]") {
+    // Use the populated DataManager from the fixture
+    auto data_manager = getDataManagerShared();
+    REQUIRE(data_manager != nullptr);
+    
+    // Verify that the DataManager has test data
+    auto all_keys = data_manager->getAllKeys();
+    REQUIRE(all_keys.size() > 0);
+    
+    // Verify specific test data is present
+    REQUIRE(data_manager->getData<PointData>("test_points") != nullptr);
+    REQUIRE(data_manager->getData<LineData>("test_lines") != nullptr);
+    REQUIRE(data_manager->getData<AnalogTimeSeries>("test_analog") != nullptr);
     
     // Create a table manager
     auto table_manager = std::make_unique<TableManager>(data_manager);
@@ -97,4 +138,35 @@ TEST_CASE_METHOD(QtWidgetTestFixture, "TableManager can create and manage tables
     bool removed = table_manager->removeTable(table_id);
     REQUIRE(removed == true);
     REQUIRE(table_manager->hasTable(table_id) == false);
+}
+
+TEST_CASE_METHOD(TableDesignerTestFixture, "TableDesignerWidget works with populated DataManager", "[widget][table_designer][data]") {
+    // Use the populated DataManager from the fixture
+    auto data_manager = getDataManagerShared();
+    REQUIRE(data_manager != nullptr);
+    
+    // Create a table manager
+    auto table_manager = std::make_unique<TableManager>(data_manager);
+    
+    // Create the table designer widget
+    auto table_designer = std::make_unique<TableDesignerWidget>(table_manager.get(), data_manager);
+    
+    // Show the widget
+    table_designer->show();
+    processEvents();
+    
+    // Test that the widget can access the DataManager's data
+    auto all_keys = data_manager->getAllKeys();
+    REQUIRE(all_keys.size() > 0);
+    
+    // Verify that the widget can handle the populated DataManager
+    REQUIRE(table_designer->isVisible() == true);
+    REQUIRE(table_designer->width() > 0);
+    REQUIRE(table_designer->height() > 0);
+    
+    // Test that the widget remains stable with the test data
+    table_designer->resize(600, 400);
+    processEvents();
+    REQUIRE(table_designer->width() == 600);
+    REQUIRE(table_designer->height() == 400);
 } 
