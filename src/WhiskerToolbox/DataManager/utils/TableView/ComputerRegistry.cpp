@@ -8,6 +8,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <set>
+#include <optional>
 
 ComputerRegistry::ComputerRegistry() {
     std::cout << "Initializing Computer Registry..." << std::endl;
@@ -136,6 +138,62 @@ std::vector<std::string> ComputerRegistry::getAllAdapterNames() const {
     return names;
 }
 
+std::vector<std::type_index> ComputerRegistry::getAvailableOutputTypes() const {
+    std::set<std::type_index> unique_types;
+    
+    for (auto const& info : all_computers_) {
+        unique_types.insert(info.outputType);
+    }
+    
+    return std::vector<std::type_index>(unique_types.begin(), unique_types.end());
+}
+
+std::map<std::type_index, std::string> ComputerRegistry::getOutputTypeNames() const {
+    std::map<std::type_index, std::string> type_names;
+    
+    for (auto const& info : all_computers_) {
+        type_names[info.outputType] = info.outputTypeName;
+    }
+    
+    return type_names;
+}
+
+std::vector<ComputerInfo> ComputerRegistry::getComputersByOutputType(
+    std::type_index outputType,
+    std::optional<RowSelectorType> rowSelectorType,
+    std::optional<std::type_index> sourceType
+) const {
+    std::vector<ComputerInfo> result;
+    
+    for (auto const& info : all_computers_) {
+        if (info.outputType != outputType) {
+            continue;
+        }
+        
+        if (rowSelectorType && info.requiredRowSelector != *rowSelectorType) {
+            continue;
+        }
+        
+        if (sourceType && info.requiredSourceType != *sourceType) {
+            continue;
+        }
+        
+        result.push_back(info);
+    }
+    
+    return result;
+}
+
+bool ComputerRegistry::isVectorComputer(std::string const& computerName) const {
+    auto info = findComputerInfo(computerName);
+    return info ? info->isVectorType : false;
+}
+
+std::type_index ComputerRegistry::getElementType(std::string const& computerName) const {
+    auto info = findComputerInfo(computerName);
+    return info ? info->elementType : typeid(void);
+}
+
 void ComputerRegistry::registerComputer(ComputerInfo info, ComputerFactory factory) {
     std::string const name = info.name; // Copy the name before moving
     
@@ -211,6 +269,7 @@ void ComputerRegistry::registerBuiltInComputers() {
         ComputerInfo info("Interval Mean", 
                          "Calculate mean value over intervals",
                          typeid(double),
+                         "double",
                          RowSelectorType::Interval,
                          typeid(std::shared_ptr<IAnalogSource>));
         
@@ -231,6 +290,7 @@ void ComputerRegistry::registerBuiltInComputers() {
         ComputerInfo info("Interval Max",
                          "Calculate maximum value over intervals",
                          typeid(double),
+                         "double",
                          RowSelectorType::Interval,
                          typeid(std::shared_ptr<IAnalogSource>));
         
@@ -251,6 +311,7 @@ void ComputerRegistry::registerBuiltInComputers() {
         ComputerInfo info("Interval Min",
                          "Calculate minimum value over intervals",
                          typeid(double),
+                         "double",
                          RowSelectorType::Interval,
                          typeid(std::shared_ptr<IAnalogSource>));
         
@@ -271,6 +332,7 @@ void ComputerRegistry::registerBuiltInComputers() {
         ComputerInfo info("Interval Standard Deviation",
                          "Calculate standard deviation over intervals",
                          typeid(double),
+                         "double",
                          RowSelectorType::Interval,
                          typeid(std::shared_ptr<IAnalogSource>));
         
@@ -291,6 +353,7 @@ void ComputerRegistry::registerBuiltInComputers() {
         ComputerInfo info("Event Presence",
                          "Check if events exist in intervals",
                          typeid(bool),
+                         "bool",
                          RowSelectorType::Interval,
                          typeid(std::shared_ptr<IEventSource>));
         
@@ -311,6 +374,7 @@ void ComputerRegistry::registerBuiltInComputers() {
         ComputerInfo info("Event Count",
                          "Count events in intervals",
                          typeid(int),
+                         "int",
                          RowSelectorType::Interval,
                          typeid(std::shared_ptr<IEventSource>));
         
@@ -331,6 +395,7 @@ void ComputerRegistry::registerBuiltInComputers() {
         ComputerInfo info("Interval Start",
                          "Get the start time of intervals",
                          typeid(double),
+                         "double",
                          RowSelectorType::Interval,
                          typeid(std::shared_ptr<IIntervalSource>));
         
@@ -351,6 +416,7 @@ void ComputerRegistry::registerBuiltInComputers() {
         ComputerInfo info("Interval End",
                          "Get the end time of intervals",
                          typeid(double),
+                         "double",
                          RowSelectorType::Interval,
                          typeid(std::shared_ptr<IIntervalSource>));
         
@@ -371,6 +437,7 @@ void ComputerRegistry::registerBuiltInComputers() {
         ComputerInfo info("Interval Duration",
                          "Get the duration of intervals",
                          typeid(double),
+                         "double",
                          RowSelectorType::Interval,
                          typeid(std::shared_ptr<IIntervalSource>));
         

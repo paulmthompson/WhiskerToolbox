@@ -300,3 +300,65 @@ QString TableManager::generateUniqueTableId(QString const & base_name) const {
 
     return candidate;
 }
+
+bool TableManager::addTableColumnWithTypeInfo(QString const & table_id, ColumnInfo & column_info) {
+    if (!hasTable(table_id)) {
+        qDebug() << "Table does not exist:" << table_id;
+        return false;
+    }
+
+    // Get type information from the computer registry
+    auto computer_info = _computer_registry->findComputerInfo(column_info.computerName.toStdString());
+    if (!computer_info) {
+        qDebug() << "Computer not found in registry:" << column_info.computerName;
+        return false;
+    }
+
+    // Populate type information
+    column_info.outputType = computer_info->outputType;
+    column_info.outputTypeName = QString::fromStdString(computer_info->outputTypeName);
+    column_info.isVectorType = computer_info->isVectorType;
+    column_info.elementType = computer_info->elementType;
+    column_info.elementTypeName = QString::fromStdString(computer_info->elementTypeName);
+
+    // Add the column with enhanced information
+    return addTableColumn(table_id, column_info);
+}
+
+QStringList TableManager::getAvailableComputersForDataSource(QString const & row_selector_type, QString const & data_source_name) const {
+    QStringList computers;
+    
+    // This would need to be implemented based on your specific data source resolution logic
+    // For now, return all computer names - you might want to filter based on actual data source compatibility
+    auto all_computer_names = _computer_registry->getAllComputerNames();
+    
+    for (auto const& name : all_computer_names) {
+        computers.append(QString::fromStdString(name));
+    }
+    
+    return computers;
+}
+
+std::tuple<QString, bool, QString> TableManager::getComputerTypeInfo(QString const & computer_name) const {
+    auto computer_info = _computer_registry->findComputerInfo(computer_name.toStdString());
+    if (!computer_info) {
+        return std::make_tuple(QString("unknown"), false, QString("unknown"));
+    }
+    
+    return std::make_tuple(
+        QString::fromStdString(computer_info->outputTypeName),
+        computer_info->isVectorType,
+        QString::fromStdString(computer_info->elementTypeName)
+    );
+}
+
+QStringList TableManager::getAvailableOutputTypes() const {
+    auto type_names = _computer_registry->getOutputTypeNames();
+    
+    QStringList result;
+    for (auto const& [type_index, name] : type_names) {
+        result.append(QString::fromStdString(name));
+    }
+    
+    return result;
+}

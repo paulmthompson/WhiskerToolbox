@@ -10,12 +10,12 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <typeindex>
 #include <variant>
 #include <vector>
 
-// Forward declarations
 class DataManagerExtension;
 class PointData;
 class TimeFrame;
@@ -50,6 +50,22 @@ public:
         : computer_(std::move(computer)) {}
     
     IColumnComputer<T>* get() const { return computer_.get(); }
+    
+    /**
+     * @brief Gets the underlying typed computer instance as a shared pointer.
+     * @return Shared pointer to the typed computer interface.
+     */
+    std::shared_ptr<IColumnComputer<T>> getComputer() const {
+        return std::shared_ptr<IColumnComputer<T>>(computer_.get(), [](IColumnComputer<T>*){});
+    }
+    
+    /**
+     * @brief Transfers ownership of the underlying computer.
+     * @return Unique pointer to the typed computer interface.
+     */
+    std::unique_ptr<IColumnComputer<T>> releaseComputer() {
+        return std::move(computer_);
+    }
     
 private:
     std::unique_ptr<IColumnComputer<T>> computer_;
@@ -102,20 +118,43 @@ struct ComputerInfo {
     std::string name;                                   ///< Display name for the computer
     std::string description;                            ///< Human-readable description
     std::type_index outputType;                         ///< Type of the computed output
+    std::string outputTypeName;                         ///< Human-readable name of the output type
+    bool isVectorType;                                  ///< True if output type is std::vector<T>
+    std::type_index elementType;                        ///< For vector types, the element type; same as outputType for non-vectors
+    std::string elementTypeName;                        ///< Human-readable name of the element type
     RowSelectorType requiredRowSelector;                ///< Required row selector type
     std::type_index requiredSourceType;                 ///< Required data source interface type
     std::vector<ComputerParameterInfo> parameters;     ///< Required/optional parameters
     
     // Default constructor
     ComputerInfo() 
-        : name(), description(), outputType(typeid(void)), 
+        : name(), description(), outputType(typeid(void)), outputTypeName("void"),
+          isVectorType(false), elementType(typeid(void)), elementTypeName("void"),
           requiredRowSelector(RowSelectorType::Interval), requiredSourceType(typeid(void)), parameters() {}
     
-    // Convenience constructor
+    // Helper constructor for simple types
+    ComputerInfo(std::string name_, std::string description_, std::type_index outputType_, 
+                 std::string outputTypeName_, RowSelectorType rowSelector_, std::type_index sourceType_)
+        : name(std::move(name_)), description(std::move(description_)), 
+          outputType(outputType_), outputTypeName(std::move(outputTypeName_)),
+          isVectorType(false), elementType(outputType_), elementTypeName(outputTypeName_),
+          requiredRowSelector(rowSelector_), requiredSourceType(sourceType_), parameters() {}
+    
+    // Helper constructor for vector types
+    ComputerInfo(std::string name_, std::string description_, std::type_index outputType_, 
+                 std::string outputTypeName_, std::type_index elementType_, std::string elementTypeName_,
+                 RowSelectorType rowSelector_, std::type_index sourceType_)
+        : name(std::move(name_)), description(std::move(description_)), 
+          outputType(outputType_), outputTypeName(std::move(outputTypeName_)),
+          isVectorType(true), elementType(elementType_), elementTypeName(std::move(elementTypeName_)),
+          requiredRowSelector(rowSelector_), requiredSourceType(sourceType_), parameters() {}
+    
+    // Legacy convenience constructor for backward compatibility
     ComputerInfo(std::string name_, std::string description_, std::type_index outputType_, 
                  RowSelectorType rowSelector, std::type_index sourceType, 
                  std::vector<ComputerParameterInfo> params = {})
         : name(std::move(name_)), description(std::move(description_)), outputType(outputType_),
+          outputTypeName("unknown"), isVectorType(false), elementType(outputType_), elementTypeName("unknown"),
           requiredRowSelector(rowSelector), requiredSourceType(sourceType), parameters(std::move(params)) {}
 };
 
@@ -252,6 +291,86 @@ public:
      * @return Vector of all adapter names.
      */
     std::vector<std::string> getAllAdapterNames() const;
+
+    // Enhanced type discovery methods
+    
+    /**
+     * @brief Gets all available output types that computers can produce.
+     * @return Vector of type_index values representing all possible output types.
+     */
+    std::vector<std::type_index> getAvailableOutputTypes() const;
+
+    /**
+     * @brief Gets human-readable names for available output types.
+     * @return Map from type_index to human-readable type name.
+     */
+    std::map<std::type_index, std::string> getOutputTypeNames() const;
+
+    /**
+     * @brief Gets computers that can produce a specific output type.
+     * @param outputType The desired output type.
+     * @param rowSelectorType Optional filter by row selector type.
+     * @param sourceType Optional filter by required source type.
+     * @return Vector of ComputerInfo for computers matching the criteria.
+     */
+    std::vector<ComputerInfo> getComputersByOutputType(
+        std::type_index outputType,
+        std::optional<RowSelectorType> rowSelectorType = std::nullopt,
+        std::optional<std::type_index> sourceType = std::nullopt
+    ) const;
+
+    /**
+     * @brief Checks if a computer supports vector output types.
+     * @param computerName The name of the computer to check.
+     * @return True if the computer outputs vector types, false otherwise.
+     */
+    bool isVectorComputer(std::string const& computerName) const;
+
+    /**
+     * @brief Gets the element type for vector-output computers.
+     * @param computerName The name of the computer.
+     * @return type_index of the element type, or typeid(void) if not a vector computer.
+     */
+    std::type_index getElementType(std::string const& computerName) const;
+
+    /**
+     * @brief Creates a type-safe computer with known output type.
+     * 
+     * This template method provides compile-time type safety when the caller
+     * knows the expected output type. It returns a properly typed computer
+     * interface rather than a type-erased one.
+     * 
+     * @tparam T The expected output type of the computer.
+     * @param computerName The name of the computer to create.
+     * @param dataSource The data source to use.
+     * @param parameters Map of parameter name -> string value.
+     * @return Shared pointer to IColumnComputer<T>, or nullptr if creation failed or type mismatch.
+     */
+    template<typename T>
+    std::shared_ptr<IColumnComputer<T>> createTypedComputer(
+        std::string const& computerName,
+        DataSourceVariant const& dataSource,
+        std::map<std::string, std::string> const& parameters = {}
+    ) const {
+        auto info = findComputerInfo(computerName);
+        if (!info || info->outputType != typeid(T)) {
+            return nullptr;
+        }
+        
+        auto base_computer = createComputer(computerName, dataSource, parameters);
+        if (!base_computer) {
+            return nullptr;
+        }
+        
+        // Safe cast since we verified the type
+        auto wrapper = dynamic_cast<ComputerWrapper<T>*>(base_computer.get());
+        if (!wrapper) {
+            return nullptr;
+        }
+        
+        base_computer.release(); // Transfer ownership
+        return wrapper->getComputer();
+    }
 
 private:
     // Computer registration storage

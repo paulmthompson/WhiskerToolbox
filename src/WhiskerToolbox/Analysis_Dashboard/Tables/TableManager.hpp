@@ -6,10 +6,10 @@
 #include <QMap>
 #include <QObject>
 #include <QString>
+
 #include <memory>
 #include <vector>
 
-// Forward declarations
 class TableView;
 class DataManager;
 class ComputerRegistry;
@@ -185,6 +185,37 @@ public:
      * @return Unique table ID
      */
     QString generateUniqueTableId(QString const & base_name = "Table") const;
+
+    // Enhanced type-aware methods
+    
+    /**
+     * @brief Add a column with automatic type information from computer registry
+     * @param table_id The table ID
+     * @param column_info The column configuration (computer name should be set)
+     * @return True if successful, false if table doesn't exist or computer not found
+     */
+    bool addTableColumnWithTypeInfo(QString const & table_id, ColumnInfo & column_info);
+    
+    /**
+     * @brief Get available computers for a specific data source and row selector
+     * @param row_selector_type The type of row selector
+     * @param data_source_name The name of the data source
+     * @return List of available computer names with their output type information
+     */
+    QStringList getAvailableComputersForDataSource(QString const & row_selector_type, QString const & data_source_name) const;
+    
+    /**
+     * @brief Get type information for a specific computer
+     * @param computer_name The name of the computer
+     * @return Tuple of (output_type_name, is_vector_type, element_type_name)
+     */
+    std::tuple<QString, bool, QString> getComputerTypeInfo(QString const & computer_name) const;
+    
+    /**
+     * @brief Get all available output types that can be generated
+     * @return Map of type_index to human-readable type names
+     */
+    QStringList getAvailableOutputTypes() const;
 
 signals:
     /**

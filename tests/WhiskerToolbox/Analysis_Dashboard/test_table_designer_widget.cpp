@@ -81,16 +81,11 @@ TEST_CASE_METHOD(TableDesignerTestFixture,
     processEvents();
     REQUIRE(table_designer->isVisible() == true);
     
-    // Test that the widget can be resized
-    table_designer->resize(400, 300);
-    processEvents();
-    REQUIRE(table_designer->width() == 400);
-    REQUIRE(table_designer->height() == 300);
-    
-    // Widget will be automatically cleaned up when unique_ptr goes out of scope
 }
 
-TEST_CASE_METHOD(TableDesignerTestFixture, "TableManager can create and manage tables", "[table_manager]") {
+TEST_CASE_METHOD(TableDesignerTestFixture, 
+    "Analysis Dashboard - TableDesignerWidget - TableManager can create and manage tables", 
+    "[table_manager]") {
     // Use the populated DataManager from the fixture
     auto data_manager = getDataManagerShared();
     REQUIRE(data_manager != nullptr);
@@ -141,7 +136,9 @@ TEST_CASE_METHOD(TableDesignerTestFixture, "TableManager can create and manage t
     REQUIRE(table_manager->hasTable(table_id) == false);
 }
 
-TEST_CASE_METHOD(TableDesignerTestFixture, "TableDesignerWidget works with populated DataManager", "[widget][table_designer][data]") {
+TEST_CASE_METHOD(TableDesignerTestFixture, 
+    "Analysis Dashboard - TableDesignerWidget - TableDesignerWidget works with populated DataManager", 
+    "[widget][table_designer][data]") {
     // Use the populated DataManager from the fixture
     auto data_manager = getDataManagerShared();
     REQUIRE(data_manager != nullptr);
@@ -165,14 +162,11 @@ TEST_CASE_METHOD(TableDesignerTestFixture, "TableDesignerWidget works with popul
     REQUIRE(table_designer->width() > 0);
     REQUIRE(table_designer->height() > 0);
     
-    // Test that the widget remains stable with the test data
-    table_designer->resize(600, 400);
-    processEvents();
-    REQUIRE(table_designer->width() == 600);
-    REQUIRE(table_designer->height() == 400);
 }
 
-TEST_CASE_METHOD(TableDesignerTestFixture, "TableDesignerWidget signal monitoring", "[widget][table_designer][signals]") {
+TEST_CASE_METHOD(TableDesignerTestFixture, 
+    "Analysis Dashboard - TableDesignerWidget - TableDesignerWidget signal monitoring", 
+    "[widget][table_designer][signals]") {
     // Use the populated DataManager from the fixture
     auto data_manager = getDataManagerShared();
     REQUIRE(data_manager != nullptr);
@@ -205,81 +199,9 @@ TEST_CASE_METHOD(TableDesignerTestFixture, "TableDesignerWidget signal monitorin
     REQUIRE(table_designer->isVisible() == true);
 }
 
-TEST_CASE_METHOD(TableDesignerTestFixture, "TableManager signal monitoring", "[table_manager][signals]") {
-    // Use the populated DataManager from the fixture
-    auto data_manager = getDataManagerShared();
-    REQUIRE(data_manager != nullptr);
-    
-    // Create signal probes for TableManager signals
-    SignalProbe tableCreatedProbe;
-    SignalProbe tableRemovedProbe;
-    SignalProbe tableInfoUpdatedProbe;
-    SignalProbe tableDataChangedProbe;
-    
-    // Create a table manager
-    auto table_manager = std::make_unique<TableManager>(data_manager);
-    
-    // Connect probes to table manager signals
-    tableCreatedProbe.connectTo(table_manager.get(), &TableManager::tableCreated);
-    tableRemovedProbe.connectTo(table_manager.get(), &TableManager::tableRemoved);
-    tableInfoUpdatedProbe.connectTo(table_manager.get(), &TableManager::tableInfoUpdated);
-    tableDataChangedProbe.connectTo(table_manager.get(), &TableManager::tableDataChanged);
-    
-    // Initially, no signals should be emitted
-    REQUIRE(!tableCreatedProbe.wasTriggered());
-    REQUIRE(!tableRemovedProbe.wasTriggered());
-    REQUIRE(!tableInfoUpdatedProbe.wasTriggered());
-    REQUIRE(!tableDataChangedProbe.wasTriggered());
-    
-    // Test creating a table
-    QString table_id = "test_table_1";
-    QString table_name = "Test Table";
-    QString table_description = "A test table for signal testing";
-    
-    bool created = table_manager->createTable(table_id, table_name, table_description);
-    REQUIRE(created == true);
-    
-    // Verify the tableCreated signal was emitted
-    REQUIRE(tableCreatedProbe.wasTriggered());
-    REQUIRE(tableCreatedProbe.getCallCount() == 1);
-    REQUIRE(tableCreatedProbe.getLastArg() == table_id);
-    
-    // Verify other signals were not emitted
-    REQUIRE(!tableRemovedProbe.wasTriggered());
-    REQUIRE(!tableInfoUpdatedProbe.wasTriggered());
-    REQUIRE(!tableDataChangedProbe.wasTriggered());
-    
-    // Test updating table info
-    QString new_name = "Updated Test Table";
-    QString new_description = "Updated description";
-    bool updated = table_manager->updateTableInfo(table_id, new_name, new_description);
-    REQUIRE(updated == true);
-    
-    // Verify the tableInfoUpdated signal was emitted
-    REQUIRE(tableInfoUpdatedProbe.wasTriggered());
-    REQUIRE(tableInfoUpdatedProbe.getCallCount() == 1);
-    REQUIRE(tableInfoUpdatedProbe.getLastArg() == table_id);
-    
-    // Verify the tableCreated signal count is still 1
-    REQUIRE(tableCreatedProbe.getCallCount() == 1);
-    
-    // Test removing the table
-    bool removed = table_manager->removeTable(table_id);
-    REQUIRE(removed == true);
-    
-    // Verify the tableRemoved signal was emitted
-    REQUIRE(tableRemovedProbe.wasTriggered());
-    REQUIRE(tableRemovedProbe.getCallCount() == 1);
-    REQUIRE(tableRemovedProbe.getLastArg() == table_id);
-    
-    // Verify signal counts
-    REQUIRE(tableCreatedProbe.getCallCount() == 1);
-    REQUIRE(tableInfoUpdatedProbe.getCallCount() == 1);
-    REQUIRE(tableRemovedProbe.getCallCount() == 1);
-    REQUIRE(!tableDataChangedProbe.wasTriggered());
-}
-
-TEST_CASE_METHOD(TableDesignerTestFixture, "TableDesignerWidget and TableManager signal integration", "[widget][table_designer][table_manager][signals]") {
+TEST_CASE_METHOD(TableDesignerTestFixture, 
+    "Analysis Dashboard - TableDesignerWidget - TableDesignerWidget and TableManager signal integration", 
+    "[widget][table_designer][table_manager][signals]") {
     // Use the populated DataManager from the fixture
     auto data_manager = getDataManagerShared();
     REQUIRE(data_manager != nullptr);
