@@ -38,6 +38,9 @@ signals:
     void addFeature(QString const & feature);
     void removeFeature(QString const & feature);
 
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+
 private slots:
     void _refreshFeatures();
     void _highlightFeature(int row, int column);
