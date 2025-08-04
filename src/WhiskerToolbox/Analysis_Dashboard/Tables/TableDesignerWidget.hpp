@@ -2,6 +2,7 @@
 #define TABLEDESIGNERWIDGET_HPP
 
 #include "TableInfo.hpp"
+#include "utils/TableView/ComputerRegistryTypes.hpp"
 
 #include <QStringList>
 #include <QWidget>
@@ -255,6 +256,21 @@ private:
      * @return Unique pointer to the created row selector, or nullptr if creation failed
      */
     std::unique_ptr<IRowSelector> createRowSelector(QString const & row_source);
+
+    /**
+     * @brief Add a typed column to the table view builder
+     * @tparam T The return type of the computer
+     * @param builder Reference to the TableViewBuilder
+     * @param column_info The column configuration
+     * @param data_source_variant The data source for the column
+     * @param registry Reference to the ComputerRegistry
+     * @return True if the column was added successfully, false otherwise
+     */
+    template<typename T>
+    bool addTypedColumnToBuilder(TableViewBuilder & builder, 
+                                ColumnInfo const & column_info,
+                                DataSourceVariant const & data_source_variant,
+                                ComputerRegistry const & registry);
 
     /**
      * @brief Add a column to the table view builder

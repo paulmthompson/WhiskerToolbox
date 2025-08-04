@@ -136,6 +136,7 @@ set(DATAMANAGER_SOURCES
 
         utils/TableView/ComputerRegistry.cpp 
         utils/TableView/ComputerRegistry.hpp
+        utils/TableView/ComputerRegistryTypes.hpp
 
 
         transforms/data_transforms.cpp

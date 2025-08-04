@@ -6,7 +6,9 @@
 #include "utils/TableView/interfaces/IEventSource.h"
 #include "utils/TableView/interfaces/IIntervalSource.h"
 #include "utils/TableView/interfaces/IRowSelector.h"
+#include "utils/TableView/ComputerRegistryTypes.hpp"
 
+#include <deque>
 #include <functional>
 #include <map>
 #include <memory>
@@ -71,26 +73,7 @@ private:
     std::unique_ptr<IColumnComputer<T>> computer_;
 };
 
-/**
- * @brief Enumeration of supported row selector types for matching computers.
- */
-enum class RowSelectorType : std::uint8_t {
-    Interval,   ///< IntervalSelector - works with time intervals
-    Timestamp,  ///< TimestampSelector - works with specific timestamps
-    Index       ///< IndexSelector - works with discrete indices
-};
 
-/**
- * @brief Variant type for data sources that can be used with computers.
- * 
- * This includes both direct data manager sources and existing table columns
- * that implement the required interfaces.
- */
-using DataSourceVariant = std::variant<
-    std::shared_ptr<IAnalogSource>,
-    std::shared_ptr<IEventSource>,
-    std::shared_ptr<IIntervalSource>
->;
 
 /**
  * @brief Information about available computer parameters.
@@ -344,10 +327,10 @@ public:
      * @param computerName The name of the computer to create.
      * @param dataSource The data source to use.
      * @param parameters Map of parameter name -> string value.
-     * @return Shared pointer to IColumnComputer<T>, or nullptr if creation failed or type mismatch.
+     * @return Unique pointer to IColumnComputer<T>, or nullptr if creation failed or type mismatch.
      */
     template<typename T>
-    std::shared_ptr<IColumnComputer<T>> createTypedComputer(
+    std::unique_ptr<IColumnComputer<T>> createTypedComputer(
         std::string const& computerName,
         DataSourceVariant const& dataSource,
         std::map<std::string, std::string> const& parameters = {}
@@ -369,12 +352,12 @@ public:
         }
         
         base_computer.release(); // Transfer ownership
-        return wrapper->getComputer();
+        return wrapper->releaseComputer(); // Use releaseComputer() to get unique_ptr
     }
 
 private:
     // Computer registration storage
-    std::vector<ComputerInfo> all_computers_;
+    std::deque<ComputerInfo> all_computers_;
     std::map<std::string, ComputerFactory> computer_factories_;
     
     // Maps (RowSelectorType, SourceTypeIndex) -> vector<ComputerInfo*>
@@ -384,7 +367,7 @@ private:
     std::map<std::string, ComputerInfo const*> name_to_computer_;
 
     // Adapter registration storage
-    std::vector<AdapterInfo> all_adapters_;
+    std::deque<AdapterInfo> all_adapters_;
     std::map<std::string, AdapterFactory> adapter_factories_;
     
     // Maps input type_index -> vector<AdapterInfo*>

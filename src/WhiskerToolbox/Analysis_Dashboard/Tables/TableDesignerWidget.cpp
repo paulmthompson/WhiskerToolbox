@@ -18,6 +18,9 @@
 #include <QDebug>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <typeindex>
+#include <vector>
+#include <tuple>
 
 TableDesignerWidget::TableDesignerWidget(TableManager * table_manager, std::shared_ptr<DataManager> data_manager, QWidget * parent)
     : QWidget(parent),
@@ -328,7 +331,26 @@ void TableDesignerWidget::onColumnDataSourceChanged() {
 
 void TableDesignerWidget::onColumnComputerChanged() {
     saveCurrentColumnConfiguration();
-    qDebug() << "Column computer changed to:" << ui->column_computer_combo->currentText();
+    
+    // Get and display type information for the selected computer
+    QString computer_name = ui->column_computer_combo->currentData().toString();
+    if (!computer_name.isEmpty() && _table_manager) {
+        auto [type_name, is_vector, element_type] = _table_manager->getComputerTypeInfo(computer_name);
+        
+        QString type_info = QString("Returns: %1").arg(type_name);
+        if (is_vector && element_type != "unknown") {
+            type_info += QString(" (elements: %1)").arg(element_type);
+        }
+        
+        qDebug() << "Column computer changed to:" << ui->column_computer_combo->currentText() 
+                 << "-" << type_info;
+        
+        // If there's a type info label in the UI, update it
+        // For now, we'll just log it - you could add a label to the UI to display this
+        updateBuildStatus(type_info);
+    } else {
+        qDebug() << "Column computer changed to:" << ui->column_computer_combo->currentText();
+    }
 }
 
 void TableDesignerWidget::onColumnSelectionChanged() {
@@ -704,10 +726,24 @@ void TableDesignerWidget::refreshColumnComputerCombo() {
     auto const & registry = _table_manager->getComputerRegistry();
     auto available_computers = registry.getAvailableComputers(row_selector_type, data_source_variant);
 
-    // Populate the combo box with available computers
+    // Populate the combo box with available computers, including type information
     for (auto const & computer_info: available_computers) {
-        ui->column_computer_combo->addItem(QString::fromStdString(computer_info.name),
-                                           QString::fromStdString(computer_info.name));
+        QString display_name = QString::fromStdString(computer_info.name);
+        
+        // Add type information to the display name
+        if (!computer_info.outputTypeName.empty()) {
+            display_name += QString(" -> %1").arg(QString::fromStdString(computer_info.outputTypeName));
+        }
+        
+        // Add vector element information if applicable
+        if (computer_info.isVectorType && !computer_info.elementTypeName.empty()) {
+            display_name += QString(" [%1]").arg(QString::fromStdString(computer_info.elementTypeName));
+        }
+        
+        ui->column_computer_combo->addItem(display_name, QString::fromStdString(computer_info.name));
+        
+        qDebug() << "Added computer:" << computer_info.name.c_str() 
+                 << "returning" << computer_info.outputTypeName.c_str();
     }
 
     if (ui->column_computer_combo->count() == 0) {
@@ -1264,76 +1300,49 @@ bool TableDesignerWidget::addColumnToBuilder(TableViewBuilder & builder, ColumnI
 
         // Create the computer from the registry
         auto const & registry = _table_manager->getComputerRegistry();
+        
+        // Get type information for the computer
+        auto computer_info_ptr = registry.findComputerInfo(column_info.computerName.toStdString());
+        if (!computer_info_ptr) {
+            qDebug() << "Computer info not found for" << column_info.computerName;
+            return false;
+        }
+        
         auto computer_base = registry.createComputer(column_info.computerName.toStdString(), data_source_variant);
         if (!computer_base) {
             qDebug() << "Failed to create computer" << column_info.computerName << "for column:" << column_info.name;
             return false;
         }
 
-        // The computer is wrapped in a ComputerWrapper. We need to work with the actual IColumnComputer
-        // For now, assume all computers return double. This could be enhanced later
-        // to handle different return types by querying the computer's type
-        auto computer_wrapper = dynamic_cast<ComputerWrapper<double> *>(computer_base.get());
-        if (!computer_wrapper) {
-            qDebug() << "Computer" << column_info.computerName << "is not a double computer wrapper for column:" << column_info.name;
+        // Use the actual return type from the computer info instead of hardcoding double
+        std::type_index return_type = computer_info_ptr->outputType;
+        qDebug() << "Computer" << column_info.computerName << "returns type:" << computer_info_ptr->outputTypeName.c_str();
+        
+        // Handle different return types using runtime type dispatch
+        bool success = false;
+        
+        if (return_type == typeid(double)) {
+            success = addTypedColumnToBuilder<double>(builder, column_info, data_source_variant, registry);
+        } else if (return_type == typeid(int)) {
+            success = addTypedColumnToBuilder<int>(builder, column_info, data_source_variant, registry);
+        } else if (return_type == typeid(bool)) {
+            success = addTypedColumnToBuilder<bool>(builder, column_info, data_source_variant, registry);
+        } else if (return_type == typeid(std::vector<double>)) {
+            success = addTypedColumnToBuilder<std::vector<double>>(builder, column_info, data_source_variant, registry);
+        } else if (return_type == typeid(std::vector<int>)) {
+            success = addTypedColumnToBuilder<std::vector<int>>(builder, column_info, data_source_variant, registry);
+        } else {
+            qDebug() << "Unsupported return type for computer" << column_info.computerName 
+                     << "- type:" << computer_info_ptr->outputTypeName.c_str();
+            return false;
+        }
+        
+        if (!success) {
+            qDebug() << "Failed to create typed computer for" << column_info.computerName;
             return false;
         }
 
-        // Get the actual computer from the wrapper
-        auto typed_computer = computer_wrapper->get();
-        if (!typed_computer) {
-            qDebug() << "Failed to get typed computer from wrapper for column:" << column_info.name;
-            return false;
-        }
-
-        // Since we can't easily extract the computer from the wrapper without modifying the wrapper class,
-        // let's create the computer again directly for the builder
-        // This is not ideal but works around the ownership issue
-        auto new_computer = registry.createComputer(column_info.computerName.toStdString(), data_source_variant);
-        if (!new_computer) {
-            qDebug() << "Failed to recreate computer" << column_info.computerName << "for builder";
-            return false;
-        }
-
-        auto new_wrapper = dynamic_cast<ComputerWrapper<double> *>(new_computer.get());
-        if (!new_wrapper) {
-            qDebug() << "Failed to cast recreated computer to wrapper";
-            return false;
-        }
-
-        // Now we need to work around the ownership issue.
-        // For now, let's use a different approach - create the computer inline
-        // based on the computer name and source
-        std::unique_ptr<IColumnComputer<double>> final_computer;
-
-        // Handle specific computer types
-        if (column_info.computerName == "Interval Mean") {
-            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&data_source_variant)) {
-                final_computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Mean);
-            }
-        } else if (column_info.computerName == "Interval Max") {
-            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&data_source_variant)) {
-                final_computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Max);
-            }
-        } else if (column_info.computerName == "Interval Min") {
-            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&data_source_variant)) {
-                final_computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::Min);
-            }
-        } else if (column_info.computerName == "Interval Standard Deviation") {
-            if (auto analogSrc = std::get_if<std::shared_ptr<IAnalogSource>>(&data_source_variant)) {
-                final_computer = std::make_unique<IntervalReductionComputer>(*analogSrc, ReductionType::StdDev);
-            }
-        }
-
-        if (!final_computer) {
-            qDebug() << "Failed to create final computer for" << column_info.computerName;
-            return false;
-        }
-
-        // Add the column to the builder
-        builder.addColumn(column_info.name.toStdString(), std::move(final_computer));
-
-        qDebug() << "Added column to builder:" << column_info.name;
+        qDebug() << "Added column to builder:" << column_info.name << "with type:" << computer_info_ptr->outputTypeName.c_str();
         return true;
 
     } catch (std::exception const & e) {
@@ -1341,6 +1350,45 @@ bool TableDesignerWidget::addColumnToBuilder(TableViewBuilder & builder, ColumnI
         return false;
     }
 }
+
+template<typename T>
+bool TableDesignerWidget::addTypedColumnToBuilder(TableViewBuilder & builder, 
+                                                  ColumnInfo const & column_info,
+                                                  DataSourceVariant const & data_source_variant,
+                                                  ComputerRegistry const & registry) {
+    try {
+        // Use the registry's type-safe computer creation method
+        auto typed_computer = registry.createTypedComputer<T>(
+            column_info.computerName.toStdString(), 
+            data_source_variant
+        );
+        
+        if (!typed_computer) {
+            qDebug() << "Failed to create typed computer" << column_info.computerName 
+                     << "for type" << typeid(T).name();
+            return false;
+        }
+
+        // Add the typed column to the builder
+        builder.addColumn(column_info.name.toStdString(), std::move(typed_computer));
+        
+        qDebug() << "Successfully added typed column" << column_info.name 
+                 << "with type" << typeid(T).name();
+        return true;
+        
+    } catch (std::exception const & e) {
+        qDebug() << "Exception creating typed column" << column_info.name 
+                 << ":" << e.what();
+        return false;
+    }
+}
+
+// Explicit template instantiations to ensure they're compiled
+template bool TableDesignerWidget::addTypedColumnToBuilder<double>(TableViewBuilder &, ColumnInfo const &, DataSourceVariant const &, ComputerRegistry const &);
+template bool TableDesignerWidget::addTypedColumnToBuilder<int>(TableViewBuilder &, ColumnInfo const &, DataSourceVariant const &, ComputerRegistry const &);
+template bool TableDesignerWidget::addTypedColumnToBuilder<bool>(TableViewBuilder &, ColumnInfo const &, DataSourceVariant const &, ComputerRegistry const &);
+template bool TableDesignerWidget::addTypedColumnToBuilder<std::vector<double>>(TableViewBuilder &, ColumnInfo const &, DataSourceVariant const &, ComputerRegistry const &);
+template bool TableDesignerWidget::addTypedColumnToBuilder<std::vector<int>>(TableViewBuilder &, ColumnInfo const &, DataSourceVariant const &, ComputerRegistry const &);
 
 void TableDesignerWidget::updateIntervalSettingsVisibility() {
     if (!ui->interval_settings_group) {
