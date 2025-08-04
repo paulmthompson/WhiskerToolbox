@@ -673,5 +673,61 @@
       "Machine Learning",
       "Overview"
     ]
+  },
+  {
+    "objectID": "examples/keypoint_labeling.html",
+    "href": "examples/keypoint_labeling.html",
+    "title": "Keypoint Video Labeling",
+    "section": "",
+    "text": "Keypoint labeling is a powerful method to systematically study motion, behavior, and anatomical positioning over time. By marking and tracking specific locations on subjects across frames in a video, you can extract detailed data about the dynamics of movement.\nFor example, keypoint data can be used to:\nThis tutorial will guide you through the process of labeling keypoints on a video and saving the keypoint data."
+  },
+  {
+    "objectID": "examples/keypoint_labeling.html#step-1-load-video-or-existing-labels",
+    "href": "examples/keypoint_labeling.html#step-1-load-video-or-existing-labels",
+    "title": "Keypoint Video Labeling",
+    "section": "Step 1: Load Video or Existing Labels",
+    "text": "Step 1: Load Video or Existing Labels\n\n\n\n\n\nTo begin labeling:\n\nOpen the application and navigate to File &gt; Load Data.\nSelect the video you intend to annotate.\n\nAlternatively, if you’ve already created keypoints and want to review or update them:\n\nSelect File &gt; Load JSON Configuration and choose your .json file.\n\n\n\n\n\n\n\nTip\n\n\n\nSee: Setting up a JSON File for more on configuration options."
+  },
+  {
+    "objectID": "examples/keypoint_labeling.html#step-2-open-the-data-manager",
+    "href": "examples/keypoint_labeling.html#step-2-open-the-data-manager",
+    "title": "Keypoint Video Labeling",
+    "section": "Step 2: Open the Data Manager",
+    "text": "Step 2: Open the Data Manager\n\n\n\n\n\nTo create or manage point data:\n\nNavigate to Modules &gt; Data Manager to open the Data Manager Module."
+  },
+  {
+    "objectID": "examples/keypoint_labeling.html#step-3-create-a-new-keypoint-feature",
+    "href": "examples/keypoint_labeling.html#step-3-create-a-new-keypoint-feature",
+    "title": "Keypoint Video Labeling",
+    "section": "Step 3: Create a New Keypoint Feature",
+    "text": "Step 3: Create a New Keypoint Feature\n\n\n\n\n\nIn the Data Manager:\n\nSet the Output Directory: This is where your labeled data (CSV) will be saved.\n\nExample: C:/Users/wanglab/Desktop/Cartoon_Mouse\n\nCreate New Data:\n\nType: point\nTime Frame: Select based on your analysis requirements (e.g., time for temporal tracking).\nName: Choose a descriptive name (e.g., jaw, nose, or paw).\n\n\nClick Create New Data to add the new feature."
+  },
+  {
+    "objectID": "examples/keypoint_labeling.html#step-4-edit-and-add-keypoints-in-the-media-widget",
+    "href": "examples/keypoint_labeling.html#step-4-edit-and-add-keypoints-in-the-media-widget",
+    "title": "Keypoint Video Labeling",
+    "section": "Step 4: Edit and Add Keypoints in the Media Widget",
+    "text": "Step 4: Edit and Add Keypoints in the Media Widget\n\n\n\n\n\nOnce the point feature is created:\n\nEnable the Feature: Select the feature in the media widget to activate the keypoint editor.\nCustomize Appearance:\n\nChoose a color using the hex selector.\nAdjust the opacity (Alpha) for better contrast against the video.\nModify the size and shape of the marker if needed.\n\nBegin Labeling:\n\nSwitch mouse mode to “Select Point”.\nClick anywhere in the video frame to add a point.\nClicking on an existing point will move it.\n\n\n\n\n\n\n\n\n\n\n\n\n\nImportant\n\n\n\nNote: The keypoint is recorded as a single-pixel coordinate. Visual shape and style are only for display and are not saved."
+  },
+  {
+    "objectID": "examples/keypoint_labeling.html#step-5-review-and-export-your-labels",
+    "href": "examples/keypoint_labeling.html#step-5-review-and-export-your-labels",
+    "title": "Keypoint Video Labeling",
+    "section": "Step 5: Review and Export Your Labels",
+    "text": "Step 5: Review and Export Your Labels\n\n\n\n\n\nAfter labeling:\n\nSelect your feature (e.g., jaw) in the Data Manager.\nYou’ll see a spreadsheet with:\n\nFrame indices\n(x, y) coordinates for each labeled keypoint\n\n\n\nExport Options:\n\nFile Name: Choose a meaningful name for your CSV.\nDelimiter: (e.g., comma , or tab \\t) – separates columns.\nLine Ending: Select line break style (\\n, \\r\\n, etc.).\nHeader: Optionally include a header row with custom labels."
+  },
+  {
+    "objectID": "examples/keypoint_labeling.html#optional-export-matching-media-frames",
+    "href": "examples/keypoint_labeling.html#optional-export-matching-media-frames",
+    "title": "Keypoint Video Labeling",
+    "section": "Optional: Export Matching Media Frames",
+    "text": "Optional: Export Matching Media Frames\n\n\n\n\n\nYou can export the video frames where keypoints were labeled:\n\nCheck Export Matching Media Frames.\nChoose from export options:\n\nSave by Frame Name\nFrame ID Padding\nImage Name Prefix\nSubfolder for Images\nOverwrite Existing Files\n\n\n\n\n\n\n\n\nWarning\n\n\n\nKeypoints will not be drawn on these frames. Only raw frames are exported."
+  },
+  {
+    "objectID": "examples/keypoint_labeling.html#step-6-save-to-csv",
+    "href": "examples/keypoint_labeling.html#step-6-save-to-csv",
+    "title": "Keypoint Video Labeling",
+    "section": "Step 6: Save to CSV",
+    "text": "Step 6: Save to CSV\n\n\n\n\n\nOnce you’ve reviewed your labels:\n\nClick “Save to CSV”\n\nA confirmation will appear showing the file path.\nYour labeled keypoint data is now saved and ready for further analysis.\n\n\nSummary\nThis tutorial demonstrated how to:\n\nLoad a video or keypoint configuration\nCreate and configure keypoint data\nAnnotate frames with feature coordinates\nExport label data and relevant frames"
   }
 ]
