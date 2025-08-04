@@ -3,7 +3,9 @@
 #include "EventPlotWidget.hpp"
 
 #include "Analysis_Dashboard/DataSourceRegistry.hpp"
+#include "Analysis_Dashboard/Tables/TableManager.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/DataManagerTypes.hpp"
 #include "ui_EventPlotPropertiesWidget.h"
 
@@ -19,6 +21,7 @@ EventPlotPropertiesWidget::EventPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
       ui(new Ui::EventPlotPropertiesWidget),
       _event_plot_widget(nullptr),
+      _data_source_registry(nullptr),
       _applying_properties(false) {
     ui->setupUi(this);
     setupConnections();
@@ -43,6 +46,9 @@ void EventPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data
 
 void EventPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * data_source_registry) {
     _data_source_registry = data_source_registry;
+    
+    // Update available tables whenever the registry changes
+    updateAvailableTables();
     
     // For backwards compatibility, extract the DataManager from the registry
     if (_data_source_registry) {
@@ -220,6 +226,17 @@ void EventPlotPropertiesWidget::onDarkModeToggled(bool enabled) {
 }
 
 void EventPlotPropertiesWidget::setupConnections() {
+    // Connect table selection signals
+    if (ui->table_combo) {
+        connect(ui->table_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &EventPlotPropertiesWidget::onTableSelectionChanged);
+    }
+
+    if (ui->column_combo) {
+        connect(ui->column_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &EventPlotPropertiesWidget::onColumnSelectionChanged);
+    }
+
     // Connect UI signals to slots
     if (ui->x_axis_combo) {
         connect(ui->x_axis_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -370,14 +387,9 @@ void EventPlotPropertiesWidget::updatePlotWidget() {
         return;
     }
 
-    // Update event data keys with selected X-axis source
-    QString selected_source = getSelectedXAxisDataSource();
-    QStringList selected_sources;
-    if (!selected_source.isEmpty()) {
-        selected_sources.append(selected_source);
-    }
-
-    _event_plot_widget->setEventDataKeys(selected_sources);
+    // Clear legacy data keys - we're now using table data
+    _event_plot_widget->setEventDataKeys(QStringList());
+    _event_plot_widget->setYAxisDataKeys(QStringList());
 
     // Update X-axis range using capture range (±N samples)
     int capture_range = getCaptureRange();
@@ -386,8 +398,13 @@ void EventPlotPropertiesWidget::updatePlotWidget() {
     // Update view bounds labels after setting the range
     updateViewBoundsLabels();
 
-    QStringList y_axis_features = getSelectedYAxisFeatures();
-    _event_plot_widget->setYAxisDataKeys(y_axis_features);
+    // Load data from selected table instead of using legacy approach
+    QString table_id = getSelectedTableId();
+    QString column_name = getSelectedColumnName();
+    
+    if (!table_id.isEmpty() && !column_name.isEmpty()) {
+        loadTableData(table_id, column_name);
+    }
 
     // Only emit properties changed signal when not applying properties
     // (to prevent infinite loop when applyToPlot() calls updatePlotWidget())
@@ -435,5 +452,181 @@ void EventPlotPropertiesWidget::updateViewBoundsLabels() {
     }
     if (ui->right_bound_label) {
         ui->right_bound_label->setText(QString::number(static_cast<int>(right_bound)));
+    }
+}
+
+void EventPlotPropertiesWidget::onTableSelectionChanged() {
+    updateAvailableColumns();
+    updatePlotWidget();
+}
+
+void EventPlotPropertiesWidget::onColumnSelectionChanged() {
+    updatePlotWidget();
+}
+
+QString EventPlotPropertiesWidget::getSelectedTableId() const {
+    if (ui->table_combo) {
+        return ui->table_combo->currentData().toString();
+    }
+    return QString();
+}
+
+void EventPlotPropertiesWidget::setSelectedTableId(const QString& table_id) {
+    if (ui->table_combo) {
+        int index = ui->table_combo->findData(table_id);
+        if (index >= 0) {
+            ui->table_combo->setCurrentIndex(index);
+        }
+    }
+}
+
+QString EventPlotPropertiesWidget::getSelectedColumnName() const {
+    if (ui->column_combo) {
+        return ui->column_combo->currentData().toString();
+    }
+    return QString();
+}
+
+void EventPlotPropertiesWidget::setSelectedColumnName(const QString& column_name) {
+    if (ui->column_combo) {
+        int index = ui->column_combo->findData(column_name);
+        if (index >= 0) {
+            ui->column_combo->setCurrentIndex(index);
+        }
+    }
+}
+
+void EventPlotPropertiesWidget::updateAvailableTables() {
+    if (!ui->table_combo || !_data_source_registry) {
+        return;
+    }
+
+    ui->table_combo->clear();
+    ui->table_combo->addItem("Select a table...", "");
+
+    // Look for TableManager source in the registry
+    AbstractDataSource* table_manager_source = nullptr;
+    auto source_ids = _data_source_registry->getRegisteredSourceIds();
+    
+    for (const auto& source_id : source_ids) {
+        auto* source = _data_source_registry->getDataSource(source_id);
+        if (source && source->getType() == "TableManager") {
+            table_manager_source = source;
+            break;
+        }
+    }
+
+    if (!table_manager_source) {
+        ui->table_combo->addItem("No TableManager found", "");
+        ui->table_info_label->setText("TableManager not available in data registry.");
+        return;
+    }
+
+    // Cast to TableManagerSource and get available tables
+    TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
+    auto table_ids = tm_source->getAvailableTableIds();
+
+    if (table_ids.isEmpty()) {
+        ui->table_combo->addItem("No tables available", "");
+        ui->table_info_label->setText("Create tables using the Table Designer widget.");
+    } else {
+        for (const auto& table_id : table_ids) {
+            ui->table_combo->addItem(table_id, table_id);
+        }
+        ui->table_info_label->setText(QString("Found %1 tables with built data.").arg(table_ids.size()));
+    }
+
+    // Update columns for the first valid table if any
+    updateAvailableColumns();
+}
+
+void EventPlotPropertiesWidget::updateAvailableColumns() {
+    if (!ui->column_combo || !_data_source_registry) {
+        return;
+    }
+
+    ui->column_combo->clear();
+    ui->column_combo->addItem("Select a column...", "");
+
+    QString selected_table_id = getSelectedTableId();
+    if (selected_table_id.isEmpty()) {
+        return;
+    }
+
+    // Get TableManager source
+    AbstractDataSource* table_manager_source = nullptr;
+    auto source_ids = _data_source_registry->getRegisteredSourceIds();
+    
+    for (const auto& source_id : source_ids) {
+        auto* source = _data_source_registry->getDataSource(source_id);
+        if (source && source->getType() == "TableManager") {
+            table_manager_source = source;
+            break;
+        }
+    }
+
+    if (!table_manager_source) {
+        return;
+    }
+
+    TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
+    auto table_manager = tm_source->getTableManager();
+    
+    if (!table_manager) {
+        return;
+    }
+
+    auto table_view = table_manager->getBuiltTable(selected_table_id);
+    if (!table_view) {
+        ui->column_combo->addItem("Table not built", "");
+        return;
+    }
+
+    auto column_names = table_view->getColumnNames();
+    for (const auto& column_name : column_names) {
+        QString qname = QString::fromStdString(column_name);
+        ui->column_combo->addItem(qname, qname);
+    }
+}
+
+void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QString& column_name) {
+    if (!_data_source_registry || !_event_plot_widget) {
+        return;
+    }
+
+    // Get TableManager source
+    AbstractDataSource* table_manager_source = nullptr;
+    auto source_ids = _data_source_registry->getRegisteredSourceIds();
+    
+    for (const auto& source_id : source_ids) {
+        auto* source = _data_source_registry->getDataSource(source_id);
+        if (source && source->getType() == "TableManager") {
+            table_manager_source = source;
+            break;
+        }
+    }
+
+    if (!table_manager_source) {
+        qWarning() << "EventPlotPropertiesWidget: No TableManager source found";
+        return;
+    }
+
+    TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
+    
+    // Get the typed data - try std::vector<float> first (common for event data)
+    try {
+        auto event_data = tm_source->getTypedTableColumnData<std::vector<float>>(table_id, column_name);
+        
+        if (!event_data.empty()) {
+            // Pass the event data directly to the OpenGL widget
+            if (_event_plot_widget->getOpenGLWidget()) {
+                _event_plot_widget->getOpenGLWidget()->setEventData(event_data);
+                qDebug() << "EventPlotPropertiesWidget: Loaded" << event_data.size() << "event vectors from table" << table_id << "column" << column_name;
+            }
+        } else {
+            qWarning() << "EventPlotPropertiesWidget: No data found for table" << table_id << "column" << column_name;
+        }
+    } catch (const std::exception& e) {
+        qWarning() << "EventPlotPropertiesWidget: Failed to load table data:" << e.what();
     }
 }

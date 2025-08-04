@@ -1582,6 +1582,10 @@ QWidget* TableDesignerWidget::createParameterControl(IParameterDescriptor const 
             }
         }
         
+        // Connect signal to save configuration when parameter changes
+        connect(combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &TableDesignerWidget::saveCurrentColumnConfiguration);
+        
         return combo;
     } else if (uiHint == "text") {
         // Create line edit for text parameters
@@ -1594,6 +1598,10 @@ QWidget* TableDesignerWidget::createParameterControl(IParameterDescriptor const 
             lineEdit->setText(defaultValue);
         }
         
+        // Connect signal to save configuration when parameter changes
+        connect(lineEdit, &QLineEdit::textChanged,
+                this, &TableDesignerWidget::saveCurrentColumnConfiguration);
+        
         return lineEdit;
     } else if (uiHint == "number") {
         // Create line edit for number parameters (could be enhanced with validators)
@@ -1605,6 +1613,10 @@ QWidget* TableDesignerWidget::createParameterControl(IParameterDescriptor const 
         if (!defaultValue.isEmpty()) {
             lineEdit->setText(defaultValue);
         }
+        
+        // Connect signal to save configuration when parameter changes
+        connect(lineEdit, &QLineEdit::textChanged,
+                this, &TableDesignerWidget::saveCurrentColumnConfiguration);
         
         return lineEdit;
     }

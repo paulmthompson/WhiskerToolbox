@@ -12,6 +12,12 @@
 #include <map>
 
 class QTableView;
+class TableManager;
+
+// Forward declare our custom TableView
+namespace WhiskerToolbox {
+class TableView;
+}
 
 /**
  * @brief Abstract interface for data sources that can provide data to plots
@@ -143,6 +149,63 @@ public:
 
 private:
     QTableView* table_view_;
+    QString name_;
+};
+
+/**
+ * @brief TableManager-based data source implementation
+ * 
+ * This provides access to TableViews managed by TableManager through
+ * the data source registry interface.
+ */
+class TableManagerSource : public AbstractDataSource {
+    Q_OBJECT
+
+public:
+    explicit TableManagerSource(TableManager* table_manager, const QString& name, QObject* parent = nullptr);
+    ~TableManagerSource() override = default;
+
+    QString getName() const override { return name_; }
+    QString getType() const override { return "TableManager"; }
+    bool isAvailable() const override;
+    int getDataPointCount() const override;
+    QStringList getAvailableColumns() const override;
+    QVariant getColumnData(const QString& column_name) const override;
+    QVariant getValue(int row, const QString& column_name) const override;
+    QAbstractItemModel* getModel() const override { return nullptr; } // Not applicable
+
+    /**
+     * @brief Get the underlying TableManager pointer
+     * @return Pointer to the wrapped TableManager, or nullptr if invalid
+     */
+    TableManager* getTableManager() const { return table_manager_; }
+
+    /**
+     * @brief Get list of available table IDs
+     * @return List of table IDs that can be accessed
+     */
+    QStringList getAvailableTableIds() const;
+
+    /**
+     * @brief Get column data from a specific table
+     * @param table_id The ID of the table
+     * @param column_name The name of the column
+     * @return Column data as QVariant
+     */
+    QVariant getTableColumnData(const QString& table_id, const QString& column_name) const;
+
+    /**
+     * @brief Get typed column data from a specific table
+     * @tparam T The expected data type
+     * @param table_id The ID of the table
+     * @param column_name The name of the column
+     * @return Vector of typed data
+     */
+    template<typename T>
+    std::vector<T> getTypedTableColumnData(const QString& table_id, const QString& column_name) const;
+
+private:
+    TableManager* table_manager_;
     QString name_;
 };
 

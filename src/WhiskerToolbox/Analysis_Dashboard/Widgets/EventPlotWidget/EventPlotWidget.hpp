@@ -8,7 +8,6 @@
 class EventPlotOpenGLWidget;
 class QGraphicsProxyWidget;
 class QGraphicsSceneMouseEvent;
-class TableView;
 
 
 /**
@@ -103,12 +102,6 @@ private:
     QGraphicsProxyWidget * _proxy_widget;
     QStringList _event_data_keys;
     QStringList _y_axis_data_keys;
-    std::unique_ptr<TableView> _table_view;
-
-    /**
-     * @brief Load event data from DataManager
-     */
-    void loadEventData();
 
     /**
      * @brief Setup the OpenGL widget and proxy

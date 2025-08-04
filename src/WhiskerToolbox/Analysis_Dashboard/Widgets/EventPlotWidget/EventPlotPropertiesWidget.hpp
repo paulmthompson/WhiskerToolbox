@@ -44,6 +44,16 @@ public slots:
 
 private slots:
     /**
+     * @brief Handle table selection changes
+     */
+    void onTableSelectionChanged();
+
+    /**
+     * @brief Handle column selection changes
+     */
+    void onColumnSelectionChanged();
+
+    /**
      * @brief Handle X-axis data source selection changes
      */
     void onXAxisDataSourceChanged();
@@ -105,10 +115,40 @@ private slots:
      */
     void onViewBoundsChanged();
 
+    /**
+     * @brief Get the selected table ID
+     * @return Selected table ID, or empty string if none selected
+     */
+    QString getSelectedTableId() const;
+
+    /**
+     * @brief Set the selected table ID
+     * @param table_id The table ID to select
+     */
+    void setSelectedTableId(const QString& table_id);
+
+    /**
+     * @brief Get the selected column name
+     * @return Selected column name, or empty string if none selected
+     */
+    QString getSelectedColumnName() const;
+
+    /**
+     * @brief Set the selected column name
+     * @param column_name The column name to select
+     */
+    void setSelectedColumnName(const QString& column_name);
+
+    /**
+     * @brief Update available tables from TableManager
+     */
+    void updateAvailableTables();
+
 private:
     Ui::EventPlotPropertiesWidget * ui;
     EventPlotWidget * _event_plot_widget;
     std::shared_ptr<DataManager> _data_manager;
+    DataSourceRegistry * _data_source_registry;
     std::set<QString> _selected_y_axis_features;
     bool _applying_properties;  // Flag to prevent signal emission during applyToPlot()
 
@@ -177,6 +217,10 @@ private:
      * @brief Update the view bounds labels based on current view
      */
     void updateViewBoundsLabels();
+
+    void loadTableData(const QString& table_id, const QString& column_name);
+
+    void updateAvailableColumns();
 };
 
 #endif// EVENTPLOTPROPERTIESWIDGET_HPP

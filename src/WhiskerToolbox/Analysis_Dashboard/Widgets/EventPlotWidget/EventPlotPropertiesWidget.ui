@@ -30,9 +30,80 @@
     <number>5</number>
    </property>
    <item>
+    <widget class="QGroupBox" name="table_selection_group">
+     <property name="title">
+      <string>Table Data Source</string>
+     </property>
+     <layout class="QVBoxLayout" name="table_selection_layout">
+      <item>
+       <widget class="QLabel" name="table_instruction_label">
+        <property name="text">
+         <string>Select a table containing centered event gather data:</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="table_combo_layout">
+        <item>
+         <widget class="QLabel" name="table_label">
+          <property name="text">
+           <string>Table:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="table_combo">
+          <property name="minimumWidth">
+           <number>150</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="column_combo_layout">
+        <item>
+         <widget class="QLabel" name="column_label">
+          <property name="text">
+           <string>Column:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="column_combo">
+          <property name="minimumWidth">
+           <number>150</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="table_info_label">
+        <property name="text">
+         <string>Create tables using the Table Designer widget.</string>
+        </property>
+        <property name="styleSheet">
+         <string>color: #666;</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="x_axis_group">
      <property name="title">
-      <string>X-Axis Data</string>
+      <string>X-Axis Data (Legacy)</string>
+     </property>
+     <property name="visible">
+      <bool>false</bool>
      </property>
      <layout class="QVBoxLayout" name="x_axis_layout">
       <item>
@@ -154,7 +225,10 @@ border-radius: 4px;
    <item>
     <widget class="QGroupBox" name="y_axis_group">
      <property name="title">
-      <string>Y-Axis Data</string>
+      <string>Y-Axis Data (Legacy)</string>
+     </property>
+     <property name="visible">
+      <bool>false</bool>
      </property>
      <layout class="QVBoxLayout" name="y_axis_layout">
       <item>

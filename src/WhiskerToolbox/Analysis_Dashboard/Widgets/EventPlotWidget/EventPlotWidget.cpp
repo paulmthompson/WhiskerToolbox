@@ -19,10 +19,8 @@
 EventPlotWidget::EventPlotWidget(QGraphicsItem * parent)
     : AbstractPlotWidget(parent),
       _opengl_widget(nullptr),
-      _proxy_widget(nullptr),
-      _table_view(nullptr) {
+      _proxy_widget(nullptr) {
     qDebug() << "EventPlotWidget::EventPlotWidget constructor called";
-
 
     setPlotTitle("Event Plot");
     setupOpenGLWidget();
@@ -32,10 +30,6 @@ EventPlotWidget::EventPlotWidget(QGraphicsItem * parent)
 
 EventPlotWidget::~EventPlotWidget() {
     qDebug() << "EventPlotWidget::~EventPlotWidget destructor called";
-
-    if (_table_view) {
-        _table_view.reset();
-    }
 }
 
 QString EventPlotWidget::getPlotType() const {
@@ -44,16 +38,12 @@ QString EventPlotWidget::getPlotType() const {
 
 void EventPlotWidget::setEventDataKeys(QStringList const & event_data_keys) {
     _event_data_keys = event_data_keys;
-    if (_event_data_keys.size() > 0 && _y_axis_data_keys.size() > 0) {
-        loadEventData();
-    }
+    // Note: Legacy method - data loading now handled by properties widget
 }
 
 void EventPlotWidget::setYAxisDataKeys(QStringList const & y_axis_data_keys) {
     _y_axis_data_keys = y_axis_data_keys;
-    if (_event_data_keys.size() > 0 && _y_axis_data_keys.size() > 0) {
-        loadEventData();
-    }
+    // Note: Legacy method - data loading now handled by properties widget
 }
 
 void EventPlotWidget::paint(QPainter * painter, QStyleOptionGraphicsItem const * option, QWidget * widget) {
@@ -121,13 +111,12 @@ void EventPlotWidget::mousePressEvent(QGraphicsSceneMouseEvent * event) {
 }
 
 void EventPlotWidget::updateVisualization() {
-    if (!_parameters.data_source_registry || !_opengl_widget) {
+    if (!_opengl_widget) {
         return;
     }
 
-    loadEventData();
-
-    // Request render update through signal (like SpatialOverlayPlotWidget)
+    // Note: Data loading is now handled by the properties widget
+    // This method just triggers a visual update
     update();
     emit renderUpdateRequested(getPlotId());
 }
@@ -135,94 +124,6 @@ void EventPlotWidget::updateVisualization() {
 void EventPlotWidget::handleFrameJumpRequest(int64_t time_frame_index, QString const & data_key) {
     // Forward frame jump request to the main dashboard
     emit frameJumpRequested(time_frame_index, data_key.toStdString());
-}
-
-void EventPlotWidget::loadEventData() {
-    qDebug() << "EventPlotWidget::loadEventData";
-    qDebug() << "EventPlotWidget::loadEventData _event_data_keys: " << _event_data_keys;
-    qDebug() << "EventPlotWidget::loadEventData _y_axis_data_keys: " << _y_axis_data_keys;
-
-    // Get DataManager from the DataSourceRegistry
-    auto digital_interval_series = _parameters.data_source_registry->getData<DigitalIntervalSeries>(_event_data_keys[0].toStdString());
-    if (!digital_interval_series) {
-        qDebug() << "EventPlotWidget::loadEventData digital_interval_series is nullptr";
-        return;
-    }
-
-    // We will use builder to create a table view
-    // Note: DataManagerExtension still needs the actual DataManager
-    // For now, get it from the registry for compatibility
-    AbstractDataSource* primary_source = _parameters.data_source_registry->getDataSource("primary_data_manager");
-    if (!primary_source || primary_source->getType() != "DataManager") {
-        qDebug() << "EventPlotWidget::loadEventData: No primary DataManager source available";
-        return;
-    }
-    
-    DataManagerSource* dm_source = static_cast<DataManagerSource*>(primary_source);
-    DataManager* data_manager = dm_source->getDataManager();
-    if (!data_manager) {
-        qDebug() << "EventPlotWidget::loadEventData: DataManager is null";
-        return;
-    }
-
-    auto dataManagerExtension = std::make_shared<DataManagerExtension>(*data_manager);
-    TableViewBuilder builder(dataManagerExtension);
-    
-    auto rowIntervalSeries = digital_interval_series;
-    if (!rowIntervalSeries) {
-        qDebug() << "EventPlotWidget::loadEventData rowIntervalSeries is nullptr";
-        return;
-    }
-
-    auto rowIntervals = rowIntervalSeries->getDigitalIntervalSeries();
-    std::vector<TimeFrameInterval> timeFrameIntervals;
-    for (auto const & interval: rowIntervals) {
-        timeFrameIntervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
-    }
-
-    auto row_timeframe_key = data_manager->getTimeFrame(_event_data_keys[0].toStdString());
-    auto row_timeframe = data_manager->getTime(row_timeframe_key);
-
-    if (!row_timeframe) {
-        qDebug() << "EventPlotWidget::loadEventData row_timeframe is nullptr";
-        return;
-    }
-
-    auto rowSelector = std::make_unique<IntervalSelector>(timeFrameIntervals, row_timeframe);
-
-    builder.setRowSelector(std::move(rowSelector));
-
-    // Add y-axis data
-    auto eventSource = dataManagerExtension->getEventSource(_y_axis_data_keys[0].toStdString());
-    if (!eventSource) {
-        qDebug() << "EventPlotWidget::loadEventData eventSource is nullptr";
-        return;
-    }
-
-    builder.addColumn<std::vector<float>>(_y_axis_data_keys[0].toStdString(),
-                                          std::make_unique<EventInIntervalComputer<std::vector<float>>>(eventSource,
-                                                                                                        EventOperation::Gather_Center,
-                                                                                                        _y_axis_data_keys[0].toStdString()));
-
-    _table_view = std::make_unique<TableView>(builder.build());
-
-    // Get the data from the table view
-    if (_table_view) {
-        auto event_data = _table_view->getColumnValues<std::vector<float>>(_y_axis_data_keys[0].toStdString());
-
-        qDebug() << "EventPlotWidget::loadEventData event_data size: " << event_data.size();
-
-        // Pass the event data to the OpenGL widget
-        if (_opengl_widget) {
-            _opengl_widget->setEventData(event_data);
-            emit renderUpdateRequested(getPlotId());
-        }
-
-    } else {
-        qDebug() << "EventPlotWidget::loadEventData _table_view is nullptr";
-    }
-
-    qDebug() << "EventPlotWidget::loadEventData done";
 }
 
 void EventPlotWidget::setupOpenGLWidget() {

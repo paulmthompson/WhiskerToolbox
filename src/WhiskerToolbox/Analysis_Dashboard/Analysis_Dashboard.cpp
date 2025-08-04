@@ -70,6 +70,14 @@ void Analysis_Dashboard::initializeDashboard() {
         qDebug() << "Analysis_Dashboard: Registered primary DataManager as data source";
     }
 
+    // Register the TableManager as a data source if available
+    if (_toolbox_panel && _toolbox_panel->getTableManager()) {
+        auto table_manager_source = std::make_unique<TableManagerSource>(_toolbox_panel->getTableManager(), 
+        "primary_table_manager",this);
+        _data_source_registry->registerDataSource("primary_table_manager", std::move(table_manager_source));
+        qDebug() << "Analysis_Dashboard: Registered TableManager as data source";
+    }
+
     // Set data manager for the properties panel
     if (_data_manager) {
         _properties_panel->setDataManager(_data_manager);
