@@ -19,7 +19,20 @@ add_executable(AnalysisDashboardTests
     test_analysis_dashboard.cpp
     test_table_designer_widget.cpp
     PointDataVisualization.test.cpp
+    ../fixtures/test_signal_probe_simple.cpp
+    ../fixtures/signal_probe.cpp
+    ../fixtures/simple_test_emitter.hpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/whiskertoolbox.qrc
+)
+
+# Enable automoc for files that contain Q_OBJECT
+set_source_files_properties(../fixtures/test_signal_probe_simple.cpp PROPERTIES AUTOMOC TRUE)
+set_source_files_properties(../fixtures/signal_probe.hpp PROPERTIES AUTOMOC TRUE)
+set_source_files_properties(../fixtures/simple_test_emitter.hpp PROPERTIES AUTOMOC TRUE)
+
+# Ensure MOC files are generated in the build directory
+set_target_properties(AnalysisDashboardTests PROPERTIES
+    AUTOMOC TRUE
 )
 
 target_link_libraries(AnalysisDashboardTests 
