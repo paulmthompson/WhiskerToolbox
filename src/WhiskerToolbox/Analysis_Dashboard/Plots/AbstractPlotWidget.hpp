@@ -9,11 +9,8 @@
 
 #include <memory>
 
-class DataManager;
 class DataSourceRegistry;
 class GroupManager;
-class TableManager;
-class TableView;
 class QGraphicsSceneMouseEvent;
 
 /**
