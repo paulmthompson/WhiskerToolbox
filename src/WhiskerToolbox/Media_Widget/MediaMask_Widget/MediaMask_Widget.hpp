@@ -28,13 +28,17 @@ class Section;
 
 class MediaMask_Widget : public QWidget {
     Q_OBJECT
+
 public:
     explicit MediaMask_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, QWidget * parent = nullptr);
     ~MediaMask_Widget() override;
 
     void setActiveKey(std::string const & key);
+
+protected:
     void showEvent(QShowEvent * event) override;
     void hideEvent(QHideEvent * event) override;
+    void resizeEvent(QResizeEvent* event) override;
 
 private:
     Ui::MediaMask_Widget * ui;
