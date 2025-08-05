@@ -1,6 +1,9 @@
 #include "Media_Widget.hpp"
 
 #include "ui_Media_Widget.h"
+#include <QTimer>
+#include <QApplication>
+#include <QResizeEvent>
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -8,7 +11,6 @@
 #include "DataManager/Lines/Line_Data.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 #include "DataManager/Points/Point_Data.hpp"
-
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -36,8 +38,8 @@ Media_Widget::Media_Widget(QWidget * parent)
     ui->splitter->setStretchFactor(0, 0);// Left panel (scroll area) doesn't stretch
     ui->splitter->setStretchFactor(1, 1);// Right panel (graphics view) stretches
 
-    // Set initial sizes: 200px for left panel, rest for canvas
-    ui->splitter->setSizes({300, 563});
+    // Set initial sizes: 250px for left panel, rest for canvas (reduced from 350px)
+    ui->splitter->setSizes({250, 513});
 
     // Set collapsible behavior
     ui->splitter->setCollapsible(0, false);// Prevent left panel from collapsing
@@ -65,6 +67,18 @@ Media_Widget::Media_Widget(QWidget * parent)
 
     connect(ui->feature_table_widget, &Feature_Table_Widget::removeFeature, this, [this](QString const & feature) {
         Media_Widget::_addFeatureToDisplay(feature, false);
+    });
+
+    // Ensure the feature table and other widgets are properly sized on startup
+    QTimer::singleShot(0, this, [this]() {
+        int scrollAreaWidth = ui->scrollArea->width();
+        ui->feature_table_widget->setFixedWidth(scrollAreaWidth - 10);
+
+        // Call the update function to size everything properly
+        _updateCanvasSize();
+
+        // Initialize the stacked widget with proper sizing
+        ui->stackedWidget->setFixedWidth(scrollAreaWidth - 10);
     });
 }
 
@@ -97,6 +111,26 @@ void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
 
     // Connect text widget to scene if both are available
     _connectTextWidgetToScene();
+
+    // Ensure all widgets in the stacked widget are properly sized
+    QTimer::singleShot(100, this, [this]() {
+        int scrollAreaWidth = ui->scrollArea->width();
+        for (int i = 0; i < ui->stackedWidget->count(); ++i) {
+            QWidget* widget = ui->stackedWidget->widget(i);
+            if (widget) {
+                widget->setFixedWidth(scrollAreaWidth - 10);
+                widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+                // If this is a MediaProcessing_Widget, make sure it fills its container
+                auto processingWidget = qobject_cast<MediaProcessing_Widget*>(widget);
+                if (processingWidget) {
+                    processingWidget->setMinimumWidth(scrollAreaWidth - 10);
+                    processingWidget->adjustSize();
+                }
+            }
+        }
+        _updateCanvasSize();
+    });
 
     _data_manager->addObserver([this]() {
         _createOptions();
@@ -244,6 +278,29 @@ void Media_Widget::_updateCanvasSize() {
         // Ensure the view fits the scene properly
         ui->graphicsView->setSceneRect(0, 0, width, height);
         ui->graphicsView->fitInView(0, 0, width, height, Qt::IgnoreAspectRatio);
+
+        // Update the feature table size to match the scroll area width with smaller right margin
+        int scrollAreaWidth = ui->scrollArea->width();
+        int featureTableWidth = scrollAreaWidth - 10;
+        ui->feature_table_widget->setFixedWidth(featureTableWidth);
+
+        // Update stacked widget width to match feature table
+        ui->stackedWidget->setFixedWidth(featureTableWidth);
+
+        // Update all widgets in the stacked widget to match the width
+        for (int i = 0; i < ui->stackedWidget->count(); ++i) {
+            QWidget* widget = ui->stackedWidget->widget(i);
+            if (widget) {
+                widget->setFixedWidth(featureTableWidth);
+
+                // For MediaProcessing_Widget, ensure it fills the available space
+                auto processingWidget = qobject_cast<MediaProcessing_Widget*>(widget);
+                if (processingWidget) {
+                    processingWidget->setMinimumWidth(featureTableWidth);
+                    processingWidget->adjustSize();
+                }
+            }
+        }
     }
 }
 
