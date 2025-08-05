@@ -1,7 +1,7 @@
 #include "GroupManager.hpp"
+
 #include <QDebug>
 
-// Define the default color palette using standard colors
 QVector<QColor> const GroupManager::DEFAULT_COLORS = {
         QColor(31, 119, 180), // Blue
         QColor(255, 127, 14), // Orange
@@ -43,7 +43,6 @@ bool GroupManager::removeGroup(int group_id) {
         return false;
     }
 
-    // Remove all point assignments for this group
     auto const & point_ids = it->point_ids;
     for (int64_t point_id: point_ids) {
         m_point_to_group.remove(point_id);

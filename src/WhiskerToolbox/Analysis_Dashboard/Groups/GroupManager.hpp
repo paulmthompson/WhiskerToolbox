@@ -5,6 +5,7 @@
 #include <QMap>
 #include <QObject>
 #include <QString>
+
 #include <cstdint>
 #include <unordered_set>
 
@@ -170,7 +171,6 @@ private:
     QMap<int64_t, int> m_point_to_group;// Fast lookup for point -> group mapping
     int m_next_group_id;
 
-    // Default color palette
     static QVector<QColor> const DEFAULT_COLORS;
 
     /**
