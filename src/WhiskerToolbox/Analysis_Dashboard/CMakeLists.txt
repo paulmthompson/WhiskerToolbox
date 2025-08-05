@@ -85,8 +85,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.hpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotPropertiesWidget.ui
-    Widgets/SpatialOverlayPlotWidget/RenderingContext.hpp
 
+    Visualizers/RenderingContext.hpp
     Visualizers/Lines/LineDataVisualization.hpp
     Visualizers/Lines/LineDataVisualization.cpp
     Visualizers/Masks/MaskDataVisualization.hpp

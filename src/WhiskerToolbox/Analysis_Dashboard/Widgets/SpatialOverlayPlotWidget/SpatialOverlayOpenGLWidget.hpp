@@ -1,7 +1,7 @@
 #ifndef SPATIALOVERLAYOPENGLWIDGET_HPP
 #define SPATIALOVERLAYOPENGLWIDGET_HPP
 
-#include "RenderingContext.hpp"
+#include "Visualizers/RenderingContext.hpp"
 #include "Selection/SelectionHandlers.hpp"
 #include "Selection/SelectionModes.hpp"
 #include "ShaderManager/ShaderManager.hpp"

@@ -1,7 +1,7 @@
 #ifndef LINEDATAVISUALIZATION_HPP
 #define LINEDATAVISUALIZATION_HPP
 
-#include "Widgets/SpatialOverlayPlotWidget/RenderingContext.hpp"
+#include "Visualizers/RenderingContext.hpp"
 #include "Widgets/SpatialOverlayPlotWidget/Selection/SelectionHandlers.hpp"
 #include "Widgets/SpatialOverlayPlotWidget/Selection/SelectionModes.hpp"
 #include "CoreGeometry/boundingbox.hpp"
