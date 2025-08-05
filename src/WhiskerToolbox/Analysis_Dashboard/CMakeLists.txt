@@ -62,6 +62,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/EventPlotWidget/EventPlotPropertiesWidget.ui
     Widgets/EventPlotWidget/EventPlotOpenGLWidget.hpp
     Widgets/EventPlotWidget/EventPlotOpenGLWidget.cpp
+    Widgets/EventPlotWidget/EventPointVisualization.hpp
+    Widgets/EventPlotWidget/EventPointVisualization.cpp
 
     Widgets/SpatialOverlayPlotWidget/Lines/LineDataVisualization.hpp
     Widgets/SpatialOverlayPlotWidget/Lines/LineDataVisualization.cpp

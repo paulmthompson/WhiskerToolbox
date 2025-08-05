@@ -45,7 +45,31 @@ void EventPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> data
 }
 
 void EventPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * data_source_registry) {
+    // Disconnect from previous registry if any
+    if (_data_source_registry) {
+        disconnect(_data_source_registry, nullptr, this, nullptr);
+    }
+    
     _data_source_registry = data_source_registry;
+    
+    // Connect to registry signals to update when new data sources are added
+    if (_data_source_registry) {
+        connect(_data_source_registry, &DataSourceRegistry::dataSourceRegistered,
+                this, [this](const QString& source_id) {
+                    Q_UNUSED(source_id)
+                    // Update both tables and data sources when new sources are registered
+                    updateAvailableTables();
+                    updateAvailableDataSources();
+                });
+        
+        connect(_data_source_registry, &DataSourceRegistry::dataSourceUnregistered,
+                this, [this](const QString& source_id) {
+                    Q_UNUSED(source_id)
+                    // Update both tables and data sources when sources are unregistered
+                    updateAvailableTables();
+                    updateAvailableDataSources();
+                });
+    }
     
     // Update available tables whenever the registry changes
     updateAvailableTables();
@@ -383,7 +407,10 @@ void EventPlotPropertiesWidget::updateXAxisInfoLabel() {
 }
 
 void EventPlotPropertiesWidget::updatePlotWidget() {
+    qDebug() << "EventPlotPropertiesWidget::updatePlotWidget called";
+    
     if (!_event_plot_widget) {
+        qDebug() << "EventPlotPropertiesWidget::updatePlotWidget - no event plot widget";
         return;
     }
 
@@ -402,8 +429,12 @@ void EventPlotPropertiesWidget::updatePlotWidget() {
     QString table_id = getSelectedTableId();
     QString column_name = getSelectedColumnName();
     
+    qDebug() << "EventPlotPropertiesWidget::updatePlotWidget - table_id:" << table_id << "column_name:" << column_name;
+    
     if (!table_id.isEmpty() && !column_name.isEmpty()) {
         loadTableData(table_id, column_name);
+    } else {
+        qDebug() << "EventPlotPropertiesWidget::updatePlotWidget - table_id or column_name is empty, skipping data load";
     }
 
     // Only emit properties changed signal when not applying properties
@@ -590,7 +621,10 @@ void EventPlotPropertiesWidget::updateAvailableColumns() {
 }
 
 void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QString& column_name) {
+    qDebug() << "EventPlotPropertiesWidget::loadTableData called with table_id:" << table_id << "column_name:" << column_name;
+    
     if (!_data_source_registry || !_event_plot_widget) {
+        qWarning() << "EventPlotPropertiesWidget: Missing data_source_registry or event_plot_widget";
         return;
     }
 
@@ -598,10 +632,14 @@ void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QSt
     AbstractDataSource* table_manager_source = nullptr;
     auto source_ids = _data_source_registry->getRegisteredSourceIds();
     
+    qDebug() << "EventPlotPropertiesWidget: Found" << source_ids.size() << "registered data sources";
+    
     for (const auto& source_id : source_ids) {
         auto* source = _data_source_registry->getDataSource(source_id);
+        qDebug() << "EventPlotPropertiesWidget: Checking source" << source_id << "type:" << (source ? source->getType() : "null");
         if (source && source->getType() == "TableManager") {
             table_manager_source = source;
+            qDebug() << "EventPlotPropertiesWidget: Found TableManager source:" << source_id;
             break;
         }
     }
@@ -615,13 +653,18 @@ void EventPlotPropertiesWidget::loadTableData(const QString& table_id, const QSt
     
     // Get the typed data - try std::vector<float> first (common for event data)
     try {
+        qDebug() << "EventPlotPropertiesWidget: Attempting to load table data...";
         auto event_data = tm_source->getTypedTableColumnData<std::vector<float>>(table_id, column_name);
+        
+        qDebug() << "EventPlotPropertiesWidget: Retrieved" << event_data.size() << "event vectors";
         
         if (!event_data.empty()) {
             // Pass the event data directly to the OpenGL widget
             if (_event_plot_widget->getOpenGLWidget()) {
                 _event_plot_widget->getOpenGLWidget()->setEventData(event_data);
-                qDebug() << "EventPlotPropertiesWidget: Loaded" << event_data.size() << "event vectors from table" << table_id << "column" << column_name;
+                qDebug() << "EventPlotPropertiesWidget: Successfully loaded" << event_data.size() << "event vectors from table" << table_id << "column" << column_name;
+            } else {
+                qWarning() << "EventPlotPropertiesWidget: OpenGL widget is null";
             }
         } else {
             qWarning() << "EventPlotPropertiesWidget: No data found for table" << table_id << "column" << column_name;

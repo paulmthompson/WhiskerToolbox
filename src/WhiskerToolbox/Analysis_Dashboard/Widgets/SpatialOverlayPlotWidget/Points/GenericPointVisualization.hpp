@@ -82,7 +82,20 @@ public:
      * @param data_key The key identifier for this visualization
      * @param group_manager Optional group manager for color coding
      */
+    /**
+     * @brief Constructor for generic point visualization
+     * @param data_key The key identifier for this visualization
+     * @param group_manager Optional group manager for color coding
+     */
     GenericPointVisualization(QString const & data_key, GroupManager * group_manager = nullptr);
+    
+    /**
+     * @brief Constructor with deferred OpenGL initialization option
+     * @param data_key The key identifier for this visualization
+     * @param group_manager Optional group manager for color coding
+     * @param defer_opengl_init If true, skip OpenGL initialization in constructor
+     */
+    GenericPointVisualization(QString const & data_key, GroupManager * group_manager, bool defer_opengl_init);
     
     /**
      * @brief Virtual destructor
@@ -286,6 +299,27 @@ GenericPointVisualization<CoordType, RowIndicatorType>::GenericPointVisualizatio
     m_spatial_index = std::make_unique<QuadTree<RowIndicatorType>>(initial_bounds);
     
     initializeOpenGLResources();
+}
+
+template<typename CoordType, typename RowIndicatorType>
+GenericPointVisualization<CoordType, RowIndicatorType>::GenericPointVisualization(
+    QString const & data_key, GroupManager * group_manager, bool defer_opengl_init)
+    : m_key(data_key),
+      m_vertex_buffer(QOpenGLBuffer::VertexBuffer),
+      m_selection_vertex_buffer(QOpenGLBuffer::VertexBuffer),
+      m_highlight_vertex_buffer(QOpenGLBuffer::VertexBuffer),
+      m_color(1.0f, 0.0f, 0.0f, 1.0f),
+      m_group_manager(group_manager),
+      m_group_data_needs_update(false) {
+    
+    // Initialize bounds - will be set by derived class in populateData()
+    BoundingBox initial_bounds(0.0f, 0.0f, 1.0f, 1.0f);
+    m_spatial_index = std::make_unique<QuadTree<RowIndicatorType>>(initial_bounds);
+    
+    // Only initialize OpenGL resources if not deferred
+    if (!defer_opengl_init) {
+        initializeOpenGLResources();
+    }
 }
 
 template<typename CoordType, typename RowIndicatorType>

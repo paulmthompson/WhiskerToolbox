@@ -19,6 +19,10 @@
 #include <unordered_map>
 #include <vector>
 
+// Forward declarations
+class EventPointVisualization;
+class GroupManager;
+
 /**
  * @brief OpenGL widget for rendering event data with high performance
  */
@@ -101,6 +105,18 @@ public:
      */
     void setEventData(std::vector<std::vector<float>> const & event_data);
 
+    /**
+     * @brief Set the group manager for color coding events
+     * @param group_manager The group manager instance
+     */
+    void setGroupManager(GroupManager * group_manager);
+
+    /**
+     * @brief Set the point size for event rendering
+     * @param point_size Point size in pixels
+     */
+    void setPointSize(float point_size);
+
     enum class PlotTheme {
         Dark,
         Light
@@ -162,7 +178,12 @@ private slots:
 
 
 private:
-    // OpenGL resources
+    // Point visualization using GenericPointVisualization
+    std::unique_ptr<EventPointVisualization> _event_visualization;
+    GroupManager * _group_manager;
+    float _point_size;
+
+    // OpenGL resources for center line (separate from point visualization)
     QOpenGLShaderProgram * _shader_program;
     QOpenGLBuffer _vertex_buffer;
     QOpenGLVertexArrayObject _vertex_array_object;
@@ -196,6 +217,8 @@ private:
 
     // Event data
     std::vector<std::vector<float>> _event_data;
+    
+    // Legacy members (kept for compatibility but may be removed)
     std::vector<float> _vertex_data;
     size_t _total_events;
 
@@ -289,12 +312,12 @@ private:
     void screenToWorld(int screen_x, int screen_y, float & world_x, float & world_y);
 
     /**
-     * @brief Render all events using OpenGL
+     * @brief Render events using the point visualization system
      */
     void renderEvents();
 
     /**
-     * @brief Render hovered event with larger size
+     * @brief Render hovered event with larger size (legacy compatibility)
      */
     void renderHoveredEvent();
 

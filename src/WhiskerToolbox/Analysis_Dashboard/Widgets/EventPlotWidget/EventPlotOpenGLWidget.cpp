@@ -1,5 +1,7 @@
 #include "EventPlotOpenGLWidget.hpp"
+#include "EventPointVisualization.hpp"
 #include "ShaderManager/ShaderManager.hpp"
+#include "Analysis_Dashboard/Groups/GroupManager.hpp"
 
 #include <QDebug>
 #include <QMouseEvent>
@@ -9,6 +11,9 @@
 
 EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
+      _event_visualization(nullptr),
+      _group_manager(nullptr),
+      _point_size(6.0f),
       _shader_program(nullptr),
       _zoom_level(1.0f),
       _y_zoom_level(1.0f),
@@ -65,10 +70,18 @@ EventPlotOpenGLWidget::~EventPlotOpenGLWidget() {
     // OpenGL context must be current for cleanup
     makeCurrent();
 
+    // Clean up event visualization
+    if (_event_visualization) {
+        _event_visualization->cleanupOpenGLResources();
+        _event_visualization.reset();
+    }
+
+    // Clean up center line shader (legacy)
     if (_shader_program) {
         delete _shader_program;
     }
 
+    // Clean up legacy buffers (may be removed in future)
     _vertex_buffer.destroy();
     _vertex_array_object.destroy();
     _highlight_vertex_buffer.destroy();
@@ -115,9 +128,57 @@ void EventPlotOpenGLWidget::setTooltipsEnabled(bool enabled) {
 void EventPlotOpenGLWidget::setEventData(std::vector<std::vector<float>> const & event_data) {
     _event_data = event_data;
 
+    // Create new event visualization with the data
+    // Note: Don't initialize OpenGL resources here - will be done in initializeGL()
+    _event_visualization = std::make_unique<EventPointVisualization>(
+        "events", _event_data, _group_manager);
+
+    // If OpenGL is already initialized, initialize the visualization resources
+    if (_opengl_resources_initialized && context() && context()->isValid()) {
+        makeCurrent();
+        try {
+            _event_visualization->initializeOpenGLResources();
+            qDebug() << "EventPlotOpenGLWidget::setEventData - EventPointVisualization initialized successfully";
+        } catch (...) {
+            qWarning() << "EventPlotOpenGLWidget::setEventData - Failed to initialize EventPointVisualization";
+        }
+        doneCurrent();
+    }
+
+    // Update legacy vertex data for compatibility (may remove later)
     updateVertexData();
     updateMatrices();
     update();
+}
+
+void EventPlotOpenGLWidget::setGroupManager(GroupManager * group_manager) {
+    _group_manager = group_manager;
+    
+    // Update existing event visualization with group manager
+    if (_event_visualization) {
+        _event_visualization->setGroupManager(_group_manager);
+        
+        // Connect to group manager signals if available
+        if (_group_manager) {
+            connect(_group_manager, &GroupManager::groupModified,
+                    this, [this]() {
+                        if (_event_visualization) {
+                            _event_visualization->refreshGroupRenderData();
+                            update();
+                        }
+                    });
+        }
+        
+        update();
+    }
+}
+
+void EventPlotOpenGLWidget::setPointSize(float point_size) {
+    float new_point_size = std::max(1.0f, std::min(50.0f, point_size)); // Clamp between 1 and 50 pixels
+    if (new_point_size != _point_size) {
+        _point_size = new_point_size;
+        update();
+    }
 }
 
 void EventPlotOpenGLWidget::initializeGL() {
@@ -152,12 +213,22 @@ void EventPlotOpenGLWidget::initializeGL() {
         glEnable(GL_MULTISAMPLE);
     }
 
-    // Initialize shaders and buffers
+    // Initialize shaders and buffers (for center line only now)
     initializeShaders();
     initializeBuffers();
 
-    // Mark OpenGL resources as initialized
+    // Mark OpenGL resources as initialized BEFORE initializing event visualization
     _opengl_resources_initialized = true;
+
+    // Initialize event visualization if we have data (context is now ready)
+    if (_event_visualization) {
+        try {
+            _event_visualization->initializeOpenGLResources();
+            qDebug() << "EventPlotOpenGLWidget::initializeGL - EventPointVisualization initialized successfully";
+        } catch (...) {
+            qWarning() << "EventPlotOpenGLWidget::initializeGL - Failed to initialize EventPointVisualization";
+        }
+    }
 
     updateMatrices();
 
@@ -176,11 +247,6 @@ void EventPlotOpenGLWidget::paintGL() {
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (!_shader_program || !_shader_program->isLinked()) {
-        qDebug() << "EventPlotOpenGLWidget::paintGL - shader program not ready";
-        return;
-    }
-
     if (!_opengl_resources_initialized) {
         qDebug() << "EventPlotOpenGLWidget::paintGL - OpenGL resources not initialized";
         return;
@@ -189,25 +255,11 @@ void EventPlotOpenGLWidget::paintGL() {
     // Always render center line first (uses its own shader)
     renderCenterLine();
 
-    // Bind point shader program for events
-    _shader_program->bind();
-
-    // Set transformation matrices for point rendering
-    _shader_program->setUniformValue("view_matrix", _view_matrix);
-    _shader_program->setUniformValue("projection_matrix", _projection_matrix);
-
-    // Render events if we have data
-    if (!_vertex_data.empty()) {
-        renderEvents();
+    // Render events using the point visualization system
+    if (_event_visualization) {
+        QMatrix4x4 mvp = _projection_matrix * _view_matrix;
+        _event_visualization->render(mvp, _point_size);
     }
-
-    // Render hovered event if any
-    if (_hovered_event.has_value()) {
-        renderHoveredEvent();
-    }
-
-    // Unbind point shader
-    _shader_program->release();
 
     qDebug() << "EventPlotOpenGLWidget::paintGL completed";
 }
@@ -247,8 +299,8 @@ void EventPlotOpenGLWidget::mouseMoveEvent(QMouseEvent * event) {
 
         _last_mouse_pos = current_pos;
     } else {
-        // Handle tooltip logic if tooltips are enabled (improved version)
-        if (_tooltips_enabled) {
+        // Handle tooltip logic if tooltips are enabled using new visualization system
+        if (_tooltips_enabled && _event_visualization) {
             // Store the current mouse position for debounced processing
             _pending_hover_pos = event->pos();
 
@@ -275,6 +327,13 @@ void EventPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
 
 void EventPlotOpenGLWidget::leaveEvent(QEvent * event) {
     Q_UNUSED(event)
+    
+    // Clear hover state in event visualization
+    if (_event_visualization) {
+        _event_visualization->clearHover();
+    }
+    
+    // Clear legacy hover state
     _hovered_event.reset();
     _tooltip_timer->stop();
     QToolTip::hideText();
@@ -282,25 +341,21 @@ void EventPlotOpenGLWidget::leaveEvent(QEvent * event) {
 }
 
 void EventPlotOpenGLWidget::handleTooltipTimer() {
-    if (_hovered_event.has_value() && _tooltips_enabled) {
-        QString tooltip_text = QString("Trial %1, Event %2\nTime: %3 ms")
-                                       .arg(_hovered_event->trial_index + 1)
-                                       .arg(_hovered_event->event_index + 1)
-                                       .arg(_hovered_event->x, 0, 'f', 1);
-
-        QToolTip::showText(mapToGlobal(QPoint(_last_mouse_pos.x(), _last_mouse_pos.y())),
-                           tooltip_text, this);
+    if (_event_visualization && _tooltips_enabled) {
+        QString tooltip_text = _event_visualization->getEventTooltipText();
+        if (!tooltip_text.isEmpty()) {
+            QToolTip::showText(mapToGlobal(QPoint(_last_mouse_pos.x(), _last_mouse_pos.y())),
+                               tooltip_text, this);
+        }
     }
 }
 
 void EventPlotOpenGLWidget::handleTooltipRefresh() {
-    if (_hovered_event.has_value() && _tooltips_enabled) {
-        QString tooltip_text = QString("Trial %1, Event %2\nTime: %3 ms")
-                                       .arg(_hovered_event->trial_index + 1)
-                                       .arg(_hovered_event->event_index + 1)
-                                       .arg(_hovered_event->x, 0, 'f', 1);
-
-        QToolTip::showText(mapToGlobal(_pending_hover_pos), tooltip_text, this);
+    if (_event_visualization && _tooltips_enabled) {
+        QString tooltip_text = _event_visualization->getEventTooltipText();
+        if (!tooltip_text.isEmpty()) {
+            QToolTip::showText(mapToGlobal(_pending_hover_pos), tooltip_text, this);
+        }
     }
 }
 
@@ -562,58 +617,15 @@ std::optional<EventPlotOpenGLWidget::HoveredEvent> EventPlotOpenGLWidget::findEv
 }
 
 void EventPlotOpenGLWidget::renderEvents() {
-    if (_vertex_data.empty()) {
-        qDebug() << "EventPlotOpenGLWidget::renderEvents - no vertex data";
-        return;
-    }
-
-    qDebug() << "EventPlotOpenGLWidget::renderEvents - rendering" << _total_events << "events";
-
-    _vertex_array_object.bind();
-    _vertex_buffer.bind();
-
-    // Set uniforms for regular event rendering
-    _shader_program->setUniformValue("u_color", QVector4D(0.2f, 0.4f, 0.8f, 1.0f));// Blue
-    _shader_program->setUniformValue("u_point_size", 6.0f);
-
-    // Draw all events
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(_total_events));
-
-    _vertex_buffer.release();
-    _vertex_array_object.release();
-
-    // Check for OpenGL errors
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        qDebug() << "EventPlotOpenGLWidget::renderEvents - OpenGL error:" << error;
-    }
+    // Events are now rendered through the EventPointVisualization in paintGL()
+    // This method is kept for compatibility but is essentially a no-op
+    qDebug() << "EventPlotOpenGLWidget::renderEvents - using EventPointVisualization system";
 }
 
 void EventPlotOpenGLWidget::renderHoveredEvent() {
-    if (!_hovered_event.has_value()) {
-        return;
-    }
-
-    _highlight_vertex_array_object.bind();
-    _highlight_vertex_buffer.bind();
-
-    // Create vertex data for the hovered event
-    float highlight_data[2] = {_hovered_event->x, _hovered_event->y};
-    _highlight_vertex_buffer.allocate(highlight_data, 2 * sizeof(float));
-
-    // Set vertex attributes
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-
-    // Set uniforms for highlight rendering
-    _shader_program->setUniformValue("u_color", QVector4D(0.0f, 0.0f, 0.0f, 1.0f));// Black
-    _shader_program->setUniformValue("u_point_size", 12.0f);                       // Larger size
-
-    // Draw the highlighted event
-    glDrawArrays(GL_POINTS, 0, 1);
-
-    _highlight_vertex_buffer.release();
-    _highlight_vertex_array_object.release();
+    // Hovered events are now rendered through the EventPointVisualization in paintGL()
+    // This method is kept for compatibility but is essentially a no-op
+    qDebug() << "EventPlotOpenGLWidget::renderHoveredEvent - using EventPointVisualization system";
 }
 
 void EventPlotOpenGLWidget::renderCenterLine() {
@@ -710,37 +722,31 @@ void EventPlotOpenGLWidget::calculateProjectionBounds(float & left, float & righ
 }
 
 void EventPlotOpenGLWidget::processHoverDebounce() {
-    if (!_tooltips_enabled || _hover_processing_active) {
+    if (!_tooltips_enabled || _hover_processing_active || !_event_visualization) {
         return;
     }
 
     _hover_processing_active = true;
 
-    // Get the screen coordinates
+    // Get the screen coordinates and convert to world coordinates
     QPoint screen_pos = _pending_hover_pos;
+    float world_x, world_y;
+    screenToWorld(screen_pos.x(), screen_pos.y(), world_x, world_y);
+    QVector2D world_pos(world_x, world_y);
+    
+    // Calculate tolerance in world coordinates
+    float tolerance = calculateWorldTolerance(10.0f); // 10 pixel tolerance
 
-    // Find the nearest event using spatial index
-    auto hovered_event = findEventNear(screen_pos.x(), screen_pos.y());
-
-    // Compare the optional values properly
-    bool hover_changed = false;
-    if (hovered_event.has_value() != _hovered_event.has_value()) {
-        hover_changed = true;
-    } else if (hovered_event.has_value() && _hovered_event.has_value()) {
-        // Both have values, compare the actual event data
-        hover_changed = (hovered_event->trial_index != _hovered_event->trial_index ||
-                         hovered_event->event_index != _hovered_event->event_index);
-    }
+    // Use the event visualization's hover handling
+    bool hover_changed = _event_visualization->handleHover(world_pos, tolerance);
 
     if (hover_changed) {
-        _hovered_event = hovered_event;
-
-        if (_hovered_event.has_value()) {
+        if (_event_visualization->m_current_hover_point) {
             // Start tooltip timer
-            _tooltip_refresh_timer->start();
+            _tooltip_timer->start(500); // 500ms delay
         } else {
             // Hide tooltip immediately
-            _tooltip_refresh_timer->stop();
+            _tooltip_timer->stop();
             QToolTip::hideText();
         }
 
