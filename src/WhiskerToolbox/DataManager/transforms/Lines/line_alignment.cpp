@@ -12,8 +12,8 @@
 
 // Calculate perpendicular direction at a line vertex
 Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t vertex_index) {
-    if (line.size() < 3) {
-        // For lines with fewer than 3 points, we can't calculate a meaningful perpendicular
+    if (line.size() < 2) {
+        // For lines with fewer than 2 points, we can't calculate a meaningful perpendicular
         return Point2D<float>{0.0f, 0.0f};
     }
 
@@ -72,6 +72,7 @@ uint8_t get_pixel_value(Point2D<float> const & point,
     }
     
     size_t index = static_cast<size_t>(y * image_size.width + x);
+    //size_t index = static_cast<size_t>(x * image_size.height + y);
     if (index < image_data.size()) {
         return image_data[index];
     }
