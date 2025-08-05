@@ -21,6 +21,7 @@ LineAlignment_Widget::LineAlignment_Widget(QWidget *parent) :
     
     // Set default values
     ui->widthSpinBox->setValue(20);
+    ui->perpendicularRangeSpinBox->setValue(50);
     ui->useProcessedDataCheckBox->setChecked(true);
     ui->approachComboBox->setCurrentIndex(0);
     
@@ -29,6 +30,8 @@ LineAlignment_Widget::LineAlignment_Widget(QWidget *parent) :
             this, &LineAlignment_Widget::_mediaFeatureSelected);
     connect(ui->widthSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &LineAlignment_Widget::_widthValueChanged);
+    connect(ui->perpendicularRangeSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &LineAlignment_Widget::_perpendicularRangeValueChanged);
     connect(ui->useProcessedDataCheckBox, &QCheckBox::toggled,
             this, &LineAlignment_Widget::_useProcessedDataToggled);
     connect(ui->approachComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
@@ -56,6 +59,7 @@ std::unique_ptr<TransformParametersBase> LineAlignment_Widget::getParameters() c
     
     // Set other parameters from UI
     params->width = ui->widthSpinBox->value();
+    params->perpendicular_range = ui->perpendicularRangeSpinBox->value();
     params->use_processed_data = ui->useProcessedDataCheckBox->isChecked();
     params->approach = static_cast<FWHMApproach>(ui->approachComboBox->currentData().toInt());
     
@@ -79,6 +83,11 @@ void LineAlignment_Widget::_mediaFeatureSelected(QString const & feature) {
 void LineAlignment_Widget::_widthValueChanged(int value) {
     // Update the width label to show the current value
     ui->widthLabel->setText(QString("Width: %1 pixels").arg(value));
+}
+
+void LineAlignment_Widget::_perpendicularRangeValueChanged(int value) {
+    // Update the perpendicular range label to show the current value
+    ui->perpendicularRangeLabel->setText(QString("Perpendicular Range: %1 pixels").arg(value));
 }
 
 void LineAlignment_Widget::_useProcessedDataToggled(bool checked) {

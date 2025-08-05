@@ -83,6 +83,7 @@ uint8_t get_pixel_value(Point2D<float> const & point,
 float calculate_fwhm_displacement(Point2D<float> const & vertex,
                                  Point2D<float> const & perpendicular_dir,
                                  int width,
+                                 int perpendicular_range,
                                  std::vector<uint8_t> const & image_data,
                                  ImageSize const & image_size,
                                  FWHMApproach approach) {
@@ -107,8 +108,8 @@ float calculate_fwhm_displacement(Point2D<float> const & vertex,
         std::vector<uint8_t> profile;
         std::vector<float> distances;
         
-        // Sample up to 50 pixels in each direction along the perpendicular
-        for (int d = -25; d <= 25; ++d) {
+        // Sample up to perpendicular_range pixels in each direction along the perpendicular
+        for (int d = -perpendicular_range/2; d <= perpendicular_range/2; ++d) {
             Point2D<float> sample_point = {
                 sample_start.x + perpendicular_dir.x * d,
                 sample_start.y + perpendicular_dir.y * d
@@ -134,19 +135,19 @@ float calculate_fwhm_displacement(Point2D<float> const & vertex,
         uint8_t half_max = max_intensity / 2;
         
         // Find the left and right boundaries at half maximum
-        int left_bound = -25;
-        int right_bound = 25;
+        int left_bound = -perpendicular_range/2;
+        int right_bound = perpendicular_range/2;
         
         for (int i = 0; i < static_cast<int>(profile.size()); ++i) {
             if (profile[i] >= half_max) {
-                left_bound = i - 25;
+                left_bound = i - perpendicular_range/2;
                 break;
             }
         }
         
         for (int i = static_cast<int>(profile.size()) - 1; i >= 0; --i) {
             if (profile[i] >= half_max) {
-                right_bound = i - 25;
+                right_bound = i - perpendicular_range/2;
                 break;
             }
         }
@@ -233,6 +234,7 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
             line_data.get(),
             typed_params->media_data.get(),
             typed_params->width,
+            typed_params->perpendicular_range,
             typed_params->use_processed_data,
             typed_params->approach,
             progressCallback
@@ -247,17 +249,19 @@ DataTypeVariant LineAlignmentOperation::execute(DataTypeVariant const & dataVari
     return result;
 }
 
-std::shared_ptr<LineData> line_alignment(LineData const * line_data,
-                                         MediaData * media_data,
-                                         int width,
-                                         bool use_processed_data,
-                                         FWHMApproach approach) {
-    return line_alignment(line_data, media_data, width, use_processed_data, approach, [](int) {});
+    std::shared_ptr<LineData> line_alignment(LineData const * line_data,
+                                             MediaData * media_data,
+                                             int width,
+                                             int perpendicular_range,
+                                             bool use_processed_data,
+                                             FWHMApproach approach) {
+    return line_alignment(line_data, media_data, width, perpendicular_range, use_processed_data, approach, [](int) {});
 }
 
 std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          MediaData * media_data,
                                          int width,
+                                         int perpendicular_range,
                                          bool use_processed_data,
                                          FWHMApproach approach,
                                          ProgressCallback progressCallback) {
@@ -330,7 +334,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                 
                 // Calculate FWHM displacement
                 float displacement = calculate_fwhm_displacement(
-                    vertex, perp_dir, width, image_data, image_size, approach);
+                    vertex, perp_dir, width, perpendicular_range, image_data, image_size, approach);
                 
                 // Apply the displacement
                 Point2D<float> aligned_vertex = {

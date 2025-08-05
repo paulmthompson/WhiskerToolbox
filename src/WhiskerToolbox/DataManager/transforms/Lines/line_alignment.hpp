@@ -47,6 +47,7 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
 float calculate_fwhm_displacement(Point2D<float> const & vertex,
                                  Point2D<float> const & perpendicular_dir,
                                  int width,
+                                 int perpendicular_range,
                                  std::vector<uint8_t> const & image_data,
                                  ImageSize const & image_size,
                                  FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
@@ -64,6 +65,7 @@ float calculate_fwhm_displacement(Point2D<float> const & vertex,
 std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          MediaData * media_data,
                                          int width = 20,
+                                         int perpendicular_range = 50,
                                          bool use_processed_data = true,
                                          FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX);
 
@@ -81,6 +83,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
 std::shared_ptr<LineData> line_alignment(LineData const * line_data,
                                          MediaData * media_data,
                                          int width,
+                                         int perpendicular_range,
                                          bool use_processed_data,
                                          FWHMApproach approach,
                                          ProgressCallback progressCallback);
@@ -90,6 +93,7 @@ std::shared_ptr<LineData> line_alignment(LineData const * line_data,
 struct LineAlignmentParameters : public TransformParametersBase {
     std::shared_ptr<MediaData> media_data;  // Pointer to the MediaData
     int width = 20;                         // Width of analysis strip
+    int perpendicular_range = 50;            // Range of perpendicular analysis (pixels)
     bool use_processed_data = true;         // Whether to use processed or raw data
     FWHMApproach approach = FWHMApproach::PEAK_WIDTH_HALF_MAX; // FWHM calculation approach
 };

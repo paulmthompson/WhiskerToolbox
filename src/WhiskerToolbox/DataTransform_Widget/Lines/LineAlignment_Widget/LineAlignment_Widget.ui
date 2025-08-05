@@ -91,49 +91,72 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QSpinBox" name="widthSpinBox">
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <number>100</number>
-        </property>
-        <property name="value">
-         <number>20</number>
-        </property>
-        <property name="suffix">
-         <string> pixels</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="dataTypeLabel">
-        <property name="text">
-         <string>Data Type:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="useProcessedDataCheckBox">
-        <property name="text">
-         <string>Use processed data</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="approachLabel">
-        <property name="text">
-         <string>FWHM Approach:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QComboBox" name="approachComboBox"/>
-      </item>
+             <item row="0" column="1">
+        <widget class="QSpinBox" name="widthSpinBox">
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="value">
+          <number>20</number>
+         </property>
+         <property name="suffix">
+          <string> pixels</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="perpendicularRangeLabel">
+         <property name="text">
+          <string>Perpendicular Range: 50 pixels</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QSpinBox" name="perpendicularRangeSpinBox">
+         <property name="minimum">
+          <number>10</number>
+         </property>
+         <property name="maximum">
+          <number>200</number>
+         </property>
+         <property name="value">
+          <number>50</number>
+         </property>
+         <property name="suffix">
+          <string> pixels</string>
+         </property>
+        </widget>
+       </item>
+             <item row="2" column="0">
+        <widget class="QLabel" name="dataTypeLabel">
+         <property name="text">
+          <string>Data Type:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QCheckBox" name="useProcessedDataCheckBox">
+         <property name="text">
+          <string>Use processed data</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="approachLabel">
+         <property name="text">
+          <string>FWHM Approach:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QComboBox" name="approachComboBox"/>
+       </item>
      </layout>
     </widget>
    </item>

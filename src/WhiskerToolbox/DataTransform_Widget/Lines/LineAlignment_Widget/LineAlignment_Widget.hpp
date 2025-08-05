@@ -27,6 +27,7 @@ private:
 private slots:
     void _mediaFeatureSelected(QString const & feature);
     void _widthValueChanged(int value);
+    void _perpendicularRangeValueChanged(int value);
     void _useProcessedDataToggled(bool checked);
     void _approachChanged(int index);
 };
