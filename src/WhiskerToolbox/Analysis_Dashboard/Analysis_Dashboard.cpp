@@ -207,8 +207,7 @@ bool Analysis_Dashboard::createAndAddPlot(QString const & plot_type) {
     qDebug() << "Analysis_Dashboard::createAndAddPlot: Created plot container with ID:" << plot_container->getPlotId();
     
     // Configure the plot with data source registry for unified data access
-    plot_container->configureManagers(_data_source_registry.get(), _group_manager.get(), 
-                                     _toolbox_panel ? _toolbox_panel->getTableManager() : nullptr);
+    plot_container->configureManagers(_data_source_registry.get(), _group_manager.get());
     
     qDebug() << "Analysis_Dashboard::createAndAddPlot: Configured managers with DataSourceRegistry, adding to organizer";
     

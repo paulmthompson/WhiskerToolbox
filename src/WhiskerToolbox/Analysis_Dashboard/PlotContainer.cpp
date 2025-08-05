@@ -37,18 +37,15 @@ QString PlotContainer::getPlotType() const
 }
 
 void PlotContainer::configureManagers(DataSourceRegistry * data_source_registry,
-                                     GroupManager* group_manager,
-                                     TableManager* table_manager)
+                                     GroupManager* group_manager)
 {
     qDebug() << "PlotContainer::configureManagers: Configuring with DataSourceRegistry for plot:" << getPlotId();
     qDebug() << "  - DataSourceRegistry:" << (data_source_registry != nullptr);
     qDebug() << "  - GroupManager:" << (group_manager != nullptr);
-    qDebug() << "  - TableManager:" << (table_manager != nullptr);
     
     if (plot_widget_) {
         plot_widget_->setDataSourceRegistry(data_source_registry);
         plot_widget_->setGroupManager(group_manager);
-        plot_widget_->setTableManager(table_manager);
         qDebug() << "PlotContainer::configureManagers: Configured plot widget with DataSourceRegistry";
     } else {
         qDebug() << "PlotContainer::configureManagers: ERROR - null plot_widget_";

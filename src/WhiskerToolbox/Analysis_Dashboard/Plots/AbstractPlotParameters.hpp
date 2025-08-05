@@ -4,10 +4,8 @@
 #include <memory>
 #include <string>
 
-class DataManager;
 class DataSourceRegistry;
 class GroupManager;
-class TableManager;
 
 /**
  * @brief Parameters struct for AbstractPlotWidget that has no Qt dependencies
@@ -52,10 +50,8 @@ struct AbstractPlotParameters {
      */
     std::string getPlotTitle() const;
 
-    // State variables
     DataSourceRegistry * data_source_registry = nullptr;
     GroupManager * group_manager = nullptr;
-    TableManager * table_manager = nullptr;
     std::string plot_title;
     std::string plot_id;
 

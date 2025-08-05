@@ -1,10 +1,5 @@
 #include "AbstractPlotWidget.hpp"
 
-
-#include "../Tables/TableManager.hpp"
-#include "DataManager/DataManager.hpp"
-#include "DataManager/utils/TableView/core/TableView.h"
-
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 
@@ -47,33 +42,6 @@ void AbstractPlotWidget::setDataSourceRegistry(DataSourceRegistry* data_source_r
 void AbstractPlotWidget::setGroupManager(GroupManager * group_manager) {
     qDebug() << "AbstractPlotWidget: setGroupManager called for plot" << QString::fromStdString(_parameters.getPlotId()) << "with GroupManager:" << (group_manager != nullptr);
     _parameters.group_manager = group_manager;
-}
-
-void AbstractPlotWidget::setTableManager(TableManager * table_manager) {
-    qDebug() << "AbstractPlotWidget: setTableManager called for plot" << QString::fromStdString(_parameters.getPlotId()) << "with TableManager:" << (table_manager != nullptr);
-    _parameters.table_manager = table_manager;
-}
-
-QStringList AbstractPlotWidget::getAvailableTableIds() const {
-    if (!_parameters.table_manager) {
-        return QStringList();
-    }
-
-    auto table_ids = _parameters.table_manager->getTableIds();
-    QStringList qt_table_ids;
-    for (auto const & id: table_ids) {
-        qt_table_ids.append(id);
-    }
-
-    return qt_table_ids;
-}
-
-std::shared_ptr<TableView> AbstractPlotWidget::getTableView(QString const & table_id) const {
-    if (!_parameters.table_manager) {
-        return nullptr;
-    }
-
-    return _parameters.table_manager->getTableView(table_id);
 }
 
 QString AbstractPlotWidget::getPlotId() const {

@@ -10,7 +10,6 @@ class AbstractPlotPropertiesWidget;
 class DataManager;
 class DataSourceRegistry;
 class GroupManager;
-class TableManager;
 
 /**
  * @brief Container that manages a plot widget and its corresponding properties widget
@@ -64,8 +63,7 @@ public:
      * @param table_manager Pointer to table manager
      */
     void configureManagers(DataSourceRegistry * data_source_registry,
-                          GroupManager* group_manager,
-                          TableManager* table_manager);
+                          GroupManager* group_manager);
 
     /**
      * @brief Update properties widget from current plot state
