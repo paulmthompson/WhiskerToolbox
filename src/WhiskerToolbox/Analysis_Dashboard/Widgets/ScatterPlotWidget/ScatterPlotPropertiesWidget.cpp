@@ -5,14 +5,17 @@
 #include "Analysis_Dashboard/DataSourceRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
+#include "DataManager/utils/TableView/core/TableView.h"
+#include "Analysis_Dashboard/Tables/TableManager.hpp"
+#include "ScatterPlotOpenGLWidget.hpp"
 #include "ui_ScatterPlotPropertiesWidget.h"
 
 #include <QCheckBox>
 #include <QColorDialog>
 #include <QComboBox>
+#include <QDebug>
 #include <QDoubleSpinBox>
 #include <QPushButton>
-
 
 ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(QWidget * parent)
     : AbstractPlotPropertiesWidget(parent),
@@ -36,19 +39,23 @@ void ScatterPlotPropertiesWidget::setDataManager(std::shared_ptr<DataManager> da
 void ScatterPlotPropertiesWidget::setDataSourceRegistry(DataSourceRegistry * data_source_registry) {
     _data_source_registry = data_source_registry;
     
-    // For backwards compatibility, extract the DataManager from the registry
     if (_data_source_registry) {
+        // Connect to data source registry signals for dynamic updates
+        connect(_data_source_registry, &DataSourceRegistry::dataSourceRegistered,
+                this, &ScatterPlotPropertiesWidget::updateAvailableDataSources);
+        connect(_data_source_registry, &DataSourceRegistry::dataSourceUnregistered,
+                this, &ScatterPlotPropertiesWidget::updateAvailableDataSources);
+        
+        // Extract the DataManager from the registry for backwards compatibility
         AbstractDataSource* primary_source = _data_source_registry->getDataSource("primary_data_manager");
         if (primary_source && primary_source->getType() == "DataManager") {
-            // Get the actual DataManager for the feature table
             DataManagerSource* dm_source = static_cast<DataManagerSource*>(primary_source);
             DataManager* data_manager = dm_source->getDataManager();
             
             if (data_manager) {
-                // Create a shared_ptr for compatibility
                 std::shared_ptr<DataManager> shared_dm(data_manager, [](DataManager*){});
                 setDataManager(shared_dm);
-                qDebug() << "EventPlotPropertiesWidget: Set DataManager from DataSourceRegistry";
+                qDebug() << "ScatterPlotPropertiesWidget: Set DataManager from DataSourceRegistry";
             }
         }
     }
@@ -62,7 +69,20 @@ void ScatterPlotPropertiesWidget::setPlotWidget(AbstractPlotWidget * plot_widget
 
     if (_scatter_plot_widget) {
         updateFromPlot();
+
+        // Connect to property changes to update the UI
+        if (_scatter_plot_widget->getOpenGLWidget()) {
+            connect(_scatter_plot_widget->getOpenGLWidget(), &ScatterPlotOpenGLWidget::zoomLevelChanged,
+                    this, &ScatterPlotPropertiesWidget::updateFromPlot);
+            connect(_scatter_plot_widget->getOpenGLWidget(), &ScatterPlotOpenGLWidget::panOffsetChanged,
+                    this, &ScatterPlotPropertiesWidget::updateFromPlot);
+        }
     }
+}
+
+void ScatterPlotPropertiesWidget::setScatterPlotWidget(ScatterPlotWidget * scatter_widget) {
+    _scatter_plot_widget = scatter_widget;
+    updateFromPlot();
 }
 
 void ScatterPlotPropertiesWidget::updateFromPlot() {
@@ -71,15 +91,8 @@ void ScatterPlotPropertiesWidget::updateFromPlot() {
     }
 
     // Update UI with current plot settings
-    // For now, just set default values since ScatterPlotWidget doesn't have specific properties yet
-
-    // Set default point size
-    ui->point_size_spinbox->setValue(3.0);
-
-    // Set default color
+    ui->point_size_spinbox->setValue(_scatter_plot_widget->getPointSize());
     ui->point_color_button->setStyleSheet("background-color: #3268a8; border: 1px solid #ccc;");
-
-    // Set default grid and legend visibility
     ui->show_grid_checkbox->setChecked(true);
     ui->show_legend_checkbox->setChecked(true);
 }
@@ -89,20 +102,17 @@ void ScatterPlotPropertiesWidget::applyToPlot() {
         return;
     }
 
-    // Set flag to prevent signal emission during property application
     _applying_properties = true;
-    
-    // Apply current settings to the plot widget
     updatePlotWidget();
-    
-    // Reset flag
     _applying_properties = false;
 }
 
 void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
-    if (!_data_source_registry || !ui->x_axis_combo || !ui->y_axis_combo) {
+    if (!ui->x_axis_combo || !ui->y_axis_combo) {
         return;
     }
+
+    qDebug() << "ScatterPlotPropertiesWidget::updateAvailableDataSources: Starting update";
 
     // Clear existing items
     ui->x_axis_combo->clear();
@@ -111,18 +121,72 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
     ui->x_axis_combo->addItem("Select a data source...", "");
     ui->y_axis_combo->addItem("Select a data source...", "");
 
-    // Get all available keys from DataManager
-    std::vector<std::string> all_keys = _data_manager->getAllKeys();
-
-    for (std::string const & key: all_keys) {
-        DM_DataType data_type = _data_manager->getType(key);
-        QString display_text = QString::fromStdString(key);
-
-        // Add to both X and Y axis combos for now
-        // In a real implementation, you might filter based on data type
-        ui->x_axis_combo->addItem(display_text, QString::fromStdString(key));
-        ui->y_axis_combo->addItem(display_text, QString::fromStdString(key));
+    // Add items from DataManager (analog time series)
+    if (_data_manager) {
+        std::vector<std::string> all_keys = _data_manager->getAllKeys();
+        
+        for (std::string const & key: all_keys) {
+            DM_DataType data_type = _data_manager->getType(key);
+            
+            // Only add analog time series for scatter plots
+            if (data_type == DM_DataType::Analog) {
+                QString display_text = QString("Analog: %1").arg(QString::fromStdString(key));
+                QString data_key = QString("analog:%1").arg(QString::fromStdString(key));
+                
+                ui->x_axis_combo->addItem(display_text, data_key);
+                ui->y_axis_combo->addItem(display_text, data_key);
+                
+                qDebug() << "Added analog time series:" << display_text;
+            }
+        }
     }
+
+    // Add items from TableManager (table columns)
+    if (_data_source_registry) {
+        // Find TableManagerSource
+        AbstractDataSource* table_manager_source = nullptr;
+        auto source_ids = _data_source_registry->getAvailableSourceIds();
+
+        for (auto const & source_id : source_ids) {
+            auto* source = _data_source_registry->getDataSource(source_id);
+            if (source && source->getType() == "TableManager") {
+                table_manager_source = source;
+                break;
+            }
+        }
+        
+        if (table_manager_source) {
+            TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
+            auto table_manager = tm_source->getTableManager();
+            
+            if (table_manager) {
+                auto table_ids = table_manager->getTableIds();
+                
+                for (auto const & table_id : table_ids) {
+                    auto table_view = table_manager->getBuiltTable(table_id);
+                    if (table_view) {
+                        auto column_names = table_view->getColumnNames();
+                        
+                        for (auto const & column_name : column_names) {
+                            QString display_text = QString("Table: %1.%2")
+                                                   .arg(table_id)
+                                                   .arg(QString::fromStdString(column_name));
+                            QString data_key = QString("table:%1:%2")
+                                               .arg(table_id)
+                                               .arg(QString::fromStdString(column_name));
+                            
+                            ui->x_axis_combo->addItem(display_text, data_key);
+                            ui->y_axis_combo->addItem(display_text, data_key);
+                            
+                            qDebug() << "Added table column:" << display_text;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    qDebug() << "ScatterPlotPropertiesWidget::updateAvailableDataSources: Completed update";
 
     // Update info labels
     updateXAxisInfoLabel();
@@ -140,8 +204,13 @@ void ScatterPlotPropertiesWidget::onYAxisDataSourceChanged() {
 }
 
 void ScatterPlotPropertiesWidget::onPointSizeChanged(double value) {
-    Q_UNUSED(value)
-    updatePlotWidget();
+    if (_scatter_plot_widget) {
+        _scatter_plot_widget->setPointSize(static_cast<float>(value));
+    }
+    
+    if (!_applying_properties) {
+        updatePlotWidget();
+    }
 }
 
 void ScatterPlotPropertiesWidget::onPointColorChanged() {
@@ -235,18 +304,159 @@ void ScatterPlotPropertiesWidget::setSelectedYAxisDataSource(QString const & dat
 }
 
 void ScatterPlotPropertiesWidget::updatePlotWidget() {
-    if (!_scatter_plot_widget) {
+    qDebug() << "ScatterPlotPropertiesWidget::updatePlotWidget: Starting update";
+    
+    QString x_data_key = getSelectedXAxisDataSource();
+    QString y_data_key = getSelectedYAxisDataSource();
+    
+    qDebug() << "Selected X data key:" << x_data_key;
+    qDebug() << "Selected Y data key:" << y_data_key;
+    
+    if (x_data_key.isEmpty() || y_data_key.isEmpty()) {
+        qDebug() << "One or both data keys are empty, skipping plot update";
         return;
     }
 
-    // For now, just emit properties changed signal
-    // In a real implementation, you would update the plot widget with the current settings
+    // Load X and Y data
+    std::vector<float> x_data = loadDataFromKey(x_data_key);
+    std::vector<float> y_data = loadDataFromKey(y_data_key);
+    
+    qDebug() << "Loaded X data size:" << x_data.size();
+    qDebug() << "Loaded Y data size:" << y_data.size();
+    
+    if (x_data.empty() || y_data.empty()) {
+        qDebug() << "One or both data vectors are empty";
+        return;
+    }
+    
+    // Make sure both data vectors have the same size
+    size_t min_size = std::min(x_data.size(), y_data.size());
+    if (x_data.size() != y_data.size()) {
+        qDebug() << "Data size mismatch, trimming to minimum size:" << min_size;
+        x_data.resize(min_size);
+        y_data.resize(min_size);
+    }
+    
+    // Update the scatter plot widget if available
+    if (_scatter_plot_widget) {
+        _scatter_plot_widget->setScatterData(x_data, y_data);
+        
+        // Set axis labels based on data keys
+        QString x_label = x_data_key.startsWith("analog:") ? 
+                         x_data_key.mid(7) : 
+                         (x_data_key.startsWith("table:") ? x_data_key.split(":").last() : x_data_key);
+        QString y_label = y_data_key.startsWith("analog:") ? 
+                         y_data_key.mid(7) : 
+                         (y_data_key.startsWith("table:") ? y_data_key.split(":").last() : y_data_key);
+                         
+        _scatter_plot_widget->setAxisLabels(x_label, y_label);
+        
+        // Apply other settings
+        _scatter_plot_widget->setPointSize(static_cast<float>(ui->point_size_spinbox->value()));
+        
+        qDebug() << "Updated scatter plot widget with" << min_size << "points";
+    } else {
+        qDebug() << "No scatter plot widget available, cannot update plot";
+    }
     
     // Only emit properties changed signal when not applying properties
-    // (to prevent infinite loop when applyToPlot() calls updatePlotWidget())
     if (!_applying_properties) {
         emit propertiesChanged();
     }
+}
+
+std::vector<float> ScatterPlotPropertiesWidget::loadDataFromKey(QString const & data_key) {
+    std::vector<float> result;
+    
+    if (data_key.startsWith("analog:")) {
+        // Handle analog time series
+        QString analog_key = data_key.mid(7); // Remove "analog:" prefix
+        
+        if (!_data_manager) {
+            qDebug() << "No data manager available for analog data";
+            return result;
+        }
+        
+        try {
+            auto analog_data = _data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
+            if (analog_data) {
+                auto data_vector = analog_data->getAnalogTimeSeries();
+                result.reserve(data_vector.size());
+                
+                for (auto value : data_vector) {
+                    result.push_back(static_cast<float>(value));
+                }
+                
+                qDebug() << "Loaded" << result.size() << "values from analog time series:" << analog_key;
+            }
+        } catch (std::exception const & e) {
+            qDebug() << "Error loading analog data:" << e.what();
+        }
+        
+    } else if (data_key.startsWith("table:")) {
+        // Handle table column data
+        QStringList parts = data_key.split(":");
+        if (parts.size() >= 3) {
+            QString table_id = parts[1];
+            QString column_name = parts[2];
+            
+            if (!_data_source_registry) {
+                qDebug() << "No data source registry available for table data";
+                return result;
+            }
+            
+            // Find TableManagerSource
+            AbstractDataSource* table_manager_source = nullptr;
+            auto source_ids = _data_source_registry->getAvailableSourceIds();
+
+            for (auto const & source_id : source_ids) {
+                auto* source = _data_source_registry->getDataSource(source_id);
+                if (source && source->getType() == "TableManager") {
+                    table_manager_source = source;
+                    break;
+                }
+            }
+            
+            if (table_manager_source) {
+                TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
+                auto table_manager = tm_source->getTableManager();
+                
+                if (table_manager) {
+                    auto table_view = table_manager->getBuiltTable(table_id);
+                    if (table_view) {
+                        try {
+                            auto column_data = table_view->getColumnValues<float>(column_name.toStdString());
+                            result = column_data;
+                            
+                            qDebug() << "Loaded" << result.size() << "values from table column:" 
+                                     << table_id << "." << column_name;
+                                     
+                        } catch (std::exception const & e) {
+                            qDebug() << "Error loading table column data:" << e.what();
+                            
+                            // Try loading as double and converting
+                            try {
+                                auto column_data_double = table_view->getColumnValues<double>(column_name.toStdString());
+                                result.reserve(column_data_double.size());
+                                
+                                for (auto value : column_data_double) {
+                                    result.push_back(static_cast<float>(value));
+                                }
+                                
+                                qDebug() << "Loaded" << result.size() << "values from table column (as double):" 
+                                         << table_id << "." << column_name;
+                                         
+                            } catch (std::exception const & e2) {
+                                qDebug() << "Error loading table column data as double:" << e2.what();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return result;
 }
 
 void ScatterPlotPropertiesWidget::updateXAxisInfoLabel() {
@@ -260,15 +470,32 @@ void ScatterPlotPropertiesWidget::updateXAxisInfoLabel() {
         return;
     }
 
-    if (!_data_manager) {
-        ui->x_axis_info_label->setText("Data manager not available");
-        return;
+    QString info_text;
+    
+    if (selected_key.startsWith("analog:")) {
+        QString analog_key = selected_key.mid(7);
+        info_text = QString("X-axis: Analog Time Series\nKey: %1").arg(analog_key);
+        
+        if (_data_manager) {
+            try {
+                auto analog_data = _data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
+                if (analog_data) {
+                    info_text += QString("\nSamples: %1").arg(analog_data->getNumSamples());
+                }
+            } catch (std::exception const & e) {
+                info_text += QString("\nError: %1").arg(e.what());
+            }
+        }
+    } else if (selected_key.startsWith("table:")) {
+        QStringList parts = selected_key.split(":");
+        if (parts.size() >= 3) {
+            QString table_id = parts[1];
+            QString column_name = parts[2];
+            info_text = QString("X-axis: Table Column\nTable: %1\nColumn: %2").arg(table_id, column_name);
+        }
+    } else {
+        info_text = QString("X-axis: Unknown data type\nKey: %1").arg(selected_key);
     }
-
-    DM_DataType data_type = _data_manager->getType(selected_key.toStdString());
-    QString info_text = QString("X-axis: %1\n"
-                                "Data type: %2")
-                                .arg(selected_key, QString::fromStdString(convert_data_type_to_string(data_type)));
 
     ui->x_axis_info_label->setText(info_text);
 }
@@ -284,15 +511,32 @@ void ScatterPlotPropertiesWidget::updateYAxisInfoLabel() {
         return;
     }
 
-    if (!_data_manager) {
-        ui->y_axis_info_label->setText("Data manager not available");
-        return;
+    QString info_text;
+    
+    if (selected_key.startsWith("analog:")) {
+        QString analog_key = selected_key.mid(7);
+        info_text = QString("Y-axis: Analog Time Series\nKey: %1").arg(analog_key);
+        
+        if (_data_manager) {
+            try {
+                auto analog_data = _data_manager->getData<AnalogTimeSeries>(analog_key.toStdString());
+                if (analog_data) {
+                    info_text += QString("\nSamples: %1").arg(analog_data->getNumSamples());
+                }
+            } catch (std::exception const & e) {
+                info_text += QString("\nError: %1").arg(e.what());
+            }
+        }
+    } else if (selected_key.startsWith("table:")) {
+        QStringList parts = selected_key.split(":");
+        if (parts.size() >= 3) {
+            QString table_id = parts[1];
+            QString column_name = parts[2];
+            info_text = QString("Y-axis: Table Column\nTable: %1\nColumn: %2").arg(table_id, column_name);
+        }
+    } else {
+        info_text = QString("Y-axis: Unknown data type\nKey: %1").arg(selected_key);
     }
-
-    DM_DataType data_type = _data_manager->getType(selected_key.toStdString());
-    QString info_text = QString("Y-axis: %1\n"
-                                "Data type: %2")
-                                .arg(selected_key, QString::fromStdString(convert_data_type_to_string(data_type)));
 
     ui->y_axis_info_label->setText(info_text);
 }

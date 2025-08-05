@@ -34,6 +34,12 @@ public:
     void updateFromPlot() override;
     void applyToPlot() override;
 
+    /**
+     * @brief Set the scatter plot widget directly (since it's no longer an AbstractPlotWidget)
+     * @param scatter_widget The scatter plot widget
+     */
+    void setScatterPlotWidget(ScatterPlotWidget * scatter_widget);
+
 public slots:
     /**
      * @brief Update the available data sources
@@ -114,6 +120,13 @@ private:
      * @brief Update the plot widget with current settings
      */
     void updatePlotWidget();
+
+    /**
+     * @brief Load data from a data key (either analog or table-based)
+     * @param data_key The key identifying the data source
+     * @return Vector of float values
+     */
+    std::vector<float> loadDataFromKey(QString const & data_key);
 
     /**
      * @brief Update the X-axis info label
