@@ -3,13 +3,13 @@
 
 #include "DataManager/DataManager.hpp"
 
+#include <QAbstractItemModel>
 #include <QObject>
 #include <QString>
 #include <QVariant>
-#include <QAbstractItemModel>
 
-#include <memory>
 #include <map>
+#include <memory>
 
 class TableManager;
 class TableView;
@@ -26,7 +26,8 @@ class AbstractDataSource : public QObject {
     Q_OBJECT
 
 public:
-    explicit AbstractDataSource(QObject* parent = nullptr) : QObject(parent) {}
+    explicit AbstractDataSource(QObject * parent = nullptr)
+        : QObject(parent) {}
     virtual ~AbstractDataSource() = default;
 
     /**
@@ -48,12 +49,6 @@ public:
     virtual bool isAvailable() const = 0;
 
     /**
-     * @brief Get the number of data points/rows available
-     * @return Number of data points, or -1 if unknown/unavailable
-     */
-    virtual int getDataPointCount() const = 0;
-
-    /**
      * @brief Get list of available column/field names
      * @return List of column names that can be accessed
      */
@@ -64,7 +59,7 @@ public:
      * @param column_name Name of the column to retrieve
      * @return QVariant containing the column data (usually QVector<double> or similar)
      */
-    virtual QVariant getColumnData(const QString& column_name) const = 0;
+    virtual QVariant getColumnData(QString const & column_name) const = 0;
 
     /**
      * @brief Get a value at a specific row and column
@@ -72,13 +67,13 @@ public:
      * @param column_name The column name
      * @return The value at the specified location
      */
-    virtual QVariant getValue(int row, const QString& column_name) const = 0;
+    virtual QVariant getValue(int row, QString const & column_name) const = 0;
 
     /**
      * @brief Get the underlying model if available (for table views)
      * @return Pointer to QAbstractItemModel, or nullptr if not applicable
      */
-    virtual QAbstractItemModel* getModel() const { return nullptr; }
+    virtual QAbstractItemModel * getModel() const { return nullptr; }
 
 signals:
     /**
@@ -100,26 +95,25 @@ class DataManagerSource : public AbstractDataSource {
     Q_OBJECT
 
 public:
-    explicit DataManagerSource(DataManager* data_manager, QObject* parent = nullptr);
+    explicit DataManagerSource(DataManager * data_manager, QObject * parent = nullptr);
     ~DataManagerSource() override = default;
 
     QString getName() const override;
     QString getType() const override { return "DataManager"; }
     bool isAvailable() const override;
-    int getDataPointCount() const override;
     QStringList getAvailableColumns() const override;
-    QVariant getColumnData(const QString& column_name) const override;
-    QVariant getValue(int row, const QString& column_name) const override;
+    QVariant getColumnData(QString const & column_name) const override;
+    QVariant getValue(int row, QString const & column_name) const override;
 
     /**
      * @brief Get the underlying DataManager pointer for backwards compatibility
      * @return Pointer to the wrapped DataManager, or nullptr if invalid
      */
-    DataManager* getDataManager() const { return data_manager_; }
+    DataManager * getDataManager() const { return data_manager_; }
 
 
 private:
-    DataManager* data_manager_;
+    DataManager * data_manager_;
     int data_manager_observer_id_;
     bool last_known_availability_ = false;
 };
@@ -134,23 +128,22 @@ class TableManagerSource : public AbstractDataSource {
     Q_OBJECT
 
 public:
-    explicit TableManagerSource(TableManager* table_manager, const QString& name, QObject* parent = nullptr);
+    explicit TableManagerSource(TableManager * table_manager, QString const & name, QObject * parent = nullptr);
     ~TableManagerSource() override = default;
 
     QString getName() const override { return name_; }
     QString getType() const override { return "TableManager"; }
     bool isAvailable() const override;
-    int getDataPointCount() const override;
     QStringList getAvailableColumns() const override;
-    QVariant getColumnData(const QString& column_name) const override;
-    QVariant getValue(int row, const QString& column_name) const override;
-    QAbstractItemModel* getModel() const override { return nullptr; } // Not applicable
+    QVariant getColumnData(QString const & column_name) const override;
+    QVariant getValue(int row, QString const & column_name) const override;
+    QAbstractItemModel * getModel() const override { return nullptr; }// Not applicable
 
     /**
      * @brief Get the underlying TableManager pointer
      * @return Pointer to the wrapped TableManager, or nullptr if invalid
      */
-    TableManager* getTableManager() const { return table_manager_; }
+    TableManager * getTableManager() const { return table_manager_; }
 
     /**
      * @brief Get list of available table IDs
@@ -164,7 +157,7 @@ public:
      * @param column_name The name of the column
      * @return Column data as QVariant
      */
-    QVariant getTableColumnData(const QString& table_id, const QString& column_name) const;
+    QVariant getTableColumnData(QString const & table_id, QString const & column_name) const;
 
     /**
      * @brief Get typed column data from a specific table
@@ -174,10 +167,10 @@ public:
      * @return Vector of typed data
      */
     template<typename T>
-    std::vector<T> getTypedTableColumnData(const QString& table_id, const QString& column_name) const;
+    std::vector<T> getTypedTableColumnData(QString const & table_id, QString const & column_name) const;
 
 private:
-    TableManager* table_manager_;
+    TableManager * table_manager_;
     QString name_;
 };
 
@@ -191,7 +184,7 @@ class DataSourceRegistry : public QObject {
     Q_OBJECT
 
 public:
-    explicit DataSourceRegistry(QObject* parent = nullptr);
+    explicit DataSourceRegistry(QObject * parent = nullptr);
     ~DataSourceRegistry() override = default;
 
     /**
@@ -200,21 +193,21 @@ public:
      * @param data_source The data source to register
      * @return True if successfully registered, false if ID already exists
      */
-    bool registerDataSource(const QString& source_id, std::unique_ptr<AbstractDataSource> data_source);
+    bool registerDataSource(QString const & source_id, std::unique_ptr<AbstractDataSource> data_source);
 
     /**
      * @brief Unregister a data source
      * @param source_id The ID of the data source to remove
      * @return True if successfully removed, false if not found
      */
-    bool unregisterDataSource(const QString& source_id);
+    bool unregisterDataSource(QString const & source_id);
 
     /**
      * @brief Get a data source by ID
      * @param source_id The ID of the data source
      * @return Pointer to the data source, or nullptr if not found
      */
-    AbstractDataSource* getDataSource(const QString& source_id) const;
+    AbstractDataSource * getDataSource(QString const & source_id) const;
 
     /**
      * @brief Get list of all registered data source IDs
@@ -239,7 +232,7 @@ public:
      * @param source_id The data source ID to check
      * @return True if registered, false otherwise
      */
-    bool isSourceRegistered(const QString& source_id) const;
+    bool isSourceRegistered(QString const & source_id) const;
 
     /**
      * @brief Get typed data from the primary DataManager source
@@ -248,19 +241,19 @@ public:
      * @return Shared pointer to the data, or nullptr if not found
      */
     template<typename T>
-    std::shared_ptr<T> getData(const std::string& key) const {
-        AbstractDataSource* primary_source = getDataSource("primary_data_manager");
+    std::shared_ptr<T> getData(std::string const & key) const {
+        AbstractDataSource * primary_source = getDataSource("primary_data_manager");
         if (!primary_source || primary_source->getType() != "DataManager") {
             return nullptr;
         }
-        
-        DataManagerSource* dm_source = static_cast<DataManagerSource*>(primary_source);
-        DataManager* data_manager = dm_source->getDataManager();
-        
+
+        DataManagerSource * dm_source = static_cast<DataManagerSource *>(primary_source);
+        DataManager * data_manager = dm_source->getDataManager();
+
         if (!data_manager) {
             return nullptr;
         }
-        
+
         return data_manager->getData<T>(key);
     }
 
@@ -269,20 +262,20 @@ signals:
      * @brief Emitted when a new data source is registered
      * @param source_id The ID of the registered data source
      */
-    void dataSourceRegistered(const QString& source_id);
+    void dataSourceRegistered(QString const & source_id);
 
     /**
      * @brief Emitted when a data source is unregistered
      * @param source_id The ID of the unregistered data source
      */
-    void dataSourceUnregistered(const QString& source_id);
+    void dataSourceUnregistered(QString const & source_id);
 
     /**
      * @brief Emitted when a data source's availability changes
      * @param source_id The ID of the data source
      * @param available True if now available, false if unavailable
      */
-    void dataSourceAvailabilityChanged(const QString& source_id, bool available);
+    void dataSourceAvailabilityChanged(QString const & source_id, bool available);
 
 private slots:
     /**
@@ -303,13 +296,13 @@ private:
      * @brief Connect to a data source's signals
      * @param data_source The data source to connect
      */
-    void connectToDataSource(AbstractDataSource* data_source);
+    void connectToDataSource(AbstractDataSource * data_source);
 
     /**
      * @brief Disconnect from a data source's signals
      * @param data_source The data source to disconnect
      */
-    void disconnectFromDataSource(AbstractDataSource* data_source);
+    void disconnectFromDataSource(AbstractDataSource * data_source);
 };
 
-#endif // DATASOURCEREGISTRY_HPP
+#endif// DATASOURCEREGISTRY_HPP
