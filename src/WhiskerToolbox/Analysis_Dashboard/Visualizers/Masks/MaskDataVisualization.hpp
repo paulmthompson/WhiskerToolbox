@@ -1,7 +1,7 @@
 #ifndef MASKDATAVISUALIZATION_HPP
 #define MASKDATAVISUALIZATION_HPP
 
-#include "Widgets/SpatialOverlayPlotWidget/Selection/SelectionHandlers.hpp"
+#include "Selection/SelectionHandlers.hpp"
 #include "CoreGeometry/polygon.hpp"
 #include "MaskIdentifier.hpp"
 #include "SpatialIndex/RTree.hpp"

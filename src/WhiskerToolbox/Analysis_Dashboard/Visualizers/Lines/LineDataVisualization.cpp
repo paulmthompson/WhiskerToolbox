@@ -4,9 +4,9 @@
 #include "ShaderManager/ShaderManager.hpp"
 #include "ShaderManager/ShaderSourceType.hpp"
 
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
+#include "Selection/LineSelectionHandler.hpp"
+#include "Selection/NoneSelectionHandler.hpp"
+#include "Selection/PolygonSelectionHandler.hpp"
 
 #include <QDebug>
 #include <QOpenGLFramebufferObject>

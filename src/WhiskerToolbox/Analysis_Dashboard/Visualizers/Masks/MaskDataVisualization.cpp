@@ -4,10 +4,10 @@
 #include "CoreGeometry/polygon_adapter.hpp"
 #include "DataManager/Masks/Mask_Data.hpp"
 
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp"
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp"
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp"
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
+#include "Selection/LineSelectionHandler.hpp"
+#include "Selection/NoneSelectionHandler.hpp"
+#include "Selection/PointSelectionHandler.hpp"
+#include "Selection/PolygonSelectionHandler.hpp"
 #include "ShaderManager/ShaderManager.hpp"
 
 #include <QDebug>

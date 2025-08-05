@@ -37,6 +37,17 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Groups/GroupManagementWidget.cpp
     Groups/GroupManagementWidget.ui
 
+    Selection/LineSelectionHandler.hpp
+    Selection/LineSelectionHandler.cpp
+    Selection/NoneSelectionHandler.hpp
+    Selection/PointSelectionHandler.hpp
+    Selection/PointSelectionHandler.cpp
+    Selection/PolygonSelectionHandler.hpp
+    Selection/PolygonSelectionHandler.cpp
+    Selection/SelectionHandlers.hpp
+    Selection/SelectionModes.hpp
+    Selection/SelectionModes.cpp
+
     # Toolbox
     Toolbox/ToolboxPanel.hpp
     Toolbox/ToolboxPanel.cpp
@@ -68,16 +79,6 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Widgets/EventPlotWidget/EventPointVisualization.hpp
     Widgets/EventPlotWidget/EventPointVisualization.cpp
 
-    Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.hpp
-    Widgets/SpatialOverlayPlotWidget/Selection/LineSelectionHandler.cpp
-    Widgets/SpatialOverlayPlotWidget/Selection/NoneSelectionHandler.hpp
-    Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp
-    Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.cpp
-    Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp
-    Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.cpp
-    Widgets/SpatialOverlayPlotWidget/Selection/SelectionHandlers.hpp
-    Widgets/SpatialOverlayPlotWidget/Selection/SelectionModes.hpp
-    Widgets/SpatialOverlayPlotWidget/Selection/SelectionModes.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.hpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayOpenGLWidget.cpp
     Widgets/SpatialOverlayPlotWidget/SpatialOverlayPlotWidget.hpp
