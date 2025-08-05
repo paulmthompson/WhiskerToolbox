@@ -5,7 +5,7 @@
 #include "AbstractPlotOrganizer.hpp"
 #include "DataSourceRegistry/DataSourceRegistry.hpp"
 #include "GraphicsScenePlotOrganizer.hpp"
-#include "GroupCoordinator.hpp"
+#include "Groups/GroupCoordinator.hpp"
 #include "PlotContainer.hpp"
 #include "PlotFactory.hpp"
 #include "DataManager/DataManager.hpp"

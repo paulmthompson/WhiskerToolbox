@@ -18,8 +18,6 @@ set(ANALYSIS_DASHBOARD_SOURCES
     PlotContainer.cpp
     PlotFactory.hpp 
     PlotFactory.cpp
-    GroupCoordinator.hpp 
-    GroupCoordinator.cpp
     DataSourceRegistry/DataSourceRegistry.hpp
     DataSourceRegistry/DataSourceRegistry.cpp
 
@@ -32,6 +30,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     # Groups
     Groups/GroupManager.hpp
     Groups/GroupManager.cpp
+    Groups/GroupCoordinator.cpp
+    Groups/GroupCoordinator.hpp
     Groups/GroupManagementWidget.hpp
     Groups/GroupManagementWidget.cpp
     Groups/GroupManagementWidget.ui
