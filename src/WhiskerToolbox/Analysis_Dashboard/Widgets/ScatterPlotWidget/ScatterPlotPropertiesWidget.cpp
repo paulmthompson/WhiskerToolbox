@@ -2,7 +2,7 @@
 #include "ScatterPlotPropertiesWidget.hpp"
 #include "ScatterPlotWidget.hpp"
 
-#include "Analysis_Dashboard/DataSourceRegistry.hpp"
+#include "DataSourceRegistry/DataSourceRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"

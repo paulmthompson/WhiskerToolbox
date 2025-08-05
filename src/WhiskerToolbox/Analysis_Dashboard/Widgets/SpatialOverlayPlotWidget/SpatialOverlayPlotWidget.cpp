@@ -4,7 +4,7 @@
 #include "DataManager/Points/Point_Data.hpp"
 #include "DataManager/TimeFrame.hpp"
 #include "SpatialOverlayOpenGLWidget.hpp"
-#include "../../DataSourceRegistry.hpp"
+#include "DataSourceRegistry/DataSourceRegistry.hpp"
 
 
 #include <QDebug>

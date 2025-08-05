@@ -3,7 +3,7 @@
 #include "ui_Analysis_Dashboard.h"
 
 #include "AbstractPlotOrganizer.hpp"
-#include "DataSourceRegistry.hpp"
+#include "DataSourceRegistry/DataSourceRegistry.hpp"
 #include "GraphicsScenePlotOrganizer.hpp"
 #include "GroupCoordinator.hpp"
 #include "PlotContainer.hpp"

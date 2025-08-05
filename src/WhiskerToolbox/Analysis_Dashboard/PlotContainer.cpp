@@ -1,5 +1,5 @@
 #include "PlotContainer.hpp"
-#include "DataSourceRegistry.hpp"
+#include "DataSourceRegistry/DataSourceRegistry.hpp"
 #include "Plots/AbstractPlotWidget.hpp"
 #include "Properties/AbstractPlotPropertiesWidget.hpp"
 

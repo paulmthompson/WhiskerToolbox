@@ -4,7 +4,7 @@
 #include "SpatialOverlayOpenGLWidget.hpp"
 #include "SpatialOverlayPlotWidget.hpp"
 
-#include "Analysis_Dashboard/DataSourceRegistry.hpp"
+#include "DataSourceRegistry/DataSourceRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Points/Point_Data.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"

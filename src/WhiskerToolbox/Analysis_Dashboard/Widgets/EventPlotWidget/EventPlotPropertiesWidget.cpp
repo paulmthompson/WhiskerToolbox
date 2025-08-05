@@ -2,8 +2,8 @@
 #include "EventPlotOpenGLWidget.hpp"
 #include "EventPlotWidget.hpp"
 
-#include "Analysis_Dashboard/DataSourceRegistry.hpp"
-#include "Analysis_Dashboard/Tables/TableManager.hpp"
+#include "DataSourceRegistry/DataSourceRegistry.hpp"
+#include "Tables/TableManager.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
 #include "DataManager/DataManagerTypes.hpp"

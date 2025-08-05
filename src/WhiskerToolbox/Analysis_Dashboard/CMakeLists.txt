@@ -20,8 +20,8 @@ set(ANALYSIS_DASHBOARD_SOURCES
     PlotFactory.cpp
     GroupCoordinator.hpp 
     GroupCoordinator.cpp
-    DataSourceRegistry.hpp
-    DataSourceRegistry.cpp
+    DataSourceRegistry/DataSourceRegistry.hpp
+    DataSourceRegistry/DataSourceRegistry.cpp
 
     # Plots
     Plots/AbstractPlotWidget.hpp
