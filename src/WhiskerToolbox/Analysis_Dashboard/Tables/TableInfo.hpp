@@ -1,6 +1,8 @@
 #ifndef TABLE_INFO_HPP
 #define TABLE_INFO_HPP
 
+#include "ColumnTypeInfo.hpp"
+
 #include <QString>
 #include <QStringList>
 #include <typeindex>
@@ -13,7 +15,10 @@ struct ColumnInfo {
     QString dataSourceName;      ///< Name/ID of the data source (e.g., "analog:LFP", "events:Spikes")
     QString computerName;        ///< Name of the computer to use
     
-    // Enhanced type information
+    // Runtime type information
+    ColumnTypeInfo typeInfo;     ///< Complete type information for the column
+    
+    // Legacy type information (kept for backwards compatibility)
     std::type_index outputType = typeid(void);     ///< Runtime type of the column output
     QString outputTypeName;                        ///< Human-readable name of the output type
     bool isVectorType = false;                     ///< True if output is std::vector<T>

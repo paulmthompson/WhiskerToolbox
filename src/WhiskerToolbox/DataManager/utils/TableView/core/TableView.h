@@ -1,6 +1,7 @@
 #ifndef TABLE_VIEW_H
 #define TABLE_VIEW_H
 
+#include "utils/TableView/columns/ColumnTypeInfo.hpp"
 #include "utils/TableView/adapters/DataManagerExtension.h"
 #include "utils/TableView/columns/Column.h"
 #include "utils/TableView/columns/IColumn.h"
@@ -75,6 +76,46 @@ public:
      * @return True if the column exists, false otherwise.
      */
     [[nodiscard]] auto hasColumn(std::string const & name) const -> bool;
+
+    /**
+     * @brief Gets the runtime type information for a column.
+     * @param name The column name.
+     * @return The std::type_info for the column's data type.
+     * @throws std::runtime_error if the column is not found.
+     */
+    [[nodiscard]] auto getColumnType(std::string const & name) const -> std::type_info const &;
+
+    /**
+     * @brief Gets the type index for a column.
+     * @param name The column name.
+     * @return The std::type_index for the column's data type.
+     * @throws std::runtime_error if the column is not found.
+     */
+    [[nodiscard]] auto getColumnTypeIndex(std::string const & name) const -> std::type_index;
+
+    /**
+     * @brief Gets column data as a variant, avoiding try/catch for type detection.
+     * 
+     * This method returns column data in a type-safe variant that contains
+     * all possible column types. Consumers can use std::visit or pattern
+     * matching to handle the data without try/catch blocks.
+     * 
+     * @param name The column name.
+     * @return ColumnDataVariant containing the column data.
+     * @throws std::runtime_error if the column is not found or type not supported.
+     */
+    [[nodiscard]] auto getColumnDataVariant(std::string const & name) -> ColumnDataVariant;
+
+    /**
+     * @brief Applies a visitor to column data in a type-safe manner.
+     * @tparam Visitor The visitor type that implements visit methods for all supported types.
+     * @param name The column name.
+     * @param visitor The visitor instance.
+     * @return The result of the visitor.
+     * @throws std::runtime_error if the column is not found or type not supported.
+     */
+    template<typename Visitor>
+    auto visitColumnData(std::string const & name, Visitor&& visitor) -> decltype(auto);
 
     /**
      * @brief Materializes all columns in the table.
@@ -186,6 +227,13 @@ auto TableView::getColumnValues(std::string const & name) -> std::vector<T> cons
 
     // 4. Call getValues on the typed column
     return typedColumn->getValues(this);
+}
+
+// Template method implementation for visitColumnData
+template<typename Visitor>
+auto TableView::visitColumnData(std::string const & name, Visitor&& visitor) -> decltype(auto) {
+    auto variant = getColumnDataVariant(name);
+    return std::visit(std::forward<Visitor>(visitor), variant);
 }
 
 #endif// TABLE_VIEW_H

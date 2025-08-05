@@ -1,4 +1,5 @@
 #include "DataSourceRegistry.hpp"
+#include "QVariantColumnDataVisitor.hpp"
 #include "Analysis_Dashboard/Tables/TableManager.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/core/TableView.h"
@@ -347,58 +348,105 @@ QVariant TableManagerSource::getTableColumnData(QString const & table_id, QStrin
         return QVariant();
     }
 
-    // Try to get the data as different types and return as QVariant
-    // First, check what type the column actually contains
-    auto column_names = table_view->getColumnNames();
     std::string std_column_name = column_name.toStdString();
 
-    if (std::find(column_names.begin(), column_names.end(), std_column_name) == column_names.end()) {
+    // Check if column exists
+    if (!table_view->hasColumn(std_column_name)) {
         qWarning() << "TableManagerSource: Column not found:" << column_name << "in table:" << table_id;
         return QVariant();
     }
 
-    // Try to get as vector<float> first (common for event data)
     try {
-        auto data = table_view->getColumnValues<std::vector<float>>(std_column_name);
-        QVariantList result;
-        for (auto const & vector: data) {
-            QVariantList inner_list;
-            for (float value: vector) {
-                inner_list.append(value);
-            }
-            result.append(QVariant::fromValue(inner_list));
-        }
-        return QVariant::fromValue(result);
-    } catch (...) {
-        // Try other types
+        // Use our new type-safe variant approach instead of try/catch
+        QVariantColumnDataVisitor visitor;
+        return table_view->visitColumnData(std_column_name, visitor);
+    } catch (const std::exception& e) {
+        qWarning() << "TableManagerSource: Error accessing column data for" << column_name 
+                   << "in table" << table_id << ":" << e.what();
+        return QVariant();
+    }
+}
+
+ColumnTypeInfo TableManagerSource::getColumnTypeInfo(QString const & table_id, QString const & column_name) const {
+    if (!table_manager_) {
+        return ColumnTypeInfo{};
     }
 
-    // Try double
-    try {
-        auto data = table_view->getColumnValues<double>(std_column_name);
-        QVariantList result;
-        for (double value: data) {
-            result.append(value);
-        }
-        return QVariant::fromValue(result);
-    } catch (...) {
-        // Try other types
+    auto table_view = table_manager_->getBuiltTable(table_id);
+    if (!table_view) {
+        return ColumnTypeInfo{};
     }
 
-    // Try int
-    try {
-        auto data = table_view->getColumnValues<int>(std_column_name);
-        QVariantList result;
-        for (int value: data) {
-            result.append(value);
-        }
-        return QVariant::fromValue(result);
-    } catch (...) {
-        // Try other types
+    std::string std_column_name = column_name.toStdString();
+    if (!table_view->hasColumn(std_column_name)) {
+        return ColumnTypeInfo{};
     }
 
-    qWarning() << "TableManagerSource: Could not get data for column:" << column_name << "in table:" << table_id;
-    return QVariant();
+    try {
+        auto type_index = table_view->getColumnTypeIndex(std_column_name);
+        
+        // Create ColumnTypeInfo based on the runtime type
+        if (type_index == typeid(std::vector<float>)) {
+            return ColumnTypeInfo::fromType<std::vector<float>>();
+        }
+        else if (type_index == typeid(std::vector<double>)) {
+            return ColumnTypeInfo::fromType<std::vector<double>>();
+        }
+        else if (type_index == typeid(std::vector<int>)) {
+            return ColumnTypeInfo::fromType<std::vector<int>>();
+        }
+        else if (type_index == typeid(std::vector<bool>)) {
+            return ColumnTypeInfo::fromType<std::vector<bool>>();
+        }
+        else if (type_index == typeid(std::vector<std::string>)) {
+            return ColumnTypeInfo::fromType<std::vector<std::string>>();
+        }
+        else if (type_index == typeid(std::vector<std::vector<float>>)) {
+            return ColumnTypeInfo::fromType<std::vector<std::vector<float>>>();
+        }
+        else {
+            // Unknown type
+            return ColumnTypeInfo{};
+        }
+    } catch (const std::exception& e) {
+        qWarning() << "TableManagerSource: Error getting type info for column" << column_name 
+                   << "in table" << table_id << ":" << e.what();
+        return ColumnTypeInfo{};
+    }
+}
+
+std::type_index TableManagerSource::getColumnTypeIndex(QString const & table_id, QString const & column_name) const {
+    if (!table_manager_) {
+        return typeid(void);
+    }
+
+    auto table_view = table_manager_->getBuiltTable(table_id);
+    if (!table_view) {
+        return typeid(void);
+    }
+
+    std::string std_column_name = column_name.toStdString();
+    if (!table_view->hasColumn(std_column_name)) {
+        return typeid(void);
+    }
+
+    try {
+        return table_view->getColumnTypeIndex(std_column_name);
+    } catch (const std::exception& e) {
+        qWarning() << "TableManagerSource: Error getting type index for column" << column_name 
+                   << "in table" << table_id << ":" << e.what();
+        return typeid(void);
+    }
+}
+
+bool TableManagerSource::isColumnNumericVector(QString const & table_id, QString const & column_name) const {
+    auto type_info = getColumnTypeInfo(table_id, column_name);
+    
+    // Check if it's a vector type with numeric elements
+    return type_info.isVectorType && 
+           (type_info.hasElementType<float>() || 
+            type_info.hasElementType<double>() || 
+            type_info.hasElementType<int>());
 }
 
 template<typename T>

@@ -1,6 +1,7 @@
 #ifndef DATASOURCEREGISTRY_HPP
 #define DATASOURCEREGISTRY_HPP
 
+#include "Analysis_Dashboard/Tables/ColumnTypeInfo.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include <QAbstractItemModel>
@@ -138,6 +139,30 @@ public:
     QVariant getColumnData(QString const & column_name) const override;
     QVariant getValue(int row, QString const & column_name) const override;
     QAbstractItemModel * getModel() const override { return nullptr; }// Not applicable
+
+    /**
+     * @brief Get type information for a column in a specific table
+     * @param table_id The ID of the table
+     * @param column_name The name of the column
+     * @return ColumnTypeInfo describing the column's type characteristics
+     */
+    ColumnTypeInfo getColumnTypeInfo(QString const & table_id, QString const & column_name) const;
+
+    /**
+     * @brief Get the runtime type index for a column in a specific table
+     * @param table_id The ID of the table
+     * @param column_name The name of the column
+     * @return std::type_index for the column, or typeid(void) if not found
+     */
+    std::type_index getColumnTypeIndex(QString const & table_id, QString const & column_name) const;
+
+    /**
+     * @brief Check if a column contains data that could be used for plotting
+     * @param table_id The ID of the table
+     * @param column_name The name of the column
+     * @return True if the column contains numeric vector data suitable for plotting
+     */
+    bool isColumnNumericVector(QString const & table_id, QString const & column_name) const;
 
     /**
      * @brief Get the underlying TableManager pointer

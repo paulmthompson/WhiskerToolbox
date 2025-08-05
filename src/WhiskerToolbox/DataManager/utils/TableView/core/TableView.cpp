@@ -57,6 +57,45 @@ bool TableView::hasColumn(std::string const & name) const {
     return m_colNameToIndex.find(name) != m_colNameToIndex.end();
 }
 
+std::type_info const & TableView::getColumnType(std::string const & name) const {
+    auto it = m_colNameToIndex.find(name);
+    if (it == m_colNameToIndex.end()) {
+        throw std::runtime_error("Column '" + name + "' not found in table");
+    }
+    
+    return m_columns[it->second]->getType();
+}
+
+std::type_index TableView::getColumnTypeIndex(std::string const & name) const {
+    return std::type_index(getColumnType(name));
+}
+
+ColumnDataVariant TableView::getColumnDataVariant(std::string const & name) {
+    auto type_index = getColumnTypeIndex(name);
+    
+    // Use template dispatch based on the actual stored types in TableView
+    // TableView stores std::vector<T> where T is the element type per row
+    if (type_index == typeid(std::vector<float>)) {
+        return getColumnValues<float>(name);  // Returns std::vector<float>
+    }
+    else if (type_index == typeid(std::vector<double>)) {
+        return getColumnValues<double>(name);  // Returns std::vector<double>
+    }
+    else if (type_index == typeid(std::vector<int>)) {
+        return getColumnValues<int>(name);  // Returns std::vector<int>
+    }
+    else if (type_index == typeid(std::vector<bool>)) {
+        return getColumnValues<bool>(name);  // Returns std::vector<bool>
+    }
+    else if (type_index == typeid(std::vector<std::vector<float>>)) {
+        return getColumnValues<std::vector<float>>(name);  // Returns std::vector<std::vector<float>>
+    }
+    else {
+        throw std::runtime_error("Column '" + name + "' has unsupported type for variant access: " + 
+                               getColumnType(name).name());
+    }
+}
+
 void TableView::materializeAll() {
     std::set<std::string> materializing;
 
