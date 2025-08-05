@@ -10,6 +10,7 @@
 #include "transforms/Lines/line_clip.hpp"
 #include "transforms/Lines/line_curvature.hpp"
 #include "transforms/Lines/line_min_point_dist.hpp"
+#include "transforms/Lines/line_alignment.hpp"
 #include "transforms/Lines/line_point_extraction.hpp"
 #include "transforms/Lines/line_resample.hpp"
 #include "transforms/Lines/line_subsegment.hpp"
@@ -49,6 +50,7 @@ TransformRegistry::TransformRegistry() {
     _registerOperation(std::make_unique<AnalogScalingOperation>());
     _registerOperation(std::make_unique<LineAngleOperation>());
     _registerOperation(std::make_unique<LineMinPointDistOperation>());
+    _registerOperation(std::make_unique<LineAlignmentOperation>());
     _registerOperation(std::make_unique<LineResampleOperation>());
     _registerOperation(std::make_unique<LineCurvatureOperation>());
     _registerOperation(std::make_unique<LineSubsegmentOperation>());

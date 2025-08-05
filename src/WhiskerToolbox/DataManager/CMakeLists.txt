@@ -159,6 +159,8 @@ set(DATAMANAGER_SOURCES
         transforms/Lines/line_angle.cpp
         transforms/Lines/line_min_point_dist.hpp
         transforms/Lines/line_min_point_dist.cpp
+        transforms/Lines/line_alignment.hpp
+        transforms/Lines/line_alignment.cpp
         transforms/Lines/line_resample.cpp
         transforms/Lines/line_resample.hpp
         transforms/Lines/line_curvature.cpp

@@ -152,6 +152,9 @@ set(PROJECT_SOURCES
         DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp
         DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.cpp
         DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.ui
+        DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.hpp
+        DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.cpp
+        DataTransform_Widget/Lines/LineAlignment_Widget/LineAlignment_Widget.ui
         DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.cpp
         DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.hpp
         DataTransform_Widget/Lines/LineResample_Widget/LineResample_Widget.ui
@@ -248,6 +251,9 @@ set(PROJECT_SOURCES
         Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.cpp
         Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.hpp
         Media_Widget/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.ui
+        Media_Widget/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.cpp
+        Media_Widget/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp
+        Media_Widget/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.ui
 
         Media_Widget/MediaInterval_Widget/MediaInterval_Widget.hpp
         Media_Widget/MediaInterval_Widget/MediaInterval_Widget.cpp
