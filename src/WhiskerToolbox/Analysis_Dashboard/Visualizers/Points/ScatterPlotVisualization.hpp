@@ -1,7 +1,7 @@
 #ifndef SCATTERPLOTVISUALIZATION_HPP
 #define SCATTERPLOTVISUALIZATION_HPP
 
-#include "Visualizers/Points/VectorPointVisualization.hpp"
+#include "GenericPointVisualization.hpp"
 
 #include <QString>
 #include <vector>
@@ -15,7 +15,7 @@ class GroupManager;
  * functionality for scatter plots, including tooltip generation
  * and data management for X vs Y plotting.
  */
-class ScatterPlotVisualization : public VectorPointVisualization<float, size_t> {
+class ScatterPlotVisualization : public GenericPointVisualization<float, size_t> {
 public:
     /**
      * @brief Constructor for scatter plot visualization
@@ -23,11 +23,13 @@ public:
      * @param x_coords Vector of X coordinates
      * @param y_coords Vector of Y coordinates
      * @param group_manager Optional group manager for color coding
+     * @param defer_opengl_init Whether to defer OpenGL initialization
      */
     ScatterPlotVisualization(QString const & data_key,
                             std::vector<float> const & x_coords,
                             std::vector<float> const & y_coords,
-                            GroupManager * group_manager = nullptr);
+                            GroupManager * group_manager = nullptr,
+                            bool defer_opengl_init = false);
 
     /**
      * @brief Destructor
@@ -66,6 +68,17 @@ protected:
      * @return Formatted tooltip text
      */
     QString getTooltipText(size_t row_indicator);
+
+    /**
+     * @brief Populate data from vector inputs
+     */
+    void populateData() override;
+
+    /**
+     * @brief Get the bounding box for the vector data
+     * @return BoundingBox containing all data points
+     */
+    BoundingBox getDataBounds() const override;
 
 private:
     QString m_x_label;      ///< Label for X axis

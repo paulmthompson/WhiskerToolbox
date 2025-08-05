@@ -20,7 +20,8 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
       _pan_offset_x(0.0f),
       _pan_offset_y(0.0f),
       _dragging(false),
-      _tooltips_enabled(true) {
+      _tooltips_enabled(true),
+      _opengl_resources_initialized(false) {
     
     // Setup tooltip timer
     _tooltip_timer = new QTimer(this);
@@ -59,25 +60,33 @@ void ScatterPlotOpenGLWidget::setScatterData(std::vector<float> const & x_data,
         return;
     }
 
-    // Create new visualization with the data
-    makeCurrent();
-    
+    // Store data for later use
+    _x_data = x_data;
+    _y_data = y_data;
+
     qDebug() << "Creating ScatterPlotVisualization with" << x_data.size() << "points";
     
+    // Create new visualization with the data (using deferred initialization)
     _scatter_visualization = std::make_unique<ScatterPlotVisualization>(
         "scatter_data",
         x_data,
         y_data,
-        _group_manager
+        _group_manager,
+        true  // defer_opengl_init = true
     );
 
-    if (_scatter_visualization) {
-        qDebug() << "ScatterPlotVisualization created successfully";
-    } else {
-        qDebug() << "Failed to create ScatterPlotVisualization";
+    // If OpenGL is already initialized, initialize the visualization resources
+    if (_opengl_resources_initialized && context() && context()->isValid()) {
+        makeCurrent();
+        try {
+            _scatter_visualization->initializeOpenGLResources();
+            qDebug() << "ScatterPlotVisualization OpenGL resources initialized successfully";
+        } catch (...) {
+            qWarning() << "Failed to initialize ScatterPlotVisualization OpenGL resources";
+        }
+        doneCurrent();
     }
 
-    doneCurrent();
     update();
     
     qDebug() << "ScatterPlotOpenGLWidget::setScatterData completed, widget updated";
@@ -147,11 +156,29 @@ void ScatterPlotOpenGLWidget::initializeGL() {
     // Initialize projection matrix
     _projection_matrix.setToIdentity();
 
+    // Mark OpenGL resources as initialized
+    _opengl_resources_initialized = true;
+
+    // Initialize any pending visualizations
+    if (_scatter_visualization) {
+        try {
+            _scatter_visualization->initializeOpenGLResources();
+            qDebug() << "ScatterPlotVisualization OpenGL resources initialized in initializeGL";
+        } catch (...) {
+            qWarning() << "Failed to initialize ScatterPlotVisualization OpenGL resources in initializeGL";
+        }
+    }
+
     qDebug() << "ScatterPlotOpenGLWidget: OpenGL initialized";
 }
 
 void ScatterPlotOpenGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
+
+    if (!_opengl_resources_initialized) {
+        qDebug() << "ScatterPlotOpenGLWidget::paintGL: OpenGL resources not initialized yet";
+        return;
+    }
 
     if (!_scatter_visualization) {
         qDebug() << "ScatterPlotOpenGLWidget::paintGL: No visualization available";

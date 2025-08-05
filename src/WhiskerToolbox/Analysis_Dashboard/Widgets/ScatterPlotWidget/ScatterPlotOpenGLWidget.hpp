@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-\\
+
 class ScatterPlotVisualization;
 class GroupManager;
 
@@ -131,6 +131,13 @@ private:
     std::unique_ptr<ScatterPlotVisualization> _scatter_visualization;
     GroupManager * _group_manager;
     float _point_size;
+
+    // Data storage for deferred initialization
+    std::vector<float> _x_data;
+    std::vector<float> _y_data;
+
+    // OpenGL state
+    bool _opengl_resources_initialized;
 
     // View transformation
     QMatrix4x4 _view_matrix;
