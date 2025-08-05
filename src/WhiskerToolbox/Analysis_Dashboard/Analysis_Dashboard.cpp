@@ -2,9 +2,10 @@
 #include "Analysis_Dashboard.hpp"
 #include "ui_Analysis_Dashboard.h"
 
-#include "AbstractPlotOrganizer.hpp"
+
 #include "DataSourceRegistry/DataSourceRegistry.hpp"
-#include "GraphicsScenePlotOrganizer.hpp"
+#include "PlotOrganizers/AbstractPlotOrganizer.hpp"
+#include "PlotOrganizers/GraphicsScenePlotOrganizer.hpp"
 #include "Groups/GroupCoordinator.hpp"
 #include "PlotContainer.hpp"
 #include "PlotFactory.hpp"

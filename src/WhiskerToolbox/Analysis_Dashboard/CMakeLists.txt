@@ -11,9 +11,6 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Analysis_Dashboard.ui
 
     # Abstract classes and interfaces
-    AbstractPlotOrganizer.hpp 
-    GraphicsScenePlotOrganizer.hpp 
-    GraphicsScenePlotOrganizer.cpp
     PlotContainer.hpp 
     PlotContainer.cpp
     PlotFactory.hpp 
@@ -26,6 +23,10 @@ set(ANALYSIS_DASHBOARD_SOURCES
     Plots/AbstractPlotWidget.cpp
     Plots/AbstractPlotParameters.hpp
     Plots/AbstractPlotParameters.cpp
+
+    PlotOrganizers/AbstractPlotOrganizer.hpp
+    PlotOrganizers/GraphicsScenePlotOrganizer.hpp
+    PlotOrganizers/GraphicsScenePlotOrganizer.cpp
 
     # Groups
     Groups/GroupManager.hpp
