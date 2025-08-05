@@ -2,6 +2,7 @@
 #include "ScatterPlotPropertiesWidget.hpp"
 #include "ScatterPlotWidget.hpp"
 
+#include "DataManager/utils/TableView/columns/ColumnTypeInfo.hpp"
 #include "DataSourceRegistry/DataSourceRegistry.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/DataManagerTypes.hpp"
@@ -153,17 +154,37 @@ void ScatterPlotPropertiesWidget::updateAvailableDataSources() {
                         auto column_names = table_view->getColumnNames();
                         
                         for (auto const & column_name : column_names) {
-                            QString display_text = QString("Table: %1.%2")
+                            // Use our new type-safe interface to filter by numeric types
+                            ColumnTypeInfo type_info = tm_source->getColumnTypeInfo(table_id, QString::fromStdString(column_name));
+                            
+                            // Only add columns that contain numeric data suitable for scatter plots
+                            bool is_plottable_numeric = false;
+                            if (type_info.isVectorType) {
+                                // Check if it's a vector of numeric types (single values per row)
+                                is_plottable_numeric = type_info.hasElementType<float>() || 
+                                                     type_info.hasElementType<double>() || 
+                                                     type_info.hasElementType<int>();
+                            }
+                            
+                            if (is_plottable_numeric) {
+                                QString type_display = QString::fromStdString(type_info.elementTypeName);
+                                QString display_text = QString("Table: %1.%2 (%3)")
+                                                       .arg(table_id)
+                                                       .arg(QString::fromStdString(column_name))
+                                                       .arg(type_display);
+                                QString data_key = QString("table:%1:%2")
                                                    .arg(table_id)
                                                    .arg(QString::fromStdString(column_name));
-                            QString data_key = QString("table:%1:%2")
-                                               .arg(table_id)
-                                               .arg(QString::fromStdString(column_name));
-                            
-                            ui->x_axis_combo->addItem(display_text, data_key);
-                            ui->y_axis_combo->addItem(display_text, data_key);
-                            
-                            qDebug() << "Added table column:" << display_text;
+                                
+                                ui->x_axis_combo->addItem(display_text, data_key);
+                                ui->y_axis_combo->addItem(display_text, data_key);
+                                
+                                qDebug() << "Added numeric table column:" << display_text 
+                                        << "Type:" << QString::fromStdString(type_info.typeName);
+                            } else {
+                                qDebug() << "Skipped non-numeric column:" << QString::fromStdString(column_name)
+                                        << "Type:" << QString::fromStdString(type_info.typeName);
+                            }
                         }
                     }
                 }
@@ -528,4 +549,174 @@ void ScatterPlotPropertiesWidget::updateYAxisInfoLabel() {
     }
 
     ui->y_axis_info_label->setText(info_text);
+}
+
+QStringList ScatterPlotPropertiesWidget::getAvailableNumericColumns() const {
+    QStringList numeric_columns;
+    
+    if (!_data_source_registry) {
+        return numeric_columns;
+    }
+    
+    // Find TableManagerSource
+    AbstractDataSource* table_manager_source = nullptr;
+    auto source_ids = _data_source_registry->getAvailableSourceIds();
+
+    for (auto const & source_id : source_ids) {
+        auto* source = _data_source_registry->getDataSource(source_id);
+        if (source && source->getType() == "TableManager") {
+            table_manager_source = source;
+            break;
+        }
+    }
+    
+    if (table_manager_source) {
+        TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
+        auto table_manager = tm_source->getTableManager();
+        
+        if (table_manager) {
+            auto table_ids = table_manager->getTableIds();
+            
+            for (auto const & table_id : table_ids) {
+                auto table_view = table_manager->getBuiltTable(table_id);
+                if (table_view) {
+                    auto column_names = table_view->getColumnNames();
+                    
+                    for (auto const & column_name : column_names) {
+                        // Use our type-safe interface to check if column is numeric
+                        ColumnTypeInfo type_info = tm_source->getColumnTypeInfo(table_id, QString::fromStdString(column_name));
+                        
+                        // Check if it's a numeric vector type suitable for plotting
+                        if (type_info.isVectorType && 
+                            (type_info.hasElementType<float>() || 
+                             type_info.hasElementType<double>() || 
+                             type_info.hasElementType<int>())) {
+                            
+                            QString data_key = QString("table:%1:%2")
+                                               .arg(table_id)
+                                               .arg(QString::fromStdString(column_name));
+                            numeric_columns.append(data_key);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return numeric_columns;
+}
+
+QMap<QString, QString> ScatterPlotPropertiesWidget::getAvailableNumericColumnsWithTypes() const {
+    QMap<QString, QString> columns_with_types;
+    
+    if (!_data_source_registry) {
+        return columns_with_types;
+    }
+    
+    // Find TableManagerSource
+    AbstractDataSource* table_manager_source = nullptr;
+    auto source_ids = _data_source_registry->getAvailableSourceIds();
+
+    for (auto const & source_id : source_ids) {
+        auto* source = _data_source_registry->getDataSource(source_id);
+        if (source && source->getType() == "TableManager") {
+            table_manager_source = source;
+            break;
+        }
+    }
+    
+    if (table_manager_source) {
+        TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
+        auto table_manager = tm_source->getTableManager();
+        
+        if (table_manager) {
+            auto table_ids = table_manager->getTableIds();
+            
+            for (auto const & table_id : table_ids) {
+                auto table_view = table_manager->getBuiltTable(table_id);
+                if (table_view) {
+                    auto column_names = table_view->getColumnNames();
+                    
+                    for (auto const & column_name : column_names) {
+                        // Use our type-safe interface to get detailed type information
+                        ColumnTypeInfo type_info = tm_source->getColumnTypeInfo(table_id, QString::fromStdString(column_name));
+                        
+                        // Check if it's a numeric vector type suitable for plotting
+                        if (type_info.isVectorType && 
+                            (type_info.hasElementType<float>() || 
+                             type_info.hasElementType<double>() || 
+                             type_info.hasElementType<int>())) {
+                            
+                            QString data_key = QString("table:%1:%2")
+                                               .arg(table_id)
+                                               .arg(QString::fromStdString(column_name));
+                            
+                            QString type_description = QString("%1 (element type: %2)")
+                                                      .arg(QString::fromStdString(type_info.typeName))
+                                                      .arg(QString::fromStdString(type_info.elementTypeName));
+                            
+                            columns_with_types[data_key] = type_description;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return columns_with_types;
+}
+
+QStringList ScatterPlotPropertiesWidget::getNumericColumnsFromRegistry(DataSourceRegistry * data_source_registry) {
+    QStringList numeric_columns;
+    
+    if (!data_source_registry) {
+        return numeric_columns;
+    }
+    
+    // Find TableManagerSource
+    AbstractDataSource* table_manager_source = nullptr;
+    auto source_ids = data_source_registry->getAvailableSourceIds();
+
+    for (auto const & source_id : source_ids) {
+        auto* source = data_source_registry->getDataSource(source_id);
+        if (source && source->getType() == "TableManager") {
+            table_manager_source = source;
+            break;
+        }
+    }
+    
+    if (table_manager_source) {
+        TableManagerSource* tm_source = static_cast<TableManagerSource*>(table_manager_source);
+        auto table_manager = tm_source->getTableManager();
+        
+        if (table_manager) {
+            auto table_ids = table_manager->getTableIds();
+            
+            for (auto const & table_id : table_ids) {
+                auto table_view = table_manager->getBuiltTable(table_id);
+                if (table_view) {
+                    auto column_names = table_view->getColumnNames();
+                    
+                    for (auto const & column_name : column_names) {
+                        // Use type-safe interface to filter numeric columns
+                        ColumnTypeInfo type_info = tm_source->getColumnTypeInfo(table_id, QString::fromStdString(column_name));
+                        
+                        // Only include numeric vector types
+                        if (type_info.isVectorType && 
+                            (type_info.hasElementType<float>() || 
+                             type_info.hasElementType<double>() || 
+                             type_info.hasElementType<int>())) {
+                            
+                            QString data_key = QString("table:%1:%2")
+                                               .arg(table_id)
+                                               .arg(QString::fromStdString(column_name));
+                            numeric_columns.append(data_key);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return numeric_columns;
 }

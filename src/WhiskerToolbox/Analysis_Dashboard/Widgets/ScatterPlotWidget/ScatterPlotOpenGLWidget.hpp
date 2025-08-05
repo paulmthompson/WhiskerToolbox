@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-// Forward declarations
+\\
 class ScatterPlotVisualization;
 class GroupManager;
 
