@@ -1,7 +1,7 @@
 #ifndef EVENTPOINTVISUALIZATION_HPP
 #define EVENTPOINTVISUALIZATION_HPP
 
-#include "../SpatialOverlayPlotWidget/Points/GenericPointVisualization.hpp"
+#include "Visualizers/Points/GenericPointVisualization.hpp"
 
 #include <vector>
 

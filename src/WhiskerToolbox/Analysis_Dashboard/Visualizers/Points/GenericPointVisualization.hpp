@@ -1,12 +1,12 @@
 #ifndef GENERICPOINTVISUALIZATION_HPP
 #define GENERICPOINTVISUALIZATION_HPP
 
-#include "../Selection/SelectionHandlers.hpp"
+#include "Widgets/SpatialOverlayPlotWidget/Selection/SelectionHandlers.hpp"
 #include "Groups/GroupManager.hpp"
 #include "SpatialIndex/QuadTree.hpp"
 #include "ShaderManager/ShaderManager.hpp"
-#include "../Selection/PointSelectionHandler.hpp"
-#include "../Selection/PolygonSelectionHandler.hpp"
+#include "Widgets/SpatialOverlayPlotWidget/Selection/PointSelectionHandler.hpp"
+#include "Widgets/SpatialOverlayPlotWidget/Selection/PolygonSelectionHandler.hpp"
 
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>

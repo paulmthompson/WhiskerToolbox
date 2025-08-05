@@ -1,7 +1,7 @@
 #ifndef SCATTERPLOTVISUALIZATION_HPP
 #define SCATTERPLOTVISUALIZATION_HPP
 
-#include "Analysis_Dashboard/Widgets/SpatialOverlayPlotWidget/Points/VectorPointVisualization.hpp"
+#include "Visualizers/Points/VectorPointVisualization.hpp"
 
 #include <QString>
 #include <vector>
